@@ -206,6 +206,12 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
 
 def _pagina(dados: dict, trab: Path) -> Path:
     trab.mkdir(parents=True, exist_ok=True)
+    (trab / 'fontes').mkdir(exist_ok=True)                  # fontes do próprio repositório (o GitHub não tem Poppins)
+    fs = RAIZ / 'node_modules' / '@fontsource'
+    for nome, orig in (('m800', 'montserrat/files/montserrat-latin-800-normal.woff2'), ('m900', 'montserrat/files/montserrat-latin-900-normal.woff2'),
+                       ('jbm700', 'jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2')):
+        if (fs / orig).exists():
+            shutil.copy(fs / orig, trab / 'fontes' / f'{nome}.woff2')
     for arq in VETOR.glob('*'):
         if arq.suffix in ('.html', '.js') and not arq.name.startswith('teste'):
             shutil.copy(arq, trab / arq.name)

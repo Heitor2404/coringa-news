@@ -1,14 +1,17 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Mont;font-weight:800;src:url(fontes/m800.woff2)}
+@font-face{font-family:Mont;font-weight:900;src:url(fontes/m900.woff2)}
+@font-face{font-family:JBM;font-weight:700;src:url(fontes/jbm700.woff2)}
 /* Ninguém Te Contou — motor vetorial (tudo desenhado por código, Val articulada). Tudo por seek(t). */
 html,body{margin:0;background:#000}
-#st{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Poppins,Inter,sans-serif}
+#st{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Mont,Poppins,sans-serif}
 .cena{position:absolute;inset:0;opacity:0}
 .cena svg{position:absolute;left:0;top:0}
 #fx{position:absolute;inset:0;pointer-events:none;z-index:4}
 #fx i{position:absolute;display:block;left:0;top:0}
 #hud{position:absolute;left:0;top:0;background:#2b2320;border:6px solid #4a3d36;border-radius:22px;padding:10px 30px;text-align:center;opacity:0;box-shadow:0 10px 26px rgba(0,0,0,.4);z-index:5;transform-origin:0 0}
 #hud small{display:block;font-weight:700;font-size:28px;letter-spacing:3px;color:#cdbfae;white-space:nowrap}
-#hud b{display:inline-block;margin-top:6px;font-family:'DejaVu Sans Mono',monospace;font-weight:700;font-size:96px;line-height:1.05;color:#F7A928;text-shadow:0 0 18px rgba(247,169,40,.75);background:#1a1412;border-radius:12px;padding:0 18px;font-variant-numeric:tabular-nums}
+#hud b{display:inline-block;margin-top:6px;font-family:JBM,monospace;font-weight:700;font-size:96px;line-height:1.05;color:#F7A928;text-shadow:0 0 18px rgba(247,169,40,.75);background:#1a1412;border-radius:12px;padding:0 18px;font-variant-numeric:tabular-nums}
 #cap{position:absolute;left:60px;right:60px;top:560px;text-align:center;font-weight:800;font-size:76px;line-height:1.05;color:#fff;text-transform:uppercase;-webkit-text-stroke:11px #1d1512;paint-order:stroke fill;z-index:6}
 #cap i{font-style:normal;color:#F2C14E}
 #balao{position:absolute;left:0;top:0;background:#fff;border:6px solid #1d1512;border-radius:30px;padding:14px 30px;font-weight:800;font-size:62px;line-height:1.05;color:#1d1512;opacity:0;z-index:6;box-shadow:0 8px 0 rgba(0,0,0,.2);max-width:860px;text-align:center}
@@ -154,5 +157,5 @@ window.seek=t=>{
     bl.style.setProperty('--rabo',rabo+'px');bl.style.transformOrigin=`${rabo}px 100%`;bl.style.left=bx+'px';bl.style.top=by+'px';bl.style.transform=`scale(${k}) rotate(${Math.sin(t*5)*1.2}deg)`}else bl.style.opacity=0;
   const f=$('fim');if(c.fim&&d>c.fim.de){$('fimp').textContent=c.fim.p;$('fimc').innerHTML=c.fim.c;f.style.opacity=1;f.style.transform=`scale(${cl(back((d-c.fim.de)/0.35),0,1.1)}) rotate(${Math.sin(t*3)*1.2}deg)`}else f.style.opacity=0;
 };
-document.fonts.ready.then(()=>{seek(0);window.READY=true});
+Promise.all([document.fonts.load('800 60px Mont'),document.fonts.load('700 60px JBM')]).catch(()=>0).then(()=>document.fonts.ready).then(()=>{seek(0);window.READY=true});
 </script></body></html>

@@ -1,0 +1,199 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#000}
+#st{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Poppins,Inter,sans-serif}
+svg{position:absolute;left:0;top:0}
+#cap{position:absolute;left:60px;right:60px;top:1240px;text-align:center;font-weight:800;font-size:74px;line-height:1.05;color:#fff;text-transform:uppercase;-webkit-text-stroke:11px #1d1512;paint-order:stroke fill;z-index:6}
+#cap i{font-style:normal;color:#F2C14E}
+#badge{position:absolute;left:40px;top:150px;display:flex;align-items:center;gap:12px;background:#2b2320;border:4px solid #4a3d36;border-radius:16px;padding:8px 16px;z-index:6;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+#badge small{font-weight:700;font-size:22px;letter-spacing:2px;color:#cdbfae}
+#badge b{font-family:'DejaVu Sans Mono',monospace;font-weight:700;font-size:44px;color:#F7A928;text-shadow:0 0 12px rgba(247,169,40,.7);background:#1a1412;border-radius:8px;padding:0 10px}
+#balao{position:absolute;background:#fff;border:6px solid #1d1512;border-radius:30px;padding:14px 30px;font-weight:800;font-size:62px;color:#1d1512;z-index:6;white-space:nowrap;transform-origin:30% 100%;box-shadow:0 8px 0 rgba(0,0,0,.2)}
+#balao:after{content:'';position:absolute;left:30%;bottom:-34px;margin-left:-16px;border:16px solid transparent;border-top:22px solid #1d1512}
+</style></head><body><div id="st">
+<svg id="sv" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+<div id="badge"><small>DIA</small><b id="dia">1</b></div>
+<div id="balao">VOLTA AQUI!</div><div id="cap"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,k)=>a+(b-a)*k;
+const eo=k=>1-Math.pow(1-cl(k),3),eio=k=>{k=cl(k);return k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2},back=k=>{k=cl(k);const c=1.7;return 1+(c+1)*Math.pow(k-1,3)+c*Math.pow(k-1,2)};
+const rnd=s=>{const x=Math.sin(s*9301+49297)*233280;return x-Math.floor(x)};
+const L='#2a1d17';           // cor do contorno
+const SK='#F0BC94',SK2='#D99A74';
+// ───────────────────────── cenário: cozinha da Val à noite, luz quente do lustre ─────────────────────────
+const cozinha=`
+<defs>
+ <linearGradient id="parede" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6C9A0"/><stop offset="1" stop-color="#D2AB80"/></linearGradient>
+ <linearGradient id="chao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9776A"/><stop offset="1" stop-color="#7E4A44"/></linearGradient>
+ <pattern id="ladrilho" width="120" height="120" patternUnits="userSpaceOnUse"><rect width="120" height="120" fill="#C98A7C"/><rect width="60" height="60" fill="#E7C7B4"/><rect x="60" y="60" width="60" height="60" fill="#E7C7B4"/></pattern>
+ <pattern id="azulejo" width="70" height="70" patternUnits="userSpaceOnUse"><rect width="70" height="70" fill="#F1E6D4"/><path d="M0 0H70V70" fill="none" stroke="#CBB89E" stroke-width="3"/></pattern>
+ <pattern id="xadrez" width="36" height="36" patternUnits="userSpaceOnUse"><rect width="36" height="36" fill="#F7B8C8"/><rect width="18" height="36" fill="#EE93AC" opacity=".7"/><rect width="36" height="18" fill="#EE93AC" opacity=".7"/></pattern>
+ <linearGradient id="armario" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C97E86"/><stop offset="1" stop-color="#DE97A0"/></linearGradient>
+ <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2650"/><stop offset="1" stop-color="#34407A"/></linearGradient>
+ <radialGradient id="luz" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE3A6" stop-opacity=".75"/><stop offset=".45" stop-color="#FFC56B" stop-opacity=".28"/><stop offset="1" stop-color="#FFB050" stop-opacity="0"/></radialGradient>
+ <radialGradient id="vin" cx=".5" cy=".46" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#1a0d06" stop-opacity=".6"/></radialGradient>
+ <radialGradient id="som" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a140c" stop-opacity=".45"/><stop offset="1" stop-color="#2a140c" stop-opacity="0"/></radialGradient>
+ <linearGradient id="bolo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A4B2E"/><stop offset="1" stop-color="#5E2F1C"/></linearGradient>
+</defs>
+<rect width="1080" height="1400" fill="url(#parede)"/>
+<rect y="1010" width="1080" height="330" fill="url(#azulejo)"/>
+<!-- janela com a noite lá fora -->
+<g transform="translate(610 420)">
+ <rect x="-14" y="-14" width="328" height="438" rx="10" fill="#9C6B4E" stroke="${L}" stroke-width="5"/>
+ <rect width="300" height="410" fill="url(#ceu)" stroke="${L}" stroke-width="4"/>
+ <circle cx="220" cy="90" r="38" fill="#FFF6D8"/><circle cx="220" cy="90" r="70" fill="#FFF6D8" opacity=".15"/>
+ ${[[40,60],[120,40],[70,150],[260,200],[160,120],[30,260]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="#fff" opacity=".8"/>`).join('')}
+ <path d="M0 330 L60 300 L120 320 L190 290 L300 315 L300 410 L0 410Z" fill="#1A2140"/>
+ <rect x="20" y="340" width="40" height="70" fill="#121833"/><rect x="200" y="330" width="60" height="80" fill="#121833"/><rect x="215" y="350" width="14" height="16" fill="#FFD27A"/>
+ <path d="M150 0V410M0 205H300" stroke="#9C6B4E" stroke-width="12"/>
+ <path d="M-30 -30 Q40 180 10 450 L-40 450Z" fill="#E7A9A0" stroke="${L}" stroke-width="4"/><path d="M330 -30 Q260 180 290 450 L340 450Z" fill="#E7A9A0" stroke="${L}" stroke-width="4"/>
+ <rect x="-30" y="410" width="360" height="22" rx="6" fill="#A97556" stroke="${L}" stroke-width="4"/>
+ <g transform="translate(240 380)"><path d="M-22 0 L22 0 L16 32 L-16 32Z" fill="#B65F3D" stroke="${L}" stroke-width="4"/><path d="M0 0 Q-30 -40 -10 -55 M0 0 Q20 -45 30 -40 M0 0 Q0 -50 5 -62" stroke="#4E8A3A" stroke-width="9" fill="none" stroke-linecap="round"/></g>
+</g>
+<!-- prateleira com potes -->
+<g transform="translate(40 560)">
+ <rect y="120" width="460" height="18" fill="#9C6B4E" stroke="${L}" stroke-width="4"/>
+ ${[0,1,2,3,4].map(k=>`<g transform="translate(${30+k*88} ${120})"><rect x="0" y="-${70+k%2*20}" width="60" height="${70+k%2*20}" rx="10" fill="#F4EAD8" stroke="${L}" stroke-width="4" opacity=".95"/><rect x="0" y="-${70+k%2*20}" width="60" height="16" rx="5" fill="${['#C0563C','#6E8B3D','#D9A13B','#8A5A9E','#3F7FA8'][k]}" stroke="${L}" stroke-width="4"/><rect x="6" y="-${40}" width="48" height="34" fill="${['#E8D6A8','#B9774A','#F2E7C9','#C99B6A','#E3C38E'][k]}"/></g>`).join('')}
+ <text x="10" y="-40" font-family="Poppins" font-weight="800" font-size="40" fill="#B4525F" opacity=".9">BOLOS DA VAL</text>
+</g>
+<!-- bancada com bolo e cupcakes -->
+<g transform="translate(0 1060)">
+ <rect x="-10" y="0" width="470" height="30" rx="6" fill="#8D5A3B" stroke="${L}" stroke-width="5"/>
+ <rect x="0" y="30" width="440" height="300" fill="url(#armario)" stroke="${L}" stroke-width="5"/>
+ <rect x="25" y="60" width="180" height="240" rx="8" fill="none" stroke="${L}" stroke-width="4" opacity=".55"/><rect x="235" y="60" width="180" height="240" rx="8" fill="none" stroke="${L}" stroke-width="4" opacity=".55"/>
+ <circle cx="190" cy="180" r="9" fill="#5A3A2A"/><circle cx="250" cy="180" r="9" fill="#5A3A2A"/>
+ <g transform="translate(120 0)"><rect x="-80" y="-14" width="160" height="14" rx="5" fill="#EFE6DA" stroke="${L}" stroke-width="4"/><rect x="-8" y="-14" width="16" height="0" /><rect x="-70" y="-120" width="140" height="106" rx="14" fill="url(#bolo)" stroke="${L}" stroke-width="5"/><path d="M-70 -95 Q-50 -80 -35 -95 Q-18 -78 0 -95 Q18 -78 35 -95 Q52 -80 70 -95 L70 -110 Q70 -120 60 -120 L-60 -120 Q-70 -120 -70 -110Z" fill="#F7EEDF" stroke="${L}" stroke-width="4"/><circle cx="0" cy="-130" r="12" fill="#D3263A" stroke="${L}" stroke-width="4"/></g>
+ ${[0,1,2].map(k=>`<g transform="translate(${290+k*55} 0)"><path d="M-20 0 L-24 -36 L24 -36 L20 0Z" fill="#E9A7C0" stroke="${L}" stroke-width="4"/><circle cx="0" cy="-46" r="24" fill="#FFF3F6" stroke="${L}" stroke-width="4"/><circle cx="0" cy="-66" r="8" fill="#D3263A" stroke="${L}" stroke-width="3"/></g>`).join('')}
+</g>
+<!-- geladeira -->
+<g transform="translate(900 760)"><rect width="200" height="580" rx="26" fill="#BFD7D2" stroke="${L}" stroke-width="5"/><path d="M0 200H200" stroke="${L}" stroke-width="4"/><rect x="22" y="80" width="14" height="90" rx="7" fill="#7E9A95"/><rect x="22" y="250" width="14" height="120" rx="7" fill="#7E9A95"/><circle cx="120" cy="110" r="18" fill="#E2574C"/></g>
+<!-- chão -->
+<rect y="1340" width="1080" height="580" fill="url(#ladrilho)"/>
+<rect y="1340" width="1080" height="580" fill="url(#chao)" opacity=".55"/>
+<rect y="1334" width="1080" height="14" fill="#8C5A48" stroke="${L}" stroke-width="4"/>
+<!-- lustre -->
+<g transform="translate(560 0)"><path d="M0 0V170" stroke="${L}" stroke-width="5"/><path d="M-70 240 Q0 150 70 240Z" fill="#E8A44A" stroke="${L}" stroke-width="5"/><ellipse cx="0" cy="246" rx="22" ry="12" fill="#FFF2C2"/></g>
+`;
+// ───────────────────────── Val no estilo "boneco de tubo": tudo articulado ─────────────────────────
+function tubo(id,cor,larg){return `<line id="${id}c" stroke="${L}" stroke-width="${larg+9}" stroke-linecap="round"/><line id="${id}" stroke="${cor}" stroke-width="${larg}" stroke-linecap="round"/>`}
+const val=`
+<g id="val">
+ <ellipse id="vsom" cx="0" cy="182" rx="150" ry="22" fill="url(#som)"/>
+ <g id="pernas">${tubo('pa1',SK,34)}${tubo('pa2',SK,34)}${tubo('pe1',SK,34)}${tubo('pe2',SK,34)}
+  <ellipse id="ch1" rx="34" ry="11" fill="#F4C431" stroke="${L}" stroke-width="5"/><ellipse id="ch2" rx="34" ry="11" fill="#F4C431" stroke="${L}" stroke-width="5"/></g>
+ <g id="tronco">
+  <g id="bracoE">${tubo('bE1','#7E2B3E',36)}${tubo('bE2',SK,30)}<g id="mE"><g class="dedo">${[[-13,26,-17,58],[-4,28,-5,64],[5,28,6,63],[13,26,18,55]].map(([a,b,c,d])=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${L}" stroke-width="20" stroke-linecap="round"/><line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${SK}" stroke-width="11" stroke-linecap="round"/>`).join('')}</g>
+   <ellipse cx="0" cy="18" rx="21" ry="20" fill="${SK}" stroke="${L}" stroke-width="5"/>
+   <line x1="-16" y1="12" x2="-30" y2="34" stroke="${L}" stroke-width="20" stroke-linecap="round"/><line x1="-16" y1="12" x2="-30" y2="34" stroke="${SK}" stroke-width="11" stroke-linecap="round"/>
+   <ellipse cx="-2" cy="18" rx="15" ry="14" fill="${SK}"/></g></g>
+  <path d="M-128 -40 Q-140 -230 -95 -262 Q0 -292 95 -262 Q140 -230 128 -40 Q130 40 120 110 L-120 110 Q-130 40 -128 -40Z" fill="#7E2B3E" stroke="${L}" stroke-width="6"/>
+  <path d="M-128 -40 Q-140 -230 -95 -262 Q-60 -275 -40 -278 Q-90 -150 -100 105 L-120 110 Q-130 40 -128 -40Z" fill="#5E1E2D" opacity=".35"/>
+  <path d="M-62 -232 L62 -232 L66 -110 L118 -95 Q128 30 112 118 Q0 140 -112 118 Q-128 30 -118 -95 L-66 -110Z" fill="url(#xadrez)" stroke="${L}" stroke-width="5"/>
+  <path d="M-62 -232 L-85 -270 M62 -232 L85 -270" stroke="#EE93AC" stroke-width="14"/><path d="M-118 -95 Q0 -80 118 -95" stroke="#EE93AC" stroke-width="12" fill="none"/>
+  <g transform="translate(-20 -20)"><rect x="-36" y="-30" width="72" height="62" rx="8" fill="#FBE3EA" stroke="${L}" stroke-width="4"/><path d="M-14 20 L-18 0 L18 0 L14 20Z" fill="#E9A7C0" stroke="${L}" stroke-width="3"/><circle cy="-8" r="13" fill="#7A3D2B" stroke="${L}" stroke-width="3"/></g>
+  <path d="M-112 118 Q0 140 112 118" stroke="#C26F86" stroke-width="5" fill="none" opacity=".6"/>
+  <g id="cabeca">
+   <rect x="-22" y="-300" width="44" height="40" fill="${SK}" stroke="${L}" stroke-width="5"/>
+   <circle cx="0" cy="-470" r="44" fill="#6B3E26" stroke="${L}" stroke-width="5"/>
+   <rect x="-70" y="-484" width="140" height="13" rx="6" fill="#F2C230" stroke="${L}" stroke-width="4" transform="rotate(-18 0 -478)"/><path d="M68 -500 L88 -508 L72 -490Z" fill="#3A2A20" transform="rotate(-18 0 -478)"/>
+   <circle cx="0" cy="-375" r="104" fill="${SK}" stroke="${L}" stroke-width="6"/>
+   <path d="M-104 -380 Q-104 -480 0 -482 Q104 -480 104 -380 Q90 -440 40 -440 Q0 -400 -50 -440 Q-95 -435 -104 -380Z" fill="#6B3E26" stroke="${L}" stroke-width="5"/>
+   <circle cx="-96" cy="-360" r="16" fill="${SK}" stroke="${L}" stroke-width="5"/><circle cx="96" cy="-360" r="16" fill="${SK}" stroke="${L}" stroke-width="5"/>
+   <ellipse cx="-62" cy="-325" rx="20" ry="12" fill="#E98A86" opacity=".55"/><ellipse cx="62" cy="-325" rx="20" ry="12" fill="#E98A86" opacity=".55"/>
+   <ellipse cx="-58" cy="-312" rx="12" ry="8" fill="#fff" opacity=".85"/>
+   <g id="sobr"><path id="sbE" d="M-62 -408 Q-40 -420 -18 -410" stroke="${L}" stroke-width="7" fill="none" stroke-linecap="round"/><path id="sbD" d="M18 -410 Q40 -420 62 -408" stroke="${L}" stroke-width="7" fill="none" stroke-linecap="round"/></g>
+   <g id="olhos"><circle id="olE" cx="-40" cy="-378" r="9" fill="${L}"/><circle id="olD" cx="40" cy="-378" r="9" fill="${L}"/></g>
+   <circle cx="-40" cy="-378" r="29" fill="#fff" fill-opacity=".18" stroke="${L}" stroke-width="5"/><circle cx="40" cy="-378" r="29" fill="#fff" fill-opacity=".18" stroke="${L}" stroke-width="5"/><path d="M-11 -380 H11" stroke="${L}" stroke-width="5"/>
+   <path d="M-6 -350 Q0 -340 6 -350" stroke="${SK2}" stroke-width="5" fill="none"/>
+   <path id="boca" fill="#7A2430" stroke="${L}" stroke-width="5" stroke-linejoin="round"/>
+   <path id="suor" d="M88 -430 Q100 -405 88 -398 Q76 -405 88 -430Z" fill="#9FD3F2" stroke="${L}" stroke-width="4" opacity="0"/>
+  </g>
+  <g id="bracoD">${tubo('bD1','#7E2B3E',36)}${tubo('bD2',SK,30)}
+   <g id="chinelo"><path d="M0 -6 C-30 -6 -40 30 -36 70 C-32 110 -40 140 -10 152 C12 158 34 150 36 120 C38 80 32 40 32 20 C32 2 18 -6 0 -6Z" fill="#F4C431" stroke="${L}" stroke-width="5"/><path d="M2 112 L-24 80 M2 112 L26 82" stroke="#2F7DC0" stroke-width="10" stroke-linecap="round"/><circle cx="2" cy="112" r="7" fill="#2F7DC0"/><path d="M-20 140 Q0 150 24 136" stroke="#C7962A" stroke-width="5" fill="none"/></g>
+   <g id="mD"><rect x="-22" y="-2" width="44" height="54" rx="20" fill="${SK}" stroke="${L}" stroke-width="5"/>
+   ${[4,16,28,40].map(y=>`<ellipse cx="-20" cy="${y+3}" rx="13" ry="7.5" fill="${SK}" stroke="${L}" stroke-width="4"/>`).join('')}
+   <path d="M12 2 Q22 14 6 26" stroke="${L}" stroke-width="19" fill="none" stroke-linecap="round"/><path d="M12 2 Q22 14 6 26" stroke="${SK}" stroke-width="10" fill="none" stroke-linecap="round"/></g></g>
+ </g>
+</g>`;
+// barata: corpo oval, cabeça, 6 patas que alternam, antenas que balançam
+const barata=k=>`<g id="b${k}"><ellipse cx="0" cy="10" rx="46" ry="9" fill="url(#som)"/>
+ <g class="pat">${[0,1,2,3,4,5].map(j=>`<path class="pt" stroke="${L}" stroke-width="5" fill="none" stroke-linecap="round"/>`).join('')}</g>
+ <ellipse cx="0" cy="-16" rx="40" ry="17" fill="#7A3B1E" stroke="${L}" stroke-width="5"/><path d="M-30 -24 Q0 -36 34 -20" stroke="#A65B30" stroke-width="5" fill="none"/>
+ <circle cx="40" cy="-16" r="11" fill="#5A2A14" stroke="${L}" stroke-width="4"/>
+ <path class="ant" stroke="${L}" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>`;
+const NB=5,B=Array.from({length:NB},(_,k)=>({de:0.75+k*0.22,y:[1735,1785,1700,1845,1760][k],v:[640,560,700,520,600][k],esc:[1,.9,1.1,.85,.95][k]}));
+$('sv').innerHTML=`<g id="cam">${cozinha}<g transform="translate(640 1478) scale(1.3)">${val}</g>${B.map((_,k)=>barata(k)).join('')}
+ <circle cx="560" cy="246" r="520" fill="url(#luz)" style="mix-blend-mode:screen"/>
+ <g id="poeira">${[0,1,2,3,4,5,6,7].map(()=>'<circle r="20" fill="#E9D8C4"/>').join('')}</g>
+ <g id="impacto" opacity="0">${[0,1,2,3,4,5].map(k=>`<path d="M0 0 L60 0" transform="rotate(${-160+k*28})" stroke="${L}" stroke-width="7" stroke-linecap="round"/>`).join('')}</g></g>
+ <rect width="1080" height="1920" fill="url(#vin)"/><rect id="flash" width="1080" height="1920" fill="#fff" opacity="0"/>`;
+const S=id=>document.getElementById(id);
+function seg(id,x1,y1,x2,y2){for(const s of [id,id+'c']){const e=S(s);e.setAttribute('x1',x1);e.setAttribute('y1',y1);e.setAttribute('x2',x2);e.setAttribute('y2',y2)}}
+// braço: ombro (sx,sy), ângulos (graus, 0 = para baixo), comprimentos
+function braco(p,sx,sy,a1,a2,l1=125,l2=112){const r=Math.PI/180,ex=sx+Math.sin(a1*r)*l1,ey=sy+Math.cos(a1*r)*l1,hx=ex+Math.sin((a1+a2)*r)*l2,hy=ey+Math.cos((a1+a2)*r)*l2;
+  seg(p+'1',sx,sy,ex,ey);seg(p+'2',ex,ey,hx,hy);return[hx,hy,a1+a2]}
+let IMP=[460,1780];const T_RAIVA=1.55,T_ERGUE=1.75,T_BATE=2.45,T_CLOSE=3.05;
+const CAPS=[[0,'NO <i>DIA 1</i>'],[0.75,'AS <i>BARATAS</i>'],[1.5,'ACHARAM A'],[1.95,'<i>COZINHA</i> DA VAL'],[2.6,'E ELA...'],[3.2,'<i>ERROU.</i>']];
+window.seek=t=>{
+  // ── câmera: geral → médio (Val + chão) → close no rosto
+  let z,cx,cy;
+  if(t<T_RAIVA){const k=eio(t/T_RAIVA);z=lerp(1,1.06,k);cx=540;cy=lerp(960,1010,k)}
+  else if(t<T_CLOSE){const k=eio((t-T_RAIVA)/1.5);z=lerp(1.14,1.2,k);cx=520;cy=1250}
+  else{const k=eio((t-T_CLOSE)/2);z=lerp(2.05,2.15,k);cx=600;cy=1330-400}
+  let tx=540-cx*z,ty=960-cy*z;tx=Math.min(0,Math.max(1080-1080*z,tx));ty=Math.min(0,Math.max(1920-1920*z,ty));
+  const db=t-T_BATE;let sh=db>0&&db<0.45?24*(1-db/0.45):0;
+  const corte=[T_RAIVA,T_CLOSE].map(c=>t-c).filter(x=>x>=0&&x<0.15)[0];const zz=z*(corte!==undefined?1+0.04*(1-corte/0.15):1);
+  S('cam').setAttribute('transform',`translate(${tx+Math.sin(t*71)*sh-(zz-z)*540} ${ty+Math.cos(t*63)*sh-(zz-z)*960}) scale(${zz})`);
+  S('flash').setAttribute('opacity',db>0&&db<0.08?0.5*(1-db/0.08):0);
+  // ── Val
+  const resp=Math.sin(t*2.6)*0.012,raiva=t>=T_RAIVA;
+  // pernas e chinelos
+  // agacha para bater: o quadril desce e os joelhos dobram
+  const ag=t<T_BATE-0.3?0:t<T_BATE?eo((t-(T_BATE-0.3))/0.3)*40:lerp(40,0,eo((t-T_BATE-0.5)/0.5));
+  const kx=ag*.9;seg('pa1',-50,100+ag,-50-kx,140+ag*.3);seg('pa2',50,100+ag,50+kx,140+ag*.3);seg('pe1',-50-kx,140+ag*.3,-58,178);seg('pe2',50+kx,140+ag*.3,58,178);
+  S('ch1').setAttribute('cx',-62);S('ch1').setAttribute('cy',186);S('ch2').setAttribute('cx',62);S('ch2').setAttribute('cy',186);
+  // tronco: respira, inclina para bater, mola quando fica com raiva
+  let inc=Math.sin(t*0.9)*1.2,sy=1+resp,sx=1-resp*.6,dy=0;
+  if(raiva&&t<T_BATE){const k=cl((t-T_RAIVA)/0.25);sy+=0.06*(1-back(k));inc+=lerp(0,6,eo((t-T_ERGUE)/0.5))}
+  if(t>=T_BATE-0.12){const k=cl((t-(T_BATE-0.12))/0.12);inc=lerp(6,-14,eo(k));if(db>0)inc=lerp(-14,-3,eo(db/0.6))}
+  S('tronco').setAttribute('transform',`translate(0 ${100+ag}) rotate(${inc}) scale(${sx} ${sy}) translate(0 -100)`);
+  // braço esquerdo (lado direito da tela): solto balançando; na raiva, mão na cintura
+  let aE=-12+Math.sin(t*1.7)*4,aE2=-8;if(raiva){const k=eo((t-T_RAIVA)/0.3);aE=lerp(aE,-40,k);aE2=lerp(-8,95,k)}
+  const[mEx,mEy,angE]=braco('bE',118,-238,-aE,-aE2);S('mE').setAttribute('transform',`translate(${mEx} ${mEy}) rotate(${-angE}) translate(0 -14)`);
+  // braço direito (com o chinelo): solto → ergue → bate
+  let a1=-14+Math.sin(t*1.5)*4,a2=-10;                                  // para fora do corpo
+  if(t>=T_ERGUE){const k=back(cl((t-T_ERGUE)/0.35));a1=lerp(-14,-128,k);a2=lerp(-10,-55,k)}
+  if(t>=T_BATE-0.12){const k=eo(cl((t-(T_BATE-0.12))/0.12));a1=lerp(-128,-38,k);a2=lerp(-55,8,k);if(db>0){const r=eo(cl((db-0.5)/0.5));a1=lerp(-38,-20,r);a2=lerp(8,-10,r)}}
+  const[hx,hy,ang]=braco('bD',-118,-238,a1,a2);S('mD').setAttribute('transform',`translate(${hx} ${hy}) rotate(${-ang}) translate(0 -18)`);
+  S('chinelo').setAttribute('transform',`translate(${hx} ${hy}) rotate(${-ang}) translate(0 -30)`);
+  // cabeça: balança, olha para as baratas, treme de raiva
+  let hr=Math.sin(t*1.3)*2.5,hdy=0;if(t>T_RAIVA-0.6&&t<T_RAIVA)hr=lerp(hr,-8,eo((t-(T_RAIVA-0.6))/0.3));if(raiva)hr=-4+Math.sin(t*28)*(t>T_CLOSE?1.5:0.6);
+  S('cabeca').setAttribute('transform',`translate(0 ${hdy}) rotate(${hr} 0 -280)`);
+  const olhaX=t>0.9&&t<T_CLOSE?-8:0,olhaY=t>0.9&&t<T_CLOSE?7:0,pisca=!raiva&&((t>0.45&&t<0.57)||(t>2.9&&t<3.0));
+  for(const [id,x] of [['olE',-40],['olD',40]]){const e=S(id);e.setAttribute('cx',x+olhaX);e.setAttribute('cy',-378+olhaY);e.setAttribute('ry',9);e.setAttribute('r',pisca?2:raiva?8:9)}
+  S('sbE').setAttribute('d',raiva?'M-64 -420 Q-40 -404 -16 -396':'M-62 -408 Q-40 -420 -18 -410');
+  S('sbD').setAttribute('d',raiva?'M16 -396 Q40 -404 64 -420':'M18 -410 Q40 -420 62 -408');
+  const ab=raiva?(t>T_CLOSE?18+Math.abs(Math.sin(t*9))*10:t<T_BATE+0.4?22:10):0;
+  S('boca').setAttribute('d',raiva?`M-30 -325 Q0 ${-335} 30 -325 Q26 ${-325+ab} 0 ${-322+ab} Q-26 ${-325+ab} -30 -325Z`:'M-26 -330 Q0 -306 26 -330 Q0 -318 -26 -330Z');
+  S('suor').setAttribute('opacity',t>T_CLOSE?1:0);S('suor').setAttribute('transform',`translate(0 ${t>T_CLOSE?((t-T_CLOSE)*30)%25:0})`);
+  // ── baratas: patas alternando (trote), antenas balançando; a primeira desvia do chinelo
+  B.forEach((b,k)=>{const d=t-b.de,e=S('b'+k);if(d<0){e.setAttribute('opacity',0);return}e.setAttribute('opacity',1);
+    let x=-120+d*b.v,y=b.y,rot=0;
+    if(k===1){y=IMP[1]+8;b.v=(IMP[0]+120)/(T_BATE-b.de);const xa=-120+(T_BATE-b.de)*b.v;if(t>T_BATE-0.05){x=xa+(t-(T_BATE-0.05))*b.v*1.3;const j=cl((t-(T_BATE-0.05))/0.35);y-=Math.sin(j*Math.PI)*90;rot=-j*360}}
+    e.setAttribute('transform',`translate(${x} ${y-Math.abs(Math.sin(d*30))*4}) rotate(${rot} 0 -16) scale(${b.esc})`);
+    e.querySelectorAll('.pt').forEach((p,j)=>{const lado=j%2?1:-1,base=[-22,0,22][j>>1],f=Math.sin(d*34+j*Math.PI/2+(j>>1))*14;
+      p.setAttribute('d',`M${base} -10 L${base+f*lado*.5-6} 2 L${base+f-10} 10`)});
+    const w=Math.sin(d*20+k)*8;e.querySelector('.ant').setAttribute('d',`M48 -22 Q70 ${-52+w} 96 ${-40+w} M46 -24 Q62 ${-64-w} 88 ${-66-w}`)});
+  // ── impacto: riscos + poeira no ponto em que o chinelo bateu
+  const ix=600+hx*1-0,iy=1330+hy;
+  S('impacto').setAttribute('opacity',db>0&&db<0.35?1-db/0.35:0);S('impacto').setAttribute('transform',`translate(${IMP[0]} ${IMP[1]}) scale(${1+db*2})`);
+  [...S('poeira').children].forEach((c,k)=>{const dd=db;if(dd<0||dd>0.8){c.setAttribute('opacity',0);return}
+    const a=(0.1+k/8*0.8)*Math.PI,r=20+dd*200;c.setAttribute('cx',IMP[0]+Math.cos(a)*r*1.4);c.setAttribute('cy',IMP[1]-Math.sin(a)*r*.5);c.setAttribute('r',16+dd*40);c.setAttribute('opacity',0.8*(1-dd/0.8))});
+  // ── texto
+  const cp=[...CAPS].reverse().find(c=>t>=c[0]),cap=$('cap');if(cap.dataset.k!=cp[0]){cap.innerHTML=cp[1];cap.dataset.k=cp[0]}
+  cap.style.top=(t>T_CLOSE?1560:t>=T_RAIVA?500:640)+'px';cap.style.transform=`scale(${lerp(.85,1,cl(back((t-cp[0])/.18),0,1.1))})`;
+  const bl=$('balao'),bd=t-(T_CLOSE+0.35);bl.style.opacity=bd>0?1:0;bl.style.left='190px';bl.style.top='330px';bl.style.transform=`scale(${cl(back(bd/0.3),0,1.1)}) rotate(${-3+Math.sin(t*6)*1.5}deg)`;
+  $('badge').style.transform=`scale(${cl(back(t/0.35),0,1.1)})`;
+};
+document.fonts.ready.then(()=>{seek(T_BATE);const m=S('cam').getCTM().inverse().multiply(S('chinelo').getCTM()),q=S('sv').createSVGPoint();q.x=0;q.y=150;const w=q.matrixTransform(m);IMP=[w.x,w.y];seek(0);window.READY=true});
+</script></body></html>

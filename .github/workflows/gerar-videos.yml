@@ -144,10 +144,11 @@ jobs:
           fi
           ) > saida/registro.txt 2>&1 && ok=1 || ok=0
           grep -E '^\s*\[(aprovação|fiscal final|claude)\]|Traceback|Error' saida/registro.txt | sed -E 's/(resposta: ).*/\1…/' | tail -20 || true
-          if [ "$ok" = "0" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-            tail -n 60 saida/registro.txt > saida/erro.txt
-            curl -s -m 30 -F chat_id="$TELEGRAM_CHAT_ID" -F caption="📄 Registro do erro (últimas linhas)" \
-              -F document=@saida/erro.txt "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" > /dev/null || true
+          # registro completo vai SEMPRE para o Telegram (sem som), para dá para entender o que aconteceu em cada vídeo
+          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            cap="📄 Registro completo da execução"; [ "$ok" = "0" ] && cap="📄 Registro do ERRO (veja o fim do arquivo)"
+            curl -s -m 30 -F chat_id="$TELEGRAM_CHAT_ID" -F caption="$cap" -F disable_notification=true \
+              -F document=@saida/registro.txt "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" > /dev/null || true
           fi
           [ "$ok" = "1" ]
 

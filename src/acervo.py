@@ -705,6 +705,34 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     return v
 
 
+def preencher(v: dict, acervo: list[dict]) -> dict:
+    """11/11: frase que ficou sem foto pega uma RESERVA do acervo ainda não usada (vídeo primeiro, depois a foto de maior
+    nota), antes de cair em ilustração ou foto repetida. As reservas são todas do próprio tema; um vídeo do tema numa
+    frase de ambiente é muito melhor que tela repetida (vídeo dos tardígrados: 7 frases sem imagem e 8 reservas sobrando)."""
+    ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
+    usados = {c.get('foto') for c in ideias if c.get('foto')}
+    livres = [x for x in acervo if x.get('util', True) and x['id'] not in usados]
+    livres.sort(key=lambda x: (not x.get('video'), bool(x.get('generica')), -float(x.get('nota') or 0)))
+    n = 0
+    ant = None
+    for c in ideias:
+        if c.get('foto'):
+            ant = c['foto']
+            continue
+        if not livres:
+            break
+        x = livres.pop(0)
+        c['foto'] = x['id']; ant = x['id']; n += 1
+    for c in v['cenas']:                       # os planos da mesma ideia herdam a foto dela
+        if c.get('sub') and not c.get('foto'):
+            pai = next((y for y in v['cenas'] if y.get('grupo') == c.get('grupo') and not y.get('sub')), None)
+            if pai and pai.get('foto'):
+                c['foto'] = pai['foto']
+    if n:
+        print(f'  [acervo] {n} frase(s) sem foto ganharam uma reserva do acervo (vídeos primeiro)')
+    return v
+
+
 def complementar(v: dict, acervo: list[dict], pasta: Path) -> list[dict]:
     """2ª busca: para cada frase que ficou sem foto, procura imagem real do ASSUNTO DA FRASE (campo "busca" do roteiro:
     "Loki Balder painting", "Halifax bomber"...), não só do tema geral. As novas entram no acervo e o casamento é refeito."""

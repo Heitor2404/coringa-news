@@ -366,6 +366,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     # 2ª busca: para cada frase ainda sem foto, procura imagem real do ASSUNTO DA FRASE (Loki, Templários, o bombardeiro...)
     acervo = acervo_mod.complementar(v, acervo, pasta)
     v = acervo_mod.casar(v, acervo)
+    v = acervo_mod.preencher(v, acervo)          # buraco = reserva do acervo (vídeo primeiro), antes de 2D ou repetir
     v['acervo'] = acervo
     v = _planos_sem_foto(v, epoca)
     v['_reserva'] = list(gemini.RESERVAS_USADAS)   # vai como aviso na prévia de aprovação

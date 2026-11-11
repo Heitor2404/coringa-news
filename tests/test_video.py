@@ -138,3 +138,14 @@ def test_foto_generica_que_nao_e_exata_sai(monkeypatch):
         {'ideia': 0, 'foto': 'a0', 'exata': False}, {'ideia': 1, 'foto': 'a1', 'exata': True}]})
     acervo.casar(v, acv)
     assert [c.get('foto') for c in v['cenas']] == [None, 'a1']
+
+
+def test_buraco_pega_reserva_video_primeiro():
+    """11/11 (tardígrados): 7 frases sem imagem com 8 reservas sobrando."""
+    from src import acervo
+    acv = [{'id': 'a0', 'mostra': 'x'}, {'id': 'a1', 'mostra': 'foto', 'nota': 9},
+           {'id': 'a2', 'mostra': 'clipe', 'video': {'url': 'u'}, 'generica': True}, {'id': 'a3', 'mostra': 'ruim', 'util': False}]
+    v = {'cenas': [{'tipo': 'historia', 'fala': 'f0', 'foto': 'a0'}, {'tipo': 'historia', 'fala': 'f1'},
+                   {'tipo': 'historia', 'fala': 'f2'}, {'tipo': 'historia', 'fala': 'f3'}]}
+    acervo.preencher(v, acv)
+    assert [c.get('foto') for c in v['cenas']] == ['a0', 'a2', 'a1', None]

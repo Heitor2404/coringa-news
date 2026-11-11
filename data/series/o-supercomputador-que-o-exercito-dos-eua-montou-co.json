@@ -1,0 +1,44 @@
+{
+ "pedido": "O supercomputador que o exército dos EUA montou com 1.760 PlayStations 3",
+ "tema": {
+  "pergunta": "Como 1.760 PlayStations 3 viraram um supercomputador militar?",
+  "formato": "explica",
+  "termos": [
+   "PlayStation 3",
+   "Supercomputador",
+   "Cell (microprocessador)",
+   "Computação de alto desempenho"
+  ],
+  "termos_en": [
+   "PlayStation 3",
+   "Cell (microprocessor)",
+   "Condor Cluster",
+   "Air Force Research Laboratory"
+  ],
+  "busca": "supercomputador 1760 PlayStation 3 Força Aérea",
+  "busca_video": [
+   "server room blinking lights",
+   "data center servers racks",
+   "circuit board close up",
+   "game console controller hands"
+  ],
+  "categoria": "TECNOLOGIA",
+  "noticia": "há 20 anos (11/11/2006): o console PlayStation 3 foi lançado ao público no Japão",
+  "pedido": "O supercomputador que o exército dos EUA montou com 1.760 PlayStations 3",
+  "partes": 1
+ },
+ "pergunta": "Como 1.760 PlayStations 3 viraram um supercomputador militar?",
+ "arco": [
+  "Como 1.760 PlayStations 3 viraram um supercomputador da Força Aérea dos EUA"
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "1.760 PlayStations viraram supercomputador",
+   "resumo": "Os militares dos EUA ligaram 1.760 PS3 num só supercomputador. O motivo da compra cabia numa só palavra. Tudo começou em 2006, quando a Sony lançou o PS3 no Japão. Ken Kutaragi, da Sony, prometia um supercomputador para a sala de estar. O motor era o chip Cell, criado com IBM e Toshiba. Ele tinha um núcleo geral e vários coprocessadores de cálculo. Em 2008, o Cell moveu o Roadrunner, da IBM. Foi o primeiro supercomputador a sustentar um petaFLOPS. Esse tipo de máquina simula explosões nucleares, aviões e clima. Só que as máquinas militares tradicionais custavam caro. O PS3 custava de US$ 499 a US$ 599 no lançamento. Em 2010, mais de 1.500 consoles formavam uma única máquina. Em 2011, já eram 1.760 PlayStations trabalhando como um só. O motivo era barato: videogame saía mais em conta que servidor militar. O videogame da sua sala escondia um chip de supercomputador.",
+   "suspense": "O videogame da sua sala escondia um chip de supercomputador."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-11"
+}

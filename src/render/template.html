@@ -38,7 +38,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 #perg b{color:var(--y)}
 #num{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:JBM,monospace;font-weight:700;font-size:150px;line-height:1;color:var(--y);text-shadow:0 10px 50px rgba(0,0,0,.95),0 0 40px rgba(255,210,31,.45);z-index:7;opacity:0;pointer-events:none}
 /* legenda na faixa de 60–70% da altura: acima da legenda/nome do Instagram e longe dos botões da direita */
-#cap{position:absolute;top:1150px;left:60px;right:150px;text-align:center;font-weight:900;font-size:84px;line-height:1.05;letter-spacing:-1.5px;z-index:8}
+#cap{position:absolute;top:1150px;left:90px;right:90px;text-align:center;font-weight:900;font-size:76px;line-height:1.05;letter-spacing:-1.5px;z-index:8}
 #cap span{display:inline-block;text-shadow:0 6px 26px rgba(0,0,0,.95),0 0 4px #000,0 0 2px #000;margin:0 10px}
 #sweep{position:absolute;top:-200px;width:260px;height:2400px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transform:rotate(18deg);z-index:7;pointer-events:none}
 .ring{position:absolute;border-radius:50%;border:4px solid var(--y)}
@@ -58,6 +58,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 <script src="data.js"></script>
 <script>
 const D=window.DATA, S=document.getElementById('stage'), FX=document.getElementById('fx');
+// legenda com UM tamanho só no vídeo inteiro, decidido pela palavra mais comprida (antes mudava a cada bloco)
+const CAP_FONTE=(()=>{const m=Math.max(0,...(D.captions||[]).flatMap(c=>c.words.map(w=>String(w.w).length)));return m>22?54:m>18?62:76})();
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const eo=x=>1-Math.pow(1-clamp(x),3);
 const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
@@ -419,41 +421,34 @@ B.historia=sc=>{const lugar=String(sc.lugar||'').toUpperCase();
   ${(sc.img&&!sc.neutro)?'':iconHero(sc,420,'hero','top:600px')}
   <div class="leak" style="position:absolute;inset:-200px;background:radial-gradient(ellipse at 50% 50%,rgba(255,180,90,.35),transparent 55%);mix-blend-mode:screen;pointer-events:none;${sc.moldura?'display:none':''}"></div>
   <div class="dust" style="position:absolute;inset:0;mix-blend-mode:screen">${poeira.map(p=>`<i style="position:absolute;left:${p.x}px;width:${p.s}px;height:${p.s}px;border-radius:50%;background:#fff6d8;opacity:.55"></i>`).join('')}</div>
-  ${lugar?`<div class="lbt" style="position:absolute;left:0;right:0;top:0;height:170px;background:#000"></div>
-  <div class="lbb" style="position:absolute;left:0;right:0;bottom:0;height:170px;background:#000"></div>`:''}
+  <!-- 11/11: sem as faixas pretas de cinema em cima e embaixo (pareciam tela cortada) -->
   ${lugar?`<div class="lg" style="position:absolute;left:70px;top:${sc.moldura?376:410}px;font-family:JBM,monospace;font-weight:700;font-size:34px;letter-spacing:4px;color:#FFD21F;text-shadow:0 2px 12px #000"><span style="color:#ff4d4d">●</span> <span class="tw"></span><span class="cur">▌</span></div>`:''}
   ${sc.destaque?`<div class="dq" style="position:absolute;left:0;right:150px;top:${sc.real?990:lugar?470:420}px;padding:22px 40px 22px 70px;background:linear-gradient(90deg,rgba(5,8,15,.85),rgba(5,8,15,.35));border-left:10px solid var(--y)"><div style="font-weight:900;font-size:60px;line-height:1.1;text-transform:uppercase;text-shadow:0 4px 18px #000">${hl(sc.destaque)}</div></div>`:''}`,
  upd(t,el){const a=sc.start,k=(t-a)/(sc.end-a);
   animHero(el.querySelector('.hero'),t,a);
-  const bar=eo((t-a+0.2)/0.5);if(lugar){el.querySelector('.lbt').style.transform=`translateY(${-170*(1-bar)}px)`;el.querySelector('.lbb').style.transform=`translateY(${170*(1-bar)}px)`}
+  
   const lk=el.querySelector('.leak');lk.style.transform=`translate(${lerp(-500,500,k)}px,${Math.sin(k*3)*120}px)`;lk.style.opacity=.5+.5*Math.sin(t*1.3);
   el.querySelectorAll('.dust i').forEach((d,i)=>{const p=poeira[i];d.style.transform=`translate(${Math.sin(t*.7+i)*30}px,${-((t*p.v)%300)}px)`});
   const lg=el.querySelector('.lg');if(lg){const n=Math.floor(clamp((t-a-0.35)/0.8)*lugar.length);lg.querySelector('.tw').textContent=lugar.slice(0,n);
    lg.querySelector('.cur').style.opacity=(Math.floor(t*3)%2)?1:0;lg.style.opacity=t>=a+0.3?1:0}
   const dq=el.querySelector('.dq');if(dq){const kd=eo((t-a-1.0)/.45);dq.style.opacity=kd;dq.style.transform=`translateX(${-200*(1-kd)}px)`}}}};
 
+// REVELAÇÃO (11/11): sem caixa. A imagem mais forte do vídeo (a do gancho, fechando em loop) em tela cheia; a pergunta em
+// cima e a resposta em letra GRANDE no meio, entrando com um tranco de câmera e um clarão.
 B.revelacao=sc=>{const c=cor(sc.cor||'amarelo');const r=String(sc.resposta||'');
- const conf=Array.from({length:44},(_,i)=>{const a=(i*137.5)%360*Math.PI/180,v=380+((i*53)%9)*55;return{dx:Math.cos(a)*v,dy:Math.sin(a)*v-260,c:['#FFD21F','#ec4899','#8b5cf6','#3ddc84','#5b9bff'][i%5],r:(i*47)%360}});
  return{html:`
-  <div class="title pq" style="top:370px;font-size:58px">${hl(sc.pergunta||'')}</div>
-  <div class="cf" style="position:absolute;left:540px;top:800px"></div>
-  <div class="cena3d" style="position:absolute;left:230px;top:520px;width:620px;height:600px;perspective:1800px">
-   <div class="flip" style="position:absolute;inset:0;transform-style:preserve-3d">
-    <div style="position:absolute;inset:0;backface-visibility:hidden;border-radius:40px;background:linear-gradient(150deg,#8b5cf6,#ec4899);border:6px solid #FFD21F;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(139,92,246,.55)">
-      <span style="font-weight:900;font-size:380px;color:#FFD21F;text-shadow:0 10px 40px rgba(0,0,0,.4)">?</span></div>
-    <div style="position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);border-radius:40px;background:#0d1320;border:6px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-shadow:0 0 90px ${c}">
-      <div style="font-weight:900;font-size:${r.length>10?86:r.length>6?108:140}px;color:${c};text-align:center;line-height:1;margin-top:20px;text-shadow:0 0 50px ${c}">${esc(r)}</div>
-      <div style="font-size:40px;font-weight:800;text-align:center;margin-top:26px;line-height:1.2">${hl(sc.detalhe||'')}</div></div>
-   </div></div>`,
+  <div class="title pq" style="top:370px;font-size:56px">${hl(sc.pergunta||'')}</div>
+  <div class="rv" style="position:absolute;left:70px;right:70px;top:600px;text-align:center;opacity:0">
+    <div class="rvr" style="font-weight:900;font-size:${r.length>16?96:r.length>10?118:146}px;line-height:.98;letter-spacing:-2px;color:${c};text-transform:uppercase;text-shadow:0 10px 50px rgba(0,0,0,.95),0 0 4px #000,0 0 60px ${c}66">${esc(r)}</div>
+    <div class="rvd" style="font-size:44px;font-weight:800;line-height:1.2;margin-top:28px;text-shadow:0 4px 20px #000,0 0 3px #000">${hl(sc.detalhe||'')}</div>
+  </div>`,
  upd(t,el){pop(el.querySelector('.pq'),t,sc.start,{dy:-40,sc:.8});
-  const box=el.querySelector('.cena3d');pop(box,t,sc.start+0.15,{dy:80,sc:.6});
   const t0=Math.min(sc.virada||1e9,sc.start+1.0);
-  const ms=el.querySelector('.ms');if(ms){const k=back((t-t0-0.3)/0.4);ms.style.opacity=clamp((t-t0-0.3)/0.1);ms.style.transform=`translateX(${(1-clamp(k,0,1.2))*-300}px) rotate(-8deg)`}
-  const shake=t<t0&&t>t0-0.7?Math.sin(t*60)*4*((t-(t0-0.7))/0.7):0;
-  const k=eio((t-t0)/0.55);el.querySelector('.flip').style.transform=`rotateY(${180*k}deg) rotate(${shake}deg) scale(${1+0.08*Math.sin(Math.PI*k)})`;
-  const cf=el.querySelector('.cf');if(!cf.childElementCount)cf.innerHTML=conf.map(p=>`<i style="position:absolute;width:22px;height:12px;border-radius:3px;background:${p.c}"></i>`).join('');
-  const kc=(t-t0-0.35)/1.4;[...cf.children].forEach((e,i)=>{const p=conf[i];if(kc<0||kc>1){e.style.opacity=0;return}
-   const q=eo(kc);e.style.opacity=1-kc;e.style.transform=`translate(${p.dx*q}px,${p.dy*q+900*kc*kc}px) rotate(${p.r+kc*720}deg)`})}}};
+  const rv=el.querySelector('.rv'),k=back((t-t0)/0.4);
+  rv.style.opacity=clamp((t-t0)/0.12);rv.style.transform=`scale(${t<t0?1.4:lerp(1.4,1,clamp(k,0,1.1))})`;
+  const d=el.querySelector('.rvd');d.style.opacity=clamp((t-t0-0.35)/0.25);
+  const im=el.querySelector('.img');if(im)im.style.filter=t>=t0&&t<t0+0.18?'brightness(1.8)':'';
+  const tr=t>t0&&t<t0+0.35?Math.sin((t-t0)*70)*10*(1-(t-t0)/0.35):0;el.style.translate=`${tr}px ${tr*0.6}px`}}};
 
 B.fechamento=sc=>({html:`
   <div class="burst" style="position:absolute;left:540px;top:620px"></div>
@@ -518,7 +513,9 @@ const scenes=D.scenes.map((sc,i)=>{sc.i=i;const b=(B[sc.tipo]||B.imagem)(sc);
     ${molduraHTML(sc,'left:40px;right:40px;top:466px;height:654px',626)}`;
   else if(sc.tipo==='gancho'&&sc.moldura_gancho) img=`<div class="img" style="background-image:url('${sc.img_fundo||sc.img}');${sc.img_fundo?'':'filter:blur(34px) saturate(1.25) brightness(.62)'}"></div>`+shade
     +molduraHTML(sc,'left:120px;right:120px;top:700px;height:440px',412);
-  else if(sc.img) img=`<div class="img" style="background-image:url('${sc.img}')"></div>`+shade;
+  else if(sc.img) img=`<div class="img" style="background-image:url('${sc.img}')"></div>`+shade
+    // foto histórica em tela cheia: etiqueta pequena com o ano (só foto de verdade; desenho/objeto não ganham)
+    +(sc.etiqueta&&!sc.moldura&&['historia','imagem'].includes(sc.tipo)?`<div class="etq" style="position:absolute;left:70px;top:1062px;z-index:3;background:var(--y);color:#05080f;font-family:JBM,monospace;font-weight:700;font-size:26px;letter-spacing:3px;padding:6px 14px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.5)">${esc(sc.etiqueta)}</div>`:'');
   el.innerHTML=img+b.html; S.appendChild(el); return{sc,el,upd:b.upd}});
 S.insertAdjacentHTML('beforeend',`<div id="dip" style="position:absolute;inset:0;background:#000;opacity:0;z-index:6"></div><div id="flash" style="position:absolute;inset:0;background:#fff;opacity:0;z-index:7;mix-blend-mode:screen"></div><div class="vig"></div><div class="grain"></div><div id="sweep"></div><div id="prog"></div>
  <div id="marca">${esc(D.meta.marca||'@coringa.explica')}</div><div id="barra"><i></i></div>
@@ -634,9 +631,12 @@ window.seek=async function(t){
   if(c&&repete(c,t)){cap.style.opacity=0}
   else if(c){cap.style.opacity=1;
     if(cap.dataset.k!=c.start){cap.dataset.k=c.start;cap.innerHTML=c.words.map(w=>`<span class="${w.hl?'h':''}">${esc(w.w)}</span>`).join('');
-      const maior=Math.max(...c.words.map(w=>String(w.w).length));cap.style.fontSize=(maior>21?46:maior>17?54:maior>13?66:84)+'px'}
-    [...cap.children].forEach((sp,i)=>{const s0=c.words[i].s??c.start;const k=back((t-s0+0.04)/0.18);
-      sp.style.opacity=t>=s0-0.04?1:0.0;sp.style.transform=`translateY(${(1-clamp(k,0,1))*24}px) scale(${lerp(.7,1,clamp(k,0,1.15))})`});
+      cap.style.fontSize=CAP_FONTE+'px'}
+    // o bloco inteiro aparece de uma vez (antes as palavras ainda não ditas ficavam invisíveis mas ocupando lugar,
+    // e a legenda parecia torta/encostada à esquerda); a palavra que está sendo dita dá um leve 'pulo'
+    const kb=back((t-c.start+0.04)/0.16);cap.style.transform=`scale(${lerp(.86,1,clamp(kb,0,1.1))})`;
+    [...cap.children].forEach((sp,i)=>{const s0=c.words[i].s??c.start;const k=clamp((t-s0+0.04)/0.14);
+      sp.style.opacity=t>=s0-0.04?1:0.5;sp.style.transform=`scale(${t>=s0-0.04?lerp(1.08,1,k):1})`});
   } else cap.style.opacity=0;
   if(PEND.length){await Promise.all(PEND.splice(0))}
 };

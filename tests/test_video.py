@@ -30,7 +30,7 @@ def test_clipes_pequenos_ou_curtos_ficam_fora(monkeypatch):
 
 
 def test_cada_video_entra_em_uma_ideia_so(monkeypatch):
-    """Foto pode aparecer em até 2 ideias; vídeo só em 1 (o mesmo movimento repetido fica feio)."""
+    """Foto e vídeo: cada um em UMA ideia só (11/11: a mesma molécula apareceu 3 vezes)."""
     from src import acervo, gemini
     acv = [{'id': 'a0', 'mostra': 'deserto visto do alto', 'mini': b'', 'video': {'url': 'u', 'w': 1920, 'h': 1080}},
            {'id': 'a1', 'mostra': 'placa da cidade', 'mini': b''}]
@@ -38,7 +38,7 @@ def test_cada_video_entra_em_uma_ideia_so(monkeypatch):
     monkeypatch.setattr(gemini, 'json_visao', lambda *a, **k: {'escolhas': [
         {'ideia': 0, 'foto': 'a0'}, {'ideia': 1, 'foto': 'a1'}, {'ideia': 2, 'foto': 'a0'}, {'ideia': 3, 'foto': 'a1'}]})
     acervo.casar(v, acv)
-    assert [c.get('foto') for c in v['cenas']] == ['a0', 'a1', None, 'a1']
+    assert [c.get('foto') for c in v['cenas']] == ['a0', 'a1', None, None]
 
 
 def test_texto_do_acervo_marca_video():
@@ -126,3 +126,15 @@ def test_fundo_escuro_sem_mancha(tmp_path, estilo):
 def test_etiqueta_sem_traco_sobrando():
     from src.midia import _legenda
     assert _legenda('Leonids-, 1844', 1844) == 'Leonids, 1844'
+
+
+def test_foto_generica_que_nao_e_exata_sai(monkeypatch):
+    """11/11: vaso qualquer numa frase sobre múmias — foto genérica e não exata não entra."""
+    from src import acervo, gemini
+    acv = [{'id': 'a0', 'mostra': 'vaso de vidro', 'mini': b'', 'generica': True},
+           {'id': 'a1', 'mostra': 'lago vermelho', 'mini': b''}]
+    v = {'cenas': [{'tipo': 'historia', 'fala': 'os egípcios mumificavam'}, {'tipo': 'historia', 'fala': 'o lago'}]}
+    monkeypatch.setattr(gemini, 'json_visao', lambda *a, **k: {'escolhas': [
+        {'ideia': 0, 'foto': 'a0', 'exata': False}, {'ideia': 1, 'foto': 'a1', 'exata': True}]})
+    acervo.casar(v, acv)
+    assert [c.get('foto') for c in v['cenas']] == [None, 'a1']

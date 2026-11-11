@@ -67,8 +67,8 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
                 desloc = usado_video.get(iid, 0.0)  # 2º plano da mesma ideia continua o vídeo de onde o 1º parou
                 # vídeo deitado em cena de foto (história/imagem) vai na MOLDURA, inteiro; o resto ocupa a tela toda
                 # clipe Full HD (ou em pé) vai em TELA CHEIA; só clipe deitado de resolução baixa fica na moldura
-                na_moldura = (c['tipo'] in ('historia', 'imagem') and (m.get('w') or 16) >= (m.get('h') or 9)
-                              and (m.get('h') or 0) < 1000)
+                # 11/11: TODO clipe em tela cheia (moldura pequena com fundo borrado foi o que mais incomodou)
+                na_moldura = False
                 n = len(list(pasta_q.glob('f_*.jpg'))) or midia.quadros(m['arq'], b - a + 0.4, pasta_q, desloc=desloc,
                                                                          moldura=na_moldura)
                 usado_video[iid] = desloc + (b - a)
@@ -112,6 +112,12 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     estilo = midia.estilo_fundo(v.get('titulo'), (v.get('_pauta') or {}).get('tema'), v.get('pergunta'), v.get('resumo'))
     print(f"  [fundo] {'B · céu' if estilo == 'ceu' else 'A · estúdio escuro'} atrás das fotos")
     _acabamento(cenas, estilo)
+    # 11/11: a revelação mostra a imagem do GANCHO em tela cheia (o vídeo fecha em loop com o começo; antes era uma caixa)
+    abertura = next((c for c in cenas if c['tipo'] == 'gancho' and c.get('img')), None)
+    for c in cenas:
+        if c['tipo'] == 'revelacao' and abertura:
+            c['img'], c['real'] = abertura['img'], abertura.get('real', False)
+            c.pop('video', None)
     # fundo do fechamento: a foto real mais marcante do vídeo (ou a imagem da abertura), escurecida atrás do Coringa
     fundo = next((c['img'] for c in cenas if c.get('real')), None) or next((c['img'] for c in cenas if c.get('img')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
@@ -185,13 +191,11 @@ def _tamanho(img: str) -> tuple[int, int]:
         return (0, 0)
 
 
-MIN_TELA_CHEIA = 760    # lado menor (px) para uma foto ir em tela cheia
 
 
 def _acabamento(cenas: list[dict], estilo: str = 'estudio'):
-    """Edição: (1) moldura só para imagem antiga, pequena, deitada ou que não é foto (cartaz, pintura, charge);
-    foto moderna e nítida vai em tela cheia, sem etiqueta; (2) etiqueta certa: FOTO · ano ou ARQUIVO · ano;
-    (3) gancho com imagem de moldura fica sobre ela mesma desfocada; (4) plano com mais de 2,6 s ganha um "soco" no meio."""
+    """Edição: (1) tudo em tela cheia; (2) etiqueta "FOTO · ano" só em foto histórica; (3) plano com mais de 2,6 s
+    ganha um "soco" no meio."""
     from src import midia
     for c in cenas:
         for k in ('img_fundo', 'moldura_gancho', 'etiqueta', 'moldura', 'foto_wh', 'soco'):   # plano copiado traz os da outra foto
@@ -205,18 +209,12 @@ def _acabamento(cenas: list[dict], estilo: str = 'estudio'):
             w, h = _tamanho(c['img'])
             c['foto_wh'] = [w, h]
             ano, tipo = c.get('ano_foto'), c.get('tipo_img') or 'foto'
-            antiga = bool(ano) and ano < 1990
-            # TELA CHEIA é o padrão (a câmera passeia pela foto). Moldura só para o que perde em tela cheia: foto antiga,
-            # documento/desenho/pintura/mapa, ou imagem pequena demais (ampliada ficaria borrada). Antes toda foto deitada
-            # ia para a moldura e o vídeo virava uma sequência de cartões pequenos (10/11).
-            c['moldura'] = antiga or tipo != 'foto' or min(w, h) < MIN_TELA_CHEIA
-            if c['moldura']:
-                rot = 'FOTO' if tipo == 'foto' else 'ARQUIVO'
-                c['etiqueta'] = rot + (f" · {c['legenda_foto']}" if c.get('legenda_foto') else (f' · {ano}' if ano else ''))
-            if c['moldura']:            # atrás da moldura: a própria foto desfocada preenchendo a tela (nada de fundo cinza vazio)
-                c['img_fundo'] = str(midia.fundo(Path(c['img']), estilo))
-            if c['tipo'] == 'gancho' and c['moldura']:
-                c['moldura_gancho'] = True
+            # 11/11: TODA cena em tela cheia (a câmera passeia pela foto). Moldura pequena sobre fundo borrado saiu de vez.
+            # Foto pequena demais já fica de fora no acervo (MIN_LADO). Etiqueta com ano só em FOTO histórica de verdade
+            # (antes molécula/desenho/vaso ganhavam "ARQUIVO · 2009" ou "FOTO · 1500").
+            c['moldura'] = False
+            if tipo == 'foto' and ano and 1826 <= ano < 1990:
+                c['etiqueta'] = 'FOTO · ' + (str(c['legenda_foto']) if c.get('legenda_foto') else str(ano))
         dur = c['end'] - c['start']
         if c.get('img') and c['tipo'] not in SEM_SOCO and dur > 2.6:
             c['soco'] = round(c['start'] + dur / 2, 3)

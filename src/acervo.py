@@ -19,7 +19,7 @@ from src import cofre
 
 COMMONS = 'https://commons.wikimedia.org/w/api.php'
 WIKI = 'https://{lang}.wikipedia.org/w/api.php'
-MIN_LADO = 500          # menor que isso fica minúscula ou borrada no vídeo (foto do paleontólogo do vídeo do dinossauro)
+MIN_LADO = 620          # 11/11: tudo vai em tela cheia; menor que isso fica minúscula ou borrada no vídeo (foto do paleontólogo do vídeo do dinossauro)
 MAX_ARQUIVOS = 60       # quantos arquivos olhar
 MAX_ACERVO = 42         # quantos baixar e catalogar
 MIN_UTEIS = 10          # menos que isso: o tema não tem material visual → pula para o próximo (com 8, repetia foto e tapava com IA)
@@ -670,7 +670,11 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             f = e.get('foto')
             if isinstance(f, int) or (isinstance(f, str) and f.isdigit()):
                 f = f'a{int(f)}'
-            if 0 <= k < len(ideias) and f in por_id:
+            exata = e.get('exata')
+            exata = exata if isinstance(exata, bool) else str(exata).lower() in ('true', 'sim', 'yes')
+            # 11/11: foto que NÃO mostra o que a frase diz e ainda é genérica (vaso qualquer numa frase sobre múmias,
+            # flamingo de zoológico numa frase sobre o lago) sai: melhor outra imagem do que uma 'mais ou menos'
+            if 0 <= k < len(ideias) and f in por_id and (exata or not por_id[f].get('generica')):
                 escolha[k] = f
     except Exception as e:
         print(f'  [acervo] casamento falhou ({str(e)[:80]}); uso as sugestões do roteirista')
@@ -680,7 +684,7 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     usos, ant = {}, None
     for k, c in enumerate(ideias):
         f = escolha.get(k)
-        if f and (usos.get(f, 0) >= (1 if por_id[f].get('video') else 2) or f == ant):
+        if f and (usos.get(f, 0) >= 1 or f == ant):        # 11/11: cada foto/vídeo em UMA ideia só (molécula 3x)
             f = None
         if f:
             usos[f] = usos.get(f, 0) + 1

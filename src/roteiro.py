@@ -352,7 +352,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
         print(f'  [série] parte {parte}/{len(arco)}: {arco[parte - 1][:90]}')
     escopo += '\nFOTOS DO ACERVO (o vídeo é montado com elas; cada frase deve poder ser mostrada por uma delas):\n' + acervo_mod.texto(acervo)
     v = revisar(v, fatos, escopo=escopo)
-    v = escolher_gancho(v, fatos, parte=parte, serie=serie)
+    v = escolher_gancho(v, fatos, parte=parte, serie=serie, acervo=acervo)
     epoca = ' · '.join(x for x in [str(dossie.get('epoca') or ''), ', '.join(dossie.get('lugares') or [])] if x)
     if serie and serie.get('arco'):
         v['arco'] = serie['arco']             # a série segue o plano da parte 1 (a parte 2 sabe se ainda vem a 3)
@@ -500,7 +500,7 @@ def tem_ingles(*textos: str) -> bool:
     return bool(ws & INGLES)
 
 
-def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = None) -> dict:
+def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = None, acervo: list | None = None) -> dict:
     """O editor escreve 3 ganchos e fica com o melhor (o gancho é o que mais pesa na retenção)."""
     from .orcamento import sobra
     if sobra() < 60 or not v.get('cenas'):
@@ -512,7 +512,10 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
                  f'"titulo" inclui "PARTE {parte}".')
     try:
         falas = '\n'.join(f"{k}. [{c['tipo']}] {c['fala']}" for k, c in enumerate(v['cenas']))
-        r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000]))
+        # 11/11: o gancho só promete o que as fotos mostram ("o lago que vira PEDRA" sem nenhum animal petrificado)
+        from . import acervo as acervo_mod
+        fotos = acervo_mod.texto(acervo) if acervo else '(sem lista de fotos)'
+        r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000], fotos=fotos))
         if isinstance(r, list):
             r = {'opcoes': r, 'escolha': 0}
         ops = [o for o in (r.get('opcoes') or []) if isinstance(o, dict) and o.get('fala') and len(str(o['fala']).split()) <= 18]

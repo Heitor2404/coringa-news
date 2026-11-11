@@ -178,19 +178,76 @@ def alinhar(pal: list[dict], texto: str) -> list[dict]:
     return out
 
 
+# palavras que não podem terminar um bloco de legenda ("ATÉ", "DO WADI EL", "OS" sozinhos)
+FRACAS = set('''a o as os um uma uns umas de da do das dos em no na nos nas num numa por pelo pela pelos pelas pra pro
+para com sem sob sobre entre e ou mas que se ao aos à às como até mais muito muita seu sua seus suas meu minha
+este esta esse essa isso isto aquele aquela cada outro outra quase tão já não nem quando onde qual quem'''.split())
+MAX_PAL, MAX_CAR = 4, 24
+_FRACAS_N = {_norm(x) for x in FRACAS}
+
+
+def _fraca(p) -> bool:
+    return _norm(p['w']) in _FRACAS_N
+
+
+
 def legendas(palavras, hl: set[str]):
-    """Agrupa em blocos de 1 a 3 palavras; quebra em pausas da fala."""
-    blocos, cur = [], []
+    """Blocos de 2 a 4 palavras, cortando onde a fala respira (pontuação ou pausa).
+    Nunca termina em artigo/preposição e evita bloco de 1 palavra só."""
+    if not palavras:
+        return []
+    # 1) trechos: corte duro em pontuação ou pausa longa
+    trechos, cur = [], []
     for i, p in enumerate(palavras):
         cur.append(p)
         prox = palavras[i + 1] if i + 1 < len(palavras) else None
-        pausa = prox is None or prox['start'] - p['end'] > 0.22 or bool(re.search(r'[.!?:;]$', p.get('raw', ''))) \
-            or (len(cur) >= 2 and p.get('raw', '').endswith(','))
-        if pausa or len(cur) == 3 or (len(cur) == 2 and len(cur[0]['w']) + len(cur[1]['w']) > 16):
-            blocos.append({'start': round(cur[0]['start'], 3),
-                           'end': round((prox['start'] if prox and not pausa else p['end'] + 0.15), 3),
-                           'words': [{'w': x['w'].upper(), 'hl': _norm(x['w']) in hl, 's': round(x['start'], 3)} for x in cur]})
-            cur = []
+        raw = p.get('raw', p['w'])
+        if prox is None or re.search(r'[.!?:;,]$', raw) or prox['start'] - p['end'] > 0.35:
+            trechos.append(cur); cur = []
+    # 2) dentro de cada trecho, blocos equilibrados de até 4 palavras / 24 letras
+    car = lambda x: sum(len(y['w']) + 1 for y in x)
+    grupos = []
+    for t in trechos:
+        n = len(t)
+        k = max(1, -(-n // MAX_PAL), -(-car(t) // (MAX_CAR + 1)))
+        alvo = n / k
+        g = []
+
+        def fecha(g):
+            leva = []
+            while len(g) > 1 and _fraca(g[-1]):         # palavra fraca vai para o começo do próximo bloco
+                leva.insert(0, g.pop())
+            grupos.append(g)
+            return leva
+        for j, p in enumerate(t):
+            if g and (len(g) >= MAX_PAL or car(g + [p]) > MAX_CAR + 2):   # não cabe: fecha antes de pôr a palavra
+                g = fecha(g)
+            g.append(p)
+            resta = n - j - 1
+            if resta >= 2 and len(g) >= alvo - 0.01:
+                g = fecha(g)
+        if g:
+            grupos.append(g)
+    # 3) bloco de 1 palavra junta com o vizinho do mesmo trecho, se couber
+    fim_trecho = {id(t[-1]) for t in trechos if re.search(r'[.!?:;]$', t[-1].get('raw', t[-1]['w']))}   # fim de frase
+    i = 0
+    while i < len(grupos):
+        g = grupos[i]
+        if len(g) == 1 and len(grupos) > 1:
+            ant = grupos[i - 1] if i > 0 and id(grupos[i - 1][-1]) not in fim_trecho else None
+            pos = grupos[i + 1] if i + 1 < len(grupos) and id(g[-1]) not in fim_trecho else None
+            if pos and car(g + pos) <= MAX_CAR + 6:
+                grupos[i:i + 2] = [g + pos]; continue
+            if ant and car(ant + g) <= MAX_CAR + 6:
+                grupos[i - 1:i + 1] = [ant + g]; i -= 1; continue
+        i += 1
+    blocos = []
+    for k, g in enumerate(grupos):
+        prox = grupos[k + 1][0] if k + 1 < len(grupos) else None
+        colado = prox is not None and prox['start'] - g[-1]['end'] <= 0.35
+        blocos.append({'start': round(g[0]['start'], 3),
+                       'end': round(prox['start'] if colado else g[-1]['end'] + 0.15, 3),
+                       'words': [{'w': x['w'].upper(), 'hl': _norm(x['w']) in hl, 's': round(x['start'], 3)} for x in g]})
     return blocos
 
 

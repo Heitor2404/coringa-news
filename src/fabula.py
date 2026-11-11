@@ -3,7 +3,7 @@
 Fluxo: tema → pesquisa (Wikipédia) → roteiro do Claude (JSON com cena, pose, balão, narração, efeito, painel e objetos)
 → prévia no Telegram (o roteiro no formato do Heitor + um quadro de cada cena) → aprovação → voz → montagem (Chrome +
 ffmpeg, com efeitos sonoros e música) → Telegram.
-A arte vem de canais/ntc/arte (cenários pintados no Google Flow + Val e objetos recortados); a montagem é canais/ntc/fabula.html.
+Tudo é desenhado por código no estilo vetorial "boneco de tubo" (canais/ntc/vetor: cenários, Val articulada, objetos); a montagem é canais/ntc/vetor/fabula.html.
 Os textos para a IA ficam no cofre privado (PROMPT_FABULA_TEMA, PROMPT_FABULA).
 """
 import json, os, random, re, shutil, subprocess, time
@@ -19,20 +19,21 @@ BRT = timezone(timedelta(hours=-3))
 NOME = 'NINGUÉM TE CONTOU'
 
 CENARIOS = ['cozinha', 'rua', 'rua_destruida', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
-ARTE = CANAL / 'arte'
-ARQ_CENARIO = {'rua': 'rua_normal'}                    # nome no roteiro → arquivo em arte/cenarios
+VETOR = CANAL / 'vetor'
 POSES = ['neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada']
-# largura na tela (px) e para que lado o desenho olha (para virar quando anda no sentido contrário)
-OBJETOS = {'barata': 200, 'rato': 260, 'passaro': 220, 'lixo': 330, 'folhas': 300, 'chinelo': 190, 'murcha': 260,
-           'globo': 300, 'mosca': 110, 'dinheiro': 220, 'pao': 230, 'gota': 110, 'fogo': 220, 'lagarto': 240,
-           'celular': 150, 'nuvem': 380}
-OLHA_ESQ = {'barata', 'passaro', 'mosca'}
+# largura na tela (px) e proporção altura/largura de cada desenho (iguais aos de vetor/kit_objetos.js; todos olham para a direita)
+OBJETOS = {'barata': 150, 'rato': 210, 'passaro': 160, 'lixo': 260, 'folhas': 240, 'chinelo': 150, 'murcha': 190,
+           'globo': 230, 'mosca': 90, 'dinheiro': 180, 'pao': 190, 'gota': 90, 'fogo': 180, 'lagarto': 230,
+           'celular': 110, 'nuvem': 320}
+PROPORCAO = {'barata': .55, 'rato': .6, 'passaro': .8, 'lixo': .7, 'folhas': .45, 'chinelo': .35, 'murcha': 1, 'globo': 1.05,
+             'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.2, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5}
+OLHA_ESQ: set[str] = set()
 ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
-# linha dos pés da Val e do chão dos objetos (px no quadro 1080x1920; todos os cenários do Flow têm chão no terço de baixo)
-CHAO = {c: 1840 for c in CENARIOS}
-# tampo de bancada/mesa: (altura, x inicial, x final)
-BANCADA = {'cozinha': (1100, 20, 560), 'lab': (1000, 480, 1060)}
-VAL_X = {'esquerda': 330, 'direita': 760, 'centro': 560}
+# linha dos pés da Val (px no quadro 1080x1920); o chão de todos os cenários começa em 1340
+CHAO = {c: 1720 for c in CENARIOS}
+# tampo de bancada/mesa: (altura, x inicial, x final) — iguais a BANCADAS em vetor/kit_cenarios.js
+BANCADA = {'cozinha': (1060, 0, 440), 'lab': (1120, 500, 1060)}
+VAL_X = {'esquerda': 300, 'direita': 780, 'centro': 560}
 VOZ = {'voz_gemini': os.getenv('NTC_VOZ', 'Puck'), 'velocidade_gemini': float(os.getenv('NTC_VELOCIDADE', '1.12')),
        'estilo_gemini': 'narrador brasileiro jovem de vídeo viral de internet: rápido, irônico, debochado e animado, '
                         'como quem conta uma fofoca absurda, mas falando claro'}
@@ -129,9 +130,7 @@ SFX = sorted(p.stem for p in (CANAL / 'sfx').glob('*.wav')) or ['pop', 'whoosh']
 
 
 def _proporcao(nome: str) -> float:
-    from PIL import Image
-    w, h = Image.open(ARTE / 'objetos' / 'usar' / f'{nome}.png').size
-    return round(h / w, 4)
+    return PROPORCAO[nome]
 
 
 def _objetos(c: dict) -> list[dict]:
@@ -146,9 +145,7 @@ def _objetos(c: dict) -> list[dict]:
         acao = o.get('acao') if o.get('acao') in ACOES else 'aparece'
         lugar = str(o.get('lugar') or 'chao')
         banc = BANCADA.get(cen) if lugar == 'bancada' else None
-        x0, x1 = (banc[1], banc[2]) if banc else (40, 1040)
-        if banc:
-            w = int(w * 0.75)                                  # mais longe da câmera
+        x0, x1 = (banc[1] + 20, banc[2] - 20) if banc else (60, 1020)
         base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu'}
         for i in range(n):
             if banc:
@@ -158,7 +155,7 @@ def _objetos(c: dict) -> list[dict]:
             elif lugar == 'meio':
                 y = 1300
             else:
-                y = chao - 150 + ((i * 53) % 4) * 45            # espalha na profundidade do chão
+                y = chao - 10 + ((i * 53) % 4) * 50             # espalha na profundidade do chão (na frente da Val)
             if acao in ('corre', 'foge'):
                 vai_dir = acao == 'corre'
                 x = x0 - w - 20 if vai_dir else x1 + 20
@@ -174,17 +171,10 @@ def _objetos(c: dict) -> list[dict]:
     return out
 
 
-def _fundo(cen: str) -> dict:
-    from PIL import Image
-    w, h = Image.open(ARTE / 'cenarios' / f'{ARQ_CENARIO.get(cen, cen)}.jpg').size
-    bh = round(1080 * h / w)
-    return {'cen': ARQ_CENARIO.get(cen, cen), 'bg_h': bh, 'bg_top': 1920 - bh}   # preso embaixo: o chão nunca é cortado
-
-
 def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     cenas, painel_ant = [], {}
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
-        s = {'a': round(a, 3), 'b': round(b, 3), **_fundo(c['cenario']), 'chao': CHAO[c['cenario']],
+        s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'chao': CHAO[c['cenario']],
              'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')), 'props': _objetos(c)}
         if c['pose'] != 'fora':
             lado = str(c.get('posicao') or 'centro')
@@ -216,9 +206,9 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
 
 def _pagina(dados: dict, trab: Path) -> Path:
     trab.mkdir(parents=True, exist_ok=True)
-    if not (trab / 'arte').exists():
-        (trab / 'arte').symlink_to(ARTE, target_is_directory=True)
-    shutil.copy(CANAL / 'fabula.html', trab / 'fabula.html')
+    for arq in VETOR.glob('*'):
+        if arq.suffix in ('.html', '.js') and not arq.name.startswith('teste'):
+            shutil.copy(arq, trab / arq.name)
     (trab / 'data.js').write_text('window.DATA=' + json.dumps(dados, ensure_ascii=False) + ';', encoding='utf-8')
     return trab / 'fabula.html'
 

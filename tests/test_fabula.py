@@ -39,24 +39,27 @@ def test_dados_do_template():
     p = [c['painel'] for c in d['cenas'] if c.get('painel') and c['painel']['rot'] == 'DIAS SEM BARATAS']
     assert [x['para'] for x in p] == [0, 1, 30, 90, 365] and p[2]['de'] == 1   # o contador continua de onde parou
     for c in d['cenas']:                                                    # Valdirene com os pés no chão do cenário
-        assert c['chao'] == fabula.CHAO[[k for k in fabula.CENARIOS if fabula.ARQ_CENARIO.get(k, k) == c['cen']][0]]
-        assert c['bg_top'] + c['bg_h'] == 1920                              # fundo preso embaixo: chão nunca cortado
+        assert c['chao'] == fabula.CHAO[c['cen']] and c['cen'] in fabula.CENARIOS
         for p in c['props']:
             assert p['ar'] > 0 and p['w'] > 0
     c0 = d['cenas'][0]                                                      # baratas na bancada: Val sai do meio e elas ficam atrás dela
     assert c0['val']['x'] != fabula.VAL_X['centro'] and all(p['atras'] for p in c0['props'] if p['t'] == 'barata')
 
 
-def test_todos_os_arquivos_existem():
+def test_kit_vetorial_tem_tudo_que_o_roteiro_pode_pedir():
+    import re
     from src import fabula
+    cen = (fabula.VETOR / 'kit_cenarios.js').read_text(encoding='utf-8')
+    obj = (fabula.VETOR / 'kit_objetos.js').read_text(encoding='utf-8')
+    val = (fabula.VETOR / 'kit_val.js').read_text(encoding='utf-8')
     for n in fabula.CENARIOS:
-        assert (fabula.ARTE / 'cenarios' / f'{fabula.ARQ_CENARIO.get(n, n)}.jpg').exists(), n
-    for n in fabula.OBJETOS:
-        assert (fabula.ARTE / 'objetos' / 'usar' / f'{n}.png').exists(), n
-    for n in ('frente', 'tres_quartos', 'comemora', 'explica', 'brava', 'panico', 'cabeca_piscando'):
-        assert (fabula.ARTE / 'val' / 'recorte' / f'{n}.png').exists(), n
-    html = (fabula.CANAL / 'fabula.html').read_text(encoding='utf-8')
-    assert 'val/svg' not in html and 'prop/' not in html                     # nada do visual antigo
+        assert re.search(rf'\b{n}: o =>', cen), n
+    for n, ar in fabula.PROPORCAO.items():                                  # mesma proporção no Python e no desenho
+        assert re.search(rf'\b{n}: {{ ar: {str(ar).lstrip("0") if ar < 1 else ar},', obj), n
+    for n in fabula.POSES:
+        assert re.search(rf'\b{n}:\s+{{ D:', val), n
+    for n, (y, x0, x1) in fabula.BANCADA.items():
+        assert f'{n}: [{y}, {x0}, {x1}]' in cen
     assert len(fabula.SFX) >= 10
 
 

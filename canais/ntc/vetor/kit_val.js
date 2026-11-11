@@ -12,9 +12,10 @@ const POSES = {
   susto:       { D: [-142, -34], E: [142, 34], mD: 'aberta', mE: 'aberta', olhos: 'arregalado', sob: 'surpresa', boca: 'o', suor: 1, pulo: 1 },
   brava:       { D: [-42, 98], E: [42, -98], mD: 'punho', mE: 'punho', olhos: 'normal', sob: 'raiva', boca: 'raiva', vermelha: 1 },
   brava2:      { D: [-92, -16], E: [42, -98], mD: 'aponta', mE: 'punho', olhos: 'normal', sob: 'raiva', boca: 'grita', vermelha: 1 },
+  chora:       { D: [-18, -40], E: [18, 40], mD: 'aberta', mE: 'aberta', olhos: 'normal', sob: 'triste', boca: 'choro' },
   desesperada: { D: [-160, -150], E: [160, 150], mD: 'aberta', mE: 'aberta', olhos: 'arregalado', sob: 'triste', boca: 'choro', suor: 1, treme: 1 },
 };
-const ALTERNATIVA = { neutra: 'pensa', comemora: 'comemora2', explica: 'explica2', susto: 'desesperada', brava: 'brava2', desesperada: 'susto' };
+const ALTERNATIVA = { neutra: 'pensa', comemora: 'comemora2', explica: 'explica2', susto: 'pensa', brava: 'brava2', desesperada: 'chora' };
 const maoAberta = `<g class="hAberta"><g>${[[-13, 26, -17, 58], [-4, 28, -5, 64], [5, 28, 6, 63], [13, 26, 18, 55]].map(([a, b, c, d]) => tuboFixo(a, b, c, d, SK, 11)).join('')}</g>
   <ellipse cx="0" cy="18" rx="21" ry="20" fill="${SK}" stroke="${L}" stroke-width="5"/>${tuboFixo(-16, 12, -30, 34, SK, 11)}<ellipse cx="-2" cy="18" rx="15" ry="14" fill="${SK}"/></g>`;
 const maoPunho = `<g class="hPunho"><rect x="-22" y="-2" width="44" height="54" rx="20" fill="${SK}" stroke="${L}" stroke-width="5"/>

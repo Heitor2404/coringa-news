@@ -38,7 +38,7 @@ const cenas=D.cenas.map((c,i)=>{
     <g class="atras"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
-    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".45" style="mix-blend-mode:multiply"/>':''}<rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
+    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".3" style="mix-blend-mode:multiply"/>':''}<rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
   ST.insertBefore(el,ST.firstChild);
   const cam=el.querySelector('.cam');
   // objetos (atrás = bancada/céu; frente = chão)
@@ -59,7 +59,7 @@ const cenas=D.cenas.map((c,i)=>{
   return{c,el,cam,V,pl,alvoObj,susto,objs,riscos:[...el.querySelectorAll('.riscos line')],amb:[...el.querySelectorAll('.amb>*')],tipoAmb:amb}});
 const VAL_ALT=(VAL_PES-VAL_TOPO)*VAL_ESC;
 function alvo(S,tipo){const V=S.V;
-  if(tipo==='rosto'&&V)return{x:V.x,y:V.chao-(VAL_PES+375)*VAL_ESC*V.s,z:2.0,sy:1120};
+  if(tipo==='rosto'&&V)return{x:V.x,y:V.chao-(VAL_PES+330)*VAL_ESC*V.s,z:1.6,sy:1180};   // coque inteiro na tela
   if(tipo==='objeto'&&S.alvoObj)return{...S.alvoObj,sy:1150};
   if(tipo==='meio')return{x:V?V.x:540,y:V?V.chao-VAL_ALT*.45:1500,z:1.3,sy:1150};
   return{x:540,y:960,z:1,sy:960}}
@@ -86,10 +86,10 @@ window.seek=t=>{
   const zz=z*(1+(susto&&ds>0&&ds<0.6?0.10*Math.exp(-ds*14):0.03*corte));
   const camX=tx+Math.sin(t*67)*sh-(zz-z)*540,camY=ty+Math.cos(t*59)*sh-(zz-z)*960;
   S.cam.setAttribute('transform',`translate(${camX} ${camY}) scale(${zz})`);
-  S.el.style.filter=`saturate(${1-(c.cinza??0)}) brightness(${1-(c.cinza??0)*0.12})`;
+  S.el.style.filter=`saturate(${1-Math.min(.7,c.cinza??0)}) brightness(${1-Math.min(.7,c.cinza??0)*0.08})`;   // cor some, mas nunca vira lama
   $('flash').style.opacity=(susto&&ds>0&&ds<0.1)?0.55*(1-ds/0.1):(i>0&&i%2===1&&d<0.12?0.35*(1-d/0.12):0);
   // ── legenda
-  const bdeG=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0),balaoOn=c.balao&&V&&d>bdeG&&d<bdeG+BALAO_DUR;
+  const bdeG=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0,c.titulo?3.0:0),balaoOn=c.balao&&V&&d>bdeG&&d<bdeG+BALAO_DUR;
   const tituloOn=c.titulo&&d<2.9,cap=$('cap');let txt=null,t0=0;
   const gi=(D.captions||[]).findIndex(x=>t>=x.start&&t<x.end+0.05),g=gi>=0?D.captions[gi]:null;
   if(g){txt=g.words.map(w=>w.hl?`<i>${w.w}</i>`:w.w).join(' ');t0=g.start}
@@ -147,7 +147,7 @@ window.seek=t=>{
     const kc=novo?eio(cl((dn-2.0)/0.5)):1,w=hd.offsetWidth,es=lerp(1,0.6,kc),X=lerp((1080-w)/2,36,kc),Y=lerp(250,150,kc);
     hd.style.transform=`translate(${X}px,${Y}px) scale(${es*(novo&&dn<0.3?1+0.12*(1-dn/0.3):1)})`}else hd.style.opacity=0;
   // ── balão: em cima da cabeça; se bater na legenda, vai para o lado
-  const bl=$('balao'),bde=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0),bfim=bde+BALAO_DUR;
+  const bl=$('balao'),bde=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0,c.titulo?3.0:0),bfim=bde+BALAO_DUR;
   if(c.balao&&cabeca&&d>bde&&d<bfim&&!fimOn){const k=d<bfim-0.2?cl(back((d-bde)/0.3),0,1.1):cl((bfim-d)/0.2);
     if(bl.dataset.k!=i){bl.textContent=c.balao;bl.dataset.k=i;bl.style.whiteSpace=c.balao.length<=22?'nowrap':'normal'}bl.style.left='0px';bl.style.opacity=1;
     const bw=bl.offsetWidth,bh=bl.offsetHeight,topo=cap.style.opacity==1&&cap.offsetTop<900?cap.offsetTop+cap.offsetHeight+24:(hd.style.opacity==1?260:200);

@@ -35,6 +35,13 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 5 | Personagem "duro" (PNG inteiro) | ✅ | trocado pelo boneco articulado vetorial |
 | 6 | Fonte do motor (Poppins) só existia na máquina do Claude; no GitHub sairia fonte genérica | ✅ | fabula.py copia Montserrat/JetBrains do node_modules para a pasta do vídeo |
 | 7 | Motor com PNG do Flow: 1º quadro errado, Val parada até 9 s, balão a cena toda, baratas da bancada escondidas, pássaro balançando pela cabeça, poeira virando mancha, noite fraca, cenas sem a Val paradas, ratos fora da tela, placa final pequena | ✅ | motor PNG apagado; motor vetorial novo resolve (ver commits 6d3109b em diante) |
+| 8 | (vídeo "E se o Sol sumisse", 11/11) Globo de mesa usado como Sol/Terra voando na cozinha; fogo usado como Sol | ✅ | kit novo: sol, terra, lua, vela, lanterna; PROMPT_FABULA: objeto tem que ser o que a frase diz |
+| 9 | Val na mesma pose de pânico por ~40 s | ✅ | pose nova "chora"; alternativas sem repetir pânico; prompt: no máx. 2 cenas seguidas com a mesma pose |
+| 10 | Metade final do vídeo escura e barrenta (noite + cor sumindo) | ✅ | noite mais leve; cor some até no máx. 70% |
+| 11 | Close do rosto cortando o coque / cara gigante | ✅ | close menos fechado (2,0 → 1,6) |
+| 12 | Balão em cima do título na 1ª cena | ✅ | balão só depois que o título sai |
+| 13 | Planeta/objeto do céu cortado no topo e em cima do painel | ✅ | objeto do céu desce para baixo do painel/legenda, atrás da Val |
+| 14 | Cenas longas sem a Val (espaço) paradas | ✅ em parte | prompt: Val em 2 de cada 3 cenas, no máx. 2 seguidas sem ela |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

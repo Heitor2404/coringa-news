@@ -368,9 +368,10 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
     raise RuntimeError(f'voz do Gemini reprovada 2 vezes ({motivo})')
 
 
-def narrar(cenas: list[dict], pasta: Path, teste: bool = False):
+def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None = None):
+    """cfg: troca a voz/estilo/velocidade (ex.: o canal Ninguém Te Contou usa outra voz que o Coringa)."""
     pasta.mkdir(parents=True, exist_ok=True)
-    cfg = config()
+    cfg = {**config(), **(cfg or {})}
     if not teste and cfg.get('voz_motor', 'gemini') == 'gemini' and os.getenv('GEMINI_API_KEY'):
         try:
             r = _narrar_gemini(cenas, pasta, cfg)

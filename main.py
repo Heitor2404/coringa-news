@@ -856,12 +856,18 @@ def main():
     ap.add_argument('--parte', type=int, default=1, help='parte da série de curiosidade (1, 2, 3...)')
     ap.add_argument('--so-virais', action='store_true', help='só faz notícia com nota de viralização alta')
     ap.add_argument('--mascote', default='', help='"gerar" = 4 versões do Coringa 3D; "1".."4" = gera as expressões da versão escolhida')
+    ap.add_argument('--fabula', default=None, nargs='?', const='', help='vídeo do canal Ninguém Te Contou (tema opcional)')
     ap.add_argument('--teste', action='store_true', help='offline (voz de teste local)')
     ap.add_argument('--teste-edge', action='store_true', help='vídeo de exemplo com a voz real + amostras de vozes')
     a = ap.parse_args()
     hoje = datetime.now(BRT).strftime('%Y-%m-%d')
     pasta = RAIZ / 'saida' / hoje
     pasta.mkdir(parents=True, exist_ok=True)
+
+    if a.fabula is not None:                          # canal 2: Ninguém Te Contou (animação da Valdirene)
+        from src import fabula
+        fabula.fazer(a.fabula.strip())
+        return
 
     if a.teste:
         v = json.loads((RAIZ / 'tests' / os.getenv('EXEMPLO', 'exemplo_ira.json')).read_text(encoding='utf-8'))

@@ -23,6 +23,9 @@ on:
       mascote:
         description: "Mascote 3D: 'gerar' = 4 versões no Telegram; número = gera as expressões da versão escolhida"
         default: ""
+      ntc:
+        description: "Ninguém Te Contou (Valdirene): 'sim' = o sistema escolhe o tema, ou escreva o tema (ex.: E se a internet acabasse?)"
+        default: ""
       teste:
         description: "Teste: vídeo de exemplo + amostras de voz"
         type: boolean
@@ -122,6 +125,7 @@ jobs:
           PARTE: ${{ github.event.inputs.parte }}
           AGENDA: ${{ github.event.schedule }}
           MASCOTE: ${{ github.event.inputs.mascote }}
+          NTC: ${{ github.event.inputs.ntc }}
         # repositório público: o registro completo (tema, roteiro) não aparece no GitHub; vai para o Telegram se der erro
         run: |
           mkdir -p saida
@@ -129,6 +133,8 @@ jobs:
           (
           if [ "${{ github.event.inputs.teste }}" = "true" ]; then
             python main.py --teste-edge
+          elif [ -n "$NTC" ]; then
+            if [ "$NTC" = "sim" ]; then python main.py --fabula; else python main.py --fabula "$NTC"; fi
           elif [ -n "$MASCOTE" ]; then
             python main.py --mascote "$MASCOTE"
           elif [ -n "$CURIOSIDADE" ]; then

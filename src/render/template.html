@@ -19,7 +19,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 .grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
 .vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,transparent 48%,rgba(0,0,0,.55) 100%);pointer-events:none}
 .layer{position:absolute;inset:0;opacity:0;will-change:opacity,transform}
-.img{position:absolute;inset:-90px;background-size:cover;background-position:center}
+.img{position:absolute;inset:-40px;background-size:cover;background-position:center}
 .shade{position:absolute;inset:0}
 .card{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:28px 32px;box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
 .lbl{font-family:JBM,monospace;font-size:26px;letter-spacing:3px;color:var(--mut);text-transform:uppercase}
@@ -529,21 +529,23 @@ const PUNCH=[];D.captions.forEach(c=>c.words.forEach(w=>{if(w.hl){const s0=w.s??
 const punch=t=>0;   // sem 'soco' de zoom nas palavras (atrapalhava a leitura)
 // movimento de câmera de cada plano (definido pelo diretor de arte)
 const CAMS=['aproxima','esquerda','afasta','direita','sobe','aproxima','desce'];
-const CAM={aproxima:[1.04,1.2,0,0,0,0],afasta:[1.24,1.04,0,0,0,0],esquerda:[1.16,1.16,70,-70,0,0],direita:[1.16,1.16,-70,70,0,0],
-  sobe:[1.16,1.16,0,0,80,-80],desce:[1.16,1.16,0,0,-80,80],tremor:[1.12,1.18,0,0,0,0]};
+// 11/11: zoom bem menor (antes 1,16–1,4 × moldura de 90 px: a foto "estourava" e ficava borrada)
+const CAM={aproxima:[1.0,1.08,0,0,0,0],afasta:[1.08,1.0,0,0,0,0],esquerda:[1.04,1.04,30,-30,0,0],direita:[1.04,1.04,-30,30,0,0],
+  sobe:[1.04,1.04,0,0,30,-30],desce:[1.04,1.04,0,0,-30,30],tremor:[1.03,1.07,0,0,0,0]};
 // 2º/3º plano da MESMA ideia: outro enquadramento da mesma imagem (mais fechado e em outro canto), como um corte de câmera
-const SUB=[[1.22,1.3,-80,-50,-90,-60],[1.22,1.3,80,50,80,50],[1.3,1.38,0,0,-110,-80]];
+const SUB=[[1.1,1.15,-30,-20,-30,-20],[1.1,1.15,30,20,30,20],[1.14,1.2,0,0,-35,-25]];
 function CAMERA(sc,t){const c=(sc.sub&&!sc.video)?SUB[(sc.sub-1)%SUB.length]:(CAM[sc.camera]||CAM[CAMS[sc.i%CAMS.length]]);const k=clamp((t-sc.start+.2)/(sc.end-sc.start+.4));const e=k*.7+eio(k)*.3;
   let x=lerp(c[2],c[3],e),y=lerp(c[4],c[5],e);
   if(sc.camera==='tremor'){const d=Math.max(.25,1-(t-sc.start)/1.2);x+=Math.sin(t*47)*9*d;y+=Math.cos(t*39)*7*d}
-  const so=sc.soco&&t>=sc.soco?0.09*eo((t-sc.soco)/.14):0;
+  const so=sc.soco&&t>=sc.soco?0.03*eo((t-sc.soco)/.14):0;
   return `scale(${lerp(c[0],c[1],e)+so}) translate(${x}px,${y}px)`}
 const TRS=['corte','corte','zoom','corte','chicote','corte'];
 const TR=sc=>sc.transicao||(['numero','cards','lista','escala','mapa','citacao','revelacao','fechamento','linha_tempo','comparacao'].includes(sc.tipo)?'zoom':TRS[sc.i%TRS.length]);
 const PEND=[];
 // legenda que só repete o que o cartão final já escreve na tela ("Segue o @coringa.explica") fica escondida
 const nrm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>1);
-function repete(c,t){const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);if(!at||at.sc.tipo!=='fechamento')return false;
+function repete(c,t){const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);if(at&&at.sc.tipo==='revelacao'&&t>=Math.min(at.sc.virada||1e9,at.sc.start+1.0)-0.05)return true;
+  if(!at||at.sc.tipo!=='fechamento')return false;
   const tela=new Set(nrm((at.sc.titulo||'Segue o coringa explica')+' coringa explica seguir segue'));const w=nrm(c.words.map(x=>x.w).join(' '));
   return w.length>0&&w.filter(x=>tela.has(x)).length/w.length>=0.5}
 
@@ -599,7 +601,10 @@ window.seek=async function(t){
       else if(tr==='flash')tf=`scale(${lerp(1.08,1,eo((t-a)/.3))})`;
       else tf=`scale(${lerp(1.035,1,eo((t-a)/.3))})`;
       s.el.style.transform=`${tf} scale(${1+0.02*clamp((t-a)/(b-a))+pz})`;
-      const im=s.el.querySelector('.img');if(im)im.style.transform=CAMERA(s.sc,t);
+      const im=s.el.querySelector('.img');if(im){im.style.transform=CAMERA(s.sc,t);
+        // foto DEITADA em tela cheia: a câmera passeia de um lado ao outro e mostra a foto inteira (antes só o miolo, ampliado)
+        const wh=s.sc.foto_wh;if(wh&&wh[0]>wh[1]*1.15&&!s.sc.video&&!s.sc.moldura){const kp=clamp((t-a)/(b-a));
+          const ida=(s.sc.i+(s.sc.sub||0))%2===0;im.style.backgroundPosition=`${ida?lerp(15,85,kp):lerp(85,15,kp)}% 50%`}}
       const sq=s.el.querySelectorAll('.sq');if(sq.length){const n=sq.length,j=Math.min(n-1,Math.floor(clamp((t-a)/(b-a))*n)),tj=a+j*(b-a)/n,kj=clamp((t-tj)/((b-a)/n));
         sq.forEach((e,q)=>{e.style.opacity=q===j?1:0});
         const imp=j===1&&t-tj<0.5?(1-(t-tj)/0.5):0;

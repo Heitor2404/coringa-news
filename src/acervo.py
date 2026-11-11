@@ -19,7 +19,7 @@ from src import cofre
 
 COMMONS = 'https://commons.wikimedia.org/w/api.php'
 WIKI = 'https://{lang}.wikipedia.org/w/api.php'
-MIN_LADO = 620          # 11/11: tudo vai em tela cheia; menor que isso fica minúscula ou borrada no vídeo (foto do paleontólogo do vídeo do dinossauro)
+MIN_LADO = 720          # 11/11: tudo vai em tela cheia; menor que isso fica minúscula ou borrada no vídeo (foto do paleontólogo do vídeo do dinossauro)
 MAX_ARQUIVOS = 60       # quantos arquivos olhar
 MAX_ACERVO = 42         # quantos baixar e catalogar
 MIN_UTEIS = 10          # menos que isso: o tema não tem material visual → pula para o próximo (com 8, repetia foto e tapava com IA)

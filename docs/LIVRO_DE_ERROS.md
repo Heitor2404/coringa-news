@@ -13,16 +13,16 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 4 | Mesmo ano 3x na tela (selo "JAPÃO · 2006" + número grande "2006" + legenda) | ✅ | render._numeros: ano nunca vira número grande; número que a cena já escreve também não |
 | 5 | Selo digitado letra a letra mostrava "EU"/"J" | ✅ | template.html: selo aparece inteiro, deslizando |
 | 6 | Título do gancho cortado nas bordas no 1º quadro | ✅ | template.html: fonte diminui até a maior palavra caber com os 5% de zoom inicial |
-| 7 | Pergunta minúscula fixa no topo e créditos ilegíveis | ✅ (pergunta) / ⏳ (créditos) | pergunta do topo removida |
-| 8 | Mesma imagem 3x no vídeo (logo da Força Aérea, chip) | 🧠 | regra para o casamento frase × foto no cofre |
-| 9 | Mesma foto parada 7 s | 🧠/⏳ | limite de tempo por foto (dividir em planos ou trocar) |
-| 10 | Foto que não bate com o fato (PS3 Slim de 2009 no lançamento de 2006) | 🧠 | porteiro precisa conferir época do objeto |
-| 11 | Imagem de outra marca (parede da Intel no "1.760 PS3") | 🧠 | porteiro: marca/logotipo visível de outra empresa = fora |
-| 12 | Zoom corta texto/objeto da foto ("RESEARCH LABO", PS3 pela metade) | ⏳ | foto com texto ou objeto inteiro → moldura em vez de tela cheia |
+| 7 | Pergunta minúscula fixa no topo e créditos ilegíveis | ✅ | pergunta do topo removida; fontes no fim em 30 px, branco |
+| 8 | Mesma imagem 3x no vídeo (logo da Força Aérea, chip) | ✅ | main.py: revelação usa a imagem da cena anterior (não a do gancho); fechamento usa a última foto; foto "vizinha" e plano extra só de até 2 ideias de distância |
+| 9 | Mesma foto parada 7 s | ✅ | PLANO_MAX 3,5 s (vira corte de câmera) e MESMA_MAX 7 s |
+| 10 | Foto que não bate com o fato (PS3 Slim de 2009 no lançamento de 2006) | ✅ | cofre: CATALOGO diz modelo/versão e descarta modelo de outra época; CASAR e FISCAL_FINAL também |
+| 11 | Imagem de outra marca (parede da Intel no "1.760 PS3") | ✅ | cofre: CATALOGO/CASAR/FISCAL_FINAL descartam marca de outra empresa |
+| 12 | Zoom corta texto/objeto da foto ("RESEARCH LABO", PS3 pela metade) | ✅ em parte | emblema/logo não entra mais (era o caso pior); foto deitada já passeia de um lado ao outro. Ficar de olho |
 | 13 | Imagem fantasma (duas fotos misturadas / número atravessando de cena) | ✅ | template.html: troca de cena sem dissolver; número grande some na troca de cena |
 | 14 | Mascote aparece 1 s e some | ✅ | template.html: mascote só em cena do gancho com ≥ 2 s |
 | 15 | Névoa escura deixando a metade de baixo suja | ✅ | template.html: sombra de baixo mais leve nas fotos (legenda ganhou contorno) |
-| 16 | Final repete logo do começo + revelação verde fora do padrão | 🧠/⏳ | revelação na cor do canal; imagem final ≠ imagem do gancho se já foi repetida |
+| 16 | Final repete logo do começo | ✅ | ver item 8 (revelação/fechamento não voltam à imagem do gancho) |
 Áudio: volume já normalizado (loudnorm I=-14) no render.
 
 ## Ninguém Te Contou — motor vetorial (11/11)

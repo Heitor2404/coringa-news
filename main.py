@@ -100,7 +100,8 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     for k, c in enumerate(cenas):
         if not c.get('img') and c['tipo'] not in ('mapa', 'fechamento') and com_img:
             ant = cenas[k - 1].get('img') if k else None
-            opcoes = [j for j in com_img if cenas[j]['img'] != ant] or com_img
+            perto = [j for j in com_img if abs(j - k) <= 2]
+            opcoes = [j for j in perto if cenas[j]['img'] != ant] or perto or com_img
             viz = cenas[min(opcoes, key=lambda j: (abs(j - k), j > k))]
             c['img'], c['repetida'] = viz['img'], True
             c['sub'] = (viz.get('sub') or 0) + 1          # outro recorte/movimento da mesma foto
@@ -112,21 +113,23 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     estilo = midia.estilo_fundo(v.get('titulo'), (v.get('_pauta') or {}).get('tema'), v.get('pergunta'), v.get('resumo'))
     print(f"  [fundo] {'B · céu' if estilo == 'ceu' else 'A · estúdio escuro'} atrás das fotos")
     _acabamento(cenas, estilo)
-    # 11/11: a revelação mostra a imagem do GANCHO em tela cheia (o vídeo fecha em loop com o começo; antes era uma caixa)
-    abertura = next((c for c in cenas if c['tipo'] == 'gancho' and c.get('img')), None)
-    for c in cenas:
-        if c['tipo'] == 'revelacao' and abertura:
-            c['img'], c['real'] = abertura['img'], abertura.get('real', False)
-            c.pop('video', None)
-    # fundo do fechamento: a foto real mais marcante do vídeo (ou a imagem da abertura), escurecida atrás do Coringa
-    fundo = next((c['img'] for c in cenas if c.get('real')), None) or next((c['img'] for c in cenas if c.get('img')), None)
+    # revelação: continua na imagem da cena anterior com outro enquadramento (11/11 noite: voltar à imagem do gancho no fim
+    # parecia repetição — o logo da Força Aérea apareceu 3x no vídeo do supercomputador)
+    for k, c in enumerate(cenas):
+        if c['tipo'] == 'revelacao':
+            ant = next((x for x in reversed(cenas[:k]) if x.get('img') and not x.get('video')), None)
+            if ant:
+                c['img'], c['real'], c['sub'] = ant['img'], ant.get('real', False), (ant.get('sub') or 0) + 1
+                c.pop('video', None)
+    # fundo do fechamento: a última foto do vídeo (escurecida atrás do Coringa), não a da abertura
+    fundo = next((c['img'] for c in reversed(cenas[:-1]) if c.get('img') and not c.get('video')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
         cenas[-1]['img'] = fundo
     return cenas
 
 
-PLANO_MAX = 6.0         # nenhuma imagem parada mais que isso num plano só
-MESMA_MAX = 10.0        # nem a mesma imagem (mesmo reenquadrada) mais que isso seguida
+PLANO_MAX = 3.5         # nenhum plano parado mais que isso (vira corte de câmera ou outra foto perto)
+MESMA_MAX = 7.0         # nem a mesma imagem (mesmo reenquadrada) mais que isso seguida
 
 
 def _quebrar_longos(cenas: list[dict]) -> list[dict]:
@@ -143,7 +146,7 @@ def _quebrar_longos(cenas: list[dict]) -> list[dict]:
         passo = dur / n
         prox = cenas[k + 1].get('img') if k + 1 < len(cenas) else None
         usadas = {c['img'], prox, out[-1].get('img') if out else None}
-        alt = [r for r in sorted(reais, key=lambda r: abs(cenas.index(r) - k)) if r['img'] not in usadas]
+        alt = [r for r in sorted(reais, key=lambda r: abs(cenas.index(r) - k)) if r['img'] not in usadas and abs(cenas.index(r) - k) <= 2]
         for j in range(n):
             p = dict(c, start=round(c['start'] + j * passo, 3), end=round(c['start'] + (j + 1) * passo, 3))
             if j:
@@ -167,7 +170,7 @@ def _quebrar_longos(cenas: list[dict]) -> list[dict]:
         if out[k].get('img') and j > k and out[j]['end'] - out[k]['start'] > MESMA_MAX:
             meio = (k + j + 1) // 2
             ant, dep = out[meio - 1].get('img'), out[j + 1].get('img') if j + 1 < len(out) else None
-            alt = [r for r in reais if r['img'] not in (ant, dep, out[k]['img'])]
+            alt = [r for r in reais if r['img'] not in (ant, dep, out[k]['img']) and abs(out.index(r) - meio) <= 3]
             if alt:
                 r = min(alt, key=lambda r: abs(out.index(r) - meio))
                 out[meio] = dict(out[meio], img=r['img'], sub=0, repetida=True,

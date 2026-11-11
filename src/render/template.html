@@ -453,7 +453,7 @@ B.revelacao=sc=>{const c=cor(sc.cor||'amarelo');const r=String(sc.resposta||'');
 
 B.fechamento=sc=>({html:`
   <div class="burst" style="position:absolute;left:540px;top:620px"></div>
-  ${(D.meta.fontes||[]).length?`<div class="fts" style="position:absolute;left:60px;right:60px;top:354px;text-align:center;font-family:JBM,monospace;font-size:20px;letter-spacing:2px;color:rgba(255,255,255,.5)">fontes: ${esc(D.meta.fontes.join(' · '))}</div>`:''}
+  ${(D.meta.fontes||[]).length?`<div class="fts" style="position:absolute;left:60px;right:60px;top:354px;text-align:center;font-weight:700;font-size:30px;line-height:1.25;color:rgba(255,255,255,.9);text-shadow:0 2px 10px #000,0 0 3px #000">Fontes: ${esc(D.meta.fontes.join(' · '))}</div>`:''}
   ${mascotHTML('m',M3.apontando?'left:340px;top:440px;width:400px;height:400px':'left:350px;top:450px;width:380px','apontando')}
   <div class="title t" style="top:860px;font-size:76px">${hl(sc.titulo||'Segue o *@coringa.explica*')}</div>
   <div class="btn" style="position:absolute;left:50%;top:1010px;display:flex;align-items:center;gap:18px;background:#fff;color:#05080f;border-radius:999px;padding:22px 56px;font-weight:900;font-size:50px;white-space:nowrap;box-shadow:0 0 50px rgba(255,255,255,.35)">

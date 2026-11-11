@@ -177,7 +177,11 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     ult['b'] = round(total, 3)
     ult['fim'] = {'de': max(0.5, (ult['b'] - ult['a']) - 3.2), 'p': str(r.get('cta_placa') or 'PARTE 2 AMANHÃ')[:28],
                   'c': re.sub(r'\*([^*]+)\*', r'<span style="color:#F2C14E">\1</span>', str(r.get('cta_tela') or ''))[:90]}
-    return {'cenas': cenas, 'captions': caps, 'duration': total}
+    # a Valdirene vai DENTRO da página (SVG em linha) para os braços, a cabeça, os olhos e a boca serem animados
+    poses = {c['val']['pose'] for c in cenas if c.get('val')}
+    val_svg = {p: re.sub(r' width="\d+" height="\d+"', ' width="100%" height="100%"', (CANAL / 'val' / f'{p}.svg').read_text(encoding='utf-8'), count=1)
+               for p in poses}
+    return {'cenas': cenas, 'captions': caps, 'duration': total, 'val_svg': val_svg}
 
 
 def _pagina(dados: dict, trab: Path) -> Path:

@@ -27,9 +27,9 @@ def rosto(exp):
              'explica': ('<circle cx="272" cy="190" r="7"/><circle cx="328" cy="190" r="7"/>',
                          '<path d="M258 168 L284 166 M316 160 L342 158"/>', '<path d="M284 228 Q304 238 320 226"/>')}[exp]
     e, s, b = olhos
-    g = f'<g fill="{O}" stroke="{O}" stroke-width="6" stroke-linecap="round">{e}</g>'
+    g = f'<g class="olhos" fill="{O}" stroke="{O}" stroke-width="6" stroke-linecap="round">{e}</g>'
     g += f'<g fill="none" stroke="{O}" stroke-width="7" stroke-linecap="round">{s}</g>'
-    g += f'<g fill="none" stroke="{O}" stroke-width="6" stroke-linecap="round">{b}</g>'
+    g += f'<g class="boca" fill="none" stroke="{O}" stroke-width="6" stroke-linecap="round">{b}</g>'
     g += f'<circle cx="250" cy="220" r="13" fill="{BOCHECHA}" opacity=".55"/><circle cx="350" cy="220" r="13" fill="{BOCHECHA}" opacity=".55"/>'
     g += '<ellipse cx="352" cy="214" rx="12" ry="7" fill="#fff" opacity=".85"/>'   # farinha na bochecha
     g += (f'<g fill="none" stroke="#8B3A2E" stroke-width="6"><rect x="250" y="176" width="44" height="30" rx="9"></rect>'
@@ -38,11 +38,11 @@ def rosto(exp):
 
 def corpo(pose, exp, extra=''):
     braços = {
-        'neutra':  braco(230, 304, [(176, 390), (226, 450)]) + braco(370, 304, [(424, 390), (374, 450)]),          # mãos na cintura
-        'susto':   braco(230, 304, [(200, 266), (234, 232)]) + braco(370, 304, [(400, 266), (366, 232)]),          # mãos no rosto
-        'explica': braco(230, 304, [(196, 400), (210, 480)]) + braco(370, 304, [(440, 262), (508, 205)]),          # apontando
-        'desespero': braco(230, 304, [(168, 210), (236, 118)]) + braco(370, 304, [(432, 210), (364, 118)]),
-        'feliz':   braco(230, 304, [(178, 222), (166, 130)]) + braco(370, 304, [(422, 222), (434, 130)]),          # braços pra cima
+        'neutra':  (braco(230, 304, [(176, 390), (226, 450)]), braco(370, 304, [(424, 390), (374, 450)])),          # mãos na cintura
+        'susto':   (braco(230, 304, [(200, 266), (234, 232)]), braco(370, 304, [(400, 266), (366, 232)])),          # mãos no rosto
+        'explica': (braco(230, 304, [(196, 400), (210, 480)]), braco(370, 304, [(440, 262), (508, 205)])),          # apontando
+        'desespero': (braco(230, 304, [(168, 210), (236, 118)]), braco(370, 304, [(432, 210), (364, 118)])),
+        'feliz':   (braco(230, 304, [(178, 222), (166, 130)]), braco(370, 304, [(422, 222), (434, 130)])),          # braços pra cima
     }[pose]
     pernas = (f'<rect x="252" y="610" width="40" height="200" rx="14" fill="#3A3F4A" stroke="{O}" stroke-width="{W}"/>'
               f'<rect x="308" y="610" width="40" height="200" rx="14" fill="#3A3F4A" stroke="{O}" stroke-width="{W}"/>'
@@ -62,8 +62,12 @@ def corpo(pose, exp, extra=''):
               f'<ellipse cx="300" cy="194" rx="80" ry="76" fill="{PELE}" stroke="{O}" stroke-width="{W}"/>'
               f'<path d="M228 192 Q228 112 300 112 Q372 112 372 192 Q360 150 330 142 Q300 160 270 144 Q240 152 228 192 Z" fill="{CABELO}" stroke="{O}" stroke-width="{W}" stroke-linejoin="round"/>'
               f'<path d="M232 200 Q216 222 236 238" fill="none" stroke="{CABELO}" stroke-width="10" stroke-linecap="round"/>')
-    frente = pose in ('susto',)
-    partes = pernas + vestido + avental + (pescoco + cabeca + rosto(exp) + braços if frente else braços + pescoco + cabeca + rosto(exp)) + extra
+    esq, dir_ = braços
+    # GRUPOS para animar no vídeo: be/bd (braços, giram no ombro), cab (cabeça, gira no pescoço), olhos (piscam), boca (fala)
+    bracos = f'<g class="be">{esq}</g><g class="bd">{dir_}{extra}</g>'
+    cab = f'<g class="cab">{cabeca}{rosto(exp)}</g>'
+    frente = pose in ('susto', 'desespero')
+    partes = pernas + vestido + avental + (pescoco + cab + bracos if frente else bracos + pescoco + cab)
     defs = ('<defs><pattern id="xadrez" width="28" height="28" patternUnits="userSpaceOnUse">'
             '<rect width="28" height="28" fill="#FFFFFF"></rect><rect width="14" height="28" fill="#F28AA8" opacity=".75"></rect>'
             '<rect width="28" height="14" fill="#F28AA8" opacity=".75"></rect></pattern></defs>')

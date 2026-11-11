@@ -381,11 +381,28 @@ MAX_VIDEOS = 8          # clipes candidatos no acervo (só o miniatura é baixad
 MIN_ALT_VIDEO = 720     # vídeo deitado com menos de 720 linhas fica borrado mesmo na moldura
 
 
+CLIPES_USADOS = Path(__file__).resolve().parents[1] / 'data' / 'clipes_usados.json'
+
+
+def clipes_usados() -> list[str]:
+    try:
+        return json.loads(CLIPES_USADOS.read_text(encoding='utf-8'))
+    except Exception:
+        return []
+
+
+def marcar_clipes(urls: list[str]):
+    """Guarda os clipes que foram ao ar (o mesmo musgo/floresta apareceu nas formigas e nos tardígrados)."""
+    if urls:
+        CLIPES_USADOS.write_text(json.dumps(list(dict.fromkeys(clipes_usados() + list(urls)))[-2000:], ensure_ascii=False),
+                                 encoding='utf-8')
+
+
 def f_videos(consultas: list[str]) -> list[dict]:
     """VÍDEO EM MOVIMENTO: clipes do próprio assunto (Wikimedia Commons) e de ambiente (Pixabay: deserto, mina, mar...).
     Entram no acervo como as fotos: o catalogador olha um quadro, o editor de imagem decide foto ou vídeo por frase."""
     from . import midia
-    out, vistos = [], set()
+    out, vistos = [], set(clipes_usados())        # 11/11: clipe já usado num vídeo do canal não volta
     buscas = list(dict.fromkeys([q for q in consultas if q]))
     for q in buscas[:6]:
         for c in midia.candidatos_pixabay(q) + midia.candidatos_arquivo(q):

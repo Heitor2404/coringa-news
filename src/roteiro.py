@@ -367,6 +367,8 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     acervo = acervo_mod.complementar(v, acervo, pasta)
     v = acervo_mod.casar(v, acervo)
     v = acervo_mod.preencher(v, acervo)          # buraco = reserva do acervo (vídeo primeiro), antes de 2D ou repetir
+    por_id = {x['id']: x for x in acervo}
+    v['_clipes'] = [por_id[c['foto']]['video']['url'] for c in v['cenas'] if c.get('foto') in por_id and por_id[c['foto']].get('video')]
     v['acervo'] = acervo
     v = _planos_sem_foto(v, epoca)
     v['_reserva'] = list(gemini.RESERVAS_USADAS)   # vai como aviso na prévia de aprovação

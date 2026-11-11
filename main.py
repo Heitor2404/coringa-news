@@ -690,6 +690,8 @@ def telegram(arq: Path, legenda: str, v: dict | None = None):
             print('  [telegram] vídeo enviado')
             # marca o dia: se o agendamento das 09:13 chegar atrasado depois disto, ele não faz outro vídeo
             (RAIZ / 'data' / 'ultimo_video.txt').write_text(datetime.now(BRT).strftime('%Y-%m-%d'), encoding='utf-8')
+            from src import acervo as _acv
+            _acv.marcar_clipes((v or {}).get('_clipes') or [])
         capa = arq.with_name(arq.stem + '-capa.jpg')
         if capa.exists():
             _tg('sendPhoto', {'caption': 'Capa (o título fica dentro do recorte do perfil)'}, ('photo', capa))

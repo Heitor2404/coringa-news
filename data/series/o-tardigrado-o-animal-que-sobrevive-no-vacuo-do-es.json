@@ -1,0 +1,44 @@
+{
+ "pedido": "O tardígrado, o animal que sobrevive no vácuo do espaço",
+ "tema": {
+  "pergunta": "Como um animal microscópico sobrevive no vácuo do espaço?",
+  "formato": "explica",
+  "termos": [
+   "Tardígrado",
+   "Criptobiose",
+   "Tardígrados no espaço",
+   "Vácuo"
+  ],
+  "termos_en": [
+   "Tardigrade",
+   "Cryptobiosis",
+   "Tardigrades in space",
+   "Tardigrade space experiment"
+  ],
+  "busca": "tardígrado espaço sobrevive vácuo",
+  "busca_video": [
+   "water bear microscope",
+   "moss close up",
+   "microscope slide movement",
+   "space stars night sky"
+  ],
+  "categoria": "CIÊNCIA",
+  "noticia": "",
+  "pedido": "O tardígrado, o animal que sobrevive no vácuo do espaço",
+  "partes": 1
+ },
+ "pergunta": "Como um animal microscópico sobrevive no vácuo do espaço?",
+ "arco": [
+  "Como o tardígrado sobrevive ao vácuo do espaço desligando a própria vida"
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "O ANIMAL QUE SOBREVIVEU AO VÁCUO",
+   "resumo": "Dez dias no vácuo do espaço. E o bicho sobreviveu. Em 2007, a missão FOTON-M3 expôs tardígrados direto ao vácuo da órbita. Ele não luta contra o vácuo: faz algo bem mais esperto. Ele se encolhe, se seca e desliga todos os sistemas do corpo. Vira uma bolinha seca chamada tun, com o metabolismo suspenso. Nesse estado, nenhum processo da vida acontece. Nem reparo, nem reprodução. De volta ao laboratório, bastou uma gota d'água para reanimá-lo. Em casa, no musgo de telhado, ele já seca e revive sempre. Aguenta 5 mil Gy de radiação, mil vezes o que você aguenta. O DNA fica protegido por proteínas chamadas Dsup. Uma cápsula deles ia na sonda israelense Beresheet, que bateu na Lua. Só que ele não é indestrutível: ele só sabe se desligar. Sobreviver, às vezes, é só saber desligar e esperar a água.",
+   "suspense": "Sobreviver, às vezes, é só saber desligar e esperar a água."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-11"
+}

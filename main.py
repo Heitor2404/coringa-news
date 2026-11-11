@@ -339,7 +339,8 @@ def conferir_ia(v: dict, imgs: dict, trab: Path, contexto: str, ids=None, rodada
         print(f'  [fiscal] {len(ruins)} imagem(ns) continuam erradas: esses planos reaproveitam a foto real vizinha')
         return imgs
     print(f'  [fiscal] {len(refazer)} imagem(ns) de IA reprovada(s); gerando de novo')
-    novas = imagens.gerar(refazer, trab / 'refeitas', v.get('estilo_visual', ''), v.get('personagem', ''))
+    estilo = imagens.ESTILO_ANIM if v.get('serie') else v.get('estilo_visual', '')     # curiosidade: sempre 2D
+    novas = imagens.gerar(refazer, trab / 'refeitas', estilo, v.get('personagem', ''))
     for iid in ruins:
         imgs.pop(iid, None)
     imgs.update(novas)
@@ -504,7 +505,9 @@ def _midia_do_acervo(v: dict, trab: Path):
         reais.update(r2); creditos += cred
     pedir_ids = {c['imagem'] for c in v['cenas'] if c.get('midia') == 'ia' and c.get('imagem') and c['imagem'] not in reais}
     pedir = [i for i in v.get('imagens', []) if i['id'] in pedir_ids]
-    imgs = imagens.gerar(pedir, trab, v.get('estilo_visual', ''), v.get('personagem', '')) if pedir else {}
+    # 11/11: frase sem foto boa ganha ILUSTRAÇÃO 2D (estilo único do canal), não foto falsa de IA — assim o tema não é
+    # descartado por falta de imagem e ninguém confunde com foto real
+    imgs = imagens.gerar(pedir, trab, imagens.ESTILO_ANIM, v.get('personagem', '')) if pedir else {}
     imgs = conferir_ia(v, imgs, trab, contexto, rodada=2)     # 1 conferência: reprovada sai (vira foto vizinha)
     imgs = {k: midia.graduar(Path(p)) for k, p in imgs.items()}
     print(f"  [mídia] {len(reais)} ideias com foto/vídeo real · {len(imgs)} com IA · o resto reaproveita a foto vizinha")

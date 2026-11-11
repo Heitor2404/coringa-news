@@ -1,5 +1,5 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
-import json, re
+import json, os, re
 from pathlib import Path
 from . import gemini
 from src import cofre
@@ -101,6 +101,10 @@ def _melhor_de_dois(prompt: str, serie: bool = False) -> dict:
     """O roteirista escreve duas versões diferentes e o editor-chefe escolhe a melhor."""
     a = _gerar_roteiro(prompt, serie=serie)
     from .orcamento import sobra
+    # 11/11: 2ª versão + comparação custavam 2 pedidos ao Claude por vídeo e quase nunca mudavam o resultado
+    # (a crítica e os 3 ganchos já melhoram o roteiro). Ligar de novo com DUAS_VERSOES=1.
+    if os.environ.get('DUAS_VERSOES', '0') != '1':
+        return a
     if sobra() < 75:
         print('  [roteiro] tempo apertado: fico com uma versão só')
         return a
@@ -377,9 +381,9 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     return v
 
 
-MAX_IA = 2          # imagens de IA por vídeo (só para frases sem foto real; 10/11: 3 de IA = vídeo com cara de falso)
+MAX_IA = 4          # ilustrações 2D por vídeo (só para frases sem foto real boa; 11/11: 2D em vez de foto falsa de IA)
 MAX_VIZINHA = 2     # frases que reaproveitam a foto vizinha
-MIN_COBERTURA = 0.5  # pelo menos metade das frases com foto real do próprio assunto
+MIN_COBERTURA = 0.35  # 11/11: com a ilustração 2D cobrindo buracos, basta ~1/3 das frases com foto real (antes 1/2)
 
 PROMPT_PARTES = cofre.prompt('PROMPT_PARTES')
 
@@ -412,6 +416,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
         raise ValueError(f'pouco material visual: só {com_foto} de {len(ideias)} frases têm foto real do assunto; pulo para o próximo tema')
     n_ia, n_clima, n_viz = 0, 0, 0
     trava = (f'Set in {epoca}. ' if epoca else '') + 'Period-accurate clothing, objects and architecture; no modern objects, no smartphones, no cars unless period-correct'
+    trava += '. Flat 2D illustration (not a photo)'
     for k, c in enumerate(ideias):
         if c.get('foto'):
             continue
@@ -419,7 +424,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
             c['midia'] = 'vizinha'; n_viz += 1
             continue
         vis = str(c.get('visual') or '').strip()
-        base = c.get('cenario') or (f"Documentary photograph of {c['busca']}" if c.get('busca') else '')
+        base = c.get('cenario') or (f"Scene showing {c['busca']}" if c.get('busca') else '')
         if vis.lower().startswith('clima') and n_clima < 2:
             c['midia'], c['busca'] = 'video', vis.split(':', 1)[-1].strip() or 'old city street'
             n_clima += 1
@@ -448,7 +453,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
 PROMPT_CRITICA = cofre.prompt('PROMPT_CRITICA')
 
 
-def revisar(v: dict, fatos: str, rodadas: int = 2, escopo: str = '') -> dict:
+def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   # 11/11: 1 rodada (economia de cota)
     """O editor-chefe dá nota e reescreve até aprovar (no máximo 'rodadas' vezes)."""
     from .orcamento import sobra
     for rodada in range(rodadas):

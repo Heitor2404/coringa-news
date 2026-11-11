@@ -1,0 +1,43 @@
+{
+ "pedido": "O lago da Tanzânia que transforma animais em estátuas de pedra",
+ "tema": {
+  "pergunta": "Por que um lago na Tanzânia transforma animais em estátuas de pedra?",
+  "formato": "explica",
+  "termos": [
+   "Lago Natron",
+   "Carbonato de sódio",
+   "Calcificação",
+   "Natrão"
+  ],
+  "termos_en": [
+   "Lake Natron",
+   "Natron (mineral)",
+   "Sodium carbonate"
+  ],
+  "busca": "lago Natron animais petrificados",
+  "busca_video": [
+   "salt lake aerial",
+   "flamingos flying over lake",
+   "alkaline lake water shore",
+   "pink lake sunset birds"
+  ],
+  "categoria": "CIÊNCIA",
+  "noticia": "",
+  "pedido": "O lago da Tanzânia que transforma animais em estátuas de pedra",
+  "partes": 1
+ },
+ "pergunta": "Por que um lago na Tanzânia transforma animais em estátuas de pedra?",
+ "arco": [
+  "O Lago Natron não vira animais em pedra: o sal alcalino preserva corpos como múmias e, ao mesmo tempo, sustenta um berçário de flamingos."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "O LAGO QUE VIRA *PEDRA*?",
+   "resumo": "Dizem que este lago transforma animais em pedra. Fica no norte da Tanzânia, colado na fronteira com o Quênia. O calor passa de 40 °C e a água fica vermelha por causa de cianobactérias. É raso, com menos de três metros, mas tem 57 km. A evaporação deixa natron e trona, sais alcalinos, no chão. Por isso o pH passa de 9 e pode superar 12, como amônia. A pedra é só aparência: o sal preserva os corpos como múmias. Os egípcios extraíam natron do Wadi El Natrun para mumificar. Até o símbolo Na, do sódio, nasceu dessa mesma palavra. E esse inferno é o único berçário dos flamingos-pequenos da região. Eles comem cianobactérias; quanto mais sal, mais ninhos o lago sustenta. Não é pedra: é o sal das múmias guardando um berçário.",
+   "suspense": "Não é pedra: é o sal das múmias guardando um berçário."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-11"
+}

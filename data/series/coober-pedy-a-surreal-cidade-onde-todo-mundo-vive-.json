@@ -1,0 +1,33 @@
+{
+ "pedido": "Coober Pedy: a surreal cidade onde todo mundo vive embaixo da terra",
+ "tema": {
+  "pergunta": "Por que moradores desta cidade australiana vivem debaixo da terra?",
+  "formato": "explica",
+  "termos": [
+   "Coober Pedy",
+   "Arquitetura subterrânea"
+  ],
+  "termos_en": [
+   "Coober Pedy",
+   "Underground architecture"
+  ],
+  "busca": "Coober Pedy cidade subterranea Australia",
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "Coober Pedy: a surreal cidade onde todo mundo vive embaixo da terra"
+ },
+ "pergunta": "Por que moradores desta cidade australiana vivem debaixo da terra?",
+ "arco": [
+  "A história de Coober Pedy, a cidade subterrânea construída no deserto da Austrália para resistir a 50°C enquanto buscavam opalas preciosas."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "Por que moradores vivem debaixo da terra em Coober Pedy?",
+   "resumo": "Opala brilha sob 50°C no deserto Em 1915, mineradores descobriram opala em um buraco seco Para escapar de 50°C, cavaram casas chamadas dugouts Hoje, hotéis, bares e até igrejas vivem sob a areia O nome Coober Pedy vem de 'kupa-piti', buraco do branco Mais de 3 000 moradores habitam esses túneis escuros Turistas pagam para dormir entre rochas brilhantes e luz de vela Em 1975, aborígenes renomearam a região como Umoona Na década de 1960, a mineração de opala virou indústria milionária A opala contém até 21% de água, brilhando como fogo Agora, você pode reservar um quarto subterrâneo e fugir do verão",
+   "suspense": "Agora, você pode reservar um quarto subterrâneo e fugir do verão"
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-10"
+}

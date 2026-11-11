@@ -1,0 +1,153 @@
+{
+ "titulo": "76 dias à deriva no Atlântico",
+ "categoria": "MUNDO",
+ "serie": "CORINGA EXPLICA",
+ "legenda_post": "Um bote de borracha, um arpão e 76 dias no meio do Atlântico. O que salvou Steven Callahan não foi um navio.",
+ "hashtags": [
+  "curiosidades",
+  "historia",
+  "sobrevivencia",
+  "coringanews"
+ ],
+ "fontes": [
+  "Wikipédia",
+  "Wikipedia (inglês)"
+ ],
+ "produto": null,
+ "imagens": [
+  {
+   "id": "a",
+   "arquivo": "tests/img/fundo_d.jpg"
+  },
+  {
+   "id": "b",
+   "arquivo": "tests/img/fundo_b.jpg"
+  },
+  {
+   "id": "c",
+   "arquivo": "tests/img/fundo_c.jpg"
+  },
+  {
+   "id": "d",
+   "arquivo": "tests/img/fundo_a.png"
+  },
+  {
+   "id": "v",
+   "arquivo": "tests/img/video_teste.mp4",
+   "video": true
+  },
+  {
+   "id": "r",
+   "arquivo": "tests/img/fundo_c.jpg",
+   "real": true
+  }
+ ],
+ "cenas": [
+  {
+   "tipo": "gancho",
+   "titulo": "76 DIAS NUM *BOTE*",
+   "subtitulo": "no meio do Atlântico",
+   "fala": "Uma batida no escuro, e o barco de Steven começou a *afundar*.",
+   "imagem": "a",
+   "transicao": "corte",
+   "camera": "tremor"
+  },
+  {
+   "tipo": "mapa",
+   "rotulo": "Atlântico, *1982*",
+   "pontos": [
+    {
+     "nome": "Canárias",
+     "lat": 28.1,
+     "lon": -15.4
+    },
+    {
+     "nome": "Guadalupe",
+     "lat": 16.25,
+     "lon": -61.55
+    }
+   ],
+   "fala": "Fevereiro de 1982, quase *mil e trezentos quilômetros* das Ilhas Canárias.",
+   "fala_tts": "Fevereiro de mil novecentos e oitenta e dois, quase mil e trezentos quilômetros das Ilhas Canárias."
+  },
+  {
+   "tipo": "historia",
+   "fala": "Ele pulou num bote de *borracha* com quase nada nas mãos.",
+   "imagem": "v",
+   "camera": "aproxima"
+  },
+  {
+   "tipo": "historia",
+   "fala": "E o detalhe que salvou a vida dele só aparece no *final*.",
+   "imagem": "r",
+   "camera": "direita",
+   "legenda_foto": "Steven Callahan, 1982"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Água doce? Ele fabricava com *destiladores solares*, gota por gota.",
+   "imagem": "a",
+   "camera": "aproxima",
+   "transicao": "zoom"
+  },
+  {
+   "tipo": "historia",
+   "destaque": "pescava com *arpão*",
+   "fala": "Comida? Peixes dourados que nadavam *embaixo* do bote, caçados com arpão.",
+   "imagem": "b",
+   "camera": "desce"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Só que tubarões também vinham, e batiam no *fundo* do bote.",
+   "imagem": "v",
+   "camera": "tremor",
+   "transicao": "flash"
+  },
+  {
+   "tipo": "historia",
+   "lugar": "SEMANAS DEPOIS",
+   "fala": "Navios passaram por ele, e *nenhum* viu o bote.",
+   "imagem": "d",
+   "camera": "esquerda",
+   "transicao": "preto"
+  },
+  {
+   "tipo": "numero",
+   "valor": "76",
+   "sufixo": " dias",
+   "rotulo": "à deriva",
+   "comparacao": "quase *2.900 km* de oceano",
+   "fala": "Foram *76 dias* e quase dois mil e novecentos quilômetros à deriva.",
+   "fala_tts": "Foram setenta e seis dias e quase dois mil e novecentos quilômetros à deriva.",
+   "imagem": "a"
+  },
+  {
+   "tipo": "revelacao",
+   "pergunta": "O que salvou Steven?",
+   "resposta": "PÁSSAROS",
+   "detalhe": "voando em círculo sobre o bote",
+   "cor": "verde",
+   "fala": "Pescadores de Guadalupe viram *pássaros* circulando no céu e foram ver o que era.",
+   "imagem": "b"
+  },
+  {
+   "tipo": "historia",
+   "lugar": "GUADALUPE · ABRIL",
+   "fala": "Os pássaros seguiam os *peixes* que seguiam o bote de Steven.",
+   "imagem": "c",
+   "camera": "sobe"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Ele virou livro, e ajudou a filmar *As Aventuras de Pi*.",
+   "imagem": "d",
+   "camera": "afasta"
+  },
+  {
+   "tipo": "fechamento",
+   "titulo": "Segue o *@coringa.news*",
+   "fala": "Você aguentaria 76 dias? Comenta. E foi tudo por causa de uma batida no escuro."
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+ "pedido": "Por que a chuva de meteoros Leônidas é a mais violenta da história: já teve 100 mil estrelas cadentes por hora",
+ "tema": {
+  "pergunta": "Por que os Leônidas já chegaram a 100 mil meteoros por hora?",
+  "formato": "explica",
+  "termos": [
+   "Leônidas (chuva de meteoros)",
+   "Chuva de meteoros",
+   "Cometa Tempel-Tuttle"
+  ],
+  "termos_en": [
+   "Leonids",
+   "Leonid meteor storm",
+   "55P/Tempel–Tuttle",
+   "Comet Tempel-Tuttle"
+  ],
+  "busca": "chuva de meteoros Leônidas",
+  "categoria": "CIÊNCIA",
+  "noticia": "pico da chuva de meteoros Leônidas (em 7 dias)",
+  "pedido": "Por que a chuva de meteoros Leônidas é a mais violenta da história: já teve 100 mil estrelas cadentes por hora",
+  "partes": 1
+ },
+ "pergunta": "Por que os Leônidas já chegaram a 100 mil meteoros por hora?",
+ "arco": [
+  "Como o cometa Tempel-Tuttle causa tempestades de Leônidas e como a de 1833 revelou a origem das estrelas cadentes"
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "A tempestade de estrelas cadentes de 1833",
+   "resumo": "Em 1833, o céu virou uma tempestade de poeira. Em 1833, essas partículas transformaram o céu numa tempestade. Aquela noite ia revelar de onde vêm as estrelas cadentes. Antes, meteoros eram vistos como um fenômeno da atmosfera. Em 1794, Ernst Chladni disse que eles vinham do espaço. Então, em 1833, Denison Olmsted estudou os riscos no céu. Os riscos partiam de um único ponto, dentro da constelação de Leão. Em 1866, Schiaparelli ligou os meteoros a cometas. No mesmo ano, Tuttle viu o Tempel-Tuttle pela segunda vez. Ele volta a cada 33 anos, deixando poeira pelo caminho. Quando a Terra cruza essa nuvem, passam de mil meteoros por hora. Em 2026, o pico é na noite de 17 para 18 de novembro. Serão só 15 meteoros por hora, uma garoa perto da tempestade. Fuja da poluição luminosa, como orienta o especialista Renato Poltronieri. O cometa orbita ao contrário: a poeira bate de frente, a 70 km/s.",
+   "suspense": "O cometa orbita ao contrário: a poeira bate de frente, a 70 km/s."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-10"
+}

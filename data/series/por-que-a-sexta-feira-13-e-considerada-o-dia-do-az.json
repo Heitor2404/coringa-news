@@ -1,0 +1,36 @@
+{
+ "pedido": "Por que a Sexta-Feira 13 é considerada o dia do azar",
+ "tema": {
+  "pergunta": "Por que a Sexta-Feira 13 é o dia do azar?",
+  "formato": "mito",
+  "termos": [
+   "Sexta-feira 13",
+   "Triscaidecafobia",
+   "Supertição"
+  ],
+  "termos_en": [
+   "Friday the 13th",
+   "Triskaidekaphobia",
+   "Superstition"
+  ],
+  "busca": "origem sexta feira 13 azar historia",
+  "categoria": "ENTRETENIMENTO",
+  "noticia": "Sexta-feira 13 acontece nesta semana, no dia 13 de novembro de 2026.",
+  "pedido": "Por que a Sexta-Feira 13 é considerada o dia do azar",
+  "partes": 1
+ },
+ "pergunta": "Por que a Sexta-Feira 13 é o dia do azar?",
+ "arco": [
+  "Origem e evolução da superstição do dia 13"
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "Por que a Sexta-Feira 13 é o dia do azar?",
+   "resumo": "Em Valhalla, Loki foi o décimo terceiro intruso no banquete. Na mitologia nórdica, Loki armou Balder com uma flecha de visco; a morte do deus selou o 13 como símbolo de tragédia, e, em 1944, um bombardeiro Halifax recebeu o nome 'Friday the 13th'. Em 1910, o psiquiatra Isador Coriat introduziu o termo triscaidecafobia no livro Abnormal Psychology, descrevendo o medo irracional do número 13. Hoje, a ciência chama o medo da sexta‑feira 13 de parascavedecatriafobia, termo que junta a deusa Frigg às raízes gregas para treze e medo. Em 13 de agosto de 1948, um homem cruzava a Rua Raadhuisstraat, em Amsterdã, enquanto o calendário marcava o dia 13. No calendário gregoriano, a sexta‑feira 13 aparece de uma a três vezes por ano, garantindo que o ciclo de azar retorne inevitavelmente.",
+   "suspense": "garantindo que o ciclo de azar retorne inevitavelmente."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-09"
+}

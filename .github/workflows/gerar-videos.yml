@@ -1,0 +1,171 @@
+name: Gerar vídeos do dia
+
+on:
+  schedule:                      # 1 vídeo por dia (curiosidade); notícia só pelo botão "Run workflow"
+    - cron: "13 12 * * *"       # 09:13 de Brasília → vídeo pronto no Telegram antes do meio-dia
+  workflow_dispatch:             # botão "Run workflow"
+    inputs:
+      qtd:
+        description: "Quantos vídeos de notícia"
+        default: "0"
+      explica:
+        description: "Quantos vídeos Coringa Explica (curiosidade)"
+        default: "0"
+      tema:
+        description: "Notícia específica (opcional, ex.: derrota do Trump)"
+        default: ""
+      curiosidade:
+        description: "Curiosidade específica (opcional, ex.: a história da primeira bomba atômica)"
+        default: ""
+      parte:
+        description: "Parte da curiosidade (1, 2, 3...)"
+        default: "1"
+      mascote:
+        description: "Mascote 3D: 'gerar' = 4 versões no Telegram; número = gera as expressões da versão escolhida"
+        default: ""
+      teste:
+        description: "Teste: vídeo de exemplo + amostras de voz"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write                # para salvar data/historico.json
+
+concurrency:
+  group: gerar-videos
+  cancel-in-progress: false
+
+jobs:
+  # O GitHub às vezes atrasa o agendamento das 09:13 em horas. Se o vídeo do dia já foi feito à mão nesse meio tempo,
+  # a execução automática atrasada para aqui (≈10 s), sem instalar nada nem mandar outra prévia (10/11–11/11).
+  checar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      pular: ${{ steps.hoje.outputs.pular }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: data
+      - id: hoje
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(cat data/ultimo_video.txt 2>/dev/null)" = "$(TZ=America/Sao_Paulo date +%F)" ]; then
+            echo "pular=1" >> "$GITHUB_OUTPUT"
+            echo "Já saiu vídeo hoje: a execução automática (atrasada) não faz nada."
+          fi
+
+  gerar:
+    needs: checar
+    if: needs.checar.outputs.pular != '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      # prompts do canal ficam no repositório PRIVADO coringa-cofre (o código é público)
+      - name: Baixar o cofre
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: prompts
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependências
+        timeout-minutes: 25         # instalação normal leva ~1,5 min; travou = falha e avisa (não come os 120 min)
+        run: |
+          # o servidor do Ubuntu às vezes trava SEM dar erro: até 3 tentativas de no máximo 3+5 min cada
+          for i in 1 2 3; do
+            timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 &&
+            timeout 300 sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji && break
+            echo "apt travou ou falhou (tentativa $i de 3)"; sleep 20
+          done
+          command -v ffmpeg > /dev/null || { echo "sem ffmpeg: não dá para montar vídeo"; exit 1; }
+          pip install -r requirements.txt
+          npm install --no-audit --no-fund
+          timeout 600 python -m playwright install --with-deps chromium
+          # Claude Code: escreve o roteiro usando a assinatura Claude Pro (sem ele, o sistema usa o Gemini como antes)
+          timeout 300 npm install -g @anthropic-ai/claude-code --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
+
+      - name: Gerar vídeos
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          TEMAS_PLANILHA: ${{ vars.TEMAS_PLANILHA }}
+          VOZ: ${{ vars.VOZ || 'pt-BR-AntonioNeural' }}
+          VOZ_TOM: ${{ vars.VOZ_TOM || '+0Hz' }}
+          VOZ_VELOCIDADE: ${{ vars.VOZ_VELOCIDADE || '+10%' }}
+          TEMA: ${{ github.event.inputs.tema }}
+          CURIOSIDADE: ${{ github.event.inputs.curiosidade }}
+          PARTE: ${{ github.event.inputs.parte }}
+          AGENDA: ${{ github.event.schedule }}
+          MASCOTE: ${{ github.event.inputs.mascote }}
+        # repositório público: o registro completo (tema, roteiro) não aparece no GitHub; vai para o Telegram se der erro
+        run: |
+          mkdir -p saida
+          set -o pipefail
+          (
+          if [ "${{ github.event.inputs.teste }}" = "true" ]; then
+            python main.py --teste-edge
+          elif [ -n "$MASCOTE" ]; then
+            python main.py --mascote "$MASCOTE"
+          elif [ -n "$CURIOSIDADE" ]; then
+            python main.py --curiosidade "$CURIOSIDADE" --parte "${PARTE:-1}"
+          elif [ -n "$TEMA" ]; then
+            python main.py --tema "$TEMA"
+          elif [ -n "$AGENDA" ]; then
+            python main.py --diario
+          elif [ "${{ github.event.inputs.qtd || '0' }}" = "0" ] && [ "${{ github.event.inputs.explica || '0' }}" = "0" ]; then
+            python main.py --diario
+          else
+            python main.py --qtd "${{ github.event.inputs.qtd || '0' }}" --explica "${{ github.event.inputs.explica || '0' }}"
+          fi
+          ) > saida/registro.txt 2>&1 && ok=1 || ok=0
+          grep -E '^\s*\[(aprovação|fiscal final|claude)\]|Traceback|Error' saida/registro.txt | sed -E 's/(resposta: ).*/\1…/' | tail -20 || true
+          if [ "$ok" = "0" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            tail -n 60 saida/registro.txt > saida/erro.txt
+            curl -s -m 30 -F chat_id="$TELEGRAM_CHAT_ID" -F caption="📄 Registro do erro (últimas linhas)" \
+              -F document=@saida/erro.txt "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" > /dev/null || true
+          fi
+          [ "$ok" = "1" ]
+
+      - name: Salvar histórico
+        if: always()
+        run: |
+          git config user.name "coringa-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/ assets/mascote3d/ 2>/dev/null || git add data/ || true
+          git diff --cached --quiet || (git commit -m "histórico $(date +%F)" && git push) || true
+
+      # o main.py avisa sozinho quando não sai vídeo; isto cobre o caso em que ele NEM CHEGOU a rodar
+      # (instalação travada, erro do GitHub, tempo esgotado)
+      - name: Avisar no Telegram se o workflow quebrou
+        if: failure() || cancelled()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ] || exit 0
+          curl -s -m 20 "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=⚠️ O workflow 'Gerar vídeos do dia' quebrou antes de terminar (instalação travada ou erro do GitHub). Dá para rodar de novo em Actions → Run workflow. Detalhes: $LINK" > /dev/null || true

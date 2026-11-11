@@ -1,0 +1,30 @@
+{
+ "pedido": "A Guerra dos Emus, quando o exército da Austrália com metralhadoras perdeu uma guerra para aves em 1932",
+ "tema": {
+  "pergunta": "Como o exército da Austrália perdeu uma guerra para aves?",
+  "formato": "explica",
+  "termos": [
+   "Guerra dos Emus",
+   "Emu"
+  ],
+  "termos_en": [
+   "Emu War"
+  ],
+  "busca": "Guerra dos Emus Australia exercito",
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "A Guerra dos Emus, quando o exército da Austrália com metralhadoras perdeu uma guerra para aves em 1932"
+ },
+ "pergunta": "Como o exército da Austrália perdeu uma guerra para aves?",
+ "arco": [
+  "PARTE 1: A chegada do exército ao distrito de Wheatbelt para enfrentar os emus.",
+  "PARTE 2: A estratégia das aves e o vexame militar que chocou a Austrália."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "A Guerra dos Emus",
+   "resumo": "Em outubro de 1932, vinte mil emus gigantes invadiram e devastaram as plantações no distrito de Wheatbelt. Com a crise da Grande Depressão em 1929, o governo falhou em pagar os subsídios aos fazendeiros de trigo. Eles eram veteranos da Primeira Guerra Mundial que tentavam sobreviver na Austrália Ocidental. Desesperados com a destruição, os ex-combatentes enviaram uma delegação ao governo exigindo ajuda armada. O governo atendeu e despachou soldados da Artilharia Real Australiana para o distrito de Campion. Os militares desembarcaram armados com metralhadoras automáticas Lewis de guerra. Diante deles estava a segunda maior ave do planeta, medindo até um metro e noventa de altura. Apesar de não voarem, esses animais são corredores bípedes que alcançam até quarenta e oito quilômetros por hora. A tropa avançou pelas planícies áridas pronta para disparar contra as vinte mil aves."
+  }
+ ]
+}

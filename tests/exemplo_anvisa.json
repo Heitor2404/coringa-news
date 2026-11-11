@@ -1,0 +1,28 @@
+{
+ "titulo": "Anvisa aprova 5 novas canetas para diabetes e obesidade",
+ "categoria": "SAÚDE",
+ "legenda_post": "A Anvisa aprovou cinco novas canetas da classe GLP-1 para diabetes e obesidade. Entenda como funcionam.",
+ "hashtags": ["saude", "anvisa", "glp1", "coringanews"],
+ "fontes": ["G1", "Governo Federal"],
+ "produto": null,
+ "imagens": [{"id": "a", "arquivo": "tests/img/fundo_d.jpg"}, {"id": "b", "arquivo": "tests/img/fundo_b.jpg"}, {"id": "c", "arquivo": "tests/img/fundo_c.jpg"}],
+ "cenas": [
+  {"tipo": "gancho", "imagem": "a", "icone": "💉", "titulo": "*5 novas* canetas aprovadas", "subtitulo": "diabetes e obesidade",
+   "fala": "A Anvisa acaba de aprovar *cinco* novas canetas contra diabetes e obesidade."},
+  {"tipo": "numero", "imagem": "b", "icone": "🏛️", "valor": 5, "sufixo": " canetas", "rotulo": "aprovadas pela Anvisa", "nota": "classe GLP-1", "cor": "verde",
+   "comparacao": "para *diabetes tipo 2* e *obesidade*",
+   "fala": "São cinco medicamentos da classe *GLP-1*, aprovados pela agência reguladora.",
+   "fala_tts": "São cinco medicamentos da classe Gê Éle Pê Um, aprovados pela agência reguladora."},
+  {"tipo": "cards", "imagem": "c", "icone": "🎯", "titulo": "Para que *servem*",
+   "itens": [{"icone": "💧", "rotulo": "Diabetes tipo 2", "valor": "controle da glicose", "cor": "verde"},
+             {"icone": "⚖️", "rotulo": "Obesidade", "valor": "perda de peso", "cor": "amarelo"}],
+   "fala": "Elas tratam o diabetes tipo dois e ajudam no *controle* do peso."},
+  {"tipo": "lista", "imagem": "b", "icone": "🧠", "titulo": "Como funcionam",
+   "itens": ["Imitam o hormônio *GLP-1*", "Regulam a *glicose* no sangue", "Aumentam a *saciedade*"],
+   "fala": "Elas imitam um hormônio do intestino: regulam a *glicose* e mandam ao cérebro o sinal de *saciedade*."},
+  {"tipo": "imagem", "imagem": "a", "icone": "🩺", "rotulo": "Só com *receita* e médico",
+   "fala": "Mas atenção: o uso exige *acompanhamento* médico."},
+  {"tipo": "fechamento", "titulo": "Segue o *@coringa.news*",
+   "fala": "Quer entender a notícia do dia? Segue o *@coringa.news*."}
+ ]
+}

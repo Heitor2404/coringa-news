@@ -1,0 +1,47 @@
+name: Testes
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["data/**", "README.md"]
+  workflow_dispatch:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar o cofre (prompts privados)
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: prompts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # mesmo navegador, fontes e bibliotecas da produção: o fiscal da tela (tests/test_tela.py) mede o vídeo de verdade
+      - run: |
+          # apt às vezes trava sem dar erro: tempo-limite próprio e segue sem ele (fonte de emoji é só detalhe)
+          timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 || true
+          timeout 300 sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji || true
+          pip install -r requirements.txt -r requirements-dev.txt
+          npm install --no-audit --no-fund
+          timeout 600 python -m playwright install --with-deps chromium
+      - run: pytest -q -rs
+
+      - name: Avisar no Telegram se os testes falharam
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ] || exit 0
+          curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"             --data-urlencode "chat_id=$TELEGRAM_CHAT_ID"             --data-urlencode "text=❌ Coringa News: os testes falharam após uma alteração. Detalhes: $LINK" > /dev/null || true

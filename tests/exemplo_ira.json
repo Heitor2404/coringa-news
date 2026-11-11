@@ -1,0 +1,145 @@
+{
+ "titulo": "O Irã vai fazer a bomba?",
+ "categoria": "MUNDO",
+ "legenda_post": "O Irã discute em público se deve construir a bomba atômica. Entenda em 40 segundos o que está em jogo.",
+ "hashtags": [
+  "ira",
+  "noticias",
+  "geopolitica",
+  "coringanews"
+ ],
+ "fontes": [
+  "CSMonitor",
+  "Iran International",
+  "Fox News"
+ ],
+ "produto": null,
+ "imagens": [
+  {
+   "id": "a",
+   "prompt": "(teste)",
+   "arquivo": "tests/img/fundo_a.png"
+  }
+ ],
+ "cenas": [
+  {
+   "tipo": "gancho",
+   "imagem": "a",
+   "titulo": "O Irã vai fazer *a bomba?*",
+   "subtitulo": "o que mudou e por quê",
+   "fala": "O Irã está debatendo, em público, se deve construir a *bomba* atômica.",
+   "icone": "☢️"
+  },
+  {
+   "tipo": "citacao",
+   "autor": "Nour News · ligado ao Conselho de Segurança",
+   "texto": "Revisar a doutrina nuclear: como e por qual caminho?",
+   "nota": "título de artigo publicado no fim de semana",
+   "carimbo": "em debate",
+   "cor": "vermelho",
+   "fala": "Pedidos pra mudar a *doutrina* nuclear já aparecem em canais oficiais. Mas o governo diz que *nada* foi aprovado.",
+   "icone": "🗞️"
+  },
+  {
+   "tipo": "numero",
+   "valor": 450,
+   "prefixo": "~",
+   "sufixo": " kg",
+   "rotulo": "urânio altamente enriquecido",
+   "nota": "≈ 1.000 libras · CSMonitor",
+   "cor": "amarelo",
+   "comparacao": "mesmo após *8 meses* de guerra",
+   "fala": "Depois de oito meses de guerra, o Irã ainda guarda quase *450* quilos de urânio altamente enriquecido.",
+   "fala_tts": "Depois de oito meses de guerra, o Irã ainda guarda quase quatrocentos e cinquenta quilos de urânio altamente enriquecido.",
+   "icone": "⚗️"
+  },
+  {
+   "tipo": "escala",
+   "titulo": "enriquecimento de urânio",
+   "subtitulo": "% de U-235 no material",
+   "unidade": "%",
+   "min": 0,
+   "max": 100,
+   "marcas": [
+    {
+     "rotulo": "USINA",
+     "valor": 4,
+     "cor": "verde"
+    },
+    {
+     "rotulo": "BOMBA",
+     "valor": 90,
+     "cor": "vermelho"
+    }
+   ],
+   "destaque": {
+    "rotulo": "IRÃ",
+    "valor": 60
+   },
+   "fala": "Usina de energia usa uns *4%*. Bomba precisa de uns *90%*. O estoque iraniano está em 60%, um passo da bomba.",
+   "fala_tts": "Usina de energia usa uns quatro por cento. Bomba precisa de uns noventa por cento. O estoque iraniano está em sessenta por cento, um passo da bomba.",
+   "icone": "🔬"
+  },
+  {
+   "tipo": "cards",
+   "icone": "⚖️",
+   "titulo": "Os *dois lados*",
+   "itens": [
+    {
+     "icone": "🇺🇸",
+     "rotulo": "Trump",
+     "valor": "Sem arma nuclear",
+     "cor": "azul"
+    },
+    {
+     "icone": "🇮🇷",
+     "rotulo": "Teerã",
+     "valor": "Rejeita negociar",
+     "cor": "vermelho"
+    }
+   ],
+   "fala": "Do lado americano, nada de arma nuclear. E Teerã, por enquanto, *rejeita* negociar o programa."
+  },
+  {
+   "tipo": "mapa",
+   "pais": "Iran",
+   "rotulo": "alvo cogitado: *Pickaxe Mountain*",
+   "pontos": [
+    {
+     "nome": "TEERÃ",
+     "lat": 35.69,
+     "lon": 51.39
+    },
+    {
+     "nome": "FORDOW",
+     "lat": 34.88,
+     "lon": 50.99
+    },
+    {
+     "nome": "NATANZ",
+     "lat": 33.72,
+     "lon": 51.73
+    },
+    {
+     "nome": "ISFAHAN",
+     "lat": 32.65,
+     "lon": 51.67
+    }
+   ],
+   "fala": "E o alvo cogitado pelos Estados Unidos é *Pickaxe* Mountain, perto de Natanz.",
+   "fala_tts": "E o alvo cogitado pelos Estados Unidos é Píquéquis Mauntein, perto de Natânz.",
+   "icone": "📍"
+  },
+  {
+   "tipo": "imagem",
+   "icone": "🤔",
+   "rotulo": "Vem *acordo* ou ataque?",
+   "fala": "Agora o mundo espera a próxima jogada."
+  },
+  {
+   "tipo": "fechamento",
+   "titulo": "Segue o *@coringa.news*",
+   "fala": "Vem acordo ou ataque? Comenta aí e segue o *Coringa News*."
+  }
+ ]
+}

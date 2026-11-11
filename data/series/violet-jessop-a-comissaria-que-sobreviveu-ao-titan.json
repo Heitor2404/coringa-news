@@ -1,0 +1,34 @@
+{
+ "pedido": "Violet Jessop, a comissária que sobreviveu ao Titanic e a mais dois desastres de navios gigantes",
+ "tema": {
+  "pergunta": "Como essa mulher sobreviveu aos maiores naufrágios da história?",
+  "formato": "explica",
+  "termos": [
+   "Violet Jessop",
+   "RMS Titanic",
+   "HMHS Britannic",
+   "RMS Olympic"
+  ],
+  "termos_en": [
+   "Violet Jessop",
+   "RMS Titanic",
+   "HMHS Britannic",
+   "RMS Olympic"
+  ],
+  "busca": "Violet Jessop survived Titanic Britannic Olympic",
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "Violet Jessop, a comissária que sobreviveu ao Titanic e a mais dois desastres de navios gigantes"
+ },
+ "pergunta": "Como essa mulher sobreviveu aos maiores naufrágios da história?",
+ "arco": [
+  "Como Violet Jessop sobreviveu às tragédias dos três navios-irmãos e ganhou o apelido de Senhorita Inafundável."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "A Senhorita Inafundável",
+   "resumo": "Em 1916, no Mar Egeu, Violet Jessop afundava no seu segundo colosso de aço. Filha de criadores de ovelhas em Bahía Blanca, Violet nasceu em 2 de outubro de 1887. Na infância, médicos previram que a tuberculose a mataria em poucos meses. Violet venceu a doença mortal e, aos 16 anos, mudou-se para a Inglaterra após a morte do pai. Seguindo os passos da mãe, virou comissária de bordo em transatlânticos. Em 20 de setembro de 1911, ela estava no RMS Olympic quando o HMS Hawke o atingiu. O casco do Olympic rasgou, mas a embarcação não afundou e Violet saiu ilesa. Em 10 de abril de 1912, ela embarcou no Titanic com 2.208 pessoas rumo a Nova York. Às 23h40 de 14 de abril, o oficial William Murdoch tentou desviar do iceberg no Atlântico Norte. O projeto previa flutuar com 4 compartimentos alagados, mas o gelo rasgou entre 6 e 7. Violet recebeu ordens para ir ao convés servir de exemplo e conseguiu vaga num barco salva-vidas. Às 02h20 de 15 de abril, o Titanic afundou totalmente, matando 1.517 pessoas. Na Primeira Guerra, como enfermeira no HMHS Britannic, sobreviveu ao seu terceiro naufrágio. Após escapar dos três navios irmãos, ganhou o apelido histórico de 'Senhorita Inafundável'. Violet viveu até os 83 anos na Inglaterra, provando que nem o oceano parava a Senhorita Inafundável."
+  }
+ ]
+}

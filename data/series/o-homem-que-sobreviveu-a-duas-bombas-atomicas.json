@@ -1,0 +1,31 @@
+{
+ "pedido": "o homem que sobreviveu a DUAS bombas atômicas.",
+ "tema": {
+  "pergunta": "Como um homem sobreviveu a duas bombas atômicas?",
+  "formato": "explica",
+  "termos": [
+   "Tsutomu Yamaguchi",
+   "Bombardeios de Hiroshima e Nagasaki"
+  ],
+  "termos_en": [
+   "Tsutomu Yamaguchi",
+   "surviving both atomic bombings"
+  ],
+  "busca": "Tsutomu Yamaguchi homem sobreviveu duas bombas atomicas",
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "o homem que sobreviveu a DUAS bombas atômicas."
+ },
+ "pergunta": "Como um homem sobreviveu a duas bombas atômicas?",
+ "arco": [
+  "Tsutomu Yamaguchi sobrevive ao primeiro bombardeio em Hiroshima e viaja para Nagasaki.",
+  "A segunda bomba detona bem no momento de seu retorno ao trabalho."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "O Homem que Sobreviveu ao Inferno",
+   "resumo": "Às 8 horas e 15 minutos da manhã de 6 de agosto de 1945, o engenheiro naval Tsutomu Yamaguchi viu o céu de Hiroshima virar inferno. Nascido em 16 de março de 1916, Yamaguchi trabalhava para a Mitsubishi Heavy Industries e fazia uma viagem de negócios quando a bomba caiu. O impacto provocou graves ferimentos e queimaduras na parte superior do corpo do engenheiro. Com a cidade destruída, ele passou a noite de 6 de agosto de 1945 dentro de um abrigo antiaéreo. Em 7 de agosto, com ferimentos no corpo, Yamaguchi pegou o trem de volta para sua cidade natal, Nagasaki. Apesar das queimaduras, o engenheiro se apresentou para trabalhar na manhã de 9 de agosto de 1945. Naquela manhã, seu supervisor gritou que Yamaguchi era 'louco' ao ouvi-lo descrever a destruição total de Hiroshima por uma só bomba. Enquanto o chefe recusava-se a acreditar no relato de Hiroshima, o relógio do escritório em Nagasaki marcava 11 horas da manhã."
+  }
+ ]
+}

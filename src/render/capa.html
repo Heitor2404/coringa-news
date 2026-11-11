@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Mont;font-weight:900;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-900-normal.woff2)}
+@font-face{font-family:Mont;font-weight:800;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-800-normal.woff2)}
+@font-face{font-family:JBM;font-weight:700;src:url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#05080f;color:#fff;font-family:Mont,'Noto Color Emoji',sans-serif}
+.img{position:absolute;inset:0;background-size:cover;background-position:center}
+.h{color:#FFD21F}
+/* área segura do feed (recorte 3:4 do perfil): y 240–1680 */
+.mascote{position:absolute}
+.mascote svg{width:100%;height:auto;display:block}
+.mascote img{height:100%;width:auto;display:block;margin-left:auto;filter:drop-shadow(0 20px 30px rgba(0,0,0,.6))}
+</style></head><body><div id="c"></div>
+<script src="data.js"></script>
+<script>
+const D=window.CAPA;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hl=s=>esc(s).replace(/\*(.+?)\*/g,'<span class="h">$1</span>');
+const n=(D.titulo||'').replace(/\*/g,'').length, fs=n>48?92:n>34?104:n>22?120:146;
+const masc=D.mascote_img?`<img src="${D.mascote_img}">`:D.mascote;
+const img=D.img?`<div class="img" style="background-image:url('${D.img}')"></div>`:'';
+let html='';
+if(D.tipo==='noticia'){
+ const linhas=String(D.titulo||'').split(/\s+/);
+ // quebra o título em 2–4 faixas, como letreiro de telejornal
+ const faixas=[];let cur='';for(const w of linhas){if((cur+' '+w).replace(/\*/g,'').trim().length>14&&cur){faixas.push(cur.trim());cur=w}else cur+=' '+w}if(cur.trim())faixas.push(cur.trim());
+ const fz=faixas.length>3?100:118;
+ html=`${img}
+ <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,transparent 35%,rgba(120,0,10,.55) 100%)"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,15,.75) 0%,rgba(5,8,15,0) 22%,rgba(5,8,15,0) 40%,rgba(5,8,15,.85) 66%,#05080f 100%)"></div>
+ <div style="position:absolute;left:0;right:0;top:230px;height:110px;background:linear-gradient(90deg,#c1121f,#e11d2e 60%,#ff4d4d);display:flex;align-items:center;padding:0 60px;gap:26px;box-shadow:0 12px 40px rgba(225,29,46,.55)">
+   <span style="display:inline-block;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 0 0 8px rgba(255,255,255,.3)"></span>
+   <span style="font-weight:900;font-size:58px;letter-spacing:4px">PLANTÃO</span>
+   <span style="margin-left:auto;font-family:JBM;font-weight:700;font-size:36px;background:rgba(0,0,0,.35);padding:8px 16px;border-radius:8px">${esc(D.data)}</span></div>
+ ${D.dado?`<div style="position:absolute;right:60px;top:400px;background:#FFD21F;color:#05080f;border-radius:22px;padding:18px 30px;text-align:center;transform:rotate(3deg);box-shadow:0 18px 40px rgba(0,0,0,.55)">
+   <div style="font-family:JBM;font-weight:700;font-size:90px;line-height:1">${esc(D.dado.valor)}</div><div style="font-weight:900;font-size:28px;letter-spacing:1px;text-transform:uppercase">${esc(D.dado.rotulo)}</div></div>`:''}
+ <div class="mascote" style="right:10px;bottom:450px;height:${D.mascote_img?620:300}px;${D.mascote_img?'':'width:300px'}">${masc}</div>
+ <div style="position:absolute;left:40px;right:40px;bottom:470px;display:flex;flex-direction:column;align-items:flex-start;gap:14px">
+   ${faixas.map((f,i)=>`<div style="background:${i%2?'#05080f':'#fff'};color:${i%2?'#fff':'#05080f'};padding:6px 26px 10px;font-weight:900;font-size:${fz}px;line-height:1.02;letter-spacing:-2px;text-transform:uppercase;transform:skewX(-6deg);box-shadow:0 14px 34px rgba(0,0,0,.55)">${esc(f).replace(/\*(.+?)\*/g,'<span style="background:#FFD21F;color:#05080f;padding:0 10px">$1</span>').replace(/\*/g,'')}</div>`).join('')}</div>
+ <div style="position:absolute;left:0;right:0;top:1470px;height:84px;background:#05080f;border-top:6px solid #e11d2e;display:flex;align-items:center;gap:30px;padding:0 40px;font-family:JBM;font-weight:700;font-size:32px;letter-spacing:3px;white-space:nowrap;overflow:hidden">
+   <span style="background:#e11d2e;padding:6px 14px;border-radius:6px">${esc((D.categoria||'NOTÍCIA').toUpperCase())}</span><span style="color:#FFD21F">@CORINGA.EXPLICA</span><span style="color:rgba(255,255,255,.7)">ENTENDA EM 1 MINUTO ▸</span></div>
+`;
+}else{
+ html=`${img}
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(40,10,80,.55) 0%,rgba(40,10,80,.1) 30%,rgba(60,10,90,.45) 52%,rgba(20,6,40,.95) 74%,#0b0418 100%)"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(150deg,#8b5cf655,transparent 45%,#ec489955);mix-blend-mode:soft-light"></div>
+ <div style="position:absolute;right:-60px;top:330px;font-weight:900;font-size:900px;line-height:1;color:#FFD21F;opacity:.16">?</div>
+ <div style="position:absolute;left:60px;top:300px;font-family:JBM;font-weight:700;font-size:40px;letter-spacing:2px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.9)">@coringa.explica</div>
+ ${D.parte?`<div style="position:absolute;right:60px;top:290px;background:#FFD21F;color:#0b0418;padding:14px 26px;border-radius:12px;font-weight:900;font-size:40px;transform:rotate(4deg);box-shadow:0 10px 30px rgba(0,0,0,.5)">PARTE ${D.parte}</div>`:''}
+ <div class="mascote" style="right:20px;bottom:440px;height:${D.mascote_img?600:300}px;${D.mascote_img?'':'width:300px'}">${masc}</div>
+ <div id="tit" style="position:absolute;left:60px;right:60px;bottom:490px;font-weight:900;font-size:${fs}px;line-height:1.02;letter-spacing:-2px;text-transform:uppercase;text-shadow:0 8px 30px rgba(0,0,0,.9)">${hl(D.titulo)}</div>
+ <div style="position:absolute;left:60px;top:1470px;font-family:JBM;font-weight:700;font-size:34px;letter-spacing:3px;color:#d8c8ff">${D.parte?'HISTÓRIA EM PARTES ▸':'VOCÊ SABIA? ▸'}</div>
+ `;
+}
+document.getElementById('c').innerHTML=html;
+// título sempre inteiro: diminui a fonte até nenhuma palavra passar da borda e caber acima de y=600 (recorte 3:4 do perfil)
+function caber(){const t=document.getElementById('tit');if(!t)return;let f=parseFloat(getComputedStyle(t).fontSize);
+ while((t.scrollWidth>t.clientWidth+2||t.offsetHeight>820)&&f>60){f-=4;t.style.fontSize=f+'px'}}
+Promise.all([document.fonts.ready.then(caber),...[...document.querySelectorAll('.img,img')].map(e=>{const u=e.tagName==='IMG'?e.src:(e.style.backgroundImage.match(/url\("?(.+?)"?\)/)||[])[1];
+ return u?new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=u}):0})]).then(()=>window.READY=true);
+</script></body></html>

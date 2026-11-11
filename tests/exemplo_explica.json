@@ -1,0 +1,28 @@
+{
+ "titulo": "Por que mudar a Constituição é tão difícil?",
+ "categoria": "BRASIL",
+ "serie": "CORINGA EXPLICA",
+ "legenda_post": "Toda PEC precisa de 3/5 dos votos, duas vezes em cada Casa. E tem coisa que nem assim muda.",
+ "hashtags": ["curiosidades", "constituicao", "pec", "coringanews"],
+ "fontes": ["Wikipédia"],
+ "produto": null,
+ "imagens": [{"id": "a", "arquivo": "tests/img/fundo_d.jpg"}, {"id": "b", "arquivo": "tests/img/fundo_b.jpg"}, {"id": "c", "arquivo": "tests/img/fundo_c.jpg"}],
+ "cenas": [
+  {"tipo": "gancho", "imagem": "a", "icone": "📜", "titulo": "Por que *3/5* dos votos?", "subtitulo": "o segredo da PEC",
+   "fala": "Por que mudar a Constituição é tão *difícil* assim?"},
+  {"tipo": "numero", "imagem": "b", "icone": "🏛️", "valor": 308, "sufixo": " votos", "rotulo": "de 513 deputados", "nota": "3/5 da Câmara", "cor": "amarelo",
+   "fala": "Na Câmara, uma PEC precisa de *308* votos dos 513 deputados.",
+   "fala_tts": "Na Câmara, uma péqui precisa de trezentos e oito votos dos quinhentos e treze deputados."},
+  {"tipo": "cards", "imagem": "c", "icone": "🔁", "titulo": "E não é *uma vez só*",
+   "itens": [{"icone": "🏛️", "rotulo": "Câmara", "valor": "2 votações", "cor": "azul"},
+             {"icone": "🏛️", "rotulo": "Senado", "valor": "49 de 81", "cor": "verde"}],
+   "fala": "E são *duas* votações em cada Casa. No Senado, precisa de 49 dos 81."},
+  {"tipo": "revelacao", "imagem": "b", "icone": "🛡️", "pergunta": "Existe algo que *nem PEC* muda?", "resposta": "SIM", "detalhe": "as *cláusulas pétreas*", "cor": "verde",
+   "fala": "Mas tem coisa que nem PEC consegue apagar: as *cláusulas pétreas*."},
+  {"tipo": "lista", "imagem": "a", "icone": "🔒", "titulo": "Cláusulas pétreas",
+   "itens": ["*Voto* direto e secreto", "Separação dos *Poderes*", "Direitos *individuais*"],
+   "fala": "Voto direto e secreto, separação dos *Poderes* e direitos individuais não podem ser abolidos."},
+  {"tipo": "fechamento", "titulo": "Segue o *@coringa.news*",
+   "fala": "Agora você sabe por que dá tanto trabalho. Segue o *@coringa.news* pra mais."}
+ ]
+}

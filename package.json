@@ -1,0 +1,13 @@
+{
+  "name": "coringa-news",
+  "private": true,
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.1.0",
+    "@fontsource/montserrat": "^5.1.0",
+    "d3-array": "^3.2.4",
+    "d3-geo": "^3.1.1",
+    "three": "^0.170.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  }
+}

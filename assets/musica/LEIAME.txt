@@ -1,0 +1,5 @@
+Trilhas de domínio público (CC0) do FreePD.com, via github.com/SoundSafari/CC0-1.0-Music.
+Podem ser usadas em vídeos monetizados, sem dar crédito.
+explica/ = vídeos Coringa Explica · noticia/ = vídeos de notícia.
+Para trocar: apague ou coloque outros .mp3 na pasta. O sistema sorteia uma por vídeo
+e abaixa o volume sozinho quando o Coringa fala.

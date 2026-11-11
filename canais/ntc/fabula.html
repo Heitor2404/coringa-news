@@ -42,9 +42,9 @@ const cenas=D.cenas.map((c,i)=>{const el=document.createElement('div');el.classN
   if(c.val){const s=c.val.s||1;V={x:c.val.x??180,y:c.val.y??860,w:720*s,h:1032*s,s};
     h+=`<div class="sombra" style="left:${V.x+V.w*.27}px;top:${V.y+V.h*.935}px;width:${V.w*.46}px;height:${V.h*.05}px"></div>`;
     h+=`<div class="val" style="left:${V.x}px;top:${V.y}px;width:${V.w}px;height:${V.h}px">${(D.val_svg||{})[c.val.pose]||''}</div>`}
-  h+='</div><div class="vinheta"></div>';el.innerHTML=h;ST.insertBefore(el,ST.firstChild);
+  h+='</div>'+(c.noite?'<div style="position:absolute;inset:0;background:rgba(25,35,90,.5);mix-blend-mode:multiply"></div>':'')+'<div class="vinheta"></div>';el.innerHTML=h;ST.insertBefore(el,ST.firstChild);
   const dur=c.b-c.a,n=Math.max(1,Math.round(dur/2.3)),pl=[];
-  const alvoVal=V?{x:V.x+V.w*.5,y:V.y+V.h*.26,z:2.2}:null;
+  const alvoVal=V?{x:V.x+V.w*.5,y:V.y+V.h*.24,z:2.0}:null;
   const p0=(c.props||[])[0],alvoObj=p0?{x:p0.anim==='corre'||p0.anim==='foge'?540:p0.x+(p0.w||160)/2,y:p0.y+(p0.w||160)*.35,z:1.6}:null;
   for(let q=0;q<n;q++){let tipo='geral';if(q>0){const op=[];if(c.balao&&alvoVal)op.push('rosto');if(alvoObj)op.push('objeto');if(alvoVal&&!c.balao)op.push('rosto');op.push('meio');tipo=op[(q-1+i)%op.length]}
     pl.push({t0:c.a+dur*q/n,tipo})}
@@ -61,8 +61,9 @@ window.seek=t=>{
   cenas.forEach((x,j)=>x.el.style.opacity=j===i?1:0);
   // ── câmera: plano atual, leve deriva e tranco no corte
   const pl=[...S.pl].reverse().find(p=>t>=p.t0)||S.pl[0],dp=t-pl.t0,A=alvo(S,pl.tipo);
-  let z=A.z*(1+0.035*cl(dp/2.5)),tx=540-A.x*z,ty=(pl.tipo==='geral'?0:900-A.y*z);
-  if(pl.tipo==='geral'){z=1+0.04*cl(dp/2.5);tx=-540*(z-1);ty=-1000*(z-1)}
+  let fimOn=c.fim&&d>c.fim.de-0.4;const A2=fimOn?alvo(S,'geral'):A;
+  let z=A2.z*(1+0.035*cl(dp/2.5)),tx=540-A2.x*z,ty=(pl.tipo==='geral'||fimOn?0:1080-A2.y*z);
+  if(pl.tipo==='geral'||fimOn){z=1+0.04*cl(dp/2.5);tx=-540*(z-1);ty=-1000*(z-1)}
   tx=Math.min(0,Math.max(1080-1080*z,tx));ty=Math.min(0,Math.max(1920-1920*z,ty));
   const corte=dp<0.12?1-dp/0.12:0;z*=1+0.03*corte;
   // tremor: quando algo cai no chão, no susto/desespero e no começo de efeito forte
@@ -71,9 +72,9 @@ window.seek=t=>{
   if(c.tremor&&d<0.6)sh=Math.max(sh,20*(1-d/0.6));
   const sx=Math.sin(t*61)*sh,sy=Math.cos(t*53)*sh;
   // transição entre cenas: chicote (desliza) ou clarão, alternando
-  let wx=0;if(i>0&&d<0.2&&i%2===0)wx=(1-eo(d/0.2))*900*(i%4===0?1:-1);
+  const wx=0;if(i>0&&i%2===0&&d<0.25)z*=1+0.12*(1-eo(d/0.25));
   S.cam.style.transform=`translate(${tx+sx+wx}px,${ty+sy}px) scale(${z})`;
-  S.el.style.filter=`saturate(${1-(c.cinza??0)}) brightness(${c.noite?0.6:1-(c.cinza??0)*0.1})${c.noite?' hue-rotate(195deg)':''}${(i>0&&d<0.2&&i%2===0)?` blur(${(1-d/0.2)*6}px)`:''}`;
+  S.el.style.filter=`saturate(${1-(c.cinza??0)}) brightness(${1-(c.cinza??0)*0.1})`;
   $('flash').style.opacity=i>0&&i%2===1&&d<0.12?0.4*(1-d/0.12):0;
   // ── Valdirene: esqueleto (braços no ombro, cabeça no pescoço), piscar, boca e "respiração"
   const vEl=S.el.querySelector('.val');
@@ -109,7 +110,7 @@ window.seek=t=>{
     const a=(k/10)*Math.PI,r=60+dd*260;const pt=[(queda.x+(queda.w||160)/2+Math.cos(a)*r-30),(queda.y+(queda.w||160)*0.7-Math.sin(a)*r*0.35)];
     e.style.opacity=0.8*(1-dd/0.7);e.style.transform=`translate(${pt[0]*z+tx}px,${pt[1]*z+ty}px) scale(${1+dd*1.5})`});
   // ── título, painel, balão, legenda, final
-  const ti=$('titulo');if(c.titulo){ti.innerHTML=c.titulo;ti.style.opacity=d<(c.b-c.a-0.3)?cl(d/0.2):cl((c.b-c.a-d)/0.3);ti.style.transform=`scale(${lerp(0.7,1,cl(back(d/0.45),0,1.1))})`}else ti.style.opacity=0;
+  const ti=$('titulo');if(c.titulo){ti.innerHTML=c.titulo;const tf=Math.min(2.6,c.b-c.a-0.3);ti.style.opacity=d<tf?cl(d/0.2):cl((tf+0.3-d)/0.3);ti.style.transform=`scale(${lerp(0.7,1,cl(back(d/0.45),0,1.1))})`}else ti.style.opacity=0;
   const h=$('hud');if(c.painel){h.style.opacity=1;$('rot').textContent=c.painel.rot;const kn=eo((d-0.2)/0.9);
     const val=lerp(c.painel.de??c.painel.para,c.painel.para,kn);$('num').textContent=(c.painel.fmt||'{}').replace('{}',Math.round(val).toLocaleString('pt-BR'));
     h.style.transform=`translateX(-50%) scale(${d<0.3?1+0.12*(1-d/0.3):1})`}else h.style.opacity=0;
@@ -120,7 +121,7 @@ window.seek=t=>{
   const g=(D.captions||[]).find(x=>t>=x.start&&t<x.end+0.05);
   if(g){txt=g.words.map(w=>w.hl?`<i>${w.w}</i>`:w.w).join(' ');t0=g.start}
   else{const cp=[...(c.caps||[])].reverse().find(x=>t>=x[0]);if(cp){txt=cp[1];t0=cp[0]}}
-  if(txt&&!c.titulo&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(c.cap_y??570)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
+  if(txt&&!(c.titulo&&d<2.9)&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(c.cap_y??570)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
   const f=$('fim');if(c.fim&&d>c.fim.de){$('fimp').textContent=c.fim.p;$('fimc').innerHTML=c.fim.c;f.style.opacity=1;f.style.transform=`scale(${cl(back((d-c.fim.de)/0.35),0,1.1)})`}else f.style.opacity=0;
 };
 const im=[...document.images].map(i=>i.decode().catch(()=>0));Promise.all(im.concat([document.fonts.ready])).then(()=>{seek(0);window.READY=true});

@@ -33,3 +33,8 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 3 | Cena de noite quase igual ao dia | ✅ | camada azul mais forte |
 | 4 | Painel grande não aparecia | ✅ | painel por índice de cena |
 | 5 | Personagem "duro" (PNG inteiro) | ✅ | trocado pelo boneco articulado vetorial |
+| 6 | Fonte do motor (Poppins) só existia na máquina do Claude; no GitHub sairia fonte genérica | ✅ | fabula.py copia Montserrat/JetBrains do node_modules para a pasta do vídeo |
+| 7 | Motor com PNG do Flow: 1º quadro errado, Val parada até 9 s, balão a cena toda, baratas da bancada escondidas, pássaro balançando pela cabeça, poeira virando mancha, noite fraca, cenas sem a Val paradas, ratos fora da tela, placa final pequena | ✅ | motor PNG apagado; motor vetorial novo resolve (ver commits 6d3109b em diante) |
+
+## Decisões que não são erro (ficam no projeto do Claude)
+- Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

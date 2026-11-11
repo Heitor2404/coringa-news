@@ -87,10 +87,12 @@ def _numeros(dados: dict) -> list[dict]:
             txt = str(w.get('w', '')).strip(' .,;:!?"\'')
             num = re.sub(r'\D', '', txt)
             ano = len(num) == 4 and 1000 <= int(num) <= 2100
-            if not num or not (ano or int(num) >= 100):      # datas e números grandes; "bote 16" não
+            if not num or ano or int(num) < 100:             # números grandes; ano NÃO (já vai no selo e na legenda: virava 3x "2006")
                 continue
             s = w.get('s', c['start'])
             cena = next((sc for sc in dados['scenes'] if sc['start'] <= s < sc['end']), None)
+            if cena and num in re.sub(r'\D', '', str(cena.get('lugar') or '') + str(cena.get('destaque') or '')):
+                continue                                     # a cena já escreve esse número na tela
             if not cena or cena.get('tipo') in SEM_NUMERO or cena.get('moldura') or s - ult < 2.5 or s - cena['start'] < 0.25:
                 continue
             out.append({'s': round(s, 3), 'w': txt.upper()})

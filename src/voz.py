@@ -241,6 +241,13 @@ def legendas(palavras, hl: set[str]):
             if ant and car(ant + g) <= MAX_CAR + 6:
                 grupos[i - 1:i + 1] = [ant + g]; i -= 1; continue
         i += 1
+    i = 0
+    while i < len(grupos) - 1:                              # "UM CHIP" + "DE SUPERCOMPUTADOR" = um bloco só
+        a, b = grupos[i], grupos[i + 1]
+        if (len(a) <= 2 or len(b) <= 2) and len(a) + len(b) <= 5 and car(a + b) <= MAX_CAR + 6 \
+                and id(a[-1]) not in fim_trecho and b[0]['start'] - a[-1]['end'] <= 0.35:
+            grupos[i:i + 2] = [a + b]; continue
+        i += 1
     blocos = []
     for k, g in enumerate(grupos):
         prox = grupos[k + 1][0] if k + 1 < len(grupos) else None

@@ -39,7 +39,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 #num{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:JBM,monospace;font-weight:700;font-size:150px;line-height:1;color:var(--y);text-shadow:0 10px 50px rgba(0,0,0,.95),0 0 40px rgba(255,210,31,.45);z-index:7;opacity:0;pointer-events:none}
 /* legenda na faixa de 60–70% da altura: acima da legenda/nome do Instagram e longe dos botões da direita */
 #cap{position:absolute;top:1150px;left:90px;right:90px;text-align:center;font-weight:900;font-size:76px;line-height:1.05;letter-spacing:-1.5px;z-index:8}
-#cap span{display:inline-block;text-shadow:0 6px 26px rgba(0,0,0,.95),0 0 4px #000,0 0 2px #000;margin:0 10px}
+#cap span{display:inline-block;text-shadow:0 6px 26px rgba(0,0,0,.95),0 0 4px #000,0 0 2px #000;-webkit-text-stroke:9px #05080f;paint-order:stroke fill;margin:0 4px}
 #sweep{position:absolute;top:-200px;width:260px;height:2400px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transform:rotate(18deg);z-index:7;pointer-events:none}
 .ring{position:absolute;border-radius:50%;border:4px solid var(--y)}
 .chk{display:flex;align-items:center;gap:24px;font-size:46px;font-weight:800;padding:30px 32px;margin-bottom:24px;background:var(--card);border:1px solid var(--line);border-radius:24px;line-height:1.15}
@@ -140,11 +140,11 @@ B.gancho=sc=>{if(!sc.img)return B.gancho0(sc);return{html:`
  upd(t,el){
   // 1º QUADRO JÁ PRONTO (imagem + título + subtítulo visíveis no quadro 0, que é o que aparece no feed): só um "respiro" leve
   const tt=el.querySelector('.t'),k0=clamp((t-sc.start)/.6);
-  if(!tt.dataset.fit){let f=parseFloat(getComputedStyle(tt).fontSize);while((tt.scrollWidth>tt.clientWidth+2||tt.offsetHeight>(sc.moldura_gancho?(D.meta.parte?180:185):sc.subtitulo?290:600))&&f>52){f-=4;tt.style.fontSize=f+'px'}tt.dataset.fit=1}
+  if(!tt.dataset.fit){let f=parseFloat(getComputedStyle(tt).fontSize);while((tt.scrollWidth*1.06>tt.clientWidth+2||tt.offsetHeight>(sc.moldura_gancho?(D.meta.parte?180:185):sc.subtitulo?290:600))&&f>52){f-=4;tt.style.fontSize=f+'px'}tt.dataset.fit=1}
   tt.style.opacity=1;tt.style.transform=`scale(${lerp(1.05,1,eo(k0))})`;
   const se=el.querySelector('.selo');if(se){se.style.opacity=1;se.style.transform=`translateX(-50%) scale(${lerp(1.08,1,eo(k0))})`}
   const sb=el.querySelector('.sub');if(sb){sb.style.opacity=1;sb.style.transform=`scale(${lerp(1.12,1,eo(k0))})`}
-  const m=el.querySelector('.m');if(m){const k=back((t-sc.start-0.9)/0.45);m.style.opacity=clamp((t-sc.start-0.9)/0.12);
+  const m=el.querySelector('.m');if(m&&sc.end-sc.start<2.6)m.style.display='none';else if(m){const k=back((t-sc.start-0.9)/0.45);m.style.opacity=clamp((t-sc.start-0.9)/0.12);
    m.style.transform=`translateX(${(1-clamp(k,0,1.2))*-360}px) rotate(${6+Math.sin(t*2)*2}deg)`;animMascot(m,t,false)}}}};
 B.gancho0=sc=>{const words=(sc.titulo||D.meta.titulo).split(/\s+/);return{html:`
   ${D.meta.parte?`<div class="selo" style="position:absolute;left:50%;top:356px;transform:translateX(-50%);background:linear-gradient(90deg,#8b5cf6,#ec4899);padding:8px 26px;border-radius:999px;font-weight:900;font-size:30px;letter-spacing:2px;white-space:nowrap;box-shadow:0 0 40px rgba(139,92,246,.6)">PARTE ${D.meta.parte}</div>`:''}
@@ -155,10 +155,11 @@ B.gancho0=sc=>{const words=(sc.titulo||D.meta.titulo).split(/\s+/);return{html:`
     <div style="font-size:42px;font-weight:800;margin-top:6px">${hl(sc.subtitulo||'')}</div></div>`,
  upd(t,el){
   // título reconstrói o destaque por palavra
-  const tt=el.querySelector('.t'); if(!tt.dataset.ok){tt.innerHTML=hl(sc.titulo||D.meta.titulo).replace(/(<span class="h">.*?<\/span>|[^\s<]+)/g,'<i style="display:inline-block;font-style:normal">$1</i>');tt.dataset.ok=1}
+  const tt=el.querySelector('.t'); if(!tt.dataset.ok){tt.innerHTML=hl(sc.titulo||D.meta.titulo).replace(/(<span class="h">.*?<\/span>|[^\s<]+)/g,'<i style="display:inline-block;font-style:normal">$1</i>');tt.dataset.ok=1;
+   let f=parseFloat(getComputedStyle(tt).fontSize);while([...tt.querySelectorAll('i')].some(w=>w.offsetWidth*1.06>tt.clientWidth)&&f>52){f-=4;tt.style.fontSize=f+'px'}}
   tt.querySelectorAll('i').forEach((w,i)=>{w.style.opacity=1});
   const se=el.querySelector('.selo');if(se){const k=back((t-sc.start+0.2)/.4);se.style.opacity=clamp((t-sc.start+0.2)/.15);se.style.transform=`translateX(-50%) scale(${clamp(k,0,1.2)})`}
-  const m=el.querySelector('.m');const k=back((t-sc.start-0.35)/0.55);m.style.opacity=clamp((t-sc.start-0.35)/0.2);
+  const m=el.querySelector('.m');if(sc.end-sc.start<2.0){m.style.display='none';pop(el.querySelector('.bal'),t,sc.start+0.8,{dy:30,sc:.5});return}const k=back((t-sc.start-0.35)/0.55);m.style.opacity=clamp((t-sc.start-0.35)/0.2);
   m.style.transform=`translateY(${(1-clamp(k,0,1.2))*400+float(t,0,8)}px)`;animMascot(m,t,speaking(t));
   pop(el.querySelector('.bal'),t,sc.start+0.8,{dy:30,sc:.5});}}};
 
@@ -429,8 +430,8 @@ B.historia=sc=>{const lugar=String(sc.lugar||'').toUpperCase();
   
   const lk=el.querySelector('.leak');lk.style.transform=`translate(${lerp(-500,500,k)}px,${Math.sin(k*3)*120}px)`;lk.style.opacity=.5+.5*Math.sin(t*1.3);
   el.querySelectorAll('.dust i').forEach((d,i)=>{const p=poeira[i];d.style.transform=`translate(${Math.sin(t*.7+i)*30}px,${-((t*p.v)%300)}px)`});
-  const lg=el.querySelector('.lg');if(lg){const n=Math.floor(clamp((t-a-0.35)/0.8)*lugar.length);lg.querySelector('.tw').textContent=lugar.slice(0,n);
-   lg.querySelector('.cur').style.opacity=(Math.floor(t*3)%2)?1:0;lg.style.opacity=t>=a+0.3?1:0}
+  const lg=el.querySelector('.lg');if(lg){lg.querySelector('.tw').textContent=lugar;lg.querySelector('.cur').style.display='none';
+   const kl=eo((t-a-0.2)/0.3);lg.style.opacity=kl;lg.style.transform=`translateX(${-40*(1-kl)}px)`}
   const dq=el.querySelector('.dq');if(dq){const kd=eo((t-a-1.0)/.45);dq.style.opacity=kd;dq.style.transform=`translateX(${-200*(1-kd)}px)`}}}};
 
 // REVELAÇÃO (11/11): sem caixa. A imagem mais forte do vídeo (a do gancho, fechando em loop) em tela cheia; a pergunta em
@@ -495,7 +496,7 @@ function moverFoto(s,t){const sc=s.sc,mo=s.el.querySelector('.moldura');if(!mo)r
 const FOTO=['imagem','gancho','historia'];
 const scenes=D.scenes.map((sc,i)=>{sc.i=i;const b=(B[sc.tipo]||B.imagem)(sc);
   const el=document.createElement('div');el.className='layer';
-  const shade=`<div class="shade" style="background:linear-gradient(180deg,rgba(5,8,15,.42) 0%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'0':'.32'}) 26%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.12':'.45'}) 58%,rgba(5,8,15,.62) 76%,rgba(5,8,15,.8) 100%)"></div>
+  const shade=`<div class="shade" style="background:linear-gradient(180deg,rgba(5,8,15,.42) 0%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'0':'.32'}) 26%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.06':'.45'}) 58%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.38':'.62'}) 76%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.5':'.8'}) 100%)"></div>
     <div class="shade" style="background:linear-gradient(160deg,${C1}${FOTO.includes(sc.tipo)?'22':'55'} 0%,transparent 45%,${C2}${FOTO.includes(sc.tipo)?'1c':'44'} 100%);mix-blend-mode:soft-light"></div>`;
   let img='';
   if(sc.seq&&sc.seq.length>1) img=sc.seq.map((u,j)=>`<div class="img sq" data-j="${j}" style="background-image:url('${u}');opacity:${j?0:1}">${sc.rec&&sc.rec[j]?`<img class="rec" src="${sc.rec[j]}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:drop-shadow(0 18px 24px rgba(0,0,0,.35))">`:''}</div>`).join('')
@@ -588,7 +589,7 @@ window.seek=async function(t){
   fx(t);
   const pz=punch(t);
   let cut=-9,fl=0,dp=0;
-  for(const s of scenes){const a=s.sc.start,b=s.sc.end,tr=TR(s.sc),fi=tr==='zoom'?.18:tr==='chicote'?.08:.001,fo=.14;
+  for(const s of scenes){const a=s.sc.start,b=s.sc.end,tr=TR(s.sc),fi=tr==='zoom'?.08:tr==='chicote'?.08:.001,fo=.001;   // sem dissolver (2 fotos misturadas = fantasma)
     let o=(t<a-fi||t>b+fo)?0:Math.min(clamp((t-a+fi)/fi),clamp((b+fo-t)/fo));
     if(s===scenes[0]&&t<a)o=1; if(s===scenes[scenes.length-1]&&t>b)o=1;
     s.el.style.opacity=o;
@@ -621,12 +622,12 @@ window.seek=async function(t){
   fl=Math.max(fl,window.__fl||0);window.__fl=0;FL.style.opacity=fl;DIP.style.opacity=dp;
   const ks=(t-cut)/.45; sweep.style.left=(ks>=0&&ks<=1)?(lerp(-400,1300,ks)+'px'):'-2000px';
   document.querySelector('#barra i').style.width=(100*clamp(t/D.duration))+'%';
-  const pg=document.getElementById('perg');if(pg.textContent){const atual=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);
+  const pg=document.getElementById('perg');pg.style.display='none';if(false){const atual=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);
     const fimG=(scenes.find(s=>s.sc.tipo!=='gancho'&&!(s.sc.grupo===scenes[0].sc.grupo))||{sc:{start:3}}).sc.start;
     const rev=(scenes.find(s=>s.sc.tipo==='revelacao')||{sc:{start:D.duration*.8}}).sc.start;
     const ok=atual&&['historia','imagem'].includes(atual.sc.tipo)&&!atual.sc.lugar&&!(atual.sc.destaque&&!atual.sc.real)&&t>=fimG&&t<rev;
     pg.style.opacity=ok?clamp((t-fimG)/.3):0}
-  const nm=(D.numeros||[]).find(n=>t>=n.s-0.05&&t<n.s+0.95),numEl=document.getElementById('num');
+  const cenaDe=x=>scenes.find(s=>x>=s.sc.start&&x<s.sc.end);const nm=(D.numeros||[]).find(n=>t>=n.s-0.05&&t<n.s+0.95&&cenaDe(n.s)===cenaDe(t)),numEl=document.getElementById('num');
   if(nm){if(numEl.dataset.k!=nm.s){numEl.dataset.k=nm.s;numEl.textContent=nm.w}const k=back((t-nm.s+0.05)/.25);
     numEl.style.opacity=t<nm.s+0.75?1:clamp((nm.s+0.95-t)/.2);numEl.style.transform=`scale(${lerp(.4,1,clamp(k,0,1.15))}) rotate(-3deg)`}
   else numEl.style.opacity=0;
@@ -635,13 +636,13 @@ window.seek=async function(t){
   cap.style.top=(D.cap_baixo||[]).some(([a,b])=>t>=a-0.05&&t<b+0.05)?'1300px':'1150px';
   if(c&&repete(c,t)){cap.style.opacity=0}
   else if(c){cap.style.opacity=1;
-    if(cap.dataset.k!=c.start){cap.dataset.k=c.start;cap.innerHTML=c.words.map(w=>`<span class="${w.hl?'h':''}">${esc(w.w)}</span>`).join('');
+    if(cap.dataset.k!=c.start){cap.dataset.k=c.start;cap.innerHTML=c.words.map(w=>`<span class="${w.hl?'h':''}">${esc(w.w)}</span>`).join(' ');
       cap.style.fontSize=CAP_FONTE+'px'}
     // o bloco inteiro aparece de uma vez (antes as palavras ainda não ditas ficavam invisíveis mas ocupando lugar,
     // e a legenda parecia torta/encostada à esquerda); a palavra que está sendo dita dá um leve 'pulo'
     const kb=back((t-c.start+0.04)/0.16);cap.style.transform=`scale(${lerp(.86,1,clamp(kb,0,1.1))})`;
     [...cap.children].forEach((sp,i)=>{const s0=c.words[i].s??c.start;const k=clamp((t-s0+0.04)/0.14);
-      sp.style.opacity=t>=s0-0.04?1:0.5;sp.style.transform=`scale(${t>=s0-0.04?lerp(1.08,1,k):1})`});
+      sp.style.opacity=1;sp.style.transform=`scale(${t>=s0-0.04?lerp(1.08,1,k):1})`});
   } else cap.style.opacity=0;
   if(PEND.length){await Promise.all(PEND.splice(0))}
 };

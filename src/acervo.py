@@ -377,7 +377,7 @@ def f_cleveland(consultas: list[str]) -> list[dict]:
     return out
 
 
-MAX_VIDEOS = 8          # clipes candidatos no acervo (só o miniatura é baixada; o clipe, só se for escolhido)
+MAX_VIDEOS = 12         # clipes candidatos no acervo (só o miniatura é baixada; o clipe, só se for escolhido)
 MIN_ALT_VIDEO = 720     # vídeo deitado com menos de 720 linhas fica borrado mesmo na moldura
 
 
@@ -405,12 +405,13 @@ def f_videos(consultas: list[str]) -> list[dict]:
     out, vistos = [], set(clipes_usados())        # 11/11: clipe já usado num vídeo do canal não volta
     buscas = list(dict.fromkeys([q for q in consultas if q]))
     for q in buscas[:6]:
-        for c in midia.candidatos_pixabay(q) + midia.candidatos_arquivo(q):
+        for c in midia.candidatos_pixabay(q) + midia.candidatos_nasa_video(q) + midia.candidatos_arquivo(q) + midia.candidatos_archive(q):
             w, h, dur = int(c.get('w') or 0), int(c.get('h') or 0), float(c.get('dur') or 0)
             deitado = w >= h
             if not c.get('thumb') or c['url'] in vistos or (dur and dur < 3):
                 continue
-            if (deitado and h and h < MIN_ALT_VIDEO) or (not deitado and h < 1280):
+            antigo = 'archive.org' in c['url']           # filme antigo: 480 linhas é o que existe (e combina com a época)
+            if (deitado and h and h < (360 if antigo else MIN_ALT_VIDEO)) or (not deitado and h < 1280):
                 continue                                    # pequeno demais: borrado no celular
             vistos.add(c['url'])
             pix = 'pixabay' in c['url']
@@ -764,7 +765,8 @@ def complementar(v: dict, acervo: list[dict], pasta: Path) -> list[dict]:
     def buscar(q):
         tit = _categoria_commons(q, 8) + _busca_commons(q, 6)
         return (f_wikidata([q])[:2] + _commons_infos(list(dict.fromkeys(tit))[:12], 'Commons')[:5]
-                + f_smithsonian([q])[:2] + f_openverse([q])[:2])
+                + f_smithsonian([q])[:2] + f_openverse([q])[:2]
+                + f_videos([q])[:2])              # 11/11: clipe buscado pela FRASE (mais específico que o tema geral)
 
     with ThreadPoolExecutor(3) as ex:
         res = list(ex.map(lambda q: _seguro(lambda: buscar(q)), consultas))

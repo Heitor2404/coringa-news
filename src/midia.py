@@ -208,6 +208,66 @@ def candidatos_pixabay(busca: str) -> list[dict]:
     return out
 
 
+def candidatos_nasa_video(busca: str) -> list[dict]:
+    """Vídeos da NASA (domínio público, sem chave): espaço, foguetes, a Terra vista de cima, laboratório da estação."""
+    out = []
+    try:
+        r = requests.get('https://images-api.nasa.gov/search', headers=UA, timeout=30,
+                         params={'q': busca[:100], 'media_type': 'video', 'page_size': 12})
+        r.raise_for_status()
+        for it in (r.json().get('collection') or {}).get('items') or []:
+            d = (it.get('data') or [{}])[0]
+            nid = d.get('nasa_id')
+            thumb = next((l.get('href') for l in it.get('links') or [] if l.get('render') == 'image'), None)
+            if not nid or not thumb:
+                continue
+            m = requests.get(f'https://images-api.nasa.gov/asset/{nid}', headers=UA, timeout=30).json()
+            hrefs = [x.get('href', '') for x in (m.get('collection') or {}).get('items') or []]
+            url = next((h for suf in ('~large.mp4', '~medium.mp4', '~orig.mp4') for h in hrefs if h.endswith(suf)), None)
+            if not url:
+                continue
+            out.append({'tipo': 'video', 'url': url.replace('http://', 'https://'), 'thumb': thumb,
+                        'descricao': f"NASA: {d.get('title', '')} — {str(d.get('description', ''))[:160]}",
+                        'w': 1280, 'h': 720, 'dur': 0.0, 'ano': _ano({'DateTimeOriginal': {'value': d.get('date_created', '')}}),
+                        'credito': f"{d.get('title', '')} (NASA, domínio público)"})
+            if len(out) >= POR_FONTE:
+                break
+    except Exception as e:
+        print(f'  [mídia/nasa] {busca!r} falhou: {str(e)[:120]}')
+    return out
+
+
+def candidatos_archive(busca: str) -> list[dict]:
+    """Internet Archive: filmes antigos de DOMÍNIO PÚBLICO (coleção Prelinger e afins), sem chave. Só arquivos até ~80 MB."""
+    out = []
+    try:
+        q = (f'({busca[:80]}) AND mediatype:movies AND (collection:prelinger OR licenseurl:*publicdomain*)')
+        r = requests.get('https://archive.org/advancedsearch.php', headers=UA, timeout=30,
+                         params={'q': q, 'fl[]': ['identifier', 'title', 'year'], 'rows': 8, 'output': 'json'})
+        r.raise_for_status()
+        for doc in (r.json().get('response') or {}).get('docs') or []:
+            ident = doc.get('identifier')
+            if not ident:
+                continue
+            meta = requests.get(f'https://archive.org/metadata/{ident}', headers=UA, timeout=30).json()
+            mp4 = [f for f in meta.get('files') or [] if str(f.get('name', '')).lower().endswith('.mp4')
+                   and 0 < int(f.get('size') or 0) <= 80_000_000]
+            if not mp4:
+                continue
+            f = max(mp4, key=lambda f: int(f.get('height') or 0))
+            out.append({'tipo': 'video', 'url': f"https://archive.org/download/{ident}/{f['name']}",
+                        'thumb': f'https://archive.org/services/img/{ident}',
+                        'descricao': f"Arquivo: {doc.get('title', '')}", 'w': int(f.get('width') or 640),
+                        'h': int(f.get('height') or 480), 'dur': float(f.get('length') or 0) if str(f.get('length', '')).replace('.', '', 1).isdigit() else 0.0,
+                        'ano': int(doc['year']) if str(doc.get('year', '')).isdigit() else None,
+                        'credito': f"{doc.get('title', '')} (Internet Archive, domínio público)"})
+            if len(out) >= POR_FONTE:
+                break
+    except Exception as e:
+        print(f'  [mídia/archive] {busca!r} falhou: {str(e)[:120]}')
+    return out
+
+
 def candidatos_openverse(busca: str) -> list[dict]:
     """Openverse (WordPress): milhões de imagens com licença aberta (Flickr e outros), sem chave. Só licenças que permitem uso comercial."""
     out = []
@@ -351,6 +411,8 @@ def quadros(clipe: Path, dur: float, pasta: Path, fps: int = 30, desloc: float =
                                  capture_output=True, text=True).stdout.strip() or 0)
     precisa = dur + 0.8
     ini = (1.0 if total > precisa + desloc + 2.5 else 0.0) + desloc     # pula o comecinho (às vezes é uma tela preta)
+    if total > 120 and total > precisa + desloc + 40:                    # filme longo (arquivo antigo): pula os créditos
+        ini = total * 0.25 + desloc
     if total and total - ini < precisa:
         ini = max(0.0, total - precisa) if total > precisa else 0.0
     filtro = (f'fps={fps},scale=960:-2,{COR_FFMPEG}' if moldura else

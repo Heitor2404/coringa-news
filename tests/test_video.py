@@ -149,3 +149,32 @@ def test_buraco_pega_reserva_video_primeiro():
                    {'tipo': 'historia', 'fala': 'f2'}, {'tipo': 'historia', 'fala': 'f3'}]}
     acervo.preencher(v, acv)
     assert [c.get('foto') for c in v['cenas']] == ['a0', 'a2', 'a1', None]
+
+
+class _R:
+    def __init__(self, d): self.d = d
+    def json(self): return self.d
+    def raise_for_status(self): pass
+
+
+def test_videos_da_nasa_e_do_archive(monkeypatch):
+    """11/11: mais fontes de vídeo sem chave (NASA e Internet Archive)."""
+    from src import midia
+
+    def falso(url, **k):
+        if 'images-api.nasa.gov/search' in url:
+            return _R({'collection': {'items': [{'data': [{'nasa_id': 'X1', 'title': 'ISS lab', 'date_created': '2015-03-01T00:00:00Z'}],
+                                                 'links': [{'href': 'https://n/thumb.jpg', 'render': 'image'}]}]}})
+        if 'images-api.nasa.gov/asset' in url:
+            return _R({'collection': {'items': [{'href': 'http://n/X1~orig.mp4'}, {'href': 'http://n/X1~large.mp4'}]}})
+        if 'advancedsearch' in url:
+            return _R({'response': {'docs': [{'identifier': 'film1', 'title': 'Old factory', 'year': '1948'}]}})
+        if 'archive.org/metadata' in url:
+            return _R({'files': [{'name': 'a.mp4', 'size': '50000000', 'height': '480', 'width': '640', 'length': '612.3'},
+                                 {'name': 'b.mp4', 'size': '900000000', 'height': '1080'}]})
+        raise AssertionError(url)
+    monkeypatch.setattr(midia.requests, 'get', falso)
+    n = midia.candidatos_nasa_video('iss')
+    assert n and n[0]['url'] == 'https://n/X1~large.mp4' and n[0]['ano'] == 2015
+    a = midia.candidatos_archive('factory')
+    assert a and a[0]['url'].endswith('/film1/a.mp4') and a[0]['h'] == 480 and a[0]['ano'] == 1948

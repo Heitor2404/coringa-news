@@ -26,14 +26,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
       # mesmo navegador, fontes e bibliotecas da produção: o fiscal da tela (tests/test_tela.py) mede o vídeo de verdade
       - run: |
           # apt às vezes trava sem dar erro: tempo-limite próprio e segue sem ele (fonte de emoji é só detalhe)
-          timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 || true
-          timeout 300 sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji || true
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 180 sudo apt-get install -y -qq fonts-noto-color-emoji) || true
           pip install -r requirements.txt -r requirements-dev.txt
           npm install --no-audit --no-fund
-          timeout 600 python -m playwright install --with-deps chromium
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
       - run: pytest -q -rs
 
       - name: Avisar no Telegram se os testes falharam

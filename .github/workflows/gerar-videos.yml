@@ -80,19 +80,22 @@ jobs:
         with:
           node-version: "22"
 
+      # ffmpeg vem do GitHub (binário pronto), não do servidor do Ubuntu, que às vezes fica fora do ar (11/11)
+      - name: Instalar ffmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+
       - name: Instalar dependências
         timeout-minutes: 25         # instalação normal leva ~1,5 min; travou = falha e avisa (não come os 120 min)
         run: |
-          # o servidor do Ubuntu às vezes trava SEM dar erro: até 3 tentativas de no máximo 3+5 min cada
-          for i in 1 2 3; do
-            timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 &&
-            timeout 300 sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji && break
-            echo "apt travou ou falhou (tentativa $i de 3)"; sleep 20
-          done
-          command -v ffmpeg > /dev/null || { echo "sem ffmpeg: não dá para montar vídeo"; exit 1; }
+          # do Ubuntu só a fonte de emoji (detalhe): se o servidor do Ubuntu estiver fora do ar, segue sem ela
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 180 sudo apt-get install -y -qq fonts-noto-color-emoji) || echo "apt fora do ar: sigo sem a fonte de emoji"
+          command -v ffmpeg > /dev/null && command -v ffprobe > /dev/null || { echo "sem ffmpeg: não dá para montar vídeo"; exit 1; }
           pip install -r requirements.txt
           npm install --no-audit --no-fund
-          timeout 600 python -m playwright install --with-deps chromium
+          # navegador: com as bibliotecas do Ubuntu; se o servidor do Ubuntu cair, a máquina do GitHub já tem quase todas
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           # Claude Code: escreve o roteiro usando a assinatura Claude Pro (sem ele, o sistema usa o Gemini como antes)
           timeout 300 npm install -g @anthropic-ai/claude-code --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
 

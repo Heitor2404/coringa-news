@@ -3,7 +3,7 @@
 Fluxo: tema → pesquisa (Wikipédia) → roteiro do Claude (JSON com cena, pose, balão, narração, efeito, painel e objetos)
 → prévia no Telegram (o roteiro no formato do Heitor + um quadro de cada cena) → aprovação → voz → montagem (Chrome +
 ffmpeg, com efeitos sonoros e música) → Telegram.
-Tudo que é desenho vem de canais/ntc (cenários, objetos e a Valdirene feitos por código): o personagem é sempre igual.
+A arte vem de canais/ntc/arte (cenários pintados no Google Flow + Val e objetos recortados); a montagem é canais/ntc/fabula.html.
 Os textos para a IA ficam no cofre privado (PROMPT_FABULA_TEMA, PROMPT_FABULA).
 """
 import json, os, random, re, shutil, subprocess, time
@@ -18,16 +18,21 @@ HIST = RAIZ / 'data' / 'historico_ntc.json'
 BRT = timezone(timedelta(hours=-3))
 NOME = 'NINGUÉM TE CONTOU'
 
-CENARIOS = ['cozinha', 'rua', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
+CENARIOS = ['cozinha', 'rua', 'rua_destruida', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
+ARTE = CANAL / 'arte'
+ARQ_CENARIO = {'rua': 'rua_normal'}                    # nome no roteiro → arquivo em arte/cenarios
 POSES = ['neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada']
-OBJETOS = {'barata': 120, 'rato': 240, 'passaro': 220, 'lixo': 200, 'folhas': 420, 'chinelo': 150, 'murcha': 170,
-           'globo': 300, 'mosca': 90, 'dinheiro': 200, 'pao': 200, 'gota': 90, 'fogo': 160, 'lagarto': 260,
-           'celular': 120, 'nuvem': 300}
+# largura na tela (px) e para que lado o desenho olha (para virar quando anda no sentido contrário)
+OBJETOS = {'barata': 200, 'rato': 260, 'passaro': 220, 'lixo': 330, 'folhas': 300, 'chinelo': 190, 'murcha': 260,
+           'globo': 300, 'mosca': 110, 'dinheiro': 220, 'pao': 230, 'gota': 110, 'fogo': 220, 'lagarto': 240,
+           'celular': 150, 'nuvem': 380}
+OLHA_ESQ = {'barata', 'passaro', 'mosca'}
 ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
-# altura do chão (onde os pés/objetos encostam) e da bancada de cada cenário (px no quadro de 1080x1920)
-CHAO = {'cozinha': 1700, 'rua': 1590, 'floresta': 1640, 'horta': 1420, 'lab': 1700, 'sala': 1640, 'mercado': 1640,
-        'praia': 1560, 'hospital': 1700, 'espaco': 1500, 'fazenda': 1380}
-BANCADA = {'cozinha': 1180, 'lab': 1180, 'mercado': 1200, 'hospital': 1080}
+# linha dos pés da Val e do chão dos objetos (px no quadro 1080x1920; todos os cenários do Flow têm chão no terço de baixo)
+CHAO = {c: 1840 for c in CENARIOS}
+# tampo de bancada/mesa: (altura, x inicial, x final)
+BANCADA = {'cozinha': (1100, 20, 560), 'lab': (1000, 480, 1060)}
+VAL_X = {'esquerda': 330, 'direita': 760, 'centro': 560}
 VOZ = {'voz_gemini': os.getenv('NTC_VOZ', 'Puck'), 'velocidade_gemini': float(os.getenv('NTC_VELOCIDADE', '1.12')),
        'estilo_gemini': 'narrador brasileiro jovem de vídeo viral de internet: rápido, irônico, debochado e animado, '
                         'como quem conta uma fofoca absurda, mas falando claro'}
@@ -123,43 +128,71 @@ def texto_previa(r: dict) -> str:
 SFX = sorted(p.stem for p in (CANAL / 'sfx').glob('*.wav')) or ['pop', 'whoosh']
 
 
+def _proporcao(nome: str) -> float:
+    from PIL import Image
+    w, h = Image.open(ARTE / 'objetos' / 'usar' / f'{nome}.png').size
+    return round(h / w, 4)
+
+
 def _objetos(c: dict) -> list[dict]:
-    """Converte 'objetos' do roteiro (tipo, quantidade, ação, lugar) em posições na tela."""
+    """Converte 'objetos' do roteiro (tipo, quantidade, ação, lugar) em posições na tela (y = base do objeto)."""
     out = []
     cen = c['cenario']
+    chao = CHAO[cen]
     for o in c['objetos']:
-        w = OBJETOS[o['tipo']]
+        t = o['tipo']
+        w, ar = OBJETOS[t], _proporcao(t)
         n = max(1, min(8, int(o.get('quantidade') or 1)))
         acao = o.get('acao') if o.get('acao') in ACOES else 'aparece'
         lugar = str(o.get('lugar') or 'chao')
-        alt = int(w * 0.75)
-        y = {'bancada': BANCADA.get(cen, CHAO[cen] - 420) - alt, 'ceu': 520, 'meio': 1000}.get(lugar, CHAO[cen] - alt - 10)
-        if acao in ('corre', 'foge'):
-            x = -w - 40 if acao == 'corre' else 1100
-            out.append({'t': o['tipo'], 'x': x, 'y': y, 'w': w, 'n': n, 'passo': 0.3, 'anim': acao,
-                        'vel': 460 if acao == 'corre' else -380, 'de': 0.2, 'dy': 8})
-        else:
-            larg = 1080 - 120
-            for i in range(n):
-                xi = 60 + (larg - w) * ((i + 0.5) / n) if n > 1 else (60 if lugar in ('esquerda',) else 1020 - w if lugar == 'direita' else 540 - w / 2)
-                out.append({'t': o['tipo'], 'x': int(xi), 'y': int(y - (i % 2) * 18), 'w': w, 'anim': acao, 'de': 0.3 + 0.18 * i})
+        banc = BANCADA.get(cen) if lugar == 'bancada' else None
+        x0, x1 = (banc[1], banc[2]) if banc else (40, 1040)
+        if banc:
+            w = int(w * 0.75)                                  # mais longe da câmera
+        base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu'}
+        for i in range(n):
+            if banc:
+                y = banc[0] + (i % 2) * 14
+            elif lugar == 'ceu':
+                y = 760 + (i % 2) * 60
+            elif lugar == 'meio':
+                y = 1300
+            else:
+                y = chao - 150 + ((i * 53) % 4) * 45            # espalha na profundidade do chão
+            if acao in ('corre', 'foge'):
+                vai_dir = acao == 'corre'
+                x = x0 - w - 20 if vai_dir else x1 + 20
+                out.append({**base, 'x': x, 'y': y, 'de': round(0.2 + 0.32 * i, 2), 'vel': (1 if vai_dir else -1) * (520 + (i * 71) % 180),
+                            'flip': (t in OLHA_ESQ) == vai_dir, 'lim': [x0, x1] if banc else None})
+            else:
+                if n == 1:
+                    x = {'esquerda': x0 + 20, 'direita': x1 - w - 20}.get(lugar, (x0 + x1) / 2 - w / 2)
+                else:
+                    x = x0 + (x1 - x0 - w) * (i / (n - 1))
+                out.append({**base, 'x': int(x), 'y': int(y), 'de': round(0.3 + 0.18 * i, 2)})
+    out.sort(key=lambda p: p['y'])                             # quem está mais perto da câmera fica na frente
     return out
+
+
+def _fundo(cen: str) -> dict:
+    from PIL import Image
+    w, h = Image.open(ARTE / 'cenarios' / f'{ARQ_CENARIO.get(cen, cen)}.jpg').size
+    bh = round(1080 * h / w)
+    return {'cen': ARQ_CENARIO.get(cen, cen), 'bg_h': bh, 'bg_top': 1920 - bh}   # preso embaixo: o chão nunca é cortado
 
 
 def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     cenas, painel_ant = [], {}
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
-        s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'cinza': round(1 - c['cor'] / 100, 2),
-             'noite': bool(c.get('noite')), 'props': _objetos(c), 'cam': random.Random(k).choice(['aproxima', 'aproxima', 'esq', 'dir', 'afasta'])}
+        s = {'a': round(a, 3), 'b': round(b, 3), **_fundo(c['cenario']), 'chao': CHAO[c['cenario']],
+             'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')), 'props': _objetos(c)}
         if c['pose'] != 'fora':
             lado = str(c.get('posicao') or 'centro')
-            esc = 1 if lado == 'centro' else 0.9
-            s['val'] = {'pose': c['pose'], 'x': {'esquerda': -40, 'direita': 400}.get(lado, 180),
-                        'y': int(CHAO[c['cenario']] - 1032 * esc * 815 / 860), 's': esc}   # pés no chão do cenário
+            if lado == 'centro' and any(o.get('lugar') == 'bancada' for o in c['objetos']) and c['cenario'] in BANCADA:
+                lado = 'direita' if BANCADA[c['cenario']][1] < 300 else 'esquerda'   # não tampar o que acontece na bancada
+            s['val'] = {'pose': c['pose'], 'x': VAL_X.get(lado, VAL_X['centro']), 's': 1 if lado == 'centro' else 0.95}
         if c['balao']:
             s['balao'] = c['balao']
-            vx = s.get('val', {}).get('x', 180)              # ao lado da cabeça, abaixo da legenda
-            s['balao_x'], s['balao_y'] = min(600, vx + 440), s.get('val', {}).get('y', 760) + 130
         p = c.get('painel') or {}
         if p.get('rotulo') and p.get('valor') is not None:
             try:
@@ -175,23 +208,16 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     # encerramento: a última cena ganha a placa da parte 2 / comentário
     ult = cenas[-1]
     ult['b'] = round(total, 3)
-    ult['fim'] = {'de': max(0.5, (ult['b'] - ult['a']) - 3.2), 'p': str(r.get('cta_placa') or 'PARTE 2 AMANHÃ')[:28],
+    ult['fim'] = {'de': max(0.5, (ult['b'] - ult['a']) - 2.8, 2.6 if ult.get('balao') else 0),   # o balão da última cena aparece antes da placa
+                   'p': str(r.get('cta_placa') or 'PARTE 2 AMANHÃ')[:28],
                   'c': re.sub(r'\*([^*]+)\*', r'<span style="color:#F2C14E">\1</span>', str(r.get('cta_tela') or ''))[:90]}
-    # a Valdirene vai DENTRO da página (SVG em linha) para os braços, a cabeça, os olhos e a boca serem animados
-    poses = {c['val']['pose'] for c in cenas if c.get('val')}
-    val_svg = {p: re.sub(r' width="\d+" height="\d+"', ' width="100%" height="100%"', (CANAL / 'val' / f'{p}.svg').read_text(encoding='utf-8'), count=1)
-               for p in poses}
-    return {'cenas': cenas, 'captions': caps, 'duration': total, 'val_svg': val_svg}
+    return {'cenas': cenas, 'captions': caps, 'duration': total}
 
 
 def _pagina(dados: dict, trab: Path) -> Path:
     trab.mkdir(parents=True, exist_ok=True)
-    for sub in ('cen', 'prop'):
-        dst = trab / sub
-        if not dst.exists():
-            shutil.copytree(CANAL / sub, dst)
-    if not (trab / 'svg').exists():
-        shutil.copytree(CANAL / 'val', trab / 'svg')
+    if not (trab / 'arte').exists():
+        (trab / 'arte').symlink_to(ARTE, target_is_directory=True)
     shutil.copy(CANAL / 'fabula.html', trab / 'fabula.html')
     (trab / 'data.js').write_text('window.DATA=' + json.dumps(dados, ensure_ascii=False) + ';', encoding='utf-8')
     return trab / 'fabula.html'

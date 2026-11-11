@@ -16,3 +16,9 @@ branca de adesivo. Gerar no Flow uma folha com vários objetos em fundo verde li
 `python canais/ntc/recorta_folha.py folha.jpg canais/ntc/arte/objetos/lado barata_lado rato passaro ...`
 (nomes na ordem de leitura, linha por linha). O script tira o verde, a borda branca, o branco preso entre pernas/folhas e o halo.
 Folha 1 (`objetos/original/folha_lado_1.jpg`): barata_lado, rato, passaro, lixo, folhas, murcha, chinelo, globo.
+
+## O que o vídeo usa (`canais/ntc/fabula.html`)
+- Cenários: `cenarios/*.jpg` (preso embaixo, chão sempre aparece; "rua" = rua_normal).
+- Val: `val/recorte/` — neutra=frente (perto: tres_quartos), comemora, explica, brava, susto/desesperada=panico; pisca trocando a cabeça (só na frente).
+- Objetos: `objetos/usar/` (versão final sem borda). Objeto novo → recortar com `recorta_folha.py`, conferir e copiar para `usar/`;
+  colocar a largura em `OBJETOS` e, se o desenho olha para a esquerda, em `OLHA_ESQ` (src/fabula.py).

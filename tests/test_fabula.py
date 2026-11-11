@@ -39,20 +39,24 @@ def test_dados_do_template():
     p = [c['painel'] for c in d['cenas'] if c.get('painel') and c['painel']['rot'] == 'DIAS SEM BARATAS']
     assert [x['para'] for x in p] == [0, 1, 30, 90, 365] and p[2]['de'] == 1   # o contador continua de onde parou
     for c in d['cenas']:                                                    # Valdirene com os pés no chão do cenário
-        if c.get('val'):
-            v = c['val']
-            pes = v['y'] + 1032 * v['s'] * 815 / 860
-            assert abs(pes - fabula.CHAO[c['cen']]) < 3
+        assert c['chao'] == fabula.CHAO[[k for k in fabula.CENARIOS if fabula.ARQ_CENARIO.get(k, k) == c['cen']][0]]
+        assert c['bg_top'] + c['bg_h'] == 1920                              # fundo preso embaixo: chão nunca cortado
+        for p in c['props']:
+            assert p['ar'] > 0 and p['w'] > 0
+    c0 = d['cenas'][0]                                                      # baratas na bancada: Val sai do meio e elas ficam atrás dela
+    assert c0['val']['x'] != fabula.VAL_X['centro'] and all(p['atras'] for p in c0['props'] if p['t'] == 'barata')
 
 
 def test_todos_os_arquivos_existem():
     from src import fabula
     for n in fabula.CENARIOS:
-        assert (fabula.CANAL / 'cen' / f'{n}.svg').exists(), n
+        assert (fabula.ARTE / 'cenarios' / f'{fabula.ARQ_CENARIO.get(n, n)}.jpg').exists(), n
     for n in fabula.OBJETOS:
-        assert (fabula.CANAL / 'prop' / f'{n}.svg').exists(), n
-    for n in ('neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada'):
-        assert (fabula.CANAL / 'val' / f'{n}.svg').exists(), n
+        assert (fabula.ARTE / 'objetos' / 'usar' / f'{n}.png').exists(), n
+    for n in ('frente', 'tres_quartos', 'comemora', 'explica', 'brava', 'panico', 'cabeca_piscando'):
+        assert (fabula.ARTE / 'val' / 'recorte' / f'{n}.png').exists(), n
+    html = (fabula.CANAL / 'fabula.html').read_text(encoding='utf-8')
+    assert 'val/svg' not in html and 'prop/' not in html                     # nada do visual antigo
     assert len(fabula.SFX) >= 10
 
 

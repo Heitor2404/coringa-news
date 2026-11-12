@@ -12,6 +12,7 @@ fotografa quadro a quadro com `seek(t)`.
   espaco), com versão noite. Chão começa em y=1340; a Val pisa em y=1720. `BANCADAS` = tampos onde objetos podem ficar.
 - `kit_objetos.js` — 16 objetos/bichos (todos virados para a direita, largura nominal 100), alguns com partes animadas
   (patas da barata/rato/lagarto, asa do pássaro/mosca, fogo).
+- `kit_pessoas.js` — figurantes genéricos (5 tons de pele, roupas e cabelos variados); entram sozinhos em rua, rua_destruida, mercado, praia, fazenda e hospital (MULTIDAO).
 - `fabula.html` — o motor: planos de câmera (geral/rosto/objeto/meio a cada ~2,3 s), Val entrando andando quando muda de
   cenário, troca de pose com mola, aceno da cabeça a cada bloco da narração, balão em cima da cabeça, painel que aparece
   grande e encolhe para o canto (como placar), legenda, título, placa final, confete, poeira, folhas/poeira no ar.

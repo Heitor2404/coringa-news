@@ -26,7 +26,7 @@ html,body{margin:0;background:#000}
 <div id="st"><div id="fx"></div>
 <div id="titulo"></div><div id="hud"><small id="rot"></small><b id="num">0</b></div><div id="balao"></div><div id="cap"></div>
 <div id="fim"><div class="pa" id="fimp"></div><div class="c" id="fimc"></div></div><div id="flash"></div></div>
-<script src="data.js"></script><script src="kit_base.js"></script><script src="kit_cenarios.js"></script><script src="kit_objetos.js"></script><script src="kit_val.js"></script>
+<script src="data.js"></script><script src="kit_base.js"></script><script src="kit_cenarios.js"></script><script src="kit_objetos.js"></script><script src="kit_val.js"></script><script src="kit_pessoas.js"></script>
 <script>
 const D=window.DATA,$=id=>document.getElementById(id),ST=$('st'),FX=$('fx');
 $('defs').outerHTML=DEFS;
@@ -35,7 +35,7 @@ const cenas=D.cenas.map((c,i)=>{
   const el=document.createElement('div');el.className='cena';
   const amb=AMBIENTE[c.cen];
   el.innerHTML=`<svg width="1080" height="1920" viewBox="0 0 1080 1920"><g class="cam">${(CEN[c.cen]||CEN.cozinha)({noite:!!c.noite})}
-    <g class="atras"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
+    <g class="atras"></g><g class="povo"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
     ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".3" style="mix-blend-mode:multiply"/>':''}<rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
@@ -44,6 +44,10 @@ const cenas=D.cenas.map((c,i)=>{
   // objetos (atrás = bancada/céu; frente = chão)
   const objs=(c.props||[]).map((p,j)=>{const g=document.createElementNS(NS,'g'),inner=document.createElementNS(NS,'g');g.appendChild(inner);inner.innerHTML=(OBJ[p.t]||OBJ.barata).svg();
     el.querySelector(p.atras?'.atras':'.frente').appendChild(g);return{p,g,inner}});
+  // figurantes: lugar público ganha gente andando ao fundo (no caos, correm com os braços para cima)
+  const povo=Array.from({length:MULTIDAO[c.cen]||0},(_,k)=>{const g=document.createElementNS(NS,'g');el.querySelector('.povo').appendChild(g);
+    const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1400+(k%3)*55+rnd(sd)*20,s:.42+(k%3)*.05,x0:rnd(sd+1)*1080,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.25}});
+  povo.sort((a,b)=>a.y-b.y);povo.forEach(q=>q.p.g.parentNode.appendChild(q.p.g));
   let V=null;
   if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'))}}
   const dur=c.b-c.a,n=Math.max(1,Math.round(dur/2.3)),pl=[];
@@ -56,7 +60,7 @@ const cenas=D.cenas.map((c,i)=>{
     else if(q>0){const op=[];if(V)op.push('rosto');if(alvoObj&&!(c.balao&&V))op.push('objeto');if(!(c.balao&&V))op.push('meio');else op.push('geral');tipo=op[(q-1+i)%op.length]}
     let t0=c.a+dur*q/n;if(susto&&q===0&&pl.length)t0=c.a+Math.min(1.6,dur*.4);if(V&&V.anda&&q===1)t0=Math.max(t0,c.a+ANDA+0.4);
     pl.push({t0,tipo,q:pl.length})}
-  return{c,el,cam,V,pl,alvoObj,susto,objs,riscos:[...el.querySelectorAll('.riscos line')],amb:[...el.querySelectorAll('.amb>*')],tipoAmb:amb}});
+  return{c,el,cam,V,povo,pl,alvoObj,susto,objs,riscos:[...el.querySelectorAll('.riscos line')],amb:[...el.querySelectorAll('.amb>*')],tipoAmb:amb}});
 const VAL_ALT=(VAL_PES-VAL_TOPO)*VAL_ESC;
 function alvo(S,tipo){const V=S.V;
   if(tipo==='rosto'&&V)return{x:V.x,y:V.chao-(VAL_PES+330)*VAL_ESC*V.s,z:1.6,sy:1180};   // coque inteiro na tela
@@ -113,6 +117,11 @@ window.seek=t=>{
       const a=(-150+k*30)*Math.PI/180,hy=V.chao-(VAL_PES+375)*VAL_ESC*V.s-pulo,R0=150+Math.sin(dd*30+k)*8,Ln=lerp(14,46,eo(dd/.15));
       e.setAttribute('opacity',1);e.setAttribute('x1',x+Math.cos(a)*R0);e.setAttribute('y1',hy+Math.sin(a)*R0);e.setAttribute('x2',x+Math.cos(a)*(R0+Ln));e.setAttribute('y2',hy+Math.sin(a)*(R0+Ln))});
     const r=S.el.querySelector('.cabeca').getBoundingClientRect();cabeca={x:r.left+r.width/2,top:r.top}}
+  // ── figurantes
+  const caos=(c.cinza??0)>=0.35||susto||(V&&V.pose==='desesperada');
+  S.povo.forEach((q,k)=>{const modo=caos?'corre':q.parado?'parado':'anda',v=modo==='corre'?320:modo==='anda'?90:0;
+    let x=q.x0+q.dir*v*d;x=((x+300)%1680+1680)%1680-300;
+    q.p.desenha({x,y:q.y,s:q.s,t,modo,dir:q.dir})});
   // ── objetos
   S.objs.forEach(({p,g,inner})=>{const n=p.n||1;if(n>1&&!g._clones){for(let k=1;k<n;k++){const cg=g.cloneNode(true);g.parentNode.appendChild(cg)}g._clones=1}
     const ar=(OBJ[p.t]||OBJ.barata).ar,s=p.w/100,dd=d-(p.de||0);let o=dd>=0?1:0,X=p.x+p.w/2,Y=p.y,tr='',flip=p.flip?-1:1;

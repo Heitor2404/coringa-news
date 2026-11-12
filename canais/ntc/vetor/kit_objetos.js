@@ -34,8 +34,23 @@ const OBJ = {
   dinheiro: { ar: .55, svg: () => `${[0, 1, 2].map(k => `<rect x="-48" y="${-18 - k * 14}" width="96" height="16" rx="3" fill="${k % 2 ? '#7AC05A' : '#8AD06A'}" stroke="${L}" stroke-width="4"/>`).join('')}<rect x="-14" y="-52" width="28" height="50" fill="#E8D6A8" stroke="${L}" stroke-width="3"/><text x="-34" y="-36" font-family="Poppins" font-weight="800" font-size="18" fill="#2E6A2A">$</text>` },
   pao: { ar: .45, svg: () => `<path d="M-50 0 Q-56 -40 0 -44 Q56 -40 50 0Z" fill="#D9963F" stroke="${L}" stroke-width="5"/><path d="M-24 -30 L-16 -14 M-2 -34 L6 -16 M20 -30 L28 -14" stroke="#F2C27A" stroke-width="6" stroke-linecap="round"/>` },
   gota: { ar: 1.4, svg: () => `<path d="M0 -140 Q46 -70 40 -36 Q34 0 0 0 Q-34 0 -40 -36 Q-46 -70 0 -140Z" fill="#7AC4EE" stroke="${L}" stroke-width="5"/><ellipse cx="-14" cy="-50" rx="8" ry="16" fill="#fff" opacity=".7"/>` },
-  fogo: { ar: 1.2, svg: () => `<g class="fg"><path d="M-40 0 Q-54 -50 -20 -90 Q-14 -60 0 -70 Q-4 -100 20 -120 Q22 -80 40 -60 Q56 -30 40 0Z" fill="#F28A2E" stroke="${L}" stroke-width="5"/><path d="M-20 0 Q-26 -30 -6 -50 Q0 -34 10 -44 Q22 -24 18 0Z" fill="#FFD25A"/></g>`,
-    anima: (g, d) => { g.querySelector('.fg').setAttribute('transform', `scale(${1 + Math.sin(d * 14) * .05} ${1 + Math.sin(d * 11 + 1) * .08})`) } },
+  fogo: { ar: 1.5, svg: () => `<circle cx="0" cy="-60" r="95" fill="#FF8A2A" opacity=".22" class="brilho"/><ellipse cx="0" cy="-4" rx="58" ry="12" fill="#3A2210" opacity=".5"/>
+     <path d="M-36 -4 L-10 -24 M36 -4 L10 -24 M-30 -14 L30 -14" stroke="#5A3418" stroke-width="12" stroke-linecap="round"/>
+     ${[0,1,2,3,4].map(k=>`<path class="ln${k}" fill="${['#E2401E','#F2702A','#F7A030','#FFD45A','#FFF4C0'][k]}" stroke="${k<2?L:'none'}" stroke-width="4"/>`).join('')}
+     <g class="fag">${[0,1,2,3,4,5].map(()=>'<circle r="4" fill="#FFD45A"/>').join('')}</g>`,
+    anima: (g, d) => {
+      // 5 camadas de labareda (vermelho → branco), cada uma dançando num ritmo; faíscas subindo; brilho pulsando
+      [1, .82, .62, .42, .24].forEach((e, k) => {
+        const f = (a, b) => Math.sin(d * a + k * 1.7 + b), h = 150 * e * (1 + .12 * f(9, 0)), w = 52 * e;
+        const t1 = -h * .55, t2 = -h, x1 = f(7, 1) * 10 * e, x2 = f(11, 2) * 16 * e, x3 = f(6, 3) * 12 * e;
+        g.querySelector('.ln' + k).setAttribute('d', `M${-w} -6 C${-w * 1.2} ${t1} ${-w * .4 + x1} ${t1 - 10} ${-w * .3 + x3} ${t2 * .7}
+          C${-w * .1} ${t2 * .82} ${x2 - 6} ${t2 * .9} ${x2} ${t2} C${w * .2 + x2} ${t2 * .8} ${w * .3} ${t2 * .7} ${w * .45 + x1} ${t2 * .6}
+          C${w * .9} ${t1 + 10} ${w * 1.15} ${t1 * .6} ${w} -6Z`)
+      });
+      g.querySelectorAll('.fag circle').forEach((c, k) => { const ph = ((d * .9 + k / 6) % 1); c.setAttribute('cx', Math.sin(d * 3 + k * 2) * 30 * ph + (k - 2.5) * 8);
+        c.setAttribute('cy', -40 - ph * 200); c.setAttribute('opacity', 1 - ph); c.setAttribute('r', 5 * (1 - ph) + 1) });
+      g.querySelector('.brilho').setAttribute('opacity', .2 + .1 * Math.sin(d * 13));
+    } },
   lagarto: { ar: .4, svg: () => `<ellipse cx="0" cy="-2" rx="60" ry="7" fill="url(#gSom)"/><path class="rabo" stroke="#5EA84A" stroke-width="14" fill="none" stroke-linecap="round"/>
      <g class="pat">${[0, 1, 2, 3].map(() => `<path class="pt" stroke="#4E8A3A" stroke-width="8" fill="none" stroke-linecap="round"/>`).join('')}</g>
      <path d="M-40 -14 Q-36 -36 0 -34 Q30 -34 44 -30 Q62 -28 64 -18 Q60 -10 44 -12 Q20 -6 -20 -8 Q-40 -8 -40 -14Z" fill="#6AC05A" stroke="${L}" stroke-width="5"/><circle cx="50" cy="-24" r="4" fill="${L}"/>

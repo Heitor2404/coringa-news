@@ -23,10 +23,10 @@ VETOR = CANAL / 'vetor'
 POSES = ['neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada']
 # largura na tela (px) e proporção altura/largura de cada desenho (iguais aos de vetor/kit_objetos.js; todos olham para a direita)
 OBJETOS = {'barata': 150, 'rato': 210, 'passaro': 160, 'lixo': 260, 'folhas': 240, 'chinelo': 150, 'murcha': 190,
-           'globo': 230, 'mosca': 90, 'dinheiro': 180, 'pao': 190, 'gota': 90, 'fogo': 180, 'lagarto': 230,
+           'globo': 230, 'mosca': 90, 'dinheiro': 180, 'pao': 190, 'gota': 90, 'fogo': 230, 'lagarto': 230,
            'celular': 110, 'nuvem': 320, 'sol': 220, 'lua': 200, 'terra': 260, 'vela': 70, 'lanterna': 170}
 PROPORCAO = {'barata': .55, 'rato': .6, 'passaro': .8, 'lixo': .7, 'folhas': .45, 'chinelo': .35, 'murcha': 1, 'globo': 1.05,
-             'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.2, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5,
+             'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.5, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5,
              'sol': 1, 'lua': 1, 'terra': 1, 'vela': 1.6, 'lanterna': .6}
 OLHA_ESQ: set[str] = set()
 VOAM = {'passaro', 'mosca', 'nuvem', 'sol', 'lua', 'terra', 'gota', 'dinheiro', 'folhas'}   # só estes podem ficar no ar
@@ -182,6 +182,11 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
         s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'chao': CHAO[c['cenario']],
              'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')), 'props': _objetos(c)}
+        if c['cenario'] == 'espaco':
+            c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
+        if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
+            s['props'] = s['props'] + [{'t': 'fogo', 'w': 200, 'ar': 1.5, 'anim': 'aparece', 'ceu': False, 'atras': True, 'x': x, 'y': 1300, 'de': 0.1}
+                                       for x in (70, 820)]   # fogo de verdade (animado) na rua destruída
         if c['pose'] != 'fora':
             lado = str(c.get('posicao') or 'centro')
             if lado == 'centro' and any(o.get('lugar') == 'bancada' for o in c['objetos']) and c['cenario'] in BANCADA:

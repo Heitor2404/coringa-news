@@ -46,6 +46,9 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 16 | Árvores da floresta flutuando (tronco terminava acima do chão) e moitas no ar | ✅ | troncos e moitas descem para dentro do chão |
 | 17 | Sacos de lixo/folhas/plantas flutuando no meio da tela (lugar "meio"/"céu") | ✅ | só bicho voador, nuvem, sol, lua, Terra, gota, dinheiro e folhas ficam no ar; o resto vai para o chão |
 | 18 | Texto "H2O + CO2 = ?" do quadro-negro brigando com a legenda | ✅ | quadro-negro só com rabiscos, sem texto |
+| 19 | Fogo "brochante" (chama pequena e parada) | ✅ | fogo novo: 5 camadas de labareda dançando, faíscas subindo, brilho; rua destruída ganha 2 fogos animados |
+| 20 | Ruas e lugares públicos vazios | ✅ | figurantes genéricos (kit_pessoas.js) andando ao fundo; no caos correm com os braços para cima |
+| 21 | Val parada no espaço na última cena | ✅ | cenário espaço sem a Val (só o planeta); Terra do fundo desce para não ficar atrás da legenda |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

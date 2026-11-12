@@ -19,6 +19,7 @@ function pessoaSVG(k) {
      <circle class="po1" cx="-24" cy="-444" r="7" fill="${L}"/><circle class="po2" cx="24" cy="-444" r="7" fill="${L}"/>
      <path class="pb" stroke="${L}" stroke-width="5" fill="#7A2430" stroke-linecap="round"/></g>
     ${tubo('pa2', cam, 24)}<circle class="pm2" r="15" fill="${pele}" stroke="${L}" stroke-width="4"/>
+    <g class="cel" style="display:none"><rect x="-16" y="-28" width="32" height="52" rx="6" fill="#2F3540" stroke="${L}" stroke-width="4"/><rect x="-10" y="-20" width="20" height="34" rx="2" fill="#8FD0FF"/><circle cx="0" cy="-6" r="40" fill="#8FD0FF" opacity=".18"/></g>
    </g>`;
 }
 class Pessoa {
@@ -26,21 +27,26 @@ class Pessoa {
   // e = {x, y (pés), s (escala), t, modo: 'anda'|'corre'|'parado', dir: 1|-1}
   desenha(e) {
     const g = this.g, t = e.t + this.k * .37, modo = e.modo, dir = e.dir || 1;
-    const vel = modo === 'corre' ? 15 : modo === 'anda' ? 7 : 0, ph = t * vel;
-    const f = modo === 'parado' ? 0 : Math.sin(ph) * (modo === 'corre' ? 46 : 28), lev = modo === 'parado' ? 0 : Math.abs(Math.cos(ph)) * (modo === 'corre' ? 26 : 12);
-    linha(g, 'pp1', -20, -140, -20 + f, 0 - Math.max(0, Math.cos(ph)) * 18); linha(g, 'pp2', 20, -140, 20 - f, 0 - Math.max(0, -Math.cos(ph)) * 18);
+    const vel = modo === 'corre' ? 15 : modo === 'anda' ? 7 : modo === 'celular' ? 4 : 0, ph = t * vel;
+    const f = modo === 'parado' ? 0 : modo === 'celular' ? Math.sin(ph) * 14 : Math.sin(ph) * (modo === 'corre' ? 46 : 28), lev = modo === 'parado' ? 0 : Math.abs(Math.cos(ph)) * (modo === 'corre' ? 26 : 12);
+    linha(g, 'pp1', -20, -210, -20 + f, 0 - Math.max(0, Math.cos(ph)) * 18); linha(g, 'pp2', 20, -210, 20 - f, 0 - Math.max(0, -Math.cos(ph)) * 18);
     const z1 = g.querySelector('.pz1'), z2 = g.querySelector('.pz2');
     z1.setAttribute('cx', -20 + f + 8); z1.setAttribute('cy', 4 - Math.max(0, Math.cos(ph)) * 18); z2.setAttribute('cx', 20 - f + 8); z2.setAttribute('cy', 4 - Math.max(0, -Math.cos(ph)) * 18);
     // braços: andando balançam; correndo de pânico vão para cima
     const r = Math.PI / 180, br = (cls, m, sx, sy, a) => { const hx = sx + Math.sin(a * r) * 150, hy = sy + Math.cos(a * r) * 150; linha(g, cls, sx, sy, hx, hy); const c = g.querySelector(m); c.setAttribute('cx', hx); c.setAttribute('cy', hy) };
+    const cel = g.querySelector('.cel'); cel.style.display = modo === 'celular' ? '' : 'none';
     if (modo === 'corre') { br('pa1', '.pm1', -50, -310, -160 + Math.sin(ph * 2) * 12); br('pa2', '.pm2', 50, -310, 160 + Math.sin(ph * 2 + 1) * 12) }
+    else if (modo === 'celular') {          // braço dobrado segurando o celular na frente do rosto, cabeça baixa
+      br('pa1', '.pm1', -50, -310, -12 - f * .5); linha(g, 'pa2', 50, -310, 40, -250); const hx = 40, hy = -250; linha(g, 'pa2', 50, -310, hx + 10, hy);
+      const m2 = g.querySelector('.pm2'); m2.setAttribute('cx', 20); m2.setAttribute('cy', -330); linha(g, 'pa2', 50, -310, 20, -330);
+      cel.setAttribute('transform', 'translate(26 -358) rotate(-12)') }
     else { br('pa1', '.pm1', -50, -310, -12 - f * .5); br('pa2', '.pm2', 50, -310, 12 + f * .5) }
     g.querySelector('.pb').setAttribute('d', modo === 'corre' ? 'M-14 -404 Q0 -416 14 -404 Q12 -384 0 -382 Q-12 -384 -14 -404Z' : 'M-14 -404 Q0 -394 14 -404');
     const pisca = (t % 3.1) < .1; ['.po1', '.po2'].forEach(o => g.querySelector(o).setAttribute('r', pisca ? 1.5 : 7));
-    g.querySelector('.pc').setAttribute('transform', `rotate(${Math.sin(t * 1.3) * 3 + (modo === 'corre' ? Math.sin(ph * 2) * 4 : 0)} 0 -370)`);
-    g.querySelector('.pt').setAttribute('transform', `translate(0 ${-lev}) rotate(${modo === 'corre' ? 6 : 0} 0 -140)`);
+    g.querySelector('.pc').setAttribute('transform', modo === 'celular' ? `translate(0 10) rotate(${8 + Math.sin(t * 1.1) * 2} 0 -370)` : `rotate(${Math.sin(t * 1.3) * 3 + (modo === 'corre' ? Math.sin(ph * 2) * 4 : 0)} 0 -370)`);
+    g.querySelector('.pt').setAttribute('transform', `translate(0 ${-70 - lev}) rotate(${modo === 'corre' ? 6 : 0} 0 -140)`);
     g.setAttribute('transform', `translate(${e.x} ${e.y}) scale(${e.s * dir} ${e.s})`);
   }
 }
 // cenários públicos ganham figurantes; quantidade e profundidade
-const MULTIDAO = { rua: 4, rua_destruida: 3, mercado: 4, praia: 3, fazenda: 2, hospital: 3 };
+const MULTIDAO = { rua: 6, rua_destruida: 5, mercado: 5, praia: 5, fazenda: 3, hospital: 4 };

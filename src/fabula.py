@@ -91,14 +91,20 @@ def validar(r: dict) -> dict:
             c['cor'] = 100
         c['objetos'] = [o for o in (c.get('objetos') or []) if isinstance(o, dict) and o.get('tipo') in OBJETOS][:3]
         c['balao'] = str(c.get('balao') or '')[:40]
+    corte = int(len(cenas) * 0.65)                           # cidade pegando fogo só no fim (último ato), uma vez
+    for k, c in enumerate(cenas):
+        if c['cenario'] == 'rua_destruida' and k < corte:
+            c['cenario'] = 'rua'
     r['cenas'] = cenas
     return r
 
 
-def escrever(tema: dict, fatos: str) -> dict:
+def escrever(tema: dict, fatos: str, notas: str = '') -> dict:
     prompt = PROMPT.format(tema=tema['tema'], fatos=fatos[:12000] or '(sem pesquisa: use só fatos que você tem certeza)',
                            cenarios=', '.join(CENARIOS), poses=', '.join(POSES), objetos=', '.join(OBJETOS),
                            acoes=', '.join(ACOES), sfx=', '.join(SFX))
+    if notas:
+        prompt += f'\n\nPEDIDOS DO DONO DO CANAL (obrigatórios, use exatamente): {notas}'
     erro = None
     for _ in range(2):
         try:
@@ -131,7 +137,8 @@ def texto_previa(r: dict) -> str:
 
 
 # ───────────────────────── montagem ─────────────────────────
-SFX = sorted(p.stem for p in (CANAL / 'sfx').glob('*.wav')) or ['pop', 'whoosh']
+SFX_FORA = {'scratch', 'contagem'}                      # disco arranhado incomodava; contagem é só do contador
+SFX = sorted(p.stem for p in (CANAL / 'sfx').glob('*.wav') if p.stem not in SFX_FORA) or ['pop', 'whoosh']
 
 
 def _proporcao(nome: str) -> float:
@@ -143,28 +150,34 @@ def _objetos(c: dict) -> list[dict]:
     out = []
     cen = c['cenario']
     chao = CHAO[cen]
-    for o in c['objetos']:
+    objs = [o for o in c['objetos'] if not (o['tipo'] == 'celular' and str(o.get('lugar') or 'chao') == 'chao')]   # celular no chão = gente com celular
+    for j, o in enumerate(objs):
         t = o['tipo']
         w, ar = OBJETOS[t], _proporcao(t)
         n = max(1, min(8, int(o.get('quantidade') or 1)))
         acao = o.get('acao') if o.get('acao') in ACOES else 'aparece'
         lugar = str(o.get('lugar') or 'chao')
+        if t == 'mosca' and o.get('acao') not in ('corre', 'foge'):
+            lugar = 'meio'                                   # mosca nunca caída no chão: fica voando
         if lugar in ('ceu', 'meio') and t not in VOAM:
             lugar = 'chao'                                   # lixo, folhas, planta etc. não flutuam: ficam no chão
         if t in ('sol', 'lua', 'terra', 'nuvem') and lugar != 'ceu':
             lugar = 'ceu'
         banc = BANCADA.get(cen) if lugar == 'bancada' else None
         x0, x1 = (banc[1] + 20, banc[2] - 20) if banc else (60, 1020)
-        base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu'}
+        base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu',
+                'voa': t in ('mosca', 'passaro') and lugar in ('ceu', 'meio') and acao not in ('corre', 'foge')}
+        fx = [0.5, 0.28, 0.72][j % 3] if len(objs) > 1 else 0.5   # tipos diferentes não se amontoam no mesmo ponto
+        dy_tipo = [0, 70, 35][j % 3]
         for i in range(n):
             if banc:
                 y = banc[0] + (i % 2) * 14
             elif lugar == 'ceu':
                 y = 1060 + (i % 2) * 60                      # céu: abaixo do painel e da legenda, atrás da Val
             elif lugar == 'meio':
-                y = 1250
+                y = 1180 + (i * 37) % 120 + dy_tipo
             else:
-                y = chao - 10 + ((i * 53) % 4) * 50             # espalha na profundidade do chão (na frente da Val)
+                y = chao - 10 + ((i * 53) % 4) * 50 + dy_tipo    # espalha na profundidade do chão (na frente da Val)
             if acao in ('corre', 'foge'):
                 vai_dir = acao == 'corre'
                 x = x0 - w - 20 if vai_dir else x1 + 20
@@ -173,7 +186,7 @@ def _objetos(c: dict) -> list[dict]:
             else:
                 rr = random.Random(f"{t}{i}{cen}{n}")         # espalhado de forma natural (nada de fileira certinha)
                 if n == 1:
-                    x = {'esquerda': x0 + 20, 'direita': x1 - w - 20}.get(lugar, (x0 + x1) / 2 - w / 2)
+                    x = {'esquerda': x0 + (x1 - x0) * (.2 + .2 * j) - w / 2, 'direita': x0 + (x1 - x0) * (.8 - .2 * j) - w / 2}.get(lugar, x0 + (x1 - x0) * fx - w / 2)   # 2º objeto do mesmo lado vai mais para dentro
                 else:
                     x = x0 + (x1 - x0 - w) * (i / (n - 1)) + rr.uniform(-.35, .35) * (x1 - x0 - w) / (n - 1)
                     x = max(x0 - w * .3, min(x1 - w * .7, x))
@@ -196,6 +209,8 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
         s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'chao': CHAO[c['cenario']],
              'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')) or c.get('luz') == 'noite', 'luz': c.get('luz'), 'props': _objetos(c)}
+        if any(o['tipo'] == 'celular' for o in c['objetos']):
+            s['celular'] = True                              # o povo da cena anda olhando o celular
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
@@ -307,7 +322,7 @@ def renderizar(dados: dict, voz_wav: Path, saida: Path, trab: Path, r: dict):
         ent += ['-i', str(arq)]
         idx = k0 + j
         ms = int(t0 * 1000)
-        fil.append(f'[{idx}:a]volume=0.55,adelay={ms}|{ms}[e{j}]'); mix.append(f'[e{j}]')
+        fil.append(f'[{idx}:a]volume={0.5 if nome == "contagem" else 0.38},adelay={ms}|{ms}[e{j}]'); mix.append(f'[e{j}]')
     fil.append(''.join(mix) + f"amix=inputs={len(mix)}:normalize=0:duration=first,apad=whole_dur={dados['duration']:.2f}[a]")
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-framerate', str(FPS), '-i', str(qd / '%05d.jpg'), *ent,
                     '-filter_complex', ';'.join(fil), '-map', '0:v', '-map', '[a]', '-t', f"{dados['duration']:.2f}",
@@ -354,10 +369,12 @@ def fazer(pedido: str = '', minutos: float | None = None) -> Path | None:
     trab = RAIZ / 'saida' / hoje / 'ntc'
     trab.mkdir(parents=True, exist_ok=True)
     minutos = minutos if minutos is not None else float(os.getenv('APROVACAO_MIN', '40'))
+    pedido, _, notas = (pedido or '').partition('|')      # "tema | pedidos do dono" (ex.: frase que tem que entrar)
+    pedido, notas = pedido.strip(), notas.strip()
     for tentativa in range(2):
         tema = escolher_tema(pedido if tentativa == 0 else '')
         print(f"  [ntc] tema: {tema['tema']}")
-        r = escrever(tema, pesquisar(tema))
+        r = escrever(tema, pesquisar(tema), notas if tentativa == 0 else '')
         r.setdefault('tema', tema['tema'])
         r.setdefault('titulo_tela', tema.get('titulo_tela', tema['tema']))
         print(f"  [ntc] roteiro: {len(r['cenas'])} cenas · {sum(len(c['narracao'].split()) for c in r['cenas'])} palavras")

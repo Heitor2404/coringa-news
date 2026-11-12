@@ -59,6 +59,16 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 29 | (vídeo baratas, 11/11 21h35) Holofote mirando ao lado da Val (ela no escuro) | ✅ | camada do holofote usa coordenadas de tela e segue a cabeça com o zoom |
 | 30 | Fogo da frente cobrindo o corpo da Val na rua destruída | ✅ | fogos da frente menores e só nas pontas da tela |
 | 31 | Segunda metade escura/marrom (noite + cor sumindo + vinheta) e floresta de noite quase preta | ✅ | cor some até no máx. 55%, noite mais leve, vinheta mais leve, céu da floresta à noite mais claro |
+| 32 | (vídeo baratas 21h35, lista do Heitor) Contador fora do centro e pequeno | ✅ | centro exato (left 50% + translate -50%), letras 34/128 px |
+| 33 | Gíria "loss" | ✅ | PROMPT_FABULA: proibido, usar "problema" |
+| 34 | Celulares em pé no chão "flutuando"; rua só com a Val | ✅ | celular no chão vira gente olhando o celular; mais figurantes (rua 6, destruída 5, mercado 5, praia 5, fazenda 3, hospital 4) |
+| 35 | Balão e legenda se batendo | ✅ | balão sempre abaixo da legenda (conferido a cada quadro) |
+| 36 | Pássaro em cima do lagarto, os dois colados no canto | ✅ | objetos diferentes em pontos e profundidades diferentes; "esquerda/direita" a 20–40% da tela, não na borda |
+| 37 | Som de disco arranhado alto no hospital | ✅ | "scratch" fora da lista de efeitos; efeitos mais baixos (0,55 → 0,38) |
+| 38 | Moscas caídas no chão | ✅ | mosca sempre no ar, voando/pairando (pássaro no ar também) |
+| 39 | Cidade pegando fogo 2 vezes | ✅ | rua_destruida só no último ato (código troca antes disso por rua normal) + regra no prompt |
+| 40 | Figurantes parecendo crianças | ✅ | pernas mais compridas e escala 0,92–1,06 |
+Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas sumissem do mundo? | na cena da cidade pegando fogo use a frase ...").
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

@@ -164,7 +164,7 @@ jobs:
           git config user.name "coringa-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/ assets/mascote3d/ 2>/dev/null || git add data/ || true
-          git diff --cached --quiet || (git commit -m "histórico $(date +%F)" && git push) || true
+          git diff --cached --quiet || (git commit -m "histórico $(date +%F)" && (git push || (git pull --rebase -q && git push))) || true   # main pode ter mudado durante o vídeo
 
       # o main.py avisa sozinho quando não sai vídeo; isto cobre o caso em que ele NEM CHEGOU a rodar
       # (instalação travada, erro do GitHub, tempo esgotado)

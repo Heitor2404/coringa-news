@@ -3,6 +3,10 @@ name: Gerar vídeos do dia
 on:
   schedule:                      # 1 vídeo por dia (curiosidade); notícia só pelo botão "Run workflow"
     - cron: "13 12 * * *"       # 09:13 de Brasília → vídeo pronto no Telegram antes do meio-dia
+  # disparo de fora (cron-job.org, no horário certo; o agendamento do GitHub chegou a atrasar 7 h e a não disparar — 12/11):
+  #   agenda-coringa = o vídeo do dia do Coringa (não repete se já saiu hoje) · agenda-ntc = um Ninguém Te Contou (tema escolhido pelo sistema)
+  repository_dispatch:
+    types: [agenda-coringa, agenda-ntc]
   workflow_dispatch:             # botão "Run workflow"
     inputs:
       qtd:
@@ -55,7 +59,7 @@ jobs:
           sparse-checkout: data
       - id: hoje
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(cat data/ultimo_video.txt 2>/dev/null)" = "$(TZ=America/Sao_Paulo date +%F)" ]; then
+          if { [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.action }}" = "agenda-coringa" ]; } && [ "$(cat data/ultimo_video.txt 2>/dev/null)" = "$(TZ=America/Sao_Paulo date +%F)" ]; then
             echo "pular=1" >> "$GITHUB_OUTPUT"
             echo "Já saiu vídeo hoje: a execução automática (atrasada) não faz nada."
           fi
@@ -129,6 +133,7 @@ jobs:
           AGENDA: ${{ github.event.schedule }}
           MASCOTE: ${{ github.event.inputs.mascote }}
           NTC: ${{ github.event.inputs.ntc }}
+          EVENTO: ${{ github.event.action }}
           APROVACAO: ${{ github.event.inputs.aprovacao == 'não' && '0' || github.event.inputs.aprovacao == 'nao' && '0' || '1' }}
         # repositório público: o registro completo (tema, roteiro) não aparece no GitHub; vai para o Telegram se der erro
         run: |
@@ -137,6 +142,10 @@ jobs:
           (
           if [ "${{ github.event.inputs.teste }}" = "true" ]; then
             python main.py --teste-edge
+          elif [ "$EVENTO" = "agenda-ntc" ]; then
+            python main.py --fabula
+          elif [ "$EVENTO" = "agenda-coringa" ]; then
+            python main.py --diario
           elif [ -n "$NTC" ]; then
             if [ "$NTC" = "sim" ]; then python main.py --fabula; else python main.py --fabula "$NTC"; fi
           elif [ -n "$MASCOTE" ]; then

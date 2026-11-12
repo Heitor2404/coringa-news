@@ -59,7 +59,13 @@ jobs:
           sparse-checkout: data
       - id: hoje
         run: |
-          if { [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.action }}" = "agenda-coringa" ]; } && [ "$(cat data/ultimo_video.txt 2>/dev/null)" = "$(TZ=America/Sao_Paulo date +%F)" ]; then
+          # PAUSA (12/11, pedido do Heitor: rodar no manual enquanto melhoramos): disparo automático (agendamento do GitHub e
+          # cron-job.org) só roda com a variável AGENDA_ATIVA=1 em Settings → Secrets and variables → Actions → Variables.
+          # O botão "Run workflow" continua funcionando sempre.
+          if { [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "repository_dispatch" ]; } && [ "${{ vars.AGENDA_ATIVA }}" != "1" ]; then
+            echo "pular=1" >> "$GITHUB_OUTPUT"
+            echo "Disparos automáticos pausados (falta AGENDA_ATIVA=1): só rodando no manual."
+          elif { [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.action }}" = "agenda-coringa" ]; } && [ "$(cat data/ultimo_video.txt 2>/dev/null)" = "$(TZ=America/Sao_Paulo date +%F)" ]; then
             echo "pular=1" >> "$GITHUB_OUTPUT"
             echo "Já saiu vídeo hoje: a execução automática (atrasada) não faz nada."
           fi

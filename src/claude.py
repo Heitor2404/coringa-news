@@ -11,6 +11,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
+
+from . import custo
 
 MODELO = os.getenv('CLAUDE_MODELO') or 'sonnet'
 MODELO_LEVE = os.getenv('CLAUDE_MODELO_LEVE') or 'haiku'
@@ -45,26 +48,33 @@ def pedir(prompt: str, leve: bool = False) -> str:
     modelo = MODELO_LEVE if leve else MODELO
     cmd = ['claude', '-p', '--model', modelo, '--output-format', 'json', '--max-turns', '1',
            '--append-system-prompt', SISTEMA, '--disallowedTools', SEM_FERRAMENTAS]
+    t0 = time.time()
     with tempfile.TemporaryDirectory() as vazio:   # pasta vazia: o Claude Code não enxerga o repositório
         try:
             r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=TEMPO_MAX,
                                cwd=vazio, env=_ambiente())
         except subprocess.TimeoutExpired:
             _falhas += 1
+            custo.registrar('claude', modelo, 0, None, time.time() - t0, ok=False)
             raise RuntimeError(f'Claude ({modelo}) não respondeu em {TEMPO_MAX}s')
     try:
         saida = json.loads(r.stdout)
     except (json.JSONDecodeError, TypeError):
         _falhas += 1
+        custo.registrar('claude', modelo, 0, None, time.time() - t0, ok=False)
         raise RuntimeError(f'Claude ({modelo}) saiu com código {r.returncode}: {(r.stderr or r.stdout)[:200]}')
     if isinstance(saida, list):                   # algumas versões devolvem a lista de eventos
         saida = next((x for x in reversed(saida) if isinstance(x, dict) and x.get('type') == 'result'), {})
+    usd = float(saida.get('total_cost_usd') or 0)
     if saida.get('is_error') or not str(saida.get('result') or '').strip():
         _falhas += 1
+        custo.registrar('claude', modelo, usd, saida.get('usage'), time.time() - t0, ok=False)   # falha também gasta
+        GASTO['usd'] += usd
         raise RuntimeError(f"Claude ({modelo}): {str(saida.get('result') or saida.get('subtype') or saida)[:200]}")
     _falhas = 0
-    GASTO['usd'] += float(saida.get('total_cost_usd') or 0)
+    GASTO['usd'] += usd
     GASTO['pedidos'] += 1
+    custo.registrar('claude', modelo, usd, saida.get('usage'), time.time() - t0)
     return str(saida['result'])
 
 

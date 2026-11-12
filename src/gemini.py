@@ -57,6 +57,8 @@ def _tentar(fn, modelos=None):
             for tentativa in range(len(esperas) + 1):
                 try:
                     r = fn(modelo)
+                    from . import custo
+                    custo.registrar('gemini', modelo)        # grátis: só conta o pedido (separado do Claude)
                     time.sleep(4)   # respeita o limite de pedidos por minuto do plano grátis
                     return r
                 except Exception as e:  # cota, sobrecarga, etc.

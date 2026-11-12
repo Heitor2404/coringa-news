@@ -618,10 +618,25 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     v['_bloqueado'] = '; '.join(graves) if graves and not teste else ''
     tx = textos_post(v, creditos)
     resumo = resumo_telegram(v, q)
-    from src import claude
+    from src import claude, custo
     if claude.GASTO['pedidos']:                       # quanto do crédito mensal do Claude Pro este vídeo usou
-        resumo += '\n🤖 ' + claude.resumo_gasto()
         print('  [claude] ' + claude.resumo_gasto())
+    if not teste:                                     # FISCAL NOVO em modo sombra (Fase 0): mostra, NÃO decide
+        try:
+            from src import fiscal
+            sb = fiscal.sombra(v, cenas, saida, nota, dados.get('problemas_tela') or [])
+            if fiscal.linhas_telegram(sb):
+                resumo += '\n' + '\n'.join(fiscal.linhas_telegram(sb))
+            fiscal.salvar(sb, pasta / f'{nome}-fiscal-sombra.json')
+        except Exception as e:
+            print(f'  [fiscal sombra] não rodou ({str(e)[:100]})')
+    if custo.linha_telegram():                        # livro-caixa (Fase 0): por etapa e por tentativa, Claude × Gemini
+        resumo += '\n' + custo.linha_telegram()
+    print(custo.tabela())
+    try:
+        custo.salvar(pasta / f'{nome}-custos.json')
+    except Exception as e:
+        print(f'  [custo] não salvei o livro-caixa: {str(e)[:80]}')
     if v.get('_aprovacao') == 'indisponivel':
         resumo = '⚠️ Montado SEM a sua aprovação (o Telegram não respondeu à prévia)\n' + resumo
     txt = [resumo, '', '════ INSTAGRAM (Reels) ════', tx['instagram'], '', '════ TIKTOK ════', tx['tiktok'], '',
@@ -689,6 +704,12 @@ def telegram(arq: Path, legenda: str, v: dict | None = None):
     try:
         info = (v or {}).get('_telegram') or {}
         envio = _versao_telegram(arq) if arq.suffix == '.mp4' else arq
+        if envio != arq:                           # Fase 0: só MEDE o volume das duas versões (não muda a normalização)
+            try:
+                from src.fiscal import nota_audio
+                print(f'  [áudio] original: {nota_audio(arq)[1][0]} · versão do Telegram: {nota_audio(envio)[1][0]}')
+            except Exception as e:
+                print(f'  [áudio] comparação não medida ({str(e)[:60]})')
         if _tg('sendVideo', {'caption': (info.get('resumo') or legenda)[:1000], 'supports_streaming': 'true'}, ('video', envio)):
             print('  [telegram] vídeo enviado')
             # marca o dia: se o agendamento das 09:13 chegar atrasado depois disto, ele não faz outro vídeo
@@ -734,6 +755,8 @@ def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None =
     arq_serie = _arquivo_serie(pedido, parte)
     serie = json.loads(arq_serie.read_text(encoding='utf-8')) if arq_serie.exists() else None
     print(f'Curiosidade: {pedido} (parte {parte})')
+    from src import custo
+    custo.tentativa(pedido)                    # livro-caixa: tudo daqui para a frente conta para esta tentativa de tema
     if parte > 1 and not serie:
         print('  ✘ não achei a parte 1 dessa série. Escreva a curiosidade igual à da parte 1.')
         return False
@@ -840,6 +863,10 @@ def _aviso_sem_video(motivo: str):
     """Dia sem vídeo NUNCA passa em silêncio: manda no Telegram o motivo de cada tema que ficou de fora."""
     linhas = [f'⚠️ Hoje não saiu vídeo: {motivo}.']
     linhas += [f'• {f}' for f in _FALHAS[-4:]]
+    from src import custo
+    if custo.linha_telegram():                    # o que foi gasto mesmo sem vídeo (temas descartados)
+        linhas.append(custo.linha_telegram())
+        print(custo.tabela())
     linhas.append('Detalhes no log da execução no GitHub (Actions). Pode rodar de novo à mão se quiser.')
     try:
         _tg('sendMessage', {'text': '\n'.join(linhas)[:4000]})

@@ -29,7 +29,8 @@ html,body{margin:0;background:#000}
 <script src="data.js"></script><script src="kit_base.js"></script><script src="kit_cenarios.js"></script><script src="kit_objetos.js"></script><script src="kit_val.js"></script><script src="kit_pessoas.js"></script>
 <script>
 const D=window.DATA,$=id=>document.getElementById(id),ST=$('st'),FX=$('fx');
-$('defs').outerHTML=DEFS;
+$('defs').outerHTML=DEFS.replace('</defs>',`<linearGradient id="gPorDoSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F08A50"/><stop offset=".6" stop-color="#F7B27A"/><stop offset="1" stop-color="#C77A5A"/></linearGradient>
+ <radialGradient id="gHolofote" cx="540" cy="1250" r="520" gradientUnits="userSpaceOnUse"><stop offset=".55" stop-color="#0a0604" stop-opacity="0"/><stop offset="1" stop-color="#0a0604" stop-opacity=".82"/></radialGradient></defs>`);
 const ANDA=0.8,BALAO_DUR=2.8;
 const cenas=D.cenas.map((c,i)=>{
   const el=document.createElement('div');el.className='cena';
@@ -38,7 +39,10 @@ const cenas=D.cenas.map((c,i)=>{
     <g class="atras"></g><g class="povo"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
-    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".3" style="mix-blend-mode:multiply"/>':''}<rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
+    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".3" style="mix-blend-mode:multiply"/>':''}
+    ${c.luz==='por_do_sol'?'<rect width="1080" height="1920" fill="url(#gPorDoSol)" style="mix-blend-mode:multiply"/><rect width="1080" height="1920" fill="#FFB060" opacity=".12" style="mix-blend-mode:screen"/>':''}
+    ${c.luz==='holofote'?'<rect class="holo" width="1080" height="1920" fill="url(#gHolofote)"/>':''}
+    <rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
   ST.insertBefore(el,ST.firstChild);
   const cam=el.querySelector('.cam');
   // objetos (atrás = bancada/céu; frente = chão)
@@ -57,12 +61,15 @@ const cenas=D.cenas.map((c,i)=>{
   if(susto&&(c.props||[]).length)pl.push({t0:c.a,tipo:'geral',q:0});
   for(let q=0;q<n;q++){let tipo='geral';
     if(susto&&q===0)tipo='rosto';
-    else if(q>0){const op=[];if(V)op.push('rosto');if(alvoObj&&!(c.balao&&V))op.push('objeto');if(!(c.balao&&V))op.push('meio');else op.push('geral');tipo=op[(q-1+i)%op.length]}
+    else if(q>0){const op=[];if(V)op.push('rosto');if(alvoObj&&!(c.balao&&V))op.push('objeto');if(!(c.balao&&V))op.push('meio');else op.push('geral');if(V&&!c.balao&&q===2)op.splice(0,op.length,i%2?'olho':'mao');tipo=op[(q-1+i)%op.length]}
     let t0=c.a+dur*q/n;if(susto&&q===0&&pl.length)t0=c.a+Math.min(1.6,dur*.4);if(V&&V.anda&&q===1)t0=Math.max(t0,c.a+ANDA+0.4);
     pl.push({t0,tipo,q:pl.length})}
   return{c,el,cam,V,povo,pl,alvoObj,susto,objs,riscos:[...el.querySelectorAll('.riscos line')],amb:[...el.querySelectorAll('.amb>*')],tipoAmb:amb}});
 const VAL_ALT=(VAL_PES-VAL_TOPO)*VAL_ESC;
 function alvo(S,tipo){const V=S.V;
+  if(tipo==='mao'&&V&&S._mao)return{x:S._mao.x,y:S._mao.y,z:2.6,sy:960};
+  if(tipo==='olho'&&V&&S._olho)return{x:S._olho.x,y:S._olho.y,z:3.2,sy:1000};
+  if((tipo==='mao'||tipo==='olho')&&V)tipo='rosto';
   if(tipo==='rosto'&&V)return{x:V.x,y:V.chao-(VAL_PES+330)*VAL_ESC*V.s,z:1.6,sy:1180};   // coque inteiro na tela
   if(tipo==='objeto'&&S.alvoObj)return{...S.alvoObj,sy:1150};
   if(tipo==='meio')return{x:V?V.x:540,y:V?V.chao-VAL_ALT*.45:1500,z:1.3,sy:1150};
@@ -97,7 +104,7 @@ window.seek=t=>{
   const tituloOn=c.titulo&&d<2.9,cap=$('cap');let txt=null,t0=0;
   const gi=(D.captions||[]).findIndex(x=>t>=x.start&&t<x.end+0.05),g=gi>=0?D.captions[gi]:null;
   if(g){txt=g.words.map(w=>w.hl?`<i>${w.w}</i>`:w.w).join(' ');t0=g.start}
-  if(txt&&!tituloOn&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(tipo==='rosto'?1560:PAINEL[i]&&!tituloOn?470:balaoOn?400:470)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
+  if(txt&&!tituloOn&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(['rosto','mao','olho'].includes(tipo)?1560:PAINEL[i]&&!tituloOn?470:balaoOn?400:470)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
   // ── Val
   let cabeca=null;
   if(V){const andando=V.anda&&d<ANDA;
@@ -116,7 +123,11 @@ window.seek=t=>{
     S.riscos.forEach((e,k)=>{const dd=ds-0.25;if(!susto||dd<0||dd>1.6){e.setAttribute('opacity',0);return}
       const a=(-150+k*30)*Math.PI/180,hy=V.chao-(VAL_PES+375)*VAL_ESC*V.s-pulo,R0=150+Math.sin(dd*30+k)*8,Ln=lerp(14,46,eo(dd/.15));
       e.setAttribute('opacity',1);e.setAttribute('x1',x+Math.cos(a)*R0);e.setAttribute('y1',hy+Math.sin(a)*R0);e.setAttribute('x2',x+Math.cos(a)*(R0+Ln));e.setAttribute('y2',hy+Math.sin(a)*(R0+Ln))});
-    const r=S.el.querySelector('.cabeca').getBoundingClientRect();cabeca={x:r.left+r.width/2,top:r.top}}
+    const r=S.el.querySelector('.cabeca').getBoundingClientRect();cabeca={x:r.left+r.width/2,top:r.top};
+    // onde estão a mão e os olhos de verdade (medido na tela e convertido para o mundo) → planos de detalhe
+    const w2=(q)=>({x:(q.left+q.width/2-camX)/zz,y:(q.top+q.height/2-camY)/zz});
+    S._mao=w2(S.el.querySelector('.mD').getBoundingClientRect());const ro=S.el.querySelector('.olhos').getBoundingClientRect();S._olho=w2(ro.width?ro:r)}
+  if(c.luz==='holofote'&&cabeca){const gh=document.getElementById('gHolofote');gh.setAttribute('cx',(cabeca.x-camX)/zz);gh.setAttribute('cy',(cabeca.top-camY)/zz+300);gh.setAttribute('r',560)}
   // ── figurantes
   const caos=(c.cinza??0)>=0.35||susto||(V&&V.pose==='desesperada');
   S.povo.forEach((q,k)=>{const modo=caos?'corre':q.parado?'parado':'anda',v=modo==='corre'?320:modo==='anda'?90:0;

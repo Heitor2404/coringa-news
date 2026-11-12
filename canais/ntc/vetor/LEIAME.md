@@ -20,3 +20,9 @@ fotografa quadro a quadro com `seek(t)`.
 
 Coisa nova (cenário, objeto, pose): desenhar UMA vez aqui e, se o roteiro puder pedir, pôr o nome na lista do
 `src/fabula.py` (CENARIOS / OBJETOS+PROPORCAO / POSES). O teste `tests/test_fabula.py` confere se os dois lados batem.
+
+## Som, luz e closes (11/11 noite)
+- Música: `canais/ntc/musica/trilha_1..5.mp3`, trilhas cômicas GERADAS por código (`gerar.py`: oom-pah de tuba, bumbo/caixa, melodia de pizzicato ou xilofone) — sem licença de terceiros. Trocar por outras = pôr .mp3 na pasta.
+- `sfx/contagem.wav`: tic-tic-tic acelerando + "pum", toca quando o contador muda.
+- Campo `luz` por cena: dia, por_do_sol (tom laranja), noite, holofote (só a Val iluminada, segue a cabeça dela).
+- Planos de detalhe: no 3º plano de uma cena sem balão, close da MÃO (cenas pares) ou do OLHO (ímpares), medidos na tela.

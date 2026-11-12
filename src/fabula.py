@@ -20,6 +20,7 @@ NOME = 'NINGUÉM TE CONTOU'
 
 CENARIOS = ['cozinha', 'rua', 'rua_destruida', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
 VETOR = CANAL / 'vetor'
+LUZES = ['dia', 'por_do_sol', 'noite', 'holofote']
 POSES = ['neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada']
 # largura na tela (px) e proporção altura/largura de cada desenho (iguais aos de vetor/kit_objetos.js; todos olham para a direita)
 OBJETOS = {'barata': 150, 'rato': 210, 'passaro': 160, 'lixo': 260, 'folhas': 240, 'chinelo': 150, 'murcha': 190,
@@ -83,6 +84,7 @@ def validar(r: dict) -> dict:
         c['cenario'] = c.get('cenario') if c.get('cenario') in CENARIOS else 'cozinha'
         c['pose'] = c.get('pose') if c.get('pose') in POSES or c.get('pose') == 'fora' else 'neutra'
         c['sfx'] = c.get('sfx') if c.get('sfx') in SFX else None
+        c['luz'] = c.get('luz') if c.get('luz') in LUZES else None
         try:
             c['cor'] = max(0, min(100, int(c.get('cor', 100))))
         except (TypeError, ValueError):
@@ -193,7 +195,7 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     cenas, painel_ant = [], {}
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
         s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'chao': CHAO[c['cenario']],
-             'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')), 'props': _objetos(c)}
+             'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')) or c.get('luz') == 'noite', 'luz': c.get('luz'), 'props': _objetos(c)}
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
@@ -287,7 +289,7 @@ def renderizar(dados: dict, voz_wav: Path, saida: Path, trab: Path, r: dict):
             pg.screenshot(path=str(qd / f'{i:05d}.jpg'), type='jpeg', quality=90)
         nav.close()
     # áudio: voz + música baixinha + efeitos no começo de cada cena
-    musicas = sorted((RAIZ / 'assets' / 'musica' / 'explica').glob('*.mp3'))
+    musicas = sorted((CANAL / 'musica').glob('*.mp3')) or sorted((RAIZ / 'assets' / 'musica' / 'explica').glob('*.mp3'))   # trilhas cômicas próprias
     musica = random.Random(r.get('tema', '')).choice(musicas) if musicas else None
     ent = ['-i', str(voz_wav)]                     # entrada 0 = quadros; 1 = voz; 2 = música; depois os efeitos
     fil, mix = [], ['[1:a]']
@@ -297,6 +299,7 @@ def renderizar(dados: dict, voz_wav: Path, saida: Path, trab: Path, r: dict):
     k0 = 3 if musica else 2
     efs = [(c['a'] + 0.12, rc['sfx']) for c, rc in zip(dados['cenas'], r['cenas']) if rc.get('sfx')]
     efs.insert(0, (0.05, 'whoosh'))
+    efs += [(c['a'] + 0.2, 'contagem') for c in dados['cenas'] if c.get('painel') and c['painel'].get('de') != c['painel'].get('para')]   # tic-tic-pum do contador
     for j, (t0, nome) in enumerate(efs):
         arq = CANAL / 'sfx' / f'{nome}.wav'
         if not arq.exists():

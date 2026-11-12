@@ -169,6 +169,8 @@ jobs:
           fi
           ) > saida/registro.txt 2>&1 && ok=1 || ok=0
           grep -E '^\s*\[(aprovação|fiscal final|claude)\]|Traceback|Error' saida/registro.txt | sed -E 's/(resposta: ).*/\1…/' | tail -20 || true
+          # Fase 0 (12/11): só NÚMEROS no registro público (custo por etapa, notas, ritmo, áudio); frases e bloqueadores só no Telegram
+          grep -E '^\s*\[(custo|fiscal sombra|áudio)\]|💰|🧪|^\s+(fatos|imagem|ritmo|acabamento|narrativa|recursos|áudio) [0-9]|não medido:|🎞' saida/registro.txt | tail -60 || true
           # registro completo vai SEMPRE para o Telegram (sem som), para dá para entender o que aconteceu em cada vídeo
           if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
             cap="📄 Registro completo da execução"; [ "$ok" = "0" ] && cap="📄 Registro do ERRO (veja o fim do arquivo)"

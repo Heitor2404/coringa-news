@@ -470,6 +470,12 @@ B.fechamento=sc=>({html:`
 
 /* ---------- foto real na moldura: a moldura fica parada e inteira; a foto se move POR DENTRO dela ---------- */
 // a foto ocupa a moldura inteira (largura 902 ou altura máxima), mesmo quando o arquivo é menor
+// 12/11 (Torre Eiffel 3, "FOTO · 1902" × "FERRO-VELHO"): na foto real em tela cheia o destaque fica em 990 px e a
+// etiqueta ficava fixa em 1062 px, dentro dele. Com destaque, a etiqueta sobe para logo ACIMA do destaque (mesmo estilo).
+const ETQ_TOP=sc=>(sc.tipo==='historia'&&sc.destaque&&sc.real)?930:1062;
+// etiqueta da MOLDURA (vídeo deitado: "▶ VÍDEO · ano"): fica no canto de cima da moldura, onde batia no cartão do alto da
+// cena (rótulo da cena "imagem", destaque da "historia" sem foto real). Com esse cartão, ela desce para o canto de baixo.
+const ETQ_MOLD_BAIXO=sc=>(sc.tipo==='imagem'&&!!sc.rotulo)||(sc.tipo==='historia'&&!!sc.destaque&&!sc.real);
 const LARG_FOTO=972;   // moldura maior (antes 902): a foto ocupa quase a largura toda
 const fotoTam=(sc,altMax)=>{const w=(sc.foto_wh||[])[0],h=(sc.foto_wh||[])[1];if(!w||!h)return `max-width:${LARG_FOTO}px;max-height:${altMax}px;`;
   const r=Math.min(LARG_FOTO/w,altMax/h);return `width:${Math.round(w*r)}px;height:${Math.round(h*r)}px;`};
@@ -479,7 +485,7 @@ const molduraHTML=(sc,caixa,altMax)=>`<div class="arq" style="position:absolute;
       <img class="foto" src="${sc.img}" style="display:block;${fotoTam(sc,altMax)}object-fit:contain">
       ${sc.rec?`<img class="rec" src="${sc.rec}" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(0,0,0,.45))">`:''}
     </div>
-    <div style="position:absolute;left:-10px;top:-26px;max-width:calc(100% + 10px);overflow:hidden;text-overflow:ellipsis;background:var(--y);color:#05080f;font-family:JBM,monospace;font-weight:700;font-size:24px;letter-spacing:2px;padding:8px 16px;border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.5);white-space:nowrap">${String(sc.etiqueta||'').startsWith('FOTO')?'📷 ':''}${esc(String(sc.etiqueta||'ARQUIVO').toUpperCase())}</div></div></div>`;
+    <div class="etq etq-mold" style="position:absolute;left:-10px;${ETQ_MOLD_BAIXO(sc)?'bottom:-26px':'top:-26px'};max-width:calc(100% + 10px);overflow:hidden;text-overflow:ellipsis;background:var(--y);color:#05080f;font-family:JBM,monospace;font-weight:700;font-size:24px;letter-spacing:2px;padding:8px 16px;border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.5);white-space:nowrap">${String(sc.etiqueta||'').startsWith('FOTO')?'📷 ':''}${esc(String(sc.etiqueta||'ARQUIVO').toUpperCase())}</div></div></div>`;
 // foco do movimento dentro da foto: 1º plano mostra a foto inteira se aproximando; os seguintes, um detalhe em outro canto
 const FOCOS=[[50,40],[30,30],[70,62],[35,68],[66,28]];
 function moverFoto(s,t){const sc=s.sc,mo=s.el.querySelector('.moldura');if(!mo)return;
@@ -516,7 +522,7 @@ const scenes=D.scenes.map((sc,i)=>{sc.i=i;const b=(B[sc.tipo]||B.imagem)(sc);
     +molduraHTML(sc,'left:120px;right:120px;top:700px;height:440px',412);
   else if(sc.img) img=`<div class="img" style="background-image:url('${sc.img}')"></div>`+shade
     // foto histórica em tela cheia: etiqueta pequena com o ano (só foto de verdade; desenho/objeto não ganham)
-    +(sc.etiqueta&&!sc.moldura&&['historia','imagem'].includes(sc.tipo)?`<div class="etq" style="position:absolute;left:70px;top:1062px;z-index:3;background:var(--y);color:#05080f;font-family:JBM,monospace;font-weight:700;font-size:26px;letter-spacing:3px;padding:6px 14px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.5)">${esc(sc.etiqueta)}</div>`:'');
+    +(sc.etiqueta&&!sc.moldura&&['historia','imagem'].includes(sc.tipo)?`<div class="etq" style="position:absolute;left:70px;top:${ETQ_TOP(sc)}px;z-index:3;background:var(--y);color:#05080f;font-family:JBM,monospace;font-weight:700;font-size:26px;letter-spacing:3px;padding:6px 14px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.5)">${esc(sc.etiqueta)}</div>`:'');
   el.innerHTML=img+b.html; S.appendChild(el); return{sc,el,upd:b.upd}});
 S.insertAdjacentHTML('beforeend',`<div id="dip" style="position:absolute;inset:0;background:#000;opacity:0;z-index:6"></div><div id="flash" style="position:absolute;inset:0;background:#fff;opacity:0;z-index:7;mix-blend-mode:screen"></div><div class="vig"></div><div class="grain"></div><div id="sweep"></div><div id="prog"></div>
  <div id="marca">${esc(D.meta.marca||'@coringa.explica')}</div><div id="barra"><i></i></div>
@@ -562,7 +568,7 @@ function caixas(raiz,layer,ehCena){const out=[];const w=document.createTreeWalke
     if(opac(el)<0.85)continue;if(getComputedStyle(el).backfaceVisibility==='hidden'||el.closest('[style*="backface-visibility"]'))continue;
     const g=ehCena?grupo(el,layer):grupo(el,null);if(!g)continue;const r=document.createRange();r.selectNodeContents(n);
     for(const q of r.getClientRects()){if(q.width<4||q.height<4)continue;const m=Math.min(q.height*.2,14);   // folga da altura da linha
-      out.push({g,tx:tx.slice(0,30),x0:q.left+2,x1:q.right-2,y0:q.top+m,y1:q.bottom-m})}}
+      out.push({g,etq:!!el.closest('.etq'),tx:tx.slice(0,30),x0:q.left+2,x1:q.right-2,y0:q.top+m,y1:q.bottom-m})}}
   return out}
 // PAINÉIS: cartão, balão, faixa, botão (caixa com fundo próprio). A legenda não pode encostar neles (folga de 14 px),
 // e nenhum texto de outro bloco pode ficar por baixo deles.
@@ -571,17 +577,17 @@ function paineis(layer){const out=[];for(const el of layer.querySelectorAll('*')
   const fundo=parseFloat(a)>=0.5||/gradient/.test(cs.backgroundImage);if(!fundo||!el.textContent.trim())continue;
   const r=el.getBoundingClientRect();if(r.width<40||r.height<30||r.width*r.height>1080*1920*.4||opac(el)<0.85)continue;
   const foto=el.classList.contains('moldura');if(foto&&out.some(o=>o.foto))continue;
-  out.push({g:grupo(el,layer),foto,tx:foto?'foto':el.textContent.trim().slice(0,30),x0:r.left,x1:r.right,y0:r.top,y1:r.bottom})}return out}
+  out.push({g:grupo(el,layer),foto,etq:el.classList.contains('etq'),tx:foto?'foto':el.textContent.trim().slice(0,30),x0:r.left,x1:r.right,y0:r.top,y1:r.bottom})}return out}
 window.inspecionar=function(t){
   const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);const prob=[];if(!at)return prob;
   const dentro=t-at.sc.start>0.5&&at.sc.end-t>0.25;           // entrada/saída da cena tem movimento (chicote, pop): não conta
   const bx=[...caixas(at.el,at.el,true),...FIXOS.flatMap(id=>{const e=document.getElementById(id);return e?caixas(e,null,false):[]})];
   const cruza=(a,b,f=0)=>Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>6-f&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>6-f;
   for(let i=0;i<bx.length;i++)for(let j=i+1;j<bx.length;j++){const a=bx[i],b=bx[j];if(a.g===b.g)continue;
-    if(cruza(a,b))prob.push({tipo:'choque',cap:a.g==='cap'||b.g==='cap',txt:`"${a.tx}" em cima de "${b.tx}"`,cena:at.sc.tipo})}
+    if(cruza(a,b))prob.push({tipo:'choque',cap:a.g==='cap'||b.g==='cap',etq:a.etq||b.etq,txt:`"${a.tx}" em cima de "${b.tx}"`,cena:at.sc.tipo})}
   // foto em moldura: faixa/destaque por cima é de propósito; só a LEGENDA não pode cobrir a foto
   for(const p of paineis(at.el))for(const a of bx){if(a.g===p.g||(p.foto&&a.g!=='cap'))continue;
-    if(cruza(a,p,a.g==='cap'&&!p.foto?20:0))prob.push({tipo:'choque',cap:a.g==='cap',txt:`"${a.tx}" encostando no cartão "${p.tx}"`,cena:at.sc.tipo})}
+    if(cruza(a,p,a.g==='cap'&&!p.foto?20:0))prob.push({tipo:'choque',cap:a.g==='cap',etq:a.etq||p.etq,txt:`"${a.tx}" encostando no cartão "${p.tx}"`,cena:at.sc.tipo})}
   for(const a of bx){if(a.x0<0||a.x1>1080||a.y0<0||a.y1>1920)prob.push({tipo:'fora',cap:a.g==='cap',txt:`"${a.tx}" saindo da tela`,cena:at.sc.tipo})}
   return dentro?prob:[]};
 
@@ -632,6 +638,10 @@ window.seek=async function(t){
     numEl.style.opacity=t<nm.s+0.75?1:clamp((nm.s+0.95-t)/.2);numEl.style.transform=`scale(${lerp(.4,1,clamp(k,0,1.15))}) rotate(-3deg)`}
   else numEl.style.opacity=0;
   const c=D.captions.find(c=>t>=c.start&&t<c.end+0.05);
+  // etiqueta da foto: onde o fiscal ainda achou choque com outro texto (depois de a legenda descer), ela some naquele
+  // trecho — é o detalhe menos importante da tela; o resto fica como está
+  const etqSome=(D.etq_some||[]).some(([a,b])=>t>=a-0.05&&t<b+0.05);
+  S.querySelectorAll('.etq').forEach(e=>{e.style.opacity=etqSome?0:1});
   // legenda na faixa normal (1150); onde o fiscal achou choque com outro texto, desce para a faixa de reserva (1300)
   cap.style.top=(D.cap_baixo||[]).some(([a,b])=>t>=a-0.05&&t<b+0.05)?'1300px':'1150px';
   if(c&&repete(c,t)){cap.style.opacity=0}

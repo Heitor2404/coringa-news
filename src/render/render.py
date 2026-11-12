@@ -196,9 +196,11 @@ def _escrever_pagina(dados: dict, trabalho: Path) -> Path:
 def fiscal_tela(dados: dict, trabalho: Path) -> list[str]:
     """FISCAL DA TELA (sem IA, sem crédito): mede a posição real de cada texto ao longo do vídeo.
     1) legenda batendo em outro texto → a legenda desce para a faixa de reserva naquele trecho (conserto automático);
-    2) mede de novo; o que sobrar (texto sobre texto, texto fora da tela) volta como lista de erros graves.
-    `dados` precisa estar pronto para o template (caminhos já em file://). Grava dados['cap_baixo']."""
+    2) etiqueta da foto ainda batendo em outro texto → ela some naquele trecho (conserto automático);
+    3) mede de novo; o que sobrar (texto sobre texto, texto fora da tela) volta como lista de erros graves.
+    `dados` precisa estar pronto para o template (caminhos já em file://). Grava dados['cap_baixo'] e dados['etq_some']."""
     dados['cap_baixo'] = []
+    dados['etq_some'] = []
     pagina = _escrever_pagina(dados, trabalho)
     achados = _persistentes(_medir(pagina, dados['duration']))
     da_legenda = [p for p in achados if p['cap'] and p['tipo'] == 'choque']
@@ -206,6 +208,15 @@ def fiscal_tela(dados: dict, trabalho: Path) -> list[str]:
         dados['cap_baixo'] = [[round(p['ini'] - 0.3, 2), round(p['fim'] + 0.3, 2)] for p in da_legenda]
         print(f'  [fiscal da tela] legenda desce em {len(da_legenda)} trecho(s) para não cobrir outro texto:')
         for p in da_legenda:
+            print(f"     {p['ini']:.1f}–{p['fim']:.1f}s ({p['cena']}): {p['txt']}")
+        pagina = _escrever_pagina(dados, trabalho)
+        achados = _persistentes(_medir(pagina, dados['duration']))
+    # 12/11: etiqueta da foto ("FOTO · 1902") batendo em outro texto → some naquele trecho (conserto automático)
+    da_etiqueta = [p for p in achados if p.get('etq')]
+    if da_etiqueta:
+        dados['etq_some'] = [[round(p['ini'] - 0.3, 2), round(p['fim'] + 0.3, 2)] for p in da_etiqueta]
+        print(f'  [fiscal da tela] etiqueta da foto some em {len(da_etiqueta)} trecho(s) para não cobrir outro texto:')
+        for p in da_etiqueta:
             print(f"     {p['ini']:.1f}–{p['fim']:.1f}s ({p['cena']}): {p['txt']}")
         pagina = _escrever_pagina(dados, trabalho)
         achados = _persistentes(_medir(pagina, dados['duration']))

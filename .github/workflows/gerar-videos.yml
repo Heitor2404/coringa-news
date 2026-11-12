@@ -26,6 +26,9 @@ on:
       ntc:
         description: "Ninguém Te Contou (Valdirene): 'sim' = o sistema escolhe o tema, ou escreva o tema (ex.: E se a internet acabasse?)"
         default: ""
+      aprovacao:
+        description: "Pedir aprovação no Telegram antes de montar? (sim / não = monta direto e manda o vídeo pronto)"
+        default: "sim"
       teste:
         description: "Teste: vídeo de exemplo + amostras de voz"
         type: boolean
@@ -126,6 +129,7 @@ jobs:
           AGENDA: ${{ github.event.schedule }}
           MASCOTE: ${{ github.event.inputs.mascote }}
           NTC: ${{ github.event.inputs.ntc }}
+          APROVACAO: ${{ github.event.inputs.aprovacao == 'não' && '0' || github.event.inputs.aprovacao == 'nao' && '0' || '1' }}
         # repositório público: o registro completo (tema, roteiro) não aparece no GitHub; vai para o Telegram se der erro
         run: |
           mkdir -p saida

@@ -39,7 +39,7 @@ const cenas=D.cenas.map((c,i)=>{
     <g class="atras"></g><g class="povo"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
-    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".3" style="mix-blend-mode:multiply"/>':''}
+    ${c.noite?'<rect width="1080" height="1920" fill="#14205a" opacity=".22" style="mix-blend-mode:multiply"/>':''}
     ${c.luz==='por_do_sol'?'<rect width="1080" height="1920" fill="url(#gPorDoSol)" style="mix-blend-mode:multiply"/><rect width="1080" height="1920" fill="#FFB060" opacity=".12" style="mix-blend-mode:screen"/>':''}
     ${c.luz==='holofote'?'<rect class="holo" width="1080" height="1920" fill="url(#gHolofote)"/>':''}
     <rect width="1080" height="1920" fill="url(#gVin)"/></svg>`;
@@ -97,7 +97,7 @@ window.seek=t=>{
   const zz=z*(1+(susto&&ds>0&&ds<0.6?0.10*Math.exp(-ds*14):0.03*corte));
   const camX=tx+Math.sin(t*67)*sh-(zz-z)*540,camY=ty+Math.cos(t*59)*sh-(zz-z)*960;
   S.cam.setAttribute('transform',`translate(${camX} ${camY}) scale(${zz})`);
-  S.el.style.filter=`saturate(${1-Math.min(.7,c.cinza??0)}) brightness(${1-Math.min(.7,c.cinza??0)*0.08})`;   // cor some, mas nunca vira lama
+  S.el.style.filter=`saturate(${1-Math.min(.55,c.cinza??0)}) brightness(${1-Math.min(.55,c.cinza??0)*0.05})`;   // cor some, mas nunca vira lama
   $('flash').style.opacity=(susto&&ds>0&&ds<0.1)?0.55*(1-ds/0.1):(i>0&&i%2===1&&d<0.12?0.35*(1-d/0.12):0);
   // ── legenda
   const bdeG=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0,c.titulo?3.0:0),balaoOn=c.balao&&V&&d>bdeG&&d<bdeG+BALAO_DUR;
@@ -127,7 +127,7 @@ window.seek=t=>{
     // onde estão a mão e os olhos de verdade (medido na tela e convertido para o mundo) → planos de detalhe
     const w2=(q)=>({x:(q.left+q.width/2-camX)/zz,y:(q.top+q.height/2-camY)/zz});
     S._mao=w2(S.el.querySelector('.mD').getBoundingClientRect());const ro=S.el.querySelector('.olhos').getBoundingClientRect();S._olho=w2(ro.width?ro:r)}
-  if(c.luz==='holofote'&&cabeca){const gh=document.getElementById('gHolofote');gh.setAttribute('cx',(cabeca.x-camX)/zz);gh.setAttribute('cy',(cabeca.top-camY)/zz+300);gh.setAttribute('r',560)}
+  if(c.luz==='holofote'&&cabeca){const gh=document.getElementById('gHolofote');gh.setAttribute('cx',cabeca.x);gh.setAttribute('cy',cabeca.top+260*zz);gh.setAttribute('r',380+260*zz)}
   // ── figurantes
   const caos=(c.cinza??0)>=0.35||susto||(V&&V.pose==='desesperada');
   S.povo.forEach((q,k)=>{const modo=caos?'corre':q.parado?'parado':'anda',v=modo==='corre'?320:modo==='anda'?90:0;

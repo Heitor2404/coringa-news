@@ -201,8 +201,8 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
             s['props'] = s['props'] + [{'t': 'fogo', 'w': w, 'ar': 1.5, 'anim': 'aparece', 'ceu': False, 'atras': atras, 'x': x, 'y': y, 'de': de}
                                        for x, y, w, atras, de in ((40, 1300, 230, True, .1), (840, 1290, 210, True, .2), (330, 1190, 130, True, .3),
-                                                                  (640, 1180, 120, True, .35), (-40, 1880, 300, False, .15), (900, 1900, 280, False, .25))]
-            # fogo de verdade (animado) na rua destruída: atrás nas casas, no meio e grande na frente, nos cantos
+                                                                  (640, 1180, 120, True, .35), (-110, 1900, 230, False, .15), (960, 1910, 220, False, .25))]
+            # fogo de verdade (animado) na rua destruída: atrás nas casas, no meio e na frente só nas pontas (não cobre a Val)
         if c['pose'] != 'fora':
             lado = str(c.get('posicao') or 'centro')
             if lado == 'centro' and any(o.get('lugar') == 'bancada' for o in c['objetos']) and c['cenario'] in BANCADA:

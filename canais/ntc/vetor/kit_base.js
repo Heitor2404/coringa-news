@@ -39,6 +39,6 @@ const DEFS = `<defs>
  <radialGradient id="gLuz" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE3A6" stop-opacity=".7"/><stop offset=".45" stop-color="#FFC56B" stop-opacity=".25"/><stop offset="1" stop-color="#FFB050" stop-opacity="0"/></radialGradient>
  <radialGradient id="gSol" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF4C8" stop-opacity=".9"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
  <radialGradient id="gSom" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a140c" stop-opacity=".45"/><stop offset="1" stop-color="#2a140c" stop-opacity="0"/></radialGradient>
- <radialGradient id="gVin" cx=".5" cy=".46" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#1a0d06" stop-opacity=".55"/></radialGradient>
+ <radialGradient id="gVin" cx=".5" cy=".46" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#1a0d06" stop-opacity=".38"/></radialGradient>
  <radialGradient id="gGlobo" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#7CC7EE"/><stop offset="1" stop-color="#2D6FA8"/></radialGradient>
 </defs>`;

@@ -56,6 +56,9 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 26 | Balões ora em MAIÚSCULA, ora em minúscula ("Tá quieto demais…") | ✅ | balão sempre em maiúscula no motor |
 | 27 | Cena do hospital falando de "fila" com 1 pessoa só | ✅ | hospital 3 figurantes, mercado 4 |
 | 28 | Contador pequeno demais para o vídeo | ✅ | contador em tamanho cheio (escala 0,72 → 1) |
+| 29 | (vídeo baratas, 11/11 21h35) Holofote mirando ao lado da Val (ela no escuro) | ✅ | camada do holofote usa coordenadas de tela e segue a cabeça com o zoom |
+| 30 | Fogo da frente cobrindo o corpo da Val na rua destruída | ✅ | fogos da frente menores e só nas pontas da tela |
+| 31 | Segunda metade escura/marrom (noite + cor sumindo + vinheta) e floresta de noite quase preta | ✅ | cor some até no máx. 55%, noite mais leve, vinheta mais leve, céu da floresta à noite mais claro |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

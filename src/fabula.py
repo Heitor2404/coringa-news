@@ -29,7 +29,7 @@ PROPORCAO = {'barata': .55, 'rato': .6, 'passaro': .8, 'lixo': .7, 'folhas': .45
              'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.5, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5,
              'sol': 1, 'lua': 1, 'terra': 1, 'vela': 1.6, 'lanterna': .6}
 OLHA_ESQ: set[str] = set()
-VOAM = {'passaro', 'mosca', 'nuvem', 'sol', 'lua', 'terra', 'gota', 'dinheiro', 'folhas'}   # só estes podem ficar no ar
+VOAM = {'passaro', 'mosca', 'nuvem', 'sol', 'lua', 'terra', 'gota', 'dinheiro'}   # só estes podem ficar no ar
 ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
 # linha dos pés da Val (px no quadro 1080x1920); o chão de todos os cenários começa em 1340
 CHAO = {c: 1720 for c in CENARIOS}

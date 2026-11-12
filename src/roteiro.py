@@ -374,6 +374,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     v['_reserva'] = list(gemini.RESERVAS_USADAS)   # vai como aviso na prévia de aprovação
     marca('roteiro pronto')
     v['produto'] = None
+    v['fatos'] = fatos       # 12/11: o fiscal confere o roteiro contra a pesquisa (antes só a notícia guardava os fatos)
     v['fontes'] = fontes
     v['serie'] = 'CORINGA EXPLICA'
     v['parte'] = parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0

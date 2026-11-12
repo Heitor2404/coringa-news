@@ -9,9 +9,19 @@ Duas formas de medir:
     planos seguidos com as mesmas cores (a mesma foto reenquadrada tem as mesmas cores).
   - `medir_cenas(cenas)`: dentro do motor, com o dado exato de qual imagem cada plano usa.
 A faixa da legenda fica de fora (ela troca a cada palavra e esconderia uma imagem parada).
+
+Duas réguas, sempre separadas (12/11):
+  - "parado" (frac_estatica): a duração INTEIRA de cada trecho com mais de 4 s sem mudança. É a que entra na nota de ritmo.
+  - "excedente": só o tempo que passou de 4 s em cada trecho (um plano de 4,3 s conta 0,3 s).
+
+12/11 (Torre Eiffel): a imagem é identificada pelo que está NA TELA (arquivo da foto + assinatura visual), não pelo id da
+ideia. Antes, um plano que reaproveitava a foto da vizinha (cena sem imagem própria, plano longo quebrado, revelação)
+ficava com o id da SUA ideia: a foto repetida contava como imagem nova (e nunca como "voltando"), e o plano longo
+quebrado com OUTRA foto contava como a mesma imagem.
 """
 import subprocess
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import numpy as np
 
@@ -23,6 +33,7 @@ CORTE_FRAC = 0.30                # fração da tela com mudança forte num só q
 ELEMENTO_FRAC = (0.02, 0.30)     # fração menor, de repente (antes calmo) = elemento entrando
 MUDANCA_FORTE = 20.0             # diferença (0–255) de um bloco 8×8 que conta como mudança forte
 MESMA_IMAGEM = 0.90              # correlação de cores acima disso = mesma imagem (reenquadrada)
+MESMA_ASSINATURA = 6             # assinatura visual 8×8: até 6 de 64 bits diferentes = a mesma foto (outro arquivo)
 
 
 def _ler(video: Path, faixa) -> np.ndarray:
@@ -49,8 +60,11 @@ def _trechos(marcos: list[float], dur: float, estatico_s: float) -> dict:
     marcos = sorted(set([0.0] + [m for m in marcos if 0 < m < dur] + [dur]))
     gaps = [(a, b, round(b - a, 1)) for a, b in zip(marcos, marcos[1:])]
     est = [g for g in gaps if g[2] > estatico_s]
+    parado = round(sum(b - a for a, b, _ in est), 2)
+    exced = round(sum(b - a - estatico_s for a, b, _ in est), 2)
     return {'duracao': round(dur, 1), 'mudancas': len(marcos) - 2, 'troca_media': round(dur / max(1, len(gaps)), 2),
-            'estaticos': est, 'frac_estatica': round(sum(g[2] for g in est) / dur, 3) if dur else 0.0,
+            'estaticos': est, 'parado_s': parado, 'frac_estatica': round(parado / dur, 3) if dur else 0.0,
+            'excedente_s': exced, 'frac_excedente': round(exced / dur, 3) if dur else 0.0,
             'maior': max([g[2] for g in est] or [0.0])}
 
 
@@ -83,27 +97,92 @@ def medir(video: Path, faixa=FAIXA_LEGENDA, estatico_s: float = ESTATICO_S) -> d
     return _trechos(marcos, dur, estatico_s) | {'cortes': len(cortes), 'elementos': len(elementos), 'imagens': len(trocas) + 1}
 
 
+_ASSIN: dict = {}
+
+
+def _arquivo(img) -> Path | None:
+    s = str(img or '')
+    if not s:
+        return None
+    p = Path(unquote(urlparse(s).path)) if s.startswith('file:') else Path(s)
+    return p if p.is_file() else None
+
+
+def _assinatura(img) -> int | None:
+    """Assinatura visual (média 8×8 em cinza): a mesma foto salva em dois arquivos tem a mesma assinatura."""
+    p = _arquivo(img)
+    if p is None:
+        return None
+    if p not in _ASSIN:
+        try:
+            from PIL import Image
+            with Image.open(p) as im:
+                q = list(im.convert('L').resize((8, 8)).tobytes())
+            m = sum(q) / 64
+            _ASSIN[p] = sum(1 << k for k, x in enumerate(q) if x > m)
+        except Exception:
+            _ASSIN[p] = None
+    return _ASSIN[p]
+
+
+def chaves_visuais(cenas: list[dict]) -> list[str]:
+    """Uma chave por plano = a imagem que está NA TELA. Vídeo: o clipe (o 2º plano da mesma ideia continua o mesmo
+    clipe). Foto: o arquivo; dois arquivos com a mesma assinatura visual viram a mesma chave."""
+    vistas: list[tuple[int, str]] = []
+    out = []
+    for c in cenas:
+        if c.get('video'):
+            out.append('clipe:' + str(c.get('imagem') or c.get('img')))
+            continue
+        img = c.get('img')
+        if not img:
+            out.append(f"{c.get('tipo')}-{c.get('grupo')}-{c.get('imagem')}")
+            continue
+        chave = 'img:' + str(unquote(urlparse(str(img)).path) if str(img).startswith('file:') else img)
+        h = _assinatura(img)
+        if h is not None:
+            igual = next((k for hh, k in vistas if bin(hh ^ h).count('1') <= MESMA_ASSINATURA), None)
+            if igual:
+                chave = igual
+            else:
+                vistas.append((h, chave))
+        out.append(chave)
+    return out
+
+
 def medir_cenas(cenas: list[dict], estatico_s: float = ESTATICO_S) -> dict:
-    """Dentro do motor: cada plano sabe a imagem que usa. Mudança = imagem diferente da anterior, ou plano de
+    """Dentro do motor: cada plano sabe a imagem que usa. Mudança = imagem diferente da anterior NA TELA, ou plano de
     infográfico/mapa (elemento novo). Mesma imagem com outro enquadramento NÃO é mudança."""
     if not cenas:
         return _trechos([], 0.0, estatico_s) | {'imagens': 0}
     graf = ('numero', 'mapa', 'linha_tempo', 'comparacao', 'cards', 'lista', 'escala', 'citacao', 'revelacao')
+    chaves = chaves_visuais(cenas)
     marcos, ant, ant_graf = [], None, False
-    for c in cenas:
-        chave = c.get('imagem') or c.get('img') or f"{c.get('tipo')}-{c.get('grupo')}"   # 'imagem' = id da mídia (vídeo ou foto)
+    for c, chave in zip(cenas, chaves):
         e_graf = c.get('tipo') in graf
         if ant is not None and (chave != ant or e_graf or ant_graf):     # gráfico entrando OU saindo também é mudança
             marcos.append(float(c['start']))
         ant, ant_graf = chave, e_graf
     dur = float(cenas[-1]['end'])
-    return _trechos(marcos, dur, estatico_s) | {'imagens': len({c.get('img') for c in cenas if c.get('img')})}
+    return _trechos(marcos, dur, estatico_s) | {'imagens': len({k for c, k in zip(cenas, chaves) if c.get('img')})}
+
+
+def _s(x: float) -> str:
+    return f'{x:.1f}'.replace('.', ',')
 
 
 def resumo(m: dict) -> str:
-    base = f"🎞 ritmo: imagem nova a cada {m['troca_media']:.1f}s em média"
-    if not m['estaticos']:
+    """Texto para o Telegram: total de trechos parados, os 3 maiores e a duração acumulada (inteira e só o excedente)."""
+    base = f"🎞 ritmo: imagem nova a cada {_s(m['troca_media'])}s em média"
+    est = m['estaticos']
+    if not est:
         return base + '; nenhum trecho parado'
-    pior = sorted(m['estaticos'], key=lambda x: -x[2])[:3]
-    return (base + f"; {round(100 * m['frac_estatica'])}% do vídeo com a mesma imagem por mais de {ESTATICO_S:.0f}s: "
-            + ', '.join(f'{a:.0f}–{b:.0f}s' for a, b, _ in sorted(pior)))
+    parado = m.get('parado_s', sum(g[2] for g in est))
+    exced = m.get('excedente_s', sum(max(0.0, g[2] - ESTATICO_S) for g in est))
+    dur = m.get('duracao') or 1
+    pior = sorted(est, key=lambda x: -x[2])[:3]
+    rot = 'os 3 maiores' if len(est) > 3 else 'todos'
+    return (base + f"; {len(est)} trecho(s) com a mesma imagem por mais de {ESTATICO_S:.0f}s, somando {_s(parado)}s "
+            f"({round(100 * parado / dur)}% do vídeo)\n"
+            f"{rot}: " + ', '.join(f'{_s(a)}–{_s(b)}s ({_s(b - a)}s)' for a, b, _ in pior)
+            + f"; só o que passou de {ESTATICO_S:.0f}s: {_s(exced)}s ({round(100 * exced / dur)}%)")

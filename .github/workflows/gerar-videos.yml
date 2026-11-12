@@ -179,6 +179,40 @@ jobs:
           fi
           [ "$ok" = "1" ]
 
+      # Fase 0 do Coringa (12/11): relatórios JSON, pacote de diagnóstico, registro e vídeo original da rodada guardados por
+      # 7 dias. Repositório PÚBLICO: artefato aqui qualquer pessoa logada no GitHub baixa, então vai CRIPTOGRAFADO (AES-256)
+      # com o secret ARTEFATOS_SENHA. Sem o secret, não guarda (só avisa). Nada disso vai para o repositório, e falha aqui
+      # nunca derruba a produção (continue-on-error). Rodada do NTC fica de fora (o NTC tem o próprio arquivo, no cofre).
+      - name: Empacotar arquivos da rodada do Coringa (criptografado)
+        if: always() && github.event.inputs.ntc == '' && github.event.action != 'agenda-ntc'
+        continue-on-error: true
+        env:
+          ARTEFATOS_SENHA: ${{ secrets.ARTEFATOS_SENHA }}
+        run: |
+          if [ -z "$ARTEFATOS_SENHA" ]; then
+            echo "::warning::Sem o secret ARTEFATOS_SENHA: os arquivos da rodada NÃO foram guardados."
+            exit 0
+          fi
+          [ -d saida ] || exit 0
+          cd saida
+          find . -type f ! -path './pacotes_ntc/*' ! -name '*-telegram.mp4' \
+            \( -name '*.json' -o -name '*-diagnostico.zip' -o -name '*.mp4' -o -name '*.txt' -o -name '*-capa.jpg' \) | sort > ../lista_rodada.txt
+          if [ ! -s ../lista_rodada.txt ]; then echo "nenhum arquivo da rodada para guardar"; exit 0; fi
+          echo "guardando $(wc -l < ../lista_rodada.txt) arquivo(s), $(du -ch $(cat ../lista_rodada.txt) | tail -1 | cut -f1)"
+          tar -cf - -T ../lista_rodada.txt | gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 3 \
+            --symmetric --cipher-algo AES256 -o ../coringa-rodada.tar.gpg 3<<< "$ARTEFATOS_SENHA"
+
+      - name: Guardar arquivos da rodada do Coringa (7 dias)
+        if: always() && hashFiles('coringa-rodada.tar.gpg') != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: coringa-rodada-${{ github.run_id }}
+          path: coringa-rodada.tar.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: ignore
+
       # NTC Fase 4 (CP1): pacote de reprodução de cada vídeo (roteiro, montagem, motor, eventos) vai para o cofre PRIVADO
       - name: Arquivar pacotes do NTC no cofre
         if: always() && hashFiles('saida/pacotes_ntc/*.json') != ''

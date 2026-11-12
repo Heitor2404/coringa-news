@@ -27,6 +27,13 @@ Actions → "Gerar vídeos do dia" → Run workflow:
 - **Curiosidade** + **Parte** → um tema escolhido;
 - **Quantos vídeos de notícia** → notícia (só manual).
 
+## Arquivos de cada rodada (7 dias, criptografados)
+Relatórios (`-custos.json`, `-fiscal-sombra.json`), pacote de diagnóstico, registro e vídeo original ficam em
+Actions → a execução → **Artifacts** → `coringa-rodada-<número>` (some depois de 7 dias). O repositório é público, então o
+arquivo vai criptografado com o secret `ARTEFATOS_SENHA` (Settings → Secrets and variables → Actions → New repository
+secret). Sem esse secret nada é guardado (só um aviso na execução). Para abrir, no seu computador:
+o GitHub entrega um `.zip`; descompacte e rode `gpg -d coringa-rodada.tar.gpg | tar -xf -` (pede a senha).
+
 ## Música
 Trilhas CC0 em `assets/musica/` (ver LEIAME.txt). O clima do roteiro (misterioso/tenso/épico/leve) escolhe a trilha.
 

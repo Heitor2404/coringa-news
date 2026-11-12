@@ -150,11 +150,13 @@ BASE = 'fatos: {fatos} | frases: {frases} | título: {titulo}'
 
 
 def test_sombra_pesos_bloqueador_separado_e_nao_decide():
-    resp = {'fatos': {'nota': 17, 'problemas': [{'frase': 2, 'tipo': 'erro_grave', 'explicacao': 'são parentes, não descendentes'}]},
+    # 12/11: a IA dá o status de cada frase; a nota de fatos é calculada pelo código (1 confere + 1 incorreta = 12,5/25)
+    resp = {'fatos': {'frases': [{'frase': 1, 'status': 'confere'},
+                                 {'frase': 2, 'status': 'erro_grave', 'explicacao': 'são parentes, não descendentes'}]},
             'narrativa': {'nota': 12}, 'recursos': {'faltou': []}}
     cenas = _cenas(('a', 3, 'gancho'), ('b', 3, 'historia'))
     r = fiscal.sombra(V, cenas, None, nota_imagem=6, pedir=_pedir(resp), prompt_base=BASE)
-    assert r['partes']['imagem'] == 12 and r['partes']['fatos'] == 17 and r['partes']['recursos'] == 5
+    assert r['partes']['imagem'] == 12 and r['partes']['fatos'] == 12.5 and r['partes']['recursos'] == 5
     assert r['bloqueadores'] == ['frase 2: são parentes, não descendentes']       # fora da média, separado
     assert 'audio' in r['nao_medido']                                              # sem vídeo: não medido, sem chute
     medidos = {k: p for k, p in r['partes'].items() if p is not None}
@@ -163,7 +165,7 @@ def test_sombra_pesos_bloqueador_separado_e_nao_decide():
 
 
 def test_sombra_recurso_so_tira_ponto_quando_era_necessario():
-    resp = {'fatos': {'nota': 25}, 'narrativa': {'nota': 15},
+    resp = {'fatos': {'frases': [{'frase': 1, 'status': 'confere'}]}, 'narrativa': {'nota': 15},
             'recursos': {'faltou': [{'frase': 1, 'recurso': 'mapa', 'necessario': False},
                                     {'frase': 2, 'recurso': 'mapa', 'necessario': True, 'por_que': 'fronteira'}]}}
     r = fiscal.sombra(V, _cenas(('a', 3, 'gancho')), None, nota_imagem=None, pedir=_pedir(resp), prompt_base=BASE)

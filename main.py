@@ -621,17 +621,19 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     from src import claude, custo
     if claude.GASTO['pedidos']:                       # quanto do crédito mensal do Claude Pro este vídeo usou
         print('  [claude] ' + claude.resumo_gasto())
+    # 12/11: o diagnóstico (🧪 fiscal sombra + 💰 custo) vai numa MENSAGEM SEPARADA no Telegram, inteira; a legenda do vídeo
+    # tem limite de ~1000 caracteres e cortava o 💰 e parte do 🧪. O resumo principal (acima) fica como era.
+    diag = []
     if not teste:                                     # FISCAL NOVO em modo sombra (Fase 0): mostra, NÃO decide
         try:
             from src import fiscal
             sb = fiscal.sombra(v, cenas, saida, nota, dados.get('problemas_tela') or [])
-            if fiscal.linhas_telegram(sb):
-                resumo += '\n' + '\n'.join(fiscal.linhas_telegram(sb))
+            diag += fiscal.linhas_telegram(sb)
             fiscal.salvar(sb, pasta / f'{nome}-fiscal-sombra.json')
         except Exception as e:
             print(f'  [fiscal sombra] não rodou ({str(e)[:100]})')
     if custo.linha_telegram():                        # livro-caixa (Fase 0): por etapa e por tentativa, Claude × Gemini
-        resumo += '\n' + custo.linha_telegram()
+        diag.append(custo.linha_telegram())
     print(custo.tabela())
     try:
         custo.salvar(pasta / f'{nome}-custos.json')
@@ -639,12 +641,13 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         print(f'  [custo] não salvei o livro-caixa: {str(e)[:80]}')
     if v.get('_aprovacao') == 'indisponivel':
         resumo = '⚠️ Montado SEM a sua aprovação (o Telegram não respondeu à prévia)\n' + resumo
-    txt = [resumo, '', '════ INSTAGRAM (Reels) ════', tx['instagram'], '', '════ TIKTOK ════', tx['tiktok'], '',
+    txt = [resumo] + (['', '\n'.join(diag)] if diag else []) + \
+          ['', '════ INSTAGRAM (Reels) ════', tx['instagram'], '', '════ TIKTOK ════', tx['tiktok'], '',
            '════ YOUTUBE SHORTS (título na 1ª linha) ════', tx['youtube']]
     if v.get('link'):   # só para a equipe conferir; não vai no post
         txt += ['', '———————————————', '🔎 PARA CONFERIR (não copiar para o post):', v['link']]
     (pasta / f'{nome}.txt').write_text('\n'.join(txt).strip() + '\n', encoding='utf-8')
-    v['_telegram'] = {'resumo': resumo, 'textos': tx}
+    v['_telegram'] = {'resumo': resumo, 'textos': tx, 'diagnostico': '\n'.join(diag)}
     if not teste:
         pacote_diagnostico(v, dados, pasta, nome)
         shutil.rmtree(trab, ignore_errors=True)
@@ -652,6 +655,8 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             shutil.rmtree(Path(v['acervo'][0]['arq']).parent, ignore_errors=True)
     print(f'  ✔ {saida.name} ({dur:.0f}s de vídeo, {time.time() - t0:.0f}s para gerar)')
     print('  ' + resumo.replace('\n', '\n  '))
+    if diag:
+        print('  ' + '\n'.join(diag).replace('\n', '\n  '))
     return saida
 
 
@@ -697,25 +702,68 @@ def _tg(metodo: str, data: dict, arquivo: tuple[str, Path] | None = None) -> boo
     return False
 
 
+LIMITE_LEGENDA = 1000      # legenda de vídeo no Telegram (o limite do Telegram é 1024)
+LIMITE_MSG = 3900          # mensagem de texto (o limite do Telegram é 4096)
+
+
+def _pedacos(texto: str, limite: int = LIMITE_MSG) -> list[str]:
+    """Quebra um texto longo em mensagens inteiras (por linha), sem cortar nada."""
+    out, atual = [], ''
+    for linha in texto.split('\n'):
+        while len(linha) > limite:                   # linha sozinha maior que o limite: quebra no meio
+            if atual:
+                out.append(atual); atual = ''
+            out.append(linha[:limite]); linha = linha[limite:]
+        if atual and len(atual) + 1 + len(linha) > limite:
+            out.append(atual); atual = linha
+        else:
+            atual = f'{atual}\n{linha}' if atual else linha
+    if atual:
+        out.append(atual)
+    return out
+
+
+def _comparar_audio(arq: Path, envio: Path) -> str:
+    """Fase 0: só MEDE o áudio do original e da versão do Telegram (não muda a normalização)."""
+    try:
+        from src.fiscal import medir_audio, texto_audio
+        orig = texto_audio(medir_audio(arq))
+        if envio != arq:
+            linha = f'original: {orig} · versão do Telegram: {texto_audio(medir_audio(envio))}'
+        else:
+            linha = f'original: {orig} · versão do Telegram: o próprio original (não precisou comprimir)'
+        print(f'  [áudio] {linha}')
+        return '🔊 áudio — ' + linha
+    except Exception as e:
+        print(f'  [áudio] comparação não medida ({str(e)[:60]})')
+        return f'🔊 áudio — comparação não medida ({str(e)[:60]})'
+
+
 def telegram(arq: Path, legenda: str, v: dict | None = None):
-    """Manda o vídeo (com o resumo de qualidade), a capa e os textos prontos de cada rede."""
+    """Manda o vídeo (com o resumo de qualidade), o diagnóstico (🧪 + 💰 + 🔊) numa mensagem separada, a capa e os
+    textos prontos de cada rede."""
     if not (os.getenv('TELEGRAM_BOT_TOKEN') and os.getenv('TELEGRAM_CHAT_ID')):
         return
     try:
         info = (v or {}).get('_telegram') or {}
         envio = _versao_telegram(arq) if arq.suffix == '.mp4' else arq
-        if envio != arq:                           # Fase 0: só MEDE o volume das duas versões (não muda a normalização)
-            try:
-                from src.fiscal import nota_audio
-                print(f'  [áudio] original: {nota_audio(arq)[1][0]} · versão do Telegram: {nota_audio(envio)[1][0]}')
-            except Exception as e:
-                print(f'  [áudio] comparação não medida ({str(e)[:60]})')
-        if _tg('sendVideo', {'caption': (info.get('resumo') or legenda)[:1000], 'supports_streaming': 'true'}, ('video', envio)):
+        audio = _comparar_audio(arq, envio) if arq.suffix == '.mp4' else ''
+        resumo = info.get('resumo') or legenda
+        cabe = len(resumo) <= LIMITE_LEGENDA
+        legenda_video = resumo if cabe else resumo[:LIMITE_LEGENDA - 40].rsplit('\n', 1)[0] + '\n(resumo completo na mensagem seguinte)'
+        if _tg('sendVideo', {'caption': legenda_video, 'supports_streaming': 'true'}, ('video', envio)):
             print('  [telegram] vídeo enviado')
             # marca o dia: se o agendamento das 09:13 chegar atrasado depois disto, ele não faz outro vídeo
             (RAIZ / 'data' / 'ultimo_video.txt').write_text(datetime.now(BRT).strftime('%Y-%m-%d'), encoding='utf-8')
             from src import acervo as _acv
             _acv.marcar_clipes((v or {}).get('_clipes') or [])
+        if not cabe:
+            for parte in _pedacos(resumo):
+                _tg('sendMessage', {'text': parte})
+        diagnostico = '\n'.join(x for x in (info.get('diagnostico') or '', audio) if x)
+        if diagnostico and info:
+            for parte in _pedacos('📋 DIAGNÓSTICO DO VÍDEO (teste da Fase 0, não decide nada)\n' + diagnostico):
+                _tg('sendMessage', {'text': parte, 'disable_notification': 'true'})
         capa = arq.with_name(arq.stem + '-capa.jpg')
         if capa.exists():
             _tg('sendPhoto', {'caption': 'Capa (o título fica dentro do recorte do perfil)'}, ('photo', capa))
@@ -723,8 +771,6 @@ def telegram(arq: Path, legenda: str, v: dict | None = None):
             t = (info.get('textos') or {}).get(rede)
             if t:
                 _tg('sendMessage', {'text': f'{rotulo}\n\n{t}'[:4000]})
-        if not info:
-            _tg('sendMessage', {'text': legenda[:4000]})
     except Exception as e:
         print('  [telegram] falhou:', e)
 

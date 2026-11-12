@@ -23,6 +23,13 @@ PESOS = {'fatos': 25, 'imagem': 20, 'ritmo': 15, 'acabamento': 15, 'narrativa': 
 NOMES = {'fatos': 'fatos', 'imagem': 'imagem', 'ritmo': 'ritmo', 'acabamento': 'acabamento', 'narrativa': 'narrativa',
          'recursos': 'recursos', 'audio': 'áudio'}
 INFOGRAFICOS = {'numero', 'cards', 'escala', 'lista', 'mapa', 'linha_tempo', 'comparacao', 'citacao', 'revelacao'}
+# 12/11 (vídeo da Torre Eiffel): cada frase recebe UM status. "incorreta" (contradiz os fatos) é diferente de "não
+# conferível" (os fatos não falam disso: pode estar certo, mas não há evidência). Não conferível NÃO é erro e NÃO ganha
+# ponto: só frase CONFERIDA nos fatos soma. Com menos da metade das afirmações conferíveis, fatos = NÃO MEDIDO.
+STATUS_FATO = ('confere', 'impreciso', 'erro_grave', 'nao_conferivel', 'sem_afirmacao')
+ROTULO_FATO = {'confere': 'conferem', 'impreciso': 'imprecisas', 'erro_grave': 'incorretas',
+               'nao_conferivel': 'não conferíveis', 'sem_afirmacao': 'sem afirmação'}
+COBERTURA_MIN = 0.5
 
 
 def faixa(nota: float) -> str:
@@ -39,11 +46,11 @@ def faixa(nota: float) -> str:
 def nota_ritmo(cenas: list[dict]) -> tuple[float, dict, list[str]]:
     m = estaticos.medir_cenas(cenas)
     pontos = PESOS['ritmo'] * (1 - min(1.0, 1.5 * m['frac_estatica']))
-    # mesma imagem voltando depois de outras (repetição percebida)
+    # mesma imagem voltando depois de outras (repetição percebida). 12/11: pela imagem NA TELA (arquivo + assinatura
+    # visual), não pelo id da ideia — a foto reaproveitada da vizinha tem o id de outra ideia e não era contada
     vistas, voltas, ant = set(), 0, None
-    for c in cenas:
-        k = c.get('imagem') or c.get('img')
-        if not k or c.get('tipo') == 'fechamento':
+    for c, k in zip(cenas, estaticos.chaves_visuais(cenas)):
+        if not c.get('img') or c.get('tipo') == 'fechamento':
             continue
         if k != ant and k in vistas:
             voltas += 1
@@ -62,18 +69,38 @@ def nota_acabamento(problemas_tela: list) -> tuple[float, list[str]]:
     return round(max(0.0, PESOS['acabamento'] - 5 * n), 1), obs + ['(parcial: margens e tela final entram na Fase 3)']
 
 
+def medir_audio(video: Path) -> dict:
+    """Volume integrado (LUFS), pico real (dBTP), taxa de amostragem e canais. Só mede (não muda nada)."""
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', str(video), '-af', 'ebur128=peak=true', '-f', 'null', '-'],
+                       capture_output=True, text=True, timeout=60)
+    txt = r.stderr[r.stderr.rfind('Summary:'):]
+    out = {'lufs': float(re.search(r'I:\s*(-?[\d.]+) LUFS', txt).group(1)),
+           'pico': float(re.search(r'Peak:\s*(-?[\d.]+) dBFS', txt).group(1))}
+    try:
+        p = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=sample_rate,channels',
+                            '-of', 'json', str(video)], capture_output=True, text=True, timeout=30)
+        st = (json.loads(p.stdout or '{}').get('streams') or [{}])[0]
+        out['taxa_hz'] = int(st['sample_rate']) if st.get('sample_rate') else None
+        out['canais'] = int(st['channels']) if st.get('channels') else None
+    except Exception:
+        out['taxa_hz'] = out['canais'] = None
+    return out
+
+
+def texto_audio(a: dict) -> str:
+    canais = {1: 'mono', 2: 'estéreo'}.get(a.get('canais'), f"{a.get('canais')} canais" if a.get('canais') else 'canais ?')
+    taxa = f"{a['taxa_hz'] / 1000:g} kHz" if a.get('taxa_hz') else 'taxa ?'
+    return f"volume {a['lufs']:.1f} LUFS, pico {a['pico']:.1f} dBTP, {taxa}, {canais}"
+
+
 def nota_audio(video: Path) -> tuple[float | None, list[str]]:
     """Volume integrado perto de −14 LUFS e pico abaixo de −1 dBTP (o padrão das redes)."""
     try:
-        r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', str(video), '-af', 'ebur128=peak=true', '-f', 'null', '-'],
-                           capture_output=True, text=True, timeout=60)
-        txt = r.stderr[r.stderr.rfind('Summary:'):]
-        lufs = float(re.search(r'I:\s*(-?[\d.]+) LUFS', txt).group(1))
-        pico = float(re.search(r'Peak:\s*(-?[\d.]+) dBFS', txt).group(1))
+        a = medir_audio(video)
     except Exception as e:
         return None, [f'áudio não medido ({str(e)[:60]})']
-    pontos = PESOS['audio'] - max(0.0, abs(lufs + 14) - 1.5) - (1 if pico > -1 else 0)
-    return round(max(0.0, pontos), 1), [f'volume {lufs:.1f} LUFS, pico {pico:.1f} dB']
+    pontos = PESOS['audio'] - max(0.0, abs(a['lufs'] + 14) - 1.5) - (1 if a['pico'] > -1 else 0)
+    return round(max(0.0, pontos), 1), [texto_audio(a)]
 
 
 # ───────────────────────── partes medidas pelo Gemini (texto) ─────────────────────────
@@ -101,6 +128,13 @@ def _gemini_direto(prompt: str) -> dict:
     return gemini._tentar(f, gemini.PRINCIPAIS or None)
 
 
+def tem_fatos(v: dict) -> bool:
+    return bool(str(v.get('fatos') or '').strip())
+
+
+SEM_FATOS = '(SEM FATOS PESQUISADOS: não avalie os fatos; devolva "fatos": {"frases": []})'
+
+
 def avaliar_texto(v: dict, prompt_base: str | None = None, pedir=None) -> dict:
     """Fatos (25), narrativa/gancho (15) e recursos (5) num pedido só. `pedir` só é trocado nos testes."""
     from . import cofre
@@ -109,7 +143,8 @@ def avaliar_texto(v: dict, prompt_base: str | None = None, pedir=None) -> dict:
         return {}
     frases = _frases(v)
     lista = '\n'.join(f"{k + 1}. {f['fala']}  [recurso na tela: {f['recurso']}]" for k, f in enumerate(frases))
-    prompt = base.format(fatos=str(v.get('fatos') or '')[:12000], frases=lista, titulo=v.get('titulo', ''))
+    fatos = str(v.get('fatos') or '').strip()[:12000] or SEM_FATOS
+    prompt = base.format(fatos=fatos, frases=lista, titulo=v.get('titulo', ''))
     caixa: dict = {}
 
     def rodar():
@@ -128,6 +163,39 @@ def avaliar_texto(v: dict, prompt_base: str | None = None, pedir=None) -> dict:
     if isinstance(r, list):
         r = r[0] if r else {}
     return r if isinstance(r, dict) else {}
+
+
+def nota_fatos(f: dict, n_frases: int) -> dict:
+    """Nota de fatos calculada AQUI (não pela IA), frase a frase:
+    confere = 1 · impreciso = 0,5 · incorreta (erro_grave) = 0 e vira bloqueador · não conferível = 0 (sem evidência não
+    ganha ponto, mas não é erro) · sem afirmação = fora da conta. Nota = 25 × pontos ÷ frases com afirmação.
+    Sem lista frase a frase, ou com menos de COBERTURA_MIN das afirmações conferíveis nos fatos: NÃO MEDIDO."""
+    por_frase = {}
+    for x in (f or {}).get('frases') or []:
+        try:
+            k = int(x.get('frase'))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        st = str(x.get('status') or '').strip().lower().replace('ã', 'a').replace('í', 'i').replace('-', '_').replace(' ', '_')
+        st = {'sem_fonte': 'nao_conferivel', 'incorreta': 'erro_grave', 'incorreto': 'erro_grave'}.get(st, st)
+        if 1 <= k <= max(n_frases, 1) and st in STATUS_FATO:
+            por_frase[k] = (st, str(x.get('explicacao') or '')[:140])
+    cont = {s: sum(1 for st, _ in por_frase.values() if st == s) for s in STATUS_FATO}
+    afirm = sum(cont[s] for s in ('confere', 'impreciso', 'erro_grave', 'nao_conferivel'))
+    conferiveis = afirm - cont['nao_conferivel']
+    itens = {s: [f'frase {k}: {e}' for k, (st, e) in sorted(por_frase.items()) if st == s]
+             for s in ('impreciso', 'erro_grave', 'nao_conferivel')}
+    r = {'nota': None, 'contagem': cont, 'afirmacoes': afirm, 'conferiveis': conferiveis, 'motivo': '',
+         'bloqueadores': itens['erro_grave'], 'imprecisas': itens['impreciso'], 'nao_conferiveis': itens['nao_conferivel']}
+    if not por_frase:
+        r['motivo'] = 'a avaliação não trouxe a conferência frase a frase'
+    elif not afirm:
+        r['motivo'] = 'nenhuma frase com afirmação'
+    elif conferiveis / afirm < COBERTURA_MIN:
+        r['motivo'] = f'evidência insuficiente: só {conferiveis} de {afirm} afirmações dá para conferir nos fatos'
+    else:
+        r['nota'] = round(PESOS['fatos'] * (cont['confere'] + 0.5 * cont['impreciso']) / afirm, 1)
+    return r
 
 
 def _num(x, maximo: float) -> float | None:
@@ -159,14 +227,20 @@ def sombra(v: dict, cenas: list[dict], video: Path | None, nota_imagem: float | 
         t = avaliar_texto(v, prompt_base=prompt_base, pedir=pedir)
     except Exception as e:
         t, obs['texto'] = {}, [f'avaliação de texto falhou ({str(e)[:80]})']
-    f = t.get('fatos') or {}
-    partes['fatos'] = _num(f.get('nota'), PESOS['fatos']) if f else None
-    for p in f.get('problemas') or []:
-        item = f"frase {p.get('frase')}: {str(p.get('explicacao') or '')[:140]}"
-        if str(p.get('tipo')) == 'erro_grave':
-            bloqueadores.append(item)                     # fora da média: aparece separado
-        else:
-            obs.setdefault('fatos', []).append(f"{p.get('tipo')}: {item}")
+    fatos_r = None
+    if not tem_fatos(v):
+        partes['fatos'] = None                            # sem fatos pesquisados não há como conferir: NÃO MEDIDO
+        obs['fatos_motivo'] = ['o fiscal não recebeu os fatos pesquisados']
+    elif t:
+        fatos_r = nota_fatos(t.get('fatos') or {}, len(_frases(v)))
+        partes['fatos'] = fatos_r['nota']
+        bloqueadores += fatos_r['bloqueadores']           # incorreta: fora da média, aparece separado
+        obs['fatos'] = [f'impreciso: {x}' for x in fatos_r['imprecisas']] + \
+                       [f'não conferível: {x}' for x in fatos_r['nao_conferiveis']]
+        if fatos_r['motivo']:
+            obs['fatos_motivo'] = [fatos_r['motivo']]
+    else:
+        partes['fatos'] = None
     n = t.get('narrativa') or {}
     partes['narrativa'] = _num(n.get('nota'), PESOS['narrativa']) if n else None
     if n.get('comentario'):
@@ -183,21 +257,30 @@ def sombra(v: dict, cenas: list[dict], video: Path | None, nota_imagem: float | 
     nota = round(10 * sum(medidos.values()) / peso, 1) if peso else None
     return {'nota': nota, 'faixa': faixa(nota) if nota is not None else 'não medido', 'partes': partes,
             'nao_medido': [k for k, p in partes.items() if p is None], 'bloqueadores': bloqueadores, 'obs': obs,
-            'ritmo': medida_ritmo}
+            'ritmo': medida_ritmo, 'fatos': fatos_r, 'recebeu_fatos': tem_fatos(v)}
 
 
 def linhas_telegram(r: dict) -> list[str]:
+    """Vai numa mensagem SEPARADA do resumo do vídeo (sem corte): pode listar tudo."""
     if not r or r.get('nota') is None:
         return []
     pts = ' · '.join(f"{NOMES[k]} {('%g' % p).replace('.', ',')}/{PESOS[k]}" for k, p in r['partes'].items() if p is not None)
     out = [f"🧪 Fiscal novo (TESTE, não decide nada): {str(r['nota']).replace('.', ',')}/10 — {r['faixa']}", f'   {pts}']
     if r['nao_medido']:
-        out.append('   não medido: ' + ', '.join(NOMES[k] for k in r['nao_medido']))
-    out.append('   ' + estaticos.resumo(r['ritmo']))
+        motivo = (r['obs'].get('fatos_motivo') or [''])[0]
+        out.append('   não medido: ' + ', '.join(NOMES[k] + (f' ({motivo})' if k == 'fatos' and motivo else '')
+                                                for k in r['nao_medido']))
+    f = r.get('fatos')
+    if f and f.get('contagem'):
+        c = f['contagem']
+        out.append('   📚 fatos frase a frase: ' + ' · '.join(f"{c[s]} {ROTULO_FATO[s]}" for s in STATUS_FATO)
+                   + ' (não conferível = sem fonte nos fatos; não é erro e não soma ponto)')
+    out += ['   ' + x for x in estaticos.resumo(r['ritmo']).split('\n')]
+    out += ['   ' + x for x in (r['obs'].get('ritmo') or [])[1:]]          # imagens voltando depois de outras
     for b in r['bloqueadores']:
-        out.append(f'   ⛔ erro factual grave (bloqueador): {b}')
+        out.append(f'   ⛔ informação INCORRETA (contradiz os fatos; bloqueador só no teste): {b}')
     for k in ('fatos', 'recursos'):
-        for o in (r['obs'].get(k) or [])[:3]:
+        for o in r['obs'].get(k) or []:
             out.append(f'   • {o}')
     return out
 

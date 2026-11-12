@@ -23,6 +23,8 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 14 | Mascote aparece 1 s e some | ✅ | template.html: mascote só em cena do gancho com ≥ 2 s |
 | 15 | Névoa escura deixando a metade de baixo suja | ✅ | template.html: sombra de baixo mais leve nas fotos (legenda ganhou contorno) |
 | 16 | Final repete logo do começo | ✅ | ver item 8 (revelação/fechamento não voltam à imagem do gancho) |
+| 17 | (prévia do Ötzi, 12/11) Prévia mostrava só o 1º pedaço da frase longa ("Eram os alemães Helmut e Erika Simon,") — aprovava sem ver o texto inteiro | ✅ | aprovacao.py: prévia (texto e imagem) mostra a frase inteira (`fala_ideia`) |
+| 18 | (prévia do Ötzi, 12/11) Erro de fato sem como corrigir na prévia ("descendentes" em vez de "parentes") | ✅ | aprovacao.py: responder `12: texto novo` (uma linha por frase, junto com `3=B` se quiser) ou `titulo: ...`; a frase é refeita com a mesma imagem e a voz/legenda já saem certas |
 Áudio: volume já normalizado (loudnorm I=-14) no render.
 
 ## Ninguém Te Contou — motor vetorial (11/11)

@@ -183,3 +183,36 @@ def test_resposta_em_canal_tambem_vale(bot, tmp_path, monkeypatch):
         return original(metodo, arquivo, **d)
     monkeypatch.setattr(aprovacao, '_api', com_canal)
     assert aprovacao.aprovar(v, reais, imgs, None, minutos=1) == 'ok'
+
+
+# ───────── correção de texto na prévia (12/11) ─────────
+@pytest.mark.parametrize('txt,esperado', [
+    ('12: A vítima tem parentes vivos.', ('editar', {'textos': {12: 'A vítima tem parentes vivos.'}, 'trocas': {}, 'titulo': None})),
+    ('frase 3 = Outro texto aqui', ('editar', {'textos': {3: 'Outro texto aqui'}, 'trocas': {}, 'titulo': None})),
+    ('Título: O homem do gelo', ('editar', {'textos': {}, 'trocas': {}, 'titulo': 'O homem do gelo'})),
+    ('7=F 10=C\n12: Ele tem parentes vivos.', ('editar', {'textos': {12: 'Ele tem parentes vivos.'}, 'trocas': {7: 'F', 10: 'C'}, 'titulo': None})),
+    ('3=B', ('trocar', {3: 'B'})),                     # troca de imagem continua igual
+    ('12: ok', None),
+])
+def test_interpretar_correcao_de_texto(txt, esperado):
+    assert aprovacao.interpretar(txt) == esperado
+
+
+def test_corrigir_texto_refaz_a_frase_com_a_mesma_imagem(bot, tmp_path):
+    novo = 'Em 2013 acharam dezenove parentes vivos do homem do gelo no Tirol da Áustria'   # 14 palavras → 2 planos
+    tg = bot([f'4: {novo}\n2=A', 'ok'])
+    v, reais, imgs = _video(tmp_path)
+    assert aprovacao.aprovar(v, reais, imgs, lambda x: {'tipo': 'foto', 'arq': x['arq']}, minutos=1) == 'ok'
+    planos = [c for c in v['cenas'] if c.get('grupo', 3) == 3 and c.get('fala_ideia') == novo]
+    assert len(planos) >= 2 and ' '.join(c['fala'] for c in planos) == novo
+    assert all(c['foto'] == 'a3' and c['imagem'] == 'i3' for c in planos)    # mesma imagem da frase original
+    assert v['cenas'][1]['foto'] != 'a1'                                      # a troca de imagem da mesma mensagem também valeu
+    assert len(aprovacao.ideias(v)) == 5 and v['cenas'][-1]['tipo'] == 'fechamento'
+    assert novo in [t for m, t, _ in tg.enviados if m == 'sendMessage' and t.startswith('📝')][-1]   # prévia nova com o texto inteiro
+
+
+def test_previa_mostra_a_frase_inteira_mesmo_dividida_em_planos(tmp_path):
+    v, reais, imgs = _video(tmp_path)
+    v['cenas'][1] |= {'fala': 'Eram os alemães Helmut e Erika Simon,', 'sub': 0, 'n_sub': 2,
+                      'fala_ideia': 'Eram os alemães Helmut e Erika Simon, que faziam trilha nos Alpes.'}
+    assert 'que faziam trilha nos Alpes' in aprovacao.texto(v)

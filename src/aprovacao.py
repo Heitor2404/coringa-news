@@ -8,6 +8,9 @@ Respostas (responder À MENSAGEM do bot — em grupo o bot só enxerga respostas
   ok / sim / monta          → monta o vídeo
   3=B 7=A                   → a frase 3 usa a reserva B, a 7 usa a A (e chega uma prévia nova)
   trocar 3 7                → troca pelas melhores reservas que sobraram (e chega uma prévia nova)
+  12: texto novo            → reescreve a frase 12 inteira (uma por linha; dá para juntar com 3=B). A voz e a legenda
+                              são feitas depois da aprovação, então já saem com o texto novo. A imagem continua a mesma.
+  titulo: texto novo        → troca o título
   outro tema / não          → descarta e tenta outro tema
 Sem resposta no tempo → NÃO monta (avisa no Telegram).
 """
@@ -55,6 +58,11 @@ def ideias(v: dict) -> list[dict]:
 
 def _limpo(s) -> str:
     return re.sub(r'\s+', ' ', str(s or '').replace('*', '')).strip()
+
+
+def _fala(c: dict) -> str:
+    """A frase INTEIRA (frase longa vira vários planos e cada plano só guarda o seu pedaço em 'fala')."""
+    return c.get('fala_ideia') or c.get('fala') or ''
 
 
 def midia_de(c: dict, reais: dict, imgs: dict) -> tuple[str, Path | None]:
@@ -151,7 +159,7 @@ def desenhar(v: dict, reais: dict, imgs: dict) -> bytes:
     d = ImageDraw.Draw(im)
     g = lista[0] if lista else {}
     d.text((gap, 24), _limpo(g.get('titulo') or v.get('titulo'))[:70], font=f_tit, fill=(255, 210, 31))
-    d.text((gap, 72), 'Gancho: ' + _limpo(g.get('fala'))[:110], font=f_txt, fill=(230, 230, 230))
+    d.text((gap, 72), 'Gancho: ' + _limpo(_fala(g))[:110], font=f_txt, fill=(230, 230, 230))
     d.text((gap, 104), f"{len(lista)} frases · RESPONDER na mensagem do roteiro: ok  |  3=B (frase 3 usa a reserva B)  |  trocar 3 7",
            font=f_pq, fill=(150, 160, 175))
     for k, a in enumerate(av):
@@ -190,9 +198,10 @@ def desenhar(v: dict, reais: dict, imgs: dict) -> bytes:
 def texto(v: dict) -> str:
     linhas = [f"📝 PRÉVIA — {_limpo(v.get('titulo'))}", '']
     for k, c in enumerate(ideias(v)):
-        linhas.append(f'{k + 1}. {_limpo(c.get("fala"))}')
+        linhas.append(f'{k + 1}. {_limpo(_fala(c))}')
     linhas += ['FINAL: Segue o @coringa.explica (cartão com o botão SEGUIR, automático)', '',
                '👉 Use os BOTÕES abaixo, ou toque em RESPONDER nesta mensagem e escreva: ok · 3=B · trocar 3 7 · outro tema',
+               '✏️ Corrigir texto: responda com uma linha por frase, ex.: 12: A vítima tem parentes vivos até hoje.  (ou titulo: ...)',
                '(em grupo, o bot só enxerga respostas a ele e os botões — mensagem solta não chega)']
     return '\n'.join(linhas)[:4000]
 
@@ -212,6 +221,9 @@ def interpretar(txt: str) -> tuple[str, dict] | None:
         return 'ok', {}
     if re.fullmatch(r'(outro|outro tema|nao|n|descarta|descartar|pula|pular|refaz|refazer)[.! ]*', t):
         return 'outro', {}
+    ed = _edicao(txt)
+    if ed:
+        return 'editar', ed
     trocas = {int(n): l.upper() for n, l in re.findall(r'\b(\d{1,2})\s*[=:\-]\s*([a-h])\b', t)}
     if trocas:
         return 'trocar', trocas
@@ -219,6 +231,70 @@ def interpretar(txt: str) -> tuple[str, dict] | None:
     if m:
         return 'trocar', {int(n): None for n in re.findall(r'\d{1,2}', m.group(1))}
     return None
+
+
+def _edicao(txt: str) -> dict | None:
+    """Correção de texto: uma linha por frase — '12: novo texto', 'frase 12 = novo texto', 'titulo: novo título'.
+    Pode vir junto com trocas de imagem na mesma mensagem ('3=B' numa linha). Devolve {'textos': {12: '...'},
+    'trocas': {3: 'B'}, 'titulo': '...'} ou None se não houver nenhuma correção de texto."""
+    textos, trocas, titulo = {}, {}, None
+    for linha in str(txt or '').splitlines():
+        lin = linha.strip()
+        if not lin:
+            continue
+        m = re.fullmatch(r'/?\s*t[ií]tulo\s*[:=]\s*(.+)', lin, re.I)
+        if m:
+            titulo = m.group(1).strip()
+            continue
+        if re.fullmatch(r'(?:\s*\d{1,2}\s*[=:\-]\s*[a-hA-H](?![\w])[\s,]*(?:e\s+)?)+', lin):   # só trocas de imagem: 7=F 10=C
+            trocas.update({int(n): l.upper() for n, l in re.findall(r'(\d{1,2})\s*[=:\-]\s*([a-hA-H])', lin)})
+            continue
+        m = re.fullmatch(r'/?\s*(?:texto|frase)?\s*(\d{1,2})\s*[:=]\s*(.+)', lin, re.I)
+        if m and len(m.group(2).split()) >= 2:              # texto novo: pelo menos 2 palavras
+            textos[int(m.group(1))] = m.group(2).strip()
+            continue
+        return None                                          # linha que não é correção: não é uma edição
+    if not textos and not titulo:
+        return None
+    return {'textos': textos, 'trocas': trocas, 'titulo': titulo}
+
+
+def aplicar_textos(v: dict, textos: dict, titulo: str | None) -> list[str]:
+    """Reescreve frases inteiras: a frase é dividida de novo em planos (mesmas regras do roteiro) e todos os planos
+    continuam com a MESMA imagem e enquadramentos da frase original."""
+    from .roteiro import CAMERAS_SUB, INFOGRAFICOS, MAX_INFOGRAFICO, MAX_PALAVRAS, _pedacos
+    feitas = []
+    if titulo:
+        v['titulo'] = titulo[:80]
+        feitas.append(f'título → {titulo[:80]}')
+    lista = ideias(v)
+    for n, novo in sorted(textos.items()):
+        if not 1 <= n <= len(lista):
+            feitas.append(f'frase {n} não existe'); continue
+        c = lista[n - 1]
+        g = c.get('grupo')
+        velhos = [x for x in v['cenas'] if x is c or (g is not None and x.get('grupo') == g and x.get('sub'))]
+        limite = 9 if c['tipo'] == 'gancho' else MAX_INFOGRAFICO if c['tipo'] in INFOGRAFICOS else MAX_PALAVRAS
+        ped = _pedacos(novo, limite)
+        if len(ped) == 1:
+            novas = [{k: val for k, val in c.items() if k not in ('sub', 'n_sub', 'fala_ideia', 'fala_tts')} | {'fala': novo}]
+        else:
+            cam0 = c.get('camera') or CAMERAS_SUB[(g or 0) % len(CAMERAS_SUB)]
+            novas = []
+            for k, pd in enumerate(ped):
+                if k < len(velhos):
+                    base = {key: val for key, val in velhos[k].items() if key != 'fala_tts'}
+                else:                                        # plano a mais: mesma imagem, outro movimento de câmera
+                    base = {key: c[key] for key in ('cenario', 'busca', 'midia', 'prompt_imagem', 'usa_personagem', 'ano_max',
+                                                    'grupo', 'foto', 'imagem') if key in c}
+                    base |= {'tipo': 'historia', 'transicao': 'corte',
+                             'camera': CAMERAS_SUB[(CAMERAS_SUB.index(cam0) + 2 * k) % len(CAMERAS_SUB)] if cam0 in CAMERAS_SUB else 'aproxima'}
+                novas.append(base | {'fala': pd, 'sub': k, 'n_sub': len(ped), 'fala_ideia': novo})
+        i0 = next(i for i, x in enumerate(v['cenas']) if x is c)
+        ids = {id(x) for x in velhos}
+        v['cenas'] = [x for x in v['cenas'][:i0] if id(x) not in ids] + novas + [x for x in v['cenas'][i0:] if id(x) not in ids]
+        feitas.append(f'frase {n} → {novo[:70]}')
+    return feitas
 
 
 def _base_offset() -> int:
@@ -261,7 +337,7 @@ def esperar(chave: str, ids_msg: set[int], ate: float, offset: int) -> tuple[tup
             if r:
                 return r, offset
             if (m.get('reply_to_message') or {}).get('message_id') in ids_msg:
-                _avisar('Não entendi. Responda: ok · 3=B · trocar 3 7 · outro tema')
+                _avisar('Não entendi. Responda: ok · 3=B · trocar 3 7 · 12: texto novo · outro tema')
     return None, offset
 
 
@@ -340,6 +416,12 @@ def aprovar(v: dict, reais: dict, imgs: dict, midia_de_item, minutos: float) -> 
         if acao == 'outro':
             _avisar('🔁 Ok, descarto este tema.')
             return 'outro'
+        if acao == 'editar':
+            feitas = aplicar_textos(v, trocas['textos'], trocas.get('titulo'))
+            if trocas.get('trocas'):
+                feitas += aplicar_trocas(v, trocas['trocas'], reais, imgs, midia_de_item)
+            _avisar('Correções:\n' + '\n'.join(feitas) + '\n\nMando a prévia nova…')
+            continue
         feitas = aplicar_trocas(v, trocas, reais, imgs, midia_de_item)
         _avisar('Trocas:\n' + '\n'.join(feitas) + '\n\nMando a prévia nova…')
     _avisar('Muitas rodadas de troca: monto com a última prévia? Responda ok, ou outro tema.')

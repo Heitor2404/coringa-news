@@ -12,6 +12,7 @@ const POSES = {
   susto:       { D: [-142, -34], E: [142, 34], mD: 'aberta', mE: 'aberta', olhos: 'arregalado', sob: 'surpresa', boca: 'o', suor: 1, pulo: 1 },
   brava:       { D: [-42, 98], E: [42, -98], mD: 'punho', mE: 'punho', olhos: 'normal', sob: 'raiva', boca: 'raiva', vermelha: 1 },
   brava2:      { D: [-92, -16], E: [42, -98], mD: 'aponta', mE: 'punho', olhos: 'normal', sob: 'raiva', boca: 'grita', vermelha: 1 },
+  tchau:       { D: [-14, -10], E: [155, 10], mD: 'aberta', mE: 'aberta', olhos: 'feliz', sob: 'surpresa', boca: 'aberto' },
   chora:       { D: [-18, -40], E: [18, 40], mD: 'aberta', mE: 'aberta', olhos: 'normal', sob: 'triste', boca: 'choro' },
   desesperada: { D: [-160, -150], E: [160, 150], mD: 'aberta', mE: 'aberta', olhos: 'arregalado', sob: 'triste', boca: 'choro', suor: 1, treme: 1 },
 };
@@ -106,6 +107,7 @@ class Val {
     let [d1, d2] = mix(A.D, P.D), [e1, e2] = mix(A.E, P.E);
     if (e.anda != null) { d1 = -14 - f1 * .5; d2 = -10; e1 = 14 - f2 * .5; e2 = 10 }
     if (e.bracoD) [d1, d2] = e.bracoD;
+    if (e.bracoE) [e1, e2] = e.bracoE;
     d1 += bal * (P.D[0] > -60 ? 1 : .4); e1 += bal2 * (P.E[0] < 60 ? 1 : .4);
     if (e.treme) { d1 += Math.sin(t * 33) * 4; e1 += Math.sin(t * 29) * 4 }
     const hD = braco(this.g, 'bD', ...OMBRO_D, d1, d2), hE = braco(this.g, 'bE', ...OMBRO_E, e1, e2);

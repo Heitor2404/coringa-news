@@ -211,6 +211,9 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
              'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')) or c.get('luz') == 'noite', 'luz': c.get('luz'), 'props': _objetos(c)}
         if any(o['tipo'] == 'celular' for o in c['objetos']):
             s['celular'] = True                              # o povo da cena anda olhando o celular
+        if c['pose'] == 'fora' and c['cenario'] in ('floresta', 'horta', 'fazenda', 'praia') and not any(o['tipo'] == 'passaro' for o in c['objetos']):
+            s['props'] = s['props'] + [{'t': 'passaro', 'w': 150, 'ar': .8, 'anim': 'aparece', 'ceu': True, 'atras': True, 'voa': True,
+                                        'x': x, 'y': y, 'de': de, 'flip': fl} for x, y, de, fl in ((180, 1150, .3, False), (760, 1230, .8, True))]
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):

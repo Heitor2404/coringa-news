@@ -69,6 +69,9 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 39 | Cidade pegando fogo 2 vezes | ✅ | rua_destruida só no último ato (código troca antes disso por rua normal) + regra no prompt |
 | 40 | Figurantes parecendo crianças | ✅ | pernas mais compridas e escala 0,92–1,06 |
 Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas sumissem do mundo? | na cena da cidade pegando fogo use a frase ...").
+| 41 | Cena sem a Val (horta/floresta) vazia e parada | ✅ | ganha 2 figurantes e 2 pássaros voando |
+| 42 | Legenda pulando de cima para baixo no close | ✅ | legenda sempre em cima |
+| 43 | Val parada nos últimos segundos (placa da Parte 2) | ✅ | Val dá tchau/chama para a Parte 2 enquanto a placa está na tela |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

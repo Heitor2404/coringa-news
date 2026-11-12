@@ -49,8 +49,8 @@ const cenas=D.cenas.map((c,i)=>{
   const objs=(c.props||[]).map((p,j)=>{const g=document.createElementNS(NS,'g'),inner=document.createElementNS(NS,'g');g.appendChild(inner);inner.innerHTML=(OBJ[p.t]||OBJ.barata).svg();
     el.querySelector(p.atras?'.atras':'.frente').appendChild(g);return{p,g,inner}});
   // figurantes: lugar público ganha gente andando ao fundo (no caos, correm com os braços para cima)
-  const povo=Array.from({length:MULTIDAO[c.cen]||0},(_,k)=>{const g=document.createElementNS(NS,'g');el.querySelector('.povo').appendChild(g);
-    const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1470+(k%3)*55+rnd(sd)*25,s:.92+(k%3)*.07,x0:(k+.5)/(MULTIDAO[c.cen]||1)*1080+(rnd(sd+1)-.5)*120,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.3,cel:c.celular||rnd(sd+4)<.35}});
+  const povo=Array.from({length:MULTIDAO[c.cen]||(!c.val&&['horta','floresta'].includes(c.cen)?2:0)},(_,k)=>{const g=document.createElementNS(NS,'g');el.querySelector('.povo').appendChild(g);
+    const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1470+(k%3)*55+rnd(sd)*25,s:.92+(k%3)*.07,x0:(k+.5)/(MULTIDAO[c.cen]||1)*1080+(rnd(sd+1)-.5)*120,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.3,cel:c.celular||(['rua','mercado','hospital','praia'].includes(c.cen)&&rnd(sd+4)<.35)}});
   povo.sort((a,b)=>a.y-b.y);povo.forEach(q=>q.p.g.parentNode.appendChild(q.p.g));
   let V=null;
   if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'))}}
@@ -104,7 +104,7 @@ window.seek=t=>{
   const tituloOn=c.titulo&&d<2.9,cap=$('cap');let txt=null,t0=0;
   const gi=(D.captions||[]).findIndex(x=>t>=x.start&&t<x.end+0.05),g=gi>=0?D.captions[gi]:null;
   if(g){txt=g.words.map(w=>w.hl?`<i>${w.w}</i>`:w.w).join(' ');t0=g.start}
-  if(txt&&!tituloOn&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(['rosto','mao','olho'].includes(tipo)?1560:PAINEL[i]&&!tituloOn?500:balaoOn?400:470)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
+  if(txt&&!tituloOn&&!(c.fim&&d>c.fim.de)){if(cap.dataset.k!=t0){cap.innerHTML=txt;cap.dataset.k=t0}cap.style.opacity=1;cap.style.top=(PAINEL[i]&&!tituloOn?500:balaoOn?400:470)+'px';cap.style.transform=`scale(${lerp(0.85,1,cl(back((t-t0)/0.18),0,1.1))})`}else cap.style.opacity=0;
   // ── Val
   let cabeca=null;
   if(V){const andando=V.anda&&d<ANDA;
@@ -112,13 +112,13 @@ window.seek=t=>{
     const ant=S._pose||pose;if(ant!==pose&&S._pose!==undefined){S._troca=pl.t0;S._ant=ant}S._pose=pose;
     const kT=S._troca!=null?cl((t-S._troca)/0.3):1;
     let x=V.x;if(andando)x=lerp(V.x<540?-280:1360,V.x,eo(d/ANDA));
-    const P=POSES[pose]||POSES.neutra;
+    const tchau=fimOn&&d>c.fim.de;const P=POSES[tchau?'tchau':pose]||POSES.neutra;
     let pulo=0;if(P.pula&&!andando){const ph=(d%0.55)/0.55;pulo=d<2.2?Math.sin(ph*Math.PI)*70:0}
     if(P.pulo&&ds>0&&ds<0.42){const k=ds/0.42;pulo=4*130*k*(1-k)}
     const olhaP=(c.props||[])[0],olhaX=olhaP&&!andando?cl((olhaP.x+olhaP.w/2-x)/40,-9,9):0,olhaY=olhaP&&olhaP.y>V.chao-200?7:0;
     let aceno=0;if(g&&!andando){const dc=t-g.start;aceno=(gi%2?1:-1)*2.5*eo(dc/0.25)+Math.sin(cl(dc/0.35)*Math.PI)*2}
     const bde=Math.max(c.balao_de??0.6,V.anda?ANDA+0.2:0),falando=c.balao&&d>bde&&d<bde+1.2;
-    V.boneco.desenha({x,chao:V.chao,s:V.s,pose:andando?'neutra':pose,poseAnt:S._ant||pose,kTroca:kT,t,anda:andando?(d*2.2)%1:null,
+    V.boneco.desenha({x,chao:V.chao,s:V.s,pose:andando?'neutra':tchau?'tchau':pose,bracoE:tchau?[150+Math.sin(t*9)*22,10+Math.sin(t*9+1)*15]:null,poseAnt:S._ant||pose,kTroca:kT,t,anda:andando?(d*2.2)%1:null,
       olhaX,olhaY,pisca:((t+i*.7)%3.4)<0.12,fala:falando?1:(P.boca==='fala'?1:0),aceno,pulo,treme:P.treme,inclina:andando?(V.x<540?4:-4):0});
     S.riscos.forEach((e,k)=>{const dd=ds-0.25;if(!susto||dd<0||dd>1.6){e.setAttribute('opacity',0);return}
       const a=(-150+k*30)*Math.PI/180,hy=V.chao-(VAL_PES+375)*VAL_ESC*V.s-pulo,R0=150+Math.sin(dd*30+k)*8,Ln=lerp(14,46,eo(dd/.15));

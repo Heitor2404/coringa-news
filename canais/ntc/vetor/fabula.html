@@ -26,7 +26,7 @@ html,body{margin:0;background:#000}
 <div id="st"><div id="fx"></div>
 <div id="titulo"></div><div id="hud"><small id="rot"></small><b id="num">0</b></div><div id="balao"></div><div id="cap"></div>
 <div id="fim"><div class="pa" id="fimp"></div><div class="c" id="fimc"></div></div><div id="flash"></div></div>
-<script src="data.js"></script><script src="kit_base.js"></script><script src="kit_cenarios.js"></script><script src="kit_objetos.js"></script><script src="kit_val.js"></script><script src="kit_pessoas.js"></script>
+<script src="data.js"></script><script src="kit_base.js"></script><script src="kit_cenarios.js"></script><script src="kit_objetos.js"></script><script src="kit_val.js"></script><script src="kit_juninho.js"></script><script src="kit_pessoas.js"></script>
 <script>
 const D=window.DATA,$=id=>document.getElementById(id),ST=$('st'),FX=$('fx');
 $('defs').outerHTML=DEFS.replace('</defs>',`<linearGradient id="gPorDoSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F08A50"/><stop offset=".6" stop-color="#F7B27A"/><stop offset="1" stop-color="#C77A5A"/></linearGradient>
@@ -35,7 +35,7 @@ const ANDA=0.8,BALAO_DUR=2.8;
 const cenas=D.cenas.map((c,i)=>{
   const el=document.createElement('div');el.className='cena';
   const amb=AMBIENTE[c.cen];
-  el.innerHTML=`<svg width="1080" height="1920" viewBox="0 0 1080 1920"><g class="cam">${(CEN[c.cen]||CEN.cozinha)({noite:!!c.noite})}
+  el.innerHTML=`<svg width="1080" height="1920" viewBox="0 0 1080 1920"><g class="cam">${(CEN[c.cen]||CEN.cozinha)({noite:!!c.noite,dono:D.personagem||'val',seca:(c.cinza??0)>=0.3})}
     <g class="atras"></g><g class="povo"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
@@ -53,7 +53,7 @@ const cenas=D.cenas.map((c,i)=>{
     const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1470+(k%3)*55+rnd(sd)*25,s:.92+(k%3)*.07,x0:(k+.5)/(MULTIDAO[c.cen]||1)*1080+(rnd(sd+1)-.5)*120,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.3,cel:c.celular||(['rua','mercado','hospital','praia'].includes(c.cen)&&rnd(sd+4)<.35)}});
   povo.sort((a,b)=>a.y-b.y);povo.forEach(q=>q.p.g.parentNode.appendChild(q.p.g));
   let V=null;
-  if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'))}}
+  if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'),(PERSONAGEM_SVG[D.personagem]||PERSONAGEM_SVG.val)())}}
   const dur=c.b-c.a,n=Math.max(1,Math.round(dur/2.3)),pl=[];
   const p0=(c.props||[]).find(p=>!['corre','foge','some'].includes(p.anim));
   const alvoObj=p0?{x:p0.x+p0.w*.5,y:p0.y-p0.w*(OBJ[p0.t]||OBJ.barata).ar*.5,z:1.6}:null;

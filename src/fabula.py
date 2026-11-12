@@ -18,7 +18,7 @@ HIST = RAIZ / 'data' / 'historico_ntc.json'
 BRT = timezone(timedelta(hours=-3))
 NOME = 'NINGUÉM TE CONTOU'
 
-CENARIOS = ['cozinha', 'rua', 'rua_destruida', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
+CENARIOS = ['sitio', 'cozinha', 'rua', 'rua_destruida', 'floresta', 'horta', 'lab', 'sala', 'mercado', 'praia', 'hospital', 'espaco', 'fazenda']
 VETOR = CANAL / 'vetor'
 LUZES = ['dia', 'por_do_sol', 'noite', 'holofote']
 POSES = ['neutra', 'comemora', 'explica', 'susto', 'brava', 'desesperada']
@@ -45,6 +45,26 @@ FPS = 30
 
 PROMPT_TEMA = cofre.prompt('PROMPT_FABULA_TEMA')
 PROMPT = cofre.prompt('PROMPT_FABULA')
+
+# protagonistas (revezam no canal). Pedido "Juninho: E se ...?" escolhe o Juninho.
+PERSONAGENS = {
+    'val': {'nome': 'Valdirene', 'hashtag': '#valdirene'},
+    'juninho': {'nome': 'Juninho', 'hashtag': '#juninho',
+                'descricao': 'PERSONAGEM: o Juninho, caipira de 20 anos, chapéu de palha, camisa xadrez, calça jeans e botina; mora num sítio '
+                             '(cenário "sitio"), é ingênuo, exagerado e fala do jeito da roça ("uai", "sô", "nossinhora"). Ele NÃO fala com voz: '
+                             'só se comunica por BALÕES curtos (até 5 palavras), engraçados e impactantes. Bordão que pode aparecer 1 vez perto do fim: '
+                             '"NINGUÉM ME CONTOU, SÔ!".'},
+}
+
+
+def _prompt_do(personagem: str) -> str:
+    if personagem != 'juninho':
+        return PROMPT
+    p = re.sub(r'PERSONAGEM:.*?(?=\n\s*\n|\nNARRADOR)', PERSONAGENS['juninho']['descricao'], PROMPT, count=1, flags=re.S)
+    for a, b in (('da Valdirene', 'do Juninho'), ('a Valdirene', 'o Juninho'), ('A Valdirene', 'O Juninho'), ('Valdirene', 'Juninho'),
+                 ('ela não aparece', 'ele não aparece'), ('Bolos da Val', 'sítio do Juninho')):
+        p = p.replace(a, b)
+    return p
 
 
 # ───────────────────────── roteiro ─────────────────────────
@@ -102,8 +122,8 @@ def validar(r: dict) -> dict:
     return r
 
 
-def escrever(tema: dict, fatos: str, notas: str = '') -> dict:
-    prompt = PROMPT.format(tema=tema['tema'], fatos=fatos[:12000] or '(sem pesquisa: use só fatos que você tem certeza)',
+def escrever(tema: dict, fatos: str, notas: str = '', personagem: str = 'val') -> dict:
+    prompt = _prompt_do(personagem).format(tema=tema['tema'], fatos=fatos[:12000] or '(sem pesquisa: use só fatos que você tem certeza)',
                            cenarios=', '.join(CENARIOS), poses=', '.join(POSES), objetos=', '.join(OBJETOS),
                            acoes=', '.join(ACOES), sfx=', '.join(SFX))
     if notas:
@@ -255,7 +275,7 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     ult['fim'] = {'de': max(0.5, (ult['b'] - ult['a']) - 2.8, 2.6 if ult.get('balao') else 0),   # o balão da última cena aparece antes da placa
                    'p': str(r.get('cta_placa') or 'PARTE 2 AMANHÃ')[:28],
                   'c': re.sub(r'\*([^*]+)\*', r'<span style="color:#F2C14E">\1</span>', str(r.get('cta_tela') or ''))[:90]}
-    return {'cenas': cenas, 'captions': caps, 'duration': total}
+    return {'cenas': cenas, 'captions': caps, 'duration': total, 'personagem': r.get('personagem', 'val')}
 
 
 def _pagina(dados: dict, trab: Path) -> Path:
@@ -383,10 +403,16 @@ def fazer(pedido: str = '', minutos: float | None = None) -> Path | None:
     minutos = minutos if minutos is not None else float(os.getenv('APROVACAO_MIN', '40'))
     pedido, _, notas = (pedido or '').partition('|')      # "tema | pedidos do dono" (ex.: frase que tem que entrar)
     pedido, notas = pedido.strip(), notas.strip()
+    personagem = 'val'
+    m = re.match(r'\s*(juninho|val|valdirene)\s*:\s*(.*)', pedido, re.I | re.S)
+    if m:
+        personagem = 'juninho' if m.group(1).lower() == 'juninho' else 'val'
+        pedido = m.group(2).strip()
     for tentativa in range(2):
         tema = escolher_tema(pedido if tentativa == 0 else '')
         print(f"  [ntc] tema: {tema['tema']}")
-        r = escrever(tema, pesquisar(tema), notas if tentativa == 0 else '')
+        r = escrever(tema, pesquisar(tema), notas if tentativa == 0 else '', personagem)
+        r['personagem'] = personagem
         r.setdefault('tema', tema['tema'])
         r.setdefault('titulo_tela', tema.get('titulo_tela', tema['tema']))
         print(f"  [ntc] roteiro: {len(r['cenas'])} cenas · {sum(len(c['narracao'].split()) for c in r['cenas'])} palavras")
@@ -408,7 +434,7 @@ def fazer(pedido: str = '', minutos: float | None = None) -> Path | None:
     saida = RAIZ / 'saida' / hoje / f"ntc-{re.sub(r'[^a-z0-9]+', '-', r['tema'].lower())[:50].strip('-')}.mp4"
     renderizar(dados, wav, saida, trab, r)
     HIST.write_text(json.dumps(historico() + [r['tema']], ensure_ascii=False, indent=1), encoding='utf-8')
-    legenda = (f"{r.get('legenda_post') or r['tema']}\n\n{' '.join(r.get('hashtags') or ['#curiosidades', '#esse', '#valdirene'])}")
+    legenda = (f"{r.get('legenda_post') or r['tema']}\n\n{' '.join(r.get('hashtags') or ['#curiosidades', '#esse', PERSONAGENS.get(r.get('personagem', 'val'), PERSONAGENS['val'])['hashtag']])}")
     import main as _m
     if _m._tg('sendVideo', {'caption': f"🎬 {NOME}\n{r['tema']}\n⏱ {total:.0f}s"[:1000], 'supports_streaming': 'true'},
               ('video', _m._versao_telegram(saida))):

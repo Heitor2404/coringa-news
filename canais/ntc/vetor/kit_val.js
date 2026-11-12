@@ -82,7 +82,7 @@ function braco(g, p, sx, sy, a1, a2, l1 = 125, l2 = 112) {
   linha(g, p + '1', sx, sy, ex, ey); linha(g, p + '2', ex, ey, hx, hy); return [hx, hy, a1 + a2];
 }
 class Val {
-  constructor(g) { this.g = g; g.innerHTML = VAL_SVG; this.q = s => g.querySelector(s); this._olhos = ''; }
+  constructor(g, svg) { this.g = g; g.innerHTML = svg || VAL_SVG; this.q = s => g.querySelector(s); this._olhos = ''; }
   // e = {x, chao, s, pose, poseAnt, kTroca (0..1 da troca), t, anda (0..1 ou null), olhaX, olhaY, pisca, fala (0..1), aceno, inclina, agacha, pulo, treme}
   desenha(e) {
     const P = POSES[e.pose] || POSES.neutra, A = POSES[e.poseAnt] || P, k = back(cl(e.kTroca ?? 1));

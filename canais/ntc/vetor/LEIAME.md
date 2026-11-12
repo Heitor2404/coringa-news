@@ -26,3 +26,9 @@ Coisa nova (cenário, objeto, pose): desenhar UMA vez aqui e, se o roteiro puder
 - `sfx/contagem.wav`: tic-tic-tic acelerando + "pum", toca quando o contador muda.
 - Campo `luz` por cena: dia, por_do_sol (tom laranja), noite, holofote (só a Val iluminada, segue a cabeça dela).
 - Planos de detalhe: no 3º plano de uma cena sem balão, close da MÃO (cenas pares) ou do OLHO (ímpares), medidos na tela.
+
+## Juninho (11/11 noite)
+- `kit_juninho.js`: segundo protagonista, caipira de ~20 anos (chapéu de palha, camisa xadrez vermelha, jeans, botina, sardas). Mesmo esqueleto/classes da Val — a classe `Val` anima os dois (`new Val(g, PERSONAGEM_SVG.juninho())`).
+- Escolha: no campo ntc, começar com "Juninho:" (ex.: `Juninho: E se parasse de chover por 1 ano?`). Sem prefixo = Val.
+- `src/fabula.py` troca o parágrafo PERSONAGEM do PROMPT_FABULA e os nomes (Valdirene → Juninho); bordão "NINGUÉM ME CONTOU, SÔ!".
+- Cenário novo `sitio` (casa de roça, poço, árvore, cerca; chão racha quando a cor some = seca). Cozinha sem "BOLOS DA VAL" quando é o Juninho.

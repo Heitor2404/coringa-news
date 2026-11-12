@@ -1,0 +1,60 @@
+{
+  "_leia": "Casos fixos do medidor geométrico do NTC (tests/ntc_geometria.py). Roteiros no mesmo formato que a IA devolve (passam por fabula.validar e fabula.dados_template, sem mudança). Escolhidos para cobrir o que já deu erro: nuvem/sol/lua no céu, Terra no espaço, fogo, bichos voando, objetos correndo e caindo.",
+  "casos": [
+    {
+      "nome": "ceu_e_voadores",
+      "roteiro": {
+        "tema": "E se chovesse dinheiro?", "titulo_tela": "E SE CHOVESSE *DINHEIRO*?",
+        "cta_placa": "PARTE 2 AMANHÃ", "cta_tela": "Comenta *CHUVA*", "cta_narracao": "Comenta chuva.",
+        "cenas": [
+          {"cenario": "rua", "cor": 100, "pose": "fora", "balao": "", "narracao": "Imagina acordar num dia lindo, céu azul, uma nuvem gordinha passando em cima das casas do bairro.", "objetos": [{"tipo": "nuvem", "quantidade": 2, "acao": "aparece", "lugar": "ceu"}, {"tipo": "sol", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "rua", "cor": 100, "pose": "explica", "posicao": "esquerda", "balao": "OLHA O CÉU!", "narracao": "A Valdirene sai na rua e vê que a nuvem não é de água, é de nota de cem.", "objetos": [{"tipo": "nuvem", "quantidade": 1, "acao": "cresce", "lugar": "ceu"}, {"tipo": "dinheiro", "quantidade": 3, "acao": "cai", "lugar": "chao"}]},
+          {"cenario": "rua", "cor": 100, "pose": "comemora", "luz": "noite", "balao": "", "narracao": "De noite continua chovendo dinheiro debaixo da lua e ninguém consegue dormir de tanta felicidade.", "objetos": [{"tipo": "lua", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}, {"tipo": "passaro", "quantidade": 2, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "sitio", "cor": 95, "pose": "fora", "balao": "", "narracao": "No sítio os passarinhos voam desviando das notas que caem do céu sem parar.", "objetos": [{"tipo": "passaro", "quantidade": 3, "acao": "aparece", "lugar": "ceu"}, {"tipo": "nuvem", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "fazenda", "cor": 90, "pose": "neutra", "balao": "CADÊ A CHUVA?", "narracao": "Mas a plantação começa a reclamar, porque dinheiro molhado não rega milho nenhum.", "objetos": [{"tipo": "sol", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}, {"tipo": "gota", "quantidade": 2, "acao": "cai", "lugar": "meio"}]},
+          {"cenario": "praia", "cor": 85, "pose": "fora", "balao": "", "narracao": "Na praia o mar fica cheio de nota boiando e as gaivotas fazem ninho de dinheiro.", "objetos": [{"tipo": "nuvem", "quantidade": 2, "acao": "aparece", "lugar": "ceu"}, {"tipo": "passaro", "quantidade": 2, "acao": "aparece", "lugar": "meio"}]},
+          {"cenario": "horta", "cor": 75, "pose": "susto", "balao": "SECOU TUDO!", "narracao": "Sem chuva de verdade, a horta da Val seca e as últimas gotas evaporam no ar.", "objetos": [{"tipo": "gota", "quantidade": 3, "acao": "aparece", "lugar": "meio"}, {"tipo": "murcha", "quantidade": 3, "acao": "cresce", "lugar": "chao"}]},
+          {"cenario": "cozinha", "cor": 65, "pose": "explica", "balao": "", "narracao": "Na cozinha a mosca é a única que continua feliz, rodando em volta do bolo da Val.", "objetos": [{"tipo": "mosca", "quantidade": 2, "acao": "aparece", "lugar": "meio"}]},
+          {"cenario": "sala", "cor": 55, "pose": "susto", "balao": "TÁ VOANDO!", "narracao": "E a sala vira um redemoinho de notas voando pra todo lado na cara da Valdirene.", "objetos": [{"tipo": "dinheiro", "quantidade": 4, "acao": "aparece", "lugar": "meio"}]},
+          {"cenario": "floresta", "cor": 50, "pose": "fora", "balao": "", "narracao": "Na floresta os bichos fogem e um passarinho fica sozinho no galho olhando a confusão.", "objetos": [{"tipo": "passaro", "quantidade": 1, "acao": "balanca", "lugar": "esquerda"}, {"tipo": "lagarto", "quantidade": 1, "acao": "aparece", "lugar": "direita"}]}
+        ]
+      }
+    },
+    {
+      "nome": "fogo_e_destruicao",
+      "roteiro": {
+        "tema": "E se o fogo não apagasse?", "titulo_tela": "E SE O *FOGO* NÃO APAGASSE?",
+        "cta_placa": "PARTE 2 AMANHÃ", "cta_tela": "Comenta *FOGO*", "cta_narracao": "Comenta fogo.",
+        "cenas": [
+          {"cenario": "cozinha", "cor": 100, "pose": "susto", "balao": "MEU BOLO!", "narracao": "Tudo começa com o forno da Valdirene, que pega fogo e simplesmente não apaga mais.", "objetos": [{"tipo": "fogo", "quantidade": 1, "acao": "cresce", "lugar": "bancada"}]},
+          {"cenario": "sala", "cor": 95, "pose": "desesperada", "balao": "", "narracao": "O fogo pula pro tapete da sala e nem a água do balde resolve o problema.", "objetos": [{"tipo": "fogo", "quantidade": 2, "acao": "cresce", "lugar": "chao"}]},
+          {"cenario": "rua", "cor": 90, "pose": "fora", "balao": "", "narracao": "Na rua o lixo pega fogo e cai das lixeiras enquanto as pessoas correm.", "objetos": [{"tipo": "lixo", "quantidade": 2, "acao": "cai", "lugar": "chao"}, {"tipo": "fogo", "quantidade": 1, "acao": "aparece", "lugar": "chao"}]},
+          {"cenario": "lab", "cor": 80, "pose": "explica", "posicao": "esquerda", "balao": "SEM OXIGÊNIO!", "narracao": "No laboratório explicam que fogo precisa de oxigênio, e esse aí não está nem aí.", "objetos": [{"tipo": "fogo", "quantidade": 1, "acao": "aparece", "lugar": "bancada"}, {"tipo": "vela", "quantidade": 1, "acao": "aparece", "lugar": "bancada"}]},
+          {"cenario": "mercado", "cor": 70, "pose": "brava", "balao": "", "narracao": "O mercado fica sem pão porque toda padaria virou churrasqueira gigante.", "objetos": [{"tipo": "pao", "quantidade": 3, "acao": "cai", "lugar": "chao"}]},
+          {"cenario": "hospital", "cor": 60, "pose": "neutra", "balao": "SÓ VELA", "narracao": "No hospital tudo funciona à luz de vela, porque a fiação da cidade derreteu inteira.", "objetos": [{"tipo": "vela", "quantidade": 2, "acao": "aparece", "lugar": "chao"}]},
+          {"cenario": "rua_destruida", "cor": 40, "pose": "desesperada", "balao": "", "narracao": "E a cidade inteira vira um mar de chamas que ninguém consegue controlar.", "objetos": []},
+          {"cenario": "rua_destruida", "cor": 30, "pose": "fora", "balao": "", "narracao": "As casas queimam uma por uma e a fumaça cobre o céu de cinza.", "objetos": [{"tipo": "fogo", "quantidade": 2, "acao": "cresce", "lugar": "chao"}]},
+          {"cenario": "rua_destruida", "cor": 20, "pose": "brava", "posicao": "direita", "balao": "NINGUÉM ME CONTOU!", "narracao": "E a Valdirene descobre que o extintor dela venceu em dois mil e dez.", "objetos": [{"tipo": "fogo", "quantidade": 1, "acao": "aparece", "lugar": "esquerda"}]}
+        ]
+      }
+    },
+    {
+      "nome": "espaco_e_movimento",
+      "roteiro": {
+        "tema": "E se a Lua caísse?", "titulo_tela": "E SE A *LUA* CAÍSSE?",
+        "cta_placa": "PARTE 2 AMANHÃ", "cta_tela": "Comenta *LUA*", "cta_narracao": "Comenta lua.",
+        "cenas": [
+          {"cenario": "espaco", "cor": 100, "pose": "fora", "balao": "", "narracao": "Lá no espaço a Lua começa a se aproximar da Terra devagarinho, sem ninguém perceber.", "objetos": [{"tipo": "terra", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}, {"tipo": "lua", "quantidade": 1, "acao": "cresce", "lugar": "ceu"}, {"tipo": "sol", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "espaco", "cor": 100, "pose": "explica", "balao": "", "narracao": "A cada dia ela fica maior no céu, e o sol parece pequenininho perto dela.", "objetos": [{"tipo": "lua", "quantidade": 1, "acao": "cresce", "lugar": "ceu"}, {"tipo": "nuvem", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "lab", "cor": 95, "pose": "explica", "posicao": "esquerda", "balao": "MARÉ GIGANTE!", "narracao": "No laboratório as baratas fogem da bancada porque sentem a gravidade mudando.", "objetos": [{"tipo": "barata", "quantidade": 3, "acao": "corre", "lugar": "bancada"}]},
+          {"cenario": "cozinha", "cor": 90, "pose": "comemora", "balao": "", "narracao": "Na cozinha da Val os ratos saem correndo pelo chão e ela até comemora.", "objetos": [{"tipo": "rato", "quantidade": 2, "acao": "foge", "lugar": "chao"}, {"tipo": "chinelo", "quantidade": 1, "acao": "cai", "lugar": "bancada"}]},
+          {"cenario": "rua", "cor": 85, "pose": "fora", "balao": "", "narracao": "Na rua o globo da escola balança sozinho e as pessoas olham pro céu assustadas.", "objetos": [{"tipo": "globo", "quantidade": 1, "acao": "balanca", "lugar": "meio"}, {"tipo": "lua", "quantidade": 1, "acao": "cresce", "lugar": "ceu"}]},
+          {"cenario": "praia", "cor": 75, "pose": "susto", "balao": "O MAR SUMIU!", "narracao": "Na praia o mar recua quilômetros e dinheiro perdido cai da areia molhada.", "objetos": [{"tipo": "dinheiro", "quantidade": 2, "acao": "cai", "lugar": "chao"}, {"tipo": "lua", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]},
+          {"cenario": "mercado", "cor": 65, "pose": "susto", "balao": "", "narracao": "No mercado oito baratas correm ao mesmo tempo pelo corredor e a Val sobe na prateleira.", "objetos": [{"tipo": "barata", "quantidade": 8, "acao": "corre", "lugar": "chao"}]},
+          {"cenario": "horta", "cor": 55, "pose": "fora", "balao": "", "narracao": "Na horta o lagarto pula sem parar porque a terra treme a cada minuto.", "objetos": [{"tipo": "lagarto", "quantidade": 1, "acao": "pula", "lugar": "chao"}, {"tipo": "folhas", "quantidade": 2, "acao": "cresce", "lugar": "chao"}]},
+          {"cenario": "cozinha", "cor": 45, "pose": "brava", "balao": "LUA ABUSADA!", "narracao": "E a Valdirene, brava, joga o chinelo pro alto querendo acertar a Lua.", "objetos": [{"tipo": "chinelo", "quantidade": 2, "acao": "cai", "lugar": "chao"}, {"tipo": "lua", "quantidade": 1, "acao": "aparece", "lugar": "ceu"}]}
+        ]
+      }
+    }
+  ]
+}

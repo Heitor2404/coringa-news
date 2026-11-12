@@ -72,6 +72,7 @@ Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas su
 | 41 | Cena sem a Val (horta/floresta) vazia e parada | ✅ | ganha 2 figurantes e 2 pássaros voando |
 | 42 | Legenda pulando de cima para baixo no close | ✅ | legenda sempre em cima |
 | 43 | Val parada nos últimos segundos (placa da Parte 2) | ✅ | Val dá tchau/chama para a Parte 2 enquanto a placa está na tela |
+| 44 | Tema pedido no campo ntc trocado pela IA ("baratas" já estava nos temas feitos) | ✅ | tema pedido é usado exatamente; lista de já feitos ignorada quando há pedido |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

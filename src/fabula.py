@@ -56,10 +56,13 @@ def historico() -> list[str]:
 
 
 def escolher_tema(pedido: str = '') -> dict:
-    r = gemini.json_(PROMPT_TEMA.format(pedido=pedido or '(nenhum: escolha você)', feitos='\n'.join(historico()[-60:]) or '(nenhum)'),
-                     leve=True)
+    # tema pedido pelo dono vale MESMO se já foi feito (antes a lista de "já feitos" fazia a IA trocar o tema)
+    feitos = '(ignore esta lista: o dono pediu o tema acima)' if pedido else ('\n'.join(historico()[-60:]) or '(nenhum)')
+    r = gemini.json_(PROMPT_TEMA.format(pedido=pedido or '(nenhum: escolha você)', feitos=feitos), leve=True)
     if isinstance(r, list):
         r = r[0] if r else {}
+    if pedido:
+        r['tema'] = pedido
     if not r.get('tema'):
         raise ValueError('o Claude não devolveu tema')
     return r

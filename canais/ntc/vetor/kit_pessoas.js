@@ -43,4 +43,4 @@ class Pessoa {
   }
 }
 // cenários públicos ganham figurantes; quantidade e profundidade
-const MULTIDAO = { rua: 4, rua_destruida: 3, mercado: 3, praia: 3, fazenda: 2, hospital: 1 };
+const MULTIDAO = { rua: 4, rua_destruida: 3, mercado: 4, praia: 3, fazenda: 2, hospital: 3 };

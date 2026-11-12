@@ -76,6 +76,10 @@ Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas su
 | 45 | (vídeo baratas 22h26) Celulares em pé no chão de novo (roteiro pôs celular em outro "lugar") | ✅ | celular nunca vira objeto solto: sempre gente olhando o celular |
 | 46 | Pássaros voando na altura do corpo das pessoas (passando por cima delas) | ✅ | pássaros das cenas sem a Val voam acima das cabeças |
 | 47 | Placa "MERCADO" escondida atrás do contador | ✅ | placa desce para cima da prateleira do meio |
+| 48 | (vídeo baratas 22h45) Terra desenhada duas vezes no espaço (cenário + objeto) | ✅ | objeto "terra" ignorado no cenário espaço |
+| 49 | Nuvem branca dentro da sala | ✅ | nuvem/sol/lua/terra nunca em cenário interno |
+| 50 | Gotas d'água espalhadas pela tela inteira na praia | ✅ | no máximo 3 gotas |
+| 51 | Narração dizendo termo técnico ("a Valdirene num holofote") | ✅ | PROMPT_FABULA: nunca citar luz/câmera/pose/objeto na narração |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

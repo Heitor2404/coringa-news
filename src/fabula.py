@@ -154,6 +154,12 @@ def _objetos(c: dict) -> list[dict]:
     cen = c['cenario']
     chao = CHAO[cen]
     objs = [o for o in c['objetos'] if o['tipo'] != 'celular']   # celular nunca solto na cena: vira gente olhando o celular
+    INTERNOS = ('cozinha', 'sala', 'lab', 'mercado', 'hospital')
+    objs = [o for o in objs if not (cen == 'espaco' and o['tipo'] == 'terra')            # o espaço já tem a Terra desenhada
+            and not (cen in INTERNOS and o['tipo'] in ('nuvem', 'sol', 'lua', 'terra'))]  # nada de nuvem/sol dentro de casa
+    for o in objs:
+        if o['tipo'] == 'gota':
+            o['quantidade'] = min(int(o.get('quantidade') or 1), 3)                       # gotas: poucas (antes enchiam a tela)
     for j, o in enumerate(objs):
         t = o['tipo']
         w, ar = OBJETOS[t], _proporcao(t)

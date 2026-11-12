@@ -179,6 +179,29 @@ jobs:
           fi
           [ "$ok" = "1" ]
 
+      # NTC Fase 4 (CP1): pacote de reprodução de cada vídeo (roteiro, montagem, motor, eventos) vai para o cofre PRIVADO
+      - name: Arquivar pacotes do NTC no cofre
+        if: always() && hashFiles('saida/pacotes_ntc/*.json') != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          cd cofre
+          git sparse-checkout add arquivo_ntc
+          mkdir -p arquivo_ntc
+          cp ../saida/pacotes_ntc/*.json arquivo_ntc/
+          git config user.name "coringa-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add arquivo_ntc
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -q -m "pacote NTC $(date +%F) (run ${{ github.run_id }})"
+          if ! (git push -q || (git pull --rebase -q && git push -q)); then
+            echo "pacote NTC: não consegui enviar ao cofre"
+            [ -n "$TELEGRAM_BOT_TOKEN" ] && curl -s -m 20 "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+              --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+              --data-urlencode "text=⚠️ Pacote do NTC não foi salvo no cofre (o token do cofre pode ser só leitura). O vídeo saiu normal." > /dev/null || true
+          fi
+
       - name: Salvar histórico
         if: always()
         run: |

@@ -1,0 +1,25 @@
+{
+  "_leia": "Roteiro REAL da Parte 2 das baratas (gerado em 12/11/2026, formato antigo, sem 'evento'), transcrito do texto da prévia do Telegram. Caso fixo do verificador de eventos (CP2) e da remontagem (CP1). Os tempos da narração não foram guardados naquele dia: a remontagem usa tempo estimado.",
+  "tema": "E se as baratas sumissem do mundo? (Parte 2)",
+  "titulo_tela": "E SE AS *BARATAS* SUMISSEM? PARTE 2",
+  "cta_placa": "PARTE 3?",
+  "cta_tela": "Comenta *MAIOR* pra continuar!",
+  "cta_narracao": "Os cupins foram só o aquecimento. Comenta MAIOR se você tem coragem de ver a parte 3!",
+  "cenas": [
+    {"painel": {"rotulo": "DIAS SEM BARATAS", "valor": 150}, "cenario": "cozinha", "cor": 80, "pose": "susto", "balao": "QUE BARULHINHO É ESSE?", "narracao": "E se as baratas sumissem do mundo? Parte 2! A Valdirene achou que o pior passou. Mal sabia ela o tamanho do problema.", "sfx": "whoosh", "objetos": []},
+    {"cenario": "cozinha", "cor": 74, "pose": "explica", "balao": "SÃO PARENTES?!", "narracao": "Quem apareceu? Os cupins, parentes das baratas! Os dois vêm do mesmo antepassado. É briga de família no armário.", "sfx": "plim", "objetos": []},
+    {"cenario": "cozinha", "cor": 68, "pose": "desesperada", "balao": "TEM REI NO ARMÁRIO?!", "narracao": "Pálidos, de corpo mole, vivem em colônia com rei, rainha, trabalhadores e soldados. Uma monarquia dentro do armário!", "sfx": "boing", "objetos": []},
+    {"cenario": "cozinha", "cor": 62, "pose": "brava", "balao": "ESSE ARMÁRIO É MEU!", "narracao": "A colônia cresceu e o armário virou reino. A Valdirene tentou negociar, mas rei de cupim não aceita Pix.", "sfx": "buzina", "objetos": []},
+    {"painel": {"rotulo": "DIAS SEM BARATAS", "valor": 200}, "cenario": "sala", "cor": 55, "pose": "susto", "balao": "MEU RODAPÉ SUMIU!", "narracao": "Dia 200: os cupins foram atrás de madeira. Porta, mesa, rodapé. Madeira é o rodízio grátis deles.", "sfx": "pop", "objetos": []},
+    {"cenario": "sala", "cor": 48, "pose": "desesperada", "balao": "A MESA EMAGRECEU!", "narracao": "A mesa ficou mais fina que a paciência da Valdirene, e ninguém mais quis sentar no sofá.", "sfx": "triste", "objetos": []},
+    {"cenario": "mercado", "cor": 42, "pose": "brava", "balao": "QUE PREÇO É ESSE?!", "narracao": "Ela correu ao mercado atrás de veneno, mas a prateleira estava vazia e o preço, nas alturas.", "sfx": "ding", "objetos": [{"tipo": "dinheiro", "quantidade": 3, "acao": "aparece"}]},
+    {"cenario": "floresta", "cor": 36, "pose": "fora", "balao": "", "narracao": "Na floresta, os cupins fizeram festa na madeira caída. E a notícia correu mais rápido que fofoca de vizinha.", "sfx": "festa", "objetos": []},
+    {"painel": {"rotulo": "DIAS SEM BARATAS", "valor": 300}, "cenario": "cozinha", "cor": 30, "pose": "susto", "balao": "A PORTA CAIU!", "narracao": "Dia 300: a Valdirene abriu o armário e a porta caiu no chão. Os cupins nem pediram licença.", "sfx": "pop", "objetos": []},
+    {"cenario": "cozinha", "cor": 25, "pose": "desesperada", "balao": "MEUS BOLOS, NÃO!", "narracao": "Ela tentou salvar os bolos, mas a colônia já tinha ocupado a confeitaria. Até o balcão virou condomínio.", "sfx": "triste", "objetos": [{"tipo": "pao", "quantidade": 2, "acao": "cai"}]},
+    {"cenario": "cozinha", "cor": 20, "pose": "neutra", "balao": "RESPIRA, VALDIRENE. RESPIRA.", "narracao": "A Valdirene respirou fundo e olhou o que sobrou da cozinha. Silêncio... só se ouvia mastigar.", "sfx": "grilo", "objetos": []},
+    {"cenario": "rua", "cor": 16, "pose": "explica", "balao": "PAREM DE FILMAR!", "narracao": "Na rua, cercas e postes de madeira também sumiam, enquanto o povo só filmava no celular.", "sfx": "whoosh", "objetos": [{"tipo": "celular", "quantidade": 3, "acao": "aparece"}, {"tipo": "lixo", "quantidade": 3, "acao": "cai"}, {"tipo": "rato", "quantidade": 2, "acao": "corre"}]},
+    {"painel": {"rotulo": "DIAS SEM BARATAS", "valor": 365}, "cenario": "rua_destruida", "cor": 12, "pose": "desesperada", "balao": "O MUNDO VIROU SERRAGEM!", "narracao": "Dia 365: a cidade parecia cenário de filme-catástrofe, tudo por causa de cupim com fome. Exagero? Talvez.", "sfx": "explosao", "objetos": []},
+    {"cenario": "cozinha", "cor": 10, "pose": "brava", "balao": "NINGUÉM ME CONTOU!", "narracao": "Aí ela caiu na real: o mundo sem baratas virou festival de cupim. A Valdirene só conseguiu gritar.", "sfx": "buzina", "objetos": []},
+    {"cenario": "horta", "cor": 10, "pose": "susto", "balao": "TEM ALGO AQUI?", "narracao": "Só que, no fundo da horta, alguma coisa maior começou a se mexer. E a Valdirene nem desconfiava.", "sfx": "grilo", "objetos": []}
+  ]
+}

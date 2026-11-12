@@ -1,0 +1,215 @@
+{
+ "tema": "E se os ratos dominassem a cidade?",
+ "titulo_tela": "E SE OS *RATOS* DOMINASSEM?",
+ "acontecimentos": [
+  {
+   "id": "e1",
+   "verbo": "invade",
+   "alvo": "rato",
+   "estado_final": "ratos na rua",
+   "importancia": "central"
+  },
+  {
+   "id": "e2",
+   "verbo": "some",
+   "alvo": "pão",
+   "estado_final": "pão comido",
+   "importancia": "apoio"
+  }
+ ],
+ "cenas": [
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "E se os ratos tomassem conta da cidade?",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "rato",
+     "quantidade": 3,
+     "acao": "corre",
+     "lugar": "chao"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "invade",
+    "alvo": "rato"
+   },
+   "mostra": "e1"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "neutra",
+   "balao": "",
+   "narracao": "Primeiro, apareceu um rato no lixo.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "rato",
+     "quantidade": 1,
+     "acao": "aparece",
+     "lugar": "chao"
+    },
+    {
+     "tipo": "lixo",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "chao"
+    }
+   ],
+   "papel": "indicio"
+  },
+  {
+   "cenario": "cozinha",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Depois os ratos invadiram a cozinha da Valdirene.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "rato",
+     "quantidade": 3,
+     "acao": "corre",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "acao",
+   "mostra": "e1"
+  },
+  {
+   "cenario": "cozinha",
+   "cor": 100,
+   "pose": "brava",
+   "balao": "",
+   "narracao": "O pão sumiu em minutos.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "pao",
+     "quantidade": 1,
+     "acao": "some",
+     "lugar": "bancada"
+    },
+    {
+     "tipo": "rato",
+     "quantidade": 1,
+     "acao": "corre",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "some",
+    "alvo": "pão"
+   },
+   "mostra": "e2"
+  },
+  {
+   "cenario": "cozinha",
+   "cor": 100,
+   "pose": "brava",
+   "balao": "",
+   "narracao": "Ela pegou o chinelo.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "chinelo",
+     "quantidade": 1,
+     "acao": "pula",
+     "lugar": "esquerda"
+    }
+   ],
+   "papel": "reacao"
+  },
+  {
+   "cenario": "lab",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Uma rata pode ter mais de cinquenta filhotes por ano.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto",
+   "painel": {
+    "rotulo": "FILHOTES POR ANO",
+    "valor": 50
+   }
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "A população cresceu sem parar.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "rato",
+     "quantidade": 3,
+     "acao": "corre",
+     "lugar": "chao"
+    }
+   ],
+   "papel": "consequencia",
+   "painel": {
+    "rotulo": "RATOS NA CIDADE",
+    "valor": 90000
+   }
+  },
+  {
+   "cenario": "floresta",
+   "cor": 100,
+   "pose": "fora",
+   "balao": "",
+   "narracao": "Os lagartos e os pássaros ficaram sem comida.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "passaro",
+     "quantidade": 2,
+     "acao": "foge",
+     "lugar": "ceu"
+    },
+    {
+     "tipo": "lagarto",
+     "quantidade": 1,
+     "acao": "foge",
+     "lugar": "chao"
+    }
+   ],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Por isso cidade limpa importa: lixo é banquete de rato.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "lixo",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "chao"
+    }
+   ],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "comemora",
+   "balao": "",
+   "narracao": "Comenta se você encararia um rato!",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  }
+ ]
+}

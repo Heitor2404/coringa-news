@@ -1,0 +1,124 @@
+{
+ "tema": "E se a madeira apodrecesse num dia?",
+ "titulo_tela": "E SE A *MADEIRA* APODRECESSE?",
+ "acontecimentos": [
+  {
+   "id": "e1",
+   "verbo": "transforma",
+   "alvo": "madeira",
+   "estado_final": "madeira podre",
+   "importancia": "central"
+  },
+  {
+   "id": "e2",
+   "verbo": "cai",
+   "alvo": "porta",
+   "estado_final": "porta no chão",
+   "importancia": "central"
+  },
+  {
+   "id": "e3",
+   "verbo": "aparece",
+   "alvo": "cupins",
+   "estado_final": "enxame",
+   "importancia": "apoio"
+  }
+ ],
+ "cenas": [
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "E se toda a madeira do mundo apodrecesse num único dia?",
+   "sfx": null,
+   "objetos": [],
+   "papel": "acao",
+   "evento": {
+    "verbo": "transforma",
+    "alvo": "madeira"
+   },
+   "mostra": "e1"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "A cadeira da Valdirene rangeu.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "indicio"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Depois a porta caiu.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "reacao",
+   "evento": {
+    "verbo": "cai",
+    "alvo": "porta"
+   },
+   "mostra": "e2"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Os cupins apareceram aos milhares.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "acao",
+   "evento": {
+    "verbo": "aparece",
+    "alvo": "cupins"
+   },
+   "mostra": "e3"
+  },
+  {
+   "cenario": "lab",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Os fungos fazem a madeira apodrecer devagar.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "rua_destruida",
+   "cor": 100,
+   "pose": "fora",
+   "balao": "",
+   "narracao": "Num dia, as casas de madeira desabariam.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Os móveis viraram pó.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Comenta o que de madeira você tem em casa!",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  }
+ ]
+}

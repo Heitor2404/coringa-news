@@ -491,6 +491,39 @@ def aprovar(r: dict, trab: Path, minutos: float) -> str:
 
 
 # ───────────────────────── tudo junto ─────────────────────────
+def _eventos(r: dict) -> dict | None:
+    """Relatório de acontecimentos (src/ntc_eventos). Qualquer erro aqui só vira aviso no log."""
+    try:
+        from . import ntc_eventos
+        rel = ntc_eventos.avaliar(r)
+        print('  [ntc] ' + ntc_eventos.resumo_telegram(rel).replace('\n', '\n  [ntc] '))
+        return rel
+    except Exception as e:
+        print(f'  [ntc] eventos: falhou ({e}); sigo sem relatório')
+        return None
+
+
+def _pacote(r: dict, dados: dict, tempos: list, caps: list, eventos: dict | None, saida: Path) -> str:
+    """Salva o pacote de reprodução (o workflow leva para o cofre). Devolve o resumo para o Telegram; nunca derruba o vídeo."""
+    linhas = []
+    try:
+        from . import ntc_eventos
+        if eventos:
+            linhas.append(ntc_eventos.resumo_telegram(eventos))
+    except Exception:
+        pass
+    try:
+        from . import ntc_pacote
+        pac = ntc_pacote.montar(r, dados, tempos, caps, eventos, saida)
+        arq = ntc_pacote.salvar(pac)
+        linhas.append(ntc_pacote.resumo_telegram(pac, arq))
+        print(f'  [ntc] pacote: {arq.name}')
+    except Exception as e:
+        linhas.append(f'📦 Pacote não salvo ({str(e)[:120]})')
+        print(f'  [ntc] pacote: falhou ({e})')
+    return '\n'.join(linhas)
+
+
 def fazer(pedido: str = '', minutos: float | None = None) -> Path | None:
     from . import voz
     hoje = datetime.now(BRT).strftime('%Y-%m-%d')
@@ -528,12 +561,16 @@ def fazer(pedido: str = '', minutos: float | None = None) -> Path | None:
     total = max(total, tempos[-1][1]) + 2.5                      # respiro para a placa final
     dados = dados_template(r, tempos, caps, total)
     saida = RAIZ / 'saida' / hoje / f"ntc-{re.sub(r'[^a-z0-9]+', '-', r['tema'].lower())[:50].strip('-')}.mp4"
+    eventos = _eventos(r)                                        # Fase 4: só relatório, não muda o vídeo
     renderizar(dados, wav, saida, trab, r)
+    resumo_pacote = _pacote(r, dados, tempos, caps, eventos, saida)
     HIST.write_text(json.dumps(historico() + [r['tema']], ensure_ascii=False, indent=1), encoding='utf-8')
     legenda = (f"{r.get('legenda_post') or r['tema']}\n\n{' '.join(r.get('hashtags') or ['#curiosidades', '#esse', PERSONAGENS.get(r.get('personagem', 'val'), PERSONAGENS['val'])['hashtag']])}")
     import main as _m
     if _m._tg('sendVideo', {'caption': f"🎬 {NOME}\n{r['tema']}\n⏱ {total:.0f}s"[:1000], 'supports_streaming': 'true'},
               ('video', _m._versao_telegram(saida))):
         _m._tg('sendMessage', {'text': f'📋 Legenda para as redes ({NOME}):\n\n{legenda}'[:4000]})
+    if resumo_pacote:
+        _m._tg('sendMessage', {'text': resumo_pacote[:4000]})
     print(f'  [ntc] pronto: {saida.name} ({total:.0f}s)')
     return saida

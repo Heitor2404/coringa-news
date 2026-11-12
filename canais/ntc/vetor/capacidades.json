@@ -1,0 +1,541 @@
+{
+ "_leia": "O que o motor do NTC sabe MOSTRAR (CP2 da Fase 4, 12/11/2026). Organizado por VERBO × CLASSE de alvo — nada aqui é de um tema só. src/ntc_eventos.py usa este arquivo para dar a cada acontecimento um nível: A = direto (o alvo existe e o verbo tem animação); B = substituto declarado (outra peça representa a classe, com o motivo); C = simbólico (painel/contador, marcado como símbolo); D = impossível hoje. Quando um objeto ou animação nova for desenhada (etapa 4.3), é AQUI que ela passa a contar. Palavras em minúsculas e sem acento.",
+ "versao": 1,
+ "objetos": {
+  "barata": {
+   "classe": "inseto_comum",
+   "palavras": [
+    "barata",
+    "baratas"
+   ]
+  },
+  "mosca": {
+   "classe": "inseto_comum",
+   "palavras": [
+    "mosca",
+    "moscas",
+    "mosquito",
+    "mosquitos"
+   ]
+  },
+  "rato": {
+   "classe": "animal_pequeno",
+   "palavras": [
+    "rato",
+    "ratos",
+    "camundongo",
+    "camundongos",
+    "ratazana",
+    "ratazanas"
+   ]
+  },
+  "lagarto": {
+   "classe": "animal_pequeno",
+   "palavras": [
+    "lagarto",
+    "lagartos",
+    "lagartixa",
+    "lagartixas",
+    "calango"
+   ]
+  },
+  "passaro": {
+   "classe": "ave",
+   "palavras": [
+    "passaro",
+    "passaros",
+    "passarinho",
+    "passarinhos",
+    "ave",
+    "aves",
+    "pombo",
+    "pombos",
+    "gaivota",
+    "gaivotas"
+   ]
+  },
+  "lixo": {
+   "classe": "lixo",
+   "palavras": [
+    "lixo",
+    "lixeira",
+    "lixeiras",
+    "sujeira",
+    "entulho"
+   ]
+  },
+  "folhas": {
+   "classe": "planta",
+   "palavras": [
+    "folha",
+    "folhas",
+    "galho",
+    "galhos"
+   ]
+  },
+  "murcha": {
+   "classe": "planta",
+   "palavras": [
+    "planta",
+    "plantas",
+    "plantacao",
+    "horta",
+    "flor",
+    "flores",
+    "milho"
+   ]
+  },
+  "pao": {
+   "classe": "alimento",
+   "palavras": [
+    "pao",
+    "paes"
+   ],
+   "substitui": [
+    "comida",
+    "alimento",
+    "alimentos",
+    "bolo",
+    "bolos",
+    "doce",
+    "doces"
+   ],
+   "motivo_substituto": "pão representa comida em geral"
+  },
+  "dinheiro": {
+   "classe": "dinheiro",
+   "palavras": [
+    "dinheiro",
+    "nota",
+    "notas",
+    "grana",
+    "real",
+    "reais",
+    "dolar",
+    "dolares"
+   ]
+  },
+  "gota": {
+   "classe": "agua",
+   "palavras": [
+    "gota",
+    "gotas",
+    "chuva",
+    "agua"
+   ]
+  },
+  "fogo": {
+   "classe": "fogo",
+   "palavras": [
+    "fogo",
+    "chama",
+    "chamas",
+    "incendio",
+    "fogueira"
+   ]
+  },
+  "chinelo": {
+   "classe": "objeto_casa",
+   "palavras": [
+    "chinelo",
+    "chinelos",
+    "sandalia"
+   ]
+  },
+  "globo": {
+   "classe": "objeto_casa",
+   "palavras": [
+    "globo"
+   ]
+  },
+  "vela": {
+   "classe": "luz",
+   "palavras": [
+    "vela",
+    "velas"
+   ],
+   "substitui": [
+    "luz"
+   ],
+   "motivo_substituto": "vela representa luz sem energia elétrica"
+  },
+  "lanterna": {
+   "classe": "luz",
+   "palavras": [
+    "lanterna",
+    "lanternas"
+   ]
+  },
+  "celular": {
+   "classe": "pessoas",
+   "palavras": [
+    "celular",
+    "celulares",
+    "filmava",
+    "filmando",
+    "filmar"
+   ]
+  },
+  "nuvem": {
+   "classe": "ceu",
+   "palavras": [
+    "nuvem",
+    "nuvens"
+   ]
+  },
+  "sol": {
+   "classe": "astro",
+   "palavras": [
+    "sol"
+   ]
+  },
+  "lua": {
+   "classe": "astro",
+   "palavras": [
+    "lua"
+   ]
+  },
+  "terra": {
+   "classe": "astro",
+   "palavras": [
+    "planeta",
+    "terra"
+   ]
+  }
+ },
+ "classes_sem_objeto": {
+  "_leia": "Coisas que a narração cita e que o motor NÃO tem como peça animável. 'cenario_fixo' = existe desenhada no cenário, mas não muda de estado (não cai, não quebra, não some).",
+  "inseto_generico": {
+   "palavras": [
+    "cupim",
+    "cupins",
+    "formiga",
+    "formigas",
+    "abelha",
+    "abelhas",
+    "gafanhoto",
+    "gafanhotos",
+    "inseto",
+    "insetos",
+    "colonia",
+    "enxame",
+    "praga"
+   ],
+   "motivo": "não há enxame nem inseto genérico; usar a barata no lugar de outro inseto seria mostrar o bicho errado"
+  },
+  "movel": {
+   "palavras": [
+    "porta",
+    "portas",
+    "mesa",
+    "mesas",
+    "cadeira",
+    "cadeiras",
+    "sofa",
+    "armario",
+    "prateleira",
+    "prateleiras",
+    "rodape",
+    "balcao",
+    "movel",
+    "moveis",
+    "cama"
+   ],
+   "cenario_fixo": true,
+   "motivo": "móveis são desenho fixo do cenário, sem estados (inteiro → roído → destruído)"
+  },
+  "construcao": {
+   "palavras": [
+    "casa",
+    "casas",
+    "predio",
+    "predios",
+    "parede",
+    "paredes",
+    "teto",
+    "cerca",
+    "cercas",
+    "poste",
+    "postes",
+    "ponte",
+    "cidade",
+    "rua",
+    "telhado",
+    "madeira",
+    "mundo",
+    "planeta inteiro"
+   ],
+   "cenario_fixo": true,
+   "motivo": "construções são desenho fixo; não há desabamento nem estados de dano"
+  },
+  "pessoa": {
+   "palavras": [
+    "povo",
+    "pessoas",
+    "gente",
+    "multidao",
+    "vizinho",
+    "vizinhos"
+   ],
+   "motivo": "figurantes existem, mas não fazem ações dirigidas (fugir, cair, reagir a um evento)"
+  },
+  "quantidade": {
+   "palavras": [
+    "preco",
+    "precos",
+    "populacao",
+    "dias",
+    "temperatura",
+    "numero",
+    "quantidade",
+    "valor"
+   ],
+   "motivo": "não é coisa desenhável: vira número no painel/contador (simbólico)"
+  },
+  "animal_grande": {
+   "palavras": [
+    "cachorro",
+    "cachorros",
+    "gato",
+    "gatos",
+    "vaca",
+    "vacas",
+    "cobra",
+    "cobras",
+    "urso",
+    "tubarao",
+    "baleia",
+    "dinossauro",
+    "monstro",
+    "bicho",
+    "criatura"
+   ],
+   "motivo": "não há animal grande na biblioteca"
+  }
+ },
+ "verbos": {
+  "_leia": "anim = animação que já existe em fabula.html. requer: 'objeto' = precisa de um objeto da biblioteca; 'estado' = precisa de troca de estado (não existe ainda); 'painel' = número no contador (C).",
+  "aparece": {
+   "palavras": [
+    "apareceu",
+    "apareceram",
+    "aparece",
+    "aparecem",
+    "surgiu",
+    "surgiram",
+    "chegou",
+    "chegaram",
+    "nasceu",
+    "nasceram",
+    "brotou"
+   ],
+   "anim": "aparece",
+   "requer": "objeto"
+  },
+  "some": {
+   "palavras": [
+    "sumiu",
+    "sumiram",
+    "sumir",
+    "sumissem",
+    "sumia",
+    "sumiam",
+    "desapareceu",
+    "desapareceram",
+    "acabou",
+    "acabaram",
+    "extinto",
+    "extintos"
+   ],
+   "anim": "some",
+   "requer": "objeto"
+  },
+  "cai": {
+   "palavras": [
+    "caiu",
+    "cairam",
+    "cai",
+    "caem",
+    "despencou",
+    "despencaram",
+    "tombou",
+    "tombaram",
+    "desabou",
+    "desabaram"
+   ],
+   "anim": "cai",
+   "requer": "objeto"
+  },
+  "quebra": {
+   "palavras": [
+    "quebrou",
+    "quebraram",
+    "rachou",
+    "racharam",
+    "partiu",
+    "desmoronou",
+    "desmoronaram",
+    "destruiu",
+    "destruiram",
+    "destruida",
+    "destruidas",
+    "destruido",
+    "virou serragem",
+    "virou po"
+   ],
+   "requer": "estado"
+  },
+  "transforma": {
+   "palavras": [
+    "emagreceu",
+    "ficou mais fina",
+    "ficou mais fino",
+    "virou",
+    "viraram",
+    "comeu",
+    "comeram",
+    "roeu",
+    "roeram",
+    "mastigar",
+    "mastigaram",
+    "apodreceu",
+    "apodreceram",
+    "derreteu",
+    "secou",
+    "secaram",
+    "murchou"
+   ],
+   "requer": "estado"
+  },
+  "invade": {
+   "palavras": [
+    "invadiu",
+    "invadiram",
+    "ocupou",
+    "ocuparam",
+    "ocupado",
+    "tomou",
+    "tomaram",
+    "dominou",
+    "dominaram",
+    "infestou",
+    "infestaram",
+    "fizeram festa"
+   ],
+   "anim": "corre",
+   "requer": "objeto",
+   "quantidade_min": 3,
+   "classes": [
+    "inseto_comum",
+    "animal_pequeno",
+    "ave"
+   ]
+  },
+  "cresce": {
+   "palavras": [
+    "cresceu",
+    "cresceram",
+    "aumentou",
+    "aumentaram",
+    "multiplicou",
+    "multiplicaram",
+    "nas alturas",
+    "explodiu",
+    "subiu",
+    "subiram",
+    "subia",
+    "sobe",
+    "disparou",
+    "dobrou",
+    "triplicou"
+   ],
+   "anim": "cresce",
+   "requer": "objeto",
+   "painel": true
+  },
+  "foge": {
+   "palavras": [
+    "fugiu",
+    "fugiram",
+    "correu",
+    "correram",
+    "escapou",
+    "escaparam",
+    "correndo"
+   ],
+   "anim": "foge",
+   "requer": "objeto"
+  },
+  "queima": {
+   "palavras": [
+    "pegou fogo",
+    "queimou",
+    "queimaram",
+    "incendiou",
+    "incendiaram",
+    "ardeu",
+    "em chamas"
+   ],
+   "anim": "fogo",
+   "requer": "objeto",
+   "nao_alvo": [
+    "fogo",
+    "chama",
+    "chamas",
+    "incendio"
+   ]
+  },
+  "indicio": {
+   "palavras": [
+    "se mexer",
+    "se mexeu",
+    "mexeu",
+    "se moveu",
+    "tremeu",
+    "balancou",
+    "barulhinho",
+    "barulho"
+   ],
+   "anim": "balanca",
+   "requer": "objeto",
+   "substituto": {
+    "objeto": "folhas",
+    "nivel": "B",
+    "motivo": "folhas balançando indicam algo escondido sem mostrar o quê"
+   }
+  }
+ },
+ "_leia_substitui": "'substitui' = palavras que a peça representa como SUBSTITUTO (nível B), com o motivo; 'palavras' = a própria coisa (nível A).",
+ "expressoes_ignoradas": {
+  "_leia": "Expressões idiomáticas que usam um verbo de mudança sem haver acontecimento (o verbo é ignorado dentro delas).",
+  "lista": [
+   "caiu na real",
+   "caiu a ficha",
+   "cai na real",
+   "correu ao",
+   "correu para",
+   "correu atras",
+   "correram atras",
+   "noticia correu",
+   "correu mais rapido",
+   "foram atras",
+   "virou noticia",
+   "virou meme",
+   "ficou de cara",
+   "apareceu na tv"
+  ]
+ },
+ "sujeitos_personagem": {
+  "_leia": "Quando o sujeito do verbo é a personagem (ou um pronome dela) e não há coisa conhecida na frase, o verbo descreve a personagem, não um acontecimento a mostrar.",
+  "lista": [
+   "valdirene",
+   "val",
+   "ela",
+   "ele",
+   "eu",
+   "voce",
+   "todo mundo",
+   "ninguem"
+  ]
+ }
+}

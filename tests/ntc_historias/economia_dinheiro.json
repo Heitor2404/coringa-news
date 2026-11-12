@@ -1,0 +1,201 @@
+{
+ "tema": "E se chovesse dinheiro?",
+ "titulo_tela": "E SE CHOVESSE *DINHEIRO*?",
+ "acontecimentos": [
+  {
+   "id": "e1",
+   "verbo": "aparece",
+   "alvo": "dinheiro",
+   "estado_final": "dinheiro caindo do céu",
+   "importancia": "central"
+  },
+  {
+   "id": "e2",
+   "verbo": "cresce",
+   "alvo": "preço",
+   "estado_final": "pão custando mil",
+   "importancia": "central"
+  },
+  {
+   "id": "e3",
+   "verbo": "some",
+   "alvo": "pão",
+   "estado_final": "prateleira vazia",
+   "importancia": "apoio"
+  }
+ ],
+ "cenas": [
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "E se amanhã começasse a chover dinheiro?",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "dinheiro",
+     "quantidade": 3,
+     "acao": "cai",
+     "lugar": "meio"
+    },
+    {
+     "tipo": "nuvem",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "ceu"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "aparece",
+    "alvo": "dinheiro"
+   },
+   "mostra": "e1"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "comemora",
+   "balao": "",
+   "narracao": "A Valdirene saiu correndo com um balde.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "dinheiro",
+     "quantidade": 2,
+     "acao": "cai",
+     "lugar": "meio"
+    }
+   ],
+   "papel": "reacao"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "comemora",
+   "balao": "",
+   "narracao": "Todo mundo ficou rico no mesmo dia.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "dinheiro",
+     "quantidade": 3,
+     "acao": "cai",
+     "lugar": "meio"
+    }
+   ],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "mercado",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Só que quando todo mundo tem dinheiro, ninguém quer vender barato.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "mercado",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "O preço do pão subiu.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "pao",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "cresce",
+    "alvo": "preço"
+   },
+   "mostra": "e2",
+   "painel": {
+    "rotulo": "PREÇO DO PÃO",
+    "valor": 5
+   }
+  },
+  {
+   "cenario": "mercado",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "E subiu de novo.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "consequencia",
+   "mostra": "e2",
+   "painel": {
+    "rotulo": "PREÇO DO PÃO",
+    "valor": 1000
+   }
+  },
+  {
+   "cenario": "mercado",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Logo o pão sumiu das prateleiras.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "pao",
+     "quantidade": 2,
+     "acao": "some",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "some",
+    "alvo": "pão"
+   },
+   "mostra": "e3"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Isso tem nome: inflação.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Dinheiro só vale porque é difícil de conseguir.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "dinheiro",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "meio"
+    }
+   ],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "comemora",
+   "balao": "",
+   "narracao": "Comenta se você pegaria o balde mesmo assim!",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  }
+ ]
+}

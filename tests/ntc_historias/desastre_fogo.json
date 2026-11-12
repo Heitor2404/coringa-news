@@ -1,0 +1,204 @@
+{
+ "tema": "E se o fogo não apagasse?",
+ "titulo_tela": "E SE O *FOGO* NÃO APAGASSE?",
+ "acontecimentos": [
+  {
+   "id": "e1",
+   "verbo": "aparece",
+   "alvo": "fogo",
+   "estado_final": "chama acesa",
+   "importancia": "central"
+  },
+  {
+   "id": "e2",
+   "verbo": "queima",
+   "alvo": "folhas",
+   "estado_final": "folhas queimadas",
+   "importancia": "central"
+  },
+  {
+   "id": "e3",
+   "verbo": "transforma",
+   "alvo": "casa",
+   "estado_final": "casa destruída",
+   "importancia": "central"
+  }
+ ],
+ "cenas": [
+  {
+   "cenario": "cozinha",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "E se nenhum fogo do mundo apagasse nunca mais?",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "fogo",
+     "quantidade": 1,
+     "acao": "aparece",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "aparece",
+    "alvo": "fogo"
+   },
+   "mostra": "e1"
+  },
+  {
+   "cenario": "cozinha",
+   "cor": 100,
+   "pose": "brava",
+   "balao": "",
+   "narracao": "A Valdirene jogou um copo de água. Nada.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "fogo",
+     "quantidade": 1,
+     "acao": "balanca",
+     "lugar": "bancada"
+    },
+    {
+     "tipo": "gota",
+     "quantidade": 2,
+     "acao": "cai",
+     "lugar": "bancada"
+    }
+   ],
+   "papel": "reacao"
+  },
+  {
+   "cenario": "floresta",
+   "cor": 100,
+   "pose": "fora",
+   "balao": "",
+   "narracao": "Na floresta, o fogo queimou as folhas.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "fogo",
+     "quantidade": 2,
+     "acao": "balanca",
+     "lugar": "meio"
+    },
+    {
+     "tipo": "folhas",
+     "quantidade": 2,
+     "acao": "some",
+     "lugar": "meio"
+    }
+   ],
+   "papel": "acao",
+   "evento": {
+    "verbo": "queima",
+    "alvo": "folhas"
+   },
+   "mostra": "e2"
+  },
+  {
+   "cenario": "floresta",
+   "cor": 100,
+   "pose": "fora",
+   "balao": "",
+   "narracao": "E as árvores secaram.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "murcha",
+     "quantidade": 2,
+     "acao": "cresce",
+     "lugar": "meio"
+    }
+   ],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "rua",
+   "cor": 100,
+   "pose": "susto",
+   "balao": "",
+   "narracao": "A fumaça cobriu o sol.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "sol",
+     "quantidade": 1,
+     "acao": "some",
+     "lugar": "ceu"
+    },
+    {
+     "tipo": "nuvem",
+     "quantidade": 2,
+     "acao": "aparece",
+     "lugar": "ceu"
+    }
+   ],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "rua_destruida",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "As casas viraram cinza.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "reacao",
+   "evento": {
+    "verbo": "transforma",
+    "alvo": "casa"
+   },
+   "mostra": "e3"
+  },
+  {
+   "cenario": "rua_destruida",
+   "cor": 100,
+   "pose": "desesperada",
+   "balao": "",
+   "narracao": "Os bombeiros não davam conta.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "floresta",
+   "cor": 100,
+   "pose": "fora",
+   "balao": "",
+   "narracao": "Os pássaros fugiram da floresta.",
+   "sfx": null,
+   "objetos": [
+    {
+     "tipo": "passaro",
+     "quantidade": 3,
+     "acao": "foge",
+     "lugar": "ceu"
+    }
+   ],
+   "papel": "consequencia"
+  },
+  {
+   "cenario": "lab",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "O fogo precisa de oxigênio, calor e combustível.",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  },
+  {
+   "cenario": "sala",
+   "cor": 100,
+   "pose": "explica",
+   "balao": "",
+   "narracao": "Comenta o que você salvaria primeiro!",
+   "sfx": null,
+   "objetos": [],
+   "papel": "contexto"
+  }
+ ]
+}

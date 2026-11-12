@@ -50,6 +50,8 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 20 | Ruas e lugares públicos vazios | ✅ | figurantes genéricos (kit_pessoas.js) andando ao fundo; no caos correm com os braços para cima |
 | 21 | Val parada no espaço na última cena | ✅ | cenário espaço sem a Val (só o planeta); Terra do fundo desce para não ficar atrás da legenda |
 | 22 | (prévia baratas 2) Monte de folhas secas flutuando na altura da cintura da Val na horta | ✅ | folhas saem da lista do que pode ficar no ar (monte de folhas é sempre no chão) |
+| 23 | Montes de folhas em fileira certinha, todos iguais | ✅ | objetos repetidos espalhados de forma natural (posição, profundidade, tamanho, ângulo e lado variados) + folhas soltas em volta |
+| 24 | Pouco fogo na cena da rua destruída | ✅ | 6 fogos: 2 nas casas ao fundo, 2 médios, 2 grandes na frente nos cantos |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

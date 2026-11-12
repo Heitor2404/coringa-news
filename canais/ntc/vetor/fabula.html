@@ -132,7 +132,7 @@ window.seek=t=>{
     else if(p.anim==='balanca')tr=`rotate(${Math.sin(dd*3)*6})`;
     else if(p.anim==='cresce')tr=`scale(${cl(back(dd/0.5),0,1.1)})`;
     else tr=`scale(${cl(back(dd/0.3),0,1.1)})`;
-    g.setAttribute('transform',`translate(${X} ${Y}) scale(${s*flip} ${s})`);g.setAttribute('opacity',o);inner.setAttribute('transform',tr);
+    g.setAttribute('transform',`translate(${X} ${Y}) rotate(${p.rot||0}) scale(${s*flip} ${s})`);g.setAttribute('opacity',o);inner.setAttribute('transform',tr);
     if(OBJ[p.t]&&OBJ[p.t].anima)OBJ[p.t].anima(inner,Math.max(0,dd)+(p.anim==='corre'||p.anim==='foge'?0:t*.2))});
   // ── ambiente
   S.amb.forEach((e,k)=>{const r1=rnd(k+1),r2=rnd(k+11),r3=rnd(k+21);let x,y,op,rt=0;

@@ -29,6 +29,7 @@ PROPORCAO = {'barata': .55, 'rato': .6, 'passaro': .8, 'lixo': .7, 'folhas': .45
              'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.5, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5,
              'sol': 1, 'lua': 1, 'terra': 1, 'vela': 1.6, 'lanterna': .6}
 OLHA_ESQ: set[str] = set()
+SOLTOS = {'folhas', 'lixo', 'dinheiro', 'pao', 'chinelo', 'murcha'}   # coisas jogadas: ângulo e lado variados
 VOAM = {'passaro', 'mosca', 'nuvem', 'sol', 'lua', 'terra', 'gota', 'dinheiro'}   # só estes podem ficar no ar
 ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
 # linha dos pés da Val (px no quadro 1080x1920); o chão de todos os cenários começa em 1340
@@ -168,11 +169,22 @@ def _objetos(c: dict) -> list[dict]:
                 out.append({**base, 'x': x, 'y': y, 'de': round(0.2 + 0.32 * i, 2), 'vel': (1 if vai_dir else -1) * (520 + (i * 71) % 180),
                             'flip': (t in OLHA_ESQ) == vai_dir, 'lim': [x0, x1] if banc else None})
             else:
+                rr = random.Random(f"{t}{i}{cen}{n}")         # espalhado de forma natural (nada de fileira certinha)
                 if n == 1:
                     x = {'esquerda': x0 + 20, 'direita': x1 - w - 20}.get(lugar, (x0 + x1) / 2 - w / 2)
                 else:
-                    x = x0 + (x1 - x0 - w) * (i / (n - 1))
-                out.append({**base, 'x': int(x), 'y': int(y), 'de': round(0.3 + 0.18 * i, 2)})
+                    x = x0 + (x1 - x0 - w) * (i / (n - 1)) + rr.uniform(-.35, .35) * (x1 - x0 - w) / (n - 1)
+                    x = max(x0 - w * .3, min(x1 - w * .7, x))
+                    if not banc and lugar not in ('ceu', 'meio'):
+                        y = chao - 60 + rr.uniform(0, 1) * 200
+                esc = rr.uniform(.75, 1.2) if n > 1 else 1
+                out.append({**base, 'x': int(x), 'y': int(y), 'w': int(w * esc), 'de': round(0.3 + 0.18 * i + rr.uniform(0, .15), 2),
+                            'rot': round(rr.uniform(-12, 12) if t in SOLTOS else 0, 1), 'flip': rr.random() < .5 and t in SOLTOS})
+        if t == 'folhas' and lugar not in ('ceu', 'meio') and not banc:   # folhas soltas espalhadas em volta dos montes
+            rr = random.Random(f"fs{cen}{n}")
+            out += [{**base, 'w': int(w * rr.uniform(.25, .4)), 'x': int(rr.uniform(x0, x1 - 60)), 'y': int(chao - 60 + rr.uniform(0, 200)),
+                     'anim': 'aparece', 'de': round(rr.uniform(.2, 1.2), 2), 'rot': round(rr.uniform(-40, 40), 1), 'flip': rr.random() < .5}
+                    for _ in range(5)]
     out.sort(key=lambda p: p['y'])                             # quem está mais perto da câmera fica na frente
     return out
 
@@ -185,8 +197,10 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
-            s['props'] = s['props'] + [{'t': 'fogo', 'w': 200, 'ar': 1.5, 'anim': 'aparece', 'ceu': False, 'atras': True, 'x': x, 'y': 1300, 'de': 0.1}
-                                       for x in (70, 820)]   # fogo de verdade (animado) na rua destruída
+            s['props'] = s['props'] + [{'t': 'fogo', 'w': w, 'ar': 1.5, 'anim': 'aparece', 'ceu': False, 'atras': atras, 'x': x, 'y': y, 'de': de}
+                                       for x, y, w, atras, de in ((40, 1300, 230, True, .1), (840, 1290, 210, True, .2), (330, 1190, 130, True, .3),
+                                                                  (640, 1180, 120, True, .35), (-40, 1880, 300, False, .15), (900, 1900, 280, False, .25))]
+            # fogo de verdade (animado) na rua destruída: atrás nas casas, no meio e grande na frente, nos cantos
         if c['pose'] != 'fora':
             lado = str(c.get('posicao') or 'centro')
             if lado == 'centro' and any(o.get('lugar') == 'bancada' for o in c['objetos']) and c['cenario'] in BANCADA:

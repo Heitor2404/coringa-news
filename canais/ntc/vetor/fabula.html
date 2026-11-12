@@ -164,7 +164,7 @@ window.seek=t=>{
   const hd=$('hud'),PN=PAINEL[i];
   if(PN&&!tituloOn&&!fimOn){hd.style.opacity=1;$('rot').textContent=PN.rot;const novo=PN.idx===i,dn=novo?d:99;
     const kn=eo((dn-0.2)/0.9);$('num').textContent=(PN.fmt||'{}').replace('{}',Math.round(novo?lerp(PN.de??PN.para,PN.para,kn):PN.para).toLocaleString('pt-BR'));
-    const w=hd.offsetWidth,es=0.72,pulo=novo&&dn<0.35?1+0.15*(1-dn/0.35):1;
+    const w=hd.offsetWidth,es=1.0,pulo=novo&&dn<0.35?1+0.15*(1-dn/0.35):1;
     hd.style.transformOrigin='50% 0';hd.style.transform=`translate(${(1080-w)/2}px,200px) scale(${es*pulo})`}else hd.style.opacity=0;
   // ── balão: em cima da cabeça; se bater na legenda, vai para o lado
   const bl=$('balao'),bde=Math.max(c.balao_de??0.6,V&&V.anda?ANDA+0.2:0,c.titulo?3.0:0),bfim=bde+BALAO_DUR;

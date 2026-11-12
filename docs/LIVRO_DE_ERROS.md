@@ -55,6 +55,7 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 25 | (prévia baratas 3) Figurantes pequenos demais (≈ 1/3 da Val) | ✅ | escala 0,42–0,52 → 0,64–0,80 e um pouco mais à frente |
 | 26 | Balões ora em MAIÚSCULA, ora em minúscula ("Tá quieto demais…") | ✅ | balão sempre em maiúscula no motor |
 | 27 | Cena do hospital falando de "fila" com 1 pessoa só | ✅ | hospital 3 figurantes, mercado 4 |
+| 28 | Contador pequeno demais para o vídeo | ✅ | contador em tamanho cheio (escala 0,72 → 1) |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

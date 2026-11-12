@@ -634,6 +634,9 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             print(f'  [fiscal sombra] não rodou ({str(e)[:100]})')
     if custo.linha_telegram():                        # livro-caixa (Fase 0): por etapa e por tentativa, Claude × Gemini
         diag.append(custo.linha_telegram())
+    from src import orcamento_video
+    if orcamento_video.linha_telegram():              # Fase 1 (monitorar): o que o orçamento FARIA; não decide nada
+        diag.append(orcamento_video.linha_telegram())
     print(custo.tabela())
     try:
         custo.salvar(pasta / f'{nome}-custos.json')
@@ -796,6 +799,12 @@ _FALHAS: list = []   # por que cada tema do dia não virou vídeo (vai no aviso 
 
 def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None):
     """True = vídeo feito; 'pular' = o tema não rende (sem material/sensível); False = erro passageiro."""
+    from src import orcamento_video          # Fase 1 (monitorar): orçamento do vídeo; no diário já vem aberto
+    with orcamento_video.video(pedido):
+        return _fazer_curiosidade(pedido, parte, pasta, pauta)
+
+
+def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None):
     from src import roteiro
     parte = max(1, parte)
     arq_serie = _arquivo_serie(pedido, parte)
@@ -858,6 +867,12 @@ def diario(pasta: Path):
     """O vídeo do dia (1 por dia, automático). O caçador de pautas escolhe o tema com mais potencial de viralizar
     (data chegando, notícia em alta, estudo novo ou curiosidade da planilha/lista). Série em andamento continua no dia
     seguinte; só um tema urgente (data/notícia com momento ≥ 9) passa na frente, e no máximo por 1 dia."""
+    from src import orcamento_video          # Fase 1 (monitorar): UM orçamento para o vídeo do dia, com todas as tentativas
+    with orcamento_video.video('diário'):
+        return _diario(pasta)
+
+
+def _diario(pasta: Path):
     from src import cacador, temas
     from src.orcamento import sobra
     hoje = datetime.now(BRT).strftime('%Y-%m-%d')
@@ -913,6 +928,9 @@ def _aviso_sem_video(motivo: str):
     if custo.linha_telegram():                    # o que foi gasto mesmo sem vídeo (temas descartados)
         linhas.append(custo.linha_telegram())
         print(custo.tabela())
+    from src import orcamento_video
+    if orcamento_video.linha_telegram():
+        linhas.append(orcamento_video.linha_telegram())
     linhas.append('Detalhes no log da execução no GitHub (Actions). Pode rodar de novo à mão se quiser.')
     try:
         _tg('sendMessage', {'text': '\n'.join(linhas)[:4000]})
@@ -1019,13 +1037,15 @@ def main():
     prods = produtos()
     for i, p in enumerate(escolhidas, 1):
         print(f'[{i}/{len(escolhidas)}] {p["titulo"]}')
+        from src import orcamento_video      # Fase 1 (monitorar): um orçamento por notícia
         try:
-            v = roteiro.escrever(p, prods)
-            v['link'] = p['link']
-            arq = montar_video(v, pasta, f'{i:02d}-{slug(v["titulo"])}')
-            hist[p['chave']] = datetime.now(timezone.utc).isoformat()
-            pautas.salvar_historico(hist)
-            telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
+            with orcamento_video.video(p['titulo']):
+                v = roteiro.escrever(p, prods)
+                v['link'] = p['link']
+                arq = montar_video(v, pasta, f'{i:02d}-{slug(v["titulo"])}')
+                hist[p['chave']] = datetime.now(timezone.utc).isoformat()
+                pautas.salvar_historico(hist)
+                telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
         except Exception as e:
             print('  ✘ pulei esta notícia:', str(e)[:300])
 

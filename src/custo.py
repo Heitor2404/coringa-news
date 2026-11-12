@@ -23,7 +23,8 @@ ETAPAS = {
     'fiscal': 'fiscal de imagem', 'conferir_ia': 'fiscal de IA', 'fiscal_final': 'fiscal final',
     'sombra': 'fiscal sombra', '_gemini_direto': 'fiscal sombra',
 }
-_PULAR = {'custo.py', 'claude.py', 'gemini.py', 'contextlib.py', 'threading.py', 'thread.py', 'concurrent'}
+_PULAR = {'custo.py', 'claude.py', 'gemini.py', 'orcamento_video.py', 'contextlib.py', 'threading.py', 'thread.py',
+          'concurrent'}
 
 _etapa = contextvars.ContextVar('etapa', default=None)
 LIVRO: list[dict] = []
@@ -136,7 +137,12 @@ def tabela() -> str:
 
 
 def salvar(arq: Path):
+    try:                                          # Fase 1 (monitorar): o que o orçamento do vídeo calculou
+        from . import orcamento_video
+        orc = orcamento_video.resumo()
+    except Exception:
+        orc = None
     arq.write_text(json.dumps({'claude_usd_estimado': claude_usd(), 'cobranca_efetiva_usd': 0.0,
                                'observacao': 'estimativa total_cost_usd do Claude Code, descontada do crédito da assinatura',
-                               'por_etapa': por_etapa(), 'chamadas': LIVRO},
+                               'por_etapa': por_etapa(), 'chamadas': LIVRO, 'orcamento': orc},
                               ensure_ascii=False, indent=1), encoding='utf-8')

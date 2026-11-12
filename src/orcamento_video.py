@@ -1,0 +1,230 @@
+"""ORÇAMENTO POR VÍDEO do Coringa (Fase 1, etapa 1 — 12/11/2026): teto USD 0,30, alvo USD 0,24.
+
+MODO MONITORAR (o único ligado nesta etapa): antes de cada chamada ao Claude calcula o PIOR CASO dela, a reserva das
+etapas essenciais que ainda faltam e o que o modo "aplicar" FARIA (chamar, pular, pedir autorização). Depois da chamada
+compara o pior caso com o custo real e aponta estouros. NÃO bloqueia, NÃO pula, NÃO muda parâmetros do Claude Code:
+o comportamento do vídeo é exatamente o de antes. Qualquer erro aqui só vai para o registro.
+
+Escopo: só existe orçamento entre `abrir()` e `fechar()`, chamados no caminho do Coringa (curiosidade, diário, notícia).
+Fora disso (o NTC, por exemplo) nada acontece: `antes()` devolve None e não imprime nada.
+
+Valores em USD = a estimativa do Claude Code (`total_cost_usd`), descontada do crédito da assinatura (cobrança: USD 0).
+"""
+import os
+from contextlib import contextmanager
+
+from . import custo
+
+TETO_USD = float(os.getenv('ORCAMENTO_TETO_USD') or 0.30)
+ALVO_USD = float(os.getenv('ORCAMENTO_ALVO_USD') or 0.24)
+
+# preço efetivo por milhão de tokens. Sonnet: medido na Torre Eiffel 2 (4 chamadas, erro ≤ 2%): toda a entrada é cobrada
+# como ESCRITA de cache (3,75), o prompt-base do Claude Code é LIDO do cache (0,30), saída 10. Haiku: proporção de
+# preço da família (a calibrar quando houver chamada medida). Modelo desconhecido: o mais caro (pior caso).
+PRECOS = {'sonnet': {'entrada': 3.75, 'cache_lido': 0.30, 'saida': 10.0},
+          'haiku': {'entrada': 1.25, 'cache_lido': 0.10, 'saida': 5.0},
+          'opus': {'entrada': 6.25, 'cache_lido': 0.50, 'saida': 25.0}}
+BASE_CLAUDE_CODE = 7025          # tokens do prompt-base do Claude Code (lidos do cache em toda chamada medida)
+CHARS_POR_TOKEN = 3.0            # português + JSON: ~3,5 a 4 caracteres por token; 3,0 SUPERESTIMA (pior caso)
+MARGEM_USD = 0.003
+
+# saída máxima por etapa (tokens) = 1,5 × a maior saída já vista (Torre Eiffel 2; 1ª calibração, 1 rodada só).
+# É o valor que o modo "aplicar" passará em CLAUDE_CODE_MAX_OUTPUT_TOKENS. Etapa sem medida: valor conservador.
+SAIDA_MAX = {'tema': 3000, 'partes': 800, 'pesquisa': 4500, 'garimpo': 4700, 'roteiro': 8400, 'crítica': 6200,
+             'ganchos': 1500}
+SAIDA_PADRAO = 8000
+# entrada típica (tokens) para RESERVAR etapas que ainda não rodaram (o prompt delas ainda não existe): medido na Torre
+# Eiffel 2 + 20%; tema e pesquisa sem medida (conservador).
+ENTRADA_TIPICA = {'tema': 6000, 'pesquisa': 9000, 'garimpo': 12000, 'roteiro': 14900, 'crítica': 14000, 'partes': 3000}
+
+# Heitor (12/11, 16h45): pesquisa, roteiro e crítica são essenciais; ganchos pode ser opcional.
+ESSENCIAIS = {'tema', 'partes', 'pesquisa', 'garimpo', 'roteiro', 'crítica'}
+OPCIONAIS = {'ganchos'}
+# ordem das etapas essenciais de cada caminho (para saber o que ainda falta reservar). "partes" é condicional e pequena:
+# não entra na reserva.
+FLUXO_EXPLICA = ['tema', 'garimpo', 'roteiro', 'crítica']
+FLUXO_NOTICIA = ['pesquisa', 'roteiro', 'crítica']
+
+_ORC: dict = {'aberto': False}
+
+
+def modo() -> str:
+    m = (os.getenv('ORCAMENTO_MODO') or 'monitorar').strip().lower()
+    if m == 'aplicar':
+        if not _ORC.get('_avisou'):
+            print('  [orçamento] ORCAMENTO_MODO=aplicar ainda NÃO foi autorizado: sigo em modo monitorar')
+            _ORC['_avisou'] = True
+        return 'monitorar'
+    return 'desligado' if m in ('0', 'desligado', 'off') else 'monitorar'
+
+
+def _preco(modelo: str) -> dict:
+    m = str(modelo or '').lower()
+    for k in ('haiku', 'sonnet', 'opus'):
+        if k in m:
+            return PRECOS[k]
+    return PRECOS['opus']
+
+
+def tokens(texto: str) -> int:
+    return int(len(str(texto or '')) / CHARS_POR_TOKEN) + 1
+
+
+def pior_caso(entrada_tokens: int, etapa: str, modelo: str, base_em_cache: bool = True) -> float:
+    """Pior caso de UMA chamada: entrada inteira cobrada como escrita de cache + prompt-base do Claude Code (lido do
+    cache; na 1ª chamada do vídeo, como escrita) + a saída máxima da etapa + margem."""
+    p = _preco(modelo)
+    base = BASE_CLAUDE_CODE * (p['cache_lido'] if base_em_cache else p['entrada'])
+    saida = SAIDA_MAX.get(etapa, SAIDA_PADRAO) * p['saida']
+    return round((entrada_tokens * p['entrada'] + base + saida) / 1e6 + MARGEM_USD, 4)
+
+
+def classe(etapa: str) -> str:
+    return 'opcional' if etapa in OPCIONAIS else 'essencial' if etapa in ESSENCIAIS else 'outra'
+
+
+# ───────────────────────── escopo do vídeo ─────────────────────────
+def abrir(rotulo: str = ''):
+    """Abre o orçamento do vídeo. Tudo o que o Claude gastar daqui até fechar() conta (todas as tentativas)."""
+    _ORC.clear()
+    _ORC.update(aberto=modo() != 'desligado', rotulo=str(rotulo)[:80], inicio=len(custo.LIVRO), eventos=[],
+                teto=TETO_USD, alvo=ALVO_USD)
+
+
+def fechar():
+    _ORC['aberto'] = False
+
+
+def aberto() -> bool:
+    return bool(_ORC.get('aberto'))
+
+
+@contextmanager
+def video(rotulo: str = ''):
+    """`with orcamento_video.video('tema'):` abre se ainda não houver orçamento aberto e fecha só se foi quem abriu."""
+    dono = not aberto()
+    if dono:
+        abrir(rotulo)
+    try:
+        yield
+    finally:
+        if dono:
+            fechar()
+
+
+def _livro() -> list[dict]:
+    return custo.LIVRO[_ORC.get('inicio', 0):]
+
+
+def gasto() -> float:
+    return round(sum(x['usd'] for x in _livro() if x['ia'] == 'claude'), 4)
+
+
+def _feitas_na_tentativa(tent: int) -> set:
+    return {x['etapa'] for x in _livro() if x['ia'] == 'claude' and x['tentativa'] == tent}
+
+
+def reserva(etapa: str, tent: int | None = None) -> float:
+    """Pior caso típico das etapas ESSENCIAIS que ainda faltam depois desta, na tentativa atual."""
+    tent = custo._tent['n'] if tent is None else tent
+    feitas = _feitas_na_tentativa(tent)
+    fluxo = FLUXO_NOTICIA if ('pesquisa' in feitas or etapa == 'pesquisa') else FLUXO_EXPLICA
+    if etapa in fluxo:
+        depois = fluxo[fluxo.index(etapa) + 1:]
+    else:                                    # etapa fora do fluxo (ganchos, partes…): o que vem depois da última feita
+        ultima = max([fluxo.index(e) for e in feitas if e in fluxo] or [-1])
+        depois = fluxo[ultima + 1:]
+    return round(sum(pior_caso(ENTRADA_TIPICA.get(e, 12000), e, 'sonnet') for e in depois if e not in feitas), 4)
+
+
+def parametros(etapa: str, gasto_atual: float | None = None, teto: float | None = None) -> dict:
+    """O que o modo "aplicar" passará ao Claude Code. Em monitorar só é CALCULADO e registrado, nunca passado."""
+    teto = _ORC.get('teto', TETO_USD) if teto is None else teto
+    g = gasto() if gasto_atual is None else gasto_atual
+    return {'max_budget_usd': round(max(0.01, teto - g), 4),
+            'max_output_tokens': SAIDA_MAX.get(etapa, SAIDA_PADRAO)}
+
+
+def decidir(etapa: str, pior: float, g: float, res: float, teto: float, alvo: float) -> str:
+    """O que o modo "aplicar" faria. Essencial: chama se o pior caso cabe no teto descontada a reserva; senão pede
+    autorização (supervisionado) ou abandona. Opcional: só chama se tudo couber no alvo; senão pula."""
+    if classe(etapa) == 'opcional':
+        return 'chamar' if g + pior + res <= alvo else 'pular'
+    if g + pior + res <= teto:
+        return 'chamar' if g + pior + res <= alvo else 'chamar (acima do alvo)'
+    return 'pedir autorização'
+
+
+def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '') -> dict | None:
+    """Chamado pelo claude.py ANTES de cada `claude -p`. Só calcula e registra. Nunca levanta erro."""
+    try:
+        if not aberto():
+            return None
+        et = etapa or custo._quem_chamou()
+        primeira = not any(x['ia'] == 'claude' for x in _livro())
+        ent = tokens(prompt) + tokens(sistema)
+        pior = pior_caso(ent, et, modelo, base_em_cache=not primeira)
+        g, res = gasto(), reserva(et)
+        teto, alvo = _ORC['teto'], _ORC['alvo']
+        d = {'etapa': et, 'classe': classe(et), 'tentativa': custo._tent['n'], 'modelo': modelo,
+             'entrada_tokens_est': ent, 'pior_caso': pior, 'gasto_antes': g, 'reserva': res,
+             'decisao': decidir(et, pior, g, res, teto, alvo), 'parametros': parametros(et, g, teto),
+             'idx_livro': len(custo.LIVRO)}
+        _ORC['eventos'].append(d)
+        print(f"  [orçamento] (monitorando, não bloqueia) t{d['tentativa']} {et} [{d['classe']}]: pior caso USD {pior:.4f}"
+              f" · gasto USD {g:.4f} · reserva essenciais USD {res:.4f} · aplicar faria: {d['decisao']}")
+        return d
+    except Exception as e:
+        print(f'  [orçamento] não calculei ({str(e)[:80]})')
+        return None
+
+
+def depois(d: dict | None):
+    """Chamado pelo claude.py DEPOIS da chamada (com sucesso ou falha): compara o pior caso com o real."""
+    try:
+        if not d:
+            return
+        novas = [x for x in custo.LIVRO[d['idx_livro']:] if x['ia'] == 'claude']
+        real = round(sum(x['usd'] for x in novas), 4)
+        d['real'] = real
+        d['ok'] = all(x['ok'] for x in novas) if novas else False
+        d['gasto_depois'] = gasto()
+        d['estimativa_baixa'] = real > d['pior_caso']
+        d['estourou_alvo'] = d['gasto_depois'] > _ORC['alvo']
+        d['estourou_teto'] = d['gasto_depois'] > _ORC['teto']
+        avisos = [s for x, s in ((d['estimativa_baixa'], 'REAL ACIMA DO PIOR CASO'),
+                                 (d['estourou_teto'], 'PASSOU DO TETO'),
+                                 (d['estourou_alvo'] and not d['estourou_teto'], 'passou do alvo')) if x]
+        print(f"  [orçamento] {d['etapa']}: real USD {real:.4f} (pior caso {d['pior_caso']:.4f}) · gasto do vídeo "
+              f"USD {d['gasto_depois']:.4f}" + ''.join(f' · {s}' for s in avisos))
+    except Exception as e:
+        print(f'  [orçamento] não comparei ({str(e)[:80]})')
+
+
+# ───────────────────────── relatório ─────────────────────────
+def resumo() -> dict:
+    ev = _ORC.get('eventos') or []
+    return {'modo': 'monitorar', 'teto_usd': _ORC.get('teto', TETO_USD), 'alvo_usd': _ORC.get('alvo', ALVO_USD),
+            'gasto_usd': gasto() if 'inicio' in _ORC else 0.0, 'eventos': ev,
+            'teria_pulado': [e['etapa'] for e in ev if e['decisao'] == 'pular'],
+            'teria_pedido_autorizacao': [e['etapa'] for e in ev if e['decisao'] == 'pedir autorização'],
+            'estimativa_baixa': [e['etapa'] for e in ev if e.get('estimativa_baixa')],
+            'estourou_teto': any(e.get('estourou_teto') for e in ev),
+            'estourou_alvo': any(e.get('estourou_alvo') for e in ev)}
+
+
+def linha_telegram() -> str:
+    """Só com o orçamento do vídeo aberto (nunca mostra o de um vídeo anterior)."""
+    if not aberto():
+        return ''
+    r = resumo()
+    if not r['eventos']:
+        return ''
+    f = lambda x: f'{x:.2f}'.replace('.', ',')
+    estado = 'PASSOU DO TETO' if r['estourou_teto'] else 'passou do alvo' if r['estourou_alvo'] else 'dentro do alvo'
+    partes = [f"🛡 Orçamento (MONITORANDO, não bloqueia): USD {f(r['gasto_usd'])} de {f(r['teto_usd'])} "
+              f"(alvo {f(r['alvo_usd'])}) — {estado}"]
+    partes.append('teria pulado: ' + (', '.join(r['teria_pulado']) or 'nada'))
+    partes.append('teria pedido autorização: ' + (', '.join(r['teria_pedido_autorizacao']) or 'nada'))
+    partes.append('pior caso abaixo do real: ' + (', '.join(r['estimativa_baixa']) or 'nunca'))
+    return ' · '.join(partes)

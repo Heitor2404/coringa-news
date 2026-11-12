@@ -48,6 +48,17 @@ def pedir(prompt: str, leve: bool = False) -> str:
     modelo = MODELO_LEVE if leve else MODELO
     cmd = ['claude', '-p', '--model', modelo, '--output-format', 'json', '--max-turns', '1',
            '--append-system-prompt', SISTEMA, '--disallowedTools', SEM_FERRAMENTAS]
+    # Fase 1, etapa 1 (12/11): o orçamento do vídeo só CALCULA o pior caso e o que faria; o comando acima não muda
+    from . import orcamento_video
+    dec = orcamento_video.antes(prompt, modelo, sistema=SISTEMA)
+    try:
+        return _executar(cmd, prompt, modelo)
+    finally:
+        orcamento_video.depois(dec)
+
+
+def _executar(cmd: list, prompt: str, modelo: str) -> str:
+    global _falhas
     t0 = time.time()
     with tempfile.TemporaryDirectory() as vazio:   # pasta vazia: o Claude Code não enxerga o repositório
         try:

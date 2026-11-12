@@ -29,8 +29,7 @@ _falhas = 0
 GASTO = {'usd': 0.0, 'pedidos': 0}
 
 # ───────── Fase 1 · M1 e M2 (12/11): interruptores, DESLIGADOS por padrão ─────────
-# M1 (CLAUDE_SISTEMA_PROPRIO=1): `--system-prompt` com só o SISTEMA, no lugar do prompt-base do Claude Code (~7 mil
-#   tokens lidos do cache em toda chamada). O pedido não muda.
+# M1: DESCARTADA em 12/11 (ver m1_ligado); o código do `--system-prompt` fica só para referência.
 # M2 (FATOS_NO_SISTEMA=1): os fatos que vão no pedido saem do meio do pedido e vão, IDÊNTICOS, para o prompt de sistema,
 #   onde o cache do Claude é reaproveitado entre roteiro, crítica e ganchos (quando o trecho de fatos é o mesmo). O lugar
 #   onde estavam vira um aviso de onde estão. Só acontece se o trecho aparece UMA vez no pedido; senão nada muda. O
@@ -50,7 +49,9 @@ def _no_coringa() -> bool:
 
 
 def m1_ligado() -> bool:
-    return os.getenv('CLAUDE_SISTEMA_PROPRIO', '0') == '1' and _no_coringa()
+    """M1 DESCARTADA (12/11, Torre Eiffel 3): o Claude Code continua mandando ~6,4 mil tokens de base mesmo com
+    --system-prompt próprio, então ela quase não economiza e muda o prompt-base. Ignora CLAUDE_SISTEMA_PROPRIO."""
+    return False
 
 
 def m2_ligado() -> bool:
@@ -105,7 +106,7 @@ def pedir(prompt: str, leve: bool = False) -> str:
     cmd, prompt, sistema = montar(prompt, modelo)
     # Fase 1 (12/11): o orçamento do vídeo só CALCULA o pior caso e o que faria; o comando acima não muda
     from . import orcamento_video
-    dec = orcamento_video.antes(prompt, modelo, sistema=sistema, base_claude_code=not m1_ligado())
+    dec = orcamento_video.antes(prompt, modelo, sistema=sistema)
     try:
         return _executar(cmd, prompt, modelo)
     finally:

@@ -18,7 +18,7 @@ from pathlib import Path
 ETAPAS = {
     'cacar': 'pauta', 'escolher': 'pauta', 'temas_explica': 'pauta',
     'tema_livre': 'tema', 'decidir_partes': 'partes', '_fatos': 'pesquisa',
-    'coletar': 'garimpo', '_melhor_de_dois': 'roteiro', 'revisar': 'crítica',
+    'coletar': 'garimpo', '_melhor_de_dois': 'roteiro', '_gerar_roteiro': 'roteiro', 'revisar': 'crítica',
     'escolher_gancho': 'ganchos', 'dirigir': 'diretor',
     'fiscal': 'fiscal de imagem', 'conferir_ia': 'fiscal de IA', 'fiscal_final': 'fiscal final',
     'sombra': 'fiscal sombra', '_gemini_direto': 'fiscal sombra',

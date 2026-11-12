@@ -215,18 +215,20 @@ def test_identifica_estouros(monkeypatch):
 
 
 # ───────── 4. reserva das essenciais ─────────
-def _tipico(e):
-    return orc.pior_caso(orc.ENTRADA_TIPICA[e], e, 'sonnet')
+def _medio(*es):
+    return sum(orc.CUSTO_MEDIO[e] for e in es)
 
 
 def test_reserva_das_essenciais_que_faltam():
+    """Reserva = custo MÉDIO medido das essenciais que faltam (12/11: o pior caso somado passava do teto já no início)."""
     custo.tentativa('t')
     orc.abrir('teste')
-    assert orc.reserva('tema') == pytest.approx(_tipico('garimpo') + _tipico('roteiro') + _tipico('crítica'), abs=1e-3)
-    assert orc.reserva('garimpo') == pytest.approx(_tipico('roteiro') + _tipico('crítica'), abs=1e-3)
-    assert orc.reserva('roteiro') == pytest.approx(_tipico('crítica'), abs=1e-3)
-    assert orc.reserva('crítica') == 0 and orc.reserva('pesquisa') == pytest.approx(_tipico('roteiro') + _tipico('crítica'), abs=1e-3)
-    assert orc.reserva('ganchos') == pytest.approx(_tipico('tema') + _tipico('garimpo') + _tipico('roteiro') + _tipico('crítica'), abs=1e-3)
+    assert orc.reserva('tema') == pytest.approx(_medio('garimpo', 'roteiro', 'crítica'), abs=1e-4)
+    assert orc.reserva('garimpo') == pytest.approx(_medio('roteiro', 'crítica'), abs=1e-4)
+    assert orc.reserva('roteiro') == pytest.approx(_medio('crítica'), abs=1e-4)
+    assert orc.reserva('crítica') == 0 and orc.reserva('pesquisa') == pytest.approx(_medio('roteiro', 'crítica'), abs=1e-4)
+    assert orc.reserva('ganchos') == pytest.approx(_medio('tema', 'garimpo', 'roteiro', 'crítica'), abs=1e-4)
+    assert orc.reserva('garimpo') + orc.pior_caso(4107, 'garimpo', 'sonnet', base_em_cache=False) <= orc.TETO_USD
 
 
 def test_reserva_desconta_o_que_ja_rodou_na_tentativa(monkeypatch):

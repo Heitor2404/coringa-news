@@ -121,9 +121,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Fase 1: interruptores em Settings → Secrets and variables → Actions → Variables (vazio = padrão: desligado)
-          CLAUDE_SISTEMA_PROPRIO: ${{ vars.CLAUDE_SISTEMA_PROPRIO }}
-          FATOS_NO_SISTEMA: ${{ vars.FATOS_NO_SISTEMA }}
+          # Fase 1: orçamento só em modo monitorar. M1 descartada e M2 DESLIGADA (12/11): as variáveis do repositório
+          # CLAUDE_SISTEMA_PROPRIO e FATOS_NO_SISTEMA não chegam mais aqui; M2 volta só por commit, para um teste autorizado.
           ORCAMENTO_MODO: ${{ vars.ORCAMENTO_MODO }}
           EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}

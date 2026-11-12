@@ -67,20 +67,17 @@ def test_desligadas_por_padrao_o_comando_e_o_de_antes(monkeypatch):
     assert ch[0]['cmd'] == ANTES(claude.MODELO) and ch[0]['input'] == f'REGRAS\n{FATOS_CURTOS}\nESCREVA'
 
 
-def test_m1_troca_so_o_prompt_de_sistema(monkeypatch):
+def test_m1_descartada_a_variavel_e_ignorada(monkeypatch):
     monkeypatch.setenv('CLAUDE_SISTEMA_PROPRIO', '1')
     ch = _falso(monkeypatch)
     orc.abrir('v')
     claude.pedir('PEDIDO')
-    c = ch[0]['cmd']
-    assert _sistema(c) == ('--system-prompt', claude.SISTEMA) and '--append-system-prompt' not in c
-    assert '--exclude-dynamic-system-prompt-sections' not in c and ch[0]['input'] == 'PEDIDO'
-    assert c[:8] == ANTES(claude.MODELO)[:8] and c[-2:] == ANTES(claude.MODELO)[-2:]
+    assert not claude.m1_ligado() and ch[0]['cmd'] == ANTES(claude.MODELO) and ch[0]['input'] == 'PEDIDO'
 
 
 @pytest.mark.parametrize('m1', ['0', '1'])
 def test_m2_move_os_fatos_identicos_para_o_sistema(monkeypatch, m1):
-    monkeypatch.setenv('CLAUDE_SISTEMA_PROPRIO', m1)
+    monkeypatch.setenv('CLAUDE_SISTEMA_PROPRIO', m1)                              # M1 ignorada nos dois casos
     monkeypatch.setenv('FATOS_NO_SISTEMA', '1')
     ch = _falso(monkeypatch)
     orc.abrir('v')
@@ -91,8 +88,7 @@ def test_m2_move_os_fatos_identicos_para_o_sistema(monkeypatch, m1):
     flag, sistema = _sistema(c)
     assert sistema.startswith(claude.SISTEMA) and sistema.endswith(FATOS_CURTOS)       # fatos idênticos, no sistema
     assert FATOS_CURTOS not in pedido and pedido.replace(claude.MARCA_FATOS, FATOS_CURTOS) == original
-    assert flag == ('--system-prompt' if m1 == '1' else '--append-system-prompt')
-    assert ('--exclude-dynamic-system-prompt-sections' in c) == (m1 == '0')
+    assert flag == '--append-system-prompt' and '--exclude-dynamic-system-prompt-sections' in c
 
 
 @pytest.mark.parametrize('pedido', ['SEM OS FATOS AQUI', f'{FATOS_CURTOS}\n---\n{FATOS_CURTOS}'])
@@ -190,15 +186,10 @@ def test_cache_lido_e_economias_aparecem_no_orcamento(monkeypatch):
         with custo.etapa(et), claude.fatos_compartilhados(FATOS_CURTOS):
             claude.pedir(f'PEDIDO\n{FATOS_CURTOS}\nFIM')
     r = orc.resumo()
-    assert r['m1'] and r['m2'] and r['cache_lido_tokens'] == 7000 and r['gasto_usd'] == pytest.approx(0.18)
+    assert r['m2'] and r['cache_lido_tokens'] == 7000 and r['gasto_usd'] == pytest.approx(0.18)
     assert [e['cache_lido_tokens'] for e in r['eventos']] == [0, 3500, 3500]
-    assert 'economias ligadas: M1, M2 · cache lido 7000 tokens' in orc.linha_telegram()
+    assert 'M2: ligada · cache lido 7000 tokens' in orc.linha_telegram()
     assert custo.claude_usd() == pytest.approx(0.18)                                # o livro-caixa conta o mesmo
-
-
-def test_pior_caso_com_m1_nao_conta_o_prompt_base():
-    com, sem = orc.pior_caso(10000, 'roteiro', 'sonnet', base_claude_code=True), orc.pior_caso(10000, 'roteiro', 'sonnet', base_claude_code=False)
-    assert com - sem == pytest.approx(7025 * 0.30 / 1e6, abs=1e-4)
 
 
 def test_pior_caso_nunca_conta_com_o_cache(monkeypatch):
@@ -316,4 +307,4 @@ def test_versao_do_claude_code_fixa_nos_workflows():
         assert 'npm install -g @anthropic-ai/claude-code ' not in t                 # nenhuma instalação sem versão
     wf = yaml.safe_load((RAIZ / '.github/workflows/gerar-videos.yml').read_text(encoding='utf-8'))
     env = next(p for p in wf['jobs']['gerar']['steps'] if p.get('name') == 'Gerar vídeos')['env']
-    assert {'CLAUDE_SISTEMA_PROPRIO', 'FATOS_NO_SISTEMA', 'ORCAMENTO_MODO'} <= set(env)
+    assert 'ORCAMENTO_MODO' in env and not {'CLAUDE_SISTEMA_PROPRIO', 'FATOS_NO_SISTEMA'} & set(env)   # M1/M2 desligadas

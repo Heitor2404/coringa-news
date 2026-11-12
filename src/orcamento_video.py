@@ -24,8 +24,13 @@ ALVO_USD = float(os.getenv('ORCAMENTO_ALVO_USD') or 0.24)
 PRECOS = {'sonnet': {'entrada': 3.75, 'cache_lido': 0.30, 'saida': 10.0},
           'haiku': {'entrada': 1.25, 'cache_lido': 0.10, 'saida': 5.0},
           'opus': {'entrada': 6.25, 'cache_lido': 0.50, 'saida': 25.0}}
-BASE_CLAUDE_CODE = 7025          # tokens do prompt-base do Claude Code (lidos do cache em toda chamada medida)
-CHARS_POR_TOKEN = 3.0            # português + JSON: ~3,5 a 4 caracteres por token; 3,0 SUPERESTIMA (pior caso)
+# 12/11 (Torre Eiffel 3, M1 e M2 ligadas): o que vai em TODA chamada além do pedido, e continua indo mesmo com
+# --system-prompt próprio (por isso a M1 foi descartada): ~6,4 a 7 mil tokens de base (prompt e ferramentas do Claude
+# Code) lidos do cache, e mais ~4,3 a 6,4 mil tokens ESCRITOS por chamada que a conta de caracteres não vê (seções
+# dinâmicas e afins). O pior caso conta os dois.
+BASE_CLAUDE_CODE = 7025          # base lida do cache (maior medida: 7.025 na Torre 2; 6.397 na Torre 3)
+SOBRECARGA_POR_CHAMADA = 6500    # escrita por chamada além do pedido (maior medida na Torre 3: 6.389)
+CHARS_POR_TOKEN = 3.0            # português + JSON
 MARGEM_USD = 0.003
 
 # saída máxima por etapa (tokens) = 1,5 × a maior saída já vista (Torre Eiffel 2; 1ª calibração, 1 rodada só).
@@ -33,9 +38,11 @@ MARGEM_USD = 0.003
 SAIDA_MAX = {'tema': 3000, 'partes': 800, 'pesquisa': 4500, 'garimpo': 4700, 'roteiro': 8400, 'crítica': 6200,
              'ganchos': 1500}
 SAIDA_PADRAO = 8000
-# entrada típica (tokens) para RESERVAR etapas que ainda não rodaram (o prompt delas ainda não existe): medido na Torre
-# Eiffel 2 + 20%; tema e pesquisa sem medida (conservador).
-ENTRADA_TIPICA = {'tema': 6000, 'pesquisa': 9000, 'garimpo': 12000, 'roteiro': 14900, 'crítica': 14000, 'partes': 3000}
+# RESERVA das etapas essenciais que ainda faltam = o custo MÉDIO medido delas (não o pior caso: somar o pior caso de
+# todas dava mais que o teto já no começo, com gasto zero). Médias da Torre Eiffel 2 e 3 (12/11); tema e pesquisa ainda
+# sem medida: estimativa.
+CUSTO_MEDIO = {'garimpo': 0.0807, 'roteiro': 0.1018, 'crítica': 0.0788, 'ganchos': 0.0374,
+               'tema': 0.05, 'pesquisa': 0.08, 'partes': 0.01}
 
 # Heitor (12/11, 16h45): pesquisa, roteiro e crítica são essenciais; ganchos pode ser opcional.
 ESSENCIAIS = {'tema', 'partes', 'pesquisa', 'garimpo', 'roteiro', 'crítica'}
@@ -73,15 +80,19 @@ def tokens(texto: str) -> int:
     return int(len(str(texto or '')) / CHARS_POR_TOKEN) + 1
 
 
-def pior_caso(entrada_tokens: int, etapa: str, modelo: str, base_em_cache: bool = True,
-              base_claude_code: bool = True) -> float:
-    """Pior caso de UMA chamada: entrada inteira cobrada como escrita de cache (sem contar com cache nenhum, nem o da M2)
-    + prompt-base do Claude Code (lido do cache; na 1ª chamada do vídeo, como escrita; com M1 ele não vai) + a saída
+def pior_caso(entrada_tokens: int, etapa: str, modelo: str, base_em_cache: bool = True) -> float:
+    """Pior caso de UMA chamada: pedido + sobrecarga por chamada, tudo cobrado como escrita de cache (sem contar com
+    cache nenhum, nem o da M2) + base do Claude Code (lida do cache; na 1ª chamada do vídeo, como escrita) + a saída
     máxima da etapa + margem."""
     p = _preco(modelo)
-    base = 0.0 if not base_claude_code else BASE_CLAUDE_CODE * (p['cache_lido'] if base_em_cache else p['entrada'])
+    base = BASE_CLAUDE_CODE * (p['cache_lido'] if base_em_cache else p['entrada'])
     saida = SAIDA_MAX.get(etapa, SAIDA_PADRAO) * p['saida']
-    return round((entrada_tokens * p['entrada'] + base + saida) / 1e6 + MARGEM_USD, 4)
+    return round(((entrada_tokens + SOBRECARGA_POR_CHAMADA) * p['entrada'] + base + saida) / 1e6 + MARGEM_USD, 4)
+
+
+def etapa_normalizada(etapa: str) -> str:
+    """Nome de função → etapa (ex.: _gerar_roteiro → roteiro), pela mesma tabela do livro-caixa."""
+    return custo.ETAPAS.get(etapa, etapa)
 
 
 def classe(etapa: str) -> str:
@@ -171,7 +182,7 @@ def gasto() -> float:
 
 
 def _feitas_na_tentativa(tent: int) -> set:
-    return {x['etapa'] for x in _livro() if x['ia'] == 'claude' and x['tentativa'] == tent}
+    return {etapa_normalizada(x['etapa']) for x in _livro() if x['ia'] == 'claude' and x['tentativa'] == tent}
 
 
 def reserva(etapa: str, tent: int | None = None) -> float:
@@ -184,7 +195,7 @@ def reserva(etapa: str, tent: int | None = None) -> float:
     else:                                    # etapa fora do fluxo (ganchos, partes…): o que vem depois da última feita
         ultima = max([fluxo.index(e) for e in feitas if e in fluxo] or [-1])
         depois = fluxo[ultima + 1:]
-    return round(sum(pior_caso(ENTRADA_TIPICA.get(e, 12000), e, 'sonnet') for e in depois if e not in feitas), 4)
+    return round(sum(CUSTO_MEDIO.get(e, 0.10) for e in depois if e not in feitas), 4)
 
 
 def parametros(etapa: str, gasto_atual: float | None = None, teto: float | None = None) -> dict:
@@ -205,21 +216,20 @@ def decidir(etapa: str, pior: float, g: float, res: float, teto: float, alvo: fl
     return 'pedir autorização'
 
 
-def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '',
-          base_claude_code: bool = True) -> dict | None:
+def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '') -> dict | None:
     """Chamado pelo claude.py ANTES de cada `claude -p`. Só calcula e registra. Nunca levanta erro."""
     try:
         if not aberto():
             return None
-        et = etapa or custo._quem_chamou()
+        et = etapa_normalizada(etapa or custo._quem_chamou())
         primeira = not any(x['ia'] == 'claude' for x in _livro())
         ent = tokens(prompt) + tokens(sistema)
-        pior = pior_caso(ent, et, modelo, base_em_cache=not primeira, base_claude_code=base_claude_code)
+        pior = pior_caso(ent, et, modelo, base_em_cache=not primeira)
         g, res = gasto(), reserva(et)
         teto, alvo = _ORC['teto'], _ORC['alvo']
         from . import claude as _cl
         d = {'etapa': et, 'classe': classe(et), 'tentativa': custo._tent['n'], 'modelo': modelo,
-             'm1': _cl.m1_ligado(), 'm2': _cl.m2_ligado() and sistema != _cl.SISTEMA,
+             'm2': _cl.m2_ligado() and sistema != _cl.SISTEMA,
              'entrada_tokens_est': ent, 'pior_caso': pior, 'gasto_antes': g, 'reserva': res,
              'decisao': decidir(et, pior, g, res, teto, alvo), 'parametros': parametros(et, g, teto),
              'idx_livro': len(custo.LIVRO)}
@@ -261,7 +271,7 @@ def resumo() -> dict:
     ev = _ORC.get('eventos') or []
     return {'modo': 'monitorar', 'teto_usd': _ORC.get('teto', TETO_USD), 'alvo_usd': _ORC.get('alvo', ALVO_USD),
             'gasto_usd': gasto() if 'inicio' in _ORC else 0.0, 'rateio_lote_usd': _ORC.get('rateio', 0.0),
-            'eventos': ev, 'm1': any(e.get('m1') for e in ev), 'm2': any(e.get('m2') for e in ev),
+            'eventos': ev, 'm2': any(e.get('m2') for e in ev),
             'cache_lido_tokens': sum(e.get('cache_lido_tokens') or 0 for e in ev),
             'teria_pulado': [e['etapa'] for e in ev if e['decisao'] == 'pular'],
             'teria_pedido_autorizacao': [e['etapa'] for e in ev if e['decisao'] == 'pedir autorização'],
@@ -286,6 +296,5 @@ def linha_telegram() -> str:
     partes.append('pior caso abaixo do real: ' + (', '.join(r['estimativa_baixa']) or 'nunca'))
     if r['rateio_lote_usd']:
         partes.append(f"inclui USD {r['rateio_lote_usd']:.3f} da escolha do lote".replace('.', ','))
-    ligadas = [m for m in ('M1', 'M2') if r[m.lower()]]
-    partes.append(f"economias ligadas: {', '.join(ligadas) or 'nenhuma'} · cache lido {r['cache_lido_tokens']} tokens")
+    partes.append(f"M2: {'ligada' if r['m2'] else 'desligada'} · cache lido {r['cache_lido_tokens']} tokens")
     return ' · '.join(partes)

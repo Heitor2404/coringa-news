@@ -6,12 +6,14 @@ com `claude setup-token` (vale ~1 ano). NUNCA usar ANTHROPIC_API_KEY junto (ela 
 
 Tarefa de qualidade → Sonnet; tarefa simples (leve=True) → Haiku. Se o Claude falhar, quem chamou segue para o Gemini.
 """
+import contextvars
 import json
 import os
 import shutil
 import subprocess
 import tempfile
 import time
+from contextlib import contextmanager
 
 from . import custo
 
@@ -25,6 +27,60 @@ SEM_FERRAMENTAS = 'Bash,Edit,Write,Read,Glob,Grep,WebFetch,WebSearch,Task,Notebo
 
 _falhas = 0
 GASTO = {'usd': 0.0, 'pedidos': 0}
+
+# ───────── Fase 1 · M1 e M2 (12/11): interruptores, DESLIGADOS por padrão ─────────
+# M1 (CLAUDE_SISTEMA_PROPRIO=1): `--system-prompt` com só o SISTEMA, no lugar do prompt-base do Claude Code (~7 mil
+#   tokens lidos do cache em toda chamada). O pedido não muda.
+# M2 (FATOS_NO_SISTEMA=1): os fatos que vão no pedido saem do meio do pedido e vão, IDÊNTICOS, para o prompt de sistema,
+#   onde o cache do Claude é reaproveitado entre roteiro, crítica e ganchos (quando o trecho de fatos é o mesmo). O lugar
+#   onde estavam vira um aviso de onde estão. Só acontece se o trecho aparece UMA vez no pedido; senão nada muda. O
+#   Gemini (quando o Claude falha) recebe o pedido original, com os fatos no lugar de sempre. Sem M1, M2 liga
+#   `--exclude-dynamic-system-prompt-sections` (tira pasta/ambiente, que mudam a cada chamada, do sistema).
+MARCA_FATOS = '[os FATOS PESQUISADOS estão nas instruções do sistema, no bloco "FATOS PESQUISADOS"; use-os aqui]'
+_fatos_ctx = contextvars.ContextVar('fatos_compartilhados', default=None)
+
+
+def _no_coringa() -> bool:
+    """M1 e M2 só valem dentro do orçamento de um vídeo do Coringa: o NTC (sem orçamento aberto) nunca muda."""
+    try:
+        from . import orcamento_video
+        return orcamento_video.aberto()
+    except Exception:
+        return False
+
+
+def m1_ligado() -> bool:
+    return os.getenv('CLAUDE_SISTEMA_PROPRIO', '0') == '1' and _no_coringa()
+
+
+def m2_ligado() -> bool:
+    return os.getenv('FATOS_NO_SISTEMA', '0') == '1' and _no_coringa()
+
+
+@contextmanager
+def fatos_compartilhados(texto: str | None):
+    """`with claude.fatos_compartilhados(trecho):` declara o trecho EXATO de fatos que o próximo pedido leva."""
+    tok = _fatos_ctx.set(str(texto) if texto else None)
+    try:
+        yield
+    finally:
+        _fatos_ctx.reset(tok)
+
+
+def montar(prompt: str, modelo: str) -> tuple[list, str, str]:
+    """Comando, pedido e sistema que vão ao `claude -p`. Com M1 e M2 desligados: exatamente como antes da Fase 1."""
+    sistema = SISTEMA
+    trecho = _fatos_ctx.get()
+    if m2_ligado() and trecho and trecho.strip() and prompt.count(trecho) == 1:
+        prompt = prompt.replace(trecho, MARCA_FATOS, 1)
+        sistema = SISTEMA + '\n\nFATOS PESQUISADOS (a única fonte de fatos do pedido):\n' + trecho
+    if m1_ligado():
+        flags = ['--system-prompt', sistema]
+    else:
+        flags = ['--append-system-prompt', sistema] + (['--exclude-dynamic-system-prompt-sections'] if sistema != SISTEMA else [])
+    cmd = ['claude', '-p', '--model', modelo, '--output-format', 'json', '--max-turns', '1', *flags,
+           '--disallowedTools', SEM_FERRAMENTAS]
+    return cmd, prompt, sistema
 
 
 def disponivel() -> bool:
@@ -46,11 +102,10 @@ def pedir(prompt: str, leve: bool = False) -> str:
     """Manda o pedido ao Claude e devolve o texto da resposta. Levanta RuntimeError se não deu certo."""
     global _falhas
     modelo = MODELO_LEVE if leve else MODELO
-    cmd = ['claude', '-p', '--model', modelo, '--output-format', 'json', '--max-turns', '1',
-           '--append-system-prompt', SISTEMA, '--disallowedTools', SEM_FERRAMENTAS]
-    # Fase 1, etapa 1 (12/11): o orçamento do vídeo só CALCULA o pior caso e o que faria; o comando acima não muda
+    cmd, prompt, sistema = montar(prompt, modelo)
+    # Fase 1 (12/11): o orçamento do vídeo só CALCULA o pior caso e o que faria; o comando acima não muda
     from . import orcamento_video
-    dec = orcamento_video.antes(prompt, modelo, sistema=SISTEMA)
+    dec = orcamento_video.antes(prompt, modelo, sistema=sistema, base_claude_code=not m1_ligado())
     try:
         return _executar(cmd, prompt, modelo)
     finally:

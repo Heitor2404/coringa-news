@@ -19,7 +19,7 @@ jobs:
           node-version: "22"
       - run: |
           pip install requests
-          timeout 300 npm install -g @anthropic-ai/claude-code --no-audit --no-fund
+          timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund   # mesma versão fixa do gerar-videos
       - name: Pedir ao Claude
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

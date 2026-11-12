@@ -938,6 +938,46 @@ def _aviso_sem_video(motivo: str):
         print(f'  [telegram] aviso não enviado: {e}')
 
 
+def _noticias(a, pasta: Path):
+    """Lote de notícias: escolha (uma chamada para o lote) + um vídeo por notícia, cada um com o seu orçamento."""
+    from src import pautas, roteiro
+    escolhidas = []
+    if a.tema.strip():
+        lista = pautas.buscar_tema(a.tema.strip())
+        print(f'{len(lista)} manchetes sobre "{a.tema.strip()}"')
+        if not lista:
+            print('  ✘ não achei notícias recentes sobre esse assunto'); return False   # main encerra, como antes
+        escolhidas = roteiro.escolher(lista, 1)
+    elif a.qtd > 0:
+        lista = pautas.buscar()
+        print(f'{len(lista)} manchetes novas')
+        escolhidas = roteiro.escolher(lista, max(a.qtd, 4) if a.so_virais else a.qtd)
+        if a.so_virais:
+            from src.voz import config as _cfg
+            lim = float(_cfg().get('nota_viral_minima', 8))
+            for p in escolhidas:
+                print(f"  nota viral {p.get('viral', 0):.0f}/10 · {p['titulo'][:80]}")
+            escolhidas = [p for p in escolhidas if p.get('viral', 0) >= lim][:a.qtd]
+            if not escolhidas:
+                print(f'  nenhuma notícia com nota ≥ {lim:.0f} agora: sem vídeo de notícia nesta rodada')
+    from src import orcamento_video
+    orcamento_video.definir_rateio(len(escolhidas))       # a escolha é dividida entre os vídeos que vão ser feitos
+    hist = pautas.carregar_historico()
+    prods = produtos()
+    for i, p in enumerate(escolhidas, 1):
+        print(f'[{i}/{len(escolhidas)}] {p["titulo"]}')
+        try:                                   # Fase 1 (monitorar): um orçamento por notícia
+            with orcamento_video.video(p['titulo']):
+                v = roteiro.escrever(p, prods)
+                v['link'] = p['link']
+                arq = montar_video(v, pasta, f'{i:02d}-{slug(v["titulo"])}')
+                hist[p['chave']] = datetime.now(timezone.utc).isoformat()
+                pautas.salvar_historico(hist)
+                telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
+        except Exception as e:
+            print('  ✘ pulei esta notícia:', str(e)[:300])
+
+
 def main():
     from src.orcamento import vigia
     vigia()
@@ -1013,41 +1053,13 @@ def main():
         fazer_curiosidade(a.curiosidade.strip(), a.parte, pasta)
         return
 
-    from src import pautas, roteiro
-    escolhidas = []
-    if a.tema.strip():
-        lista = pautas.buscar_tema(a.tema.strip())
-        print(f'{len(lista)} manchetes sobre "{a.tema.strip()}"')
-        if not lista:
-            print('  ✘ não achei notícias recentes sobre esse assunto'); return
-        escolhidas = roteiro.escolher(lista, 1)
-    elif a.qtd > 0:
-        lista = pautas.buscar()
-        print(f'{len(lista)} manchetes novas')
-        escolhidas = roteiro.escolher(lista, max(a.qtd, 4) if a.so_virais else a.qtd)
-        if a.so_virais:
-            from src.voz import config as _cfg
-            lim = float(_cfg().get('nota_viral_minima', 8))
-            for p in escolhidas:
-                print(f"  nota viral {p.get('viral', 0):.0f}/10 · {p['titulo'][:80]}")
-            escolhidas = [p for p in escolhidas if p.get('viral', 0) >= lim][:a.qtd]
-            if not escolhidas:
-                print(f'  nenhuma notícia com nota ≥ {lim:.0f} agora: sem vídeo de notícia nesta rodada')
-    hist = pautas.carregar_historico()
-    prods = produtos()
-    for i, p in enumerate(escolhidas, 1):
-        print(f'[{i}/{len(escolhidas)}] {p["titulo"]}')
-        from src import orcamento_video      # Fase 1 (monitorar): um orçamento por notícia
-        try:
-            with orcamento_video.video(p['titulo']):
-                v = roteiro.escrever(p, prods)
-                v['link'] = p['link']
-                arq = montar_video(v, pasta, f'{i:02d}-{slug(v["titulo"])}')
-                hist[p['chave']] = datetime.now(timezone.utc).isoformat()
-                pautas.salvar_historico(hist)
-                telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
-        except Exception as e:
-            print('  ✘ pulei esta notícia:', str(e)[:300])
+    from src import orcamento_video          # Fase 1 (monitorar): a escolha das notícias é custo do LOTE, rateado
+    orcamento_video.abrir_lote('notícias')
+    try:
+        if _noticias(a, pasta) is False:
+            return
+    finally:
+        orcamento_video.fechar_lote()
 
     if a.explica > 0:                        # curiosidades extras do banco de temas (manual)
         from src import temas

@@ -113,13 +113,18 @@ jobs:
           # navegador: com as bibliotecas do Ubuntu; se o servidor do Ubuntu cair, a máquina do GitHub já tem quase todas
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           # Claude Code: escreve o roteiro usando a assinatura Claude Pro (sem ele, o sistema usa o Gemini como antes)
-          timeout 300 npm install -g @anthropic-ai/claude-code --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
+          # versão FIXA (Fase 1, 12/11): a que rodou a Torre Eiffel 2 (publicada em 10/11). Atualizar só de propósito.
+          timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
 
       - name: Gerar vídeos
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Fase 1: interruptores em Settings → Secrets and variables → Actions → Variables (vazio = padrão: desligado)
+          CLAUDE_SISTEMA_PROPRIO: ${{ vars.CLAUDE_SISTEMA_PROPRIO }}
+          FATOS_NO_SISTEMA: ${{ vars.FATOS_NO_SISTEMA }}
+          ORCAMENTO_MODO: ${{ vars.ORCAMENTO_MODO }}
           EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

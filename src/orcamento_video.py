@@ -46,6 +46,9 @@ FLUXO_EXPLICA = ['tema', 'garimpo', 'roteiro', 'crítica']
 FLUXO_NOTICIA = ['pesquisa', 'roteiro', 'crítica']
 
 _ORC: dict = {'aberto': False}
+# LOTE de notícias: a escolha das notícias (uma chamada para o lote todo) é rateada entre os vídeos do lote, para cada
+# centavo contar uma vez só: vídeo = o que ele gastou + a sua parte da escolha; lote = escolha + vídeos.
+_LOTE: dict = {'aberto': False}
 
 
 def modo() -> str:
@@ -70,11 +73,13 @@ def tokens(texto: str) -> int:
     return int(len(str(texto or '')) / CHARS_POR_TOKEN) + 1
 
 
-def pior_caso(entrada_tokens: int, etapa: str, modelo: str, base_em_cache: bool = True) -> float:
-    """Pior caso de UMA chamada: entrada inteira cobrada como escrita de cache + prompt-base do Claude Code (lido do
-    cache; na 1ª chamada do vídeo, como escrita) + a saída máxima da etapa + margem."""
+def pior_caso(entrada_tokens: int, etapa: str, modelo: str, base_em_cache: bool = True,
+              base_claude_code: bool = True) -> float:
+    """Pior caso de UMA chamada: entrada inteira cobrada como escrita de cache (sem contar com cache nenhum, nem o da M2)
+    + prompt-base do Claude Code (lido do cache; na 1ª chamada do vídeo, como escrita; com M1 ele não vai) + a saída
+    máxima da etapa + margem."""
     p = _preco(modelo)
-    base = BASE_CLAUDE_CODE * (p['cache_lido'] if base_em_cache else p['entrada'])
+    base = 0.0 if not base_claude_code else BASE_CLAUDE_CODE * (p['cache_lido'] if base_em_cache else p['entrada'])
     saida = SAIDA_MAX.get(etapa, SAIDA_PADRAO) * p['saida']
     return round((entrada_tokens * p['entrada'] + base + saida) / 1e6 + MARGEM_USD, 4)
 
@@ -85,14 +90,54 @@ def classe(etapa: str) -> str:
 
 # ───────────────────────── escopo do vídeo ─────────────────────────
 def abrir(rotulo: str = ''):
-    """Abre o orçamento do vídeo. Tudo o que o Claude gastar daqui até fechar() conta (todas as tentativas)."""
+    """Abre o orçamento do vídeo. Tudo o que o Claude gastar daqui até fechar() conta (todas as tentativas), mais a sua
+    parte da escolha do lote, se o vídeo for de um lote de notícias."""
+    rateio = _LOTE.get('rateio', 0.0) if _LOTE.get('aberto') else 0.0
     _ORC.clear()
     _ORC.update(aberto=modo() != 'desligado', rotulo=str(rotulo)[:80], inicio=len(custo.LIVRO), eventos=[],
-                teto=TETO_USD, alvo=ALVO_USD)
+                teto=TETO_USD, alvo=ALVO_USD, rateio=round(rateio, 6))
 
 
 def fechar():
+    if _ORC.get('aberto') and _LOTE.get('aberto'):
+        _LOTE['videos'].append({'rotulo': _ORC.get('rotulo'), 'proprio_usd': gasto_proprio(), 'rateio_usd': _ORC['rateio']})
     _ORC['aberto'] = False
+
+
+def abrir_lote(rotulo: str = 'notícias'):
+    """Antes da escolha das notícias: o que o Claude gastar até definir_rateio() é custo do LOTE."""
+    _LOTE.clear()
+    _LOTE.update(aberto=modo() != 'desligado', rotulo=rotulo, inicio=len(custo.LIVRO), escolha_usd=0.0, n=0,
+                 rateio=0.0, videos=[])
+
+
+def definir_rateio(n_videos: int):
+    """Depois da escolha: fecha o custo da escolha e divide igual entre os vídeos que vão ser feitos."""
+    if not _LOTE.get('aberto'):
+        return
+    _LOTE['escolha_usd'] = round(sum(x['usd'] for x in custo.LIVRO[_LOTE['inicio']:] if x['ia'] == 'claude'), 6)
+    _LOTE['n'] = max(0, int(n_videos))
+    _LOTE['rateio'] = round(_LOTE['escolha_usd'] / _LOTE['n'], 6) if _LOTE['n'] else 0.0
+
+
+def fechar_lote() -> dict:
+    """Fecha o lote e imprime a conta: escolha + vídeos = total, sem contar nada duas vezes."""
+    if not _LOTE.get('aberto'):
+        return {}
+    _LOTE['aberto'] = False
+    vids = _LOTE['videos']
+    total = round(_LOTE['escolha_usd'] + sum(v['proprio_usd'] for v in vids), 6)
+    r = {'rotulo': _LOTE['rotulo'], 'escolha_usd': _LOTE['escolha_usd'], 'n_videos_previstos': _LOTE['n'],
+         'rateio_usd': _LOTE['rateio'], 'videos': vids, 'total_usd': total,
+         'escolha_sem_video_usd': round(_LOTE['escolha_usd'] - _LOTE['rateio'] * len(vids), 6)}
+    try:
+        print(f"  [orçamento] lote {r['rotulo']}: escolha USD {r['escolha_usd']:.4f} rateada entre {r['n_videos_previstos']} "
+              f"vídeo(s) (USD {r['rateio_usd']:.4f} cada) · {len(vids)} vídeo(s) feito(s) · total do lote USD {total:.4f}"
+              + (f" · escolha sem vídeo USD {r['escolha_sem_video_usd']:.4f}" if r['escolha_sem_video_usd'] > 1e-6 else ''))
+    except Exception:
+        pass
+    _LOTE['resumo'] = r
+    return r
 
 
 def aberto() -> bool:
@@ -116,8 +161,13 @@ def _livro() -> list[dict]:
     return custo.LIVRO[_ORC.get('inicio', 0):]
 
 
+def gasto_proprio() -> float:
+    return round(sum(x['usd'] for x in _livro() if x['ia'] == 'claude'), 6)
+
+
 def gasto() -> float:
-    return round(sum(x['usd'] for x in _livro() if x['ia'] == 'claude'), 4)
+    """O que conta para o vídeo: o que ele gastou + a sua parte da escolha do lote (zero fora de lote)."""
+    return round(gasto_proprio() + _ORC.get('rateio', 0.0), 4)
 
 
 def _feitas_na_tentativa(tent: int) -> set:
@@ -155,7 +205,8 @@ def decidir(etapa: str, pior: float, g: float, res: float, teto: float, alvo: fl
     return 'pedir autorização'
 
 
-def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '') -> dict | None:
+def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '',
+          base_claude_code: bool = True) -> dict | None:
     """Chamado pelo claude.py ANTES de cada `claude -p`. Só calcula e registra. Nunca levanta erro."""
     try:
         if not aberto():
@@ -163,10 +214,12 @@ def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '')
         et = etapa or custo._quem_chamou()
         primeira = not any(x['ia'] == 'claude' for x in _livro())
         ent = tokens(prompt) + tokens(sistema)
-        pior = pior_caso(ent, et, modelo, base_em_cache=not primeira)
+        pior = pior_caso(ent, et, modelo, base_em_cache=not primeira, base_claude_code=base_claude_code)
         g, res = gasto(), reserva(et)
         teto, alvo = _ORC['teto'], _ORC['alvo']
+        from . import claude as _cl
         d = {'etapa': et, 'classe': classe(et), 'tentativa': custo._tent['n'], 'modelo': modelo,
+             'm1': _cl.m1_ligado(), 'm2': _cl.m2_ligado() and sistema != _cl.SISTEMA,
              'entrada_tokens_est': ent, 'pior_caso': pior, 'gasto_antes': g, 'reserva': res,
              'decisao': decidir(et, pior, g, res, teto, alvo), 'parametros': parametros(et, g, teto),
              'idx_livro': len(custo.LIVRO)}
@@ -187,6 +240,8 @@ def depois(d: dict | None):
         novas = [x for x in custo.LIVRO[d['idx_livro']:] if x['ia'] == 'claude']
         real = round(sum(x['usd'] for x in novas), 4)
         d['real'] = real
+        d['cache_lido_tokens'] = sum(x['cache_lida'] for x in novas)
+        d['cache_escrito_tokens'] = sum(x['cache_escrita'] for x in novas)
         d['ok'] = all(x['ok'] for x in novas) if novas else False
         d['gasto_depois'] = gasto()
         d['estimativa_baixa'] = real > d['pior_caso']
@@ -205,7 +260,9 @@ def depois(d: dict | None):
 def resumo() -> dict:
     ev = _ORC.get('eventos') or []
     return {'modo': 'monitorar', 'teto_usd': _ORC.get('teto', TETO_USD), 'alvo_usd': _ORC.get('alvo', ALVO_USD),
-            'gasto_usd': gasto() if 'inicio' in _ORC else 0.0, 'eventos': ev,
+            'gasto_usd': gasto() if 'inicio' in _ORC else 0.0, 'rateio_lote_usd': _ORC.get('rateio', 0.0),
+            'eventos': ev, 'm1': any(e.get('m1') for e in ev), 'm2': any(e.get('m2') for e in ev),
+            'cache_lido_tokens': sum(e.get('cache_lido_tokens') or 0 for e in ev),
             'teria_pulado': [e['etapa'] for e in ev if e['decisao'] == 'pular'],
             'teria_pedido_autorizacao': [e['etapa'] for e in ev if e['decisao'] == 'pedir autorização'],
             'estimativa_baixa': [e['etapa'] for e in ev if e.get('estimativa_baixa')],
@@ -227,4 +284,8 @@ def linha_telegram() -> str:
     partes.append('teria pulado: ' + (', '.join(r['teria_pulado']) or 'nada'))
     partes.append('teria pedido autorização: ' + (', '.join(r['teria_pedido_autorizacao']) or 'nada'))
     partes.append('pior caso abaixo do real: ' + (', '.join(r['estimativa_baixa']) or 'nunca'))
+    if r['rateio_lote_usd']:
+        partes.append(f"inclui USD {r['rateio_lote_usd']:.3f} da escolha do lote".replace('.', ','))
+    ligadas = [m for m in ('M1', 'M2') if r[m.lower()]]
+    partes.append(f"economias ligadas: {', '.join(ligadas) or 'nenhuma'} · cache lido {r['cache_lido_tokens']} tokens")
     return ' · '.join(partes)

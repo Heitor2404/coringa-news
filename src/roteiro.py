@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import gemini
+from . import claude, gemini
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -248,7 +248,8 @@ def _fatos(pauta: dict) -> str:
 def escrever(pauta: dict, produtos: list[dict]) -> dict:
     fatos = _fatos(pauta)
     prods = '\n'.join(f"- {p['id']}: {p['nome']} (temas: {', '.join(p.get('temas', []))})" for p in produtos) or '(nenhum)'
-    v = _melhor_de_dois(PROMPT_ROTEIRO.format(fatos=fatos, produtos=prods, **pauta))
+    with claude.fatos_compartilhados(fatos):           # M2 (desligado por padrão): mesmo texto, no sistema
+        v = _melhor_de_dois(PROMPT_ROTEIRO.format(fatos=fatos, produtos=prods, **pauta))
     v = revisar(v, fatos)
     v.setdefault('estilo_visual', 'cinematic photorealistic news illustration, dramatic lighting, shallow depth of field')
     v.pop('arco', None)                    # notícia não é série: nunca chama para "parte 2"
@@ -337,10 +338,11 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     pasta = Path(__file__).resolve().parent.parent / 'tmp' / ('acervo-' + re.sub(r'[^a-z0-9]+', '-', tema['pergunta'].lower())[:40])
     acervo = acervo_mod.coletar(tema, dossie, pasta)        # sem fotos reais suficientes: ValueError → próximo tema
     marca('acervo pronto')
-    v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
-        pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
-        partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
-        categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)))
+    with claude.fatos_compartilhados(fatos):           # M2 (desligado por padrão): mesmo texto, no sistema
+        v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
+            pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
+            partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
+            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)))
     v['arco'] = (v.get('arco') or []) if capitulos else (v.get('arco') or [])[:1]
     if capitulos and parte <= 1 and len(v['arco']) > n:
         v['arco'] = v['arco'][:n]
@@ -466,8 +468,9 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   
             return v
         try:
             base = {k: val for k, val in v.items() if k not in ('fatos', 'produto', 'resumo', 'imagens', 'dossie')}
-            r = gemini.json_(PROMPT_CRITICA.format(fatos=str(fatos)[:14000], roteiro=json.dumps(base, ensure_ascii=False),
-                                                   escopo=(f'- escopo: {escopo} Se contar algo além disso (ou "spoilar" as próximas partes), nota 0.\n' if escopo else '')))
+            with claude.fatos_compartilhados(str(fatos)[:14000]):     # M2: o MESMO trecho de fatos de sempre
+                r = gemini.json_(PROMPT_CRITICA.format(fatos=str(fatos)[:14000], roteiro=json.dumps(base, ensure_ascii=False),
+                                                       escopo=(f'- escopo: {escopo} Se contar algo além disso (ou "spoilar" as próximas partes), nota 0.\n' if escopo else '')))
             if isinstance(r, list):
                 r = r[0]
             print(f"  [editor] rodada {rodada + 1}: notas {r.get('notas')} · {'aprovado' if r.get('aprovado') else 'reescrito'}")
@@ -524,7 +527,8 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
         # 11/11: o gancho só promete o que as fotos mostram ("o lago que vira PEDRA" sem nenhum animal petrificado)
         from . import acervo as acervo_mod
         fotos = acervo_mod.texto(acervo) if acervo else '(sem lista de fotos)'
-        r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000], fotos=fotos))
+        with claude.fatos_compartilhados(str(fatos)[:9000]):          # M2: o MESMO trecho de fatos de sempre
+            r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000], fotos=fotos))
         if isinstance(r, list):
             r = {'opcoes': r, 'escolha': 0}
         ops = [o for o in (r.get('opcoes') or []) if isinstance(o, dict) and o.get('fala') and len(str(o['fala']).split()) <= 18]

@@ -42,6 +42,10 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 12 | Balão em cima do título na 1ª cena | ✅ | balão só depois que o título sai |
 | 13 | Planeta/objeto do céu cortado no topo e em cima do painel | ✅ | objeto do céu desce para baixo do painel/legenda, atrás da Val |
 | 14 | Cenas longas sem a Val (espaço) paradas | ✅ em parte | prompt: Val em 2 de cada 3 cenas, no máx. 2 seguidas sem ela |
+| 15 | (prévia baratas, 11/11) Contador torto: encolhia do meio para o canto e ficava no meio do caminho | ✅ | contador fixo em cima, centralizado, tamanho único; só dá um pulo quando o número muda |
+| 16 | Árvores da floresta flutuando (tronco terminava acima do chão) e moitas no ar | ✅ | troncos e moitas descem para dentro do chão |
+| 17 | Sacos de lixo/folhas/plantas flutuando no meio da tela (lugar "meio"/"céu") | ✅ | só bicho voador, nuvem, sol, lua, Terra, gota, dinheiro e folhas ficam no ar; o resto vai para o chão |
+| 18 | Texto "H2O + CO2 = ?" do quadro-negro brigando com a legenda | ✅ | quadro-negro só com rabiscos, sem texto |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

@@ -29,6 +29,7 @@ PROPORCAO = {'barata': .55, 'rato': .6, 'passaro': .8, 'lixo': .7, 'folhas': .45
              'mosca': .7, 'dinheiro': .55, 'pao': .45, 'gota': 1.4, 'fogo': 1.2, 'lagarto': .4, 'celular': 1.7, 'nuvem': .5,
              'sol': 1, 'lua': 1, 'terra': 1, 'vela': 1.6, 'lanterna': .6}
 OLHA_ESQ: set[str] = set()
+VOAM = {'passaro', 'mosca', 'nuvem', 'sol', 'lua', 'terra', 'gota', 'dinheiro', 'folhas'}   # só estes podem ficar no ar
 ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
 # linha dos pés da Val (px no quadro 1080x1920); o chão de todos os cenários começa em 1340
 CHAO = {c: 1720 for c in CENARIOS}
@@ -145,6 +146,10 @@ def _objetos(c: dict) -> list[dict]:
         n = max(1, min(8, int(o.get('quantidade') or 1)))
         acao = o.get('acao') if o.get('acao') in ACOES else 'aparece'
         lugar = str(o.get('lugar') or 'chao')
+        if lugar in ('ceu', 'meio') and t not in VOAM:
+            lugar = 'chao'                                   # lixo, folhas, planta etc. não flutuam: ficam no chão
+        if t in ('sol', 'lua', 'terra', 'nuvem') and lugar != 'ceu':
+            lugar = 'ceu'
         banc = BANCADA.get(cen) if lugar == 'bancada' else None
         x0, x1 = (banc[1] + 20, banc[2] - 20) if banc else (60, 1020)
         base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu'}
@@ -154,7 +159,7 @@ def _objetos(c: dict) -> list[dict]:
             elif lugar == 'ceu':
                 y = 1060 + (i % 2) * 60                      # céu: abaixo do painel e da legenda, atrás da Val
             elif lugar == 'meio':
-                y = 1300
+                y = 1250
             else:
                 y = chao - 10 + ((i * 53) % 4) * 50             # espalha na profundidade do chão (na frente da Val)
             if acao in ('corre', 'foge'):

@@ -1,0 +1,42 @@
+{
+ "pedido": "O homem que vendeu a Torre Eiffel duas vezes",
+ "tema": {
+  "pergunta": "Como um golpista vendeu a Torre Eiffel duas vezes?",
+  "formato": "explica",
+  "termos": [
+   "Victor Lustig",
+   "Torre Eiffel",
+   "Golpe do conto do vigário"
+  ],
+  "termos_en": [
+   "Victor Lustig",
+   "Eiffel Tower",
+   "Confidence trick"
+  ],
+  "busca": "Victor Lustig Torre Eiffel golpe",
+  "busca_video": [
+   "Eiffel Tower timelapse",
+   "Paris street traffic night",
+   "old newspaper printing press",
+   "Paris rooftops sunset"
+  ],
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "O homem que vendeu a Torre Eiffel duas vezes",
+  "partes": 1
+ },
+ "pergunta": "Como um golpista vendeu a Torre Eiffel duas vezes?",
+ "arco": [
+  "Como Victor Lustig vendeu a Torre Eiffel duas vezes em Paris, 1925."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "O homem que vendeu a Torre Eiffel",
+   "resumo": "Ele vendeu a Torre Eiffel com documentos falsos do governo. Victor Lustig se passou por funcionário do governo francês. Ele forjou documentos oficiais e disse a empresários que a torre seria vendida como ferro-velho. A França vivia o caos do pós-guerra, e ele vendeu a torre inteira. Gustave Eiffel, o engenheiro da torre, tinha morrido dois anos antes. Um comerciante de Paris achou que fechava o negócio da vida. Ele pagou. Lustig embolsou o dinheiro e fugiu. Mas o comerciante teve vergonha de dar queixa à polícia. Um mês depois, Lustig voltou a Paris. E tentou vender a mesma torre de novo. Em 2015, 6,91 milhões de pessoas subiram nessa suposta sucata. A vergonha de uma vítima deixou Lustig vender a Torre Eiffel duas vezes.",
+   "suspense": "vender a Torre Eiffel duas vezes."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-12"
+}

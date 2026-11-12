@@ -153,7 +153,7 @@ def _objetos(c: dict) -> list[dict]:
     out = []
     cen = c['cenario']
     chao = CHAO[cen]
-    objs = [o for o in c['objetos'] if not (o['tipo'] == 'celular' and str(o.get('lugar') or 'chao') == 'chao')]   # celular no chão = gente com celular
+    objs = [o for o in c['objetos'] if o['tipo'] != 'celular']   # celular nunca solto na cena: vira gente olhando o celular
     for j, o in enumerate(objs):
         t = o['tipo']
         w, ar = OBJETOS[t], _proporcao(t)
@@ -216,7 +216,7 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
             s['celular'] = True                              # o povo da cena anda olhando o celular
         if c['pose'] == 'fora' and c['cenario'] in ('floresta', 'horta', 'fazenda', 'praia') and not any(o['tipo'] == 'passaro' for o in c['objetos']):
             s['props'] = s['props'] + [{'t': 'passaro', 'w': 150, 'ar': .8, 'anim': 'aparece', 'ceu': True, 'atras': True, 'voa': True,
-                                        'x': x, 'y': y, 'de': de, 'flip': fl} for x, y, de, fl in ((180, 1150, .3, False), (760, 1230, .8, True))]
+                                        'x': x, 'y': y, 'de': de, 'flip': fl} for x, y, de, fl in ((180, 760, .3, False), (760, 830, .8, True))   # acima da cabeça das pessoas]
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):

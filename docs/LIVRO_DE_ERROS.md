@@ -73,6 +73,9 @@ Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas su
 | 42 | Legenda pulando de cima para baixo no close | ✅ | legenda sempre em cima |
 | 43 | Val parada nos últimos segundos (placa da Parte 2) | ✅ | Val dá tchau/chama para a Parte 2 enquanto a placa está na tela |
 | 44 | Tema pedido no campo ntc trocado pela IA ("baratas" já estava nos temas feitos) | ✅ | tema pedido é usado exatamente; lista de já feitos ignorada quando há pedido |
+| 45 | (vídeo baratas 22h26) Celulares em pé no chão de novo (roteiro pôs celular em outro "lugar") | ✅ | celular nunca vira objeto solto: sempre gente olhando o celular |
+| 46 | Pássaros voando na altura do corpo das pessoas (passando por cima delas) | ✅ | pássaros das cenas sem a Val voam acima das cabeças |
+| 47 | Placa "MERCADO" escondida atrás do contador | ✅ | placa desce para cima da prateleira do meio |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

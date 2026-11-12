@@ -1,0 +1,33 @@
+{
+  "_leia": "Regiões de cada cenário (px no quadro 1080x1920, [x0, y0, x1, y1]). Lugar ÚNICO onde se diz onde fica o céu livre. src/fabula.py põe nuvem, sol, lua e o que a IA mandar 'no céu' INTEIRO dentro de uma destas caixas, sem encostar no texto. Medido no Chrome (tests/ntc_geometria.py, 12/11/2026): nenhuma peça de cenário (casa, árvore, morro, mar) entra nelas — tests/test_ntc_geometria.py confere isso sempre. Mudou um cenário em kit_cenarios.js? Rode os testes; se acusar, ajuste aqui. Cenário sem céu à vista = lista vazia (nuvem/sol/lua saem da cena; bicho voando vai para o meio).",
+  "texto": {
+    "legenda": [0, 385, 1080, 675],
+    "painel": [200, 180, 880, 445],
+    "titulo": [0, 290, 1080, 648]
+  },
+  "quadro_seguro": {
+    "_leia": "Onde objeto do chão fica INTEIRO na tela [x0, x1, base máxima]. Sem a Val a câmera faz zoom lento (+9%) e anda ±40 px para o lado, então a margem é maior.",
+    "com_val": [60, 1020, 1870],
+    "sem_val": [90, 990, 1820]
+  },
+  "astro": {
+    "_leia": "Onde o próprio cenário desenha o sol (dia) e a lua (noite): centro do círculo. Quando o roteiro pede esse astro, o cenário deixa de desenhar o dele e o objeto fica neste lugar (nada de sol em dobro).",
+    "centro": [850, 250],
+    "cenarios": ["rua", "horta", "fazenda", "sitio", "praia"]
+  },
+  "ceu": {
+    "rua": [[40, 80, 1040, 380]],
+    "rua_destruida": [[40, 80, 1040, 280]],
+    "sitio": [[40, 80, 1040, 380], [40, 680, 1040, 890]],
+    "fazenda": [[40, 80, 1040, 380], [40, 680, 1040, 780], [40, 680, 320, 990], [800, 680, 1040, 990]],
+    "praia": [[40, 80, 1040, 380], [40, 680, 670, 990], [40, 680, 1040, 839]],
+    "horta": [[40, 80, 1040, 380], [40, 680, 1040, 950]],
+    "espaco": [[40, 80, 1040, 380], [40, 680, 300, 1320], [780, 680, 1040, 1320]],
+    "floresta": [],
+    "cozinha": [],
+    "sala": [],
+    "lab": [],
+    "mercado": [],
+    "hospital": []
+  }
+}

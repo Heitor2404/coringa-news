@@ -81,6 +81,19 @@ Pedido do dono no roteiro: campo ntc = "tema | pedido" (ex.: "E se as baratas su
 | 50 | Gotas d'água espalhadas pela tela inteira na praia | ✅ | no máximo 3 gotas |
 | 51 | Narração dizendo termo técnico ("a Valdirene num holofote") | ✅ | PROMPT_FABULA: nunca citar luz/câmera/pose/objeto na narração |
 
+## Ninguém Te Contou — medidor geométrico (12/11, Fase 2 da auditoria)
+Achados pelo `tests/ntc_geometria.py` (mede no Chrome o que foi desenhado; relatório em `docs/RELATORIO_GEOMETRIA_NTC.md`). Cada um tem teste em `tests/test_ntc_geometria.py`.
+| # | Erro | Status | Como foi resolvido |
+|---|---|---|---|
+| 52 | Nuvem, sol e lua desenhados NA FRENTE das casas, do celeiro e da palmeira, e abaixo do horizonte (base fixa em y=1060; na rua sobram só 70 px entre a legenda e o telhado) | ✅ | `canais/ntc/vetor/regioes.json`: céu livre de cada cenário medido no Chrome; `fabula._no_ceu` põe o objeto inteiro numa região (acima da legenda, longe do painel e do título); não coube nem menor → sai da cena. Teste no Chrome confere que nenhuma peça do cenário entra nas regiões |
+| 53 | Sol ou lua em dobro (o cenário já desenha o dele e o roteiro põe outro) | ✅ | o objeto entra no lugar do astro do cenário e o cenário não desenha o dele (`sem_astro` → `ceu({semAstro})` em kit_cenarios.js) |
+| 54 | Gota/nota que "cai" terminava a queda no meio do ar | ✅ | o que cai termina no chão |
+| 55 | Objetos do chão cortados na borda (até 30% para fora; base até y=1930) | ✅ | `regioes.json` → `quadro_seguro`: com a Val x 60–1020 e base até 1870; sem a Val (a câmera dá zoom de +9% e anda ±40 px) x 90–990 e base até 1820; folhas soltas idem |
+| 56 | Legenda cobrindo até 27% da cabeça da Val nos planos "meio" e close de objeto | ✅ | fabula.html `alvo()`: a câmera mantém o topo da cabeça abaixo de y=700; no close de objeto com a Val no quadro, o zoom abre (mín. 1,15) até caber a cabeça e o objeto |
+| 57 | Val cortada na borda ao gesticular na esquerda/direita (até 18%) | ✅ | laterais em x=360/720 (antes 300/780) e escala 0,9 |
+| 58 | Pássaros de ambiente encostando na legenda (topo em y=640) | ✅ | passam pela mesma regra do céu; floresta (sem céu à vista) voa abaixo da legenda e acima das cabeças |
+| 59 | Nuvem no espaço | ✅ | nuvem ignorada no cenário espaço |
+
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.
 - NTC (11/11 noite): música cômica própria, som do contador, luz por cena (pôr do sol/holofote), closes de mão e olho.

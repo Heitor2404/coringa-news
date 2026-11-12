@@ -35,7 +35,7 @@ const ANDA=0.8,BALAO_DUR=2.8;
 const cenas=D.cenas.map((c,i)=>{
   const el=document.createElement('div');el.className='cena';
   const amb=AMBIENTE[c.cen];
-  el.innerHTML=`<svg width="1080" height="1920" viewBox="0 0 1080 1920"><g class="cam">${(CEN[c.cen]||CEN.cozinha)({noite:!!c.noite,dono:D.personagem||'val',seca:(c.cinza??0)>=0.3})}
+  el.innerHTML=`<svg width="1080" height="1920" viewBox="0 0 1080 1920"><g class="cam">${(CEN[c.cen]||CEN.cozinha)({noite:!!c.noite,semAstro:!!c.sem_astro,dono:D.personagem||'val',seca:(c.cinza??0)>=0.3})}
     <g class="atras"></g><g class="povo"></g><g class="val"></g><g class="frente"></g><g class="riscos">${[0,1,2,3,4].map(()=>`<line stroke="${L}" stroke-width="9" stroke-linecap="round" opacity="0"/>`).join('')}</g>
     <g class="amb">${amb?Array.from({length:amb==='folha'?14:26},(_,k)=>amb==='folha'?`<path d="M-17 0 Q0 -12 17 0 Q0 9 -17 0Z" fill="${['#B5762F','#8E5A23','#C9963F','#7A8B2E'][k%4]}" stroke="${L}" stroke-width="2"/>`
       :amb==='estrela'?'<circle r="3" fill="#fff"/>':`<circle r="${4+k%3*2}" fill="${amb==='cinza'?'#555':'#FFF4D6'}"/>`).join(''):''}</g></g>
@@ -56,7 +56,7 @@ const cenas=D.cenas.map((c,i)=>{
   if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'),(PERSONAGEM_SVG[D.personagem]||PERSONAGEM_SVG.val)())}}
   const dur=c.b-c.a,n=Math.max(1,Math.round(dur/2.3)),pl=[];
   const p0=(c.props||[]).find(p=>!['corre','foge','some'].includes(p.anim));
-  const alvoObj=p0?{x:p0.x+p0.w*.5,y:p0.y-p0.w*(OBJ[p0.t]||OBJ.barata).ar*.5,z:1.6}:null;
+  const alvoObj=p0?{x:p0.x+p0.w*.5,y:p0.y-p0.w*(OBJ[p0.t]||OBJ.barata).ar*.5,hb:p0.w*(OBJ[p0.t]||OBJ.barata).ar*.5,z:1.6}:null;
   const susto=V&&['susto','desesperada'].includes(V.pose);
   if(susto&&(c.props||[]).length)pl.push({t0:c.a,tipo:'geral',q:0});
   for(let q=0;q<n;q++){let tipo='geral';
@@ -71,8 +71,15 @@ function alvo(S,tipo){const V=S.V;
   if(tipo==='olho'&&V&&S._olho)return{x:S._olho.x,y:S._olho.y,z:3.2,sy:1000};
   if((tipo==='mao'||tipo==='olho')&&V)tipo='rosto';
   if(tipo==='rosto'&&V)return{x:V.x,y:V.chao-(VAL_PES+330)*VAL_ESC*V.s,z:1.6,sy:1180};   // coque inteiro na tela
-  if(tipo==='objeto'&&S.alvoObj)return{...S.alvoObj,sy:1150};
-  if(tipo==='meio')return{x:V?V.x:540,y:V?V.chao-VAL_ALT*.45:1500,z:1.3,sy:1150};
+  // cabeça da Val sempre abaixo da legenda (y≈675): antes, no 'meio' e no close de objeto, a legenda cobria até 27% da cabeça
+  const LEG=700,topo=V?V.chao-VAL_ALT*V.s:0;
+  if(tipo==='objeto'&&S.alvoObj){const A=S.alvoObj;let z=A.z,sy=1150;
+    const cabNoQuadro=V&&540+(V.x+260*V.s-A.x)*z*1.08>0&&540+(V.x-260*V.s-A.x)*z*1.08<1080;   // alguma parte da cabeça aparece
+    if(cabNoQuadro&&topo<A.y){
+      z=Math.max(1.15,Math.min(A.z,(1890-LEG)/((A.y+A.hb-topo)*1.08)));   // abre o zoom até caber a cabeça (abaixo da legenda) e o objeto
+      sy=Math.max(sy,Math.min(LEG+(A.y-topo)*z*1.08,1890-A.hb*z*1.08))}
+    return{...A,z,sy}}
+  if(tipo==='meio'){const y=V?V.chao-VAL_ALT*.45:1500;return{x:V?V.x:540,y,z:1.3,sy:V?Math.max(1150,LEG+(y-topo)*1.3*1.08):1150}}
   return{x:540,y:960,z:1,sy:960}}
 // confete e poeira de queda
 const CONF=Array.from({length:46},(_,i)=>({x:rnd(i)*1080,v:500+rnd(i+7)*500,r:rnd(i+3)*720,c:['#F2C14E','#F28AA8','#7DBE4A','#5B8FD6','#E07A6B'][i%5],w:14+rnd(i+1)*12}));

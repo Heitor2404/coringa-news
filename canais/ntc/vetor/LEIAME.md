@@ -32,3 +32,9 @@ Coisa nova (cenário, objeto, pose): desenhar UMA vez aqui e, se o roteiro puder
 - Escolha: no campo ntc, começar com "Juninho:" (ex.: `Juninho: E se parasse de chover por 1 ano?`). Sem prefixo = Val.
 - `src/fabula.py` troca o parágrafo PERSONAGEM do PROMPT_FABULA e os nomes (Valdirene → Juninho); bordão "NINGUÉM ME CONTOU, SÔ!".
 - Cenário novo `sitio` (casa de roça, poço, árvore, cerca; chão racha quando a cor some = seca). Cozinha sem "BOLOS DA VAL" quando é o Juninho.
+
+## Regiões do cenário e medidor (12/11)
+- `regioes.json`: lugar ÚNICO onde cada cenário diz onde fica o céu livre (+ faixas de legenda, painel e título, e o lugar do sol/lua do cenário). `src/fabula.py` põe tudo que é "do céu" inteiro dentro dessas caixas. Cenário sem céu à vista = lista vazia.
+- Mudou um cenário? Rode `pytest tests/test_ntc_geometria.py`: o teste desenha cada cenário no Chrome e acusa se uma casa/árvore/morro entrar no céu declarado.
+- `ceu({semAstro: true})`: o cenário não desenha o sol/lua dele (o roteiro trouxe o próprio).
+- Diagnóstico completo (sem IA, sem vídeo): `PYTHONPATH=. python -m tests.ntc_geometria docs/RELATORIO_GEOMETRIA_NTC.md` (~25 min).

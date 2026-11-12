@@ -6,7 +6,7 @@ ffmpeg, com efeitos sonoros e música) → Telegram.
 Tudo é desenhado por código no estilo vetorial "boneco de tubo" (canais/ntc/vetor: cenários, Val articulada, objetos); a montagem é canais/ntc/vetor/fabula.html.
 Os textos para a IA ficam no cofre privado (PROMPT_FABULA_TEMA, PROMPT_FABULA).
 """
-import json, os, random, re, shutil, subprocess, time
+import json, math, os, random, re, shutil, subprocess, time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -37,7 +37,13 @@ ACOES = ['corre', 'foge', 'some', 'cai', 'pula', 'balanca', 'cresce', 'aparece']
 CHAO = {c: 1720 for c in CENARIOS}
 # tampo de bancada/mesa: (altura, x inicial, x final) — iguais a BANCADAS em vetor/kit_cenarios.js
 BANCADA = {'cozinha': (1060, 0, 440), 'lab': (1120, 500, 1060)}
-VAL_X = {'esquerda': 300, 'direita': 780, 'centro': 560}
+# laterais um pouco para dentro: com o braço aberto (explica, tchau) a Val saía até 18% do quadro (medidor geométrico, 12/11)
+VAL_X = {'esquerda': 360, 'direita': 720, 'centro': 560}
+VAL_S_LADO = 0.9
+# céu livre de cada cenário, faixas de texto e lugar do astro: canais/ntc/vetor/regioes.json (lugar único)
+REGIOES = json.loads((VETOR / 'regioes.json').read_text(encoding='utf-8'))
+ASTROS_E_NUVEM = {'nuvem', 'sol', 'lua', 'terra'}
+Y_MAX_CHAO = REGIOES['quadro_seguro']['com_val'][2]   # base máxima de objeto no chão (abaixo disso o desenho sai pela borda de baixo)
 VOZ = {'voz_gemini': os.getenv('NTC_VOZ', 'Puck'), 'velocidade_gemini': float(os.getenv('NTC_VELOCIDADE', '1.12')),
        'estilo_gemini': 'narrador brasileiro jovem de vídeo viral de internet: rápido, irônico, debochado e animado, '
                         'como quem conta uma fofoca absurda, mas falando claro'}
@@ -168,14 +174,87 @@ def _proporcao(nome: str) -> float:
     return PROPORCAO[nome]
 
 
-def _objetos(c: dict) -> list[dict]:
-    """Converte 'objetos' do roteiro (tipo, quantidade, ação, lugar) em posições na tela (y = base do objeto)."""
+def _caixa(p: dict) -> list:
+    """Caixa do desenho no quadro: x = esquerda, y = base (o desenho sobe a partir dela)."""
+    return [p['x'], p['y'] - p['w'] * p['ar'], p['x'] + p['w'], p['y']]
+
+
+def _cruza(a: list, b: list) -> float:
+    return max(0, min(a[2], b[2]) - max(a[0], b[0])) * max(0, min(a[3], b[3]) - max(a[1], b[1]))
+
+
+def _dentro(a: list, r: list) -> bool:
+    return a[0] >= r[0] and a[1] >= r[1] and a[2] <= r[2] and a[3] <= r[3]
+
+
+def _no_ceu(props: list, cen: str, noite: bool, evitar: list) -> list:
+    """Põe cada objeto 'do céu' INTEIRO numa região de céu livre do cenário (regioes.json), sem encostar no texto
+    (legenda, painel, título), sem empilhar com outro objeto do céu e sem tapar o astro. Não coube nem menor → sai da cena.
+    Sol de dia / lua de noite ficam no lugar do astro do cenário, que deixa de desenhar o dele (marca 'troca_astro')."""
+    regs = REGIOES['ceu'].get(cen, [])
+    texto = [REGIOES['texto']['legenda']] + list(evitar or [])
+    ax, ay = REGIOES['astro']['centro']
+    tem_astro = cen in REGIOES['astro']['cenarios']
+    ceu = sorted([p for p in props if p.get('ceu')], key=lambda p: (p['t'] not in ('sol', 'lua', 'terra'), p['t'] != 'nuvem'))
+    fora = [p for p in props if not p.get('ceu')]
+    postos, out = [], []
+    troca = tem_astro and any((q['t'] == 'sol' and not noite) or (q['t'] == 'lua' and noite) for q in ceu)
+    astro_cx = [ax - 120, ay - 120, ax + 120, ay + 120]          # astro do cenário (ou o objeto que entra no lugar dele)
+    for k, p in enumerate(ceu):
+        if not regs:
+            if p['t'] in ASTROS_E_NUVEM:
+                continue                                         # cenário sem céu à vista
+            q0, q1, _ = REGIOES['quadro_seguro']['sem_val']
+            fora.append({**p, 'ceu': False, 'atras': False, 'x': int(max(q0, min(q1 - p['w'], p['x']))),
+                         'y': 830 + (k * 37) % 80})                # bicho/nota/gota: abaixo da legenda e acima da cabeça das pessoas
+            continue
+        no_astro = tem_astro and ((p['t'] == 'sol' and not noite) or (p['t'] == 'lua' and noite))
+        if no_astro:
+            alvo = (ax, ay)
+        else:
+            fx = [0.22, 0.55, 0.8, 0.38, 0.12, 0.68, 0.46, 0.3][k % 8]
+            alvo = (40 + 1000 * fx, (regs[0][1] + regs[0][3]) / 2)
+        melhor = None
+        for esc in (1, .85, .7, .55):
+            w = int(p['w'] * esc)
+            h = w * p['ar']
+            for r in regs:
+                for x in range(int(r[0]), int(r[2] - w) + 1, 20):
+                    for base in range(int(math.ceil(r[1] + h)), int(r[3]) + 1, 15):
+                        cx = x + w / 2
+                        cx_ = [x, base - h, x + w, base]
+                        if any(_cruza(cx_, t) for t in texto):
+                            continue
+                        if any(_cruza(cx_, q) > .15 * min(w * h, (q[2] - q[0]) * (q[3] - q[1])) for q in postos):
+                            continue
+                        if tem_astro and not no_astro and _cruza(cx_, astro_cx) > .25 * w * h:
+                            continue
+                        dist = (cx - alvo[0]) ** 2 + ((base - h / 2) - alvo[1]) ** 2
+                        if melhor is None or dist < melhor[0]:
+                            melhor = (dist, cx_, w)
+            if melhor:
+                break
+        if not melhor:
+            continue                                             # não cabe no céu livre: melhor sair do que atravessar casa
+        _, cx_, w = melhor
+        postos.append(cx_)
+        q = {**p, 'x': int(cx_[0]), 'y': int(cx_[3]), 'w': int(w)}
+        if no_astro and troca:
+            q['troca_astro'] = True
+        out.append(q)
+    return fora + out
+
+
+def _objetos(c: dict, evitar: list | None = None) -> list[dict]:
+    """Converte 'objetos' do roteiro (tipo, quantidade, ação, lugar) em posições na tela (y = base do objeto).
+    evitar = caixas de texto da cena além da legenda (painel, título), para o céu não ficar embaixo delas."""
     out = []
     cen = c['cenario']
     chao = CHAO[cen]
+    qx0, qx1, ymax = REGIOES['quadro_seguro']['sem_val' if c.get('pose') == 'fora' else 'com_val']   # sem a Val a câmera anda: margem maior
     objs = [o for o in c['objetos'] if o['tipo'] != 'celular']   # celular nunca solto na cena: vira gente olhando o celular
     INTERNOS = ('cozinha', 'sala', 'lab', 'mercado', 'hospital')
-    objs = [o for o in objs if not (cen == 'espaco' and o['tipo'] == 'terra')            # o espaço já tem a Terra desenhada
+    objs = [o for o in objs if not (cen == 'espaco' and o['tipo'] in ('terra', 'nuvem'))  # o espaço já tem a Terra desenhada; nuvem no espaço não existe
             and not (cen in INTERNOS and o['tipo'] in ('nuvem', 'sol', 'lua', 'terra'))]  # nada de nuvem/sol dentro de casa
     for o in objs:
         if o['tipo'] == 'gota':
@@ -190,10 +269,12 @@ def _objetos(c: dict) -> list[dict]:
             lugar = 'meio'                                   # mosca nunca caída no chão: fica voando
         if lugar in ('ceu', 'meio') and t not in VOAM:
             lugar = 'chao'                                   # lixo, folhas, planta etc. não flutuam: ficam no chão
+        if acao == 'cai' and lugar in ('ceu', 'meio') and t not in ASTROS_E_NUVEM:
+            lugar = 'chao'                                   # o que cai termina no chão (antes a gota parava no meio do ar)
         if t in ('sol', 'lua', 'terra', 'nuvem') and lugar != 'ceu':
             lugar = 'ceu'
         banc = BANCADA.get(cen) if lugar == 'bancada' else None
-        x0, x1 = (banc[1] + 20, banc[2] - 20) if banc else (60, 1020)
+        x0, x1 = (banc[1] + 20, banc[2] - 20) if banc else (qx0, qx1)
         base = {'t': t, 'w': w, 'ar': ar, 'anim': acao, 'ceu': lugar == 'ceu', 'atras': bool(banc) or lugar == 'ceu',
                 'voa': t in ('mosca', 'passaro') and lugar in ('ceu', 'meio') and acao not in ('corre', 'foge')}
         fx = [0.5, 0.28, 0.72][j % 3] if len(objs) > 1 else 0.5   # tipos diferentes não se amontoam no mesmo ponto
@@ -210,6 +291,8 @@ def _objetos(c: dict) -> list[dict]:
             if acao in ('corre', 'foge'):
                 vai_dir = acao == 'corre'
                 x = x0 - w - 20 if vai_dir else x1 + 20
+                if not banc and lugar not in ('ceu', 'meio'):
+                    y = min(y, ymax)
                 out.append({**base, 'x': x, 'y': y, 'de': round(0.2 + 0.32 * i, 2), 'vel': (1 if vai_dir else -1) * (520 + (i * 71) % 180),
                             'flip': (t in OLHA_ESQ) == vai_dir, 'lim': [x0, x1] if banc else None})
             else:
@@ -222,27 +305,40 @@ def _objetos(c: dict) -> list[dict]:
                     if not banc and lugar not in ('ceu', 'meio'):
                         y = chao - 60 + rr.uniform(0, 1) * 200
                 esc = rr.uniform(.75, 1.2) if n > 1 else 1
+                if lugar != 'ceu':                           # inteiro dentro do quadro (antes podia sair até 30% pela borda)
+                    x = max(x0, min(x1 - w * esc, x))
+                    if not banc and lugar != 'meio':
+                        y = min(y, ymax)
                 out.append({**base, 'x': int(x), 'y': int(y), 'w': int(w * esc), 'de': round(0.3 + 0.18 * i + rr.uniform(0, .15), 2),
                             'rot': round(rr.uniform(-12, 12) if t in SOLTOS else 0, 1), 'flip': rr.random() < .5 and t in SOLTOS})
         if t == 'folhas' and lugar not in ('ceu', 'meio') and not banc:   # folhas soltas espalhadas em volta dos montes
             rr = random.Random(f"fs{cen}{n}")
-            out += [{**base, 'w': int(w * rr.uniform(.25, .4)), 'x': int(rr.uniform(x0, x1 - 60)), 'y': int(chao - 60 + rr.uniform(0, 200)),
-                     'anim': 'aparece', 'de': round(rr.uniform(.2, 1.2), 2), 'rot': round(rr.uniform(-40, 40), 1), 'flip': rr.random() < .5}
-                    for _ in range(5)]
+            for _ in range(5):
+                ws = int(w * rr.uniform(.25, .4))
+                out.append({**base, 'w': ws, 'x': int(rr.uniform(x0, x1 - ws)), 'y': int(min(chao - 60 + rr.uniform(0, 200), ymax - 20)),
+                            'anim': 'aparece', 'de': round(rr.uniform(.2, 1.2), 2), 'rot': round(rr.uniform(-40, 40), 1), 'flip': rr.random() < .5})
+    out = _no_ceu(out, cen, bool(c.get('noite')) or c.get('luz') == 'noite', evitar or [])
     out.sort(key=lambda p: p['y'])                             # quem está mais perto da câmera fica na frente
     return out
 
 
 def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
     cenas, painel_ant = [], {}
+    teve_painel = False
     for k, (c, (a, b)) in enumerate(zip(r['cenas'], tempos)):
+        pn = c.get('painel') or {}
+        teve_painel = teve_painel or bool(pn.get('rotulo') and pn.get('valor') is not None)   # o painel fica no canto até o fim
+        evitar = ([REGIOES['texto']['painel']] if teve_painel else []) + ([REGIOES['texto']['titulo']] if k == 0 else [])
+        extra = []
+        if c['pose'] == 'fora' and c['cenario'] in ('floresta', 'horta', 'fazenda', 'praia') and not any(o['tipo'] == 'passaro' for o in c['objetos']):
+            extra = [{'tipo': 'passaro', 'quantidade': 2, 'acao': 'aparece', 'lugar': 'ceu'}]   # passarinhos de ambiente, no céu livre
         s = {'a': round(a, 3), 'b': round(b, 3), 'cen': c['cenario'], 'chao': CHAO[c['cenario']],
-             'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')) or c.get('luz') == 'noite', 'luz': c.get('luz'), 'props': _objetos(c)}
+             'cinza': round(1 - c['cor'] / 100, 2), 'noite': bool(c.get('noite')) or c.get('luz') == 'noite', 'luz': c.get('luz'),
+             'props': _objetos({**c, 'objetos': c['objetos'] + extra}, evitar)}
+        if any(p.get('troca_astro') for p in s['props']):
+            s['sem_astro'] = True                            # o sol/lua do roteiro entra no lugar do astro do cenário (nada de dois sóis)
         if any(o['tipo'] == 'celular' for o in c['objetos']):
             s['celular'] = True                              # o povo da cena anda olhando o celular
-        if c['pose'] == 'fora' and c['cenario'] in ('floresta', 'horta', 'fazenda', 'praia') and not any(o['tipo'] == 'passaro' for o in c['objetos']):
-            s['props'] = s['props'] + [{'t': 'passaro', 'w': 150, 'ar': .8, 'anim': 'aparece', 'ceu': True, 'atras': True, 'voa': True,
-                                        'x': x, 'y': y, 'de': de, 'flip': fl} for x, y, de, fl in ((180, 760, .3, False), (760, 830, .8, True))]   # acima da cabeça das pessoas
         if c['cenario'] == 'espaco':
             c['pose'] = 'fora'                              # no espaço só o planeta/o que a cena mostra, sem a Val
         if c['cenario'] == 'rua_destruida' and not any(o['tipo'] == 'fogo' for o in c['objetos']):
@@ -254,7 +350,7 @@ def dados_template(r: dict, tempos: list, caps: list, total: float) -> dict:
             lado = str(c.get('posicao') or 'centro')
             if lado == 'centro' and any(o.get('lugar') == 'bancada' for o in c['objetos']) and c['cenario'] in BANCADA:
                 lado = 'direita' if BANCADA[c['cenario']][1] < 300 else 'esquerda'   # não tampar o que acontece na bancada
-            s['val'] = {'pose': c['pose'], 'x': VAL_X.get(lado, VAL_X['centro']), 's': 1 if lado == 'centro' else 0.95}
+            s['val'] = {'pose': c['pose'], 'x': VAL_X.get(lado, VAL_X['centro']), 's': 1 if lado == 'centro' else VAL_S_LADO}
         if c['balao']:
             s['balao'] = c['balao']
         p = c.get('painel') or {}

@@ -2,8 +2,9 @@
 // Cada cenário: (o) => SVG, com o.noite (céu escuro, lua, janelas acesas).
 const est = (n, s = 1) => Array.from({ length: n }, (_, k) => `<circle cx="${rnd(k * 3 + s) * 1080}" cy="${rnd(k * 7 + s) * 700}" r="${2 + rnd(k + s) * 2.5}" fill="#fff" opacity="${.5 + rnd(k * 5 + s) * .5}"/>`).join('');
 const ceu = (o, y2 = 1340) => o.noite
-  ? `<rect width="1080" height="${y2}" fill="url(#gCeuNoite)"/>${est(40)}<circle cx="820" cy="260" r="62" fill="#FFF6D8"/><circle cx="820" cy="260" r="130" fill="#FFF6D8" opacity=".12"/>`
-  : `<rect width="1080" height="${y2}" fill="url(#gCeuDia)"/><circle cx="850" cy="250" r="190" fill="url(#gSol)"/><circle cx="850" cy="250" r="70" fill="#FFF3C4"/>${nuvemBg(160, 380, 1)}${nuvemBg(560, 220, .8)}`;
+  ? `<rect width="1080" height="${y2}" fill="url(#gCeuNoite)"/>${est(40)}${o.semAstro ? '' : '<circle cx="820" cy="260" r="62" fill="#FFF6D8"/><circle cx="820" cy="260" r="130" fill="#FFF6D8" opacity=".12"/>'}`
+  : `<rect width="1080" height="${y2}" fill="url(#gCeuDia)"/>${o.semAstro ? '' : '<circle cx="850" cy="250" r="190" fill="url(#gSol)"/><circle cx="850" cy="250" r="70" fill="#FFF3C4"/>'}${nuvemBg(160, 380, 1)}${nuvemBg(560, 220, .8)}`;
+// semAstro: o roteiro trouxe o próprio sol (dia) ou lua (noite) — o objeto entra no lugar deste (src/fabula.py, regioes.json)
 const nuvemBg = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" opacity=".9"><path d="M0 40 Q0 0 40 4 Q60 -30 100 -10 Q140 -30 160 10 Q200 10 196 40Z" fill="#fff"/></g>`;
 const janela = (x, y, w, h, o, cortina = '#E7A9A0') => `<g transform="translate(${x} ${y})">
  <rect x="-14" y="-14" width="${w + 28}" height="${h + 28}" rx="10" fill="#9C6B4E" stroke="${L}" stroke-width="5"/>

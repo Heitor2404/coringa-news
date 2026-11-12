@@ -52,6 +52,8 @@ Status: ✅ resolvido no código · 🧠 depende do prompt no cofre (escolha de 
 | 22 | (prévia baratas 2) Monte de folhas secas flutuando na altura da cintura da Val na horta | ✅ | folhas saem da lista do que pode ficar no ar (monte de folhas é sempre no chão) |
 | 23 | Montes de folhas em fileira certinha, todos iguais | ✅ | objetos repetidos espalhados de forma natural (posição, profundidade, tamanho, ângulo e lado variados) + folhas soltas em volta |
 | 24 | Pouco fogo na cena da rua destruída | ✅ | 6 fogos: 2 nas casas ao fundo, 2 médios, 2 grandes na frente nos cantos |
+| 25 | (prévia baratas 3) Figurantes pequenos demais (≈ 1/3 da Val) | ✅ | escala 0,42–0,52 → 0,64–0,80 e um pouco mais à frente |
+| 26 | Balões ora em MAIÚSCULA, ora em minúscula ("Tá quieto demais…") | ✅ | balão sempre em maiúscula no motor |
 
 ## Decisões que não são erro (ficam no projeto do Claude)
 - Coringa: linha editorial nova da pauta (perigo, consequência, mistério, absurdo; nicho rebaixado) — cofre e7d8d71.

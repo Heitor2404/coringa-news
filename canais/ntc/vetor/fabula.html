@@ -14,7 +14,7 @@ html,body{margin:0;background:#000}
 #hud b{display:inline-block;margin-top:6px;font-family:JBM,monospace;font-weight:700;font-size:96px;line-height:1.05;color:#F7A928;text-shadow:0 0 18px rgba(247,169,40,.75);background:#1a1412;border-radius:12px;padding:0 18px;font-variant-numeric:tabular-nums}
 #cap{position:absolute;left:60px;right:60px;top:560px;text-align:center;font-weight:800;font-size:76px;line-height:1.05;color:#fff;text-transform:uppercase;-webkit-text-stroke:11px #1d1512;paint-order:stroke fill;z-index:6}
 #cap i{font-style:normal;color:#F2C14E}
-#balao{position:absolute;left:0;top:0;background:#fff;border:6px solid #1d1512;border-radius:30px;padding:14px 30px;font-weight:800;font-size:62px;line-height:1.05;color:#1d1512;opacity:0;z-index:6;box-shadow:0 8px 0 rgba(0,0,0,.2);max-width:860px;text-align:center}
+#balao{position:absolute;left:0;top:0;text-transform:uppercase;background:#fff;border:6px solid #1d1512;border-radius:30px;padding:14px 30px;font-weight:800;font-size:62px;line-height:1.05;color:#1d1512;opacity:0;z-index:6;box-shadow:0 8px 0 rgba(0,0,0,.2);max-width:860px;text-align:center}
 #balao:after{content:'';position:absolute;left:var(--rabo,50%);bottom:-34px;margin-left:-16px;border:16px solid transparent;border-top:22px solid #1d1512}
 #titulo{position:absolute;left:50px;right:50px;top:300px;text-align:center;font-weight:800;font-size:112px;line-height:1;color:#fff;-webkit-text-stroke:14px #1d1512;paint-order:stroke fill;opacity:0;z-index:7}
 #titulo i{font-style:normal;color:#F2C14E}
@@ -46,7 +46,7 @@ const cenas=D.cenas.map((c,i)=>{
     el.querySelector(p.atras?'.atras':'.frente').appendChild(g);return{p,g,inner}});
   // figurantes: lugar público ganha gente andando ao fundo (no caos, correm com os braços para cima)
   const povo=Array.from({length:MULTIDAO[c.cen]||0},(_,k)=>{const g=document.createElementNS(NS,'g');el.querySelector('.povo').appendChild(g);
-    const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1400+(k%3)*55+rnd(sd)*20,s:.42+(k%3)*.05,x0:rnd(sd+1)*1080,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.25}});
+    const sd=i*7+k*13;return{p:new Pessoa(g,sd),y:1440+(k%3)*65+rnd(sd)*25,s:.64+(k%3)*.08,x0:rnd(sd+1)*1080,dir:rnd(sd+2)>.5?1:-1,parado:rnd(sd+3)<.25}});
   povo.sort((a,b)=>a.y-b.y);povo.forEach(q=>q.p.g.parentNode.appendChild(q.p.g));
   let V=null;
   if(c.val){const ant=D.cenas[i-1];V={x:c.val.x,chao:c.chao,s:c.val.s||1,pose:c.val.pose,anda:i>0&&!['susto','desesperada'].includes(c.val.pose)&&(!ant||!ant.val||ant.cen!==c.cen),boneco:new Val(el.querySelector('.val'))}}

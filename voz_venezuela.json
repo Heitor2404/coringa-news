@@ -1,0 +1,36 @@
+{
+ "titulo": "Venezuela, Portuguese Wikipedia Article Intro.wav",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Venezuela,_Portuguese_Wikipedia_Article_Intro.wav",
+ "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Venezuela%2C_Portuguese_Wikipedia_Article_Intro.wav?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+ "url_reduzida": null,
+ "largura": 0,
+ "altura": 0,
+ "mime": "audio/wav",
+ "licenca": "CC0",
+ "licenca_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+ "autor": "Wilfredor",
+ "credito": "Own work",
+ "termos": "Creative Commons Zero, Public Domain Dedication",
+ "descricao": "Venezuela, Portuguese Wikipedia Article Intro. Version: 58734483",
+ "data": "2020-09-03",
+ "id": "voz_venezuela",
+ "uso": "P1-9/P1-10 narração humana real + alinhamento por palavra",
+ "arquivo": "voz_venezuela.ogg",
+ "sonda": {
+  "programs": [],
+  "stream_groups": [],
+  "streams": [
+   {
+    "codec_type": "audio",
+    "sample_rate": "48000",
+    "channels": 1,
+    "r_frame_rate": "0/0"
+   }
+  ],
+  "format": {
+   "duration": "80.006500"
+  }
+ },
+ "bytes": 726271,
+ "licenca_livre": true
+}

@@ -183,6 +183,25 @@
     const bloco = cobre(nrm(cap.words.map(w => w.w).join(' ')), c);
     return bloco >= 0.6 || (c._falaCob >= 0.6 && bloco >= 0.34);
   }
+  function quebrar(b, L, f0) {
+    const ws = [...b.querySelectorAll('.w')];
+    const medir = () => ws.map(w => { const r = w.getBoundingClientRect(), cs = getComputedStyle(w); return r.width + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight); });
+    const esp = () => { const sp = document.createElement('span'); sp.textContent = ' '; b.appendChild(sp); const x = sp.getBoundingClientRect().width; sp.remove(); return x; };
+    b.querySelectorAll('br').forEach(x => x.remove());
+    for (let f = f0; ; f -= 2) {
+      b.style.fontSize = f + 'px';
+      const w = medir(), s = esp(), soma = (i, j) => w.slice(i, j).reduce((a, x) => a + x, 0) + s * Math.max(0, j - i - 1);
+      if (soma(0, w.length) <= L) return;
+      let melhor = null;
+      for (let k = 1; k < w.length; k++) { const m = Math.max(soma(0, k), soma(k, w.length)); if (m <= L && (!melhor || m < melhor[1])) melhor = [k, m]; }
+      if (melhor) { ws[melhor[0]].insertAdjacentHTML('beforebegin', '<br>'); return; }
+      if (f <= 50) {   // 3 linhas: guloso com a mesma folga (palavra nunca é cortada)
+        let x = 0; ws.forEach((el, i) => { if (i && x + w[i] > L) { el.insertAdjacentHTML('beforebegin', '<br>'); x = 0; } x += w[i] + s; });
+        return;
+      }
+    }
+  }
+
   function legenda(t) {
     // blocos que se sobrepõem (fim estendido de um × começo do seguinte): vale o mais recente, senão a palavra é dita
     // com o bloco anterior ainda na tela
@@ -201,8 +220,10 @@
       LEG.innerHTML = `<div class="bloco">${cap.words.map(w => `<span class="w${w.hl ? ' hl' : ''}">${esc(w.w)}</span>`).join(' ')}</div>`;
       // hierarquia: com texto principal na tela, a legenda é texto de apoio (menor); sozinha, é a voz da cena
       const f0 = at.legFonte || 66; const b = LEG.firstChild; let f = f0; b.style.fontSize = f + 'px';
-      // no máximo 2 linhas; diminui pouco, nunca abaixo de 50 px; palavra longa nunca é cortada (quebra no espaço)
-      while (b.offsetHeight > f0 * 1.08 * 2.05 && f > 50) { f -= 2; b.style.fontSize = f + 'px'; }
+      // V2.2: quebra DETERMINÍSTICA e equilibrada. Antes o navegador quebrava sozinho e um bloco que cabia por poucos px
+      // quebrava diferente no CI (outra rasterização). Agora: larguras das palavras medidas, decisão com folga de 24 px,
+      // 2 linhas com a quebra que minimiza a linha mais longa, <br> explícito; diminui até 50 px antes de aceitar 3 linhas.
+      quebrar(b, LEG.clientWidth - 24, f0);
     }
     LEG.style.opacity = 1;
     const ws = LEG.querySelectorAll('.w');

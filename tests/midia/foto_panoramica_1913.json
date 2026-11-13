@@ -1,0 +1,20 @@
+{
+ "titulo": "Locks at Gatun, Panama Canal, taken during March 1913 LCCN2007663276.tif",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Locks_at_Gatun,_Panama_Canal,_taken_during_March_1913_LCCN2007663276.tif",
+ "licenca": "Public domain",
+ "licenca_url": "",
+ "autor": "",
+ "credito": "https://www.loc.gov/pictures/item/2007663276",
+ "data": "1913date QS:P571,+1913-00-00T00:00:00Z/9",
+ "largura": 2239,
+ "altura": 697,
+ "fixture": {
+  "arquivo": "foto_panoramica_1913.jpg",
+  "tamanho": [
+   2239,
+   697
+  ],
+  "derivado": "original",
+  "recorte": "não"
+ }
+}

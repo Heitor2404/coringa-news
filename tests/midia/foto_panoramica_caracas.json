@@ -1,0 +1,20 @@
+{
+ "titulo": "Caribbean Sea, Avila Mt, Caracas Panorama.jpg",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Caribbean_Sea,_Avila_Mt,_Caracas_Panorama.jpg",
+ "licenca": "CC BY-SA 3.0",
+ "licenca_url": "https://creativecommons.org/licenses/by-sa/3.0",
+ "autor": "Paolo Costa Baldi",
+ "credito": "Own work",
+ "data": "2011-07-10",
+ "largura": 13347,
+ "altura": 2575,
+ "fixture": {
+  "arquivo": "foto_panoramica_caracas.jpg",
+  "tamanho": [
+   2400,
+   463
+  ],
+  "derivado": "reduzido",
+  "recorte": "não"
+ }
+}

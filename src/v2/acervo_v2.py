@@ -268,3 +268,32 @@ def historica(item: dict, arq: str | Path | None = None) -> bool:
             x = np.asarray(im.convert('RGB').resize((64, 64)), dtype=float)
         return float(np.abs(x[..., 0] - x[..., 1]).mean() + np.abs(x[..., 1] - x[..., 2]).mean()) < 6   # quase PB
     return False
+
+
+ESC_MAX = 1.5          # ampliação máxima tolerada sobre os pixels reais (acima disso a foto "derrete")
+PROTAGONISTA_MIN = 300 # altura mínima (px no vídeo 1080×1920) para uma foto de arquivo ser a protagonista da cena
+
+
+def adequacao_historica(wh: tuple | list, recorte: list | None = None) -> dict:
+    """V2.2: o enquadramento de uma foto de arquivo depende da resolução e da proporção REAIS da área útil.
+    Espelha a regra de foto.historica (comp/fotos.js). modo: 'inteira' (cabe grande), 'varredura' (panorâmica com
+    pixels para uma janela alta) ou 'insuficiente' (vira faixa fina ou exige ampliação destrutiva → não pode ser
+    protagonista: buscar o original/outra foto autêntica, ou outra composição)."""
+    rc = recorte or [0, 0, 1, 1]
+    cw, ch = (rc[2] - rc[0]) * wh[0], (rc[3] - rc[1]) * wh[1]
+    asp = cw / max(ch, 1)
+    L = 1000 if asp >= .9 else max(420, min(1000, round(860 * asp)))
+    A1 = min(L / asp, 860)
+    esc_inteira = L / cw
+    if asp > 2.0:
+        A2 = min(560, ch * ESC_MAX)
+        modo = 'varredura' if A2 >= PROTAGONISTA_MIN and esc_inteira <= ESC_MAX else 'insuficiente'
+        altura = max(A1, A2)
+    else:
+        altura = A1
+        modo = 'inteira' if A1 >= PROTAGONISTA_MIN and esc_inteira <= ESC_MAX else 'insuficiente'
+    motivo = '' if modo != 'insuficiente' else (
+        f'{round(cw)}×{round(ch)} px úteis: ' + ('vira faixa de ' + str(round(altura)) + ' px' if altura < PROTAGONISTA_MIN else
+                                                 f'exigiria ampliar {esc_inteira:.1f}× (máx. {ESC_MAX}×)'))
+    return {'modo': modo, 'util_px': [round(cw), round(ch)], 'proporcao': round(asp, 2), 'largura_tela': L, 'altura_tela': round(altura),
+            'ampliacao_inteira': round(esc_inteira, 2), 'motivo': motivo}

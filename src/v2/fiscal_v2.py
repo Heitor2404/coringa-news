@@ -14,6 +14,8 @@ Antes (V2) o fiscal misturava bloqueio e gosto. Agora:
     D9 número que não passou em fatos.validar()                                  (antigo B3) — bloqueia
     D10 revelação mostrada antes de ser dita ou > 0,4 s depois                   (antigo B5) — bloqueia
     D11 plano longo fora de mecanismo (> 8 s), loudness fora de −14 ± 1 LUFS    — aviso
+    D12 (V2.2) foto de arquivo sem resolução/proporção para ser protagonista (vira faixa fina ou exige ampliação
+        destrutiva; acervo_v2.adequacao_historica) — bloqueio: buscar o original ou outra foto autêntica
   SEMÂNTICO — o que a tela mostra contradiz ou não cumpre o que a fala diz. Pode BLOQUEAR.
     S1 acontecimento crítico sem representação (capacidades → limitação)        (antigo B1)
     S2 fala promete mecanismo/processo e a cena mostra foto ou texto             (antigo B2)
@@ -48,7 +50,8 @@ SOLUCAO = {
     'D5': 'trocar pelo arquivo correto ou remover a referência', 'D6': 'encurtar o texto (o limite vem do catálogo da composição)',
     'D7': 'corrigir lon/lat a partir da fonte', 'D8': 'redesenhar a rota pelo mar (pontos intermediários) ou marcar tipo correto',
     'D9': 'usar o valor e o contexto exatos da fonte (fatos.validar)', 'D10': 'ajustar a virada para o instante em que a palavra é dita',
-    'D11': 'dividir o plano / normalizar o áudio', 'S1': 'fornecer os dados que a composição exige ou reescrever a fala',
+    'D11': 'dividir o plano / normalizar o áudio',
+    'D12': 'usar o original em resolução maior (ou outra foto autêntica do mesmo fato); nunca inventar resolução nem ampliar além de 1,5×', 'S1': 'fornecer os dados que a composição exige ou reescrever a fala',
     'S2': 'trocar a foto pela composição de mecanismo', 'S3': 'inverter o sentido da animação para bater com a fala',
     'S4': 'conseguir os valores com fonte ou deixar a fala sem promessa de comparação',
     'S5': 'fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto',
@@ -124,6 +127,17 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             v = p.get(campo)
             if isinstance(v, str) and isinstance(mx, (int, float)) and len(v.replace('*', '')) > mx:
                 A.append(_achado('deterministico', 'D6', 'aviso', k, comp, ini, f'texto "{campo}" acima do limite', f'{len(v.replace("*", ""))} > {mx} caracteres: "{v[:50]}"'))
+        # D12 foto de arquivo protagonista
+        if comp == 'foto.historica' and p.get('img') and Path(str(p['img'])).exists():
+            from PIL import Image
+            from src.v2 import acervo_v2
+            with Image.open(p['img']) as im:
+                wh = im.size
+            rc = p['recorte'] if isinstance(p.get('recorte'), list) else acervo_v2.recorte_conteudo(p['img'])
+            ad = acervo_v2.adequacao_historica(wh, rc)
+            if ad['modo'] == 'insuficiente':
+                A.append(_achado('deterministico', 'D12', 'bloqueio', k, comp, ini, 'foto de arquivo sem resolução para ser protagonista',
+                                 f"{Path(str(p['img'])).name}: {ad['motivo']}"))
         # D7 / D8 mapas
         if comp.startswith('mapa.'):
             pts = list(p.get('pontos') or [])

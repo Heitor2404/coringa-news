@@ -1,0 +1,20 @@
+{
+ "titulo": "1635 Blaeu Map Guiana, Venezuela, and El Dorado - Geographicus - Guiana-blaeu-1635.jpg",
+ "pagina": "https://commons.wikimedia.org/wiki/File:1635_Blaeu_Map_Guiana,_Venezuela,_and_El_Dorado_-_Geographicus_-_Guiana-blaeu-1635.jpg",
+ "licenca": "Public domain",
+ "licenca_url": "",
+ "autor": "Willem Blaeu",
+ "credito": "This file was provided to Wikimedia Commons by Geographicus Rare Antique Maps, a specialist dealer in rare maps and other cartography of the 15th, 16th, 17th, 18th and 19th centuries, as part of a coo",
+ "data": "1635",
+ "largura": 4000,
+ "altura": 3084,
+ "fixture": {
+  "arquivo": "documento_mapa_1635.jpg",
+  "tamanho": [
+   1600,
+   1234
+  ],
+  "derivado": "reduzido",
+  "recorte": "não"
+ }
+}

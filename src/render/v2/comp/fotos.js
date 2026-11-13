@@ -28,14 +28,17 @@
     area_segura: 'conteúdo entre 360 e 1200', legibilidade: 'procedência 28 px mono; descrição 40 px serifa',
     rejeicao: ['ampliação além de 2× a resolução (borra)', 'recorte que corta o assunto citado', 'panorâmica exibida como faixa fina sem varredura'],
     transicao: 'mascara',
-    exemplo: { params: { img: '@construcao_1913', recorte: 'auto', ano: 1913, credito: 'Library of Congress · domínio público', descricao: 'Eclusas de Gatún em construção', anotacoes: [{ x: .3, y: .55, texto: 'câmara dupla' }], foco: [.3, .5] }, dur: 6, fala: 'Em 1913, as eclusas de Gatún ainda estavam em obra.' },
+    exemplo: { params: { img: '@panoramica_1913', recorte: 'auto', ano: 1913, credito: 'Library of Congress · domínio público', descricao: 'Eclusas de Gatún em construção, março de 1913', anotacoes: [{ x: .5, y: .72, texto: 'câmara da eclusa' }], foco: [.5, .6] }, dur: 6, fala: 'Em 1913, as eclusas de Gatún ainda estavam em obra.' },
   }, (p, ctx) => {
     const wh = p.img_wh || [1600, 1000], rc = p.recorte || [0, 0, 1, 1];
-    const cw = (rc[2] - rc[0]) * wh[0], ch = (rc[3] - rc[1]) * wh[1], asp = cw / ch, pan = asp > 2.0, L = 1000;
-    const A1 = Math.round(clamp(L / asp, 90, 760));                        // momento 1: a foto inteira
-    const A2 = pan ? Math.round(clamp(ch * 2.0, A1, 560)) : A1;           // momento 2: janela (panorâmica cresce)
-    const zMax = pan ? 1 : clamp((cw / L) * 2.0, 1, 1.9);                 // aproximação limitada pela resolução
-    if ((!pan && zMax < 1.15) || (pan && A2 < 300)) (V2.alertas = V2.alertas || []).push(`foto.historica: resolução baixa (${Math.round(cw)}×${Math.round(ch)} px úteis) — aproximação limitada; buscar o original em resolução maior`);
+    const cw = (rc[2] - rc[0]) * wh[0], ch = (rc[3] - rc[1]) * wh[1], asp = cw / ch, pan = asp > 2.0;
+    // V2.2: enquadramento pela PROPORÇÃO e RESOLUÇÃO reais (mesma regra de acervo_v2.adequacao_historica).
+    // Vertical: a moldura acompanha a proporção (cópia alta), em vez de recortar uma janela 1000×760 da foto.
+    const ESC = 1.5, L = asp >= .9 ? 1000 : Math.round(clamp(860 * asp, 420, 1000));
+    const A1 = Math.round(clamp(L / asp, 90, 860));                        // momento 1: a foto inteira
+    const A2 = pan ? Math.round(clamp(ch * ESC, A1, 560)) : A1;           // momento 2: janela (panorâmica cresce sem passar de 1,5×)
+    const zMax = pan ? 1 : clamp((cw / L) * ESC, 1, 1.9);                 // aproximação limitada pela resolução
+    if ((pan ? Math.max(A1, A2) : A1) < 300 || L / cw > ESC) (V2.alertas = V2.alertas || []).push(`foto.historica: resolução insuficiente (${Math.round(cw)}×${Math.round(ch)} px úteis) — não serve de protagonista; buscar o original em resolução maior`);
     return {
       html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 42%,#2a2219 0%,#120f0b 75%)"></div>
         <div class="abs" data-deco="1" style="inset:0;opacity:.35;background-image:repeating-linear-gradient(0deg,rgba(255,240,210,.03) 0 2px,transparent 2px 5px)"></div>

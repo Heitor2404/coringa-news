@@ -1,0 +1,20 @@
+{
+ "titulo": "Salto Angel Dry Season.jpg",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Salto_Angel_Dry_Season.jpg",
+ "licenca": "CC BY-SA 4.0",
+ "licenca_url": "https://creativecommons.org/licenses/by-sa/4.0",
+ "autor": "Berrucomons",
+ "credito": "Own work",
+ "data": "2009-12-29",
+ "largura": 2965,
+ "altura": 3008,
+ "fixture": {
+  "arquivo": "foto_vertical_salto_angel.jpg",
+  "tamanho": [
+   946,
+   1600
+  ],
+  "derivado": "reduzido",
+  "recorte": "sim"
+ }
+}

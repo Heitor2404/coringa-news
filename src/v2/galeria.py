@@ -23,7 +23,10 @@ AUD = Path(os.environ.get('CORINGA_AUDITORIA', str(RAIZ / 'saida' / 'auditoria')
 _PANAMA = {'lago_navios': 'a13-g.jpg', 'ancon_1914': 'a16-g.jpg', 'margem_lago': 'a18-g.jpg', 'satelite': 'a2-g.jpg',
            'navio_eclusa': 'a20-g.jpg', 'camara_eclusa': 'a23-g.jpg', 'construcao_1913': 'a31-g.jpg', 'navio_mar': 'a41-g.jpg',
            'agua_clara': 'a8-g.jpg'}
-_TESTE = {'fundo_a': 'tests/img/fundo_a.png', 'fundo_b': 'tests/img/fundo_b.jpg', 'fundo_c': 'tests/img/fundo_c.jpg',
+_TESTE = {'panoramica_1913': 'tests/midia/foto_panoramica_1913.jpg', 'panoramica_caracas': 'tests/midia/foto_panoramica_caracas.jpg',
+          'horizontal_roraima': 'tests/midia/foto_horizontal_roraima.jpg', 'vertical_salto': 'tests/midia/foto_vertical_salto_angel.jpg',
+          'quadrada_salto': 'tests/midia/foto_quadrada_salto_angel.jpg', 'mapa_1635': 'tests/midia/documento_mapa_1635.jpg',
+'fundo_a': 'tests/img/fundo_a.png', 'fundo_b': 'tests/img/fundo_b.jpg', 'fundo_c': 'tests/img/fundo_c.jpg',
           'fundo_d': 'tests/img/fundo_d.jpg', 'pele': 'prototipos/editorial/midia/pele_macro.jpg', 'video_teste': 'tests/img/video_teste.mp4'}
 
 

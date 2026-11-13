@@ -1,0 +1,396 @@
+{
+ "id": "micro_ondas",
+ "assunto": "como o micro-ondas esquenta a comida (tecnologia)",
+ "duracao": 9,
+ "fatos": [
+  "o forno de micro-ondas doméstico opera em cerca de 2,45 GHz (2,45 bilhões de ciclos por segundo)",
+  "o campo elétrico da onda inverte de sentido a cada meio ciclo",
+  "a molécula de água é polar: o lado do oxigênio é negativo, o dos hidrogênios é positivo",
+  "as moléculas giram tentando se alinhar ao campo; essa agitação, transferida às vizinhas, é calor"
+ ],
+ "elementos": [
+  {
+   "id": "comida",
+   "tipo": "faixa",
+   "x": 540,
+   "y": 960,
+   "w": 760,
+   "h": 250,
+   "raio": 34,
+   "cores0": [
+    "#0f1828",
+    "#0c1422"
+   ],
+   "cores1": [
+    "#6a2a10",
+    "#2e1208"
+   ],
+   "borda": "rgba(255,255,255,.18)",
+   "props": {
+    "op": [
+     [
+      0.8,
+      0
+     ],
+     [
+      1.3,
+      1
+     ]
+    ],
+    "mistura": [
+     [
+      4.6,
+      0
+     ],
+     [
+      8.0,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "id": "campo",
+   "tipo": "campo",
+   "x": 540,
+   "y": 705,
+   "w": 860,
+   "lambda": 430,
+   "freq": 0.45,
+   "altura": 78,
+   "n": 15,
+   "cor": "#ffb347",
+   "props": {
+    "op": [
+     [
+      0,
+      0
+     ],
+     [
+      0.4,
+      1
+     ]
+    ],
+    "amplitude": [
+     [
+      0.2,
+      0
+     ],
+     [
+      1.2,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a1",
+   "tipo": "molecula",
+   "x": 300,
+   "y": 915,
+   "agua": true,
+   "raio": 22,
+   "angulo_base": -90,
+   "campo_x0": 110,
+   "campo_lambda": 430,
+   "freq": 0.45,
+   "quente": true,
+   "props": {
+    "op": [
+     [
+      1.0,
+      0
+     ],
+     [
+      1.5,
+      1
+     ]
+    ],
+    "oscila": [
+     [
+      1.8,
+      0
+     ],
+     [
+      2.6,
+      -55
+     ]
+    ],
+    "brilho": [
+     [
+      4.8,
+      0
+     ],
+     [
+      8,
+      0.9
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a2",
+   "tipo": "molecula",
+   "x": 540,
+   "y": 900,
+   "agua": true,
+   "raio": 22,
+   "angulo_base": -90,
+   "campo_x0": 110,
+   "campo_lambda": 430,
+   "freq": 0.45,
+   "quente": true,
+   "props": {
+    "op": [
+     [
+      1.0,
+      0
+     ],
+     [
+      1.5,
+      1
+     ]
+    ],
+    "oscila": [
+     [
+      1.8,
+      0
+     ],
+     [
+      2.6,
+      -55
+     ]
+    ],
+    "brilho": [
+     [
+      4.8,
+      0
+     ],
+     [
+      8,
+      0.9
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a3",
+   "tipo": "molecula",
+   "x": 780,
+   "y": 920,
+   "agua": true,
+   "raio": 22,
+   "angulo_base": -90,
+   "campo_x0": 110,
+   "campo_lambda": 430,
+   "freq": 0.45,
+   "quente": true,
+   "props": {
+    "op": [
+     [
+      1.0,
+      0
+     ],
+     [
+      1.5,
+      1
+     ]
+    ],
+    "oscila": [
+     [
+      1.8,
+      0
+     ],
+     [
+      2.6,
+      -55
+     ]
+    ],
+    "brilho": [
+     [
+      4.8,
+      0
+     ],
+     [
+      8,
+      0.9
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a4",
+   "tipo": "molecula",
+   "x": 420,
+   "y": 1015,
+   "agua": true,
+   "raio": 22,
+   "angulo_base": -90,
+   "campo_x0": 110,
+   "campo_lambda": 430,
+   "freq": 0.45,
+   "quente": true,
+   "props": {
+    "op": [
+     [
+      1.0,
+      0
+     ],
+     [
+      1.5,
+      1
+     ]
+    ],
+    "oscila": [
+     [
+      1.8,
+      0
+     ],
+     [
+      2.6,
+      -55
+     ]
+    ],
+    "brilho": [
+     [
+      4.8,
+      0
+     ],
+     [
+      8,
+      0.9
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a5",
+   "tipo": "molecula",
+   "x": 660,
+   "y": 1020,
+   "agua": true,
+   "raio": 22,
+   "angulo_base": -90,
+   "campo_x0": 110,
+   "campo_lambda": 430,
+   "freq": 0.45,
+   "quente": true,
+   "props": {
+    "op": [
+     [
+      1.0,
+      0
+     ],
+     [
+      1.5,
+      1
+     ]
+    ],
+    "oscila": [
+     [
+      1.8,
+      0
+     ],
+     [
+      2.6,
+      -55
+     ]
+    ],
+    "brilho": [
+     [
+      4.8,
+      0
+     ],
+     [
+      8,
+      0.9
+     ]
+    ]
+   }
+  }
+ ],
+ "rotulos": [
+  {
+   "texto": "2,45 GHz · em câmera lenta",
+   "pos": [
+    540,
+    598
+   ],
+   "lado": "centro",
+   "tamanho": 24,
+   "de": 0.4,
+   "ate": 9
+  },
+  {
+   "texto": "campo elétrico\ninverte o sentido",
+   "alvo": [
+    196,
+    705
+   ],
+   "pos": [
+    80,
+    808
+   ],
+   "lado": "dir",
+   "de": 0.6,
+   "ate": 3.6
+  },
+  {
+   "texto": "água\n− oxigênio · + hidrogênio",
+   "alvo": [
+    405,
+    1012
+   ],
+   "pos": [
+    90,
+    1100
+   ],
+   "lado": "dir",
+   "tamanho": 24,
+   "de": 1.8,
+   "ate": 4.8
+  },
+  {
+   "texto": "agitação\n= calor",
+   "alvo": [
+    672,
+    1018
+   ],
+   "pos": [
+    700,
+    1100
+   ],
+   "lado": "dir",
+   "de": 5.0,
+   "ate": 9
+  }
+ ],
+ "passos": [
+  {
+   "de": 0,
+   "ate": 1.8,
+   "titulo": "A onda do forno",
+   "fala": "O forno cria um *campo elétrico* que vira de sentido."
+  },
+  {
+   "de": 1.8,
+   "ate": 4.8,
+   "titulo": "A água gira",
+   "fala": "A água tem um lado *+* e um *−*: ela gira atrás do campo.",
+   "destaque": [
+    "campo",
+    "a1",
+    "a2",
+    "a3",
+    "a4",
+    "a5"
+   ]
+  },
+  {
+   "de": 4.8,
+   "ate": 9.01,
+   "titulo": "Agitação vira calor",
+   "fala": "Bilhões de vezes por segundo: isso vira *calor*."
+  }
+ ]
+}

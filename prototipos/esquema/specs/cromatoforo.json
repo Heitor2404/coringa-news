@@ -1,0 +1,465 @@
+{
+ "id": "cromatoforo",
+ "assunto": "polvo — como muda de cor",
+ "duracao": 12,
+ "fatos": [
+  "cromatóforo = saco elástico de pigmento cercado de músculos radiais",
+  "os músculos são acionados por nervos vindos do cérebro (controle neuromuscular direto)",
+  "músculos contraem → o saco estica e o pigmento cobre área maior; relaxam → o saco elástico volta",
+  "milhares de cromatóforos na pele mudam juntos em frações de segundo"
+ ],
+ "elementos": [
+  {
+   "id": "pele",
+   "tipo": "pele",
+   "x": 540,
+   "y": 840,
+   "w": 760,
+   "h": 440,
+   "n": 520,
+   "rmax": 12,
+   "semente": 4,
+   "fixos": [
+    [
+     0,
+     0
+    ],
+    [
+     -180,
+     -110
+    ]
+   ],
+   "props": {
+    "op": [
+     [
+      0,
+      0
+     ],
+     [
+      0.4,
+      1
+     ],
+     [
+      2.3,
+      1
+     ],
+     [
+      2.62,
+      0
+     ],
+     [
+      8.95,
+      0
+     ],
+     [
+      9.5,
+      1
+     ]
+    ],
+    "esc": [
+     [
+      0,
+      1
+     ],
+     [
+      2.3,
+      1.04
+     ],
+     [
+      2.9,
+      4.2,
+      "entrada"
+     ],
+     [
+      8.9,
+      4.2
+     ],
+     [
+      9.7,
+      1,
+      "saida"
+     ]
+    ],
+    "onda": [
+     [
+      8.9,
+      0
+     ],
+     [
+      10.9,
+      1,
+      "linear"
+     ]
+    ]
+   },
+   "cores": [
+    "#b88a3a",
+    "#8f3b28",
+    "#4e2618",
+    "#6b2c1e"
+   ]
+  },
+  {
+   "id": "nervo",
+   "tipo": "nervo",
+   "x": 0,
+   "y": 0,
+   "pontos": [
+    [
+     30,
+     588
+    ],
+    [
+     170,
+     598
+    ],
+    [
+     290,
+     640
+    ],
+    [
+     383,
+     730
+    ]
+   ],
+   "largura": 5,
+   "props": {
+    "op": [
+     [
+      2.9,
+      0
+     ],
+     [
+      3.5,
+      1
+     ],
+     [
+      8.8,
+      1
+     ],
+     [
+      9.3,
+      0
+     ]
+    ],
+    "pulso": [
+     [
+      5.5,
+      -1
+     ],
+     [
+      5.55,
+      0
+     ],
+     [
+      6.25,
+      1,
+      "linear"
+     ],
+     [
+      6.3,
+      2
+     ]
+    ],
+    "aceso": [
+     [
+      6.25,
+      0
+     ],
+     [
+      6.6,
+      0.45
+     ],
+     [
+      8.8,
+      0.45
+     ]
+    ]
+   }
+  },
+  {
+   "id": "detalhe",
+   "tipo": "cromatoforo",
+   "x": 540,
+   "y": 840,
+   "r0": 26,
+   "r1": 96,
+   "ancora": 170,
+   "musculos": 14,
+   "entrada": -145,
+   "semente": 9,
+   "props": {
+    "op": [
+     [
+      2.4,
+      0
+     ],
+     [
+      2.85,
+      1
+     ],
+     [
+      8.9,
+      1
+     ],
+     [
+      9.5,
+      0
+     ]
+    ],
+    "esc": [
+     [
+      2.4,
+      0.24
+     ],
+     [
+      3.2,
+      1,
+      "saida"
+     ],
+     [
+      8.8,
+      1
+     ],
+     [
+      9.6,
+      0.24,
+      "entrada"
+     ]
+    ],
+    "sinal": [
+     [
+      6.25,
+      0
+     ],
+     [
+      6.85,
+      1,
+      "linear"
+     ]
+    ],
+    "ativo": [
+     [
+      6.6,
+      0
+     ],
+     [
+      6.95,
+      1
+     ],
+     [
+      8.8,
+      1
+     ]
+    ],
+    "abertura": [
+     [
+      6.8,
+      0
+     ],
+     [
+      7.9,
+      1,
+      "suave"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "chegada",
+   "tipo": "brilho",
+   "x": 383,
+   "y": 730,
+   "r0": 8,
+   "r1": 60,
+   "props": {
+    "p": [
+     [
+      6.2,
+      -1
+     ],
+     [
+      6.25,
+      0
+     ],
+     [
+      6.9,
+      1,
+      "linear"
+     ],
+     [
+      6.95,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "expande",
+   "tipo": "brilho",
+   "x": 540,
+   "y": 840,
+   "r0": 90,
+   "r1": 190,
+   "cor": "#ffffff",
+   "props": {
+    "p": [
+     [
+      7.6,
+      -1
+     ],
+     [
+      7.65,
+      0
+     ],
+     [
+      8.4,
+      1,
+      "linear"
+     ],
+     [
+      8.45,
+      2
+     ]
+    ]
+   }
+  }
+ ],
+ "rotulos": [
+  {
+   "texto": "cromatóforos\npontos de pigmento",
+   "alvo": [
+    360,
+    730
+   ],
+   "pos": [
+    250,
+    572
+   ],
+   "lado": "dir",
+   "de": 0.6,
+   "ate": 2.4
+  },
+  {
+   "texto": "saco de\npigmento",
+   "alvo": [
+    555,
+    850
+   ],
+   "pos": [
+    700,
+    760
+   ],
+   "lado": "dir",
+   "de": 3.5,
+   "ate": 5.4
+  },
+  {
+   "texto": "músculos\nradiais",
+   "alvo": [
+    458,
+    887
+   ],
+   "pos": [
+    330,
+    1010
+   ],
+   "lado": "esq",
+   "de": 4.1,
+   "ate": 6.75
+  },
+  {
+   "texto": "nervo\nvem do cérebro",
+   "alvo": [
+    140,
+    597
+   ],
+   "pos": [
+    60,
+    705
+   ],
+   "lado": "dir",
+   "de": 5.5,
+   "ate": 8.0
+  },
+  {
+   "texto": "músculos\ncontraem",
+   "alvo": [
+    430,
+    903
+   ],
+   "pos": [
+    330,
+    1010
+   ],
+   "lado": "esq",
+   "de": 6.9,
+   "ate": 8.8
+  },
+  {
+   "texto": "pigmento\nse espalha",
+   "alvo": [
+    600,
+    830
+   ],
+   "pos": [
+    700,
+    760
+   ],
+   "lado": "dir",
+   "de": 7.6,
+   "ate": 8.8
+  },
+  {
+   "texto": "a pele\nmuda de cor",
+   "alvo": [
+    680,
+    700
+   ],
+   "pos": [
+    700,
+    578
+   ],
+   "lado": "dir",
+   "de": 9.8,
+   "ate": 12
+  }
+ ],
+ "passos": [
+  {
+   "de": 0,
+   "ate": 2.9,
+   "titulo": "A pele em close",
+   "fala": "Na pele do polvo há milhares de *cromatóforos*."
+  },
+  {
+   "de": 2.9,
+   "ate": 5.4,
+   "titulo": "Um saco de pigmento",
+   "fala": "Cada um é um saco elástico de *pigmento*, preso a músculos."
+  },
+  {
+   "de": 5.4,
+   "ate": 6.9,
+   "titulo": "O sinal do cérebro",
+   "fala": "Um nervo leva o sinal do *cérebro* até os músculos.",
+   "destaque": [
+    "nervo",
+    "detalhe",
+    "chegada"
+   ]
+  },
+  {
+   "de": 6.9,
+   "ate": 8.9,
+   "titulo": "Os músculos puxam",
+   "fala": "Eles contraem, esticam o saco e o pigmento se *espalha*."
+  },
+  {
+   "de": 8.9,
+   "ate": 12.01,
+   "titulo": "A pele muda de cor",
+   "fala": "Milhares de uma vez: a pele *muda de cor*."
+  }
+ ]
+}

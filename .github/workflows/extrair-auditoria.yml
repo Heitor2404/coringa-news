@@ -1,0 +1,64 @@
+name: Extrair arquivos para auditoria
+
+# Manual. Descriptografa (com o secret ARTEFATOS_SENHA) o pacote de uma rodada do Coringa e guarda SÓ os arquivos da
+# auditoria visual (zip de diagnóstico, dados.json, roteiro.json, acervo.json) no repositório PRIVADO do cofre, em
+# auditoria/<execução>/. Nada é publicado como artefato aberto. Sem IA, sem vídeo, não toca o NTC.
+on:
+  workflow_dispatch:
+    inputs:
+      execucao:
+        description: "Número da execução do 'Gerar vídeos do dia' (ex.: 43435732255)"
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  extrair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar o pacote criptografado da execução
+        uses: actions/download-artifact@v4
+        with:
+          name: coringa-rodada-${{ github.event.inputs.execucao }}
+          run-id: ${{ github.event.inputs.execucao }}
+          github-token: ${{ github.token }}
+          path: pacote
+
+      - name: Descriptografar e separar só os arquivos da auditoria
+        env:
+          ARTEFATOS_SENHA: ${{ secrets.ARTEFATOS_SENHA }}
+        run: |
+          set -e
+          mkdir -p tudo sel
+          gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 3 -d pacote/coringa-rodada.tar.gpg \
+            3<<< "$ARTEFATOS_SENHA" | tar -xf - -C tudo
+          find tudo -name '*-diagnostico.zip' -exec cp {} sel/ \;
+          for z in sel/*-diagnostico.zip; do
+            unzip -o -q -j "$z" dados.json roteiro.json acervo.json -d sel/ || true
+          done
+          ls -la sel
+          [ -n "$(ls sel/*-diagnostico.zip 2>/dev/null)" ] || { echo "nenhum zip de diagnóstico no pacote"; exit 1; }
+
+      - name: Guardar no cofre privado
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: auditoria
+
+      - name: Enviar
+        run: |
+          d=cofre/auditoria/${{ github.event.inputs.execucao }}
+          mkdir -p "$d" && cp sel/* "$d"/
+          cd cofre
+          git config user.name "coringa-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add auditoria
+          git diff --cached --quiet && { echo "nada novo"; exit 0; }
+          git commit -q -m "auditoria: arquivos da execução ${{ github.event.inputs.execucao }}"
+          git push -q || (git pull --rebase -q && git push -q)
+          echo "guardado em coringa-cofre/auditoria/${{ github.event.inputs.execucao }}"

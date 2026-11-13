@@ -20,13 +20,35 @@ PROMPT_ROTEIRO = cofre.prompt('PROMPT_ROTEIRO')
 LIMITE_PALAVRAS = 160      # ≈ 55–60 s de narração: mais que isso o vídeo fica longo e a retenção cai
 
 
+def e_roteiro(o) -> bool:
+    """Esquema mínimo de um roteiro (para recuperar o JSON certo da resposta, não um pedaço dele)."""
+    if isinstance(o, list):
+        o = next((x for x in o if isinstance(x, dict)), {})
+    if not isinstance(o, dict):
+        return False
+    cenas = o.get('cenas') or o.get('scenes')
+    if cenas is None and isinstance(o.get('roteiro'), dict):
+        cenas = o['roteiro'].get('cenas')
+    return isinstance(cenas, list) and len(cenas) >= 3 and all(isinstance(c, dict) for c in cenas)
+
+
+def e_critica(o) -> bool:
+    if isinstance(o, list):
+        o = o[0] if o else {}
+    return isinstance(o, dict) and any(k in o for k in ('notas', 'aprovado', 'roteiro'))
+
+
+def e_ganchos(o) -> bool:
+    return isinstance(o, list) or (isinstance(o, dict) and isinstance(o.get('opcoes'), list))
+
+
 def _gerar_roteiro(prompt: str, tentativas: int = 3, serie: bool = False) -> dict:
     """Pede o roteiro e confere; se vier incompleto, pede de novo (até 3 vezes) em vez de desistir do vídeo.
     Em série (parte 1), exige o plano em 2 ou 3 partes: a parte 1 conta só o 1º capítulo e chama para a parte 2."""
     erro, melhor = None, None
     for k in range(tentativas):
         try:
-            v = _validar(gemini.json_(prompt))
+            v = _validar(gemini.json_(prompt, validar=e_roteiro))
             if melhor is None or len(v['cenas']) > len(melhor['cenas']):
                 melhor = v
             palavras = sum(len(c['fala'].split()) for c in v['cenas'])
@@ -524,7 +546,7 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '', problemas: 
             with claude.fatos_compartilhados(str(fatos)[:14000]):     # M2: o MESMO trecho de fatos de sempre
                 r = gemini.json_(PROMPT_CRITICA.format(fatos=str(fatos)[:14000], roteiro=json.dumps(base, ensure_ascii=False),
                                                        escopo=(f'- escopo: {escopo} Se contar algo além disso (ou "spoilar" as próximas partes), nota 0.\n' if escopo else ''),
-                                                       problemas=problemas))
+                                                       problemas=problemas), validar=e_critica)
             if isinstance(r, list):
                 r = r[0]
             print(f"  [editor] rodada {rodada + 1}: notas {r.get('notas')} · {'aprovado' if r.get('aprovado') else 'reescrito'}")
@@ -580,6 +602,23 @@ def tem_ingles(*textos: str) -> bool:
     return bool(ws & INGLES)
 
 
+def _promessa(v: dict) -> str:
+    """A promessa editorial que o gancho tem de ABRIR (13/11, polvo: o gancho virou "nove cérebros e três corações" num
+    vídeo que promete explicar a mudança de cor). Sem plano: o título e a 1ª fala."""
+    p = v.get('plano') or {}
+    partes = [p.get('promessa'), (p.get('angulo') or {}).get('pergunta'), p.get('assunto')] if p.get('origem') != 'derivado' else []
+    partes = [str(x) for x in partes if x] or [str(v.get('titulo') or ''), str((v.get('cenas') or [{}])[0].get('fala') or '')]
+    return ' · '.join(partes)
+
+
+def na_promessa(opcao: dict, v: dict) -> bool:
+    """O gancho fala do assunto prometido? (palavras de conteúdo em comum com a promessa/pergunta/assunto do plano)"""
+    p = v.get('plano') or {}
+    if not p or p.get('origem') == 'derivado':
+        return True                                   # sem plano não há promessa explícita para conferir
+    return bool(editorial.raizes(f"{opcao.get('fala', '')} {opcao.get('titulo', '')}") & editorial.raizes(_promessa(v)))
+
+
 def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = None, acervo: list | None = None) -> dict:
     """O editor escreve 3 ganchos e fica com o melhor (o gancho é o que mais pesa na retenção)."""
     from .orcamento import sobra
@@ -600,7 +639,8 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
         from . import acervo as acervo_mod
         fotos = acervo_mod.texto(acervo) if acervo else '(sem lista de fotos)'
         with claude.fatos_compartilhados(str(fatos)[:9000]):          # M2: o MESMO trecho de fatos de sempre
-            r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000], fotos=fotos))
+            r = gemini.json_(PROMPT_GANCHOS.format(regra=regra, falas=falas, fatos=str(fatos)[:9000], fotos=fotos,
+                                                   promessa=_promessa(v)), validar=e_ganchos)
         if isinstance(r, list):
             r = {'opcoes': r, 'escolha': 0}
         ops = [o for o in (r.get('opcoes') or []) if isinstance(o, dict) and o.get('fala') and len(str(o['fala']).split()) <= 18]
@@ -611,6 +651,14 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
         except (TypeError, ValueError):
             e = 0
         o = ops[e if 0 <= e < len(ops) else 0]
+        if not na_promessa(o, v):                     # 13/11: o gancho abre a promessa do vídeo, não outro assunto
+            dentro = [x for x in ops if na_promessa(x, v)]
+            if dentro:
+                print(f"  [gancho] o escolhido fugia da promessa (\"{str(o['fala'])[:60]}\"); fico com outra opção")
+                o = dentro[0]
+            else:
+                print(f"  [gancho] nenhuma opção abre a promessa (\"{_promessa(v)[:60]}\"); fico com o gancho original")
+                return v
         if tem_ingles(o.get('fala'), o.get('titulo'), o.get('subtitulo')):     # gancho em inglês: o espectador não entende
             limpos = [x for x in ops if not tem_ingles(x.get('fala'), x.get('titulo'), x.get('subtitulo'))]
             if limpos:

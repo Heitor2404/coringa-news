@@ -125,28 +125,29 @@ def texto(prompt: str, leve: bool = False) -> str:
     return _em_cascata(f, prompt, False, leve)
 
 
-def json_(prompt: str, leve: bool = False):
-    """Resposta em JSON."""
+def json_(prompt: str, leve: bool = False, validar=None):
+    """Resposta em JSON. `validar(obj) -> bool` (opcional): o esquema esperado — resposta que não passa conta como falha
+    daquela IA (e a cascata segue), em vez de virar roteiro quebrado."""
     from google.genai import types
     def f(modelo):
         r = cliente().models.generate_content(
             model=modelo, contents=prompt,
             config=types.GenerateContentConfig(response_mime_type='application/json', temperature=0.6))
-        return extrair_json(r.text)
-    return _em_cascata(f, prompt, True, leve)
+        return extrair_json(r.text, validar)
+    return _em_cascata(f, prompt, True, leve, validar)
 
 
 RESERVAS_USADAS: list[str] = []      # tarefa de qualidade (roteiro, revisão, gancho) que saiu de modelo reserva
 
 
-def _em_cascata(f, prompt: str, json_mode: bool, leve: bool):
+def _em_cascata(f, prompt: str, json_mode: bool, leve: bool, validar=None):
     """Ordem de qualidade: CLAUDE (assinatura Pro; Sonnet, ou Haiku nas tarefas simples) → Gemini principal (todas as
     chaves) → Groq GPT-OSS 120B → Gemini lite → Cloudflare. Assim o Gemini sobrecarregado não estraga mais o roteiro."""
     from . import claude
     if claude.disponivel():
         try:
             txt = claude.pedir(prompt, leve)
-            return extrair_json(txt) if json_mode else txt
+            return extrair_json(txt, validar) if json_mode else txt
         except Exception as e:            # sem crédito, fora do ar, JSON quebrado: segue para o Gemini
             print(f'  [claude] falhou ({str(e)[:160]}); sigo com o Gemini')
     if leve:
@@ -174,14 +175,47 @@ def _em_cascata(f, prompt: str, json_mode: bool, leve: bool):
         return _reserva(prompt, json_mode, e, so_cloudflare=True)
 
 
-def extrair_json(txt: str):
-    txt = (txt or '').strip()
-    txt = re.sub(r'^```(?:json)?|```$', '', txt, flags=re.M).strip()
+AVISOS_JSON: list[str] = []      # o que extrair_json teve de ignorar (texto depois do JSON etc.), para o registro
+
+
+def extrair_json(txt: str, validar=None):
+    """O 1º JSON VÁLIDO da resposta. 13/11 (polvo): o roteiro do Claude (US$ 0,13) veio com algo depois do JSON e a busca
+    antiga — do 1º "{" ao ÚLTIMO "}", gulosa — dava "Extra data" e jogava tudo fora. Agora:
+      1. a resposta inteira, se for JSON;
+      2. o objeto COMPLETO que começa no 1º "{"/"[" (json.raw_decode); o que vier depois é ignorado e anotado;
+      3. só com `validar` (esquema esperado): os outros objetos completos da resposta, o 1º que passar.
+    Nunca devolve pedaço malformado nem um sub-objeto que não passa no esquema; sem nada válido, levanta ValueError."""
+    bruto = (txt or '').strip()
+    limpo = re.sub(r'^```(?:json)?\s*$|^```\s*$', '', bruto, flags=re.M).strip()
+    ok = (lambda o: True) if validar is None else validar
     try:
-        return json.loads(txt)
+        obj = json.loads(limpo)
+        if ok(obj):
+            return obj
+        raise ValueError('a resposta é JSON, mas não tem o formato esperado')
     except json.JSONDecodeError:
-        m = re.search(r'[\[{].*[\]}]', txt, re.S)
-        return json.loads(m.group(0))
+        pass
+    dec = json.JSONDecoder()
+    inicios = [m.start() for m in re.finditer(r'[\[{]', limpo)]
+    if not inicios:
+        raise ValueError('nenhum JSON na resposta')
+    candidatos = inicios if validar is not None else inicios[:1]
+    erro = None
+    for i in candidatos:
+        try:
+            obj, fim = dec.raw_decode(limpo, i)
+        except json.JSONDecodeError as e:
+            erro = erro or e
+            continue
+        if not ok(obj):
+            continue
+        sobra = limpo[fim:].strip()
+        if i > 0 or sobra:
+            AVISOS_JSON.append(f'JSON recuperado: ignorei {i} caractere(s) antes e {len(sobra)} depois'
+                               + (f' ("{sobra[:60]}")' if sobra else ''))
+            print(f'  [json] {AVISOS_JSON[-1]}')
+        return obj
+    raise ValueError(f'nenhum JSON válido na resposta ({str(erro)[:80] if erro else "nenhum objeto no formato esperado"})')
 
 
 # ───────────── reservas gratuitas quando o Gemini falhar (Groq → Cloudflare) ─────────────

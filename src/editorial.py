@@ -62,6 +62,66 @@ def _palavras(s: str) -> set[str]:
     return {w for w in re.findall(r'[a-z0-9]{4,}', s)}
 
 
+PARADAS = {'como', 'para', 'pelo', 'pela', 'pelos', 'pelas', 'mais', 'muito', 'muita', 'esse', 'essa', 'isso', 'este',
+           'esta', 'isto', 'quando', 'onde', 'porque', 'sobre', 'entre', 'depois', 'antes', 'ainda', 'tambem', 'cada',
+           'todo', 'toda', 'todos', 'todas', 'eles', 'elas', 'mesmo', 'mesma', 'assim', 'pode', 'podem', 'fazer', 'quem',
+           'qual', 'quais', 'outro', 'outra', 'nossa', 'nosso', 'voce', 'deles', 'delas', 'dele', 'dela', 'seus', 'suas',
+           'numa', 'num', 'nunca', 'sempre', 'tudo', 'nada', 'algo', 'ser', 'sera', 'foram', 'eram', 'tinha', 'tem',
+           'esta', 'estao', 'aqui', 'agora', 'entao', 'porem', 'mas', 'apenas', 'so', 'logo', 'bem', 'tao', 'menos',
+           'que', 'com', 'por', 'uma', 'uns', 'dos', 'das', 'nos', 'nas', 'ele', 'ela', 'seu', 'sua', 'sem', 'foi', 'sao',
+           'era', 'ate', 'aos', 'pra', 'pro', 'tem', 'ter', 'vai', 'nao', 'sim', 'mais', 'dia', 'vez', 'ano', 'anos'}
+
+
+def raizes(s) -> set[str]:
+    """Palavras de conteúdo (3+ letras, sem as vazias: "cor" conta), reduzidas aos 5 primeiros caracteres
+    ("muda"/"mudando" casam)."""
+    s = unicodedata.normalize('NFKD', str(s or '').replace('*', '')).encode('ascii', 'ignore').decode().lower()
+    return {w[:5] for w in re.findall(r'[a-z]{3,}', s) if w not in PARADAS}
+
+
+ANO = re.compile(r'\b(1[5-9][0-9]{2}|20[0-9]{2})\b')
+
+
+def _central(v: dict) -> tuple[set[str], set[str], str]:
+    p = v.get('plano') or {}
+    est = p.get('estrategia') or {}
+    txt = ' '.join([str(p.get(k) or '') for k in ('assunto', 'intencao', 'promessa')]
+                   + [str((p.get('angulo') or {}).get('pergunta') or ''), str(v.get('titulo') or '')]
+                   + [str(est.get(k) or '') for k in ('abertura', 'payoff', 'fechamento')] + [str(x) for x in est.get('progressao') or []]
+                   + [str(e.get('afirmacao') or '') for e in p.get('evidencias') or []])
+    return raizes(txt), set(ANO.findall(txt)), txt
+
+
+def desvios(v: dict) -> list[str]:
+    """13/11 (polvo: "Em janeiro de 2026, uma pele sintética…" num vídeo sobre como o polvo muda de cor). Assunto lateral:
+    2+ ideias SEGUIDAS sem nenhuma palavra do plano (promessa, pergunta, assunto, estratégia, evidências), ou uma ideia
+    com um ano que o plano não tem e menos de 40% das palavras ligadas ao plano. Só com plano do roteirista (sem ele não há o que comparar)."""
+    p = v.get('plano') or {}
+    if not p or p.get('origem') == 'derivado':
+        return []
+    central, anos, _ = _central(v)
+    if not central:
+        return []
+    ideias = [c for c in v.get('cenas', []) if c.get('tipo') not in ('fechamento',) and not c.get('sub')]
+    sem, out = [], []
+    for k, c in enumerate(ideias):
+        r = raizes(c.get('fala'))
+        comum = r & central
+        ano_fora = [a for a in ANO.findall(str(c.get('fala') or '')) if a not in anos]
+        if ano_fora and len(comum) < 0.4 * max(1, len(r)):     # data nova + quase nada do plano = outro assunto
+            out.append(f"desvio: cena {k + 1} traz um fato de {ano_fora[0]} fora do plano (\"{str(c.get('fala'))[:60]}\")")
+        sem.append(k if (r and not comum) else None)
+    run = []
+    for k in sem + [None]:
+        if k is not None:
+            run.append(k)
+            continue
+        if len(run) >= 2:
+            out.append(f'desvio: cenas {run[0] + 1}–{run[-1] + 1} não falam da pergunta central (assunto lateral?)')
+        run = []
+    return out
+
+
 def _numeros(s: str) -> set[str]:
     return {n.replace('.', '').replace(',', '') for n in re.findall(r'\d[\d.,]*\d|\d', str(s or '').replace('*', ''))
             if len(n.replace('.', '').replace(',', '')) >= 2}
@@ -215,6 +275,7 @@ def avaliar_roteiro(v: dict, fatos: str = '') -> dict:
         entrega = set().union(*(_palavras(c.get('fala')) for c in cenas[len(cenas) // 2:])) if cenas else set()
         if prom and len(prom & entrega) == 0:
             probs.append('a segunda metade não retoma nada da promessa (promessa não cumprida?)')
+    probs += desvios(v)                                  # 13/11: assunto lateral (pele sintética no vídeo do polvo)
     # premissa repetida: duas frases seguidas dizendo quase o mesmo
     for k in range(1, len(cenas)):
         a, b = _palavras(cenas[k - 1].get('fala')), _palavras(cenas[k].get('fala'))

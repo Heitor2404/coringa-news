@@ -125,7 +125,7 @@ def test_gemini_reserva_recebe_o_pedido_original(monkeypatch):
 # ───────── os quatro pontos do roteiro declaram o MESMO trecho que já mandavam ─────────
 def _capturar(monkeypatch):
     vistos = []
-    def json_(prompt, leve=False):
+    def json_(prompt, leve=False, validar=None):
         vistos.append((claude._fatos_ctx.get(), prompt))
         return {}
     monkeypatch.setattr(gemini, 'json_', json_)

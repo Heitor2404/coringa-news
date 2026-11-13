@@ -341,7 +341,8 @@ def test_comparacao_de_audio_original_e_telegram(tmp_path):
     assert 'não medida' in main._comparar_audio(tmp_path / 'nao-existe.mp4', tg)          # falha só avisa
 
 
-def test_normalizacao_nao_mudou():
-    """Esta etapa só MEDE: a cadeia de áudio da montagem continua a mesma (loudnorm −14 / −1,5)."""
-    fonte = (RAIZ / 'src/render/render.py').read_text(encoding='utf-8')
-    assert fonte.count('loudnorm=I=-14:TP=-1.5[a]') == 2 and 'aresample' not in fonte.split('def renderizar(')[-1]
+def test_normalizacao_agora_em_duas_passadas_48k_e_com_limitador():
+    """Fase 0 só mediu; 13/11 (plano-mestre, Etapa 1, autorizado): a cadeia passou a medir e corrigir (render.masterizar)."""
+    fonte = (RAIZ / 'src/render/render.py').read_text(encoding='utf-8').split('def renderizar(')[-1]
+    assert 'loudnorm=I=-14:TP=-1.5[a]' not in fonte and 'masterizar(mix, master)' in fonte
+    assert "'-ar', '48000'" in fonte and 'alimiter' in fonte

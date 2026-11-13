@@ -299,17 +299,48 @@ def _montar(dados, pagina, audio, saida, trabalho, musica, workers):
             if w.get('hl') and t0 - ult > 0.6:
                 pops.append(t0); ult = t0
     sfx = _efeitos(dados['scenes'], dados['duration'], trabalho, pops, dados.get('numeros'))
-    entradas = ['-i', str(video), '-i', str(audio), '-i', str(sfx)]
+    # 13/11 (polvo: −16,3 LUFS, pico +0,9 dBTP, 96 kHz): a mistura sai crua (48 kHz) e a MASTERIZAÇÃO é separada e medida
+    entradas = ['-i', str(audio), '-i', str(sfx)]
     if musica and musica.exists():
         entradas += ['-stream_loop', '-1', '-i', str(musica)]
-        filtro = ('[1:a]asplit=2[v][vk];[3:a]volume=0.28[m0];[m0][vk]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350[m];[2:a]volume=0.35[fx];'
-                  '[v][fx][m]amix=inputs=3:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5[a]')   # música abaixa sozinha quando o Coringa fala
+        filtro = ('[0:a]asplit=2[v][vk];[2:a]volume=0.28[m0];[m0][vk]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350[m];[1:a]volume=0.35[fx];'
+                  '[v][fx][m]amix=inputs=3:normalize=0:duration=first,aresample=48000[a]')   # música abaixa sozinha quando o Coringa fala
     else:
-        filtro = '[2:a]volume=0.35[fx];[1:a][fx]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5[a]'
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', *entradas, '-filter_complex', filtro,
-                    '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+        filtro = '[1:a]volume=0.35[fx];[0:a][fx]amix=inputs=2:normalize=0:duration=first,aresample=48000[a]'
+    mix, master = trabalho / 'mix.wav', trabalho / 'master.wav'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', *entradas, '-filter_complex', filtro, '-map', '[a]',
+                    '-t', f"{dados['duration']:.3f}", '-c:a', 'pcm_s16le', str(mix)], check=True)
+    masterizar(mix, master)
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(video), '-i', str(master),
+                    '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-ar', '48000',
                     '-shortest', '-movflags', '+faststart', str(saida)], check=True)
     return saida
+
+
+ALVO_LUFS, ALVO_TP = -14.0, -1.5
+LIMITE_AMOSTRA = 0.75       # ≈ −2,5 dBFS por amostra: folga para o pico verdadeiro e para o AAC (alvo final ≤ −1 dBTP)
+LIMITADOR_MAX_DB = 4.0      # o limitador pode segurar até ~4 dB de pico; mais que isso, a mistura fica baixa (não esmaga)
+
+
+def masterizar(entrada: Path, saida: Path) -> dict:
+    """Duas passadas com o MESMO medidor do diagnóstico (ebur128): 1ª mede loudness e pico verdadeiro; 2ª aplica um
+    ganho fixo (linear: não muda a dinâmica da fala) + 48 kHz + limitador de pico. Antes: loudnorm em uma passada
+    (dinâmico, não chegava no alvo nem garantia o pico depois do AAC: −16,3 LUFS e +0,9 dBTP no polvo) e 96 kHz."""
+    from src.fiscal import medir_audio
+    try:
+        m = medir_audio(entrada)
+    except Exception:                               # silêncio ("-inf"): nada a medir, só reamostra e limita
+        m = {}
+    i, tp = m.get('lufs'), m.get('pico')
+    ganho = 0.0
+    if i is not None and i > -70:
+        ganho = ALVO_LUFS - i
+        if tp is not None:
+            ganho = min(ganho, ALVO_TP + LIMITADOR_MAX_DB - tp)     # não empurra o pico além do que o limitador segura
+    filtro = f'volume={ganho:.2f}dB,aresample=48000,alimiter=limit={LIMITE_AMOSTRA}:attack=2:release=50:level=false'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(entrada), '-af', filtro, '-ar', '48000', '-c:a', 'pcm_s16le',
+                    str(saida)], check=True)
+    return {'entrada': m, 'ganho_db': round(ganho, 2)}
 
 
 if __name__ == '__main__':

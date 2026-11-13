@@ -313,7 +313,7 @@ def alertas(v: dict, cenas: list[dict], problemas_tela: list, bloqueadores: list
         p = v.get('plano') or {}
         if p and p.get('origem') != 'derivado':
             for pb in editorial.validar_plano(p, fatos) + editorial.avaliar_roteiro(v, fatos)['problemas']:
-                if any(x in pb for x in ('promessa', 'payoff', 'não fecha', 'não é viável', 'suspense')):
+                if any(x in pb for x in ('promessa', 'payoff', 'não fecha', 'não é viável', 'suspense', 'desvio')):
                     out.append({'nivel': 'P1', 'motivo': 'roteiro', 'evidencia': pb})
     except Exception as e:                                # instrumento: nunca derruba a rodada
         out.append({'nivel': '?', 'motivo': 'alertas não medidos', 'evidencia': str(e)[:80]})

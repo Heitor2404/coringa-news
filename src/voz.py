@@ -330,6 +330,19 @@ def _conferir_fala(pal: list[dict], falas: list[str], dur: float) -> str:
     return ''
 
 
+def diagnostico_extra(antes: list[str], estilo: str) -> str:
+    """13/11 (polvo: 16 s cortados do começo). Diz O QUE foi falado antes do roteiro e se é a instrução de tom lida em
+    voz alta (as palavras batem com o pedido mandado ao TTS). Só registro: não muda a gravação."""
+    instrucao = {_norm(w) for w in f'Narre em português do Brasil {estilo} Leia SOMENTE o texto abaixo da linha'.split()
+                 if len(_norm(w)) >= 3}
+    ouvidas = [_norm(w) for w in antes if len(_norm(w)) >= 3]          # "o", "de", "e" não identificam nada
+    if not ouvidas:
+        return 'antes do roteiro: só ruído/silêncio'
+    da_instrucao = sum(1 for w in ouvidas if w in instrucao) / len(ouvidas)
+    causa = 'leu a INSTRUÇÃO de tom em voz alta' if da_instrucao >= 0.5 else 'falou algo que não é instrução nem roteiro'
+    return f'antes do roteiro a voz disse ({len(ouvidas)} palavras, {da_instrucao:.0%} da instrução): {causa} — "{" ".join(antes)[:120]}"'
+
+
 def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
     falas = [c['fala'] for c in cenas]
     # pedaços da mesma frase (planos da mesma ideia) seguem juntos, sem a pausa de parágrafo no meio da frase
@@ -355,6 +368,7 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
         blocos = [b for b in difflib.SequenceMatcher(None, ouvido, roteiro, autojunk=False).get_matching_blocks() if b.size >= 2]
         i0 = blocos[0].a if blocos and blocos[0].b <= 2 else 0
         corte = max(0.0, pal[i0]['start'] - 0.08) if i0 > 0 else 0.0
+        antes = [p['w'] for p in pal[:i0]]               # o que a voz disse ANTES do roteiro (diagnóstico)
         pal = [dict(p, start=p['start'] - corte + INICIO, end=p['end'] - corte + INICIO) for p in pal[i0:]]
         wav = pasta / 'voz.wav'
         ms = int(INICIO * 1000)
@@ -367,6 +381,7 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
             continue
         if corte:
             print(f'  [voz] cortei {corte:.1f}s do começo (a voz leu algo fora do roteiro)')
+            print('  [voz] ' + diagnostico_extra(antes, cfg.get('estilo_gemini', ESTILO_PADRAO)))
         tempos, por_cena = _tempos_por_cena(pal, falas, dur)
         caps = []
         for f, ws in zip(falas, por_cena):

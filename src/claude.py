@@ -9,11 +9,13 @@ Tarefa de qualidade → Sonnet; tarefa simples (leve=True) → Haiku. Se o Claud
 import contextvars
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import time
 from contextlib import contextmanager
+from pathlib import Path
 
 from . import custo
 
@@ -142,7 +144,25 @@ def _executar(cmd: list, prompt: str, modelo: str) -> str:
     GASTO['usd'] += usd
     GASTO['pedidos'] += 1
     custo.registrar('claude', modelo, usd, saida.get('usage'), time.time() - t0)
+    guardar_bruta(str(saida['result']))
     return str(saida['result'])
+
+
+PASTA_BRUTAS = Path(__file__).resolve().parents[1] / 'saida' / 'respostas_ia'
+
+
+def guardar_bruta(texto: str):
+    """13/11 (polvo): a resposta paga que dá erro de leitura era perdida e não dava para saber o que veio. Guarda o texto
+    bruto de cada pedido do Coringa (vai para o pacote PRIVADO da rodada, nunca para o repositório). NTC: não guarda."""
+    try:
+        if not _no_coringa():
+            return
+        PASTA_BRUTAS.mkdir(parents=True, exist_ok=True)
+        n = len(list(PASTA_BRUTAS.glob('*.txt'))) + 1
+        etapa = re.sub(r'[^a-z0-9]+', '-', str((custo.LIVRO[-1] if custo.LIVRO else {}).get('etapa') or 'pedido').lower())
+        (PASTA_BRUTAS / f'{n:02d}-{etapa}.txt').write_text(texto, encoding='utf-8')
+    except Exception as e:
+        print(f'  [claude] não guardei a resposta bruta ({str(e)[:60]})')
 
 
 def resumo_gasto() -> str:

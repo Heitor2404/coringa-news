@@ -147,8 +147,17 @@ def _gasto(usd_lista):
         custo.registrar('claude', 'sonnet', usd, None, 1, etapa_=etapa)
 
 
-def test_ganchos_pulados_quando_o_video_ja_passou_do_teto(monkeypatch):
-    _gasto([('tema', 0.0015), ('garimpo', 0.0657), ('partes', 0.0018), ('roteiro', 0.1387), ('crítica', 0.1158)])   # 0,32
+def test_sem_bloqueio_por_orcamento_e_a_regra_de_opcional_fica_desligada(monkeypatch):
+    _gasto([('roteiro', 0.30), ('crítica', 0.25)])                                 # 0,55: acima do teto de referência
+    pedidos = []
+    monkeypatch.setattr(gemini, 'json_', lambda *a, **k: pedidos.append(1) or {'opcoes': []})
+    roteiro.escolher_gancho(_roteiro(), FATOS)
+    assert pedidos == [1] and not ov.opcional_excedida('ganchos')                  # política de 12/11: só monitora
+
+
+def test_ganchos_pulados_se_a_regra_for_religada(monkeypatch):
+    monkeypatch.setattr(ov, 'PULAR_OPCIONAL_ACIMA_DO_TETO', True)
+    _gasto([('tema', 0.0015), ('garimpo', 0.0657), ('roteiro', 0.2387), ('crítica', 0.2158)])        # 0,52
     pedidos = []
     monkeypatch.setattr(gemini, 'json_', lambda *a, **k: pedidos.append(1) or {})
     v = roteiro.escolher_gancho(_roteiro(), FATOS)

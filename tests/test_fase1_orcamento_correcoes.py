@@ -17,6 +17,10 @@ def limpo(monkeypatch):
     custo.zerar()
     orc._ORC.clear(); orc._ORC['aberto'] = False
     orc._LOTE.clear(); orc._LOTE['aberto'] = False
+    # estes testes conferem a MECÂNICA do monitor com os limites antigos (0,30/0,24); a política nova (0,50/0,40/0,35)
+    # tem teste próprio em test_valores_aprovados
+    monkeypatch.setattr(orc, 'TETO_USD', 0.30); monkeypatch.setattr(orc, 'ALVO_USD', 0.24)
+    monkeypatch.setattr(orc, 'ALERTA_USD', 0.30)
     for k in ('ORCAMENTO_MODO', 'CLAUDE_SISTEMA_PROPRIO', 'FATOS_NO_SISTEMA'):
         monkeypatch.delenv(k, raising=False)
     monkeypatch.setattr(claude, '_falhas', 0)

@@ -23,6 +23,10 @@ def limpo(monkeypatch):
     orc._ORC.clear()
     orc._ORC['aberto'] = False
     monkeypatch.delenv('ORCAMENTO_MODO', raising=False)
+    # estes testes conferem a MECÂNICA do monitor com os limites antigos (0,30/0,24); a política nova (0,50/0,40/0,35)
+    # tem teste próprio em test_valores_aprovados
+    monkeypatch.setattr(orc, 'TETO_USD', 0.30); monkeypatch.setattr(orc, 'ALVO_USD', 0.24)
+    monkeypatch.setattr(orc, 'ALERTA_USD', 0.30)
     monkeypatch.setattr(claude, '_falhas', 0)
     yield
     custo.zerar()
@@ -54,7 +58,10 @@ def _pedir(etapa, prompt='x' * 30000, leve=False):
 
 
 def test_valores_aprovados():
-    assert orc.TETO_USD == 0.30 and orc.ALVO_USD == 0.24
+    import importlib
+    novo = importlib.reload(orc)                                                   # os valores do módulo, sem o fixture
+    assert novo.TETO_USD == 0.50 and novo.ALVO_USD == 0.35 and novo.ALERTA_USD == 0.40   # política de 12/11 (desenvolvimento)
+    assert not novo.PULAR_OPCIONAL_ACIMA_DO_TETO                                          # sem bloqueio por orçamento
     assert {'garimpo', 'pesquisa', 'roteiro', 'crítica'} <= orc.ESSENCIAIS and orc.OPCIONAIS == {'ganchos'}
 
 

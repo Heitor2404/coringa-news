@@ -15,8 +15,13 @@ from contextlib import contextmanager
 
 from . import custo
 
-TETO_USD = float(os.getenv('ORCAMENTO_TETO_USD') or 0.30)
-ALVO_USD = float(os.getenv('ORCAMENTO_ALVO_USD') or 0.24)
+# 12/11 (política do Heitor para a fase de desenvolvimento: qualidade primeiro; revisar depois de vídeos reais suficientes):
+# meta US$ 0,35 · alerta US$ 0,40 · teto de REFERÊNCIA US$ 0,50 (não é meta de gasto). Só monitoramento: nada é bloqueado
+# por orçamento. Antes: alvo 0,24 e teto 0,30.
+TETO_USD = float(os.getenv('ORCAMENTO_TETO_USD') or 0.50)
+ALVO_USD = float(os.getenv('ORCAMENTO_ALVO_USD') or 0.35)
+ALERTA_USD = float(os.getenv('ORCAMENTO_ALERTA_USD') or 0.40)
+PULAR_OPCIONAL_ACIMA_DO_TETO = False   # 12/11: sem bloqueio automático por orçamento (a regra existe, desligada)
 
 # preço efetivo por milhão de tokens. Sonnet: medido na Torre Eiffel 2 (4 chamadas, erro ≤ 2%): toda a entrada é cobrada
 # como ESCRITA de cache (3,75), o prompt-base do Claude Code é LIDO do cache (0,30), saída 10. Haiku: proporção de
@@ -220,7 +225,8 @@ def opcional_excedida(etapa: str) -> bool:
     """12/11 (polvo, autorizado pelo Heitor): chamada OPCIONAL (ganchos) não sai quando o vídeo JÁ passou do teto. Única
     regra que age de verdade; as essenciais continuam só monitoradas (o modo aplicar segue sem autorização)."""
     try:
-        return modo() != 'desligado' and aberto() and classe(etapa) == 'opcional' and gasto() >= TETO_USD
+        return PULAR_OPCIONAL_ACIMA_DO_TETO and modo() != 'desligado' and aberto() and classe(etapa) == 'opcional' \
+            and gasto() >= TETO_USD
     except Exception:
         return False
 
@@ -266,9 +272,11 @@ def depois(d: dict | None):
         d['estimativa_baixa'] = real > d['pior_caso']
         d['estourou_alvo'] = d['gasto_depois'] > _ORC['alvo']
         d['estourou_teto'] = d['gasto_depois'] > _ORC['teto']
+        d['estourou_alerta'] = d['gasto_depois'] > ALERTA_USD
         avisos = [s for x, s in ((d['estimativa_baixa'], 'REAL ACIMA DO PIOR CASO'),
-                                 (d['estourou_teto'], 'PASSOU DO TETO'),
-                                 (d['estourou_alvo'] and not d['estourou_teto'], 'passou do alvo')) if x]
+                                 (d['estourou_teto'], 'PASSOU DO TETO DE REFERÊNCIA'),
+                                 (d['estourou_alerta'] and not d['estourou_teto'], 'ALERTA DE CUSTO'),
+                                 (d['estourou_alvo'] and not d['estourou_alerta'], 'passou da meta')) if x]
         print(f"  [orçamento] {d['etapa']}: real USD {real:.4f} (pior caso {d['pior_caso']:.4f}) · gasto do vídeo "
               f"USD {d['gasto_depois']:.4f}" + ''.join(f' · {s}' for s in avisos))
     except Exception as e:
@@ -285,7 +293,8 @@ def resumo() -> dict:
             'teria_pulado': [e['etapa'] for e in ev if e['decisao'] == 'pular'],
             'teria_pedido_autorizacao': [e['etapa'] for e in ev if e['decisao'] == 'pedir autorização'],
             'estimativa_baixa': [e['etapa'] for e in ev if e.get('estimativa_baixa')],
-            'estourou_teto': any(e.get('estourou_teto') for e in ev),
+            'estourou_teto': any(e.get('estourou_teto') for e in ev), 'alerta_usd': ALERTA_USD,
+            'estourou_alerta': any(e.get('estourou_alerta') for e in ev),
             'estourou_alvo': any(e.get('estourou_alvo') for e in ev)}
 
 
@@ -297,9 +306,10 @@ def linha_telegram() -> str:
     if not r['eventos']:
         return ''
     f = lambda x: f'{x:.2f}'.replace('.', ',')
-    estado = 'PASSOU DO TETO' if r['estourou_teto'] else 'passou do alvo' if r['estourou_alvo'] else 'dentro do alvo'
-    partes = [f"🛡 Orçamento (MONITORANDO, não bloqueia): USD {f(r['gasto_usd'])} de {f(r['teto_usd'])} "
-              f"(alvo {f(r['alvo_usd'])}) — {estado}"]
+    estado = ('PASSOU DO TETO DE REFERÊNCIA' if r['estourou_teto'] else 'ALERTA DE CUSTO' if r['estourou_alerta']
+              else 'acima da meta' if r['estourou_alvo'] else 'dentro da meta')
+    partes = [f"🛡 Orçamento (MONITORANDO, não bloqueia): USD {f(r['gasto_usd'])} · meta {f(r['alvo_usd'])} · "
+              f"alerta {f(r['alerta_usd'])} · teto de referência {f(r['teto_usd'])} — {estado}"]
     partes.append('teria pulado: ' + (', '.join(r['teria_pulado']) or 'nada'))
     partes.append('teria pedido autorização: ' + (', '.join(r['teria_pedido_autorizacao']) or 'nada'))
     partes.append('pior caso abaixo do real: ' + (', '.join(r['estimativa_baixa']) or 'nunca'))

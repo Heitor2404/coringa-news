@@ -587,7 +587,7 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
         return v
     from . import orcamento_video
     if orcamento_video.opcional_excedida('ganchos'):          # 12/11 (polvo): já passou do teto → opcional não sai
-        print(f'  [orçamento] ganchos pulados: o vídeo já gastou USD {orcamento_video.gasto():.2f} (teto {orcamento_video.TETO_USD:.2f})')
+        print(f'  [orçamento] ganchos pulados: o vídeo já gastou USD {orcamento_video.gasto():.2f} (teto de referência {orcamento_video.TETO_USD:.2f})')
         return v
     regra = ''
     if parte > 1 and serie:

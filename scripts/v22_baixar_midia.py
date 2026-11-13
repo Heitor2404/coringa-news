@@ -115,7 +115,10 @@ def main():
                 if it.get('alinhar'):
                     from faster_whisper import WhisperModel
                     m = WhisperModel('small', device='cpu', compute_type='int8')
-                    segs, inf = m.transcribe(str(arq), language=it['alinhar'], word_timestamps=True, vad_filter=False)
+                    import numpy as np   # decodifica com ffmpeg (independe da versão do PyAV usada pelo faster-whisper)
+                    pcm = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(arq), '-f', 's16le', '-ac', '1', '-ar', '16000', '-'], capture_output=True, check=True).stdout
+                    onda = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
+                    segs, inf = m.transcribe(onda, language=it['alinhar'], word_timestamps=True, vad_filter=False)
                     pal = [{'w': w.word.strip(), 's': round(w.start, 3), 'e': round(w.end, 3), 'p': round(w.probability, 3)} for s in segs for w in (s.words or [])]
                     (out / f'{i}.palavras.json').write_text(json.dumps({'modelo': 'faster-whisper small int8', 'idioma': inf.language, 'palavras': pal}, ensure_ascii=False, indent=0))
             meta.update(id=i, uso=it.get('uso'), arquivo=arq.name, sonda=ffprobe(arq), bytes=arq.stat().st_size)

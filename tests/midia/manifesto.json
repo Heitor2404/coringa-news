@@ -5,7 +5,7 @@
       "id": "video_h_60fps",
       "tipo": "video",
       "commons": "Container Ship Dashcam Around The World In 70 Days Timelapse, 4k, 60fps.webm",
-      "inicio": 600,
+      "inicio": 25,
       "dur": 6,
       "streaming": true,
       "uso": "P1-6 taxa de quadros diferente (60 fps), lido por intervalo sem baixar o arquivo inteiro"
@@ -20,5 +20,5 @@
       "uso": "P1-9/P1-10 narração humana real + alinhamento por palavra"
     }
   ],
-  "_rodada": "3: só o que faltou (alinhamento da voz e clipe 60 fps); o resto já foi baixado na 1ª rodada e virou fixture"
+  "_rodada": "4: alinhamento sem PyAV; clipe 60 fps em trecho inicial (busca por HTTP em 600 s gerava arquivo vazio)"
 }

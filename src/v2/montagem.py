@@ -168,7 +168,8 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
             if rev:     # a conclusão vem da resposta que o vídeo deu (sem texto novo inventado)
                 r = rev['params']
                 conclusao = f"{_limpo(r.get('pergunta')).rstrip('?')}? *{_limpo(r.get('resposta')).capitalize()}*." if r.get('pergunta') else _limpo(r.get('detalhe'))
-            nova.update(comp='encerramento.editorial', params={'variante': 'cta' if sc.get('proxima') else 'conclusao', 'resumo': conclusao, 'fontes': fontes,
+            conclusao = conclusao or _limpo(sc.get('resumo'))     # conclusão declarada pelo roteiro; nunca texto inventado
+            nova.update(comp='encerramento.editorial', params={'variante': 'cta' if sc.get('proxima') else ('conclusao' if conclusao else 'marca'), 'resumo': conclusao, 'fontes': fontes,
                                                                'marca': meta.get('marca', '@coringa.explica'), 'proxima': sc.get('proxima'), 'mascote': 'apontando'})
             if rev and rev.get('base'):
                 nova['base'] = {**rev['base'], 'escurece': .6}
@@ -216,6 +217,12 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                     # V2.2: composição desenhada pelo acontecimento DECLARADO, com os dados declarados (antes, toda composição
                     # que não fosse eclusa/nível/escala caía no ramo de foto, mesmo com o seletor certo)
                     p = dict(dec.get('params') or {})
+                    if dec['comp'] == 'numero.animado':
+                        # número declarado no contrato passa pela MESMA validação de fatos (moeda, natureza, fonte listada)
+                        erros = fatos.validar(p, fontes)
+                        if erros:
+                            d['bloqueio'] = erros
+                        p = {**fatos.para_tela(p), **{k: v for k, v in p.items() if k in ('representacao',)}}
                     if dec['comp'] in ('foto.historica',) and not p.get('img') and img:
                         p['img'] = img
                     nova.update(comp=dec['comp'], params=p)

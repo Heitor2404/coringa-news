@@ -1,0 +1,106 @@
+{
+  "_doc": "FIXTURE da etapa do ROTEIRISTA (em produção: modelo de linguagem pago com src.v2.contrato.BLOCO_PROMPT). Reproduz o contrato de saída: falas + acontecimento declarado por cena + fatos com fonte. Texto = a leitura humana real de voz_venezuela.ogg (CC0), recortada em trechos; o motor faz o resto (normalização, acervo, montagem, alinhamento, render, fiscal).",
+  "titulo": "Onde fica a Venezuela",
+  "fontes": [
+    "Wikipédia (Venezuela)",
+    "Wikimedia Commons"
+  ],
+  "creditos_audio": "Narração: Wilfredor (Wikimedia Commons, CC0)",
+  "cenas": [
+    {
+      "fala": "A Venezuela, oficialmente República Bolivariana da Venezuela, em castelhano República Bolivariana de Venezuela, é um país da América localizado na parte norte da América do Sul,",
+      "acontecimento": {
+        "id": "onde",
+        "tipo": "territorio",
+        "mostrar": "a Venezuela no norte da América do Sul",
+        "importancia": "critica",
+        "fonte": "Wikipédia (Venezuela)",
+        "dados": {
+          "pais": "Venezuela",
+          "kicker": "ONDE FICA",
+          "titulo": "Norte da *América do Sul*",
+          "folga": 1.6,
+          "max_paises": 3
+        }
+      }
+    },
+    {
+      "fala": "constituída por uma parte continental e um grande número de pequenas ilhas no mar do Caribe,",
+      "acontecimento": {
+        "id": "ilhas",
+        "tipo": "localizacao",
+        "mostrar": "as ilhas venezuelanas no mar do Caribe",
+        "importancia": "apoio",
+        "fonte": "Wikipédia (Ilha de Margarita)",
+        "dados": {
+          "kicker": "ILHAS",
+          "titulo": "Ilhas no *Caribe*",
+          "pontos": [
+            {
+              "nome": "Ilha de Margarita",
+              "lon": -63.95,
+              "lat": 11.03
+            }
+          ],
+          "folga": 6
+        }
+      }
+    },
+    {
+      "fala": "cuja capital e maior aglomeração urbana é a cidade de Caracas.",
+      "acontecimento": {
+        "id": "capital",
+        "tipo": "lugar",
+        "quem": "Caracas",
+        "onde": "Caracas",
+        "mostrar": "a cidade de Caracas, capital",
+        "importancia": "apoio"
+      }
+    },
+    {
+      "fala": "Possui uma área de 916.445 quilômetros quadrados",
+      "acontecimento": {
+        "id": "area",
+        "tipo": "numero",
+        "mostrar": "a área total do país",
+        "importancia": "apoio",
+        "fonte": "Wikipédia (Venezuela)",
+        "dados": {
+          "valor": 916445,
+          "unidade": "km²",
+          "rotulo": "Área da Venezuela",
+          "contexto": "Parte continental e ilhas.",
+          "fonte": "Wikipédia (Venezuela)"
+        }
+      }
+    },
+    {
+      "fala": "Suas fronteiras são delimitadas ao norte com o mar do Caribe, a oeste com a Colômbia, ao sul com o Brasil e a leste com a Guiana, com quem mantém disputas territoriais.",
+      "acontecimento": {
+        "id": "fronteiras",
+        "tipo": "territorio",
+        "mostrar": "os vizinhos: Colômbia, Brasil e Guiana, e o mar do Caribe",
+        "importancia": "critica",
+        "fonte": "Wikipédia (Venezuela)",
+        "dados": {
+          "pais": "Venezuela",
+          "kicker": "FRONTEIRAS",
+          "titulo": "Vizinhos e *mar do Caribe*",
+          "dado": "Colômbia · Brasil · Guiana",
+          "folga": 0.35,
+          "max_paises": 4
+        },
+        "sincronia": {
+          "vizinhos": [
+            "Colômbia",
+            "Brasil",
+            "Guiana"
+          ]
+        }
+      }
+    }
+  ],
+  "fechamento": {
+    "resumo": "Venezuela: norte da *América do Sul*, de frente para o *Caribe*."
+  }
+}

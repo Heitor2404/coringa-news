@@ -22,11 +22,14 @@
         { id: 'mar', type: 'background', paint: { 'background-color': COR.mar } },
         { id: 'terra', type: 'fill', source: 'paises', paint: { 'fill-color': COR.terra, 'fill-antialias': true } },
         { id: 'alvo', type: 'fill', source: 'alvo', paint: { 'fill-color': COR.alvo, 'fill-opacity': 0 } },
+        // V2.2: vizinhos que acendem quando a narração diz o nome (params.vizinhos = [{nome, t}])
+        { id: 'vizinho', type: 'fill', source: 'paises', filter: ['in', ['get', 'name_pt'], ['literal', []]], paint: { 'fill-color': '#3FD0E0', 'fill-opacity': .34 } },
         { id: 'lagos', type: 'fill', source: 'lagos', paint: { 'fill-color': COR.lago } },
         { id: 'rios', type: 'line', source: 'rios', paint: { 'line-color': COR.rio, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, .8, 8, 2.4], 'line-opacity': .8 } },
         { id: 'fronteira', type: 'line', source: 'paises', paint: { 'line-color': COR.borda, 'line-width': ['interpolate', ['linear'], ['zoom'], 2, .8, 8, 1.8], 'line-opacity': .9 } },
         { id: 'alvo-borda-brilho', type: 'line', source: 'alvo', paint: { 'line-color': COR.alvo, 'line-width': 14, 'line-blur': 10, 'line-opacity': 0 } },
         { id: 'alvo-borda', type: 'line', source: 'alvo', paint: { 'line-color': COR.alvo, 'line-width': 3.5, 'line-opacity': 0 } },
+        { id: 'vizinho-borda', type: 'line', source: 'paises', filter: ['in', ['get', 'name_pt'], ['literal', []]], paint: { 'line-color': '#3FD0E0', 'line-width': 3 } },
         // rotas: 12 px + contorno escuro + brilho (legível no celular sobre terra e sobre mar)
         ...[0, 1, 2].flatMap(i => [
           { id: `rota${i}-brilho`, type: 'line', source: `rota${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': (p.rotas && p.rotas[i] && p.rotas[i].cor) || CORES_ROTA[i], 'line-width': 34, 'line-blur': 18, 'line-opacity': .45 } },
@@ -335,7 +338,8 @@
     id: 'mapa.territorio', nome: 'Mapa com zoom e destaque territorial', tratamento: 'mapa', tom: 'escuro',
     objetivo: 'Destacar um país/território inteiro, sua forma e vizinhança, aproximando do contexto continental.',
     funcoes: ['territorio', 'pais', 'fronteira', 'regiao'],
-    params: { pais: 'nome PT/EN ou ISO-A3 (Natural Earth)', titulo: '≤ 36', dado: 'linha curta sobre o território ≤ 40 (opcional)', kicker: "padrão 'TERRITÓRIO'" },
+    params: { pais: 'nome PT/EN ou ISO-A3 (Natural Earth)', titulo: '≤ 36', dado: 'linha curta sobre o território ≤ 40 (opcional)', kicker: "padrão 'TERRITÓRIO'",
+      vizinhos: '[{nome (Natural Earth pt), t (s na cena)}]: cada vizinho acende no instante em que a narração diz o nome (contrato: sincronia)' },
     fundo: 'próprio (MapLibre)', layout: 'cabeçalho 340–480; território enquadrado em 430–1060; nome do país no centróide; dado em faixa embaixo',
     paleta: 'território amarelo 85% com borda brilhante; vizinhos e mares rotulados', animacao: 'aproxima com leve rotação; território acende (preenchimento + brilho da borda); vizinhos aparecem',
     duracao: [3, 4.5, 6], limites: { titulo: 36, dado: 40 }, legenda: 'livre',
@@ -356,8 +360,13 @@
         const ka = eo5((tl - 1.0) / .8);
         const r = await m.upd(tl, el, eio(tl / Math.min(2.0, c.dur * .45)), map => {
           map.setPaintProperty('alvo', 'fill-opacity', .82 * ka); map.setPaintProperty('alvo-borda', 'line-opacity', ka);
-          map.setPaintProperty('alvo-borda-brilho', 'line-opacity', .9 * ka * (.7 + .3 * Math.sin(tl * 4))); });
+          map.setPaintProperty('alvo-borda-brilho', 'line-opacity', .9 * ka * (.7 + .3 * Math.sin(tl * 4)));
+          const ativos = (p.vizinhos || []).filter(v => tl >= +v.t).map(v => v.nome);
+          ['vizinho', 'vizinho-borda'].forEach(l => map.setFilter(l, ['in', ['get', 'name_pt'], ['literal', ativos]])); });
         if (!r) return;
+        const ativos = new Set((p.vizinhos || []).filter(v => tl >= +v.t).map(v => String(v.nome).toLowerCase()));
+        el.querySelectorAll('.rot-mapa.pais').forEach(e => { const on = ativos.has(e.textContent.trim().toLowerCase()); e.classList.toggle('ativo', on);
+          if (on) { e.style.opacity = 1; e.style.color = '#3FD0E0'; e.style.fontWeight = 900; } else { e.style.color = ''; e.style.fontWeight = ''; } });
         aparece(el.querySelector('.cab'), tl, .05, { dy: -20 });
         const nm = el.querySelector('.nmp'); if (c0) { const q = r.map.project(c0); nm.style.left = clamp(q.x - nm.offsetWidth / 2, 90, 920 - nm.offsetWidth) + 'px'; nm.style.top = clamp(q.y - nm.offsetHeight / 2 - 70, 500, 960) + 'px'; }
         nm.style.opacity = eo5((tl - 1.4) / .4);

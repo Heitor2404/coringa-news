@@ -56,7 +56,7 @@ SINONIMOS = {'transformacao_quimica': 'transformacao', 'reacao': 'transformacao'
              'viagem': 'deslocamento', 'etapas': 'processo', 'explosao': 'impacto', 'erupcao': 'impacto', 'serie': 'evolucao_temporal',
              'linha_tempo': 'sequencia_historica', 'fenomeno_natural': 'impacto', 'mapa': 'localizacao', 'grafico': 'comparacao'}
 GENERICAS = {'foto.documental', 'destaque.palavras', 'banner.discreto', 'lower_third', 'foto.sequencia'}   # não desenham acontecimento
-CAMPOS = ('id', 'tipo', 'sujeito', 'acao', 'estado_inicial', 'estado_final', 'mostrar', 'dados', 'capacidade', 'fonte', 'importancia', 'obrigatoria')
+CAMPOS = ('id', 'tipo', 'sujeito', 'acao', 'estado_inicial', 'estado_final', 'mostrar', 'dados', 'capacidade', 'fonte', 'importancia', 'obrigatoria', 'sincronia')
 
 
 def _n(s) -> str:
@@ -106,6 +106,27 @@ def capazes(tipo: str) -> list[str]:
     return list((TIPOS.get(tipo) or {}).get('comps', {}))
 
 
+def resolver_sincronia(ac: dict, palavras: list[dict], inicio_cena: float) -> dict:
+    """`ac['sincronia']` = {parâmetro: [palavras ditas]} → `ac['dados'][parâmetro]` = [{nome, t}] com t = instante (na
+    cena) em que a narração começa a dizer cada palavra. Palavra não encontrada fica de fora e é registrada."""
+    import unicodedata
+    tok = lambda x: re.sub(r'[^a-z0-9]', '', ''.join(c for c in unicodedata.normalize('NFKD', str(x).lower()) if not unicodedata.combining(c)))
+    ac = dict(ac); dados = dict(ac.get('dados') or {}); faltou = []
+    for chave, alvos in (ac.get('sincronia') or {}).items():
+        out = []
+        for nome in alvos:
+            w = next((w for w in palavras if tok(w['w']).startswith(tok(nome)[:max(4, len(tok(nome)) - 2)])), None)
+            if w:
+                out.append({'nome': nome, 't': round(w['s'] - inicio_cena, 3)})
+            else:
+                faltou.append(nome)
+        dados[chave] = out
+    ac['dados'] = dados
+    if faltou:
+        ac['sincronia_faltou'] = faltou
+    return ac
+
+
 BLOCO_PROMPT = """
 CONTRATO DE ACONTECIMENTOS (obrigatório em toda cena do tipo "historia"/"imagem"): além de quem/onde/quando/recurso,
 preencha em "acontecimento":
@@ -118,7 +139,8 @@ preencha em "acontecimento":
   "dados": só o que está nos FATOS, no formato da composição: etapas [..] | pontos [{nome, lon, lat}] | serie [{ano, valor}] |
            itens [{rotulo, valor}] | forcas [{nome, angulo, intensidade}] | eventos [{ano, texto}] | valor + fonte;
   "fonte": de onde vêm os dados; "importancia": "critica" ou "apoio"; "obrigatoria": true se a cena não pode ir ao ar
-  sem mostrar o acontecimento.
+  sem mostrar o acontecimento; "sincronia": {parâmetro: [palavras da fala]} quando algo na tela deve acontecer no
+  instante em que uma palavra é dita (ex.: {"vizinhos": ["Colômbia", "Brasil"]}).
 Se o acontecimento não puder ser desenhado com os fatos disponíveis, declare-o mesmo assim (o motor registra a
 limitação; não troque por uma foto qualquer).
 """

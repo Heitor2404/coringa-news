@@ -5,7 +5,7 @@
   const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt } = V2.U;
   const H = V2.H;
   const COR = { mar: '#0a1a2f', mar2: '#0d2340', terra: '#26344b', terra2: '#2d3d57', borda: '#5d7598', costa: '#8fa9cf', rio: '#4f86c6', lago: '#0f2a4c', alvo: '#FFD21F', rota: '#FFD21F' };
-  const PAD = { top: 470, bottom: 760, left: 100, right: 170 };     // área útil do mapa: y 470–1160, x 100–910 (V2.1: maior)
+  const PAD = { top: 540, bottom: 760, left: 100, right: 170 };     // área útil do mapa: y 540–1160, x 100–910 (V2.1: abaixo do cabeçalho de 2 linhas)
   const CORES_ROTA = ['#FFD21F', '#3FD0E0', '#FF6B5A'];
 
   function estilo(geo, p) {
@@ -77,8 +77,29 @@
         const host = el.querySelector('.mapa-host');
         map = new maplibregl.Map({ container: host, style: estilo(p.geo || {}, p), interactive: false, attributionControl: false, fadeDuration: 0,
           canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true }, center: [0, 0], zoom: 1, renderWorldCopies: false, maxPitch: 60 });
-        await new Promise(r => map.once('load', r));
-        const bb = p.bbox; const pad = { ...PAD, ...(p._pad || {}) }; B = cam(map, bb, pad); B.bearing = p.bearing || 0; B.pitch = p.pitch || 0;
+        host._map = map; await new Promise(r => map.once('load', r));
+        const bb = p.bbox; let pad = { ...PAD, ...(p._pad || {}) };
+        // Num quadro vertical de 1920 px o MapLibre não afasta além do zoom em que o mundo cobre a altura (z≈1,9):
+        // rotas que descem ao Cabo Horn ou sobem ao Ártico ficariam fora do quadro. Se o enquadramento pedir zoom
+        // menor, o mapa encolhe na vertical (com esmaecimento na borda) até a caixa caber na área útil.
+        const ajuste = (() => {
+          const c = map.cameraForBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad }); if (!c) return null;
+          const W = 512 * 2 ** c.zoom, my = l => Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, l)) * Math.PI / 360));
+          const acima = (Math.PI - my(bb[3])) / (2 * Math.PI) * W, abaixo = (my(bb[1]) + Math.PI) / (2 * Math.PI) * W;
+          const H = host.clientHeight || 1920, topo = Math.max(0, Math.ceil(pad.top - acima + 4)), fundo = Math.min(H, Math.floor(H - pad.bottom + abaixo - 4));
+          if (topo <= 0 && fundo >= H) return null;
+          return { topo, fundo, H };
+        })();
+        if (ajuste) {
+          Object.assign(host.style, { top: ajuste.topo + 'px', height: (ajuste.fundo - ajuste.topo) + 'px', bottom: 'auto',
+            maskImage: `linear-gradient(180deg,${ajuste.topo ? 'transparent 0,#000 90px' : '#000 0'},#000 calc(100% - 110px),${ajuste.fundo < ajuste.H ? 'transparent' : '#000'} 100%)` });
+          host.style.webkitMaskImage = host.style.maskImage;
+          map.resize(); pad = { ...pad, top: pad.top - ajuste.topo, bottom: pad.bottom - (ajuste.H - ajuste.fundo) };
+          // o resto do código posiciona rótulos em coordenadas do palco: project() devolve y do palco
+          const proj = map.project.bind(map), dy = ajuste.topo; map.project = ll => { const q = proj(ll); return { x: q.x, y: q.y + dy }; };
+          p._ajusteHost = ajuste;
+        }
+        B = cam(map, bb, pad); B.bearing = p.bearing || 0; B.pitch = p.pitch || 0;
         const w = bb[2] - bb[0], h = bb[3] - bb[1], f = p.contexto_fator || 6;
         A = p.camera_inicial || cam(map, [bb[0] - w * f / 2, Math.max(-80, bb[1] - h * f / 2), bb[2] + w * f / 2, Math.min(80, bb[3] + h * f / 2)]);
         if (A.zoom > B.zoom - 1.2) A.zoom = Math.max(0.5, B.zoom - 2.2);
@@ -121,16 +142,41 @@
       <div class="kicker" style="font-size:24px;color:var(--amarelo)">${esc(rot)}</div>
       ${p.titulo ? `<div class="tt" data-txt="1" style="font-weight:900;font-size:50px;line-height:1.05;margin-top:8px;text-transform:uppercase">${hl(p.titulo)}</div>` : ''}</div>`;
   const moldura = `<div class="abs" data-deco="1" style="inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(7,11,18,.65) 0%,rgba(7,11,18,0) 24%,rgba(7,11,18,0) 56%,rgba(7,11,18,.85) 80%,rgba(7,11,18,.95) 100%)"></div>`;
-  const ATR = '<div class="abs atr" data-g="atr" data-opcional="1" style="right:160px;top:1180px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">Natural Earth · MapLibre</div>';
+  const ATR = '<div class="abs atr" data-g="atr" data-opcional="1" style="right:160px;top:1198px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">Natural Earth · MapLibre</div>';
   const pinoHTML = (i, nome, sub) => `<div class="pino pn${i}" style="opacity:0"><div class="onda"></div><div class="onda o2"></div><div class="nucleo"></div></div>
      <div class="abs rot-mapa destaque lb${i}" data-g="pt${i}" style="opacity:0">${esc(nome)}${sub ? `<div style="font-family:var(--f-dado);font-weight:400;font-size:24px;letter-spacing:1px;margin-top:4px;color:#3a4558">${esc(sub)}</div>` : ''}</div>`;
-  function animPino(el, i, tl, t0, q, cima) {
+  function animPino(el, i, tl, t0, q, cima, vizinhos) {
     const pn = el.querySelector('.pn' + i), lb = el.querySelector('.lb' + i); if (!pn || !q) return;
+    if (i === 0) el.querySelectorAll('.rot-mapa.destaque').forEach(e => { e._t = null; });   // nova passada: nenhum nome posicionado ainda
     const k = back((tl - t0) / .45); pn.style.left = q.x + 'px'; pn.style.top = q.y + 'px'; pn.style.opacity = clamp((tl - t0) / .1);
     pn.querySelector('.nucleo').style.transform = `scale(${clamp(k, 0, 1.3)})`;
     pn.querySelectorAll('.onda').forEach((o, j) => { const ph = ((tl - t0 + j * .6) % 1.2) / 1.2; o.style.transform = `scale(${1 + ph * 4})`; o.style.opacity = tl > t0 ? (1 - ph) * .8 : 0; });
-    const w = lb.offsetWidth, hh = lb.offsetHeight; lb.style.left = clamp(q.x - w / 2, 90, 920 - w) + 'px'; lb.style.top = (cima ? q.y - hh - 44 : q.y + 40) + 'px';
-    const kl = eo5((tl - t0 - .25) / .4); lb.style.opacity = kl; lb.style.transform = `translateY(${(1 - kl) * (cima ? 16 : -16)}px)`;
+    // posição do nome: a preferida (acima/abaixo), a oposta, à direita, à esquerda — a primeira que não cobre
+    // cabeçalho, painel de distância, atribuição nem outro nome de pino; sem nenhuma livre, fica a preferida.
+    const w = lb.offsetWidth, hh = lb.offsetHeight;
+    // outro pino a menos de 300 px: o nome vai para o lado oposto a ele (senão os nomes se cruzam)
+    // vizinhos: posições DESTE quadro passadas por quem chama (o DOM ainda guarda o quadro anterior)
+    const viz = (vizinhos || [...el.querySelectorAll('.pino')].filter(e => e !== pn && parseFloat(e.style.opacity || 0) > .05).map(e => [parseFloat(e.style.left), parseFloat(e.style.top)]))
+      .filter(v => Math.hypot(v[0] - q.x, v[1] - q.y) < 300);
+    let ordem = [cima ? 'cima' : 'baixo', cima ? 'baixo' : 'cima', 'dir', 'esq'];
+    if (viz.length) { const vx = viz[0][0] - q.x, vy = viz[0][1] - q.y; const lado = vx > 0 ? 'esq' : 'dir', vert = vy > 0 ? 'cima' : 'baixo';
+      ordem = Math.abs(vx) >= Math.abs(vy) ? [lado, vert, vert === 'cima' ? 'baixo' : 'cima', lado === 'esq' ? 'dir' : 'esq'] : [vert, lado, lado === 'esq' ? 'dir' : 'esq', vert === 'cima' ? 'baixo' : 'cima']; }
+    const cands = ordem.map(k => {
+      const x = k === 'dir' ? q.x + 46 : k === 'esq' ? q.x - 46 - w : clamp(q.x - w / 2, 90, 920 - w);
+      const y = k === 'cima' ? q.y - hh - 44 : k === 'baixo' ? q.y + 40 : q.y - hh / 2;
+      return { k, x, y };
+    });
+    // ocupado: interface fixa, nomes JÁ posicionados neste quadro (ordem dos pinos) e os outros pinos
+    const ocup = [...el.querySelectorAll('.cab,.dist,.cmpd,.atr,.rot-mapa.destaque')].filter(e => e !== lb && parseFloat(getComputedStyle(e).opacity) > .05 && !(e.classList.contains('destaque') && e._t == null))
+      .map(e => { const r = e.getBoundingClientRect(); return [r.left - 8, r.top - 8, r.right + 8, r.bottom + 8]; })
+      .concat(viz.map(v => [v[0] - 26, v[1] - 26, v[0] + 26, v[1] + 26]));
+    const dentro = c => c.x >= 60 && c.x + w <= 1000 && c.y >= 330 && c.y + hh <= 1225;
+    const sobre = c => ocup.reduce((s2, o) => s2 + Math.max(0, Math.min(c.x + w, o[2]) - Math.max(c.x, o[0])) * Math.max(0, Math.min(c.y + hh, o[3]) - Math.max(c.y, o[1])), 0);
+    // sem posição livre: a de menor sobreposição dentro da tela (nunca escondida atrás do cabeçalho)
+    const esc = cands.find(c => dentro(c) && !sobre(c)) || cands.filter(dentro).sort((x, y) => sobre(x) - sobre(y))[0] || cands[0];
+    lb.style.left = esc.x + 'px'; lb.style.top = esc.y + 'px'; lb._pos = esc.k; lb._t = 1; lb.dataset.pos = esc.k;
+    const kl = eo5((tl - t0 - .25) / .4); lb.style.opacity = kl;
+    const d = (1 - kl) * 16; lb.style.transform = esc.k === 'cima' ? `translateY(${d}px)` : esc.k === 'baixo' ? `translateY(${-d}px)` : `translateX(${esc.k === 'dir' ? -d : d}px)`;
   }
 
   /* 9. mapa.localizacao */
@@ -180,7 +226,7 @@
       rota: [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], folga: .45, nota: 'Distância: Wikipédia' }, dur: 6, fala: 'São oitenta quilômetros do Caribe ao Pacífico.' },
   }, (p, ctx) => {
     const comp = !!p.rotas;
-    if (comp) p._pad = { bottom: 1920 - (985 - 20 * Math.max(0, (p.rotas.length - 2))) };   // o painel de distâncias não cobre a rota
+    p._pad = comp ? { bottom: 1920 - (985 - 20 * Math.max(0, (p.rotas.length - 2))) } : { bottom: 1920 - 1070 };   // painel/distância não cobrem a rota
     const m = motorMapa(p, ctx, 'rota');
     const rs = comp ? p.rotas.slice(0, 3).map((r, i) => ({ nome: r.nome, km: r.distancia_km ? +r.distancia_km : m.trilhas[i].total, oficial: !!r.distancia_km, cor: r.cor || CORES_ROTA[i] }))
       : [{ nome: '', km: p.distancia_km ? +p.distancia_km : m.total, oficial: !!p.distancia_km, cor: CORES_ROTA[0] }];
@@ -190,12 +236,12 @@
           <div style="flex:1;height:22px;background:rgba(255,255,255,.08)"><div class="bk bk${i}" style="height:100%;width:0;background:${r.cor}"></div></div>
           <span class="kv kv${i}" style="flex:none;width:200px;text-align:right;font-family:var(--f-dado);font-weight:700;font-size:34px;color:#fff">0 km</span></div>`).join('')}
         <div style="font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.65);margin-top:10px">${rs.some(r => !r.oficial) ? '≈ calculado pelo traçado desenhado' : ''}${p.nota ? ' · ' + esc(p.nota) : ''}</div></div>`
-      : `<div class="abs dist" data-g="dist" data-txt="1" style="left:72px;top:1060px;display:flex;align-items:baseline;gap:14px;background:rgba(7,12,22,.88);padding:10px 22px;border-left:8px solid var(--amarelo)">
+      : `<div class="abs dist" data-g="dist" data-txt="1" style="left:72px;top:1092px;display:flex;align-items:baseline;gap:14px;background:rgba(7,12,22,.88);padding:10px 22px;border-left:8px solid var(--amarelo)">
           <span class="dv" style="font-family:var(--f-dado);font-weight:700;font-size:64px;color:#fff">0</span><span style="font-family:var(--f-dado);font-size:32px;color:var(--amarelo)">km${rs[0].oficial ? '' : ' (≈ pelo traçado)'}</span></div>`;
     return {
       html: `<div class="mapa-host" data-ocupa="1"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>
         ${m.trilhas.map((t, i) => `<div class="abs bolinha b${i}" style="width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 0 0 9px ${rs[i] ? rs[i].cor : '#FFD21F'}88,0 0 30px ${rs[i] ? rs[i].cor : '#FFD21F'};opacity:0"></div>`).join('')}
-        ${m.pts.map((x, i) => pinoHTML(i, x.nome, '')).join('')}${cabecalho(p, p.kicker || (comp ? 'DISTÂNCIAS' : 'TRAJETO'))}${painel}${comp ? ATR.replace('top:1180px', 'top:1198px') : ATR}`,
+        ${m.pts.map((x, i) => pinoHTML(i, x.nome, '')).join('')}${cabecalho(p, p.kicker || (comp ? 'DISTÂNCIAS' : 'TRAJETO'))}${painel}${ATR}`,
       montar: el => m.montar(el),
       async upd(tl, el, c) {
         // câmera: chega ao enquadramento final em 40% da cena e fica (só um empurrão de 3% para não congelar)
@@ -208,7 +254,8 @@
         if (!r) return;
         aparece(el.querySelector('.cab'), tl, .05, { dy: -20 });
         m.trilhas.forEach((_, i) => { const b = el.querySelector('.b' + i); if (pontas[i]) { const q = r.map.project(pontas[i]); b.style.left = q.x + 'px'; b.style.top = q.y + 'px'; } b.style.opacity = kr[i] > 0 && kr[i] < 1 ? 1 : 0; });
-        m.pts.forEach((x, i) => animPino(el, i, tl, i === 0 ? .7 : desenho[0] + fatia * n * .95, r.map.project([x.lon, x.lat]), i === 0));
+        const t0s = m.pts.map((_, i) => i === 0 ? .7 : desenho[0] + fatia * n * .95), qs = m.pts.map(x => r.map.project([x.lon, x.lat]));
+        m.pts.forEach((x, i) => animPino(el, i, tl, t0s[i], qs[i], i === 0, qs.filter((q2, j) => j !== i).map(q2 => [q2.x, q2.y])));
         if (comp) { aparece(el.querySelector('.cmpd'), tl, .8, { dy: 20 }); rs.forEach((x, i) => { el.querySelector('.bk' + i).style.width = (100 * x.km / mx * kr[i]) + '%'; el.querySelector('.kv' + i).textContent = fmt(x.km * kr[i], 0) + ' km'; }); }
         else { el.querySelector('.dv').textContent = fmt(rs[0].km * kr[0], 0); aparece(el.querySelector('.dist'), tl, .8, { dx: -20, dy: 0 }); }
         r.colisao();

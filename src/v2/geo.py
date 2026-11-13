@@ -43,7 +43,8 @@ def _cruza(a, b) -> bool:
 def caixa_de(pontos: list[tuple[float, float]], folga: float = 0.35, minimo: float = 1.0) -> tuple:
     xs, ys = [p[0] for p in pontos], [p[1] for p in pontos]
     w, h = max(max(xs) - min(xs), minimo), max(max(ys) - min(ys), minimo)
-    return (min(xs) - w * folga, min(ys) - h * folga, max(xs) + w * folga, max(ys) + h * folga)
+    # limita ao mundo projetável (Web Mercator corta em ±85°): folga grande não pode virar caixa além dos polos
+    return (max(-180.0, min(xs) - w * folga), max(-80.0, min(ys) - h * folga), min(180.0, max(xs) + w * folga), min(84.0, max(ys) + h * folga))
 
 
 def pais(nome: str) -> dict | None:

@@ -34,12 +34,15 @@ def _norm(w: str) -> str:
 ESTILO_PADRAO = 'tom sério e confiante de apresentador de telejornal brasileiro, ritmo ágil, sem pausas longas'
 
 
-def _rest_tts(modelo: str, texto: str, voz: str, formato: str, chave: str = '') -> bytes:
-    """Chamada direta à API (sem a biblioteca), em dois formatos de configuração de voz: o antigo e o novo."""
+def _rest_tts(modelo: str, texto: str, voz: str, formato: str, chave: str = '', sistema: str | None = None) -> bytes:
+    """Chamada direta à API (sem a biblioteca), em dois formatos de configuração de voz: o antigo e o novo.
+    sistema: instrução de tom FORA do texto falado (systemInstruction) — o que está em 'contents' é só o roteiro."""
     import base64, requests
     vc = {'prebuiltVoiceConfig': {'voiceName': voz}} if formato == 'antigo' else {'voice': voz}
     corpo = {'contents': [{'role': 'user', 'parts': [{'text': texto}]}],
              'generationConfig': {'responseModalities': ['AUDIO'], 'speechConfig': {'voiceConfig': vc}}}
+    if sistema:
+        corpo['systemInstruction'] = {'parts': [{'text': sistema}]}
     r = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent',
                       headers={'x-goog-api-key': chave or os.getenv('GEMINI_API_KEY', '')}, json=corpo, timeout=300)
     if r.status_code >= 400:
@@ -47,13 +50,23 @@ def _rest_tts(modelo: str, texto: str, voz: str, formato: str, chave: str = '') 
     return base64.b64decode(r.json()['candidates'][0]['content']['parts'][0]['inlineData']['data'])
 
 
-def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_PADRAO):
+def pedido_tts(texto: str, estilo: str, separado: bool) -> tuple[str, str | None]:
+    """(texto falado, instrução de sistema). separado=True (Coringa, 13/11): o texto falado é SÓ o roteiro e o tom vai
+    como instrução de sistema — a voz não tem instrução nenhuma para ler em voz alta (no Panamá leu 13 palavras dela e
+    8,9 s foram cortados). separado=False: o pedido antigo (instrução + linha + roteiro), mantido para o NTC."""
+    if separado:
+        return pronuncia(texto), f'Narração em português do Brasil: {_estilo(estilo)}.'
+    return f'Narre em português do Brasil ({_estilo(estilo)}). Leia SOMENTE o texto abaixo da linha.\n---\n{pronuncia(texto)}', None
+
+
+def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_PADRAO, estilo_separado: bool = False):
     """Voz do Gemini. Tenta vários modelos e dois jeitos de chamar (a API muda de formato de vez em quando);
-    em sobrecarga, espera e tenta de novo. Só desiste depois de tudo isso (aí entra a voz do Edge)."""
+    em sobrecarga, espera e tenta de novo. Só desiste depois de tudo isso (aí entra a voz do Edge).
+    estilo_separado: o tom vai como instrução de sistema; se o modelo recusar instrução de sistema (400), a mesma chamada
+    é refeita só com o roteiro (sem tom) — nunca com a instrução dentro do texto falado."""
     from google.genai import types
     from .gemini import cliente
-    # instrução curta e separada por uma linha marcada: quanto menor, menos chance de a voz ler a instrução em voz alta
-    pedido = f'Narre em português do Brasil ({_estilo(estilo)}). Leia SOMENTE o texto abaixo da linha.\n---\n{pronuncia(texto)}'
+    pedido, sistema = pedido_tts(texto, estilo, estilo_separado)
     erros = []
     from . import gemini as _g
     for ch in range(max(1, len(_g.CHAVES))):          # 2ª chave do Gemini, se a cota da 1ª acabar
@@ -61,18 +74,19 @@ def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_
         for modelo in ('gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'):
             jeitos = [('sdk', None), ('rest', 'antigo'), ('rest', 'novo')]
             for jeito, formato in jeitos:
+                sis = sistema
                 for tentativa in range(3):
                     try:
                         if jeito == 'sdk':
                             r = cliente().models.generate_content(
                                 model=modelo, contents=pedido,
                                 config=types.GenerateContentConfig(
-                                    response_modalities=['AUDIO'],
+                                    response_modalities=['AUDIO'], system_instruction=sis,
                                     speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
                                         prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voz)))))
                             pcm = r.candidates[0].content.parts[0].inline_data.data
                         else:
-                            pcm = _rest_tts(modelo, pedido, voz, formato, _g.CHAVES[ch] if _g.CHAVES else '')
+                            pcm = _rest_tts(modelo, pedido, voz, formato, _g.CHAVES[ch] if _g.CHAVES else '', sistema=sis)
                         with wave.open(str(wav), 'wb') as w:
                             w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000); w.writeframes(pcm)
                         print(f'  [voz] Gemini ok ({modelo}, {jeito}{"/" + formato if formato else ""})')
@@ -80,6 +94,9 @@ def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_
                     except Exception as e:
                         msg = str(e)
                         erros.append(f'{modelo}/{jeito}: {msg[:90]}')
+                        if sis and ('400' in msg or 'INVALID_ARGUMENT' in msg) and tentativa < 2:
+                            sis = None                           # modelo não aceita instrução de sistema: só o roteiro
+                            continue
                         if ('503' in msg or 'UNAVAILABLE' in msg or '500' in msg) and tentativa < 2:
                             time.sleep(20 * (tentativa + 1))
                             continue
@@ -353,7 +370,8 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
     motivo = ''
     for tentativa in range(2):                         # grava; se não bater com o roteiro, grava de novo; depois desiste
         bruto = pasta / f'gemini{tentativa}.wav'
-        gemini_tts(texto, bruto, cfg.get('voz_gemini', 'Charon'), cfg.get('estilo_gemini', ESTILO_PADRAO))
+        gemini_tts(texto, bruto, cfg.get('voz_gemini', 'Charon'), cfg.get('estilo_gemini', ESTILO_PADRAO),
+                   estilo_separado=bool(cfg.get('_estilo_separado')))
         vel = float(cfg.get('velocidade_gemini', 1.1))
         rapido = pasta / f'gemini_rapido{tentativa}.wav'
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(bruto), '-af', f'atempo={vel}', '-ac', '1', str(rapido)], check=True)
@@ -393,7 +411,9 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
 def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None = None):
     """cfg: troca a voz/estilo/velocidade (ex.: o canal Ninguém Te Contou usa outra voz que o Coringa)."""
     pasta.mkdir(parents=True, exist_ok=True)
+    coringa = cfg is None                          # Coringa (sem cfg): tom fora do texto falado; NTC (cfg próprio): como antes
     cfg = {**config(), **(cfg or {})}
+    cfg.setdefault('_estilo_separado', coringa)
     if not teste and cfg.get('voz_motor', 'gemini') == 'gemini' and os.getenv('GEMINI_API_KEY'):
         try:
             r = _narrar_gemini(cenas, pasta, cfg)

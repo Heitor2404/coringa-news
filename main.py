@@ -157,7 +157,55 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     fundo = next((c['img'] for c in reversed(cenas[:-1]) if c.get('img') and not c.get('video')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
         cenas[-1]['img'] = fundo
+        cenas[-1]['_fundo_fechamento'] = True
+    for aviso in _sem_repeticao_longa(cenas):
+        print('  [mídia] pendência (antes do render): ' + aviso)
     return cenas
+
+
+REPETICAO_MAX = 9.0     # mesma mídia seguida (o porteiro barra a partir de 11 s): a cena HERDADA não passa disso
+SEPARACAO_MIN = 4.0     # foto de cena anterior só volta se saiu da tela há pelo menos isso (separação visual)
+
+
+def _sem_repeticao_longa(cenas: list[dict]) -> list[str]:
+    """13/11 (Panamá: payoff e fechamento herdaram a mesma foto → 13 s seguidos, vídeo barrado). Só mexe em mídia
+    HERDADA (cena sem foto própria que pegou a da vizinha, ou o fundo do fechamento): se ela esticar a mesma imagem além
+    de REPETICAO_MAX, troca por uma foto real de uma cena anterior, fora da tela há SEPARACAO_MIN e diferente da
+    próxima; sem alternativa, o fechamento fica sem foto (Coringa sobre fundo escuro) e a cena vira pendência
+    (frase-chave anotada), avisada antes do render. Devolve os avisos."""
+    avisos = []
+    for k, c in enumerate(cenas):
+        if not c.get('img') or c.get('video') or not (c.get('repetida') or c.get('_fundo_fechamento')):
+            continue
+        j = k
+        while j > 0 and cenas[j - 1].get('img') == c['img']:
+            j -= 1
+        if c['end'] - cenas[j]['start'] <= REPETICAO_MAX:
+            continue
+        velha, prox = c['img'], next((x.get('img') for x in cenas[k + 1:] if x.get('img') != c['img']), None)
+        saida, propria = {}, set()
+        for x in cenas[:k]:
+            if x.get('img') and not x.get('video'):
+                saida[x['img']] = x['end']
+                if x.get('real') and not x.get('repetida'):
+                    propria.add(x['img'])
+        alts = [im for im in propria if im not in (velha, prox) and c['start'] - saida[im] >= SEPARACAO_MIN]
+        mesma_ideia = [x for x in cenas[k:] if x.get('img') == velha and x.get('grupo') == c.get('grupo')
+                       and (x is c or x.get('sub'))]
+        if alts:
+            nova = max(alts, key=lambda im: saida[im])          # a que saiu por último: a mais perto do assunto
+            for x in mesma_ideia:
+                x['img'], x['real'] = nova, True
+            continue
+        for x in mesma_ideia:
+            x.pop('img', None)
+            if x['tipo'] != 'fechamento':
+                x['pendente'] = 'repeticao'
+                x['hf'] = _anotacao(x)
+        if c['tipo'] != 'fechamento':
+            avisos.append(f"cena {k} ({c['start']:.0f}s) sem mídia própria e sem outra foto real disponível: "
+                          'frase-chave anotada em vez de repetir a imagem')
+    return avisos
 
 
 PLANO_MAX = 3.5         # plano mais longo que isso PODE ganhar um detalhe da mesma foto (se a resolução deixar)
@@ -878,14 +926,15 @@ def _arquivo_serie(pedido: str, parte: int) -> Path:
 _FALHAS: list = []   # por que cada tema do dia não virou vídeo (vai no aviso do Telegram)
 
 
-def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None):
-    """True = vídeo feito; 'pular' = o tema não rende (sem material/sensível); False = erro passageiro."""
+def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None, unico: bool = False):
+    """True = vídeo feito; 'pular' = o tema não rende (sem material/sensível); False = erro passageiro.
+    unico=True (curiosidade pedida à mão / teste, 13/11): no máximo UM vídeo — reprovado, não há outro tema depois."""
     from src import orcamento_video          # Fase 1 (monitorar): orçamento do vídeo; no diário já vem aberto
     with orcamento_video.video(pedido):
-        return _fazer_curiosidade(pedido, parte, pasta, pauta)
+        return _fazer_curiosidade(pedido, parte, pasta, pauta, unico)
 
 
-def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None):
+def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None, unico: bool = False):
     from src import roteiro
     parte = max(1, parte)
     arq_serie = _arquivo_serie(pedido, parte)
@@ -907,9 +956,12 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         nome = f'explica-{slug(pedido)[:40]}' + (f'-parte{parte}' if v.get('parte') else '')
         arq = montar_video(v, pasta, nome)
         if v.get('_bloqueado'):
-            print(f"  ✘ porteiro: não mando este vídeo ({v['_bloqueado']}); tento outro tema")
-            _tg('sendMessage', {'text': f"⛔ Vídeo de \"{v['titulo']}\" barrado antes de chegar aqui: {v['_bloqueado']}. "
-                                        'Vou tentar outro tema (se der tempo hoje). O arquivo ficou nos artefatos do GitHub.'[:4000]})
+            seguir = 'execução única: não tento outro tema' if unico else 'tento outro tema'
+            print(f"  ✘ porteiro: não mando este vídeo ({v['_bloqueado']}); {seguir}")
+            _tg('sendMessage', {'text': (f"⛔ Vídeo de \"{v['titulo']}\" barrado antes de chegar aqui: {v['_bloqueado']}. "
+                                         + ('Execução única (teste): nenhum outro tema será gerado. ' if unico else
+                                            'Vou tentar outro tema (se der tempo hoje). ')
+                                         + 'O arquivo ficou nos artefatos do GitHub.')[:4000]})
             raise ValueError(f"material ruim: {v['_bloqueado']}")
         serie = serie or {'pedido': pedido, 'tema': t, 'pergunta': t['pergunta'], 'arco': v.get('arco') or [], 'partes': []}
         serie['partes'] = [p for p in serie['partes'] if p['parte'] != parte] + \
@@ -1131,7 +1183,7 @@ def main():
             _aviso_sem_video(f'erro inesperado no sistema: {str(e)[:200]}')
         return
     if a.curiosidade.strip():
-        fazer_curiosidade(a.curiosidade.strip(), a.parte, pasta)
+        fazer_curiosidade(a.curiosidade.strip(), a.parte, pasta, unico=True)     # 1 vídeo, mesmo se reprovado
         return
 
     from src import orcamento_video          # Fase 1 (monitorar): a escolha das notícias é custo do LOTE, rateado

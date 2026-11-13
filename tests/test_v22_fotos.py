@@ -46,3 +46,36 @@ def test_baixa_resolucao_bloqueia_como_protagonista(tmp_path, nome):
     d = {'duration': 6, 'meta': {}, 'captions': [], 'scenes': [{'comp': 'foto.historica', 'start': 0, 'end': 6, 'params': {'img': str(arq), 'recorte': [0, 0, 1, 1]}}]}
     r = fiscal_v2.avaliar(d, [{}], [])
     assert any(a['codigo'] == 'D12' and a['gravidade'] == 'bloqueio' for a in r['achados']), r['achados']
+
+
+JS_DOC = """(()=>{const c=V2.cenas[0].el,j=c.querySelector('.janela'),im=c.querySelector('.foto-mold'),r=j.getBoundingClientRect();
+  return {w:r.width,h:r.height,left:r.left,right:r.right,iw:im.offsetWidth,ih:im.offsetHeight,tx:new DOMMatrix(getComputedStyle(im).transform).m41}})()"""
+
+
+def test_panoramica_documental_varre_em_vez_de_faixa(tmp_path):
+    """Achado do render inédito: Caracas (2400×463) em foto.documental aparecia como faixa de 185 px."""
+    arq = M / 'foto_panoramica_caracas.jpg'
+    with Image.open(arq) as im:
+        wh = im.size
+    d = {'duration': 6, 'meta': {'motor': 'v2'}, 'captions': [], 'scenes': [{'comp': 'foto.documental', 'start': 0, 'end': 6,
+         'params': {'lugar': 'CARACAS'}, 'fundo': {'img': str(arq), 'de': 'auto', 'para': 'auto'}}]}
+    pd = palco.preparar(d)
+    assert pd['scenes'][0]['fundo']['modo'] == 'moldura'
+    with palco.abrir(pd, tmp_path) as pg:
+        xs = []
+        for t in (0.2, 3.0, 5.8):
+            pg.evaluate(f'seek({t})'); j = pg.evaluate(JS_DOC); xs.append(j['tx'])
+            assert j['h'] >= acervo_v2.PROTAGONISTA_MIN, j                    # não é faixa fina
+            assert j['ih'] / wh[1] <= acervo_v2.ESC_MAX + .01, j              # sem ampliar além de 1,5×
+            assert abs((j['left'] + j['right']) / 2 - 540) <= 2, j
+        assert abs(xs[-1] - xs[0]) > 100, xs                                   # a câmera percorre a panorâmica
+    assert not [a for a in fiscal_v2.avaliar(pd, [{}], [])['achados'] if a['codigo'] == 'D12']
+
+
+def test_panoramica_documental_baixa_resolucao_bloqueia(tmp_path):
+    arq = _baixa(tmp_path, 'foto_panoramica_caracas.jpg', 150)            # 150 px de altura: nem varrendo chega a 300
+    d = {'duration': 6, 'meta': {'motor': 'v2'}, 'captions': [], 'scenes': [{'comp': 'foto.documental', 'start': 0, 'end': 6,
+         'params': {}, 'fundo': {'img': str(arq), 'de': 'auto', 'para': 'auto'}}]}
+    pd = palco.preparar(d)
+    d12 = [a for a in fiscal_v2.avaliar(pd, [{}], [])['achados'] if a['codigo'] == 'D12']
+    assert d12 and d12[0]['gravidade'] == 'bloqueio', d12

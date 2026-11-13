@@ -138,6 +138,18 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             if ad['modo'] == 'insuficiente':
                 A.append(_achado('deterministico', 'D12', 'bloqueio', k, comp, ini, 'foto de arquivo sem resolução para ser protagonista',
                                  f"{Path(str(p['img'])).name}: {ad['motivo']}"))
+        # D12 também para a foto de FUNDO (foto.documental e cenas sobre foto): panorâmica em moldura sem altura possível
+        fu = sc.get('fundo') or {}
+        arq_f = str(fu.get('img') or '').replace('file://', '')
+        if comp != 'foto.historica' and arq_f and Path(arq_f).exists() and (fu.get('modo') in ('moldura', 'arquivo')):
+            from PIL import Image
+            from src.v2 import acervo_v2
+            with Image.open(arq_f) as im:
+                wh = im.size
+            ad = acervo_v2.adequacao_historica(wh)
+            if ad['modo'] == 'insuficiente':
+                A.append(_achado('deterministico', 'D12', 'bloqueio', k, comp, ini, 'foto sem resolução para ser protagonista',
+                                 f"{Path(arq_f).name}: {ad['motivo']}"))
         # D7 / D8 mapas
         if comp.startswith('mapa.'):
             pts = list(p.get('pontos') or [])

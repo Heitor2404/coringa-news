@@ -79,11 +79,15 @@
     const f = sc.fundo; if (!f || !f.img) return '';
     const modo = f.modo || 'cobrir';
     if (modo === 'moldura' || modo === 'arquivo') {
-      const [w, h] = f.wh || [1600, 900], larg = 960, alt = Math.min(1000, Math.round(larg * h / w));
+      const [w, h] = f.wh || [1600, 900], larg = 960;
+      let alt = Math.min(1000, Math.round(larg * h / w));
       const lw = alt < Math.round(larg * h / w) ? Math.round(alt * w / h) : larg;
+      // V2.2: panorâmica (> 2:1) não vira faixa fina — janela alta (até 560 px, sem ampliar além de 1,5× os pixels
+      // reais) e a câmera VARRE a foto de ponta a ponta (mesma regra de acervo_v2.adequacao_historica)
+      if (w / h > 2 && modo === 'moldura') { const a2 = Math.round(Math.min(560, h * 1.5)); if (a2 > alt) { alt = a2; f.varre = true; } }
       return `<div class="fundo-desfoque" style="background-image:url('${f.img}')"></div>
         <div class="moldura-v2 abs" data-g="foto" style="left:${(W - lw) / 2 - (modo === 'arquivo' ? 18 : 0)}px;top:${f.y || 470}px;padding:${modo === 'arquivo' ? 18 : 0}px;${modo === 'arquivo' ? 'background:#efe6d2;box-shadow:0 40px 90px rgba(0,0,0,.6)' : 'box-shadow:0 30px 80px rgba(0,0,0,.55)'}">
-          <div class="janela" style="position:relative;width:${lw}px;height:${alt}px;overflow:hidden"><img class="foto-mold" src="${f.img}" style="position:absolute;left:0;top:0;width:${lw}px;height:${alt}px;transform-origin:0 0;${modo === 'arquivo' ? 'filter:sepia(.25) contrast(1.05)' : ''}"></div></div>`;
+          <div class="janela" style="position:relative;width:${lw}px;height:${alt}px;overflow:hidden"><img class="foto-mold" src="${f.img}" style="position:absolute;left:0;top:0;width:${f.varre ? Math.round(alt * w / h) : lw}px;height:${alt}px;transform-origin:0 0;${modo === 'arquivo' ? 'filter:sepia(.25) contrast(1.05)' : ''}"></div></div>`;
     }
     return `<img class="fundo-foto" src="${f.img}"><div class="escurece-base" style="opacity:${f.escurece ?? 1}"></div>`;
   }
@@ -106,8 +110,15 @@
       im.style.transform = `translate(${c.x}px,${c.y}px) scale(${c.s})`;
     } else {
       const im = el.querySelector('.foto-mold'), jn = el.querySelector('.janela'); if (!im || !jn) return;
-      const vw = jn.clientWidth, vh = jn.clientHeight, c = camera([vw, vh], cx, cy, z, vw, vh, 3);
-      im.style.transform = `translate(${c.x}px,${c.y}px) scale(${c.s})`;
+      const vw = jn.clientWidth, vh = jn.clientHeight;
+      if (f.varre) {           // varredura: da ponta onde NÃO está o foco até o foco (ou de ponta a ponta), sem zoom
+        const iw = im.offsetWidth, folga = Math.max(0, iw - vw), fx = (f.para || [.5])[0];
+        const x0 = fx >= .5 ? 0 : -folga, x1 = fx >= .5 ? -folga * Math.min(1, fx * 1.2) : -folga * Math.max(0, fx - .1);
+        im.style.transform = `translate(${lerp(x0, x1, k)}px,0px)`;
+      } else {
+        const c = camera([vw, vh], cx, cy, z, vw, vh, 3);
+        im.style.transform = `translate(${c.x}px,${c.y}px) scale(${c.s})`;
+      }
       const mo = el.querySelector('.moldura-v2'); if (mo) mo.style.transform = `translateY(${lerp(14, -14, k)}px)`;
     }
   }

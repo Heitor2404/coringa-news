@@ -122,8 +122,13 @@
         const r = extra && extra(map);
         await desenhado(map);
         const pos = (lonlat, e, dx = 0, dy = 0) => { if (!e) return; const q = map.project(lonlat); e.style.left = (q.x + dx) + 'px'; e.style.top = (q.y + dy) + 'px'; return q; };
-        rotulosMar.forEach((m, i) => { const e = el.querySelector('.rm' + i); const q = pos(m.c, e); e.style.transform = 'translate(-50%,-50%)'; e.style.opacity = clamp((tl - .3) / .5) * (q.y > 420 && q.y < 1100 && q.x > 120 && q.x < 880 ? 1 : 0); });
-        rotulosPais.forEach((m, i) => { const e = el.querySelector('.rp' + i); const q = pos(m.c, e); e.style.transform = 'translate(-50%,-50%)'; e.style.opacity = clamp((tl - .5) / .5) * (q.y > 420 && q.y < 1100 && q.x > 160 && q.x < 860 ? .9 : 0); });
+        // rótulos de mar: presos dentro do quadro pela LARGURA (o centro dentro não basta: "Oceano Pacífico" saía pela borda);
+        // rótulos de país: só aparecem se couberem inteiros (deslocar poria o nome sobre outro país)
+        rotulosMar.forEach((m, i) => { const e = el.querySelector('.rm' + i); const q = pos(m.c, e); const w = e.offsetWidth;
+          e.style.left = clamp(q.x, 70 + w / 2, 1000 - w / 2) + 'px'; e.style.transform = 'translate(-50%,-50%)';
+          e.style.opacity = clamp((tl - .3) / .5) * (q.y > 420 && q.y < 1100 && q.x > -w / 4 && q.x < 1080 + w / 4 ? 1 : 0); });
+        rotulosPais.forEach((m, i) => { const e = el.querySelector('.rp' + i); const q = pos(m.c, e); const w = e.offsetWidth; e.style.transform = 'translate(-50%,-50%)';
+          e.style.opacity = clamp((tl - .5) / .5) * (q.y > 420 && q.y < 1100 && q.x - w / 2 > 70 && q.x + w / 2 < 1000 ? .9 : 0); });
         return { map, pos, colisao: () => colisao(el) };
       },
     };

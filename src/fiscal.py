@@ -306,6 +306,10 @@ def alertas(v: dict, cenas: list[dict], problemas_tela: list, bloqueadores: list
         for c in v.get('cenas', []):
             if c.get('_rebaixado'):
                 out.append({'nivel': 'P1', 'motivo': 'gráfico rebaixado (dado fora dos fatos)', 'evidencia': c['_rebaixado']})
+        from . import resolucao
+        for pd in resolucao.resumo(cenas)['pendentes']:     # Etapa 2: decisão do Heitor — cena central sem representação = P0 editorial
+            out.append({'nivel': 'P0' if pd['central'] else 'P1', 'motivo': f"cena sem representação ({pd['tipo'].replace('_', ' ')})",
+                        'evidencia': f"cena {pd['cena']}: {pd['sugestao']}"})
         r = storyboard.resumo(cenas)
         if r['centrais_sem_explicacao']:
             out.append({'nivel': 'P1', 'motivo': 'cena central sem mídia que explique',

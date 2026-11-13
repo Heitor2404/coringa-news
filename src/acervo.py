@@ -525,9 +525,14 @@ def _catalogar(itens: list[dict], tema: str, epoca: str) -> None:
                 util = a.get('util')
                 x['util'] = util if isinstance(util, bool) else str(util).lower() in ('true', 'sim', 'yes')
                 tpc = a.get('texto_por_cima', False)    # marca d'água / texto de outro canal: nunca vai para o vídeo
-                if tpc is True or str(tpc).lower() in ('true', 'sim', 'yes'):
+                diagrama = str(a.get('tipo') or '').lower() == 'diagrama'
+                if (tpc is True or str(tpc).lower() in ('true', 'sim', 'yes')) and not diagrama:
                     x['util'] = False
                     print(f"  [acervo] fora: texto/marca d'água por cima — {x['titulo'][:60]}")
+                elif diagrama:
+                    # 13/11 (Etapa 2): no polvo "Chromatophores Bimac- Markey" saiu por ter rótulos — em diagrama, seta e
+                    # rótulo SÃO o conteúdo. Fica, marcado como diagrama (reconstrução explicativa), se for útil.
+                    x['rotulado'] = tpc is True or str(tpc).lower() in ('true', 'sim', 'yes')
                 x['mostra'] = str(a.get('mostra') or '')[:200]
                 x['tipo_img'] = str(a.get('tipo') or 'foto').lower()
                 # 12/11 (imagem por acontecimento): quem e onde a imagem mostra, para ligar a imagem ao fato sem nova IA
@@ -799,9 +804,11 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
         # época, proveniência, clareza, resolução); a genérica só entra em frase de ambiente; abaixo de RECUSA = recusa
         amb = acont.ambiente(c)
         sb = c.get('sb') or {}
-        if sb.get('midia_preferida') == 'diagrama' and sb.get('proposito') not in ('abertura', 'contexto', 'ligacao'):
-            selecao.registrar(c, None, None, ['mecanismo: fica para o esquema explicativo (foto do assunto não mostra o processo)'])
-            continue                                   # 12/11 (polvo): reserva qualquer não explica o processo
+        if sb.get('necessidade') in ('processo', 'acontecimento'):
+            # 13/11 (Etapa 2): processo e fato central não são tapados com foto qualquer da reserva (no polvo: a praia nos
+            # leucóforos, as rochas nos melanócitos). Só o casamento (que vê a imagem) ou o resolvedor decidem essas cenas.
+            selecao.registrar(c, None, None, [f"{sb['necessidade']}: reserva do acervo não representa (fica para o resolvedor)"])
+            continue
         contexto = sb.get('proposito') in ('abertura', 'contexto', 'ligacao')
         notas = sorted(((selecao.pontuar(x, c), x) for x in livres if amb or contexto or not x.get('generica')),
                        key=lambda t: -t[0][0])

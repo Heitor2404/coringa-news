@@ -22,7 +22,7 @@ CENTRAIS = {'mecanismo', 'evidencia', 'payoff', 'virada', 'comparacao', 'consequ
 CONTEXTUAIS_OK = {'abertura', 'contexto', 'ligacao', 'fechamento'}                      # contexto basta aqui
 
 # mídia preferida por recurso pedido no acontecimento
-POR_RECURSO = {'foto': 'foto_do_fato', 'video': 'video_do_fato', 'documento': 'documento', 'jornal': 'documento',
+POR_RECURSO = {'esquema': 'diagrama', 'diagrama': 'diagrama', 'foto': 'foto_do_fato', 'video': 'video_do_fato', 'documento': 'documento', 'jornal': 'documento',
                'retrato': 'retrato', 'lugar': 'foto_do_lugar', 'objeto': 'foto_do_objeto', 'mapa': 'mapa',
                'linha_tempo': 'linha_tempo', 'numero': 'grafico', 'ia': 'ilustracao', 'ambiente': 'video_ambiente'}
 POR_TIPO = {'mapa': 'mapa', 'linha_tempo': 'linha_tempo', 'numero': 'grafico', 'comparacao': 'grafico', 'escala': 'grafico',
@@ -70,9 +70,38 @@ def _requisitos(c: dict, funcao: str, modo: str) -> list[str]:
     return list(dict.fromkeys(req)) or ['assunto']
 
 
+# 13/11 (Etapa 2): o que a cena PRECISA mostrar decide antes da mídia que o roteiro preferiu. No polvo o roteiro escreveu
+# recurso "foto" em frase de processo e o storyboard pedia foto: entrou polvo/areia/praia no lugar do mecanismo.
+#   processo      — como algo funciona (esquema/diagrama, ou registro real do próprio processo)
+#   acontecimento — o fato central (evidência/payoff): registro real do fato, documento, ou reconstrução sinalizada
+#   acontecimento_flex — virada/consequência/comparação: aceita pessoa/lugar/objeto do próprio fato como contexto
+#   contexto      — abertura, contexto, ligação, ambiente: foto do assunto basta
+#   documental   — a frase é sobre a coisa em si (roteiro sem função declarada: comportamento de antes)
+#   grafico       — o próprio infográfico é a representação
+ESTRITAS = {'processo', 'acontecimento'}
+
+
+def necessidade(c: dict, funcao: str, modo: str) -> str:
+    rec = (c.get('acontecimento') or {}).get('recurso') or ''
+    if c.get('tipo') in POR_TIPO:
+        return 'grafico'
+    if rec in ('esquema', 'diagrama') or funcao == 'mecanismo' or \
+            (modo in ('mecanismo', 'experimento_mental') and funcao == '' and rec not in ('ambiente',)):
+        return 'processo'
+    if rec == 'ambiente' or funcao in ('abertura', 'contexto', 'ligacao', 'fechamento'):
+        return 'contexto'
+    if funcao in ('evidencia', 'payoff'):
+        return 'acontecimento'
+    if funcao in ('virada', 'consequencia', 'comparacao'):
+        return 'acontecimento_flex'
+    return 'documental'
+
+
 def _preferida(c: dict, funcao: str, modo: str) -> str:
     if c.get('tipo') in POR_TIPO:
         return POR_TIPO[c['tipo']]
+    if necessidade(c, funcao, modo) == 'processo':      # a necessidade vence a mídia genérica pedida pelo roteiro
+        return 'diagrama'
     rec = (c.get('acontecimento') or {}).get('recurso') or ''
     if rec in POR_RECURSO:
         return POR_RECURSO[rec]
@@ -111,7 +140,8 @@ def construir(v: dict) -> dict:
                              'hierarquia': ['visual', 'legenda'] if pref not in ('grafico', 'linha_tempo') else ['dado', 'legenda'],
                              'area_segura': 'legenda na faixa de baixo; rótulos acima dela'},
               'movimento': MOVIMENTO.get(pref, 'leve'), 'transicao': None,
-              'midia': None, 'evidencia': 'sem_midia', 'explica': False, 'limitacoes': []}
+              'midia': None, 'evidencia': 'sem_midia', 'explica': False, 'limitacoes': [],
+              'necessidade': necessidade(c, funcao, modo), 'resolucao': None}
         c['sb'] = sb
         if c.get('grupo') is not None:
             por_grupo[c['grupo']] = sb
@@ -131,6 +161,8 @@ def _nivel(c: dict, sb: dict) -> tuple[str, list[str]]:
     if c.get('repetida') or c.get('midia') == 'vizinha':
         return 'contextual', ['mídia emprestada da cena vizinha']
     rel = c.get('relacao')
+    if rel == 'diagrama' or c.get('_tipo_img') == 'diagrama':
+        return 'explicativo', lim                       # diagrama real (acervo): reconstrução explicativa
     if rel in ('fato', 'documento'):
         return 'direto', lim
     if rel == 'pessoa' and 'acao' in sb['requisitos']:

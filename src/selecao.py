@@ -62,6 +62,10 @@ def verificar(x: dict, c: dict, rel: str | None) -> tuple[str | None, list[str],
         if rel == 'documento' and not (str(x.get('tipo_img') or '').lower() in TIPOS_PAPEL or PAPEL.search(_texto(x))):
             motivos.append('o Gemini disse "documento", mas o catálogo não mostra papel/jornal')
             return 'tema', motivos, verificada
+    elif rel == 'diagrama':
+        if str(x.get('tipo_img') or '').lower() not in ('diagrama', 'desenho'):
+            motivos.append('o Gemini disse "diagrama", mas o catálogo não marca a imagem como diagrama')
+            return 'tema', motivos, verificada
     elif rel in ('pessoa', 'lugar'):
         alvo = _tok(ac.get('quem') if rel == 'pessoa' else ac.get('onde'))
         meta = _tok(' '.join(x.get('pessoas') or []) if rel == 'pessoa' else x.get('lugar')) | _tok(_texto(x))

@@ -18,7 +18,7 @@ import re
 import unicodedata
 
 RECURSOS = ('foto', 'video', 'documento', 'jornal', 'retrato', 'lugar', 'objeto', 'mapa', 'linha_tempo', 'numero', 'ia',
-            'ambiente')
+            'ambiente', 'esquema')      # 13/11 (Etapa 2): "esquema" = o que só se entende desenhado (processo, mecanismo)
 RELACOES_DO_FATO = ('fato', 'documento', 'pessoa', 'lugar', 'objeto')    # imagem ligada ao acontecimento da frase
 GRAFICOS = ('mapa', 'linha_tempo', 'numero', 'comparacao', 'cards', 'lista', 'escala', 'citacao')
 SEM_IDEIA = ('fechamento',)
@@ -64,7 +64,8 @@ def normalizar(v: dict) -> dict:
         c.setdefault('grupo', f'g{k}')
         ac = c.get('acontecimento') if isinstance(c.get('acontecimento'), dict) else {}
         rec = _norm(ac.get('recurso')).replace(' ', '_').replace('-', '_')
-        rec = {'linha_do_tempo': 'linha_tempo', 'foto_do_fato': 'foto', 'jornais': 'jornal', 'mapas': 'mapa'}.get(rec, rec)
+        rec = {'linha_do_tempo': 'linha_tempo', 'foto_do_fato': 'foto', 'jornais': 'jornal', 'mapas': 'mapa',
+               'diagrama': 'esquema', 'esquemas': 'esquema', 'diagramas': 'esquema'}.get(rec, rec)
         c['acontecimento'] = {'quem': _txt(ac.get('quem')), 'onde': _txt(ac.get('onde')), 'quando': _txt(ac.get('quando'), 20),
                               'recurso': rec if rec in RECURSOS else ''}
         ev = _txt(c.get('evento') or ac.get('evento'), 12)

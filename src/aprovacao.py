@@ -75,6 +75,8 @@ def midia_de(c: dict, reais: dict, imgs: dict) -> tuple[str, Path | None]:
         return 'FOTO', Path(m['arq'])
     if imgs.get(iid):
         return 'IA', Path(imgs[iid])
+    if c.get('midia') == 'pendente':         # 13/11 (Etapa 2): falta esquema/reconstrução — a prévia mostra, não esconde
+        return 'PENDENTE', None
     if c.get('midia') == 'cartao':           # 12/11: sem imagem que mostre o fato → palavras da narração na tela
         return 'CARTÃO', None
     if c.get('midia') == 'evento':           # 12/11: imagem de outra frase do MESMO acontecimento, reenquadrada

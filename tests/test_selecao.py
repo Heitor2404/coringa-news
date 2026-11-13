@@ -95,10 +95,11 @@ def test_preencher_escolhe_pela_frase_e_recusa_o_que_nao_serve():
     acv = copy.deepcopy(ACERVO)
     acervo.preencher(v, acv)
     c = v['cenas']
-    assert c[1]['foto'] == 'a1' and 'mesma pessoa do fato' in c[1]['_escolha']['motivos']   # Lustig > foto qualquer
-    assert c[4]['foto'] == 'a6' and any('ferro' in m or 'scrap' in m or 'yard' in m for m in c[4]['_escolha']['motivos'])
+    assert c[1].get('foto') is None and 'acontecimento' in c[1]['_escolha']['motivos'][0]   # Etapa 2: fato central
+    assert c[2]['foto'] == 'a1' and 'mesma pessoa do fato' in c[2]['_escolha']['motivos']   # contexto: Lustig > qualquer
+    assert c[4].get('foto') is None and 'processo' in c[4]['_escolha']['motivos'][0]   # Etapa 2: processo não leva reserva
     assert all(x.get('foto') != 'a3' for x in c)                                    # genérica fora de frase de ambiente
-    ruim = sbm.construir({'cenas': [dict(_cenas()['cenas'][4], foto=None)]})
+    ruim = sbm.construir({'cenas': [dict(_cenas()['cenas'][4], foto=None, bloco={'funcao': 'contexto'})]})
     acervo.preencher(ruim, [copy.deepcopy(ACERVO[5])])                              # sem proveniência, 400 px
     assert ruim['cenas'][0].get('foto') is None and 'nenhuma reserva serve' in ruim['cenas'][0]['_escolha']['motivos'][0]
 
@@ -120,12 +121,10 @@ def test_documento_que_faltou_nao_vira_documento_falso():
     assert 'nenhum documento é fabricado' in c['_fallback']
 
 
-def test_mecanismo_sem_foto_vira_esquema_explicativo_sinalizado():
+def test_mecanismo_sem_foto_fica_esquema_pendente_sem_ia():
     v = _sem_foto('mecanismo', '', 'mecanismo')
     c = v['cenas'][4]
-    assert c['prompt_imagem'].startswith('Clear, scientifically accurate') and 'Period-accurate' not in c['prompt_imagem']
-    sbm.atualizar_midia(v)
-    assert c['sb']['evidencia'] == 'explicativo' and 'esquema ilustrado' in ' '.join(c['sb']['limitacoes'])
+    assert c['midia'] == 'pendente' and not c.get('prompt_imagem') and 'esquema pendente' in c['_fallback']
 
 
 def test_storyboard_recebe_escolha_e_rebaixa_o_nao_verificado(monkeypatch):

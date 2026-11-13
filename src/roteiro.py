@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import acontecimentos, claude, editorial, gemini, recursos, storyboard, viabilidade
+from . import acontecimentos, claude, editorial, gemini, recursos, resolucao, storyboard, viabilidade
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -412,6 +412,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     v['_clipes'] = [por_id[c['foto']]['video']['url'] for c in v['cenas'] if c.get('foto') in por_id and por_id[c['foto']].get('video')]
     v['acervo'] = acervo
     v = _planos_sem_foto(v, epoca)
+    v = resolucao.resolver(v)                  # Etapa 2: o storyboard DECIDE a mídia de cada ideia (sb.resolucao)
     v = storyboard.atualizar_midia(v)          # o que entrou em cada cena e se explica a frase
     v['_reserva'] = list(gemini.RESERVAS_USADAS)   # vai como aviso na prévia de aprovação
     marca('roteiro pronto')
@@ -484,16 +485,15 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
         if vis.lower().startswith('clima') and n_clima < 2:
             c['midia'], c['busca'] = 'video', vis.split(':', 1)[-1].strip() or 'old city street'
             n_clima += 1
+        elif pref == 'diagrama' and n_esq < MAX_ESQUEMAS:
+            # 13/11 (Etapa 2): processo sem registro real nem diagrama → ESQUEMA PENDENTE (o componente vem na Etapa 3).
+            # Antes: imagem de IA "estilo diagrama" — pode inventar ciência, e não é esquema; nem foto emprestada.
+            c['midia'] = 'pendente'
+            c['_fallback'] = 'esquema pendente (não há registro real nem diagrama do processo)'
+            n_esq += 1
         elif n_viz < MAX_VIZINHA and not base:
             c['midia'] = 'vizinha'; n_viz += 1
             c['_fallback'] = 'contexto: foto da cena vizinha'
-        elif base and pref == 'diagrama' and n_esq < MAX_ESQUEMAS:
-            # mecanismo invisível → esquema ilustrado correto (sinalizado), sem trava de época (plano-mestre E)
-            c['midia'] = 'ia'
-            c['prompt_imagem'] = (f"Clear, scientifically accurate explanatory illustration (diagram style) of: {base}. "
-                                  'Simplified shapes, no text, no labels, not a photograph.')
-            c['_fallback'] = 'esquema ilustrado (não há foto do processo)'
-            n_esq += 1
         elif n_ia < (MAX_IA if mecanismo else max_ia) and base:
             c['midia'] = 'ia'
             if pref == 'documento':                # nunca um documento fabricado com cara de fonte real
@@ -511,7 +511,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
         raise ValueError(f'pouco material visual: {n_viz} frases sem imagem própria; pulo para o próximo tema')
     if mecanismo and ideias:
         graf = sum(1 for c in ideias if c['tipo'] in INFOGRAFICOS)
-        explicadas = com_foto + n_esq + graf
+        explicadas = com_foto + n_esq + graf            # esquema pendente conta como planejado (Etapa 3 desenha)
         ancora = max(MIN_ANCORA, int(0.15 * len(ideias) + 0.999))
         if com_foto < ancora or explicadas / len(ideias) < MIN_EXPLICADAS:
             raise ValueError(f'pouco material visual (mecanismo): {com_foto} foto(s) real(is) do assunto (mínimo {ancora}) e '

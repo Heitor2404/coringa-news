@@ -109,7 +109,7 @@ def test_casamento_registra_o_porque_e_diz_ao_gemini_o_que_cada_frase_precisa(mo
     assert '[mecanismo: foto só se MOSTRAR o processo' in pedido and '[contexto: uma boa foto do próprio assunto serve]' in pedido
 
 
-def test_rodada_do_polvo_agora_monta_com_contexto_esquemas_e_ancora(monkeypatch, capsys):
+def test_rodada_do_polvo_agora_monta_com_contexto_e_esquemas_pendentes(monkeypatch, capsys):
     v, _, _ = _casar_como_na_rodada(monkeypatch, capsys)
     v = acervo.preencher(v, _acervo())
     ideias = [c for c in v['cenas'] if c['tipo'] != 'fechamento']
@@ -117,11 +117,12 @@ def test_rodada_do_polvo_agora_monta_com_contexto_esquemas_e_ancora(monkeypatch,
     assert set(com_foto) >= {0, 1, 8}                                              # abertura e contexto: fotos do assunto
     assert all(not ideias[k].get('foto') for k in (2, 3, 5, 6, 7, 10))              # mecanismo: fica para o esquema
     v = roteiro._planos_sem_foto(v, '')                                            # antes: ValueError (4 de 13)
-    esq = [c for c in v['cenas'] if str(c.get('prompt_imagem', '')).startswith('Clear, scientifically accurate')]
-    assert len(esq) >= 6 and all('Period-accurate' not in c['prompt_imagem'] for c in esq)
-    sbm.atualizar_midia(v)
-    niveis = {c['sb']['evidencia'] for c in v['cenas'] if c.get('sb') and c['sb']['proposito'] == 'mecanismo'}
-    assert niveis == {'explicativo'}                                               # explicação ilustrada, sinalizada
+    esq = [c for c in v['cenas'] if c.get('midia') == 'pendente']
+    assert len(esq) >= 6 and not any(c.get('prompt_imagem') for c in esq)       # Etapa 2: esquema PENDENTE, sem IA inventando
+    from src import resolucao
+    resolucao.resolver(v)
+    tipos = {c['sb']['resolucao']['tipo'] for c in v['cenas'] if c.get('sb') and c['sb']['proposito'] == 'mecanismo'}
+    assert tipos == {'esquema_pendente'}
 
 
 def test_mecanismo_sem_foto_real_nenhuma_continua_barrado(monkeypatch, capsys):

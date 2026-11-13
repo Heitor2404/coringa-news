@@ -102,6 +102,8 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     # (ela apareceria antes da hora) nem voltar a uma que já saiu da tela (A-B-A). Só o GANCHO, que não tem anterior,
     # pode abrir com a imagem da cena seguinte (é a abertura do assunto).
     for k, c in enumerate(cenas):
+        if c.get('pendente'):                         # Etapa 2: cena pendente não ganha foto emprestada (não finge
+            continue                                  # estar resolvida); fica sem mídia e marcada
         if not c.get('img') and c['tipo'] not in ('mapa', 'fechamento') and com_img:
             if k and cenas[k - 1].get('img') and not cenas[k - 1].get('video'):
                 viz = cenas[k - 1]
@@ -661,6 +663,12 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         (pasta / f'{nome}-metricas.json').write_text(json.dumps(met, ensure_ascii=False, indent=1), encoding='utf-8')
     except Exception as e:
         print(f'  [métricas] não medi ({str(e)[:80]})')
+    try:                                              # Etapa 2: resolução visual por cena
+        from src import resolucao
+        if resolucao.linha_telegram(cenas):
+            diag.append(resolucao.linha_telegram(cenas))
+    except Exception as e:
+        print(f'  [resolução] não medi ({str(e)[:80]})')
     try:                                              # plano-mestre D: storyboard — só registro
         from src import storyboard
         if storyboard.linha_telegram(cenas):

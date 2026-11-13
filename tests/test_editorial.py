@@ -163,5 +163,5 @@ def test_prompts_do_cofre_pedem_plano_e_bloco_e_formatam():
     assert '"plano"' in txt and '"bloco"' in txt and 'NUNCA force suspense' in txt
     assert 'fio condutor: uma pessoa' not in txt                                  # receita única de história saiu
     c = cofre.prompt('PROMPT_CRITICA').format(escopo='', fatos='F', roteiro='{}', problemas='PROBLEMAS X')
-    assert 'PROBLEMAS X' in c and 'não remova "plano", "bloco"' in c
+    assert "PROBLEMAS X" in c and 'não remova "plano", "bloco", "mostrar"' in c
     assert len(r) < 13000                                                         # prompt cresceu ≈ 16% (10,5 → 12,2 kB)

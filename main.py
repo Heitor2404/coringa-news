@@ -130,6 +130,8 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
             if ant:
                 c['img'], c['real'], c['sub'] = ant['img'], ant.get('real', False), (ant.get('sub') or 0) + 1
                 c.pop('video', None)
+    from src import storyboard
+    storyboard.registrar_tempos(cenas)             # plano-mestre D: span da narração e motivo da transição (registro)
     # fundo do fechamento: a última foto do vídeo (escurecida atrás do Coringa), não a da abertura
     fundo = next((c['img'] for c in reversed(cenas[:-1]) if c.get('img') and not c.get('video')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
@@ -630,6 +632,14 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     from src import orcamento_video
     if orcamento_video.linha_telegram():              # Fase 1 (monitorar): o que o orçamento FARIA; não decide nada
         diag.append(orcamento_video.linha_telegram())
+    try:                                              # plano-mestre D: storyboard — só registro
+        from src import storyboard
+        if storyboard.linha_telegram(cenas):
+            diag.append(storyboard.linha_telegram(cenas))
+            (pasta / f'{nome}-storyboard.json').write_text(json.dumps(storyboard.resumo(cenas), ensure_ascii=False, indent=1),
+                                                          encoding='utf-8')
+    except Exception as e:
+        print(f'  [storyboard] não medi ({str(e)[:80]})')
     if v.get('plano'):                                # plano-mestre B/C (12/11): plano editorial e função dos blocos — só registro
         try:
             from src import editorial

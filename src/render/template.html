@@ -41,8 +41,15 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 #perg b{color:var(--y)}
 #num{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:JBM,monospace;font-weight:700;font-size:150px;line-height:1;color:var(--y);text-shadow:0 10px 50px rgba(0,0,0,.95),0 0 40px rgba(255,210,31,.45);z-index:7;opacity:0;pointer-events:none}
 /* legenda na faixa de 60–70% da altura: acima da legenda/nome do Instagram e longe dos botões da direita */
-#cap{position:absolute;top:1150px;left:90px;right:90px;text-align:center;font-weight:900;font-size:var(--fs-legenda);line-height:1.05;letter-spacing:-1.5px;z-index:8}
-#cap span{display:inline-block;text-shadow:0 6px 26px rgba(0,0,0,.95),0 0 4px #000,0 0 2px #000;-webkit-text-stroke:9px #05080f;paint-order:stroke fill;margin:0 4px}
+/* 13/11 TIPOGRAFIA: legenda = nível 2 de leitura. Linhas equilibradas (nada de 1 palavra sobrando), sem o contorno
+   grosso que deixava as letras "sujas", e o destaque vira UMA faixa amarela reta (palavras seguidas destacadas = um bloco só) */
+#cap{position:absolute;top:1130px;left:80px;right:80px;text-align:center;font-weight:900;font-size:var(--fs-legenda);line-height:1.1;letter-spacing:-1.5px;z-index:8;text-wrap:balance}
+#cap span{display:inline-block;text-shadow:0 4px 22px rgba(0,0,0,.95),0 0 3px #000;margin:0 5px}
+#cap span.h{color:#05080f;background:var(--y);padding:0 16px 2px;border-radius:12px;text-shadow:none;box-shadow:0 10px 28px rgba(0,0,0,.5)}
+/* hierarquia: 1 texto principal por tela. Nível 1 = .n1 (título/número), nível 2 = .n2 (apoio), nível 3 = .n3 (rótulo pequeno) */
+.n2{font-weight:800;font-size:46px;line-height:1.2;color:#e9eef7;text-shadow:0 3px 16px #000,0 0 3px #000}
+.n3{font-family:JBM,monospace;font-weight:700;font-size:30px;letter-spacing:4px;color:var(--y);text-transform:uppercase;text-shadow:0 2px 10px #000}
+.chapa{position:absolute;inset:0;background:radial-gradient(ellipse 80% 38% at 50% 46%,rgba(5,8,15,.78),rgba(5,8,15,.35) 70%,transparent);pointer-events:none}
 #sweep{position:absolute;top:-200px;width:260px;height:2400px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transform:rotate(18deg);z-index:7;pointer-events:none}
 .ring{position:absolute;border-radius:50%;border:4px solid var(--y)}
 .chk{display:flex;align-items:center;gap:24px;font-size:46px;font-weight:800;padding:30px 32px;margin-bottom:24px;background:var(--card);border:1px solid var(--line);border-radius:24px;line-height:1.15}
@@ -65,7 +72,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 <script>
 const D=window.DATA, S=document.getElementById('stage'), FX=document.getElementById('fx');
 // legenda com UM tamanho só no vídeo inteiro, decidido pela palavra mais comprida (antes mudava a cada bloco)
-const CAP_FONTE=(()=>{const m=Math.max(0,...(D.captions||[]).flatMap(c=>c.words.map(w=>String(w.w).length)));return m>22?54:m>18?62:76})();
+const CAP_FONTE=(()=>{const m=Math.max(0,...(D.captions||[]).flatMap(c=>c.words.map(w=>String(w.w).length)));return m>22?54:m>18?62:m>12?76:90})();   // 13/11: 90 px quando nenhuma palavra passa de 12 letras (antes 76 sempre)
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const eo=x=>1-Math.pow(1-clamp(x),3);
 const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
@@ -138,20 +145,24 @@ function animHero(el,t,t0){if(!el)return;const k=back((t-t0)/.5);el.style.opacit
 
 /* ---------- cenas ---------- */
 const B={};
-B.gancho=sc=>{if(!sc.img)return B.gancho0(sc);return{html:`
+// 13/11 ABERTURA: 3 camadas no máximo — rótulo reto (nível 3), PERGUNTA grande (nível 1), mascote. A legenda some no gancho
+// (o título já é o texto principal). Sem etiqueta torta. Foto cheia: texto no terço de baixo; foto em moldura: no topo.
+B.gancho=sc=>{if(!sc.img)return B.gancho0(sc);const mold=!!sc.moldura_gancho,topo=mold?(D.meta.parte?440:380):960;return{html:`
   ${D.meta.parte?`<div class="selo" style="position:absolute;left:50%;top:356px;transform:translateX(-50%);background:linear-gradient(90deg,#8b5cf6,#ec4899);padding:8px 26px;border-radius:999px;font-weight:900;font-size:30px;letter-spacing:2px;white-space:nowrap;box-shadow:0 0 40px rgba(139,92,246,.6)">PARTE ${D.meta.parte}</div>`:''}
-  <div class="title t" style="top:${D.meta.parte?430:380}px;font-size:${sc.moldura_gancho?80:(sc.titulo||'').length>30?88:104}px">${hl(sc.titulo||D.meta.titulo)}</div>
-  ${sc.subtitulo?`<div class="sub" style="position:absolute;left:0;right:0;top:${sc.moldura_gancho?(D.meta.parte?620:575):(D.meta.parte?730:680)}px;text-align:center;z-index:2"><span style="display:inline-block;background:var(--y);color:#05080f;font-weight:900;font-size:40px;padding:8px 24px;border-radius:10px;text-transform:uppercase;transform:rotate(-2deg);box-shadow:0 10px 30px rgba(0,0,0,.5)">${esc(sc.subtitulo)}</span></div>`:''}
-  ${sc.moldura_gancho?'':mascotHTML('m',M3.surpreso?'left:10px;top:760px;width:270px;height:380px':'left:20px;top:820px;width:240px','surpreso')}`,
+  ${mold?'':'<div class="shade" style="background:linear-gradient(180deg,transparent 38%,rgba(5,8,15,.55) 52%,rgba(5,8,15,.82) 75%,rgba(5,8,15,.6) 100%)"></div>'}
+  ${sc.subtitulo?`<div class="sub n3" style="position:absolute;left:90px;right:90px;top:${topo}px;text-align:center;font-size:34px"><span style="display:inline-block;border-top:4px solid var(--y);padding-top:12px">${esc(sc.subtitulo)}</span></div>`:''}
+  <div class="title t" style="left:70px;right:70px;top:${topo+(sc.subtitulo?78:0)}px;font-size:${mold?84:116}px;line-height:.98;letter-spacing:-3px;text-wrap:balance">${hl(sc.titulo||D.meta.titulo)}</div>
+  ${mold?'':mascotHTML('m',M3.surpreso?'left:20px;top:470px;width:380px;height:500px':'left:30px;top:520px;width:350px','surpreso')}`,
  upd(t,el){
-  // 1º QUADRO JÁ PRONTO (imagem + título + subtítulo visíveis no quadro 0, que é o que aparece no feed): só um "respiro" leve
+  // 1º QUADRO JÁ PRONTO (imagem + título visíveis no quadro 0, que é o que aparece no feed): só um "respiro" leve
   const tt=el.querySelector('.t'),k0=clamp((t-sc.start)/.6);
-  if(!tt.dataset.fit){let f=parseFloat(getComputedStyle(tt).fontSize);while((tt.scrollWidth*1.06>tt.clientWidth+2||tt.offsetHeight>(sc.moldura_gancho?(D.meta.parte?180:185):sc.subtitulo?290:600))&&f>52){f-=4;tt.style.fontSize=f+'px'}tt.dataset.fit=1}
-  tt.style.opacity=1;tt.style.transform=`scale(${lerp(1.05,1,eo(k0))})`;
+  if(!tt.dataset.fit){let f=parseFloat(getComputedStyle(tt).fontSize);const lim=mold?(D.meta.parte?180:200):370;
+    while((tt.scrollWidth>tt.clientWidth+2||tt.offsetHeight>lim)&&f>60){f-=4;tt.style.fontSize=f+'px'}tt.dataset.fit=1}
+  tt.style.opacity=1;tt.style.transform=`scale(${lerp(1.04,1,eo(k0))})`;
   const se=el.querySelector('.selo');if(se){se.style.opacity=1;se.style.transform=`translateX(-50%) scale(${lerp(1.08,1,eo(k0))})`}
-  const sb=el.querySelector('.sub');if(sb){sb.style.opacity=1;sb.style.transform=`scale(${lerp(1.12,1,eo(k0))})`}
-  const m=el.querySelector('.m');if(m&&sc.end-sc.start<2.6)m.style.display='none';else if(m){const k=back((t-sc.start-0.9)/0.45);m.style.opacity=clamp((t-sc.start-0.9)/0.12);
-   m.style.transform=`translateX(${(1-clamp(k,0,1.2))*-360}px) rotate(${6+Math.sin(t*2)*2}deg)`;animMascot(m,t,false)}}}};
+  const sb=el.querySelector('.sub');if(sb)sb.style.opacity=1;
+  const m=el.querySelector('.m');if(m&&sc.end-sc.start<2.6)m.style.display='none';else if(m){const k=back((t-sc.start-0.5)/0.45);m.style.opacity=clamp((t-sc.start-0.5)/0.12);
+   m.style.transform=`translateX(${(1-clamp(k,0,1.2))*-360}px) rotate(${Math.sin(t*2)*2}deg)`;animMascot(m,t,false)}}}};
 B.gancho0=sc=>{const words=(sc.titulo||D.meta.titulo).split(/\s+/);return{html:`
   ${D.meta.parte?`<div class="selo" style="position:absolute;left:50%;top:356px;transform:translateX(-50%);background:linear-gradient(90deg,#8b5cf6,#ec4899);padding:8px 26px;border-radius:999px;font-weight:900;font-size:30px;letter-spacing:2px;white-space:nowrap;box-shadow:0 0 40px rgba(139,92,246,.6)">PARTE ${D.meta.parte}</div>`:''}
   <div class="title t" style="top:${D.meta.parte?430:380}px">${words.map(w=>`<span style="display:inline-block">${hl(w.includes('*')?w:w)}</span>`).join(' ')}</div>
@@ -521,10 +532,14 @@ function hfEscolha(sc){
   if(sc.tipo==='numero'&&HFOK('count-up')){const v=Number(String(sc.valor).replace(',','.'));
     if(Number.isInteger(v)&&Math.abs(v)<1e9){const pre=curto(sc.prefixo)?String(sc.prefixo||''):'',suf=curto(sc.sufixo)?String(sc.sufixo||''):'';
       const longo=[curto(sc.prefixo)?'':sc.prefixo,curto(sc.sufixo)?'':sc.sufixo].filter(Boolean).join(' · ');
-      return hfCena(sc,'count-up',{start:0,end:v,prefix:pre,suffix:(/^[A-Za-zÀ-ÿ]/.test(suf)?' ':'')+suf,glow:false},'left:90px;right:90px;top:610px;height:400px',sc.start+.2,
-        {html:`<div class="lbl rl" style="position:absolute;top:560px;left:90px;right:150px;text-align:center;font-size:32px;color:#dfe6f3">${esc(sc.rotulo||'')}</div>
-          ${longo||sc.nota?`<div class="nt" style="position:absolute;left:90px;right:150px;top:1020px;text-align:center;font-weight:800;font-size:38px;text-transform:uppercase;text-shadow:0 4px 18px #000">${esc(longo||sc.nota)}</div>`:''}`,
-         upd(t,el){show(el.querySelector('.rl'),t,sc.start);show(el.querySelector('.nt'),t,sc.start+.9)}})}}
+      // 13/11 hierarquia: nota curta vira o rótulo de cima (nível 3); NÚMERO (nível 1); unidade + frase (nível 2).
+      // Chapa escura atrás do bloco: a foto continua, mas o número não briga com ela. A legenda some (PRINCIPAL).
+      const apoio=[longo,sc.rotulo].filter(Boolean),nota=String(sc.nota||'').length<=28?sc.nota:'';
+      return hfCena(sc,'count-up',{start:0,end:v,prefix:pre,suffix:(/^[A-Za-zÀ-ÿ]/.test(suf)?' ':'')+suf,glow:false},'left:70px;right:70px;top:430px;height:700px;z-index:2',sc.start+.2,
+        {html:`<div class="chapa"></div>${nota?`<div class="n3 rl" style="position:absolute;top:580px;left:90px;right:90px;text-align:center">${esc(nota)}</div>`:''}
+          ${longo?`<div class="nt" style="position:absolute;left:90px;right:90px;top:925px;text-align:center;font-weight:900;font-size:64px;line-height:1;text-transform:uppercase;letter-spacing:-1px;text-shadow:0 4px 18px #000">${esc(longo)}</div>`:''}
+          ${sc.rotulo?`<div class="n2 ap" style="position:absolute;left:110px;right:110px;top:${longo?1010:930}px;text-align:center;text-wrap:balance">${esc(String(sc.rotulo).charAt(0).toUpperCase()+String(sc.rotulo).slice(1))}</div>`:''}`,
+         upd(t,el){const r=el.querySelector('.rl');if(r)show(r,t,sc.start);const n=el.querySelector('.nt');if(n)show(n,t,sc.start+.5);show(el.querySelector('.ap'),t,sc.start+.9)}})}}
   if(sc.tipo==='comparacao'&&HFOK('chart-story')){const it=(sc.itens||[]).slice(0,5).filter(x=>isFinite(+x.valor));
     if(it.length>=2){const mx=it.reduce((k,x,i)=>+x.valor>+it[k].valor?i:k,0);
       return hfCena(sc,'chart-story',{type:'bars',data:it.map(x=>+x.valor).join(', '),labels:it.map(x=>curtoTxt(x.rotulo,14)).join(', '),
@@ -602,7 +617,8 @@ const TR=sc=>sc.transicao||(['numero','cards','lista','escala','mapa','citacao',
 const PEND=[];
 // legenda que só repete o que o cartão final já escreve na tela ("Segue o @coringa.explica") fica escondida
 const nrm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>1);
-function repete(c,t){const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);if(at&&at.sc.tipo==='revelacao'&&t>=Math.min(at.sc.virada||1e9,at.sc.start+1.0)-0.05)return true;
+const PRINCIPAL=sc=>['gancho','numero'].includes(sc.tipo)||!!sc.hf;
+function repete(c,t){const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);if(at&&PRINCIPAL(at.sc))return true;if(at&&at.sc.tipo==='revelacao'&&t>=Math.min(at.sc.virada||1e9,at.sc.start+1.0)-0.05)return true;
   if(!at||at.sc.tipo!=='fechamento')return false;
   const tela=new Set(nrm((at.sc.titulo||'Segue o coringa explica')+' coringa explica seguir segue'));const w=nrm(c.words.map(x=>x.w).join(' '));
   return w.length>0&&w.filter(x=>tela.has(x)).length/w.length>=0.5}
@@ -701,7 +717,7 @@ window.seek=async function(t){
     pg.style.opacity=ok?clamp((t-fimG)/.3):0}
   const cenaDe=x=>scenes.find(s=>x>=s.sc.start&&x<s.sc.end);const nm=(D.numeros||[]).find(n=>t>=n.s-0.05&&t<n.s+0.95&&cenaDe(n.s)===cenaDe(t)),numEl=document.getElementById('num');
   if(nm){if(numEl.dataset.k!=nm.s){numEl.dataset.k=nm.s;numEl.textContent=nm.w}const k=back((t-nm.s+0.05)/.25);
-    numEl.style.opacity=t<nm.s+0.75?1:clamp((nm.s+0.95-t)/.2);numEl.style.transform=`scale(${lerp(.4,1,clamp(k,0,1.15))}) rotate(-3deg)`}
+    numEl.style.opacity=t<nm.s+0.75?1:clamp((nm.s+0.95-t)/.2);numEl.style.transform=`scale(${lerp(.4,1,clamp(k,0,1.15))})`}
   else numEl.style.opacity=0;
   const c=D.captions.find(c=>t>=c.start&&t<c.end+0.05);
   // etiqueta da foto: onde o fiscal ainda achou choque com outro texto (depois de a legenda descer), ela some naquele
@@ -712,13 +728,14 @@ window.seek=async function(t){
   cap.style.top=(D.cap_baixo||[]).some(([a,b])=>t>=a-0.05&&t<b+0.05)?'1300px':'1150px';
   if(c&&repete(c,t)){cap.style.opacity=0}
   else if(c){cap.style.opacity=1;
-    if(cap.dataset.k!=c.start){cap.dataset.k=c.start;cap.innerHTML=c.words.map(w=>`<span class="${w.hl?'h':''}">${esc(w.w)}</span>`).join(' ');
-      cap.style.fontSize=CAP_FONTE+'px'}
+    if(cap.dataset.k!=c.start){cap.dataset.k=c.start;const g=[];c.words.forEach(w=>{const u=g[g.length-1];if(u&&w.hl&&u.hl)u.w+=' '+w.w;else g.push({w:w.w,hl:!!w.hl,s:w.s??c.start})});
+      cap.innerHTML=g.map(w=>`<span class="${w.hl?'h':''}" data-s="${w.s}">${esc(w.w)}</span>`).join(' ');cap.style.fontSize=CAP_FONTE+'px'}
     // o bloco inteiro aparece de uma vez (antes as palavras ainda não ditas ficavam invisíveis mas ocupando lugar,
     // e a legenda parecia torta/encostada à esquerda); a palavra que está sendo dita dá um leve 'pulo'
-    const kb=back((t-c.start+0.04)/0.16);cap.style.transform=`scale(${lerp(.86,1,clamp(kb,0,1.1))})`;
-    [...cap.children].forEach((sp,i)=>{const s0=c.words[i].s??c.start;const k=clamp((t-s0+0.04)/0.14);
-      sp.style.opacity=1;sp.style.transform=`scale(${t>=s0-0.04?lerp(1.08,1,k):1})`});
+    const kb=eo((t-c.start+0.04)/0.14);cap.style.transform=`translateY(${lerp(18,0,kb)}px)`;cap.style.opacity=clamp(kb*1.4);
+    // a palavra ainda não dita fica apagada (o bloco não se mexe; só acende acompanhando a voz)
+    [...cap.children].forEach(sp=>{sp.style.opacity=t>=+sp.dataset.s-0.04?1:.42});
+
   } else cap.style.opacity=0;
   if(PEND.length){await Promise.all(PEND.splice(0))}
 };

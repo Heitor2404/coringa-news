@@ -49,7 +49,8 @@ ROTEIRO = {
                     'pontos': [{'nome': 'Colón', 'lon': -79.9, 'lat': 9.36}, {'nome': 'Cidade do Panamá', 'lon': -79.53, 'lat': 8.96}],
                     'rota': [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], 'folga': .45}},
         {'fala': 'O navio entra na câmara e a comporta fecha. Então a água do lago desce por gravidade e enche a câmara. Quando o nível iguala, a comporta da frente abre.',
-         'params': {'sentido': 'subir', 'desnivel_m': 26, 'lago': 'LAGO GATÚN', 'mar': 'MAR DO CARIBE', 'kicker': 'MECANISMO · ECLUSA'},
+         'params': {'sentido': 'subir', 'desnivel_m': 26, 'lago': 'LAGO GATÚN', 'mar': 'MAR DO CARIBE', 'kicker': 'MECANISMO · ECLUSA',
+                    'degraus': 3},   # Gatún: três câmaras em sequência somam os 26 m (Wikipedia, Panama Canal locks)
          'sync': {'tempos': ['entra', 'desce', 'iguala']}},
         {'fala': 'Cada travessia gasta *200 milhões de litros* de água doce.',
          'fato': {'rotulo': 'Água doce por travessia', 'valor': 200, 'unidade': 'milhões de litros', 'natureza': 'tipico', 'natureza_txt': 'MÉDIA POR TRAVESSIA',

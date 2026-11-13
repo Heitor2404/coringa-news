@@ -18,7 +18,8 @@
     funcoes: ['mecanismo', 'agua_subindo', 'elevacao_vertical', 'agua_descendo', 'eclusa'],
     params: { sentido: "'subir' | 'descer'", desnivel_m: 'desnível em metros (dos fatos)', lago: 'nome do nível alto ≤ 18', mar: 'nome do nível baixo ≤ 18',
       etapas: '3 textos ≤ 40 (entra/fecha · enche/esvazia · iguala/sai)', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala',
-      planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26' },
+      planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26',
+      degraus: 'nº de câmaras REAIS em sequência que somam o desnível (ex.: 3 em Gatún). > 1 = aviso explícito + escada com o navio subindo todos os degraus' },
     fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho 340–440 (etapa atual, 3 marcadores); corte esquemático 450–1210 em tela cheia; rótulos de estado (comportas, válvula, níveis) em HTML de tamanho fixo que acompanham a câmera',
     paleta: 'água ciano; concreto azul-acinzentado com textura; comportas amarelas; navio branco/vermelho; GRAVIDADE e Δh em amarelo', animacao: 'navio desloca → comporta fecha (plano B) → válvula abre, fluxo no túnel (plano C) → água e navio sobem juntos (plano D) → níveis iguais, comporta abre (plano E) → navio sai (plano F)',
     duracao: [5, 9, 16], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
@@ -98,7 +99,12 @@
         <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
         <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
       </div>
-      <div class="abs" data-g="aviso" data-opcional="1" style="right:160px;top:1176px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>
+      ${+p.degraus > 1 ? `<div class="abs esc-deg" data-g="degraus" style="right:150px;top:1142px;display:flex;align-items:center;gap:16px">
+          <svg width="120" height="60" viewBox="0 0 190 96" style="overflow:visible">${Array.from({ length: +p.degraus }, (_, i) => {
+            const w = 190 / +p.degraus, h = 96 / +p.degraus; return `<rect class="dg dg${i}" x="${i * w}" y="${96 - (i + 1) * h}" width="${w - 4}" height="${(i + 1) * h}" fill="rgba(63,208,224,.18)" stroke="#3FD0E0" stroke-width="2"/>`; }).join('')}
+            <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
+          <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
+        : `<div class="abs" data-g="aviso" data-opcional="1" style="right:160px;top:1176px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
       <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:#fff;background:rgba(5,20,26,.88);padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
 
     // ---- linha do tempo física ----
@@ -200,6 +206,12 @@
         el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - (i ? T[i] : 0)) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - (i ? T[i] : 0)) / .35)) * 16 : 0}px)`; });
         el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? 'var(--ciano)' : 'rgba(127,227,240,.25)');
         c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada, navio_x: nx, linha_dagua: superficie };
+        // escada dos degraus reais: o navio percorre TODAS as câmaras na proporção do nível do esquema
+        const dgn = el.querySelector('.dg-navio');
+        if (dgn) { const N = +p.degraus, fr = clamp(subir ? m / D : 1 - m / D), w = 190 / N, h = 96 / N, i = Math.min(N - 1, Math.floor(fr * N)), ff = fr * N - i;
+          dgn.setAttribute('cx', i * w + (w - 4) * (.15 + .7 * ff)); dgn.setAttribute('cy', 96 - (i + 1) * h - 9);
+          el.querySelectorAll('.dg').forEach((r, j) => r.setAttribute('fill', j <= i ? 'rgba(63,208,224,.45)' : 'rgba(63,208,224,.12)'));
+          aparece(el.querySelector('.esc-deg'), tl, .4, { dy: 10 }); }
       },
       textos: () => [...ET, p.lago, p.mar, String(D)],
     };

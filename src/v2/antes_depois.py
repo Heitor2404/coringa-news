@@ -68,7 +68,20 @@ def antes(dados: dict, tempos: list[float], pasta: Path) -> dict:
     return out
 
 
+# V2.2: correções de ACERVO (mesma foto, fonte de maior resolução e licença verificada) — o fiscal D12 bloqueia a cópia
+# de 929×91 px úteis da auditoria. Original: Library of Congress, LCCN 2007663276, via Wikimedia Commons (domínio público).
+SUBSTITUICOES_ACERVO = {'img/a31-g.jpg': str(palco.RAIZ / 'tests' / 'midia' / 'foto_panoramica_1913.jpg')}
+
+
 def depois_dados(dados: dict) -> tuple[dict, list[dict]]:
+    import copy
+    dados = copy.deepcopy(dados)
+    for sc in dados['scenes']:
+        if sc.get('img') in SUBSTITUICOES_ACERVO:
+            sc['img'] = SUBSTITUICOES_ACERVO[sc['img']]
+            sc['etiqueta'] = 'FOTO · 1913'          # o original tem data de março de 1913
+            sc['img_substituida'] = 'LoC LCCN 2007663276 (mesma foto, maior resolução)'
+            sc['credito'] = 'Library of Congress · domínio público'
     corr = {13: {'valor': 200, 'unidade': 'milhões de litros', 'rotulo': 'Água doce por travessia', 'natureza': 'tipico', 'natureza_txt': 'MÉDIA POR TRAVESSIA',
                  'contexto': 'Sai do lago Gatún e vai para o mar.', 'fonte': 'Wikipédia'},
             18: fatos.PANAMA_LEILAO}

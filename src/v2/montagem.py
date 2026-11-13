@@ -27,6 +27,11 @@ from src.v2 import acervo_v2, capacidades, contrato, fatos
 ESTATICO_MAX = 5.0
 
 
+def _maiuscula(s: str) -> str:
+    """Só a 1ª letra em maiúscula (str.capitalize() rebaixava nomes próprios: "Eclusas de gatún")."""
+    return s[:1].upper() + s[1:]
+
+
 def _limpo(s) -> str:
     return re.sub(r'\*', '', str(s or '')).strip()
 
@@ -65,6 +70,19 @@ def _fase_eclusa(sc: dict) -> int:
     return 0
 
 
+_NUM = {'dois': 2, 'duas': 2, 'tres': 3, 'quatro': 4, 'cinco': 5}
+
+
+def _degraus(ctx: str) -> int | None:
+    """V2.2: quantas câmaras REAIS o roteiro diz que o navio sobe ("três para subir", "3 degraus para subir").
+    Serve para a eclusa avisar que uma câmara do esquema representa o desnível total."""
+    m = re.search(r'\b(dois|duas|tres|quatro|cinco|\d+)\s+(?:degraus\s+|camaras\s+)?para\s+subir', ctx)
+    if not m:
+        return None
+    v = m.group(1)
+    return int(v) if v.isdigit() else _NUM.get(v)
+
+
 def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | None = None) -> tuple[dict, list[dict]]:
     """`base`: pasta onde estão as imagens (img/...). `fatos_corrigidos`: {índice da cena: valor (src/v2/fatos.py)} —
     a correção editorial de um número, que ainda assim passa pela validação."""
@@ -84,7 +102,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
         d = {'cenas_v1': [i], 'inicio': sc['start'], 'fala': _limpo(sc.get('fala'))}
         if tipo == 'gancho':
             nova.update(comp='abertura.pergunta', params={'kicker': ' · '.join(x for x in [meta.get('categoria') or 'CURIOSIDADE', _limpo(sc.get('subtitulo')).split(',')[0]] if x).upper()[:32],
-                        'pergunta': sc.get('titulo') or meta.get('titulo'), 'contexto': ', '.join(_limpo(sc.get('subtitulo')).split(',')[1:]).strip().capitalize()})
+                        'pergunta': sc.get('titulo') or meta.get('titulo'), 'contexto': _maiuscula(', '.join(_limpo(sc.get('subtitulo')).split(',')[1:]).strip())})
             if img:
                 nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
             d.update(comp='abertura.pergunta', motivo='M1: gancho')
@@ -182,7 +200,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 sentido = 'descer' if descer and not subir else 'subir'
                 nova.update(end=fim, comp=dec['comp'], origem=grupo, fala=' '.join(_limpo(v1[k].get('fala')) for k in grupo),
                             params={'sentido': sentido, 'desnivel_m': desnivel or 26, 'lago': 'LAGO GATÚN' if 'gatun' in capacidades._n(ctx_tema) else 'NÍVEL ALTO',
-                                    'mar': 'MAR', 'tempos': tempos, 'kicker': 'MECANISMO · ECLUSA'} if dec['comp'] == 'mecanismo.eclusa' else
+                                    'mar': 'MAR', 'tempos': tempos, 'kicker': 'MECANISMO · ECLUSA', 'degraus': _degraus(capacidades._n(ctx_tema))} if dec['comp'] == 'mecanismo.eclusa' else
                             {'de': 0, 'ate': desnivel or 10, 'max': (desnivel or 10) * 1.2, 'unidade': 'm', 'objeto': 'navio', 'flutua': True})
                 if dec['comp'] == 'mecanismo.eclusa' and sentido == 'subir' and tempos[2] < dur - .8:
                     pass
@@ -244,8 +262,8 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 historica = bool(ano and int(ano.group(1)) < 1960 and etq.startswith('FOTO'))
                 rc = acervo_v2.recorte_conteudo(img) if img else [0, 0, 1, 1]
                 if img and (historica or rc != [0.0, 0.0, 1.0, 1.0]):
-                    nova.update(comp='foto.historica', params={'img': img, 'recorte': rc, 'ano': ano.group(1) if ano else '', 'credito': 'Wikimedia Commons',
-                                                               'descricao': _limpo(sc.get('mostrar'))[:60].capitalize()})
+                    nova.update(comp='foto.historica', params={'img': img, 'recorte': rc, 'ano': ano.group(1) if ano else '', 'credito': sc.get('credito') or 'Wikimedia Commons',
+                                                               'descricao': _maiuscula(_limpo(sc.get('mostrar'))[:60])})
                     d.update(comp='foto.historica', motivo='M5: foto de arquivo' + (' com recorte de scanner' if rc != [0.0, 0.0, 1.0, 1.0] else ''))
                 elif img:
                     if sc.get('destaque'):

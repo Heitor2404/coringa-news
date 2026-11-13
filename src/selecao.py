@@ -111,6 +111,33 @@ def pontuar(x: dict, c: dict) -> tuple[float, list[str]]:
     return round(p, 2), m
 
 
+# ───────────── a mídia MOSTRA o acontecimento narrado? (Etapa 3, 13/11/2026) ─────────────
+# O catálogo marca "genérica" (não é foto específica de um evento/pessoa) — mas para fenômeno natural isso não diz se a
+# imagem representa a frase: um polvo REALMENTE camuflado é "genérico" e ainda assim mostra a camuflagem. O critério passa
+# a ser o conteúdo: o que a imagem mostra (catálogo, campo "mostra"/título) contém o que a cena precisa deixar visível
+# (sb.intencao_visual / mostrar), descontado o assunto do vídeo ("polvo" sozinho não prova nada) e palavras de enquadramento.
+ENQUADRAMENTO = {'foto', 'fotog', 'image', 'imagem', 'video', 'close', 'detal', 'plano', 'cena', 'mostr', 'visto', 'vista',
+                 'fundo', 'ambie', 'regis', 'exemp', 'tipo', 'parte', 'grand', 'peque', 'muito', 'algun', 'sobre'}
+
+
+def assunto(v: dict) -> frozenset:
+    """Raízes do assunto do vídeo (não provam que a imagem mostra o fato)."""
+    from . import editorial
+    p = v.get('plano') or {}
+    return frozenset(editorial.raizes(p.get('assunto') or v.get('assunto') or ''))
+
+
+def mostra_o_fato(x: dict, c: dict, excluir=frozenset()) -> tuple[bool, list[str]]:
+    """(mostra?, raízes em comum). Compara o que a mídia mostra com o que a cena precisa mostrar — sem IA."""
+    from . import editorial
+    sb = c.get('sb') or {}
+    alvo_txt = sb.get('intencao_visual') or c.get('mostrar') or ''   # o que PRECISA estar visível — a fala cita lugares e nomes que a imagem não precisa provar
+    alvo = editorial.raizes(alvo_txt) - set(excluir) - ENQUADRAMENTO
+    visto = editorial.raizes(f"{x.get('mostra', '')} {x.get('titulo', '')}") - set(excluir) - ENQUADRAMENTO
+    comum = sorted(alvo & visto)
+    return bool(comum), comum
+
+
 def registrar(c: dict, foto: str | None, rel: str | None, motivos: list[str], verificada: bool = True,
               rejeitadas: list[dict] | None = None):
     c['_escolha'] = {'foto': foto, 'relacao': rel, 'motivos': motivos[:4], 'verificada': verificada,

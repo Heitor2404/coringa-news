@@ -18,9 +18,13 @@ Regras (sem afrouxar nem inventar):
                retrato/lugar/foto do tema sozinhos não mostram o fato → reconstrucao_pendente
   acontecimento_flex → aceita pessoa/lugar/objeto do próprio fato como contexto
   contexto / documental / grafico → como antes (contexto rotulado como contexto)
+Etapa 3 (13/11): o critério é se a mídia REPRESENTA o acontecimento, não o rótulo "genérica" do catálogo — mídia real
+cujo conteúdo mostra o que a cena precisa vale como evidência real (selecao.mostra_o_fato); em processo, vídeo do
+fenômeno vale, foto estática não demonstra o funcionamento. Evidência real, reconstrução explicativa e ilustração
+conceitual continuam distintas.
 Roteiro sem storyboard (antigo): nada muda.
 """
-from . import storyboard
+from . import selecao, storyboard
 
 INFOGRAFICOS = storyboard.INFOGRAFICOS
 REAIS = ('fato', 'documento')
@@ -59,7 +63,26 @@ def _classe(c: dict, mid: str | None, x: dict) -> tuple[str, str]:
     return 'contexto', 'contextual'
 
 
-def resolver_cena(c: dict, por_id: dict) -> dict:
+def _real_que_mostra(c: dict, nec: str, mid, x: dict, classe: str, excluir) -> tuple[str | None, str, list[str]]:
+    """Etapa 3: mídia REAL do acervo (foto/vídeo) que mostra o que a cena precisa vale como evidência, mesmo marcada
+    "genérica" ou com relação "tema". Devolve (classe nova ou None, justificativa/motivo de recusa, raízes em comum).
+      acontecimento/flex/documental/contexto: mostra → evidência real (polvo camuflado na frase da camuflagem)
+      processo: VÍDEO que mostra → evidência real (o fenômeno acontecendo); foto estática só se o casamento, que VIU a
+                imagem, disse "fato" — senão ela mostra o resultado, não o mecanismo (fica esquema)"""
+    if not x or mid in (None, 'ia', 'vizinha', 'video_clima') or classe not in ('ligada', 'contexto', 'evidencia_real'):
+        return None, '', []
+    ok, comum = selecao.mostra_o_fato(x, c, excluir)
+    if not ok:
+        return None, '', []
+    if nec == 'processo' and not x.get('video'):
+        if classe == 'evidencia_real':
+            return 'evidencia_real', 'registro real (casamento disse "fato") com o que a cena mostra: ' + ', '.join(comum[:3]), comum
+        return None, 'foto estática mostra o resultado, não o funcionamento (' + ', '.join(comum[:3]) + ')', comum
+    oque = 'vídeo real mostra o fenômeno acontecendo' if x.get('video') else 'mídia real mostra o próprio acontecimento'
+    return 'evidencia_real', f"{oque}: {', '.join(comum[:3])}", comum
+
+
+def resolver_cena(c: dict, por_id: dict, excluir=frozenset()) -> dict:
     sb = c['sb']
     nec = sb.get('necessidade') or 'documental'
     mid, x = _candidato(c, por_id)
@@ -69,13 +92,23 @@ def resolver_cena(c: dict, por_id: dict) -> dict:
     rej = []
     tipo, just, pend, sug = None, '', False, ''
     papel = str(x.get('tipo_img') or '').lower() in PAPEL
+    nova, porque, comum = _real_que_mostra(c, nec, mid, x, classe, excluir)
+    if nova:
+        if classe != 'evidencia_real' or nec == 'processo':
+            classe, nivel = 'evidencia_real', 'direto'
+            c['_mostra_fato'] = porque
+    elif nec == 'processo' and classe == 'evidencia_real' and mid and not x.get('video'):
+        classe = 'contexto'                               # "fato" de foto estática sem o que a cena mostra: não é mecanismo
+    if porque and not nova:
+        rej.append({'midia': mid, 'motivo': porque})
     if nec == 'grafico' or classe == 'reconstrucao_explicativa':
         tipo, just = 'reconstrucao_explicativa', ('infográfico com dado dos fatos' if c.get('tipo') in INFOGRAFICOS
                                                   else 'diagrama real do acervo explica o processo')
     elif classe == 'evidencia_real':
-        tipo, just = 'evidencia_real', f"registro real do próprio fato ({c.get('relacao')}{', documento' if papel else ''})"
+        tipo, just = 'evidencia_real', (c.pop('_mostra_fato', None)
+                                        or f"registro real do próprio fato ({c.get('relacao')}{', documento' if papel else ''})")
     elif nec == 'processo':
-        if mid:
+        if mid and not porque:
             rej.append({'midia': mid, 'motivo': {'ia': 'imagem de IA não é esquema confiável (pode inventar ciência)',
                                                  'vizinha': 'foto emprestada não mostra o processo'}.get(mid, 'foto do assunto não mostra o processo')})
         tipo, pend, nivel = 'esquema_pendente', True, 'sem_midia'
@@ -106,16 +139,17 @@ def resolver_cena(c: dict, por_id: dict) -> dict:
     for r in (c.get('_escolha') or {}).get('rejeitadas') or []:
         rej.append({'midia': r.get('foto'), 'motivo': r.get('motivo')})
     return {'tipo': tipo, 'midia': None if pend else mid, 'nivel': nivel, 'justificativa': just, 'rejeitadas': rej[:6],
-            'pendente': pend, 'sugestao': sug, 'necessidade': nec}
+            'pendente': pend, 'sugestao': sug, 'necessidade': nec, 'mostra': comum[:4]}
 
 
 def resolver(v: dict) -> dict:
     """Uma vez, depois do acervo e dos planos sem foto. Grava sb.resolucao e alinha os campos antigos (aplicar)."""
     por_id = {x['id']: x for x in v.get('acervo') or []}
+    excluir = selecao.assunto(v)
     for c in v.get('cenas', []):
         if c.get('sub') or c.get('tipo') == 'fechamento' or not c.get('sb'):
             continue
-        c['sb']['resolucao'] = resolver_cena(c, por_id)
+        c['sb']['resolucao'] = resolver_cena(c, por_id, excluir)
         aplicar(c)
     for c in v.get('cenas', []):                         # pedaços da mesma ideia seguem a ideia
         if c.get('sub') and c.get('sb') and c['sb'].get('resolucao'):

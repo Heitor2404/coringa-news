@@ -696,6 +696,7 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     from . import selecao
     escolha, relacao, motivos, verif, recusas = {}, {}, {}, {}, {}
     recusar = lambda k, f, m: recusas.setdefault(k, []).append({'foto': f, 'motivo': m})
+    tema_r = selecao.assunto(v)
     try:
         r = gemini.json_visao(PROMPT_CASAR.format(primeiro=acervo[0]['id'], acervo=texto(acervo), ideias=linhas),
                               [x['mini'] for x in acervo], leve=False)
@@ -718,7 +719,9 @@ def casar(v: dict, acervo: list[dict]) -> dict:
                     recusar(k, f, 'foto fora do acervo')
                 continue
             contexto = (ideias[k].get('sb') or {}).get('proposito') in ('abertura', 'contexto', 'ligacao')
-            if not exata and por_id[f].get('generica') and not contexto:
+            # 13/11 (Etapa 3): "genérica" sozinha não recusa — polvo realmente camuflado é genérico e MOSTRA a camuflagem.
+            # Sai só a genérica que, pelo que o catálogo diz que ela mostra, não tem o que a cena precisa deixar visível.
+            if not exata and por_id[f].get('generica') and not contexto and not selecao.mostra_o_fato(por_id[f], ideias[k], tema_r)[0]:
                 recusar(k, f, 'genérica e não mostra o que a frase diz')
                 continue
             # 12/11 (reversão da correção 2): a ligação com o acontecimento é só REGISTRO e preferência (está no pedido),
@@ -796,6 +799,7 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
     usados = {c.get('foto') for c in ideias if c.get('foto')}
     livres = [x for x in acervo if x.get('util', True) and x['id'] not in usados]
     from . import selecao
+    tema_r = selecao.assunto(v)
     n = 0
     for c in ideias:
         if c.get('foto') or not livres:
@@ -806,8 +810,28 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
         sb = c.get('sb') or {}
         if sb.get('necessidade') in ('processo', 'acontecimento'):
             # 13/11 (Etapa 2): processo e fato central não são tapados com foto qualquer da reserva (no polvo: a praia nos
-            # leucóforos, as rochas nos melanócitos). Só o casamento (que vê a imagem) ou o resolvedor decidem essas cenas.
-            selecao.registrar(c, None, None, [f"{sb['necessidade']}: reserva do acervo não representa (fica para o resolvedor)"])
+            # leucóforos, as rochas nos melanócitos). Etapa 3: entra só a reserva que MOSTRA o que a cena precisa (o polvo
+            # camuflado na frase da camuflagem); em processo, só vídeo (o fenômeno acontecendo) ou diagrama — foto estática
+            # não demonstra mecanismo. Sem nenhuma assim, a cena fica para o resolvedor.
+            nec = sb['necessidade']
+            boas = []
+            for x in livres:
+                ok, comum = selecao.mostra_o_fato(x, c, tema_r)
+                diag = str(x.get('tipo_img') or '').lower() == 'diagrama'
+                if nec == 'processo' and not (x.get('video') or diag):
+                    continue
+                if ok or (nec == 'processo' and diag and selecao.mostra_o_fato(x, c)[0]):
+                    boas.append((len(comum) + (1 if x.get('video') else 0) + float(x.get('nota') or 0) * 0.1, comum, x))
+            if not boas:
+                selecao.registrar(c, None, None, [f"{nec}: nenhuma reserva mostra o que a cena precisa (fica para o resolvedor)"])
+                continue
+            boas.sort(key=lambda t: -t[0])
+            _, comum, x = boas[0]
+            rel = 'diagrama' if str(x.get('tipo_img') or '').lower() == 'diagrama' else 'fato'
+            livres.remove(x)
+            c['foto'], c['relacao'] = x['id'], rel
+            selecao.registrar(c, x['id'], rel, ['reserva mostra: ' + ', '.join(comum[:3])])
+            n += 1
             continue
         contexto = sb.get('proposito') in ('abertura', 'contexto', 'ligacao')
         notas = sorted(((selecao.pontuar(x, c), x) for x in livres if amb or contexto or not x.get('generica')),

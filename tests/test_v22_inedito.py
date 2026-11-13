@@ -52,3 +52,19 @@ def test_vizinhos_acendem_quando_o_nome_e_dito(r):
     for nome, t in viz.items():
         assert abs(sc['start'] + t - palavras[nome.lower()]) < .02, (nome, t)
     assert viz['Colômbia'] < viz['Brasil'] < viz['Guiana']
+
+
+@pytest.mark.parametrize('resumo', ['Venezuela: norte da América do Sul, de frente para o Caribe.',
+                                    'Quem ergue o navio é a *gravidade*, não uma bomba.', 'Curto.'])
+def test_encerramento_mascote_nao_encosta_no_resumo(tmp_path, resumo):
+    """Achado do render inédito: com resumo de 3 linhas o chapéu do mascote encostava em 'Caribe.'."""
+    from src.v2 import palco
+    d = {'duration': 4, 'meta': {'motor': 'v2', 'fontes': ['Wikipédia']}, 'captions': [], 'scenes': [{'comp': 'encerramento.editorial',
+         'start': 0, 'end': 4, 'params': {'variante': 'conclusao', 'resumo': resumo, 'mascote': 'apontando', 'marca': '@coringa.explica'}}]}
+    with palco.abrir(palco.preparar(d), tmp_path) as pg:
+        pg.evaluate('seek(3.5)')
+        g = pg.evaluate("""(()=>{const e=V2.cenas[0].el,r=e.querySelector('.rz').getBoundingClientRect(),m=e.querySelector('.mascw').getBoundingClientRect(),
+          c=e.querySelector('.mc').getBoundingClientRect();return {rz:r.bottom,m0:m.top,m1:m.bottom,mc:c.top,h:m.height,avisos:V2.avisos}})()""")
+    assert g['m0'] >= g['rz'] + 20, g           # espaço entre o texto e o mascote
+    assert g['m1'] <= g['mc'], g                # mascote acima do painel da marca
+    assert g['h'] >= 240 and not g['avisos'], g

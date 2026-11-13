@@ -130,7 +130,7 @@
         <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(7,11,18,${comBase ? .55 : 0}) 0%,rgba(7,11,18,${comBase ? .2 : 0}) 45%,rgba(7,11,18,.9) 75%)"></div>
         ${grande}
         ${pose ? `<div class="abs mascw" data-ocupa="1" style="right:110px;top:560px;width:300px;height:420px"><div class="abs" style="left:-40px;right:-40px;bottom:-30px;height:120px;background:radial-gradient(ellipse at 50% 70%,rgba(0,0,0,.7),transparent 70%)"></div>
-          <img class="abs masc" src="${pose}" style="left:0;bottom:0;width:300px;height:420px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(-5px 0 0 rgba(255,210,31,.35)) drop-shadow(0 20px 26px rgba(0,0,0,.6))"></div>` : ''}
+          <img class="abs masc" src="${pose}" style="left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(-5px 0 0 rgba(255,210,31,.35)) drop-shadow(0 20px 26px rgba(0,0,0,.6))"></div>` : ''}
         <div class="abs mc" data-g="mc" data-txt="1" style="left:72px;right:150px;top:1010px;display:flex;align-items:center;gap:22px;padding:18px 24px;background:rgba(7,11,18,.85);border-top:6px solid var(--amarelo)">
           <span style="flex:none;width:34px;height:34px;background:var(--amarelo);transform:rotate(45deg)"></span>
           <div style="flex:1"><div style="font-weight:900;font-size:52px;line-height:.95;letter-spacing:-1px">CORINGA EXPLICA</div><div style="font-family:var(--f-dado);font-weight:700;font-size:28px;margin-top:8px;color:rgba(255,255,255,.85)">${esc(p.marca || '@coringa.explica')}</div></div>
@@ -141,7 +141,13 @@
           /* quebra DETERMINÍSTICA: fontes são unidades inteiras e a decisão de quebrar usa folga de 40 px. Antes a linha
              cabia com ~16 px de sobra e o Chromium do CI a quebrava (diferença de rasterização), mudando o layout. */
           const L = f.clientWidth - 40; let x = 0;
-          f.querySelectorAll('.fu').forEach(u => { const w = u.getBoundingClientRect().width + 10; if (x > 0 && x + w > L) { u.insertAdjacentHTML('beforebegin', '<br>'); x = 0; } x += w; }); f.style.top = (1210 - f.offsetHeight) + 'px'; el.querySelector('.mc').style.top = (1210 - f.offsetHeight - 14 - el.querySelector('.mc').offsetHeight) + 'px'; } },
+          f.querySelectorAll('.fu').forEach(u => { const w = u.getBoundingClientRect().width + 10; if (x > 0 && x + w > L) { u.insertAdjacentHTML('beforebegin', '<br>'); x = 0; } x += w; }); f.style.top = (1210 - f.offsetHeight) + 'px'; el.querySelector('.mc').style.top = (1210 - f.offsetHeight - 14 - el.querySelector('.mc').offsetHeight) + 'px'; }
+        /* V2.2: o mascote começa 24 px ABAIXO do fim do resumo (antes a caixa 560–980 cruzava a 3ª linha e o chapéu encostava
+           no texto); encolhe na proporção mantendo o pé no mesmo lugar, acima do painel da marca */
+        const mw = el.querySelector('.mascw'), mc = el.querySelector('.mc');
+        if (mw && r) { const base = Math.min(980, (mc ? mc.offsetTop : 1000) - 20), topo = Math.max(560, r.offsetTop + r.offsetHeight + 24);
+          const h = Math.max(240, base - topo); mw.style.top = (base - h) + 'px'; mw.style.height = h + 'px'; mw.style.width = Math.round(h * 300 / 420) + 'px';
+          if (base - h < topo) V2.avisos.push(`encerramento: mascote ainda encosta no resumo (${topo - (base - h)} px)`); } },
       upd(tl, el) {
         revelar(el.querySelector('.rz'), tl, .05, { passo: .05 });
         const mw = el.querySelector('.mascw'); if (mw) { const k = eo5((tl - .5) / .6); mw.style.opacity = clamp((tl - .5) / .2); mw.querySelector('.masc').style.transform = `translateY(${(1 - k) * 50}px)`; }

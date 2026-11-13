@@ -78,8 +78,10 @@ def _preferida(c: dict, funcao: str, modo: str) -> str:
         return POR_RECURSO[rec]
     if str(c.get('visual') or '').lower().startswith('clima'):
         return 'video_ambiente'
-    if modo in ('mecanismo', 'experimento_mental') and funcao in ('mecanismo', 'evidencia', 'payoff', ''):
-        return 'diagrama'
+    if modo in ('mecanismo', 'experimento_mental'):
+        # 12/11 (polvo): só o PROCESSO pede esquema; abertura, contexto, virada e consequência mostram o próprio
+        # assunto (o polvo camuflado é foto direta) — antes todas as frases pediam esquema e a foto real ficava de fora
+        return 'diagrama' if funcao in ('mecanismo', '') else 'foto_do_fato'
     return ALTERNATIVAS[modo][0]
 
 

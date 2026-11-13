@@ -76,6 +76,7 @@ def test_explica_continua_com_os_mesmos_pedidos_ao_claude(monkeypatch):
     monkeypatch.setattr(acv, 'coletar', lambda *a, **k: [{'id': 'a0', 'mostra': 'torre', 'mini': b'', 'util': True, 'nota': 7}])
     monkeypatch.setattr(acv, 'complementar', lambda v, acervo, *a, **k: acervo)
     monkeypatch.setattr(roteiro, 'geocodificar', lambda v: v)
+    monkeypatch.setattr(roteiro.viabilidade, 'avaliar', lambda *a, **k: {'ok': True, 'especificas': 9, 'uteis': 9, 'videos': 0})
     monkeypatch.setattr(roteiro, '_planos_sem_foto', lambda v, *a, **k: v)          # porteiro de acervo: fora deste teste
     monkeypatch.setattr(gemini, 'json_visao', lambda *a, **k: {'escolhas': []})
     cenas = [{'tipo': 'gancho', 'fala': f'Em 1925 ele vendeu a torre {k}.', 'cenario': 'x', 'bloco': {'funcao': 'abertura'}}

@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import acontecimentos, claude, editorial, gemini, recursos, storyboard
+from . import acontecimentos, claude, editorial, gemini, recursos, storyboard, viabilidade
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -30,17 +30,21 @@ def _gerar_roteiro(prompt: str, tentativas: int = 3, serie: bool = False) -> dic
             if melhor is None or len(v['cenas']) > len(melhor['cenas']):
                 melhor = v
             palavras = sum(len(c['fala'].split()) for c in v['cenas'])
-            limite = editorial.limite_palavras(editorial.normalizar_plano(v.get('plano')), LIMITE_PALAVRAS)   # duração do plano
-            if palavras > limite:
-                prompt += (f'\n\nATENÇÃO: a versão anterior tinha {palavras} palavras (≈ {palavras // 2.6:.0f} s). '
-                           f'O MÁXIMO é {limite - 10} palavras. Corte o que não for essencial.')
-                raise ValueError(f'roteiro longo demais ({palavras} palavras)')
+            limite = editorial.limite_palavras(editorial.normalizar_plano(v.get('plano')), LIMITE_PALAVRAS)   # nunca < 160
+            # 12/11 (polvo): UMA regra de formato para roteiro e reescrita da crítica (editorial.formato); só o que o código
+            # não conserta pede outra chamada (frase longa vira 2 planos no dividir; até 8% além do teto é aceito)
+            estado, motivos = editorial.formato(v['cenas'], limite)
             ideias = [c for c in v['cenas'] if c['tipo'] != 'fechamento']
-            longas = [c['fala'] for c in ideias if len(c['fala'].split()) > 16]
-            if len(ideias) < 11 or len(longas) >= 3:
-                prompt += (f'\n\nATENÇÃO: a versão anterior tinha {len(ideias)} cenas' + (f' e frases longas demais ("{longas[0][:60]}...")' if longas else '')
-                           + '. São OBRIGATÓRIAS 12 a 18 cenas, UMA frase de no máximo 12 palavras por cena.')
-                raise ValueError(f'{len(ideias)} cenas, {len(longas)} frase(s) longa(s)')
+            if estado == 'invalido':
+                if palavras > limite * editorial.FOLGA_PALAVRAS:
+                    prompt += (f'\n\nATENÇÃO: a versão anterior tinha {palavras} palavras (≈ {palavras // 2.6:.0f} s). '
+                               f'O MÁXIMO é {limite - 10} palavras. Corte o que não for essencial.')
+                    raise ValueError(f'roteiro longo demais ({palavras} palavras)')
+                prompt += (f'\n\nATENÇÃO: a versão anterior tinha {len(ideias)} cenas. São OBRIGATÓRIAS 12 a 18 cenas, '
+                           'UMA frase de no máximo 12 palavras por cena.')
+                raise ValueError(f"{len(ideias)} cenas ({'; '.join(motivos)})")
+            if motivos:
+                print(f"  [roteiro] aceito com ajuste, sem pedir de novo: {'; '.join(motivos)}")
             if serie and len(v.get('arco') or []) < 2:
                 prompt += ('\n\nATENÇÃO: o "arco" PRECISA ter 2 ou 3 partes. Conte nesta PARTE 1 só o primeiro capítulo, '
                            'com detalhe, e termine em suspense. NÃO conte a história inteira.')
@@ -338,12 +342,20 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
         n = len((serie or {}).get('arco') or []) or 2
     pasta = Path(__file__).resolve().parent.parent / 'tmp' / ('acervo-' + re.sub(r'[^a-z0-9]+', '-', tema['pergunta'].lower())[:40])
     acervo = acervo_mod.coletar(tema, dossie, pasta)        # sem fotos reais suficientes: ValueError → próximo tema
+    # 12/11 (polvo): viabilidade visual pelo TIPO de conteúdo ANTES do roteiro (nenhuma chamada nova; pula o tema cedo)
+    tipo = viabilidade.classificar(tema, fatos, dossie)
+    viab = viabilidade.avaliar(acervo, tipo)
+    print(f"  [viabilidade] {tipo}: {viab['especificas']} imagem(ns) específica(s), {viab['uteis']} útil(eis), "
+          f"{viab['videos']} vídeo(s) · {'ok' if viab['ok'] else 'NÃO'}")
+    if not viab['ok']:
+        raise ValueError(viab['motivo'] + '; pulo para o próximo tema')
     marca('acervo pronto')
     with claude.fatos_compartilhados(fatos):           # M2 (desligado por padrão): mesmo texto, no sistema
         v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
             pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
             partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
             categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)))
+    v['tipo_conteudo'] = tipo
     v['arco'] = (v.get('arco') or []) if capitulos else (v.get('arco') or [])[:1]
     if capitulos and parte <= 1 and len(v['arco']) > n:
         v['arco'] = v['arco'][:n]
@@ -396,6 +408,9 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
 MAX_IA = 4          # ilustrações 2D por vídeo (só para frases sem foto real boa; 11/11: 2D em vez de foto falsa de IA)
 MAX_VIZINHA = 2     # frases que reaproveitam a foto vizinha
 MIN_COBERTURA = 0.35  # 11/11: com a ilustração 2D cobrindo buracos, basta ~1/3 das frases com foto real (antes 1/2)
+MAX_ESQUEMAS = 8      # 12/11: mecanismo — esquemas explicativos (não contam no limite de ilustração MAX_IA)
+MIN_ANCORA = 2        # mecanismo: fotos reais do assunto (o animal, o objeto) que ancoram o vídeo no mundo real
+MIN_EXPLICADAS = 0.8  # mecanismo: frases com foto real, esquema ou infográfico
 
 PROMPT_PARTES = cofre.prompt('PROMPT_PARTES')
 
@@ -414,20 +429,24 @@ def decidir_partes(tema: dict, fatos: str) -> int:
 
 def _planos_sem_foto(v: dict, epoca: str) -> dict:
     """Ideias que ficaram sem foto do acervo: vídeo de clima (se o roteirista pediu, até 2), imagem de IA com a época
-    travada (até 6) e, no máximo, 2 ideias reaproveitando a foto real vizinha.
-    PORTEIRO: se menos da metade das ideias tem foto real do próprio assunto, o tema não tem material visual → próximo tema
-    (foi o caso do sangue de dinossauro: 4 de 12 ideias com foto certa).
-    12/11: a correção 2 da Fase 3 (IA só quando pedida, cartão no lugar da vizinha) foi REVERTIDA: tirou variedade."""
+    travada e, no máximo, 2 ideias reaproveitando a foto real vizinha.
+    PORTEIRO ADAPTATIVO (12/11, depois do polvo) — pelo TIPO de conteúdo (viabilidade.py), sem afrouxar:
+      - história/natureza/geral (como sempre): pelo menos MIN_COBERTURA das frases com foto real do assunto;
+      - MECANISMO (o processo é invisível): fotos reais do assunto como âncora (≥ MIN_ANCORA e ≥ 15% das frases) e TODA
+        frase coberta por foto real, ESQUEMA explicativo (frase cuja mídia preferida no storyboard é diagrama) ou
+        infográfico (≥ MIN_EXPLICADAS); ilustração que não é esquema continua limitada a MAX_IA.
+    O porteiro decide DEPOIS de distribuir as mídias (antes contava só foto, e o polvo caiu com 4/13 sem considerar os
+    esquemas que o vídeo teria)."""
     ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
     com_foto = sum(1 for c in ideias if c.get('foto'))
-    # ciência "por dentro" (cérebro, células, sabor, espaço profundo): não existe foto real de quase nada disso; a imagem
-    # certa é a ilustração científica 3D. Aí basta 1/4 das frases com foto real e a IA pode cobrir até 8.
     estilo = str(v.get('estilo_visual') or '').lower()
-    ciencia = any(k in estilo for k in ('scientific', '3d', 'medical', 'microscop', 'space'))
-    minimo, max_ia = (0.25, 8) if ciencia else (MIN_COBERTURA, MAX_IA)
-    if ideias and com_foto / len(ideias) < minimo:
+    modos = (v.get('plano') or {}).get('modos') or []
+    mecanismo = v.get('tipo_conteudo') == 'mecanismo' or 'mecanismo' in modos or \
+        any(k in estilo for k in ('scientific', '3d', 'medical', 'microscop', 'space'))
+    if not mecanismo and ideias and com_foto / len(ideias) < MIN_COBERTURA:
         raise ValueError(f'pouco material visual: só {com_foto} de {len(ideias)} frases têm foto real do assunto; pulo para o próximo tema')
-    n_ia, n_clima, n_viz = 0, 0, 0
+    max_ia = MAX_ESQUEMAS if mecanismo else MAX_IA
+    n_ia, n_clima, n_viz, n_esq = 0, 0, 0, 0
     trava = (f'Set in {epoca}. ' if epoca else '') + 'Period-accurate clothing, objects and architecture; no modern objects, no smartphones, no cars unless period-correct'
     trava += '. Flat 2D illustration (not a photo)'
     for k, c in enumerate(ideias):
@@ -435,26 +454,27 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
             continue
         if k == 0:                                 # GANCHO nunca é imagem de IA: o 1º quadro é o que vende o vídeo
             c['midia'] = 'vizinha'; n_viz += 1
+            c['_fallback'] = 'contexto: foto da cena vizinha'
             continue
         vis = str(c.get('visual') or '').strip()
         base = c.get('cenario') or (f"Scene showing {c['busca']}" if c.get('busca') else '')
+        pref = (c.get('sb') or {}).get('midia_preferida')
         if vis.lower().startswith('clima') and n_clima < 2:
             c['midia'], c['busca'] = 'video', vis.split(':', 1)[-1].strip() or 'old city street'
             n_clima += 1
         elif n_viz < MAX_VIZINHA and not base:
             c['midia'] = 'vizinha'; n_viz += 1
             c['_fallback'] = 'contexto: foto da cena vizinha'
-        elif n_ia < max_ia and base:
-            # plano-mestre E: fallback CONDICIONAL ao que a cena precisa (storyboard). Mecanismo invisível → esquema
-            # ilustrado correto (sinalizado), sem trava de época; frase que pedia documento → ilustração da CENA, nunca
-            # de um papel (não se fabrica documento com cara de fonte real).
-            pref = (c.get('sb') or {}).get('midia_preferida')
+        elif base and pref == 'diagrama' and n_esq < MAX_ESQUEMAS:
+            # mecanismo invisível → esquema ilustrado correto (sinalizado), sem trava de época (plano-mestre E)
             c['midia'] = 'ia'
-            if pref == 'diagrama':
-                c['prompt_imagem'] = (f"Clear, scientifically accurate explanatory illustration (diagram style) of: {base}. "
-                                      'Simplified shapes, no text, no labels, not a photograph.')
-                c['_fallback'] = 'esquema ilustrado (não há foto do processo)'
-            elif pref == 'documento':
+            c['prompt_imagem'] = (f"Clear, scientifically accurate explanatory illustration (diagram style) of: {base}. "
+                                  'Simplified shapes, no text, no labels, not a photograph.')
+            c['_fallback'] = 'esquema ilustrado (não há foto do processo)'
+            n_esq += 1
+        elif n_ia < (MAX_IA if mecanismo else max_ia) and base:
+            c['midia'] = 'ia'
+            if pref == 'documento':                # nunca um documento fabricado com cara de fonte real
                 c['prompt_imagem'] = (f"{base}. {trava}. Do not depict any document, letter, newspaper, sign or written "
                                       'paper; no text.')
                 c['_fallback'] = 'ilustração da cena: o documento real não foi encontrado (nenhum documento é fabricado)'
@@ -467,14 +487,23 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
             c['_fallback'] = 'contexto: foto da cena vizinha'
     if n_viz > MAX_VIZINHA:
         raise ValueError(f'pouco material visual: {n_viz} frases sem imagem própria; pulo para o próximo tema')
+    if mecanismo and ideias:
+        graf = sum(1 for c in ideias if c['tipo'] in INFOGRAFICOS)
+        explicadas = com_foto + n_esq + graf
+        ancora = max(MIN_ANCORA, int(0.15 * len(ideias) + 0.999))
+        if com_foto < ancora or explicadas / len(ideias) < MIN_EXPLICADAS:
+            raise ValueError(f'pouco material visual (mecanismo): {com_foto} foto(s) real(is) do assunto (mínimo {ancora}) e '
+                             f'{explicadas} de {len(ideias)} frases com foto, esquema ou infográfico (mínimo '
+                             f'{MIN_EXPLICADAS:.0%}); pulo para o próximo tema')
     for c in v['cenas']:                       # pedaços da mesma ideia seguem a ideia
         if c.get('sub'):
             pai = next((x for x in v['cenas'] if x.get('grupo') == c.get('grupo') and not x.get('sub')), None)
             if pai:
-                for k in ('midia', 'busca', 'prompt_imagem'):
+                for k in ('midia', 'busca', 'prompt_imagem', '_fallback'):
                     if pai.get(k):
                         c[k] = pai[k]
-    print(f'  [acervo] sem foto: {n_clima} vídeo(s) de clima · {n_ia} imagem(ns) de IA · {n_viz} reaproveitam a foto vizinha')
+    print(f'  [acervo] sem foto ({"mecanismo" if mecanismo else v.get("tipo_conteudo") or "padrão"}): {n_clima} vídeo(s) de clima · '
+          f'{n_esq} esquema(s) · {n_ia} ilustração(ões) · {n_viz} reaproveitam a foto vizinha')
     return _validar(v)
 
 
@@ -505,6 +534,7 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '', problemas: 
             if r.get('aprovado') or not (isinstance(novo, dict) and novo.get('cenas')):
                 return v
             for k in ('serie', 'parte', 'link', 'fatos', 'produto', 'categoria', 'fontes', 'arco', 'personagem', 'estilo_visual', 'dossie',
+                      'tipo_conteudo',
                       'clima', 'legenda_post', 'hashtags', 'titulo_youtube', 'legenda_tiktok'):
                 if k in v and k not in novo:
                     novo[k] = v[k]
@@ -519,10 +549,14 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '', problemas: 
                             b[k] = a[k]
             ideias = [c for c in novo['cenas'] if c['tipo'] != 'fechamento']
             palavras = sum(len(c['fala'].split()) for c in novo['cenas'])
-            limite = editorial.limite_palavras(novo.get('plano'), LIMITE_PALAVRAS)
-            if len(ideias) < 11 or palavras > limite or any(len(c['fala'].split()) > 16 for c in ideias):
-                print(f'  [editor] a reescrita saiu fora do formato ({len(ideias)} cenas, {palavras} palavras); fico com a anterior')
+            limite = editorial.limite_palavras(novo.get('plano') or v.get('plano'), LIMITE_PALAVRAS)
+            estado, motivos = editorial.formato(novo['cenas'], limite)    # 12/11 (polvo): mesma regra do roteiro
+            if estado == 'invalido':
+                print(f'  [editor] a reescrita saiu fora do formato ({len(ideias)} cenas, {palavras} palavras: '
+                      f"{'; '.join(motivos)}); fico com a anterior")
                 return v
+            if motivos:
+                print(f"  [editor] reescrita aproveitada com ajuste: {'; '.join(motivos)}")
             v = novo
         except Exception as e:
             print(f'  [editor] não consegui revisar ({str(e)[:100]}); sigo com o roteiro atual')
@@ -550,6 +584,10 @@ def escolher_gancho(v: dict, fatos: str, parte: int = 1, serie: dict | None = No
     """O editor escreve 3 ganchos e fica com o melhor (o gancho é o que mais pesa na retenção)."""
     from .orcamento import sobra
     if sobra() < 60 or not v.get('cenas'):
+        return v
+    from . import orcamento_video
+    if orcamento_video.opcional_excedida('ganchos'):          # 12/11 (polvo): já passou do teto → opcional não sai
+        print(f'  [orçamento] ganchos pulados: o vídeo já gastou USD {orcamento_video.gasto():.2f} (teto {orcamento_video.TETO_USD:.2f})')
         return v
     regra = ''
     if parte > 1 and serie:

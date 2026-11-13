@@ -94,8 +94,10 @@ def pontuar(x: dict, c: dict) -> tuple[float, list[str]]:
     else:
         p -= 1; m.append('sem proveniência')
     amb = acont.ambiente(c)
+    contexto = sb.get('proposito') in ('abertura', 'contexto', 'ligacao')
     if x.get('generica') and not amb:                  # em frase de ambiente, imagem genérica de época é o certo
-        p -= 3; m.append('genérica')
+        p -= 1 if contexto else 3                      # em frase de contexto, foto do assunto é contexto honesto
+        m.append('genérica')
     lado = min(int(x.get('w') or 0), int(x.get('h') or 0))
     if 0 < lado < MIN_LADO:
         p -= 1.5; m.append(f'resolução baixa ({lado}px)')

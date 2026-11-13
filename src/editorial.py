@@ -154,10 +154,40 @@ def validar_plano(p: dict, fatos: str = '') -> list[str]:
 
 
 def limite_palavras(p: dict | None, padrao: int) -> int:
-    """Duração-alvo do plano → teto de palavras (o padrão de sempre quando não há plano)."""
+    """Teto de palavras do roteiro. 12/11 (polvo): o plano pedia 45 s e o teto caía para 134 palavras — a 1ª versão (155)
+    foi recusada e pedida de novo (US$ 0,12) e a reescrita da crítica (152) foi jogada fora, embora as duas coubessem nas
+    160 de sempre. Agora a duração do plano só AUMENTA o teto (vídeo de até 70 s); nunca o deixa abaixo do padrão. Encurtar
+    é pedido ao roteirista no prompt, não cobrado com nova chamada."""
     if not p or p.get('origem') == 'derivado':
         return padrao
-    return int(round(p['duracao_alvo_s'] * PALAVRAS_POR_S)) + 10
+    return max(padrao, int(round(p['duracao_alvo_s'] * PALAVRAS_POR_S)) + 10)
+
+
+FOLGA_PALAVRAS = 1.08      # passou do teto por até 8%: aceita (e avisa) em vez de pagar outra chamada
+MIN_IDEIAS_REESCRITA = 10  # reescrita com 10+ ideias é aproveitável (dividir() ainda quebra as frases longas)
+MAX_PALAVRAS_FRASE = 20
+
+
+def formato(cenas: list[dict], limite: int) -> tuple[str, list[str]]:
+    """Regra ÚNICA de formato para roteiro e reescrita: ('ok' | 'recuperavel' | 'invalido', motivos).
+    Recuperável = o código conserta sem IA (frase longa → dividir(); poucas palavras além do teto → aceita e avisa)."""
+    ideias = [c for c in cenas if c.get('tipo') != 'fechamento']
+    palavras = sum(len(str(c.get('fala') or '').split()) for c in cenas)
+    longas = [c for c in ideias if len(str(c.get('fala') or '').split()) > 16]
+    mot = []
+    if len(ideias) < MIN_IDEIAS_REESCRITA:
+        return 'invalido', [f'{len(ideias)} ideias (mínimo {MIN_IDEIAS_REESCRITA})']
+    if palavras > limite * FOLGA_PALAVRAS:
+        return 'invalido', [f'{palavras} palavras (teto {limite} + 8%)']
+    if any(len(str(c.get('fala') or '').split()) > MAX_PALAVRAS_FRASE for c in ideias):
+        return 'invalido', [f'frase com mais de {MAX_PALAVRAS_FRASE} palavras']
+    if palavras > limite:
+        mot.append(f'{palavras} palavras (teto {limite}): aceito, cabe na folga')
+    if longas:
+        mot.append(f'{len(longas)} frase(s) longa(s): viram 2 planos no dividir()')
+    if len(ideias) < 11:
+        mot.append(f'{len(ideias)} ideias')
+    return ('recuperavel' if mot else 'ok'), mot
 
 
 # ───────────────────────── blocos (etapa C) ─────────────────────────

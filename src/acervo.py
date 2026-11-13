@@ -677,8 +677,17 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     if not ideias:
         return v
     from . import acontecimentos as acont
+    def dica(c):
+        # 12/11 (polvo, 0/13): o pedido mandava "null" para foto "mais ou menos", sem dizer que a frase de MECANISMO tem
+        # outra saída (o esquema) e que a frase de CONTEXTO aceita foto do assunto. Agora cada ideia diz o que precisa.
+        sb = c.get('sb') or {}
+        if sb.get('midia_preferida') == 'diagrama':
+            return ' [mecanismo: foto só se MOSTRAR o processo; senão null — vira esquema explicativo]'
+        if sb.get('proposito') in ('abertura', 'contexto', 'ligacao'):
+            return ' [contexto: uma boa foto do próprio assunto serve]'
+        return ''
     linhas = '\n'.join(f"{k}: {(c.get('fala_ideia') or c['fala']).replace('*', '')} [{c.get('visual') or '?'}]"
-                       + acont.linha_casar(c) for k, c in enumerate(ideias))
+                       + acont.linha_casar(c) + dica(c) for k, c in enumerate(ideias))
     from . import selecao
     escolha, relacao, motivos, verif, recusas = {}, {}, {}, {}, {}
     recusar = lambda k, f, m: recusas.setdefault(k, []).append({'foto': f, 'motivo': m})
@@ -700,8 +709,11 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             # 11/11: foto que NÃO mostra o que a frase diz e ainda é genérica (vaso qualquer numa frase sobre múmias,
             # flamingo de zoológico numa frase sobre o lago) sai: melhor outra imagem do que uma 'mais ou menos'
             if not (0 <= k < len(ideias) and f in por_id):
+                if 0 <= k < len(ideias) and f:
+                    recusar(k, f, 'foto fora do acervo')
                 continue
-            if not exata and por_id[f].get('generica'):
+            contexto = (ideias[k].get('sb') or {}).get('proposito') in ('abertura', 'contexto', 'ligacao')
+            if not exata and por_id[f].get('generica') and not contexto:
                 recusar(k, f, 'genérica e não mostra o que a frase diz')
                 continue
             # 12/11 (reversão da correção 2): a ligação com o acontecimento é só REGISTRO e preferência (está no pedido),
@@ -716,7 +728,10 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             # plano-mestre E: a relação do Gemini é HIPÓTESE; os metadados confirmam ou rebaixam para "tema"
             rel, motivos[k], verif[k] = selecao.verificar(por_id[f], ideias[k], rel)
             escolha[k], relacao[k] = f, rel
+        respondidas = len([e for e in (r.get('escolhas') or []) if isinstance(e, dict)])
+        nulas = len([e for e in (r.get('escolhas') or []) if isinstance(e, dict) and not e.get('foto')])
     except Exception as e:
+        respondidas = nulas = None
         print(f'  [acervo] casamento falhou ({str(e)[:80]}); uso as sugestões do roteirista')
         for k, c in enumerate(ideias):
             if c.get('visual') in por_id:
@@ -751,6 +766,19 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     n = sum(1 for c in ideias if c.get('foto'))
     nv = sum(1 for c in ideias if c.get('foto') and por_id[c['foto']].get('video'))
     print(f'  [acervo] {n} de {len(ideias)} ideias com foto/vídeo real do acervo ({nv} em movimento)')
+    # 12/11 (polvo): o registro passa a dizer POR QUE cada ideia ficou sem foto (antes: só "0 de 13")
+    from collections import Counter
+    mot = Counter(x['motivo'] for lst in recusas.values() for x in lst)
+    if respondidas is not None:
+        print(f'  [acervo] casamento: o Gemini respondeu {respondidas} ideia(s), {nulas} sem foto (null)'
+              + (' · recusas: ' + ', '.join(f'{m} {q}' for m, q in mot.most_common()) if mot else ''))
+    for k, c in enumerate(ideias):
+        esc = c.get('_escolha') or {}
+        if not c.get('foto'):
+            rec = '; '.join(f"{x['foto']}: {x['motivo']}" for x in esc.get('rejeitadas') or []) or 'o Gemini não escolheu nenhuma'
+            print(f"     ideia {k} ({(c.get('sb') or {}).get('proposito', '?')}): sem foto — {rec[:140]}")
+        elif esc.get('relacao') == 'tema' and esc.get('motivos'):
+            print(f"     ideia {k}: {c['foto']} como contexto — {esc['motivos'][0][:120]}")
     return v
 
 
@@ -770,7 +798,12 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
         # plano-mestre E: ranqueia as reservas pelo que a FRASE afirma (ligação com o fato, o que precisa estar visível,
         # época, proveniência, clareza, resolução); a genérica só entra em frase de ambiente; abaixo de RECUSA = recusa
         amb = acont.ambiente(c)
-        notas = sorted(((selecao.pontuar(x, c), x) for x in livres if amb or not x.get('generica')),
+        sb = c.get('sb') or {}
+        if sb.get('midia_preferida') == 'diagrama' and sb.get('proposito') not in ('abertura', 'contexto', 'ligacao'):
+            selecao.registrar(c, None, None, ['mecanismo: fica para o esquema explicativo (foto do assunto não mostra o processo)'])
+            continue                                   # 12/11 (polvo): reserva qualquer não explica o processo
+        contexto = sb.get('proposito') in ('abertura', 'contexto', 'ligacao')
+        notas = sorted(((selecao.pontuar(x, c), x) for x in livres if amb or contexto or not x.get('generica')),
                        key=lambda t: -t[0][0])
         if not notas or (notas[0][0][0] < selecao.RECUSA and not amb):
             if notas:

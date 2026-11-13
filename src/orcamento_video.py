@@ -216,6 +216,15 @@ def decidir(etapa: str, pior: float, g: float, res: float, teto: float, alvo: fl
     return 'pedir autorização'
 
 
+def opcional_excedida(etapa: str) -> bool:
+    """12/11 (polvo, autorizado pelo Heitor): chamada OPCIONAL (ganchos) não sai quando o vídeo JÁ passou do teto. Única
+    regra que age de verdade; as essenciais continuam só monitoradas (o modo aplicar segue sem autorização)."""
+    try:
+        return modo() != 'desligado' and aberto() and classe(etapa) == 'opcional' and gasto() >= TETO_USD
+    except Exception:
+        return False
+
+
 def antes(prompt: str, modelo: str, etapa: str | None = None, sistema: str = '') -> dict | None:
     """Chamado pelo claude.py ANTES de cada `claude -p`. Só calcula e registra. Nunca levanta erro."""
     try:

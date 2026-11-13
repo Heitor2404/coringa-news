@@ -110,10 +110,12 @@ def test_suspense_criminal_forcado_em_biologia_e_apontado_mas_nao_no_golpe():
     assert not any('crime/suspense' in p for p in ed.avaliar_roteiro(h, fh)['problemas'])
 
 
-def test_duracao_do_plano_muda_o_teto_de_palavras():
+def test_duracao_do_plano_so_aumenta_o_teto_de_palavras():
+    """12/11 (polvo): plano de 45 s derrubava o teto para 134 e custou um roteiro a mais. Agora nunca fica abaixo de 160."""
     v, _ = _v('ciencia')                                                         # 40 s
-    assert ed.limite_palavras(v['plano'], roteiro.LIMITE_PALAVRAS) == round(40 * ed.PALAVRAS_POR_S) + 10
-    assert ed.limite_palavras(_v('historia')[0]['plano'], roteiro.LIMITE_PALAVRAS) == round(55 * ed.PALAVRAS_POR_S) + 10
+    assert ed.limite_palavras(v['plano'], roteiro.LIMITE_PALAVRAS) == roteiro.LIMITE_PALAVRAS
+    p = dict(v['plano'], duracao_alvo_s=70)
+    assert ed.limite_palavras(p, roteiro.LIMITE_PALAVRAS) == round(70 * ed.PALAVRAS_POR_S) + 10
 
 
 # ───────── integração: mesma quantidade de chamadas, crítica recebe os problemas, reescrita herda ─────────
@@ -140,19 +142,48 @@ def test_critica_recebe_os_problemas_detectados_e_a_reescrita_herda_plano_e_bloc
     assert [c.get('bloco') for c in novo['cenas']] == [c.get('bloco') for c in v['cenas']]
 
 
-def test_gerar_roteiro_usa_o_teto_do_plano(monkeypatch):
-    v, _ = _v('ciencia')                                                         # 40 s → teto 120 palavras
+def test_gerar_roteiro_do_polvo_nao_pede_de_novo(monkeypatch):
+    """O caso real: plano de 45 s e 1ª versão com 155 palavras → aceita, UMA chamada só (antes: 2, +US$ 0,12)."""
+    v, _ = _v('ciencia')
+    v['plano']['duracao_alvo_s'] = 45
     v['cenas'] = _cenas_validas(v, 14)
-    for c in v['cenas'][:-1]:
-        c['fala'] = 'uma duas tres quatro cinco seis sete oito nove dez'            # 140 palavras
+    falas = ['uma duas tres quatro cinco seis sete oito nove dez onze'] * 14
+    falas[0] = 'uma duas tres quatro cinco seis sete oito nove dez onze doze'
+    for c, f in zip(v['cenas'][:-1], falas):
+        c['fala'] = f
+    v['cenas'][-1]['fala'] = 'Segue o Coringa.'
+    assert sum(len(c['fala'].split()) for c in v['cenas']) == 158
     pedidos = []
     monkeypatch.setattr(gemini, 'json_', lambda p, *a, **k: pedidos.append(p) or copy.deepcopy(v))
-    with pytest.raises(ValueError):
-        roteiro._gerar_roteiro('PEDIDO', tentativas=1)
-    sem_plano = copy.deepcopy(v)
-    sem_plano.pop('plano')
-    monkeypatch.setattr(gemini, 'json_', lambda p, *a, **k: copy.deepcopy(sem_plano))
-    assert roteiro._gerar_roteiro('PEDIDO', tentativas=1)                       # 140 < 160 (o teto de sempre)
+    assert roteiro._gerar_roteiro('PEDIDO', tentativas=3) and len(pedidos) == 1
+
+
+def test_formato_unico_aceita_o_recuperavel_e_recusa_o_invalido():
+    ideia = lambda n: {'tipo': 'historia', 'fala': ' '.join(['p'] * n)}
+    fim = {'tipo': 'fechamento', 'fala': 'Segue.'}
+    assert ed.formato([ideia(11)] * 12 + [fim], 160)[0] == 'ok'
+    est, mot = ed.formato([ideia(17)] + [ideia(10)] * 11 + [fim], 160)          # uma frase de 17: dividir() conserta
+    assert est == 'recuperavel' and 'dividir' in mot[0]
+    assert ed.formato([ideia(14)] * 12 + [fim], 160)[0] == 'recuperavel'         # 169 ≤ 160 × 1,08
+    assert ed.formato([ideia(15)] * 12 + [fim], 160)[0] == 'invalido'            # 181
+    assert ed.formato([ideia(10)] * 9 + [fim], 160)[0] == 'invalido'             # 9 ideias
+    assert ed.formato([ideia(21)] + [ideia(8)] * 11 + [fim], 160)[0] == 'invalido'
+
+
+def test_reescrita_da_critica_com_152_palavras_e_aproveitada(monkeypatch):
+    """O caso real: a crítica reescreveu com 12 ideias e 152 palavras; antes era jogada fora (teto 134)."""
+    v, fatos = _v('ciencia')
+    v['plano']['duracao_alvo_s'] = 45
+    v['cenas'] = _cenas_validas(v, 12)
+    novo = copy.deepcopy(v)
+    for c in novo['cenas'][:-1]:
+        c['fala'] = 'uma duas tres quatro cinco seis sete oito nove dez onze doze'
+    novo['cenas'][-1]['fala'] = 'Segue o Coringa Explica.'
+    assert sum(len(c['fala'].split()) for c in novo['cenas']) == 148
+    monkeypatch.setattr(gemini, 'json_', lambda p, *a, **k: {'roteiro': copy.deepcopy(novo), 'aprovado': False, 'notas': {}})
+    monkeypatch.setattr(roteiro, 'PROMPT_CRITICA', '{escopo}|{fatos}|{roteiro}|{problemas}')
+    r = roteiro.revisar(v, fatos)
+    assert r['cenas'][0]['fala'] == novo['cenas'][0]['fala']                     # a melhoria ficou
 
 
 # ───────── prompts do cofre ─────────

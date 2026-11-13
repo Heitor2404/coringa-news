@@ -45,6 +45,7 @@ def test_caminho_explica_guarda_os_fatos_e_o_fiscal_recebe(monkeypatch):
     _sem_rede(monkeypatch)
     monkeypatch.setattr(fontes, 'coletar', lambda *a, **k: (FATOS, ['Wikipédia'], 'https://x', {'epoca': '1925'}))
     monkeypatch.setattr(roteiro, 'decidir_partes', lambda *a, **k: 1)
+    monkeypatch.setattr(roteiro.viabilidade, 'avaliar', lambda *a, **k: {'ok': True, 'especificas': 9, 'uteis': 9, 'videos': 0})
     monkeypatch.setattr(acv, 'coletar', lambda *a, **k: [])
     monkeypatch.setattr(acv, 'texto', lambda *a, **k: '')
     monkeypatch.setattr(acv, 'casar', lambda v, *a, **k: v)

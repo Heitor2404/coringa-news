@@ -107,6 +107,13 @@ def em_terra(lon: float, lat: float) -> str | None:
     return None
 
 
+def mares_em(lon: float, lat: float) -> list[str]:
+    """Nomes (inglês, Natural Earth) dos polígonos marinhos que contêm o ponto. Teste plano (par-ímpar), que não depende
+    do sentido dos anéis: serve de verificação independente do d3 esférico usado no palco."""
+    return [f['properties'].get('name') for f in camada('mares')
+            if f['_bb'][0] <= lon <= f['_bb'][2] and f['_bb'][1] <= lat <= f['_bb'][3] and _no_poligono(lon, lat, f['geometry'])]
+
+
 def coordenadas_validas(pontos: list[dict]) -> list[str]:
     erros = []
     for p in pontos:

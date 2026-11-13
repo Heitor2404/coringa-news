@@ -60,6 +60,14 @@
     'Mar Arábico': 'Mar da Arábia', 'Golfo de Bengala': 'Baía de Bengala', 'Moscovo': 'Moscou', 'Irão': 'Irã', 'Quénia': 'Quênia', 'Vietname': 'Vietnã',
     'Polónia': 'Polônia', 'Roménia': 'Romênia', 'Arménia': 'Armênia', 'Eslovénia': 'Eslovênia', 'Benim': 'Benin', 'Camarões': 'Camarões' };
   const ptbr = n => PTBR[n] || n;
+  // V2.2: polígono com o sentido dos anéis invertido nos dados (ex.: Canal do Iucatão no Natural Earth) vira, para o d3
+  // esférico, o globo inteiro MENOS o polígono (área > 2π) — "contém" qualquer ponto e roubava o rótulo do Mar do Caribe.
+  const sentido = f => { if (!f || !f.geometry) return f;
+    const g = f.geometry, inv = r => r.slice().reverse();
+    const ok = pl => d3.geoArea({ type: 'Polygon', coordinates: pl }) > 2 * Math.PI ? pl.map(inv) : pl;   // cada peça por si
+    if (g.type === 'Polygon') return { ...f, geometry: { ...g, coordinates: ok(g.coordinates) } };
+    if (g.type === 'MultiPolygon') return { ...f, geometry: { ...g, coordinates: g.coordinates.map(ok) } };
+    return f; };
   const coord = (lon, lat) => `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? 'N' : 'S'} · ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? 'L' : 'O'}`;
   function hav(a, b) { const R = 6371, r = Math.PI / 180, dl = (b[1] - a[1]) * r, dg = (b[0] - a[0]) * r; const h = Math.sin(dl / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 
@@ -133,7 +141,7 @@
         if (A.zoom > B.zoom - 1.2) A.zoom = Math.max(0.5, B.zoom - 2.2);
         A.bearing = p.bearing_inicial ?? -8; A.pitch = 0;
         // rótulos de mar/oceano e de países vizinhos: centro do polígono (d3.geoCentroid), só os maiores do quadro
-        const mares = (p.geo.mares || { features: [] }).features.map(f2 => ({ nome: ptbr(f2.properties.name_pt || f2.properties.name), c: d3.geoCentroid(f2), area: d3.geoArea(f2), f: f2 }))
+        const mares = (p.geo.mares || { features: [] }).features.map(sentido).map(f2 => ({ nome: ptbr(f2.properties.name_pt || f2.properties.name), ne: f2.properties.name, c: d3.geoCentroid(f2), area: d3.geoArea(f2), f: f2 }))
           .filter(x => x.nome).sort((a, b2) => b2.area - a.area);   // V2.2: escolha final depende de haver ÁGUA no quadro final
         let candMar = mares.map(m => ({ ...m, ...(p.mares_pos || {})[m.nome] && { c: p.mares_pos[m.nome], fixo: true } }));
         const alvoNome = String(p.pais_nome || '').toLowerCase();
@@ -145,7 +153,7 @@
         // terra ("Golfo do Panamá" sobre o país) e o de um oceano pode ficar fora do quadro. Para cada mar do recorte (por
         // área), candidatos = pontos amostrados DENTRO do polígono e visíveis no enquadramento FINAL; vale o mais perto do
         // centróide cuja caixa inteira (15 pontos) fica sobre água. Mares sem lugar não ganham rótulo.
-        terra = [...((p.geo.paises || {}).features || []), ...(p.pais_geo ? [p.pais_geo] : [])];
+        terra = [...((p.geo.paises || {}).features || []), ...(p.pais_geo ? [p.pais_geo] : [])].map(sentido);
         { const cab = el.querySelector('.cab'), pn = [...el.querySelectorAll('.cmpd,.dist,.dd,.nmp')].map(x => x.offsetTop).filter(v => v > 0);
           lim = { y0: cab ? cab.offsetTop + cab.offsetHeight + 16 : 420, y1: Math.min(1100, ...pn.map(v => v - 16)) }; }
         map.jumpTo(B);
@@ -170,7 +178,7 @@
           if (ord.length) rotulosMar.push({ ...m, c: ord[0][0], alternativas: ord.slice(1, 40).map(x => x[0]) });
         }
         medida.remove();
-        el.querySelector('.rotulos').insertAdjacentHTML('afterbegin', rotulosMar.map((m, i) => `<div class="rot-mapa mar rm${i}" data-g="mar${i}" data-opcional="1">${esc(m.nome)}</div>`).join(''));
+        el.querySelector('.rotulos').insertAdjacentHTML('afterbegin', rotulosMar.map((m, i) => `<div class="rot-mapa mar rm${i}" data-g="mar${i}" data-opcional="1" data-ne="${esc(m.ne || '')}">${esc(m.nome)}</div>`).join(''));
         map.jumpTo(A); await desenhado(map);
       },
       async upd(tl, el, kcam, extra) {

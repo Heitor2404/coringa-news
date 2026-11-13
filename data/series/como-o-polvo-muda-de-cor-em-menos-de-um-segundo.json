@@ -1,0 +1,43 @@
+{
+ "pedido": "como o polvo muda de cor em menos de um segundo",
+ "tema": {
+  "pergunta": "Como o polvo muda de cor em menos de um segundo?",
+  "formato": "explica",
+  "termos": [
+   "Polvo",
+   "Cromatóforo",
+   "Camuflagem",
+   "Cefalópode"
+  ],
+  "termos_en": [
+   "Octopus",
+   "Chromatophore",
+   "Cephalopod camouflage",
+   "Iridophore"
+  ],
+  "busca": "polvo muda de cor camuflagem",
+  "busca_video": [
+   "octopus camouflage",
+   "octopus changing color",
+   "underwater reef octopus",
+   "cuttlefish skin color"
+  ],
+  "categoria": "CIÊNCIA",
+  "noticia": "",
+  "pedido": "como o polvo muda de cor em menos de um segundo"
+ },
+ "pergunta": "Como o polvo muda de cor em menos de um segundo?",
+ "arco": [
+  "O polvo muda de cor até dormindo porque o cérebro comanda direto a pele."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "O polvo muda de cor até dormindo",
+   "resumo": "Ele tem nove cérebros e três corações. Ele tem nove cérebros e três corações. E muda de cor mesmo sem enxergar verde e vermelho. A pele tem células cheias de pigmento, os cromatóforos. Eles são ligados direto aos nervos do animal. O cérebro aperta os sacos, sem esperar sangue nem hormônios. São seis tipos: amarelos, vermelhos, brancos, pretos, azuis e reflexivos. Nos leucóforos e iridóforos, a cor não é pigmento: é luz espalhada. Mamíferos e aves não têm cromatóforos, só melanócitos. Em janeiro de 2026, uma pele sintética copiou isso: muda cor e textura em segundos. Dormindo, ele revive padrões de caça. Pode ser um sonho. A pele é uma tela viva, comandada direto pelo cérebro. Por isso, até dormindo, o cérebro continua pintando a pele.",
+   "suspense": "Por isso, até dormindo, o cérebro continua pintando a pele."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-13"
+}

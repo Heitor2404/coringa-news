@@ -97,21 +97,20 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     # ficar muitos segundos seguidos na tela.
     reais_k = [k for k, c in enumerate(cenas) if c.get('real') and c.get('img')]
     com_img = reais_k or [k for k, c in enumerate(cenas) if c.get('img') and not c.get('video')]
-    # 12/11 (reversão da correção 2 da Fase 3): volta o preenchimento de antes para TODA ideia sem imagem (sem cartão
-    # automático, sem a mesma foto cobrindo várias ideias), mas SEM A-B-A: a foto emprestada só pode ser a da cena
-    # ANTERIOR (a mesma continua, outro enquadramento) ou a da PRÓXIMA (entra um pouco antes). Nunca uma que já saiu da tela.
+    # Ideia sem imagem própria (no máximo 2 por vídeo, pelo porteiro do roteiro). Plano-mestre G: a imagem certa é a da
+    # cena ANTERIOR, continuando (é contexto, e o storyboard registra isso) — nunca antecipar a imagem da PRÓXIMA ideia
+    # (ela apareceria antes da hora) nem voltar a uma que já saiu da tela (A-B-A). Só o GANCHO, que não tem anterior,
+    # pode abrir com a imagem da cena seguinte (é a abertura do assunto).
     for k, c in enumerate(cenas):
         if not c.get('img') and c['tipo'] not in ('mapa', 'fechamento') and com_img:
-            ant = cenas[k - 1].get('img') if k else None
-            saiu = {x.get('img') for x in cenas[:max(0, k - 1)] if x.get('img')} - {ant}
-            prox = next((j for j in range(k + 1, len(cenas)) if cenas[j].get('img') or cenas[j]['tipo'] == 'fechamento'), None)
-            opcoes = [j for j in ([prox] if prox is not None else []) if cenas[j].get('img') and not cenas[j].get('video')
-                      and cenas[j]['img'] not in saiu]
-            if not opcoes and k and ant and not cenas[k - 1].get('video'):
-                opcoes = [k - 1]
-            if not opcoes:
+            if k and cenas[k - 1].get('img') and not cenas[k - 1].get('video'):
+                viz = cenas[k - 1]
+            elif k == 0:
+                viz = next((x for x in cenas[1:] if x.get('img') and not x.get('video')), None)
+            else:
+                viz = None
+            if viz is None:
                 continue
-            viz = cenas[opcoes[0]]
             c['img'], c['repetida'] = viz['img'], True
             c['sub'] = (viz.get('sub') or 0) + 1          # outro recorte/movimento da mesma foto
             if viz.get('real'):
@@ -132,6 +131,7 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
                 c.pop('video', None)
     from src import storyboard
     storyboard.registrar_tempos(cenas)             # plano-mestre D: span da narração e motivo da transição (registro)
+    _transicoes(cenas)                             # plano-mestre G: a transição segue o motivo (sem tela preta automática)
     # fundo do fechamento: a última foto do vídeo (escurecida atrás do Coringa), não a da abertura
     fundo = next((c['img'] for c in reversed(cenas[:-1]) if c.get('img') and not c.get('video')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
@@ -139,39 +139,61 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     return cenas
 
 
-PLANO_MAX = 3.5         # nenhum plano parado mais que isso (vira corte de câmera ou outra foto perto)
+PLANO_MAX = 3.5         # plano mais longo que isso PODE ganhar um detalhe da mesma foto (se a resolução deixar)
+DETALHE_MIN = 1.3       # zoom mínimo para o detalhe ser outra vista de verdade (menos que isso é Ken Burns, não conta)
+DETALHE_MAX = 1.6
+AMPLIA_MAX = 2.0        # quanto a foto pode ser ampliada no total (cobrir a tela × detalhe) sem ficar borrada
+PLANO_MIN = 1.6         # nenhum pedaço de plano mais curto que isso (corte nervoso)
+
+
+def _zoom_detalhe(img: str) -> float:
+    """Até quanto dá para aproximar desta foto em tela cheia sem borrar (0 = não dá)."""
+    w, h = _tamanho(img)
+    if not w or not h:
+        return 0.0
+    z = min(DETALHE_MAX, AMPLIA_MAX / max(1080 / w, 1920 / h))
+    return round(z, 2) if z >= DETALHE_MIN else 0.0
 
 
 def _quebrar_longos(cenas: list[dict]) -> list[dict]:
-    """Porteiro da montagem: plano longo vira 2 ou mais planos. 12/11 (reversão da correção 2 da Fase 3): volta a variar
-    de foto, mas SEM A-B-A — antes o 2º plano pegava outra foto real e o 3º voltava à primeira (A → X → A), e a troca do
-    "meio" de uma sequência longa fazia o mesmo. Agora: 1º plano = a foto da ideia; 2º = um reenquadramento dela (um só);
-    do 3º em diante entra a foto da PRÓXIMA cena (ela começa um pouco antes, e não volta nada que já saiu da tela).
-    Sem próxima foto real, segue o reenquadramento."""
+    """Plano-mestre G: ritmo não é quantidade de cortes. Plano longo (> PLANO_MAX) ganha UM detalhe da mesma foto só se
+    a resolução deixar um zoom de verdade (≥ DETALHE_MIN) e cada pedaço ficar com pelo menos PLANO_MIN; senão fica
+    inteiro (cena longa que mostra o fato é melhor que corte para outra coisa). Nunca entra a foto de outra ideia aqui
+    (antecipava a próxima ou voltava a uma que já saiu: A-B-A). Documento: o detalhe só depois de dar tempo de ler."""
     out = []
-    for k, c in enumerate(cenas):
+    for c in cenas:
         dur = c['end'] - c['start']
         if not c.get('img') or c.get('video') or c['tipo'] not in ('historia', 'imagem') or dur <= PLANO_MAX:
             out.append(c)
             continue
-        n = int(dur // PLANO_MAX) + 1
-        passo = dur / n
-        prox = cenas[k + 1] if k + 1 < len(cenas) else None
-        antecipa = prox if prox is not None and prox.get('img') and prox.get('real') and not prox.get('video') \
-            and prox['img'] != c['img'] else None
-        for j in range(n):
-            p = dict(c, start=round(c['start'] + j * passo, 3), end=round(c['start'] + (j + 1) * passo, 3))
-            if j:
-                p.pop('soco', None)
-                if j >= 2 and antecipa is not None:
-                    p['img'] = antecipa['img']
-                    for key in ('legenda_foto', 'ano_foto', 'tipo_img', 'real'):
-                        p[key] = antecipa.get(key)
-                    p['sub'], p['repetida'] = 0, True
-                else:
-                    p['sub'] = (c.get('sub') or 0) + j
-            out.append(p)
+        papel = str(c.get('tipo_img') or '').lower() in ('documento', 'jornal', 'manuscrito', 'carta') or \
+            (c.get('sb') or {}).get('midia_preferida') == 'documento'
+        z = _zoom_detalhe(c['img'])
+        corte = round(c['start'] + max(PLANO_MIN, dur * (0.6 if papel else 0.5)), 3)
+        if not z or c['end'] - corte < PLANO_MIN:
+            out.append(c)                                # inteiro: sem resolução para um detalhe de verdade
+            continue
+        out.append(dict(c, end=corte))
+        d = dict(c, start=corte, sub=(c.get('sub') or 0) + 1, zoom_detalhe=z)
+        d.pop('soco', None)
+        out.append(d)
     return out
+
+
+def _transicoes(cenas: list[dict]):
+    """Transição pelo motivo registrado no storyboard: pedaço da mesma ideia ou continuação do mesmo acontecimento →
+    corte seco; mudança de lugar/tempo → zoom curto; contraste → chicote. Nada de tela preta automática. Sem motivo (ou
+    roteiro antigo), fica a transição de sempre do template. Transição já escolhida não muda."""
+    MOTIVO = {'continuidade': 'corte', 'mudanca_de_lugar_ou_tempo': 'zoom', 'contraste': 'chicote'}
+    ant = None
+    for c in cenas:
+        sb = c.get('sb')
+        if sb and not c.get('transicao') and c['tipo'] in ('historia', 'imagem'):
+            if ant is not None and ant.get('sb') is sb:
+                c['transicao'] = 'corte'
+            elif MOTIVO.get(sb.get('transicao')):
+                c['transicao'] = MOTIVO[sb['transicao']]
+        ant = c
 
 
 SEM_SOCO = {'mapa', 'fechamento', 'gancho', 'revelacao', 'numero', 'linha_tempo', 'comparacao', 'cards', 'lista', 'escala', 'citacao'}

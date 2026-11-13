@@ -301,15 +301,16 @@ def test_montagem_sem_cartao_automatico_e_sem_a_b_a(tmp_path):
     assert ac.aba(cenas) == 0
 
 
-def test_plano_longo_varia_sem_voltar_e_sem_reenquadrar_tres_vezes(tmp_path):
+def test_plano_longo_sem_resolucao_fica_inteiro_e_nao_antecipa_a_proxima(tmp_path):
+    """Plano-mestre G: foto 900×1200 em tela cheia não aguenta um detalhe de verdade → o plano fica inteiro (antes:
+    A, A reenquadrada e a foto da PRÓXIMA ideia antes da hora)."""
     v = _sem_foto()
     for c in v['cenas']:
         c.pop('cenario', None)
     v['cenas'][1]['foto'], v['cenas'][3]['foto'], v['cenas'][5]['foto'] = 'a1', 'a2', 'a3'
     cenas = _montar(tmp_path, v['cenas'], [3.0, 3.0, 9.0, 3.0, 3.0, 3.0, 2.0])
     reuniao = [c for c in cenas if c.get('grupo') == 2]
-    assert [_img(c) for c in reuniao] == ['a4.jpg', 'a4.jpg', 'a2.jpg']       # A, A reenquadrada, a PRÓXIMA foto
-    assert [c.get('sub') or 0 for c in reuniao] == [0, 1, 0]
+    assert [_img(c) for c in reuniao] == ['a4.jpg'] and reuniao[0]['end'] - reuniao[0]['start'] == 9.0
     _seq_sem_aba(cenas)
 
 

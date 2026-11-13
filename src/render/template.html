@@ -544,7 +544,10 @@ const CAM={aproxima:[1.0,1.08,0,0,0,0],afasta:[1.08,1.0,0,0,0,0],esquerda:[1.04,
   sobe:[1.04,1.04,0,0,30,-30],desce:[1.04,1.04,0,0,-30,30],tremor:[1.03,1.07,0,0,0,0]};
 // 2º/3º plano da MESMA ideia: outro enquadramento da mesma imagem (mais fechado e em outro canto), como um corte de câmera
 const SUB=[[1.1,1.15,-30,-20,-30,-20],[1.1,1.15,30,20,30,20],[1.14,1.2,0,0,-35,-25]];
-function CAMERA(sc,t){const c=(sc.sub&&!sc.video)?SUB[(sc.sub-1)%SUB.length]:(CAM[sc.camera]||CAM[CAMS[sc.i%CAMS.length]]);const k=clamp((t-sc.start+.2)/(sc.end-sc.start+.4));const e=k*.7+eio(k)*.3;
+// DETALHE (plano-mestre G): zoom de verdade num ponto da foto (só quando a resolução deixa: main._zoom_detalhe)
+function DETALHE(sc){const z=+sc.zoom_detalhe,f=FOCOS[(sc.sub||1)%FOCOS.length],lim=v=>Math.max(-(540-540/z),Math.min(540-540/z,v));
+  const x=lim(-(f[0]/100-.5)*1080),y=lim(-(f[1]/100-.5)*1080);return [z,z*1.03,x,x,y,y]}
+function CAMERA(sc,t){const c=(sc.zoom_detalhe&&!sc.video)?DETALHE(sc):(sc.sub&&!sc.video)?SUB[(sc.sub-1)%SUB.length]:(CAM[sc.camera]||CAM[CAMS[sc.i%CAMS.length]]);const k=clamp((t-sc.start+.2)/(sc.end-sc.start+.4));const e=k*.7+eio(k)*.3;
   let x=lerp(c[2],c[3],e),y=lerp(c[4],c[5],e);
   if(sc.camera==='tremor'){const d=Math.max(.25,1-(t-sc.start)/1.2);x+=Math.sin(t*47)*9*d;y+=Math.cos(t*39)*7*d}
   const so=sc.soco&&t>=sc.soco?0.03*eo((t-sc.soco)/.14):0;

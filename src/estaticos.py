@@ -167,12 +167,137 @@ def medir_cenas(cenas: list[dict], estatico_s: float = ESTATICO_S) -> dict:
     return _trechos(marcos, dur, estatico_s) | {'imagens': len({k for c, k in zip(cenas, chaves) if c.get('img')})}
 
 
+# ───────── 12/11 (Torre Eiffel 4): imagem IMÓVEL × movimento de câmera que de fato muda o que se vê ─────────
+# A régua acima conta a mesma foto como "parada" mesmo com a câmera passeando por ela. Esta conta como mudança o
+# movimento que MUDA A VISTA, sem premiar movimento à toa. Só conta quando, tudo junto:
+#   - a parte da foto que está na tela mudou de verdade: sobreposição (IoU) com a vista do último marco < MUDA_VISTA
+#     (zoom lento de 8% ou panorâmica de 30 px sozinhos NÃO chegam lá);
+#   - o movimento tem propósito: câmera escolhida para a cena (roteiro / _dar_movimento: aproxima no retrato, afasta no
+#     fato, panorâmica no lugar) ou reenquadramento do MESMO acontecimento; a câmera automática de rodízio e o tremor não
+#     contam;
+#   - passou pelo menos MOV_INTERVALO desde a última mudança (corte nervoso não ganha nada);
+#   - a mesma foto está na tela há no máximo MOV_MAX_MESMA: dali em diante é parado, com ou sem câmera.
+# Clipe de vídeo é movimento real dentro da imagem: conta a cada MOV_INTERVALO, também até MOV_MAX_MESMA.
+# Os números da câmera são os do template (src/render/template.html); um teste confere que continuam iguais.
+TELA = (1080, 1920)
+CAMS = ['aproxima', 'esquerda', 'afasta', 'direita', 'sobe', 'aproxima', 'desce']
+CAM = {'aproxima': [1.0, 1.08, 0, 0, 0, 0], 'afasta': [1.08, 1.0, 0, 0, 0, 0], 'esquerda': [1.04, 1.04, 30, -30, 0, 0],
+       'direita': [1.04, 1.04, -30, 30, 0, 0], 'sobe': [1.04, 1.04, 0, 0, 30, -30], 'desce': [1.04, 1.04, 0, 0, -30, 30],
+       'tremor': [1.03, 1.07, 0, 0, 0, 0]}
+SUB = [[1.1, 1.15, -30, -20, -30, -20], [1.1, 1.15, 30, 20, 30, 20], [1.14, 1.2, 0, 0, -35, -25]]
+FOCOS = [[50, 40], [30, 30], [70, 62], [35, 68], [66, 28]]
+MUDA_VISTA = 0.75            # IoU abaixo disso = pelo menos ~25% do que se vê é outro pedaço da foto
+MOV_INTERVALO = 2.0
+MOV_MAX_MESMA = 8.0
+GRAF = ('numero', 'mapa', 'linha_tempo', 'comparacao', 'cards', 'lista', 'escala', 'citacao', 'revelacao')
+
+
+def _eio(x: float) -> float:
+    x = min(1.0, max(0.0, x))
+    return 4 * x ** 3 if x < .5 else 1 - (-2 * x + 2) ** 3 / 2
+
+
+def _vista(c: dict, t: float, i: int) -> tuple[float, float, float, float]:
+    """Retângulo da foto que aparece na tela no instante t (0–1 em x e y), como o template desenha."""
+    a, b = float(c['start']), float(c['end'])
+    k = min(1.0, max(0.0, (t - a + .2) / (b - a + .4)))
+    if c.get('moldura'):                                # moverFoto: zoom em torno de um foco dentro da foto
+        e = k * .6 + _eio(k) * .4
+        fx, fy = (v / 100 for v in FOCOS[(c.get('sub') or 0) % len(FOCOS)])
+        z = (1.28 + .12 * e) if c.get('sub') else (1.0 + .12 * e)
+        return fx - fx / z, fy - fy / z, fx + (1 - fx) / z, fy + (1 - fy) / z
+    e = k * .7 + _eio(k) * .3                           # CAMERA: scale(z) translate(x, y) sobre a tela cheia
+    if c.get('zoom_detalhe') and not c.get('video'):     # DETALHE do template (plano-mestre G)
+        z0 = float(c['zoom_detalhe'])
+        f = FOCOS[(c.get('sub') or 1) % len(FOCOS)]
+        lim = lambda v: max(-(540 - 540 / z0), min(540 - 540 / z0, v))
+        x, y = lim(-(f[0] / 100 - .5) * 1080), lim(-(f[1] / 100 - .5) * 1080)
+        cam = [z0, z0 * 1.03, x, x, y, y]
+    else:
+        cam = SUB[(c['sub'] - 1) % len(SUB)] if c.get('sub') and not c.get('video') else \
+            (CAM.get(c.get('camera')) or CAM[CAMS[i % len(CAMS)]])
+    z = cam[0] + (cam[1] - cam[0]) * e
+    cx = .5 - (cam[2] + (cam[3] - cam[2]) * e) / TELA[0]
+    cy = .5 - (cam[4] + (cam[5] - cam[4]) * e) / TELA[1]
+    m = .5 / z
+    return cx - m, cy - m, cx + m, cy + m
+
+
+def _iou(p, q) -> float:
+    ix = max(0.0, min(p[2], q[2]) - max(p[0], q[0]))
+    iy = max(0.0, min(p[3], q[3]) - max(p[1], q[1]))
+    inter = ix * iy
+    ap, aq = (p[2] - p[0]) * (p[3] - p[1]), (q[2] - q[0]) * (q[3] - q[1])
+    return inter / (ap + aq - inter) if inter else 0.0
+
+
+def _com_proposito(c: dict) -> bool:
+    if c.get('camera') == 'tremor':
+        return False
+    if c.get('zoom_detalhe'):
+        return True                                     # detalhe que a montagem só cria quando a resolução deixa
+    if c.get('sub'):
+        return bool(c.get('evento'))                    # reenquadramento do mesmo acontecimento
+    return c.get('camera') in CAM                       # câmera escolhida (sem ela, o rodízio automático não conta)
+
+
+def medir_movimento(cenas: list[dict], estatico_s: float = ESTATICO_S) -> dict:
+    """Como medir_cenas, mais as mudanças de VISTA com propósito dentro da mesma foto (regras acima).
+    Devolve o mesmo formato + 'movimento' (quantas mudanças vieram da câmera/clipe) e 'mesma_imagem' (a régua antiga)."""
+    antigo = medir_cenas(cenas, estatico_s)
+    if not cenas:
+        return antigo | {'movimento': 0, 'mesma_imagem': antigo}
+    chaves = chaves_visuais(cenas)
+    marcos, mov = [], []
+    ant, ant_graf, ini, ult, ref = None, False, 0.0, 0.0, None
+    for i, (c, chave) in enumerate(zip(cenas, chaves)):
+        a, b = float(c['start']), float(c['end'])
+        e_graf = c.get('tipo') in GRAF
+        if ant is None or chave != ant or e_graf or ant_graf:
+            if ant is not None:
+                marcos.append(a)
+            ini, ult, ref = a, a, None
+        ant, ant_graf = chave, e_graf
+        if e_graf or not c.get('img'):
+            continue
+        if c.get('video'):
+            t = ult + MOV_INTERVALO
+            while t < b and t - ini <= MOV_MAX_MESMA:
+                if t >= a:
+                    mov.append(round(t, 2)); ult = t
+                t += MOV_INTERVALO
+            continue
+        if ref is None:
+            ref = _vista(c, a, i)
+        if not _com_proposito(c):
+            continue
+        t = a
+        while t < b:
+            w = _vista(c, t, i)
+            if t - ult >= MOV_INTERVALO and t - ini <= MOV_MAX_MESMA and _iou(ref, w) < MUDA_VISTA:
+                mov.append(round(t, 2)); ult, ref = t, w
+            t += 1 / FPS
+    dur = float(cenas[-1]['end'])
+    # três tipos de mudança, separados (plano-mestre G): semântica (outra imagem/gráfico), geométrica (a vista da MESMA
+    # foto mudou de verdade, com propósito) e nenhuma (imagem idêntica: os trechos parados)
+    return _trechos(marcos + mov, dur, estatico_s) | {'imagens': antigo['imagens'], 'movimento': len(mov),
+                                                        'semanticas': len(marcos), 'mesma_imagem': antigo}
+
+
 def _s(x: float) -> str:
     return f'{x:.1f}'.replace('.', ',')
 
 
 def resumo(m: dict) -> str:
     """Texto para o Telegram: total de trechos parados, os 3 maiores e a duração acumulada (inteira e só o excedente)."""
+    if 'mesma_imagem' in m:                          # régua nova (câmera que muda a vista conta) + a antiga ao lado
+        mi = m['mesma_imagem']
+        antiga = (f"   sem contar a câmera: imagem nova a cada {_s(mi['troca_media'])}s; {len(mi['estaticos'])} trecho(s) "
+                  f"com a mesma foto por mais de {ESTATICO_S:.0f}s ({round(100 * mi['frac_estatica'])}% do vídeo)")
+        novo = resumo({k: v for k, v in m.items() if k != 'mesma_imagem'})
+        novo = novo.replace('🎞 ritmo: imagem nova', '🎞 ritmo (câmera com propósito conta): mudança de vista', 1) \
+                   .replace('com a mesma imagem', 'parado de verdade', 1)
+        return novo + f" · {m.get('movimento', 0)} mudança(s) vieram da câmera/clipe\n" + antiga
     base = f"🎞 ritmo: imagem nova a cada {_s(m['troca_media'])}s em média"
     est = m['estaticos']
     if not est:

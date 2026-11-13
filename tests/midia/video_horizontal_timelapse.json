@@ -1,0 +1,31 @@
+{
+ "titulo": "Panama Canal Timelapse- Caribbean to Pacific.webm",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Panama_Canal_Timelapse-_Caribbean_to_Pacific.webm",
+ "licenca": "CC BY 3.0",
+ "licenca_url": "https://creativecommons.org/licenses/by/3.0",
+ "autor": "Morrison Mast",
+ "credito": "YouTube: Panama Canal Timelapse: Caribbean to Pacific – View/save archived versions on archive.org",
+ "data": "2014-01-27",
+ "fixture": {
+  "arquivo": "video_horizontal_timelapse.mp4",
+  "trecho_original": "s 40–46",
+  "sonda": {
+   "programs": [],
+   "streams": [
+    {
+     "codec_type": "video",
+     "width": 1280,
+     "height": 720,
+     "r_frame_rate": "30000/1001"
+    },
+    {
+     "codec_type": "audio",
+     "r_frame_rate": "0/0"
+    }
+   ],
+   "format": {
+    "duration": "6.006000"
+   }
+  }
+ }
+}

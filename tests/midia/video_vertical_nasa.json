@@ -1,0 +1,31 @@
+{
+ "titulo": "Hubble Women Making History- Beverly Johnson (SVS14324 BEV VERTICAL MP4).webm",
+ "pagina": "https://commons.wikimedia.org/wiki/File:Hubble_Women_Making_History-_Beverly_Johnson_(SVS14324_BEV_VERTICAL_MP4).webm",
+ "licenca": "Public domain",
+ "licenca_url": "",
+ "autor": "NASA's Scientific Visualization Studio - Intern/Kascie Herron, KBR Wyle Services, LLC/Paul Morris, ADNET Systems, Inc./Aaron E. Lepsch",
+ "credito": "Hubble Women Making History: Beverly Johnson",
+ "data": "29 March 2023, 13:55:00 (upload date)",
+ "fixture": {
+  "arquivo": "video_vertical_nasa.mp4",
+  "trecho_original": "s 30–36",
+  "sonda": {
+   "programs": [],
+   "streams": [
+    {
+     "codec_type": "video",
+     "width": 720,
+     "height": 1280,
+     "r_frame_rate": "30000/1001"
+    },
+    {
+     "codec_type": "audio",
+     "r_frame_rate": "0/0"
+    }
+   ],
+   "format": {
+    "duration": "6.006000"
+   }
+  }
+ }
+}

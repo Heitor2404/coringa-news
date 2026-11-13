@@ -292,6 +292,35 @@ def renderizar(dados: dict, audio: Path, saida: Path, trabalho: Path, musica: Pa
     return _montar(dados, pagina, audio, saida, trabalho, musica, workers)
 
 
+def _audio_original(dados: dict, trabalho: Path) -> Path | None:
+    """V2.2: áudio ORIGINAL de vídeo de arquivo (video.documental com params.audio_original > 0; padrão 0 = removido).
+    Cada trecho entra alinhado à cena, com o mesmo corte do vídeo (inicio..inicio+duração), fades curtos, e depois passa
+    pela compressão lateral da narração (abaixa quando a voz fala). Clipe sem trilha de áudio é ignorado e registrado."""
+    ent, fil, k, dur = [], [], 0, dados['duration']
+    dados.setdefault('registro_audio', [])
+    for sc in dados.get('scenes', []):
+        p = sc.get('params') or {}
+        vol, arq = float(p.get('audio_original') or 0), p.get('video')
+        if sc.get('comp') != 'video.documental' or vol <= 0 or not arq or not Path(str(arq)).exists():
+            continue
+        tem = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', str(arq)],
+                             capture_output=True, text=True).stdout.strip()
+        if not tem:
+            dados['registro_audio'].append(f"{Path(str(arq)).name}: sem trilha de áudio (audio_original ignorado)"); continue
+        ini, d = float(p.get('inicio') or 0), sc['end'] - sc['start']
+        ent += ['-ss', f'{ini:.3f}', '-t', f'{d:.3f}', '-i', str(arq)]
+        ms = int(sc['start'] * 1000)
+        fil.append(f'[{k}:a]aresample=48000,aformat=channel_layouts=mono,volume={vol:.2f},afade=t=in:d=0.25,afade=t=out:st={max(0.0, d - 0.3):.3f}:d=0.3,adelay={ms}|{ms}[o{k}]')
+        dados['registro_audio'].append(f"{Path(str(arq)).name}: áudio original a {vol:.2f} em {sc['start']:.2f}–{sc['end']:.2f} s")
+        k += 1
+    if not k:
+        return None
+    fil.append(''.join(f'[o{i}]' for i in range(k)) + f'amix=inputs={k}:normalize=0,apad=whole_dur={dur},atrim=0:{dur}[o]')
+    saida = trabalho / 'audio_original.wav'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', *ent, '-filter_complex', ';'.join(fil), '-map', '[o]', '-ac', '1', str(saida)], check=True)
+    return saida
+
+
 def _montar(dados, pagina, audio, saida, trabalho, musica, workers, nav_args=None):
 
     n = int(dados['duration'] * FPS)
@@ -315,12 +344,21 @@ def _montar(dados, pagina, audio, saida, trabalho, musica, workers, nav_args=Non
     sfx = _efeitos(dados['scenes'], dados['duration'], trabalho, pops, dados.get('numeros'))
     # 13/11 (polvo: −16,3 LUFS, pico +0,9 dBTP, 96 kHz): a mistura sai crua (48 kHz) e a MASTERIZAÇÃO é separada e medida
     entradas = ['-i', str(audio), '-i', str(sfx)]
+    orig = _audio_original(dados, trabalho)
+    # cadeia: voz [0] → (duas cópias de chave para a compressão lateral) ; música e áudio original abaixam quando a voz fala
+    partes, rotulos, n = ['[1:a]volume=0.35[fx]'], ['[v]', '[fx]'], 2
+    chaves = (1 if musica and musica.exists() else 0) + (1 if orig else 0)
+    partes.insert(0, f'[0:a]asplit={1 + chaves}[v]' + ''.join(f'[k{i}]' for i in range(chaves)))
+    ki = 0
     if musica and musica.exists():
         entradas += ['-stream_loop', '-1', '-i', str(musica)]
-        filtro = ('[0:a]asplit=2[v][vk];[2:a]volume=0.28[m0];[m0][vk]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350[m];[1:a]volume=0.35[fx];'
-                  '[v][fx][m]amix=inputs=3:normalize=0:duration=first,aresample=48000[a]')   # música abaixa sozinha quando o Coringa fala
-    else:
-        filtro = '[1:a]volume=0.35[fx];[0:a][fx]amix=inputs=2:normalize=0:duration=first,aresample=48000[a]'
+        partes.append(f'[{n}:a]volume=0.28[m0];[m0][k{ki}]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350[m]')
+        rotulos.append('[m]'); n += 1; ki += 1      # música abaixa sozinha quando o Coringa fala
+    if orig:
+        entradas += ['-i', str(orig)]
+        partes.append(f'[{n}:a][k{ki}]sidechaincompress=threshold=0.02:ratio=6:attack=20:release=400[or]')
+        rotulos.append('[or]'); n += 1; ki += 1
+    filtro = ';'.join(partes) + ';' + ''.join(rotulos) + f'amix=inputs={len(rotulos)}:normalize=0:duration=first,aresample=48000[a]'
     mix, master = trabalho / 'mix.wav', trabalho / 'master.wav'
     subprocess.run(['ffmpeg', '-v', 'error', '-y', *entradas, '-filter_complex', filtro, '-map', '[a]',
                     '-t', f"{dados['duration']:.3f}", '-c:a', 'pcm_s16le', str(mix)], check=True)

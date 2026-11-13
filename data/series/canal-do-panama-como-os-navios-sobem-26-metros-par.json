@@ -1,0 +1,43 @@
+{
+ "pedido": "Canal do Panamá: como os navios sobem 26 metros para atravessar o continente",
+ "tema": {
+  "pergunta": "Como um navio gigante sobe 26 metros sem bomba nenhuma?",
+  "formato": "explica",
+  "termos": [
+   "Canal do Panamá",
+   "Eclusa",
+   "Lago Gatun",
+   "Eclusas de Gatun"
+  ],
+  "termos_en": [
+   "Panama Canal",
+   "Gatun Locks",
+   "Gatun Lake",
+   "Lock (water navigation)"
+  ],
+  "busca": "Canal do Panamá eclusas navios",
+  "busca_video": [
+   "container ship canal",
+   "ship lock water gate",
+   "water filling lock",
+   "cargo ship night"
+  ],
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "Canal do Panamá: como os navios sobem 26 metros para atravessar o continente"
+ },
+ "pergunta": "Como um navio gigante sobe 26 metros sem bomba nenhuma?",
+ "arco": [
+  "Como o Canal do Panamá levanta navios gigantes 26 metros usando só a gravidade e muita água doce."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "Como um navio sobe 26 metros sem bomba?",
+   "resumo": "Ninguém empurra este navio, mas ele sobe 26 metros. O Canal do Panamá, com 80 km, liga o Caribe ao Pacífico. No meio do caminho há um lago, 26 metros acima do mar. Esse lago nasceu quando represaram o rio Chagres. O navio entra numa câmara e a comporta de trás fecha. Então a câmara enche e o navio sobe junto com a água. Essa água vem do lago, descendo por gravidade, sem bombas. Quando o nível iguala, a comporta da frente se abre. Para descer, é o inverso: a câmara esvazia aos poucos. O canal original tem seis degraus: três para subir, três para descer. Cada travessia gasta 200 milhões de litros de água doce. As eclusas novas, de 2016, reaproveitam 60% da água em 18 bacias. Essa água vem das chuvas; com El Niño, o canal restringiu navios. Um navio chegou a pagar R$ 27 milhões para passar. Quem levantou o navio foi a gravidade, puxando água do lago.",
+   "suspense": "Quem levantou o navio foi a gravidade, puxando água do lago."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-13"
+}

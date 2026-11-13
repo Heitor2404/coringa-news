@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: (timeout 120 sudo apt-get update -qq && timeout 240 sudo apt-get install -y -qq ffmpeg) || sudo apt-get install -y -qq ffmpeg
-      - run: pip install -q faster-whisper==1.1.1
+      - run: pip install -q faster-whisper==1.1.1 requests
       - run: python scripts/v22_baixar_midia.py tests/midia/manifesto.json /tmp/midia
       - name: Publica no ramo órfão midia-teste-v22
         run: |

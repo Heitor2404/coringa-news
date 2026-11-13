@@ -98,9 +98,12 @@ def main():
                         'data': item.get('date'), 'credito': 'Library of Congress, Prints & Photographs Division'}
             elif it['tipo'] == 'video':
                 meta = info_commons(it['commons'])
-                bruto = tmp / f'{i}.webm'; get(meta['url'], bruto, limite=200_000_000)
+                if it.get('streaming'):        # arquivo grande: ffmpeg busca só o trecho por HTTP (cabeçalho de user-agent)
+                    bruto = meta['url']
+                else:
+                    bruto = tmp / f'{i}.webm'; get(meta['url'], bruto, limite=200_000_000)
                 arq = out / f'{i}.mp4'
-                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', str(it['inicio']), '-t', str(it['dur']), '-i', str(bruto),
+                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-user_agent', UA['User-Agent'], '-ss', str(it['inicio']), '-t', str(it['dur']), '-i', str(bruto),
                                 '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', str(arq)], check=True)
             elif it['tipo'] == 'audio':
                 meta = info_commons(it['commons'])

@@ -294,6 +294,8 @@ def escrever(pauta: dict, produtos: list[dict]) -> dict:
 PROMPT_TEMAS_EXPLICA = cofre.prompt('PROMPT_TEMAS_EXPLICA')
 
 PROMPT_ROTEIRO_EXPLICA = cofre.prompt('PROMPT_ROTEIRO_EXPLICA')
+# V2.2: contrato de acontecimentos (público) anexado ao pedido do roteiro; o texto do cofre não muda
+from src.v2.contrato import BLOCO_PROMPT as CONTRATO_ACONTECIMENTOS  # noqa: E402
 
 BLOCO_PARTE1 = """SÉRIE EM CAPÍTULOS — esta é a PARTE 1 de {n}.
 - OBRIGATÓRIO: planeje em "arco" a história completa em EXATAMENTE {n} partes (1 frase por parte), cortando nos suspenses naturais.
@@ -376,7 +378,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
         v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
             pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
             partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
-            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)))
+            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)) + CONTRATO_ACONTECIMENTOS)
     v['tipo_conteudo'] = tipo
     v['arco'] = (v.get('arco') or []) if capitulos else (v.get('arco') or [])[:1]
     if capitulos and parte <= 1 and len(v['arco']) > n:

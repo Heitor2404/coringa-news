@@ -68,6 +68,10 @@ def normalizar(v: dict) -> dict:
                'diagrama': 'esquema', 'esquemas': 'esquema', 'diagramas': 'esquema'}.get(rec, rec)
         c['acontecimento'] = {'quem': _txt(ac.get('quem')), 'onde': _txt(ac.get('onde')), 'quando': _txt(ac.get('quando'), 20),
                               'recurso': rec if rec in RECURSOS else ''}
+        # V2.2: contrato de acontecimentos (tipo, sujeito, ação, estados, o que mostrar, dados, importância…) — o motor
+        # visual consulta isto antes de qualquer padrão textual (src/v2/contrato.py)
+        from src.v2 import contrato
+        c['acontecimento'].update(contrato.normalizar(ac))
         ev = _txt(c.get('evento') or ac.get('evento'), 12)
         c['evento'] = ev or f'i{k}'
         vistos[c.get('grupo', k)] = c

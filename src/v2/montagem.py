@@ -22,7 +22,7 @@ import copy
 import re
 from pathlib import Path
 
-from src.v2 import acervo_v2, capacidades, fatos
+from src.v2 import acervo_v2, capacidades, contrato, fatos
 
 ESTATICO_MAX = 5.0
 
@@ -157,7 +157,8 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
             d.update(comp='encerramento.editorial', motivo='M1: fechamento')
         else:
             dec = capacidades.escolher(sc, {}, ctx_tema)
-            d.update(capacidade=dec.get('capacidade'), critica=dec.get('critica'), trecho=dec.get('trecho'))
+            d.update(capacidade=dec.get('capacidade'), critica=dec.get('critica'), trecho=dec.get('trecho'), origem=dec.get('origem'),
+                     acontecimento=dec.get('acontecimento'), aviso=dec.get('aviso'))
             if dec.get('comp') in ('mecanismo.eclusa', 'mecanismo.nivel'):
                 # M3: junta as cenas seguidas que narram o mesmo mecanismo
                 j, grupo = i, []
@@ -185,11 +186,36 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                             {'de': 0, 'ate': desnivel or 10, 'max': (desnivel or 10) * 1.2, 'unidade': 'm', 'objeto': 'navio', 'flutua': True})
                 if dec['comp'] == 'mecanismo.eclusa' and sentido == 'subir' and tempos[2] < dur - .8:
                     pass
-                d.update(cenas_v1=grupo, comp=dec['comp'], motivo=f"M3: {len(grupo)} cena(s) do mesmo mecanismo numa composição; {dec.get('motivo', '')}")
+                if dec.get('origem') == 'contrato':
+                    nova['params'].update({k: v for k, v in (dec.get('params') or {}).items() if v not in (None, '')})
+                d.update(cenas_v1=grupo, comp=dec['comp'], motivo=f"M3: {len(grupo)} cena(s) do mesmo mecanismo numa composição; {dec.get('motivo', '')}",
+                         origem=dec.get('origem'), acontecimento=dec.get('acontecimento'))
                 out.append(nova); direcao.append(d)
                 i = j
                 continue
+            if dec.get('comp') and dec['comp'] not in contrato.GENERICAS:
+                if dec.get('origem') == 'contrato':
+                    # V2.2: composição desenhada pelo acontecimento DECLARADO, com os dados declarados (antes, toda composição
+                    # que não fosse eclusa/nível/escala caía no ramo de foto, mesmo com o seletor certo)
+                    p = dict(dec.get('params') or {})
+                    if dec['comp'] in ('foto.historica',) and not p.get('img') and img:
+                        p['img'] = img
+                    nova.update(comp=dec['comp'], params=p)
+                    if img and dec['comp'] in ('revelacao.surpresa', 'destaque.palavras'):
+                        nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
+                    d.update(comp=dec['comp'], motivo=dec.get('motivo', ''), origem='contrato', acontecimento=dec.get('acontecimento'))
+                    out.append(nova); direcao.append(d)
+                    if img:
+                        usadas.setdefault(img, []).append(len(out) - 1)
+                    i += 1
+                    continue
+                # padrão textual achou uma composição desenhada, mas sem dados declarados: a cena fica com foto e a troca
+                # é REGISTRADA (o fiscal bloqueia se o acontecimento for crítico — S5), nunca silenciosa
+                d['substituicao'] = f"{dec['comp']} reconhecida por padrão textual (\"{dec.get('trecho', '')}\"), sem dados declarados → foto"
+            if dec.get('sem_contrato'):
+                d['sem_contrato'] = True
             if dec.get('comp') is None:
+                d['faltam'] = dec.get('faltam', [])
                 # acontecimento crítico sem composição: registra e mantém a imagem (a cena será REPROVADA pelo fiscal)
                 nova.update(comp='foto.documental', params={'lugar': _limpo(sc.get('lugar'))[:28]}, limitacao=dec['limitacao'])
                 if img:

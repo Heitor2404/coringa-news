@@ -153,12 +153,42 @@ def _tem(req: str, params: dict, contexto: str) -> bool:
     return params.get(req) not in (None, '', [], {})
 
 
+def _pelo_contrato(ac: dict, params: dict, ctx: str) -> dict:
+    """Decisão pelo acontecimento DECLARADO (contrato.py). Sem padrões textuais."""
+    from src.v2 import contrato
+    p = {**(ac.get('dados') or {}), **params}
+    crit = contrato.critico(ac)
+    base = {'capacidade': ac['tipo'], 'critica': crit, 'trecho': ac.get('mostrar') or ac.get('acao') or '', 'origem': 'contrato', 'acontecimento': ac}
+    if ac['tipo'] == 'desconhecido':
+        return {**base, 'comp': None, 'faltam': ['composição para o tipo ' + repr(ac.get('tipo_pedido'))],
+                'limitacao': f"acontecimento declarado de tipo desconhecido ({ac.get('tipo_pedido')!r}): nenhuma composição da biblioteca o representa"}
+    comps = contrato.TIPOS[ac['tipo']]['comps']
+    ordem = list(comps)
+    if ac.get('capacidade') in comps:                       # composição pedida pelo roteiro vem primeiro
+        ordem.remove(ac['capacidade']); ordem.insert(0, ac['capacidade'])
+    falhas, faltam = [], []
+    for comp in ordem:
+        f = [r for r in comps[comp] if not _tem(r, p, ctx)]
+        if not f:
+            return {**base, 'comp': comp, 'params': p, 'motivo': f"contrato: {ac['tipo']} ({ac.get('mostrar') or ac.get('acao') or ''}) → {comp}"}
+        falhas.append(f'{comp} precisa de {", ".join(f)} válidos'); faltam += [f'{comp}: {x}' for x in f]
+    if crit:
+        return {**base, 'comp': None, 'faltam': faltam,
+                'limitacao': f"acontecimento declarado {ac['tipo']} ({ac.get('mostrar') or ac.get('acao') or ac.get('id') or ''}) sem composição viável: " + '; '.join(falhas)}
+    return {**base, 'comp': 'foto.documental', 'params': {}, 'motivo': f"contrato: {ac['tipo']} de apoio sem dados para desenhar → foto real",
+            'aviso': 'dados insuficientes para ' + '; '.join(falhas)}
+
+
 def escolher(cena: dict, params: dict | None = None, contexto: str = '') -> dict:
     """Decide a composição para a cena. `params` = dados disponíveis para montar (pontos, itens, imagens…);
     `contexto` = palavras do tema/vídeo (ex.: 'canal eclusa navio'). Retorna {comp, capacidade, critica, motivo} ou,
     sem composição viável, {comp: None, limitacao, critica}."""
     params = params or {}
     ctx = _n(contexto + ' ' + cena.get('fala', '') + ' ' + cena.get('mostrar', ''))
+    from src.v2 import contrato
+    ac = contrato.declarado(cena)
+    if ac:   # V2.2: o acontecimento declarado pelo roteirista manda; padrões textuais só no formato antigo
+        return _pelo_contrato(ac, params, ctx)
     achados = detectar(cena)
     falhas = []
 
@@ -167,7 +197,8 @@ def escolher(cena: dict, params: dict | None = None, contexto: str = '') -> dict
         for comp in cap.comps:
             faltam = [r for r in cap.requisitos.get(comp, []) if not _tem(r, params, ctx)]
             if not faltam:
-                return {'comp': comp, 'capacidade': cap.id, 'critica': cap.critica, 'trecho': a['trecho'], 'motivo': f'"{a["trecho"]}" → {cap.descricao}'}
+                return {'comp': comp, 'capacidade': cap.id, 'critica': cap.critica, 'trecho': a['trecho'], 'motivo': f'"{a["trecho"]}" → {cap.descricao}',
+                        'origem': 'padroes', 'params': params}
             falhas.append(f'{cap.id}: {comp} precisa de {", ".join(faltam)} válidos')
         return None
     # 1) acontecimentos CRÍTICOS ditos na fala: qualquer um representável serve (a fala pode ter vários); se nenhum
@@ -185,7 +216,9 @@ def escolher(cena: dict, params: dict | None = None, contexto: str = '') -> dict
         r = viavel(a)
         if r:
             return r
-    r = {'comp': 'foto.documental', 'capacidade': 'lugar', 'critica': False, 'trecho': '', 'motivo': 'nenhum acontecimento específico: foto real do assunto'}
+    r = {'comp': 'foto.documental', 'capacidade': 'lugar', 'critica': False, 'trecho': '', 'origem': 'padroes',
+         'motivo': 'nenhum acontecimento específico encontrado pelos padrões: foto real do assunto',
+         'sem_contrato': True}   # V2.2: nada declarado e nada reconhecido → o fiscal exige revisão humana (S6)
     if falhas:   # havia algo a mostrar, mas sem dado confiável: não inventa gráfico/número — avisa
         r['aviso'] = 'dados insuficientes para ' + '; '.join(falhas)
     return r

@@ -105,7 +105,7 @@ def test_tipo_ou_prop_desconhecidos_sao_rejeitados(pagina):
 def test_cromatoforo_demonstra_o_mecanismo_em_ordem(pagina):
     """Sinal → contração → saco estica → pele muda: medido no desenho, não só no roteiro."""
     pagina.evaluate('s => ESQUEMA.carregar(s)', _spec('cromatoforo'))
-    area = 'document.querySelector(\'[data-id="detalhe"] path[stroke^="rgba(255,215"]\').getBBox().width'
+    area = 'document.querySelector(\'[data-id="detalhe"] path.saco\').getBBox().width'
     pagina.evaluate('seek(5.0)'); antes = pagina.evaluate(area)
     pagina.evaluate('seek(8.3)'); depois = pagina.evaluate(area)
     assert depois > antes * 2.5                                       # o saco de pigmento esticou

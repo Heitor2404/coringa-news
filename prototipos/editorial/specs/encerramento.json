@@ -1,0 +1,17 @@
+{
+ "componente": "encerramento",
+ "duracao": 5,
+ "fundo": {
+  "tipo": "escuro"
+ },
+ "fatos": [
+  "resumo = resposta do vídeo do polvo"
+ ],
+ "props": {
+  "resumo": "O polvo muda de cor\nporque o cérebro *liga a pele*.",
+  "marca": "CORINGA EXPLICA",
+  "handle": "@coringa.explica",
+  "mascote": "../../assets/mascote3d/apontando.png",
+  "fontes": "listadas na descrição do vídeo"
+ }
+}

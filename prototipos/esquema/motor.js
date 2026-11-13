@@ -67,95 +67,130 @@
   // cada uma: criar(g, e, ctx) → estado; desenhar(estado, e, P, t). P = props avaliadas no tempo t.
   const PRIM = {};
 
-  /* CROMATÓFORO: saco elástico de pigmento com músculos radiais presos em pontos fixos; terminais nervosos em anel.
-     abertura 0→1: os músculos ENCURTAM e puxam a borda do saco para fora (o pigmento se espalha num disco).
-     sinal 0→1: o impulso percorre o anel nervoso e acende cada terminal; ativo: músculos em contração (brilho). */
+  /* CROMATÓFORO (v2, 13/11): saco elástico de pigmento com 12–20 músculos radiais (cada um um feixe de fibras), presos
+     em pontos do tecido; o nervo chega num ponto ("entrada") e se RAMIFICA pelos dois lados até cada músculo.
+     abertura 0→1: os músculos encurtam e puxam a borda do saco (o pigmento se espalha num disco de borda irregular).
+     sinal 0→1: o impulso corre pelos ramos e acende cada terminal; ativo: músculos em contração.
+     Bordas orgânicas por deslocamento de ruído (filtro "org"); vizinhos desfocados dão profundidade de tecido. */
   PRIM.cromatoforo = {
     props: { abertura: 0, sinal: 0, ativo: 0, nervos: 1 },
     criar(g, e, ctx) {
-      const r = semente(e.semente || 7), n = e.musculos || 14, s = {};
-      s.ang = Array.from({ length: n }, (_, i) => (i / n) * Math.PI * 2 + (r() - .5) * .18);
-      s.fase = [r() * 6, r() * 6, r() * 6];
-      const A = e.ancora || 205;
-      const gr = el('radialGradient', { id: ctx.uid('pig'), cx: '45%', cy: '42%', r: '62%' }, ctx.defs);
-      s.st = [el('stop', { offset: '0%' }, gr), el('stop', { offset: '70%' }, gr), el('stop', { offset: '100%' }, gr)];
-      const gm = el('linearGradient', { id: ctx.uid('mus'), x1: 0, y1: 0, x2: 1, y2: 0 }, ctx.defs);
-      s.sm = [el('stop', { offset: '0%' }, gm), el('stop', { offset: '100%' }, gm)];
-      if (e.lente) {                          // recorte "lupa" sobre outra cena (clímax): disco escuro com aro
-        el('circle', { r: A + 44, fill: '#080c16', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 3 }, g);
+      const r = semente(e.semente || 7), n = e.musculos || 16, s = {}, A = e.ancora || 205;
+      s.A = A; s.ent = (e.entrada ?? -90) * Math.PI / 180;
+      s.ang = Array.from({ length: n }, (_, i) => (i / n) * Math.PI * 2 + (r() - .5) * .22);
+      s.Ai = s.ang.map(() => A * (.84 + r() * .2));
+      s.fase = [r() * 6, r() * 6, r() * 6, r() * 6];
+      // tecido: textura + vizinhos desfocados (outros cromatóforos fora de foco)
+      if (e.lente) {
+        el('circle', { r: A + 44, fill: '#0a0d14', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 3 }, g);
         el('circle', { r: A + 52, fill: 'none', stroke: 'rgba(5,8,15,.9)', 'stroke-width': 10 }, g);
       }
+      const clipT = el('clipPath', { id: ctx.uid('ct') }, ctx.defs); el('circle', { r: A + (e.lente ? 43 : 150) }, clipT);
+      const tec = el('g', { 'clip-path': `url(#${clipT.id})` }, g);
       const tg = el('radialGradient', { id: ctx.uid('tec') }, ctx.defs);
-      [['0%', '#3a2f2a', .55], ['70%', '#241d1c', .35], ['100%', '#140f10', 0]].forEach(([o, c, a]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }, tg));
-      s.tecido = el('circle', { r: A + 70, fill: `url(#${tg.id})` }, g);
-      s.halo = el('circle', { r: A + 60, fill: `url(#${ctx.halo})`, opacity: .55 }, g);
-      s.anel = el('circle', { r: A + 22, fill: 'none', stroke: COR.nervo, 'stroke-width': 2, opacity: .35 }, g);
-      const ent = e.entrada ?? -90;
-      s.anelLuz = [1, -1].map(sg => el('circle', { r: A + 22, fill: 'none', stroke: COR.y, 'stroke-width': 5, 'stroke-linecap': 'round', filter: `url(#${ctx.glow})`, transform: `rotate(${ent}) scale(1,${sg})` }, g));
-      s.ent = ent * Math.PI / 180;
-      s.mus = s.ang.map(() => el('path', { fill: `url(#${gm.id})`, stroke: 'rgba(255,200,190,.25)', 'stroke-width': 1 }, g));
-      s.ter = s.ang.map(() => el('path', { fill: 'none', stroke: COR.nervo, 'stroke-width': 2.2, 'stroke-linecap': 'round' }, g));
-      s.terPt = s.ang.map(() => el('circle', { r: 4.5, fill: COR.nervo }, g));
-      s.Ai = s.ang.map(() => A * (.86 + r() * .16));
-      s.anc = s.ang.map((a, i) => el('circle', { cx: Math.cos(a) * s.Ai[i], cy: Math.sin(a) * s.Ai[i], r: 4, fill: '#3a4256', stroke: 'rgba(255,255,255,.3)', 'stroke-width': 1 }, g));
-      s.saco = el('path', { fill: `url(#${gr.id})`, stroke: 'rgba(255,215,190,.55)', 'stroke-width': 2 }, g);
-      s.gran = Array.from({ length: e.granulos || 46 }, () => ({ rho: Math.sqrt(r()) * .86, phi: r() * Math.PI * 2, sz: 2 + r() * 2.2,
-        n: el('circle', { fill: '#2a0a06' }, g) }));
-      s.brilho = el('ellipse', { fill: 'rgba(255,255,255,.18)' }, g);
-      s.A = A;
+      [['0%', '#4a3a31', .75], ['65%', '#2c2220', .55], ['100%', '#130f10', 0]].forEach(([o, c, a]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }, tg));
+      el('circle', { r: A + 150, fill: `url(#${tg.id})` }, tec);
+      el('circle', { r: A + 150, fill: 'url(#' + ctx.celulas + ')', opacity: .5 }, tec);
+      s.viz = [];
+      const nv = e.vizinhos ?? 7;
+      for (let i = 0; i < nv; i++) {
+        const a = r() * Math.PI * 2, d = A * (1.1 + r() * .3), rv = 8 + r() * 12;
+        const c = el('circle', { cx: Math.cos(a) * d, cy: Math.sin(a) * d, fill: ['#6a2a18', '#8a5a22', '#3e1c12'][i % 3], filter: 'url(#desfoque)', opacity: .55 }, tec);
+        s.viz.push({ c, rv, k: .35 + r() * .5 });
+      }
+      s.halo = el('circle', { r: A + 40, fill: `url(#${ctx.halo})`, opacity: .45 }, g);
+      // nervo ramificado: dois ramos a partir da entrada, contornando o saco em raio irregular
+      const Rb = th => A * 1.03 + 7 * Math.sin(3 * th + s.fase[3]) + 4 * Math.sin(7 * th);
+      s.ramos = [1, -1].map(sg => {
+        const pts = [];
+        for (let k = 0; k <= 40; k++) { const th = s.ent + sg * k / 40 * Math.PI * .97; pts.push([Math.cos(th) * Rb(th), Math.sin(th) * Rb(th)]); }
+        const d = curva(pts);
+        const base = el('path', { d, fill: 'none', stroke: COR.nervo, 'stroke-width': 1.8, 'stroke-linecap': 'round', opacity: .3 }, g);
+        const luz = el('path', { d, fill: 'none', stroke: COR.y, 'stroke-width': 4, 'stroke-linecap': 'round', filter: `url(#${ctx.glow})` }, g);
+        return { base, luz, L: base.getTotalLength() };
+      });
+      s.Rb = Rb;
+      // músculos: feixes de 3 fibras
+      s.mus = s.ang.map(() => ({ f: [0, 1, 2].map(() => el('path', { fill: `url(#${ctx.musc})`, stroke: 'rgba(255,190,180,.18)', 'stroke-width': .8 }, g)),
+                                 estr: el('path', { fill: 'none', stroke: 'rgba(255,225,220,.35)', 'stroke-width': 1.2, 'stroke-dasharray': '1.5 4' }, g) }));
+      s.ter = s.ang.map(() => el('path', { fill: 'none', stroke: COR.nervo, 'stroke-width': 1.8, 'stroke-linecap': 'round' }, g));
+      s.terPt = s.ang.map(() => el('circle', { r: 3.5, fill: COR.nervo }, g));
+      s.anc = s.ang.map((a, i) => el('circle', { cx: Math.cos(a) * s.Ai[i], cy: Math.sin(a) * s.Ai[i], r: 3.2, fill: '#4a4f60', opacity: .8 }, g));
+      // saco (com borda orgânica)
+      const gr = el('radialGradient', { id: ctx.uid('pig'), cx: '46%', cy: '44%', r: '60%' }, ctx.defs);
+      s.st = [el('stop', { offset: '0%' }, gr), el('stop', { offset: '78%' }, gr), el('stop', { offset: '100%' }, gr)];
+      const org = el('g', { filter: 'url(#org)' }, g);
+      s.saco = el('path', { fill: `url(#${gr.id})`, class: 'saco' }, org);
+      s.gran = Array.from({ length: e.granulos || 90 }, () => ({ rho: Math.sqrt(r()) * .9, phi: r() * Math.PI * 2, sz: 1.4 + r() * 2.6,
+        n: el('circle', { fill: r() > .5 ? '#2a0904' : '#4a1408' }, org) }));
+      s.borda = el('path', { fill: 'none', stroke: 'rgba(40,8,4,.55)', 'stroke-width': 3 }, org);
+      s.brilho = el('ellipse', { fill: 'rgba(255,235,220,.13)', filter: 'url(#desfoque)' }, g);
       return s;
     },
     desenhar(s, e, P) {
-      const r0 = e.r0 || 20, r1 = e.r1 || 108, A = s.A, k = clamp(P.abertura);
-      const R = lerp(r0, r1, k);
-      const borda = a => R * (1 + .07 * Math.sin(3 * a + s.fase[0]) * (0.4 + k) + .045 * Math.sin(5 * a + s.fase[1]) * (0.3 + k) + .03 * Math.sin(8 * a + s.fase[2]) * k);
-      const pts = []; for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2; const b = borda(a); pts.push([Math.cos(a) * b, Math.sin(a) * b]); }
-      s.saco.setAttribute('d', curva(pts, true));
-      const pig = e.pigmento || ['#4a130c', '#7a2516', '#2c0905'], aberto = e.pigmento_aberto || ['#b5532f', '#9a3a22', '#5c1d12'];
+      const r0 = e.r0 || 20, r1 = e.r1 || 108, A = s.A, k = clamp(P.abertura), at = clamp(P.ativo);
+      const R = lerp(r0, r1, EASE.saida(k));
+      const f = s.fase;
+      const borda = a => R * (1 + .08 * Math.sin(3 * a + f[0]) * (.5 + k) + .05 * Math.sin(5 * a + f[1]) * (.4 + k)
+                                + .035 * Math.sin(9 * a + f[2]) * k + .02 * Math.sin(14 * a + f[0]) * k);
+      const pts = []; for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2; const b = borda(a); pts.push([Math.cos(a) * b, Math.sin(a) * b]); }
+      const d = curva(pts, true); s.saco.setAttribute('d', d); s.borda.setAttribute('d', d);
+      const pig = e.pigmento || ['#3c0e08', '#5e1a0e', '#2a0804'], aberto = e.pigmento_aberto || ['#b04a26', '#933620', '#5a1a0e'];
       s.st.forEach((st, i) => st.setAttribute('stop-color', mistura(pig[i], aberto[i], k)));
-      s.saco.setAttribute('fill-opacity', lerp(1, .92, k));
+      s.borda.setAttribute('opacity', lerp(.4, .9, k));
       s.gran.forEach(q => { const b = borda(q.phi) * q.rho; q.n.setAttribute('cx', Math.cos(q.phi) * b); q.n.setAttribute('cy', Math.sin(q.phi) * b);
-        q.n.setAttribute('r', q.sz * lerp(.75, 1, k)); q.n.setAttribute('opacity', lerp(.35, .8, k)); });
-      s.brilho.setAttribute('cx', -R * .28); s.brilho.setAttribute('cy', -R * .32); s.brilho.setAttribute('rx', R * .32); s.brilho.setAttribute('ry', R * .16);
-      const at = clamp(P.ativo);
-      s.sm[0].setAttribute('stop-color', mistura('#6e2f45', '#ff8f7a', at)); s.sm[1].setAttribute('stop-color', mistura('#4d2236', '#d9566a', at));
-      s.ang.forEach((a, i) => {          // fuso muscular entre a borda do saco e a âncora
-        const c = Math.cos(a), sn = Math.sin(a), b = borda(a) * .96;
-        const Ai = s.Ai[i], x0 = c * b, y0 = sn * b, x1 = c * (Ai - 4), y1 = sn * (Ai - 4);
-        const comp = Ai - b, larg = lerp(3.5, 12, k) * (1 + .25 * at) * clamp(comp / 60, .5, 1.4);
-        const ond = (1 - k) * 7 * (i % 2 ? 1 : -1);                 // relaxado: fibra frouxa, levemente ondulada
-        const mx = (x0 + x1) / 2 - sn * ond, my = (y0 + y1) / 2 + c * ond, px = -sn * larg, py = c * larg;
-        s.mus[i].setAttribute('d', `M${x0},${y0} Q${mx + px},${my + py} ${x1},${y1} Q${mx - px},${my - py} ${x0},${y0}Z`);
-        // terminal: do anel (A+22) até o meio do músculo
-        const tx = c * (A + 22), ty = sn * (A + 22);
-        let dist = Math.abs(((a - s.ent) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);   // 0..π a partir da entrada
-        const aceso = clamp((P.sinal * Math.PI - dist + .3) / .3);
-        s.ter[i].setAttribute('d', `M${tx},${ty} Q${c * (A + 4) + px * .6},${sn * (A + 4) + py * .6} ${mx + px * .3},${my + py * .3}`);
-        s.ter[i].setAttribute('stroke', mistura('#7f9bc4', '#FFD21F', aceso)); s.ter[i].setAttribute('opacity', P.nervos);
-        s.terPt[i].setAttribute('cx', mx + px * .3); s.terPt[i].setAttribute('cy', my + py * .3);
-        s.terPt[i].setAttribute('fill', mistura('#7f9bc4', '#FFD21F', aceso)); s.terPt[i].setAttribute('opacity', P.nervos);
-        s.terPt[i].setAttribute('r', 4 + 3 * aceso * (1 - at * .5));
+        q.n.setAttribute('r', q.sz * lerp(.6, 1, k)); q.n.setAttribute('opacity', lerp(.25, .7, k)); });
+      s.brilho.setAttribute('cx', -R * .3); s.brilho.setAttribute('cy', -R * .34); s.brilho.setAttribute('rx', R * .38); s.brilho.setAttribute('ry', R * .2);
+      s.viz.forEach(v => v.c.setAttribute('r', v.rv * (1 + 1.4 * k * v.k)));
+      const corM0 = mistura('#6b2c40', '#ff9a86', at), corM1 = mistura('#40182a', '#d4566a', at);
+      PRIM.cromatoforo._g = PRIM.cromatoforo._g || {};
+      const sg = clamp(P.sinal), alcance = sg * Math.PI * .97;
+      s.ang.forEach((a, i) => {
+        const c = Math.cos(a), sn = Math.sin(a), b = borda(a) * .97, Ai = s.Ai[i];
+        const x0 = c * b, y0 = sn * b, x1 = c * (Ai - 3), y1 = sn * (Ai - 3), comp = Ai - b;
+        const larg = lerp(4, 13, k) * (1 + .2 * at) * clamp(comp / 60, .55, 1.35), ond = (1 - k) * 8 * (i % 2 ? 1 : -1);
+        const px = -sn, py = c;
+        s.mus[i].f.forEach((fp, j) => {
+          const off = (j - 1) * larg * .62, w = larg * .42;
+          const mx = (x0 + x1) / 2 - sn * ond + px * off, my = (y0 + y1) / 2 + c * ond + py * off;
+          const ax = x0 + px * off * .35, ay = y0 + py * off * .35, bx = x1 + px * off * .2, by = y1 + py * off * .2;
+          fp.setAttribute('d', `M${ax},${ay} Q${mx + px * w},${my + py * w} ${bx},${by} Q${mx - px * w},${my - py * w} ${ax},${ay}Z`);
+          fp.setAttribute('fill', j === 1 ? corM0 : corM1);
+        });
+        const mx = (x0 + x1) / 2 - sn * ond, my = (y0 + y1) / 2 + c * ond;
+        s.mus[i].estr.setAttribute('d', `M${x0},${y0} Q${mx},${my} ${x1},${y1}`);
+        // terminal: do ramo até o meio do músculo; acende quando o impulso passa por esse ângulo
+        const dist = Math.abs(((a - s.ent) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
+        const aceso = clamp((alcance - dist + .25) / .25);
+        const Rb = s.Rb(a), tx = c * Rb, ty = sn * Rb;
+        const qx = x0 + (x1 - x0) * .72 - sn * ond * .5, qy = y0 + (y1 - y0) * .72 + c * ond * .5;
+        s.ter[i].setAttribute('d', `M${tx},${ty} Q${c * (Ai + 2) + px * 8},${sn * (Ai + 2) + py * 8} ${qx},${qy}`);
+        const cor = mistura('#7f9bc4', '#FFD21F', aceso);
+        s.ter[i].setAttribute('stroke', cor); s.ter[i].setAttribute('opacity', P.nervos);
+        s.terPt[i].setAttribute('cx', qx); s.terPt[i].setAttribute('cy', qy); s.terPt[i].setAttribute('fill', cor);
+        s.terPt[i].setAttribute('opacity', P.nervos); s.terPt[i].setAttribute('r', 3 + 2.5 * aceso * (1 - at * .5));
       });
-      const L = 2 * Math.PI * (A + 22), sg = clamp(P.sinal);
-      s.anelLuz.forEach(n => { n.setAttribute('stroke-dasharray', `${L / 2 * sg} ${L}`); n.setAttribute('opacity', sg <= 0 ? 0 : sg < 1 ? 1 : .25 + .5 * at);
-        n.style.display = P.nervos > .05 ? '' : 'none'; });
-      s.anel.setAttribute('opacity', .55 * P.nervos);
+      s.ramos.forEach(rm => { const seg = rm.L * .28, pos = rm.L * sg;      // impulso = trecho de luz que corre (não acende o anel todo)
+        rm.luz.setAttribute('stroke-dasharray', sg < 1 ? `0 ${Math.max(0, pos - seg)} ${Math.min(seg, pos)} ${rm.L}` : `${rm.L} 0`);
+        rm.luz.setAttribute('opacity', sg <= 0 ? 0 : sg < 1 ? 1 : .18); rm.base.setAttribute('opacity', .3 * P.nervos);
+        rm.luz.style.display = P.nervos > .05 ? '' : 'none'; });
     },
   };
 
   /* PELE: trecho de pele com centenas de cromatóforos (amarelos, vermelhos, marrons) sobre a base clara.
      abertura: todos; onda (0→1): abertura que se espalha do centro (ox, oy em fração) — a cor muda em toda a pele. */
   PRIM.pele = {
-    props: { abertura: 0, onda: 0 },
+    props: { abertura: 0, onda: 0, fecha: 0 },
     criar(g, e, ctx) {
       const r = semente(e.semente || 3), w = e.w, h = e.h, s = { w, h, pts: [] };
       const clip = el('clipPath', { id: ctx.uid('clip') }, ctx.defs);
       el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: e.raio || 36 }, clip);
       const base = el('linearGradient', { id: ctx.uid('base'), x1: 0, y1: 0, x2: 0, y2: 1 }, ctx.defs);
-      el('stop', { offset: '0%', 'stop-color': '#d9c7ad' }, base); el('stop', { offset: '100%', 'stop-color': '#b8a48a' }, base);
+      const bc = e.base || ['#d9c7ad', '#b8a48a'];
+      el('stop', { offset: '0%', 'stop-color': bc[0] }, base); el('stop', { offset: '100%', 'stop-color': bc[1] }, base);
       const gg = el('g', { 'clip-path': `url(#${clip.id})` }, g);
       el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, fill: `url(#${base.id})` }, gg);
-      s.cam = el('g', {}, gg);
+      s.cam = el('g', { filter: e.organico === false ? '' : 'url(#org)' }, gg);
       const n = e.n || Math.round(w * h / 1500), cores = e.cores || ['#c99a2e', '#a8432a', '#5a2a1a', '#7a3220'];
       const fixos = e.fixos || [];                 // posições garantidas (para um rótulo apontar para um cromatóforo real)
       for (let i = 0; i < n + fixos.length; i++) {
@@ -175,7 +210,7 @@
       const banda = .18;
       s.pts.forEach(p => {
         const w = clamp((P.onda * (1 + banda) - p.d) / banda);
-        const k = EASE.saida(clamp(Math.max(P.abertura, w) - p.j * .08));
+        const k = EASE.saida(clamp(Math.max(P.abertura, w) - p.j * .08)) * (1 - clamp(P.fecha));   // fecha: relaxam todos
         p.o.setAttribute('r', lerp(1.6, p.rmax, k)); p.o.setAttribute('opacity', lerp(.9, .82, k));
       });
       const fr = P.onda > 0 && P.onda < 1;
@@ -270,7 +305,7 @@
 
   /* MOLÉCULA (N₂/O₂ esquemática): dois átomos; brilho = sendo atingida (espalha a luz). */
   PRIM.molecula = {
-    props: { brilho: 0, oscila: 0 },
+    props: { brilho: 0, oscila: 0, agita: 0 },
     criar(g, e, ctx) {
       const r = e.raio || 11, a = (e.angulo || 0) * Math.PI / 180, s = {};
       s.halo = el('circle', { r: r * 3.4, fill: `url(#${e.quente ? ctx.haloQ : ctx.haloB})` }, g);
@@ -294,8 +329,10 @@
       s.halo.setAttribute('opacity', clamp(P.brilho));
       if (!s.agua) s.at.forEach(a => a.setAttribute('fill', mistura('#9fb0c8', '#e6f0ff', P.brilho)));
       // segue o campo: o mesmo seno do PRIM.campo no x da molécula (freq em ciclos/s da ANIMAÇÃO, não a real)
-      const ph = 2 * Math.PI * ((e.x - (e.campo_x0 || 0)) / (e.campo_lambda || 1e9) - (e.freq || 0) * t);
-      s.gir.setAttribute('transform', `rotate(${(e.angulo_base || 0) + P.oscila * Math.sin(ph)})`);
+      const xr = (e.x - (e.campo_x0 || 0)) / (e.campo_lambda || 1e9);
+      const f = e.estacionaria ? Math.cos(2 * Math.PI * xr) * Math.cos(2 * Math.PI * (e.freq || 0) * t) : Math.sin(2 * Math.PI * (xr - (e.freq || 0) * t));
+      const ag = P.agita, jx = ag * Math.sin(t * 7.3 + e.x * .13), jy = ag * Math.cos(t * 8.9 + e.y * .11);   // agitação = calor
+      s.gir.setAttribute('transform', `translate(${jx},${jy}) rotate(${(e.angulo_base || 0) + P.oscila * f + ag * .8 * Math.sin(t * 11 + e.x)})`);
     },
   };
 
@@ -312,9 +349,11 @@
     },
     desenhar(s, e, P, t) {
       s.s.forEach(q => {
-        const v = Math.sin(2 * Math.PI * ((q.x + e.x - (e.campo_x0 ?? e.x - e.w / 2)) / e.lambda - (e.freq || 0) * t)) * (e.altura || 90) * P.amplitude;
+        const xr = (q.x + e.x - (e.campo_x0 ?? e.x - e.w / 2)) / e.lambda;
+        const v = (e.estacionaria ? Math.cos(2 * Math.PI * xr) * Math.cos(2 * Math.PI * (e.freq || 0) * t)      // onda parada entre paredes
+                                  : Math.sin(2 * Math.PI * (xr - (e.freq || 0) * t))) * (e.altura || 90) * P.amplitude;
         q.l.setAttribute('y2', -v); q.p.setAttribute('transform', `translate(${q.x},${-v}) rotate(${v >= 0 ? 180 : 0})`);
-        q.p.setAttribute('opacity', Math.abs(v) > 14 ? 1 : 0); q.l.setAttribute('opacity', .35 + .65 * Math.abs(v) / (e.altura || 90));
+        q.p.setAttribute('opacity', Math.abs(v) > 14 ? 1 : 0); q.l.setAttribute('opacity', .35 + .65 * Math.abs(v) / (e.altura || 90)); q.l.setAttribute('stroke-width', e.espessura || 4);
       });
     },
   };
@@ -386,6 +425,167 @@
     },
   };
 
+  /* CÉU com horizonte: gradiente vertical (zênite mais escuro, horizonte mais claro — o espalhamento múltiplo clareia a
+     faixa perto do horizonte) que vai da noite/escuro (dia=0) ao céu diurno (dia=1); colinas em silhueta e chão escuro
+     (a legenda fica sobre o chão, sempre legível). */
+  PRIM.ceu = {
+    props: { dia: 0 },
+    criar(g, e, ctx) {
+      const hz = e.horizonte || 1060, r = semente(e.semente || 2), s = {};
+      const gr = el('linearGradient', { id: ctx.uid('ceu'), x1: 0, y1: 0, x2: 0, y2: 1, gradientUnits: 'userSpaceOnUse' }, ctx.defs);
+      gr.setAttribute('y1', -e.y); gr.setAttribute('y2', hz - e.y);
+      s.st = [0, .55, 1].map(o => el('stop', { offset: o }, gr));
+      el('rect', { x: -e.x, y: -e.y, width: W, height: hz - e.y + 4, fill: `url(#${gr.id})` }, g);
+      const colina = (y0, amp, freq, fase) => {
+        let d = `M${-e.x},${hz - e.y + 40}`;
+        for (let x = 0; x <= W; x += 20) d += ` L${x - e.x},${(y0 - e.y) - amp * (.5 + .5 * Math.sin(x / freq + fase)) - amp * .35 * Math.sin(x / (freq * .37) + fase * 2)}`;
+        return d + ` L${W - e.x},${H - e.y} L${-e.x},${H - e.y}Z`;
+      };
+      s.c1 = el('path', { d: colina(hz + 6, 34, 140, r() * 6) }, g);
+      s.c2 = el('path', { d: colina(hz + 34, 22, 90, r() * 6), fill: '#070a10' }, g);
+      return s;
+    },
+    desenhar(s, e, P) {
+      const k = clamp(P.dia), noite = ['#03050a', '#060a14', '#0d1526'], dia = e.cores_dia || ['#1a4fa6', '#3f7fd0', '#b9d3ee'];
+      s.st.forEach((st, i) => st.setAttribute('stop-color', mistura(noite[i], dia[i], k)));
+      s.c1.setAttribute('fill', mistura('#0b1019', '#2a3c52', k));
+    },
+  };
+
+  /* FEIXE de luz branca: as cores viajam juntas (núcleo branco); separa 0→1 mostra os componentes lado a lado, cada um
+     com seu comprimento de onda (lambdas, px). desenho 0→1 revela do início ao fim. */
+  PRIM.feixe = {
+    props: { desenho: 1, separa: 0 },
+    criar(g, e) {
+      const [x0, y0] = [e.de[0] - e.x, e.de[1] - e.y], [x1, y1] = [e.para[0] - e.x, e.para[1] - e.y];
+      const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, s = { L, comp: [] };
+      s.nuc = el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: '#fff8e6', 'stroke-width': 7, 'stroke-linecap': 'round', filter: 'url(#glow)' }, g);
+      (e.cores || [['#ff6a4d', 70], ['#7be88a', 53], ['#5b9bff', 45]]).forEach(([cor, lam], k) => {
+        const p = el('path', { fill: 'none', stroke: cor, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+        s.comp.push({ p, cor, lam, k, x0, y0, ux, uy });
+      });
+      s.nComp = s.comp.length;
+      return s;
+    },
+    desenhar(s, e, P, t) {
+      const k = clamp(P.desenho), sep = clamp(P.separa), Lv = s.L * k;
+      s.nuc.setAttribute('x2', s.comp[0].x0 + s.comp[0].ux * Lv); s.nuc.setAttribute('y2', s.comp[0].y0 + s.comp[0].uy * Lv);
+      s.nuc.setAttribute('opacity', (1 - sep) * (k > 0 ? 1 : 0));
+      s.comp.forEach(c => {
+        const off = (c.k - (s.nComp - 1) / 2) * 22 * sep, pts = [];
+        for (let d = 0; d <= Lv; d += 3) {
+          const o = Math.sin((d - t * 120) / c.lam * Math.PI * 2) * 9 * sep + off;
+          pts.push([+(c.x0 + c.ux * d - c.uy * o).toFixed(1), +(c.y0 + c.uy * d + c.ux * o).toFixed(1)]);
+        }
+        c.p.setAttribute('d', pts.length > 1 ? reta(pts) : ''); c.p.setAttribute('opacity', .25 + .75 * sep);
+      });
+    },
+  };
+
+  /* AR: nuvem de moléculas (N₂/O₂ esquemáticas) que se agitam; espalha 0→1 é a frente de luz chegando (a partir de
+     "origem"): cada molécula atingida reemite ondas curtas azuis em todas as direções e fica com um brilho azul. */
+  PRIM.ar = {
+    props: { espalha: 0 },
+    criar(g, e, ctx) {
+      const r = semente(e.semente || 6), s = { m: [] }, o = e.origem ? [e.origem[0] - e.x, e.origem[1] - e.y] : [-e.w / 2, -e.h / 2];
+      let dmax = 0;
+      for (let i = 0; i < (e.n || 30); i++) {
+        const x = (r() - .5) * e.w, y = (r() - .5) * e.h, a = r() * Math.PI, d = Math.hypot(x - o[0], y - o[1]);
+        dmax = Math.max(dmax, d);
+        const gm = el('g', {}, g);
+        const halo = el('circle', { r: 26, fill: `url(#${ctx.haloB})`, opacity: 0 }, gm);
+        const ondas = [0, 1, 2, 3, 4, 5].map(j => el('path', { fill: 'none', stroke: '#7fb2ff', 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0 }, gm));
+        const dx = Math.cos(a) * 5, dy = Math.sin(a) * 5;
+        el('line', { x1: -dx, y1: -dy, x2: dx, y2: dy, stroke: 'rgba(255,255,255,.45)', 'stroke-width': 2 }, gm);
+        el('circle', { cx: -dx, cy: -dy, r: 5.5, fill: '#c9d6ea' }, gm); el('circle', { cx: dx, cy: dy, r: 5.5, fill: '#c9d6ea' }, gm);
+        s.m.push({ gm, halo, ondas, x, y, d, ph: r() * 6, rot: r() * 6 });
+      }
+      s.m.forEach(q => q.d /= dmax);
+      return s;
+    },
+    desenhar(s, e, P, t) {
+      s.m.forEach(q => {
+        const jx = 3 * Math.sin(t * 1.7 + q.ph), jy = 3 * Math.cos(t * 1.3 + q.ph * 1.7);
+        q.gm.setAttribute('transform', `translate(${q.x + jx},${q.y + jy}) rotate(${(t * 20 + q.rot * 57) % 360})`);
+        const p = clamp((P.espalha * 1.25 - q.d) / .25);                 // 0 → 1 enquanto a onda azul sai desta molécula
+        q.halo.setAttribute('opacity', p > 0 ? .35 + .4 * (1 - p) : 0);
+        q.ondas.forEach((w, j) => {
+          if (p <= 0 || p >= 1) { w.setAttribute('opacity', 0); return; }
+          const a = j / 6 * Math.PI * 2 + q.rot, r0 = 10 + 50 * p, r1 = r0 + 22, pts = [];
+          for (let rr = r0; rr <= r1; rr += 2) { const o = Math.sin(rr / 5) * 3; pts.push([+(Math.cos(a) * rr - Math.sin(a) * o).toFixed(1), +(Math.sin(a) * rr + Math.cos(a) * o).toFixed(1)]); }
+          w.setAttribute('d', reta(pts)); w.setAttribute('opacity', (1 - p) * .9);
+        });
+      });
+    },
+  };
+
+  /* PESSOA em silhueta (observador), de pé; altura em px. */
+  PRIM.pessoa = {
+    props: {},
+    criar(g, e) {
+      const h = e.altura || 80, k = h / 80;
+      el('circle', { cx: 0, cy: -72 * k, r: 7 * k, fill: e.cor || '#05070b' }, g);
+      el('path', { d: `M${-9 * k},${-62 * k} Q0,${-66 * k} ${9 * k},${-62 * k} L${11 * k},${-30 * k} L${7 * k},${-30 * k} L${6 * k},0 L${1.5 * k},0 L0,${-26 * k} L${-1.5 * k},0 L${-6 * k},0 L${-7 * k},${-30 * k} L${-11 * k},${-30 * k}Z`, fill: e.cor || '#05070b' }, g);
+      return {};
+    },
+    desenhar() {},
+  };
+
+  /* FORNO DE MICRO-ONDAS em corte: carcaça, cavidade de metal (paredes refletem), magnétron com aletas, guia de onda que
+     desemboca no teto da cavidade, prato giratório e uma tigela de sopa. calor 0→1 esquenta a superfície da sopa. */
+  PRIM.forno = {
+    props: { calor: 0 },
+    criar(g, e, ctx) {
+      const s = {};
+      const gc = el('linearGradient', { id: ctx.uid('carc'), x1: 0, y1: 0, x2: 0, y2: 1 }, ctx.defs);
+      el('stop', { offset: '0%', 'stop-color': '#323c4b' }, gc); el('stop', { offset: '100%', 'stop-color': '#1a212c' }, gc);
+      el('rect', { x: -430, y: -230, width: 860, height: 460, rx: 26, fill: `url(#${gc.id})`, stroke: 'rgba(255,255,255,.22)', 'stroke-width': 2 }, g);
+      const gv = el('linearGradient', { id: ctx.uid('cav'), x1: 0, y1: 0, x2: 0, y2: 1 }, ctx.defs);
+      el('stop', { offset: '0%', 'stop-color': '#0d121b' }, gv); el('stop', { offset: '100%', 'stop-color': '#121a26' }, gv);
+      el('rect', { x: -380, y: -150, width: 620, height: 360, rx: 8, fill: `url(#${gv.id})`, stroke: '#9fb3cc', 'stroke-width': 4 }, g);
+      el('rect', { x: -372, y: -142, width: 604, height: 344, rx: 6, fill: 'none', stroke: 'rgba(159,179,204,.25)', 'stroke-width': 1.5 }, g);
+      // painel + magnétron (com aletas de refrigeração e antena)
+      el('rect', { x: 262, y: -205, width: 146, height: 410, rx: 12, fill: '#1d2530', stroke: 'rgba(255,255,255,.12)' }, g);
+      el('rect', { x: 290, y: -190, width: 96, height: 120, rx: 10, fill: '#46505f', stroke: 'rgba(255,255,255,.35)', 'stroke-width': 1.5 }, g);
+      for (let i = 0; i < 7; i++) el('line', { x1: 298, y1: -178 + i * 15, x2: 378, y2: -178 + i * 15, stroke: 'rgba(255,255,255,.18)', 'stroke-width': 2 }, g);
+      el('rect', { x: 276, y: -186, width: 16, height: 26, rx: 3, fill: '#c8a050' }, g);
+      // guia de onda: duto do magnétron até a abertura no teto da cavidade
+      el('rect', { x: 70, y: -206, width: 210, height: 44, fill: '#0f151e', stroke: '#9fb3cc', 'stroke-width': 3 }, g);
+      el('rect', { x: 73, y: -164, width: 56, height: 18, fill: '#0f151e' }, g);
+      // prato e tigela
+      el('ellipse', { cx: -70, cy: 188, rx: 240, ry: 14, fill: 'rgba(190,220,255,.12)', stroke: 'rgba(255,255,255,.35)', 'stroke-width': 2 }, g);
+      el('path', { d: 'M-215,112 Q-205,182 -70,182 Q65,182 75,112Z', fill: '#d7dce4', stroke: '#f2f4f8', 'stroke-width': 2 }, g);
+      el('path', { d: 'M-200,112 Q-190,170 -70,170 Q50,170 60,112Z', fill: '#b9c0cc' }, g);
+      s.sopa = el('ellipse', { cx: -70, cy: 113, rx: 136, ry: 12 }, g);
+      s.calorG = el('ellipse', { cx: -70, cy: 100, rx: 160, ry: 60, fill: `url(#${ctx.haloQ})` }, g);
+      el('ellipse', { cx: -70, cy: 112, rx: 145, ry: 14, fill: 'none', stroke: '#eef1f6', 'stroke-width': 3 }, g);
+      return s;
+    },
+    desenhar(s, e, P) {
+      const k = clamp(P.calor);
+      s.sopa.setAttribute('fill', mistura('#9a6a2c', '#e0782e', k)); s.calorG.setAttribute('opacity', k * .9);
+    },
+  };
+
+  /* VAPOR: fiapos que sobem e se dissolvem (determinístico pelo tempo); intensidade 0→1. */
+  PRIM.vapor = {
+    props: { intensidade: 0 },
+    criar(g, e) {
+      const r = semente(e.semente || 12), s = { f: [] };
+      for (let i = 0; i < (e.n || 7); i++) s.f.push({ x: (r() - .5) * (e.w || 220), ph: r(), v: .35 + r() * .25, a: 6 + r() * 8,
+        p: el('path', { fill: 'none', stroke: 'rgba(235,240,248,.55)', 'stroke-width': 5, 'stroke-linecap': 'round', filter: 'url(#desfoque)' }, g) });
+      return s;
+    },
+    desenhar(s, e, P, t) {
+      const H0 = e.altura || 220;
+      s.f.forEach(q => {
+        const c = ((t * q.v + q.ph) % 1), y0 = -c * H0, pts = [];
+        for (let k = 0; k <= 10; k++) { const yy = y0 - k * 9; pts.push([+(q.x + Math.sin((yy / 30) + q.ph * 6 + t) * q.a).toFixed(1), +yy.toFixed(1)]); }
+        q.p.setAttribute('d', curva(pts)); q.p.setAttribute('opacity', clamp(P.intensidade) * Math.sin(c * Math.PI) * .9);
+      });
+    },
+  };
+
   /* FIBRA ÓPTICA: núcleo de vidro (índice maior) envolto pela casca (índice menor), em corte. */
   PRIM.fibra = {
     props: {},
@@ -400,6 +600,24 @@
       return {};
     },
     desenhar() {},
+  };
+
+  /* FLASH: clarão de quadro inteiro (revelação), cor e intensidade a. Determinístico (sem acaso). */
+  PRIM.flash = {
+    props: { a: 0 },
+    criar(g, e) { return { r: el('rect', { x: 0, y: 0, width: W, height: H, fill: e.cor || '#fff7d6' }, g) }; },
+    desenhar(s, e, P) { s.r.setAttribute('opacity', clamp(P.a)); },
+  };
+
+  /* VÉU: escurecimento em gradiente (foco no centro ou embaixo), para destacar a cadeia na revelação. */
+  PRIM.veu = {
+    props: { a: 0 },
+    criar(g, e, ctx) {
+      const gr = el('radialGradient', { id: ctx.uid('veu'), cx: (e.cx ?? .5), cy: (e.cy ?? .5), r: e.r ?? .55 }, ctx.defs);
+      el('stop', { offset: '0%', 'stop-color': '#05080f', 'stop-opacity': e.centro ?? .5 }, gr); el('stop', { offset: '100%', 'stop-color': '#05080f', 'stop-opacity': .95 }, gr);
+      return { r: el('rect', { x: 0, y: 0, width: W, height: H, fill: `url(#${gr.id})` }, g) };
+    },
+    desenhar(s, e, P) { s.r.setAttribute('opacity', clamp(P.a)); },
   };
 
   /* PULSO DE DESTAQUE: anel que se expande e some (onde algo acontece). */
@@ -473,6 +691,16 @@
     const f = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
     el('feGaussianBlur', { stdDeviation: 5, result: 'b' }, f); const m = el('feMerge', {}, f); el('feMergeNode', { in: 'b' }, m); el('feMergeNode', { in: 'SourceGraphic' }, m);
     ctx.glow = 'glow';
+    const fo = el('filter', { id: 'org', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
+    el('feTurbulence', { type: 'fractalNoise', baseFrequency: .045, numOctaves: 2, seed: 4, result: 'tn' }, fo);
+    el('feDisplacementMap', { in: 'SourceGraphic', in2: 'tn', scale: 9, xChannelSelector: 'R', yChannelSelector: 'G' }, fo);
+    const fd = el('filter', { id: 'desfoque', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs); el('feGaussianBlur', { stdDeviation: 4 }, fd);
+    const cel = el('pattern', { id: 'celulas', width: 46, height: 40, patternUnits: 'userSpaceOnUse' }, defs);
+    el('path', { d: 'M0,20 L11,0 L35,0 L46,20 L35,40 L11,40Z', fill: 'none', stroke: 'rgba(255,220,200,.10)', 'stroke-width': 1.2, filter: 'url(#org)' }, cel);
+    ctx.celulas = 'celulas';
+    const gm = el('linearGradient', { id: 'musc', x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: '0%', 'stop-color': '#fff', 'stop-opacity': .0 }, gm); el('stop', { offset: '100%', 'stop-color': '#fff', 'stop-opacity': .0 }, gm);
+    ctx.musc = 'musc';
     const pat = el('pattern', { id: 'grao', width: 120, height: 120, patternUnits: 'userSpaceOnUse' }, defs);
     const fr = el('filter', { id: 'ruido' }, defs); el('feTurbulence', { type: 'fractalNoise', baseFrequency: .8, numOctaves: 2 }, fr);
     el('feColorMatrix', { values: '0 0 0 0 .2  0 0 0 0 .1  0 0 0 0 .05  0 0 0 .9 0' }, fr);
@@ -500,7 +728,7 @@
     const cabT = el('text', { x: W / 2, y: 506, 'text-anchor': 'middle', 'font-family': 'Mont', 'font-weight': 800, 'font-size': 40, 'letter-spacing': -.3, fill: '#fff' }, cab);
     const pontos = (spec.passos || []).map((_, i, a) => el('rect', { x: W / 2 - a.length * 22 + i * 44 + 6, y: 524, width: 32, height: 5, rx: 2.5 }, cab));
     const leg = el('g', { id: 'legenda', style: opc.legenda ? '' : 'display:none' }, svg);
-    ESTADO = { spec, itens, rotulos, cab, cabN, cabT, pontos, leg, opc, mostraCab: spec.cabecalho !== false };
+    ESTADO = { camada, spec, itens, rotulos, cab, cabN, cabT, pontos, leg, opc, mostraCab: spec.cabecalho !== false };
     seek(0);
     return true;
   }
@@ -517,6 +745,11 @@
       const antes = !anterior || !anterior.destaque || !anterior.destaque.length || anterior.destaque.includes(id) ? 1 : .38;
       return lerp(antes, em ? 1 : .38, entra);
     };
+    if (S.spec.camera) {                            // câmera da cena (empurrão, tremor de impacto), não mexe nos rótulos
+      const c = S.spec.camera, o = c.origem || [W / 2, 900];
+      const esc = trilha(c.esc, t, 1), dx = trilha(c.dx, t, 0), dy = trilha(c.dy, t, 0);
+      S.camada.setAttribute('transform', `translate(${o[0] + dx},${o[1] + dy}) scale(${esc}) translate(${-o[0]},${-o[1]})`);
+    }
     S.itens.forEach(({ e, g, pr, s }) => {
       const P = {}; const pp = e.props || {};
       for (const nm in pr.props) P[nm] = trilha(pp[nm], t, pr.props[nm]);

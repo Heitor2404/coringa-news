@@ -1,0 +1,18 @@
+{
+ "componente": "abertura",
+ "duracao": 4.5,
+ "fundo": {
+  "tipo": "oceano",
+  "semente": 4
+ },
+ "fatos": [
+  "polvo-comum: Octopus vulgaris",
+  "a mudança de cor ocorre em frações de segundo",
+  "o controle é neural, não hormonal"
+ ],
+ "props": {
+  "kicker": "POLVO-COMUM · OCTOPUS VULGARIS",
+  "titulo": "Ele muda de cor\nem *frações*\nde segundo",
+  "apoio": "E sem nenhum hormônio no caminho."
+ }
+}

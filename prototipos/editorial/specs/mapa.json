@@ -1,0 +1,36 @@
+{
+ "componente": "mapa",
+ "duracao": 5.5,
+ "fundo": {
+  "tipo": "escuro"
+ },
+ "fatos": [
+  "Adelaide: -34.9285, 138.6007",
+  "Coober Pedy: -29.0135, 134.7544",
+  "distância calculada em linha reta (grande círculo, raio médio 6371 km)"
+ ],
+ "props": {
+  "titulo": "Onde fica *Coober Pedy*",
+  "origem": {
+   "nome": "Adelaide",
+   "lon": 138.6007,
+   "lat": -34.9285
+  },
+  "destino": {
+   "nome": "Coober Pedy",
+   "kicker": "DESTINO",
+   "lon": 134.7544,
+   "lat": -29.0135
+  },
+  "largo": [
+   [
+    112,
+    -9
+   ],
+   [
+    155,
+    -45
+   ]
+  ]
+ }
+}

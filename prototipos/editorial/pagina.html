@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-br"><head><meta charset="utf-8">
+<!-- Protótipo isolado dos componentes editoriais (Etapa 3, frente B). Mesmas fontes e tokens do Coringa. -->
+<style>
+@font-face{font-family:Mont;font-weight:900;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-900-normal.woff2)}
+@font-face{font-family:Mont;font-weight:800;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-800-normal.woff2)}
+@font-face{font-family:Mont;font-weight:700;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-700-normal.woff2)}
+@font-face{font-family:JBM;font-weight:400;src:url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2)}
+@font-face{font-family:JBM;font-weight:700;src:url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2)}
+:root{--y:#FFD21F;--bg:#05080f;--mut:#9aa6bb}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:#fff;font-family:Mont,sans-serif}
+#palco,.camada,.camada-fundo{position:absolute;inset:0;overflow:hidden}
+.fundo-img{position:absolute;inset:-40px;background-size:cover;background-position:center;will-change:transform}
+.fundo-svg{position:absolute;inset:0;width:1080px;height:1920px;transform-origin:50% 40%}
+.fundo-escuro{position:absolute;inset:0;background:radial-gradient(ellipse 80% 55% at 50% 42%,#0e1a2e 0%,#060a14 60%,#04060b 100%)}
+/* gradientes de leitura: topo (marca) e base (legenda) sempre escuros, como em documentário */
+.camada::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,5,10,.75) 0%,rgba(3,5,10,0) 22%,rgba(3,5,10,0) 52%,rgba(3,5,10,.82) 78%,rgba(3,5,10,.92) 100%)}
+.grain{position:absolute;inset:0;opacity:.08;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+#marca{position:absolute;top:286px;left:0;right:0;text-align:center;font-family:JBM;font-weight:700;font-size:26px;letter-spacing:3px;color:rgba(255,255,255,.62)}
+#barra{position:absolute;top:322px;left:50%;width:240px;margin-left:-120px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+#barra i{position:absolute;left:0;top:0;bottom:0;width:8%;background:var(--y)}
+em{font-style:normal;color:var(--y);position:relative;display:inline-block}
+
+/* 1. abertura */
+.ab{position:absolute;left:90px;right:150px;top:560px}
+.ab-k{font-family:JBM;font-weight:700;font-size:28px;letter-spacing:6px;color:var(--y);margin-bottom:26px}
+.ab-t{font-family:Mont;font-weight:900;line-height:.98;letter-spacing:-2px;text-transform:uppercase;white-space:nowrap}
+.ab-t .mask{display:block;overflow:hidden;padding:4px 0 6px}
+.ab-t .ln{display:block;will-change:transform;text-shadow:0 6px 30px rgba(0,0,0,.45)}
+.ab-r{display:block;width:240px;height:8px;background:var(--y);margin-top:30px;transform-origin:left;border-radius:2px}
+.ab-s{font-family:Mont;font-weight:700;font-size:38px;line-height:1.25;color:#e8edf5;margin-top:26px;max-width:860px;text-shadow:0 2px 16px rgba(0,0,0,.6)}
+
+/* 2. revelação */
+.flash{position:absolute;inset:0;background:#fff4d0;opacity:0;mix-blend-mode:screen}
+.veu{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,5,10,.35),rgba(3,5,10,.85));opacity:0}
+.rv{position:absolute;left:120px;right:180px;top:600px;text-align:center}
+.rv-tag{display:inline-block;font-family:JBM;font-weight:700;font-size:26px;letter-spacing:6px;color:#05080f;background:var(--y);padding:8px 16px 6px;margin-bottom:34px}
+.rv-f{font-family:Mont;font-weight:900;line-height:1.02;letter-spacing:-2px;text-transform:uppercase;text-shadow:0 8px 40px rgba(0,0,0,.6);transform-origin:50% 60%}
+.rv-f em{color:#05080f;padding:0 .08em}
+.rv-f em .marca{position:absolute;left:-.06em;right:-.06em;top:.08em;bottom:.02em;background:var(--y);z-index:-1;transform-origin:left;transform:scaleX(0)}
+.rv-f em{z-index:0}
+.rv-d{font-family:JBM;font-weight:700;font-size:32px;letter-spacing:2px;color:#dfe6f1;margin-top:40px;text-transform:uppercase}
+
+/* 3. mapa */
+.mapa{position:absolute;inset:0;width:1080px;height:1920px}
+.mp-pin{position:absolute;transform:translateX(-50%);font-family:JBM;font-weight:700;font-size:26px;letter-spacing:2px;color:#fff;background:rgba(5,8,15,.85);border:1px solid rgba(255,255,255,.35);padding:8px 14px 6px;text-transform:uppercase;white-space:nowrap}
+.mp-card{position:absolute;transform-origin:0 50%;background:#05080f;border-left:8px solid var(--y);padding:14px 22px 14px 18px;box-shadow:0 10px 40px rgba(0,0,0,.6);white-space:nowrap}
+.mp-card b{display:block;font-family:JBM;font-weight:700;font-size:24px;letter-spacing:4px;color:var(--y)}
+.mp-card span{display:block;font-family:Mont;font-weight:900;font-size:48px;letter-spacing:-1px;text-transform:uppercase;margin-top:4px}
+.mp-dist{position:absolute;left:90px;top:1040px;display:flex;align-items:baseline;gap:16px}
+.mp-dist .n{font-family:Mont;font-weight:900;font-size:84px;letter-spacing:-2px;color:var(--y)}
+.mp-dist .u{font-family:JBM;font-weight:700;font-size:26px;letter-spacing:3px;color:#dfe6f1;text-transform:uppercase}
+.mp-tit{position:absolute;left:90px;right:150px;top:410px;font-family:Mont;font-weight:900;font-size:56px;letter-spacing:-1px;text-transform:uppercase;line-height:1.02}
+
+/* 4. etiqueta */
+.et-svg{position:absolute;inset:0;width:1080px;height:1920px}
+.et{position:absolute;max-width:520px}
+.et.esq{text-align:right}
+.et-tipo{overflow:hidden;display:inline-block}
+.et-tipo span{display:inline-block;font-family:JBM;font-weight:700;font-size:24px;letter-spacing:5px;color:#05080f;background:var(--y);padding:6px 12px 4px}
+.et-nome{overflow:hidden;margin-top:10px}
+.et-nome span{display:block;font-family:Mont;font-weight:900;font-size:56px;line-height:1.02;letter-spacing:-1px;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.7)}
+.et-sub{display:block;height:4px;background:#fff;margin-top:12px;transform-origin:left;width:100%}
+.et.esq .et-sub{transform-origin:right}
+.et-det{font-family:JBM;font-weight:700;font-size:26px;letter-spacing:2px;color:#dfe6f1;margin-top:12px;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+
+/* 5. encerramento */
+.en-r{position:absolute;left:120px;right:180px;top:760px;text-align:center;font-family:Mont;font-weight:800;font-size:66px;line-height:1.1;letter-spacing:-1px;text-transform:uppercase;white-space:nowrap}
+.en-m{position:absolute;left:120px;right:180px;top:840px;text-align:center;font-family:Mont;font-weight:900;font-size:92px;letter-spacing:-3px;white-space:nowrap}
+.en-m span{display:inline-block}
+.en-m .pt{color:var(--y)}
+.en-rg{position:absolute;left:50%;width:300px;margin-left:-150px;top:965px;height:7px;background:var(--y);transform-origin:center}
+.en-h{position:absolute;left:0;right:0;top:1000px;text-align:center;font-family:JBM;font-weight:700;font-size:34px;letter-spacing:3px;color:#dfe6f1}
+.en-masc{position:absolute;height:420px;left:50%;transform-origin:50% 100%;margin-left:-81px;top:400px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.6))}
+.en-f{position:absolute;left:120px;right:180px;top:1090px;text-align:center;font-family:JBM;font-size:22px;letter-spacing:1px;color:#8d99ad}
+
+.zona{position:absolute;left:0;right:0;background:rgba(255,77,77,.10);border:1px dashed rgba(255,77,77,.5);display:none}
+body.zonas .zona{display:block}
+</style></head>
+<body>
+<div id="pre" style="position:absolute;left:-9999px;top:0"><span style="font-family:Mont;font-weight:900">Aa</span><span style="font-family:Mont;font-weight:800">Aa</span><span style="font-family:Mont;font-weight:700">Aa</span><span style="font-family:JBM;font-weight:700">Aa</span><span style="font-family:JBM;font-weight:400">Aa</span></div>
+<div id="palco"></div>
+<div class="grain"></div>
+<div id="marca">CORINGA EXPLICA</div><div id="barra"><i></i></div>
+<div class="zona" style="top:0;height:270px"></div>
+<div class="zona" style="top:1150px;height:330px;background:rgba(91,155,255,.08);border-color:rgba(91,155,255,.5)"></div>
+<div class="zona" style="top:1480px;bottom:0"></div>
+<script src="../../node_modules/d3-array/dist/d3-array.min.js"></script>
+<script src="../../node_modules/d3-geo/dist/d3-geo.min.js"></script>
+<script src="../../node_modules/topojson-client/dist/topojson-client.min.js"></script>
+<script src="editorial.js"></script>
+</body></html>

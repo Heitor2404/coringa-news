@@ -1,0 +1,29 @@
+{
+ "componente": "etiqueta",
+ "duracao": 4,
+ "fundo": {
+  "tipo": "imagem",
+  "src": "../../assets/img/fundo_b.jpg",
+  "esc0": 1.0,
+  "esc1": 1.06
+ },
+ "fatos": [
+  "a imagem é ilustração gerada, não foto (a etiqueta declara)"
+ ],
+ "props": {
+  "tipo": "ILUSTRAÇÃO",
+  "nome": "Cérebro *humano*",
+  "detalhe": "imagem ilustrativa · não é foto",
+  "alvo": [
+   560,
+   700
+  ],
+  "raio": 120,
+  "ancora": [
+   150,
+   880
+  ],
+  "lado": "dir",
+  "semente": 7
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "componente": "revelacao",
+ "duracao": 3.5,
+ "fundo": {
+  "tipo": "imagem",
+  "src": "midia/pele_macro.jpg"
+ },
+ "fatos": [
+  "o sinal vai do cérebro, por nervos, aos músculos dos cromatóforos"
+ ],
+ "props": {
+  "rotulo": "A RESPOSTA",
+  "frase": "O cérebro liga\na cor *direto*",
+  "dado": "nervo → músculo → pigmento",
+  "em": 0.35
+ }
+}

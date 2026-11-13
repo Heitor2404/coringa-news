@@ -1,0 +1,43 @@
+{
+ "pedido": "a história da Torre Eiffel",
+ "tema": {
+  "pergunta": "Por que a Torre Eiffel quase foi demolida?",
+  "formato": "explica",
+  "termos": [
+   "Torre Eiffel",
+   "Exposição Universal de 1889",
+   "Gustave Eiffel",
+   "Telegrafia sem fio"
+  ],
+  "termos_en": [
+   "Eiffel Tower",
+   "Gustave Eiffel",
+   "Exposition Universelle (1889)",
+   "Wireless telegraphy"
+  ],
+  "busca": "Torre Eiffel história demolição 1909",
+  "busca_video": [
+   "Eiffel Tower night sparkle",
+   "steel beams construction crane",
+   "Paris crowd walking plaza",
+   "old radio antenna tower"
+  ],
+  "categoria": "MUNDO",
+  "noticia": "",
+  "pedido": "a história da Torre Eiffel"
+ },
+ "pergunta": "Por que a Torre Eiffel quase foi demolida?",
+ "arco": [
+  "A Torre Eiffel nasceu para ser demolida em 20 anos e só sobreviveu por causa de uma antena de rádio."
+ ],
+ "partes": [
+  {
+   "parte": 1,
+   "titulo": "TORRE EIFFEL: *DEMOLIÇÃO* MARCADA",
+   "resumo": "A Torre Eiffel nasceu com data marcada para ser demolida. Em 1887, Gustave Eiffel começa a erguer a torre em Paris. Ela seria o portão da Exposição Universal de 1889. Só um segredo militar impediu que ela virasse sucata. Ao crescer, ela superou o Monumento de Washington: 330 metros de ferro. Foi a mais alta do mundo por 41 anos, até o Chrysler. Mas artistas e intelectuais franceses odiaram o design dela. Feita de ferro forjado, ganhou o apelido de Dama de Ferro. A feira recebeu cerca de 32 milhões de visitantes em seis meses. Por volta de 1909, o prazo acabava e a demolição se aproximava. Mas ela era uma enorme antena de rádio, útil aos militares. Derrubar a torre significaria perder essa antena; ela ficou. Até um golpista a vendeu como ferro-velho, e voltou um mês depois. Em 2022, 5,9 milhões de pessoas visitaram a torre condenada.",
+   "suspense": "Em 2022, 5,9 milhões de pessoas visitaram a torre condenada."
+  }
+ ],
+ "proxima": null,
+ "atualizado": "2026-11-12"
+}

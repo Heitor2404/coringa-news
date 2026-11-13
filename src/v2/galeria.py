@@ -163,11 +163,11 @@ def pagina_html(itens: list[dict], metas: dict, comparacoes: list[dict], saida: 
         comps.append(f'''<section class="card cmp" id="cmp-{esc(c['id'])}"><header><h2>Antes × depois: {esc(c['titulo'])}</h2></header>
 <p class="obj">{esc(c.get('nota', ''))}</p><div class="ad"><figure><img loading="lazy" src="{esc(c['antes'])}"><figcaption>ANTES · motor atual (main)</figcaption></figure>
 <figure><img loading="lazy" src="{esc(c['depois'])}"><figcaption>DEPOIS · V2 ({esc(c.get('comp', ''))})</figcaption></figure>
-{f'<figure><video src="{esc(c["previa"])}" muted loop playsinline controls preload="none"></video><figcaption>prévia V2</figcaption></figure>' if c.get('previa') else ''}</div></section>''')
+{f'<figure><video src="{esc(c["previa"])}" poster="{esc(c["depois"])}" muted loop playsinline controls preload="none"></video><figcaption>prévia V2 (a cena inteira)</figcaption></figure>' if c.get('previa') else ''}</div></section>''')
     tms = []
     for t in temas or []:
         imgs = ''.join(f'<img loading="lazy" src="{esc(c)}">' for c in t['capturas'])
-        vid = f'<video src="{esc(t["previa"])}" muted loop playsinline controls preload="none"></video>' if t.get('previa') else ''
+        vid = f'<video src="{esc(t["previa"])}" poster="{esc(t["capturas"][0])}" muted loop playsinline controls preload="none"></video>' if t.get('previa') else ''
         tms.append(f'<section class="card" id="tema-{esc(t["id"])}"><header><h2>{esc(t["titulo"])}</h2><span class="st" style="background:{"#3ddc84" if not t["erros"] and not any(p.get("grave") for p in t["problemas"]) else "#ff4d3d"}">{len(t["problemas"])} problema(s) geométrico(s)</span></header><p class="obj">Dados aproximados/sintéticos, só para testar a reutilização da biblioteca fora do Panamá.</p><div class="midia">{imgs}{vid}</div></section>')
     idx = ''.join(f'<a href="#{esc(r["id"])}">{esc(r["id"])}</a>' for r in itens)
     css = '''body{margin:0;background:#0b0f17;color:#e9edf3;font:15px/1.5 system-ui,sans-serif}main{max-width:1500px;margin:auto;padding:24px}
@@ -205,8 +205,17 @@ def main(argv=None):
         r = renderizar_comp(m, saida, trabalho, previa=not a.sem_previa)
         print(f"  {m['id']:28s} {r['segundos']:5.1f}s  problemas={len(r['problemas'])} erros={len(r['erros'])}")
         itens.append(r)
+    if so and (saida / 'resultado.json').exists():       # --so: só refaz as pedidas; o resto da galeria fica
+        antigos = {r['id']: r for r in json.loads((saida / 'resultado.json').read_text(encoding='utf-8'))}
+        antigos.update({r['id']: r for r in itens})
+        itens = [antigos[m['id']] for m in cat if m['id'] in antigos]
     (saida / 'resultado.json').write_text(json.dumps(itens, ensure_ascii=False, indent=1), encoding='utf-8')
-    temas = [] if a.so else renderizar_temas(saida, trabalho, previa=not a.sem_previa)
+    arq_temas = saida / 'temas.json'
+    if a.so and arq_temas.exists():
+        temas = json.loads(arq_temas.read_text(encoding='utf-8'))
+    else:
+        temas = [] if a.so else renderizar_temas(saida, trabalho, previa=not a.sem_previa)
+        arq_temas.write_text(json.dumps(temas, ensure_ascii=False), encoding='utf-8')
     comparacoes = []
     cmp_arq = saida / 'comparacoes.json'
     if cmp_arq.exists():

@@ -55,7 +55,7 @@
     area_segura: 'texto entre y 330 e 1150; x ≤ 930', legibilidade: 'rótulo 30 px mono com sombra; contraste garantido pelo escurecimento do topo',
     rejeicao: ['foto sem relação com a fala (acervo_v2.relevancia < limiar)', 'foto ampliada além da resolução', 'mesma foto já usada sem novo enquadramento'],
     transicao: 'corte',
-    exemplo: { params: { lugar: 'LAGO GATÚN · PANAMÁ', credito: 'Wikimedia Commons' }, fundo: { img: '@fundo_b', de: [.5, .55, 1], para: [.4, .5, 1.12] }, dur: 4 },
+    exemplo: { params: { lugar: 'LAGO GATÚN · PANAMÁ', credito: 'Wikimedia Commons' }, fundo: { img: '@lago_navios', de: [.5, .55, 1], para: [.55, .5, 1.12] }, dur: 4, fala: 'No meio do caminho há um lago.' },
   }, (p, ctx) => ({
     html: `${p.lugar ? `<div class="abs lugar" data-g="lugar" style="left:72px;top:336px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:4px;color:#fff" class="sombra-txt"><span style="width:12px;height:12px;border-radius:50%;background:var(--vermelho);box-shadow:0 0 0 5px rgba(255,77,61,.25)"></span><span class="tx" style="text-shadow:0 2px 14px rgba(0,0,0,.8)">${esc(p.lugar)}</span></div>` : ''}
       ${p.credito ? `<div class="abs" data-g="credito" data-opcional="1" style="right:160px;top:1120px;font-family:var(--f-dado);font-size:24px;letter-spacing:1px;color:rgba(255,255,255,.7);text-shadow:0 1px 8px #000">${esc(p.credito)}</div>` : ''}`,

@@ -88,7 +88,7 @@
           ${pa ? `<g class="an" opacity="0"><line x1="${x(pa[0])}" x2="${x(pa[0])}" y1="${y(pa[1]) - 20}" y2="${y0 - 10}" stroke="#d22f1f" stroke-width="3" stroke-dasharray="8 6"/><circle cx="${x(pa[0])}" cy="${y(pa[1])}" r="14" fill="#d22f1f" stroke="var(--papel)" stroke-width="4"/></g>` : ''}
         </svg>
         <div class="abs vc" data-g="vc" style="font-family:var(--f-dado);font-weight:700;font-size:34px;color:#141414;background:var(--papel);padding:2px 8px"></div>
-        ${pa ? `<div class="abs ant" data-g="ant" data-txt="1" style="left:${clamp(x(pa[0]) - 200, 72, 930 - 400)}px;width:400px;top:${y0 - 70}px;text-align:center;font-weight:800;font-size:32px;color:#d22f1f;opacity:0">${esc(an.texto)}</div>` : ''}
+        ${pa ? `<div class="abs ant" data-g="ant" data-txt="1" data-alinhamento="local" style="left:${clamp(x(pa[0]) - 200, 72, 930 - 400)}px;width:400px;top:${y0 - 70}px;text-align:center;font-weight:800;font-size:32px;color:#d22f1f;opacity:0">${esc(an.texto)}</div>` : ''}
         ${p.conclusao ? `<div class="abs conc" data-g="conc" data-txt="1" style="left:72px;right:150px;top:1075px;padding:14px 20px;border-left:10px solid #d22f1f;background:rgba(20,20,20,.05);font-weight:800;font-size:40px;line-height:1.15;color:#141414;opacity:0">${hl(p.conclusao)}</div>` : ''}
         ${H.fonte(p.fonte, true).replace('bottom:770px', 'bottom:700px')}`,
       montar(el) { caber(el.querySelector('.tt'), { max: 58, min: 42, alt: 150 }); },

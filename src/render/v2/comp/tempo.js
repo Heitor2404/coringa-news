@@ -34,7 +34,7 @@
               ${e.img ? `<div class="abs" style="left:0;top:${Y - 430}px;width:320px;height:220px;padding:10px;background:#efe6d2;box-shadow:0 20px 40px rgba(0,0,0,.5);transform:rotate(-1.5deg)"><div style="width:300px;height:200px;background:url('${e.img}') center/cover;filter:sepia(.3) contrast(1.05)"></div></div>` : ''}
               <div class="abs ano" data-txt="1" style="left:0;top:${Y - 180}px;font-family:var(--f-serif);font-weight:700;font-size:128px;line-height:1;color:#efe6d2;white-space:nowrap">${esc(e.ano)}</div>
               <div class="abs tx" data-txt="1" style="left:0;top:${Y + 44}px;width:430px;font-weight:700;font-size:40px;line-height:1.15;color:#fff">${hl(e.texto)}</div></div>`).join('')}
-          ${ev.slice(1).map((e, i) => `<div class="abs gap gap${i}" data-g="gap${i}" data-opcional="1" style="left:${(X[i] + X[i + 1]) / 2 - 90}px;width:180px;text-align:center;top:${Y - 50}px;font-family:var(--f-dado);font-size:26px;color:rgba(239,230,210,.7)">+${e.ano - ev[i].ano} anos</div>`).join('')}
+          ${ev.slice(1).map((e, i) => `<div class="abs gap gap${i}" data-g="gap${i}" data-opcional="1" data-alinhamento="local" style="left:${(X[i] + X[i + 1]) / 2 - 90}px;width:180px;text-align:center;top:${Y - 50}px;font-family:var(--f-dado);font-size:26px;color:rgba(239,230,210,.7)">+${e.ano - ev[i].ano} anos</div>`).join('')}
         </div>`,
       upd(tl, el, c) {
         const d = c.dur, t0 = .3, passo = (d - 1.2) / Math.max(1, n - 1);

@@ -21,7 +21,7 @@
 @font-face{font-family:Serif;font-style:italic;font-weight:400;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-italic.woff2)}
 @font-face{font-family:Serif;font-style:italic;font-weight:600;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-600-italic.woff2)}
 
-:root{
+:root{--eixo-esq:150px;--eixo-dir:150px;
   /* marca */
   --amarelo:#FFD21F; --amarelo-escuro:#C99A00; --vermelho:#FF4D3D; --ciano:#3FD0E0; --verde:#3DDC84; --azul:#5B9BFF;
   /* neutros */
@@ -71,8 +71,13 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 .t-arquivo{background:#16120c}
 .papel-arquivo{background:#efe6d2;box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.2)}
 
+/* EIXO CENTRAL (V2.2): todo texto que a composição promete centralizar fica num contêiner SIMÉTRICO 150–930 px
+   (centro x = 540 em 1080). Antes: margens 72/150, 90/150, 60/140 deslocavam o centro para 501–510 px.
+   O transform-origin fica no centro da caixa simétrica: escala/entrada não tira o texto do eixo. */
+.eixo{left:var(--eixo-esq);right:var(--eixo-dir);text-align:center;transform-origin:50% 50%}
+
 /* LEGENDA V2 */
-#legenda{position:absolute;left:90px;right:150px;top:var(--leg-topo);height:260px;display:flex;align-items:flex-start;justify-content:center;z-index:60;pointer-events:none}
+#legenda{position:absolute;left:var(--eixo-esq);right:var(--eixo-dir);top:var(--leg-topo);height:260px;display:flex;align-items:flex-start;justify-content:center;z-index:60;pointer-events:none}
 #legenda .bloco{text-align:center;font-weight:800;font-size:66px;line-height:1.08;letter-spacing:-1px;color:#fff;
   text-shadow:0 3px 18px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9)}
 #legenda .w{display:inline-block;margin:0 .14em;transition:none}

@@ -299,6 +299,33 @@
     }
     return prob;
   };
+  /* MEDIÇÃO HORIZONTAL (V2.2): para cada texto visível, centro da CAIXA e centro dos GLIFOS (união dos retângulos de
+     um Range sobre o texto), por linha. 'declarado' = elemento com data-centro (a composição promete centralizar) ou a
+     legenda. 'alinhamento' = text-align/justify efetivo, para a auditoria achar centralização acidental não declarada. */
+  V2.medirCentros = function () {
+    const W = document.documentElement.clientWidth || 1080, cx = W / 2, out = [];
+    const visivel = e => { for (let x = e; x && x !== document.body; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) return false; } return true; };
+    const linhas = e => { const r = document.createRange(); r.selectNodeContents(e); const rs = [...r.getClientRects()].filter(q => q.width > 1 && q.height > 1);
+      const por = []; rs.forEach(q => { const l = por.find(z => Math.abs(z.y - q.top) < q.height * .5); if (l) { l.x0 = Math.min(l.x0, q.left); l.x1 = Math.max(l.x1, q.right); } else por.push({ y: q.top, x0: q.left, x1: q.right }); });
+      return por.map(l => ({ y: Math.round(l.y), centro: +((l.x0 + l.x1) / 2).toFixed(1), x0: Math.round(l.x0), x1: Math.round(l.x1) })); };
+    const alvo = new Set([...document.querySelectorAll('#legenda .bloco, [data-centro], [data-txt], [data-g]')]);
+    alvo.forEach(e => {
+      if (!visivel(e) || !(e.textContent || '').trim()) return;
+      const cs = getComputedStyle(e), pai = e.parentElement ? getComputedStyle(e.parentElement) : null, b = e.getBoundingClientRect();
+      const al = cs.textAlign === 'center' || (cs.display.includes('flex') && cs.justifyContent === 'center') ? 'centro' : cs.textAlign;
+      const ls = linhas(e); if (!ls.length) return;
+      const g0 = Math.min(...ls.map(l => l.x0)), g1 = Math.max(...ls.map(l => l.x1));
+      const cena = e.closest('[data-comp]');
+      out.push({ g: e.id === 'legenda' || e.closest('#legenda') ? 'legenda' : (e.dataset.g || e.className.split(' ').slice(0, 2).join('.')), comp: cena ? cena.dataset.comp : null,
+        declarado: e.hasAttribute('data-centro') || !!e.closest('#legenda'), intencao: e.dataset.alinhamento || null, alinhamento: al,
+        caixa: { x0: Math.round(b.left), x1: Math.round(b.right), centro: +((b.left + b.right) / 2).toFixed(1) },
+        glifos: { x0: Math.round(g0), x1: Math.round(g1), centro: +((g0 + g1) / 2).toFixed(1) }, linhas: ls, texto: e.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+        desvio_caixa: +(((b.left + b.right) / 2) - cx).toFixed(1), desvio_glifos: +(((g0 + g1) / 2) - cx).toFixed(1),
+        largura_tela: W });
+    });
+    return out;
+  };
+
   window.estadoV2 = function (t) {
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end);
     return { comp: at && at.meta.id, legenda: LEG.style.opacity !== '0', motivo: LEG.dataset.motivo || '', topo: at && at.legTop, fonte: at && at.legFonte, conflitos: V2.conflitosLegenda, avisos: AVISOS.slice() };

@@ -277,7 +277,7 @@
           <line x1="72" x2="${72 + R / 2}" y1="1078" y2="1078" stroke="#fff" stroke-width="4"/><line x1="72" x2="72" y1="1068" y2="1088" stroke="#fff" stroke-width="4"/><line x1="${72 + R / 2}" x2="${72 + R / 2}" y1="1068" y2="1088" stroke="#fff" stroke-width="4"/></svg>
         <div class="abs" data-g="esc" style="left:${72 + R / 2 + 16}px;top:1060px;font-family:var(--f-dado);font-size:26px;color:#fff">${fmt(sk / 2, 0)} km</div>
         ${an.map((a, i) => `<div class="abs al al${i}" data-g="al${i}" style="left:${clamp(C[0] + a.r * .72 + 10, 100, 700)}px;top:${C[1] - a.r * .72 - 40}px;max-width:330px;font-weight:700;font-size:28px;line-height:1.1;color:${i ? '#FFD21F' : '#FF4D3D'};background:rgba(5,20,26,.8);padding:4px 10px;opacity:0">${esc(fmt(a.raio_km, 0) + ' km · ' + a.rotulo)}</div>`).join('')}
-        <div class="abs" data-g="ct" style="left:${C[0] - 100}px;width:200px;top:${C[1] + 30}px;text-align:center;font-family:var(--f-dado);font-weight:700;font-size:26px;color:#fff">${esc(p.centro || '')}</div>`,
+        <div class="abs" data-g="ct" data-alinhamento="local" style="left:${C[0] - 100}px;width:200px;top:${C[1] + 30}px;text-align:center;font-family:var(--f-dado);font-weight:700;font-size:26px;color:#fff">${esc(p.centro || '')}</div>`,
       upd(tl, el) {
         aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });
         const t0 = .6, k = (tl - t0), rf = Math.max(0, k) * 240, mx = an.length ? an[an.length - 1].r : R;

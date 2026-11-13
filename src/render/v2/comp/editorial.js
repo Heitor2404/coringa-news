@@ -22,11 +22,11 @@
     return {
       html: `<div class="abs" style="inset:0;background:${base ? 'linear-gradient(180deg,rgba(5,8,14,.9) 0%,rgba(5,8,14,.8) 33%,rgba(5,8,14,0) 46%)' : 'rgba(5,8,14,.74)'}"></div>
         <div class="abs pul" data-deco="1" style="left:540px;top:${Y.pul}px;width:0;height:0">${[0, 1, 2].map(i => `<div class="rv-pr pr${i}" style="position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;border:3px solid ${cor};opacity:0"></div>`).join('')}</div>
-        <div class="abs rv-pq" data-g="pq" data-txt="1" style="left:72px;right:150px;top:${Y.pq}px;text-align:center;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
-        <div class="abs rv-rs manchete" data-g="rs" data-txt="1" style="left:60px;right:140px;top:${Y.rs}px;text-align:center;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
+        <div class="abs rv-pq eixo" data-g="pq" data-txt="1" data-centro="1" style="top:${Y.pq}px;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
+        <div class="abs rv-rs manchete eixo" data-g="rs" data-txt="1" data-centro="1" style="top:${Y.rs}px;white-space:nowrap;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
         <div class="abs rv-br" style="left:50%;top:790px;height:10px;width:0;background:${cor}"></div>
-        <div class="abs rv-dt serif" data-g="dt" data-txt="1" style="left:90px;right:150px;top:830px;text-align:center;font-size:${base ? 40 : 46}px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
-      montar(el) { const r = el.querySelector('.rv-rs'); r.style.opacity = 1; caber(r, { max: base ? 130 : 150, min: 90, larg: 880 }); r.style.opacity = 0;
+        <div class="abs rv-dt serif eixo" data-g="dt" data-txt="1" data-centro="1" style="top:830px;font-size:${base ? 40 : 46}px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
+      montar(el) { const r = el.querySelector('.rv-rs'); r.style.opacity = 1; caber(r, { max: base ? 130 : 150, min: 80, larg: 780 }); r.style.opacity = 0;
         const b = el.querySelector('.rv-br'); b.style.top = (r.offsetTop + r.offsetHeight + 12) + 'px'; el.querySelector('.rv-dt').style.top = (r.offsetTop + r.offsetHeight + (base ? 40 : 60)) + 'px'; },
       upd(tl, el) {
         const v = +p.virada || 1.0;
@@ -35,7 +35,7 @@
         const k = tl - v, rs = el.querySelector('.rv-rs');
         rs.style.opacity = k >= 0 ? 1 : 0; rs.style.transform = `scale(${k >= 0 ? lerp(1.25, 1, eo5(k / .3)) : 1.25})`;
         if (k >= 0 && k < .2) window.__v2flash = .85 * (1 - k / .2);
-        const b = el.querySelector('.rv-br'), w = 300 * eo5((k - .15) / .45); b.style.width = Math.max(0, w) + 'px'; b.style.marginLeft = (-Math.max(0, w) / 2 - 40) + 'px';
+        const b = el.querySelector('.rv-br'), w = 300 * eo5((k - .15) / .45); b.style.width = Math.max(0, w) + 'px'; b.style.marginLeft = (-Math.max(0, w) / 2) + 'px';   /* barra centrada no eixo (sem compensação de margem torta) */
         aparece(el.querySelector('.rv-dt'), tl, v + .5, { dy: 16 });
       },
       textos: () => [p.pergunta, p.resposta, p.detalhe],

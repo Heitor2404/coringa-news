@@ -142,7 +142,7 @@
           return `<div class="abs it it${i}" data-g="it${i}" style="left:${72 + i * larg}px;width:${larg}px;top:${chao - h - 70}px;height:${h + 70}px">
             <div class="vl" style="position:absolute;left:0;right:0;top:0;text-align:center;font-family:var(--f-dado);font-weight:700;font-size:38px;color:${dz ? '#141414' : '#3d3a33'}">${fmt(+x.valor, (+x.valor) % 1 ? 1 : 0)} ${u}</div>
             <svg class="sil" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="position:absolute;left:${(larg - w) / 2}px;bottom:0;overflow:visible" fill="${dz ? 'var(--amarelo)' : '#2b2925'}" stroke="${dz ? '#141414' : 'none'}" stroke-width="${dz ? 4 : 0}">${(SIL[x.forma] || SIL.barra)(w, h)}</svg></div>
-            <div class="abs rt rt${i}" data-g="rt${i}" style="left:${72 + i * larg}px;width:${larg}px;top:${chao + 14}px;text-align:center;font-weight:800;font-size:28px;line-height:1.1;color:#141414;text-transform:uppercase">${esc(x.rotulo)}</div>`; }).join('')}
+            <div class="abs rt rt${i}" data-g="rt${i}" data-alinhamento="local" style="left:${72 + i * larg}px;width:${larg}px;top:${chao + 14}px;text-align:center;font-weight:800;font-size:28px;line-height:1.1;color:#141414;text-transform:uppercase">${esc(x.rotulo)}</div>`; }).join('')}
         ${de ? `<div class="abs ref" data-deco="1" style="left:72px;width:858px;top:${chao - ALT * (+de.valor) / mx}px;height:0;border-top:3px dashed #141414;opacity:0"></div>` : ''}
         ${H.fonte(p.fonte, true)}`,
       montar(el) { caber(el.querySelector('.tt'), { max: 72, min: 50, alt: 170 }); },

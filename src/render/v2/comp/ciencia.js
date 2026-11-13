@@ -125,7 +125,7 @@
           ${fs.map((f, i) => `<line class="fv fv${i}" x1="${C[0]}" y1="${C[1]}" x2="${C[0]}" y2="${C[1]}" stroke="${f.cor || 'var(--ciano)'}" stroke-width="12" stroke-linecap="round" marker-end="url(#fv${ctx.i}${i})"/>`).join('')}
           <line class="fr" x1="${C[0]}" y1="${C[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fff" stroke-width="5" stroke-dasharray="14 10" marker-end="url(#fr${ctx.i})" opacity="0"/></svg>
         ${fs.map((f, i) => { const v = vec(f); return `<div class="abs fn fn${i}" data-g="fn${i}" style="left:${clamp(C[0] + v[0] * 1.12 + (Math.abs(v[0]) < 20 ? 40 : 0), 80, 760)}px;top:${C[1] + v[1] * 1.12 - 20}px;font-weight:800;font-size:34px;color:${f.cor || 'var(--ciano)'};text-transform:uppercase;opacity:0">${esc(f.nome)}</div>`; }).join('')}
-        ${p.resultado ? `<div class="abs rs" data-g="rs" data-txt="1" style="left:72px;right:150px;top:1060px;text-align:center;font-family:var(--f-dado);font-weight:700;font-size:36px;color:#fff;background:rgba(5,20,26,.85);padding:12px;border:2px solid var(--ciano)">${esc(p.resultado)}</div>` : ''}`,
+        ${p.resultado ? `<div class="abs rs eixo" data-g="rs" data-txt="1" data-centro="1" style="top:1060px;font-family:var(--f-dado);font-weight:700;font-size:36px;color:#fff;background:rgba(5,20,26,.85);padding:12px;border:2px solid var(--ciano)">${esc(p.resultado)}</div>` : ''}`,
       upd(tl, el, c) {
         aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });
         const on = el.querySelector('.onda'); if (on) { let d = `M0 ${C[1] + 10}`; for (let x = 0; x <= 1080; x += 30) d += ` L${x} ${C[1] + 10 + Math.sin(x / 50 + tl * 3) * 6}`; on.setAttribute('d', d); }
@@ -170,7 +170,7 @@
           <defs><radialGradient id="gl${ctx.i}"><stop offset="0" stop-color="${C.cor}" stop-opacity=".55"/><stop offset="1" stop-color="${C.cor}" stop-opacity="0"/></radialGradient></defs><circle cx="${fx}" cy="${cy}" r="${C.raio * 2.6}" fill="url(#gl${ctx.i})"/><circle cx="${fx}" cy="${cy}" r="${C.raio}" fill="${C.cor}"/>
           <circle class="orb" r="${O.raio}" fill="${O.cor}" stroke="#fff" stroke-width="3"/></svg>
         ${titulo('ASTRONOMIA', p.titulo)}
-        <div class="abs" data-g="nc" style="left:${fx - 100}px;width:200px;top:${cy + C.raio + 16}px;text-align:center;font-weight:800;font-size:30px;text-transform:uppercase;color:${C.cor}">${esc(C.nome)}</div>
+        <div class="abs" data-g="nc" data-alinhamento="local" style="left:${fx - 100}px;width:200px;top:${cy + C.raio + 16}px;text-align:center;font-weight:800;font-size:30px;text-transform:uppercase;color:${C.cor}">${esc(C.nome)}</div>
         <div class="abs no" data-g="no" style="font-weight:800;font-size:30px;text-transform:uppercase;color:#fff;white-space:nowrap">${esc(O.nome)}</div>
         <div class="abs" data-g="pl" style="left:72px;right:150px;top:1036px;display:flex;gap:16px">
           ${p.periodo ? `<div class="pl1" data-txt="1" style="font-family:var(--f-dado);font-weight:700;font-size:30px;padding:10px 16px;border:2px solid var(--ciano);color:#fff">PERÍODO · <span class="pv">${esc(p.periodo)}</span></div>` : ''}

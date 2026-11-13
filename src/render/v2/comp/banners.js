@@ -122,9 +122,9 @@
   }, (p) => ({
     html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 45%,#141b2a 0%,#070b12 70%)"></div>
       ${p.numero ? `<div class="abs nmr" data-deco="1" style="left:0;right:0;top:470px;text-align:center;font-weight:900;font-size:420px;line-height:1;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.16);letter-spacing:-10px">${esc(p.numero)}</div>` : ''}
-      <div class="abs tt manchete" data-g="tt" data-txt="1" style="left:90px;right:150px;top:760px;text-align:center;font-size:96px">${palavras(p.titulo || '')}</div>
+      <div class="abs tt manchete eixo" data-g="tt" data-txt="1" data-centro="1" style="top:760px;font-size:96px">${palavras(p.titulo || '')}</div>
       <div class="abs fio3" style="left:50%;top:900px;height:3px;width:0;background:var(--amarelo)"></div>
-      <div class="abs sb serif" data-g="sb" data-txt="1" style="left:90px;right:150px;top:930px;text-align:center;font-style:italic;font-size:44px;color:rgba(255,255,255,.8)">${esc(p.subtitulo || '')}</div>`,
+      <div class="abs sb serif eixo" data-g="sb" data-txt="1" data-centro="1" style="top:930px;font-style:italic;font-size:44px;color:rgba(255,255,255,.8)">${esc(p.subtitulo || '')}</div>`,
     montar(el) { const t = el.querySelector('.tt'); caber(t, { max: 96, min: 64, alt: 120 }); },
     upd(tl, el) {
       const n = el.querySelector('.nmr'); if (n) { n.style.transform = `translateX(${lerp(60, -60, eio(tl / 2.4))}px)`; n.style.opacity = clamp(tl / .4); }

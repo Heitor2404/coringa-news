@@ -59,6 +59,9 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 <script src="../../node_modules/d3-geo/dist/d3-geo.min.js"></script>
 <script src="../../node_modules/topojson-client/dist/topojson-client.min.js"></script>
 <script src="data.js"></script>
+<script src="hyperframes/gsap-3.14.2.min.js"></script>
+<script src="hf_src.js"></script>
+<script src="hyperframes/hf.js"></script>
 <script>
 const D=window.DATA, S=document.getElementById('stage'), FX=document.getElementById('fx');
 // legenda com UM tamanho só no vídeo inteiro, decidido pela palavra mais comprida (antes mudava a cada bloco)
@@ -501,9 +504,51 @@ function moverFoto(s,t){const sc=s.sc,mo=s.el.querySelector('.moldura');if(!mo)r
   if(rc){rc.style.transformOrigin=`${f[0]}% ${f[1]}%`;rc.style.transform=`scale(${z*1.035}) translate(${lerp(-10,10,e)}px,${lerp(6,-8,e)}px)`;
     ft.style.transform=`scale(${z}) translate(${lerp(8,-8,e)}px,0)`}}
 
+/* ---------- componentes HyperFrames (código original, ver src/render/hyperframes/NOTICE.md) ----------
+   13/11: número, comparação, revelação, fechamento e cena sem mídia confiável usam componentes prontos do catálogo
+   HyperFrames (Apache-2.0) quando o dado cabe neles; senão, o construtor antigo continua valendo (nada quebra). */
+const HFOK=n=>!!(window.HF&&HF.disponivel(n));
+function hfCena(sc,nome,vars,caixa,t0,extra){   // caixa = estilo CSS da área; t0 = quando o componente começa
+  return{html:`<div class="hfbox" style="position:absolute;${caixa}"></div>${extra?extra.html:''}`,
+   upd(t,el){if(!el._hf){   // o componente mede o texto ao montar: a camada precisa estar no layout (visível ou não)
+       const d0=el.style.display,v0=el.style.visibility;el.style.display='block';el.style.visibility='hidden';
+       el._hf=HF.montar(el.querySelector('.hfbox'),nome,vars,{duracao:Math.max(2,sc.end-t0)})||{seek(){}};
+       el.style.display=d0;el.style.visibility=v0}
+     el._hf.seek(t-t0);if(extra&&extra.upd)extra.upd(t,el)}}}
+const curtoTxt=(x,n)=>String(x||'').replace(/\*/g,'').replace(/,/g,' ').trim().slice(0,n);
+function hfEscolha(sc){
+  if(sc.hf&&HFOK(sc.hf.nome)) return hfCena(sc,sc.hf.nome,sc.hf.vars||{},sc.hf.caixa||'left:90px;right:90px;top:520px;height:440px',sc.start+(sc.hf.atraso||0));
+  if(sc.tipo==='numero'&&HFOK('count-up')){const v=Number(String(sc.valor).replace(',','.'));
+    if(Number.isInteger(v)&&Math.abs(v)<1e9){const pre=curto(sc.prefixo)?String(sc.prefixo||''):'',suf=curto(sc.sufixo)?String(sc.sufixo||''):'';
+      const longo=[curto(sc.prefixo)?'':sc.prefixo,curto(sc.sufixo)?'':sc.sufixo].filter(Boolean).join(' · ');
+      return hfCena(sc,'count-up',{start:0,end:v,prefix:pre,suffix:(/^[A-Za-zÀ-ÿ]/.test(suf)?' ':'')+suf,glow:false},'left:90px;right:90px;top:610px;height:400px',sc.start+.2,
+        {html:`<div class="lbl rl" style="position:absolute;top:560px;left:90px;right:150px;text-align:center;font-size:32px;color:#dfe6f3">${esc(sc.rotulo||'')}</div>
+          ${longo||sc.nota?`<div class="nt" style="position:absolute;left:90px;right:150px;top:1020px;text-align:center;font-weight:800;font-size:38px;text-transform:uppercase;text-shadow:0 4px 18px #000">${esc(longo||sc.nota)}</div>`:''}`,
+         upd(t,el){show(el.querySelector('.rl'),t,sc.start);show(el.querySelector('.nt'),t,sc.start+.9)}})}}
+  if(sc.tipo==='comparacao'&&HFOK('chart-story')){const it=(sc.itens||[]).slice(0,5).filter(x=>isFinite(+x.valor));
+    if(it.length>=2){const mx=it.reduce((k,x,i)=>+x.valor>+it[k].valor?i:k,0);
+      return hfCena(sc,'chart-story',{type:'bars',data:it.map(x=>+x.valor).join(', '),labels:it.map(x=>curtoTxt(x.rotulo,14)).join(', '),
+        unit:String(sc.unidade||'').length<=4?String(sc.unidade||''):'',emphasize:mx+1},'left:70px;right:110px;top:470px;height:640px',sc.start+.1,
+        {html:sc.titulo?`<div class="sec st" style="top:390px">${hl(sc.titulo)}</div>`:'',upd(t,el){show(el.querySelector('.st'),t,sc.start)}})}}
+  if(sc.tipo==='revelacao'&&HFOK('headline-slam')&&String(sc.resposta||'').trim()){
+    const t0=Math.min(sc.virada||1e9,sc.start+1.0),pal=String(sc.resposta).trim().split(/\s+/);
+    return hfCena(sc,'headline-slam',{text:String(sc.resposta).trim(),accent_word_index:pal.length-1,shadow:true},'left:90px;right:90px;top:560px;height:330px',t0,
+      {html:`<div class="title pq" style="top:370px;font-size:56px">${hl(sc.pergunta||'')}</div>
+        <div class="rvd" style="position:absolute;left:90px;right:150px;top:930px;text-align:center;font-size:42px;font-weight:800;line-height:1.2;text-shadow:0 4px 20px #000;opacity:0">${hl(sc.detalhe||'')}</div>`,
+       upd(t,el){pop(el.querySelector('.pq'),t,sc.start,{dy:-40,sc:.8});el.querySelector('.rvd').style.opacity=clamp((t-t0-0.6)/0.3);
+         el.querySelector('.hfbox').style.opacity=t<t0?0:1;const im=el.querySelector('.img');if(im)im.style.filter=t>=t0&&t<t0+0.18?'brightness(1.8)':''}})}
+  if(sc.tipo==='fechamento'&&HFOK('logo-brand-close')&&!sc.produto&&!sc.proxima)
+    return hfCena(sc,'logo-brand-close',{wordmark:'CORINGA EXPLICA',tagline:'',url:''},'left:90px;right:90px;top:830px;height:220px',sc.start+.35,
+      {html:`${(D.meta.fontes||[]).length?`<div class="fts" style="position:absolute;left:90px;right:150px;top:354px;text-align:center;font-family:JBM;font-weight:700;font-size:24px;letter-spacing:1px;line-height:1.3;color:rgba(255,255,255,.7)">FONTES · ${esc(D.meta.fontes.join(' · '))}</div>`:''}
+        ${mascotHTML('m',M3.apontando?'left:390px;top:470px;width:300px;height:340px':'left:400px;top:480px;width:280px','apontando')}
+        <div class="hdl" style="position:absolute;left:90px;right:150px;top:1060px;text-align:center;font-family:JBM;font-weight:700;font-size:32px;letter-spacing:3px;color:#dfe6f1;opacity:0">${esc(D.meta.marca||'@coringa.explica')}</div>`,
+       upd(t,el){const m=el.querySelector('.m');const k=back((t-sc.start)/0.5);m.style.opacity=clamp((t-sc.start)/0.15);
+         m.style.transform=`scale(${clamp(k,0,1.2)}) translateY(${float(t,0,6)}px)`;animMascot(m,t,speaking(t));show(el.querySelector('.fts'),t,sc.start+.9);show(el.querySelector('.hdl'),t,sc.start+1.6)}});
+  return null}
+
 /* ---------- montagem ---------- */
 const FOTO=['imagem','gancho','historia'];
-const scenes=D.scenes.map((sc,i)=>{sc.i=i;const b=(B[sc.tipo]||B.imagem)(sc);
+const scenes=D.scenes.map((sc,i)=>{sc.i=i;const b=hfEscolha(sc)||(B[sc.tipo]||B.imagem)(sc);
   const el=document.createElement('div');el.className='layer';
   const shade=`<div class="shade" style="background:linear-gradient(180deg,rgba(5,8,15,.42) 0%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'0':'.32'}) 26%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.06':'.45'}) 58%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.38':'.62'}) 76%,rgba(5,8,15,${FOTO.includes(sc.tipo)?'.5':'.8'}) 100%)"></div>
     <div class="shade" style="background:linear-gradient(160deg,${C1}${FOTO.includes(sc.tipo)?'22':'55'} 0%,transparent 45%,${C2}${FOTO.includes(sc.tipo)?'1c':'44'} 100%);mix-blend-mode:soft-light"></div>`;

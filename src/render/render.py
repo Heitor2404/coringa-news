@@ -19,6 +19,11 @@ def _pagina(trabalho: Path) -> Path:
     html = TEMPLATE.read_text(encoding='utf-8')
     html = html.replace('../../node_modules', (RAIZ / 'node_modules').as_uri())
     html = html.replace('src="data.js"', f'src="{(trabalho / "data.js").as_uri()}"')
+    # 13/11: componentes HyperFrames (código original + GSAP local). Sem o arquivo, o template usa os construtores antigos.
+    html = html.replace('src="hyperframes/', f'src="{(TEMPLATE.parent / "hyperframes").as_uri()}/')
+    (trabalho / 'hf_src.js').write_text('window.HF_SRC=' + json.dumps({p.stem: p.read_text(encoding='utf-8') for p in
+                                        sorted((TEMPLATE.parent / 'hyperframes' / 'componentes').glob('*.html'))}) + ';', encoding='utf-8')
+    html = html.replace('src="hf_src.js"', f'src="{(trabalho / "hf_src.js").as_uri()}"')
     p = trabalho / 'index.html'
     p.write_text(html, encoding='utf-8')
     return p

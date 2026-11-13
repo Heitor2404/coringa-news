@@ -51,6 +51,22 @@ def escolher_musica(v: dict, nome: str) -> Path | None:
     return m
 
 
+def _anotacao(c: dict) -> dict:
+    """Frase-chave da cena para o componente vox-annotate (HyperFrames): até 8 palavras da 1ª oração do destaque (ou da
+    fala), com a palavra marcada (*assim*) ou a mais longa sublinhada. Não inventa nada: é o próprio texto narrado."""
+    import re
+    base = str(c.get('destaque') or '').strip() or str(c.get('fala') or '')
+    marcadas = re.findall(r'\*([^*]+)\*', base)
+    frase = re.split(r'[.!?;:]', base.replace('*', ''))[0].strip()
+    pal = frase.split()
+    frase = ' '.join(pal[:8])
+    chave = next((m for m in marcadas if m.lower() in frase.lower()), '')
+    if not chave:
+        chave = max((p for p in frase.split() if len(p) >= 5), key=len, default='')
+    return {'nome': 'vox-annotate', 'vars': {'text': frase, 'keyword': chave.strip(' ,'), 'note': '', 'style': 'underline',
+                                             'draw_at': 0.6}, 'caixa': 'left:90px;right:150px;top:560px;height:420px'}
+
+
 def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict]:
     from src import midia
     cenas, usado_video = [], {}
@@ -119,6 +135,9 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
                 c['real'] = True
                 for key in ('legenda_foto', 'ano_foto', 'tipo_img'):
                     c[key] = viz.get(key)
+    for c in cenas:                                   # 13/11: cena sem mídia confiável não fica em tela vazia nem ganha foto
+        if c.get('pendente') and not c.get('img'):    # decorativa: a frase-chave anotada (componente vox-annotate) e a
+            c['hf'] = _anotacao(c)                    # pendência continua registrada no relatório
     cenas = _quebrar_longos(cenas)
     estilo = midia.estilo_fundo(v.get('titulo'), (v.get('_pauta') or {}).get('tema'), v.get('pergunta'), v.get('resumo'))
     print(f"  [fundo] {'B · céu' if estilo == 'ceu' else 'A · estúdio escuro'} atrás das fotos")

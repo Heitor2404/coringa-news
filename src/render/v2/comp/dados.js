@@ -20,7 +20,7 @@
       equivalencia: "{tipo:'cubo', lado_m, ref:{nome, altura_m, forma}, texto, apoio} | {tipo:'grade', icone, n ≤ 100, texto} | {tipo:'barra', ref_valor, ref_nome, texto}" },
     fundo: 'próprio (papel)', layout: 'kicker 345 · natureza 400 · NÚMERO 450–700 · contexto · representação 790–1150 · fonte 1165',
     paleta: 'papel #F2EDE3, tinta #141414, amarelo marca-texto (vermelho só para recorde/excepcional)', animacao: 'contagem com desaceleração; régua; a representação se constrói (cubo cresce até o lado real; ícones preenchem; barra corre)',
-    duracao: [3, 5, 7], limites: { rotulo: 32, unidade: 22, natureza: 28, contexto: 70 }, legenda: 'integrada',
+    duracao: [3, 5, 7], limites: { rotulo: 32, unidade: 22, natureza: 28, contexto: 110 }, legenda: 'integrada',
     area_segura: 'x 72–930', legibilidade: 'número ≥ 180 px; contexto 42 px; fonte 26 px',
     rejeicao: ['valor sem fonte listada', 'dinheiro sem natureza ou conversão sem data (fatos.py)', 'equivalência que não sai de conversão exata (não inventar)'],
     transicao: 'mascara',

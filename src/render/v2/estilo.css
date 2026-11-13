@@ -104,4 +104,4 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 .t-ciencia .hl{color:var(--ciano)}
 
 /* composição usada como BASE de outra cena (ex.: revelação sobre o mecanismo): sem cabeçalho/rótulos próprios */
-.base-cena [data-g="et"],.base-cena .kicker,.base-cena .pas,.base-cena [data-g="aviso"]{display:none!important}
+.base-cena [data-g="et"],.base-cena .kicker,.base-cena .pas,.base-cena [data-g="aviso"],.base-cena .re{display:none!important}

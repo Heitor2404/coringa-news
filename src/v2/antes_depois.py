@@ -97,7 +97,11 @@ def main(argv=None):
             for nome, i0, i1 in PREVIAS:
                 previas[nome] = palco.previa(pg, i0, i1, pasta / f'previa_{nome}.mp4', fps=24)
         erros = pg.erros + pg.evaluate('V2.avisos')
-    rel = fiscal_v2.avaliar(v2, direcao, geo, dados)
+        conflitos = pg.evaluate('V2.conflitosLegenda || []')
+    from src.v2 import galeria
+    cat = {m['id']: m for m in galeria.catalogo(pasta / '_cat')}
+    rel = fiscal_v2.avaliar(v2, direcao, geo, dados, catalogo=cat, conflitos_legenda=conflitos)
+    (pasta / 'fiscal_v2_panama.md').write_text(fiscal_v2.tabela_md(rel), encoding='utf-8')
     (pasta / 'fiscal_v2_panama.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1), encoding='utf-8')
     print(fiscal_v2.texto(rel))
     if erros:

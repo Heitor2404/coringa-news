@@ -5,7 +5,7 @@ name: Testes V2 (visual)
 on:
   push:
     branches: [visual-v2, visual-v2-1-refinamento, visual-v2-2-correcao-final]
-    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
+    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/test_v22_*.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
   workflow_dispatch:
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
           npm install --no-audit --no-fund
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           python scripts/v2_natural_earth.py
-      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py
+      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py
       - name: Galeria de validação (artefato)
         if: always()
         run: python -m src.v2.galeria --saida saida/galeria_v2

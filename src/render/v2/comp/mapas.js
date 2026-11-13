@@ -52,12 +52,29 @@
     const arco = dz > 4 ? Math.sin(k * Math.PI) * Math.min(1.6, dz / 12) : 0;
     return { center: [lerp(a.center[0], b.center[0], k), lerp(a.center[1], b.center[1], k)], zoom: lerp(a.zoom, b.zoom, k) - arco, bearing: lerp(a.bearing || 0, b.bearing || 0, k), pitch: lerp(a.pitch || 0, b.pitch || 0, k) };
   }
+  // Natural Earth traz nomes em português de Portugal; o canal fala português do Brasil
+  const PTBR = { 'Mar das Caraíbas': 'Mar do Caribe', 'Caraíbas': 'Caribe', 'Canal do Iucatão': 'Canal de Iucatã', 'Golfo das Honduras': 'Golfo de Honduras',
+    'Mar Arábico': 'Mar da Arábia', 'Golfo de Bengala': 'Baía de Bengala', 'Moscovo': 'Moscou', 'Irão': 'Irã', 'Quénia': 'Quênia', 'Vietname': 'Vietnã',
+    'Polónia': 'Polônia', 'Roménia': 'Romênia', 'Arménia': 'Armênia', 'Eslovénia': 'Eslovênia', 'Benim': 'Benin', 'Camarões': 'Camarões' };
+  const ptbr = n => PTBR[n] || n;
   const coord = (lon, lat) => `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? 'N' : 'S'} · ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? 'L' : 'O'}`;
   function hav(a, b) { const R = 6371, r = Math.PI / 180, dl = (b[1] - a[1]) * r, dg = (b[0] - a[0]) * r; const h = Math.sin(dl / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 
   /* motor comum dos 3 mapas: cria o mapa, calcula câmera inicial/final, posiciona rótulos */
   function motorMapa(p, ctx, tipo) {
-    let map, A, B, rotulosMar = [], rotulosPais = [];
+    let map, A, B, rotulosMar = [], rotulosPais = [], terra = [];
+    // a caixa do rótulo (centro q, em px do palco) está toda sobre água e dentro do quadro?
+    let lim = { y0: 420, y1: 1100 };   // faixa livre real: abaixo do cabeçalho e acima dos painéis da cena (medida no montar)
+    const caixaNaAgua = (e, q) => {
+      const w = e.offsetWidth, h = e.offsetHeight;
+      if (!q || q.x - w / 2 < 70 || q.x + w / 2 > 1000 || q.y - h / 2 < lim.y0 || q.y + h / 2 > lim.y1) return false;
+      const dy = map._dy || 0;
+      for (const fx of [-.5, -.25, 0, .25, .5]) for (const fy of [-.5, 0, .5]) {
+        const ll = map.unproject([q.x + fx * w, q.y + fy * h - dy]); const pt = [ll.lng, ll.lat];
+        if (terra.some(f => d3.geoContains(f, pt))) return false;
+      }
+      return true;
+    };
     const pts = (p.pontos || []).map(x => ({ ...x, lon: +x.lon, lat: +x.lat }));
     // TRILHAS: uma rota (p.rota ou os pontos) ou várias para comparar (p.rotas). Trechos longos seguem o círculo
     // máximo (d3.geoInterpolate): uma linha reta no Mercator atravessaria regiões erradas.
@@ -96,7 +113,7 @@
           host.style.webkitMaskImage = host.style.maskImage;
           map.resize(); pad = { ...pad, top: pad.top - ajuste.topo, bottom: pad.bottom - (ajuste.H - ajuste.fundo) };
           // o resto do código posiciona rótulos em coordenadas do palco: project() devolve y do palco
-          const proj = map.project.bind(map), dy = ajuste.topo; map.project = ll => { const q = proj(ll); return { x: q.x, y: q.y + dy }; };
+          const proj = map.project.bind(map), dy = ajuste.topo; map.project = ll => { const q = proj(ll); return { x: q.x, y: q.y + dy }; }; map._dy = dy;
           p._ajusteHost = ajuste;
         }
         B = cam(map, bb, pad); B.bearing = p.bearing || 0; B.pitch = p.pitch || 0;
@@ -105,15 +122,44 @@
         if (A.zoom > B.zoom - 1.2) A.zoom = Math.max(0.5, B.zoom - 2.2);
         A.bearing = p.bearing_inicial ?? -8; A.pitch = 0;
         // rótulos de mar/oceano e de países vizinhos: centro do polígono (d3.geoCentroid), só os maiores do quadro
-        const mares = (p.geo.mares || { features: [] }).features.map(f2 => ({ nome: f2.properties.name_pt || f2.properties.name, c: d3.geoCentroid(f2), area: d3.geoArea(f2) }))
-          .filter(x => x.nome && x.c[0] > bb[0] - w * 1.2 && x.c[0] < bb[2] + w * 1.2 && x.c[1] > bb[1] - h * 1.2 && x.c[1] < bb[3] + h * 1.2).sort((a, b2) => b2.area - a.area).slice(0, p.max_mares ?? 2);
-        rotulosMar = mares.map(m => ({ ...m, ...(p.mares_pos || {})[m.nome] && { c: p.mares_pos[m.nome] } }));
+        const mares = (p.geo.mares || { features: [] }).features.map(f2 => ({ nome: ptbr(f2.properties.name_pt || f2.properties.name), c: d3.geoCentroid(f2), area: d3.geoArea(f2), f: f2 }))
+          .filter(x => x.nome).sort((a, b2) => b2.area - a.area);   // V2.2: escolha final depende de haver ÁGUA no quadro final
+        let candMar = mares.map(m => ({ ...m, ...(p.mares_pos || {})[m.nome] && { c: p.mares_pos[m.nome], fixo: true } }));
         const alvoNome = String(p.pais_nome || '').toLowerCase();
-        rotulosPais = (p.geo.paises || { features: [] }).features.map(f2 => ({ nome: f2.properties.name_pt || f2.properties.name, c: [f2.properties.label_x ?? d3.geoCentroid(f2)[0], f2.properties.label_y ?? d3.geoCentroid(f2)[1]], area: d3.geoArea(f2) }))
+        rotulosPais = (p.geo.paises || { features: [] }).features.map(f2 => ({ nome: ptbr(f2.properties.name_pt || f2.properties.name), c: [f2.properties.label_x ?? d3.geoCentroid(f2)[0], f2.properties.label_y ?? d3.geoCentroid(f2)[1]], area: d3.geoArea(f2) }))
           .filter(x => x.nome && x.nome.toLowerCase() !== alvoNome).sort((a, b2) => b2.area - a.area).slice(0, p.max_paises ?? 3);
-        const html = [...rotulosMar.map((m, i) => `<div class="rot-mapa mar rm${i}" data-g="mar${i}" data-opcional="1">${esc(m.nome)}</div>`),
-          ...rotulosPais.map((m, i) => `<div class="rot-mapa pais rp${i}" data-g="pais${i}" data-opcional="1">${esc(m.nome)}</div>`)].join('');
+        const html = [...rotulosPais.map((m, i) => `<div class="rot-mapa pais rp${i}" data-g="pais${i}" data-opcional="1">${esc(m.nome)}</div>`)].join('');
         el.querySelector('.rotulos').insertAdjacentHTML('beforeend', html);
+        // V2.2: rótulo de mar SOBRE ÁGUA e DENTRO do quadro final. O centróide de um golfo (polígono côncavo) pode cair em
+        // terra ("Golfo do Panamá" sobre o país) e o de um oceano pode ficar fora do quadro. Para cada mar do recorte (por
+        // área), candidatos = pontos amostrados DENTRO do polígono e visíveis no enquadramento FINAL; vale o mais perto do
+        // centróide cuja caixa inteira (15 pontos) fica sobre água. Mares sem lugar não ganham rótulo.
+        terra = [...((p.geo.paises || {}).features || []), ...(p.pais_geo ? [p.pais_geo] : [])];
+        { const cab = el.querySelector('.cab'), pn = [...el.querySelectorAll('.cmpd,.dist,.dd,.nmp')].map(x => x.offsetTop).filter(v => v > 0);
+          lim = { y0: cab ? cab.offsetTop + cab.offsetHeight + 16 : 420, y1: Math.min(1100, ...pn.map(v => v - 16)) }; }
+        map.jumpTo(B);
+        const medida = document.createElement('div'); medida.className = 'rot-mapa mar'; medida.style.cssText = 'position:absolute;visibility:hidden';
+        el.querySelector('.rotulos').appendChild(medida);
+        const vis = el.getBoundingClientRect(), dentro = ll => { const q = map.project(ll); return q.x > 60 && q.x < 1010 && q.y > 400 && q.y < 1120; };
+        for (const m of candMar) {
+          if (rotulosMar.length >= (p.max_mares ?? 2)) break;
+          if (rotulosMar.some(r => r.nome === m.nome)) continue;     // o mesmo oceano vem em vários polígonos
+          medida.textContent = m.nome;
+          // candidatos: grade sobre a TELA do enquadramento final (densidade acompanha o zoom), convertida em lon/lat e
+          // mantida só dentro do polígono deste mar; vence o ponto com mais folga (caixa ampliada 40 px ainda sobre água)
+          let cands = m.fixo ? [m.c] : [];
+          if (!m.fixo) for (let gx = 0; gx <= 18; gx++) for (let gy = 0; gy <= 14; gy++) {
+            const sx = 120 + gx * (840 / 18), sy = lim.y0 + 20 + gy * ((lim.y1 - lim.y0 - 40) / 14), u = map.unproject([sx, sy - (map._dy || 0)]), ll = [u.lng, u.lat];
+            if (d3.geoContains(m.f, ll)) cands.push(ll);
+          }
+          const folga = ll => { const q = map.project(ll); if (!caixaNaAgua(medida, q)) return -1;
+            const w = medida.offsetWidth, h = medida.offsetHeight; let f = Math.min(q.x - w / 2 - 70, 1000 - q.x - w / 2, q.y - h / 2 - lim.y0, lim.y1 - q.y - h / 2);
+            medida.style.padding = '0 20px'; const larga = caixaNaAgua(medida, q); medida.style.padding = ''; return larga ? f + 1000 : f; };
+          const ord = cands.map(ll => [ll, folga(ll)]).filter(x => x[1] >= 0).sort((u, v) => v[1] - u[1]);
+          if (ord.length) rotulosMar.push({ ...m, c: ord[0][0], alternativas: ord.slice(1, 40).map(x => x[0]) });
+        }
+        medida.remove();
+        el.querySelector('.rotulos').insertAdjacentHTML('afterbegin', rotulosMar.map((m, i) => `<div class="rot-mapa mar rm${i}" data-g="mar${i}" data-opcional="1">${esc(m.nome)}</div>`).join(''));
         map.jumpTo(A); await desenhado(map);
       },
       async upd(tl, el, kcam, extra) {
@@ -124,12 +170,27 @@
         const pos = (lonlat, e, dx = 0, dy = 0) => { if (!e) return; const q = map.project(lonlat); e.style.left = (q.x + dx) + 'px'; e.style.top = (q.y + dy) + 'px'; return q; };
         // rótulos de mar: presos dentro do quadro pela LARGURA (o centro dentro não basta: "Oceano Pacífico" saía pela borda);
         // rótulos de país: só aparecem se couberem inteiros (deslocar poria o nome sobre outro país)
-        rotulosMar.forEach((m, i) => { const e = el.querySelector('.rm' + i); const q = pos(m.c, e); const w = e.offsetWidth;
-          e.style.left = clamp(q.x, 70 + w / 2, 1000 - w / 2) + 'px'; e.style.transform = 'translate(-50%,-50%)';
-          e.style.opacity = clamp((tl - .3) / .5) * (q.y > 420 && q.y < 1100 && q.x > -w / 4 && q.x < 1080 + w / 4 ? 1 : 0); });
+        rotulosMar.forEach((m, i) => { const e = el.querySelector('.rm' + i); const q = pos(m.c, e); e.style.transform = 'translate(-50%,-50%)';
+          // em TODO quadro (câmera andando inclusive): só aparece com a caixa inteira sobre água e dentro do quadro
+          e.style.opacity = caixaNaAgua(e, q) ? clamp((tl - .3) / .5) : 0; });
         rotulosPais.forEach((m, i) => { const e = el.querySelector('.rp' + i); const q = pos(m.c, e); const w = e.offsetWidth; e.style.transform = 'translate(-50%,-50%)';
           e.style.opacity = clamp((tl - .5) / .5) * (q.y > 420 && q.y < 1100 && q.x - w / 2 > 70 && q.x + w / 2 < 1000 ? .9 : 0); });
-        return { map, pos, colisao: () => colisao(el) };
+        // rótulo de mar escondido por colisão com nome de pino/país/painel: muda UMA vez para a próxima posição sobre
+        // água sem colisão (âncora geográfica fica fixa depois, sem pular a cada quadro)
+        const realocar = () => {
+          rotulosMar.forEach((m, i) => {
+            const e = el.querySelector('.rm' + i); if (!e || m.travado) return;
+            if (parseFloat(e.style.opacity || 0) > .01 || !caixaNaAgua(e, map.project(m.c)) || tl < .3) return;
+            const outros = [...el.querySelectorAll('.cab,.dist,.cmpd,.dd,.nmp,.rot-mapa.destaque,.pino,.atr,.rotulos .rot-mapa')].filter(x => x !== e && parseFloat(x.style.opacity || 1) > .05)
+              .map(x => x.getBoundingClientRect());
+            const w = e.offsetWidth, h = e.offsetHeight;
+            const livre = ll => { const q = map.project(ll); if (!caixaNaAgua(e, q)) return false; const b = { l: q.x - w / 2 - 10, r: q.x + w / 2 + 10, t: q.y - h / 2 - 6, d: q.y + h / 2 + 6 };
+              return !outros.some(o => b.l < o.right && o.left < b.r && b.t < o.bottom && o.top < b.d); };
+            const nova = (m.alternativas || []).find(livre);
+            if (nova) { m.c = nova; m.travado = true; pos(m.c, e); e.style.opacity = clamp((tl - .3) / .5); }
+          });
+        };
+        return { map, pos, colisao: () => { colisao(el); realocar(); } };
       },
     };
   }
@@ -137,7 +198,7 @@
   function colisao(el) {
     const caixa = e => { const r = e.getBoundingClientRect(); return { x0: r.left - 10, x1: r.right + 10, y0: r.top - 6, y1: r.bottom + 6 }; };
     const cruza = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-    const fixos = [...el.querySelectorAll('.cab,.dist,.dd,.nmp,.rot-mapa.destaque,.pino,.atr')].filter(e => parseFloat(e.style.opacity || 1) > .05).map(caixa);
+    const fixos = [...el.querySelectorAll('.cab,.dist,.cmpd,.dd,.nmp,.rot-mapa.destaque,.pino,.atr')].filter(e => parseFloat(e.style.opacity || 1) > .05).map(caixa);
     for (const e of el.querySelectorAll('.rotulos .rot-mapa')) {
       if (parseFloat(e.style.opacity || 0) <= .01) continue; const b = caixa(e);
       if (fixos.some(f => cruza(f, b))) e.style.opacity = 0; else fixos.push(b);

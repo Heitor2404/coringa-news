@@ -9,33 +9,34 @@
     objetivo: 'Entregar a resposta da pergunta central (payoff) no instante em que é falada, com impacto.',
     funcoes: ['revelacao', 'payoff', 'surpresa'],
     params: { pergunta: '≤ 40 (a pergunta do início)', resposta: '1–3 palavras (≤ 18 caracteres)', detalhe: '≤ 60 (o porquê, serifa)', virada: 'segundo (na cena) em que a resposta é DITA (o motor calcula pela legenda)', cor: "'amarelo' | 'verde' | 'vermelho'" },
-    fundo: 'opcional: a imagem do gancho (fecha o ciclo), muito escurecida', layout: 'pergunta pequena 380–450; resposta gigante centrada em y≈700; barra; detalhe 900–1060',
+    fundo: 'opcional: a imagem do gancho (fecha o ciclo), muito escurecida — OU, melhor, o próprio acontecimento: cena.base = a composição do mecanismo congelada no estado final (a resposta aparece SOBRE a explicação visual)', layout: 'sem base: pergunta 380, resposta gigante y≈700, detalhe abaixo; com base: pergunta+resposta+detalhe no alto (360–700) e o mecanismo visível embaixo',
     paleta: 'resposta na cor escolhida, brilho; fundo escurecido 75%', animacao: 'antes da virada: pergunta + pulso de expectativa; na virada: clarão, resposta bate (1,25 → 1), barra corre; detalhe aparece',
     duracao: [2.5, 3.5, 5], limites: { pergunta: 40, resposta: 18, detalhe: 60 }, legenda: 'integrada',
     area_segura: 'y 360–1100', legibilidade: 'resposta ≥ 130 px 900',
     rejeicao: ['resposta mostrada antes de ser dita (spoiler)', 'revelação que não responde a pergunta do gancho'],
     transicao: 'corte',
     exemplo: { params: { pergunta: 'O que ergue o navio?', resposta: 'GRAVIDADE', detalhe: 'A água desce do lago e enche a câmara.', virada: 1.2, cor: 'amarelo' }, fundo: { img: '@navio_eclusa', escurece: 1 }, dur: 4, fala: 'Quem levanta o navio é a gravidade.' },
-  }, (p) => {
-    const cor = { verde: 'var(--verde)', vermelho: 'var(--vermelho)' }[p.cor] || 'var(--amarelo)';
+  }, (p, ctx) => {
+    const cor = { verde: 'var(--verde)', vermelho: 'var(--vermelho)' }[p.cor] || 'var(--amarelo)', base = !!ctx.sc.base;
+    const Y = base ? { pq: 360, rs: 430, pul: 520 } : { pq: 380, rs: 600, pul: 700 };
     return {
-      html: `<div class="abs" style="inset:0;background:rgba(5,8,14,.74)"></div>
-        <div class="abs pul" data-deco="1" style="left:540px;top:700px;width:0;height:0">${[0, 1, 2].map(i => `<div class="pr pr${i}" style="position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;border:3px solid ${cor};opacity:0"></div>`).join('')}</div>
-        <div class="abs pq" data-g="pq" data-txt="1" style="left:72px;right:150px;top:380px;text-align:center;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
-        <div class="abs rs manchete" data-g="rs" data-txt="1" style="left:60px;right:140px;top:600px;text-align:center;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
-        <div class="abs br" style="left:50%;top:790px;height:10px;width:0;background:${cor}"></div>
-        <div class="abs dt serif" data-g="dt" data-txt="1" style="left:90px;right:150px;top:830px;text-align:center;font-size:46px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
-      montar(el) { const r = el.querySelector('.rs'); r.style.opacity = 1; caber(r, { max: 150, min: 90, larg: 880 }); r.style.opacity = 0;
-        const b = el.querySelector('.br'); b.style.top = (r.offsetTop + r.offsetHeight + 16) + 'px'; el.querySelector('.dt').style.top = (r.offsetTop + r.offsetHeight + 60) + 'px'; },
+      html: `<div class="abs" style="inset:0;background:${base ? 'linear-gradient(180deg,rgba(5,8,14,.9) 0%,rgba(5,8,14,.8) 33%,rgba(5,8,14,0) 46%)' : 'rgba(5,8,14,.74)'}"></div>
+        <div class="abs pul" data-deco="1" style="left:540px;top:${Y.pul}px;width:0;height:0">${[0, 1, 2].map(i => `<div class="rv-pr pr${i}" style="position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;border:3px solid ${cor};opacity:0"></div>`).join('')}</div>
+        <div class="abs rv-pq" data-g="pq" data-txt="1" style="left:72px;right:150px;top:${Y.pq}px;text-align:center;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
+        <div class="abs rv-rs manchete" data-g="rs" data-txt="1" style="left:60px;right:140px;top:${Y.rs}px;text-align:center;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
+        <div class="abs rv-br" style="left:50%;top:790px;height:10px;width:0;background:${cor}"></div>
+        <div class="abs rv-dt serif" data-g="dt" data-txt="1" style="left:90px;right:150px;top:830px;text-align:center;font-size:${base ? 40 : 46}px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
+      montar(el) { const r = el.querySelector('.rv-rs'); r.style.opacity = 1; caber(r, { max: base ? 130 : 150, min: 90, larg: 880 }); r.style.opacity = 0;
+        const b = el.querySelector('.rv-br'); b.style.top = (r.offsetTop + r.offsetHeight + 12) + 'px'; el.querySelector('.rv-dt').style.top = (r.offsetTop + r.offsetHeight + (base ? 40 : 60)) + 'px'; },
       upd(tl, el) {
         const v = +p.virada || 1.0;
-        aparece(el.querySelector('.pq'), tl, .05, { dy: -16 });
-        el.querySelectorAll('.pr').forEach((r, i) => { const ph = ((tl * .9 + i / 3) % 1); r.style.transform = `scale(${.4 + ph})`; r.style.opacity = tl < v ? (1 - ph) * .7 : 0; });
-        const k = tl - v, rs = el.querySelector('.rs');
+        aparece(el.querySelector('.rv-pq'), tl, .05, { dy: -16 });
+        el.querySelectorAll('.rv-pr').forEach((r, i) => { const ph = ((tl * .9 + i / 3) % 1); r.style.transform = `scale(${.4 + ph})`; r.style.opacity = tl < v ? (1 - ph) * .7 : 0; });
+        const k = tl - v, rs = el.querySelector('.rv-rs');
         rs.style.opacity = k >= 0 ? 1 : 0; rs.style.transform = `scale(${k >= 0 ? lerp(1.25, 1, eo5(k / .3)) : 1.25})`;
         if (k >= 0 && k < .2) window.__v2flash = .85 * (1 - k / .2);
-        const b = el.querySelector('.br'), w = 300 * eo5((k - .15) / .45); b.style.width = Math.max(0, w) + 'px'; b.style.marginLeft = (-Math.max(0, w) / 2 - 40) + 'px';
-        aparece(el.querySelector('.dt'), tl, v + .5, { dy: 16 });
+        const b = el.querySelector('.rv-br'), w = 300 * eo5((k - .15) / .45); b.style.width = Math.max(0, w) + 'px'; b.style.marginLeft = (-Math.max(0, w) / 2 - 40) + 'px';
+        aparece(el.querySelector('.rv-dt'), tl, v + .5, { dy: 16 });
       },
       textos: () => [p.pergunta, p.resposta, p.detalhe],
     };
@@ -102,41 +103,49 @@
     textos: () => [p.texto, p.autor],
   }));
 
-  /* 22. encerramento.editorial */
+  /* 22. encerramento.editorial — V2.1: QUATRO variantes; a conclusão tem relação com o acontecimento do vídeo.
+   *  conclusao: a ideia em letra grande + (opcional) a composição do acontecimento CONGELADA ao fundo (cena.base);
+   *  pergunta: uma pergunta aberta para o próximo vídeo; marca: só a marca, discreta, sobre a última imagem;
+   *  cta: chamada contextual ("Parte 2 amanhã: …"). Mascote opcional, com chão e luz (não colado). */
   V2.registrar({
-    id: 'encerramento.editorial', nome: 'Encerramento editorial', tratamento: 'editorial', tom: 'escuro', marca: false,
-    objetivo: 'Fechar com a ideia do vídeo em uma linha, a marca grande e legível, a chamada e as fontes legíveis.',
+    id: 'encerramento.editorial', nome: 'Encerramento editorial (4 variantes)', tratamento: 'editorial', tom: 'escuro', marca: false,
+    objetivo: 'Fechar com a conclusão do acontecimento (não só a identidade do canal), a marca legível, a chamada e as fontes.',
     funcoes: ['encerramento', 'fechamento'],
-    params: { resumo: 'a ideia em uma linha ≤ 70 (serifa)', proxima: 'número da próxima parte (opcional)', fontes: 'lista de fontes (≥ 1; 24–28 px, legíveis)', marca: "'@coringa.explica'" },
-    fundo: 'próprio (fundo limpo de marca: nada de mascote sobre árvore/foto)', layout: 'resumo 350–470; Coringa grande (440 px) à esquerda 500–960; marca + @ à direita; chamada 980; fontes 1040–1110',
-    paleta: 'grafite com losangos da marca muito sutis; amarelo só na marca e na chamada', animacao: 'resumo revela; Coringa entra de baixo; marca monta letra a letra; chamada pulsa uma vez; fontes aparecem',
-    duracao: [2.5, 3.5, 5], limites: { resumo: 70, fontes: 5 }, legenda: 'integrada',
-    area_segura: 'y 340–1110; x 72–930', legibilidade: 'marca 84 px 900; fontes ≥ 26 px',
-    rejeicao: ['@ duplicado na tela', 'fontes com letra < 24 px', 'mascote sobre foto poluída'],
+    params: { variante: "'conclusao' (padrão) | 'pergunta' | 'marca' | 'cta'", resumo: 'a conclusão ≤ 70 (conclusao) ou a pergunta ≤ 60 (pergunta)', chamada: 'CTA contextual ≤ 40 (cta)', proxima: 'nº da próxima parte',
+      fontes: 'lista (≥ 1; 26 px)', marca: "'@coringa.explica'", mascote: "'' | 'apontando' | 'comemorando' (opcional)" },
+    fundo: 'próprio, ou a composição do acontecimento congelada ao fundo (cena.base) / a última foto (cena.fundo, variante marca)', layout: 'conclusão grande 380–760; marca em faixa compacta 1030–1110 (logo + @ uma vez); fontes 1130–1200',
+    paleta: 'grafite; amarelo só na marca e na chamada', animacao: 'a conclusão revela palavra a palavra; faixa da marca desliza; chamada pulsa uma vez; fontes aparecem',
+    duracao: [2.5, 3.5, 5], limites: { resumo: 70, chamada: 40, fontes: 5 }, legenda: 'integrada',
+    area_segura: 'y 360–1200; x 72–930', legibilidade: 'conclusão ≥ 64 px; marca 52 px; fontes 26 px',
+    rejeicao: ['@ duplicado na tela', 'conclusão sem relação com o acontecimento do vídeo', 'mascote sobre foto poluída'],
     transicao: 'mascara',
-    exemplo: { params: { resumo: 'Quem ergue o navio é a *gravidade*, não uma bomba.', fontes: ['Wikipédia', 'Wikipedia (inglês)', 'Revista Oeste'], marca: '@coringa.explica' }, dur: 4, fala: 'Segue o Coringa Explica.' },
+    exemplo: { params: { variante: 'conclusao', resumo: 'Quem ergue o navio é a *gravidade*, não uma bomba.', fontes: ['Wikipédia', 'Wikipedia (inglês)', 'Revista Oeste'], marca: '@coringa.explica', mascote: 'apontando' }, dur: 4, fala: 'Segue o Coringa Explica.' },
   }, (p, ctx) => {
-    const m = ctx.D.meta.mascote || {}, fts = (p.fontes || ctx.D.meta.fontes || []).slice(0, 5);
+    const m = ctx.D.meta.mascote || {}, fts = (p.fontes || ctx.D.meta.fontes || []).slice(0, 5), v = p.variante || 'conclusao';
+    const comBase = !!ctx.sc.base || !!ctx.sc.fundo, pose = p.mascote && m[p.mascote] ? m[p.mascote] : null;
+    const grande = v === 'pergunta' ? `<div class="abs rz manchete" data-g="rz" data-txt="1" style="left:72px;right:${pose ? 330 : 150}px;top:400px;font-size:84px;line-height:1.02;color:#fff"><span style="color:var(--amarelo)">?</span> ${palavras(p.resumo || '')}</div>`
+      : v === 'marca' ? '' : `<div class="abs rz" data-g="rz" data-txt="1" style="left:72px;right:${pose ? 330 : 150}px;top:400px;font-family:var(--f-serif);font-weight:600;font-size:70px;line-height:1.1;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.5)">${palavras(v === 'cta' ? (p.chamada || p.resumo || '') : (p.resumo || ''))}</div>`;
     return {
-      html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 40% 55%,#1c2436 0%,#080c14 70%)"></div>
-        <div class="abs" data-deco="1" style="inset:0;opacity:.06;background-image:repeating-linear-gradient(45deg,#FFD21F 0 2px,transparent 2px 60px),repeating-linear-gradient(-45deg,#FFD21F 0 2px,transparent 2px 60px)"></div>
-        ${p.resumo ? `<div class="abs rz" data-g="rz" data-txt="1" style="left:72px;right:150px;top:350px;font-family:var(--f-serif);font-size:48px;line-height:1.18;color:#fff">${palavras(p.resumo)}</div>` : ''}
-        ${m.apontando ? `<img class="abs masc" src="${m.apontando}" style="left:0px;top:470px;width:520px;height:540px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 30px 50px rgba(0,0,0,.6))">` : ''}
-        <div class="abs mc" data-g="mc" data-txt="1" style="left:470px;right:150px;top:640px">
-          <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-block;width:30px;height:30px;background:var(--amarelo);transform:rotate(45deg)"></span><span class="kicker" style="font-size:26px;color:var(--amarelo)">CANAL</span></div>
-          <div class="mw" style="font-weight:900;font-size:84px;line-height:.92;letter-spacing:-2px;margin-top:12px">CORINGA<br>EXPLICA</div>
-          <div style="font-family:var(--f-dado);font-weight:700;font-size:30px;margin-top:16px;color:rgba(255,255,255,.85)">${esc(p.marca || '@coringa.explica')}</div></div>
-        <div class="abs cta" data-g="cta" style="left:470px;top:960px;background:var(--amarelo);color:#0b0f17;font-weight:900;font-size:36px;padding:14px 26px;letter-spacing:1px">${p.proxima ? `PARTE ${esc(p.proxima)} AMANHÃ` : 'SIGA PARA MAIS'}</div>
-        ${fts.length ? `<div class="abs fts" data-g="fts" style="left:72px;right:150px;top:1050px;font-family:var(--f-dado);font-size:26px;line-height:1.3;color:rgba(255,255,255,.78)"><span style="color:var(--amarelo)">FONTES ·</span> ${fts.map(esc).join(' · ')}</div>` : ''}`,
-      montar(el) { const f = el.querySelector('.fts'); if (f) { caber(f, { max: 26, min: 24, alt: 70 }); f.style.top = (1110 - f.offsetHeight) + 'px'; } const r = el.querySelector('.rz'); if (r) caber(r, { max: 48, min: 36, alt: 130 }); },
+      html: `${comBase ? '' : `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 40% 45%,#1c2436 0%,#080c14 70%)"></div>`}
+        <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(7,11,18,${comBase ? .55 : 0}) 0%,rgba(7,11,18,${comBase ? .2 : 0}) 45%,rgba(7,11,18,.9) 75%)"></div>
+        ${grande}
+        ${pose ? `<div class="abs mascw" data-ocupa="1" style="right:110px;top:560px;width:300px;height:420px"><div class="abs" style="left:-40px;right:-40px;bottom:-30px;height:120px;background:radial-gradient(ellipse at 50% 70%,rgba(0,0,0,.7),transparent 70%)"></div>
+          <img class="abs masc" src="${pose}" style="left:0;bottom:0;width:300px;height:420px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(-5px 0 0 rgba(255,210,31,.35)) drop-shadow(0 20px 26px rgba(0,0,0,.6))"></div>` : ''}
+        <div class="abs mc" data-g="mc" data-txt="1" style="left:72px;right:150px;top:1010px;display:flex;align-items:center;gap:22px;padding:18px 24px;background:rgba(7,11,18,.85);border-top:6px solid var(--amarelo)">
+          <span style="flex:none;width:34px;height:34px;background:var(--amarelo);transform:rotate(45deg)"></span>
+          <div style="flex:1"><div style="font-weight:900;font-size:52px;line-height:.95;letter-spacing:-1px">CORINGA EXPLICA</div><div style="font-family:var(--f-dado);font-weight:700;font-size:28px;margin-top:8px;color:rgba(255,255,255,.85)">${esc(p.marca || '@coringa.explica')}</div></div>
+          ${v === 'marca' ? '' : `<div class="cta" style="flex:none;background:var(--amarelo);color:#0b0f17;font-weight:900;font-size:30px;padding:12px 18px">${p.proxima ? `PARTE ${esc(p.proxima)} AMANHÃ` : v === 'pergunta' ? 'RESPONDA AQUI' : 'SIGA'}</div>`}</div>
+        ${fts.length ? `<div class="abs fts" data-g="fts" style="left:72px;right:150px;top:1150px;font-family:var(--f-dado);font-size:26px;line-height:1.3;color:rgba(255,255,255,.8)"><span style="color:var(--amarelo)">FONTES ·</span> ${fts.map(esc).join(' · ')}</div>` : ''}`,
+      montar(el) { const r = el.querySelector('.rz'); if (r) caber(r, { max: v === 'pergunta' ? 84 : 70, min: 48, alt: 560 });
+        const f = el.querySelector('.fts'); if (f) { caber(f, { max: 26, min: 26, alt: 70 }); f.style.top = (1210 - f.offsetHeight) + 'px'; el.querySelector('.mc').style.top = (1210 - f.offsetHeight - 14 - el.querySelector('.mc').offsetHeight) + 'px'; } },
       upd(tl, el) {
-        revelar(el.querySelector('.rz'), tl, .05, { passo: .04 });
-        const ms = el.querySelector('.masc'); if (ms) { const k = back((tl - .2) / .55); ms.style.opacity = clamp((tl - .2) / .15); ms.style.transform = `translateY(${(1 - clamp(k, 0, 1.1)) * 300}px) rotate(${Math.sin(tl * 2) * 1.5}deg)`; }
-        aparece(el.querySelector('.mc'), tl, .5, { dx: 40, dy: 0 });
-        const c = el.querySelector('.cta'), kc = back((tl - 1.0) / .4), pu = Math.max(0, Math.sin(clamp((tl - 1.8) / .35) * Math.PI)) * .06; c.style.opacity = clamp((tl - 1.0) / .12); c.style.transform = `scale(${clamp(kc, 0, 1.1) + pu})`; c.style.transformOrigin = '0 50%';
-        aparece(el.querySelector('.fts'), tl, 1.3, { dy: 10 });
+        revelar(el.querySelector('.rz'), tl, .05, { passo: .05 });
+        const mw = el.querySelector('.mascw'); if (mw) { const k = eo5((tl - .5) / .6); mw.style.opacity = clamp((tl - .5) / .2); mw.querySelector('.masc').style.transform = `translateY(${(1 - k) * 50}px)`; }
+        aparece(el.querySelector('.mc'), tl, .7, { dy: 30 });
+        const c = el.querySelector('.cta'); if (c) { const pu = Math.max(0, Math.sin(clamp((tl - 1.6) / .35) * Math.PI)) * .08; c.style.transform = `scale(${1 + pu})`; }
+        aparece(el.querySelector('.fts'), tl, 1.1, { dy: 10 });
       },
-      textos: () => [p.resumo, 'coringa explica segue siga seguir', p.marca],
+      textos: () => [p.resumo, p.chamada, 'coringa explica segue siga seguir', p.marca],
     };
   });
 })();

@@ -23,7 +23,7 @@ _PANAMA = {'lago_navios': 'a13-g.jpg', 'ancon_1914': 'a16-g.jpg', 'margem_lago':
            'navio_eclusa': 'a20-g.jpg', 'camara_eclusa': 'a23-g.jpg', 'construcao_1913': 'a31-g.jpg', 'navio_mar': 'a41-g.jpg',
            'agua_clara': 'a8-g.jpg'}
 _TESTE = {'fundo_a': 'tests/img/fundo_a.png', 'fundo_b': 'tests/img/fundo_b.jpg', 'fundo_c': 'tests/img/fundo_c.jpg',
-          'fundo_d': 'tests/img/fundo_d.jpg', 'pele': 'prototipos/editorial/midia/pele_macro.jpg'}
+          'fundo_d': 'tests/img/fundo_d.jpg', 'pele': 'prototipos/editorial/midia/pele_macro.jpg', 'video_teste': 'tests/img/video_teste.mp4'}
 
 
 def midia() -> dict[str, str]:

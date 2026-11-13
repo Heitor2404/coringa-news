@@ -33,7 +33,10 @@
   --f-titulo:Mont,sans-serif; --f-dado:JBM,monospace; --f-serif:Serif,Georgia,serif;
   /* zonas */
   --zona-topo:270px; --zona-base:1480px; --zona-direita:930px; --margem:72px;
-  --leg-topo:1180px; --leg-base:1440px;
+  --leg-topo:1240px; --leg-base:1455px;
+  /* escala tipográfica e ritmo (iguais a V2.T em nucleo.js) */
+  --fs-display:120px; --fs-h1:88px; --fs-h2:64px; --fs-h3:50px; --fs-corpo:40px; --fs-apoio:34px; --fs-rotulo:28px; --fs-min:26px;
+  --linha-fino:3px; --linha-medio:6px; --linha-forte:10px; --raio:4px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);color:#fff;font-family:var(--f-titulo);-webkit-font-smoothing:antialiased}
@@ -47,8 +50,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 .vinheta{position:absolute;inset:0;pointer-events:none;z-index:39;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%)}
 
 /* rótulos e textos-base */
-.kicker{font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:5px;text-transform:uppercase}
-.rot{font-family:var(--f-dado);font-weight:400;font-size:26px;letter-spacing:3px;text-transform:uppercase;color:var(--nevoa)}
+.kicker{font-family:var(--f-dado);font-weight:700;font-size:var(--fs-rotulo);letter-spacing:5px;text-transform:uppercase}
+.rot{font-family:var(--f-dado);font-weight:400;font-size:var(--fs-min);letter-spacing:3px;text-transform:uppercase;color:var(--nevoa)}
 .manchete{font-weight:900;letter-spacing:-2px;line-height:.98;text-transform:uppercase}
 .serif{font-family:var(--f-serif)}
 .sombra-txt{text-shadow:0 4px 24px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.6)}
@@ -73,11 +76,11 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 #legenda .bloco{text-align:center;font-weight:800;font-size:66px;line-height:1.08;letter-spacing:-1px;color:#fff;
   text-shadow:0 3px 18px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9)}
 #legenda .w{display:inline-block;margin:0 .14em;transition:none}
-#legenda .w.fut{color:rgba(255,255,255,.55)}
+#legenda .w.fut{color:rgba(255,255,255,.72)}
 #legenda .w.ag{color:var(--amarelo)}
 #legenda .w.hl{color:var(--amarelo)}
 #legenda.claro .bloco{color:var(--tinta-papel);text-shadow:none}
-#legenda.claro .w.fut{color:rgba(20,20,20,.42)}
+#legenda.claro .w.fut{color:rgba(20,20,20,.55)}
 #legenda.claro .w.ag,#legenda.claro .w.hl{color:#b8860b}
 
 /* marca discreta (canto superior, fora da zona da interface) */
@@ -90,12 +93,15 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 .mapa-host{position:absolute;inset:0}
 .mapa-host canvas{outline:none}
 .pino{position:absolute;transform:translate(-50%,-50%)}
-.pino .nucleo{width:26px;height:26px;border-radius:50%;background:var(--amarelo);border:5px solid #fff;box-shadow:0 0 0 6px rgba(255,210,31,.25),0 8px 20px rgba(0,0,0,.5)}
-.pino .onda{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:4px solid var(--amarelo)}
-.rot-mapa{position:absolute;white-space:nowrap;font-weight:800;font-size:34px;letter-spacing:.5px;color:#fff;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 3px #000}
-.rot-mapa.mar{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:38px;text-transform:none;letter-spacing:2px;color:rgba(180,210,245,.85)}
-.rot-mapa.pais{font-weight:700;font-size:30px;letter-spacing:6px;color:rgba(255,255,255,.75)}
-.rot-mapa.destaque{background:#fff;color:var(--tinta);padding:8px 18px;border-radius:4px;text-shadow:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.pino .nucleo{width:40px;height:40px;border-radius:50%;background:var(--amarelo);border:7px solid #fff;box-shadow:0 0 0 8px rgba(255,210,31,.3),0 8px 20px rgba(0,0,0,.6)}
+.pino .onda{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:4px solid var(--amarelo)}
+.rot-mapa{position:absolute;white-space:nowrap;font-weight:800;font-size:38px;letter-spacing:.5px;color:#fff;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 3px #000}
+.rot-mapa.mar{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:42px;text-transform:none;letter-spacing:2px;color:rgba(190,218,250,.92)}
+.rot-mapa.pais{font-weight:700;font-size:32px;letter-spacing:6px;color:rgba(255,255,255,.82)}
+.rot-mapa.destaque{background:#fff;color:var(--tinta);font-size:42px;padding:10px 22px;border-radius:4px;text-shadow:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .cena .hl{color:var(--amarelo)}
 .t-dado .hl{color:inherit;background:linear-gradient(transparent 60%,var(--amarelo) 60%,var(--amarelo) 94%,transparent 94%)}
 .t-ciencia .hl{color:var(--ciano)}
+
+/* composição usada como BASE de outra cena (ex.: revelação sobre o mecanismo): sem cabeçalho/rótulos próprios */
+.base-cena [data-g="et"],.base-cena .kicker,.base-cena .pas,.base-cena [data-g="aviso"]{display:none!important}

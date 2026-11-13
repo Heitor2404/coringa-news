@@ -5,7 +5,8 @@
   const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt } = V2.U;
   const H = V2.H;
   const COR = { mar: '#0a1a2f', mar2: '#0d2340', terra: '#26344b', terra2: '#2d3d57', borda: '#5d7598', costa: '#8fa9cf', rio: '#4f86c6', lago: '#0f2a4c', alvo: '#FFD21F', rota: '#FFD21F' };
-  const PAD = { top: 430, bottom: 860, left: 110, right: 190 };     // área útil do mapa: y 430–1060, x 110–890
+  const PAD = { top: 470, bottom: 760, left: 100, right: 170 };     // área útil do mapa: y 470–1160, x 100–910 (V2.1: maior)
+  const CORES_ROTA = ['#FFD21F', '#3FD0E0', '#FF6B5A'];
 
   function estilo(geo, p) {
     const fc = x => x || { type: 'FeatureCollection', features: [] };
@@ -15,7 +16,7 @@
         lagos: { type: 'geojson', data: fc(geo.lagos), maxzoom: 9, tolerance: .2 },
         rios: { type: 'geojson', data: fc(geo.rios), maxzoom: 9, tolerance: .2 },
         alvo: { type: 'geojson', data: p.pais_geo ? { type: 'FeatureCollection', features: [p.pais_geo] } : fc(null), maxzoom: 8 },
-        rota: { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } }, maxzoom: 10 },
+        ...Object.fromEntries([0, 1, 2].map(i => [`rota${i}`, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } }, maxzoom: 10 }])),
       },
       layers: [
         { id: 'mar', type: 'background', paint: { 'background-color': COR.mar } },
@@ -26,8 +27,11 @@
         { id: 'fronteira', type: 'line', source: 'paises', paint: { 'line-color': COR.borda, 'line-width': ['interpolate', ['linear'], ['zoom'], 2, .8, 8, 1.8], 'line-opacity': .9 } },
         { id: 'alvo-borda-brilho', type: 'line', source: 'alvo', paint: { 'line-color': COR.alvo, 'line-width': 14, 'line-blur': 10, 'line-opacity': 0 } },
         { id: 'alvo-borda', type: 'line', source: 'alvo', paint: { 'line-color': COR.alvo, 'line-width': 3.5, 'line-opacity': 0 } },
-        { id: 'rota-brilho', type: 'line', source: 'rota', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': COR.rota, 'line-width': 22, 'line-blur': 14, 'line-opacity': .55 } },
-        { id: 'rota', type: 'line', source: 'rota', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': COR.rota, 'line-width': 8 } },
+        // rotas: 12 px + contorno escuro + brilho (legível no celular sobre terra e sobre mar)
+        ...[0, 1, 2].flatMap(i => [
+          { id: `rota${i}-brilho`, type: 'line', source: `rota${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': (p.rotas && p.rotas[i] && p.rotas[i].cor) || CORES_ROTA[i], 'line-width': 34, 'line-blur': 18, 'line-opacity': .45 } },
+          { id: `rota${i}-contorno`, type: 'line', source: `rota${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#05080f', 'line-width': 18 } },
+          { id: `rota${i}`, type: 'line', source: `rota${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': (p.rotas && p.rotas[i] && p.rotas[i].cor) || CORES_ROTA[i], 'line-width': 12 } }]),
       ],
     };
   }
@@ -39,7 +43,7 @@
       map.once('render', ok); map.triggerRepaint();
     });
   }
-  const cam = (map, bb) => { const c = map.cameraForBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: PAD });
+  const cam = (map, bb, pad = PAD) => { const c = map.cameraForBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad });
     if (!c) return { center: [(bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2], zoom: 3 };
     const ce = c.center && (Array.isArray(c.center) ? c.center : [c.center.lng, c.center.lat]); return { center: ce, zoom: c.zoom }; };
   function camLerp(a, b, k) {
@@ -55,23 +59,26 @@
   function motorMapa(p, ctx, tipo) {
     let map, A, B, rotulosMar = [], rotulosPais = [];
     const pts = (p.pontos || []).map(x => ({ ...x, lon: +x.lon, lat: +x.lat }));
-    const rota = (p.rota || (tipo === 'rota' ? pts.map(x => [x.lon, x.lat]) : [])).map(([a, b]) => [+a, +b]);
-    const cum = [0]; for (let i = 1; i < rota.length; i++) cum.push(cum[i - 1] + hav(rota[i - 1], rota[i]));
-    const total = cum[cum.length - 1] || 0;
-    function parcial(k) {   // a rota até a fração k do comprimento
-      if (rota.length < 2) return { coords: rota, ponta: rota[0] };
-      const alvo = total * k; let i = cum.findIndex(c => c >= alvo); if (i < 1) i = k <= 0 ? 1 : cum.length - 1;
-      const f = (alvo - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1), ponta = [lerp(rota[i - 1][0], rota[i][0], clamp(f)), lerp(rota[i - 1][1], rota[i][1], clamp(f))];
-      return { coords: [...rota.slice(0, i), ponta], ponta };
+    // TRILHAS: uma rota (p.rota ou os pontos) ou várias para comparar (p.rotas). Trechos longos seguem o círculo
+    // máximo (d3.geoInterpolate): uma linha reta no Mercator atravessaria regiões erradas.
+    const densa = cs => { const out = []; for (let i = 0; i < cs.length; i++) { if (i) { const d = hav(cs[i - 1], cs[i]); if (d > 250) { const f = d3.geoInterpolate(cs[i - 1], cs[i]); const n = Math.ceil(d / 120); for (let k = 1; k < n; k++) out.push(f(k / n)); } } out.push(cs[i]); } return out; };
+    const brutas = p.rotas ? p.rotas.map(r => r.rota || (r.pontos || []).map(x => [x.lon, x.lat])) : [p.rota || (tipo === 'rota' ? pts.map(x => [x.lon, x.lat]) : [])];
+    const trilhas = brutas.slice(0, 3).map(cs => { const c = densa(cs.map(([a, b]) => [+a, +b])); const cum = [0]; for (let i = 1; i < c.length; i++) cum.push(cum[i - 1] + hav(c[i - 1], c[i])); return { c, cum, total: cum[cum.length - 1] || 0 }; });
+    const rota = (trilhas[0] || { c: [] }).c, total = (trilhas[0] || { total: 0 }).total;
+    function parcial(k, j = 0) {   // a trilha j até a fração k do comprimento
+      const T = trilhas[j]; if (!T || T.c.length < 2) return { coords: T ? T.c : [], ponta: T && T.c[0] };
+      const alvo = T.total * k; let i = T.cum.findIndex(c => c >= alvo); if (i < 1) i = k <= 0 ? 1 : T.cum.length - 1;
+      const f = (alvo - T.cum[i - 1]) / ((T.cum[i] - T.cum[i - 1]) || 1), ponta = [lerp(T.c[i - 1][0], T.c[i][0], clamp(f)), lerp(T.c[i - 1][1], T.c[i][1], clamp(f))];
+      return { coords: [...T.c.slice(0, i), ponta], ponta };
     }
     return {
-      pts, rota, total, parcial,
+      pts, rota, total, parcial, trilhas,
       async montar(el) {
         const host = el.querySelector('.mapa-host');
         map = new maplibregl.Map({ container: host, style: estilo(p.geo || {}, p), interactive: false, attributionControl: false, fadeDuration: 0,
           canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true }, center: [0, 0], zoom: 1, renderWorldCopies: false, maxPitch: 60 });
         await new Promise(r => map.once('load', r));
-        const bb = p.bbox; B = cam(map, bb); B.bearing = p.bearing || 0; B.pitch = p.pitch || 0;
+        const bb = p.bbox; const pad = { ...PAD, ...(p._pad || {}) }; B = cam(map, bb, pad); B.bearing = p.bearing || 0; B.pitch = p.pitch || 0;
         const w = bb[2] - bb[0], h = bb[3] - bb[1], f = p.contexto_fator || 6;
         A = p.camera_inicial || cam(map, [bb[0] - w * f / 2, Math.max(-80, bb[1] - h * f / 2), bb[2] + w * f / 2, Math.min(80, bb[3] + h * f / 2)]);
         if (A.zoom > B.zoom - 1.2) A.zoom = Math.max(0.5, B.zoom - 2.2);
@@ -114,7 +121,7 @@
       <div class="kicker" style="font-size:24px;color:var(--amarelo)">${esc(rot)}</div>
       ${p.titulo ? `<div class="tt" data-txt="1" style="font-weight:900;font-size:50px;line-height:1.05;margin-top:8px;text-transform:uppercase">${hl(p.titulo)}</div>` : ''}</div>`;
   const moldura = `<div class="abs" data-deco="1" style="inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(7,11,18,.65) 0%,rgba(7,11,18,0) 24%,rgba(7,11,18,0) 56%,rgba(7,11,18,.85) 80%,rgba(7,11,18,.95) 100%)"></div>`;
-  const ATR = '<div class="abs atr" data-g="atr" data-opcional="1" style="right:160px;top:1112px;font-family:var(--f-dado);font-size:24px;color:rgba(255,255,255,.55)">Natural Earth · MapLibre</div>';
+  const ATR = '<div class="abs atr" data-g="atr" data-opcional="1" style="right:160px;top:1180px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">Natural Earth · MapLibre</div>';
   const pinoHTML = (i, nome, sub) => `<div class="pino pn${i}" style="opacity:0"><div class="onda"></div><div class="onda o2"></div><div class="nucleo"></div></div>
      <div class="abs rot-mapa destaque lb${i}" data-g="pt${i}" style="opacity:0">${esc(nome)}${sub ? `<div style="font-family:var(--f-dado);font-weight:400;font-size:24px;letter-spacing:1px;margin-top:4px;color:#3a4558">${esc(sub)}</div>` : ''}</div>`;
   function animPino(el, i, tl, t0, q, cima) {
@@ -142,54 +149,71 @@
   }, (p, ctx) => {
     const m = motorMapa(p, ctx, 'local');
     return {
-      html: `<div class="mapa-host"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>${m.pts.map((x, i) => pinoHTML(i, x.nome, x.sub || coord(x.lon, x.lat))).join('')}${cabecalho(p, p.kicker || 'ONDE FICA')}${ATR}`,
+      html: `<div class="mapa-host" data-ocupa="1"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>${m.pts.map((x, i) => pinoHTML(i, x.nome, x.sub || coord(x.lon, x.lat))).join('')}${cabecalho(p, p.kicker || 'ONDE FICA')}${ATR}`,
       montar: el => m.montar(el),
       async upd(tl, el, c) {
-        const kc = eio((tl - .1) / Math.min(2.4, c.dur * .6));
+        const kc = eio((tl - .1) / Math.min(2.2, c.dur * .45));   // chega e PERMANECE (fim legível)
         const r = await m.upd(tl, el, kc); if (!r) return;
         aparece(el.querySelector('.cab'), tl, .05, { dy: -20 });
-        m.pts.forEach((x, i) => animPino(el, i, tl, Math.min(2.4, c.dur * .6) + .05 + i * .3, r.map.project([x.lon, x.lat]), true));
+        m.pts.forEach((x, i) => animPino(el, i, tl, Math.min(2.2, c.dur * .45) + .05 + i * .3, r.map.project([x.lon, x.lat]), true));
         r.colisao();
       },
       textos: () => [p.titulo, ...m.pts.map(x => x.nome)],
     };
   });
 
-  /* 10. mapa.rota */
+  /* 10. mapa.rota — V2.1: uma rota OU comparação de até 3 rotas (distâncias), círculo máximo nos trechos longos,
+   * permanência no enquadramento final, rota 12 px com contorno, pinos 40 px, rótulos 42 px. */
   V2.registrar({
-    id: 'mapa.rota', nome: 'Mapa com rota animada', tratamento: 'mapa', tom: 'escuro',
-    objetivo: 'Mostrar um trajeto, deslocamento ou ligação: a linha se desenha no ritmo da fala, com distância.',
-    funcoes: ['rota', 'trajeto', 'deslocamento', 'ligacao'],
-    params: { titulo: '≤ 36', pontos: 'origem/destino {nome, lon, lat}', rota: 'opcional: [[lon,lat],…] do trajeto real', distancia_km: 'distância oficial (se não vier, mostra ≈ calculada)', kicker: "padrão 'TRAJETO'" },
-    fundo: 'próprio (MapLibre)', layout: 'cabeçalho 340–480; rota enquadrada em 430–1060; contador de distância no canto inferior esquerdo (1000–1100)',
-    paleta: 'rota amarela 8 px com brilho; pinos de origem/destino', animacao: 'câmera assenta; a linha avança com um ponto na ponta; distância conta junto',
-    duracao: [3.5, 5, 7], limites: { titulo: 36 }, legenda: 'livre',
-    area_segura: 'y 340–1100', legibilidade: 'distância 64 px mono',
-    rejeicao: ['rota inventada (sem pontos nos fatos)', 'distância sem fonte apresentada como exata'],
+    id: 'mapa.rota', nome: 'Mapa com rota animada (e comparação de distâncias)', tratamento: 'mapa', tom: 'escuro',
+    objetivo: 'Mostrar um trajeto, deslocamento ou ligação — ou comparar trajetos: a linha se desenha no ritmo da fala, com a distância.',
+    funcoes: ['rota', 'trajeto', 'deslocamento', 'ligacao', 'comparar_distancias'],
+    params: { titulo: '≤ 36', pontos: 'origem/destino {nome, lon, lat}', rota: 'opcional: [[lon,lat],…] do trajeto real', distancia_km: 'distância oficial (sem ela: "≈ calculada pelo traçado")',
+      rotas: 'comparação: 2–3 × {nome ≤ 18, rota [[lon,lat]…], distancia_km?, cor?}', tipo: "'maritima' | 'terrestre' | 'aerea' | 'canal' (o geo.py valida se a rota marítima atravessa terra)", kicker: "padrão 'TRAJETO'", nota: 'fonte/observação ≤ 60' },
+    fundo: 'próprio (MapLibre)', layout: 'cabeçalho 340–470; rotas enquadradas em 470–1160; distância (ou barras de comparação) em 1010–1190, sem cobrir a rota',
+    paleta: 'rota 1 amarela, 2 ciano, 3 coral; 12 px + contorno escuro + brilho; pinos 40 px', animacao: 'câmera vai do contexto ao enquadramento das rotas e PARA (últimos 35%); cada rota se desenha com ponto na ponta; distância conta junto',
+    duracao: [3.5, 6, 9], limites: { titulo: 36, nome: 18, rotas: 3 }, legenda: 'livre',
+    area_segura: 'y 340–1200', legibilidade: 'distância 64 px mono; nomes 42 px',
+    rejeicao: ['rota inventada (sem pontos nos fatos)', 'rota marítima que atravessa continente (geo.validar_rota)', 'distância calculada apresentada como oficial'],
     transicao: 'zoom',
-    exemplo: { params: { kicker: 'TRAJETO', titulo: 'Do *Caribe* ao *Pacífico*', distancia_km: 80, pontos: [{ nome: 'Colón', lon: -79.9, lat: 9.36 }, { nome: 'Cidade do Panamá', lon: -79.53, lat: 8.96 }],
-      rota: [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], folga: .45 }, dur: 5.5, fala: 'São oitenta quilômetros do Caribe ao Pacífico.' },
+    exemplo: { params: { kicker: 'TRAJETO', titulo: 'Do *Caribe* ao *Pacífico*', distancia_km: 80, tipo: 'canal', pontos: [{ nome: 'Colón', lon: -79.9, lat: 9.36 }, { nome: 'Cidade do Panamá', lon: -79.53, lat: 8.96 }],
+      rota: [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], folga: .45, nota: 'Distância: Wikipédia' }, dur: 6, fala: 'São oitenta quilômetros do Caribe ao Pacífico.' },
   }, (p, ctx) => {
-    const m = motorMapa(p, ctx, 'rota'), km = p.distancia_km ? +p.distancia_km : m.total;
+    const comp = !!p.rotas;
+    if (comp) p._pad = { bottom: 1920 - (985 - 20 * Math.max(0, (p.rotas.length - 2))) };   // o painel de distâncias não cobre a rota
+    const m = motorMapa(p, ctx, 'rota');
+    const rs = comp ? p.rotas.slice(0, 3).map((r, i) => ({ nome: r.nome, km: r.distancia_km ? +r.distancia_km : m.trilhas[i].total, oficial: !!r.distancia_km, cor: r.cor || CORES_ROTA[i] }))
+      : [{ nome: '', km: p.distancia_km ? +p.distancia_km : m.total, oficial: !!p.distancia_km, cor: CORES_ROTA[0] }];
+    const mx = Math.max(...rs.map(r => r.km), 1);
+    const painel = comp ? `<div class="abs cmpd" data-g="cmpd" data-txt="1" style="left:72px;right:150px;top:${1000 - 40 * Math.max(0, rs.length - 2)}px;padding:16px 22px;background:rgba(7,12,22,.88)">
+        ${rs.map((r, i) => `<div style="display:flex;align-items:center;gap:16px;margin:${i ? 12 : 0}px 0 0"><span style="flex:none;width:230px;font-weight:800;font-size:30px;color:${r.cor};text-transform:uppercase">${esc(r.nome)}</span>
+          <div style="flex:1;height:22px;background:rgba(255,255,255,.08)"><div class="bk bk${i}" style="height:100%;width:0;background:${r.cor}"></div></div>
+          <span class="kv kv${i}" style="flex:none;width:200px;text-align:right;font-family:var(--f-dado);font-weight:700;font-size:34px;color:#fff">0 km</span></div>`).join('')}
+        <div style="font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.65);margin-top:10px">${rs.some(r => !r.oficial) ? '≈ calculado pelo traçado desenhado' : ''}${p.nota ? ' · ' + esc(p.nota) : ''}</div></div>`
+      : `<div class="abs dist" data-g="dist" data-txt="1" style="left:72px;top:1060px;display:flex;align-items:baseline;gap:14px;background:rgba(7,12,22,.88);padding:10px 22px;border-left:8px solid var(--amarelo)">
+          <span class="dv" style="font-family:var(--f-dado);font-weight:700;font-size:64px;color:#fff">0</span><span style="font-family:var(--f-dado);font-size:32px;color:var(--amarelo)">km${rs[0].oficial ? '' : ' (≈ pelo traçado)'}</span></div>`;
     return {
-      html: `<div class="mapa-host"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>
-        <div class="abs bolinha" style="width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#fff;box-shadow:0 0 0 8px rgba(255,210,31,.45),0 0 30px var(--amarelo);opacity:0"></div>
-        ${m.pts.map((x, i) => pinoHTML(i, x.nome, '')).join('')}${cabecalho(p, p.kicker || 'TRAJETO')}
-        <div class="abs dist" data-g="dist" data-txt="1" style="left:72px;top:1010px;display:flex;align-items:baseline;gap:14px;background:rgba(7,12,22,.82);padding:10px 22px;border-left:6px solid var(--amarelo)">
-          <span class="dv" style="font-family:var(--f-dado);font-weight:700;font-size:64px;color:#fff">0</span><span style="font-family:var(--f-dado);font-size:30px;color:var(--amarelo)">km${p.distancia_km ? '' : ' (≈)'}</span></div>${ATR.replace('right:160px', 'right:160px')}`,
+      html: `<div class="mapa-host" data-ocupa="1"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>
+        ${m.trilhas.map((t, i) => `<div class="abs bolinha b${i}" style="width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 0 0 9px ${rs[i] ? rs[i].cor : '#FFD21F'}88,0 0 30px ${rs[i] ? rs[i].cor : '#FFD21F'};opacity:0"></div>`).join('')}
+        ${m.pts.map((x, i) => pinoHTML(i, x.nome, '')).join('')}${cabecalho(p, p.kicker || (comp ? 'DISTÂNCIAS' : 'TRAJETO'))}${painel}${comp ? ATR.replace('top:1180px', 'top:1198px') : ATR}`,
       montar: el => m.montar(el),
       async upd(tl, el, c) {
-        const kc = eio((tl) / 1.2), kr = eio((tl - .9) / Math.max(1.5, c.dur - 2.2));
-        let ponta = null;
-        const r = await m.upd(tl, el, kc, map => { const pr = m.parcial(kr); ponta = pr.ponta; map.getSource('rota').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: kr > 0 ? pr.coords : [] } }); });
+        // câmera: chega ao enquadramento final em 40% da cena e fica (só um empurrão de 3% para não congelar)
+        const tc = Math.min(1.6, c.dur * .3), kc = eio(tl / tc);
+        const desenho = [.9, Math.max(1.6, c.dur * .62)], n = m.trilhas.length, fatia = (desenho[1] - desenho[0]) / n;
+        const kr = m.trilhas.map((_, i) => eio((tl - desenho[0] - i * fatia) / Math.max(1.2, fatia)));
+        const pontas = [];
+        const r = await m.upd(tl, el, kc, map => { m.trilhas.forEach((_, i) => { const pr = m.parcial(kr[i], i); pontas[i] = pr.ponta;
+          map.getSource(`rota${i}`).setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: kr[i] > 0 ? pr.coords : [] } }); }); });
         if (!r) return;
         aparece(el.querySelector('.cab'), tl, .05, { dy: -20 });
-        const b = el.querySelector('.bolinha'); if (ponta) { const q = r.map.project(ponta); b.style.left = q.x + 'px'; b.style.top = q.y + 'px'; } b.style.opacity = kr > 0 && kr < 1 ? 1 : 0;
-        m.pts.forEach((x, i) => animPino(el, i, tl, i === 0 ? .8 : .9 + Math.max(1.5, c.dur - 2.2) * .95, r.map.project([x.lon, x.lat]), i === 0));
-        el.querySelector('.dv').textContent = fmt(km * kr, 0); aparece(el.querySelector('.dist'), tl, .8, { dx: -20, dy: 0 });
+        m.trilhas.forEach((_, i) => { const b = el.querySelector('.b' + i); if (pontas[i]) { const q = r.map.project(pontas[i]); b.style.left = q.x + 'px'; b.style.top = q.y + 'px'; } b.style.opacity = kr[i] > 0 && kr[i] < 1 ? 1 : 0; });
+        m.pts.forEach((x, i) => animPino(el, i, tl, i === 0 ? .7 : desenho[0] + fatia * n * .95, r.map.project([x.lon, x.lat]), i === 0));
+        if (comp) { aparece(el.querySelector('.cmpd'), tl, .8, { dy: 20 }); rs.forEach((x, i) => { el.querySelector('.bk' + i).style.width = (100 * x.km / mx * kr[i]) + '%'; el.querySelector('.kv' + i).textContent = fmt(x.km * kr[i], 0) + ' km'; }); }
+        else { el.querySelector('.dv').textContent = fmt(rs[0].km * kr[0], 0); aparece(el.querySelector('.dist'), tl, .8, { dx: -20, dy: 0 }); }
         r.colisao();
       },
-      textos: () => [p.titulo, String(km), ...m.pts.map(x => x.nome)],
+      textos: () => [p.titulo, ...rs.map(x => String(Math.round(x.km)) + ' ' + x.nome), ...m.pts.map(x => x.nome)],
     };
   });
 
@@ -210,14 +234,14 @@
     const m = motorMapa(p, ctx, 'territorio');
     const c0 = p.pais_geo ? [p.pais_geo.properties.label_x, p.pais_geo.properties.label_y] : null;
     return {
-      html: `<div class="mapa-host"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>
+      html: `<div class="mapa-host" data-ocupa="1"></div>${moldura}<div class="rotulos abs" style="inset:0"></div>
         <div class="abs nmp" data-g="nmp" data-txt="1" style="font-weight:900;font-size:46px;letter-spacing:4px;color:#0b0f17;background:var(--amarelo);padding:6px 18px;text-transform:uppercase;opacity:0;white-space:nowrap">${esc(p.pais_nome || p.pais || '')}</div>
         ${cabecalho(p, p.kicker || 'TERRITÓRIO')}
-        ${p.dado ? `<div class="abs dd" data-g="dd" data-txt="1" style="left:72px;top:1020px;font-family:var(--f-dado);font-weight:700;font-size:32px;color:#fff;background:rgba(7,12,22,.85);padding:12px 22px;border-left:6px solid var(--amarelo)">${esc(p.dado)}</div>` : ''}${ATR}`,
+        ${p.dado ? `<div class="abs dd" data-g="dd" data-txt="1" style="left:72px;top:1090px;font-family:var(--f-dado);font-weight:700;font-size:34px;color:#fff;background:rgba(7,12,22,.85);padding:12px 22px;border-left:6px solid var(--amarelo)">${esc(p.dado)}</div>` : ''}${ATR}`,
       montar: el => m.montar(el),
       async upd(tl, el, c) {
         const ka = eo5((tl - 1.0) / .8);
-        const r = await m.upd(tl, el, eio(tl / Math.min(2.2, c.dur * .55)), map => {
+        const r = await m.upd(tl, el, eio(tl / Math.min(2.0, c.dur * .45)), map => {
           map.setPaintProperty('alvo', 'fill-opacity', .82 * ka); map.setPaintProperty('alvo-borda', 'line-opacity', ka);
           map.setPaintProperty('alvo-borda-brilho', 'line-opacity', .9 * ka * (.7 + .3 * Math.sin(tl * 4))); });
         if (!r) return;

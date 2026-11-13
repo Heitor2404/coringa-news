@@ -87,11 +87,17 @@ def preparar(dados: dict) -> dict:
                 if not (pasta / 'f_0001.jpg').exists():
                     manim_cenas.renderizar(q['manim'], pasta, dur=sc['end'] - sc['start'], **kw)
                 q['dir'], q['n'], q['fps'] = str(pasta), len(list(pasta.glob('f_*.jpg'))), 30
+        if p.get('video') and not (isinstance(q, dict) and q.get('dir')):
+            p['quadros'] = q = quadros_video(p['video'], float(p.get('inicio') or 0), float(p.get('fim') or (float(p.get('inicio') or 0) + sc['end'] - sc['start'])))
+            if p.get('lower_third') and not sc.get('_sobre'):
+                pass
         if isinstance(q, dict) and q.get('dir'):
             q['base'] = Path(q['dir']).resolve().as_uri() + '/f_'
         if str(sc.get('comp', '')).startswith('mapa.'):
             pts = [(float(x['lon']), float(x['lat'])) for x in p.get('pontos') or [] if 'lon' in x]
             pts += [(float(a), float(b)) for a, b in p.get('rota') or []]
+            for r in p.get('rotas') or []:
+                pts += [(float(a), float(b)) for a, b in r.get('rota') or []] + [(float(x['lon']), float(x['lat'])) for x in r.get('pontos') or []]
             alvo = geo.pais(p['pais']) if p.get('pais') else None
             if alvo:
                 bb = alvo['_bb']
@@ -104,6 +110,22 @@ def preparar(dados: dict) -> dict:
             p['bbox'] = bb
             p['geo'] = geo.recorte(bb, extra=p.get('extra', 1.6))
     return d
+
+
+def quadros_video(arq: str, ini: float, fim: float, fps: int = 30) -> dict:
+    """Extrai os quadros do trecho [ini, fim] de um vídeo local (cache por arquivo+trecho). Sem rede."""
+    import hashlib
+    arq = str(Path(arq).resolve())
+    chave = hashlib.sha1(f'{arq}|{ini:.3f}|{fim:.3f}|{fps}'.encode()).hexdigest()[:12]
+    pasta = RAIZ / 'saida' / 'video_cache' / chave
+    if not (pasta / 'f_0001.jpg').exists():
+        pasta.mkdir(parents=True, exist_ok=True)
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', f'{ini:.3f}', '-to', f'{fim:.3f}', '-i', arq, '-vf', f'fps={fps}',
+                        '-q:v', '3', str(pasta / 'f_%04d.jpg')], check=True)
+    from PIL import Image
+    with Image.open(pasta / 'f_0001.jpg') as im:
+        wh = list(im.size)
+    return {'dir': str(pasta), 'n': len(list(pasta.glob('f_*.jpg'))), 'fps': fps, 'wh': wh}
 
 
 def pagina(dados: dict, trabalho: Path) -> Path:

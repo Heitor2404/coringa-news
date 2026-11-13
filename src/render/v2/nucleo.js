@@ -51,6 +51,22 @@
   }
   V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber };
 
+  /* tokens da identidade (os mesmos de estilo.css): uma escala tipográfica, um ritmo, uma espessura de linha */
+  V2.T = {
+    fs: { display: 120, h1: 88, h2: 64, h3: 50, corpo: 40, apoio: 34, rotulo: 28, min: 26 },
+    esp: { 1: 8, 2: 16, 3: 24, 4: 32, 5: 48, 6: 72 },
+    linha: { fino: 3, medio: 6, forte: 10 },
+    dur: { entra: .45, sai: .35, palavra: .055, permanencia_min: 1.2 },
+  };
+  /* ÁREAS SEGURAS por plataforma (1080×1920). 'todas' = a mais restritiva das três (padrão). conteúdo = onde o
+     protagonista da cena mora; legenda = faixa da narração, abaixo do conteúdo e acima da interface. */
+  const PLATAFORMAS = { reels: { topo: 250, base: 1500, direita: 940 }, tiktok: { topo: 240, base: 1470, direita: 920 },
+    shorts: { topo: 280, base: 1520, direita: 940 }, todas: { topo: 280, base: 1470, direita: 930 } };
+  V2.Z = Object.assign({ margem: 72, conteudo: [330, 1215], legenda: [1240, 1455] }, PLATAFORMAS[(window.DATA && window.DATA.meta && window.DATA.meta.plataforma) || 'todas'] || PLATAFORMAS.todas);
+  V2.PLATAFORMAS = PLATAFORMAS;
+  // saída de elementos temporários (banners): fator 1 → 0 entre t1 e t1 + d
+  V2.U.saida = (tl, t1, d = .35) => 1 - eo((tl - t1) / d);
+
   V2.registrar = (meta, construtor) => { V2.comps[meta.id] = { meta, construtor }; };
   V2.catalogo = () => Object.values(V2.comps).map(c => c.meta);
 
@@ -112,10 +128,16 @@
       let b;
       try { b = c.construtor(sc.params || {}, ctx) || {}; }
       catch (e) { AVISOS.push(`cena ${i} (${c.meta.id}): ${e.message}`); b = { html: '' }; }
-      el.innerHTML = fundoHTML(sc) + (b.html || '');
+      let base = null;
+      if (sc.base && V2.comps[sc.base.comp]) {      // composição de BASE congelada (ex.: revelação sobre o mecanismo pronto)
+        const cb = V2.comps[sc.base.comp], bsc = { ...sc, comp: sc.base.comp, params: sc.base.params || {}, fundo: null };
+        const bctx = { i: i + 1000, D, sc: bsc, el, V2, meta: cb.meta, dur: +sc.base.dur || 8 };
+        try { base = { b: cb.construtor(bsc.params, bctx) || {}, ctx: bctx, t: +sc.base.t || 0, meta: cb.meta }; } catch (e) { AVISOS.push(`base ${sc.base.comp}: ${e.message}`); }
+      }
+      el.innerHTML = (base ? `<div class="base-cena abs${base.meta.tratamento ? ' t-' + base.meta.tratamento : ''}" style="inset:0">${base.b.html || ''}</div><div class="abs" style="inset:0;background:rgba(5,8,14,${sc.base.escurece ?? .55})"></div>` : '') + fundoHTML(sc) + (b.html || '');
       if (c.meta.tratamento) el.classList.add('t-' + c.meta.tratamento);
       PALCO.appendChild(el);
-      cenas.push({ sc, el, b, meta: c.meta, ctx });
+      cenas.push({ sc, el, b, meta: c.meta, ctx, base, temKicker: !!el.querySelector('.kicker') });
     });
   }
 
@@ -170,12 +192,15 @@
     if (modo === 'oculta') { LEG.style.opacity = 0; LEG.dataset.motivo = 'cena pediu'; return; }
     if (modo === 'integrada' && redundante(cap, at)) { LEG.style.opacity = 0; LEG.dataset.motivo = 'redundante com a tela'; return; }
     LEG.classList.toggle('claro', at.meta.tom === 'claro');
+    // posição ESTÁVEL por cena (calculada na partida pela ocupação da cena, ver ocupacao())
+    LEG.style.top = (at.legTop || V2.Z.legenda[0]) + 'px';
     if (LEG.dataset.k != cap.start) {
       LEG.dataset.k = cap.start;
       LEG.innerHTML = `<div class="bloco">${cap.words.map(w => `<span class="w${w.hl ? ' hl' : ''}">${esc(w.w)}</span>`).join(' ')}</div>`;
-      const b = LEG.firstChild; let f = 66; b.style.fontSize = f + 'px';
-      // no máximo 3 linhas (2 é o normal); diminui pouco, nunca abaixo de 52 px
-      while (b.offsetHeight > 66 * 1.08 * 2.05 && f > 52) { f -= 2; b.style.fontSize = f + 'px'; }
+      // hierarquia: com texto principal na tela, a legenda é texto de apoio (menor); sozinha, é a voz da cena
+      const f0 = at.legFonte || 66; const b = LEG.firstChild; let f = f0; b.style.fontSize = f + 'px';
+      // no máximo 2 linhas; diminui pouco, nunca abaixo de 50 px; palavra longa nunca é cortada (quebra no espaço)
+      while (b.offsetHeight > f0 * 1.08 * 2.05 && f > 50) { f -= 2; b.style.fontSize = f + 'px'; }
     }
     LEG.style.opacity = 1;
     const ws = LEG.querySelectorAll('.w');
@@ -222,6 +247,7 @@
       if (tr === 'preto' && i > 0 && t < a && t > a - .25) preto = Math.max(preto, (t - (a - .25)) / .25);
       const tl = t - a;
       moverFundo(c.el, c.sc, tl, b - a);
+      if (c.base && c.base.b.upd) { try { const r = c.base.b.upd(c.base.t, c.el.querySelector('.base-cena'), c.base.ctx); if (r && r.then) pend.push(r); } catch (e) { } }
       if (c.b.upd) { try { const r = c.b.upd(tl, c.el, c.ctx); if (r && r.then) pend.push(r); } catch (e) { AVISOS.push(`upd ${c.meta.id}: ${e.message}`); } }
     }
     flash = Math.max(flash, window.__v2flash || 0); window.__v2flash = 0;
@@ -229,7 +255,7 @@
     document.getElementById('preto').style.opacity = preto;
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end) || cenas[cenas.length - 1];
     const mc = document.getElementById('marca');
-    if (mc && at) { mc.classList.toggle('claro', at.meta.tom === 'claro'); document.querySelector('.vinheta').style.opacity = at.meta.tom === 'claro' ? 0 : 1; mc.style.opacity = at.meta.marca === false ? 0 : 1; }
+    if (mc && at) { mc.classList.toggle('claro', at.meta.tom === 'claro'); document.querySelector('.vinheta').style.opacity = at.meta.tom === 'claro' ? 0 : 1; mc.style.opacity = (at.meta.marca === false || at.temKicker) ? 0 : 1; }
     legenda(t);
     if (pend.length) await Promise.all(pend);
   };
@@ -266,15 +292,37 @@
     }
     for (const a of bx) {
       if (a.x0 < 0 || a.x1 > W || a.y0 < 0 || a.y1 > H) prob.push({ tipo: 'fora', grave: true, txt: `"${a.tx}" sai do quadro`, cena: at.meta.id });
-      else if (!a.opc && (a.y0 < 270 || a.y1 > 1480 || a.x0 > 930)) prob.push({ tipo: 'zona', grave: false, txt: `"${a.tx}" na área da interface`, cena: at.meta.id });
-      if (a.fs < 23.5) prob.push({ tipo: 'pequeno', grave: false, txt: `"${a.tx}" com ${Math.round(a.fs)}px`, cena: at.meta.id });
+      else if (!a.opc && (a.y0 < V2.Z.topo || a.y1 > V2.Z.base || a.x0 > V2.Z.direita)) prob.push({ tipo: 'zona', grave: false, txt: `"${a.tx}" na área da interface`, cena: at.meta.id });
+      if (a.fs < V2.T.fs.min - .5 && !a.svg) prob.push({ tipo: 'pequeno', grave: false, txt: `"${a.tx}" com ${Math.round(a.fs)}px`, cena: at.meta.id });
     }
     return prob;
   };
   window.estadoV2 = function (t) {
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end);
-    return { comp: at && at.meta.id, legenda: LEG.style.opacity !== '0', motivo: LEG.dataset.motivo || '', avisos: AVISOS.slice() };
+    return { comp: at && at.meta.id, legenda: LEG.style.opacity !== '0', motivo: LEG.dataset.motivo || '', topo: at && at.legTop, fonte: at && at.legFonte, conflitos: V2.conflitosLegenda, avisos: AVISOS.slice() };
   };
+
+  /* ---------------- ocupação da tela → posição da legenda (por cena, estável) ---------------- */
+  // Cada composição marca o PROTAGONISTA com data-ocupa (mapa, diagrama, gráfico, foto, banner). Na partida, cada cena
+  // é posta no instante de maior informação (70% da duração), medimos o que está ocupado e escolhemos a faixa de
+  // legenda que não encosta em nada: 1240 (padrão) → 1300 → topo (360). Sem faixa livre: fica na padrão com letra
+  // reduzida e o conflito vai para V2.conflitosLegenda (o fiscal reporta).
+  V2.conflitosLegenda = [];
+  async function ocupacao() {
+    const ALT = 66 * 1.1 * 2 + 10;
+    for (const c of cenas) {
+      const tl = (c.sc.end - c.sc.start) * .7, t = c.sc.start + tl;
+      try { await window.seek(t); } catch (e) { }
+      const rects = [...c.el.querySelectorAll('[data-ocupa],[data-txt],[data-g]')].filter(e => opac(e) > .3).map(e => e.getBoundingClientRect())
+        .filter(r => r.width > 4 && r.height > 4 && r.width * r.height < 1080 * 1920 * .6);
+      const livre = y => !rects.some(r => r.bottom > y + 6 && r.top < y + ALT - 6 && r.right > 90 && r.left < 930);
+      const op = [V2.Z.legenda[0], V2.Z.legenda[0] + 60, 360];
+      c.legTop = op.find(livre);
+      if (c.legTop === undefined) { c.legTop = V2.Z.legenda[0]; V2.conflitosLegenda.push({ cena: c.sc.i, comp: c.meta.id }); }
+      const principal = [...c.el.querySelectorAll('[data-txt]')].some(e => opac(e) > .5 && parseFloat(getComputedStyle(e).fontSize) >= 44);
+      c.legFonte = principal ? 58 : 66;
+    }
+  }
 
   /* ---------------- partida ---------------- */
   V2.iniciar = async function () {
@@ -282,7 +330,9 @@
     const imgs = [...document.images].map(i => i.decode ? i.decode().catch(() => 0) : 0);
     await document.fonts.ready; await Promise.all(imgs);
     const montagens = cenas.map(c => c.b.montar ? Promise.resolve().then(() => c.b.montar(c.el, c.ctx)).catch(e => AVISOS.push(`montar ${c.meta.id}: ${e.message}`)) : 0);
-    await Promise.all([document.fonts.ready, ...imgs, ...montagens]);
+    const bases = cenas.filter(c => c.base && c.base.b.montar).map(c => Promise.resolve().then(() => c.base.b.montar(c.el.querySelector('.base-cena'), c.base.ctx)).catch(e => AVISOS.push(`montar base: ${e.message}`)));
+    await Promise.all([document.fonts.ready, ...imgs, ...montagens, ...bases]);
+    await ocupacao();
     await window.seek(0);
     window.READY = true;
   };

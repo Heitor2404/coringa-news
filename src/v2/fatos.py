@@ -84,6 +84,11 @@ def para_tela(valor: dict) -> dict:
         p['conversao'] = f"≈ {MOEDAS.get(cv['moeda'], cv['moeda'])} {_fmt(cv['valor'])} {valor.get('unidade', '')} · câmbio de {cv['data']} ({cv['fonte']})".strip()
     if valor.get('equivalencia'):
         p['equivalencia'] = valor['equivalencia']
+    else:   # V2.1: equivalência só por conversão exata de unidade (src/v2/unidades.py); sem unidade de volume, nenhuma
+        from src.v2 import unidades
+        eq = unidades.equivalencia(valor['valor'], valor.get('unidade', ''))
+        if eq:
+            p['equivalencia'] = eq
     return p
 
 

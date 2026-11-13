@@ -5,60 +5,104 @@
   const papelFundo = `<div class="abs" style="inset:0;background:var(--papel)"></div><div class="abs" data-deco="1" style="inset:0;opacity:.5;background-image:linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px);background-size:54px 54px"></div>`;
   const kickerP = (t, top = 352) => `<div class="abs kicker" data-g="kicker" style="left:72px;top:${top}px;color:#141414"><span style="display:inline-block;width:14px;height:14px;background:var(--amarelo);outline:2px solid #141414;transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(t)}</div>`;
 
-  /* 6. numero.animado */
+  /* 6. numero.animado — V2.1: o número é o PROTAGONISTA (até 260 px) e vem com UMA representação concreta:
+   *  - 'cubo': volume desenhado como cubo em escala ao lado de uma referência conhecida (src/v2/unidades.py: só
+   *    conversão exata de unidade + alturas de referência da Wikipédia);
+   *  - 'grade': N ícones (contagem real, ex.: 80 piscinas de volume nominal);
+   *  - 'barra': o valor contra um valor de referência da mesma unidade (com fonte).
+   * Natureza do valor (média, recorde, leilão…) e fonte sempre na tela. */
   V2.registrar({
     id: 'numero.animado', nome: 'Número estatístico animado', tratamento: 'dado', tom: 'claro',
-    objetivo: 'Fazer um número ser entendido: valor, unidade, NATUREZA (média, recorde, estimativa), uma equivalência concreta e a fonte.',
+    objetivo: 'Fazer um número ser entendido: valor, unidade, NATUREZA (média, recorde, estimativa), uma representação concreta e a fonte.',
     funcoes: ['numero', 'estatistica'],
-    params: { rotulo: '≤ 32 (o que é medido)', valor: 'número (sem texto)', casas: 'casas decimais', prefixo: "'US$', 'R$'… (moeda ORIGINAL)", unidade: '≤ 22 ("milhões de litros")',
-      natureza: '≤ 26: "MÉDIA POR TRAVESSIA", "RECORDE", "ESTIMATIVA" (obrigatória para dinheiro)', contexto: 'frase ≤ 70 (serifa)', equivalencia: '{icone, n ≤ 100, texto ≤ 40}', fonte: 'veículo/órgão listado nas fontes (obrigatório)', conversao: 'texto da conversão com data e fonte do câmbio (opcional)' },
-    fundo: 'próprio (papel)', layout: 'kicker 352 · natureza 420 · número 470–700 · contexto 720 · equivalência 830–1060 · fonte 1110',
-    paleta: 'papel #F2EDE3, tinta #141414, um acento (amarelo marca-texto ou vermelho p/ recorde)', animacao: 'contagem com desaceleração (1,3 s); ícones da equivalência preenchem em grade; régua sob o número',
-    duracao: [3, 4.5, 7], limites: { rotulo: 32, unidade: 22, natureza: 26, contexto: 70 }, legenda: 'integrada',
-    area_segura: 'x 72–930', legibilidade: 'número ≥ 170 px; contexto 44 px; fonte 24 px mono',
-    rejeicao: ['valor sem fonte listada', 'dinheiro sem natureza ou com conversão sem data (src/v2/fatos.py bloqueia)', 'número decorativo que a fala não explica'],
+    params: { rotulo: '≤ 32 (o que é medido)', valor: 'número', casas: 'casas decimais', prefixo: "moeda ORIGINAL ('US$', 'R$'…)", unidade: '≤ 22',
+      natureza: '≤ 28 (obrigatória para dinheiro)', contexto: 'frase ≤ 70 (serifa)', fonte: 'obrigatória (lista do vídeo)', conversao: 'texto da conversão com data/fonte (opcional)',
+      equivalencia: "{tipo:'cubo', lado_m, ref:{nome, altura_m, forma}, texto, apoio} | {tipo:'grade', icone, n ≤ 100, texto} | {tipo:'barra', ref_valor, ref_nome, texto}" },
+    fundo: 'próprio (papel)', layout: 'kicker 345 · natureza 400 · NÚMERO 450–700 · contexto · representação 790–1150 · fonte 1165',
+    paleta: 'papel #F2EDE3, tinta #141414, amarelo marca-texto (vermelho só para recorde/excepcional)', animacao: 'contagem com desaceleração; régua; a representação se constrói (cubo cresce até o lado real; ícones preenchem; barra corre)',
+    duracao: [3, 5, 7], limites: { rotulo: 32, unidade: 22, natureza: 28, contexto: 70 }, legenda: 'integrada',
+    area_segura: 'x 72–930', legibilidade: 'número ≥ 180 px; contexto 42 px; fonte 26 px',
+    rejeicao: ['valor sem fonte listada', 'dinheiro sem natureza ou conversão sem data (fatos.py)', 'equivalência que não sai de conversão exata (não inventar)'],
     transicao: 'mascara',
-    exemplo: { params: { rotulo: 'Água doce por travessia', valor: 200, prefixo: '', unidade: 'milhões de litros', natureza: 'MÉDIA POR TRAVESSIA', contexto: 'Sai do lago Gatún e vai para o mar.', equivalencia: { icone: 'piscina', n: 80, texto: '≈ 80 piscinas olímpicas' }, fonte: 'Wikipédia' }, dur: 5, fala: 'Cada travessia gasta duzentos milhões de litros de água doce.' },
+    exemplo: { params: { rotulo: 'Água doce por travessia', valor: 200, unidade: 'milhões de litros', natureza: 'MÉDIA POR TRAVESSIA', contexto: 'Sai do lago Gatún e vai para o mar.',
+      equivalencia: { tipo: 'cubo', lado_m: 58.5, ref: { nome: 'Cristo Redentor', altura_m: 38, forma: 'torre' }, texto: 'um cubo de ≈ 59 m de lado', apoio: '≈ 80 piscinas olímpicas (volume nominal)' }, fonte: 'Wikipédia' },
+      dur: 5.5, fala: 'Cada travessia gasta duzentos milhões de litros de água doce.' },
   }, (p) => {
     const v = +p.valor, cs = +p.casas || 0, eq = p.equivalencia;
-    const n = eq ? Math.min(100, Math.max(1, Math.round(eq.n))) : 0, col = n > 50 ? 10 : n > 20 ? 8 : 5, lado = col === 10 ? 64 : col === 8 ? 80 : 110;
-    const vermelho = /RECORDE|EXCE|LEIL/i.test(p.natureza || '');
+    const vermelho = /RECORDE|EXCE|LEIL/i.test(p.natureza || ''), acento = vermelho ? '#d22f1f' : 'var(--amarelo)';
+    let rep = '';
+    if (eq && eq.tipo === 'cubo') {
+      // cubo isométrico e a referência NA MESMA ESCALA (altura em px = metros × escala)
+      const ALT = 290, ref = eq.ref || { nome: 'Pessoa', altura_m: 1.75, forma: 'pessoa' };
+      const esc_ = ALT / Math.max(eq.lado_m * 1.12, ref.altura_m), L = eq.lado_m * esc_, dx = L * .5, dy = L * .28, hR = ref.altura_m * esc_;
+      rep = `<svg class="abs repr" data-ocupa="1" style="left:72px;top:800px;overflow:visible" width="840" height="${ALT + 70}">
+        <g transform="translate(60 ${ALT + 20})"><g class="cubo">
+          <path d="M0 0 H${L} V${-L} H0 Z" fill="var(--amarelo)" stroke="#141414" stroke-width="5"/>
+          <path d="M0 ${-L} L${dx} ${-L - dy} H${L + dx} L${L} ${-L} Z" fill="#ffe680" stroke="#141414" stroke-width="5"/>
+          <path d="M${L} 0 L${L + dx} ${-dy} V${-L - dy} L${L} ${-L} Z" fill="#e0b400" stroke="#141414" stroke-width="5"/>
+          <line x1="0" y1="18" x2="${L}" y2="18" stroke="#141414" stroke-width="3"/><text x="${L / 2}" y="52" text-anchor="middle" font-family="JBM" font-weight="700" font-size="30" fill="#141414">${fmt(eq.lado_m, 0)} m</text></g></g>
+        <g class="refg" transform="translate(${60 + L + dx + 70} ${ALT + 20})">
+          <g transform="translate(0 ${-hR})" fill="#2b2925">${(SIL[ref.forma] || SIL.barra)(Math.max(26, hR * .38), hR)}</g>
+          <text x="0" y="${-hR - 16}" font-family="Mont" font-weight="800" font-size="28" fill="#141414">${esc(ref.nome)} · ${fmt(ref.altura_m, 0)} m</text></g>
+        <line x1="0" x2="840" y1="${ALT + 20}" y2="${ALT + 20}" stroke="#141414" stroke-width="4"/></svg>
+        <div class="abs eqt" data-g="eqt" data-txt="1" style="left:72px;right:150px;font-weight:800;font-size:34px;line-height:1.2;color:#141414">${esc(eq.texto || '')}${eq.apoio ? `<div style="font-weight:600;font-size:28px;color:#5f584c">${esc(eq.apoio)}</div>` : ''}</div>`;
+    } else if (eq && eq.tipo === 'barra') {
+      const mx = Math.max(v, +eq.ref_valor || 0) || 1;
+      rep = `<div class="abs repr" data-ocupa="1" style="left:72px;right:150px;top:840px">
+        ${[[p.rotulo || 'valor', v, acento], [eq.ref_nome, +eq.ref_valor, '#2b2925']].map(([n, x, cor], i) => `<div style="margin-top:${i ? 34 : 0}px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:34px;color:#141414"><span>${esc(n)}</span><span style="font-family:var(--f-dado)">${fmt(x, cs)}</span></div>
+          <div style="height:60px;background:rgba(20,20,20,.08);margin-top:10px"><div class="br br${i}" style="height:100%;width:0;background:${cor};outline:3px solid #141414;outline-offset:-3px" data-w="${100 * x / mx}"></div></div></div>`).join('')}
+        ${eq.texto ? `<div data-txt="1" style="font-weight:800;font-size:36px;margin-top:28px;color:#141414">${esc(eq.texto)}</div>` : ''}</div>`;
+    } else if (eq) {
+      const n = Math.min(100, Math.max(1, Math.round(eq.n || 1)));
+      rep = `<div class="abs repr grade" data-ocupa="1" style="left:72px;top:820px;display:grid;color:#141414">${Array.from({ length: n }, () => `<div class="u" style="opacity:.12;padding:4px">${H.icone(eq.icone || 'caixa', { tam: 56, esp: 3 })}</div>`).join('')}</div>
+        <div class="abs eqt" data-g="eqt" data-txt="1" style="left:72px;right:150px;font-weight:800;font-size:38px;color:#141414">${esc(eq.texto || '')}</div>`;
+    }
     return {
       html: `${papelFundo}${kickerP(p.rotulo || '')}
-        <div class="abs nat" style="left:72px;top:418px">${H.natureza(p.natureza, vermelho ? '#d22f1f' : '#141414')}</div>
-        <div class="abs nb" data-g="num" data-txt="1" style="left:66px;right:150px;top:470px;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;color:#141414">
-          <span class="pr" style="font-weight:800;font-size:90px">${esc(p.prefixo || '')}</span><span class="v" style="font-weight:900;font-size:200px;line-height:.9;letter-spacing:-8px;font-variant-numeric:tabular-nums">${fmt(v, cs)}</span>
-          <span class="un" style="font-weight:800;font-size:56px;line-height:1;max-width:420px">${esc(p.unidade || '')}</span></div>
-        <div class="abs regua" data-deco="1" style="left:72px;height:10px;width:0;background:${vermelho ? '#d22f1f' : 'var(--amarelo)'}"></div>
-        <div class="abs ctx serif" data-g="ctx" data-txt="1" style="left:72px;right:150px;font-size:44px;line-height:1.2;color:#2a2722">${hl(p.contexto || '')}</div>
+        <div class="abs nat" style="left:72px;top:400px">${H.natureza(p.natureza, vermelho ? '#d22f1f' : '#141414').replace('font-size:24px', 'font-size:26px')}</div>
+        <div class="abs nb" data-g="num" data-txt="1" data-ocupa="1" style="left:62px;right:150px;top:455px;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;color:#141414">
+          <span class="pr" style="font-weight:800;font-size:96px">${esc(p.prefixo || '')}</span><span class="v" style="font-weight:900;font-size:230px;line-height:.86;letter-spacing:-9px;font-variant-numeric:tabular-nums">${fmt(v, cs)}</span>
+          <span class="un" style="font-weight:800;font-size:52px;line-height:1;max-width:330px">${esc(p.unidade || '')}</span></div>
+        <div class="abs regua" data-deco="1" style="left:72px;height:12px;width:0;background:${acento}"></div>
+        <div class="abs ctx serif" data-g="ctx" data-txt="1" style="left:72px;right:150px;font-size:42px;line-height:1.2;color:#2a2722">${hl(p.contexto || '')}</div>
         ${p.conversao ? `<div class="abs cv" data-g="cv" style="left:72px;right:150px;font-family:var(--f-dado);font-size:26px;color:#5f584c">${esc(p.conversao)}</div>` : ''}
-        ${eq ? `<div class="abs eq" data-g="eq" style="left:72px;width:${col * lado}px;display:grid;grid-template-columns:repeat(${col},${lado}px);color:#141414">${Array.from({ length: n }, (_, i) => `<div class="u" style="opacity:.12;padding:4px">${H.icone(eq.icone || 'caixa', { tam: lado - 8, esp: 3 })}</div>`).join('')}</div>
-          <div class="abs eqt" data-g="eqt" data-txt="1" style="left:72px;font-weight:800;font-size:38px;color:#141414">${esc(eq.texto || '')}</div>` : ''}
-        ${H.fonte(p.fonte, true).replace('bottom:770px', 'bottom:780px')}`,
+        ${rep}
+        ${p.fonte ? `<div class="abs chip-fonte" data-g="fonte" style="right:150px;top:404px;font-family:var(--f-dado);font-size:26px;letter-spacing:2px;color:#5f584c;text-transform:uppercase">FONTE · ${esc(p.fonte)}</div>` : ''}`,
       montar(el) {
         const nb = el.querySelector('.nb'), vv = el.querySelector('.v');
-        let f = 200; while (nb.scrollWidth > nb.clientWidth + 2 && f > 120) { f -= 10; vv.style.fontSize = f + 'px'; }
-        let y = nb.offsetTop + nb.offsetHeight + 18;
-        const rg = el.querySelector('.regua'); rg.style.top = y + 'px'; y += 34;
-        const cx = el.querySelector('.ctx'); cx.style.top = y + 'px'; y += cx.offsetHeight + 14;
-        const cv = el.querySelector('.cv'); if (cv) { cv.style.top = y + 'px'; y += cv.offsetHeight + 10; }
-        const eq = el.querySelector('.eq'), et = el.querySelector('.eqt');
-        if (eq) { y += 16; const disp = 1090 - et.offsetHeight - 16 - y, nn = eq.children.length;
-          // grade que cabe: escolhe colunas e lado do ícone para ocupar o espaço disponível (mín. 34 px)
-          let best = null; for (let c = 4; c <= 14; c++) { const rows = Math.ceil(nn / c), l = Math.floor(Math.min(780 / c, disp / rows, 96)); if (l >= 34 && (!best || l > best.l)) best = { c, l, rows }; }
-          best = best || { c: 14, l: 34, rows: Math.ceil(nn / 14) };
-          eq.style.gridTemplateColumns = `repeat(${best.c},${best.l}px)`; eq.style.width = best.c * best.l + 'px';
-          eq.querySelectorAll('svg').forEach(s => { s.setAttribute('width', best.l - 8); s.setAttribute('height', best.l - 8); });
-          eq.style.top = y + 'px'; et.style.top = (y + best.rows * best.l + 12) + 'px'; }
+        let f = 230; while ((nb.scrollWidth > nb.clientWidth + 2 || nb.offsetHeight > 300) && f > 140) { f -= 10; vv.style.fontSize = f + 'px'; }
+        let y = nb.offsetTop + nb.offsetHeight + 16;
+        el.querySelector('.regua').style.top = y + 'px'; y += 30;
+        const cx = el.querySelector('.ctx'); cx.style.top = y + 'px'; y += cx.offsetHeight + 12;
+        const cv = el.querySelector('.cv'); if (cv) { cv.style.top = y + 'px'; y += cv.offsetHeight + 8; }
+        const rp = el.querySelector('.repr'), et = el.querySelector('.eqt');
+        if (rp && rp.classList.contains('grade')) {          // grade que cabe entre o contexto e a fonte
+          const disp = 1150 - (et ? 52 : 0) - (y + 20), nn = rp.children.length; let best = null;
+          for (let c = 5; c <= 14; c++) { const rows = Math.ceil(nn / c), l = Math.floor(Math.min(820 / c, disp / rows, 110)); if (l >= 36 && (!best || l > best.l)) best = { c, l, rows }; }
+          best = best || { c: 14, l: 36, rows: Math.ceil(nn / 14) };
+          rp.style.gridTemplateColumns = `repeat(${best.c},${best.l}px)`; rp.querySelectorAll('svg').forEach(s => { s.setAttribute('width', best.l - 8); s.setAttribute('height', best.l - 8); });
+          rp.style.top = (y + 20) + 'px'; if (et) et.style.top = (y + 20 + best.rows * best.l + 10) + 'px';
+        } else if (rp) {
+          // representação ocupa o espaço entre o contexto e o fim da área de conteúdo (1200), texto de apoio embaixo
+          const alt0 = +rp.getAttribute('height') || rp.offsetHeight, hEt = et ? et.offsetHeight + 8 : 0;
+          // escala para caber entre o contexto e o fim da área de conteúdo (nada invade a faixa da legenda)
+          const disp = 1200 - hEt - (y + 24), k = Math.min(1, disp / alt0), alt = alt0 * k;
+          rp.style.transformOrigin = '0 0'; rp.style.transform = `scale(${k})`;
+          const topo = Math.max(y + 24, 1200 - hEt - alt);
+          rp.style.top = topo + 'px'; if (et) et.style.top = (topo + alt + 4) + 'px';
+        }
       },
       upd(tl, el) {
         aparece(el.querySelector('.nat'), tl, .15, { dy: 10 });
-        const vv = el.querySelector('.v'), k = eo((tl - .25) / 1.3); vv.textContent = fmt(v * k, cs);
-        aparece(el.querySelector('.nb'), tl, .1, { dy: 20 });
-        el.querySelector('.regua').style.width = lerp(0, 260, eo5((tl - .4) / 1.1)) + 'px';
-        aparece(el.querySelector('.ctx'), tl, 1.0, { dy: 16 }); aparece(el.querySelector('.cv'), tl, 1.2, { dy: 10 });
-        const us = el.querySelectorAll('.u'); us.forEach((u, i) => { const kk = clamp((tl - 1.4 - i * .022) / .2); u.style.opacity = .12 + .88 * kk; });
-        aparece(el.querySelector('.eqt'), tl, 1.6 + us.length * .022 * .6, { dy: 10 });
+        const vv = el.querySelector('.v'), k = eo((tl - .2) / 1.3); vv.textContent = fmt(v * k, cs);
+        aparece(el.querySelector('.nb'), tl, .05, { dy: 20 });
+        el.querySelector('.regua').style.width = lerp(0, 300, eo5((tl - .4) / 1.1)) + 'px';
+        aparece(el.querySelector('.ctx'), tl, .9, { dy: 16 }); aparece(el.querySelector('.cv'), tl, 1.1, { dy: 10 });
+        const cb = el.querySelector('.cubo'); if (cb) { const kc = eo5((tl - 1.3) / 1.0); cb.style.transform = `scale(${kc})`; cb.style.transformOrigin = '0 100%'; cb.style.transformBox = 'fill-box'; }
+        const rg = el.querySelector('.refg'); if (rg) rg.style.opacity = clamp((tl - 2.1) / .4);
+        el.querySelectorAll('.br').forEach((b, i) => b.style.width = (+b.dataset.w * eio((tl - 1.3 - i * .5) / .9)) + '%');
+        const us = el.querySelectorAll('.u'); us.forEach((u, i) => { u.style.opacity = .12 + .88 * clamp((tl - 1.3 - i * .02) / .2); });
+        aparece(el.querySelector('.eqt'), tl, 2.3, { dy: 10 });
         aparece(el.querySelector('.chip-fonte'), tl, .8, { dy: 0 });
       },
       textos: () => [p.rotulo, String(p.valor), fmt(v, cs), p.unidade, p.contexto, eq && eq.texto],

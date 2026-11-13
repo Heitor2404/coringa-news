@@ -12,69 +12,67 @@
     div.style.backgroundSize = `${w * s}px ${h * s}px`; div.style.backgroundPosition = `${x}px ${y}px`;
   }
 
-  /* 13. foto.historica */
+  /* 13. foto.historica — V2.1: DOIS MOMENTOS. (1) apresentação editorial: a foto inteira, grande, com ano, procedência
+   * e contexto; (2) aproximação da região relevante com câmera suave — só até onde a resolução permite (máx. 2× os
+   * pixels reais). Panorâmica: (1) a faixa inteira, (2) a janela cresce e VARRE a foto. Fundo escuro de arquivo, sem
+   * borrão (a V2 deixava uma mancha desfocada embaixo). Resolução insuficiente → enquadramento alternativo + aviso. */
   V2.registrar({
-    id: 'foto.historica', nome: 'Fotografia histórica com enquadramento dirigido', tratamento: 'arquivo', tom: 'escuro',
-    objetivo: 'Mostrar a prova histórica inteira e legível, e conduzir o olho até o detalhe que a fala cita.',
+    id: 'foto.historica', nome: 'Fotografia histórica com enquadramento dirigido', tratamento: 'arquivo', tom: 'escuro', marca: false,
+    objetivo: 'Mostrar a prova histórica inteira e legível e, depois, conduzir o olho até o detalhe que a fala cita.',
     funcoes: ['historia', 'prova', 'arquivo'],
-    params: { img: 'arquivo da foto', img_wh: '[w,h]', recorte: '[x0,y0,x1,y1] do conteúdo real (acervo_v2.recorte_conteudo tira borda/cartão do scanner)', ano: 'ano ≤ 4 dígitos',
-      credito: 'acervo/autor ≤ 44', descricao: 'o que a foto mostra ≤ 60 (serifa)', anotacoes: '0–2 × {x, y (0–1 no recorte), texto ≤ 22}', foco: '[cx, cy] para onde a câmera vai' },
-    fundo: 'a própria foto, desfocada e sépia, cobre o fundo', layout: 'moldura de arquivo 960 px de largura centrada em y≈720; panorâmica (> 2:1) vira VARREDURA numa janela 960×520; legenda de procedência embaixo da moldura (≤ y 1110)',
-    paleta: 'papel #efe6d2, sépia leve, carimbo vermelho-tijolo', animacao: 'moldura assenta; câmera desliza (varredura) ou aproxima do foco; anotação: círculo se desenha + fio + rótulo',
-    duracao: [2.5, 4, 7], limites: { descricao: 60, credito: 44, anotacoes: 2 }, legenda: 'livre',
-    area_segura: 'moldura entre y 360 e 1080', legibilidade: 'procedência 26 px mono; descrição 36 px serifa',
-    rejeicao: ['foto ampliada além de 1,6× a resolução', 'recorte que corta pessoas/objeto citado', 'panorâmica exibida como faixa fina (era o erro do vídeo do Panamá)'],
+    params: { img: 'arquivo da foto', img_wh: '[w,h]', recorte: '[x0,y0,x1,y1] do conteúdo real (acervo_v2.recorte_conteudo)', ano: 'ano', credito: 'acervo/autor ≤ 44', descricao: 'o que a foto mostra ≤ 60',
+      foco: '[cx, cy] (0–1 no recorte) da região relevante', momento2: 's em que começa a aproximação (padrão 45% da cena)', anotacoes: '0–2 × {x, y, texto ≤ 22}' },
+    fundo: 'próprio (arquivo escuro, sem borrão)', layout: 'moldura de 1000 px de largura; foto vertical até 760 px de altura; descrição e procedência abaixo; tudo entre 360 e 1200',
+    paleta: 'papel #efe6d2, sépia leve, carimbo tijolo', animacao: 'momento 1: moldura assenta, carimbo; momento 2: aproximação (ou varredura) suave até o foco; anotação desenha',
+    duracao: [3, 5, 8], limites: { descricao: 60, credito: 44, anotacoes: 2 }, legenda: 'livre',
+    area_segura: 'conteúdo entre 360 e 1200', legibilidade: 'procedência 28 px mono; descrição 40 px serifa',
+    rejeicao: ['ampliação além de 2× a resolução (borra)', 'recorte que corta o assunto citado', 'panorâmica exibida como faixa fina sem varredura'],
     transicao: 'mascara',
-    exemplo: { params: { img: '@construcao_1913', recorte: 'auto', ano: 1913, credito: 'Library of Congress · domínio público', descricao: 'Eclusas de Gatún em construção, vista panorâmica', anotacoes: [{ x: .3, y: .55, texto: 'câmara dupla' }], foco: [.3, .5] }, dur: 5.5, fala: 'Em 1913, as eclusas de Gatún ainda estavam em obra.' },
+    exemplo: { params: { img: '@construcao_1913', recorte: 'auto', ano: 1913, credito: 'Library of Congress · domínio público', descricao: 'Eclusas de Gatún em construção', anotacoes: [{ x: .3, y: .55, texto: 'câmara dupla' }], foco: [.3, .5] }, dur: 6, fala: 'Em 1913, as eclusas de Gatún ainda estavam em obra.' },
   }, (p, ctx) => {
     const wh = p.img_wh || [1600, 1000], rc = p.recorte || [0, 0, 1, 1];
-    const asp = (rc[2] - rc[0]) * wh[0] / ((rc[3] - rc[1]) * wh[1]);
-    const pan = asp > 2.0, L = 940, cropH = (rc[3] - rc[1]) * wh[1];
-    // panorâmica: janela de varredura com ampliação máxima de 2× os pixels reais; se a janela ficar baixa, entra
-    // uma faixa de VISÃO GERAL (a foto inteira) com um retângulo mostrando o trecho ampliado
-    const A = pan ? Math.round(clamp(cropH * 2.0, 260, 560)) : Math.round(clamp(L / asp, 400, 600));
-    const geral = pan && A < 460, AG = Math.round(L / asp);
-    const res = Math.min(((rc[2] - rc[0]) * wh[0]) / (pan ? A * asp : L), 9);   // pixels da foto por pixel da tela
-    if (pan && cropH * 2.0 < 400) (V2.alertas = V2.alertas || []).push(`foto.historica: original com só ${Math.round(cropH)} px de altura útil — buscar arquivo em resolução maior`);
-    const top = 400 + (700 - A - (geral ? AG + 70 : 0)) / 2;
+    const cw = (rc[2] - rc[0]) * wh[0], ch = (rc[3] - rc[1]) * wh[1], asp = cw / ch, pan = asp > 2.0, L = 1000;
+    const A1 = Math.round(clamp(L / asp, 90, 760));                        // momento 1: a foto inteira
+    const A2 = pan ? Math.round(clamp(ch * 2.0, A1, 560)) : A1;           // momento 2: janela (panorâmica cresce)
+    const zMax = pan ? 1 : clamp((cw / L) * 2.0, 1, 1.9);                 // aproximação limitada pela resolução
+    if ((!pan && zMax < 1.15) || (pan && A2 < 300)) (V2.alertas = V2.alertas || []).push(`foto.historica: resolução baixa (${Math.round(cw)}×${Math.round(ch)} px úteis) — aproximação limitada; buscar o original em resolução maior`);
     return {
-      html: `<div class="abs" style="inset:-60px;background:url('${p.img}') center/cover;filter:blur(36px) sepia(.6) brightness(.35)"></div>
-        <div class="abs mold" data-g="foto" style="left:${(1080 - L) / 2 - 16}px;top:${top}px;padding:16px 16px 0;background:#efe6d2;box-shadow:0 40px 90px rgba(0,0,0,.65)">
-          ${geral ? `<div class="vg" style="position:relative;width:${L}px;height:${AG}px;background:url('${p.img}') no-repeat;background-size:${L / (rc[2] - rc[0])}px auto;background-position:${-rc[0] * L / (rc[2] - rc[0])}px ${-rc[1] * (L / (rc[2] - rc[0])) * wh[1] / wh[0]}px;filter:sepia(.18)"><div class="vr" style="position:absolute;top:-4px;bottom:-4px;border:4px solid var(--amarelo)"></div></div>
-            <div style="font-family:var(--f-dado);font-size:24px;color:#4a4236;padding:8px 2px 12px">VISÃO GERAL · ↓ TRECHO AMPLIADO</div>` : ''}
-          <div class="jn" style="position:relative;width:${L}px;height:${A}px;background-image:url('${p.img}');background-repeat:no-repeat;filter:sepia(.18) contrast(1.06)">
-            <svg class="anot" width="${L}" height="${A}" style="position:absolute;inset:0;overflow:visible"></svg></div>
-          <div class="pr" data-g="proc" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:14px 4px 14px;font-family:var(--f-dado);font-size:26px;color:#4a4236">
-            <span>ARQUIVO${p.ano ? ' · ' + esc(p.ano) : ''}</span><span style="font-size:24px;text-align:right">${esc(p.credito || '')}</span></div></div>
-        ${p.ano ? `<div class="abs carimbo" data-g="carimbo" style="left:600px;white-space:nowrap;top:${top - 36}px;border:5px solid #b4432f;color:#b4432f;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:3px;padding:6px 14px;transform:rotate(-4deg);background:rgba(239,230,210,.92)">FOTO REAL · ${esc(p.ano)}</div>` : ''}
-        ${p.descricao ? `<div class="abs ds serif" data-g="ds" data-txt="1" style="left:72px;right:150px;font-style:italic;font-size:38px;line-height:1.2;color:#efe6d2">${esc(p.descricao)}</div>` : ''}
-        ${(p.anotacoes || []).slice(0, 2).map((a, i) => `<div class="abs an an${i}" data-g="an${i}" style="font-weight:800;font-size:30px;color:#0b0f17;background:var(--amarelo);padding:4px 12px;text-transform:uppercase;white-space:nowrap;opacity:0">${esc(a.texto)}</div>`).join('')}`,
-      montar(el) {
-        const mo = el.querySelector('.mold'), ds = el.querySelector('.ds');
-        if (ds) ds.style.top = (mo.offsetTop + mo.offsetHeight + 22) + 'px';
-        if (ds && mo.offsetTop + mo.offsetHeight + 22 + ds.offsetHeight > 1110) { mo.style.top = (1110 - ds.offsetHeight - 22 - mo.offsetHeight) + 'px'; ds.style.top = (mo.offsetTop + mo.offsetHeight + 22) + 'px'; }
-        const ca = el.querySelector('.carimbo'); if (ca) ca.style.top = (mo.offsetTop - 30) + 'px';
-      },
+      html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 42%,#2a2219 0%,#120f0b 75%)"></div>
+        <div class="abs" data-deco="1" style="inset:0;opacity:.35;background-image:repeating-linear-gradient(0deg,rgba(255,240,210,.03) 0 2px,transparent 2px 5px)"></div>
+        <div class="abs mold" data-g="foto" data-ocupa="1" style="left:${(1080 - L) / 2 - 14}px;padding:14px 14px 0;background:#efe6d2;box-shadow:0 40px 90px rgba(0,0,0,.7)">
+          <div class="jn" style="position:relative;width:${L}px;height:${A1}px;background-image:url('${p.img}');background-repeat:no-repeat;filter:sepia(.16) contrast(1.06)">
+            <svg class="anot" width="${L}" height="${A2}" style="position:absolute;left:0;top:0;overflow:visible"></svg></div>
+          <div class="pr" data-g="proc" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 4px 14px;font-family:var(--f-dado);font-size:28px;color:#4a4236">
+            <span style="font-weight:700">ARQUIVO${p.ano ? ' · ' + esc(p.ano) : ''}</span><span style="font-size:26px;text-align:right">${esc(p.credito || '')}</span></div></div>
+        ${p.ano ? `<div class="abs carimbo" data-g="carimbo" style="right:150px;white-space:nowrap;border:5px solid #b4432f;color:#b4432f;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:3px;padding:6px 14px;transform:rotate(-4deg);background:rgba(239,230,210,.95)">FOTO REAL · ${esc(p.ano)}</div>` : ''}
+        ${p.descricao ? `<div class="abs ds serif" data-g="ds" data-txt="1" style="left:72px;right:150px;font-style:italic;font-size:40px;line-height:1.2;color:#efe6d2">${esc(p.descricao)}</div>` : ''}
+        ${(p.anotacoes || []).slice(0, 2).map((a, i) => `<div class="abs an an${i}" data-g="an${i}" style="font-weight:800;font-size:32px;color:#0b0f17;background:var(--amarelo);padding:4px 12px;text-transform:uppercase;white-space:nowrap;opacity:0">${esc(a.texto)}</div>`).join('')}`,
+      montar(el) { el._lay = null; },
       upd(tl, el, c) {
-        const k = clamp(tl / c.dur), e = k * .5 + eio(k) * .5, f = p.foco || [.5, .5];
-        const jn = el.querySelector('.jn');
-        if (pan) { janela(jn, wh, rc, L, A, lerp(0, 1, e), .5, 1);         // varredura de ponta a ponta
-          const vr = el.querySelector('.vr'); if (vr) { const fr = clamp((L / A) / asp, 0, 1); vr.style.width = (fr * L) + 'px'; vr.style.left = (lerp(0, 1, e) * (1 - fr) * L) + 'px'; } }
-        else janela(jn, wh, rc, L, A, lerp(.5, f[0], e), lerp(.5, f[1], e), lerp(1, Math.min(1.25, 1 + (res - 1) * .5 + .08), e));
-        const mo = el.querySelector('.mold'), km = eo5(tl / .6); mo.style.transform = `translateY(${(1 - km) * 40}px) rotate(${lerp(-1.2, -.6, km)}deg)`;
-        const ca = el.querySelector('.carimbo'); if (ca) { const kc = clamp((tl - .6) / .18); ca.style.opacity = kc; ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
-        aparece(el.querySelector('.ds'), tl, .7, { dy: 12 });
-        // anotações: posição recalculada da câmera atual (o círculo acompanha o ponto da foto)
+        const m2 = p.momento2 ?? c.dur * .45, k2 = eio((tl - m2) / Math.max(1, c.dur - m2 - .3));
+        const A = Math.round(lerp(A1, A2, eio((tl - m2) / .8)));
+        const jn = el.querySelector('.jn'), mo = el.querySelector('.mo') || el.querySelector('.mold'), ds = el.querySelector('.ds');
+        jn.style.height = A + 'px'; el.querySelector('.anot').setAttribute('height', A);
+        // centraliza o bloco (moldura + descrição) na área de conteúdo 360–1200
+        const hMo = mo.offsetHeight, hDs = ds ? ds.offsetHeight + 20 : 0, top = clamp(360 + (840 - hMo - hDs) / 2, 360, 1200 - hMo - hDs);
+        mo.style.top = top + 'px'; if (ds) ds.style.top = (top + hMo + 20) + 'px';
+        const ca = el.querySelector('.carimbo'); if (ca) { ca.style.top = (top - 34) + 'px'; const kc = clamp((tl - .6) / .18); ca.style.opacity = kc; ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
+        // câmera dentro da janela: momento 1 = foto inteira; momento 2 = foco (ou varredura)
+        const f = p.foco || [.5, .5];
+        if (pan) janela(jn, wh, rc, L, A, tl < m2 ? .5 : lerp(.5, f[0], k2) + (k2 >= 1 ? 0 : 0), .5, tl < m2 ? 1 : 1);
+        else janela(jn, wh, rc, L, A, lerp(.5, f[0], k2), lerp(.5, f[1], k2), lerp(1, zMax, k2));
+        if (pan && tl >= m2) janela(jn, wh, rc, L, A, lerp(0, 1, k2), .5, 1);
+        mo.style.transform = `translateY(${(1 - eo5(tl / .6)) * 40}px) rotate(${lerp(-1, -.5, eo5(tl / .6))}deg)`;
+        aparece(ds, tl, .7, { dy: 12 });
         const svg = el.querySelector('.anot'); let s = '';
         (p.anotacoes || []).slice(0, 2).forEach((a, i) => {
           const bs = jn.style.backgroundSize.split(' ').map(parseFloat), bp = jn.style.backgroundPosition.split(' ').map(parseFloat);
           const px = bp[0] + (rc[0] + a.x * (rc[2] - rc[0])) * bs[0], py = bp[1] + (rc[1] + a.y * (rc[3] - rc[1])) * bs[1];
-          const t0 = 1.2 + i * 1.0, ka = eo5((tl - t0) / .6), R = 56;
-          if (tl > t0 && px > 0 && px < L) s += `<circle cx="${px}" cy="${py}" r="${R}" fill="none" stroke="#FFD21F" stroke-width="6" stroke-dasharray="${2 * Math.PI * R}" stroke-dashoffset="${2 * Math.PI * R * (1 - ka)}"/>
-            <line x1="${px}" y1="${py - R}" x2="${px}" y2="${Math.max(8, py - R - 70 * ka)}" stroke="#FFD21F" stroke-width="4"/>`;
+          const t0 = m2 + .6 + i * .8, ka = eo5((tl - t0) / .6), R = 58, vis = px > 10 && px < L - 10 && py > 10 && py < A - 10;
+          if (tl > t0 && vis) s += `<circle cx="${px}" cy="${py}" r="${R}" fill="none" stroke="#FFD21F" stroke-width="7" stroke-dasharray="${2 * Math.PI * R}" stroke-dashoffset="${2 * Math.PI * R * (1 - ka)}"/>`;
           const an = el.querySelector('.an' + i), r = jn.getBoundingClientRect();
-          an.style.left = clamp(r.left + px - an.offsetWidth / 2, 72, 920 - an.offsetWidth) + 'px'; an.style.top = clamp(r.top + py - R - 70 - an.offsetHeight, r.top + 8, r.bottom - an.offsetHeight - 8) + 'px';   // rótulo nunca sai da janela da foto
-          an.style.opacity = px > 0 && px < L ? clamp((tl - t0 - .4) / .25) : 0;
+          an.style.left = clamp(r.left + px - an.offsetWidth / 2, 72, 920 - an.offsetWidth) + 'px'; an.style.top = clamp(r.top + py - R - 14 - an.offsetHeight, r.top + 8, r.bottom - an.offsetHeight - 8) + 'px';
+          an.style.opacity = vis ? clamp((tl - t0 - .3) / .25) : 0;
         });
         svg.innerHTML = s;
       },
@@ -151,6 +149,52 @@
         aparece(el.querySelector('.tt'), tl, .05, { dy: 14 });
       },
       textos: () => [p.titulo, p.rotulo_antes, p.rotulo_depois],
+    };
+  });
+})();
+
+/* video.documental — V2.1: vídeo real (arquivo local) dentro da composição editorial: corte (início/fim), enquadramento
+ * (moldura para vídeo deitado, tela cheia com foco para vertical), banner/lower third por cima e legenda. Os quadros
+ * são extraídos com ffmpeg na preparação (src/v2/palco.py) — nada de API externa; o seek(t) troca o quadro exato. */
+(function () {
+  const { esc, hl, clamp, lerp, eo, eo5, eio, aparece } = V2.U;
+  V2.registrar({
+    id: 'video.documental', nome: 'Vídeo de arquivo na composição', tratamento: 'documental', tom: 'escuro',
+    objetivo: 'Usar filmagem real do acontecimento (arquivo, documentário, registro) com procedência, corte e enquadramento.',
+    funcoes: ['video', 'acontecimento', 'arquivo'],
+    params: { video: 'arquivo .mp4 local (licença conferida no acervo)', inicio: 's no clipe', fim: 's no clipe (padrão: início + duração da cena)', modo: "'auto' | 'moldura' (deitado) | 'cobrir' (vertical/tela cheia)",
+      foco: '[cx, cy] para o modo cobrir', etiqueta: '"VÍDEO · 1914 · acervo" ≤ 40', lower_third: '{nome, descricao} opcional', velocidade: '0,5–1 (câmera lenta opcional)' },
+    fundo: 'o próprio vídeo', layout: 'deitado: moldura 1000×562 centrada em 360–1200 com etiqueta acima e lower third abaixo; vertical: tela cheia com escurecimento só na base',
+    paleta: 'escuro neutro; etiqueta amarela; sem filtro que altere o registro', animacao: 'quadro a quadro do clipe (sem interpolação); moldura assenta; lower third entra e sai',
+    duracao: [2, 4, 8], limites: { etiqueta: 40 }, legenda: 'livre',
+    area_segura: 'textos entre 360 e 1200', legibilidade: 'etiqueta 28 px mono',
+    rejeicao: ['clipe sem licença/procedência', 'trecho que não mostra o que a fala diz', 'vídeo ampliado além de 1,6× a resolução'],
+    transicao: 'corte',
+    exemplo: { params: { video: '@video_teste', inicio: 0.5, etiqueta: 'VÍDEO DE TESTE (SINTÉTICO)', lower_third: { nome: 'Conjunto de Mandelbrot', descricao: 'clipe local de teste técnico' } }, dur: 4, fala: 'Este é um clipe local usado só para testar o vídeo dentro da composição.' },
+  }, (p, ctx) => {
+    const q = p.quadros || {}, n = +q.n || 0, fps = +q.fps || 30, wh = q.wh || [1920, 1080];
+    const deitado = (p.modo || 'auto') === 'moldura' || ((p.modo || 'auto') === 'auto' && wh[0] > wh[1] * 1.1);
+    const L = 1000, A = Math.round(L * wh[1] / wh[0]);
+    return {
+      html: deitado
+        ? `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 45%,#1a2233 0%,#070b12 75%)"></div>
+           <div class="abs vmold" data-ocupa="1" data-g="video" style="left:${(1080 - L) / 2}px;top:${Math.round(360 + (840 - A) / 2 - 40)}px;width:${L}px;height:${A}px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);outline:2px solid rgba(255,255,255,.2)">
+             ${n ? `<img class="vq" src="${q.base}0001.jpg" style="width:100%;height:100%;object-fit:cover">` : ''}</div>
+           ${p.lower_third ? `<div class="abs vlt" data-g="vlt" data-txt="1" style="left:72px;top:${Math.round(360 + (840 - A) / 2 - 40 + A + 30)}px;display:flex;align-items:stretch"><div style="width:10px;background:var(--amarelo)"></div>
+             <div style="padding:12px 24px;background:rgba(9,13,22,.86)"><div style="font-weight:900;font-size:52px;text-transform:uppercase;line-height:1">${esc(p.lower_third.nome || '')}</div>
+             <div style="font-family:var(--f-dado);font-weight:700;font-size:28px;color:var(--amarelo);margin-top:8px;text-transform:uppercase">${esc(p.lower_third.descricao || '')}</div></div></div>` : ''}
+           ${p.etiqueta ? `<div class="abs vet" data-g="vet" style="left:${(1080 - L) / 2}px;top:${Math.round(360 + (840 - A) / 2 - 92)}px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:3px;color:#0b0f17;background:var(--amarelo);padding:6px 14px">▶ ${esc(p.etiqueta)}</div>` : ''}`
+        : `${n ? `<img class="vq fundo-foto" src="${q.base}0001.jpg" style="width:${wh[0]}px;height:${wh[1]}px">` : ''}<div class="escurece-base"></div>
+           ${p.etiqueta ? `<div class="abs vet" data-g="vet" style="left:72px;top:360px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:3px;color:#0b0f17;background:var(--amarelo);padding:6px 14px">▶ ${esc(p.etiqueta)}</div>` : ''}`,
+      upd(tl, el, c) {
+        const im = el.querySelector('.vq');
+        if (!deitado && im) { const f = p.foco || [.5, .5]; const cm = V2.camera(wh, f[0], f[1], 1.0, 1080, 1920, 1.6); im.style.transform = `translate(${cm.x}px,${cm.y}px) scale(${cm.s})`; }
+        const mo = el.querySelector('.vmold'); if (mo) mo.style.transform = `translateY(${(1 - eo5(tl / .5)) * 30}px)`;
+        aparece(el.querySelector('.vet'), tl, .2, { dx: -20, dy: 0 });
+        const lt = el.querySelector('.vlt'); if (lt) { aparece(lt, tl, .6, { dx: -40, dy: 0 }); if (tl > c.dur - .4) lt.style.opacity = V2.U.saida(tl, c.dur - .4, .3); }
+        if (im && n) { const fr = 1 + Math.min(n - 1, Math.max(0, Math.floor(tl * fps * (+p.velocidade || 1)))); if (im.dataset.f != fr) { im.dataset.f = fr; im.src = q.base + String(fr).padStart(4, '0') + '.jpg'; return im.decode().catch(() => 0); } }
+      },
+      textos: () => [p.etiqueta],
     };
   });
 })();

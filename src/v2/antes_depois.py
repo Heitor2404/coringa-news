@@ -70,7 +70,7 @@ def antes(dados: dict, tempos: list[float], pasta: Path) -> dict:
 
 def depois_dados(dados: dict) -> tuple[dict, list[dict]]:
     corr = {13: {'valor': 200, 'unidade': 'milhões de litros', 'rotulo': 'Água doce por travessia', 'natureza': 'tipico', 'natureza_txt': 'MÉDIA POR TRAVESSIA',
-                 'contexto': 'Sai do lago Gatún e vai para o mar.', 'fonte': 'Wikipédia', 'equivalencia': {'icone': 'piscina', 'n': 80, 'texto': '≈ 80 piscinas olímpicas (2,5 milhões de L cada)'}},
+                 'contexto': 'Sai do lago Gatún e vai para o mar.', 'fonte': 'Wikipédia'},
             18: fatos.PANAMA_LEILAO}
     return montagem.converter(dados, AUD, fatos_corrigidos=corr)
 

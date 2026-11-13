@@ -77,3 +77,73 @@ def recorte(bb: tuple, extra: float = 1.0) -> dict:
         'mares': fc('mares', lambda p: (p.get('scalerank') or 0) <= (rank_max if regional else 2)),
         'regioes': fc('regioes', lambda p: (p.get('scalerank') or 0) <= 2) if not regional else {'type': 'FeatureCollection', 'features': []},
     }
+
+
+# ---------------- validação geográfica (V2.1) ----------------
+def _no_poligono(lon: float, lat: float, geom: dict) -> bool:
+    polis = geom['coordinates'] if geom['type'] == 'MultiPolygon' else [geom['coordinates']]
+    for pol in polis:
+        dentro = False
+        anel = pol[0]
+        j = len(anel) - 1
+        for i in range(len(anel)):
+            xi, yi = anel[i][0], anel[i][1]
+            xj, yj = anel[j][0], anel[j][1]
+            if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / ((yj - yi) or 1e-12) + xi:
+                dentro = not dentro
+            j = i
+        if dentro:
+            return True
+    return False
+
+
+def em_terra(lon: float, lat: float) -> str | None:
+    """Nome do país (Natural Earth 1:50m) que contém o ponto, ou None (mar)."""
+    for f in camada('paises'):
+        b = f['_bb']
+        if b[0] <= lon <= b[2] and b[1] <= lat <= b[3] and _no_poligono(lon, lat, f['geometry']):
+            return f['properties'].get('name_pt') or f['properties'].get('name')
+    return None
+
+
+def coordenadas_validas(pontos: list[dict]) -> list[str]:
+    erros = []
+    for p in pontos:
+        try:
+            lon, lat = float(p['lon']), float(p['lat'])
+        except (KeyError, TypeError, ValueError):
+            erros.append(f"{p.get('nome', '?')}: coordenada ausente ou não numérica")
+            continue
+        if not (-180 <= lon <= 180 and -90 <= lat <= 90):
+            erros.append(f"{p.get('nome', '?')}: coordenada fora do globo ({lon}, {lat})")
+        elif p.get('pais'):
+            alvo = pais(p['pais'])
+            if alvo and not _no_poligono(lon, lat, alvo['geometry']):
+                # tolera ponto costeiro: 0,15° de folga
+                if not any(_no_poligono(lon + dx, lat + dy, alvo['geometry']) for dx in (-.15, 0, .15) for dy in (-.15, 0, .15)):
+                    erros.append(f"{p.get('nome', '?')}: ({lon}, {lat}) não fica em {p['pais']}")
+    return erros
+
+
+def validar_rota(rota: list, tipo: str = 'maritima', passo_km: float = 60) -> dict:
+    """Amostra a rota (círculo máximo entre os vértices) e mede quanto passa sobre terra. Rota marítima com mais de 3%
+    do comprimento sobre terra (fora das pontas) é incoerente. 'canal' e 'terrestre'/'aerea' não são checadas assim."""
+    import math
+    def hav(a, b):
+        r = math.pi / 180
+        h = math.sin((b[1] - a[1]) * r / 2) ** 2 + math.cos(a[1] * r) * math.cos(b[1] * r) * math.sin((b[0] - a[0]) * r / 2) ** 2
+        return 2 * 6371 * math.asin(math.sqrt(h))
+    amostras, total = [], 0.0
+    for a, b in zip(rota, rota[1:]):
+        d = hav(a, b)
+        total += d
+        n = max(1, int(d / passo_km))
+        for k in range(n):
+            amostras.append((a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n))
+    if tipo != 'maritima' or len(amostras) < 4:
+        return {'ok': True, 'km': round(total), 'em_terra': 0.0, 'paises': []}
+    miolo = amostras[2:-2]
+    terra = [(x, em_terra(*x)) for x in miolo]
+    sobre = [t for t in terra if t[1]]
+    frac = len(sobre) / max(1, len(miolo))
+    return {'ok': frac <= .03, 'km': round(total), 'em_terra': round(frac, 3), 'paises': sorted({t[1] for t in sobre})}

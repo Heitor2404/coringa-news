@@ -8,7 +8,8 @@
     id: 'abertura.pergunta', nome: 'Abertura cinematográfica com pergunta', tratamento: 'documental', tom: 'escuro',
     objetivo: 'Plantar a pergunta central sobre a imagem mais forte do tema; o 1º quadro já funciona como capa.',
     funcoes: ['abertura', 'gancho'],
-    params: { kicker: 'tema/série (≤ 32): "ENGENHARIA · PANAMÁ"', pergunta: 'pergunta com *destaque* (≤ 60 caracteres)', contexto: 'linha de contexto em serifa (≤ 48)', mascote: 'bool: Coringa entra no canto (padrão: não)' },
+    params: { kicker: 'tema/série (≤ 32): "ENGENHARIA · PANAMÁ"', pergunta: 'pergunta com *destaque* (≤ 60 caracteres)', contexto: 'linha de contexto em serifa (≤ 48)',
+      mascote: "'' (padrão: sem) | 'surpreso' | 'pensando' | 'apontando' — integrado à luz da cena, não colado", posicao: "'auto' (texto no lado oposto ao assunto da foto) | 'baixo' | 'alto'" },
     fundo: 'obrigatório: foto mais forte (fundo.de → fundo.para aproxima do objeto)',
     layout: 'kicker y≈340 · pergunta ocupa 760–1110 (alinhada à esquerda, 2–3 linhas) · contexto logo abaixo do fio · faixa da legenda livre',
     paleta: 'foto + escurecimento inferior; destaque amarelo em UMA palavra', animacao: 'foto aproxima; fio cresce; palavras sobem de máscaras (0,05 s entre elas); 1º quadro já legível',
@@ -20,20 +21,27 @@
       fala: 'Ninguém empurra este navio, mas ele sobe 26 metros.' },
   }, (p, ctx) => {
     const m = ctx.D.meta.mascote || {};
+    // layout adaptativo: o texto vai para o lado OPOSTO ao assunto da foto (fundo.para[1] = altura do foco)
+    const foco = ((ctx.sc.fundo || {}).para || [.5, .5])[1];
+    const pos = p.posicao && p.posicao !== 'auto' ? p.posicao : (typeof foco === 'number' && foco > .62 ? 'alto' : 'baixo');
+    const pose = p.mascote === true ? 'surpreso' : p.mascote;
+    const comMasc = pose && m[pose];
     return {
-      html: `<div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(7,11,18,0) 30%,rgba(7,11,18,.55) 55%,rgba(7,11,18,.92) 82%)"></div>
+      html: `<div class="abs" style="inset:0;background:${pos === 'alto' ? 'linear-gradient(0deg,rgba(7,11,18,0) 40%,rgba(7,11,18,.6) 65%,rgba(7,11,18,.9) 85%)' : 'linear-gradient(180deg,rgba(7,11,18,0) 30%,rgba(7,11,18,.55) 55%,rgba(7,11,18,.92) 82%)'}"></div>
         ${H.kicker(p.kicker || '', 'var(--amarelo)', 'left:72px;top:352px')}
         <div class="abs fio-k" style="left:72px;top:390px;height:3px;width:0;background:rgba(255,255,255,.5)"></div>
-        <div class="abs perg manchete sombra-txt" data-g="pergunta" data-txt="1" style="left:72px;right:150px;top:760px;font-size:104px;color:#fff">${palavras(p.pergunta || '')}</div>
+        <div class="abs perg manchete sombra-txt" data-g="pergunta" data-txt="1" data-ocupa="1" style="left:72px;right:${comMasc ? 380 : 150}px;top:760px;font-size:104px;color:#fff">${palavras(p.pergunta || '')}</div>
         <div class="abs ctxl" data-g="contexto" data-txt="1" style="left:72px;right:150px;font-family:var(--f-serif);font-style:italic;font-size:44px;color:rgba(255,255,255,.88);display:flex;align-items:center;gap:22px">
           <span class="fio-c" style="flex:none;display:inline-block;height:3px;width:70px;background:var(--amarelo)"></span><span>${esc(p.contexto || '')}</span></div>
-        ${p.mascote && m.surpreso ? `<img class="abs masc" src="${m.surpreso}" style="right:150px;top:470px;width:300px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.6))">` : ''}`,
+        ${comMasc ? `<div class="abs mascw" data-ocupa="1" style="right:110px;top:${pos === 'alto' ? 760 : 700}px;width:360px;height:480px">
+            <div class="abs" style="left:-60px;right:-60px;bottom:-40px;height:160px;background:radial-gradient(ellipse at 50% 70%,rgba(0,0,0,.65),transparent 70%)"></div>
+            <div class="abs luz" style="inset:-80px;background:radial-gradient(circle at 50% 45%,rgba(255,210,31,.22),transparent 60%)"></div>
+            <img class="abs masc" src="${m[pose]}" style="left:0;bottom:0;width:360px;height:480px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(-6px 0 0 rgba(255,210,31,.35)) drop-shadow(0 24px 30px rgba(0,0,0,.6)) saturate(.92) contrast(1.05)"></div>` : ''}`,
       montar(el) {
         const pq = el.querySelector('.perg'); pq.querySelectorAll('.hl').forEach(h => h.style.color = 'var(--amarelo)');
-        caber(pq, { max: 104, min: 72, alt: 330 });
-        // a pergunta fica ancorada embaixo (termina em 1080): cresce para cima
-        pq.style.top = (1080 - pq.offsetHeight) + 'px';
-        el.querySelector('.ctxl').style.top = 1092 + 'px';
+        caber(pq, { max: 104, min: 68, alt: 330 });
+        if (pos === 'alto') { pq.style.top = '440px'; el.querySelector('.ctxl').style.top = (440 + pq.offsetHeight + 14) + 'px'; }
+        else { pq.style.top = (1110 - pq.offsetHeight) + 'px'; el.querySelector('.ctxl').style.top = 1124 + 'px'; }   // ancorada embaixo, cresce para cima
       },
       upd(tl, el) {
         // 1º quadro (tl=0) precisa estar legível: as palavras já começam na posição final quando tl<0.02
@@ -43,7 +51,8 @@
         if (tl < .02) el.querySelector('.fio-k').style.width = '240px';
         const c = el.querySelector('.ctxl'); c.style.opacity = tl < .02 ? 1 : clamp((tl - .6) / .3);
         el.querySelector('.fio-c').style.width = (tl < .02 ? 70 : lerp(0, 70, eo((tl - .6) / .5))) + 'px';
-        const ms = el.querySelector('.masc'); if (ms) { const kk = back((tl - .9) / .5); ms.style.opacity = clamp((tl - .9) / .15); ms.style.transform = `translateY(${(1 - clamp(kk, 0, 1.2)) * 200}px) rotate(${Math.sin(tl * 2) * 2}deg)`; }
+        const mw = el.querySelector('.mascw'); if (mw) { const kk = eo5((tl - .5) / .7); mw.style.opacity = clamp((tl - .5) / .25); const ms = mw.querySelector('.masc');
+          ms.style.transform = `translateY(${(1 - kk) * 60}px) rotate(${Math.sin(tl * 1.6) * 1.2}deg)`; ms.style.transformOrigin = '50% 100%'; }
       },
       textos: () => [p.pergunta, p.contexto, p.kicker],
     };

@@ -5,100 +5,205 @@
 (function () {
   const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt } = V2.U;
 
+  /* 18. mecanismo.eclusa — V2.1: corte lateral em ESCALA DE CELULAR, com direção de câmera (planos A–F) e física coerente:
+   *  - a água entra/sai pelo TÚNEL com válvula (sistema hidráulico desenhado), nunca atravessando comporta fechada;
+   *  - comporta só abre com os níveis iguais (o desenho calcula a diferença e trava a abertura);
+   *  - o navio NÃO tem altura própria: a linha d'água do casco é a superfície da água em cada quadro;
+   *  - o enchimento desacelera como na física (vazão ∝ √Δh: a diferença de nível cai como (1 − k)²).
+   * Planos: A visão geral · B comporta fechando · C fluxo pelo túnel · D elevação (acompanha o navio) · E equalização ·
+   * F saída. Os planos seguem os tempos da fala (params.tempos) e podem ser desligados (params.planos = false). */
   V2.registrar({
     id: 'mecanismo.eclusa', nome: 'Mecanismo físico animado: eclusa', tratamento: 'ciencia', tom: 'escuro',
-    objetivo: 'Mostrar a água subindo e o navio sendo elevado dentro da câmara, e de onde vem a água (gravidade, sem bombas).',
+    objetivo: 'Mostrar, sem áudio, por que o navio sobe: a água do nível alto desce pelo túnel por gravidade, enche a câmara fechada e levanta o navio; a comporta só abre com os níveis iguais.',
     funcoes: ['mecanismo', 'agua_subindo', 'elevacao_vertical', 'agua_descendo', 'eclusa'],
     params: { sentido: "'subir' | 'descer'", desnivel_m: 'desnível em metros (dos fatos)', lago: 'nome do nível alto ≤ 18', mar: 'nome do nível baixo ≤ 18',
-      etapas: '3 textos ≤ 44 (entra · enche/esvazia · sai) — padrão em português', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala', kicker: '≤ 26' },
-    fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho com etapa atual 340–500; corte esquemático 520–1090 (mar à esquerda, câmara no meio, lago à direita); régua em metros na parede esquerda',
-    paleta: 'água ciano translúcida; concreto azul-acinzentado; navio branco; fluxo em pontos brancos; GRAVIDADE em amarelo', animacao: 'navio desloca; comportas sobem/descem; fluxo no túnel; nível e navio sobem juntos; régua conta os metros',
-    duracao: [4, 7, 12], limites: { etapa: 44, nome: 18 }, legenda: 'livre',
-    area_segura: 'y 340–1095; x 40–1040 (o desenho pode encostar nas bordas; textos até 930)', legibilidade: 'etapa 46 px 900; rótulos 28 px mono; régua 30 px mono',
-    rejeicao: ['desnível que não está nos fatos', 'cena de mecanismo trocada por foto parada (o fiscal_v2 bloqueia quando a fala descreve o mecanismo)'],
-    problemas_conhecidos: ['comportas desenhadas como comportas de levantar (a de Panamá é de duas folhas que giram): simplificação do corte lateral, registrada'],
+      etapas: '3 textos ≤ 40 (entra/fecha · enche/esvazia · iguala/sai)', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala',
+      planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26' },
+    fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho 340–440 (etapa atual, 3 marcadores); corte esquemático 450–1210 em tela cheia; rótulos de estado (comportas, válvula, níveis) em HTML de tamanho fixo que acompanham a câmera',
+    paleta: 'água ciano; concreto azul-acinzentado com textura; comportas amarelas; navio branco/vermelho; GRAVIDADE e Δh em amarelo', animacao: 'navio desloca → comporta fecha (plano B) → válvula abre, fluxo no túnel (plano C) → água e navio sobem juntos (plano D) → níveis iguais, comporta abre (plano E) → navio sai (plano F)',
+    duracao: [5, 9, 16], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
+    area_segura: 'cabeçalho e rótulos dentro de x 72–930; desenho em tela cheia (pode encostar nas bordas)', legibilidade: 'etapa 52 px 900; rótulos de estado 30 px; nível 40 px mono',
+    rejeicao: ['desnível que não está nos fatos', 'sentido (subir/descer) que contradiz a fala (fiscal_v2 S3)', 'cena de mecanismo trocada por foto parada (fiscal_v2 B2)'],
+    problemas_conhecidos: ['corte lateral simplificado: as comportas aparecem como de levantar (no Panamá são de duas folhas que giram) e o túnel aparece sob a câmara (no Panamá corre dentro das paredes) — rotulado como ESQUEMA ILUSTRATIVO'],
     transicao: 'mascara',
-    exemplo: { params: { sentido: 'subir', desnivel_m: 26, lago: 'LAGO GATÚN', mar: 'MAR DO CARIBE', kicker: 'MECANISMO · ECLUSA' }, dur: 9,
+    exemplo: { params: { sentido: 'subir', desnivel_m: 26, lago: 'LAGO GATÚN', mar: 'MAR DO CARIBE', kicker: 'MECANISMO · ECLUSA', tempos: [0, 3.2, 8.4] }, dur: 11,
       fala: 'O navio entra e a comporta fecha. A água do lago desce por gravidade e enche a câmara. O navio sobe vinte e seis metros e segue.' },
   }, (p, ctx) => {
     const subir = p.sentido !== 'descer', D = +p.desnivel_m || 26;
-    const YB = 1050, YL = 980, YH = 680, CX0 = 300, CX1 = 780, TOPO = 640;     // fundo, nível baixo, nível alto, câmara
-    const ET = p.etapas || (subir ? ['O navio entra e a comporta fecha', 'A água do lago desce e enche a câmara', 'Nível igual: a comporta abre'] : ['O navio entra pelo lado alto', 'A câmara esvazia para o mar', 'Nível igual: o navio desce e sai']);
-    const navio = `<g class="nav"><path d="M-170 0 H170 L148 56 H-150 Z" fill="#e9eef7"/><path d="M-160 36 H160 L150 56 H-150 Z" fill="#b3261e"/>
-      <rect x="-120" y="-40" width="150" height="40" fill="#dfe6f2"/><rect x="50" y="-78" width="90" height="78" fill="#f2f5fa"/><rect x="60" y="-70" width="70" height="14" fill="#2b3a4a"/>
-      ${[-110, -78, -46, -14].map(x => `<rect x="${x}" y="-66" width="28" height="26" fill="#f0b429" stroke="#8a6a12" stroke-width="2"/>`).join('')}</g>`;
+    // ---- mundo (unidades de desenho) ----
+    const MW = 1480, TOPO = 290, YH = 340, YL = 650, FUNDO = 860, C0 = 360, C1 = 1060, PAR = 28, SOLEIRA = 570, TUN = 915;
+    const PORTAS = [540, 720, 900];
+    const TUN_ENCHE = `M1310 ${SOLEIRA} V${TUN} H${PORTAS[0] - 60}`, TUN_ESVAZIA = `M${PORTAS[2] + 60} ${TUN} H150 V${YL + 40}`;
+    const ET = p.etapas || (subir ? ['O navio entra e a comporta de trás fecha', 'Água do lago desce pelo túnel e enche a câmara', 'Níveis iguais: a comporta da frente abre']
+      : ['O navio entra pelo lado alto e a comporta fecha', 'A câmara esvazia pelo túnel para o mar', 'Níveis iguais: a comporta abre e o navio sai']);
+    // ---- tela ----
+    const SY = 535, SH = 675, SW = 1080, ASP = SW / SH;
+    const navio = `<g class="nav">
+      <path d="M-215 -26 H215 L190 50 H-198 Z" fill="#f2f5fa" stroke="#0b0f17" stroke-width="4"/>
+      <path d="M-206 20 H206 L190 50 H-198 Z" fill="#c4302b"/>
+      <rect x="80" y="-120" width="110" height="94" fill="#f7f9fc" stroke="#0b0f17" stroke-width="4"/>
+      <rect x="92" y="-108" width="86" height="18" fill="#22313f"/>
+      ${[-180, -138, -96, -54, -12, 30].map((x, k) => `<rect x="${x}" y="${k % 2 ? -66 : -64}" width="38" height="38" fill="${['#f0b429', '#3a86c8', '#e05a3a', '#f0b429', '#4caf7a', '#3a86c8'][k]}" stroke="#0b0f17" stroke-width="3"/>`).join('')}
+      <line x1="150" y1="-120" x2="150" y2="-160" stroke="#0b0f17" stroke-width="5"/></g>`;
+    const comporta = (cls, x, y0, y1) => `<g class="${cls}"><rect x="${x}" y="${y0}" width="${PAR}" height="${y1 - y0}" fill="#FFD21F" stroke="#0b0f17" stroke-width="4"/>
+      ${Array.from({ length: Math.floor((y1 - y0) / 56) }, (_, k) => `<line x1="${x}" x2="${x + PAR}" y1="${y0 + 28 + k * 56}" y2="${y0 + 48 + k * 56}" stroke="#0b0f17" stroke-width="5"/>`).join('')}</g>`;
+    const torre = x => `<rect x="${x - 14}" y="80" width="${PAR + 28}" height="${TOPO - 80}" fill="#42566a" stroke="#9fb6c8" stroke-width="3"/><rect x="${x - 14}" y="70" width="${PAR + 28}" height="14" fill="#9fb6c8"/>`;
+    const html = `<div class="grade"></div>
+      <div class="abs kicker" data-g="kicker" style="left:72px;top:345px;color:var(--ciano)"><span style="display:inline-block;width:14px;height:14px;border:3px solid var(--ciano);transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(p.kicker || 'MECANISMO · ECLUSA')}</div>
+      <div class="abs pas" style="left:72px;top:388px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:110px;height:10px;background:rgba(127,227,240,.25)"></div>`).join('')}</div>
+      ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:412px;font-weight:900;font-size:46px;line-height:1.04;text-transform:uppercase;opacity:0;text-shadow:0 3px 14px rgba(0,0,0,.6)"><span style="font-family:var(--f-dado);color:var(--ciano);margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
+      <svg class="abs cv" data-ocupa="1" style="left:0;top:${SY}px" width="${SW}" height="${SH}" viewBox="0 0 ${MW} ${MW / ASP}" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="ag${ctx.i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fd8e8" stop-opacity=".78"/><stop offset="1" stop-color="#0c6676" stop-opacity=".92"/></linearGradient>
+          <pattern id="cc${ctx.i}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="36" height="36" fill="#34495b"/><line x1="0" y1="0" x2="0" y2="36" stroke="#3e566a" stroke-width="12"/></pattern>
+          <pattern id="rc${ctx.i}" width="60" height="40" patternUnits="userSpaceOnUse"><rect width="60" height="40" fill="#1d2a33"/><circle cx="14" cy="12" r="5" fill="#26353f"/><circle cx="44" cy="28" r="7" fill="#26353f"/></pattern>
+          <marker id="sf${ctx.i}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#fff"/></marker></defs>
+        <rect x="-400" y="-400" width="${MW + 800}" height="1800" fill="none"/>
+        <!-- rocha e concreto -->
+        <rect x="-300" y="${FUNDO}" width="${MW + 600}" height="400" fill="url(#rc${ctx.i})"/>
+        <path d="M${C1 + PAR} ${SOLEIRA} H${MW + 300} V${FUNDO} H${C1 + PAR} Z" fill="url(#rc${ctx.i})"/>
+        <!-- túneis (aquedutos) e portas no piso da câmara -->
+        <path d="${TUN_ENCHE}" fill="none" stroke="#08171d" stroke-width="44" stroke-linejoin="round"/>
+        <path d="${TUN_ESVAZIA}" fill="none" stroke="#08171d" stroke-width="44" stroke-linejoin="round"/>
+        ${PORTAS.map(x => `<rect x="${x - 16}" y="${FUNDO - 4}" width="32" height="${TUN - FUNDO + 4}" fill="#08171d"/>`).join('')}
+        <path class="fl fl-enche" d="${TUN_ENCHE}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <path class="fl fl-esvazia" d="${TUN_ESVAZIA}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <!-- águas -->
+        <rect x="-300" y="${YL}" width="${C0 - PAR + 300}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
+        <rect x="${C1 + PAR}" y="${YH}" width="${MW + 300 - C1 - PAR}" height="${SOLEIRA - YH}" fill="url(#ag${ctx.i})"/>
+        <rect class="cam" x="${C0}" y="${YL}" width="${C1 - C0}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
+        <path class="sup" fill="none" stroke="#d6fbff" stroke-width="5"/>
+        <g class="jatos">${PORTAS.map(() => '<path fill="none" stroke="#e8fdff" stroke-width="5" stroke-linecap="round"/>').join('')}</g>
+        <!-- paredes da câmara -->
+        <rect x="${C0 - PAR - 40}" y="${TOPO}" width="40" height="${YL - TOPO}" fill="url(#cc${ctx.i})" opacity="0"/>
+        <rect x="${C0}" y="${FUNDO}" width="${C1 - C0}" height="10" fill="#9fb6c8"/>
+        ${navio}
+        ${torre(C0 - PAR)}${torre(C1)}
+        ${comporta('cpE', C0 - PAR, TOPO, FUNDO)}${comporta('cpD', C1, TOPO, SOLEIRA)}
+        <!-- válvulas -->
+        <g class="vE"><circle cx="1310" cy="${(SOLEIRA + TUN) / 2}" r="34" fill="#0b0f17" stroke="#FFD21F" stroke-width="7"/><line class="vEl" x1="1310" y1="${(SOLEIRA + TUN) / 2 - 30}" x2="1310" y2="${(SOLEIRA + TUN) / 2 + 30}" stroke="#FFD21F" stroke-width="9"/></g>
+        <g class="vS"><circle cx="300" cy="${TUN}" r="34" fill="#0b0f17" stroke="#FFD21F" stroke-width="7"/><line class="vSl" x1="270" y1="${TUN}" x2="330" y2="${TUN}" stroke="#FFD21F" stroke-width="9"/></g>
+        <!-- régua e Δh -->
+        <line x1="${C0 + 34}" y1="${YL}" x2="${C0 + 34}" y2="${YH}" stroke="rgba(255,255,255,.7)" stroke-width="4"/>
+        ${Array.from({ length: 6 }, (_, k) => `<line x1="${C0 + 34}" x2="${C0 + 64}" y1="${lerp(YL, YH, k / 5)}" y2="${lerp(YL, YH, k / 5)}" stroke="rgba(255,255,255,.7)" stroke-width="4"/>`).join('')}
+        <g class="delta"><line class="dl" x1="${C1 - 60}" x2="${C1 - 60}" stroke="#FFD21F" stroke-width="6"/><line class="dt" x1="${C1 - 80}" x2="${C1 - 40}" stroke="#FFD21F" stroke-width="6"/><line class="db" x1="${C1 - 80}" x2="${C1 - 40}" stroke="#FFD21F" stroke-width="6"/>
+          <line x1="${C1 - 60}" x2="${MW + 300}" y1="${YH}" y2="${YH}" stroke="#FFD21F" stroke-width="3" stroke-dasharray="14 10" opacity=".7"/></g>
+        <g class="grav"><line class="ga" stroke="#FFD21F" stroke-width="12" marker-end="url(#sf${ctx.i})"/></g>
+      </svg>
+      <div class="rotulos-ecl">
+        <div class="abs re r-mar" data-g="r-mar">${esc(p.mar || 'NÍVEL BAIXO')} · 0 m</div>
+        <div class="abs re r-lago" data-g="r-lago">${esc(p.lago || 'NÍVEL ALTO')} · +${fmt(D, D % 1 ? 1 : 0)} m</div>
+        <div class="abs re r-cpE" data-g="r-cpE"></div><div class="abs re r-cpD" data-g="r-cpD"></div>
+        <div class="abs re r-val" data-g="r-val">VÁLVULA ABERTA</div>
+        <div class="abs re r-grav" data-g="r-grav" style="background:#FFD21F;color:#0b0f17">${subir ? 'DESCE DO LAGO POR GRAVIDADE' : 'ESCOA PARA O MAR POR GRAVIDADE'}</div>
+        <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
+        <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
+      </div>
+      <div class="abs" data-g="aviso" data-opcional="1" style="right:160px;top:1176px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>
+      <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:#fff;background:rgba(5,20,26,.88);padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
+
+    // ---- linha do tempo física ----
+    function tempos(d) {
+      const T = (p.tempos || [0, d * .32, d * .76]).map(Number);
+      const entra = [T[0] + .25, Math.max(T[0] + 1.6, Math.min(T[1] - 1.0, T[0] + (T[1] - T[0]) * .65))];
+      const fecha = [entra[1] + .1, entra[1] + .8];                         // só fecha com o navio inteiro dentro
+      const valv = Math.max(fecha[1] + .15, T[1]);
+      const enche = [valv + .35, Math.max(valv + 1.6, T[2] - .5)];
+      const abre = [Math.max(enche[1] + .2, T[2]), Math.max(enche[1] + .2, T[2]) + .7];
+      const sai = [abre[1] + .1, d - .1];
+      return { T, entra, fecha, valv, enche, abre, sai };
+    }
+    // ---- câmera: retângulos [x, y, w] no mundo (h = w / aspecto) ----
+    const rect = (cx, cy, w) => [cx - w / 2, cy - w / ASP / 2, w];
+    function plano(nome, est) {
+      switch (nome) {
+        case 'A': return rect(MW / 2, 600, MW);
+        case 'B': return rect(subir ? C0 + 40 : C1 - 40, 600, 820);
+        case 'C': return subir ? rect(1000, 700, 1100) : rect(470, 720, 1100);
+        case 'D': return rect((C0 + C1) / 2 + 60, est.nivel + 40, 1000);
+        case 'E': return rect(subir ? C1 - 60 : C0 + 60, (YH + YL) / 2 + 60, 900);
+        default: return rect(subir ? MW / 2 + 60 : MW / 2 - 60, 600, MW);
+      }
+    }
     return {
-      html: `<div class="grade"></div>
-        <div class="abs kicker" data-g="kicker" style="left:72px;top:345px;color:var(--ciano)"><span style="display:inline-block;width:14px;height:14px;border:3px solid var(--ciano);transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(p.kicker || 'MECANISMO')}</div>
-        <div class="abs pas" data-g="pas" style="left:72px;top:392px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:90px;height:8px;background:rgba(127,227,240,.25)"></div>`).join('')}</div>
-        ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:420px;font-weight:900;font-size:46px;line-height:1.08;text-transform:uppercase;opacity:0"><span style="font-family:var(--f-dado);color:var(--ciano);margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
-        <svg class="abs cv" style="left:0;top:0" width="1080" height="1920">
-          <defs><linearGradient id="ag${ctx.i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FD0E0" stop-opacity=".55"/><stop offset="1" stop-color="#0f6a7a" stop-opacity=".75"/></linearGradient>
-            <pattern id="cc${ctx.i}" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="24" height="24" fill="#33424f"/><line x1="0" y1="0" x2="0" y2="24" stroke="#3d4e5c" stroke-width="10"/></pattern></defs>
-          <!-- terreno e concreto -->
-          <path d="M0 ${YB + 40} V${YB} H${CX0 - 20} V${TOPO} H${CX0} V${YB} H${CX1} V${TOPO} H${CX1 + 20} V${YH + 90} H1080 V${YB + 40} Z" fill="url(#cc${ctx.i})" stroke="#7fa3b8" stroke-width="3"/>
-          <!-- túnel (aqueduto) por baixo da câmara -->
-          <path class="tunel" d="${subir ? `M1040 ${YH + 150} V${YB + 25} H${CX0 + 60}` : `M${CX1 - 60} ${YB + 25} H40 V${YL + 40}`}" fill="none" stroke="#0a2027" stroke-width="34"/>
-          ${[420, 540, 660].map(x => `<rect x="${x - 10}" y="${YB - 2}" width="20" height="30" fill="#0a2027"/>`).join('')}
-          <path class="fluxo" d="${subir ? `M1040 ${YH + 150} V${YB + 25} H${CX0 + 60}` : `M${CX1 - 60} ${YB + 25} H40 V${YL + 40}`}" fill="none" stroke="#fff" stroke-width="8" stroke-dasharray="4 26" stroke-linecap="round" opacity="0"/>
-          <circle class="valv" cx="${subir ? 1040 : 40}" cy="${subir ? YH + 230 : YL + 120}" r="22" fill="#0a2027" stroke="#FFD21F" stroke-width="5"/><line class="valvl" x1="${subir ? 1040 : 40}" y1="${subir ? YH + 214 : YL + 104}" x2="${subir ? 1040 : 40}" y2="${subir ? YH + 246 : YL + 136}" stroke="#FFD21F" stroke-width="6"/>
-          <!-- águas: mar (baixo), lago (alto), câmara (varia) -->
-          <rect x="0" y="${YL}" width="${CX0 - 20}" height="${YB - YL}" fill="url(#ag${ctx.i})"/>
-          <rect x="${CX1 + 20}" y="${YH}" width="${1080 - CX1 - 20}" height="${90}" fill="url(#ag${ctx.i})"/>
-          <rect class="cam" x="${CX0}" y="${YL}" width="${CX1 - CX0}" height="${YB - YL}" fill="url(#ag${ctx.i})"/>
-          <path class="sup" fill="none" stroke="#bff5fb" stroke-width="3"/>
-          <g class="bolhas">${Array.from({ length: 14 }, () => '<circle r="5" fill="none" stroke="#e8fdff" stroke-width="2"/>').join('')}</g>
-          ${navio}
-          <!-- comportas -->
-          <rect class="cpE" x="${CX0 - 20}" y="${TOPO - 20}" width="20" height="${YB - TOPO + 20}" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/>
-          <rect class="cpD" x="${CX1}" y="${TOPO - 20}" width="20" height="${YH + 90 - TOPO + 20}" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/>
-          <!-- régua -->
-          <line x1="${CX0 + 24}" y1="${YL}" x2="${CX0 + 24}" y2="${YH}" stroke="rgba(255,255,255,.55)" stroke-width="3"/>
-          ${Array.from({ length: 6 }, (_, i) => `<line x1="${CX0 + 24}" x2="${CX0 + 44}" y1="${lerp(YL, YH, i / 5)}" y2="${lerp(YL, YH, i / 5)}" stroke="rgba(255,255,255,.55)" stroke-width="3"/>`).join('')}
-          <!-- gravidade -->
-          <g class="grav" opacity="0"><line x1="${subir ? 990 : 90}" y1="${subir ? YH + 110 : YL + 20}" x2="${subir ? 990 : 90}" y2="${subir ? YH + 210 : YL + 100}" stroke="#FFD21F" stroke-width="8" marker-end="url(#gv${ctx.i})"/></g>
-          <defs><marker id="gv${ctx.i}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#FFD21F"/></marker></defs>
-        </svg>
-        <div class="abs" data-g="lago" style="left:${CX1 + 34}px;top:${YH - 54}px;font-family:var(--f-dado);font-weight:700;font-size:24px;color:#bff5fb">${esc(p.lago || 'LAGO')}<br><span style="color:var(--amarelo)">+${fmt(D, D % 1 ? 1 : 0)} m</span></div>
-        <div class="abs" data-g="mar" style="left:24px;top:${YL - 66}px;font-family:var(--f-dado);font-weight:700;font-size:24px;color:#bff5fb">${esc(p.mar || 'MAR')}<br><span style="color:rgba(255,255,255,.7)">0 m</span></div>
-        <div class="abs rv" data-g="regua" style="left:${CX0 + 54}px;font-family:var(--f-dado);font-weight:700;font-size:34px;color:#fff;background:rgba(5,20,26,.8);padding:2px 10px;border-left:4px solid var(--amarelo)"></div>
-        <div class="abs gt" data-g="grav" style="left:${subir ? 750 : 110}px;top:${subir ? YH + 300 : YL - 260}px;font-weight:900;font-size:34px;color:#FFD21F;opacity:0;text-align:${subir ? 'right' : 'left'};width:240px">GRAVIDADE<div style="font-family:var(--f-dado);font-weight:400;font-size:24px;color:#fff">sem bombas</div></div>
-        <div class="abs" data-g="aviso" data-opcional="1" style="right:160px;top:1112px;font-family:var(--f-dado);font-size:24px;color:rgba(255,255,255,.5)">ESQUEMA · FORA DE ESCALA</div>`,
+      html,
       upd(tl, el, c) {
-        const d = c.dur, T = p.tempos || [.2, d * .3, d * .74];
+        const tm = tempos(c.dur), { T, entra, fecha, valv, enche, abre, sai } = tm;
+        // nível na câmara: (1 − k)² na diferença (vazão ∝ √Δh) — desacelera ao se aproximar do nível final
+        const k = clamp((tl - enche[0]) / (enche[1] - enche[0])), frac = 1 - Math.pow(1 - k, 2);
+        const ent = subir ? YL : YH, sai_ = subir ? YH : YL, nivel = lerp(ent, sai_, frac);
+        const delta = Math.abs(nivel - sai_) / (YL - YH) * D;                 // metros que faltam
+        // navio: x pelas etapas; y = SEMPRE a superfície onde ele está
+        const xIni = subir ? 140 : 1330, xMid = (C0 + C1) / 2, xFim = subir ? 1330 : 140;
+        const ke = eio(clamp((tl - entra[0]) / (entra[1] - entra[0]))), ks = eio(clamp((tl - sai[0]) / Math.max(.8, sai[1] - sai[0])));
+        const nx = tl < sai[0] ? lerp(xIni, xMid, ke) : lerp(xMid, xFim, ks);
+        const superficie = nx < C0 ? YL : nx > C1 + PAR ? YH : nivel;
+        const ny = superficie + Math.sin(tl * 1.7) * 2.5;
+        el.querySelector('.nav').setAttribute('transform', `translate(${nx} ${ny})`);
+        const cam = el.querySelector('.cam'); cam.setAttribute('y', nivel); cam.setAttribute('height', FUNDO - nivel);
+        let sp = `M${C0} ${nivel}`; for (let x = C0; x <= C1; x += 20) sp += ` L${x} ${nivel + Math.sin(x / 38 + tl * 5) * (k > 0 && k < 1 ? 6 : 2.5)}`;
+        el.querySelector('.sup').setAttribute('d', sp);
+        // comportas (mecânica: movimento linear com freio curto, sem "mola")
+        const mec = x => { x = clamp(x); return x < .85 ? x / .85 * .95 : .95 + (x - .85) / .15 * .05; };
+        const atras = el.querySelector(subir ? '.cpE' : '.cpD'), frente = el.querySelector(subir ? '.cpD' : '.cpE');
+        const hA = subir ? FUNDO - TOPO : SOLEIRA - TOPO, hF = subir ? SOLEIRA - TOPO : FUNDO - TOPO;
+        const fechada = mec((tl - fecha[0]) / (fecha[1] - fecha[0]));
+        // TRAVA FÍSICA: a comporta da frente só abre com Δh ≈ 0
+        const aberta = delta < .3 ? mec((tl - abre[0]) / (abre[1] - abre[0])) : 0;
+        atras.setAttribute('transform', `translate(0 ${-(1 - fechada) * (hA - 10)})`);
+        frente.setAttribute('transform', `translate(0 ${-aberta * (hF - 10)})`);
+        // válvula e fluxo pelo túnel certo
+        const vAberta = tl >= valv && k < 1, vk = vAberta ? eo((tl - valv) / .35) : (k >= 1 ? 1 - eo((tl - enche[1]) / .3) : 0);
+        el.querySelector(subir ? '.vEl' : '.vSl').setAttribute('transform', `rotate(${90 * vk} ${subir ? 1310 : 300} ${subir ? (SOLEIRA + TUN) / 2 : TUN})`);
+        const fl = el.querySelector(subir ? '.fl-enche' : '.fl-esvazia');
+        fl.setAttribute('opacity', vAberta ? .95 : 0); fl.setAttribute('stroke-dashoffset', subir ? -tl * 220 : -tl * 220);
+        el.querySelectorAll('.jatos path').forEach((j, q) => { const x = PORTAS[q], h = vAberta && subir ? 40 + 20 * Math.sin(tl * 9 + q) : 0;
+          j.setAttribute('d', `M${x} ${FUNDO} q ${8 * Math.sin(tl * 7 + q)} ${-h / 2} 0 ${-h}`); j.setAttribute('opacity', h ? .85 : 0); });
+        const ga = el.querySelector('.ga');
+        if (subir) { ga.setAttribute('x1', 1250); ga.setAttribute('y1', SOLEIRA - 130); ga.setAttribute('x2', 1250); ga.setAttribute('y2', SOLEIRA + 120); }
+        else { ga.setAttribute('x1', 210); ga.setAttribute('y1', TUN - 160); ga.setAttribute('x2', 210); ga.setAttribute('y2', TUN - 30); }
+        el.querySelector('.grav').setAttribute('opacity', vAberta ? clamp((tl - valv) / .3) : 0);
+        // Δh: colchete entre a superfície da câmara e o nível de destino
+        const dl = el.querySelector('.dl'); dl.setAttribute('y1', Math.min(nivel, sai_)); dl.setAttribute('y2', Math.max(nivel, sai_));
+        el.querySelector('.dt').setAttribute('y1', sai_); el.querySelector('.dt').setAttribute('y2', sai_);
+        el.querySelector('.db').setAttribute('y1', nivel); el.querySelector('.db').setAttribute('y2', nivel);
+        el.querySelector('.delta').setAttribute('opacity', tl > fecha[0] && tl < abre[1] + .4 ? 1 : 0);
+        // ---- câmera dirigida ----
+        const est = { nx, nivel };
+        const seq = p.planos === false ? [['A', 0]] : [['A', 0], ['B', fecha[0] - .5], ['C', valv - .1], ['D', enche[0] + (enche[1] - enche[0]) * .3], ['E', enche[1] - .3], ['F', abre[1] + .2]];
+        let r = plano(seq[0][0], est);
+        for (let q = 1; q < seq.length; q++) { if (tl < seq[q][1]) break; const kq = eio((tl - seq[q][1]) / .8); const r1 = plano(seq[q][0], est); r = [lerp(r[0], r1[0], kq), lerp(r[1], r1[1], kq), lerp(r[2], r1[2], kq)]; }
+        const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
+        const P = (x, y) => [(x - r[0]) / r[2] * SW, SY + (y - r[1]) / (r[2] / ASP) * SH];
+        const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => { const e = el.querySelector(sel); if (txt !== undefined) e.textContent = txt;
+          const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight; const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, 926 - w), Tt = py + (ay < 0 ? -h - 10 : 10);
+          const dentro = Tt > SY + 10 && Tt + h < SY + SH - 40 && px > 30 && px < 1050; /* âncora fora do quadro: rótulo some */ e.style.left = L + 'px'; e.style.top = Tt + 'px'; e.style.opacity = vis && dentro ? 1 : 0; };
+        poe('.r-mar', 150, YL, undefined, true);
+        poe('.r-lago', 1300, YH, undefined, true);
+        poe('.r-cpE', C0 - PAR / 2, TOPO - 10, (subir ? fechada : (tl < abre[0] ? 1 : 1 - aberta)) > .9 ? 'COMPORTA FECHADA' : 'COMPORTA ABERTA', true);
+        poe('.r-cpD', C1 + PAR / 2, TOPO - 10, (subir ? 1 - aberta : fechada) > .9 ? 'COMPORTA FECHADA' : 'COMPORTA ABERTA', tl > fecha[0] - .6);
+        poe('.r-val', subir ? 1310 : 300, subir ? (SOLEIRA + TUN) / 2 + 40 : TUN + 40, undefined, vAberta, 0, 1);
+        poe('.r-grav', subir ? 1250 : 210, subir ? SOLEIRA - 140 : TUN - 170, undefined, vAberta);
+        const m = D * (YL - nivel) / (YL - YH);
+        poe('.r-nivel', C0 + 80, nivel, `${fmt(m, 0)} m`, tl > entra[1] - .3, 1, -1);
+        poe('.r-delta', C1 - 80, (nivel + sai_) / 2, delta > .3 ? `FALTAM ${fmt(delta, 0)} m` : 'NÍVEIS IGUAIS ✓', tl > fecha[0] && tl < abre[1] + .4, -1, 1);
+        // rótulos não se cobrem: na ordem de prioridade, o que bater num já posto desce uma linha; se ainda bater, some
+        const postos = [];
+        for (const sel of ['.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
+          const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
+          const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
+          const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);
+          let b = caixa(); if (bate(b)) { e.style.top = (parseFloat(e.style.top) + (b[3] - b[1]) + 6) + 'px'; b = caixa(); if (bate(b) || b[3] > SY + SH - 40) { e.style.opacity = 0; continue; } }
+          postos.push(b);
+        }
+        // cabeçalho
         const f = tl < T[1] ? 0 : tl < T[2] ? 1 : 2;
-        // nível da câmara: começa no nível de entrada e vai ao de saída durante a etapa 2
-        const kN = eio(clamp((tl - T[1] - .5) / Math.max(1, T[2] - T[1] - .6)));
-        const ent = subir ? YL : YH, sai = subir ? YH : YL, nivel = lerp(ent, sai, kN);
-        const cam = el.querySelector('.cam'); cam.setAttribute('y', nivel); cam.setAttribute('height', YB - nivel);
-        let sp = `M${CX0} ${nivel}`; for (let x = CX0; x <= CX1; x += 20) sp += ` L${x} ${nivel + Math.sin(x / 40 + tl * 4) * (kN > 0 && kN < 1 ? 5 : 2)}`; el.querySelector('.sup').setAttribute('d', sp);
-        // navio: entra (etapa 1), sobe com a água (2), sai (3)
-        const x0 = subir ? 90 : 990, xm = (CX0 + CX1) / 2, x1 = subir ? 1000 : 80;
-        const kE = eio(clamp((tl - T[0]) / Math.max(.8, (T[1] - T[0]) * .7))), kS = eio(clamp((tl - T[2] - .5) / Math.max(.8, d - T[2] - .6)));
-        const nx = tl < T[2] + .5 ? lerp(x0, xm, kE) : lerp(xm, x1, kS);
-        const ny = (tl < T[1] ? ent : tl < T[2] + .5 ? nivel : sai) - 30 + Math.sin(tl * 1.8) * 3;
-        el.querySelector('.nav').setAttribute('transform', `translate(${nx} ${ny}) rotate(${Math.sin(tl * 1.3) * .8})`);
-        // comportas: a de trás fecha no fim da etapa 1; a da frente abre no início da etapa 3 (sobem para fora d'água)
-        const atras = subir ? el.querySelector('.cpE') : el.querySelector('.cpD'), frente = subir ? el.querySelector('.cpD') : el.querySelector('.cpE');
-        const kF = eo5(clamp((tl - (T[1] - .6)) / .5)), kA = eo5(clamp((tl - T[2]) / .5));
-        atras.setAttribute('transform', `translate(0 ${-(1 - kF) * 260})`); atras.style.opacity = .35 + .65 * kF;
-        frente.setAttribute('transform', `translate(0 ${-kA * 260})`); frente.style.opacity = 1 - .65 * kA;
-        // fluxo pelo túnel: só com a válvula aberta (etapa 2)
-        const flu = f === 1 && kN < 1, fl = el.querySelector('.fluxo'); fl.style.opacity = flu ? .9 : 0; fl.style.strokeDashoffset = -tl * 160;
-        el.querySelector('.valvl').setAttribute('transform', `rotate(${f >= 1 ? 90 * eo5((tl - T[1]) / .4) : 0} ${subir ? 1040 : 40} ${subir ? YH + 230 : YL + 120})`);
-        el.querySelector('.grav').setAttribute('opacity', f === 1 ? clamp((tl - T[1]) / .3) : 0); el.querySelector('.gt').style.opacity = f === 1 ? clamp((tl - T[1] - .2) / .3) : 0;
-        el.querySelectorAll('.bolhas circle').forEach((b, i) => { const ph = (tl * .9 + i * .37) % 1, x = [420, 540, 660][i % 3] + Math.sin(i * 7 + tl * 3) * 16, y = lerp(YB - 10, nivel + 10, ph);
-          b.setAttribute('cx', x); b.setAttribute('cy', y); b.setAttribute('opacity', flu && subir && y > nivel ? (1 - ph) * .9 : 0); });
-        // régua em metros, acompanha a superfície
-        const m = D * (YL - nivel) / (YL - YH), rv = el.querySelector('.rv'); rv.textContent = fmt(m, 0) + ' m'; rv.style.top = (nivel - 26) + 'px';
-        // cabeçalho da etapa
-        el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - T[i]) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - T[i]) / .35)) * 16 : 0}px)`; });
+        el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - (i ? T[i] : 0)) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - (i ? T[i] : 0)) / .35)) * 16 : 0}px)`; });
         el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? 'var(--ciano)' : 'rgba(127,227,240,.25)');
+        c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada, navio_x: nx, linha_dagua: superficie };
       },
       textos: () => [...ET, p.lago, p.mar, String(D)],
     };
   });
-
 
   /* 18b. mecanismo.nivel — nível de líquido subindo/descendo num recipiente/região (enchente, maré, represa, tanque) */
   V2.registrar({

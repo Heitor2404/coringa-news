@@ -112,9 +112,17 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
         elif tipo == 'revelacao':
             nova.update(comp='revelacao.surpresa', params={'pergunta': sc.get('pergunta'), 'resposta': sc.get('resposta'), 'detalhe': sc.get('detalhe'),
                                                           'virada': _virada(sc, caps), 'cor': 'amarelo'})
-            if img:
-                nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto', 'escurece': 1}
-            d.update(comp='revelacao.surpresa', motivo='M1: payoff')
+            mec = next((x for x in reversed(out) if x['comp'] in ('mecanismo.eclusa', 'mecanismo.nivel') and x['params'].get('sentido', 'subir') == 'subir'), None)
+            if mec:
+                # M8 (V2.1): a resposta aparece SOBRE o mecanismo que ela explica (congelado nos níveis iguais), não sobre foto escura
+                bp = {**mec['params'], 'planos': False}
+                tf = (bp.get('tempos') or [0, 0, (mec['end'] - mec['start']) * .76])[2] + .9
+                nova['base'] = {'comp': mec['comp'], 'params': bp, 't': round(tf, 2), 'dur': round(mec['end'] - mec['start'], 2), 'escurece': .15}
+                d.update(comp='revelacao.surpresa', motivo='M1: payoff · M8: sobre o mecanismo congelado')
+            else:
+                if img:
+                    nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto', 'escurece': 1}
+                d.update(comp='revelacao.surpresa', motivo='M1: payoff')
         elif tipo in ('lista', 'cards'):
             it = sc.get('itens') or []
             etapas = [{'titulo': _limpo(x.get('rotulo'))[:22], 'texto': _limpo(x.get('valor'))[:60], 'icone': 'documento'} if isinstance(x, dict) else
@@ -137,7 +145,15 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
             nova.update(comp='citacao', params={'texto': sc.get('texto'), 'autor': sc.get('autor'), 'papel': sc.get('nota', '')})
             d.update(comp='citacao', motivo='M1: citação')
         elif tipo == 'fechamento':
-            nova.update(comp='encerramento.editorial', params={'resumo': '', 'fontes': fontes, 'marca': meta.get('marca', '@coringa.explica'), 'proxima': sc.get('proxima')})
+            rev = next((x for x in reversed(out) if x['comp'] == 'revelacao.surpresa'), None)
+            conclusao = ''
+            if rev:     # a conclusão vem da resposta que o vídeo deu (sem texto novo inventado)
+                r = rev['params']
+                conclusao = f"{_limpo(r.get('pergunta')).rstrip('?')}? *{_limpo(r.get('resposta')).capitalize()}*." if r.get('pergunta') else _limpo(r.get('detalhe'))
+            nova.update(comp='encerramento.editorial', params={'variante': 'cta' if sc.get('proxima') else 'conclusao', 'resumo': conclusao, 'fontes': fontes,
+                                                               'marca': meta.get('marca', '@coringa.explica'), 'proxima': sc.get('proxima'), 'mascote': 'apontando'})
+            if rev and rev.get('base'):
+                nova['base'] = {**rev['base'], 'escurece': .6}
             d.update(comp='encerramento.editorial', motivo='M1: fechamento')
         else:
             dec = capacidades.escolher(sc, {}, ctx_tema)

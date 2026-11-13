@@ -1,13 +1,17 @@
 name: Extrair arquivos para auditoria
 
-# Manual. Descriptografa (com o secret ARTEFATOS_SENHA) o pacote de uma rodada do Coringa e guarda SÓ os arquivos da
-# auditoria visual (zip de diagnóstico, dados.json, roteiro.json, acervo.json) no repositório PRIVADO do cofre, em
-# auditoria/<execução>/. Nada é publicado como artefato aberto. Sem IA, sem vídeo, não toca o NTC.
+# Manual. Descriptografa (com o secret ARTEFATOS_SENHA) o pacote de uma rodada do Coringa, separa SÓ os arquivos da
+# auditoria visual (zip de diagnóstico, dados.json, roteiro.json, acervo.json) e os entrega CRIPTOGRAFADOS para uma
+# chave pública informada na hora (só quem tem a chave privada abre). O resultado sai no log, como texto cifrado.
+# Nada é publicado aberto, nada vai para o repositório. Sem IA, sem vídeo, não toca o NTC.
 on:
   workflow_dispatch:
     inputs:
       execucao:
         description: "Número da execução do 'Gerar vídeos do dia' (ex.: 43435732255)"
+        required: true
+      chave_publica:
+        description: "Chave pública GPG (armored) em base64, de quem vai receber os arquivos"
         required: true
 
 permissions:
@@ -42,23 +46,16 @@ jobs:
           ls -la sel
           [ -n "$(ls sel/*-diagnostico.zip 2>/dev/null)" ] || { echo "nenhum zip de diagnóstico no pacote"; exit 1; }
 
-      - name: Guardar no cofre privado
-        uses: actions/checkout@v4
-        with:
-          repository: Heitor2404/coringa-cofre
-          token: ${{ secrets.COFRE_TOKEN }}
-          path: cofre
-          sparse-checkout: auditoria
-
-      - name: Enviar
+      - name: Entregar criptografado para a chave pública
+        env:
+          CHAVE: ${{ github.event.inputs.chave_publica }}
         run: |
-          d=cofre/auditoria/${{ github.event.inputs.execucao }}
-          mkdir -p "$d" && cp sel/* "$d"/
-          cd cofre
-          git config user.name "coringa-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add auditoria
-          git diff --cached --quiet && { echo "nada novo"; exit 0; }
-          git commit -q -m "auditoria: arquivos da execução ${{ github.event.inputs.execucao }}"
-          git push -q || (git pull --rebase -q && git push -q)
-          echo "guardado em coringa-cofre/auditoria/${{ github.event.inputs.execucao }}"
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          echo "$CHAVE" | base64 -d | gpg --batch --quiet --import
+          dest=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          tar -C sel -czf auditoria.tgz .
+          gpg --batch --yes --quiet --trust-model always --encrypt -r "$dest" -o auditoria.tgz.gpg auditoria.tgz
+          echo "----- INICIO AUDITORIA $(stat -c %s auditoria.tgz.gpg) -----"
+          base64 -w 0 auditoria.tgz.gpg; echo
+          echo "----- FIM AUDITORIA -----"

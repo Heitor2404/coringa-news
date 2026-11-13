@@ -640,6 +640,12 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
                                                           encoding='utf-8')
     except Exception as e:
         print(f'  [storyboard] não medi ({str(e)[:80]})')
+    try:                                              # plano-mestre F: recursos gráficos com função e dado dos fatos
+        from src import recursos
+        if v.get('fatos') and recursos.linha_telegram(v, str(v['fatos'])):
+            diag.append(recursos.linha_telegram(v, str(v['fatos'])))
+    except Exception as e:
+        print(f'  [recursos] não medi ({str(e)[:80]})')
     if v.get('plano'):                                # plano-mestre B/C (12/11): plano editorial e função dos blocos — só registro
         try:
             from src import editorial

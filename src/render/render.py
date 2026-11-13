@@ -228,6 +228,26 @@ def fiscal_tela(dados: dict, trabalho: Path) -> list[str]:
     return erros
 
 
+def legibilidade(dados: dict, trabalho: Path) -> list[str]:
+    """Plano-mestre F (só registro e testes; NÃO entra no porteiro): texto menor que o mínimo da identidade ou dentro
+    das zonas dos botões do Reels/TikTok. `dados` já preparados (file://)."""
+    from playwright.sync_api import sync_playwright
+    pagina = _escrever_pagina(dados, trabalho)
+    medidas = []
+    with sync_playwright() as p:
+        nav = p.chromium.launch(args=NAVEGADOR)
+        pg = nav.new_page(viewport={'width': 1080, 'height': 1920})
+        pg.goto(Path(pagina).as_uri())
+        pg.wait_for_function('window.READY===true', timeout=60000)
+        t = 0.0
+        while t < dados['duration']:
+            pg.evaluate(f'seek({t:.3f})')
+            medidas += [(round(t, 2), pb) for pb in pg.evaluate(f'legibilidade({t:.3f})')]
+            t += PASSO_FISCAL
+        nav.close()
+    return [f"{x['ini']:.1f}s ({x['cena']}): {x['txt']}" for x in _persistentes(medidas)]
+
+
 def preparar(dados: dict) -> dict:
     """Completa os dados para o template (mascote, mapa, viradas, números, caminhos file://). Não altera o original."""
     dados = json.loads(json.dumps(dados, default=str))

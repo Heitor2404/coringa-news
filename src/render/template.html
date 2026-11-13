@@ -6,7 +6,10 @@
 @font-face{font-family:Mont;font-weight:700;src:url(../../node_modules/@fontsource/montserrat/files/montserrat-latin-700-normal.woff2)}
 @font-face{font-family:JBM;font-weight:400;src:url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2)}
 @font-face{font-family:JBM;font-weight:700;src:url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2)}
-:root{--y:#FFD21F;--r:#ff4d4d;--g:#3ddc84;--b:#5b9bff;--bg:#05080f;--card:rgba(13,19,32,.88);--line:rgba(255,255,255,.12);--mut:#9aa6bb;--ac:#ff4d4d}
+/* IDENTIDADE (plano-mestre F): os mesmos tokens de src/render/identidade.py — um teste confere que continuam iguais */
+:root{--y:#FFD21F;--r:#ff4d4d;--g:#3ddc84;--b:#5b9bff;--bg:#05080f;--card:rgba(13,19,32,.88);--line:rgba(255,255,255,.12);--mut:#9aa6bb;--ac:#ff4d4d;
+  --fs-titulo:96px;--fs-secao:58px;--fs-legenda:76px;--fs-rotulo:26px;--fs-etiqueta:24px;--fs-aviso:24px;
+  --zona-topo:270px;--zona-base:1480px;--zona-direita:930px;--zona-margem:50px}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:#fff;font-family:Mont,'Noto Color Emoji',sans-serif}
 .emo{font-family:'Noto Color Emoji',sans-serif;line-height:1}
@@ -22,10 +25,10 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 .img{position:absolute;inset:-40px;background-size:cover;background-position:center}
 .shade{position:absolute;inset:0}
 .card{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:28px 32px;box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
-.lbl{font-family:JBM,monospace;font-size:26px;letter-spacing:3px;color:var(--mut);text-transform:uppercase}
+.lbl{font-family:JBM,monospace;font-size:var(--fs-rotulo);letter-spacing:3px;color:var(--mut);text-transform:uppercase}
 .h{color:var(--y)}
-.title{position:absolute;left:50px;right:50px;text-align:center;font-weight:900;font-size:96px;line-height:1.02;letter-spacing:-2px;text-shadow:0 8px 34px rgba(0,0,0,.9);text-transform:uppercase}
-.sec{position:absolute;left:70px;right:70px;font-weight:900;font-size:58px;letter-spacing:-1px;text-transform:uppercase;text-shadow:0 6px 24px rgba(0,0,0,.8)}
+.title{position:absolute;left:var(--zona-margem);right:var(--zona-margem);text-align:center;font-weight:900;font-size:var(--fs-titulo);line-height:1.02;letter-spacing:-2px;text-shadow:0 8px 34px rgba(0,0,0,.9);text-transform:uppercase}
+.sec{position:absolute;left:70px;right:70px;font-weight:900;font-size:var(--fs-secao);letter-spacing:-1px;text-transform:uppercase;text-shadow:0 6px 24px rgba(0,0,0,.8)}
 .sec small{display:block;font-family:JBM;font-weight:400;font-size:24px;letter-spacing:3px;color:var(--mut);margin-top:8px;text-transform:uppercase}
 /* ZONAS SEGURAS do Reels (1080x1920): topo 0–270 e base 1440–1920 ficam embaixo dos botões/legenda do Instagram,
    e a coluna da direita (x > 930) tem curtir/comentar/compartilhar. Nada importante vai nessas áreas. */
@@ -33,12 +36,12 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:
 #marca{position:absolute;top:286px;left:0;right:0;text-align:center;font-family:JBM,monospace;font-weight:700;font-size:26px;letter-spacing:3px;color:rgba(255,255,255,.62);text-shadow:0 2px 10px rgba(0,0,0,.9);z-index:8}
 #barra{position:absolute;top:322px;left:50%;width:240px;margin-left:-120px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden;z-index:8}
 #barra i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--y);box-shadow:0 0 10px rgba(255,210,31,.8)}
-#tag{position:absolute;top:334px;width:100%;text-align:center;font-family:JBM,monospace;font-size:15px;letter-spacing:3px;color:rgba(255,255,255,.4);text-shadow:0 2px 8px #000;z-index:8}
+#tag{position:absolute;top:334px;width:100%;text-align:center;font-family:JBM,monospace;font-size:var(--fs-aviso);letter-spacing:3px;color:rgba(255,255,255,.72);text-shadow:0 2px 8px #000;z-index:8}
 #perg{position:absolute;top:360px;left:70px;right:150px;text-align:center;font-weight:800;font-size:30px;line-height:1.15;color:#fff;text-shadow:0 3px 14px #000,0 0 3px #000;z-index:8;opacity:0}
 #perg b{color:var(--y)}
 #num{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:JBM,monospace;font-weight:700;font-size:150px;line-height:1;color:var(--y);text-shadow:0 10px 50px rgba(0,0,0,.95),0 0 40px rgba(255,210,31,.45);z-index:7;opacity:0;pointer-events:none}
 /* legenda na faixa de 60–70% da altura: acima da legenda/nome do Instagram e longe dos botões da direita */
-#cap{position:absolute;top:1150px;left:90px;right:90px;text-align:center;font-weight:900;font-size:76px;line-height:1.05;letter-spacing:-1.5px;z-index:8}
+#cap{position:absolute;top:1150px;left:90px;right:90px;text-align:center;font-weight:900;font-size:var(--fs-legenda);line-height:1.05;letter-spacing:-1.5px;z-index:8}
 #cap span{display:inline-block;text-shadow:0 6px 26px rgba(0,0,0,.95),0 0 4px #000,0 0 2px #000;-webkit-text-stroke:9px #05080f;paint-order:stroke fill;margin:0 4px}
 #sweep{position:absolute;top:-200px;width:260px;height:2400px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transform:rotate(18deg);z-index:7;pointer-events:none}
 .ring{position:absolute;border-radius:50%;border:4px solid var(--y)}
@@ -151,7 +154,7 @@ B.gancho0=sc=>{const words=(sc.titulo||D.meta.titulo).split(/\s+/);return{html:`
   <div class="title t" style="top:${D.meta.parte?430:380}px">${words.map(w=>`<span style="display:inline-block">${hl(w.includes('*')?w:w)}</span>`).join(' ')}</div>
   ${mascotHTML('m',M3.falando?'left:290px;top:760px;width:440px;height:380px':'left:330px;top:780px;width:380px')}
   <div class="card bal" style="left:120px;right:120px;top:600px;padding:20px 28px;text-align:center;border:2px solid rgba(255,210,31,.6)">
-    <div class="lbl" style="color:var(--y);font-size:22px">você sabia?</div>
+    <div class="lbl" style="color:var(--y)">você sabia?</div>
     <div style="font-size:42px;font-weight:800;margin-top:6px">${hl(sc.subtitulo||'')}</div></div>`,
  upd(t,el){
   // título reconstrói o destaque por palavra
@@ -236,7 +239,7 @@ B.escala=sc=>{const mn=+sc.min||0,mx=+sc.max||100,X=v=>90+900*clamp((v-mn)/(mx-m
   if(de){const t0=beat(sc,mk.length,n);el.querySelector('.fill').style.width=(100*clamp((de.valor-mn)/(mx-mn))*eio((t-t0+0.3)/1.1))+'%';pop(el.querySelector('.de'),t,t0+0.5,{dy:30})}}}};
 
 B.lista=sc=>{const it=(sc.itens||[]).slice(0,4);return{html:`
-  <div style="position:absolute;left:60px;right:60px;top:${it.length>3?380:420}px">
+  <div style="position:absolute;left:60px;right:calc(1080px - var(--zona-direita));top:${it.length>3?380:420}px">
     <div class="ttl" style="font-size:64px;font-weight:900;color:var(--y);margin-bottom:40px;text-transform:uppercase;display:flex;align-items:center;gap:20px"><span class="emo" style="font-size:70px">${esc(ico(sc))}</span>${esc(sc.titulo)}</div>
     ${it.map((x,i)=>`<div class="chk c${i}"><div class="ic">${i+1}</div><div>${hl(x)}</div><span class="ok">✓</span></div>`).join('')}</div>`,
  upd(t,el){show(el.querySelector('.ttl'),t,sc.start);it.forEach((x,i)=>{const t0=beat(sc,i,it.length,.45);pop(el.querySelector('.c'+i),t,t0,{dx:-400,dy:0,sc:.95});el.querySelector(`.c${i} .ok`).style.opacity=P(t,t0+0.5,.3)})}}};
@@ -590,6 +593,21 @@ window.inspecionar=function(t){
     if(cruza(a,p,a.g==='cap'&&!p.foto?20:0))prob.push({tipo:'choque',cap:a.g==='cap',etq:a.etq||p.etq,txt:`"${a.tx}" encostando no cartão "${p.tx}"`,cena:at.sc.tipo})}
   for(const a of bx){if(a.x0<0||a.x1>1080||a.y0<0||a.y1>1920)prob.push({tipo:'fora',cap:a.g==='cap',txt:`"${a.tx}" saindo da tela`,cena:at.sc.tipo})}
   return dentro?prob:[]};
+
+// LEGIBILIDADE (plano-mestre F; só registro/testes, não decide nada): texto pequeno demais ou dentro das zonas dos
+// botões do Reels/TikTok (topo, base e coluna da direita)
+window.legibilidade=function(t){
+  const at=scenes.find(s=>t>=s.sc.start&&t<s.sc.end);if(!at||t-at.sc.start<0.5||at.sc.end-t<0.25)return [];
+  const css=getComputedStyle(document.documentElement),px=k=>parseFloat(css.getPropertyValue(k));
+  const MIN=px('--fs-etiqueta'),TOPO=px('--zona-topo'),BASE=px('--zona-base'),DIR=px('--zona-direita');const out=[];
+  const raizes=[at.el,...FIXOS.map(id=>document.getElementById(id)).filter(Boolean)];
+  for(const r of raizes){const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT);let n;
+    while((n=w.nextNode())){const tx=n.textContent.trim();const el=n.parentElement;if(!tx||el.closest('[data-deco]'))continue;
+      if(el.closest('svg')||opac(el)<0.5)continue;const fs=parseFloat(getComputedStyle(el).fontSize);
+      const q=el.getBoundingClientRect();if(q.width<4||q.height<4)continue;
+      if(fs<MIN-0.5)out.push({tipo:'pequeno',txt:`"${tx.slice(0,30)}" com ${Math.round(fs)}px`,cena:at.sc.tipo});
+      if(q.top<TOPO-2||q.bottom>BASE+2||q.left>DIR)out.push({tipo:'zona',txt:`"${tx.slice(0,30)}" na área dos botões`,cena:at.sc.tipo})}}
+  return out};
 
 window.seek=async function(t){
   fx(t);

@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import acontecimentos, claude, editorial, gemini, storyboard
+from . import acontecimentos, claude, editorial, gemini, recursos, storyboard
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -366,6 +366,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     if serie and serie.get('arco'):
         v['arco'] = serie['arco']             # a série segue o plano da parte 1 (a parte 2 sabe se ainda vem a 3)
     v = arrumar_final(v, parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0)
+    recursos.rebaixar(v, fatos)                 # plano-mestre F: gráfico com dado fora dos fatos não vai à tela
     v = acontecimentos.normalizar(dividir(geocodificar(v)))    # 12/11: quem/onde/quando/recurso de cada ideia
     v = storyboard.construir(v)                # plano-mestre D: uma estrutura por cena (só registro)
     v = acervo_mod.casar(v, acervo)

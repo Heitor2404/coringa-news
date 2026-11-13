@@ -217,7 +217,7 @@ def test_sombra_desiste_no_limite_de_tempo_sem_segurar(monkeypatch):
     r = fiscal.sombra(V, _cenas(('a', 3, 'gancho')), None, nota_imagem=8,
                       pedir=lambda p: _t.sleep(5), prompt_base=BASE)
     assert _t.time() - t0 < 2 and 'fatos' in r['nao_medido'] and r['nota'] is not None
-    assert any('falhou' in o for o in r['obs'].get('texto', []))
+    assert any('não respondeu' in o for o in r['obs'].get('texto', []))      # 12/11: o motivo aparece
 
 
 def test_sombra_nao_roda_com_pouco_tempo_na_rodada(monkeypatch):

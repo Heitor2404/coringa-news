@@ -54,7 +54,7 @@ def test_caminho_explica_guarda_os_fatos_e_o_fiscal_recebe(monkeypatch):
     v = roteiro.escrever_explica({'pergunta': 'Como vendeu a torre?', 'termos': ['Lustig']})
     assert v['fatos'] == FATOS
     enviados = []
-    fiscal.avaliar_texto(v, prompt_base=BASE, pedir=lambda p: enviados.append(p) or {})
+    fiscal.avaliar_texto(v, prompt_base=BASE, pedir=lambda p: enviados.append(p) or {'fatos': {}})
     assert 'Lustig vendeu a Torre Eiffel como ferro-velho' in enviados[0]
 
 
@@ -64,7 +64,7 @@ def test_caminho_noticias_guarda_os_fatos_e_o_fiscal_recebe(monkeypatch):
     monkeypatch.setattr(roteiro, 'PROMPT_ROTEIRO', '{fatos} {produtos} {titulo}')     # o texto real fica no cofre
     v = roteiro.escrever({'titulo': 'Ponte fecha', 'resumo': '', 'fonte': '', 'link': ''}, [])
     enviados = []
-    fiscal.avaliar_texto(v, prompt_base=BASE, pedir=lambda p: enviados.append(p) or {})
+    fiscal.avaliar_texto(v, prompt_base=BASE, pedir=lambda p: enviados.append(p) or {'fatos': {}})
     assert 'a ponte fechou em 3 de março' in enviados[0]
 
 

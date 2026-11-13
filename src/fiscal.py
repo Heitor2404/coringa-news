@@ -17,7 +17,12 @@ from pathlib import Path
 
 from . import estaticos
 
-LIMITE_TEXTO_S = 90          # o pedido ao Gemini roda em paralelo; passou disso, o fiscal segue sem ele (não segura o vídeo)
+LIMITE_TEXTO_S = 150         # o pedido ao Gemini roda em paralelo; passou disso, o fiscal segue sem ele (não segura o vídeo)
+# 12/11 (Torre Eiffel 4): fatos, narrativa e recursos saíram "não medido" SEM motivo. O pedido de texto ao Gemini não foi
+# respondido (o livro-caixa registra 8 chamadas do Gemini na rodada e nenhuma é do fiscal sombra) e o erro ficava só no
+# .json criptografado. O fiscal sombra só tentava os modelos PRINCIPAIS do plano grátis, os mesmos que o casamento de
+# imagens tinha acabado de usar; com o limite por minuto (espera de até 60 s por modelo) os 90 s estouravam. Agora:
+# principais → lite (grátis também) dentro de 150 s; o motivo aparece no Telegram e no registro; avaliação do lite é marcada.
 TEMPO_MIN_RODADA = 20        # minutos que precisam sobrar na rodada para o fiscal sombra rodar
 PESOS = {'fatos': 25, 'imagem': 20, 'ritmo': 15, 'acabamento': 15, 'narrativa': 15, 'recursos': 5, 'audio': 5}
 NOMES = {'fatos': 'fatos', 'imagem': 'imagem', 'ritmo': 'ritmo', 'acabamento': 'acabamento', 'narrativa': 'narrativa',
@@ -44,7 +49,7 @@ def faixa(nota: float) -> str:
 
 # ───────────────────────── partes medidas por código ─────────────────────────
 def nota_ritmo(cenas: list[dict]) -> tuple[float, dict, list[str]]:
-    m = estaticos.medir_cenas(cenas)
+    m = estaticos.medir_movimento(cenas)      # 12/11: imagem imóvel × movimento de câmera que de fato muda a vista
     pontos = PESOS['ritmo'] * (1 - min(1.0, 1.5 * m['frac_estatica']))
     # mesma imagem voltando depois de outras (repetição percebida). 12/11: pela imagem NA TELA (arquivo + assinatura
     # visual), não pelo id da ideia — a foto reaproveitada da vizinha tem o id de outra ideia e não era contada
@@ -116,7 +121,8 @@ def _frases(v: dict) -> list[dict]:
 
 
 def _gemini_direto(prompt: str) -> dict:
-    """Gemini SEM passar pelo Claude (a cascata normal tenta o Claude primeiro e gastaria crédito da assinatura)."""
+    """Gemini SEM passar pelo Claude (a cascata normal tenta o Claude primeiro e gastaria crédito da assinatura).
+    Principais primeiro; sem resposta deles, os lite (grátis também). O modelo que respondeu vai em '_modelo'."""
     from google.genai import types
     from . import gemini
 
@@ -124,8 +130,13 @@ def _gemini_direto(prompt: str) -> dict:
         r = gemini.cliente().models.generate_content(
             model=modelo, contents=prompt,
             config=types.GenerateContentConfig(response_mime_type='application/json', temperature=0.2))
-        return gemini.extrair_json(r.text)
-    return gemini._tentar(f, gemini.PRINCIPAIS or None)
+        out = gemini.extrair_json(r.text)
+        if isinstance(out, list):
+            out = out[0] if out else {}
+        if isinstance(out, dict):
+            out['_modelo'] = modelo
+        return out
+    return gemini._tentar(f, (gemini.PRINCIPAIS + gemini.LITES) or None)
 
 
 def tem_fatos(v: dict) -> bool:
@@ -162,7 +173,9 @@ def avaliar_texto(v: dict, prompt_base: str | None = None, pedir=None) -> dict:
     r = caixa.get('r')
     if isinstance(r, list):
         r = r[0] if r else {}
-    return r if isinstance(r, dict) else {}
+    if not isinstance(r, dict) or not any(k in r for k in ('fatos', 'narrativa', 'recursos')):
+        raise ValueError('a resposta veio sem fatos/narrativa/recursos')
+    return r
 
 
 def nota_fatos(f: dict, n_frases: int) -> dict:
@@ -223,10 +236,22 @@ def sombra(v: dict, cenas: list[dict], video: Path | None, nota_imagem: float | 
         partes['audio'], obs['audio'] = nota_audio(video)
     else:
         partes['audio'] = None
+    motivo_texto = ''
     try:
         t = avaliar_texto(v, prompt_base=prompt_base, pedir=pedir)
+        if not t:
+            motivo_texto = 'o texto do fiscal sombra não está no cofre'
     except Exception as e:
-        t, obs['texto'] = {}, [f'avaliação de texto falhou ({str(e)[:80]})']
+        t = {}
+        motivo_texto = f'o Gemini não respondeu ({type(e).__name__}: {str(e)[:90]})'
+    if motivo_texto:
+        obs['texto'] = [motivo_texto]
+        print(f'  [fiscal sombra] fatos/narrativa/recursos não medidos: {motivo_texto}')
+    else:
+        modelo = str(t.get('_modelo') or '')
+        obs['texto_modelo'] = [modelo] if modelo else []
+        if 'lite' in modelo:
+            print(f'  [fiscal sombra] texto avaliado pelo modelo lite ({modelo}): os principais não responderam')
     fatos_r = None
     if not tem_fatos(v):
         partes['fatos'] = None                            # sem fatos pesquisados não há como conferir: NÃO MEDIDO
@@ -241,6 +266,7 @@ def sombra(v: dict, cenas: list[dict], video: Path | None, nota_imagem: float | 
             obs['fatos_motivo'] = [fatos_r['motivo']]
     else:
         partes['fatos'] = None
+        obs['fatos_motivo'] = [motivo_texto or 'sem avaliação de texto']
     n = t.get('narrativa') or {}
     partes['narrativa'] = _num(n.get('nota'), PESOS['narrativa']) if n else None
     if n.get('comentario'):
@@ -257,7 +283,52 @@ def sombra(v: dict, cenas: list[dict], video: Path | None, nota_imagem: float | 
     nota = round(10 * sum(medidos.values()) / peso, 1) if peso else None
     return {'nota': nota, 'faixa': faixa(nota) if nota is not None else 'não medido', 'partes': partes,
             'nao_medido': [k for k, p in partes.items() if p is None], 'bloqueadores': bloqueadores, 'obs': obs,
-            'ritmo': medida_ritmo, 'fatos': fatos_r, 'recebeu_fatos': tem_fatos(v)}
+            'ritmo': medida_ritmo, 'fatos': fatos_r, 'recebeu_fatos': tem_fatos(v),
+            'alertas': alertas(v, cenas, problemas_tela or [], bloqueadores), 'por_cena': por_cena(cenas)}
+
+
+# ───────────────────────── plano-mestre H: alertas graves e evidência por cena ─────────────────────────
+# A nota total NÃO esconde falha grave: os alertas ficam separados (P0 = não pode ir ao ar; P1 = vídeo fraco), cada um
+# com a evidência. Só observação: não muda a nota, o fiscal antigo nem a publicação. Falsos positivos conhecidos:
+#  - "cena central sem mídia que explique": depende da relação dada pelo Gemini e conferida por metadados (E); foto boa
+#    sem ano ou sem nome no catálogo cai como contextual;
+#  - "promessa não retomada": comparação por palavras (sinônimos escapam);
+#  - "dado fora dos fatos": por dígitos ("três mil" escrito por extenso nos fatos não casa com 3000).
+def alertas(v: dict, cenas: list[dict], problemas_tela: list, bloqueadores: list) -> list[dict]:
+    from . import editorial, recursos, storyboard
+    out = [{'nivel': 'P0', 'motivo': 'informação incorreta', 'evidencia': b} for b in bloqueadores]
+    out += [{'nivel': 'P0', 'motivo': 'texto em cima de texto', 'evidencia': str(t)} for t in problemas_tela]
+    fatos = str(v.get('fatos') or '')
+    try:
+        for pb in recursos.conferir(v, fatos) if fatos else []:
+            if pb['inventado']:
+                out.append({'nivel': 'P0', 'motivo': 'gráfico com dado fora dos fatos', 'evidencia': f"cena {pb['cena'] + 1}: {pb['problema']}"})
+        for c in v.get('cenas', []):
+            if c.get('_rebaixado'):
+                out.append({'nivel': 'P1', 'motivo': 'gráfico rebaixado (dado fora dos fatos)', 'evidencia': c['_rebaixado']})
+        r = storyboard.resumo(cenas)
+        if r['centrais_sem_explicacao']:
+            out.append({'nivel': 'P1', 'motivo': 'cena central sem mídia que explique',
+                        'evidencia': 'cenas ' + ', '.join(str(k + 1) for k in r['centrais_sem_explicacao'][:6])})
+        p = v.get('plano') or {}
+        if p and p.get('origem') != 'derivado':
+            for pb in editorial.validar_plano(p, fatos) + editorial.avaliar_roteiro(v, fatos)['problemas']:
+                if any(x in pb for x in ('promessa', 'payoff', 'não fecha', 'não é viável', 'suspense')):
+                    out.append({'nivel': 'P1', 'motivo': 'roteiro', 'evidencia': pb})
+    except Exception as e:                                # instrumento: nunca derruba a rodada
+        out.append({'nivel': '?', 'motivo': 'alertas não medidos', 'evidencia': str(e)[:80]})
+    return out
+
+
+def por_cena(cenas: list[dict]) -> list[dict]:
+    vistos, out = set(), []
+    for c in cenas:
+        sb = c.get('sb')
+        if sb and id(sb) not in vistos:
+            vistos.add(id(sb))
+            out.append({'cena': sb['cena'] + 1, 'proposito': sb['proposito'], 'evidencia': sb['evidencia'],
+                        'explica': sb['explica'], 'limitacoes': sb['limitacoes'][:3]})
+    return out
 
 
 def linhas_telegram(r: dict) -> list[str]:
@@ -268,8 +339,13 @@ def linhas_telegram(r: dict) -> list[str]:
     out = [f"🧪 Fiscal novo (TESTE, não decide nada): {str(r['nota']).replace('.', ',')}/10 — {r['faixa']}", f'   {pts}']
     if r['nao_medido']:
         motivo = (r['obs'].get('fatos_motivo') or [''])[0]
+        texto = (r['obs'].get('texto') or [''])[0]
         out.append('   não medido: ' + ', '.join(NOMES[k] + (f' ({motivo})' if k == 'fatos' and motivo else '')
-                                                for k in r['nao_medido']))
+                                                for k in r['nao_medido'])
+                   + (f' — narrativa/recursos: {texto}' if texto and texto != motivo else ''))
+    modelo = (r['obs'].get('texto_modelo') or [''])[0]
+    if 'lite' in modelo:
+        out.append(f'   (fatos/narrativa/recursos avaliados pelo modelo lite {modelo}: os principais não responderam)')
     f = r.get('fatos')
     if f and f.get('contagem'):
         c = f['contagem']
@@ -282,6 +358,15 @@ def linhas_telegram(r: dict) -> list[str]:
     for k in ('fatos', 'recursos'):
         for o in r['obs'].get(k) or []:
             out.append(f'   • {o}')
+    al = r.get('alertas') or []
+    if al:
+        out.append(f"   🚩 alertas (fora da nota, não decidem): " + ' · '.join(f"{a['nivel']} {a['motivo']}" for a in al[:5]))
+        for a in al[:5]:
+            out.append(f"      - {a['nivel']}: {a['evidencia'][:120]}")
+    ex = [c for c in r.get('por_cena') or []]
+    if ex:
+        n = sum(1 for c in ex if c['explica'])
+        out.append(f'   🖼 representação: {n} de {len(ex)} cenas com mídia que explica a frase (storyboard)')
     return out
 
 

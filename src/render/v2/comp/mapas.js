@@ -222,8 +222,8 @@
     area_segura: 'y 340–1200', legibilidade: 'distância 64 px mono; nomes 42 px',
     rejeicao: ['rota inventada (sem pontos nos fatos)', 'rota marítima que atravessa continente (geo.validar_rota)', 'distância calculada apresentada como oficial'],
     transicao: 'zoom',
-    exemplo: { params: { kicker: 'TRAJETO', titulo: 'Do *Caribe* ao *Pacífico*', distancia_km: 80, tipo: 'canal', pontos: [{ nome: 'Colón', lon: -79.9, lat: 9.36 }, { nome: 'Cidade do Panamá', lon: -79.53, lat: 8.96 }],
-      rota: [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], folga: .45, nota: 'Distância: Wikipédia' }, dur: 6, fala: 'São oitenta quilômetros do Caribe ao Pacífico.' },
+    exemplo: { params: { kicker: 'TRAJETO', titulo: 'Do *Caribe* ao *Pacífico*', distancia_km: 82, tipo: 'canal', pontos: [{ nome: 'Colón', lon: -79.9, lat: 9.36 }, { nome: 'Cidade do Panamá', lon: -79.53, lat: 8.96 }],
+      rota: [[-79.915, 9.37], [-79.92, 9.27], [-79.87, 9.2], [-79.8, 9.16], [-79.72, 9.13], [-79.68, 9.1], [-79.64, 9.05], [-79.6, 9.01], [-79.57, 8.96], [-79.55, 8.9]], folga: .45, nota: 'Distância: Wikipedia (inglês); Britannica' }, dur: 6, fala: 'São oitenta e dois quilômetros do Caribe ao Pacífico.' },
   }, (p, ctx) => {
     const comp = !!p.rotas;
     p._pad = comp ? { bottom: 1920 - (985 - 20 * Math.max(0, (p.rotas.length - 2))) } : { bottom: 1920 - 1070 };   // painel/distância não cobrem a rota

@@ -184,7 +184,9 @@
     return bloco >= 0.6 || (c._falaCob >= 0.6 && bloco >= 0.34);
   }
   function legenda(t) {
-    const cap = (D.captions || []).find(c => t >= c.start && t < c.end + 0.05);
+    // blocos que se sobrepõem (fim estendido de um × começo do seguinte): vale o mais recente, senão a palavra é dita
+    // com o bloco anterior ainda na tela
+    const cap = (D.captions || []).filter(c => t >= c.start && t < c.end + 0.05).reduce((a2, c) => (!a2 || c.start >= a2.start ? c : a2), null);
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end);
     LEG.dataset.motivo = '';
     if (!cap || !at) { LEG.style.opacity = 0; LEG.dataset.motivo = 'sem fala'; return; }

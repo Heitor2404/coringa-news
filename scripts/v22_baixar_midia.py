@@ -13,7 +13,7 @@ LIVRES = re.compile(r'(public domain|pd|cc0|cc[- ]by|no known restrictions)', re
 
 
 def get(url, dest=None, limite=400_000_000):
-    for t in range(4):
+    for t in range(7):
         try:
             req = urllib.request.Request(url, headers=UA)
             with urllib.request.urlopen(req, timeout=120) as r:
@@ -30,7 +30,7 @@ def get(url, dest=None, limite=400_000_000):
                             break
                 return dest
         except Exception as e:
-            print('  tentativa', t, e); time.sleep(3 * (t + 1))
+            print('  tentativa', t, e); time.sleep(min(90, 8 * 2 ** t))   # o upload.wikimedia.org limita a taxa
     raise RuntimeError('falhou: ' + url)
 
 
@@ -103,7 +103,8 @@ def main():
                 else:
                     bruto = tmp / f'{i}.webm'; get(meta['url'], bruto, limite=200_000_000)
                 arq = out / f'{i}.mp4'
-                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-user_agent', UA['User-Agent'], '-ss', str(it['inicio']), '-t', str(it['dur']), '-i', str(bruto),
+                ua = ['-user_agent', UA['User-Agent']] if it.get('streaming') else []
+                subprocess.run(['ffmpeg', '-v', 'error', '-y', *ua, '-ss', str(it['inicio']), '-t', str(it['dur']), '-i', str(bruto),
                                 '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', str(arq)], check=True)
             elif it['tipo'] == 'audio':
                 meta = info_commons(it['commons'])

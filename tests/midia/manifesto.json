@@ -2,43 +2,6 @@
   "_doc": "Mídia de teste REAL e gratuita (V2.2). Baixada pelo workflow midia-teste-v22 (Actions tem internet; esta máquina não). Licença vem da API do Commons no momento do download e fica em <id>.json ao lado do arquivo. Nada pago.",
   "itens": [
     {
-      "id": "gatun_1913_scan",
-      "tipo": "imagem",
-      "commons": "Bird's-eye view of Gatun Locks, Panama Canal LCCN95515719.jpg",
-      "uso": "P1-5 candidata de alta resolução da panorâmica de 1913"
-    },
-    {
-      "id": "gatun_1913_pan",
-      "tipo": "imagem",
-      "commons": "Locks at Gatun, Panama Canal, taken during March 1913 LCCN2007663276.tif",
-      "converter": "jpg",
-      "uso": "P1-5 alternativa autêntica (panorâmica já recortada)"
-    },
-    {
-      "id": "video_h_navio",
-      "tipo": "video",
-      "commons": "Continuing Promise transits the Panama Canal-ZLIWzvfdisQ-248+251.webm",
-      "inicio": 18,
-      "dur": 10,
-      "uso": "P1-6 horizontal com áudio original"
-    },
-    {
-      "id": "video_h_timelapse",
-      "tipo": "video",
-      "commons": "Panama Canal Timelapse- Caribbean to Pacific.webm",
-      "inicio": 40,
-      "dur": 8,
-      "uso": "P1-6 outra taxa de quadros / time-lapse"
-    },
-    {
-      "id": "video_v_nasa",
-      "tipo": "video",
-      "commons": "Hubble Women Making History- Beverly Johnson (SVS14324 BEV VERTICAL MP4).webm",
-      "inicio": 30,
-      "dur": 8,
-      "uso": "P1-6 vertical"
-    },
-    {
       "id": "video_h_60fps",
       "tipo": "video",
       "commons": "Container Ship Dashcam Around The World In 70 Days Timelapse, 4k, 60fps.webm",
@@ -55,30 +18,7 @@
       "dur": 80,
       "alinhar": "pt",
       "uso": "P1-9/P1-10 narração humana real + alinhamento por palavra"
-    },
-    {
-      "id": "foto_salto_angel",
-      "tipo": "busca",
-      "busca": "Salto Ángel Venezuela",
-      "uso": "P1-9 acervo real do tema inédito"
-    },
-    {
-      "id": "foto_caracas",
-      "tipo": "busca",
-      "busca": "Caracas panorama city",
-      "uso": "P1-9"
-    },
-    {
-      "id": "foto_orinoco",
-      "tipo": "busca",
-      "busca": "Orinoco river Venezuela",
-      "uso": "P1-9"
-    },
-    {
-      "id": "foto_roraima",
-      "tipo": "busca",
-      "busca": "Monte Roraima tepui",
-      "uso": "P1-9"
     }
-  ]
+  ],
+  "_rodada": "3: só o que faltou (alinhamento da voz e clipe 60 fps); o resto já foi baixado na 1ª rodada e virou fixture"
 }

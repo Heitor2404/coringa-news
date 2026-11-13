@@ -55,11 +55,15 @@ CAPACIDADES: list[Capacidade] = [
     Capacidade('manobra_eclusa', 'navio entrando/saindo de câmara, comporta fechando/abrindo (mecanismo de eclusa)',
                [r'(comporta|camara|eclusa)\w*.{0,40}(fech\w*|abr\w*|entr\w*|iguala\w*)', r'(entr\w*|sai\w*) (numa|na|da) (camara|eclusa)', r'nivel iguala'],
                ['mecanismo.eclusa'], True, {'mecanismo.eclusa': []}),
+    Capacidade('maquina', 'máquina/mecanismo em funcionamento (peças que giram, empurram, comprimem, transformam energia)',
+               [r'(turbina|motor|engrenage\w*|pistao|pistoes|bomba|helice|gerador|alavanca|polia|compressor|manivela|biela)\w*.{0,50}(gir\w*|empurr\w*|acion\w*|comprim\w*|transform\w*|produz\w*|mov\w*|puxa\w*)'],
+               ['diagrama.explicativo', 'processo.etapas', 'forcas.vetores'], True,
+               {'diagrama.explicativo': ['nos'], 'processo.etapas': ['etapas>=2'], 'forcas.vetores': ['forcas']}),
     Capacidade('explosao', 'explosão, impacto, erupção, onda de choque',
                [r'explod\w*|explos\w*|onda de choque|cratera|erup\w*|detona\w*|impacto (de|do|da)'], ['evento.impacto'], True,
                {'evento.impacto': ['aneis']}),
     Capacidade('rota', 'trajeto, ligação ou deslocamento entre lugares',
-               [r'\bliga\w* .{0,30}\b(a|ao|com)\b', r'\b(de|do|da) [a-z]+.{0,30}\b(ate|ao|a) [a-z]+', r'atravess\w*|naveg\w*|percorr\w*|viaj\w*|rota|trajeto|caminho entre'],
+               [r'\bliga\w* .{0,30}\b(ao|com)\b', r'\b(de|do|da) [a-z]+.{0,30}\b(ate|ao) [a-z]+', r'(atravess|naveg|percorr|viaj)\w*.{0,40}\b(ate|rumo|para (o|a|os|as))\b', r'\brota\b|trajeto|caminho entre'],
                ['mapa.rota'], True, {'mapa.rota': ['pontos>=2']}),
     Capacidade('localizacao', 'onde fica um lugar',
                [r'\bfica (em|no|na)\b|localizad\w*|\bonde fica|situad\w*'], ['mapa.localizacao'], False, {'mapa.localizacao': ['pontos>=1']},
@@ -75,13 +79,13 @@ CAPACIDADES: list[Capacidade] = [
                [r'(cresc|caiu|cai |aument|diminu|despenc|disparo)\w*.{0,40}(desde|ao longo|por ano|em \d{4}|decada)', r'desde \d{4}'],
                ['grafico.temporal'], False, {'grafico.temporal': ['serie>=4']}),
     Capacidade('sequencia_historica', 'sequência de datas/fatos históricos',
-               [r'\b1[5-9]\d\d\b.{3,80}\b(1[5-9]\d\d|20\d\d)\b|\b20\d\d\b.{3,80}\b20\d\d\b'], ['linha_tempo.historica'], False,
+               [r'\b(1\d{3}|20\d\d)\b.{3,80}\b(1\d{3}|20\d\d)\b'], ['linha_tempo.historica'], False,
                {'linha_tempo.historica': ['eventos>=2']}, {'tipo': ['linha_tempo']}),
     Capacidade('transformacao', 'transformação de um estado em outro (antes × depois)',
                [r'(vir[ao]u?|transform\w*|se torn\w*|antes .{0,40} (hoje|depois|agora))'], ['comparacao.antes_depois', 'processo.etapas'], True,
                {'comparacao.antes_depois': ['img_antes', 'img_depois'], 'processo.etapas': ['etapas>=2']}),
     Capacidade('proporcao', 'porcentagem / fração de um todo', [r'\d+ ?(%|por cento)'], ['proporcao'], False, {'proporcao': ['pct']}),
-    Capacidade('numero', 'um número grande no centro da frase', [r'\b\d{2,}[\d.,]*\s*(mil|milho\w*|bilho\w*|litros|km|metros|toneladas|anos)'], ['numero.animado'], False,
+    Capacidade('numero', 'um número grande no centro da frase', [r'\b\d{2,}[\d.,]*\s*(mil|milho\w*|bilho\w*|litros|km|quilometros|metros|toneladas|anos)', r'\b\d+([.,]\d+)?\s*(mil|milho\w*|bilho\w*|trilho\w*|anos-luz)\b'], ['numero.animado'], False,
                {'numero.animado': ['valor', 'fonte']}, {'tipo': ['numero']}),
     Capacidade('processo', 'processo em etapas / mecanismo explicado passo a passo',
                [r'\b(primeiro|em seguida|depois|entao|por fim)\b.{0,80}\b(depois|entao|em seguida|por fim)\b'], ['processo.etapas', 'diagrama.explicativo'], True,
@@ -89,7 +93,7 @@ CAPACIDADES: list[Capacidade] = [
     Capacidade('forca', 'forças físicas (empuxo, peso, atrito, pressão), flutuar/afundar',
                [r'empuxo|\bpeso\b|atrito|pressao|flutu\w*|afund\w*|forca (da|de|do)'], ['forcas.vetores'], True, {'forcas.vetores': ['forcas']}),
     Capacidade('orbita', 'movimento celeste (órbita, translação, rotação)',
-               [r'orbit\w*|gir\w* em torno|volta (ao redor|em torno)|translac\w*|ano-luz|anos-luz'], ['astronomia.orbita'], True, {'astronomia.orbita': []}),
+               [r'orbit\w*|gir\w* em torno|volta (ao redor|em torno)|translac\w*'], ['astronomia.orbita'], True, {'astronomia.orbita': []}),
     Capacidade('citacao', 'fala literal de alguém', [r'["“].{10,}["”]'], ['citacao'], False, {'citacao': ['texto', 'autor']}),
     Capacidade('fonte', 'informação atribuída a uma fonte (estudo, jornal, documento)',
                [r'\b(segundo|de acordo com) (o|a|um|uma)?\s*(estudo|pesquisa|jornal|relatorio|documento|reportagem)'], ['fonte.evidencia'], False, {'fonte.evidencia': ['veiculo', 'trecho']}),
@@ -121,12 +125,31 @@ def detectar(cena: dict) -> list[dict]:
     return achados
 
 
+def _num(v) -> bool:
+    try:
+        float(v); return not isinstance(v, bool)
+    except (TypeError, ValueError):
+        return False
+
+
+def _valido(campo: str, x) -> bool:
+    """Um item só conta se for utilizável: ponto com lon/lat no mundo, item de gráfico com valor numérico."""
+    if campo in ('pontos', 'rota') and isinstance(x, dict):
+        return _num(x.get('lon')) and _num(x.get('lat')) and -180 <= float(x['lon']) <= 180 and -85 <= float(x['lat']) <= 85
+    if isinstance(x, dict) and 'valor' in x:
+        return _num(x['valor'])
+    return True
+
+
 def _tem(req: str, params: dict, contexto: str) -> bool:
     if req.startswith('contexto:'):
         return re.search(req.split(':', 1)[1], contexto) is not None
     m = re.match(r'(\w+)>=(\d+)', req)
     if m:
-        return len(params.get(m.group(1)) or []) >= int(m.group(2))
+        itens = params.get(m.group(1)) or []
+        return len(itens) >= int(m.group(2)) and all(_valido(m.group(1), x) for x in itens)
+    if req == 'valor':
+        return _num(params.get('valor'))
     return params.get(req) not in (None, '', [], {})
 
 
@@ -138,19 +161,34 @@ def escolher(cena: dict, params: dict | None = None, contexto: str = '') -> dict
     ctx = _n(contexto + ' ' + cena.get('fala', '') + ' ' + cena.get('mostrar', ''))
     achados = detectar(cena)
     falhas = []
-    for a in achados:
+
+    def viavel(a):
         cap = POR_ID[a['capacidade']]
         for comp in cap.comps:
-            reqs = cap.requisitos.get(comp, [])
-            faltam = [r for r in reqs if not _tem(r, params, ctx)]
+            faltam = [r for r in cap.requisitos.get(comp, []) if not _tem(r, params, ctx)]
             if not faltam:
-                return {'comp': comp, 'capacidade': cap.id, 'critica': cap.critica, 'trecho': a['trecho'],
-                        'motivo': f'"{a["trecho"]}" → {cap.descricao}'}
-            falhas.append(f'{comp} precisa de {", ".join(faltam)}')
-        if cap.critica and a['por_texto']:
-            return {'comp': None, 'capacidade': cap.id, 'critica': True, 'trecho': a['trecho'],
-                    'limitacao': f'acontecimento "{a["trecho"]}" ({cap.descricao}) sem composição viável: ' + '; '.join(falhas)}
-    return {'comp': 'foto.documental', 'capacidade': 'lugar', 'critica': False, 'trecho': '', 'motivo': 'nenhum acontecimento específico: foto real do assunto'}
+                return {'comp': comp, 'capacidade': cap.id, 'critica': cap.critica, 'trecho': a['trecho'], 'motivo': f'"{a["trecho"]}" → {cap.descricao}'}
+            falhas.append(f'{cap.id}: {comp} precisa de {", ".join(faltam)} válidos')
+        return None
+    # 1) acontecimentos CRÍTICOS ditos na fala: qualquer um representável serve (a fala pode ter vários); se nenhum
+    #    for, a cena recebe limitação — uma composição não crítica (foto, número) não substitui um mecanismo.
+    criticos = [a for a in achados if a['critica'] and a['por_texto']]
+    for a in criticos:
+        r = viavel(a)
+        if r:
+            return r
+    if criticos:
+        a = criticos[0]
+        return {'comp': None, 'capacidade': a['capacidade'], 'critica': True, 'trecho': a['trecho'],
+                'limitacao': f'acontecimento "{a["trecho"]}" ({POR_ID[a["capacidade"]].descricao}) sem composição viável: ' + '; '.join(falhas)}
+    for a in achados:
+        r = viavel(a)
+        if r:
+            return r
+    r = {'comp': 'foto.documental', 'capacidade': 'lugar', 'critica': False, 'trecho': '', 'motivo': 'nenhum acontecimento específico: foto real do assunto'}
+    if falhas:   # havia algo a mostrar, mas sem dado confiável: não inventa gráfico/número — avisa
+        r['aviso'] = 'dados insuficientes para ' + '; '.join(falhas)
+    return r
 
 
 # Referências de altura conhecidas (Wikipédia), para a escala sem inventar números

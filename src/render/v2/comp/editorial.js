@@ -1,0 +1,142 @@
+/* EDITORIAL V2 — revelação, evidência (fonte), citação e encerramento. */
+(function () {
+  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, palavras, revelar, caber } = V2.U;
+  const H = V2.H;
+
+  /* 20. revelacao.surpresa */
+  V2.registrar({
+    id: 'revelacao.surpresa', nome: 'Revelação de informação surpreendente', tratamento: 'alerta', tom: 'escuro',
+    objetivo: 'Entregar a resposta da pergunta central (payoff) no instante em que é falada, com impacto.',
+    funcoes: ['revelacao', 'payoff', 'surpresa'],
+    params: { pergunta: '≤ 40 (a pergunta do início)', resposta: '1–3 palavras (≤ 18 caracteres)', detalhe: '≤ 60 (o porquê, serifa)', virada: 'segundo (na cena) em que a resposta é DITA (o motor calcula pela legenda)', cor: "'amarelo' | 'verde' | 'vermelho'" },
+    fundo: 'opcional: a imagem do gancho (fecha o ciclo), muito escurecida', layout: 'pergunta pequena 380–450; resposta gigante centrada em y≈700; barra; detalhe 900–1060',
+    paleta: 'resposta na cor escolhida, brilho; fundo escurecido 75%', animacao: 'antes da virada: pergunta + pulso de expectativa; na virada: clarão, resposta bate (1,25 → 1), barra corre; detalhe aparece',
+    duracao: [2.5, 3.5, 5], limites: { pergunta: 40, resposta: 18, detalhe: 60 }, legenda: 'integrada',
+    area_segura: 'y 360–1100', legibilidade: 'resposta ≥ 130 px 900',
+    rejeicao: ['resposta mostrada antes de ser dita (spoiler)', 'revelação que não responde a pergunta do gancho'],
+    transicao: 'corte',
+    exemplo: { params: { pergunta: 'O que ergue o navio?', resposta: 'GRAVIDADE', detalhe: 'A água desce do lago e enche a câmara.', virada: 1.2, cor: 'amarelo' }, fundo: { img: '@navio_eclusa', escurece: 1 }, dur: 4, fala: 'Quem levanta o navio é a gravidade.' },
+  }, (p) => {
+    const cor = { verde: 'var(--verde)', vermelho: 'var(--vermelho)' }[p.cor] || 'var(--amarelo)';
+    return {
+      html: `<div class="abs" style="inset:0;background:rgba(5,8,14,.74)"></div>
+        <div class="abs pul" data-deco="1" style="left:540px;top:700px;width:0;height:0">${[0, 1, 2].map(i => `<div class="pr pr${i}" style="position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;border:3px solid ${cor};opacity:0"></div>`).join('')}</div>
+        <div class="abs pq" data-g="pq" data-txt="1" style="left:72px;right:150px;top:380px;text-align:center;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
+        <div class="abs rs manchete" data-g="rs" data-txt="1" style="left:60px;right:140px;top:600px;text-align:center;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
+        <div class="abs br" style="left:50%;top:790px;height:10px;width:0;background:${cor}"></div>
+        <div class="abs dt serif" data-g="dt" data-txt="1" style="left:90px;right:150px;top:830px;text-align:center;font-size:46px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
+      montar(el) { const r = el.querySelector('.rs'); r.style.opacity = 1; caber(r, { max: 150, min: 90, larg: 880 }); r.style.opacity = 0;
+        const b = el.querySelector('.br'); b.style.top = (r.offsetTop + r.offsetHeight + 16) + 'px'; el.querySelector('.dt').style.top = (r.offsetTop + r.offsetHeight + 60) + 'px'; },
+      upd(tl, el) {
+        const v = +p.virada || 1.0;
+        aparece(el.querySelector('.pq'), tl, .05, { dy: -16 });
+        el.querySelectorAll('.pr').forEach((r, i) => { const ph = ((tl * .9 + i / 3) % 1); r.style.transform = `scale(${.4 + ph})`; r.style.opacity = tl < v ? (1 - ph) * .7 : 0; });
+        const k = tl - v, rs = el.querySelector('.rs');
+        rs.style.opacity = k >= 0 ? 1 : 0; rs.style.transform = `scale(${k >= 0 ? lerp(1.25, 1, eo5(k / .3)) : 1.25})`;
+        if (k >= 0 && k < .2) window.__v2flash = .85 * (1 - k / .2);
+        const b = el.querySelector('.br'), w = 300 * eo5((k - .15) / .45); b.style.width = Math.max(0, w) + 'px'; b.style.marginLeft = (-Math.max(0, w) / 2 - 40) + 'px';
+        aparece(el.querySelector('.dt'), tl, v + .5, { dy: 16 });
+      },
+      textos: () => [p.pergunta, p.resposta, p.detalhe],
+    };
+  });
+
+  /* 21. fonte.evidencia */
+  V2.registrar({
+    id: 'fonte.evidencia', nome: 'Cartão de fonte / evidência', tratamento: 'arquivo', tom: 'escuro',
+    objetivo: 'Mostrar DE ONDE vem a informação (jornal, estudo, documento oficial), com o trecho que a sustenta grifado.',
+    funcoes: ['fonte', 'evidencia', 'prova', 'documento'],
+    params: { tipo: "'JORNAL' | 'ESTUDO' | 'DOCUMENTO OFICIAL'", veiculo: '≤ 30 (precisa estar na lista de fontes do vídeo)', data: 'dd/mm/aaaa', titulo: 'manchete ≤ 90', trecho: 'trecho ≤ 160', grifo: 'parte do trecho a grifar (substring)', endereco: 'domínio curto ≤ 32' },
+    fundo: 'próprio (mesa escura) ou foto do assunto desfocada', layout: 'folha de papel 900 px, girada −1,5°, em y 380–1080; cabeçalho (veículo + data), manchete serifada, trecho com grifo amarelo, rodapé com endereço',
+    paleta: 'papel claro; tinta; grifo amarelo; selo "FONTE VERIFICADA" verde-escuro', animacao: 'folha desliza; grifo corre no trecho quando é citado; selo carimba',
+    duracao: [3, 4.5, 7], limites: { veiculo: 30, titulo: 90, trecho: 160 }, legenda: 'livre',
+    area_segura: 'y 360–1100', legibilidade: 'manchete 50 px serifa 700; trecho 38 px serifa',
+    rejeicao: ['veículo fora da lista de fontes do vídeo (era o "O GLOBO" do Panamá)', 'trecho inventado ou parafraseado como se fosse literal'],
+    transicao: 'deslize',
+    exemplo: { params: { tipo: 'EXEMPLO SINTÉTICO', veiculo: 'Jornal Exemplo', data: '00/00/0000', titulo: 'Manchete de demonstração do cartão de fonte', trecho: 'Trecho fictício: o valor foi pago em leilão por uma vaga, e não é a tarifa normal, cobrada à parte.', grifo: 'pago em leilão por uma vaga', endereco: 'exemplo.invalid' }, dur: 5, fala: 'O valor foi pago em leilão por uma vaga, não é a tarifa normal.' },
+  }, (p) => {
+    const tr = esc(p.trecho || ''), g = esc(p.grifo || ''), i = g ? tr.indexOf(g) : -1;
+    const corpo = i >= 0 ? `${tr.slice(0, i)}<span class="gr" style="background:linear-gradient(var(--amarelo),var(--amarelo)) no-repeat 0 80% / 0% 70%;box-decoration-break:clone;-webkit-box-decoration-break:clone">${g}</span>${tr.slice(i + g.length)}` : tr;
+    return {
+      html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 45%,#2a2318 0%,#0e0b08 75%)"></div>
+        <div class="abs folha" data-g="folha" style="left:70px;width:860px;top:380px;background:#f4efe4;color:#151515;padding:40px 44px 34px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:rotate(-1.5deg)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px solid #151515;padding-bottom:14px">
+            <div style="font-family:var(--f-serif);font-weight:700;font-size:40px">${esc(p.veiculo || '')}</div><div style="font-family:var(--f-dado);font-size:26px;color:#4d463a">${esc(p.data || '')}</div></div>
+          <div style="font-family:var(--f-dado);font-weight:700;font-size:24px;letter-spacing:3px;color:#8a2a1a;margin:18px 0 8px">${esc(p.tipo || 'FONTE')}</div>
+          <div class="ft" data-txt="1" style="font-family:var(--f-serif);font-weight:700;font-size:50px;line-height:1.1">${esc(p.titulo || '')}</div>
+          <div class="ftr" data-txt="1" style="font-family:var(--f-serif);font-size:38px;line-height:1.35;margin-top:22px;color:#2a2620">${corpo}</div>
+          <div style="margin-top:22px;font-family:var(--f-dado);font-size:24px;color:#6b6455">${esc(p.endereco || '')}</div></div>
+        <div class="abs selo" data-g="selo" style="left:640px;top:330px;border:5px solid #1f6b3a;color:#1f6b3a;background:rgba(244,239,228,.95);font-family:var(--f-dado);font-weight:700;font-size:26px;letter-spacing:2px;padding:8px 14px;transform:rotate(5deg);opacity:0">✓ FONTE CITADA</div>`,
+      montar(el) { const f = el.querySelector('.folha'); caber(el.querySelector('.ftr'), { max: 38, min: 28, alt: 9e9 });
+        let fs = 38; const tr2 = el.querySelector('.ftr'); while (f.offsetTop + f.offsetHeight > 1090 && fs > 28) { fs -= 2; tr2.style.fontSize = fs + 'px'; el.querySelector('.ft').style.fontSize = (fs + 10) + 'px'; } },
+      upd(tl, el, c) {
+        const f = el.querySelector('.folha'), k = eo5(tl / .6); f.style.transform = `translateY(${(1 - k) * 120}px) rotate(${lerp(3, -1.5, k)}deg)`; f.style.opacity = clamp(tl / .2);
+        const gr = el.querySelector('.gr'); if (gr) gr.style.backgroundSize = `${eio((tl - 1.0) / 1.0) * 100}% 70%`;
+        const s = el.querySelector('.selo'), ks = clamp((tl - Math.min(2.2, c.dur - 1)) / .18); s.style.opacity = ks; s.style.transform = `rotate(5deg) scale(${lerp(1.8, 1, eo(ks))})`;
+      },
+      textos: () => [p.titulo, p.trecho, p.veiculo],
+    };
+  });
+
+  /* 22b. citacao */
+  V2.registrar({
+    id: 'citacao', nome: 'Citação', tratamento: 'editorial', tom: 'escuro',
+    objetivo: 'Dar voz a uma pessoa real com a frase exata dela (só se estiver nos fatos, com autor e data).',
+    funcoes: ['citacao', 'depoimento'],
+    params: { texto: 'frase literal ≤ 140', autor: '≤ 30', papel: '≤ 40 (cargo, ano)' },
+    fundo: 'opcional: retrato do autor (lado esquerdo), escurecido', layout: 'aspas gigantes decorativas 340–560; texto serifado 560–960; autor com fio 990–1090',
+    paleta: 'serifa branca, aspas amarelas 30%, fio amarelo', animacao: 'aspas entram; texto revela por linhas; autor desliza',
+    duracao: [3, 5, 8], limites: { texto: 140, autor: 30, papel: 40 }, legenda: 'integrada',
+    area_segura: 'y 340–1100', legibilidade: 'texto ≥ 50 px serifa',
+    rejeicao: ['citação não literal ou sem fonte', 'autor que a fala não identifica'],
+    transicao: 'mascara',
+    exemplo: { params: { texto: 'A terra se divide, o mundo se une.', autor: 'Lema do Canal do Panamá', papel: 'inscrito no selo da Zona do Canal' }, dur: 4, fala: 'O lema do canal: a terra se divide, o mundo se une.' },
+  }, (p) => ({
+    html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 30% 30%,#1a2233 0%,#070b12 75%)"></div>
+      <div class="abs aspas" data-deco="1" style="left:50px;top:300px;font-family:var(--f-serif);font-weight:700;font-size:420px;line-height:1;color:var(--amarelo);opacity:.3">“</div>
+      <div class="abs qt" data-g="qt" data-txt="1" style="left:90px;right:150px;top:600px;font-family:var(--f-serif);font-size:66px;line-height:1.18;color:#fff">${palavras(p.texto || '')}</div>
+      <div class="abs au" data-g="au" style="left:90px;right:150px;display:flex;gap:20px;align-items:center"><span style="flex:none;width:60px;height:4px;background:var(--amarelo)"></span>
+        <div><div data-txt="1" style="font-weight:900;font-size:36px;text-transform:uppercase">${esc(p.autor || '')}</div><div style="font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.7)">${esc(p.papel || '')}</div></div></div>`,
+    montar(el) { const q = el.querySelector('.qt'); caber(q, { max: 66, min: 46, alt: 420 }); el.querySelector('.au').style.top = (q.offsetTop + q.offsetHeight + 40) + 'px'; },
+    upd(tl, el) { aparece(el.querySelector('.aspas'), tl, 0, { dy: 30, s0: .8 }); revelar(el.querySelector('.qt'), tl, .3, { passo: .045 }); aparece(el.querySelector('.au'), tl, 1.2, { dx: -30, dy: 0 }); },
+    textos: () => [p.texto, p.autor],
+  }));
+
+  /* 22. encerramento.editorial */
+  V2.registrar({
+    id: 'encerramento.editorial', nome: 'Encerramento editorial', tratamento: 'editorial', tom: 'escuro', marca: false,
+    objetivo: 'Fechar com a ideia do vídeo em uma linha, a marca grande e legível, a chamada e as fontes legíveis.',
+    funcoes: ['encerramento', 'fechamento'],
+    params: { resumo: 'a ideia em uma linha ≤ 70 (serifa)', proxima: 'número da próxima parte (opcional)', fontes: 'lista de fontes (≥ 1; 24–28 px, legíveis)', marca: "'@coringa.explica'" },
+    fundo: 'próprio (fundo limpo de marca: nada de mascote sobre árvore/foto)', layout: 'resumo 350–470; Coringa grande (440 px) à esquerda 500–960; marca + @ à direita; chamada 980; fontes 1040–1110',
+    paleta: 'grafite com losangos da marca muito sutis; amarelo só na marca e na chamada', animacao: 'resumo revela; Coringa entra de baixo; marca monta letra a letra; chamada pulsa uma vez; fontes aparecem',
+    duracao: [2.5, 3.5, 5], limites: { resumo: 70, fontes: 5 }, legenda: 'integrada',
+    area_segura: 'y 340–1110; x 72–930', legibilidade: 'marca 84 px 900; fontes ≥ 26 px',
+    rejeicao: ['@ duplicado na tela', 'fontes com letra < 24 px', 'mascote sobre foto poluída'],
+    transicao: 'mascara',
+    exemplo: { params: { resumo: 'Quem ergue o navio é a *gravidade*, não uma bomba.', fontes: ['Wikipédia', 'Wikipedia (inglês)', 'Revista Oeste'], marca: '@coringa.explica' }, dur: 4, fala: 'Segue o Coringa Explica.' },
+  }, (p, ctx) => {
+    const m = ctx.D.meta.mascote || {}, fts = (p.fontes || ctx.D.meta.fontes || []).slice(0, 5);
+    return {
+      html: `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 40% 55%,#1c2436 0%,#080c14 70%)"></div>
+        <div class="abs" data-deco="1" style="inset:0;opacity:.06;background-image:repeating-linear-gradient(45deg,#FFD21F 0 2px,transparent 2px 60px),repeating-linear-gradient(-45deg,#FFD21F 0 2px,transparent 2px 60px)"></div>
+        ${p.resumo ? `<div class="abs rz" data-g="rz" data-txt="1" style="left:72px;right:150px;top:350px;font-family:var(--f-serif);font-size:48px;line-height:1.18;color:#fff">${palavras(p.resumo)}</div>` : ''}
+        ${m.apontando ? `<img class="abs masc" src="${m.apontando}" style="left:0px;top:470px;width:520px;height:540px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 30px 50px rgba(0,0,0,.6))">` : ''}
+        <div class="abs mc" data-g="mc" data-txt="1" style="left:470px;right:150px;top:640px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-block;width:30px;height:30px;background:var(--amarelo);transform:rotate(45deg)"></span><span class="kicker" style="font-size:26px;color:var(--amarelo)">CANAL</span></div>
+          <div class="mw" style="font-weight:900;font-size:84px;line-height:.92;letter-spacing:-2px;margin-top:12px">CORINGA<br>EXPLICA</div>
+          <div style="font-family:var(--f-dado);font-weight:700;font-size:30px;margin-top:16px;color:rgba(255,255,255,.85)">${esc(p.marca || '@coringa.explica')}</div></div>
+        <div class="abs cta" data-g="cta" style="left:470px;top:960px;background:var(--amarelo);color:#0b0f17;font-weight:900;font-size:36px;padding:14px 26px;letter-spacing:1px">${p.proxima ? `PARTE ${esc(p.proxima)} AMANHÃ` : 'SIGA PARA MAIS'}</div>
+        ${fts.length ? `<div class="abs fts" data-g="fts" style="left:72px;right:150px;top:1050px;font-family:var(--f-dado);font-size:26px;line-height:1.3;color:rgba(255,255,255,.78)"><span style="color:var(--amarelo)">FONTES ·</span> ${fts.map(esc).join(' · ')}</div>` : ''}`,
+      montar(el) { const f = el.querySelector('.fts'); if (f) { caber(f, { max: 26, min: 24, alt: 70 }); f.style.top = (1110 - f.offsetHeight) + 'px'; } const r = el.querySelector('.rz'); if (r) caber(r, { max: 48, min: 36, alt: 130 }); },
+      upd(tl, el) {
+        revelar(el.querySelector('.rz'), tl, .05, { passo: .04 });
+        const ms = el.querySelector('.masc'); if (ms) { const k = back((tl - .2) / .55); ms.style.opacity = clamp((tl - .2) / .15); ms.style.transform = `translateY(${(1 - clamp(k, 0, 1.1)) * 300}px) rotate(${Math.sin(tl * 2) * 1.5}deg)`; }
+        aparece(el.querySelector('.mc'), tl, .5, { dx: 40, dy: 0 });
+        const c = el.querySelector('.cta'), kc = back((tl - 1.0) / .4), pu = Math.max(0, Math.sin(clamp((tl - 1.8) / .35) * Math.PI)) * .06; c.style.opacity = clamp((tl - 1.0) / .12); c.style.transform = `scale(${clamp(kc, 0, 1.1) + pu})`; c.style.transformOrigin = '0 50%';
+        aparece(el.querySelector('.fts'), tl, 1.3, { dy: 10 });
+      },
+      textos: () => [p.resumo, 'coringa explica segue siga seguir', p.marca],
+    };
+  });
+})();

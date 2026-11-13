@@ -30,10 +30,11 @@ def _pagina(trabalho: Path) -> Path:
 
 
 def _trecho(args):
-    pagina, ini, fim, saida = args
+    pagina, ini, fim, saida = args[:4]
+    nav_args = args[4] if len(args) > 4 else NAVEGADOR
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
-        nav = p.chromium.launch(args=NAVEGADOR)
+        nav = p.chromium.launch(args=nav_args)
         pg = nav.new_page(viewport={'width': 1080, 'height': 1920})
         pg.goto(Path(pagina).as_uri())
         pg.wait_for_function('window.READY===true', timeout=60000)
@@ -276,6 +277,14 @@ def renderizar(dados: dict, audio: Path, saida: Path, trabalho: Path, musica: Pa
     Depois de montar, dados['problemas_tela'] traz o que o fiscal da tela não conseguiu consertar (lista vazia = tudo certo)."""
     trabalho.mkdir(parents=True, exist_ok=True)
     original = dados
+    if (dados.get('meta') or {}).get('motor') == 'v2':
+        # V2 (ramo visual-v2): palco próprio (src/render/v2), mesma interface seek/READY; o resto (quadros, ffmpeg,
+        # efeitos, masterização) é o mesmo. O motor antigo continua sendo o padrão.
+        from src.v2 import palco
+        dados = palco.preparar(dados)
+        pagina = palco.pagina(dados, trabalho)
+        dados['numeros'] = []
+        return _montar(dados, pagina, audio, saida, trabalho, musica, workers, palco.NAVEGADOR)
     dados = preparar(dados)
     original['problemas_tela'] = fiscal_tela(dados, trabalho)
     original['cap_baixo'] = dados['cap_baixo']
@@ -283,12 +292,12 @@ def renderizar(dados: dict, audio: Path, saida: Path, trabalho: Path, musica: Pa
     return _montar(dados, pagina, audio, saida, trabalho, musica, workers)
 
 
-def _montar(dados, pagina, audio, saida, trabalho, musica, workers):
+def _montar(dados, pagina, audio, saida, trabalho, musica, workers, nav_args=None):
 
     n = int(dados['duration'] * FPS)
     workers = workers or max(1, min(4, os.cpu_count() or 1))
     passo = -(-n // workers)
-    partes = [(str(pagina), i, min(n, i + passo), str(trabalho / f'parte{k}.mp4'))
+    partes = [(str(pagina), i, min(n, i + passo), str(trabalho / f'parte{k}.mp4'), nav_args or NAVEGADOR)
               for k, i in enumerate(range(0, n, passo))]
     with ProcessPoolExecutor(len(partes)) as ex:
         list(ex.map(_trecho, partes))

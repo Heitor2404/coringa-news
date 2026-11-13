@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<!-- PALCO V2: mesma interface do template antigo (DATA, seek, READY, inspecionar). O Python troca os caminhos
+     relativos por file:// (src/v2/palco.py). Ordem: bibliotecas → núcleo → composições → dados → iniciar. -->
+<link rel="stylesheet" href="../../../node_modules/maplibre-gl/dist/maplibre-gl.css">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body><div id="palco"></div>
+<script src="data.js"></script>
+<script src="../../../node_modules/d3/dist/d3.min.js"></script>
+<script src="../../../node_modules/maplibre-gl/dist/maplibre-gl.js"></script>
+<script src="nucleo.js"></script>
+<!--COMPOSICOES-->
+<script>V2.iniciar().catch(e => { window.ERRO_V2 = String(e && e.stack || e); window.READY = true; });</script>
+</body></html>

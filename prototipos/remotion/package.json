@@ -1,0 +1,15 @@
+{
+  "name": "coringa-remotion-prototipo",
+  "private": true,
+  "description": "Protótipo de avaliação do Remotion (Módulo F da V2). Não faz parte do pipeline.",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.543",
+    "@remotion/renderer": "^4.0.543",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.543"
+  }
+}

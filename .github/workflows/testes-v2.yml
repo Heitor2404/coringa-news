@@ -1,0 +1,48 @@
+name: Testes V2 (visual)
+
+# Ramo visual-v2: testes do sistema audiovisual V2 + galeria de validação como artefato.
+# Sem IA, sem geração paga, sem cofre: só renderiza composições com dados de exemplo do próprio repositório.
+on:
+  push:
+    branches: [visual-v2]
+    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
+  workflow_dispatch:
+
+jobs:
+  v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+      - name: Natural Earth (cache)
+        uses: actions/cache@v4
+        with:
+          path: src/render/v2/dados/ne
+          key: natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}
+      - run: |
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji libpango1.0-dev libcairo2-dev pkg-config) || true
+          pip install -r requirements.txt -r requirements-dev.txt
+          pip install manim || echo "manim indisponível: a composição animacao.quadros fica fora dos testes"
+          npm install --no-audit --no-fund
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+          python scripts/v2_natural_earth.py
+      - run: pytest -q -rs tests/test_v2.py
+      - name: Galeria de validação (artefato)
+        if: always()
+        run: python -m src.v2.galeria --saida saida/galeria_v2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galeria-v2-${{ github.run_number }}
+          path: saida/galeria_v2
+          retention-days: 7

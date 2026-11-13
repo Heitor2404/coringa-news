@@ -1,0 +1,101 @@
+/* CORINGA EXPLICA — SISTEMA VISUAL V2 (13/11/2026)
+   Quadro 1080×1920. Uma identidade, vários TRATAMENTOS por função narrativa (não um cartão escuro para tudo):
+     documental  — a foto manda; tipografia fina, fios e barras de cor por cima
+     arquivo     — papel, sépia, carimbo de procedência, moldura de acervo
+     dado        — papel claro, tinta escura, um acento por gráfico (lê como infográfico de jornal)
+     mapa        — cartografia escura, terra quente, destaque amarelo
+     ciencia     — prancheta técnica: azul-petróleo, grade fina, linhas ciano, rótulos brancos
+     alerta      — vermelho e amarelo, só para o que é surpreendente/importante
+   ZONAS (Reels/TikTok): 0–270 topo da interface · >1480 base da interface · x>930 coluna de botões.
+   LEGENDA: faixa fixa 1180–1440. Composição que precisar dessa faixa declara (ver nucleo.js, legenda).            */
+@font-face{font-family:Mont;font-weight:900;src:url(../../../node_modules/@fontsource/montserrat/files/montserrat-latin-900-normal.woff2)}
+@font-face{font-family:Mont;font-weight:800;src:url(../../../node_modules/@fontsource/montserrat/files/montserrat-latin-800-normal.woff2)}
+@font-face{font-family:Mont;font-weight:700;src:url(../../../node_modules/@fontsource/montserrat/files/montserrat-latin-700-normal.woff2)}
+@font-face{font-family:Mont;font-weight:600;src:url(../../../node_modules/@fontsource/montserrat/files/montserrat-latin-600-normal.woff2)}
+@font-face{font-family:Mont;font-weight:500;src:url(../../../node_modules/@fontsource/montserrat/files/montserrat-latin-500-normal.woff2)}
+@font-face{font-family:JBM;font-weight:400;src:url(../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2)}
+@font-face{font-family:JBM;font-weight:700;src:url(../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2)}
+@font-face{font-family:Serif;font-weight:400;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-normal.woff2)}
+@font-face{font-family:Serif;font-weight:600;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-600-normal.woff2)}
+@font-face{font-family:Serif;font-weight:700;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-700-normal.woff2)}
+@font-face{font-family:Serif;font-style:italic;font-weight:400;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-italic.woff2)}
+@font-face{font-family:Serif;font-style:italic;font-weight:600;src:url(../../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-600-italic.woff2)}
+
+:root{
+  /* marca */
+  --amarelo:#FFD21F; --amarelo-escuro:#C99A00; --vermelho:#FF4D3D; --ciano:#3FD0E0; --verde:#3DDC84; --azul:#5B9BFF;
+  /* neutros */
+  --tinta:#0B0F17; --noite:#070B12; --grafite:#1A2130; --nevoa:rgba(255,255,255,.66); --fio:rgba(255,255,255,.22);
+  --papel:#F2EDE3; --papel-2:#E6DFD1; --tinta-papel:#141414; --sepia:#C8B38A;
+  --mapa-mar:#0B1A2E; --mapa-terra:#2C3A4F; --mapa-borda:#6F86A8;
+  --tecnico:#0C2A33; --tecnico-grade:rgba(120,220,235,.10); --tecnico-linha:#7FE3F0;
+  /* tipografia */
+  --f-titulo:Mont,sans-serif; --f-dado:JBM,monospace; --f-serif:Serif,Georgia,serif;
+  /* zonas */
+  --zona-topo:270px; --zona-base:1480px; --zona-direita:930px; --margem:72px;
+  --leg-topo:1180px; --leg-base:1440px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);color:#fff;font-family:var(--f-titulo);-webkit-font-smoothing:antialiased}
+#palco{position:absolute;inset:0;overflow:hidden;background:var(--noite)}
+.cena{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity,transform,clip-path}
+.abs{position:absolute}
+.fundo-foto{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.fundo-desfoque{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(40px) saturate(1.1) brightness(.5)}
+.escurece-base{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,11,18,.55) 0%,rgba(7,11,18,0) 22%,rgba(7,11,18,0) 52%,rgba(7,11,18,.72) 78%,rgba(7,11,18,.9) 100%)}
+.grao{position:absolute;inset:0;opacity:.06;pointer-events:none;z-index:40;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vinheta{position:absolute;inset:0;pointer-events:none;z-index:39;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%)}
+
+/* rótulos e textos-base */
+.kicker{font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:5px;text-transform:uppercase}
+.rot{font-family:var(--f-dado);font-weight:400;font-size:26px;letter-spacing:3px;text-transform:uppercase;color:var(--nevoa)}
+.manchete{font-weight:900;letter-spacing:-2px;line-height:.98;text-transform:uppercase}
+.serif{font-family:var(--f-serif)}
+.sombra-txt{text-shadow:0 4px 24px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.6)}
+.marca-txt{background:linear-gradient(transparent 58%,var(--amarelo) 58%,var(--amarelo) 92%,transparent 92%);padding:0 6px}
+
+/* fios e barras */
+.fio{position:absolute;height:3px;background:var(--amarelo)}
+.barra-cor{position:absolute;width:12px;background:var(--amarelo)}
+
+/* tratamento: dado (papel claro) */
+.t-dado{background:var(--papel);color:var(--tinta-papel)}
+.t-dado .rot{color:#6b6458}
+/* tratamento: ciência (prancheta) */
+.t-ciencia{background:radial-gradient(ellipse at 50% 40%,#103744 0%,var(--tecnico) 60%,#081d24 100%)}
+.t-ciencia .grade{position:absolute;inset:0;background-image:linear-gradient(var(--tecnico-grade) 1px,transparent 1px),linear-gradient(90deg,var(--tecnico-grade) 1px,transparent 1px);background-size:60px 60px}
+/* tratamento: arquivo */
+.t-arquivo{background:#16120c}
+.papel-arquivo{background:#efe6d2;box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.2)}
+
+/* LEGENDA V2 */
+#legenda{position:absolute;left:90px;right:150px;top:var(--leg-topo);height:260px;display:flex;align-items:flex-start;justify-content:center;z-index:60;pointer-events:none}
+#legenda .bloco{text-align:center;font-weight:800;font-size:66px;line-height:1.08;letter-spacing:-1px;color:#fff;
+  text-shadow:0 3px 18px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9)}
+#legenda .w{display:inline-block;margin:0 .14em;transition:none}
+#legenda .w.fut{color:rgba(255,255,255,.55)}
+#legenda .w.ag{color:var(--amarelo)}
+#legenda .w.hl{color:var(--amarelo)}
+#legenda.claro .bloco{color:var(--tinta-papel);text-shadow:none}
+#legenda.claro .w.fut{color:rgba(20,20,20,.42)}
+#legenda.claro .w.ag,#legenda.claro .w.hl{color:#b8860b}
+
+/* marca discreta (canto superior, fora da zona da interface) */
+#marca{position:absolute;left:var(--margem);top:292px;font-family:var(--f-dado);font-weight:700;font-size:24px;letter-spacing:4px;color:rgba(255,255,255,.7);z-index:61;display:flex;align-items:center;gap:12px}
+#marca i{display:inline-block;width:14px;height:14px;background:var(--amarelo);transform:rotate(45deg)}
+#marca.claro{color:rgba(20,20,20,.6)}
+#aviso-ia{position:absolute;right:160px;top:292px;font-family:var(--f-dado);font-size:22px;letter-spacing:3px;color:rgba(255,255,255,.6);z-index:61}
+
+/* elementos de mapa sobre o MapLibre */
+.mapa-host{position:absolute;inset:0}
+.mapa-host canvas{outline:none}
+.pino{position:absolute;transform:translate(-50%,-50%)}
+.pino .nucleo{width:26px;height:26px;border-radius:50%;background:var(--amarelo);border:5px solid #fff;box-shadow:0 0 0 6px rgba(255,210,31,.25),0 8px 20px rgba(0,0,0,.5)}
+.pino .onda{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:4px solid var(--amarelo)}
+.rot-mapa{position:absolute;white-space:nowrap;font-weight:800;font-size:34px;letter-spacing:.5px;color:#fff;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 3px #000}
+.rot-mapa.mar{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:38px;text-transform:none;letter-spacing:2px;color:rgba(180,210,245,.85)}
+.rot-mapa.pais{font-weight:700;font-size:30px;letter-spacing:6px;color:rgba(255,255,255,.75)}
+.rot-mapa.destaque{background:#fff;color:var(--tinta);padding:8px 18px;border-radius:4px;text-shadow:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.cena .hl{color:var(--amarelo)}
+.t-dado .hl{color:inherit;background:linear-gradient(transparent 60%,var(--amarelo) 60%,var(--amarelo) 94%,transparent 94%)}
+.t-ciencia .hl{color:var(--ciano)}

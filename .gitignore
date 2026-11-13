@@ -5,3 +5,6 @@ node_modules/
 .env
 .venv
 /cofre
+
+# V2: camadas do Natural Earth (baixadas por scripts/v2_natural_earth.py)
+src/render/v2/dados/ne/

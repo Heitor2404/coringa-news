@@ -74,9 +74,17 @@
       const dy = map._dy || 0;
       for (const fx of [-.5, -.25, 0, .25, .5]) for (const fy of [-.5, 0, .5]) {
         const ll = map.unproject([q.x + fx * w, q.y + fy * h - dy]); const pt = [ll.lng, ll.lat];
-        if (terra.some(f => d3.geoContains(f, pt))) return false;
+        if (terra.some(f => naCaixa(f, pt) && d3.geoContains(f, pt))) return false;
       }
       return true;
+    };
+    // pré-filtro EXATO do teste de terra: fora da caixa geográfica (d3.geoBounds) o ponto não está no polígono. A caixa
+    // que cruza o antimeridiano vem com lon0 > lon1. Sem isto a preparação de um mapa com muitos países passava de 60 s.
+    const caixas = new WeakMap();
+    const naCaixa = (f, [lon, lat]) => {
+      let b = caixas.get(f); if (!b) { b = d3.geoBounds(f); caixas.set(f, b); }
+      const [[x0, y0], [x1, y1]] = b; if (lat < y0 - 1e-9 || lat > y1 + 1e-9) return false;
+      return x0 <= x1 ? lon >= x0 - 1e-9 && lon <= x1 + 1e-9 : lon >= x0 - 1e-9 || lon <= x1 + 1e-9;
     };
     const pts = (p.pontos || []).map(x => ({ ...x, lon: +x.lon, lat: +x.lat }));
     // TRILHAS: uma rota (p.rota ou os pontos) ou várias para comparar (p.rotas). Trechos longos seguem o círculo
@@ -153,7 +161,7 @@
           let cands = m.fixo ? [m.c] : [];
           if (!m.fixo) for (let gx = 0; gx <= 18; gx++) for (let gy = 0; gy <= 14; gy++) {
             const sx = 120 + gx * (840 / 18), sy = lim.y0 + 20 + gy * ((lim.y1 - lim.y0 - 40) / 14), u = map.unproject([sx, sy - (map._dy || 0)]), ll = [u.lng, u.lat];
-            if (d3.geoContains(m.f, ll)) cands.push(ll);
+            if (naCaixa(m.f, ll) && d3.geoContains(m.f, ll)) cands.push(ll);
           }
           const folga = ll => { const q = map.project(ll); if (!caixaNaAgua(medida, q)) return -1;
             const w = medida.offsetWidth, h = medida.offsetHeight; let f = Math.min(q.x - w / 2 - 70, 1000 - q.x - w / 2, q.y - h / 2 - lim.y0, lim.y1 - q.y - h / 2);

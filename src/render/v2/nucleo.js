@@ -379,10 +379,12 @@
     montar(); camadasFixas();
     const imgs = [...document.images].map(i => i.decode ? i.decode().catch(() => 0) : 0);
     await document.fonts.ready; await Promise.all(imgs);
-    const montagens = cenas.map(c => c.b.montar ? Promise.resolve().then(() => c.b.montar(c.el, c.ctx)).catch(e => AVISOS.push(`montar ${c.meta.id}: ${e.message}`)) : 0);
+    V2.TEMPOS = { montar: [], ocupacao: 0 };      // diagnóstico de partida (ms), lido pelos testes de desempenho
+    const cron = (k, f) => Promise.resolve().then(async () => { const t0 = performance.now(); try { await f(); } finally { V2.TEMPOS.montar.push({ cena: k, ms: Math.round(performance.now() - t0) }); } });
+    const montagens = cenas.map((c, k) => c.b.montar ? cron(`${k}:${c.meta.id}`, () => c.b.montar(c.el, c.ctx)).catch(e => AVISOS.push(`montar ${c.meta.id}: ${e.message}`)) : 0);
     const bases = cenas.filter(c => c.base && c.base.b.montar).map(c => Promise.resolve().then(() => c.base.b.montar(c.el.querySelector('.base-cena'), c.base.ctx)).catch(e => AVISOS.push(`montar base: ${e.message}`)));
     await Promise.all([document.fonts.ready, ...imgs, ...montagens, ...bases]);
-    await ocupacao();
+    const t1 = performance.now(); await ocupacao(); V2.TEMPOS.ocupacao = Math.round(performance.now() - t1);
     await window.seek(0);
     window.READY = true;
   };

@@ -19,10 +19,15 @@ Antes (V2) o fiscal misturava bloqueio e gosto. Agora:
     S2 fala promete mecanismo/processo e a cena mostra foto ou texto             (antigo B2)
     S3 eclusa animada no sentido contrário ao da fala (sobe × desce)
     S4 dados insuficientes para o que a fala sugere (gráfico/número recusado) — aviso
+    S5 (V2.2) acontecimento DECLARADO pelo roteiro (contrato) × o que foi selecionado × o que a composição é capaz de
+       mostrar × se a cena existe/foi renderizada; substituição genérica de acontecimento crítico — bloqueio
+    S6 (V2.2) cena narrativa sem acontecimento declarado e que os padrões não reconheceram: a seleção não tem como
+       saber se havia algo a mostrar → REVISÃO HUMANA obrigatória (gravidade 'revisao': impede a aprovação automática)
   ESTÉTICO — NÃO bloqueia nem vira nota. Sinais medidos (mesma composição em sequência, imagem repetida, foto
     parada) entram como observação, e as perguntas abertas ficam para o Heitor.
 
-Cada achado: {categoria, codigo, gravidade (bloqueio|aviso|observacao), cena, comp, instante, problema, evidencia, solucao}.
+Cada achado: {categoria, codigo, gravidade (bloqueio|revisao|aviso|observacao), cena, comp, instante, problema, evidencia, solucao}.
+`aprovacao_automatica` só é verdadeira sem bloqueio E sem revisão pendente.
 As chaves antigas `bloqueios`/`avisos` continuam (mesmos códigos antigos B1–B5 entre parênteses em `codigo_v2`).
 """
 from __future__ import annotations
@@ -45,7 +50,10 @@ SOLUCAO = {
     'D9': 'usar o valor e o contexto exatos da fonte (fatos.validar)', 'D10': 'ajustar a virada para o instante em que a palavra é dita',
     'D11': 'dividir o plano / normalizar o áudio', 'S1': 'fornecer os dados que a composição exige ou reescrever a fala',
     'S2': 'trocar a foto pela composição de mecanismo', 'S3': 'inverter o sentido da animação para bater com a fala',
-    'S4': 'conseguir os valores com fonte ou deixar a fala sem promessa de comparação', 'E': 'avaliação humana',
+    'S4': 'conseguir os valores com fonte ou deixar a fala sem promessa de comparação',
+    'S5': 'fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto',
+    'S6': 'o roteiro deve declarar o acontecimento da cena (contrato: tipo, mostrar, dados); até lá, um humano confere a cena',
+    'E': 'avaliação humana',
 }
 _SOBE = re.compile(r'\b(sob[ea]\w*|subi\w*|ench\w*|elev\w*|ergu\w*)')
 _DESCE = re.compile(r'\b(desc[ei]\w*|esvazi\w*|baix\w*|escoa\w*)')
@@ -86,8 +94,10 @@ def _cena_de(cenas, t):
 
 
 def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = None, dados_v1: dict | None = None,
-            audio: dict | None = None, catalogo: dict | None = None, conflitos_legenda: list | None = None) -> dict:
-    """`catalogo`: {id: meta} (para limites de texto); `conflitos_legenda`: V2.conflitosLegenda do palco."""
+            audio: dict | None = None, catalogo: dict | None = None, conflitos_legenda: list | None = None,
+            renderizadas: list | None = None) -> dict:
+    """`catalogo`: {id: meta} (para limites de texto); `conflitos_legenda`: V2.conflitosLegenda do palco;
+    `renderizadas`: índices das cenas V2 que tiveram conteúdo visível no palco (None = não verificado)."""
     from src.v2 import geo as geomod
     A = []
     cenas = dados_v2['scenes']
@@ -155,6 +165,39 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             if k is not None and cenas[k]['comp'] not in MECANISMOS:
                 A.append(_achado('semantico', 'S2', 'bloqueio', k, cenas[k]['comp'], s['start'], 'fala descreve mecanismo e a tela não mostra',
                                  f'"{re.sub(r"[*]", "", s.get("fala", ""))[:60]}" → {cenas[k]["comp"]}'))
+    # S5: contrato declarado × seleção × capacidade × renderização (não depende de padrões textuais)
+    from src.v2 import contrato as ct
+    declarados = []
+    if dados_v1:
+        for i, s1 in enumerate(dados_v1['scenes']):
+            ac = ct.declarado(s1)
+            if ac and ct.critico(ac):
+                declarados.append((i, ac, s1))
+    else:
+        for k, d in enumerate(direcao):
+            ac = d.get('acontecimento')
+            if ac and ac.get('tipo') and ct.critico(ac):
+                declarados.append((k, ac, {'start': cenas[k]['start'] if k < len(cenas) else 0}))
+    for i, ac, s1 in declarados:
+        k = next((k for k, sc in enumerate(cenas) if i in sc.get('origem', [i] if not dados_v1 else [])), None) if dados_v1 else i
+        rot = f"{ac['tipo']} — {ac.get('mostrar') or ac.get('acao') or ac.get('id') or ''}"
+        if k is None or k >= len(cenas):
+            A.append(_achado('semantico', 'S5', 'bloqueio', None, None, s1.get('start'), 'acontecimento crítico declarado sem cena no vídeo', rot)); continue
+        comp = cenas[k]['comp']
+        if comp not in ct.capazes(ac['tipo']) or comp in ct.GENERICAS and ac['tipo'] not in ('pessoa', 'lugar', 'ambiente'):
+            dk = direcao[k] if k < len(direcao) else {}
+            falta = '; '.join(dk.get('faltam') or []) or dk.get('limitacao') or dk.get('substituicao') or ''
+            A.append(_achado('semantico', 'S5', 'bloqueio', k, comp, cenas[k]['start'], 'representação inadequada de acontecimento crítico declarado',
+                             f"declarado: {rot}; capazes: {', '.join(ct.capazes(ac['tipo'])) or 'nenhuma'}; na tela: {comp}" + (f"; falta: {falta}" if falta else '')))
+        elif renderizadas is not None and k not in renderizadas:
+            A.append(_achado('semantico', 'S5', 'bloqueio', k, comp, cenas[k]['start'], 'cena do acontecimento crítico sem conteúdo visível no render', rot))
+    for k, d in enumerate(direcao):
+        if d.get('substituicao') and d.get('critica'):
+            A.append(_achado('semantico', 'S5', 'bloqueio', k, cenas[k]['comp'] if k < len(cenas) else None, cenas[k]['start'] if k < len(cenas) else None,
+                             'substituição genérica de acontecimento crítico', d['substituicao']))
+        if d.get('sem_contrato'):
+            A.append(_achado('semantico', 'S6', 'revisao', k, cenas[k]['comp'] if k < len(cenas) else None, cenas[k]['start'] if k < len(cenas) else None,
+                             'cena sem acontecimento declarado e não reconhecida pelos padrões', f"\"{str(d.get('fala', ''))[:70]}\" → {cenas[k]['comp'] if k < len(cenas) else '?'}"))
     # D1–D3 geometria (amostrada pelo palco)
     for g in _persistentes(geometria or []):
         k = _cena_de(cenas, g['ini'])
@@ -182,6 +225,7 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         A.append(_achado('estetico', 'E-pergunta', 'observacao', None, None, None, q, 'sem medida automática'))
 
     bloq = [a for a in A if a['gravidade'] == 'bloqueio']
+    revisao = [a for a in A if a['gravidade'] == 'revisao']
     criticas = [d for d in direcao if d.get('critica')]
     det = {
         'cenas': len(cenas), 'acontecimentos_criticos': len(criticas), 'criticos_representados': sum(1 for d in criticas if d.get('comp')),
@@ -193,8 +237,9 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         'composicoes_distintas': len({sc['comp'] for sc in cenas}),
     }
     compat = lambda a: {'codigo': a['codigo_v2'] or a['codigo'], 'cena': a['cena'], 'inicio': a['instante'], 'texto': f"{a['problema']}: {a['evidencia']}"}
-    return {'aprovado_tecnicamente': not bloq, 'achados': A,
+    return {'aprovado_tecnicamente': not bloq, 'aprovacao_automatica': not bloq and not revisao, 'revisao_humana': len(revisao), 'achados': A,
             'por_categoria': {c: {'bloqueios': sum(1 for a in A if a['categoria'] == c and a['gravidade'] == 'bloqueio'),
+                                  'revisoes': sum(1 for a in A if a['categoria'] == c and a['gravidade'] == 'revisao'),
                                   'avisos': sum(1 for a in A if a['categoria'] == c and a['gravidade'] == 'aviso'),
                                   'observacoes': sum(1 for a in A if a['categoria'] == c and a['gravidade'] == 'observacao')}
                               for c in ('deterministico', 'semantico', 'estetico')},
@@ -204,13 +249,14 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
 
 
 def texto(r: dict) -> str:
-    linhas = [f"FISCAL V2.1 — {'sem bloqueio' if r['aprovado_tecnicamente'] else str(len(r['bloqueios'])) + ' bloqueio(s)'}"]
+    linhas = [f"FISCAL V2.2 — {'sem bloqueio' if r['aprovado_tecnicamente'] else str(len(r['bloqueios'])) + ' bloqueio(s)'}"
+              f" · aprovação automática: {'sim' if r['aprovacao_automatica'] else 'NÃO'}" + (f" ({r['revisao_humana']} cena(s) para revisão humana)" if r['revisao_humana'] else '')]
     for c, n in r['por_categoria'].items():
-        linhas.append(f"  {c}: {n['bloqueios']} bloqueio(s), {n['avisos']} aviso(s), {n['observacoes']} observação(ões)")
+        linhas.append(f"  {c}: {n['bloqueios']} bloqueio(s), {n['revisoes']} revisão(ões), {n['avisos']} aviso(s), {n['observacoes']} observação(ões)")
     for a in r['achados']:
         if a['codigo'] == 'E-pergunta':
             continue
-        marca = {'bloqueio': '✘', 'aviso': '!', 'observacao': '·'}[a['gravidade']]
+        marca = {'bloqueio': '✘', 'revisao': '?', 'aviso': '!', 'observacao': '·'}[a['gravidade']]
         t = '' if a['instante'] is None else f"{a['instante']:.2f}s "
         linhas.append(f"  {marca} {a['codigo']} cena {a['cena']} {t}{a['problema']} — {a['evidencia'][:110]} → {a['solucao']}")
     linhas.append('  medidas: ' + ', '.join(f'{k}={v}' for k, v in r['deterministico'].items()))

@@ -4,7 +4,7 @@ name: Testes V2 (visual)
 # Sem IA, sem geração paga, sem cofre: só renderiza composições com dados de exemplo do próprio repositório.
 on:
   push:
-    branches: [visual-v2, visual-v2-1-refinamento]
+    branches: [visual-v2, visual-v2-1-refinamento, visual-v2-2-correcao-final]
     paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
   workflow_dispatch:
 

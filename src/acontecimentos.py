@@ -106,7 +106,7 @@ def ambiente(c: dict) -> bool:
 # ───────────────────────── cobertura (só registro) ─────────────────────────
 ROTULOS = {'mostra_o_fato': 'mostram o fato', 'ligada_ao_fato': 'pessoa/lugar/objeto do fato', 'grafico': 'gráfico',
            'mesmo_acontecimento': 'imagem do mesmo acontecimento', 'ambiente': 'ambiente', 'ilustracao_ia': 'ilustração',
-           'cartao': 'cartão (sem imagem)', 'emprestada': 'emprestada de outro acontecimento',
+           'tema': 'só do tema', 'cartao': 'cartão (sem imagem)', 'emprestada': 'emprestada de outro acontecimento',
            'sem_classificacao': 'sem classificação'}
 
 
@@ -128,6 +128,8 @@ def classe(c: dict) -> str:
         return 'ligada_ao_fato'
     if rel == 'ambiente' or c.get('midia') == 'video' or ambiente(c):
         return 'ambiente'
+    if rel == 'tema':
+        return 'tema'
     return 'sem_classificacao'
 
 

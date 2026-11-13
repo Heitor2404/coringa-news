@@ -699,15 +699,15 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             # flamingo de zoológico numa frase sobre o lago) sai: melhor outra imagem do que uma 'mais ou menos'
             if not (0 <= k < len(ideias) and f in por_id and (exata or not por_id[f].get('generica'))):
                 continue
-            # 12/11: a imagem precisa ter ligação com o ACONTECIMENTO da frase (o fato, o documento, ou a pessoa/lugar/
-            # objeto dele). "Só do tema" sai — a não ser em frase de ambiente. Resposta sem "relacao" (formato antigo):
-            # vale a regra de antes, marcada como "fato" se exata.
+            # 12/11 (reversão da correção 2): a ligação com o acontecimento é só REGISTRO e preferência (está no pedido),
+            # não filtro — o filtro rígido esvaziou o acervo usado (Torre Eiffel 4). Foto "do tema" que combina com a
+            # frase volta a valer (relacao "tema"). Só sai a evidentemente desconectada: relacao null e não exata.
             rel = str(e.get('relacao') or '').strip().lower() or None
+            if 'relacao' in e and rel in (None, 'nenhuma', 'none', 'null') and not exata:
+                continue
             if rel is None and 'relacao' not in e:
                 rel = 'fato' if exata else None
-            if rel in acont.RELACOES_DO_FATO or (rel == 'ambiente' and acont.ambiente(ideias[k])) or \
-                    (rel is None and 'relacao' not in e):
-                escolha[k], relacao[k] = f, rel
+            escolha[k], relacao[k] = f, rel
     except Exception as e:
         print(f'  [acervo] casamento falhou ({str(e)[:80]}); uso as sugestões do roteirista')
         for k, c in enumerate(ideias):
@@ -743,9 +743,9 @@ def casar(v: dict, acervo: list[dict]) -> dict:
 
 
 def preencher(v: dict, acervo: list[dict]) -> dict:
-    """Frase que ficou sem foto pega uma RESERVA do acervo ainda não usada — 12/11: SÓ se a reserva for da MESMA pessoa
-    ou do MESMO lugar do acontecimento da frase (nomes em comum, sem IA), ou se a frase é de ambiente (aí vale a regra de
-    11/11: vídeo primeiro). Antes qualquer reserva do tema entrava: foto do tema numa frase sobre outro fato."""
+    """Frase que ficou sem foto pega uma RESERVA do acervo ainda não usada (11/11: vídeo primeiro, depois a de maior nota).
+    12/11 (reversão da correção 2): volta a aceitar reserva do tema; a da MESMA pessoa/lugar do acontecimento vem antes.
+    Só fica de fora a reserva GENÉRICA (marcada no catálogo) em frase que não é de ambiente: desconectada da narração."""
     from . import acontecimentos as acont
     ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
     usados = {c.get('foto') for c in ideias if c.get('foto')}
@@ -764,6 +764,8 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
         if x is None and acont.ambiente(c):
             x, rel = livres[0], 'ambiente'
         if x is None:
+            x, rel = next((y for y in livres if not y.get('generica')), None), 'tema'
+        if x is None:
             continue
         livres.remove(x)
         c['foto'], c['relacao'] = x['id'], rel
@@ -774,7 +776,7 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
             if pai and pai.get('foto'):
                 c['foto'], c['relacao'] = pai['foto'], pai.get('relacao')
     if n:
-        print(f'  [acervo] {n} frase(s) sem foto ganharam uma reserva do acervo ligada ao acontecimento (ou de ambiente)')
+        print(f'  [acervo] {n} frase(s) sem foto ganharam uma reserva do acervo (ligada ao acontecimento primeiro)')
     return v
 
 

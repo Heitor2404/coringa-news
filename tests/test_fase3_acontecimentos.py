@@ -1,5 +1,7 @@
-"""Fase 3, correção 2 (12/11/2026): imagem por ACONTECIMENTO. Sem vídeo, sem IA de verdade (a escolha do Gemini é
-simulada). O espectador precisa ver o fato narrado; foto só do tema, empréstimo entre acontecimentos e A-B-A saem."""
+"""Fase 3 (12/11/2026): imagem por ACONTECIMENTO — o que ficou depois da REVERSÃO seletiva das correções 2 e 3
+(Torre Eiffel 4 ruim). Ficam: metadados (evento/acontecimento), diagnóstico de cobertura e busca dirigida. Saem: filtros
+rígidos, cartões automáticos, mesma foto cobrindo várias ideias, câmera/transição fixas. Continua proibido: A-B-A e imagem
+evidentemente desconectada. Sem vídeo, sem IA de verdade (a escolha do Gemini é simulada)."""
 import copy
 import json
 from pathlib import Path
@@ -66,27 +68,6 @@ def _casar(monkeypatch, escolhas):
     return v, vistos
 
 
-def test_casar_manda_o_acontecimento_e_exige_ligacao_com_o_fato(monkeypatch):
-    v, vistos = _casar(monkeypatch, [
-        {'ideia': 0, 'foto': 'a0', 'exata': True, 'relacao': 'lugar'},
-        {'ideia': 1, 'foto': 'a3', 'exata': False, 'relacao': None},           # só do tema: sai
-        {'ideia': 2, 'foto': 'a4', 'exata': True, 'relacao': 'lugar'},
-        {'ideia': 3, 'foto': 'a1', 'exata': False, 'relacao': 'tema'},         # Lustig numa frase sobre Poisson: sai
-        {'ideia': 4, 'foto': 'a3', 'exata': False, 'relacao': 'ambiente'},     # genérica, mas a frase é de ambiente
-        {'ideia': 5, 'foto': 'a2', 'exata': True, 'relacao': 'documento'}])
-    assert len(vistos) == 1 and 'acontecimento: quem=Victor Lustig, onde=Paris, quando=1925, recurso=documento' in vistos[0]
-    c = v['cenas']
-    assert [x.get('foto') for x in c[:6]] == ['a0', None, 'a4', None, None, 'a2']
-    assert [x.get('relacao') for x in c[:6]] == ['lugar', None, 'lugar', None, None, 'documento']
-
-
-def test_casar_ambiente_so_em_frase_de_ambiente(monkeypatch):
-    v, _ = _casar(monkeypatch, [{'ideia': 4, 'foto': 'a0', 'exata': True, 'relacao': 'ambiente'},
-                                {'ideia': 1, 'foto': 'a1', 'exata': True, 'relacao': 'ambiente'}])
-    assert v['cenas'][4]['foto'] == 'a0' and v['cenas'][4]['relacao'] == 'ambiente'
-    assert v['cenas'][1].get('foto') is None                             # frase de fato não aceita "ambiente"
-
-
 def test_casar_resposta_no_formato_antigo_segue_a_regra_de_antes(monkeypatch):
     v, _ = _casar(monkeypatch, [{'ideia': 1, 'foto': 'a1', 'exata': True}, {'ideia': 2, 'foto': 'a4', 'exata': False},
                                 {'ideia': 3, 'foto': 'a3', 'exata': False}])
@@ -94,19 +75,6 @@ def test_casar_resposta_no_formato_antigo_segue_a_regra_de_antes(monkeypatch):
     assert c[1]['foto'] == 'a1' and c[1]['relacao'] == 'fato'
     assert c[2]['foto'] == 'a4' and 'relacao' not in c[2]                 # não exata, específica: aceita (como antes)
     assert c[3].get('foto') is None                                       # genérica e não exata: fora (como antes)
-
-
-def test_preencher_so_pessoa_ou_lugar_do_fato_ou_ambiente():
-    v = _ideias()
-    v['cenas'][0]['foto'] = 'a0'
-    livres = copy.deepcopy(ACERVO)
-    acervo.preencher(v, livres)
-    c = v['cenas']
-    assert c[1]['foto'] == 'a1' and c[1]['relacao'] == 'pessoa'           # retrato do Lustig: pessoa do fato
-    assert c[2]['foto'] == 'a4' and c[2]['relacao'] == 'lugar'            # o Crillon: lugar do fato
-    assert c[3].get('foto') is None                                       # nada do Poisson: fica sem
-    assert c[4]['relacao'] == 'ambiente'                                  # ambiente pega a reserva que sobrar
-    assert c[5].get('foto') in (None, 'a2')
 
 
 def test_segunda_busca_dirigida_pelo_acontecimento(monkeypatch):
@@ -139,25 +107,6 @@ def _sem_foto(**extra):
     return v
 
 
-def test_ideia_sem_foto_vira_mesmo_evento_ou_cartao_e_ia_so_se_pedida():
-    v = _sem_foto()
-    v['cenas'][5]['visual'] = 'ia'                                        # o roteiro pediu ilustração
-    roteiro._planos_sem_foto(v, 'Paris 1925')
-    m = [c.get('midia') for c in v['cenas'][:6]]
-    assert m == [None, 'evento', None, 'cartao', None, 'ia']
-    assert not any(c.get('prompt_imagem') for c in v['cenas'][:5])        # nenhuma IA para tapar fato histórico
-
-
-def test_porteiro_de_tema_continua_com_os_mesmos_limites():
-    v = {'cenas': [{'tipo': 'gancho', 'fala': 'g', 'foto': 'a0', 'grupo': 0}]
-         + [{'tipo': 'historia', 'fala': f'f{k}', 'foto': 'a1' if k < 6 else None, 'grupo': k, 'evento': f'e{k}',
-             'acontecimento': AC()} for k in range(1, 14)] + [{'tipo': 'fechamento', 'fala': 's'}]}
-    with pytest.raises(ValueError, match='frases sem imagem própria'):          # 8 cartões > 2 + 4
-        roteiro._planos_sem_foto(v, '')
-    v['cenas'][7]['foto'] = v['cenas'][8]['foto'] = 'a1'
-    roteiro._planos_sem_foto(v, '')                                             # 6 cartões: passa, como antes passava
-
-
 # ───────── montagem: sem empréstimo entre acontecimentos, sem A-B-A ─────────
 def _jpg(p: Path, cor):
     from PIL import Image
@@ -177,45 +126,11 @@ def _montar(tmp, cenas_v, duracoes):
     return main._montar_cenas({'cenas': cenas_v, 'titulo': 'Torre'}, reais, {}, tempos, tmp)
 
 
-def test_montagem_reaproveita_so_o_mesmo_evento_e_deixa_cartao_no_resto(tmp_path):
-    v = _sem_foto()
-    roteiro._planos_sem_foto(v, '')
-    cenas = _montar(tmp_path, v['cenas'], [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0])
-    ids = ac.ideias(cenas)
-    img = lambda c: Path(str(c.get('img'))).name if c.get('img') else None
-    assert img(ids[1]) == 'a4.jpg' and ids[1].get('mesmo_evento')        # forjou ← reunião (mesmo golpe)
-    assert img(ids[3]) is None and ids[3].get('rotulo') is None           # Poisson: cartão com *pagou*
-    assert img(ids[4]) == 'a3.jpg' and img(ids[5]) is None                # ilustração pedida não veio aqui: cartão
-    assert not any(c.get('repetida') for c in cenas if c['tipo'] != 'gancho')
-    cob = ac.cobertura(cenas)
-    assert cob['contagem']['emprestada'] == 0 and cob['aba'] == 0
-    assert cob['contagem']['mesmo_acontecimento'] == 1 and cob['contagem']['cartao'] == 2
-    assert cob['contagem']['ambiente'] == 1 and cob['contagem']['ligada_ao_fato'] == 0
-
-
-def test_plano_longo_reenquadra_a_mesma_imagem_sem_trazer_outra(tmp_path):
-    v = _sem_foto()
-    roteiro._planos_sem_foto(v, '')
-    cenas = _montar(tmp_path, v['cenas'], [3.0, 3.0, 9.0, 3.0, 3.0, 3.0, 2.0])
-    reuniao = [c for c in cenas if c.get('grupo') == 2]
-    assert len(reuniao) == 3 and {Path(c['img']).name for c in reuniao} == {'a4.jpg'}
-    assert [c.get('sub') or 0 for c in reuniao] == [0, 1, 2]              # detalhe/outro canto da MESMA foto
-    assert ac.aba(cenas) == 0
-
-
 def test_roteiro_antigo_sem_evento_monta_como_antes(tmp_path):
     cenas_v = [{'tipo': 'gancho', 'fala': 'a', 'foto': 'a0'}, {'tipo': 'historia', 'fala': 'b'},
                {'tipo': 'historia', 'fala': 'c', 'foto': 'a1'}, {'tipo': 'fechamento', 'fala': 'd'}]
     cenas = _montar(tmp_path, cenas_v, [3.0, 3.0, 3.0, 2.0])
     assert cenas[1].get('img') and cenas[1].get('repetida')                # foto vizinha, como antes
-
-
-def test_cartao_sem_asteriscos_usa_nomes_da_propria_fala(tmp_path):
-    v = _sem_foto()
-    v['cenas'][3]['fala'] = 'André Poisson pagou em 1925'
-    roteiro._planos_sem_foto(v, '')
-    cenas = _montar(tmp_path, v['cenas'], [3.0] * 6 + [2.0])
-    assert ac.ideias(cenas)[3]['rotulo'] == 'Poisson 1925'                 # palavras ditas na narração, nada inventado
 
 
 # ───────── cobertura: só registro ─────────
@@ -304,3 +219,111 @@ def test_previa_mostra_cartao_e_mesmo_fato():
     assert [aprovacao.midia_de(c, reais, {})[0] for c in v['cenas'][:4]] == ['FOTO', 'CARTÃO', 'MESMO FATO', 'REPETE']
     av = '\n'.join(aprovacao.avisos(v, reais, {}))
     assert 'cartão com as palavras da narração' in av and 'mesmo acontecimento' in av and 'repete a foto vizinha' in av
+
+
+# ───────── reversão seletiva (12/11, depois da Torre Eiffel 4) ─────────
+def test_casar_volta_a_aceitar_foto_do_tema_e_so_tira_a_desconectada(monkeypatch):
+    v, vistos = _casar(monkeypatch, [
+        {'ideia': 0, 'foto': 'a0', 'exata': True, 'relacao': 'lugar'},
+        {'ideia': 1, 'foto': 'a3', 'exata': False, 'relacao': None},           # genérica e sem ligação: sai
+        {'ideia': 2, 'foto': 'a4', 'exata': True, 'relacao': 'lugar'},
+        {'ideia': 3, 'foto': 'a1', 'exata': False, 'relacao': 'tema'},         # do tema, específica: VOLTA a valer
+        {'ideia': 4, 'foto': 'a3', 'exata': False, 'relacao': 'ambiente'},     # genérica não exata: fora (regra de 11/11)
+        {'ideia': 5, 'foto': 'a2', 'exata': True, 'relacao': 'documento'}])
+    assert 'acontecimento: quem=Victor Lustig' in vistos[0]                   # o acontecimento continua indo no pedido
+    c = v['cenas']
+    assert [x.get('foto') for x in c[:6]] == ['a0', None, 'a4', 'a1', None, 'a2']
+    assert c[3]['relacao'] == 'tema'
+
+
+def test_casar_ambiente_em_frase_de_fato_volta_a_valer(monkeypatch):
+    v, _ = _casar(monkeypatch, [{'ideia': 1, 'foto': 'a1', 'exata': True, 'relacao': 'ambiente'}])
+    assert v['cenas'][1]['foto'] == 'a1'                                       # filtro rígido de ambiente saiu
+
+
+def test_preencher_prefere_o_fato_aceita_o_tema_e_recusa_generica():
+    v = _ideias()
+    v['cenas'][0]['foto'] = 'a0'
+    livres = copy.deepcopy(ACERVO)
+    acervo.preencher(v, livres)
+    c = v['cenas']
+    assert c[1]['foto'] == 'a1' and c[1]['relacao'] == 'pessoa'               # ligada ao fato vem primeiro
+    assert c[2]['foto'] == 'a4' and c[2]['relacao'] == 'lugar'
+    assert c[3]['foto'] == 'a2' and c[3]['relacao'] == 'tema'                 # Poisson: reserva do tema (como antes)
+    assert c[4]['foto'] == 'a3' and c[4]['relacao'] == 'ambiente'             # a genérica só na frase de ambiente
+    assert c[5].get('foto') is None                                           # acabou: a genérica não tapa fato
+
+
+def test_sem_foto_volta_a_cadeia_de_antes_ia_e_vizinha_sem_cartao():
+    v = _sem_foto()
+    roteiro._planos_sem_foto(v, 'Paris 1925')
+    m = [c.get('midia') for c in v['cenas'][:6]]
+    assert 'cartao' not in m and 'evento' not in m
+    assert m[1] == 'ia' and m[3] == 'ia' and m[5] == 'ia'                     # cenário pedido → ilustração (como antes)
+    assert 'Set in Paris 1925' in v['cenas'][1]['prompt_imagem']              # época travada continua
+    assert not any('newspaper' in str(c.get('prompt_imagem') or '').lower() for c in v['cenas'])   # nada de documento inventado
+
+
+def test_porteiro_de_tema_de_antes():
+    v = {'cenas': [{'tipo': 'gancho', 'fala': 'g', 'foto': 'a0', 'grupo': 0}]
+         + [{'tipo': 'historia', 'fala': f'f{k}', 'foto': 'a1' if k < 8 else None, 'grupo': k} for k in range(1, 14)]
+         + [{'tipo': 'fechamento', 'fala': 's'}]}
+    with pytest.raises(ValueError, match='frases sem imagem própria'):          # 6 sem cenário → 6 vizinhas > 2
+        roteiro._planos_sem_foto(v, '')
+
+
+def _img(c):
+    return Path(str(c.get('img'))).name if c.get('img') else None
+
+
+def _seq_sem_aba(cenas):
+    vistas, ant = set(), None
+    for c in cenas:
+        k = _img(c)
+        if not k or c['tipo'] == 'fechamento':
+            continue
+        assert not (k != ant and k in vistas), f'{k} voltou depois de sair da tela'
+        vistas.add(k); ant = k
+
+
+def test_montagem_sem_cartao_automatico_e_sem_a_b_a(tmp_path):
+    v = _sem_foto()
+    for c in v['cenas']:
+        c.pop('cenario', None)                                                 # sem IA: só fotos reais e vizinhas
+    v['cenas'][3]['foto'] = 'a1'
+    roteiro._planos_sem_foto(v, '')
+    cenas = _montar(tmp_path, v['cenas'], [3.0] * 6 + [2.0])
+    ids = ac.ideias(cenas)
+    assert all(c.get('img') for c in ids)                                     # nenhuma ideia vira cartão de texto
+    assert not any(c.get('rotulo') for c in cenas) and not any(c.get('mesmo_evento') for c in cenas)
+    assert len({_img(c) for c in ids}) >= 4                                   # variedade: cada foto real na sua ideia
+    _seq_sem_aba(cenas)
+    assert ac.aba(cenas) == 0
+
+
+def test_plano_longo_varia_sem_voltar_e_sem_reenquadrar_tres_vezes(tmp_path):
+    v = _sem_foto()
+    for c in v['cenas']:
+        c.pop('cenario', None)
+    v['cenas'][1]['foto'], v['cenas'][3]['foto'], v['cenas'][5]['foto'] = 'a1', 'a2', 'a3'
+    cenas = _montar(tmp_path, v['cenas'], [3.0, 3.0, 9.0, 3.0, 3.0, 3.0, 2.0])
+    reuniao = [c for c in cenas if c.get('grupo') == 2]
+    assert [_img(c) for c in reuniao] == ['a4.jpg', 'a4.jpg', 'a2.jpg']       # A, A reenquadrada, a PRÓXIMA foto
+    assert [c.get('sub') or 0 for c in reuniao] == [0, 1, 0]
+    _seq_sem_aba(cenas)
+
+
+def test_sem_camera_nem_transicao_forcadas(tmp_path):
+    v = _sem_foto()
+    for c in v['cenas']:
+        c.pop('cenario', None)
+    cenas = _montar(tmp_path, v['cenas'], [3.0] * 6 + [2.0])
+    assert not any(c.get('camera') for c in cenas)                            # volta o rodízio do template
+    assert not any(c.get('transicao') for c in cenas)                         # e as transições de sempre
+    assert not hasattr(main, '_juntar_cartoes') and not hasattr(main, '_dar_movimento')
+
+
+def test_cobertura_conta_foto_do_tema():
+    cob = ac.cobertura([{'tipo': 'gancho', 'grupo': 0, 'evento': 'e0', 'img': 'A', 'relacao': 'tema'},
+                        {'tipo': 'fechamento'}])
+    assert cob['contagem']['tema'] == 1 and 'só do tema' in ac.linha_telegram(cob)

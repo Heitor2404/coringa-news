@@ -10,6 +10,7 @@ média > 4,0 ou fração > 2,5%. Atualizar de propósito: python -m src.v2.regre
 from __future__ import annotations
 
 import argparse
+import base64
 import io
 import os
 from pathlib import Path
@@ -25,6 +26,9 @@ LIM_MEDIA, LIM_FRACAO = 4.0, 0.025
 FRACOES = (0.35, 0.85)
 
 
+DIAG = {}   # diagnóstico do ambiente (fontes, imagens, navegador) por composição, impresso quando a regressão falha
+
+
 def _midia_repo():
     os.environ['CORINGA_AUDITORIA'] = '/nao-existe'       # só imagens do repositório
     galeria.AUD = Path('/nao-existe')
@@ -35,6 +39,9 @@ def quadros(meta: dict, trabalho: Path) -> dict[float, Image.Image]:
     d = galeria.dados_exemplo(meta)
     out = {}
     with palco.abrir(palco.preparar(d), trabalho / meta['id']) as pg:
+        DIAG[meta['id']] = pg.evaluate("""(()=>{const f=[...document.fonts].map(x=>x.family+' '+x.weight+' '+x.status);
+            const im=[...document.images].map(i=>(i.src.split('/').pop()||'').slice(0,40)+' '+i.complete+' '+i.naturalWidth);
+            return {ua:navigator.userAgent, fontes:f, imagens:im}})()""")
         for f in FRACOES:
             t = round(d['duration'] * f, 2)
             pg.evaluate(f'seek({t})')
@@ -63,7 +70,12 @@ def verificar(metas: list[dict], trabalho: Path) -> list[dict]:
             if not ref.exists():
                 res.append({'id': m['id'], 't': t, 'ok': False, 'motivo': 'sem referência'})
                 continue
-            res.append({'id': m['id'], 't': t, **comparar(im, Image.open(ref).convert('RGB'))})
+            r = {'id': m['id'], 't': t, **comparar(im, Image.open(ref).convert('RGB'))}
+            if not r['ok']:   # para diagnosticar diferença de ambiente (CI): o quadro produzido vai junto, pequeno
+                buf = io.BytesIO(); im.save(buf, 'WEBP', quality=80)
+                r['produzido_webp_b64'] = base64.b64encode(buf.getvalue()).decode()
+                r['ambiente'] = DIAG.get(m['id'])
+            res.append(r)
     return res
 
 

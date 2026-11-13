@@ -86,7 +86,9 @@ def test_regressao_visual_contra_referencias(catalogo, tmp_path):
     metas = [m for m in catalogo if not _pula(m['id'])]
     res = regressao.verificar(metas, tmp_path)
     falhas = [r for r in res if not r['ok']]
-    assert not falhas, falhas
+    for f in falhas:   # diagnóstico completo no log (o assert trunca): quadro produzido em base64 + fontes/imagens/navegador
+        print('REGRESSAO_DIAG', json.dumps(f, ensure_ascii=False))
+    assert not falhas, [{k: v for k, v in f.items() if k not in ('produzido_webp_b64', 'ambiente')} for f in falhas]
 
 
 def test_regressao_detecta_mudanca_real(catalogo, tmp_path):

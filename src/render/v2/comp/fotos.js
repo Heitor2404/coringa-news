@@ -44,7 +44,7 @@
             <svg class="anot" width="${L}" height="${A2}" style="position:absolute;left:0;top:0;overflow:visible"></svg></div>
           <div class="pr" data-g="proc" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 4px 14px;font-family:var(--f-dado);font-size:28px;color:#4a4236">
             <span style="font-weight:700">ARQUIVO${p.ano ? ' · ' + esc(p.ano) : ''}</span><span style="font-size:26px;text-align:right">${esc(p.credito || '')}</span></div></div>
-        ${p.ano ? `<div class="abs carimbo" data-g="carimbo" style="right:150px;white-space:nowrap;border:5px solid #b4432f;color:#b4432f;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:3px;padding:6px 14px;transform:rotate(-4deg);background:rgba(239,230,210,.95)">FOTO REAL · ${esc(p.ano)}</div>` : ''}
+        ${p.ano ? `<div class="abs carimbo" data-g="carimbo" style="right:178px;white-space:nowrap;border:5px solid #b4432f;color:#b4432f;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:3px;padding:6px 14px;transform:rotate(-4deg);background:rgba(239,230,210,.95)">FOTO REAL · ${esc(p.ano)}</div>` : ''}
         ${p.descricao ? `<div class="abs ds serif" data-g="ds" data-txt="1" style="left:72px;right:150px;font-style:italic;font-size:40px;line-height:1.2;color:#efe6d2">${esc(p.descricao)}</div>` : ''}
         ${(p.anotacoes || []).slice(0, 2).map((a, i) => `<div class="abs an an${i}" data-g="an${i}" style="font-weight:800;font-size:32px;color:#0b0f17;background:var(--amarelo);padding:4px 12px;text-transform:uppercase;white-space:nowrap;opacity:0">${esc(a.texto)}</div>`).join('')}`,
       montar(el) { el._lay = null; },
@@ -56,7 +56,7 @@
         // centraliza o bloco (moldura + descrição) na área de conteúdo 360–1200
         const hMo = mo.offsetHeight, hDs = ds ? ds.offsetHeight + 20 : 0, top = clamp(360 + (840 - hMo - hDs) / 2, 360, 1200 - hMo - hDs);
         mo.style.top = top + 'px'; if (ds) ds.style.top = (top + hMo + 20) + 'px';
-        const ca = el.querySelector('.carimbo'); if (ca) { ca.style.top = (top - 34) + 'px'; const kc = clamp((tl - .6) / .18); ca.style.opacity = kc; ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
+        const ca = el.querySelector('.carimbo'); if (ca) { ca.style.top = Math.max(V2.Z.topo + 8, top + 24) + 'px'; const kc = clamp((tl - .6) / .18); ca.style.opacity = kc; ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
         // câmera dentro da janela: momento 1 = foto inteira; momento 2 = foco (ou varredura)
         const f = p.foco || [.5, .5];
         if (pan) janela(jn, wh, rc, L, A, tl < m2 ? .5 : lerp(.5, f[0], k2) + (k2 >= 1 ? 0 : 0), .5, tl < m2 ? 1 : 1);

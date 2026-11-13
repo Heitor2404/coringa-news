@@ -63,10 +63,10 @@
         <div class="abs folha" data-g="folha" style="left:70px;width:860px;top:380px;background:#f4efe4;color:#151515;padding:40px 44px 34px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:rotate(-1.5deg)">
           <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px solid #151515;padding-bottom:14px">
             <div style="font-family:var(--f-serif);font-weight:700;font-size:40px">${esc(p.veiculo || '')}</div><div style="font-family:var(--f-dado);font-size:26px;color:#4d463a">${esc(p.data || '')}</div></div>
-          <div style="font-family:var(--f-dado);font-weight:700;font-size:24px;letter-spacing:3px;color:#8a2a1a;margin:18px 0 8px">${esc(p.tipo || 'FONTE')}</div>
+          <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;letter-spacing:3px;color:#8a2a1a;margin:18px 0 8px">${esc(p.tipo || 'FONTE')}</div>
           <div class="ft" data-txt="1" style="font-family:var(--f-serif);font-weight:700;font-size:50px;line-height:1.1">${esc(p.titulo || '')}</div>
           <div class="ftr" data-txt="1" style="font-family:var(--f-serif);font-size:38px;line-height:1.35;margin-top:22px;color:#2a2620">${corpo}</div>
-          <div style="margin-top:22px;font-family:var(--f-dado);font-size:24px;color:#6b6455">${esc(p.endereco || '')}</div></div>
+          <div style="margin-top:22px;font-family:var(--f-dado);font-size:26px;color:#6b6455">${esc(p.endereco || '')}</div></div>
         <div class="abs selo" data-g="selo" style="left:640px;top:330px;border:5px solid #1f6b3a;color:#1f6b3a;background:rgba(244,239,228,.95);font-family:var(--f-dado);font-weight:700;font-size:26px;letter-spacing:2px;padding:8px 14px;transform:rotate(5deg);opacity:0">✓ FONTE CITADA</div>`,
       montar(el) { const f = el.querySelector('.folha'); caber(el.querySelector('.ftr'), { max: 38, min: 28, alt: 9e9 });
         let fs = 38; const tr2 = el.querySelector('.ftr'); while (f.offsetTop + f.offsetHeight > 1090 && fs > 28) { fs -= 2; tr2.style.fontSize = fs + 'px'; el.querySelector('.ft').style.fontSize = (fs + 10) + 'px'; } },

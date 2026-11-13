@@ -139,12 +139,12 @@
     }
   }
   const cabecalho = (p, rot) => `<div class="abs cab" data-g="cab" style="left:72px;right:150px;top:340px;padding:22px 28px 24px;background:rgba(7,12,22,.82);backdrop-filter:blur(10px);border-top:6px solid var(--amarelo)">
-      <div class="kicker" style="font-size:24px;color:var(--amarelo)">${esc(rot)}</div>
+      <div class="kicker" style="font-size:26px;color:var(--amarelo)">${esc(rot)}</div>
       ${p.titulo ? `<div class="tt" data-txt="1" style="font-weight:900;font-size:50px;line-height:1.05;margin-top:8px;text-transform:uppercase">${hl(p.titulo)}</div>` : ''}</div>`;
   const moldura = `<div class="abs" data-deco="1" style="inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(7,11,18,.65) 0%,rgba(7,11,18,0) 24%,rgba(7,11,18,0) 56%,rgba(7,11,18,.85) 80%,rgba(7,11,18,.95) 100%)"></div>`;
   const ATR = '<div class="abs atr" data-g="atr" data-opcional="1" style="right:160px;top:1198px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">Natural Earth · MapLibre</div>';
   const pinoHTML = (i, nome, sub) => `<div class="pino pn${i}" style="opacity:0"><div class="onda"></div><div class="onda o2"></div><div class="nucleo"></div></div>
-     <div class="abs rot-mapa destaque lb${i}" data-g="pt${i}" style="opacity:0">${esc(nome)}${sub ? `<div style="font-family:var(--f-dado);font-weight:400;font-size:24px;letter-spacing:1px;margin-top:4px;color:#3a4558">${esc(sub)}</div>` : ''}</div>`;
+     <div class="abs rot-mapa destaque lb${i}" data-g="pt${i}" style="opacity:0">${esc(nome)}${sub ? `<div style="font-family:var(--f-dado);font-weight:400;font-size:26px;letter-spacing:1px;margin-top:4px;color:#3a4558">${esc(sub)}</div>` : ''}</div>`;
   function animPino(el, i, tl, t0, q, cima, vizinhos) {
     const pn = el.querySelector('.pn' + i), lb = el.querySelector('.lb' + i); if (!pn || !q) return;
     if (i === 0) el.querySelectorAll('.rot-mapa.destaque').forEach(e => { e._t = null; });   // nova passada: nenhum nome posicionado ainda

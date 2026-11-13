@@ -38,8 +38,8 @@
   const H = V2.H = {
     IC, icone,
     kicker: (txt, cor = 'var(--amarelo)', extra = '') => `<div class="kicker abs" data-g="kicker" style="color:${cor};${extra}"><span style="display:inline-block;width:14px;height:14px;background:${cor};transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(txt)}</div>`,
-    fonte: (txt, claro) => txt ? `<div class="chip-fonte abs" data-g="fonte" data-opcional="1" style="left:72px;bottom:${1920 - 1150}px;font-family:var(--f-dado);font-size:24px;letter-spacing:2px;color:${claro ? '#5f584c' : 'rgba(255,255,255,.62)'};text-transform:uppercase"><span style="opacity:.75">FONTE ·</span> ${esc(txt)}</div>` : '',
-    natureza: (txt, cor = 'var(--vermelho)') => txt ? `<span class="natureza" style="display:inline-block;font-family:var(--f-dado);font-weight:700;font-size:24px;letter-spacing:3px;padding:6px 12px;border:2px solid ${cor};color:${cor};text-transform:uppercase">${esc(txt)}</span>` : '',
+    fonte: (txt, claro) => txt ? `<div class="chip-fonte abs" data-g="fonte" data-opcional="1" style="left:72px;bottom:${1920 - 1150}px;font-family:var(--f-dado);font-size:26px;letter-spacing:2px;color:${claro ? '#5f584c' : 'rgba(255,255,255,.62)'};text-transform:uppercase"><span style="opacity:.75">FONTE ·</span> ${esc(txt)}</div>` : '',
+    natureza: (txt, cor = 'var(--vermelho)') => txt ? `<span class="natureza" style="display:inline-block;font-family:var(--f-dado);font-weight:700;font-size:26px;letter-spacing:3px;padding:6px 12px;border:2px solid ${cor};color:${cor};text-transform:uppercase">${esc(txt)}</span>` : '',
   };
 
   /* foto.documental — reserva e cena de foto pura: a imagem manda, câmera dirigida, rótulo de lugar/data discreto */
@@ -58,7 +58,7 @@
     exemplo: { params: { lugar: 'LAGO GATÚN · PANAMÁ', credito: 'Wikimedia Commons' }, fundo: { img: '@lago_navios', de: [.5, .55, 1], para: [.55, .5, 1.12] }, dur: 4, fala: 'No meio do caminho há um lago.' },
   }, (p, ctx) => ({
     html: `${p.lugar ? `<div class="abs lugar" data-g="lugar" style="left:72px;top:336px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:30px;letter-spacing:4px;color:#fff" class="sombra-txt"><span style="width:12px;height:12px;border-radius:50%;background:var(--vermelho);box-shadow:0 0 0 5px rgba(255,77,61,.25)"></span><span class="tx" style="text-shadow:0 2px 14px rgba(0,0,0,.8)">${esc(p.lugar)}</span></div>` : ''}
-      ${p.credito ? `<div class="abs" data-g="credito" data-opcional="1" style="right:160px;top:1120px;font-family:var(--f-dado);font-size:24px;letter-spacing:1px;color:rgba(255,255,255,.7);text-shadow:0 1px 8px #000">${esc(p.credito)}</div>` : ''}`,
+      ${p.credito ? `<div class="abs" data-g="credito" data-opcional="1" style="right:160px;top:1120px;font-family:var(--f-dado);font-size:26px;letter-spacing:1px;color:rgba(255,255,255,.7);text-shadow:0 1px 8px #000">${esc(p.credito)}</div>` : ''}`,
     upd(tl, el) { aparece(el.querySelector('.lugar'), tl, .25, { dx: -30, dy: 0 }); }
   }));
 })();

@@ -84,7 +84,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 #legenda.claro .w.ag,#legenda.claro .w.hl{color:#b8860b}
 
 /* marca discreta (canto superior, fora da zona da interface) */
-#marca{position:absolute;left:var(--margem);top:292px;font-family:var(--f-dado);font-weight:700;font-size:24px;letter-spacing:4px;color:rgba(255,255,255,.7);z-index:61;display:flex;align-items:center;gap:12px}
+#marca{position:absolute;left:var(--margem);top:292px;font-family:var(--f-dado);font-weight:700;font-size:26px;letter-spacing:4px;color:rgba(255,255,255,.7);z-index:61;display:flex;align-items:center;gap:12px}
 #marca i{display:inline-block;width:14px;height:14px;background:var(--amarelo);transform:rotate(45deg)}
 #marca.claro{color:rgba(20,20,20,.6)}
 #aviso-ia{position:absolute;right:160px;top:292px;font-family:var(--f-dado);font-size:22px;letter-spacing:3px;color:rgba(255,255,255,.6);z-index:61}

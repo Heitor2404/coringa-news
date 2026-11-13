@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import sys
 import os
 import re
 import time
@@ -26,10 +27,36 @@ _TESTE = {'fundo_a': 'tests/img/fundo_a.png', 'fundo_b': 'tests/img/fundo_b.jpg'
           'fundo_d': 'tests/img/fundo_d.jpg', 'pele': 'prototipos/editorial/midia/pele_macro.jpg', 'video_teste': 'tests/img/video_teste.mp4'}
 
 
-def midia() -> dict[str, str]:
+def _substituto(nome: str) -> str:
+    """Imagem cinza com 'SEM ACERVO' escrito nela. Antes, a falta da foto de arquivo caía numa ilustração qualquer que
+    herdava o rótulo 'FOTO REAL · 1913' do exemplo — atribuição falsa. O substituto não pode passar por documento."""
+    from PIL import Image, ImageDraw, ImageFont
+    arq = RAIZ / 'saida' / 'substitutos' / f'{nome}.png'
+    if not arq.exists():
+        arq.parent.mkdir(parents=True, exist_ok=True)
+        im = Image.new('RGB', (1200, 800), (58, 58, 62)); dr = ImageDraw.Draw(im)
+        for x in range(-800, 1200, 60):
+            dr.line([(x, 800), (x + 800, 0)], fill=(70, 70, 75), width=18)
+        try:
+            f1 = ImageFont.truetype('DejaVuSans-Bold.ttf', 84); f2 = ImageFont.truetype('DejaVuSans.ttf', 40)
+        except OSError:
+            f1 = f2 = ImageFont.load_default()
+        dr.text((600, 330), 'SEM ACERVO', font=f1, fill=(255, 210, 31), anchor='mm')
+        dr.text((600, 440), f'imagem "{nome}" ausente · substituto de teste', font=f2, fill=(230, 230, 230), anchor='mm')
+        im.save(arq)
+    return str(arq)
+
+
+def midia(avisar: bool = True) -> dict[str, str]:
     m = {k: str(RAIZ / v) for k, v in _TESTE.items()}
+    faltam = []
     for k, v in _PANAMA.items():
-        m[k] = str(AUD / 'img' / v) if (AUD / 'img' / v).exists() else m['fundo_b']
+        if (AUD / 'img' / v).exists():
+            m[k] = str(AUD / 'img' / v)
+        else:
+            m[k] = _substituto(k); faltam.append(k)
+    if faltam and avisar:
+        print(f'  AVISO: acervo do Panamá ausente ({AUD}); {len(faltam)} imagens viraram substituto "SEM ACERVO"', file=sys.stderr)
     return m
 
 

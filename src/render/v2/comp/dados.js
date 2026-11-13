@@ -59,8 +59,8 @@
     }
     return {
       html: `${papelFundo}${kickerP(p.rotulo || '')}
-        <div class="abs nat" style="left:72px;top:400px">${H.natureza(p.natureza, vermelho ? '#d22f1f' : '#141414').replace('font-size:24px', 'font-size:26px')}</div>
-        <div class="abs nb" data-g="num" data-txt="1" data-ocupa="1" style="left:62px;right:150px;top:455px;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;color:#141414">
+        <div class="abs nat" style="left:72px;top:400px">${H.natureza(p.natureza, vermelho ? '#d22f1f' : '#141414')}</div>
+        <div class="abs nb" data-g="num" data-txt="1" data-ocupa="1" style="left:62px;right:150px;top:478px;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;color:#141414">
           <span class="pr" style="font-weight:800;font-size:96px">${esc(p.prefixo || '')}</span><span class="v" style="font-weight:900;font-size:230px;line-height:.86;letter-spacing:-9px;font-variant-numeric:tabular-nums">${fmt(v, cs)}</span>
           <span class="un" style="font-weight:800;font-size:52px;line-height:1;max-width:330px">${esc(p.unidade || '')}</span></div>
         <div class="abs regua" data-deco="1" style="left:72px;height:12px;width:0;background:${acento}"></div>

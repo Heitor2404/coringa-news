@@ -175,7 +175,7 @@
         <div class="abs" data-g="pl" style="left:72px;right:150px;top:1036px;display:flex;gap:16px">
           ${p.periodo ? `<div class="pl1" data-txt="1" style="font-family:var(--f-dado);font-weight:700;font-size:30px;padding:10px 16px;border:2px solid var(--ciano);color:#fff">PERÍODO · <span class="pv">${esc(p.periodo)}</span></div>` : ''}
           ${p.distancia ? `<div data-txt="1" style="font-family:var(--f-dado);font-weight:700;font-size:30px;padding:10px 16px;border:2px solid rgba(255,255,255,.4);color:#fff">${esc(p.distancia)}</div>` : ''}</div>
-        ${p.fora_de_escala ? `<div class="abs" data-g="esc" data-opcional="1" style="right:160px;top:984px;font-family:var(--f-dado);font-size:24px;color:rgba(255,255,255,.55)">TAMANHOS FORA DE ESCALA</div>` : ''}`,
+        ${p.fora_de_escala ? `<div class="abs" data-g="esc" data-opcional="1" style="right:160px;top:984px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.55)">TAMANHOS FORA DE ESCALA</div>` : ''}`,
       upd(tl, el, c) {
         aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });
         const vt = +p.voltas || 1, M = clamp((tl - .4) / (c.dur - .8)) * vt * 2 * Math.PI, E = kepler(M % (2 * Math.PI) + (M >= 2 * Math.PI * vt ? 2 * Math.PI : 0));

@@ -654,6 +654,13 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     from src import orcamento_video
     if orcamento_video.linha_telegram():              # Fase 1 (monitorar): o que o orçamento FARIA; não decide nada
         diag.append(orcamento_video.linha_telegram())
+    try:                                              # plano-mestre I: métricas da rodada — só registro
+        from src import metricas
+        met = metricas.coletar(v, cenas)
+        diag.append(metricas.linha_telegram(met))
+        (pasta / f'{nome}-metricas.json').write_text(json.dumps(met, ensure_ascii=False, indent=1), encoding='utf-8')
+    except Exception as e:
+        print(f'  [métricas] não medi ({str(e)[:80]})')
     try:                                              # plano-mestre D: storyboard — só registro
         from src import storyboard
         if storyboard.linha_telegram(cenas):

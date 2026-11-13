@@ -15,7 +15,11 @@ def sobra() -> float:
     return LIMITE - passou()
 
 
+MARCAS: list[tuple[str, float]] = []      # plano-mestre I: linha do tempo da execução (métricas)
+
+
 def marca(etapa: str):
+    MARCAS.append((etapa, round(passou(), 1)))
     print(f'  [tempo] {etapa}: {passou():.0f} min (sobram {sobra():.0f})')
 
 

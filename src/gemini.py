@@ -85,6 +85,11 @@ def _tentar(fn, modelos=None):
             if '503' in str(erro) or 'UNAVAILABLE' in str(erro):
                 _lento[modelo] = time.time() + 300         # sobrecarregado: 5 minutos sem tentar esse modelo
             print(f'  [gemini] {modelo}' + (f' (chave {ch + 1})' if len(CHAVES) > 1 else '') + f' falhou: {str(erro)[:120]}')
+    try:                                     # plano-mestre I: a falha também entra no livro-caixa (ok=False, grátis)
+        from . import custo
+        custo.registrar('gemini', 'indisponível', ok=False)
+    except Exception:
+        pass
     raise RuntimeError(f'Gemini indisponível: {erro}')
 
 

@@ -4,8 +4,8 @@ name: Testes V2 (visual)
 # Sem IA, sem geração paga, sem cofre: só renderiza composições com dados de exemplo do próprio repositório.
 on:
   push:
-    branches: [visual-v2]
-    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
+    branches: [visual-v2, visual-v2-1-refinamento]
+    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/v2_referencias/**", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
   workflow_dispatch:
 
 jobs:
@@ -30,13 +30,13 @@ jobs:
           path: src/render/v2/dados/ne
           key: natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}
       - run: |
-          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji libpango1.0-dev libcairo2-dev pkg-config) || true
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji libpango1.0-dev libcairo2-dev pkg-config espeak-ng) || true
           pip install -r requirements.txt -r requirements-dev.txt
           pip install manim || echo "manim indisponível: a composição animacao.quadros fica fora dos testes"
           npm install --no-audit --no-fund
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           python scripts/v2_natural_earth.py
-      - run: pytest -q -rs tests/test_v2.py
+      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py
       - name: Galeria de validação (artefato)
         if: always()
         run: python -m src.v2.galeria --saida saida/galeria_v2

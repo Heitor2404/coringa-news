@@ -37,6 +37,7 @@ Teste automático **não é aprovação visual**: todo estado abaixo é técnico
 | 20 | palavra dita com o bloco anterior de legenda na tela | sobreposição de blocos → vencia o primeiro | `nucleo.js` (seleção do bloco) | vence o mais recente | `test_legenda_sobreposta…` (falha com o código antigo) | §6 |
 | 21 | erro de sintaxe derrubava 4 composições sem aviso | comentário `//` em linha única | `fotos.js` | `/* */` + teste que compila todo JS e confere o catálogo | `test_todo_js_do_palco_compila…` | — |
 | 22 | "80 km" (a fonte citada diz 82) | arredondamento do roteiro | `mapas.js` exemplo; roteiro experimental | 82 km (Wikipedia inglês; Britannica) | — | quadro_1 |
+| 23 | "Oceano Pacífico" saía pela borda no mapa mundial (24 medições graves no tema mapas) | visibilidade testava só o centro do rótulo | `mapas.js` `motorMapa.upd` | rótulo de mar preso no quadro pela largura; país só se couber inteiro | medição do tema mapas: 24 → 0 | tema mapas |
 
 ## 2. Auditoria por composição
 

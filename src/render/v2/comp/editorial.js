@@ -135,9 +135,13 @@
           <span style="flex:none;width:34px;height:34px;background:var(--amarelo);transform:rotate(45deg)"></span>
           <div style="flex:1"><div style="font-weight:900;font-size:52px;line-height:.95;letter-spacing:-1px">CORINGA EXPLICA</div><div style="font-family:var(--f-dado);font-weight:700;font-size:28px;margin-top:8px;color:rgba(255,255,255,.85)">${esc(p.marca || '@coringa.explica')}</div></div>
           ${v === 'marca' ? '' : `<div class="cta" style="flex:none;background:var(--amarelo);color:#0b0f17;font-weight:900;font-size:30px;padding:12px 18px">${p.proxima ? `PARTE ${esc(p.proxima)} AMANHÃ` : v === 'pergunta' ? 'RESPONDA AQUI' : 'SIGA'}</div>`}</div>
-        ${fts.length ? `<div class="abs fts" data-g="fts" style="left:72px;right:150px;top:1150px;font-family:var(--f-dado);font-size:26px;line-height:1.3;color:rgba(255,255,255,.8)"><span style="color:var(--amarelo)">FONTES ·</span> ${fts.map(esc).join(' · ')}</div>` : ''}`,
+        ${fts.length ? `<div class="abs fts" data-g="fts" style="left:72px;right:150px;top:1150px;font-family:var(--f-dado);font-size:26px;line-height:1.3;color:rgba(255,255,255,.8)"><span class="fu" style="color:var(--amarelo);white-space:nowrap">FONTES ·</span> ${fts.map((x, i) => `<span class="fu" style="white-space:nowrap">${esc(x)}${i < fts.length - 1 ? ' ·' : ''}</span>`).join(' ')}</div>` : ''}`,
       montar(el) { const r = el.querySelector('.rz'); if (r) caber(r, { max: v === 'pergunta' ? 84 : 70, min: 48, alt: 560 });
-        const f = el.querySelector('.fts'); if (f) { caber(f, { max: 26, min: 26, alt: 70 }); f.style.top = (1210 - f.offsetHeight) + 'px'; el.querySelector('.mc').style.top = (1210 - f.offsetHeight - 14 - el.querySelector('.mc').offsetHeight) + 'px'; } },
+        const f = el.querySelector('.fts'); if (f) {
+          /* quebra DETERMINÍSTICA: fontes são unidades inteiras e a decisão de quebrar usa folga de 40 px. Antes a linha
+             cabia com ~16 px de sobra e o Chromium do CI a quebrava (diferença de rasterização), mudando o layout. */
+          const L = f.clientWidth - 40; let x = 0;
+          f.querySelectorAll('.fu').forEach(u => { const w = u.getBoundingClientRect().width + 10; if (x > 0 && x + w > L) { u.insertAdjacentHTML('beforebegin', '<br>'); x = 0; } x += w; }); f.style.top = (1210 - f.offsetHeight) + 'px'; el.querySelector('.mc').style.top = (1210 - f.offsetHeight - 14 - el.querySelector('.mc').offsetHeight) + 'px'; } },
       upd(tl, el) {
         revelar(el.querySelector('.rz'), tl, .05, { passo: .05 });
         const mw = el.querySelector('.mascw'); if (mw) { const k = eo5((tl - .5) / .6); mw.style.opacity = clamp((tl - .5) / .2); mw.querySelector('.masc').style.transform = `translateY(${(1 - k) * 50}px)`; }

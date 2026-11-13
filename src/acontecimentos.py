@@ -144,10 +144,16 @@ def aba(cenas: list[dict]) -> int:
 
 def cobertura(cenas: list[dict]) -> dict:
     ids = ideias(cenas)
-    por = [{'evento': c.get('evento'), 'fala': _txt(c.get('fala'), 70), 'classe': classe(c),
-            'recurso_pedido': (c.get('acontecimento') or {}).get('recurso', '')} for c in ids]
+    por = []
+    for c in ids:
+        if c.get('fundidas'):                 # cartões seguidos que viraram lista/linha do tempo: cada fato conta
+            por += [{'evento': f.get('evento'), 'fala': _txt(f.get('fala'), 70), 'classe': 'grafico',
+                     'recurso_pedido': f.get('recurso', '')} for f in c['fundidas']]
+        else:
+            por.append({'evento': c.get('evento'), 'fala': _txt(c.get('fala'), 70), 'classe': classe(c),
+                        'recurso_pedido': (c.get('acontecimento') or {}).get('recurso', '')})
     cont = {k: sum(1 for p in por if p['classe'] == k) for k in ROTULOS}
-    return {'ideias': len(ids), 'contagem': cont, 'aba': aba(cenas), 'por_ideia': por}
+    return {'ideias': len(por), 'contagem': cont, 'aba': aba(cenas), 'por_ideia': por}
 
 
 def linha_telegram(cob: dict) -> str:

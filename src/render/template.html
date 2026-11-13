@@ -239,7 +239,7 @@ B.lista=sc=>{const it=(sc.itens||[]).slice(0,4);return{html:`
   <div style="position:absolute;left:60px;right:60px;top:${it.length>3?380:420}px">
     <div class="ttl" style="font-size:64px;font-weight:900;color:var(--y);margin-bottom:40px;text-transform:uppercase;display:flex;align-items:center;gap:20px"><span class="emo" style="font-size:70px">${esc(ico(sc))}</span>${esc(sc.titulo)}</div>
     ${it.map((x,i)=>`<div class="chk c${i}"><div class="ic">${i+1}</div><div>${hl(x)}</div><span class="ok">✓</span></div>`).join('')}</div>`,
- upd(t,el){show(el.querySelector('.ttl'),t,sc.start);it.forEach((x,i)=>{const t0=beat(sc,i,it.length,.45);pop(el.querySelector('.c'+i),t,t0,{dx:-400,dy:0,sc:.95});el.querySelector(`.c${i} .ok`).style.opacity=P(t,t0+0.5,.3)})}}};
+ upd(t,el){show(el.querySelector('.ttl'),t,sc.start);it.forEach((x,i)=>{const t0=(sc.tempos&&sc.tempos[i]!=null)?sc.tempos[i]:beat(sc,i,it.length,.45);pop(el.querySelector('.c'+i),t,t0,{dx:-400,dy:0,sc:.95});el.querySelector(`.c${i} .ok`).style.opacity=P(t,t0+0.5,.3)})}}};
 
 /* ---------- infográficos animados (substituem as simulações): linha do tempo e comparação ---------- */
 B.linha_tempo=sc=>{const it=(sc.itens||[]).slice(0,4),n=it.length,y0=540,y1=n>3?950:980,passo=n>1?(y1-y0)/(n-1):0;return{html:`
@@ -252,7 +252,8 @@ B.linha_tempo=sc=>{const it=(sc.itens||[]).slice(0,4),n=it.length,y0=540,y1=n>3?
     <div style="font-size:40px;font-weight:800;line-height:1.12;margin-top:6px;text-shadow:0 4px 16px #000">${hl(x.texto)}</div></div></div>`).join('')}`,
  upd(t,el){show(el.querySelector('.st'),t,sc.start);const a=sc.start+0.25,d=Math.max(.8,sc.end-sc.start-1.0);
   el.querySelector('.ln').style.height=((y1-y0)*eio((t-a)/d))+'px';
-  it.forEach((x,i)=>pop(el.querySelector('.ev'+i),t,a+(n>1?i/(n-1):0)*d-0.1,{dx:-120,dy:0,sc:.8}))}}};
+  // 12/11: cartões seguidos viram linha do tempo; cada fato entra quando a narração chega nele (sc.tempos)
+  it.forEach((x,i)=>pop(el.querySelector('.ev'+i),t,(sc.tempos&&sc.tempos[i]!=null)?sc.tempos[i]:a+(n>1?i/(n-1):0)*d-0.1,{dx:-120,dy:0,sc:.8}))}}};
 
 B.comparacao=sc=>{const it=(sc.itens||[]).slice(0,3),mx=Math.max(...it.map(x=>+x.valor||0),1),u=uni(sc.unidade);
  const dc=v=>Math.abs(v)<10&&v%1?1:0;return{html:`

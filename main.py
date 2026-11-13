@@ -143,6 +143,9 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
             if ant:
                 c['img'], c['real'], c['sub'] = ant['img'], ant.get('real', False), (ant.get('sub') or 0) + 1
                 c.pop('video', None)
+    if any(c.get('evento') for c in cenas):        # 12/11 (Fase 3, correção 3): roteiro com acontecimentos
+        cenas = _juntar_cartoes(cenas)
+        _dar_movimento(cenas)
     # fundo do fechamento: a última foto do vídeo (escurecida atrás do Coringa), não a da abertura
     fundo = next((c['img'] for c in reversed(cenas[:-1]) if c.get('img') and not c.get('video')), None)
     if cenas and cenas[-1]['tipo'] == 'fechamento' and fundo:
@@ -216,6 +219,104 @@ def _quebrar_longos(cenas: list[dict]) -> list[dict]:
                                  **{key: r.get(key) for key in ('legenda_foto', 'ano_foto', 'tipo_img', 'real')})
         k = j + 1
     return out
+
+
+MAX_ITENS_CARTAO = 4    # um quadro de cartões seguidos junta no máximo 4 fatos (o limite da lista/linha do tempo)
+_ANO = re.compile(r'\b(1[0-9]{3}|20[0-9]{2})\b')
+
+
+def _palavras_chave(c: dict) -> str:
+    """O que a própria narração destaca (*asteriscos*), ou o rótulo do cartão; até 5 palavras. Nada inventado."""
+    fala = str(c.get('fala') or '')
+    m = re.findall(r'\*([^*]+)\*', fala)
+    txt = ' '.join(m) if m else str(c.get('rotulo') or c.get('destaque') or ' '.join(fala.split()[:3]))
+    return ' '.join(txt.replace('*', '').split()[:5])
+
+
+def _juntar_cartoes(cenas: list[dict]) -> list[dict]:
+    """12/11 (Fase 3, correção 3): 2 ou mais ideias SEGUIDAS sem imagem do fato não viram uma fila de cartões de texto.
+    Viram UM quadro que cresce com a narração: LINHA DO TEMPO quando todas têm ano e há anos diferentes (as datas são
+    informação), senão LISTA dos fatos. Cada item entra no segundo em que a narração chega nele. Sem imagem nova, sem
+    foto genérica; a legenda não muda."""
+    def cartao(c):
+        return c['tipo'] in ('historia', 'imagem') and not c.get('img') and not c.get('video')
+    out, k = [], 0
+    while k < len(cenas):
+        if not cartao(cenas[k]):
+            out.append(cenas[k]); k += 1
+            continue
+        j = k
+        while j + 1 < len(cenas) and cartao(cenas[j + 1]):
+            j += 1
+        bloco = cenas[k:j + 1]
+        # pedaços da mesma ideia contam como 1 item
+        ideias = []
+        for c in bloco:
+            if not ideias or c.get('grupo') != ideias[-1][0].get('grupo'):
+                ideias.append([c])
+            else:
+                ideias[-1].append(c)
+        if len(ideias) < 2:
+            out += bloco; k = j + 1
+            continue
+        for ini in range(0, len(ideias), MAX_ITENS_CARTAO):
+            parte = ideias[ini:ini + MAX_ITENS_CARTAO]
+            if len(parte) < 2:                      # sobrou 1 no fim: fica como cartão
+                out += parte[0]
+                continue
+            primeiro, ultimo = parte[0][0], parte[-1][-1]
+            anos = [(_ANO.search(str((g[0].get('acontecimento') or {}).get('quando') or '')) or [None])[0] for g in parte]
+            itens = [_palavras_chave(g[0]) for g in parte]
+            novo = {key: primeiro[key] for key in ('grupo', 'evento', 'acontecimento', 'cor') if key in primeiro}
+            novo.update(start=primeiro['start'], end=ultimo['end'], fala=' '.join(str(g[0].get('fala') or '') for g in parte),
+                        tempos=[round(g[0]['start'] + 0.15, 3) for g in parte],
+                        fundidas=[{'grupo': g[0].get('grupo'), 'evento': g[0].get('evento'),
+                                   'fala': str(g[0].get('fala') or '')[:70],
+                                   'recurso': (g[0].get('acontecimento') or {}).get('recurso', '')} for g in parte])
+            if all(anos) and len(set(anos)) >= 2:
+                novo.update(tipo='linha_tempo', titulo='', itens=[{'ano': a, 'texto': t} for a, t in zip(anos, itens)])
+            else:
+                novo.update(tipo='lista', titulo='', itens=itens)
+            out.append(novo)
+        k = j + 1
+    return out
+
+
+def _dar_movimento(cenas: list[dict]):
+    """12/11 (Fase 3, correção 3): câmera e transição com PROPÓSITO, sem cortes novos.
+    Câmera do 1º plano de cada ideia: retrato/objeto/documento do fato → aproxima (o olho vai no assunto); lugar e
+    ambiente → panorâmica (lados alternados, nunca a mesma direção em ideias seguidas); o fato em si → afasta (mostra o
+    todo). Reenquadramento (2º plano em diante da mesma imagem) continua no detalhe de outro canto (SUB do template).
+    Transição: continuação do mesmo acontecimento → corte seco (a câmera só muda de ponto); mudança de lugar/tempo
+    marcada pelo roteiro (etiqueta "lugar") ou salto de 5+ anos → escurece (o tempo passou); o resto fica como era."""
+    lado, ant_cam, ant = 0, None, None
+    for c in cenas:
+        if c['tipo'] not in ('historia', 'imagem') or not c.get('img') or c.get('video'):
+            ant = c
+            continue
+        if not c.get('sub'):
+            rel = c.get('relacao')
+            if rel in ('pessoa', 'objeto', 'documento'):
+                cam = 'aproxima'
+            elif rel == 'fato':
+                cam = 'afasta'
+            else:
+                cam = ('esquerda', 'direita')[lado % 2]; lado += 1
+            if cam == ant_cam:
+                cam = {'aproxima': 'afasta', 'afasta': 'aproxima', 'esquerda': 'direita', 'direita': 'esquerda'}[cam]
+            if c.get('camera'):                      # câmera que o roteiro já escolheu (ex.: tremor) fica
+                cam = c['camera']
+            c['camera'], ant_cam = cam, cam
+        if ant is not None and ant.get('tipo') not in ('gancho',):
+            ac_a, ac_c = ant.get('acontecimento') or {}, c.get('acontecimento') or {}
+            mesmo = (c.get('grupo') is not None and c.get('grupo') == ant.get('grupo')) or \
+                    (c.get('evento') and c.get('evento') == ant.get('evento'))
+            ano_a, ano_c = _ANO.search(str(ac_a.get('quando') or '')), _ANO.search(str(ac_c.get('quando') or ''))
+            if mesmo:
+                c['transicao'] = 'corte'
+            elif c.get('lugar') or (ano_a and ano_c and abs(int(ano_a.group(1)) - int(ano_c.group(1))) >= 5):
+                c['transicao'] = 'preto'               # a etiqueta de lugar/tempo do roteiro ou um salto de 5+ anos
+        ant = c
 
 
 SEM_SOCO = {'mapa', 'fechamento', 'gancho', 'revelacao', 'numero', 'linha_tempo', 'comparacao', 'cards', 'lista', 'escala', 'citacao'}

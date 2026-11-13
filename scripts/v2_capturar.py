@@ -16,7 +16,8 @@ def main():
     saida = Path(sys.argv[1]).resolve(); saida.mkdir(parents=True, exist_ok=True)
     so = sys.argv[sys.argv.index('--so') + 1].split(',') if '--so' in sys.argv else []
     cat = galeria.catalogo(saida / '_cat')
-    out = {}
+    arq = saida / 'catalogo.json'
+    out = json.loads(arq.read_text(encoding='utf-8')) if (so and arq.exists()) else {}   # --so atualiza só as pedidas
     for m in cat:
         if so and m['id'] not in so:
             continue

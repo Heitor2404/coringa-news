@@ -56,7 +56,7 @@
         // centraliza o bloco (moldura + descrição) na área de conteúdo 360–1200
         const hMo = mo.offsetHeight, hDs = ds ? ds.offsetHeight + 20 : 0, top = clamp(360 + (840 - hMo - hDs) / 2, 360, 1200 - hMo - hDs);
         mo.style.top = top + 'px'; if (ds) ds.style.top = (top + hMo + 20) + 'px';
-        const ca = el.querySelector('.carimbo'); if (ca) { ca.style.top = Math.max(V2.Z.topo + 8, top + 24) + 'px'; const kc = clamp((tl - .6) / .18); ca.style.opacity = kc; ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
+        const ca = el.querySelector('.carimbo'); if (ca) { ca.style.top = Math.max(V2.Z.topo + 8, top + 24) + 'px'; const kc = clamp((tl - .6) / .18), ksai = (p.anotacoes || []).length ? clamp((tl - m2 - .4) / .3) : 0; ca.style.opacity = kc * (1 - ksai); /* sai quando a anotação entra (mesma região) */ ca.style.transform = `rotate(-4deg) scale(${lerp(1.8, 1, eo(kc))})`; }
         // câmera dentro da janela: momento 1 = foto inteira; momento 2 = foco (ou varredura)
         const f = p.foco || [.5, .5];
         if (pan) janela(jn, wh, rc, L, A, tl < m2 ? .5 : lerp(.5, f[0], k2) + (k2 >= 1 ? 0 : 0), .5, tl < m2 ? 1 : 1);

@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import claude, gemini
+from . import acontecimentos, claude, gemini
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -363,7 +363,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     if serie and serie.get('arco'):
         v['arco'] = serie['arco']             # a série segue o plano da parte 1 (a parte 2 sabe se ainda vem a 3)
     v = arrumar_final(v, parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0)
-    v = dividir(geocodificar(v))
+    v = acontecimentos.normalizar(dividir(geocodificar(v)))    # 12/11: quem/onde/quando/recurso de cada ideia
     v = acervo_mod.casar(v, acervo)
     # 2ª busca: para cada frase ainda sem foto, procura imagem real do ASSUNTO DA FRASE (Loki, Templários, o bombardeiro...)
     acervo = acervo_mod.complementar(v, acervo, pasta)
@@ -407,10 +407,12 @@ def decidir_partes(tema: dict, fatos: str) -> int:
 
 
 def _planos_sem_foto(v: dict, epoca: str) -> dict:
-    """Ideias que ficaram sem foto do acervo: vídeo de clima (se o roteirista pediu, até 2), imagem de IA com a época
-    travada (até 6) e, no máximo, 2 ideias reaproveitando a foto real vizinha.
-    PORTEIRO: se menos da metade das ideias tem foto real do próprio assunto, o tema não tem material visual → próximo tema
-    (foi o caso do sangue de dinossauro: 4 de 12 ideias com foto certa)."""
+    """Ideias que ficaram sem foto do acervo (12/11, imagem por acontecimento — ver src/acontecimentos.py):
+    gancho → foto vizinha (como antes); vídeo de clima (frase de ambiente, até 2); ilustração de IA SÓ quando o roteiro
+    pediu "ia" (mito, microscópico, momento sem registro possível) — nunca para tapar buraco de fato histórico; outra ideia
+    do MESMO evento com foto → reenquadra a imagem dela; senão, CARTÃO com as palavras da narração (sem inventar imagem).
+    PORTEIROS de tema (como antes): menos de MIN_COBERTURA das ideias com foto real → próximo tema; e mais de
+    MAX_VIZINHA + MAX_IA ideias sem imagem própria (o que antes era IA + vizinha) → próximo tema."""
     ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
     com_foto = sum(1 for c in ideias if c.get('foto'))
     # ciência "por dentro" (cérebro, células, sabor, espaço profundo): não existe foto real de quase nada disso; a imagem
@@ -420,7 +422,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
     minimo, max_ia = (0.25, 8) if ciencia else (MIN_COBERTURA, MAX_IA)
     if ideias and com_foto / len(ideias) < minimo:
         raise ValueError(f'pouco material visual: só {com_foto} de {len(ideias)} frases têm foto real do assunto; pulo para o próximo tema')
-    n_ia, n_clima, n_viz = 0, 0, 0
+    n_ia, n_clima, n_viz, n_evento, n_cartao = 0, 0, 0, 0, 0
     trava = (f'Set in {epoca}. ' if epoca else '') + 'Period-accurate clothing, objects and architecture; no modern objects, no smartphones, no cars unless period-correct'
     trava += '. Flat 2D illustration (not a photo)'
     for k, c in enumerate(ideias):
@@ -430,20 +432,22 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
             c['midia'] = 'vizinha'; n_viz += 1
             continue
         vis = str(c.get('visual') or '').strip()
+        rec = (c.get('acontecimento') or {}).get('recurso', '')
         base = c.get('cenario') or (f"Scene showing {c['busca']}" if c.get('busca') else '')
+        mesmo = [x for x in ideias if x is not c and x.get('foto') and x.get('evento') and x.get('evento') == c.get('evento')]
         if vis.lower().startswith('clima') and n_clima < 2:
             c['midia'], c['busca'] = 'video', vis.split(':', 1)[-1].strip() or 'old city street'
             n_clima += 1
-        elif n_viz < MAX_VIZINHA and not base:
-            c['midia'] = 'vizinha'; n_viz += 1
-        elif n_ia < max_ia and base:
+        elif (vis.lower() == 'ia' or rec == 'ia') and n_ia < max_ia and base:
             c['midia'] = 'ia'
             c['prompt_imagem'] = f"{base}. {trava}."
             n_ia += 1
+        elif mesmo:
+            c['midia'] = 'evento'; n_evento += 1     # a montagem reenquadra a imagem da outra ideia do mesmo evento
         else:
-            c['midia'] = 'vizinha'; n_viz += 1
-    if n_viz > MAX_VIZINHA:
-        raise ValueError(f'pouco material visual: {n_viz} frases sem imagem própria; pulo para o próximo tema')
+            c['midia'] = 'cartao'; n_cartao += 1     # sem imagem que mostre o fato: as palavras da narração na tela
+    if n_viz + n_cartao > MAX_VIZINHA + MAX_IA:
+        raise ValueError(f'pouco material visual: {n_viz + n_cartao} frases sem imagem própria; pulo para o próximo tema')
     for c in v['cenas']:                       # pedaços da mesma ideia seguem a ideia
         if c.get('sub'):
             pai = next((x for x in v['cenas'] if x.get('grupo') == c.get('grupo') and not x.get('sub')), None)
@@ -451,7 +455,8 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
                 for k in ('midia', 'busca', 'prompt_imagem'):
                     if pai.get(k):
                         c[k] = pai[k]
-    print(f'  [acervo] sem foto: {n_clima} vídeo(s) de clima · {n_ia} imagem(ns) de IA · {n_viz} reaproveitam a foto vizinha')
+    print(f'  [acervo] sem foto: {n_clima} vídeo(s) de clima · {n_ia} ilustração(ões) pedida(s) · {n_evento} do mesmo '
+          f'acontecimento · {n_cartao} cartão(ões) · {n_viz} foto vizinha (gancho)')
     return _validar(v)
 
 
@@ -484,6 +489,11 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   
                 if k in v and k not in novo:
                     novo[k] = v[k]
             novo = _validar(novo)
+            if len(novo['cenas']) == len(v['cenas']):       # a reescrita que esquecer o acontecimento herda o da versão anterior
+                for a, b in zip(v['cenas'], novo['cenas']):
+                    for k in ('acontecimento', 'evento'):
+                        if k in a and k not in b:
+                            b[k] = a[k]
             ideias = [c for c in novo['cenas'] if c['tipo'] != 'fechamento']
             palavras = sum(len(c['fala'].split()) for c in novo['cenas'])
             if len(ideias) < 11 or palavras > LIMITE_PALAVRAS or any(len(c['fala'].split()) > 16 for c in ideias):

@@ -97,8 +97,23 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
     # ficar muitos segundos seguidos na tela.
     reais_k = [k for k, c in enumerate(cenas) if c.get('real') and c.get('img')]
     com_img = reais_k or [k for k, c in enumerate(cenas) if c.get('img') and not c.get('video')]
+    # 12/11 (imagem por acontecimento): foto de OUTRO acontecimento só no gancho (midia "vizinha"). Ideia do MESMO evento
+    # reenquadra a imagem dele; o resto fica sem imagem = cartão com as palavras da narração (o template desenha).
     for k, c in enumerate(cenas):
-        if not c.get('img') and c['tipo'] not in ('mapa', 'fechamento') and com_img:
+        if c.get('img') or c['tipo'] in ('mapa', 'fechamento') or c.get('midia') == 'vizinha' or not c.get('evento'):
+            continue
+        mesmo = [j for j, x in enumerate(cenas) if j != k and x.get('img') and not x.get('video')
+                 and x.get('evento') == c['evento'] and x.get('grupo') != c.get('grupo')]
+        if mesmo:
+            viz = cenas[min(mesmo, key=lambda j: abs(j - k))]
+            c['img'], c['mesmo_evento'] = viz['img'], True
+            c['sub'] = (viz.get('sub') or 0) + 1          # outro recorte/movimento da mesma imagem
+            for key in ('real', 'legenda_foto', 'ano_foto', 'tipo_img', 'relacao'):
+                if viz.get(key) is not None:
+                    c[key] = viz.get(key)
+    for k, c in enumerate(cenas):
+        if not c.get('img') and c['tipo'] not in ('mapa', 'fechamento') and com_img and (
+                c.get('midia') == 'vizinha' or not c.get('evento')):     # roteiro antigo (sem evento): como antes
             ant = cenas[k - 1].get('img') if k else None
             perto = [j for j in com_img if abs(j - k) <= 2]
             opcoes = [j for j in perto if cenas[j]['img'] != ant] or perto or com_img
@@ -109,6 +124,13 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
                 c['real'] = True
                 for k in ('legenda_foto', 'ano_foto', 'tipo_img'):
                     c[k] = viz.get(k)
+    # cartão (ideia sem imagem que mostre o fato): o template escreve as palavras-chave da fala (*asteriscos*); fala sem
+    # asteriscos ganha como rótulo os nomes/números que ela mesma diz (nada inventado)
+    for c in cenas:
+        if not c.get('img') and c['tipo'] in ('historia', 'imagem') and '*' not in str(c.get('fala') or '') \
+                and not (c.get('rotulo') or c.get('destaque')):
+            nomes = re.findall(r'\d[\d.,]*|\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ú-]+', str(c.get('fala') or '')[1:])
+            c['rotulo'] = ' '.join(nomes[:2]) or ' '.join(str(c.get('fala') or '').split()[:2])
     cenas = _quebrar_longos(cenas)
     estilo = midia.estilo_fundo(v.get('titulo'), (v.get('_pauta') or {}).get('tema'), v.get('pergunta'), v.get('resumo'))
     print(f"  [fundo] {'B · céu' if estilo == 'ceu' else 'A · estúdio escuro'} atrás das fotos")
@@ -133,8 +155,25 @@ MESMA_MAX = 7.0         # nem a mesma imagem (mesmo reenquadrada) mais que isso 
 
 
 def _quebrar_longos(cenas: list[dict]) -> list[dict]:
-    """Porteiro da montagem: plano longo vira 2 ou mais planos. O 2º usa OUTRA foto real do vídeo (a mais próxima que não
-    esteja na tela antes nem depois); se não houver, a mesma foto com outro enquadramento."""
+    """Porteiro da montagem: plano longo vira 2 ou mais planos. 12/11 (imagem por acontecimento): a MESMA imagem da ideia
+    com outro enquadramento (detalhe, outro canto) — foto de OUTRO acontecimento não entra mais (era o A-B-A). Mais
+    cortes não substituem imagem do fato. Roteiro antigo, sem `evento`: como antes (outra foto real perto)."""
+    if any(c.get('evento') for c in cenas):
+        out = []
+        for c in cenas:
+            dur = c['end'] - c['start']
+            if not c.get('img') or c.get('video') or c['tipo'] not in ('historia', 'imagem') or dur <= PLANO_MAX:
+                out.append(c)
+                continue
+            n = int(dur // PLANO_MAX) + 1
+            passo = dur / n
+            for j in range(n):
+                p = dict(c, start=round(c['start'] + j * passo, 3), end=round(c['start'] + (j + 1) * passo, 3))
+                if j:
+                    p.pop('soco', None)
+                    p['sub'] = (c.get('sub') or 0) + j
+                out.append(p)
+        return out
     reais = [c for c in cenas if c.get('real') and c.get('img') and not c.get('repetida')]
     out = []
     for k, c in enumerate(cenas):
@@ -637,6 +676,15 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     from src import orcamento_video
     if orcamento_video.linha_telegram():              # Fase 1 (monitorar): o que o orçamento FARIA; não decide nada
         diag.append(orcamento_video.linha_telegram())
+    try:                                              # Fase 3 (12/11): cobertura visual por acontecimento — só registro
+        from src import acontecimentos
+        cob = acontecimentos.cobertura(cenas)
+        v['_cobertura'] = cob
+        if acontecimentos.linha_telegram(cob):
+            diag.append(acontecimentos.linha_telegram(cob))
+        (pasta / f'{nome}-cobertura.json').write_text(json.dumps(cob, ensure_ascii=False, indent=1), encoding='utf-8')
+    except Exception as e:
+        print(f'  [cobertura] não medi ({str(e)[:80]})')
     print(custo.tabela())
     try:
         custo.salvar(pasta / f'{nome}-custos.json')

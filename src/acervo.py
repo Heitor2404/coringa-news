@@ -530,6 +530,10 @@ def _catalogar(itens: list[dict], tema: str, epoca: str) -> None:
                     print(f"  [acervo] fora: texto/marca d'água por cima — {x['titulo'][:60]}")
                 x['mostra'] = str(a.get('mostra') or '')[:200]
                 x['tipo_img'] = str(a.get('tipo') or 'foto').lower()
+                # 12/11 (imagem por acontecimento): quem e onde a imagem mostra, para ligar a imagem ao fato sem nova IA
+                ps = a.get('pessoas')
+                x['pessoas'] = [str(n)[:60] for n in (ps if isinstance(ps, list) else [ps] if ps else [])][:4]
+                x['lugar'] = str(a.get('lugar') or '')[:80]
                 esp = a.get('especifica', True)
                 x['generica'] = not (esp if isinstance(esp, bool) else str(esp).lower() in ('true', 'sim', 'yes'))
                 try:
@@ -672,9 +676,10 @@ def casar(v: dict, acervo: list[dict]) -> dict:
         ideias.append(c)
     if not ideias:
         return v
+    from . import acontecimentos as acont
     linhas = '\n'.join(f"{k}: {(c.get('fala_ideia') or c['fala']).replace('*', '')} [{c.get('visual') or '?'}]"
-                       for k, c in enumerate(ideias))
-    escolha = {}
+                       + acont.linha_casar(c) for k, c in enumerate(ideias))
+    escolha, relacao = {}, {}
     try:
         r = gemini.json_visao(PROMPT_CASAR.format(primeiro=acervo[0]['id'], acervo=texto(acervo), ideias=linhas),
                               [x['mini'] for x in acervo], leve=False)
@@ -692,8 +697,17 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             exata = exata if isinstance(exata, bool) else str(exata).lower() in ('true', 'sim', 'yes')
             # 11/11: foto que NÃO mostra o que a frase diz e ainda é genérica (vaso qualquer numa frase sobre múmias,
             # flamingo de zoológico numa frase sobre o lago) sai: melhor outra imagem do que uma 'mais ou menos'
-            if 0 <= k < len(ideias) and f in por_id and (exata or not por_id[f].get('generica')):
-                escolha[k] = f
+            if not (0 <= k < len(ideias) and f in por_id and (exata or not por_id[f].get('generica'))):
+                continue
+            # 12/11: a imagem precisa ter ligação com o ACONTECIMENTO da frase (o fato, o documento, ou a pessoa/lugar/
+            # objeto dele). "Só do tema" sai — a não ser em frase de ambiente. Resposta sem "relacao" (formato antigo):
+            # vale a regra de antes, marcada como "fato" se exata.
+            rel = str(e.get('relacao') or '').strip().lower() or None
+            if rel is None and 'relacao' not in e:
+                rel = 'fato' if exata else None
+            if rel in acont.RELACOES_DO_FATO or (rel == 'ambiente' and acont.ambiente(ideias[k])) or \
+                    (rel is None and 'relacao' not in e):
+                escolha[k], relacao[k] = f, rel
     except Exception as e:
         print(f'  [acervo] casamento falhou ({str(e)[:80]}); uso as sugestões do roteirista')
         for k, c in enumerate(ideias):
@@ -707,14 +721,19 @@ def casar(v: dict, acervo: list[dict]) -> dict:
         if f:
             usos[f] = usos.get(f, 0) + 1
             c['foto'] = f
+            if relacao.get(k):
+                c['relacao'] = relacao[k]
         else:
             c.pop('foto', None)
+            c.pop('relacao', None)
         ant = f
     for c in v['cenas']:                       # os planos da mesma ideia herdam a foto dela
         if c.get('sub'):
             pai = next((x for x in v['cenas'] if x.get('grupo') == c.get('grupo') and not x.get('sub')), None)
             if pai and pai.get('foto'):
                 c['foto'] = pai['foto']
+                if pai.get('relacao'):
+                    c['relacao'] = pai['relacao']
             else:
                 c.pop('foto', None)
     n = sum(1 for c in ideias if c.get('foto'))
@@ -724,30 +743,38 @@ def casar(v: dict, acervo: list[dict]) -> dict:
 
 
 def preencher(v: dict, acervo: list[dict]) -> dict:
-    """11/11: frase que ficou sem foto pega uma RESERVA do acervo ainda não usada (vídeo primeiro, depois a foto de maior
-    nota), antes de cair em ilustração ou foto repetida. As reservas são todas do próprio tema; um vídeo do tema numa
-    frase de ambiente é muito melhor que tela repetida (vídeo dos tardígrados: 7 frases sem imagem e 8 reservas sobrando)."""
+    """Frase que ficou sem foto pega uma RESERVA do acervo ainda não usada — 12/11: SÓ se a reserva for da MESMA pessoa
+    ou do MESMO lugar do acontecimento da frase (nomes em comum, sem IA), ou se a frase é de ambiente (aí vale a regra de
+    11/11: vídeo primeiro). Antes qualquer reserva do tema entrava: foto do tema numa frase sobre outro fato."""
+    from . import acontecimentos as acont
     ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
     usados = {c.get('foto') for c in ideias if c.get('foto')}
     livres = [x for x in acervo if x.get('util', True) and x['id'] not in usados]
     livres.sort(key=lambda x: (not x.get('video'), bool(x.get('generica')), -float(x.get('nota') or 0)))
     n = 0
-    ant = None
     for c in ideias:
-        if c.get('foto'):
-            ant = c['foto']
+        if c.get('foto') or not livres:
             continue
-        if not livres:
-            break
-        x = livres.pop(0)
-        c['foto'] = x['id']; ant = x['id']; n += 1
+        x, rel = None, None
+        for cand in livres:
+            rel = acont.ligacao(cand, c)
+            if rel:
+                x = cand
+                break
+        if x is None and acont.ambiente(c):
+            x, rel = livres[0], 'ambiente'
+        if x is None:
+            continue
+        livres.remove(x)
+        c['foto'], c['relacao'] = x['id'], rel
+        n += 1
     for c in v['cenas']:                       # os planos da mesma ideia herdam a foto dela
         if c.get('sub') and not c.get('foto'):
             pai = next((y for y in v['cenas'] if y.get('grupo') == c.get('grupo') and not y.get('sub')), None)
             if pai and pai.get('foto'):
-                c['foto'] = pai['foto']
+                c['foto'], c['relacao'] = pai['foto'], pai.get('relacao')
     if n:
-        print(f'  [acervo] {n} frase(s) sem foto ganharam uma reserva do acervo (vídeos primeiro)')
+        print(f'  [acervo] {n} frase(s) sem foto ganharam uma reserva do acervo ligada ao acontecimento (ou de ambiente)')
     return v
 
 
@@ -756,10 +783,18 @@ def complementar(v: dict, acervo: list[dict], pasta: Path) -> list[dict]:
     "Loki Balder painting", "Halifax bomber"...), não só do tema geral. As novas entram no acervo e o casamento é refeito."""
     from .orcamento import sobra
     faltam = [c for c in v['cenas'] if c['tipo'] not in ('mapa', 'fechamento') and not c.get('sub')
-              and not c.get('foto') and str(c.get('busca') or '').strip()]
+              and not c.get('foto') and (str(c.get('busca') or '').strip() or (c.get('acontecimento') or {}).get('quem'))]
     if not faltam or sobra() < 50:
         return acervo
-    consultas = list(dict.fromkeys(str(c['busca']).strip() for c in faltam))[:6]
+
+    def consulta(c):
+        """12/11: busca dirigida pelo ACONTECIMENTO; quando o recurso pedido é documento/jornal, procura o papel da época."""
+        ac = c.get('acontecimento') or {}
+        q = str(c.get('busca') or '').strip() or ' '.join(x for x in (ac.get('quem'), ac.get('onde'), ac.get('quando')) if x)
+        if ac.get('recurso') in ('documento', 'jornal') and not re.search(r'newspaper|document|letter|jornal', q, re.I):
+            q = f"{q} {'newspaper' if ac['recurso'] == 'jornal' else 'document'}"
+        return q
+    consultas = list(dict.fromkeys(consulta(c) for c in faltam))[:6]
     print(f"  [acervo] 2ª busca para {len(faltam)} frase(s) sem foto: {', '.join(consultas)}")
 
     def buscar(q):

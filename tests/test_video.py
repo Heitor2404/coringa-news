@@ -141,14 +141,20 @@ def test_foto_generica_que_nao_e_exata_sai(monkeypatch):
 
 
 def test_buraco_pega_reserva_video_primeiro():
-    """11/11 (tardígrados): 7 frases sem imagem com 8 reservas sobrando."""
+    """11/11 (tardígrados): reserva do acervo tapa frase sem imagem, vídeo primeiro. 12/11 (imagem por acontecimento):
+    só em frase de AMBIENTE ou com reserva da MESMA pessoa/lugar do fato; frase sobre outro fato fica sem (vira cartão)."""
     from src import acervo
-    acv = [{'id': 'a0', 'mostra': 'x'}, {'id': 'a1', 'mostra': 'foto', 'nota': 9},
+    acv = [{'id': 'a0', 'mostra': 'x'}, {'id': 'a1', 'mostra': 'retrato de Victor Lustig', 'nota': 9, 'pessoas': ['Victor Lustig']},
            {'id': 'a2', 'mostra': 'clipe', 'video': {'url': 'u'}, 'generica': True}, {'id': 'a3', 'mostra': 'ruim', 'util': False}]
-    v = {'cenas': [{'tipo': 'historia', 'fala': 'f0', 'foto': 'a0'}, {'tipo': 'historia', 'fala': 'f1'},
-                   {'tipo': 'historia', 'fala': 'f2'}, {'tipo': 'historia', 'fala': 'f3'}]}
+    amb = {'quem': '', 'onde': '', 'quando': '', 'recurso': 'ambiente'}
+    fato = {'quem': 'Victor Lustig', 'onde': 'Paris', 'quando': '1925', 'recurso': 'retrato'}
+    outro = {'quem': 'André Poisson', 'onde': '', 'quando': '1925', 'recurso': 'documento'}
+    v = {'cenas': [{'tipo': 'historia', 'fala': 'f0', 'foto': 'a0'}, {'tipo': 'historia', 'fala': 'f1', 'acontecimento': amb},
+                   {'tipo': 'historia', 'fala': 'f2', 'acontecimento': fato},
+                   {'tipo': 'historia', 'fala': 'f3', 'acontecimento': outro}]}
     acervo.preencher(v, acv)
     assert [c.get('foto') for c in v['cenas']] == ['a0', 'a2', 'a1', None]
+    assert [c.get('relacao') for c in v['cenas']][1:] == ['ambiente', 'pessoa', None]
 
 
 class _R:

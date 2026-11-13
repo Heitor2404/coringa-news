@@ -75,6 +75,10 @@ def midia_de(c: dict, reais: dict, imgs: dict) -> tuple[str, Path | None]:
         return 'FOTO', Path(m['arq'])
     if imgs.get(iid):
         return 'IA', Path(imgs[iid])
+    if c.get('midia') == 'cartao':           # 12/11: sem imagem que mostre o fato → palavras da narração na tela
+        return 'CARTÃO', None
+    if c.get('midia') == 'evento':           # 12/11: imagem de outra frase do MESMO acontecimento, reenquadrada
+        return 'MESMO FATO', None
     return 'REPETE', None
 
 
@@ -95,6 +99,10 @@ def avisos(v: dict, reais: dict, imgs: dict) -> list[str]:
         out.append(f"• {tipos.count('IA')} imagem(ns) de IA")
     if tipos.count('REPETE'):
         out.append(f"• {tipos.count('REPETE')} frase(s) sem imagem própria (repete a foto vizinha)")
+    if tipos.count('CARTÃO'):
+        out.append(f"• {tipos.count('CARTÃO')} frase(s) sem imagem do fato: vão como cartão com as palavras da narração")
+    if tipos.count('MESMO FATO'):
+        out.append(f"• {tipos.count('MESMO FATO')} frase(s) com a imagem de outra frase do mesmo acontecimento")
     contagem: dict = {}
     for c in ideias(v):
         if c.get('foto'):

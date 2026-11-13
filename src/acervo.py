@@ -679,7 +679,9 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     from . import acontecimentos as acont
     linhas = '\n'.join(f"{k}: {(c.get('fala_ideia') or c['fala']).replace('*', '')} [{c.get('visual') or '?'}]"
                        + acont.linha_casar(c) for k, c in enumerate(ideias))
-    escolha, relacao = {}, {}
+    from . import selecao
+    escolha, relacao, motivos, verif, recusas = {}, {}, {}, {}, {}
+    recusar = lambda k, f, m: recusas.setdefault(k, []).append({'foto': f, 'motivo': m})
     try:
         r = gemini.json_visao(PROMPT_CASAR.format(primeiro=acervo[0]['id'], acervo=texto(acervo), ideias=linhas),
                               [x['mini'] for x in acervo], leve=False)
@@ -697,16 +699,22 @@ def casar(v: dict, acervo: list[dict]) -> dict:
             exata = exata if isinstance(exata, bool) else str(exata).lower() in ('true', 'sim', 'yes')
             # 11/11: foto que NÃO mostra o que a frase diz e ainda é genérica (vaso qualquer numa frase sobre múmias,
             # flamingo de zoológico numa frase sobre o lago) sai: melhor outra imagem do que uma 'mais ou menos'
-            if not (0 <= k < len(ideias) and f in por_id and (exata or not por_id[f].get('generica'))):
+            if not (0 <= k < len(ideias) and f in por_id):
+                continue
+            if not exata and por_id[f].get('generica'):
+                recusar(k, f, 'genérica e não mostra o que a frase diz')
                 continue
             # 12/11 (reversão da correção 2): a ligação com o acontecimento é só REGISTRO e preferência (está no pedido),
             # não filtro — o filtro rígido esvaziou o acervo usado (Torre Eiffel 4). Foto "do tema" que combina com a
             # frase volta a valer (relacao "tema"). Só sai a evidentemente desconectada: relacao null e não exata.
             rel = str(e.get('relacao') or '').strip().lower() or None
             if 'relacao' in e and rel in (None, 'nenhuma', 'none', 'null') and not exata:
+                recusar(k, f, 'sem ligação com a frase')
                 continue
             if rel is None and 'relacao' not in e:
                 rel = 'fato' if exata else None
+            # plano-mestre E: a relação do Gemini é HIPÓTESE; os metadados confirmam ou rebaixam para "tema"
+            rel, motivos[k], verif[k] = selecao.verificar(por_id[f], ideias[k], rel)
             escolha[k], relacao[k] = f, rel
     except Exception as e:
         print(f'  [acervo] casamento falhou ({str(e)[:80]}); uso as sugestões do roteirista')
@@ -717,6 +725,7 @@ def casar(v: dict, acervo: list[dict]) -> dict:
     for k, c in enumerate(ideias):
         f = escolha.get(k)
         if f and (usos.get(f, 0) >= 1 or f == ant):        # 11/11: cada foto/vídeo em UMA ideia só (molécula 3x)
+            recusar(k, f, 'já usada em outra ideia')
             f = None
         if f:
             usos[f] = usos.get(f, 0) + 1
@@ -726,6 +735,9 @@ def casar(v: dict, acervo: list[dict]) -> dict:
         else:
             c.pop('foto', None)
             c.pop('relacao', None)
+        selecao.registrar(c, f, relacao.get(k) if f else None,
+                          (motivos.get(k) or ['escolhida pelo casamento']) if f else ['nenhuma imagem escolhida'],
+                          verif.get(k, True), recusas.get(k))
         ant = f
     for c in v['cenas']:                       # os planos da mesma ideia herdam a foto dela
         if c.get('sub'):
@@ -750,25 +762,25 @@ def preencher(v: dict, acervo: list[dict]) -> dict:
     ideias = [c for c in v['cenas'] if c['tipo'] not in ('fechamento', 'mapa') and not c.get('sub')]
     usados = {c.get('foto') for c in ideias if c.get('foto')}
     livres = [x for x in acervo if x.get('util', True) and x['id'] not in usados]
-    livres.sort(key=lambda x: (not x.get('video'), bool(x.get('generica')), -float(x.get('nota') or 0)))
+    from . import selecao
     n = 0
     for c in ideias:
         if c.get('foto') or not livres:
             continue
-        x, rel = None, None
-        for cand in livres:
-            rel = acont.ligacao(cand, c)
-            if rel:
-                x = cand
-                break
-        if x is None and acont.ambiente(c):
-            x, rel = livres[0], 'ambiente'
-        if x is None:
-            x, rel = next((y for y in livres if not y.get('generica')), None), 'tema'
-        if x is None:
+        # plano-mestre E: ranqueia as reservas pelo que a FRASE afirma (ligação com o fato, o que precisa estar visível,
+        # época, proveniência, clareza, resolução); a genérica só entra em frase de ambiente; abaixo de RECUSA = recusa
+        amb = acont.ambiente(c)
+        notas = sorted(((selecao.pontuar(x, c), x) for x in livres if amb or not x.get('generica')),
+                       key=lambda t: -t[0][0])
+        if not notas or (notas[0][0][0] < selecao.RECUSA and not amb):
+            if notas:
+                selecao.registrar(c, None, None, ['nenhuma reserva serve (melhor: ' + ', '.join(notas[0][0][1][:2]) + ')'])
             continue
+        (pts, mot), x = notas[0]
+        rel = acont.ligacao(x, c) or ('ambiente' if amb else 'tema')
         livres.remove(x)
         c['foto'], c['relacao'] = x['id'], rel
+        selecao.registrar(c, x['id'], rel, [f'reserva com {pts:g} pontos'] + mot)
         n += 1
     for c in v['cenas']:                       # os planos da mesma ideia herdam a foto dela
         if c.get('sub') and not c.get('foto'):

@@ -142,7 +142,7 @@ def test_foto_generica_que_nao_e_exata_sai(monkeypatch):
 
 def test_buraco_pega_reserva_video_primeiro():
     """11/11 (tardígrados): reserva do acervo tapa frase sem imagem, vídeo primeiro. 12/11 (imagem por acontecimento):
-    só em frase de AMBIENTE ou com reserva da MESMA pessoa/lugar do fato; frase sobre outro fato fica sem (vira cartão)."""
+    Plano-mestre E: ranqueada pela frase (ligação com o fato, ambiente, proveniência...); sem reserva útil, fica sem."""
     from src import acervo
     acv = [{'id': 'a0', 'mostra': 'x'}, {'id': 'a1', 'mostra': 'retrato de Victor Lustig', 'nota': 9, 'pessoas': ['Victor Lustig']},
            {'id': 'a2', 'mostra': 'clipe', 'video': {'url': 'u'}, 'generica': True}, {'id': 'a3', 'mostra': 'ruim', 'util': False}]

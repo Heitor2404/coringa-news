@@ -442,12 +442,28 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
             n_clima += 1
         elif n_viz < MAX_VIZINHA and not base:
             c['midia'] = 'vizinha'; n_viz += 1
+            c['_fallback'] = 'contexto: foto da cena vizinha'
         elif n_ia < max_ia and base:
+            # plano-mestre E: fallback CONDICIONAL ao que a cena precisa (storyboard). Mecanismo invisível → esquema
+            # ilustrado correto (sinalizado), sem trava de época; frase que pedia documento → ilustração da CENA, nunca
+            # de um papel (não se fabrica documento com cara de fonte real).
+            pref = (c.get('sb') or {}).get('midia_preferida')
             c['midia'] = 'ia'
-            c['prompt_imagem'] = f"{base}. {trava}."
+            if pref == 'diagrama':
+                c['prompt_imagem'] = (f"Clear, scientifically accurate explanatory illustration (diagram style) of: {base}. "
+                                      'Simplified shapes, no text, no labels, not a photograph.')
+                c['_fallback'] = 'esquema ilustrado (não há foto do processo)'
+            elif pref == 'documento':
+                c['prompt_imagem'] = (f"{base}. {trava}. Do not depict any document, letter, newspaper, sign or written "
+                                      'paper; no text.')
+                c['_fallback'] = 'ilustração da cena: o documento real não foi encontrado (nenhum documento é fabricado)'
+            else:
+                c['prompt_imagem'] = f"{base}. {trava}."
+                c['_fallback'] = 'ilustração: não há registro real da cena'
             n_ia += 1
         else:
             c['midia'] = 'vizinha'; n_viz += 1
+            c['_fallback'] = 'contexto: foto da cena vizinha'
     if n_viz > MAX_VIZINHA:
         raise ValueError(f'pouco material visual: {n_viz} frases sem imagem própria; pulo para o próximo tema')
     for c in v['cenas']:                       # pedaços da mesma ideia seguem a ideia

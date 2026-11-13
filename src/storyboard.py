@@ -149,6 +149,14 @@ def atualizar_midia(v: dict) -> dict:
         if not sb or c.get('sub'):
             continue
         nivel, lim = _nivel(c, sb)
+        esc = c.get('_escolha') or {}
+        if nivel == 'direto' and esc.get('foto') == c.get('foto') and esc.get('verificada') is False:
+            nivel, lim = 'contextual', lim + ['autenticidade não verificada (sem ano na imagem)']
+        if c.get('_fallback'):
+            lim = lim + [c['_fallback']]
+        if c.get('prompt_imagem', '').startswith('Clear, scientifically accurate'):
+            nivel = 'explicativo' if sb['midia_preferida'] == 'diagrama' else nivel
+        sb['escolha'] = esc or None
         sb['midia'] = c.get('foto') or c.get('midia') or (c['tipo'] if c.get('tipo') in INFOGRAFICOS else None)
         sb['evidencia'], sb['limitacoes'] = nivel, lim
         sb['explica'] = nivel in ('direto', 'explicativo') or (nivel in ('contextual', 'ilustrativo')

@@ -1,7 +1,7 @@
 """Escolhe as pautas do dia e escreve o roteiro em cenas com o Gemini."""
 import json, os, re
 from pathlib import Path
-from . import acontecimentos, claude, gemini
+from . import acontecimentos, claude, editorial, gemini
 from src import cofre
 
 TIPOS = {'gancho', 'numero', 'cards', 'citacao', 'escala', 'lista', 'mapa', 'imagem', 'historia', 'revelacao', 'fechamento',
@@ -30,9 +30,10 @@ def _gerar_roteiro(prompt: str, tentativas: int = 3, serie: bool = False) -> dic
             if melhor is None or len(v['cenas']) > len(melhor['cenas']):
                 melhor = v
             palavras = sum(len(c['fala'].split()) for c in v['cenas'])
-            if palavras > LIMITE_PALAVRAS:
+            limite = editorial.limite_palavras(editorial.normalizar_plano(v.get('plano')), LIMITE_PALAVRAS)   # duração do plano
+            if palavras > limite:
                 prompt += (f'\n\nATENÇÃO: a versão anterior tinha {palavras} palavras (≈ {palavras // 2.6:.0f} s). '
-                           f'O MÁXIMO é {LIMITE_PALAVRAS - 10} palavras (≈ 55 s). Corte o que não for essencial.')
+                           f'O MÁXIMO é {limite - 10} palavras. Corte o que não for essencial.')
                 raise ValueError(f'roteiro longo demais ({palavras} palavras)')
             ideias = [c for c in v['cenas'] if c['tipo'] != 'fechamento']
             longas = [c['fala'] for c in ideias if len(c['fala'].split()) > 16]
@@ -357,7 +358,9 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
                   + (f'NÃO pode contar nada destes capítulos seguintes: "{depois}" — termina em suspense antes deles.' if depois else ''))
         print(f'  [série] parte {parte}/{len(arco)}: {arco[parte - 1][:90]}')
     escopo += '\nFOTOS DO ACERVO (o vídeo é montado com elas; cada frase deve poder ser mostrada por uma delas):\n' + acervo_mod.texto(acervo)
-    v = revisar(v, fatos, escopo=escopo)
+    v = editorial.preparar(v)                 # plano editorial (veio no MESMO pedido do roteiro; sem ele, derivado)
+    v = revisar(v, fatos, escopo=escopo, problemas=editorial.para_critica(v, fatos))
+    v = editorial.preparar(v)
     v = escolher_gancho(v, fatos, parte=parte, serie=serie, acervo=acervo)
     epoca = ' · '.join(x for x in [str(dossie.get('epoca') or ''), ', '.join(dossie.get('lugares') or [])] if x)
     if serie and serie.get('arco'):
@@ -461,7 +464,7 @@ def _planos_sem_foto(v: dict, epoca: str) -> dict:
 PROMPT_CRITICA = cofre.prompt('PROMPT_CRITICA')
 
 
-def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   # 11/11: 1 rodada (economia de cota)
+def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '', problemas: str = '') -> dict:   # 11/11: 1 rodada
     """O editor-chefe dá nota e reescreve até aprovar (no máximo 'rodadas' vezes)."""
     from .orcamento import sobra
     for rodada in range(rodadas):
@@ -472,7 +475,8 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   
             base = {k: val for k, val in v.items() if k not in ('fatos', 'produto', 'resumo', 'imagens', 'dossie')}
             with claude.fatos_compartilhados(str(fatos)[:14000]):     # M2: o MESMO trecho de fatos de sempre
                 r = gemini.json_(PROMPT_CRITICA.format(fatos=str(fatos)[:14000], roteiro=json.dumps(base, ensure_ascii=False),
-                                                       escopo=(f'- escopo: {escopo} Se contar algo além disso (ou "spoilar" as próximas partes), nota 0.\n' if escopo else '')))
+                                                       escopo=(f'- escopo: {escopo} Se contar algo além disso (ou "spoilar" as próximas partes), nota 0.\n' if escopo else ''),
+                                                       problemas=problemas))
             if isinstance(r, list):
                 r = r[0]
             print(f"  [editor] rodada {rodada + 1}: notas {r.get('notas')} · {'aprovado' if r.get('aprovado') else 'reescrito'}")
@@ -486,6 +490,9 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   
                 if k in v and k not in novo:
                     novo[k] = v[k]
             novo = _validar(novo)
+            editorial.herdar(v, novo)                       # plano editorial e função dos blocos (etapas B/C)
+            if novo.get('plano'):
+                editorial.preparar(novo)
             if len(novo['cenas']) == len(v['cenas']):       # a reescrita que esquecer o acontecimento herda o da versão anterior
                 for a, b in zip(v['cenas'], novo['cenas']):
                     for k in ('acontecimento', 'evento'):
@@ -493,7 +500,8 @@ def revisar(v: dict, fatos: str, rodadas: int = 1, escopo: str = '') -> dict:   
                             b[k] = a[k]
             ideias = [c for c in novo['cenas'] if c['tipo'] != 'fechamento']
             palavras = sum(len(c['fala'].split()) for c in novo['cenas'])
-            if len(ideias) < 11 or palavras > LIMITE_PALAVRAS or any(len(c['fala'].split()) > 16 for c in ideias):
+            limite = editorial.limite_palavras(novo.get('plano'), LIMITE_PALAVRAS)
+            if len(ideias) < 11 or palavras > limite or any(len(c['fala'].split()) > 16 for c in ideias):
                 print(f'  [editor] a reescrita saiu fora do formato ({len(ideias)} cenas, {palavras} palavras); fico com a anterior')
                 return v
             v = novo

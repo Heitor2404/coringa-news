@@ -1,0 +1,76 @@
+{
+ "historia": {
+  "categoria": "HISTÓRIA",
+  "fatos": "- ★ Em 1925, Victor Lustig vendeu a Torre Eiffel a um sucateiro (Wikipédia)\n- Lustig se passou por vice-diretor do Ministério dos Correios e Telégrafos (Wikipédia)\n- Reuniu seis sucateiros no Hôtel de Crillon (Wikipédia)\n- André Poisson pagou o preço e ainda uma propina (Wikipédia)\n- Poisson teve vergonha de denunciar o golpe (Wikipédia)\n- Lustig fugiu para Viena e voltou para tentar de novo (Wikipédia)\n- Em 1935 foi preso nos Estados Unidos por falsificar dinheiro (Wikipédia)",
+  "roteiro": {
+   "titulo": "O HOMEM QUE VENDEU A TORRE",
+   "plano": {"assunto": "o golpe de Victor Lustig com a Torre Eiffel", "intencao": "entender como um vigarista convenceu um sucateiro a comprar a Torre Eiffel e por que ninguém o denunciou",
+    "promessa": "como alguém vendeu a Torre Eiffel em 1925", "complexidade": "baixa",
+    "angulo": {"tipo": "misterio", "pergunta": "como alguém consegue vender um monumento que não é dele?"},
+    "modos": ["historico_investigativo", "estudo_de_caso"],
+    "estrategia": {"abertura": "a venda da torre em 1925", "progressao": ["o disfarce de funcionário", "a reunião secreta", "a propina", "a vergonha da vítima"], "payoff": "a vergonha de Poisson garantiu o silêncio", "fechamento": "Lustig tentou de novo"},
+    "evidencias": [{"afirmacao": "Lustig vendeu a torre em 1925", "fonte": "Wikipédia", "certeza": "alta", "natureza": "fato"},
+                   {"afirmacao": "Poisson não denunciou por vergonha", "fonte": "Wikipédia", "certeza": "media", "natureza": "fato"}],
+    "incertezas": ["o valor exato pago não é consenso"],
+    "visual": {"precisa_mostrar": ["Lustig", "Hôtel de Crillon", "Torre Eiffel 1925"], "disponivel": ["retrato de Lustig"], "faltando": ["Poisson"], "riscos": ["não existe foto da reunião"]},
+    "duracao_alvo_s": 55, "viabilidade": {"ok": true}},
+   "cenas": [
+    {"tipo": "gancho", "fala": "Em 1925, um homem *vendeu* a Torre Eiffel.", "bloco": {"funcao": "abertura", "avanca": "a promessa"}},
+    {"tipo": "historia", "fala": "Victor Lustig se passou por *vice-diretor* dos Correios.", "bloco": {"funcao": "contexto"}},
+    {"tipo": "historia", "fala": "Ele reuniu seis sucateiros no luxuoso *Hôtel de Crillon*.", "bloco": {"funcao": "evidencia"}},
+    {"tipo": "historia", "fala": "Disse que a torre seria desmontada e vendida como *ferro*.", "bloco": {"funcao": "mecanismo"}},
+    {"tipo": "historia", "fala": "André Poisson pagou o preço e ainda uma *propina*.", "bloco": {"funcao": "virada"}},
+    {"tipo": "historia", "fala": "A vergonha impediu Poisson de *denunciar* o golpe.", "bloco": {"funcao": "payoff"}},
+    {"tipo": "historia", "fala": "Lustig fugiu para Viena e voltou para *vender a torre* de novo.", "bloco": {"funcao": "consequencia"}},
+    {"tipo": "fechamento", "fala": "Segue o Coringa Explica."}]}
+ },
+ "biologia": {
+  "categoria": "BIOLOGIA",
+  "fatos": "- ★ Macrófagos engolem bactérias nas primeiras horas de uma infecção (Wikipédia)\n- Células dendríticas levam pedaços do invasor até os linfonodos (Wikipédia)\n- Linfócitos T e B são ativados em 4 a 7 dias (Wikipédia)\n- Anticorpos marcam o invasor para destruição (Wikipédia)\n- Células de memória ficam por anos e aceleram a segunda resposta (Wikipédia)\n- A febre é uma resposta do corpo que dificulta a multiplicação de alguns patógenos (Wikipédia)",
+  "roteiro": {
+   "titulo": "O EXÉRCITO DENTRO DE VOCÊ",
+   "plano": {"assunto": "a resposta imune a uma infecção", "intencao": "entender as etapas pelas quais o corpo reconhece e derrota um invasor e por que a segunda infecção é mais fraca",
+    "promessa": "por que a segunda infecção pelo mesmo micróbio costuma ser mais fraca", "complexidade": "media",
+    "angulo": {"tipo": "mecanismo", "pergunta": "como o corpo aprende a reconhecer um invasor?"},
+    "modos": ["mecanismo"],
+    "estrategia": {"abertura": "a febre como sinal de defesa", "progressao": ["macrófagos engolem", "dendríticas avisam os linfonodos", "linfócitos ativados em dias", "anticorpos marcam"], "payoff": "as células de memória", "fechamento": "por que a segunda vez é mais rápida"},
+    "evidencias": [{"afirmacao": "linfócitos são ativados em 4 a 7 dias", "fonte": "Wikipédia", "certeza": "alta", "natureza": "fato"},
+                   {"afirmacao": "células de memória duram anos", "fonte": "Wikipédia", "certeza": "alta", "natureza": "fato"},
+                   {"afirmacao": "anticorpo é como uma etiqueta", "fonte": "", "certeza": "alta", "natureza": "analogia"}],
+    "visual": {"precisa_mostrar": ["macrófago engolindo bactéria", "linfonodo", "anticorpo"], "disponivel": ["micrografia de macrófago"], "faltando": ["esquema dos linfonodos"], "riscos": ["etapas invisíveis a olho nu: precisa de diagrama"]},
+    "duracao_alvo_s": 50, "viabilidade": {"ok": true}},
+   "cenas": [
+    {"tipo": "gancho", "fala": "A sua *febre* é o corpo contra-atacando.", "bloco": {"funcao": "abertura"}},
+    {"tipo": "historia", "fala": "Nas primeiras horas, *macrófagos* engolem as bactérias.", "bloco": {"funcao": "mecanismo"}},
+    {"tipo": "historia", "fala": "Células dendríticas levam pedaços do invasor aos *linfonodos*.", "bloco": {"funcao": "mecanismo"}},
+    {"tipo": "historia", "fala": "Lá, linfócitos levam de 4 a 7 dias para *despertar*.", "bloco": {"funcao": "evidencia"}},
+    {"tipo": "historia", "fala": "Anticorpos funcionam como *etiquetas* presas no invasor.", "bloco": {"funcao": "comparacao"}},
+    {"tipo": "historia", "fala": "Algumas células viram *memória* e ficam por anos.", "bloco": {"funcao": "payoff"}},
+    {"tipo": "historia", "fala": "Por isso a segunda infecção costuma ser mais *fraca*.", "bloco": {"funcao": "consequencia"}},
+    {"tipo": "fechamento", "fala": "Segue o Coringa Explica."}]}
+ },
+ "ciencia": {
+  "categoria": "CIÊNCIA",
+  "fatos": "- ★ A luz do Sol tem todas as cores (Wikipédia)\n- O ar espalha mais a luz azul que a vermelha: espalhamento de Rayleigh (Wikipédia)\n- No pôr do sol a luz atravessa muito mais atmosfera (Wikipédia)\n- O azul é espalhado antes de chegar e sobram laranja e vermelho (Wikipédia)\n- Em Marte o céu do pôr do sol é azulado por causa da poeira fina (NASA)",
+  "roteiro": {
+   "titulo": "POR QUE O CÉU FICA LARANJA",
+   "plano": {"assunto": "a cor do céu ao meio-dia e no pôr do sol", "intencao": "entender por que o mesmo céu é azul ao meio-dia e laranja no fim da tarde",
+    "promessa": "por que o céu fica laranja no fim da tarde", "complexidade": "baixa",
+    "angulo": {"tipo": "contraste", "pergunta": "se a luz é a mesma, por que a cor muda?"},
+    "modos": ["mecanismo", "comparacao"],
+    "estrategia": {"abertura": "o mesmo céu, duas cores", "progressao": ["a luz branca tem todas as cores", "o ar espalha o azul", "no fim da tarde o caminho é maior"], "payoff": "sobram laranja e vermelho", "fechamento": "em Marte é o contrário"},
+    "evidencias": [{"afirmacao": "o ar espalha mais o azul", "fonte": "Wikipédia", "certeza": "alta", "natureza": "fato"},
+                   {"afirmacao": "pôr do sol azulado em Marte", "fonte": "NASA", "certeza": "alta", "natureza": "fato"}],
+    "visual": {"precisa_mostrar": ["céu azul", "pôr do sol", "caminho da luz na atmosfera"], "disponivel": ["foto do pôr do sol", "foto de Marte da NASA"], "faltando": ["diagrama do caminho da luz"], "riscos": []},
+    "duracao_alvo_s": 40, "viabilidade": {"ok": true}},
+   "cenas": [
+    {"tipo": "gancho", "fala": "O mesmo céu muda de *azul* para *laranja*.", "bloco": {"funcao": "abertura"}},
+    {"tipo": "historia", "fala": "A luz do Sol carrega *todas* as cores.", "bloco": {"funcao": "contexto"}},
+    {"tipo": "historia", "fala": "O ar espalha muito mais a luz *azul*.", "bloco": {"funcao": "mecanismo"}},
+    {"tipo": "historia", "fala": "No fim da tarde, a luz atravessa muito mais *ar*.", "bloco": {"funcao": "mecanismo"}},
+    {"tipo": "historia", "fala": "O azul se perde no caminho e o céu fica *laranja*.", "bloco": {"funcao": "payoff"}},
+    {"tipo": "historia", "fala": "Em Marte, o pôr do sol é *azulado*.", "bloco": {"funcao": "comparacao"}},
+    {"tipo": "historia", "fala": "A poeira fina de lá inverte o *jogo*.", "bloco": {"funcao": "consequencia"}},
+    {"tipo": "fechamento", "fala": "Segue o Coringa Explica."}]}
+ }
+}

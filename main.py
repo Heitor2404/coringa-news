@@ -630,6 +630,13 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     from src import orcamento_video
     if orcamento_video.linha_telegram():              # Fase 1 (monitorar): o que o orçamento FARIA; não decide nada
         diag.append(orcamento_video.linha_telegram())
+    if v.get('plano'):                                # plano-mestre B/C (12/11): plano editorial e função dos blocos — só registro
+        try:
+            from src import editorial
+            if editorial.linha_telegram(v, str(v.get('fatos') or '')):
+                diag.append(editorial.linha_telegram(v, str(v.get('fatos') or '')))
+        except Exception as e:
+            print(f'  [plano editorial] não medi ({str(e)[:80]})')
     try:                                              # Fase 3 (12/11): cobertura visual por acontecimento — só registro
         from src import acontecimentos
         cob = acontecimentos.cobertura(cenas)

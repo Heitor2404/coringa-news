@@ -17,6 +17,7 @@ from src.v2 import auditoria_v21 as A  # noqa: E402
 V = Path('saida/v21')
 G = V / 'galeria'
 e = html.escape
+SOB_CARGA = {'mapa.localizacao': 21.0, 'mapa.rota': 21.8, 'mapa.territorio': 26.2}   # 1ª captura completa, sem concorrência
 
 
 def _j(p, padrao=None):
@@ -42,6 +43,8 @@ def main():
         prev = G / 'previas' / f'{c}.mp4'
         campos = ''.join(f'<dt>{e(k.replace("_", " "))}</dt><dd>{e(str(a[k]))}</dd>' for k in A.CAMPOS[1:-1])
         seg = f"{(cat_a.get(c) or {}).get('segundos', '—')} s → {(cat_d.get(c) or {}).get('segundos', '—')} s"
+        if c in SOB_CARGA:   # recapturados com prévias rodando em paralelo: o tempo medido inclui a disputa de CPU
+            seg += f' (medido sob carga; na rodada sequencial: {SOB_CARGA[c]} s)'
         cards.append(f'''<article class="comp" data-estado="{e(a['estado'])}" id="c-{c.replace('.', '-')}">
   <header><h3>{e(c)}</h3><span class="tag" style="--c:{cor[a['estado']]}">{e(a['estado'])}</span><span class="t">captura {e(seg)}</span></header>
   <div class="lado"><b>V2</b>{f'<img loading="lazy" src="img/{c}__antes.jpg" alt="V2 {e(c)}">' if ant else '<p class="nova">composição nova na V2.1</p>'}</div>
@@ -85,7 +88,7 @@ nav{{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}}nav a{{background:var(--
 .comp,.tema{{background:var(--pn);border-radius:10px;padding:14px;margin:14px 0}}.comp header{{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}}
 .tag{{border:1px solid var(--c);color:var(--c);border-radius:20px;padding:1px 10px;font-size:13px}}.t{{color:var(--mu);font-size:13px}}
 .lado{{margin:6px 0}}.lado b{{display:inline-block;width:44px;color:var(--mu);font-size:13px;vertical-align:top}}.lado img{{width:calc(100% - 50px);max-width:1098px;border-radius:4px}}
-.nova{{display:inline-block;color:var(--am)}}.inst{{color:var(--mu);font-size:12px;margin:2px 0 8px 50px}}video{{max-width:270px;width:100%;border-radius:6px;display:block;margin:8px 0}}
+.nova{{display:inline-block;color:var(--am)}}.inst{{color:var(--mu);font-size:12px;margin:2px 0 8px 50px}}video{{max-width:270px;width:100%;aspect-ratio:9/16;background:#000;border-radius:6px;display:block;margin:8px 0}}
 details{{margin-top:6px}}summary{{cursor:pointer;color:var(--am)}}dl{{display:grid;grid-template-columns:170px 1fr;gap:4px 12px;margin:10px 0 0}}dt{{color:var(--mu)}}dd{{margin:0}}
 figure{{margin:16px 0;background:var(--pn);padding:12px;border-radius:10px}}figure img{{width:100%;max-width:822px;border-radius:4px}}figcaption{{color:var(--mu);font-size:14px;margin-top:6px}}
 table{{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}}th,td{{border-bottom:1px solid var(--ln);padding:6px;text-align:left;vertical-align:top}}th{{color:var(--mu)}}tr.xx td{{color:#ff9b91}}

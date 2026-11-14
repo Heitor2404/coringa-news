@@ -202,6 +202,11 @@ def recorte_conteudo(arq: str | Path) -> list[float]:
     # foto montada em cartão/scanner tem margem nos QUATRO lados; céu ou mar liso numa foto comum, não
     if min(r[0], r[1], 1 - r[2], 1 - r[3]) < .025:
         return [0.0, 0.0, 1.0, 1.0]
+    # correção do piloto: foto colada em cartão ocupa ao menos METADE do arquivo numa direção (cartão de teste: 83% da
+    # largura; panorâmica de 1913: 90%). Mancha pequena nas duas direções é textura local — satélite de deserto (39% × 4%)
+    # e diagrama em papel (38% × 3%) viravam "foto" de faixa de 69 px
+    if max(r[2] - r[0], r[3] - r[1]) < .5:
+        return [0.0, 0.0, 1.0, 1.0]
     m = 1.0 / max(nw, nh)                          # um bloco de folga para dentro (tira o fio da borda)
     return [round(r[0] + m, 4), round(r[1] + m, 4), round(r[2] - m, 4), round(r[3] - m, 4)]
 

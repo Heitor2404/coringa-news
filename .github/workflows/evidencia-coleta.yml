@@ -1,0 +1,45 @@
+# Evidência V1 (experimental): coleta ÚNICA de metadados reais, imagens e leitura do Gemini com os prompts CEGOS.
+# Sem Claude, sem vídeo, no máximo 18 chamadas ao Gemini (plano grátis), sem nova tentativa. Resultado CIFRADO.
+name: Evidência V1 — coleta controlada
+on:
+  push:
+    branches: [evidencia-v1-experimental]
+    paths: [".github/evidencia/pedido.txt"]
+permissions:
+  contents: write
+concurrency: { group: evidencia-coleta, cancel-in-progress: false }
+jobs:
+  coleta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar o cofre (ramo dos prompts cegos)
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          ref: evidencia-v1
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q google-genai requests pillow
+      - name: Coletar e ler (uma vez)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/evidencia_coleta.py; tail -n 80 saida_evidencia/log.txt | grep -E '^\[gemini\]' || true
+      - name: Cifrar e publicar no ramo de resultado
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --quiet --import .github/piloto/chave_publica.asc
+          dest=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          tar -czf coleta.tgz saida_evidencia
+          gpg --batch --yes --quiet --trust-model always --encrypt -r "$dest" -o /tmp/coleta.tgz.gpg coleta.tgz
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan evidencia-coleta-resultado
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/coleta.tgz.gpg coleta-${{ github.run_id }}.tgz.gpg
+          git add coleta-${{ github.run_id }}.tgz.gpg
+          git commit -qm "coleta cifrada (execução ${{ github.run_id }})"
+          git push -f -q origin evidencia-coleta-resultado

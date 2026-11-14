@@ -1,0 +1,652 @@
+{
+ "grupo": "generalizacao_v2",
+ "nota": "Conjunto NOVO de generalização, escrito ANTES das correções da etapa 3 e nunca usado para ajustá-las. Domínios ausentes dos conjuntos anteriores. Registros e leituras visuais são cenários de regra (não arquivos conferidos): mede a regra, não o Gemini. Gabarito pela mesma política da proposta.",
+ "dominios": {
+  "dirigivel_hindenburg": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Hindenburg disaster"
+     ],
+     "categorias": [
+      "Hindenburg disaster"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "LZ 129 Hindenburg",
+      "categorias": [
+       "LZ 129 Hindenburg"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "hb_fogo": {
+     "bruto": {
+      "tipo": "evento_historico",
+      "sujeito": "dirigível Hindenburg",
+      "acao": "pega fogo e cai",
+      "estado_inicial": "dirigível atracando",
+      "estado_final": "estrutura queimada no chão",
+      "quando": "6 de maio de 1937",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 6 de maio de 1937, o Hindenburg pegou fogo ao atracar."
+     ]
+    }
+   },
+   "imagens": {
+    "fogo": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hindenburg burning at Lakehurst",
+      "categorias": [
+       "Hindenburg disaster"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1937-05-06"
+      },
+      "descricao": "The airship on fire"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "upload_txt": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hindenburg disaster photo",
+      "categorias": [
+       "LZ 129 Hindenburg"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "",
+      "datetimeoriginal_bruto": {
+       "value": "Uploaded on 14 March 2011",
+       "source": "commons-desc-page"
+      }
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "voo_1936": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hindenburg over Manhattan",
+      "categorias": [
+       "LZ 129 Hindenburg"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1936-08-08"
+      },
+      "descricao": "Hindenburg flying over New York"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "r101": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "R101 wreck 1930",
+      "categorias": [
+       "R101",
+       "Airship accidents in France"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1930-10-05"
+      },
+      "descricao": "Wreck of the R101 airship near Beauvais"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "zeppelin_nt": {
+     "registro": {
+      "fonte": "Openverse",
+      "titulo": "zeppelin flying",
+      "categorias": [],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "airship blimp sky",
+      "etiquetas_livres": true
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "memorial": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hindenburg crash site marker Lakehurst",
+      "categorias": [
+       "Hindenburg disaster",
+       "Memorials in New Jersey"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2012"
+      },
+      "descricao": "Marker at the crash site"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "g-hb-01",
+     "tipo_caso": 1,
+     "acontecimento": "hb_fogo",
+     "imagem": "fogo",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "dirigível em chamas no dia, categoria do desastre"
+    },
+    {
+     "id": "g-hb-02",
+     "tipo_caso": 10,
+     "acontecimento": "hb_fogo",
+     "imagem": "upload_txt",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "mostra o fogo; data é de envio (\"Uploaded on\"), categoria só da entidade: vínculo fraco"
+    },
+    {
+     "id": "g-hb-03",
+     "tipo_caso": 2,
+     "acontecimento": "hb_fogo",
+     "imagem": "voo_1936",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "voo em 1936: antes"
+    },
+    {
+     "id": "g-hb-04",
+     "tipo_caso": 9,
+     "acontecimento": "hb_fogo",
+     "imagem": "r101",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "destroços de OUTRO dirigível (R101): o registro diz outro acontecimento"
+    },
+    {
+     "id": "g-hb-05",
+     "tipo_caso": 4,
+     "acontecimento": "hb_fogo",
+     "imagem": "zeppelin_nt",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "dirigível qualquer, sem vínculo"
+    },
+    {
+     "id": "g-hb-06",
+     "tipo_caso": 7,
+     "acontecimento": "hb_fogo",
+     "imagem": "memorial",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "marco no local"
+    }
+   ],
+   "eventos_esperados": {
+    "hb#fraco": {
+     "acontecimento": "hb_fogo",
+     "acervo": [
+      "upload_txt",
+      "voo_1936",
+      "r101",
+      "zeppelin_nt"
+     ],
+     "esperado": "revisao",
+     "fundamento": "só a foto com data de envio: revisão"
+    }
+   }
+  },
+  "nuclear_chernobyl": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Chernobyl disaster"
+     ],
+     "categorias": [
+      "Chernobyl disaster"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Chernobyl Nuclear Power Plant",
+      "categorias": [
+       "Chernobyl Nuclear Power Plant"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "ch_explosao": {
+     "bruto": {
+      "tipo": "impacto",
+      "sujeito": "reator 4",
+      "acao": "explode e expõe o núcleo",
+      "estado_inicial": "reator intacto",
+      "estado_final": "prédio do reator destruído",
+      "quando": "26 de abril de 1986",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 26 de abril de 1986, o reator 4 explodiu."
+     ]
+    }
+   },
+   "imagens": {
+    "aerea_1986": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Chernobyl reactor 4 after the explosion",
+      "categorias": [
+       "Chernobyl disaster"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1986-05-03"
+      },
+      "descricao": "Destroyed reactor building"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "nsc_2017": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "New Safe Confinement 2017",
+      "categorias": [
+       "Chernobyl New Safe Confinement",
+       "Chernobyl Nuclear Power Plant"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2017"
+      },
+      "descricao": "The arch over the reactor"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "pripyat_2010": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Pripyat abandoned 2010",
+      "categorias": [
+       "Pripyat"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Abandoned city"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "usina_1985": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Chernobyl plant 1985",
+      "categorias": [
+       "Chernobyl Nuclear Power Plant"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1985"
+      },
+      "descricao": "Plant before the accident"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "fukushima": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Fukushima Daiichi reactor 3 2011",
+      "categorias": [
+       "Fukushima Daiichi nuclear disaster"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2011-03-16"
+      },
+      "descricao": "Damaged reactor building"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "jornal_ru": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Pravda front page May 1986",
+      "categorias": [
+       "Chernobyl disaster",
+       "Newspapers of the Soviet Union"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1986-05-06"
+      },
+      "descricao": "Newspaper"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "g-ch-01",
+     "tipo_caso": 1,
+     "acontecimento": "ch_explosao",
+     "imagem": "aerea_1986",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "prédio destruído dias depois, categoria do desastre"
+    },
+    {
+     "id": "g-ch-02",
+     "tipo_caso": 7,
+     "acontecimento": "ch_explosao",
+     "imagem": "nsc_2017",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "arco de contenção de 2017: consequência"
+    },
+    {
+     "id": "g-ch-03",
+     "tipo_caso": 7,
+     "acontecimento": "ch_explosao",
+     "imagem": "pripyat_2010",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "cidade abandonada, registro sem vínculo com o desastre nem com a usina"
+    },
+    {
+     "id": "g-ch-04",
+     "tipo_caso": 2,
+     "acontecimento": "ch_explosao",
+     "imagem": "usina_1985",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "usina antes do acidente"
+    },
+    {
+     "id": "g-ch-05",
+     "tipo_caso": 9,
+     "acontecimento": "ch_explosao",
+     "imagem": "fukushima",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "reator danificado de OUTRO acidente"
+    },
+    {
+     "id": "g-ch-06",
+     "tipo_caso": 6,
+     "acontecimento": "ch_explosao",
+     "imagem": "jornal_ru",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "jornal",
+      "classe_confere": false,
+      "texto_visivel": {
+       "presente": true,
+       "escrita": "cirilica",
+       "e_o_conteudo": true
+      }
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "jornal em cirílico: o texto é o conteúdo"
+    }
+   ],
+   "eventos_esperados": {
+    "ch#outro": {
+     "acontecimento": "ch_explosao",
+     "acervo": [
+      "nsc_2017",
+      "usina_1985",
+      "fukushima"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "só contexto e outro acidente"
+    }
+   }
+  },
+  "botanica_germinacao": {
+   "referencias": {
+    "evento": {},
+    "entidades": [
+     {
+      "nome": "Phaseolus vulgaris",
+      "apelidos": [
+       "feijão"
+      ],
+      "categorias": [
+       "Phaseolus vulgaris"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "gm_broto": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "semente de feijão",
+      "acao": "germina e solta a raiz",
+      "estado_inicial": "semente seca",
+      "estado_final": "broto com raiz",
+      "quando": "",
+      "importancia": "critica"
+     },
+     "falas": [
+      "A semente de feijão incha e solta a primeira raiz."
+     ]
+    }
+   },
+   "imagens": {
+    "broto_cat": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Phaseolus vulgaris seedling",
+      "categorias": [
+       "Phaseolus vulgaris (seedlings)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Germinating bean"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "broto_livre": {
+     "registro": {
+      "fonte": "Openverse",
+      "titulo": "bean sprout",
+      "categorias": [],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "bean sprout germination",
+      "etiquetas_livres": true
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "vagem": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Phaseolus vulgaris pods",
+      "categorias": [
+       "Phaseolus vulgaris (fruits)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2014-07-01"
+      },
+      "descricao": "Bean pods"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "milho": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Zea mays seedling",
+      "categorias": [
+       "Zea mays (seedlings)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Germinating corn"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    },
+    "desenho": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bean germination diagram",
+      "categorias": [
+       "Phaseolus vulgaris",
+       "Germination diagrams"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Diagram"
+     },
+     "verificacao": "cenário de regra (registro montado; não é arquivo conferido)",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "g-gm-01",
+     "tipo_caso": 1,
+     "acontecimento": "gm_broto",
+     "imagem": "broto_cat",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "germinação na categoria curada da espécie (atemporal)"
+    },
+    {
+     "id": "g-gm-02",
+     "tipo_caso": 10,
+     "acontecimento": "gm_broto",
+     "imagem": "broto_livre",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "germinação com etiqueta livre: vínculo fraco"
+    },
+    {
+     "id": "g-gm-03",
+     "tipo_caso": 3,
+     "acontecimento": "gm_broto",
+     "imagem": "vagem",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "vagens: outro estado da mesma espécie"
+    },
+    {
+     "id": "g-gm-04",
+     "tipo_caso": 9,
+     "acontecimento": "gm_broto",
+     "imagem": "milho",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "germinação de OUTRA espécie"
+    },
+    {
+     "id": "g-gm-05",
+     "tipo_caso": 5,
+     "acontecimento": "gm_broto",
+     "imagem": "desenho",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "diagrama",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "diagrama explica"
+    }
+   ],
+   "eventos_esperados": {
+    "gm#prova": {
+     "acontecimento": "gm_broto",
+     "acervo": [
+      "broto_cat",
+      "vagem",
+      "milho"
+     ],
+     "esperado": "foto_prova",
+     "fundamento": "atemporal com espécie curada"
+    }
+   }
+  }
+ }
+}

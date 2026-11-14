@@ -647,12 +647,8 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         if evidencia.ativo():        # EXPERIMENTAL (desligado por padrão): só grava; não muda nenhuma decisão, sem IA
             try:
                 import copy as _copy
-                visoes, reg_visao = {}, None
-                if os.getenv('EVIDENCIA_V1_VISAO') == '1':     # leitura cega Gemini → NVIDIA (teto por vídeo; desligada por padrão)
-                    from src.v2 import visao_provedores
-                    visoes, reg_visao = visao_provedores.sombra(v, v['acervo'])
-                sombra = evidencia.preparar(_copy.deepcopy(v), _copy.deepcopy(v['acervo']), visoes=visoes)
-                sombra['visao'] = reg_visao
+                from src.v2 import visao_provedores      # metadados reais + leitura cega (EVIDENCIA_V1_VISAO=1), em cópias
+                sombra = visao_provedores.executar_sombra(v, v['acervo'], ler_visao=os.getenv('EVIDENCIA_V1_VISAO') == '1')
                 (pasta / f'{nome}-evidencia-sombra.json').write_text(json.dumps(sombra, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
                 print('  [evidência/sombra] ' + evidencia.resumo(sombra).replace('\n', '\n  '))
             except Exception as e:

@@ -128,7 +128,7 @@ def ler(prompt: str, imagens: list[bytes], orc: Orcamento, ordem=('gemini', 'nvi
             orc.registro.append({'tarefa': tarefa, **reg})
             if j is not None:
                 return {'provedor': prov, 'modelo': modelo, 'texto': txt, 'json': j, 'tentativas': tentativas}
-            anterior = {'provedor': prov, 'motivo': 'JSON inválido'}
+            break                                       # JSON inválido NÃO troca de provedor: leitura incerta
         except Exception as e:
             reg = {'provedor': prov, 'modelo': modelo, 'segundos': round(time.time() - t, 1), 'erro': str(e)[:200]}
             tentativas.append(reg)
@@ -245,9 +245,12 @@ def ler_roteiro(eventos: list[dict], imagens: dict[str, bytes], prompt_catalogo:
     reg['retidas_nvidia'] = retidas
     p1 = ler(prompt_casar.format(n=len(ids), primeiro='0', acontecimentos=_texto_eventos(eventos)), [imagens[i] for i in ids], orc,
              ordem=('gemini',), tarefa='casamento', chamadores=chamadores)
+    falha1 = next((t.get('erro', '') for t in reversed(p1.get('tentativas') or []) if t.get('erro')), '')
+    if not catalogo:
+        reg['catalogo'] = 'catálogo indisponível: nenhuma imagem pode ir ao endpoint grátis (privacidade não verificada); leitura incerta'
     if p1.get('json') is not None:
         pares = avaliacoes(p1, ids)
-    elif ok_nv:                                   # fallback: só as imagens permitidas vão ao endpoint grátis
+    elif ok_nv and falha1 and (INDISPONIVEL.search(falha1) or 'sem ' in falha1):   # fallback só por indisponibilidade/limite
         p1 = ler(prompt_casar.format(n=len(ok_nv), primeiro='0', acontecimentos=_texto_eventos(eventos)), [imagens[i] for i in ok_nv],
                  orc, ordem=('nvidia',), tarefa='casamento_fallback', chamadores=chamadores)
         pares = avaliacoes(p1, ok_nv) if p1.get('json') is not None else {}
@@ -277,8 +280,9 @@ def ler_roteiro(eventos: list[dict], imagens: dict[str, bytes], prompt_catalogo:
     return {'visoes': visoes, 'registro': reg, 'catalogo': catalogo}
 
 
-def sombra(v: dict, acervo: list[dict]) -> tuple[dict, dict]:
-    """Gancho do main.py (só com EVIDENCIA_V1=sombra E EVIDENCIA_V1_VISAO=1): lê o acervo com os prompts cegos."""
+def sombra(v: dict, acervo: list[dict], referencias: dict | None = None, chamadores: dict | None = None,
+           prompts: tuple[str, str] | None = None) -> tuple[dict, dict]:
+    """Leitura cega do acervo (catálogo → casamento → dupla leitura) com os prompts experimentais do cofre."""
     from src import cofre
     from src.v2 import evidencia as E
     eventos, vistos = [], set()
@@ -286,7 +290,7 @@ def sombra(v: dict, acervo: list[dict]) -> tuple[dict, dict]:
         ac = c.get('acontecimento') or {}
         if ac.get('tipo') and ac.get('id') and ac['id'] not in vistos:
             vistos.add(ac['id'])
-            eventos.append(E.acontecimento(ac, [c.get('fala', '')], None, ac['id']))
+            eventos.append(E.acontecimento(ac, [c.get('fala', '')], referencias, ac['id']))
     imagens = {}
     for x in acervo:
         if x.get('id') and x.get('arq') and os.path.exists(x['arq']):
@@ -294,5 +298,28 @@ def sombra(v: dict, acervo: list[dict]) -> tuple[dict, dict]:
                 imagens[x['id']] = f.read()
     if not imagens or not eventos:
         return {}, {'motivo': 'sem imagens ou acontecimentos'}
-    r = ler_roteiro(eventos, imagens, cofre.prompt('PROMPT_CATALOGO_EVIDENCIA'), cofre.prompt('PROMPT_CASAR_EVIDENCIA'))
+    p_cat, p_cas = prompts or (cofre.prompt('PROMPT_CATALOGO_EVIDENCIA'), cofre.prompt('PROMPT_CASAR_EVIDENCIA'))
+    if p_cat.startswith('[') or p_cas.startswith('['):
+        return {}, {'motivo': 'prompts experimentais ausentes do cofre: nenhuma chamada'}
+    r = ler_roteiro(eventos, imagens, p_cat, p_cas, chamadores=chamadores)
     return r['visoes'], r['registro']
+
+
+def executar_sombra(v: dict, acervo: list[dict], chamadores: dict | None = None, get=None, ler_visao: bool = True,
+                    prompts: tuple[str, str] | None = None) -> dict:
+    """O MESMO caminho do main.py em modo sombra: acervo → metadados reais → referências → catálogo → casamento →
+    dupla leitura → Evidência V1 → relatório. Trabalha em CÓPIAS: nunca altera `v` nem o acervo."""
+    import copy
+    from src.v2 import evidencia as E
+    from src.v2 import evidencia_registros as ER
+    v2, ac2 = copy.deepcopy(v), copy.deepcopy(acervo)
+    regs, res_regs = ER.registros(ac2, get=get, pausa=0 if get else ER.PAUSA)
+    refs, res_refs = ER.referencias(v2, get=get, pausa=0 if get else ER.PAUSA)
+    visoes, reg_visao = ({}, None)
+    if ler_visao:
+        visoes, reg_visao = sombra(v2, ac2, refs, chamadores=chamadores, prompts=prompts)
+    rel = E.preparar(v2, ac2, registros=regs, visoes=visoes, referencias=refs)
+    rel['registros'] = res_regs
+    rel['referencias'] = {'resumo': res_refs, 'entidades': [{k: e.get(k) for k in ('nome', 'categorias', 'ids')} for e in refs['entidades']]}
+    rel['visao'] = reg_visao
+    return rel

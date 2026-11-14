@@ -27,6 +27,7 @@ jobs:
       - name: Coletar e ler (uma vez)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MODELO_ALTERNATIVO: gemini-3.5-flash-lite
         run: python scripts/evidencia_teste_modelo.py
       - name: Cifrar e publicar no ramo de resultado
         run: |

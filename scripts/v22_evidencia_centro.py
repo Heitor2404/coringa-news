@@ -10,7 +10,8 @@ sys.path.insert(0, os.getcwd())
 
 CASOS_LEG = ['GRAVIDADE', 'DOIS OCEANOS', 'A ÁGUA DESCE DO LAGO E ENCHE A CÂMARA INTEIRA', 'US$ 5,3 MILHÕES', 'ESCHERICHIA COLI', '— E AGORA?!']
 COMPS = [('revelacao.surpresa', [.3, .6]), ('titulo.capitulo', [.7]), ('forcas.vetores', [.8]), ('foto.documental', [.6]),
-         ('abertura.pergunta', [.7]), ('numero.animado', [.8]), ('encerramento.editorial', [.8]), ('banner.importante', [.6])]
+         ('abertura.pergunta', [.7]), ('numero.animado', [.8]), ('encerramento.editorial', [.8]), ('banner.importante', [.6]),
+         ('foto.historica', [.3, .85]), ('mapa.territorio', [.95])]   # galeria V2.2: foto de 1913 e rótulos de mar
 
 
 def capturar(saida: Path):

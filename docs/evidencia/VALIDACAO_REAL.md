@@ -115,3 +115,17 @@
 - **Impedimento: o repositório não tem o secret `OPENROUTER_API_KEY`. Nenhuma chamada foi feita.** Nada foi medido.
 - Para rodar: criar o secret `OPENROUTER_API_KEY` (Settings → Secrets and variables → Actions) e alterar
   `.github/evidencia/teste_openrouter.txt`. A chave nunca deve ser colada em chat, arquivo ou commit.
+
+## OpenRouter / nvidia/nemotron-3.5-super-vl:free — execução 43637054557
+
+- **Respondeu:** 1 chamada (a 2ª não foi necessária), HTTP 200, **20,6 s**, custo 0. Foram 3.704 tokens de entrada e 2.552 de saída, dos quais 1.990 de raciocínio.
+- **JSON:** válido e no contrato. As 8 avaliações vieram com `confere_com`, `classe_confere` e `confianca`.
+- **Leitura das imagens:**
+  - i6 → só a a6 (`acao`: "navio atravessado no canal entre as duas margens"). As demais vieram como `outro_estado`.
+  - i2 → a10 (`acao`: "navio navegando no mar aberto"); a6, a12 e a1 como `outro_estado`.
+  - Correto visualmente. Melhor que o 3.5-flash-lite, que chamou de "entidade" o navio que navegava.
+- **Pela regra (inalterada), com registros e catálogo reais:**
+  - **nav-07 (a10 × i2): CONTEXTO = gabarito.** É o caso desenhado: a visão confirma a ação, mas o registro (2011, "Ever Given (ship, 1986)") contradiz, e a imagem não vira prova.
+  - **nav-08: CONTEXTO = gabarito.**
+  - **nav-01 (a6 × i6): CONTEXTO ≠ PROVA.** Mesma rejeição do Gemini lite: o casamento diz "ação" para o navio preso e o catálogo (Gemini lite) diz "nada acontecendo".
+  - **Falsas provas: 0.**

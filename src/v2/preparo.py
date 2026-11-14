@@ -164,6 +164,15 @@ MIDIA = {'satelite', 'aerea', 'aproximada', 'lateral', 'detalhe', 'fotografia', 
 
 
 # ───────────────────────── reclassificação ─────────────────────────
+FENOMENO = {'mecanismo', 'processo', 'transformacao', 'movimento', 'nivel', 'orbita', 'escala', 'proporcao', 'comparacao'}
+
+
+def atemporal(ac: dict, bruto: dict, v: dict) -> bool:
+    """Fenômeno sem momento histórico: o contrato não dá ano, o tipo descreve como algo funciona e o vídeo não é uma
+    história datada. Só então a época geral do vídeo NÃO vira a data do acontecimento."""
+    return (_ano(bruto.get('quando')) is None and not (ac.get('dados') or {}).get('data')      # "", "atual", "sempre": sem ano
+            and ac.get('tipo') in FENOMENO and v.get('tipo_conteudo') != 'historico')
+
 def _contagens(dados: dict) -> dict:
     return {k: v for k, v in (dados or {}).items() if isinstance(v, (int, float)) or (isinstance(v, str) and re.fullmatch(r'\s*[\d.,]+\s*', v))}
 
@@ -178,6 +187,15 @@ def reclassificar(ac: dict, cena: dict) -> tuple[str, str | None]:
         return 'movimento', 'deslocamento local causado por força (vento/corrente), não rota geográfica'
     if tipo == 'citacao' and not (dados.get('texto') and dados.get('autor')) and any(dinheiro(v) for v in dados.values()):
         return 'numero', 'valor em dinheiro sem texto/autor: é um número (cobrança/valor), não citação'
+    # tipo declarado incompatível com os dados: sem os campos que as composições do tipo exigem, mas com uma sequência real
+    # de etapas (≥ 3, textuais e distintas) → é um processo. Se houver qualquer campo do próprio tipo, fica (ambíguo).
+    etapas = [str(e).strip() for e in (dados.get('etapas') or []) if isinstance(e, str) and str(e).strip() and not re.fullmatch(r'[\d.,%\s]+', str(e))]
+    proprios = {re.split(r'[<>=]', r)[0] for reqs in contrato.TIPOS.get(tipo, {}).get('comps', {}).values() for r in reqs}
+    so_com_dados = all(contrato.TIPOS.get(tipo, {}).get('comps', {}).values())     # nenhuma composição sem requisito (foto)
+    if tipo in contrato.TIPOS and so_com_dados and tipo not in ('processo', 'mecanismo', 'transformacao') and 'etapas' not in proprios \
+            and len(set(etapas)) >= 3 and not any(k in dados for k in proprios):
+        return 'processo', (f'tipo "{tipo}" sem os dados que suas composições exigem ({", ".join(sorted(proprios)) or "nenhum"}), '
+                            f'mas com {len(set(etapas))} etapas: a fala descreve um processo')
     cont = _contagens(dados)
     if tipo in ('processo', 'mecanismo', 'transformacao') and cont and len(cont) == len(dados) and not any(k in dados for k in ('etapas', 'nos', 'forcas')):
         return 'numero', 'dados são só contagens: a fala enumera quantidades, não descreve etapas'
@@ -277,7 +295,10 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         if novo != ac.get('tipo'):
             ac['tipo_original'], ac['tipo'], ac['reclassificacao'] = ac.get('tipo'), novo, motivo
         ev['tipo'] = ac['tipo']; ev['reclassificacao'] = motivo
-        ano_evento = _ano(bruto.get('quando')) or _ano((ac.get('dados') or {}).get('data')) or ano_geral
+        # a época geral do vídeo só vale como data de um acontecimento SEM data em história datada; fenômeno científico sem
+        # momento histórico (mecanismo, natureza, geral) não ganha o ano da reportagem (lagartixa: "2026" × foto de 2009)
+        ano_evento = _ano(bruto.get('quando')) or _ano((ac.get('dados') or {}).get('data')) \
+            or (None if atemporal(ac, bruto, v) else ano_geral)
 
         # 3) dados no formato da composição (só com o verificado)
         faltam = []

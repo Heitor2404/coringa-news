@@ -38,10 +38,11 @@ jobs:
           python scripts/v2_natural_earth.py
       - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py tests/test_v22_fotos.py tests/test_v22_video.py tests/test_v22_inedito.py tests/test_v22_eclusa.py tests/test_piloto_correcao.py tests/test_porteiro_revisao.py tests/test_evidencia.py
       - name: Galeria de validação (artefato)
-        if: always()
+        # ramo da evidência não toca renderização nem composições: a galeria seria idêntica (pula)
+        if: always() && !startsWith(github.ref_name, 'evidencia-')
         run: python -m src.v2.galeria --saida saida/galeria_v2
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && !startsWith(github.ref_name, 'evidencia-')
         with:
           name: galeria-v2-${{ github.run_number }}
           path: saida/galeria_v2

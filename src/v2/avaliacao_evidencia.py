@@ -22,7 +22,7 @@ from pathlib import Path
 
 from src.v2 import evidencia as E
 
-CENARIOS_VISAO = ('correta', 'adversaria', 'legado', 'ausente')
+CENARIOS_VISAO = ('correta', 'adversaria', 'adversaria_casamento', 'legado', 'ausente')
 CENARIOS_REGISTRO = ('completo', 'sem_categoria', 'sem_data')
 
 
@@ -39,8 +39,13 @@ def registro(r: dict, cenario: str = 'completo') -> dict:
 
 def visao(caso: dict, ev: dict, cenario: str) -> dict | None:
     vc = caso.get('visao_correta') or {}
+    # catálogo (outra chamada, por imagem): rotulado com a verdade nos cenários correta e adversaria_casamento
+    cat = {'natureza': vc.get('natureza', 'foto'), 'generica': bool(vc.get('generica')), 'acao_em_curso': vc.get('confere_com') == 'acao'}
     if cenario == 'correta':
-        return {'origem': 'rotulada_cega', 'viu_legenda': False, 'confianca': 'alta', 'generica': False, **vc}
+        return {'origem': 'rotulada_cega', 'viu_legenda': False, 'confianca': 'alta', 'generica': False, **vc, 'catalogo': cat}
+    if cenario == 'adversaria_casamento':     # só o casamento erra (uma alucinação), com confiança alta
+        return {'origem': 'adversaria', 'viu_legenda': False, 'confere_com': (ev['exige'] or ['acao'])[0], 'natureza': 'foto',
+                'classe_confere': True, 'confianca': 'alta', 'generica': False, 'catalogo': cat}
     if cenario == 'adversaria':
         return {'origem': 'adversaria', 'viu_legenda': False, 'confere_com': (ev['exige'] or ['acao'])[0], 'natureza': 'foto',
                 'classe_confere': True, 'confianca': 'alta', 'generica': False}
@@ -99,6 +104,7 @@ def metricas(res: dict) -> dict:
          'prova_esperada': sum(c['esperado'] == 'PROVA' for c in cs),
          'prova_reconhecida': sum(c['esperado'] == 'PROVA' and c['obtido'] == 'PROVA' for c in cs),
          'falsa_prova_adversaria': [c['id'] for c in cs if c['cenarios']['adversaria/completo'] == 'PROVA' and c['esperado'] != 'PROVA'],
+         'falsa_prova_adversaria_casamento': [c['id'] for c in cs if c['cenarios']['adversaria_casamento/completo'] == 'PROVA' and c['esperado'] != 'PROVA'],
          'invariante_sem_visao_independente': [c['id'] for c in cs for k, n in c['cenarios'].items()
                                                if k.split('/')[0] in ('legado', 'ausente') and n == 'PROVA'],
          # tirar categoria/data (visão correta) nunca CRIA uma prova que o registro completo não dá
@@ -131,8 +137,10 @@ def relatorio_md(res: dict, titulo: str) -> str:
         l.append(f"| {d} | {x['casos']} | {x['acerto']} | {x['falsa_prova']} | {x['prova_reconhecida']}/{x['prova_esperada']} |")
     l += ['', f"- Invariante — sem visão independente nunca há PROVA: {'ok' if not m['invariante_sem_visao_independente'] else m['invariante_sem_visao_independente']}",
           f"- Invariante — tirar categoria ou data nunca cria PROVA: {'ok' if not m['invariante_monotonia'] else m['invariante_monotonia']}",
-          f"- Dependência da visão (IA mentindo com confiança alta): {len(m['falsa_prova_adversaria'])} falsa(s) prova(s): "
-          f"{', '.join(m['falsa_prova_adversaria']) or 'nenhuma'}", '',
+          f"- Dependência da visão (catálogo E casamento mentindo com confiança alta): {len(m['falsa_prova_adversaria'])} falsa(s) prova(s): "
+          f"{', '.join(m['falsa_prova_adversaria']) or 'nenhuma'}",
+          f"- Só o casamento erra (catálogo correto): {len(m['falsa_prova_adversaria_casamento'])} falsa(s) prova(s): "
+          f"{', '.join(m['falsa_prova_adversaria_casamento']) or 'nenhuma'}", '',
           '## Casos', '', '| Caso | Tipo | Acontecimento | Imagem | Esperado | Obtido | Adversária | Legado | Sem categoria | Motivo |',
           '|---|---|---|---|---|---|---|---|---|---|']
     for c in res['casos']:

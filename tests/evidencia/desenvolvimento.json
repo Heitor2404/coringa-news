@@ -19,6 +19,12 @@
        "IMO 9811000",
        "Ever Given (ship, 2018)"
       ]
+     },
+     {
+      "nome": "Suez Canal",
+      "categorias": [
+       "Suez Canal"
+      ]
      }
     ]
    },
@@ -416,8 +422,8 @@
       "natureza": "foto",
       "classe_confere": false
      },
-     "esperado": "INCOMPATIVEL",
-     "fundamento": "igreja à beira do canal em 2015: nada do acontecimento"
+     "esperado": "CONTEXTO",
+     "fundamento": "igreja à beira do canal (2015): só o LUGAR do acontecimento — contexto de lugar, nunca representa o bloqueio (ajuste da etapa 3: o lugar do contrato é referência)"
     },
     {
      "id": "nav-12",

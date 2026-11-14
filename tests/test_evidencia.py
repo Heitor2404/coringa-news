@@ -235,3 +235,68 @@ def test_nao_altera_o_roteiro():
     antes = json.dumps(v, sort_keys=True, default=str)
     E.preparar(v, v['acervo'])
     assert json.dumps(v, sort_keys=True, default=str) == antes
+
+
+# ── regressão das correções da etapa 3 (defeitos comprovados) ──
+RES = Path(__file__).parent / 'evidencia' / 'reservado.json'
+
+
+@pytest.mark.parametrize('valor', ['Uploaddate 2010-01-17', 'Uploaded on 14 March 2011', 'upload date 2009'])
+def test_data_de_envio_nunca_vira_data_de_captura(valor):
+    assert E._classificar_data_commons({'value': valor, 'source': 'commons-desc-page'})[0] == 'upload'
+
+
+def test_atemporal_categoria_curada_da_entidade_mais_visao_prova():
+    e = ev(quando='')
+    assert E.avaliar(e, reg(cats=('Objeto Y (pupae)',), datas={}), vis('estado_final'))['nivel'] == 'PROVA'
+    assert E.avaliar(e, reg(cats=(), datas={}, titulo='Objeto Y'), vis('estado_final'))['nivel'] == 'RELACIONADA'   # só nome
+
+
+def test_registro_curado_de_outro_assunto_e_incompativel():
+    a = E.avaliar(ev(), reg(cats=('Outro Acidente Z',)), vis('estado_final'))
+    assert a['nivel'] == 'INCOMPATIVEL' and 'outro assunto' in a['motivos'][0]
+
+
+def test_sem_vinculo_nao_vira_contexto():
+    a = E.avaliar(ev(), reg(cats=(), datas={}), vis('outro_estado'))
+    assert a['nivel'] == 'INCOMPATIVEL'
+
+
+def test_confianca_alta_do_casamento_nao_basta_se_o_catalogo_discorda():
+    v = {**vis('acao'), 'catalogo': {'natureza': 'foto', 'generica': False, 'acao_em_curso': False}}
+    assert E.avaliar(ev(), reg(), v)['nivel'] != 'PROVA'
+    v = {**vis('acao'), 'catalogo': {'natureza': 'ilustracao', 'generica': False, 'acao_em_curso': True}}
+    assert E.avaliar(ev(), reg(), v)['nivel'] != 'PROVA'
+
+
+def test_emblema_pelo_registro_nunca_prova():
+    assert E.avaliar(ev(), reg(cats=('Grande Evento X', 'Mission patches')), vis('acao'))['nivel'] == 'CONTEXTO'
+
+
+def test_lugar_do_contrato_vira_referencia():
+    e = E.acontecimento({'tipo': 'localizacao', 'onde': 'Vale Q', 'quando': '1990'}, ['x'], REFS, 'e1')
+    assert {'nome': 'Vale Q'} in e['referencias']['entidades']
+
+
+def test_decisao_guarda_a_evidencia_da_imagem():
+    e = ev()
+    r = E._registro('Commons', 'arq', ['Grande Evento X'], {'criacao_declarada': E.intervalo('1990-06-10')}, '', '', 'CC BY 4.0', None, pagina='p')
+    rep = E.decidir(e, [('a1', E.avaliar(e, r, vis()))])
+    assert rep['evidencia']['imagem'] == 'a1' and rep['evidencia']['licenca'] == 'CC BY 4.0' and rep['evidencia']['familias']
+
+
+@pytest.mark.parametrize('cid', ['ap-08', 'bw-05', 'tn-04'])
+def test_falsos_positivos_adversarios_com_so_o_casamento_errando(cid):
+    r = A.rodar(RES)
+    c = next(x for x in r['casos'] if x['id'] == cid)
+    assert c['cenarios']['adversaria_casamento/completo'] != 'PROVA'
+
+
+def test_emblema_nao_prova_nem_com_visao_toda_errada():
+    c = next(x for x in A.rodar(RES)['casos'] if x['id'] == 'ap-08')
+    assert c['cenarios']['adversaria/completo'] != 'PROVA'
+
+
+def test_generalizacao_v2_sem_falsa_prova():
+    m = A.rodar(Path(__file__).parent / 'evidencia' / 'generalizacao_v2.json')['metricas']
+    assert m['falsa_prova'] == [] and m['invariante_sem_visao_independente'] == [] and m['invariante_monotonia'] == []

@@ -83,6 +83,21 @@ def _degraus(ctx: str) -> int | None:
     return int(v) if v.isdigit() else _NUM.get(v)
 
 
+def _fragmentos(v1: list[dict], i: int) -> list[int]:
+    """Índices dos planos seguidos que pertencem ao MESMO acontecimento declarado (mesmo id de contrato) ou à mesma
+    ideia dividida (mesmo `evento`/`grupo` com `sub`), a partir de i."""
+    ac = (v1[i].get('acontecimento') or {}) if isinstance(v1[i].get('acontecimento'), dict) else {}
+    chave = ac.get('id') or v1[i].get('evento')
+    out = [i]
+    j = i + 1
+    while chave and j < len(v1) and v1[j].get('tipo') in ('historia', 'imagem'):
+        acj = v1[j].get('acontecimento') if isinstance(v1[j].get('acontecimento'), dict) else {}
+        if (acj.get('id') or v1[j].get('evento')) != chave:
+            break
+        out.append(j); j += 1
+    return out
+
+
 def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | None = None) -> tuple[dict, list[dict]]:
     """`base`: pasta onde estão as imagens (img/...). `fatos_corrigidos`: {índice da cena: valor (src/v2/fatos.py)} —
     a correção editorial de um número, que ainda assim passa pela validação."""
@@ -119,10 +134,14 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                                                         'rotulo': sc.get('rotulo'), 'nota': sc.get('nota'), 'contexto': sc.get('nota') or '', 'fonte': sc.get('fonte')}
             erros = fatos.validar(valor, fontes)
             if erros:
-                nova.update(comp='banner.importante', params={'rotulo': 'NÚMERO BLOQUEADO', 'titulo': 'Dado sem verificação', 'texto': '; '.join(e.split(':')[0] for e in erros), 'cor': 'vermelho'}, bloqueada=True)
+                # correção do piloto: o motivo do bloqueio fica no REGISTRO (direção + fiscal D9), nunca na tela
+                # (antes: banner "NÚMERO BLOQUEADO · Dado sem verificação · F3" aparecia dentro do vídeo)
                 if img:
+                    nova.update(comp='foto.documental', params={'lugar': _limpo(sc.get('lugar'))[:28]}, bloqueada=True)
                     nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
-                d.update(comp=None, bloqueio=erros, motivo='M6: número não passou na validação factual')
+                else:
+                    nova.update(comp='destaque.palavras', params={'frase': sc.get('fala')}, bloqueada=True)
+                d.update(comp=None, bloqueio=erros, motivo='M6: número não passou na validação factual (sem número na tela)')
             else:
                 p = fatos.para_tela(valor)
                 nova.update(comp='numero.animado', params=p)
@@ -177,7 +196,10 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
         else:
             dec = capacidades.escolher(sc, {}, ctx_tema)
             d.update(capacidade=dec.get('capacidade'), critica=dec.get('critica'), trecho=dec.get('trecho'), origem=dec.get('origem'),
-                     acontecimento=dec.get('acontecimento'), aviso=dec.get('aviso'))
+                     acontecimento=dec.get('acontecimento'), aviso=dec.get('aviso'), representacao=dec.get('representacao'))
+            # correção do piloto: planos em que a MESMA fala/acontecimento foi dividida viram UMA cena (mesma composição,
+            # sincronia contínua, um só registro no fiscal)
+            mesmo = _fragmentos(v1, i)
             if dec.get('comp') in ('mecanismo.eclusa', 'mecanismo.nivel'):
                 # M3: junta as cenas seguidas que narram o mesmo mecanismo
                 j, grupo = i, []
@@ -225,14 +247,15 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                         p = {**fatos.para_tela(p), **{k: v for k, v in p.items() if k in ('representacao',)}}
                     if dec['comp'] in ('foto.historica',) and not p.get('img') and img:
                         p['img'] = img
-                    nova.update(comp=dec['comp'], params=p)
+                    nova.update(comp=dec['comp'], params=p, end=v1[mesmo[-1]]['end'], origem=mesmo,
+                                fala=' '.join(_limpo(v1[k].get('fala')) for k in mesmo))
                     if img and dec['comp'] in ('revelacao.surpresa', 'destaque.palavras'):
                         nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
-                    d.update(comp=dec['comp'], motivo=dec.get('motivo', ''), origem='contrato', acontecimento=dec.get('acontecimento'))
+                    d.update(cenas_v1=mesmo, comp=dec['comp'], motivo=dec.get('motivo', ''), origem='contrato', acontecimento=dec.get('acontecimento'))
                     out.append(nova); direcao.append(d)
                     if img:
                         usadas.setdefault(img, []).append(len(out) - 1)
-                    i += 1
+                    i = mesmo[-1] + 1
                     continue
                 # padrão textual achou uma composição desenhada, mas sem dados declarados: a cena fica com foto e a troca
                 # é REGISTRADA (o fiscal bloqueia se o acontecimento for crítico — S5), nunca silenciosa
@@ -241,11 +264,22 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 d['sem_contrato'] = True
             if dec.get('comp') is None:
                 d['faltam'] = dec.get('faltam', [])
-                # acontecimento crítico sem composição: registra e mantém a imagem (a cena será REPROVADA pelo fiscal)
-                nova.update(comp='foto.documental', params={'lugar': _limpo(sc.get('lugar'))[:28]}, limitacao=dec['limitacao'])
+                # acontecimento crítico sem composição: registra e mantém a imagem (a cena será REPROVADA pelo fiscal).
+                # Correção do piloto: sem imagem, a cena era foto.documental VAZIA (tela preta ~6 s com só a legenda);
+                # agora mostra a própria fala, e os fragmentos da mesma ideia ficam numa cena só
+                nova.update(end=v1[mesmo[-1]]['end'], origem=mesmo, fala=' '.join(_limpo(v1[k].get('fala')) for k in mesmo), limitacao=dec['limitacao'])
                 if img:
+                    nova.update(comp='foto.documental', params={'lugar': _limpo(sc.get('lugar'))[:28]})
                     nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
-                d.update(comp=None, limitacao=dec['limitacao'])
+                else:
+                    nova.update(comp='destaque.palavras', params={'frase': nova['fala']})
+                    d['sem_imagem'] = True
+                d.update(cenas_v1=mesmo, comp=None, limitacao=dec['limitacao'])
+                out.append(nova); direcao.append(d)
+                if img:
+                    usadas.setdefault(img, []).append(len(out) - 1)
+                i = mesmo[-1] + 1
+                continue
             else:
                 # M4: pedaços da mesma ideia com a mesma imagem
                 j = i + 1

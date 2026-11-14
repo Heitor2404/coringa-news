@@ -94,7 +94,7 @@ As correções funcionaram nos casos da 1ª execução (testes `tests/test_prepa
 
 ---
 
-# Piloto real V2.4 — execução 43654018515 (commit 2e43ae3 + pedido 5a…)
+# Piloto real V2.4 — execução 43654018515 (código 2e43ae3)
 
 **Resultado: `BLOQUEADO_PREPARO`. Sem MP4.** Execução única, sem nova tentativa (como manda a ordem).
 

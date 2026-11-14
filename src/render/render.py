@@ -377,22 +377,60 @@ LIMITADOR_MAX_DB = 4.0      # o limitador pode segurar até ~4 dB de pico; mais 
 def masterizar(entrada: Path, saida: Path) -> dict:
     """Duas passadas com o MESMO medidor do diagnóstico (ebur128): 1ª mede loudness e pico verdadeiro; 2ª aplica um
     ganho fixo (linear: não muda a dinâmica da fala) + 48 kHz + limitador de pico. Antes: loudnorm em uma passada
-    (dinâmico, não chegava no alvo nem garantia o pico depois do AAC: −16,3 LUFS e +0,9 dBTP no polvo) e 96 kHz."""
+    (dinâmico, não chegava no alvo nem garantia o pico depois do AAC: −16,3 LUFS e +0,9 dBTP no polvo) e 96 kHz.
+
+    Correção do piloto Ever Given (−18,5 LUFS): com voz de TTS mais baixa e picos de efeitos, a distância entre pico e
+    volume médio passou de ~21 dB; o ganho ficava limitado ao que o limitador segura e a mistura saía baixa. Agora,
+    quando falta ganho, os PICOS são domados antes (limitador rápido, só nos picos), o ganho é aplicado, o resultado é
+    MEDIDO e, se ainda estiver fora de −14 ± 0,5, uma correção final é feita."""
     from src.fiscal import medir_audio
-    try:
-        m = medir_audio(entrada)
-    except Exception:                               # silêncio ("-inf"): nada a medir, só reamostra e limita
-        m = {}
+
+    def medir(a):
+        try:
+            return medir_audio(a)
+        except Exception:                           # silêncio ("-inf"): nada a medir, só reamostra e limita
+            return {}
+
+    def aplicar(src, dst, ganho):
+        filtro = f'volume={ganho:.2f}dB,aresample=48000,alimiter=limit={LIMITE_AMOSTRA}:attack=2:release=50:level=false'
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(src), '-af', filtro, '-ar', '48000', '-c:a', 'pcm_s16le', str(dst)], check=True)
+
+    def domar(src, dst, db, pico):
+        limite = max(.0625, min(1.0, 10 ** ((pico - db - .5) / 20)))
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(src), '-af', f'alimiter=limit={limite:.4f}:attack=1:release=60:level=false',
+                        '-c:a', 'pcm_s16le', str(dst)], check=True)
+
+    m = medir(entrada)
     i, tp = m.get('lufs'), m.get('pico')
-    ganho = 0.0
-    if i is not None and i > -70:
-        ganho = ALVO_LUFS - i
-        if tp is not None:
-            ganho = min(ganho, ALVO_TP + LIMITADOR_MAX_DB - tp)     # não empurra o pico além do que o limitador segura
-    filtro = f'volume={ganho:.2f}dB,aresample=48000,alimiter=limit={LIMITE_AMOSTRA}:attack=2:release=50:level=false'
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(entrada), '-af', filtro, '-ar', '48000', '-c:a', 'pcm_s16le',
-                    str(saida)], check=True)
-    return {'entrada': m, 'ganho_db': round(ganho, 2)}
+    fonte, domado, ganho, out = entrada, 0.0, 0.0, {}
+    if i is None or i <= -70:
+        aplicar(entrada, saida, 0.0)
+        return {'entrada': m, 'ganho_db': 0.0, 'picos_domados_db': None, 'saida': medir(saida)}
+    ganho = ALVO_LUFS - i
+    teto = ALVO_TP + LIMITADOR_MAX_DB - (tp if tp is not None else -1.0)
+    falta = ganho - teto if ganho > teto + .3 else 0.0
+    for rodada in range(4):                         # mede depois de cada passada; no máximo 3 correções
+        if falta > 0:
+            alvo = saida.with_name(f'{saida.stem}_domado{rodada}.wav')
+            m2 = medir(fonte)
+            domar(fonte, alvo, falta, m2.get('pico', tp if tp is not None else -1.0))
+            if fonte != entrada:
+                Path(fonte).unlink(missing_ok=True)
+            fonte, domado = alvo, round(domado + falta, 2)
+            m3 = medir(fonte)
+            ganho = ALVO_LUFS - m3['lufs'] if m3.get('lufs') is not None else ganho
+        aplicar(fonte, saida, ganho)
+        out = medir(saida)
+        if out.get('lufs') is None or abs(out['lufs'] - ALVO_LUFS) <= .5:
+            break
+        deficit = ALVO_LUFS - out['lufs']
+        falta = deficit + .5 if deficit > 0 else 0.0  # baixo: doma mais os picos e sobe o ganho; alto: só reduz o ganho
+        if deficit < 0:
+            ganho += deficit
+    correcao = 0.0
+    if fonte != entrada:
+        Path(fonte).unlink(missing_ok=True)
+    return {'entrada': m, 'ganho_db': round(ganho + correcao, 2), 'picos_domados_db': domado or None, 'saida': out}
 
 
 if __name__ == '__main__':

@@ -91,3 +91,53 @@ As correções funcionaram nos casos da 1ª execução (testes `tests/test_prepa
 ---
 
 **Correção estrutural (V2.4, offline, sem vídeo):** ver [`CORRECAO_V24_CONTRATOS.md`](CORRECAO_V24_CONTRATOS.md) — pré-validação e conserto rastreado dos contratos, checkpoint/retomada por etapa e separação entre evidência visual e ilustração de mecanismo.
+
+---
+
+# Piloto real V2.4 — execução 43654018515 (commit 2e43ae3 + pedido 5a…)
+
+**Resultado: `BLOQUEADO_PREPARO`. Sem MP4.** Execução única, sem nova tentativa (como manda a ordem).
+
+**Execução**
+- Tempo: 610 s. Pico de memória: 270 MB. Custo: USD 0,00.
+  - O **Claude atingiu o limite semanal** da assinatura (volta em 16/11, 05:00 UTC). Roteiro, crítica e conserto saíram do Gemini (reserva).
+- Busca na web do Gemini: 429. LoC: 429. Gemini 3.8-flash: um 504.
+- Pacote cifrado: ramo `piloto-v22-resultado`, arquivo `piloto-43654018515.tgz.gpg`, para as duas chaves.
+- Checkpoint cifrado no cache: chave `piloto-checkpoint-43654018515`. Para retomar: `retomar.txt` = `43654018515 roteiro`.
+
+**Roteiro:** 19 planos, 150 palavras (cerca de 58 s).
+- Fala de "atração molecular", dipolo instantâneo, Van der Waals e distância de contato. Não fala em "some".
+- **Não menciona cerdas nem espátulas.** Menciona lamelas e "almofadas adesivas".
+- Fecha com a NASA/Astrobee (2025) e Suni Williams.
+- Imprecisão: "gruda apenas ajustando cargas elétricas moleculares" (revelação).
+
+## Pré-validação V2.4 (funcionou como projetada)
+
+- Uma chamada de conserto para **7 contratos críticos não observáveis** (e4–e10). **7 aceitos**, com todos os itens rastreados na pesquisa.
+- Resultado: diagrama.explicativo, processo.etapas e forcas.vetores, todos marcados como **ILUSTRAÇÃO, não é evidência**.
+- Nenhum contrato ficou pendente.
+
+## O que bloqueou: 3 mecanismos críticos **observáveis**, que a V2.4 deixa para o acervo
+
+| Ev. | Fala | Contrato (sujeito / mostrar / dados) | Foto no acervo | Por que o preparo recusou |
+|---|---|---|---|---|
+| e2 | "…usa lamelas nos dedos para se segurar." | Hemidactylus mabouia / "desenho anatômico das lamelas" / `{especie}` | nenhuma das lamelas; a0 é desenho de *Tarentola* | sem composição viável; foto só de contexto (a2) |
+| e3 | "…estruturas microscópicas que ampliam o contato." | **"almofadas adesivas"** / "close da sola da pata no vidro" / `{estrutura}` | **a3 = "parte inferior da pata… sobre um vidro" (CC)** | o sujeito "almofadas adesivas" não aparece no catálogo de a3: força 1, só contexto |
+| e11 | "Em 2025, a NASA usou essa física no robô Astrobee…" | **"NASA"** / "robô Astrobee manipulando objeto dourado" / `{ano, entidade}` | **a13/a15/a18 = Astrobee com almofadas adesivas (NASA)** | o sujeito "NASA" não aparece nas legendas: força 0,5; troca para a1, que é só contexto |
+
+**Causa técnica.** A avaliação de foto do preparo V2.3 (`preparo.avaliar_imagem`) é lexical:
+- exige a palavra do `sujeito` do contrato no catálogo;
+- só dá força 3 por grupos de estado herdados do Ever Given (preso, liberado…). Em tema científico, esses grupos nunca casam.
+
+Assim, mecanismo crítico observável só chega a "foto declarada" (força 2) se o roteirista nomear o sujeito com a mesma palavra do catálogo. O e3 e o e11 tinham foto real adequada no acervo e foram bloqueados por isso. O e2 não tinha imagem nenhuma: é um bloqueio legítimo.
+
+**Evidência V1 (sombra):**
+- 0 bloqueios. e2, e3, e11 e e12 ficaram como `foto_relacionada`, para revisão humana.
+- **Falha da V1:** em e11 ela escolhe a10, uma lagartixa no Kruger, para a fala da NASA/Astrobee. O vínculo "categoria da entidade Hemidactylus mabouia" vale para qualquer acontecimento do vídeo.
+- Visão: catálogo e casamento pelo Gemini lite (11 s cada); dupla leitura pela NVIDIA (e2 × a3, concordante).
+- 11 imagens retidas por privacidade/texto. Nenhuma discordância.
+
+**Não corrigido nesta execução** (exige mudança na avaliação de foto do V2.3, fora do escopo autorizado):
+1. O sujeito visível do contrato (robô, pata) versus a entidade institucional (NASA).
+2. Grupos de estado genéricos para fenômenos científicos.
+3. O vínculo por entidade da V1 aplicado a acontecimentos de outro sujeito.

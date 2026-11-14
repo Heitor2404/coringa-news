@@ -77,3 +77,16 @@
 3. **ap-04 (rejeição indevida):** a NASA devolve "APOLLO XI" sem palavras-chave.
 4. **tn-01 (rejeição indevida):** o arquivo HABS traz a data da documentação ("after 1968"); a data da foto está no título.
 5. **ap-01 / ap-02:** sem casamento, a foto certa fica RELACIONADA (revisão), nunca PROVA. Para a fala da decolagem, a foto da Lua também fica RELACIONADA (revisão) em vez de CONTEXTO, porque a fase não pode ser julgada sem a leitura do estado.
+
+## Teste mínimo com modelo alternativo — execução 43635010212 (única, encerrada)
+
+- **Diagnóstico sem geração** (`models.list` e `models.get`):
+  - `gemini-3.8-flash` existe e está visível para a chave (versão 3.0, entrada de 1M tokens).
+  - Os erros anteriores foram **503 UNAVAILABLE "high demand"**, do lado do Google. Não é cota da chave (seria 429) nem modelo inexistente (seria 404).
+- **Escolha do alternativo:** `gemini-3.6-flash`, o próximo modelo principal na ordem do próprio projeto (`gemini.PRINCIPAIS`).
+  - Uma chamada de casamento cego: 4 imagens já guardadas do Ever Given (a6, a10, a12, a1) × acontecimentos i6 (evidência direta, gabarito nav-01 = PROVA) e i2 (imagem enganosa a10, gabarito nav-07 = CONTEXTO).
+- **Resultado: 503 UNAVAILABLE "high demand" de novo** (10 s). Sem resposta, não há precisão a medir. O teste foi encerrado, sem nova tentativa.
+- **Impedimento registrado:** nesta janela, os modelos principais do plano grátis (3.8 e 3.6 flash) recusaram as chamadas de visão longas por sobrecarga.
+  - Os modelos lite (3.5-flash-lite) responderam a todos os 7 catálogos.
+  - Modelos visíveis que não testei: 3.7-flash e 3.5-flash.
+- **Respostas brutas:** `tests/evidencia/coleta_real/teste_modelo_43635010212/`.

@@ -1,0 +1,36 @@
+{
+ "modelos_visiveis": [
+  "models/gemini-2.5-flash",
+  "models/gemini-2.5-flash-image",
+  "models/gemini-2.5-flash-lite",
+  "models/gemini-2.5-pro",
+  "models/gemini-3-pro-image",
+  "models/gemini-3.1-flash-image",
+  "models/gemini-3.1-flash-lite",
+  "models/gemini-3.1-flash-lite-image",
+  "models/gemini-3.5-flash",
+  "models/gemini-3.5-flash-lite",
+  "models/gemini-3.6-flash",
+  "models/gemini-3.7-flash",
+  "models/gemini-3.8-flash",
+  "models/gemini-4-argon",
+  "models/gemini-4-carbon",
+  "models/gemini-4-hydrogen",
+  "models/gemini-embedding-001",
+  "models/gemini-embedding-2",
+  "models/gemini-nano-banana-2.1",
+  "models/gemini-omni-flash-preview"
+ ],
+ "gemini-3.8-flash": {
+  "name": "models/gemini-3.8-flash",
+  "version": "3.0",
+  "input_token_limit": 1048576,
+  "output_token_limit": 65536
+ },
+ "gemini-3.6-flash": {
+  "name": "models/gemini-3.6-flash",
+  "version": "3.6-flash-07-2026",
+  "input_token_limit": 1048576,
+  "output_token_limit": 65536
+ }
+}

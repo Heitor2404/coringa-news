@@ -1,0 +1,15 @@
+{
+ "modelo": "gemini-3.6-flash",
+ "ordem_das_imagens": [
+  "a6_commons",
+  "a10_outro_navio",
+  "a12_2020",
+  "a1_roterda"
+ ],
+ "acontecimentos": [
+  "i6",
+  "i2"
+ ],
+ "erro": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+ "segundos": 10.0
+}

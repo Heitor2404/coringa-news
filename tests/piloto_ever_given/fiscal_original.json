@@ -1,0 +1,791 @@
+{
+ "aprovado_tecnicamente": false,
+ "aprovacao_automatica": false,
+ "revisao_humana": 0,
+ "achados": [
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 1,
+   "comp": "foto.documental",
+   "instante": 1.51,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado impacto (Navio porta-contêineres bloqueando o Canal de Suez) sem composição viável: evento.impacto precisa de aneis válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 2,
+   "comp": "foto.documental",
+   "instante": 5.28,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para forcas.vetores precisa de forcas válidos; mecanismo.nivel precisa de de, ate válidos; animacao.quadros precisa de cena válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 3,
+   "comp": "foto.documental",
+   "instante": 9.65,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 4,
+   "comp": "foto.documental",
+   "instante": 11.18,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 5,
+   "comp": "foto.documental",
+   "instante": 13.24,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado mecanismo (Extremidades do navio presas nas margens opostas) sem composição viável: diagrama.explicativo precisa de nos válidos; processo.etapas precisa de etapas>=2 válidos; forcas.vetores precisa de forcas válidos; mecanismo.eclusa precisa de sentido válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-ritmo",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 5,
+   "comp": "foto.documental",
+   "instante": 13.24,
+   "problema": "foto parada por 5.6 s (> 5.0 s)",
+   "evidencia": "foto parada por 5.6 s (> 5.0 s)",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 6,
+   "comp": "foto.documental",
+   "instante": 18.8,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 7,
+   "comp": "foto.documental",
+   "instante": 21.04,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-cont",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 7,
+   "comp": "foto.documental",
+   "instante": 21.04,
+   "problema": "mesma composição e mesmos dados da cena anterior",
+   "evidencia": "foto.documental",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "deterministico",
+   "codigo": "D9",
+   "codigo_v2": "B3",
+   "gravidade": "bloqueio",
+   "cena": 8,
+   "comp": "banner.importante",
+   "instante": 23.39,
+   "problema": "número sem validação",
+   "evidencia": "F3: número sem fonte",
+   "solucao": "usar o valor e o contexto exatos da fonte (fatos.validar)"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 9,
+   "comp": "foto.documental",
+   "instante": 27.91,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 10,
+   "comp": "foto.documental",
+   "instante": 30.94,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-cont",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 10,
+   "comp": "foto.documental",
+   "instante": 30.94,
+   "problema": "mesma composição e mesmos dados da cena anterior",
+   "evidencia": "foto.documental",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 11,
+   "comp": "foto.documental",
+   "instante": 33.58,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 12,
+   "comp": "foto.documental",
+   "instante": 38.44,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-cont",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 12,
+   "comp": "foto.documental",
+   "instante": 38.44,
+   "problema": "mesma composição e mesmos dados da cena anterior",
+   "evidencia": "foto.documental",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S1",
+   "codigo_v2": "B1",
+   "gravidade": "bloqueio",
+   "cena": 13,
+   "comp": "foto.documental",
+   "instante": 40.9,
+   "problema": "acontecimento crítico sem representação",
+   "evidencia": "acontecimento declarado transformacao (Navio liberado no canal) sem composição viável: comparacao.antes_depois precisa de img_antes, img_depois válidos; processo.etapas precisa de etapas>=2 válidos",
+   "solucao": "fornecer os dados que a composição exige ou reescrever a fala"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-ritmo",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 13,
+   "comp": "foto.documental",
+   "instante": 40.9,
+   "problema": "foto parada por 5.7 s (> 5.0 s)",
+   "evidencia": "foto parada por 5.7 s (> 5.0 s)",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 14,
+   "comp": "foto.documental",
+   "instante": 46.61,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para citacao precisa de texto, autor válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 15,
+   "comp": "foto.documental",
+   "instante": 49.27,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para citacao precisa de texto, autor válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S4",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": 16,
+   "comp": "foto.documental",
+   "instante": 52.43,
+   "problema": "dados insuficientes para o que a fala sugere",
+   "evidencia": "dados insuficientes para foto.historica precisa de img válidos; video.documental precisa de video válidos; linha_tempo.historica precisa de eventos>=2 válidos",
+   "solucao": "conseguir os valores com fonte ou deixar a fala sem promessa de comparação"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-rep",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": 17,
+   "comp": "revelacao.surpresa",
+   "instante": 57.31,
+   "problema": "imagem repetida (a27-g.jpg) — já usada na cena v2 16",
+   "evidencia": "imagem repetida (a27-g.jpg) — já usada na cena v2 16",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S2",
+   "codigo_v2": "B2",
+   "gravidade": "bloqueio",
+   "cena": 3,
+   "comp": "foto.documental",
+   "instante": 9.65,
+   "problema": "fala descreve mecanismo e a tela não mostra",
+   "evidencia": "\"Na manhã de vinte e três de março,\" → foto.documental",
+   "solucao": "trocar a foto pela composição de mecanismo"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S2",
+   "codigo_v2": "B2",
+   "gravidade": "bloqueio",
+   "cena": 5,
+   "comp": "foto.documental",
+   "instante": 13.24,
+   "problema": "fala descreve mecanismo e a tela não mostra",
+   "evidencia": "\"Ele ficou de través: proa e popa presas em margens opostas.\" → foto.documental",
+   "solucao": "trocar a foto pela composição de mecanismo"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S2",
+   "codigo_v2": "B2",
+   "gravidade": "bloqueio",
+   "cena": 9,
+   "comp": "foto.documental",
+   "instante": 27.91,
+   "problema": "fala descreve mecanismo e a tela não mostra",
+   "evidencia": "\"A corrida de seis dias reuniu quinze rebocadores,\" → foto.documental",
+   "solucao": "trocar a foto pela composição de mecanismo"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S2",
+   "codigo_v2": "B2",
+   "gravidade": "bloqueio",
+   "cena": 13,
+   "comp": "foto.documental",
+   "instante": 40.9,
+   "problema": "fala descreve mecanismo e a tela não mostra",
+   "evidencia": "\"Às 15h05, catorze rebocadores egípcios, holandeses e italian\" → foto.documental",
+   "solucao": "trocar a foto pela composição de mecanismo"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 0,
+   "comp": "abertura.pergunta",
+   "instante": 0.0,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: impacto — Navio porta-contêineres bloqueando o Canal de Suez; capazes: evento.impacto; na tela: abertura.pergunta",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 1,
+   "comp": "foto.documental",
+   "instante": 1.51,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: impacto — Navio porta-contêineres bloqueando o Canal de Suez; capazes: evento.impacto; na tela: foto.documental; falta: evento.impacto: aneis",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 3,
+   "comp": "foto.documental",
+   "instante": 9.65,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: deslocamento — Navio desviando por causa do vento; capazes: mapa.rota; na tela: foto.documental; falta: mapa.rota: pontos>=2",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 4,
+   "comp": "foto.documental",
+   "instante": 11.18,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: deslocamento — Navio desviando por causa do vento; capazes: mapa.rota; na tela: foto.documental; falta: mapa.rota: pontos>=2",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 5,
+   "comp": "foto.documental",
+   "instante": 13.24,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: mecanismo — Extremidades do navio presas nas margens opostas; capazes: diagrama.explicativo, processo.etapas, forcas.vetores, mecanismo.eclusa; na tela: foto.documental; falta: diagrama.explicativo: nos; processo.etapas: etapas>=2; forcas.vetores: forcas; mecanismo.eclusa: sentido",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 6,
+   "comp": "foto.documental",
+   "instante": 18.8,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: localizacao — Corte transversal do canal; capazes: mapa.localizacao; na tela: foto.documental; falta: mapa.localizacao: pontos>=1",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 7,
+   "comp": "foto.documental",
+   "instante": 21.04,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: localizacao — Corte transversal do canal; capazes: mapa.localizacao; na tela: foto.documental; falta: mapa.localizacao: pontos>=1",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 8,
+   "comp": "banner.importante",
+   "instante": 23.39,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: numero — Navios parados no mar aguardando liberação; capazes: numero.animado; na tela: banner.importante",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 9,
+   "comp": "foto.documental",
+   "instante": 27.91,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: processo — Dragas e rebocadores trabalhando na proa; capazes: processo.etapas, diagrama.explicativo; na tela: foto.documental; falta: processo.etapas: etapas>=2; diagrama.explicativo: nos",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 10,
+   "comp": "foto.documental",
+   "instante": 30.94,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: processo — Dragas e rebocadores trabalhando na proa; capazes: processo.etapas, diagrama.explicativo; na tela: foto.documental; falta: processo.etapas: etapas>=2; diagrama.explicativo: nos",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 13,
+   "comp": "foto.documental",
+   "instante": 40.9,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: transformacao — Navio liberado no canal; capazes: comparacao.antes_depois, processo.etapas; na tela: foto.documental; falta: comparacao.antes_depois: img_antes; comparacao.antes_depois: img_depois; processo.etapas: etapas>=2",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "semantico",
+   "codigo": "S5",
+   "codigo_v2": "",
+   "gravidade": "bloqueio",
+   "cena": 17,
+   "comp": "revelacao.surpresa",
+   "instante": 57.31,
+   "problema": "representação inadequada de acontecimento crítico declarado",
+   "evidencia": "declarado: evolucao_temporal — Tráfego intenso de navios; capazes: grafico.temporal; na tela: revelacao.surpresa",
+   "solucao": "fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto"
+  },
+  {
+   "categoria": "deterministico",
+   "codigo": "D11",
+   "codigo_v2": "",
+   "gravidade": "aviso",
+   "cena": null,
+   "comp": null,
+   "instante": 0.0,
+   "problema": "loudness fora da meta",
+   "evidencia": "-18.5 LUFS (meta −14 ± 1)",
+   "solucao": "dividir o plano / normalizar o áudio"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "A abertura faz querer ver o resto (sem depender da legenda)?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "O mecanismo ficou claro só olhando a tela, sem som?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "Algum gráfico/mapa ficou bonito mas não explicou nada?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "Alguma foto parece de banco de imagens, sem relação com a fala?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "O ritmo cansa em algum trecho (anotar o segundo)?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  },
+  {
+   "categoria": "estetico",
+   "codigo": "E-pergunta",
+   "codigo_v2": "",
+   "gravidade": "observacao",
+   "cena": null,
+   "comp": null,
+   "instante": null,
+   "problema": "O encerramento tem cara de marca (mascote, marca, fontes legíveis)?",
+   "evidencia": "sem medida automática",
+   "solucao": "avaliação humana"
+  }
+ ],
+ "por_categoria": {
+  "deterministico": {
+   "bloqueios": 1,
+   "revisoes": 0,
+   "avisos": 1,
+   "observacoes": 0
+  },
+  "semantico": {
+   "bloqueios": 25,
+   "revisoes": 0,
+   "avisos": 6,
+   "observacoes": 0
+  },
+  "estetico": {
+   "bloqueios": 0,
+   "revisoes": 0,
+   "avisos": 0,
+   "observacoes": 12
+  }
+ },
+ "bloqueios": [
+  {
+   "codigo": "B1",
+   "cena": 1,
+   "inicio": 1.51,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado impacto (Navio porta-contêineres bloqueando o Canal de Suez) sem composição viável: evento.impacto precisa de aneis válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 3,
+   "inicio": 9.65,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 4,
+   "inicio": 11.18,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 5,
+   "inicio": 13.24,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado mecanismo (Extremidades do navio presas nas margens opostas) sem composição viável: diagrama.explicativo precisa de nos válidos; processo.etapas precisa de etapas>=2 válidos; forcas.vetores precisa de forcas válidos; mecanismo.eclusa precisa de sentido válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 6,
+   "inicio": 18.8,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 7,
+   "inicio": 21.04,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos"
+  },
+  {
+   "codigo": "B3",
+   "cena": 8,
+   "inicio": 23.39,
+   "texto": "número sem validação: F3: número sem fonte"
+  },
+  {
+   "codigo": "B1",
+   "cena": 9,
+   "inicio": 27.91,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 10,
+   "inicio": 30.94,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+  },
+  {
+   "codigo": "B1",
+   "cena": 13,
+   "inicio": 40.9,
+   "texto": "acontecimento crítico sem representação: acontecimento declarado transformacao (Navio liberado no canal) sem composição viável: comparacao.antes_depois precisa de img_antes, img_depois válidos; processo.etapas precisa de etapas>=2 válidos"
+  },
+  {
+   "codigo": "B2",
+   "cena": 3,
+   "inicio": 9.65,
+   "texto": "fala descreve mecanismo e a tela não mostra: \"Na manhã de vinte e três de março,\" → foto.documental"
+  },
+  {
+   "codigo": "B2",
+   "cena": 5,
+   "inicio": 13.24,
+   "texto": "fala descreve mecanismo e a tela não mostra: \"Ele ficou de través: proa e popa presas em margens opostas.\" → foto.documental"
+  },
+  {
+   "codigo": "B2",
+   "cena": 9,
+   "inicio": 27.91,
+   "texto": "fala descreve mecanismo e a tela não mostra: \"A corrida de seis dias reuniu quinze rebocadores,\" → foto.documental"
+  },
+  {
+   "codigo": "B2",
+   "cena": 13,
+   "inicio": 40.9,
+   "texto": "fala descreve mecanismo e a tela não mostra: \"Às 15h05, catorze rebocadores egípcios, holandeses e italian\" → foto.documental"
+  },
+  {
+   "codigo": "S5",
+   "cena": 0,
+   "inicio": 0.0,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: impacto — Navio porta-contêineres bloqueando o Canal de Suez; capazes: evento.impacto; na tela: abertura.pergunta"
+  },
+  {
+   "codigo": "S5",
+   "cena": 1,
+   "inicio": 1.51,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: impacto — Navio porta-contêineres bloqueando o Canal de Suez; capazes: evento.impacto; na tela: foto.documental; falta: evento.impacto: aneis"
+  },
+  {
+   "codigo": "S5",
+   "cena": 3,
+   "inicio": 9.65,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: deslocamento — Navio desviando por causa do vento; capazes: mapa.rota; na tela: foto.documental; falta: mapa.rota: pontos>=2"
+  },
+  {
+   "codigo": "S5",
+   "cena": 4,
+   "inicio": 11.18,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: deslocamento — Navio desviando por causa do vento; capazes: mapa.rota; na tela: foto.documental; falta: mapa.rota: pontos>=2"
+  },
+  {
+   "codigo": "S5",
+   "cena": 5,
+   "inicio": 13.24,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: mecanismo — Extremidades do navio presas nas margens opostas; capazes: diagrama.explicativo, processo.etapas, forcas.vetores, mecanismo.eclusa; na tela: foto.documental; falta: diagrama.explicativo: nos; processo.etapas: etapas>=2; forcas.vetores: forcas; mecanismo.eclusa: sentido"
+  },
+  {
+   "codigo": "S5",
+   "cena": 6,
+   "inicio": 18.8,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: localizacao — Corte transversal do canal; capazes: mapa.localizacao; na tela: foto.documental; falta: mapa.localizacao: pontos>=1"
+  },
+  {
+   "codigo": "S5",
+   "cena": 7,
+   "inicio": 21.04,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: localizacao — Corte transversal do canal; capazes: mapa.localizacao; na tela: foto.documental; falta: mapa.localizacao: pontos>=1"
+  },
+  {
+   "codigo": "S5",
+   "cena": 8,
+   "inicio": 23.39,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: numero — Navios parados no mar aguardando liberação; capazes: numero.animado; na tela: banner.importante"
+  },
+  {
+   "codigo": "S5",
+   "cena": 9,
+   "inicio": 27.91,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: processo — Dragas e rebocadores trabalhando na proa; capazes: processo.etapas, diagrama.explicativo; na tela: foto.documental; falta: processo.etapas: etapas>=2; diagrama.explicativo: nos"
+  },
+  {
+   "codigo": "S5",
+   "cena": 10,
+   "inicio": 30.94,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: processo — Dragas e rebocadores trabalhando na proa; capazes: processo.etapas, diagrama.explicativo; na tela: foto.documental; falta: processo.etapas: etapas>=2; diagrama.explicativo: nos"
+  },
+  {
+   "codigo": "S5",
+   "cena": 13,
+   "inicio": 40.9,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: transformacao — Navio liberado no canal; capazes: comparacao.antes_depois, processo.etapas; na tela: foto.documental; falta: comparacao.antes_depois: img_antes; comparacao.antes_depois: img_depois; processo.etapas: etapas>=2"
+  },
+  {
+   "codigo": "S5",
+   "cena": 17,
+   "inicio": 57.31,
+   "texto": "representação inadequada de acontecimento crítico declarado: declarado: evolucao_temporal — Tráfego intenso de navios; capazes: grafico.temporal; na tela: revelacao.surpresa"
+  }
+ ],
+ "avisos": [
+  {
+   "codigo": "S4",
+   "cena": 2,
+   "inicio": 5.28,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para forcas.vetores precisa de forcas válidos; mecanismo.nivel precisa de de, ate válidos; animacao.quadros precisa de cena válidos"
+  },
+  {
+   "codigo": "S4",
+   "cena": 11,
+   "inicio": 33.58,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+  },
+  {
+   "codigo": "S4",
+   "cena": 12,
+   "inicio": 38.44,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+  },
+  {
+   "codigo": "S4",
+   "cena": 14,
+   "inicio": 46.61,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para citacao precisa de texto, autor válidos"
+  },
+  {
+   "codigo": "S4",
+   "cena": 15,
+   "inicio": 49.27,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para citacao precisa de texto, autor válidos"
+  },
+  {
+   "codigo": "S4",
+   "cena": 16,
+   "inicio": 52.43,
+   "texto": "dados insuficientes para o que a fala sugere: dados insuficientes para foto.historica precisa de img válidos; video.documental precisa de video válidos; linha_tempo.historica precisa de eventos>=2 válidos"
+  },
+  {
+   "codigo": "D11",
+   "cena": null,
+   "inicio": 0.0,
+   "texto": "loudness fora da meta: -18.5 LUFS (meta −14 ± 1)"
+  }
+ ],
+ "deterministico": {
+  "cenas": 19,
+  "acontecimentos_criticos": 9,
+  "criticos_representados": 0,
+  "mecanismos_na_tela": 0,
+  "numeros_bloqueados": 1,
+  "problemas_geometricos_graves": 0,
+  "imagens_repetidas": 1,
+  "maior_plano_s": 5.7,
+  "composicoes_distintas": 5
+ },
+ "subjetivo": {
+  "estado": "pendente de avaliação humana (sem nota automática)",
+  "perguntas": [
+   "A abertura faz querer ver o resto (sem depender da legenda)?",
+   "O mecanismo ficou claro só olhando a tela, sem som?",
+   "Algum gráfico/mapa ficou bonito mas não explicou nada?",
+   "Alguma foto parece de banco de imagens, sem relação com a fala?",
+   "O ritmo cansa em algum trecho (anotar o segundo)?",
+   "O encerramento tem cara de marca (mascote, marca, fontes legíveis)?"
+  ]
+ }
+}

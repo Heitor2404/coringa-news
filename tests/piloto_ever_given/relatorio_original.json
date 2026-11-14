@@ -1,0 +1,572 @@
+{
+ "tempos": {
+  "selecao_montagem_s": 0.14,
+  "medicao_s": 4.59
+ },
+ "desempenho_render": {
+  "render_s": 163.6,
+  "pico_memoria_mb_filhos": 553,
+  "tamanho_mb": 42.71
+ },
+ "audio": {
+  "lufs": -18.5,
+  "pico_dbtp": -1.3
+ },
+ "sincronia_contrato": [
+  {
+   "cena": 0,
+   "sincronia": {
+    "impacto": [
+     "bilhões",
+     "dólares"
+    ]
+   },
+   "faltou": [
+    "bilhões",
+    "dólares"
+   ]
+  },
+  {
+   "cena": 1,
+   "sincronia": {
+    "impacto": [
+     "bilhões",
+     "dólares"
+    ]
+   },
+   "faltou": [
+    "bilhões",
+    "dólares"
+   ]
+  },
+  {
+   "cena": 2,
+   "sincronia": {
+    "rota": [
+     "Malásia",
+     "Holanda"
+    ]
+   },
+   "faltou": [
+    "Malásia",
+    "Holanda"
+   ]
+  },
+  {
+   "cena": 3,
+   "sincronia": {
+    "rota": [
+     "Malásia",
+     "Holanda"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 4,
+   "sincronia": {
+    "vento": [
+     "ventos",
+     "fortes"
+    ]
+   },
+   "faltou": [
+    "ventos",
+    "fortes"
+   ]
+  },
+  {
+   "cena": 5,
+   "sincronia": {
+    "vento": [
+     "ventos",
+     "fortes"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 6,
+   "sincronia": {
+    "margens": [
+     "margens",
+     "opostas"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 7,
+   "sincronia": {
+    "faixa": [
+     "duas",
+     "faixas"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 8,
+   "sincronia": {
+    "faixa": [
+     "duas",
+     "faixas"
+    ]
+   },
+   "faltou": [
+    "duas",
+    "faixas"
+   ]
+  },
+  {
+   "cena": 9,
+   "sincronia": {
+    "quantidade": [
+     "trezentos",
+     "sessenta",
+     "nove"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 10,
+   "sincronia": {
+    "resgate": [
+     "quinze",
+     "rebocadores"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 11,
+   "sincronia": {
+    "resgate": [
+     "quinze",
+     "rebocadores"
+    ]
+   },
+   "faltou": [
+    "quinze",
+    "rebocadores"
+   ]
+  },
+  {
+   "cena": 12,
+   "sincronia": {
+    "progresso": [
+     "oitenta",
+     "por",
+     "cento"
+    ]
+   },
+   "faltou": [
+    "oitenta",
+    "por",
+    "cento"
+   ]
+  },
+  {
+   "cena": 13,
+   "sincronia": {
+    "progresso": [
+     "oitenta",
+     "por",
+     "cento"
+    ]
+   },
+   "faltou": [
+    "oitenta",
+    "por",
+    "cento"
+   ]
+  },
+  {
+   "cena": 14,
+   "sincronia": {
+    "libertacao": [
+     "catorze",
+     "rebocadores"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 15,
+   "sincronia": {
+    "cobranca": [
+     "novecentos",
+     "dezesseis",
+     "milhões"
+    ]
+   },
+   "faltou": [
+    "novecentos",
+    "dezesseis",
+    "milhões"
+   ]
+  },
+  {
+   "cena": 16,
+   "sincronia": {
+    "cobranca": [
+     "novecentos",
+     "dezesseis",
+     "milhões"
+    ]
+   },
+   "faltou": [
+    "novecentos",
+    "dezesseis",
+    "milhões"
+   ]
+  },
+  {
+   "cena": 17,
+   "sincronia": {
+    "cobranca": [
+     "novecentos",
+     "dezesseis",
+     "milhões"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 18,
+   "sincronia": {
+    "valor": [
+     "seiscentos",
+     "milhões"
+    ]
+   },
+   "faltou": null
+  },
+  {
+   "cena": 19,
+   "sincronia": {
+    "valor": [
+     "seiscentos",
+     "milhões"
+    ]
+   },
+   "faltou": [
+    "seiscentos",
+    "milhões"
+   ]
+  },
+  {
+   "cena": 20,
+   "sincronia": {
+    "faturamento": [
+     "faturamento",
+     "recorde"
+    ]
+   },
+   "faltou": null
+  }
+ ],
+ "erros_pagina": [],
+ "preparacao_pagina_ms": {
+  "montar": [
+   {
+    "cena": "0:abertura.pergunta",
+    "ms": 2
+   },
+   {
+    "cena": "8:banner.importante",
+    "ms": 1
+   },
+   {
+    "cena": "17:revelacao.surpresa",
+    "ms": 1
+   },
+   {
+    "cena": "18:encerramento.editorial",
+    "ms": 1
+   }
+  ],
+  "ocupacao": 15
+ },
+ "resolucao": "1080x1920",
+ "cenas": [
+  {
+   "k": 0,
+   "comp": "abertura.pergunta",
+   "inicio": 0.0,
+   "fim": 1.511,
+   "fala": "Este navio ficou *atravessado*",
+   "origem": null,
+   "decisao": "M1: gancho",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 1,
+   "comp": "foto.documental",
+   "inicio": 1.511,
+   "fim": 5.284,
+   "fala": "e *bloqueou* o Canal de Suez por seis dias.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado impacto (Navio porta-contêineres bloqueando o Canal de Suez) sem composição viável: evento.impacto precisa de aneis válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "evento.impacto: aneis"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 2,
+   "comp": "foto.documental",
+   "inicio": 5.284,
+   "fim": 9.65,
+   "fala": "O Ever Given levava vinte mil contêineres da Malásia para a Holanda.",
+   "origem": "contrato",
+   "decisao": "contrato: movimento de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 3,
+   "comp": "foto.documental",
+   "inicio": 9.65,
+   "fim": 11.183,
+   "fala": "Na manhã de *vinte e três de março*,",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "mapa.rota: pontos>=2"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 4,
+   "comp": "foto.documental",
+   "inicio": 11.183,
+   "fim": 13.237,
+   "fala": "ventos fortes o empurraram.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "mapa.rota: pontos>=2"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 5,
+   "comp": "foto.documental",
+   "inicio": 13.237,
+   "fim": 18.799,
+   "fala": "Ele ficou *de través*: proa e popa presas em *margens opostas*.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado mecanismo (Extremidades do navio presas nas margens opostas) sem composição viável: diagrama.explicativo precisa de nos válidos; processo.etapas precisa de etapas>=2 válidos; forcas.vetores precisa de forcas válidos; mecanismo.eclusa precisa de sentido válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "diagrama.explicativo: nos",
+    "processo.etapas: etapas>=2",
+    "forcas.vetores: forcas",
+    "mecanismo.eclusa: sentido"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 6,
+   "comp": "foto.documental",
+   "inicio": 18.799,
+   "fim": 21.038,
+   "fala": "O encalhe foi *ao sul do trecho de duas faixas*.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "mapa.localizacao: pontos>=1"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 7,
+   "comp": "foto.documental",
+   "inicio": 21.038,
+   "fim": 23.394,
+   "fala": "Ninguém tinha como passar ao lado.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "mapa.localizacao: pontos>=1"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 8,
+   "comp": "banner.importante",
+   "inicio": 23.394,
+   "fim": 27.91,
+   "fala": "Até vinte e oito de março, *trezentos e sessenta e nove* navios esperavam.",
+   "origem": null,
+   "decisao": "M6: número não passou na validação factual",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 9,
+   "comp": "foto.documental",
+   "inicio": 27.91,
+   "fim": 30.936,
+   "fala": "A corrida de seis dias reuniu *quinze rebocadores*,",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "processo.etapas: etapas>=2",
+    "diagrama.explicativo: nos"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 10,
+   "comp": "foto.documental",
+   "inicio": 30.936,
+   "fim": 33.576,
+   "fala": "duas dragas e seiscentos trabalhadores.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "processo.etapas: etapas>=2",
+    "diagrama.explicativo: nos"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 11,
+   "comp": "foto.documental",
+   "inicio": 33.576,
+   "fim": 38.436,
+   "fala": "Em 29 de março, ele foi movido 80% na direção certa,",
+   "origem": "contrato",
+   "decisao": "contrato: processo de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 12,
+   "comp": "foto.documental",
+   "inicio": 38.436,
+   "fim": 40.896,
+   "fala": "mas a proa seguiu encalhada.",
+   "origem": "contrato",
+   "decisao": "contrato: processo de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 13,
+   "comp": "foto.documental",
+   "inicio": 40.896,
+   "fim": 46.61,
+   "fala": "Às 15h05, *catorze rebocadores* egípcios, holandeses e italianos o libertaram.",
+   "origem": "contrato",
+   "decisao": "acontecimento declarado transformacao (Navio liberado no canal) sem composição viável: comparacao.antes_depois precisa de img_antes, img_depois válidos; processo.etapas precisa de etapas>=2 válidos",
+   "sem_contrato": null,
+   "faltam": [
+    "comparacao.antes_depois: img_antes",
+    "comparacao.antes_depois: img_depois",
+    "processo.etapas: etapas>=2"
+   ],
+   "substituicao": null
+  },
+  {
+   "k": 14,
+   "comp": "foto.documental",
+   "inicio": 46.61,
+   "fim": 49.27,
+   "fala": "Em 13 de abril, o Egito reteve o navio",
+   "origem": "contrato",
+   "decisao": "contrato: citacao de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 15,
+   "comp": "foto.documental",
+   "inicio": 49.27,
+   "fim": 52.43,
+   "fala": "e cobrou novecentos e dezesseis milhões de dólares.",
+   "origem": "contrato",
+   "decisao": "contrato: citacao de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 16,
+   "comp": "foto.documental",
+   "inicio": 52.43,
+   "fim": 57.308,
+   "fala": "A cobrança caiu para seiscentos milhões e, em julho, o navio foi liberado.",
+   "origem": "contrato",
+   "decisao": "contrato: evento_historico de apoio sem dados para desenhar → foto real",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 17,
+   "comp": "revelacao.surpresa",
+   "inicio": 57.308,
+   "fim": 60.99,
+   "fala": "Mesmo com o bloqueio, o canal teve *faturamento recorde*.",
+   "origem": null,
+   "decisao": "M1: payoff",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  },
+  {
+   "k": 18,
+   "comp": "encerramento.editorial",
+   "inicio": 60.99,
+   "fim": 63.522,
+   "fala": "Segue o *Coringa Explica*.",
+   "origem": null,
+   "decisao": "M1: fechamento",
+   "sem_contrato": null,
+   "faltam": null,
+   "substituicao": null
+  }
+ ],
+ "fiscal": {
+  "aprovado_tecnicamente": false,
+  "aprovacao_automatica": false,
+  "por_categoria": {
+   "deterministico": {
+    "bloqueios": 1,
+    "revisoes": 0,
+    "avisos": 1,
+    "observacoes": 0
+   },
+   "semantico": {
+    "bloqueios": 25,
+    "revisoes": 0,
+    "avisos": 6,
+    "observacoes": 0
+   },
+   "estetico": {
+    "bloqueios": 0,
+    "revisoes": 0,
+    "avisos": 0,
+    "observacoes": 12
+   }
+  }
+ }
+}

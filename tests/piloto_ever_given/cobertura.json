@@ -1,0 +1,90 @@
+{
+ "ideias": 12,
+ "contagem": {
+  "mostra_o_fato": 4,
+  "ligada_ao_fato": 4,
+  "grafico": 1,
+  "mesmo_acontecimento": 0,
+  "ambiente": 0,
+  "ilustracao_ia": 0,
+  "tema": 0,
+  "cartao": 1,
+  "emprestada": 0,
+  "sem_classificacao": 2
+ },
+ "aba": 0,
+ "por_ideia": [
+  {
+   "evento": "i0",
+   "fala": "Este navio ficou *atravessado*",
+   "classe": "mostra_o_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i2",
+   "fala": "O *Ever Given* levava vinte mil",
+   "classe": "ligada_ao_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i4",
+   "fala": "Na manhã de *vinte e três de março*,",
+   "classe": "sem_classificacao",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i6",
+   "fala": "Ele ficou *de través*: proa e popa presas em *margens opostas*.",
+   "classe": "mostra_o_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i7",
+   "fala": "O encalhe foi *ao sul do trecho de duas faixas*.",
+   "classe": "sem_classificacao",
+   "recurso_pedido": "esquema"
+  },
+  {
+   "evento": "i9",
+   "fala": "Até vinte e oito de março, *trezentos e sessenta e nove* navios espera",
+   "classe": "grafico",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i10",
+   "fala": "A corrida de seis dias reuniu *quinze rebocadores*,",
+   "classe": "cartao",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i12",
+   "fala": "Em 29 de março, ele foi movido *80%* na direção certa,",
+   "classe": "mostra_o_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i14",
+   "fala": "Às 15h05, *catorze rebocadores* egípcios, holandeses e italianos o lib",
+   "classe": "mostra_o_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i15",
+   "fala": "Em 13 de abril,",
+   "classe": "ligada_ao_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i18",
+   "fala": "A cobrança caiu para *seiscentos milhões* e,",
+   "classe": "ligada_ao_fato",
+   "recurso_pedido": "foto"
+  },
+  {
+   "evento": "i20",
+   "fala": "Mesmo com o bloqueio, o canal teve *faturamento recorde*.",
+   "classe": "ligada_ao_fato",
+   "recurso_pedido": "foto"
+  }
+ ]
+}

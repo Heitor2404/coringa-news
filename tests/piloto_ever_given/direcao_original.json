@@ -1,0 +1,717 @@
+[
+ {
+  "cenas_v1": [
+   0
+  ],
+  "inicio": 0.0,
+  "fala": "Este navio ficou atravessado",
+  "comp": "abertura.pergunta",
+  "motivo": "M1: gancho"
+ },
+ {
+  "cenas_v1": [
+   1
+  ],
+  "inicio": 1.511,
+  "fala": "e bloqueou o Canal de Suez por seis dias.",
+  "capacidade": "impacto",
+  "critica": true,
+  "trecho": "Navio porta-contêineres bloqueando o Canal de Suez",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e1",
+   "tipo": "impacto",
+   "sujeito": "Navio Ever Given",
+   "acao": "bloquear tráfego marítimo",
+   "estado_inicial": "fluxo normal no canal",
+   "estado_final": "mercadorias estimadas em US$ 9,6 bilhões por dia paradas",
+   "mostrar": "Navio porta-contêineres bloqueando o Canal de Suez",
+   "dados": {
+    "impacto_diario": "US$ 9,6 bilhões",
+    "impacto": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "impacto": [
+     "bilhões",
+     "dólares"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "evento.impacto: aneis"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado impacto (Navio porta-contêineres bloqueando o Canal de Suez) sem composição viável: evento.impacto precisa de aneis válidos",
+  "notas": [
+   "mesma ideia: mesma foto com outro enquadramento"
+  ]
+ },
+ {
+  "cenas_v1": [
+   2
+  ],
+  "inicio": 5.284,
+  "fala": "O Ever Given levava vinte mil",
+  "capacidade": "movimento",
+  "critica": false,
+  "trecho": "Navio de carga em navegação",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e2",
+   "tipo": "movimento",
+   "sujeito": "Ever Given",
+   "acao": "navegar de Tanjung Pelepas a Roterdã",
+   "estado_inicial": "saindo de Tanjung Pelepas",
+   "estado_final": "em rota para Roterdã",
+   "mostrar": "Navio de carga em navegação",
+   "dados": {
+    "origem": "Tanjung Pelepas",
+    "destino": "Roterdã",
+    "capacidade": "20.124 TEU",
+    "rota": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "rota": [
+     "Malásia",
+     "Holanda"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para forcas.vetores precisa de forcas válidos; mecanismo.nivel precisa de de, ate válidos; animacao.quadros precisa de cena válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: movimento de apoio sem dados para desenhar → foto real"
+ },
+ {
+  "cenas_v1": [
+   4
+  ],
+  "inicio": 9.65,
+  "fala": "Na manhã de vinte e três de março,",
+  "capacidade": "deslocamento",
+  "critica": true,
+  "trecho": "Navio desviando por causa do vento",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e3",
+   "tipo": "deslocamento",
+   "sujeito": "Ever Given",
+   "acao": "ser empurrado pelo vento",
+   "estado_inicial": "alinhado no canal",
+   "estado_final": "desviado da rota central",
+   "mostrar": "Navio desviando por causa do vento",
+   "dados": {
+    "data": "23 de março de 2021",
+    "vento": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "vento": [
+     "ventos",
+     "fortes"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "mapa.rota: pontos>=2"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos"
+ },
+ {
+  "cenas_v1": [
+   5
+  ],
+  "inicio": 11.183,
+  "fala": "ventos fortes o empurraram.",
+  "capacidade": "deslocamento",
+  "critica": true,
+  "trecho": "Navio desviando por causa do vento",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e3",
+   "tipo": "deslocamento",
+   "sujeito": "Ever Given",
+   "acao": "ser empurrado pelo vento",
+   "estado_inicial": "alinhado no canal",
+   "estado_final": "desviado da rota central",
+   "mostrar": "Navio desviando por causa do vento",
+   "dados": {
+    "data": "23 de março de 2021",
+    "vento": [
+     {
+      "nome": "ventos",
+      "t": 0.12
+     },
+     {
+      "nome": "fortes",
+      "t": 0.634
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "vento": [
+     "ventos",
+     "fortes"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "mapa.rota: pontos>=2"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado deslocamento (Navio desviando por causa do vento) sem composição viável: mapa.rota precisa de pontos>=2 válidos",
+  "notas": [
+   "mesma ideia: mesma foto com outro enquadramento"
+  ]
+ },
+ {
+  "cenas_v1": [
+   6
+  ],
+  "inicio": 13.237,
+  "fala": "Ele ficou de través: proa e popa presas em margens opostas.",
+  "capacidade": "mecanismo",
+  "critica": true,
+  "trecho": "Extremidades do navio presas nas margens opostas",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e4",
+   "tipo": "mecanismo",
+   "sujeito": "Casco do Ever Given",
+   "acao": "encalhar de través nas duas margens",
+   "estado_inicial": "flutuando na água",
+   "estado_final": "preso nas margens opostas",
+   "mostrar": "Extremidades do navio presas nas margens opostas",
+   "dados": {
+    "comprimento": "399,94 metros",
+    "margens": [
+     {
+      "nome": "margens",
+      "t": 4.056
+     },
+     {
+      "nome": "opostas",
+      "t": 4.821
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "margens": [
+     "margens",
+     "opostas"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "diagrama.explicativo: nos",
+   "processo.etapas: etapas>=2",
+   "forcas.vetores: forcas",
+   "mecanismo.eclusa: sentido"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado mecanismo (Extremidades do navio presas nas margens opostas) sem composição viável: diagrama.explicativo precisa de nos válidos; processo.etapas precisa de etapas>=2 válidos; forcas.vetores precisa de forcas válidos; mecanismo.eclusa precisa de sentido válidos",
+  "avisos": [
+   "foto parada por 5.6 s (> 5.0 s)"
+  ]
+ },
+ {
+  "cenas_v1": [
+   7
+  ],
+  "inicio": 18.799,
+  "fala": "O encalhe foi ao sul do trecho de duas faixas.",
+  "capacidade": "localizacao",
+  "critica": true,
+  "trecho": "Corte transversal do canal",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e5",
+   "tipo": "localizacao",
+   "sujeito": "Trecho do canal",
+   "acao": "impedir a passagem de outros navios",
+   "estado_inicial": "fluxo em fila única",
+   "estado_final": "bloqueio total sem desvio",
+   "mostrar": "Corte transversal do canal",
+   "dados": {
+    "trecho": "sul do segmento de duas faixas",
+    "faixa": [
+     {
+      "nome": "duas",
+      "t": 1.773
+     },
+     {
+      "nome": "faixas",
+      "t": 1.998
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "faixa": [
+     "duas",
+     "faixas"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "mapa.localizacao: pontos>=1"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos"
+ },
+ {
+  "cenas_v1": [
+   8
+  ],
+  "inicio": 21.038,
+  "fala": "Ninguém tinha como passar ao lado.",
+  "capacidade": "localizacao",
+  "critica": true,
+  "trecho": "Corte transversal do canal",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e5",
+   "tipo": "localizacao",
+   "sujeito": "Trecho do canal",
+   "acao": "impedir a passagem de outros navios",
+   "estado_inicial": "fluxo em fila única",
+   "estado_final": "bloqueio total sem desvio",
+   "mostrar": "Corte transversal do canal",
+   "dados": {
+    "trecho": "sul do segmento de duas faixas",
+    "faixa": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "faixa": [
+     "duas",
+     "faixas"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "mapa.localizacao: pontos>=1"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado localizacao (Corte transversal do canal) sem composição viável: mapa.localizacao precisa de pontos>=1 válidos",
+  "notas": [
+   "mesma ideia: mesma foto com outro enquadramento"
+  ]
+ },
+ {
+  "cenas_v1": [
+   9
+  ],
+  "inicio": 23.394,
+  "fala": "Até vinte e oito de março, trezentos e sessenta e nove navios esperavam.",
+  "comp": null,
+  "bloqueio": [
+   "F3: número sem fonte"
+  ],
+  "motivo": "M6: número não passou na validação factual"
+ },
+ {
+  "cenas_v1": [
+   10
+  ],
+  "inicio": 27.91,
+  "fala": "A corrida de seis dias reuniu quinze rebocadores,",
+  "capacidade": "processo",
+  "critica": true,
+  "trecho": "Dragas e rebocadores trabalhando na proa",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e7",
+   "tipo": "processo",
+   "sujeito": "Equipes de resgate",
+   "acao": "puxar o navio e remover areia",
+   "estado_inicial": "casco enterrado na margem",
+   "estado_final": "escavação e tração contínuas",
+   "mostrar": "Dragas e rebocadores trabalhando na proa",
+   "dados": {
+    "rebocadores": 15,
+    "dragas": 2,
+    "trabalhadores": 600,
+    "resgate": [
+     {
+      "nome": "quinze",
+      "t": 1.88
+     },
+     {
+      "nome": "rebocadores",
+      "t": 2.26
+     }
+    ]
+   },
+   "fonte": "Olhar Digital",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "resgate": [
+     "quinze",
+     "rebocadores"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "processo.etapas: etapas>=2",
+   "diagrama.explicativo: nos"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+ },
+ {
+  "cenas_v1": [
+   11
+  ],
+  "inicio": 30.936,
+  "fala": "duas dragas e seiscentos trabalhadores.",
+  "capacidade": "processo",
+  "critica": true,
+  "trecho": "Dragas e rebocadores trabalhando na proa",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e7",
+   "tipo": "processo",
+   "sujeito": "Equipes de resgate",
+   "acao": "puxar o navio e remover areia",
+   "estado_inicial": "casco enterrado na margem",
+   "estado_final": "escavação e tração contínuas",
+   "mostrar": "Dragas e rebocadores trabalhando na proa",
+   "dados": {
+    "rebocadores": 15,
+    "dragas": 2,
+    "trabalhadores": 600,
+    "resgate": []
+   },
+   "fonte": "Olhar Digital",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "resgate": [
+     "quinze",
+     "rebocadores"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "processo.etapas: etapas>=2",
+   "diagrama.explicativo: nos"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado processo (Dragas e rebocadores trabalhando na proa) sem composição viável: processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos"
+ },
+ {
+  "cenas_v1": [
+   12
+  ],
+  "inicio": 33.576,
+  "fala": "Em 29 de março, ele foi movido 80% na direção certa,",
+  "capacidade": "processo",
+  "critica": false,
+  "trecho": "Navio parcialmente movido",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e8",
+   "tipo": "processo",
+   "sujeito": "Ever Given",
+   "acao": "ser reflutuado parcialmente",
+   "estado_inicial": "preso transversalmente",
+   "estado_final": "movido 80%, proa ainda encalhada",
+   "mostrar": "Navio parcialmente movido",
+   "dados": {
+    "progresso": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "progresso": [
+     "oitenta",
+     "por",
+     "cento"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: processo de apoio sem dados para desenhar → foto real"
+ },
+ {
+  "cenas_v1": [
+   13
+  ],
+  "inicio": 38.436,
+  "fala": "mas a proa seguiu encalhada.",
+  "capacidade": "processo",
+  "critica": false,
+  "trecho": "Navio parcialmente movido",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e8",
+   "tipo": "processo",
+   "sujeito": "Ever Given",
+   "acao": "ser reflutuado parcialmente",
+   "estado_inicial": "preso transversalmente",
+   "estado_final": "movido 80%, proa ainda encalhada",
+   "mostrar": "Navio parcialmente movido",
+   "dados": {
+    "progresso": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "progresso": [
+     "oitenta",
+     "por",
+     "cento"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para processo.etapas precisa de etapas>=2 válidos; diagrama.explicativo precisa de nos válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: processo de apoio sem dados para desenhar → foto real",
+  "notas": [
+   "mesma ideia: mesma foto com outro enquadramento"
+  ]
+ },
+ {
+  "cenas_v1": [
+   14
+  ],
+  "inicio": 40.896,
+  "fala": "Às 15h05, catorze rebocadores egípcios, holandeses e italianos o libertaram.",
+  "capacidade": "transformacao",
+  "critica": true,
+  "trecho": "Navio liberado no canal",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e9",
+   "tipo": "transformacao",
+   "sujeito": "Ever Given",
+   "acao": "desencalhar e voltar a flutuar",
+   "estado_inicial": "preso transversalmente",
+   "estado_final": "flutuando livremente",
+   "mostrar": "Navio liberado no canal",
+   "dados": {
+    "horario": "15:05 no Egito",
+    "rebocadores_finais": 14,
+    "libertacao": [
+     {
+      "nome": "catorze",
+      "t": 0.897
+     },
+     {
+      "nome": "rebocadores",
+      "t": 1.494
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "critica",
+   "obrigatoria": true,
+   "sincronia": {
+    "libertacao": [
+     "catorze",
+     "rebocadores"
+    ]
+   }
+  },
+  "aviso": null,
+  "faltam": [
+   "comparacao.antes_depois: img_antes",
+   "comparacao.antes_depois: img_depois",
+   "processo.etapas: etapas>=2"
+  ],
+  "comp": null,
+  "limitacao": "acontecimento declarado transformacao (Navio liberado no canal) sem composição viável: comparacao.antes_depois precisa de img_antes, img_depois válidos; processo.etapas precisa de etapas>=2 válidos",
+  "avisos": [
+   "foto parada por 5.7 s (> 5.0 s)"
+  ]
+ },
+ {
+  "cenas_v1": [
+   15
+  ],
+  "inicio": 46.61,
+  "fala": "Em 13 de abril,",
+  "capacidade": "citacao",
+  "critica": false,
+  "trecho": "Navio retido no porto",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e10",
+   "tipo": "citacao",
+   "sujeito": "Governo egípcio",
+   "acao": "reter o navio e exigir indenização",
+   "estado_inicial": "navio liberado fisicamente",
+   "estado_final": "navio retido por cobrança",
+   "mostrar": "Navio retido no porto",
+   "dados": {
+    "valor_inicial": "US$ 916 milhões",
+    "reputacao": "US$ 300 milhões",
+    "cobranca": []
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "cobranca": [
+     "novecentos",
+     "dezesseis",
+     "milhões"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para citacao precisa de texto, autor válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: citacao de apoio sem dados para desenhar → foto real"
+ },
+ {
+  "cenas_v1": [
+   17
+  ],
+  "inicio": 49.27,
+  "fala": "e cobrou novecentos e dezesseis milhões de dólares.",
+  "capacidade": "citacao",
+  "critica": false,
+  "trecho": "Navio retido no porto",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e10",
+   "tipo": "citacao",
+   "sujeito": "Governo egípcio",
+   "acao": "reter o navio e exigir indenização",
+   "estado_inicial": "navio liberado fisicamente",
+   "estado_final": "navio retido por cobrança",
+   "mostrar": "Navio retido no porto",
+   "dados": {
+    "valor_inicial": "US$ 916 milhões",
+    "reputacao": "US$ 300 milhões",
+    "cobranca": [
+     {
+      "nome": "novecentos",
+      "t": 0.52
+     },
+     {
+      "nome": "dezesseis",
+      "t": 1.063
+     },
+     {
+      "nome": "milhões",
+      "t": 1.48
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "cobranca": [
+     "novecentos",
+     "dezesseis",
+     "milhões"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para citacao precisa de texto, autor válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: citacao de apoio sem dados para desenhar → foto real",
+  "notas": [
+   "mesma ideia: mesma foto com outro enquadramento"
+  ]
+ },
+ {
+  "cenas_v1": [
+   18
+  ],
+  "inicio": 52.43,
+  "fala": "A cobrança caiu para seiscentos milhões e,",
+  "capacidade": "evento_historico",
+  "critica": false,
+  "trecho": "Navio liberado",
+  "origem": "contrato",
+  "acontecimento": {
+   "id": "e11",
+   "tipo": "evento_historico",
+   "sujeito": "Ever Given",
+   "acao": "ser liberado após acordo de compensação",
+   "estado_inicial": "retido por cobrança",
+   "estado_final": "liberado após acordo",
+   "mostrar": "Navio liberado",
+   "dados": {
+    "valor_final": "US$ 600 milhões",
+    "valor": [
+     {
+      "nome": "seiscentos",
+      "t": 1.691
+     },
+     {
+      "nome": "milhões",
+      "t": 1.98
+     }
+    ]
+   },
+   "fonte": "Wikipedia (inglês)",
+   "importancia": "apoio",
+   "obrigatoria": false,
+   "sincronia": {
+    "valor": [
+     "seiscentos",
+     "milhões"
+    ]
+   }
+  },
+  "aviso": "dados insuficientes para foto.historica precisa de img válidos; video.documental precisa de video válidos; linha_tempo.historica precisa de eventos>=2 válidos",
+  "comp": "foto.documental",
+  "motivo": "contrato: evento_historico de apoio sem dados para desenhar → foto real"
+ },
+ {
+  "cenas_v1": [
+   20
+  ],
+  "inicio": 57.308,
+  "fala": "Mesmo com o bloqueio, o canal teve faturamento recorde.",
+  "comp": "revelacao.surpresa",
+  "motivo": "M1: payoff",
+  "avisos": [
+   "imagem repetida (a27-g.jpg) — já usada na cena v2 16"
+  ]
+ },
+ {
+  "cenas_v1": [
+   21
+  ],
+  "inicio": 60.99,
+  "fala": "Segue o Coringa Explica.",
+  "comp": "encerramento.editorial",
+  "motivo": "M1: fechamento"
+ }
+]

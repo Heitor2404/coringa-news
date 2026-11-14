@@ -1,0 +1,3786 @@
+{
+ "duration": 63.522,
+ "meta": {
+  "titulo": "Como um navio travou o Canal de Suez",
+  "categoria": "MUNDO",
+  "data": "13/11",
+  "serie": "CORINGA EXPLICA",
+  "parte": 0,
+  "marca": "@coringa.explica",
+  "pergunta": "E o canal, perdeu?",
+  "fontes": [
+   "Wikipédia",
+   "Wikipedia (inglês)",
+   "Olhar Digital",
+   "Wikimedia Commons"
+  ]
+ },
+ "scenes": [
+  {
+   "bloco": {
+    "funcao": "abertura",
+    "avanca": "Joga o espectador no absurdo: um navio atravessado prendendo bilhões por dia, e abre a dúvida de como."
+   },
+   "tipo": "gancho",
+   "titulo": "O NAVIO QUE *BLOQUEOU* O CANAL",
+   "subtitulo": "Preso de lado, sem saída",
+   "fala": "Este navio ficou *atravessado*",
+   "mostrar": "O gigantesco navio Ever Given encalhado no canal, visto de cima.",
+   "busca": "Ever Given grounded Suez satellite",
+   "visual": "a3",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Canal de Suez",
+    "quando": "Março de 2021",
+    "recurso": "foto",
+    "id": "e1",
+    "tipo": "impacto",
+    "sujeito": "Navio Ever Given",
+    "acao": "bloquear tráfego marítimo",
+    "estado_inicial": "fluxo normal no canal",
+    "estado_final": "mercadorias estimadas em US$ 9,6 bilhões por dia paradas",
+    "mostrar": "Navio porta-contêineres bloqueando o Canal de Suez",
+    "dados": {
+     "impacto_diario": "US$ 9,6 bilhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "impacto": [
+      "bilhões",
+      "dólares"
+     ]
+    }
+   },
+   "imagem": "c0",
+   "grupo": 0,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i0",
+   "sb": {
+    "versao": 1,
+    "cena": 0,
+    "evento": "i0",
+    "narracao": "Este navio ficou atravessado e bloqueou o Canal de Suez por seis dias.",
+    "span": [
+     0.0,
+     5.284
+    ],
+    "proposito": "abertura",
+    "avanca": "Joga o espectador no absurdo: um navio atravessado prendendo bilhões por dia, e abre a dúvida de como.",
+    "intencao_visual": "O gigantesco navio Ever Given encalhado no canal, visto de cima.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "aceita contexto rotulado",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": null,
+    "midia": "a3",
+    "evidencia": "contextual",
+    "explica": true,
+    "limitacoes": [
+     "autenticidade não verificada (sem ano na imagem)"
+    ],
+    "necessidade": "contexto",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a3",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: navio",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "contexto",
+     "mostra": [
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a3",
+     "relacao": "fato",
+     "motivos": [
+      "\"fato\" sem ano na imagem: autenticidade não verificada"
+     ],
+     "verificada": false,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a3",
+   "relacao": "fato",
+   "_escolha": {
+    "foto": "a3",
+    "relacao": "fato",
+    "motivos": [
+     "\"fato\" sem ano na imagem: autenticidade não verificada"
+    ],
+    "verificada": false,
+    "rejeitadas": []
+   },
+   "_tipo_img": "foto",
+   "start": 0.0,
+   "end": 1.511,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a5-g.jpg",
+   "real": true,
+   "ano_foto": null,
+   "tipo_img": "foto",
+   "foto_wh": [
+    1800,
+    1194
+   ],
+   "moldura": false
+  },
+  {
+   "busca": "Ever Given grounded Suez satellite",
+   "grupo": 0,
+   "tipo": "historia",
+   "fala": "e *bloqueou* o Canal de Suez por seis dias.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "afasta",
+   "transicao": "corte",
+   "imagem": "c0",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Canal de Suez",
+    "quando": "Março de 2021",
+    "recurso": "foto",
+    "id": "e1",
+    "tipo": "impacto",
+    "sujeito": "Navio Ever Given",
+    "acao": "bloquear tráfego marítimo",
+    "estado_inicial": "fluxo normal no canal",
+    "estado_final": "mercadorias estimadas em US$ 9,6 bilhões por dia paradas",
+    "mostrar": "Navio porta-contêineres bloqueando o Canal de Suez",
+    "dados": {
+     "impacto_diario": "US$ 9,6 bilhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "impacto": [
+      "bilhões",
+      "dólares"
+     ]
+    }
+   },
+   "evento": "i0",
+   "sb": {
+    "versao": 1,
+    "cena": 0,
+    "evento": "i0",
+    "narracao": "Este navio ficou atravessado e bloqueou o Canal de Suez por seis dias.",
+    "span": [
+     0.0,
+     5.284
+    ],
+    "proposito": "abertura",
+    "avanca": "Joga o espectador no absurdo: um navio atravessado prendendo bilhões por dia, e abre a dúvida de como.",
+    "intencao_visual": "O gigantesco navio Ever Given encalhado no canal, visto de cima.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "aceita contexto rotulado",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": null,
+    "midia": "a3",
+    "evidencia": "contextual",
+    "explica": true,
+    "limitacoes": [
+     "autenticidade não verificada (sem ano na imagem)"
+    ],
+    "necessidade": "contexto",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a3",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: navio",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "contexto",
+     "mostra": [
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a3",
+     "relacao": "fato",
+     "motivos": [
+      "\"fato\" sem ano na imagem: autenticidade não verificada"
+     ],
+     "verificada": false,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a3",
+   "relacao": "fato",
+   "start": 1.511,
+   "end": 5.284,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a5-g.jpg",
+   "real": true,
+   "ano_foto": null,
+   "tipo_img": "foto",
+   "foto_wh": [
+    1800,
+    1194
+   ],
+   "moldura": false,
+   "soco": 3.397
+  },
+  {
+   "bloco": {
+    "funcao": "contexto",
+    "avanca": "Mostra o que o navio carregava e para onde ia, dando a escala do que ficou parado."
+   },
+   "tipo": "historia",
+   "lugar": "MALÁSIA → HOLANDA",
+   "fala": "O *Ever Given* levava vinte mil",
+   "mostrar": "Navio porta-contêineres navegando em mar aberto.",
+   "busca": "Ever Given sailing open sea",
+   "visual": "a10",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Rota Malásia a Holanda",
+    "quando": "Março de 2021",
+    "recurso": "foto",
+    "id": "e2",
+    "tipo": "movimento",
+    "sujeito": "Ever Given",
+    "acao": "navegar de Tanjung Pelepas a Roterdã",
+    "estado_inicial": "saindo de Tanjung Pelepas",
+    "estado_final": "em rota para Roterdã",
+    "mostrar": "Navio de carga em navegação",
+    "dados": {
+     "origem": "Tanjung Pelepas",
+     "destino": "Roterdã",
+     "capacidade": "20.124 TEU"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "rota": [
+      "Malásia",
+      "Holanda"
+     ]
+    }
+   },
+   "imagem": "c1",
+   "grupo": 1,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i2",
+   "sb": {
+    "versao": 1,
+    "cena": 2,
+    "evento": "i2",
+    "narracao": "O Ever Given levava vinte mil contêineres da Malásia para a Holanda.",
+    "span": [
+     5.284,
+     9.65
+    ],
+    "proposito": "contexto",
+    "avanca": "Mostra o que o navio carregava e para onde ia, dando a escala do que ficou parado.",
+    "intencao_visual": "Navio porta-contêineres navegando em mar aberto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "aceita contexto rotulado",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a10",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "contexto",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a10",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: abert, mar, naveg",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "contexto",
+     "mostra": [
+      "abert",
+      "mar",
+      "naveg",
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a10",
+     "relacao": "objeto",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a10",
+   "relacao": "objeto",
+   "_escolha": {
+    "foto": "a10",
+    "relacao": "objeto",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "_tipo_img": "foto",
+   "start": 5.284,
+   "end": 7.09,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a23-g.jpg",
+   "real": true,
+   "ano_foto": 2011,
+   "tipo_img": "foto",
+   "legenda_foto": "Ever Given container ship",
+   "foto_wh": [
+    1800,
+    1197
+   ],
+   "moldura": false,
+   "transicao": "zoom"
+  },
+  {
+   "busca": "Ever Given sailing open sea",
+   "grupo": 1,
+   "tipo": "historia",
+   "fala": "contêineres da Malásia para a Holanda.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "direita",
+   "transicao": "corte",
+   "imagem": "c1",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Rota Malásia a Holanda",
+    "quando": "Março de 2021",
+    "recurso": "foto",
+    "id": "e2",
+    "tipo": "movimento",
+    "sujeito": "Ever Given",
+    "acao": "navegar de Tanjung Pelepas a Roterdã",
+    "estado_inicial": "saindo de Tanjung Pelepas",
+    "estado_final": "em rota para Roterdã",
+    "mostrar": "Navio de carga em navegação",
+    "dados": {
+     "origem": "Tanjung Pelepas",
+     "destino": "Roterdã",
+     "capacidade": "20.124 TEU"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "rota": [
+      "Malásia",
+      "Holanda"
+     ]
+    }
+   },
+   "evento": "i2",
+   "sb": {
+    "versao": 1,
+    "cena": 2,
+    "evento": "i2",
+    "narracao": "O Ever Given levava vinte mil contêineres da Malásia para a Holanda.",
+    "span": [
+     5.284,
+     9.65
+    ],
+    "proposito": "contexto",
+    "avanca": "Mostra o que o navio carregava e para onde ia, dando a escala do que ficou parado.",
+    "intencao_visual": "Navio porta-contêineres navegando em mar aberto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "aceita contexto rotulado",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a10",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "contexto",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a10",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: abert, mar, naveg",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "contexto",
+     "mostra": [
+      "abert",
+      "mar",
+      "naveg",
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a10",
+     "relacao": "objeto",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a10",
+   "relacao": "objeto",
+   "start": 7.09,
+   "end": 9.65,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a23-g.jpg",
+   "real": true,
+   "ano_foto": 2011,
+   "tipo_img": "foto",
+   "legenda_foto": "Ever Given container ship",
+   "foto_wh": [
+    1800,
+    1197
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Responde o primeiro porquê: o vento empurrou o navio, e abre a dúvida de como isso o prendeu."
+   },
+   "tipo": "historia",
+   "lugar": "23 DE MARÇO DE 2021",
+   "fala": "Na manhã de *vinte e três de março*,",
+   "mostrar": "Imagem de satélite do navio no canal no dia do encalhe.",
+   "busca": "Ever Given grounded Suez satellite",
+   "visual": "a9",
+   "acontecimento": {
+    "quem": "Ventos fortes",
+    "onde": "Canal de Suez",
+    "quando": "23 de março de 2021",
+    "recurso": "foto",
+    "id": "e3",
+    "tipo": "deslocamento",
+    "sujeito": "Ever Given",
+    "acao": "ser empurrado pelo vento",
+    "estado_inicial": "alinhado no canal",
+    "estado_final": "desviado da rota central",
+    "mostrar": "Navio desviando por causa do vento",
+    "dados": {
+     "data": "23 de março de 2021"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "vento": [
+      "ventos",
+      "fortes"
+     ]
+    }
+   },
+   "imagem": "c2",
+   "grupo": 2,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i4",
+   "sb": {
+    "versao": 1,
+    "cena": 4,
+    "evento": "i4",
+    "narracao": "Na manhã de vinte e três de março, ventos fortes o empurraram.",
+    "span": [
+     9.65,
+     13.237
+    ],
+    "proposito": "mecanismo",
+    "avanca": "Responde o primeiro porquê: o vento empurrou o navio, e abre a dúvida de como isso o prendeu.",
+    "intencao_visual": "Imagem de satélite do navio no canal no dia do encalhe.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "processo"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a5",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a5",
+     "nivel": "explicativo",
+     "justificativa": "diagrama real do acervo explica o processo",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a5",
+     "relacao": "diagrama",
+     "motivos": [
+      "reserva mostra: "
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a5",
+    "relacao": "diagrama",
+    "motivos": [
+     "reserva mostra: "
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a5",
+   "relacao": "diagrama",
+   "_tipo_img": "diagrama",
+   "start": 9.65,
+   "end": 11.183,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a10-g.jpg",
+   "real": true,
+   "ano_foto": 2015,
+   "tipo_img": "diagrama",
+   "legenda_foto": "SUEZCANAL SECTION-ar, 2015",
+   "foto_wh": [
+    1800,
+    1380
+   ],
+   "moldura": false,
+   "transicao": "zoom"
+  },
+  {
+   "busca": "Ever Given grounded Suez satellite",
+   "grupo": 2,
+   "tipo": "historia",
+   "fala": "ventos fortes o empurraram.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "sobe",
+   "transicao": "corte",
+   "imagem": "c2",
+   "acontecimento": {
+    "quem": "Ventos fortes",
+    "onde": "Canal de Suez",
+    "quando": "23 de março de 2021",
+    "recurso": "foto",
+    "id": "e3",
+    "tipo": "deslocamento",
+    "sujeito": "Ever Given",
+    "acao": "ser empurrado pelo vento",
+    "estado_inicial": "alinhado no canal",
+    "estado_final": "desviado da rota central",
+    "mostrar": "Navio desviando por causa do vento",
+    "dados": {
+     "data": "23 de março de 2021"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "vento": [
+      "ventos",
+      "fortes"
+     ]
+    }
+   },
+   "evento": "i4",
+   "sb": {
+    "versao": 1,
+    "cena": 4,
+    "evento": "i4",
+    "narracao": "Na manhã de vinte e três de março, ventos fortes o empurraram.",
+    "span": [
+     9.65,
+     13.237
+    ],
+    "proposito": "mecanismo",
+    "avanca": "Responde o primeiro porquê: o vento empurrou o navio, e abre a dúvida de como isso o prendeu.",
+    "intencao_visual": "Imagem de satélite do navio no canal no dia do encalhe.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "processo"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a5",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a5",
+     "nivel": "explicativo",
+     "justificativa": "diagrama real do acervo explica o processo",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a5",
+     "relacao": "diagrama",
+     "motivos": [
+      "reserva mostra: "
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a5",
+   "relacao": "diagrama",
+   "start": 11.183,
+   "end": 13.237,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a10-g.jpg",
+   "real": true,
+   "ano_foto": 2015,
+   "tipo_img": "diagrama",
+   "legenda_foto": "SUEZCANAL SECTION-ar, 2015",
+   "foto_wh": [
+    1800,
+    1380
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Explica como o casco travou: de través, preso nas duas margens."
+   },
+   "tipo": "historia",
+   "fala": "Ele ficou *de través*: proa e popa presas em *margens opostas*.",
+   "mostrar": "Imagem de satélite aproximada do casco preso nas margens.",
+   "busca": "Ever Given bow stuck in bank close up satellite",
+   "visual": "a6",
+   "acontecimento": {
+    "quem": "Proa e popa do Ever Given",
+    "onde": "Margens do Canal de Suez",
+    "quando": "23 de março de 2021",
+    "recurso": "foto",
+    "id": "e4",
+    "tipo": "mecanismo",
+    "sujeito": "Casco do Ever Given",
+    "acao": "encalhar de través nas duas margens",
+    "estado_inicial": "flutuando na água",
+    "estado_final": "preso nas margens opostas",
+    "mostrar": "Extremidades do navio presas nas margens opostas",
+    "dados": {
+     "comprimento": "399,94 metros"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "margens": [
+      "margens",
+      "opostas"
+     ]
+    }
+   },
+   "imagem": "c3",
+   "grupo": 3,
+   "evento": "i6",
+   "sb": {
+    "versao": 1,
+    "cena": 6,
+    "evento": "i6",
+    "narracao": "Ele ficou de través: proa e popa presas em margens opostas.",
+    "span": [
+     13.237,
+     18.799
+    ],
+    "proposito": "mecanismo",
+    "avanca": "Explica como o casco travou: de través, preso nas duas margens.",
+    "intencao_visual": "Imagem de satélite aproximada do casco preso nas margens.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "processo"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "novo_bloco",
+    "midia": "a6",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a6",
+     "nivel": "direto",
+     "justificativa": "registro real (casamento disse \"fato\") com o que a cena mostra: aprox, satel",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "processo",
+     "mostra": [
+      "aprox",
+      "satel"
+     ]
+    },
+    "escolha": {
+     "foto": "a6",
+     "relacao": "fato",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a6",
+    "relacao": "fato",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a6",
+   "relacao": "fato",
+   "_tipo_img": "foto",
+   "start": 13.237,
+   "end": 18.799,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a11-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "foto",
+   "legenda_foto": "2021",
+   "foto_wh": [
+    1800,
+    1194
+   ],
+   "moldura": false,
+   "soco": 16.018
+  },
+  {
+   "bloco": {
+    "funcao": "virada",
+    "avanca": "Entrega o payoff do mecanismo: sem trecho duplo, ninguém passa, e abre a dúvida de quantos ficaram esperando."
+   },
+   "tipo": "historia",
+   "fala": "O encalhe foi *ao sul do trecho de duas faixas*.",
+   "mostrar": "Diagrama em corte do canal estreito.",
+   "busca": "Suez Canal technical cross section diagram",
+   "visual": "a0",
+   "acontecimento": {
+    "quem": "Canal de Suez",
+    "onde": "Sul do trecho de duas faixas",
+    "quando": "23 de março de 2021",
+    "recurso": "esquema",
+    "id": "e5",
+    "tipo": "localizacao",
+    "sujeito": "Trecho do canal",
+    "acao": "impedir a passagem de outros navios",
+    "estado_inicial": "fluxo em fila única",
+    "estado_final": "bloqueio total sem desvio",
+    "mostrar": "Corte transversal do canal",
+    "dados": {
+     "trecho": "sul do segmento de duas faixas"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "faixa": [
+      "duas",
+      "faixas"
+     ]
+    }
+   },
+   "imagem": "c4",
+   "grupo": 4,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i7",
+   "sb": {
+    "versao": 1,
+    "cena": 7,
+    "evento": "i7",
+    "narracao": "O encalhe foi ao sul do trecho de duas faixas. Ninguém tinha como passar ao lado.",
+    "span": [
+     18.799,
+     23.394
+    ],
+    "proposito": "virada",
+    "avanca": "Entrega o payoff do mecanismo: sem trecho duplo, ninguém passa, e abre a dúvida de quantos ficaram esperando.",
+    "intencao_visual": "Diagrama em corte do canal estreito.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "contraste",
+    "midia": "a0",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a0",
+     "nivel": "explicativo",
+     "justificativa": "diagrama real do acervo explica o processo",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a0",
+     "relacao": "diagrama",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a0",
+   "relacao": "diagrama",
+   "_escolha": {
+    "foto": "a0",
+    "relacao": "diagrama",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "_tipo_img": "diagrama",
+   "start": 18.799,
+   "end": 21.038,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a0-g.jpg",
+   "real": true,
+   "ano_foto": 1995,
+   "tipo_img": "diagrama",
+   "legenda_foto": "SUEZCANAL SECTION, 1995",
+   "foto_wh": [
+    1800,
+    1380
+   ],
+   "moldura": false,
+   "transicao": "chicote"
+  },
+  {
+   "busca": "Suez Canal technical cross section diagram",
+   "grupo": 4,
+   "tipo": "historia",
+   "fala": "Ninguém tinha como passar ao lado.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "aproxima",
+   "transicao": "corte",
+   "imagem": "c4",
+   "acontecimento": {
+    "quem": "Canal de Suez",
+    "onde": "Sul do trecho de duas faixas",
+    "quando": "23 de março de 2021",
+    "recurso": "esquema",
+    "id": "e5",
+    "tipo": "localizacao",
+    "sujeito": "Trecho do canal",
+    "acao": "impedir a passagem de outros navios",
+    "estado_inicial": "fluxo em fila única",
+    "estado_final": "bloqueio total sem desvio",
+    "mostrar": "Corte transversal do canal",
+    "dados": {
+     "trecho": "sul do segmento de duas faixas"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "faixa": [
+      "duas",
+      "faixas"
+     ]
+    }
+   },
+   "evento": "i7",
+   "sb": {
+    "versao": 1,
+    "cena": 7,
+    "evento": "i7",
+    "narracao": "O encalhe foi ao sul do trecho de duas faixas. Ninguém tinha como passar ao lado.",
+    "span": [
+     18.799,
+     23.394
+    ],
+    "proposito": "virada",
+    "avanca": "Entrega o payoff do mecanismo: sem trecho duplo, ninguém passa, e abre a dúvida de quantos ficaram esperando.",
+    "intencao_visual": "Diagrama em corte do canal estreito.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "contraste",
+    "midia": "a0",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a0",
+     "nivel": "explicativo",
+     "justificativa": "diagrama real do acervo explica o processo",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a0",
+     "relacao": "diagrama",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a0",
+   "relacao": "diagrama",
+   "start": 21.038,
+   "end": 23.394,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a0-g.jpg",
+   "real": true,
+   "ano_foto": 1995,
+   "tipo_img": "diagrama",
+   "legenda_foto": "SUEZCANAL SECTION, 1995",
+   "foto_wh": [
+    1800,
+    1380
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "consequencia",
+    "avanca": "Mede o tamanho do engarrafamento que o bloqueio criou."
+   },
+   "tipo": "numero",
+   "valor": 369,
+   "prefixo": "",
+   "sufixo": " navios",
+   "rotulo": "Navios parados na fila",
+   "nota": "Até 28 de março de 2021",
+   "comparacao": "",
+   "cor": "vermelho",
+   "fala": "Até vinte e oito de março, *trezentos e sessenta e nove* navios esperavam.",
+   "mostrar": "Imagem de satélite de navios aguardando no mar.",
+   "busca": "Satellite view of ships waiting Suez Canal",
+   "visual": "a2",
+   "acontecimento": {
+    "quem": "369 navios",
+    "onde": "Canal de Suez",
+    "quando": "28 de março de 2021",
+    "recurso": "foto",
+    "id": "e6",
+    "tipo": "numero",
+    "sujeito": "Frota de navios cargueiros",
+    "acao": "aguardar em fila",
+    "estado_inicial": "trânsito fluido",
+    "estado_final": "369 navios retidos na fila",
+    "mostrar": "Navios parados no mar aguardando liberação",
+    "dados": {
+     "quantidade": 369
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "quantidade": [
+      "trezentos",
+      "sessenta",
+      "nove"
+     ]
+    }
+   },
+   "imagem": "c5",
+   "grupo": 5,
+   "evento": "i9",
+   "sb": {
+    "versao": 1,
+    "cena": 9,
+    "evento": "i9",
+    "narracao": "Até vinte e oito de março, trezentos e sessenta e nove navios esperavam.",
+    "span": [
+     23.394,
+     27.91
+    ],
+    "proposito": "consequencia",
+    "avanca": "Mede o tamanho do engarrafamento que o bloqueio criou.",
+    "intencao_visual": "Imagem de satélite de navios aguardando no mar.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "grafico",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "diagrama"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "dado",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do dado",
+    "transicao": "novo_bloco",
+    "midia": "a2",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "grafico",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a2",
+     "nivel": "explicativo",
+     "justificativa": "infográfico com dado dos fatos",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "grafico",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a2",
+     "relacao": "fato",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a2",
+   "relacao": "fato",
+   "_escolha": {
+    "foto": "a2",
+    "relacao": "fato",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "_tipo_img": "foto",
+   "start": 23.394,
+   "end": 27.91,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a3-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "foto",
+   "legenda_foto": "Suez Canal Crisis, 2021",
+   "foto_wh": [
+    1048,
+    1280
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Apresenta a força-tarefa da corrida de seis dias contra o casco preso."
+   },
+   "tipo": "historia",
+   "destaque": "*600 TRABALHADORES*",
+   "fala": "A corrida de seis dias reuniu *quinze rebocadores*,",
+   "mostrar": "Rebocadores e escavadeira ao redor do casco encalhado.",
+   "busca": "Suez Canal dredger tugboats Ever Given rescue",
+   "visual": "",
+   "acontecimento": {
+    "quem": "15 rebocadores, 2 dragas e 600 trabalhadores",
+    "onde": "Canal de Suez",
+    "quando": "23 a 29 de março de ",
+    "recurso": "foto",
+    "id": "e7",
+    "tipo": "processo",
+    "sujeito": "Equipes de resgate",
+    "acao": "puxar o navio e remover areia",
+    "estado_inicial": "casco enterrado na margem",
+    "estado_final": "escavação e tração contínuas",
+    "mostrar": "Dragas e rebocadores trabalhando na proa",
+    "dados": {
+     "rebocadores": 15,
+     "dragas": 2,
+     "trabalhadores": 600
+    },
+    "fonte": "Olhar Digital",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "resgate": [
+      "quinze",
+      "rebocadores"
+     ]
+    }
+   },
+   "imagem": "c6",
+   "grupo": 6,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i10",
+   "sb": {
+    "versao": 1,
+    "cena": 10,
+    "evento": "i10",
+    "narracao": "A corrida de seis dias reuniu quinze rebocadores, duas dragas e seiscentos trabalhadores.",
+    "span": [
+     27.91,
+     33.576
+    ],
+    "proposito": "mecanismo",
+    "avanca": "Apresenta a força-tarefa da corrida de seis dias contra o casco preso.",
+    "intencao_visual": "Rebocadores e escavadeira ao redor do casco encalhado.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "processo"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "novo_bloco",
+    "midia": "pendente",
+    "evidencia": "sem_midia",
+    "explica": false,
+    "limitacoes": [
+     "nenhuma mídia para esta frase"
+    ],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "esquema_pendente",
+     "midia": null,
+     "nivel": "sem_midia",
+     "justificativa": "processo sem registro real nem diagrama no acervo",
+     "rejeitadas": [
+      {
+       "midia": "a8",
+       "motivo": "foto do assunto não mostra o processo"
+      }
+     ],
+     "pendente": true,
+     "sugestao": "ESQUEMA: Rebocadores e escavadeira ao redor do casco encalhado.",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a8",
+     "relacao": "fato",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a8",
+    "relacao": "fato",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "_tipo_img": "foto",
+   "midia": "pendente",
+   "pendente": "esquema_pendente",
+   "start": 27.91,
+   "end": 30.936,
+   "img": null,
+   "hf": {
+    "nome": "vox-annotate",
+    "vars": {
+     "text": "600 TRABALHADORES",
+     "keyword": "600 TRABALHADORES",
+     "note": "",
+     "style": "underline",
+     "draw_at": 0.6
+    },
+    "caixa": "left:90px;right:150px;top:560px;height:420px"
+   }
+  },
+  {
+   "busca": "Suez Canal dredger tugboats Ever Given rescue",
+   "grupo": 6,
+   "tipo": "historia",
+   "fala": "duas dragas e seiscentos trabalhadores.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "afasta",
+   "transicao": "corte",
+   "imagem": "c6",
+   "acontecimento": {
+    "quem": "15 rebocadores, 2 dragas e 600 trabalhadores",
+    "onde": "Canal de Suez",
+    "quando": "23 a 29 de março de ",
+    "recurso": "foto",
+    "id": "e7",
+    "tipo": "processo",
+    "sujeito": "Equipes de resgate",
+    "acao": "puxar o navio e remover areia",
+    "estado_inicial": "casco enterrado na margem",
+    "estado_final": "escavação e tração contínuas",
+    "mostrar": "Dragas e rebocadores trabalhando na proa",
+    "dados": {
+     "rebocadores": 15,
+     "dragas": 2,
+     "trabalhadores": 600
+    },
+    "fonte": "Olhar Digital",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "resgate": [
+      "quinze",
+      "rebocadores"
+     ]
+    }
+   },
+   "evento": "i10",
+   "sb": {
+    "versao": 1,
+    "cena": 10,
+    "evento": "i10",
+    "narracao": "A corrida de seis dias reuniu quinze rebocadores, duas dragas e seiscentos trabalhadores.",
+    "span": [
+     27.91,
+     33.576
+    ],
+    "proposito": "mecanismo",
+    "avanca": "Apresenta a força-tarefa da corrida de seis dias contra o casco preso.",
+    "intencao_visual": "Rebocadores e escavadeira ao redor do casco encalhado.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "processo"
+    ],
+    "midia_preferida": "diagrama",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "dado",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "parado: leitura do esquema",
+    "transicao": "novo_bloco",
+    "midia": "pendente",
+    "evidencia": "sem_midia",
+    "explica": false,
+    "limitacoes": [
+     "nenhuma mídia para esta frase"
+    ],
+    "necessidade": "processo",
+    "resolucao": {
+     "tipo": "esquema_pendente",
+     "midia": null,
+     "nivel": "sem_midia",
+     "justificativa": "processo sem registro real nem diagrama no acervo",
+     "rejeitadas": [
+      {
+       "midia": "a8",
+       "motivo": "foto do assunto não mostra o processo"
+      }
+     ],
+     "pendente": true,
+     "sugestao": "ESQUEMA: Rebocadores e escavadeira ao redor do casco encalhado.",
+     "necessidade": "processo",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a8",
+     "relacao": "fato",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "midia": "pendente",
+   "pendente": "esquema_pendente",
+   "start": 30.936,
+   "end": 33.576,
+   "img": null,
+   "hf": {
+    "nome": "vox-annotate",
+    "vars": {
+     "text": "duas dragas e seiscentos trabalhadores",
+     "keyword": "trabalhadores",
+     "note": "",
+     "style": "underline",
+     "draw_at": 0.6
+    },
+    "caixa": "left:90px;right:150px;top:560px;height:420px"
+   }
+  },
+  {
+   "bloco": {
+    "funcao": "evidencia",
+    "avanca": "Mostra o primeiro avanço do resgate e que ainda faltava soltar a proa."
+   },
+   "tipo": "historia",
+   "fala": "Em 29 de março, ele foi movido *80%* na direção certa,",
+   "mostrar": "Imagem de satélite aproximada do navio ainda encalhado.",
+   "busca": "Ever Given bow stuck satellite",
+   "visual": "a6",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Canal de Suez",
+    "quando": "29 de março de 2021",
+    "recurso": "foto",
+    "id": "e8",
+    "tipo": "processo",
+    "sujeito": "Ever Given",
+    "acao": "ser reflutuado parcialmente",
+    "estado_inicial": "preso transversalmente",
+    "estado_final": "movido 80%, proa ainda encalhada",
+    "mostrar": "Navio parcialmente movido",
+    "dados": {
+     "progresso": "80%"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "progresso": [
+      "oitenta",
+      "por",
+      "cento"
+     ]
+    }
+   },
+   "imagem": "c7",
+   "grupo": 7,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i12",
+   "sb": {
+    "versao": 1,
+    "cena": 12,
+    "evento": "i12",
+    "narracao": "Em 29 de março, ele foi movido 80% na direção certa, mas a proa seguiu encalhada.",
+    "span": [
+     33.576,
+     40.896
+    ],
+    "proposito": "evidencia",
+    "avanca": "Mostra o primeiro avanço do resgate e que ainda faltava soltar a proa.",
+    "intencao_visual": "Imagem de satélite aproximada do navio ainda encalhado.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "novo_bloco",
+    "midia": "a4",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "acontecimento",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a4",
+     "nivel": "direto",
+     "justificativa": "registro real do próprio fato (fato)",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento",
+     "mostra": [
+      "aprox",
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a4",
+     "relacao": "fato",
+     "motivos": [
+      "reserva mostra: aprox, navio"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a4",
+    "relacao": "fato",
+    "motivos": [
+     "reserva mostra: aprox, navio"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a4",
+   "relacao": "fato",
+   "_tipo_img": "foto",
+   "start": 33.576,
+   "end": 38.436,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a6-g.jpg",
+   "real": true,
+   "ano_foto": 2020,
+   "tipo_img": "foto",
+   "legenda_foto": "2020",
+   "foto_wh": [
+    1800,
+    810
+   ],
+   "moldura": false,
+   "soco": 36.006
+  },
+  {
+   "busca": "Ever Given bow stuck satellite",
+   "grupo": 7,
+   "tipo": "historia",
+   "fala": "mas a proa seguiu encalhada.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "direita",
+   "transicao": "corte",
+   "imagem": "c7",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Canal de Suez",
+    "quando": "29 de março de 2021",
+    "recurso": "foto",
+    "id": "e8",
+    "tipo": "processo",
+    "sujeito": "Ever Given",
+    "acao": "ser reflutuado parcialmente",
+    "estado_inicial": "preso transversalmente",
+    "estado_final": "movido 80%, proa ainda encalhada",
+    "mostrar": "Navio parcialmente movido",
+    "dados": {
+     "progresso": "80%"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "progresso": [
+      "oitenta",
+      "por",
+      "cento"
+     ]
+    }
+   },
+   "evento": "i12",
+   "sb": {
+    "versao": 1,
+    "cena": 12,
+    "evento": "i12",
+    "narracao": "Em 29 de março, ele foi movido 80% na direção certa, mas a proa seguiu encalhada.",
+    "span": [
+     33.576,
+     40.896
+    ],
+    "proposito": "evidencia",
+    "avanca": "Mostra o primeiro avanço do resgate e que ainda faltava soltar a proa.",
+    "intencao_visual": "Imagem de satélite aproximada do navio ainda encalhado.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "novo_bloco",
+    "midia": "a4",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "acontecimento",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a4",
+     "nivel": "direto",
+     "justificativa": "registro real do próprio fato (fato)",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento",
+     "mostra": [
+      "aprox",
+      "navio"
+     ]
+    },
+    "escolha": {
+     "foto": "a4",
+     "relacao": "fato",
+     "motivos": [
+      "reserva mostra: aprox, navio"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a4",
+   "relacao": "fato",
+   "start": 38.436,
+   "end": 40.896,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a6-g.jpg",
+   "real": true,
+   "ano_foto": 2020,
+   "tipo_img": "foto",
+   "legenda_foto": "2020",
+   "foto_wh": [
+    1800,
+    810
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "payoff",
+    "avanca": "Entrega a resposta da promessa: o navio é solto após seis dias."
+   },
+   "tipo": "historia",
+   "lugar": "29 DE MARÇO DE 2021",
+   "fala": "Às 15h05, *catorze rebocadores* egípcios, holandeses e italianos o libertaram.",
+   "mostrar": "Foto de satélite do Ever Given flutuando no canal.",
+   "busca": "Ever Given refloated Suez canal ISS photo",
+   "visual": "a8",
+   "acontecimento": {
+    "quem": "14 rebocadores",
+    "onde": "Canal de Suez",
+    "quando": "29 de março de 2021",
+    "recurso": "foto",
+    "id": "e9",
+    "tipo": "transformacao",
+    "sujeito": "Ever Given",
+    "acao": "desencalhar e voltar a flutuar",
+    "estado_inicial": "preso transversalmente",
+    "estado_final": "flutuando livremente",
+    "mostrar": "Navio liberado no canal",
+    "dados": {
+     "horario": "15:05 no Egito",
+     "rebocadores_finais": 14
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "libertacao": [
+      "catorze",
+      "rebocadores"
+     ]
+    }
+   },
+   "imagem": "c8",
+   "grupo": 8,
+   "evento": "i14",
+   "sb": {
+    "versao": 1,
+    "cena": 14,
+    "evento": "i14",
+    "narracao": "Às 15h05, catorze rebocadores egípcios, holandeses e italianos o libertaram.",
+    "span": [
+     40.896,
+     46.61
+    ],
+    "proposito": "payoff",
+    "avanca": "Entrega a resposta da promessa: o navio é solto após seis dias.",
+    "intencao_visual": "Foto de satélite do Ever Given flutuando no canal.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a9",
+    "evidencia": "direto",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "acontecimento",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a9",
+     "nivel": "direto",
+     "justificativa": "registro real do próprio fato (fato)",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento",
+     "mostra": [
+      "satel"
+     ]
+    },
+    "escolha": {
+     "foto": "a9",
+     "relacao": "fato",
+     "motivos": [
+      "reserva mostra: satel"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a9",
+    "relacao": "fato",
+    "motivos": [
+     "reserva mostra: satel"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a9",
+   "relacao": "fato",
+   "_tipo_img": "foto",
+   "start": 40.896,
+   "end": 46.61,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a22-g.jpg",
+   "real": true,
+   "ano_foto": null,
+   "tipo_img": "foto",
+   "foto_wh": [
+    1800,
+    841
+   ],
+   "moldura": false,
+   "soco": 43.753,
+   "transicao": "zoom"
+  },
+  {
+   "bloco": {
+    "funcao": "consequencia",
+    "avanca": "Mostra que a conta chegou: o Egito reteve o navio."
+   },
+   "tipo": "historia",
+   "lugar": "13 DE ABRIL DE 2021",
+   "fala": "Em 13 de abril,",
+   "mostrar": "Popa do Ever Given atracado no porto.",
+   "busca": "Ever Given stern port",
+   "visual": "a7",
+   "acontecimento": {
+    "quem": "Governo egípcio",
+    "onde": "Egito",
+    "quando": "13 de abril de 2021",
+    "recurso": "foto",
+    "id": "e10",
+    "tipo": "citacao",
+    "sujeito": "Governo egípcio",
+    "acao": "reter o navio e exigir indenização",
+    "estado_inicial": "navio liberado fisicamente",
+    "estado_final": "navio retido por cobrança",
+    "mostrar": "Navio retido no porto",
+    "dados": {
+     "valor_inicial": "US$ 916 milhões",
+     "reputacao": "US$ 300 milhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "cobranca": [
+      "novecentos",
+      "dezesseis",
+      "milhões"
+     ]
+    }
+   },
+   "imagem": "c9",
+   "grupo": 9,
+   "sub": 0,
+   "n_sub": 3,
+   "evento": "i15",
+   "sb": {
+    "versao": 1,
+    "cena": 15,
+    "evento": "i15",
+    "narracao": "Em 13 de abril, o Egito reteve o navio e cobrou novecentos e dezesseis milhões de dólares.",
+    "span": [
+     46.61,
+     52.43
+    ],
+    "proposito": "consequencia",
+    "avanca": "Mostra que a conta chegou: o Egito reteve o navio.",
+    "intencao_visual": "Popa do Ever Given atracado no porto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a1",
+    "evidencia": "contextual",
+    "explica": false,
+    "limitacoes": [],
+    "necessidade": "acontecimento_flex",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a1",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: porto",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento_flex",
+     "mostra": [
+      "porto"
+     ]
+    },
+    "escolha": {
+     "foto": "a1",
+     "relacao": "objeto",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a1",
+   "relacao": "objeto",
+   "_escolha": {
+    "foto": "a1",
+    "relacao": "objeto",
+    "motivos": [
+     "escolhida pelo casamento"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "_tipo_img": "foto",
+   "start": 46.61,
+   "end": 47.85,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a1-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "foto",
+   "legenda_foto": "2021",
+   "foto_wh": [
+    1800,
+    1200
+   ],
+   "moldura": false,
+   "transicao": "zoom"
+  },
+  {
+   "busca": "Ever Given stern port",
+   "grupo": 9,
+   "tipo": "historia",
+   "fala": "o Egito *reteve o navio*",
+   "sub": 1,
+   "n_sub": 3,
+   "camera": "desce",
+   "transicao": "corte",
+   "imagem": "c9",
+   "acontecimento": {
+    "quem": "Governo egípcio",
+    "onde": "Egito",
+    "quando": "13 de abril de 2021",
+    "recurso": "foto",
+    "id": "e10",
+    "tipo": "citacao",
+    "sujeito": "Governo egípcio",
+    "acao": "reter o navio e exigir indenização",
+    "estado_inicial": "navio liberado fisicamente",
+    "estado_final": "navio retido por cobrança",
+    "mostrar": "Navio retido no porto",
+    "dados": {
+     "valor_inicial": "US$ 916 milhões",
+     "reputacao": "US$ 300 milhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "cobranca": [
+      "novecentos",
+      "dezesseis",
+      "milhões"
+     ]
+    }
+   },
+   "evento": "i15",
+   "sb": {
+    "versao": 1,
+    "cena": 15,
+    "evento": "i15",
+    "narracao": "Em 13 de abril, o Egito reteve o navio e cobrou novecentos e dezesseis milhões de dólares.",
+    "span": [
+     46.61,
+     52.43
+    ],
+    "proposito": "consequencia",
+    "avanca": "Mostra que a conta chegou: o Egito reteve o navio.",
+    "intencao_visual": "Popa do Ever Given atracado no porto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a1",
+    "evidencia": "contextual",
+    "explica": false,
+    "limitacoes": [],
+    "necessidade": "acontecimento_flex",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a1",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: porto",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento_flex",
+     "mostra": [
+      "porto"
+     ]
+    },
+    "escolha": {
+     "foto": "a1",
+     "relacao": "objeto",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a1",
+   "relacao": "objeto",
+   "start": 47.85,
+   "end": 49.27,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a1-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "foto",
+   "legenda_foto": "2021",
+   "foto_wh": [
+    1800,
+    1200
+   ],
+   "moldura": false
+  },
+  {
+   "busca": "Ever Given stern port",
+   "grupo": 9,
+   "tipo": "historia",
+   "fala": "e cobrou *novecentos e dezesseis milhões* de dólares.",
+   "sub": 2,
+   "n_sub": 3,
+   "camera": "esquerda",
+   "transicao": "corte",
+   "imagem": "c9",
+   "acontecimento": {
+    "quem": "Governo egípcio",
+    "onde": "Egito",
+    "quando": "13 de abril de 2021",
+    "recurso": "foto",
+    "id": "e10",
+    "tipo": "citacao",
+    "sujeito": "Governo egípcio",
+    "acao": "reter o navio e exigir indenização",
+    "estado_inicial": "navio liberado fisicamente",
+    "estado_final": "navio retido por cobrança",
+    "mostrar": "Navio retido no porto",
+    "dados": {
+     "valor_inicial": "US$ 916 milhões",
+     "reputacao": "US$ 300 milhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "cobranca": [
+      "novecentos",
+      "dezesseis",
+      "milhões"
+     ]
+    }
+   },
+   "evento": "i15",
+   "sb": {
+    "versao": 1,
+    "cena": 15,
+    "evento": "i15",
+    "narracao": "Em 13 de abril, o Egito reteve o navio e cobrou novecentos e dezesseis milhões de dólares.",
+    "span": [
+     46.61,
+     52.43
+    ],
+    "proposito": "consequencia",
+    "avanca": "Mostra que a conta chegou: o Egito reteve o navio.",
+    "intencao_visual": "Popa do Ever Given atracado no porto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "mudanca_de_lugar_ou_tempo",
+    "midia": "a1",
+    "evidencia": "contextual",
+    "explica": false,
+    "limitacoes": [],
+    "necessidade": "acontecimento_flex",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a1",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: porto",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento_flex",
+     "mostra": [
+      "porto"
+     ]
+    },
+    "escolha": {
+     "foto": "a1",
+     "relacao": "objeto",
+     "motivos": [
+      "escolhida pelo casamento"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "foto": "a1",
+   "relacao": "objeto",
+   "start": 49.27,
+   "end": 52.43,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a1-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "foto",
+   "legenda_foto": "2021",
+   "foto_wh": [
+    1800,
+    1200
+   ],
+   "moldura": false,
+   "soco": 50.85
+  },
+  {
+   "bloco": {
+    "funcao": "consequencia",
+    "avanca": "Fecha o caso jurídico: cobrança reduzida e navio liberado."
+   },
+   "tipo": "historia",
+   "fala": "A cobrança caiu para *seiscentos milhões* e,",
+   "mostrar": "Ever Given ancorado no porto.",
+   "busca": "Ever Given anchored port",
+   "visual": "a1",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Egito",
+    "quando": "Início de julho de 2",
+    "recurso": "foto",
+    "id": "e11",
+    "tipo": "evento_historico",
+    "sujeito": "Ever Given",
+    "acao": "ser liberado após acordo de compensação",
+    "estado_inicial": "retido por cobrança",
+    "estado_final": "liberado após acordo",
+    "mostrar": "Navio liberado",
+    "dados": {
+     "valor_final": "US$ 600 milhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "valor": [
+      "seiscentos",
+      "milhões"
+     ]
+    }
+   },
+   "imagem": "c10",
+   "grupo": 10,
+   "sub": 0,
+   "n_sub": 2,
+   "evento": "i18",
+   "sb": {
+    "versao": 1,
+    "cena": 18,
+    "evento": "i18",
+    "narracao": "A cobrança caiu para seiscentos milhões e, em julho, o navio foi liberado.",
+    "span": [
+     52.43,
+     57.308
+    ],
+    "proposito": "consequencia",
+    "avanca": "Fecha o caso jurídico: cobrança reduzida e navio liberado.",
+    "intencao_visual": "Ever Given ancorado no porto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "novo_bloco",
+    "midia": "a12",
+    "evidencia": "contextual",
+    "explica": false,
+    "limitacoes": [
+     "retrato: mostra quem, não o que fez"
+    ],
+    "necessidade": "acontecimento_flex",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a12",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: porto",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento_flex",
+     "mostra": [
+      "porto"
+     ]
+    },
+    "escolha": {
+     "foto": "a12",
+     "relacao": "pessoa",
+     "motivos": [
+      "reserva com 6.1 pontos",
+      "mesma pessoa do fato",
+      "mostra: ever, given, porto"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a12",
+    "relacao": "pessoa",
+    "motivos": [
+     "reserva com 6.1 pontos",
+     "mesma pessoa do fato",
+     "mostra: ever, given, porto"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a12",
+   "relacao": "pessoa",
+   "_tipo_img": "foto",
+   "start": 52.43,
+   "end": 55.062,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a27-g.jpg",
+   "real": true,
+   "ano_foto": 2020,
+   "tipo_img": "foto",
+   "legenda_foto": "2020",
+   "foto_wh": [
+    1800,
+    1006
+   ],
+   "moldura": false,
+   "soco": 53.746
+  },
+  {
+   "busca": "Ever Given anchored port",
+   "grupo": 10,
+   "tipo": "historia",
+   "fala": "em julho, o navio foi liberado.",
+   "sub": 1,
+   "n_sub": 2,
+   "camera": "aproxima",
+   "transicao": "corte",
+   "imagem": "c10",
+   "acontecimento": {
+    "quem": "Ever Given",
+    "onde": "Egito",
+    "quando": "Início de julho de 2",
+    "recurso": "foto",
+    "id": "e11",
+    "tipo": "evento_historico",
+    "sujeito": "Ever Given",
+    "acao": "ser liberado após acordo de compensação",
+    "estado_inicial": "retido por cobrança",
+    "estado_final": "liberado após acordo",
+    "mostrar": "Navio liberado",
+    "dados": {
+     "valor_final": "US$ 600 milhões"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {
+     "valor": [
+      "seiscentos",
+      "milhões"
+     ]
+    }
+   },
+   "evento": "i18",
+   "sb": {
+    "versao": 1,
+    "cena": 18,
+    "evento": "i18",
+    "narracao": "A cobrança caiu para seiscentos milhões e, em julho, o navio foi liberado.",
+    "span": [
+     52.43,
+     57.308
+    ],
+    "proposito": "consequencia",
+    "avanca": "Fecha o caso jurídico: cobrança reduzida e navio liberado.",
+    "intencao_visual": "Ever Given ancorado no porto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "foto_do_fato",
+    "alternativas": [
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico",
+     "diagrama"
+    ],
+    "fallback": "foto_do_objeto",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "mostrar a cena inteira",
+    "transicao": "novo_bloco",
+    "midia": "a12",
+    "evidencia": "contextual",
+    "explica": false,
+    "limitacoes": [
+     "retrato: mostra quem, não o que fez"
+    ],
+    "necessidade": "acontecimento_flex",
+    "resolucao": {
+     "tipo": "evidencia_real",
+     "midia": "a12",
+     "nivel": "direto",
+     "justificativa": "mídia real mostra o próprio acontecimento: porto",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "acontecimento_flex",
+     "mostra": [
+      "porto"
+     ]
+    },
+    "escolha": {
+     "foto": "a12",
+     "relacao": "pessoa",
+     "motivos": [
+      "reserva com 6.1 pontos",
+      "mesma pessoa do fato",
+      "mostra: ever, given, porto"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "relacao": "pessoa",
+   "foto": "a12",
+   "start": 55.062,
+   "end": 57.308,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a27-g.jpg",
+   "real": true,
+   "ano_foto": 2020,
+   "tipo_img": "foto",
+   "legenda_foto": "2020",
+   "foto_wh": [
+    1800,
+    1006
+   ],
+   "moldura": false
+  },
+  {
+   "bloco": {
+    "funcao": "virada",
+    "avanca": "Fecha a abertura com o contraste: o canal parou, mas ganhou mais do que nunca."
+   },
+   "tipo": "revelacao",
+   "pergunta": "E o canal, perdeu?",
+   "resposta": "RECORDE",
+   "detalhe": "Faturamento recorde mesmo com o bloqueio",
+   "cor": "verde",
+   "fala": "Mesmo com o bloqueio, o canal teve *faturamento recorde*.",
+   "mostrar": "Navio porta-contêineres navegando em mar aberto.",
+   "busca": "Suez Canal container ships traffic",
+   "visual": "a10",
+   "acontecimento": {
+    "quem": "Canal de Suez",
+    "onde": "Egito",
+    "quando": "2021",
+    "recurso": "foto",
+    "id": "e12",
+    "tipo": "evolucao_temporal",
+    "sujeito": "Receita do Canal de Suez",
+    "acao": "atingir faturamento recorde",
+    "estado_inicial": "seis dias de bloqueio",
+    "estado_final": "faturamento recorde",
+    "mostrar": "Tráfego intenso de navios",
+    "dados": {
+     "navios_ano": 20600
+    },
+    "fonte": "iG Economia",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "faturamento": [
+      "faturamento",
+      "recorde"
+     ]
+    }
+   },
+   "imagem": "c11",
+   "grupo": 11,
+   "evento": "i20",
+   "sb": {
+    "versao": 1,
+    "cena": 20,
+    "evento": "i20",
+    "narracao": "Mesmo com o bloqueio, o canal teve faturamento recorde.",
+    "span": [
+     57.308,
+     60.99
+    ],
+    "proposito": "virada",
+    "avanca": "Fecha a abertura com o contraste: o canal parou, mas ganhou mais do que nunca.",
+    "intencao_visual": "Navio porta-contêineres navegando em mar aberto.",
+    "requisitos": [
+     "pessoa",
+     "lugar",
+     "tempo",
+     "acao"
+    ],
+    "midia_preferida": "revelacao",
+    "alternativas": [
+     "foto_do_fato",
+     "foto_do_objeto",
+     "video_do_fato",
+     "grafico"
+    ],
+    "fallback": "foto_do_fato",
+    "rejeicao": "replanejar a cena: nenhuma mídia explica o trecho",
+    "composicao": {
+     "foco": "assunto",
+     "hierarquia": [
+      "visual",
+      "legenda"
+     ],
+     "area_segura": "legenda na faixa de baixo; rótulos acima dela"
+    },
+    "movimento": "leve",
+    "transicao": "contraste",
+    "midia": "a14",
+    "evidencia": "explicativo",
+    "explica": true,
+    "limitacoes": [],
+    "necessidade": "grafico",
+    "resolucao": {
+     "tipo": "reconstrucao_explicativa",
+     "midia": "a14",
+     "nivel": "explicativo",
+     "justificativa": "infográfico com dado dos fatos",
+     "rejeitadas": [],
+     "pendente": false,
+     "sugestao": "",
+     "necessidade": "grafico",
+     "mostra": []
+    },
+    "escolha": {
+     "foto": "a14",
+     "relacao": "pessoa",
+     "motivos": [
+      "reserva com 4.8 pontos",
+      "mesma pessoa do fato",
+      "mesma época (2021)"
+     ],
+     "verificada": true,
+     "rejeitadas": []
+    }
+   },
+   "_escolha": {
+    "foto": "a14",
+    "relacao": "pessoa",
+    "motivos": [
+     "reserva com 4.8 pontos",
+     "mesma pessoa do fato",
+     "mesma época (2021)"
+    ],
+    "verificada": true,
+    "rejeitadas": []
+   },
+   "foto": "a14",
+   "relacao": "pessoa",
+   "_tipo_img": "cartaz",
+   "start": 57.308,
+   "end": 60.99,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a27-g.jpg",
+   "real": true,
+   "ano_foto": 2021,
+   "tipo_img": "cartaz",
+   "legenda_foto": "2021",
+   "foto_wh": [
+    1350,
+    1800
+   ],
+   "moldura": false,
+   "sub": 2
+  },
+  {
+   "bloco": {
+    "funcao": "payoff",
+    "avanca": "Encerra o vídeo convidando a seguir o perfil."
+   },
+   "tipo": "fechamento",
+   "titulo": "Segue o *@coringa.explica*",
+   "fala": "Segue o *Coringa Explica*.",
+   "imagem": null,
+   "grupo": 12,
+   "start": 60.99,
+   "end": 63.522,
+   "img": "/home/runner/work/coringa-news/coringa-news/tmp/acervo-como-um-nico-navio-travou-o-canal-de-sue/a1-g.jpg",
+   "_fundo_fechamento": true,
+   "real": true
+  }
+ ],
+ "captions": [
+  {
+   "start": 0.05,
+   "end": 1.781,
+   "words": [
+    {
+     "w": "ESTE",
+     "hl": false,
+     "s": 0.05
+    },
+    {
+     "w": "NAVIO",
+     "hl": false,
+     "s": 0.323
+    },
+    {
+     "w": "FICOU",
+     "hl": false,
+     "s": 0.65
+    },
+    {
+     "w": "ATRAVESSADO",
+     "hl": true,
+     "s": 0.977
+    }
+   ]
+  },
+  {
+   "start": 1.631,
+   "end": 2.666,
+   "words": [
+    {
+     "w": "E",
+     "hl": false,
+     "s": 1.631
+    },
+    {
+     "w": "BLOQUEOU",
+     "hl": true,
+     "s": 1.74
+    },
+    {
+     "w": "O",
+     "hl": false,
+     "s": 2.23
+    },
+    {
+     "w": "CANAL",
+     "hl": false,
+     "s": 2.339
+    }
+   ]
+  },
+  {
+   "start": 2.666,
+   "end": 5.554,
+   "words": [
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 2.666
+    },
+    {
+     "w": "SUEZ",
+     "hl": false,
+     "s": 2.83
+    },
+    {
+     "w": "POR",
+     "hl": false,
+     "s": 3.11
+    },
+    {
+     "w": "SEIS",
+     "hl": false,
+     "s": 3.722
+    },
+    {
+     "w": "DIAS",
+     "hl": false,
+     "s": 4.486
+    }
+   ]
+  },
+  {
+   "start": 5.404,
+   "end": 6.19,
+   "words": [
+    {
+     "w": "O",
+     "hl": false,
+     "s": 5.404
+    },
+    {
+     "w": "EVER",
+     "hl": true,
+     "s": 5.71
+    },
+    {
+     "w": "GIVEN",
+     "hl": true,
+     "s": 5.928
+    }
+   ]
+  },
+  {
+   "start": 6.19,
+   "end": 7.36,
+   "words": [
+    {
+     "w": "LEVAVA",
+     "hl": false,
+     "s": 6.19
+    },
+    {
+     "w": "VINTE",
+     "hl": false,
+     "s": 6.63
+    },
+    {
+     "w": "MIL",
+     "hl": false,
+     "s": 7.01
+    }
+   ]
+  },
+  {
+   "start": 7.21,
+   "end": 8.27,
+   "words": [
+    {
+     "w": "CONTÊINERES",
+     "hl": false,
+     "s": 7.21
+    },
+    {
+     "w": "DA",
+     "hl": false,
+     "s": 7.75
+    },
+    {
+     "w": "MALÁSIA",
+     "hl": false,
+     "s": 7.892
+    }
+   ]
+  },
+  {
+   "start": 8.27,
+   "end": 8.9,
+   "words": [
+    {
+     "w": "PARA",
+     "hl": false,
+     "s": 8.27
+    },
+    {
+     "w": "A",
+     "hl": false,
+     "s": 8.42
+    },
+    {
+     "w": "HOLANDA",
+     "hl": false,
+     "s": 8.48
+    }
+   ]
+  },
+  {
+   "start": 9.77,
+   "end": 10.387,
+   "words": [
+    {
+     "w": "NA",
+     "hl": false,
+     "s": 9.77
+    },
+    {
+     "w": "MANHÃ",
+     "hl": false,
+     "s": 9.885
+    },
+    {
+     "w": "DE",
+     "hl": true,
+     "s": 10.115
+    },
+    {
+     "w": "VINTE",
+     "hl": true,
+     "s": 10.23
+    }
+   ]
+  },
+  {
+   "start": 10.387,
+   "end": 11.453,
+   "words": [
+    {
+     "w": "E",
+     "hl": true,
+     "s": 10.387
+    },
+    {
+     "w": "TRÊS",
+     "hl": true,
+     "s": 10.439
+    },
+    {
+     "w": "DE",
+     "hl": true,
+     "s": 10.57
+    },
+    {
+     "w": "MARÇO",
+     "hl": true,
+     "s": 10.79
+    }
+   ]
+  },
+  {
+   "start": 11.303,
+   "end": 13.507,
+   "words": [
+    {
+     "w": "VENTOS",
+     "hl": false,
+     "s": 11.303
+    },
+    {
+     "w": "FORTES",
+     "hl": false,
+     "s": 11.817
+    },
+    {
+     "w": "O",
+     "hl": false,
+     "s": 12.33
+    },
+    {
+     "w": "EMPURRARAM",
+     "hl": false,
+     "s": 12.477
+    }
+   ]
+  },
+  {
+   "start": 13.357,
+   "end": 14.94,
+   "words": [
+    {
+     "w": "ELE",
+     "hl": false,
+     "s": 13.357
+    },
+    {
+     "w": "FICOU",
+     "hl": false,
+     "s": 13.65
+    },
+    {
+     "w": "DE",
+     "hl": true,
+     "s": 14.09
+    },
+    {
+     "w": "TRAVÉS",
+     "hl": true,
+     "s": 14.31
+    }
+   ]
+  },
+  {
+   "start": 15.19,
+   "end": 17.007,
+   "words": [
+    {
+     "w": "PROA",
+     "hl": false,
+     "s": 15.19
+    },
+    {
+     "w": "E",
+     "hl": false,
+     "s": 15.668
+    },
+    {
+     "w": "POPA",
+     "hl": false,
+     "s": 15.859
+    },
+    {
+     "w": "PRESAS",
+     "hl": false,
+     "s": 16.337
+    }
+   ]
+  },
+  {
+   "start": 17.007,
+   "end": 19.069,
+   "words": [
+    {
+     "w": "EM",
+     "hl": false,
+     "s": 17.007
+    },
+    {
+     "w": "MARGENS",
+     "hl": true,
+     "s": 17.293
+    },
+    {
+     "w": "OPOSTAS",
+     "hl": true,
+     "s": 18.058
+    }
+   ]
+  },
+  {
+   "start": 18.919,
+   "end": 19.67,
+   "words": [
+    {
+     "w": "O",
+     "hl": false,
+     "s": 18.919
+    },
+    {
+     "w": "ENCALHE",
+     "hl": false,
+     "s": 19.11
+    },
+    {
+     "w": "FOI",
+     "hl": false,
+     "s": 19.49
+    }
+   ]
+  },
+  {
+   "start": 19.67,
+   "end": 20.437,
+   "words": [
+    {
+     "w": "AO",
+     "hl": true,
+     "s": 19.67
+    },
+    {
+     "w": "SUL",
+     "hl": true,
+     "s": 19.806
+    },
+    {
+     "w": "DO",
+     "hl": true,
+     "s": 19.986
+    },
+    {
+     "w": "TRECHO",
+     "hl": true,
+     "s": 20.121
+    }
+   ]
+  },
+  {
+   "start": 20.437,
+   "end": 21.308,
+   "words": [
+    {
+     "w": "DE",
+     "hl": true,
+     "s": 20.437
+    },
+    {
+     "w": "DUAS",
+     "hl": true,
+     "s": 20.572
+    },
+    {
+     "w": "FAIXAS",
+     "hl": true,
+     "s": 20.797
+    }
+   ]
+  },
+  {
+   "start": 21.158,
+   "end": 21.789,
+   "words": [
+    {
+     "w": "NINGUÉM",
+     "hl": false,
+     "s": 21.158
+    },
+    {
+     "w": "TINHA",
+     "hl": false,
+     "s": 21.519
+    }
+   ]
+  },
+  {
+   "start": 21.789,
+   "end": 23.664,
+   "words": [
+    {
+     "w": "COMO",
+     "hl": false,
+     "s": 21.789
+    },
+    {
+     "w": "PASSAR",
+     "hl": false,
+     "s": 22.014
+    },
+    {
+     "w": "AO",
+     "hl": false,
+     "s": 22.33
+    },
+    {
+     "w": "LADO",
+     "hl": false,
+     "s": 22.47
+    }
+   ]
+  },
+  {
+   "start": 23.514,
+   "end": 24.376,
+   "words": [
+    {
+     "w": "ATÉ",
+     "hl": false,
+     "s": 23.514
+    },
+    {
+     "w": "VINTE",
+     "hl": false,
+     "s": 24.21
+    }
+   ]
+  },
+  {
+   "start": 24.376,
+   "end": 25.25,
+   "words": [
+    {
+     "w": "E",
+     "hl": true,
+     "s": 24.376
+    },
+    {
+     "w": "OITO",
+     "hl": false,
+     "s": 24.432
+    },
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 24.57
+    },
+    {
+     "w": "MARÇO",
+     "hl": false,
+     "s": 24.744
+    }
+   ]
+  },
+  {
+   "start": 25.25,
+   "end": 26.09,
+   "words": [
+    {
+     "w": "TREZENTOS",
+     "hl": true,
+     "s": 25.25
+    },
+    {
+     "w": "E",
+     "hl": true,
+     "s": 25.65
+    },
+    {
+     "w": "SESSENTA",
+     "hl": true,
+     "s": 25.73
+    }
+   ]
+  },
+  {
+   "start": 26.09,
+   "end": 27.22,
+   "words": [
+    {
+     "w": "E",
+     "hl": true,
+     "s": 26.09
+    },
+    {
+     "w": "NOVE",
+     "hl": true,
+     "s": 26.17
+    },
+    {
+     "w": "NAVIOS",
+     "hl": false,
+     "s": 26.345
+    },
+    {
+     "w": "ESPERAVAM",
+     "hl": false,
+     "s": 26.59
+    }
+   ]
+  },
+  {
+   "start": 28.03,
+   "end": 29.086,
+   "words": [
+    {
+     "w": "A",
+     "hl": false,
+     "s": 28.03
+    },
+    {
+     "w": "CORRIDA",
+     "hl": false,
+     "s": 28.147
+    },
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 28.617
+    },
+    {
+     "w": "SEIS",
+     "hl": false,
+     "s": 28.793
+    }
+   ]
+  },
+  {
+   "start": 29.086,
+   "end": 30.17,
+   "words": [
+    {
+     "w": "DIAS",
+     "hl": false,
+     "s": 29.086
+    },
+    {
+     "w": "REUNIU",
+     "hl": false,
+     "s": 29.379
+    },
+    {
+     "w": "QUINZE",
+     "hl": true,
+     "s": 29.79
+    }
+   ]
+  },
+  {
+   "start": 30.17,
+   "end": 31.206,
+   "words": [
+    {
+     "w": "REBOCADORES",
+     "hl": true,
+     "s": 30.17
+    }
+   ]
+  },
+  {
+   "start": 31.056,
+   "end": 31.874,
+   "words": [
+    {
+     "w": "DUAS",
+     "hl": false,
+     "s": 31.056
+    },
+    {
+     "w": "DRAGAS",
+     "hl": false,
+     "s": 31.397
+    }
+   ]
+  },
+  {
+   "start": 31.874,
+   "end": 33.846,
+   "words": [
+    {
+     "w": "E",
+     "hl": false,
+     "s": 31.874
+    },
+    {
+     "w": "SEISCENTOS",
+     "hl": false,
+     "s": 32.01
+    },
+    {
+     "w": "TRABALHADORES",
+     "hl": false,
+     "s": 32.47
+    }
+   ]
+  },
+  {
+   "start": 33.696,
+   "end": 35.004,
+   "words": [
+    {
+     "w": "EM",
+     "hl": false,
+     "s": 33.696
+    },
+    {
+     "w": "29",
+     "hl": false,
+     "s": 33.941
+    },
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 34.187
+    },
+    {
+     "w": "MARÇO",
+     "hl": false,
+     "s": 34.432
+    }
+   ]
+  },
+  {
+   "start": 35.004,
+   "end": 37.03,
+   "words": [
+    {
+     "w": "ELE",
+     "hl": false,
+     "s": 35.004
+    },
+    {
+     "w": "FOI",
+     "hl": false,
+     "s": 35.331
+    },
+    {
+     "w": "MOVIDO",
+     "hl": false,
+     "s": 35.658
+    },
+    {
+     "w": "80%",
+     "hl": true,
+     "s": 36.23
+    }
+   ]
+  },
+  {
+   "start": 37.03,
+   "end": 38.706,
+   "words": [
+    {
+     "w": "NA",
+     "hl": false,
+     "s": 37.03
+    },
+    {
+     "w": "DIREÇÃO",
+     "hl": false,
+     "s": 37.284
+    },
+    {
+     "w": "CERTA",
+     "hl": false,
+     "s": 37.963
+    }
+   ]
+  },
+  {
+   "start": 38.556,
+   "end": 41.166,
+   "words": [
+    {
+     "w": "MAS",
+     "hl": false,
+     "s": 38.556
+    },
+    {
+     "w": "A",
+     "hl": false,
+     "s": 38.896
+    },
+    {
+     "w": "PROA",
+     "hl": false,
+     "s": 39.065
+    },
+    {
+     "w": "SEGUIU",
+     "hl": false,
+     "s": 39.489
+    },
+    {
+     "w": "ENCALHADA",
+     "hl": false,
+     "s": 40.083
+    }
+   ]
+  },
+  {
+   "start": 41.016,
+   "end": 41.793,
+   "words": [
+    {
+     "w": "ÀS",
+     "hl": false,
+     "s": 41.016
+    },
+    {
+     "w": "15H05",
+     "hl": false,
+     "s": 41.27
+    }
+   ]
+  },
+  {
+   "start": 41.793,
+   "end": 43.612,
+   "words": [
+    {
+     "w": "CATORZE",
+     "hl": true,
+     "s": 41.793
+    },
+    {
+     "w": "REBOCADORES",
+     "hl": true,
+     "s": 42.39
+    },
+    {
+     "w": "EGÍPCIOS",
+     "hl": false,
+     "s": 43.057
+    }
+   ]
+  },
+  {
+   "start": 43.612,
+   "end": 44.89,
+   "words": [
+    {
+     "w": "HOLANDESES",
+     "hl": false,
+     "s": 43.612
+    },
+    {
+     "w": "E",
+     "hl": false,
+     "s": 44.223
+    },
+    {
+     "w": "ITALIANOS",
+     "hl": false,
+     "s": 44.334
+    }
+   ]
+  },
+  {
+   "start": 44.89,
+   "end": 45.58,
+   "words": [
+    {
+     "w": "O",
+     "hl": false,
+     "s": 44.89
+    },
+    {
+     "w": "LIBERTARAM",
+     "hl": false,
+     "s": 44.967
+    }
+   ]
+  },
+  {
+   "start": 46.73,
+   "end": 48.12,
+   "words": [
+    {
+     "w": "EM",
+     "hl": false,
+     "s": 46.73
+    },
+    {
+     "w": "13",
+     "hl": false,
+     "s": 46.962
+    },
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 47.195
+    },
+    {
+     "w": "ABRIL",
+     "hl": false,
+     "s": 47.427
+    }
+   ]
+  },
+  {
+   "start": 47.97,
+   "end": 49.54,
+   "words": [
+    {
+     "w": "O",
+     "hl": true,
+     "s": 47.97
+    },
+    {
+     "w": "EGITO",
+     "hl": false,
+     "s": 48.125
+    },
+    {
+     "w": "RETEVE",
+     "hl": true,
+     "s": 48.59
+    },
+    {
+     "w": "O",
+     "hl": true,
+     "s": 48.963
+    },
+    {
+     "w": "NAVIO",
+     "hl": true,
+     "s": 49.07
+    }
+   ]
+  },
+  {
+   "start": 49.39,
+   "end": 50.249,
+   "words": [
+    {
+     "w": "E",
+     "hl": true,
+     "s": 49.39
+    },
+    {
+     "w": "COBROU",
+     "hl": false,
+     "s": 49.479
+    },
+    {
+     "w": "NOVECENTOS",
+     "hl": true,
+     "s": 49.79
+    }
+   ]
+  },
+  {
+   "start": 50.249,
+   "end": 51.47,
+   "words": [
+    {
+     "w": "E",
+     "hl": true,
+     "s": 50.249
+    },
+    {
+     "w": "DEZESSEIS",
+     "hl": true,
+     "s": 50.333
+    },
+    {
+     "w": "MILHÕES",
+     "hl": true,
+     "s": 50.75
+    }
+   ]
+  },
+  {
+   "start": 51.47,
+   "end": 52.7,
+   "words": [
+    {
+     "w": "DE",
+     "hl": false,
+     "s": 51.47
+    },
+    {
+     "w": "DÓLARES",
+     "hl": false,
+     "s": 51.74
+    }
+   ]
+  },
+  {
+   "start": 52.55,
+   "end": 53.99,
+   "words": [
+    {
+     "w": "A",
+     "hl": false,
+     "s": 52.55
+    },
+    {
+     "w": "COBRANÇA",
+     "hl": false,
+     "s": 52.73
+    },
+    {
+     "w": "CAIU",
+     "hl": false,
+     "s": 53.54
+    }
+   ]
+  },
+  {
+   "start": 53.99,
+   "end": 55.332,
+   "words": [
+    {
+     "w": "PARA",
+     "hl": false,
+     "s": 53.99
+    },
+    {
+     "w": "SEISCENTOS",
+     "hl": true,
+     "s": 54.121
+    },
+    {
+     "w": "MILHÕES",
+     "hl": true,
+     "s": 54.41
+    },
+    {
+     "w": "E",
+     "hl": false,
+     "s": 54.972
+    }
+   ]
+  },
+  {
+   "start": 55.182,
+   "end": 55.884,
+   "words": [
+    {
+     "w": "EM",
+     "hl": false,
+     "s": 55.182
+    },
+    {
+     "w": "JULHO",
+     "hl": false,
+     "s": 55.393
+    }
+   ]
+  },
+  {
+   "start": 55.884,
+   "end": 57.578,
+   "words": [
+    {
+     "w": "O",
+     "hl": false,
+     "s": 55.884
+    },
+    {
+     "w": "NAVIO",
+     "hl": false,
+     "s": 56.024
+    },
+    {
+     "w": "FOI",
+     "hl": false,
+     "s": 56.445
+    },
+    {
+     "w": "LIBERADO",
+     "hl": false,
+     "s": 56.726
+    }
+   ]
+  },
+  {
+   "start": 57.428,
+   "end": 58.587,
+   "words": [
+    {
+     "w": "MESMO",
+     "hl": false,
+     "s": 57.428
+    },
+    {
+     "w": "COM",
+     "hl": false,
+     "s": 57.849
+    },
+    {
+     "w": "O",
+     "hl": false,
+     "s": 58.13
+    },
+    {
+     "w": "BLOQUEIO",
+     "hl": false,
+     "s": 58.13
+    }
+   ]
+  },
+  {
+   "start": 58.587,
+   "end": 59.181,
+   "words": [
+    {
+     "w": "O",
+     "hl": false,
+     "s": 58.587
+    },
+    {
+     "w": "CANAL",
+     "hl": false,
+     "s": 58.679
+    },
+    {
+     "w": "TEVE",
+     "hl": false,
+     "s": 58.953
+    }
+   ]
+  },
+  {
+   "start": 59.181,
+   "end": 60.44,
+   "words": [
+    {
+     "w": "FATURAMENTO",
+     "hl": true,
+     "s": 59.181
+    },
+    {
+     "w": "RECORDE",
+     "hl": true,
+     "s": 59.73
+    }
+   ]
+  },
+  {
+   "start": 61.11,
+   "end": 62.52,
+   "words": [
+    {
+     "w": "SEGUE",
+     "hl": false,
+     "s": 61.11
+    },
+    {
+     "w": "O",
+     "hl": false,
+     "s": 61.412
+    },
+    {
+     "w": "CORINGA",
+     "hl": true,
+     "s": 61.513
+    },
+    {
+     "w": "EXPLICA",
+     "hl": true,
+     "s": 61.916
+    }
+   ]
+  }
+ ]
+}

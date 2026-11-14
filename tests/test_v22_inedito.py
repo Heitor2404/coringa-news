@@ -63,8 +63,11 @@ def test_encerramento_mascote_nao_encosta_no_resumo(tmp_path, resumo):
          'start': 0, 'end': 4, 'params': {'variante': 'conclusao', 'resumo': resumo, 'mascote': 'apontando', 'marca': '@coringa.explica'}}]}
     with palco.abrir(palco.preparar(d), tmp_path) as pg:
         pg.evaluate('seek(3.5)')
-        g = pg.evaluate("""(()=>{const e=V2.cenas[0].el,r=e.querySelector('.rz').getBoundingClientRect(),m=e.querySelector('.mascw').getBoundingClientRect(),
-          c=e.querySelector('.mc').getBoundingClientRect();return {rz:r.bottom,m0:m.top,m1:m.bottom,mc:c.top,h:m.height,avisos:V2.avisos}})()""")
-    assert g['m0'] >= g['rz'] + 20, g           # espaço entre o texto e o mascote
+        g = pg.evaluate("""(()=>{const e=V2.cenas[0].el,m=e.querySelector('.mascw').getBoundingClientRect(),c=e.querySelector('.mc').getBoundingClientRect();
+          const rg=document.createRange(); rg.selectNodeContents(e.querySelector('.rz'));
+          const col=[...rg.getClientRects()].filter(q=>q.right>670-24).map(q=>q.bottom);
+          return {rz:Math.max(0,...col),m0:m.top,m1:m.bottom,mc:c.top,h:m.height,avisos:V2.avisos}})()""")
+    assert g['m0'] >= g['rz'] + 20, g           # espaço entre o texto que entra na coluna do mascote e o mascote
     assert g['m1'] <= g['mc'], g                # mascote acima do painel da marca
     assert g['h'] >= 240 and not g['avisos'], g
+    assert abs(g['m0'] - max(560, g['rz'] + 24)) <= 1, g   # encolhe só o que o conflito real exige (linha curta não conta)

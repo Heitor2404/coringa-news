@@ -145,7 +145,11 @@
         /* V2.2: o mascote começa 24 px ABAIXO do fim do resumo (antes a caixa 560–980 cruzava a 3ª linha e o chapéu encostava
            no texto); encolhe na proporção mantendo o pé no mesmo lugar, acima do painel da marca */
         const mw = el.querySelector('.mascw'), mc = el.querySelector('.mc');
-        if (mw && r) { const base = Math.min(980, (mc ? mc.offsetTop : 1000) - 20), topo = Math.max(560, r.offsetTop + r.offsetHeight + 24);
+        if (mw && r) {
+          // só contam as linhas do resumo que ENTRAM na coluna do mascote (x ≥ 670 − 24); linha curta não empurra nada
+          const rg = document.createRange(); rg.selectNodeContents(r); const ox = el.getBoundingClientRect();
+          const fim = Math.max(0, ...[...rg.getClientRects()].filter(q => q.right - ox.left > 670 - 24).map(q => q.bottom - ox.top));
+          const base = Math.min(980, (mc ? mc.offsetTop : 1000) - 20), topo = Math.max(560, fim + 24);
           const h = Math.max(240, base - topo); mw.style.top = (base - h) + 'px'; mw.style.height = h + 'px'; mw.style.width = Math.round(h * 300 / 420) + 'px';
           if (base - h < topo) V2.avisos.push(`encerramento: mascote ainda encosta no resumo (${topo - (base - h)} px)`); } },
       upd(tl, el) {

@@ -4,8 +4,8 @@ name: Testes V2 (visual)
 # Sem IA, sem geração paga, sem cofre: só renderiza composições com dados de exemplo do próprio repositório.
 on:
   push:
-    branches: [visual-v2, visual-v2-1-refinamento, visual-v2-2-correcao-final, visual-v2-3-correcao-piloto]
-    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/test_v22_*.py", "tests/v2_referencias/**", "tests/midia/**", "tests/piloto_ever_given/**", "tests/_piloto.py", "tests/test_piloto_*.py", "main.py", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
+    branches: [visual-v2, visual-v2-1-refinamento, visual-v2-2-correcao-final, visual-v2-3-correcao-piloto, visual-v2-3-porteiro-revisao]
+    paths: ["src/render/v2/**", "src/v2/**", "src/render/render.py", "tests/test_v2.py", "tests/test_v21.py", "tests/test_v22_*.py", "tests/v2_referencias/**", "tests/midia/**", "tests/piloto_ever_given/**", "tests/_piloto.py", "tests/test_piloto_*.py", "tests/test_porteiro_*.py", "main.py", "scripts/v2_natural_earth.py", ".github/workflows/testes-v2.yml"]
   workflow_dispatch:
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
           npm install --no-audit --no-fund
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           python scripts/v2_natural_earth.py
-      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py tests/test_v22_fotos.py tests/test_v22_video.py tests/test_v22_inedito.py tests/test_v22_eclusa.py tests/test_piloto_correcao.py
+      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py tests/test_v22_fotos.py tests/test_v22_video.py tests/test_v22_inedito.py tests/test_v22_eclusa.py tests/test_piloto_correcao.py tests/test_porteiro_revisao.py
       - name: Galeria de validação (artefato)
         if: always()
         run: python -m src.v2.galeria --saida saida/galeria_v2

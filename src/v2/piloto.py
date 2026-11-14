@@ -120,5 +120,7 @@ def renderizar(dados: dict, audio: Path, saida: Path, trab: Path, musica: Path |
     if erro_render:
         raise RuntimeError(f'piloto V2.2: render falhou ({erro_render})')
     bloq = [a for a in rel.get('achados', []) if a.get('gravidade') == 'bloqueio']
+    rev = [a for a in rel.get('achados', []) if a.get('gravidade') == 'revisao']
     return {'relatorio': relatorio, 'bloqueios': [f"{a['codigo']} cena {a.get('cena')}: {a.get('problema')}" for a in bloq],
+            'revisoes': [f"{a['codigo']} cena {a.get('cena')}: {a.get('problema')}" for a in rev],
             'aprovacao_automatica': rel.get('aprovacao_automatica')}

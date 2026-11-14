@@ -605,6 +605,33 @@ def _midia_do_acervo(v: dict, trab: Path):
     return reais, imgs, creditos, set(imgs)
 
 
+def _aplicar_porteiro(v: dict, q: dict, dados: dict, dur: float, piloto: dict | None, teste: bool) -> list[str]:
+    """PORTEIRO FINAL: erro que não pode ir ao ar (imagem parada, data errada, vídeo longo demais, reprovação do fiscal
+    V2) → o vídeo não é enviado. Define v['_bloqueado'] (vazio = pode seguir) e devolve a lista de motivos."""
+    graves = [e for e in q['erros'] if 'parada' in e or 'na tela' in e or 'ano atual' in e]
+    tela = dados.get('problemas_tela') or []          # fiscal da tela: texto em cima de texto / saindo da tela
+    if tela:
+        q['erros'].append(f'texto em cima de texto em {len(tela)} ponto(s) (ex.: {tela[0]})')
+        graves.append(f'texto em cima de texto ({len(tela)}x, ex.: {tela[0]})')
+    if dur > 80:
+        graves.append(f'vídeo com {dur:.0f}s (máximo 80)')
+    if piloto and piloto['bloqueios']:                # fiscal V2.2 bloqueou: registra (o vídeo da 1ª tentativa fica guardado)
+        graves.append('fiscal V2.2: ' + '; '.join(piloto['bloqueios'])[:400])
+    elif piloto and piloto.get('aprovacao_automatica') is not True:
+        # sem bloqueio técnico, mas com revisão humana pendente (ou sem resposta clara do fiscal): NÃO segue sozinho.
+        # O vídeo fica guardado; só vai ao ar com aprovação humana explícita.
+        pend = '; '.join(piloto.get('revisoes') or []) or 'aprovação automática não concedida'
+        graves.append('revisão humana pendente (fiscal V2.2): ' + pend[:400])
+    if piloto:                                        # o fiscal antigo NÃO libera o que o V2.2 reprovou ou mandou revisar
+        q['v22'] = piloto
+        if piloto['bloqueios']:
+            q['motivos'] = q['motivos'] + [f"fiscal V2.2 reprovou ({len(piloto['bloqueios'])} problema(s))"]
+        elif not piloto.get('aprovacao_automatica'):
+            q['motivos'] = q['motivos'] + ['fiscal V2.2 pede revisão humana']
+    v['_bloqueado'] = '; '.join(graves) if graves and not teste else ''
+    return graves
+
+
 def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     trab = RAIZ / 'tmp' / nome
     if trab.exists():
@@ -718,23 +745,7 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     q['erros'] = erros_basicos(cenas, caps)
     if any('parada' in e for e in q['erros']):          # frase de ligação sem número é normal: fica só no 🔧 (aviso)
         q['motivos'] = q['motivos'] + ['erro básico (ver 🔧)']
-    # PORTEIRO FINAL: erro que não pode ir ao ar (imagem parada, data errada, vídeo longo demais) → o vídeo não é enviado
-    graves = [e for e in q['erros'] if 'parada' in e or 'na tela' in e or 'ano atual' in e]
-    tela = dados.get('problemas_tela') or []          # fiscal da tela: texto em cima de texto / saindo da tela
-    if tela:
-        q['erros'].append(f'texto em cima de texto em {len(tela)} ponto(s) (ex.: {tela[0]})')
-        graves.append(f'texto em cima de texto ({len(tela)}x, ex.: {tela[0]})')
-    if dur > 80:
-        graves.append(f'vídeo com {dur:.0f}s (máximo 80)')
-    if piloto and piloto['bloqueios']:                # fiscal V2.2 bloqueou: registra (o vídeo da 1ª tentativa fica guardado)
-        graves.append('fiscal V2.2: ' + '; '.join(piloto['bloqueios'])[:400])
-    if piloto:                                        # o fiscal antigo NÃO libera o que o V2.2 reprovou ou mandou revisar
-        q['v22'] = piloto
-        if piloto['bloqueios']:
-            q['motivos'] = q['motivos'] + [f"fiscal V2.2 reprovou ({len(piloto['bloqueios'])} problema(s))"]
-        elif not piloto.get('aprovacao_automatica'):
-            q['motivos'] = q['motivos'] + ['fiscal V2.2 pede revisão humana']
-    v['_bloqueado'] = '; '.join(graves) if graves and not teste else ''
+    _aplicar_porteiro(v, q, dados, dur, piloto, teste)
     tx = textos_post(v, creditos)
     resumo = resumo_telegram(v, q)
     from src import claude, custo

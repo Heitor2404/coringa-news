@@ -8,7 +8,7 @@ name: Piloto de produção V2.2 (Coringa Explica)
 # Dispara quando .github/piloto/pedido.txt muda neste ramo (workflow_dispatch exigiria o arquivo na main).
 on:
   push:
-    branches: [visual-v2-2-correcao-final]
+    branches: [visual-v2-2-correcao-final, piloto-v23-santa-helena]
     paths: [".github/piloto/pedido.txt"]
 
 permissions:

@@ -96,9 +96,61 @@ def _cena_de(cenas, t):
     return next((k for k, sc in enumerate(cenas) if sc['start'] <= t < sc['end']), None)
 
 
+COMPS_FOTO = ('foto.documental', 'foto.historica', 'lower_third', 'banner.discreto')
+FOTO_REAL = ('foto.documental', 'foto.historica', 'video.documental', 'abertura.pergunta', 'lower_third', 'banner.discreto')
+TECNICO = re.compile(r'BLOQUEAD|SEM VERIFICA|SEM ACERVO|PENDENTE|TODO\b|FIXME|\bundefined\b|\bNaN\b|\bnull\b|\bNone\b|placeholder', re.I)
+CODIGO = re.compile(r'(?:[FSDAP]\d{1,2}\s*[;,]?\s*)+')
+
+
+def _textos(x) -> list[str]:
+    """Todos os textos de um dicionário de parâmetros (o que pode aparecer na tela)."""
+    if isinstance(x, str):
+        return [x] if not x.startswith(('file:', '/', 'http')) and not re.fullmatch(r'[#\w.-]+\.(jpg|png|webp|mp4)', x) else []
+    if isinstance(x, dict):
+        return [t for k, v in x.items() if k not in ('img', 'video', 'recorte', 'cor', 'icone', 'variante', 'tipo', 'sentido', 'modo', 'representacao')
+                for t in _textos(v)]
+    if isinstance(x, (list, tuple)):
+        return [t for v in x for t in _textos(v)]
+    return []
+
+
+def _quadro_vazio(arq) -> bool:
+    """Quadro escuro e uniforme fora do cabeçalho e da faixa de legenda: tela preta com só a legenda."""
+    try:
+        from PIL import Image
+        import numpy as np
+        with Image.open(arq) as im:
+            g = np.asarray(im.convert('L').resize((108, 192)), float)
+        area = np.concatenate([g[25:120], g[150:]])
+        return area.mean() < 28 and area.std() < 10
+    except Exception:
+        return False
+
+
+def _adequada(sc: dict, d: dict, ac: dict, renderizadas, k) -> str:
+    """'sim' (representa), 'declarada' (imagem pedida; crítico → revisão humana), 'render' (não apareceu) ou 'nao'."""
+    from src.v2 import contrato as ct
+    comp = sc['comp']
+    rep = ac.get('representacao') if isinstance(ac.get('representacao'), dict) else {}
+    tem_img = bool((sc.get('fundo') or {}).get('img') or (sc.get('params') or {}).get('img'))
+    if renderizadas is not None and k not in renderizadas:
+        return 'render'
+    if comp in ct.capazes(ac['tipo']) and not (comp in ct.GENERICAS and ac['tipo'] not in ('pessoa', 'lugar', 'ambiente')):
+        return 'sim'
+    if rep.get('modo') == 'composicao' and comp == rep.get('comp'):
+        return 'sim'
+    if rep.get('modo') == 'foto_direta' and comp in FOTO_REAL and tem_img:
+        return 'sim'
+    if rep.get('modo') == 'editorial' and comp in ('revelacao.surpresa', 'abertura.pergunta', 'encerramento.editorial', 'numero.animado'):
+        return 'sim'
+    if rep.get('modo') == 'foto_declarada' and comp in FOTO_REAL and tem_img:
+        return 'declarada'
+    return 'nao'
+
+
 def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = None, dados_v1: dict | None = None,
             audio: dict | None = None, catalogo: dict | None = None, conflitos_legenda: list | None = None,
-            renderizadas: list | None = None) -> dict:
+            renderizadas: list | None = None, quadros: dict | None = None) -> dict:
     """`catalogo`: {id: meta} (para limites de texto); `conflitos_legenda`: V2.conflitosLegenda do palco;
     `renderizadas`: índices das cenas V2 que tiveram conteúdo visível no palco (None = não verificado)."""
     from src.v2 import geo as geomod
@@ -107,9 +159,6 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
     direcao = list(direcao) + [{}] * (len(cenas) - len(direcao))
     for k, (sc, d) in enumerate(zip(cenas, direcao)):
         ini, comp, p = round(sc['start'], 2), sc['comp'], sc.get('params') or {}
-        # S1
-        if d.get('limitacao') and (d.get('critica') or sc.get('limitacao')) and d.get('comp') is None:
-            A.append(_achado('semantico', 'S1', 'bloqueio', k, comp, ini, 'acontecimento crítico sem representação', d['limitacao']))
         if d.get('aviso'):
             A.append(_achado('semantico', 'S4', 'aviso', k, comp, ini, 'dados insuficientes para o que a fala sugere', d['aviso']))
         # D9
@@ -117,6 +166,15 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             A.append(_achado('deterministico', 'D9', 'bloqueio', k, comp, ini, 'número sem validação', '; '.join(d['bloqueio'])))
         for a in d.get('avisos', []):
             A.append(_achado('estetico', 'E-rep' if 'repetida' in a else 'E-ritmo', 'observacao', k, comp, ini, a, a))
+        # D13 (correção do piloto): cena sem conteúdo visual — composição de foto sem imagem (tela preta com só a legenda)
+        if comp in COMPS_FOTO and not ((sc.get('fundo') or {}).get('img') or p.get('img')):
+            A.append(_achado('deterministico', 'D13', 'bloqueio', k, comp, ini, 'cena sem conteúdo visual', f"{comp} sem imagem por {sc['end'] - sc['start']:.1f} s"))
+        if quadros and k in quadros and _quadro_vazio(quadros[k]):
+            A.append(_achado('deterministico', 'D13', 'bloqueio', k, comp, ini, 'cena sem conteúdo visual', f'quadro {Path(quadros[k]).name}: tela escura e uniforme fora da legenda'))
+        # D14 (correção do piloto): texto técnico/interno na tela ("NÚMERO BLOQUEADO", "SEM ACERVO", códigos F3…)
+        tecnico = [t for t in _textos(p) if TECNICO.search(t) or CODIGO.fullmatch(t.strip())]
+        if tecnico:
+            A.append(_achado('deterministico', 'D14', 'bloqueio', k, comp, ini, 'mensagem interna/técnica na tela', '; '.join(tecnico)[:120]))
         # D5 arquivos
         for arq in set(_arquivos({'params': p, 'fundo': sc.get('fundo') or {}})):
             if not Path(arq).exists():
@@ -178,52 +236,85 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             A.append(_achado('deterministico', 'D11', 'aviso', k, comp, ini, 'plano longo', f'{dur:.1f} s'))
         if k and comp == cenas[k - 1]['comp'] and p == cenas[k - 1].get('params') and (sc.get('fundo') or {}).get('img') == (cenas[k - 1].get('fundo') or {}).get('img'):
             A.append(_achado('estetico', 'E-cont', 'observacao', k, comp, ini, 'mesma composição e mesmos dados da cena anterior', comp))
-    # S2
-    if dados_v1:
-        for i, s in enumerate(dados_v1['scenes']):
-            if s.get('tipo') not in ('historia', 'imagem'):
-                continue
-            achados = [a for a in capacidades.detectar(s) if a['critica'] and a['por_texto']]
-            mec = (s.get('bloco') or {}).get('funcao') == 'mecanismo' or any(a['capacidade'] in ('agua_subindo', 'agua_descendo', 'elevacao_vertical', 'manobra_eclusa', 'processo', 'forca', 'explosao', 'maquina') for a in achados)
-            if not mec:
-                continue
-            k = next((k for k, sc in enumerate(cenas) if i in sc.get('origem', [])), None)
-            if k is not None and cenas[k]['comp'] not in MECANISMOS:
-                A.append(_achado('semantico', 'S2', 'bloqueio', k, cenas[k]['comp'], s['start'], 'fala descreve mecanismo e a tela não mostra',
-                                 f'"{re.sub(r"[*]", "", s.get("fala", ""))[:60]}" → {cenas[k]["comp"]}'))
-    # S5: contrato declarado × seleção × capacidade × renderização (não depende de padrões textuais)
+    # S1/S2/S5/S7 por ACONTECIMENTO (correção do piloto): os fragmentos de uma fala dividida são avaliados juntos, a
+    # mesma causa conta uma vez, e foto real que mostra o fato (conferida pelo preparo no catálogo) é representação válida
     from src.v2 import contrato as ct
-    declarados = []
+    prep = ((dados_v1 or {}).get('meta') or {}).get('preparo') or {}
+    faltam_prep = {b['evento']: b['faltam'] for b in prep.get('bloqueios') or []}
+    eventos, ordem_ev = {}, []
+
+    def _ev(eid, ac, crit):
+        if eid not in eventos:
+            eventos[eid] = {'ac': ac, 'critico': crit, 'v2': [], 'v1': []}
+            ordem_ev.append(eid)
+        return eventos[eid]
     if dados_v1:
-        for i, s1 in enumerate(dados_v1['scenes']):
+        for i1, s1 in enumerate(dados_v1['scenes']):
             ac = ct.declarado(s1)
-            if ac and ct.critico(ac):
-                declarados.append((i, ac, s1))
+            if not ac:
+                continue
+            ev = _ev(ac.get('id') or s1.get('evento') or f'v1:{i1}', ac, ct.critico(ac))
+            ev['v1'].append(i1)
+            ev['v2'] += [k for k, sc in enumerate(cenas) if i1 in sc.get('origem', []) and k not in ev['v2']]
     else:
         for k, d in enumerate(direcao):
             ac = d.get('acontecimento')
-            if ac and ac.get('tipo') and ct.critico(ac):
-                declarados.append((k, ac, {'start': cenas[k]['start'] if k < len(cenas) else 0}))
-    for i, ac, s1 in declarados:
-        k = next((k for k, sc in enumerate(cenas) if i in sc.get('origem', [i] if not dados_v1 else [])), None) if dados_v1 else i
-        rot = f"{ac['tipo']} — {ac.get('mostrar') or ac.get('acao') or ac.get('id') or ''}"
-        if k is None or k >= len(cenas):
-            A.append(_achado('semantico', 'S5', 'bloqueio', None, None, s1.get('start'), 'acontecimento crítico declarado sem cena no vídeo', rot)); continue
-        comp = cenas[k]['comp']
-        if comp not in ct.capazes(ac['tipo']) or comp in ct.GENERICAS and ac['tipo'] not in ('pessoa', 'lugar', 'ambiente'):
-            dk = direcao[k] if k < len(direcao) else {}
-            falta = '; '.join(dk.get('faltam') or []) or dk.get('limitacao') or dk.get('substituicao') or ''
-            A.append(_achado('semantico', 'S5', 'bloqueio', k, comp, cenas[k]['start'], 'representação inadequada de acontecimento crítico declarado',
-                             f"declarado: {rot}; capazes: {', '.join(ct.capazes(ac['tipo'])) or 'nenhuma'}; na tela: {comp}" + (f"; falta: {falta}" if falta else '')))
-        elif renderizadas is not None and k not in renderizadas:
-            A.append(_achado('semantico', 'S5', 'bloqueio', k, comp, cenas[k]['start'], 'cena do acontecimento crítico sem conteúdo visível no render', rot))
+            if ac and ac.get('tipo'):
+                _ev(ac.get('id') or f'v2:{k}', ac, ct.critico(ac))['v2'].append(k)
+    for eid in ordem_ev:
+        ev = eventos[eid]
+        ac, ks = ev['ac'], sorted(ev['v2'])
+        if not ev['critico']:
+            continue
+        rot = f"{ac['tipo']} — {ac.get('mostrar') or ac.get('acao') or eid}"
+        if not ks:
+            A.append(_achado('semantico', 'S5', 'bloqueio', None, None, None, 'acontecimento crítico declarado sem cena no vídeo', f'{eid}: {rot}'))
+            continue
+        modos = [_adequada(cenas[k], direcao[k] if k < len(direcao) else {}, ac, renderizadas, k) for k in ks]
+        if 'sim' in modos:
+            continue
+        na_tela = ', '.join(dict.fromkeys(cenas[k]['comp'] for k in ks))
+        if 'declarada' in modos:
+            A.append(_achado('semantico', 'S7', 'revisao', ks[0], na_tela, cenas[ks[0]]['start'],
+                             'acontecimento crítico mostrado pela imagem pedida, sem prova do estado narrado',
+                             f"{eid} ({rot}); cenas {ks}: um humano confere se a imagem explica o fato"))
+            continue
+        falta = faltam_prep.get(eid) or next((direcao[k].get('faltam') for k in ks if k < len(direcao) and direcao[k].get('faltam')), None) \
+            or [x for k in ks if k < len(direcao) for x in [direcao[k].get('limitacao') or direcao[k].get('substituicao')] if x]
+        A.append(_achado('semantico', 'S5', 'bloqueio', ks[0], na_tela, cenas[ks[0]]['start'],
+                         'cena do acontecimento crítico sem conteúdo visível no render' if 'render' in modos else 'acontecimento crítico sem representação adequada',
+                         f"{eid}: declarado {rot}; capazes: {', '.join(ct.capazes(ac['tipo'])) or 'nenhuma'}; na tela: {na_tela} (cenas {ks})"
+                         + (f"; falta: {' | '.join(map(str, falta))[:220]}" if falta else '')))
+    for r in prep.get('revisoes') or []:
+        if not any(a['codigo'] == 'S7' and a['evidencia'].startswith(f"{r['evento']} ") for a in A):
+            ks = sorted({k for i1 in r.get('cenas') or [] for k, sc in enumerate(cenas) if i1 in sc.get('origem', [])})
+            A.append(_achado('semantico', 'S7', 'revisao', ks[0] if ks else None, None, cenas[ks[0]]['start'] if ks else None,
+                             r['problema'], f"{r['evento']} {r['evidencia']}"))
+    # formato antigo (sem contrato): S1/S2/substituição/S6 continuam, agrupados pela ideia (um achado por causa)
+    com_contrato = {i1 for ev in eventos.values() for i1 in ev['v1']}
+    vistos = set()
+    if dados_v1:
+        for i1, s1 in enumerate(dados_v1['scenes']):
+            if i1 in com_contrato or s1.get('tipo') not in ('historia', 'imagem'):
+                continue
+            achados = [a for a in capacidades.detectar(s1) if a['critica'] and a['por_texto']]
+            mec = (s1.get('bloco') or {}).get('funcao') == 'mecanismo' or any(a['capacidade'] in ('agua_subindo', 'agua_descendo', 'elevacao_vertical', 'manobra_eclusa', 'processo', 'forca', 'explosao', 'maquina') for a in achados)
+            k = next((k for k, sc in enumerate(cenas) if i1 in sc.get('origem', [])), None)
+            chave = ('S2', s1.get('evento') or s1.get('grupo') or i1)
+            if mec and k is not None and cenas[k]['comp'] not in MECANISMOS and chave not in vistos:
+                vistos.add(chave)
+                A.append(_achado('semantico', 'S2', 'bloqueio', k, cenas[k]['comp'], s1['start'], 'fala descreve mecanismo e a tela não mostra',
+                                 f'"{re.sub(r"[*]", "", s1.get("fala", ""))[:60]}" → {cenas[k]["comp"]}'))
     for k, d in enumerate(direcao):
+        if k >= len(cenas) or any(i1 in com_contrato for i1 in cenas[k].get('origem', [])):
+            continue
+        if d.get('limitacao') and (d.get('critica') or cenas[k].get('limitacao')) and d.get('comp') is None:
+            A.append(_achado('semantico', 'S1', 'bloqueio', k, cenas[k]['comp'], round(cenas[k]['start'], 2), 'acontecimento crítico sem representação', d['limitacao']))
         if d.get('substituicao') and d.get('critica'):
-            A.append(_achado('semantico', 'S5', 'bloqueio', k, cenas[k]['comp'] if k < len(cenas) else None, cenas[k]['start'] if k < len(cenas) else None,
-                             'substituição genérica de acontecimento crítico', d['substituicao']))
+            A.append(_achado('semantico', 'S5', 'bloqueio', k, cenas[k]['comp'], cenas[k]['start'], 'substituição genérica de acontecimento crítico', d['substituicao']))
         if d.get('sem_contrato'):
-            A.append(_achado('semantico', 'S6', 'revisao', k, cenas[k]['comp'] if k < len(cenas) else None, cenas[k]['start'] if k < len(cenas) else None,
-                             'cena sem acontecimento declarado e não reconhecida pelos padrões', f"\"{str(d.get('fala', ''))[:70]}\" → {cenas[k]['comp'] if k < len(cenas) else '?'}"))
+            A.append(_achado('semantico', 'S6', 'revisao', k, cenas[k]['comp'], cenas[k]['start'],
+                             'cena sem acontecimento declarado e não reconhecida pelos padrões', f"\"{str(d.get('fala', ''))[:70]}\" → {cenas[k]['comp']}"))
     # D1–D3 geometria (amostrada pelo palco)
     for g in _persistentes(geometria or []):
         k = _cena_de(cenas, g['ini'])
@@ -246,7 +337,20 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
             if mostra < dito - .4 or mostra > dito + .4:
                 A.append(_achado('deterministico', 'D10', 'bloqueio', k, sc['comp'], mostra, 'revelação fora de sincronia', f'aparece em {mostra:.2f} s, é dita em {dito:.2f} s'))
     if audio and audio.get('lufs') is not None and abs(audio['lufs'] + 14) > 1:
-        A.append(_achado('deterministico', 'D11', 'aviso', None, None, 0, 'loudness fora da meta', f"{audio['lufs']:.1f} LUFS (meta −14 ± 1)"))
+        A.append(_achado('deterministico', 'A1', 'bloqueio', None, None, 0, 'loudness fora da meta', f"{audio['lufs']:.1f} LUFS (meta −14 ± 1)"))
+    if audio and audio.get('pico_dbtp') is not None and audio['pico_dbtp'] > -1.0:
+        A.append(_achado('deterministico', 'A1', 'bloqueio', None, None, 0, 'pico verdadeiro acima de −1 dBTP', f"{audio['pico_dbtp']:.1f} dBTP"))
+    # mesma causa contínua (tela vazia em cenas seguidas) é UM problema: junta os achados D13 consecutivos
+    juntos = []
+    for a in A:
+        ant = juntos[-1] if juntos else None
+        if a['codigo'] == 'D13' and ant and ant['codigo'] == 'D13' and a['cena'] is not None and ant.get('_ate', ant['cena']) is not None \
+                and a['cena'] == ant.get('_ate', ant['cena']) + 1:
+            ant['_ate'] = a['cena']
+            ant['evidencia'] = f"cenas {ant['cena']}–{a['cena']}: " + re.sub(r'^cenas \d+–\d+: ', '', ant['evidencia'])
+            continue
+        juntos.append(a)
+    A = [{k: v for k, v in a.items() if k != '_ate'} for a in juntos]
     for q in PERGUNTAS:
         A.append(_achado('estetico', 'E-pergunta', 'observacao', None, None, None, q, 'sem medida automática'))
 

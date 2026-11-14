@@ -2,7 +2,8 @@
 construções inéditas em 8 categorias. Casos escritos ANTES de rodar; critérios de aceitação objetivos:
 
   C1  contrato declarado COM dados → composição capaz do tipo em 100% dos casos;
-  C2  contrato crítico declarado SEM dados → limitação com os dados que faltam, e o fiscal BLOQUEIA (100%);
+  C2  contrato crítico declarado SEM dados → limitação com os dados que faltam, e o fiscal BLOQUEIA uma vez, com o que
+      falta na evidência (100%);
   C3  tipo declarado desconhecido → limitação e bloqueio (100%);
   C4  formato antigo (sem contrato), paráfrase crítica → NUNCA aprovação automática com representação inadequada
       (aceito: composição capaz OU bloqueio OU revisão humana obrigatória) — 100%;
@@ -74,7 +75,9 @@ def _res(v2, direcao, r):
     sc = v2['scenes'][0]
     cods = sorted({a['codigo'] for a in r['achados'] if a['gravidade'] in ('bloqueio', 'revisao')})
     return {'comp': sc['comp'], 'bloqueios_revisoes': cods, 'aprovacao_automatica': r['aprovacao_automatica'],
-            'limitacao': direcao[0].get('limitacao'), 'faltam': direcao[0].get('faltam')}
+            'limitacao': direcao[0].get('limitacao'), 'faltam': direcao[0].get('faltam'),
+            'evidencia_s5': ' '.join(a['evidencia'] for a in r['achados'] if a['codigo'] == 'S5' and a['gravidade'] == 'bloqueio'),
+            'n_bloqueios': sum(1 for a in r['achados'] if a['gravidade'] == 'bloqueio')}
 
 
 def rodar() -> dict:
@@ -87,7 +90,10 @@ def rodar() -> dict:
         sem['obrigatoria'] = True
         y = _res(*_uma(fala, sem))
         out['C2'].append({'id': cid + '-sem-dados', 'categoria': cat, 'fala': fala, **y,
-                          'passou': (not y['aprovacao_automatica']) and 'S1' in y['bloqueios_revisoes'] and 'S5' in y['bloqueios_revisoes'] and bool(y['faltam'])})
+                          # correção do piloto: S1 e S5 eram a MESMA causa contada duas vezes; o critério exige o bloqueio
+                          # (S5), a lista do que falta E essa lista na evidência do próprio bloqueio, numa causa só
+                          'passou': (not y['aprovacao_automatica']) and 'S5' in y['bloqueios_revisoes'] and bool(y['faltam'])
+                                    and 'falta:' in y['evidencia_s5'] and y['n_bloqueios'] == 1})
         z = _res(*_uma(fala, None))
         cap = z['comp'] in ok
         out['C4'].append({'id': cid + '-formato-antigo', 'categoria': cat, 'fala': fala, **z, 'aceitaveis': sorted(ok),

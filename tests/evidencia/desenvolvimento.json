@@ -1,0 +1,914 @@
+{
+ "grupo": "desenvolvimento",
+ "nota": "Casos de DESENVOLVIMENTO: podem ser usados para ajustar a regra. Material real dos dois pilotos (roteiro, acervo, catálogo) e fatos verificáveis das páginas citadas. Campos do registro marcados \"cenario\" foram montados para o teste e precisam ser confirmados na API do Commons (esta sessão não alcança a API).",
+ "dominios": {
+  "naval": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "2021 Suez Canal obstruction"
+     ],
+     "categorias": [
+      "2021 Suez Canal obstruction"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Ever Given",
+      "categorias": [
+       "IMO 9811000",
+       "Ever Given (ship, 2018)"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "i0": {
+     "bruto": {
+      "tipo": "impacto",
+      "sujeito": "Navio Ever Given",
+      "acao": "bloquear tráfego marítimo",
+      "estado_inicial": "fluxo normal no canal",
+      "estado_final": "canal bloqueado",
+      "mostrar": "Navio porta-contêineres bloqueando o Canal de Suez",
+      "quando": "23 a 29 de março de 2021",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Este navio ficou *atravessado* e *bloqueou* o Canal de Suez por seis dias."
+     ]
+    },
+    "i6": {
+     "bruto": {
+      "tipo": "mecanismo",
+      "sujeito": "Casco do Ever Given",
+      "acao": "encalhar de través nas duas margens",
+      "estado_inicial": "flutuando na água",
+      "estado_final": "preso nas margens opostas",
+      "quando": "23 de março de 2021",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Ele ficou *de través*: proa e popa presas em *margens opostas*."
+     ]
+    },
+    "i2": {
+     "bruto": {
+      "tipo": "movimento",
+      "sujeito": "Ever Given",
+      "acao": "navegar de Tanjung Pelepas a Roterdã",
+      "estado_inicial": "saindo de Tanjung Pelepas",
+      "estado_final": "em rota para Roterdã",
+      "quando": "Março de 2021",
+      "importancia": "critica"
+     },
+     "falas": [
+      "O *Ever Given* levava vinte mil contêineres da Malásia para a Holanda."
+     ]
+    },
+    "i14": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "Ever Given",
+      "acao": "desencalhar e voltar a flutuar",
+      "estado_inicial": "preso transversalmente",
+      "estado_final": "flutuando livremente",
+      "quando": "29 de março de 2021",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Às 15h05, *catorze rebocadores* o puxaram e ele voltou a flutuar."
+     ]
+    },
+    "i7": {
+     "bruto": {
+      "tipo": "localizacao",
+      "sujeito": "Trecho do canal",
+      "acao": "impedir a passagem",
+      "quando": "23 de março de 2021"
+     },
+     "falas": [
+      "O encalhe foi *ao sul do trecho de duas faixas*."
+     ]
+    }
+   },
+   "imagens": {
+    "a6_commons": {
+     "pilot_id": "a6",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 cropped",
+      "categorias": [
+       "2021 Suez Canal obstruction",
+       "Ever Given (ship, 2018)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2021-03-24"
+      },
+      "descricao": "Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021. Image is about 2.64 kilometers wide."
+     },
+     "verificacao": "https://Www.wikipedia.org/wiki/File:Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal,_Egypt_-_March_24th,_2021_cropped.jpg (título e envio de 26/03/2021; inspeção visual do arquivo do piloto)"
+    },
+    "a9_openverse": {
+     "pilot_id": "a9",
+     "registro": {
+      "fonte": "Openverse",
+      "titulo": "Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 (51070311183)",
+      "categorias": [],
+      "datas": {},
+      "descricao": "",
+      "etiquetas_livres": true
+     },
+     "verificacao": "mesma imagem (Copernicus/Flickr) chegando pelo Openverse: sem data e sem categoria (a API do Openverse não devolve data)"
+    },
+    "a8_iss": {
+     "pilot_id": "a8",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Ever Given in Suez Canal viewed from ISS",
+      "categorias": [
+       "2021 Suez Canal obstruction"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2021-03-27"
+      },
+      "descricao": "The container ship Ever Given stuck in the Suez Canal in Egypt, viewed from the International Space Station"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/2021_Suez_Canal_obstruction (legenda da infobox: imagem da ISS de 27 de março de 2021)"
+    },
+    "a2_aster": {
+     "pilot_id": "a2",
+     "registro": {
+      "fonte": "NASA",
+      "titulo": "Suez Canal Crisis",
+      "categorias": [
+       "Suez Canal"
+      ],
+      "datas": {
+       "criacao_declarada": "2021-04-04"
+      },
+      "descricao": "Even after the mega-freighter Ever Given was freed from its grounding in the Suez Canal on March 29, 5 days later shipping traffic still had not recovered."
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:Suez_Canal_Crisis_(ASTER).jpg (\"The image was acquired April 4\")"
+    },
+    "a1_roterda": {
+     "pilot_id": "a1",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "IMO 9811000 EVER GIVEN (09)",
+      "categorias": [
+       "IMO 9811000",
+       "Port of Rotterdam"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2021"
+      },
+      "descricao": "De EVER GIVEN voor de wal bij de ECT (8150) in de Amazonehaven, Europoort, Rotterdam"
+     },
+     "verificacao": "acervo do piloto (descrição oficial); inspeção visual: navio atracado com guindastes"
+    },
+    "a12_2020": {
+     "pilot_id": "a12",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "EVER GIVEN (49643352087)",
+      "categorias": [
+       "IMO 9811000"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2020-03-09"
+      },
+      "descricao": "Amezonehaven (sic) 9-3-2020"
+     },
+     "verificacao": "acervo do piloto (descrição \"9-3-2020\"); inspeção visual: popa no porto"
+    },
+    "a10_outro_navio": {
+     "pilot_id": "a10",
+     "registro": {
+      "fonte": "Wikidata",
+      "titulo": "Ever Given container ship",
+      "categorias": [
+       "IMO 8320901"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2011"
+      },
+      "descricao": "With NOAA's predicted, real-time, and forecasted currents, people can safely dock and undock ships"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/2021_Suez_Canal_obstruction (o Ever Given de 2018 substituiu um navio homônimo, IMO 8320901); foto NOAA de 2011; inspeção visual: navio navegando"
+    },
+    "a0_diagrama": {
+     "pilot_id": "a0",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "SUEZCANAL SECTION",
+      "categorias": [
+       "Suez Canal",
+       "Cross sections"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1995"
+      },
+      "descricao": "Typical Cross sections of Suez canal"
+     },
+     "verificacao": "inspeção visual: corte transversal com rótulos em inglês"
+    },
+    "a5_arabe": {
+     "pilot_id": "a5",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "SUEZCANAL SECTION-ar",
+      "categorias": [
+       "Suez Canal"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2015"
+      },
+      "descricao": "مقطع عرضي نمطي يُظهر أقسام قناة السُويس."
+     },
+     "verificacao": "inspeção visual: o mesmo corte com textos em árabe"
+    },
+    "a11_igreja": {
+     "pilot_id": "a11",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "A Church beside the Suez Canal",
+      "categorias": [
+       "Suez Canal",
+       "Churches in Egypt"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2015"
+      },
+      "descricao": "Church seen from the Canal."
+     },
+     "verificacao": "inspeção visual: igreja à beira do canal"
+    },
+    "a14_placa": {
+     "pilot_id": "a14",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Sign about delivery bottlenecks due to March 2021 Suez Canal obstruction at German supermarket",
+      "categorias": [
+       "2021 Suez Canal obstruction",
+       "Signs in Germany"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2021"
+      },
+      "descricao": "Sign about delivery bottlenecks due to March 2021 Suez Canal obstruction at German supermarket"
+     },
+     "verificacao": "acervo do piloto (título e descrição oficiais)"
+    }
+   },
+   "casos": [
+    {
+     "id": "nav-01",
+     "tipo_caso": 1,
+     "acontecimento": "i6",
+     "imagem": "a6_commons",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "satélite de 24/03/2021 mostra o navio preso de través (estado final declarado); registro na categoria do encalhe"
+    },
+    {
+     "id": "nav-02",
+     "tipo_caso": 10,
+     "acontecimento": "i6",
+     "imagem": "a9_openverse",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "mesma imagem, mas o registro (Openverse) não tem data nem categoria: o vínculo é só o título livre"
+    },
+    {
+     "id": "nav-03",
+     "tipo_caso": 1,
+     "acontecimento": "i0",
+     "imagem": "a8_iss",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "foto da ISS em 27/03/2021, durante o bloqueio"
+    },
+    {
+     "id": "nav-04",
+     "tipo_caso": 2,
+     "acontecimento": "i0",
+     "imagem": "a2_aster",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "navios esperando em 04/04/2021, depois da liberação: efeito posterior, não o bloqueio"
+    },
+    {
+     "id": "nav-05",
+     "tipo_caso": 3,
+     "acontecimento": "i14",
+     "imagem": "a1_roterda",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "o navio atracado em Roterdã não é o navio voltando a flutuar no canal"
+    },
+    {
+     "id": "nav-06",
+     "tipo_caso": 3,
+     "acontecimento": "i14",
+     "imagem": "a6_commons",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "imagem de 24/03 mostra o navio PRESO; a fala é a liberação de 29/03"
+    },
+    {
+     "id": "nav-07",
+     "tipo_caso": 9,
+     "acontecimento": "i2",
+     "imagem": "a10_outro_navio",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a visão vê um navio \"Ever Given\" navegando, mas a foto é de 2011 (outro navio, IMO 8320901): registro contradiz"
+    },
+    {
+     "id": "nav-08",
+     "tipo_caso": 2,
+     "acontecimento": "i2",
+     "imagem": "a12_2020",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "o navio certo, atracado em 09/03/2020: outra época e outro estado"
+    },
+    {
+     "id": "nav-09",
+     "tipo_caso": 5,
+     "acontecimento": "i7",
+     "imagem": "a0_diagrama",
+     "visao_correta": {
+      "confere_com": "entidade",
+      "natureza": "diagrama",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "corte transversal explica o canal, não registra o encalhe"
+    },
+    {
+     "id": "nav-10",
+     "tipo_caso": 6,
+     "acontecimento": "i7",
+     "imagem": "a5_arabe",
+     "visao_correta": {
+      "confere_com": "entidade",
+      "natureza": "diagrama",
+      "classe_confere": true,
+      "texto_visivel": {
+       "presente": true,
+       "escrita": "arabe",
+       "e_o_conteudo": true
+      }
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "rótulos em árabe são o conteúdo do diagrama"
+    },
+    {
+     "id": "nav-11",
+     "tipo_caso": 4,
+     "acontecimento": "i0",
+     "imagem": "a11_igreja",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "igreja à beira do canal em 2015: nada do acontecimento"
+    },
+    {
+     "id": "nav-12",
+     "tipo_caso": 7,
+     "acontecimento": "i0",
+     "imagem": "a14_placa",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "cartaz",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "placa no supermercado alemão: consequência; está na categoria do acontecimento, mas categoria não é estado"
+    }
+   ],
+   "eventos_esperados": {
+    "i14": {
+     "acervo": [
+      "a6_commons",
+      "a1_roterda",
+      "a12_2020",
+      "a2_aster"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "nenhuma imagem do navio liberado (bloqueio legítimo do piloto)"
+    },
+    "i6": {
+     "acervo": [
+      "a6_commons",
+      "a1_roterda",
+      "a0_diagrama"
+     ],
+     "esperado": "foto_prova",
+     "fundamento": "prova real disponível"
+    }
+   }
+  },
+  "geologia": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "1980 eruption of Mount St. Helens"
+     ],
+     "categorias": [
+      "1980 eruption of Mount St. Helens"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Mount St. Helens",
+      "categorias": [
+       "Mount St. Helens"
+      ]
+     },
+     {
+      "nome": "David A. Johnston",
+      "apelidos": [
+       "David Johnston"
+      ],
+      "categorias": [
+       "David A. Johnston"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "e7": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "face norte",
+      "acao": "desliza de uma só vez",
+      "estado_inicial": "encosta inchada",
+      "estado_final": "face destacada e descendo",
+      "quando": "18 de maio de 1980",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Toda a face norte deslizou, no *maior deslizamento* de terra já registrado."
+     ]
+    },
+    "e6": {
+     "bruto": {
+      "tipo": "evento_historico",
+      "sujeito": "terremoto",
+      "acao": "desencadeia a avalanche de detritos",
+      "estado_inicial": "encosta inchada",
+      "estado_final": "encosta em colapso",
+      "quando": "18 de maio de 1980, 8h32",
+      "importancia": "critica",
+      "fonte": "Wikipédia"
+     },
+     "falas": [
+      "Às 8h32 de domingo, um terremoto de *magnitude 5,1* sacudiu o vulcão."
+     ]
+    },
+    "e9": {
+     "bruto": {
+      "tipo": "movimento",
+      "sujeito": "explosão lateral",
+      "acao": "ultrapassa a avalanche",
+      "estado_inicial": "avalanche à frente",
+      "estado_final": "explosão à frente",
+      "quando": "18 de maio de 1980",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Explodiu rumo ao lago Spirit e *ultrapassou* a própria avalanche."
+     ]
+    },
+    "e1": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "Monte Santa Helena",
+      "acao": "perdeu cerca de 400 m de altura",
+      "estado_inicial": "cume íntegro",
+      "estado_final": "cume destruído",
+      "quando": "1980",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Uma montanha perdeu *400 metros* de altura num domingo."
+     ]
+    },
+    "e2": {
+     "bruto": {
+      "tipo": "lugar",
+      "sujeito": "Monte Santa Helena",
+      "acao": "localiza o vulcão",
+      "quando": "1980"
+     },
+     "falas": [
+      "Era o *Monte Santa Helena*, no estado de Washington."
+     ]
+    },
+    "e5": {
+     "bruto": {
+      "tipo": "pessoa",
+      "sujeito": "David A. Johnston",
+      "acao": "monitora o vulcão",
+      "quando": "17 de maio de 1980"
+     },
+     "falas": [
+      "A *10 km* dali, o vulcanólogo David Johnston, de 30 anos, vigiava."
+     ]
+    },
+    "e12": {
+     "bruto": {
+      "tipo": "impacto",
+      "sujeito": "erupção",
+      "acao": "destruiu casas e pontes e matou 57 pessoas",
+      "quando": "18 de maio de 1980",
+      "importancia": "critica"
+     },
+     "falas": [
+      "A erupção destruiu *250 casas*, 47 pontes e matou 57 pessoas."
+     ]
+    }
+   },
+   "imagens": {
+    "a25_rosenquist": {
+     "pilot_id": "a25",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Mount St. Helens landslide sequence (Rosenquist) 2",
+      "categorias": [
+       "1980 eruption of Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1980-05-18"
+      },
+      "descricao": "Fotografia da série mostrando o início do colapso da face norte"
+     },
+     "verificacao": "https://pubs.usgs.gov/gip/msh/catastrophic.html (série de Rosenquist, 18/05/1980, ~40 s após o terremoto das 08:32:11); catálogo do piloto (a25)"
+    },
+    "a18_post": {
+     "pilot_id": "a18",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "MSH80 eruption mount st helens 05-18-80",
+      "categorias": [
+       "1980 eruption of Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1980-05-18"
+      },
+      "descricao": "Eruption column, May 18, 1980, Austin Post, USGS"
+     },
+     "verificacao": "https://dlab.epfl.ch/wikispeedia/wpcd/images/266/26634.jpg.htm (May 18, 1980, by Austin Post, USGS)"
+    },
+    "a15_depois": {
+     "pilot_id": "a15",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Mount St. Helens from Johnston Ridge after the eruption",
+      "categorias": [
+       "Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1980"
+      },
+      "descricao": "Vista de Johnston Ridge logo após a erupção de 18 de maio de 1980"
+     },
+     "verificacao": "catálogo do piloto (a15, 1980)"
+    },
+    "a13_antes": {
+     "pilot_id": "a13",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Mount St. Helens one day before the eruption",
+      "categorias": [
+       "Mount St. Helens",
+       "1980 eruption of Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1980-05-17"
+      },
+      "descricao": "Monte Santa Helena visto de Johnston Ridge um dia antes da erupção"
+     },
+     "verificacao": "catálogo do piloto (a13: \"um dia antes da erupção\")"
+    },
+    "a5_1982": {
+     "pilot_id": "a5",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Mount St. Helens plume 1982",
+      "categorias": [
+       "Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1982"
+      },
+      "descricao": "Pluma de vapor, gás e cinzas do topo nevado"
+     },
+     "verificacao": "catálogo do piloto (a5, 1982)"
+    },
+    "a0_memorial": {
+     "pilot_id": "a0",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Johnston Ridge memorial",
+      "categorias": [
+       "Memorials of the 1980 eruption of Mount St. Helens"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2007"
+      },
+      "descricao": "Memorial em granito com os nomes das vítimas da erupção de 18 de maio de 1980"
+     },
+     "verificacao": "catálogo do piloto (a0, 2007)"
+    },
+    "a23_animacao": {
+     "pilot_id": "a23",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Mount St. Helens landslide computer animation",
+      "categorias": [
+       "1980 eruption of Mount St. Helens",
+       "Computer-generated images"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2005"
+      },
+      "descricao": "Animação computadorizada ilustrando o deslizamento de terra em 18 de maio de 1980"
+     },
+     "verificacao": "catálogo do piloto (a23: \"Animação computadorizada\")"
+    },
+    "a16_nuvens": {
+     "pilot_id": "a16",
+     "registro": {
+      "fonte": "Openverse",
+      "titulo": "clouds over mountains",
+      "categorias": [],
+      "datas": {},
+      "descricao": "mountains clouds fog",
+      "etiquetas_livres": true
+     },
+     "verificacao": "catálogo do piloto (a16: picos cobertos por nuvens; sem data)"
+    },
+    "a12_johnston": {
+     "pilot_id": "a12",
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "David A. Johnston at Coldwater II, May 17, 1980",
+      "categorias": [
+       "David A. Johnston"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1980-05-17"
+      },
+      "descricao": "David A. Johnston sentado no acampamento em 17 de maio de 1980"
+     },
+     "verificacao": "catálogo do piloto (a12: \"17 de maio de 1980\")"
+    }
+   },
+   "casos": [
+    {
+     "id": "geo-01",
+     "tipo_caso": 1,
+     "acontecimento": "e7",
+     "imagem": "a25_rosenquist",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "série de Rosenquist: a face norte deslizando, 18/05/1980 (USGS)"
+    },
+    {
+     "id": "geo-02",
+     "tipo_caso": 1,
+     "acontecimento": "e6",
+     "imagem": "a25_rosenquist",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "mostra a encosta em colapso desencadeada pelo terremoto; NÃO comprova a magnitude 5,1 (verificação factual à parte)"
+    },
+    {
+     "id": "geo-03",
+     "tipo_caso": 3,
+     "acontecimento": "e9",
+     "imagem": "a25_rosenquist",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "início do colapso: a avalanche ainda à frente; a fala é a explosão ultrapassando"
+    },
+    {
+     "id": "geo-04",
+     "tipo_caso": 1,
+     "acontecimento": "e1",
+     "imagem": "a15_depois",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "cume destruído logo após a erupção; o registro liga à MONTANHA (não ao acontecimento) e a data é só o ano: vínculo fraco"
+    },
+    {
+     "id": "geo-05",
+     "tipo_caso": 2,
+     "acontecimento": "e7",
+     "imagem": "a13_antes",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a montanha um dia antes: estado anterior (serve de \"antes\" numa comparação, não prova o deslizamento)"
+    },
+    {
+     "id": "geo-06",
+     "tipo_caso": 2,
+     "acontecimento": "e7",
+     "imagem": "a5_1982",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "pluma de 1982: outra época"
+    },
+    {
+     "id": "geo-07",
+     "tipo_caso": 1,
+     "acontecimento": "e2",
+     "imagem": "a5_1982",
+     "visao_correta": {
+      "confere_com": "entidade",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "acontecimento de LUGAR (identidade): a montanha certa. Limite registrado: o contrato não diz que a fala é \"antes da erupção\""
+    },
+    {
+     "id": "geo-08",
+     "tipo_caso": 7,
+     "acontecimento": "e12",
+     "imagem": "a0_memorial",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "memorial de 2007: consequência, não a destruição"
+    },
+    {
+     "id": "geo-09",
+     "tipo_caso": 5,
+     "acontecimento": "e7",
+     "imagem": "a23_animacao",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "reconstituicao_3d",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "animação computadorizada: explica, nunca prova (mesmo na categoria do acontecimento)"
+    },
+    {
+     "id": "geo-10",
+     "tipo_caso": 4,
+     "acontecimento": "e9",
+     "imagem": "a16_nuvens",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false,
+      "generica": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "nuvens sobre montanhas: genérica"
+    },
+    {
+     "id": "geo-11",
+     "tipo_caso": 1,
+     "acontecimento": "e5",
+     "imagem": "a12_johnston",
+     "visao_correta": {
+      "confere_com": "entidade",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "Johnston em 17/05/1980, categoria da pessoa"
+    },
+    {
+     "id": "geo-12",
+     "tipo_caso": 1,
+     "acontecimento": "e1",
+     "imagem": "a18_post",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "coluna da erupção em 18/05/1980 (Austin Post, USGS), na categoria do acontecimento"
+    }
+   ],
+   "eventos_esperados": {
+    "e7": {
+     "acervo": [
+      "a25_rosenquist",
+      "a13_antes",
+      "a5_1982",
+      "a23_animacao",
+      "a16_nuvens"
+     ],
+     "esperado": "foto_prova",
+     "fundamento": "era bloqueio falso no piloto"
+    },
+    "e9": {
+     "acervo": [
+      "a25_rosenquist",
+      "a16_nuvens",
+      "a5_1982"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "nenhuma imagem da explosão ultrapassando"
+    },
+    "e12": {
+     "acervo": [
+      "a0_memorial",
+      "a16_nuvens"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "memorial não prova destruição"
+    }
+   }
+  }
+ }
+}

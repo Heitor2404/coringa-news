@@ -1,0 +1,679 @@
+{
+ "titulo": "A MONTANHA QUE DESABOU",
+ "categoria": "CIÊNCIA",
+ "legenda_post": "Monte Santa Helena 1980: como uma montanha inteira virou nuvem de cinzas? Ela inchou por dois meses e, num domingo de manhã, perdeu 400 metros de altura. No rádio, um vulcanólogo de 30 anos gritou um aviso que ficou famoso.",
+ "hashtags": [
+  "MonteSantaHelena",
+  "erupcao1980",
+  "vulcao",
+  "DavidJohnston",
+  "curiosidadescientificas"
+ ],
+ "titulo_youtube": "Monte Santa Helena 1980: como a montanha virou cinzas",
+ "legenda_tiktok": "Uma montanha inchou por dois meses e desabou num domingo. Entenda como.",
+ "clima": "tenso",
+ "estilo_visual": "photorealistic cinematic film still, historical reenactment, natural colors, 35mm film grain, dramatic lighting",
+ "personagem": "30-year-old male volcanologist, 1980 outdoor field clothes, short dark hair, sitting on a camp chair with a notebook",
+ "arco": [
+  "Como o Monte Santa Helena inchou e desabou em 18 de maio de 1980"
+ ],
+ "plano": {
+  "versao": 2,
+  "origem": "roteirista",
+  "assunto": "Erupção do Monte Santa Helena em 18 de maio de 1980",
+  "intencao": "Entender que o deslizamento da face norte tirou a tampa do gás sob pressão, o que causou a explosão",
+  "por_que_agora": "",
+  "promessa": "Explicar como uma montanha perdeu 400 metros de altura num domingo de manhã",
+  "publico": "leigo",
+  "complexidade": "media",
+  "angulo": {
+   "tipo": "causa_consequencia",
+   "pergunta": "O que fez uma montanha inchada desabar e explodir?"
+  },
+  "modos": [
+   "mecanismo",
+   "estudo_de_caso"
+  ],
+  "estrategia": {
+   "abertura": "Uma montanha perdeu 400 metros de altura num domingo",
+   "progressao": [
+    "Dois meses de terremotos e inchaço da encosta norte",
+    "Terremoto 5,1 solta a face norte inteira",
+    "Sem a tampa, o gás sob pressão explode",
+    "A explosão ultrapassa a avalanche; Johnston avisa pelo rádio",
+    "Saldo: coluna de 24 km, 57 mortos e cume rebaixado"
+   ],
+   "payoff": "O deslizamento tirou a tampa e o gás preso explodiu",
+   "fechamento": "A altitude do cume caiu de 2.950 para 2.549 m e o mecanismo explica a perda"
+  },
+  "evidencias": [
+   {
+    "afirmacao": "A face norte deslizou de uma vez, no maior deslizamento já registrado",
+    "fonte": "Wikipedia (inglês)",
+    "certeza": "alta",
+    "natureza": "fato"
+   },
+   {
+    "afirmacao": "Sem a face norte, a rocha com gás sob pressão explodiu rumo ao lago Spirit",
+    "fonte": "Wikipedia (inglês)",
+    "certeza": "alta",
+    "natureza": "fato"
+   },
+   {
+    "afirmacao": "A mistura quente ultrapassou a avalanche",
+    "fonte": "Wikipédia",
+    "certeza": "alta",
+    "natureza": "fato"
+   },
+   {
+    "afirmacao": "O cume caiu de 2.950 m para 2.549 m",
+    "fonte": "Wikipedia (inglês)",
+    "certeza": "alta",
+    "natureza": "fato"
+   },
+   {
+    "afirmacao": "Johnston avisou pelo rádio: Vancouver! Vancouver! This is it!",
+    "fonte": "Wikipedia (inglês)",
+    "certeza": "alta",
+    "natureza": "fato"
+   }
+  ],
+  "incertezas": [],
+  "visual": {
+   "precisa_mostrar": [
+    "Inchaço da encosta, deslizamento, explosão lateral e o cume antes e depois"
+   ],
+   "disponivel": [
+    "Fotos de Johnston, do vulcão antes e depois e da pluma de cinzas"
+   ],
+   "faltando": [
+    "Imagens do deslizamento e da explosão lateral em si"
+   ],
+   "riscos": [
+    "O mecanismo do deslizamento e da explosão depende de esquema desenhado"
+   ]
+  },
+  "duracao_alvo_s": 57,
+  "viabilidade": {
+   "ok": true,
+   "motivo": "O dossiê sustenta toda a cadeia causal",
+   "alternativa": ""
+  }
+ },
+ "cenas": [
+  {
+   "tipo": "gancho",
+   "fala": "Uma montanha perdeu *400 metros* de altura num domingo.",
+   "titulo": "A MONTANHA QUE *DESABOU*",
+   "subtitulo": "Santa Helena, 1980",
+   "cenario": "Mountain with a huge missing summit and an ash cloud above, 1980",
+   "bloco": {
+    "funcao": "abertura",
+    "avanca": "Apresenta a perda de 400 metros de altura"
+   },
+   "mostrar": "Vulcão com o cume destruído",
+   "busca": "Mount St Helens after eruption",
+   "visual": "a15",
+   "evento": "e1",
+   "acontecimento": {
+    "quem": "Monte Santa Helena",
+    "onde": "Washington, EUA",
+    "quando": "1980",
+    "recurso": "foto",
+    "id": "e1",
+    "tipo": "transformacao",
+    "sujeito": "Monte Santa Helena",
+    "acao": "perdeu cerca de 400 m de altura",
+    "estado_inicial": "cume íntegro",
+    "estado_final": "cume destruído",
+    "mostrar": "A montanha após a erupção",
+    "dados": {
+     "valor": 400,
+     "fonte": "Wikipedia (inglês)"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "altura": [
+      "400",
+      "metros"
+     ]
+    }
+   },
+   "imagem": "c0"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Era o *Monte Santa Helena*, no estado de Washington.",
+   "lugar": "WASHINGTON · 1980",
+   "cenario": "Aerial view of a snow-capped volcano in the Pacific Northwest, 1980",
+   "bloco": {
+    "funcao": "contexto",
+    "avanca": "Situa o vulcão e o lugar"
+   },
+   "mostrar": "Vulcão nevado intacto",
+   "busca": "Mount St Helens before 1980",
+   "visual": "a14",
+   "evento": "e2",
+   "acontecimento": {
+    "quem": "Monte Santa Helena",
+    "onde": "Condado de Skamania, Washington",
+    "quando": "1980",
+    "recurso": "lugar",
+    "id": "e2",
+    "tipo": "lugar",
+    "sujeito": "Monte Santa Helena",
+    "acao": "localiza o vulcão",
+    "estado_inicial": "",
+    "estado_final": "",
+    "mostrar": "O vulcão e seus arredores",
+    "dados": {},
+    "fonte": "Wikipédia",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {}
+   },
+   "imagem": "c1"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Havia dois meses que ele tremia, com *terremotos* e explosões de vapor.",
+   "cenario": "Volcanologist operating a gas detection instrument on a tripod on a volcano slope, April 1980",
+   "bloco": {
+    "funcao": "contexto",
+    "avanca": "Mostra os sinais de dois meses antes"
+   },
+   "mostrar": "Cientista monitorando o vulcão",
+   "busca": "Johnston gas instrument 1980",
+   "visual": "a4",
+   "evento": "e3",
+   "acontecimento": {
+    "quem": "Vulcanólogos do USGS",
+    "onde": "Monte Santa Helena",
+    "quando": "Março a maio de 1980",
+    "recurso": "foto",
+    "id": "e3",
+    "tipo": "evolucao_temporal",
+    "sujeito": "vulcão",
+    "acao": "teve terremotos e explosões de vapor por cerca de dois meses",
+    "estado_inicial": "calmo",
+    "estado_final": "agitado",
+    "mostrar": "Monitoramento do vulcão",
+    "dados": {},
+    "fonte": "Wikipédia",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {}
+   },
+   "imagem": "c2"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Magma subia por baixo e criou uma *protuberância* enorme na encosta norte.",
+   "cenario": "Large bulge on the north flank of a snow-covered volcano, 1980",
+   "destaque": "*PROTUBERÂNCIA* NORTE",
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Explica o inchaço da encosta"
+   },
+   "mostrar": "Encosta norte inchada com fraturas",
+   "busca": "Mount St Helens bulge 1980",
+   "visual": "a13",
+   "evento": "e4",
+   "acontecimento": {
+    "quem": "Magma sob o vulcão",
+    "onde": "Encosta norte",
+    "quando": "Antes de 18 de maio de 1980",
+    "recurso": "esquema",
+    "id": "e4",
+    "tipo": "mecanismo",
+    "sujeito": "magma",
+    "acao": "empurra a encosta norte e forma uma protuberância",
+    "estado_inicial": "encosta lisa",
+    "estado_final": "encosta inchada e fraturada",
+    "mostrar": "Corte do vulcão com magma empurrando a encosta",
+    "dados": {
+     "etapas": [
+      "magma sobe",
+      "encosta norte incha",
+      "fraturas se abrem"
+     ]
+    },
+    "fonte": "Wikipédia",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "inchaco": [
+      "protuberância"
+     ]
+    }
+   },
+   "imagem": "c3"
+  },
+  {
+   "tipo": "historia",
+   "fala": "A *10 km* dali, o vulcanólogo David Johnston, de 30 anos, vigiava.",
+   "lugar": "POSTO DO USGS",
+   "cenario": "Young volcanologist on a camp chair with a notebook near a research trailer, 1980",
+   "bloco": {
+    "funcao": "contexto",
+    "avanca": "Apresenta Johnston observando de longe"
+   },
+   "mostrar": "Johnston no acampamento com caderno",
+   "busca": "David Johnston volcanologist 1980",
+   "visual": "a12",
+   "evento": "e5",
+   "acontecimento": {
+    "quem": "David A. Johnston",
+    "onde": "Posto do USGS, a 10 km do vulcão",
+    "quando": "17 de maio de 1980",
+    "recurso": "retrato",
+    "id": "e5",
+    "tipo": "pessoa",
+    "sujeito": "David A. Johnston",
+    "acao": "monitora o vulcão",
+    "estado_inicial": "",
+    "estado_final": "",
+    "mostrar": "Johnston sentado no acampamento",
+    "dados": {
+     "valor": 30,
+     "fonte": "Wikipedia (inglês)"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {}
+   },
+   "imagem": "c4"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Às 8h32 de domingo, um terremoto de *magnitude 5,1* sacudiu o vulcão.",
+   "lugar": "18 DE MAIO DE 1980",
+   "cenario": "Volcano slope shaking with cracks and dust, early morning, 1980",
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Mostra o gatilho do desabamento"
+   },
+   "mostrar": "Encosta norte tremendo e rachando",
+   "busca": "Mount St Helens earthquake 1980",
+   "visual": "ia",
+   "evento": "e6",
+   "acontecimento": {
+    "quem": "Monte Santa Helena",
+    "onde": "Condado de Skamania",
+    "quando": "18 de maio de 1980, 8h32",
+    "recurso": "ia",
+    "id": "e6",
+    "tipo": "evento_historico",
+    "sujeito": "terremoto",
+    "acao": "desencadeia a avalanche de detritos",
+    "estado_inicial": "encosta inchada",
+    "estado_final": "encosta em colapso",
+    "mostrar": "Tremor sacudindo a encosta inchada",
+    "dados": {
+     "valor": 5.1,
+     "fonte": "Wikipédia"
+    },
+    "fonte": "Wikipédia",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "tempo": [
+      "8h32"
+     ]
+    }
+   },
+   "imagem": "c5"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Toda a face norte deslizou, no *maior deslizamento* de terra já registrado.",
+   "cenario": "Entire north face of a volcano sliding down in a giant landslide, 1980",
+   "bloco": {
+    "funcao": "virada",
+    "avanca": "Mostra o colapso da face norte"
+   },
+   "mostrar": "Face norte deslizando de uma vez",
+   "busca": "Mount St Helens landslide 1980",
+   "visual": "ia",
+   "evento": "e7",
+   "acontecimento": {
+    "quem": "Face norte do vulcão",
+    "onde": "Monte Santa Helena",
+    "quando": "18 de maio de 1980",
+    "recurso": "esquema",
+    "id": "e7",
+    "tipo": "transformacao",
+    "sujeito": "face norte",
+    "acao": "desliza de uma só vez",
+    "estado_inicial": "encosta inchada",
+    "estado_final": "face destacada e descendo",
+    "mostrar": "Corte do vulcão com a face norte deslizando",
+    "dados": {
+     "valor": 2.5,
+     "fonte": "Wikipedia (inglês)"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {}
+   },
+   "imagem": "c6"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Sem a face norte, o gás sob pressão perdeu a *tampa*.",
+   "cenario": "Cross-section diagram of a volcano with pressurized gas-rich rock exposed after landslide",
+   "bloco": {
+    "funcao": "mecanismo",
+    "avanca": "Explica por que o vulcão explodiu"
+   },
+   "mostrar": "Gás sob pressão sem a tampa de rocha",
+   "busca": "volcano lateral blast diagram",
+   "visual": "ia",
+   "evento": "e8",
+   "acontecimento": {
+    "quem": "Rocha com gás e vapor sob pressão",
+    "onde": "Interior do Monte Santa Helena",
+    "quando": "18 de maio de 1980",
+    "recurso": "esquema",
+    "id": "e8",
+    "tipo": "mecanismo",
+    "sujeito": "rocha rica em gás e vapor",
+    "acao": "perde a tampa e se descomprime",
+    "estado_inicial": "gás contido sob pressão",
+    "estado_final": "gás exposto, pronto para explodir",
+    "mostrar": "Esquema do vulcão sem a face norte e o gás se expandindo",
+    "dados": {
+     "etapas": [
+      "face norte desliza",
+      "pressão cai",
+      "gás se expande"
+     ]
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "tampa": [
+      "tampa"
+     ]
+    }
+   },
+   "imagem": "c7"
+  },
+  {
+   "tipo": "historia",
+   "fala": "Explodiu rumo ao lago Spirit e *ultrapassou* a própria avalanche.",
+   "lugar": "LAGO SPIRIT",
+   "cenario": "Giant blast cloud racing across forest toward a lake, 1980",
+   "bloco": {
+    "funcao": "virada",
+    "avanca": "A explosão passa a avalanche"
+   },
+   "mostrar": "Explosão passando a avalanche rumo ao lago",
+   "busca": "Mount St Helens lateral blast",
+   "visual": "a11",
+   "evento": "e9",
+   "acontecimento": {
+    "quem": "Mistura quente de lava e rocha",
+    "onde": "Do vulcão ao lago Spirit",
+    "quando": "18 de maio de 1980",
+    "recurso": "esquema",
+    "id": "e9",
+    "tipo": "movimento",
+    "sujeito": "explosão lateral",
+    "acao": "ultrapassa a avalanche",
+    "estado_inicial": "avalanche à frente",
+    "estado_final": "explosão à frente",
+    "mostrar": "Duas frentes descendo: a explosão passa a avalanche",
+    "dados": {},
+    "fonte": "Wikipédia",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {
+     "passa": [
+      "ultrapassou"
+     ]
+    }
+   },
+   "imagem": "c8"
+  },
+  {
+   "tipo": "citacao",
+   "fala": "Pelo rádio, Johnston avisou: *Vancouver! Vancouver! This is it!*",
+   "fala_tts": "Pelo rádio, Johnston avisou: Vâncuver! Vâncuver! Dis is ít!",
+   "autor": "David A. Johnston",
+   "texto": "Vancouver! Vancouver! This is it!",
+   "cor": "amarelo",
+   "cenario": "Volcanologist at a radio at a research post, 1980",
+   "bloco": {
+    "funcao": "evidencia",
+    "avanca": "O aviso de Johnston ao vivo"
+   },
+   "mostrar": "Johnston no acampamento com caderno",
+   "busca": "David Johnston radio 1980",
+   "visual": "a3",
+   "evento": "e10",
+   "acontecimento": {
+    "quem": "David A. Johnston",
+    "onde": "Posto do USGS",
+    "quando": "18 de maio de 1980",
+    "recurso": "retrato",
+    "id": "e10",
+    "tipo": "citacao",
+    "sujeito": "David A. Johnston",
+    "acao": "avisa a erupção pelo rádio",
+    "estado_inicial": "",
+    "estado_final": "",
+    "mostrar": "Retrato de Johnston e a frase",
+    "dados": {
+     "valor": "Vancouver! Vancouver! This is it!",
+     "fonte": "Wikipedia (inglês)"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {}
+   },
+   "imagem": "c9"
+  },
+  {
+   "tipo": "numero",
+   "fala": "A coluna de cinzas subiu *24 km* e a pluma atingiu 11 estados.",
+   "valor": 24,
+   "prefixo": "",
+   "sufixo": " km",
+   "rotulo": "Altura da coluna",
+   "nota": "Dossiê: 80.000 pés",
+   "comparacao": "",
+   "cor": "vermelho",
+   "cenario": "Towering ash column above a volcano, 1980",
+   "bloco": {
+    "funcao": "consequencia",
+    "avanca": "Escala da nuvem de cinzas"
+   },
+   "mostrar": "Coluna de cinzas altíssima",
+   "busca": "Mount St Helens ash plume",
+   "visual": "a11",
+   "evento": "e11",
+   "acontecimento": {
+    "quem": "Coluna de erupção",
+    "onde": "Monte Santa Helena",
+    "quando": "18 de maio de 1980",
+    "recurso": "numero",
+    "id": "e11",
+    "tipo": "numero",
+    "sujeito": "coluna de erupção",
+    "acao": "subiu 24 km e a pluma atingiu 11 estados",
+    "estado_inicial": "",
+    "estado_final": "",
+    "mostrar": "24 km de altura",
+    "dados": {
+     "valor": 24,
+     "fonte": "Wikipedia (inglês)"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {}
+   },
+   "imagem": "c10"
+  },
+  {
+   "tipo": "historia",
+   "fala": "A erupção destruiu *250 casas*, 47 pontes e matou 57 pessoas.",
+   "cenario": "Granite memorial with names of the victims of the 1980 eruption",
+   "bloco": {
+    "funcao": "consequencia",
+    "avanca": "Saldo de destruição e mortes"
+   },
+   "mostrar": "Memorial com os nomes das vítimas",
+   "busca": "Johnston Ridge memorial",
+   "visual": "a0",
+   "evento": "e12",
+   "acontecimento": {
+    "quem": "Região atingida",
+    "onde": "Washington, EUA",
+    "quando": "1980",
+    "recurso": "lugar",
+    "id": "e12",
+    "tipo": "impacto",
+    "sujeito": "erupção",
+    "acao": "destruiu casas e pontes e matou 57 pessoas",
+    "estado_inicial": "",
+    "estado_final": "",
+    "mostrar": "Memorial das vítimas",
+    "dados": {
+     "itens": [
+      {
+       "rotulo": "casas",
+       "valor": 250
+      },
+      {
+       "rotulo": "pontes",
+       "valor": 47
+      },
+      {
+       "rotulo": "mortos",
+       "valor": 57
+      }
+     ]
+    },
+    "fonte": "Wikipédia",
+    "importancia": "apoio",
+    "obrigatoria": false,
+    "sincronia": {}
+   },
+   "imagem": "c11"
+  },
+  {
+   "tipo": "comparacao",
+   "fala": "O cume caiu de *2.950* para 2.549 metros.",
+   "titulo": "ALTURA DO CUME (m)",
+   "unidade": "m",
+   "itens": [
+    {
+     "rotulo": "Antes",
+     "valor": 2950.0,
+     "cor": "verde"
+    },
+    {
+     "rotulo": "Depois",
+     "valor": 2549.0,
+     "cor": "vermelho"
+    }
+   ],
+   "cenario": "Volcano summit before and after eruption",
+   "bloco": {
+    "funcao": "evidencia",
+    "avanca": "Quantifica a perda de altura"
+   },
+   "mostrar": "Altura do cume antes e depois",
+   "busca": "Mount St Helens before after",
+   "visual": "a15",
+   "evento": "e13",
+   "acontecimento": {
+    "quem": "Monte Santa Helena",
+    "onde": "Washington",
+    "quando": "1980",
+    "recurso": "numero",
+    "id": "e13",
+    "tipo": "comparacao",
+    "sujeito": "altitude do cume",
+    "acao": "diminuiu cerca de 400 m",
+    "estado_inicial": "2.950 m",
+    "estado_final": "2.549 m",
+    "mostrar": "Duas barras de altura",
+    "dados": {
+     "itens": [
+      {
+       "rotulo": "Antes",
+       "valor": 2950
+      },
+      {
+       "rotulo": "Depois",
+       "valor": 2549
+      }
+     ]
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {}
+   },
+   "imagem": "c12"
+  },
+  {
+   "tipo": "revelacao",
+   "fala": "Um deslize tirou a *tampa*, e o gás preso fez a montanha perder 400 metros.",
+   "pergunta": "O que explodiu a montanha?",
+   "resposta": "GÁS SEM TAMPA",
+   "detalhe": "O deslizamento da face norte liberou o gás",
+   "cor": "vermelho",
+   "cenario": "Volcano with a missing north face releasing a blast",
+   "bloco": {
+    "funcao": "payoff",
+    "avanca": "Responde a pergunta central"
+   },
+   "mostrar": "Vulcão sem a face norte",
+   "busca": "Mount St Helens crater",
+   "visual": "a13",
+   "evento": "e14",
+   "acontecimento": {
+    "quem": "Monte Santa Helena",
+    "onde": "Washington",
+    "quando": "18 de maio de 1980",
+    "recurso": "esquema",
+    "id": "e14",
+    "tipo": "mecanismo",
+    "sujeito": "gás sob pressão",
+    "acao": "explode ao perder a tampa",
+    "estado_inicial": "face norte intacta",
+    "estado_final": "explosão e cratera",
+    "mostrar": "Deslizamento, perda da tampa e explosão",
+    "dados": {
+     "etapas": [
+      "deslizamento",
+      "perda da tampa",
+      "explosão"
+     ]
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true,
+    "sincronia": {}
+   },
+   "imagem": "c13"
+  },
+  {
+   "tipo": "fechamento",
+   "fala": "Segue o Coringa Explica.",
+   "titulo": "Segue o *@coringa.explica*",
+   "imagem": null
+  }
+ ],
+ "tipo_conteudo": "historico"
+}

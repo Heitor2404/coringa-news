@@ -643,6 +643,15 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     if os.getenv('MOTOR_VISUAL') == 'v2' and not teste and v.get('acervo') is not None:
         # CORREÇÃO DO PILOTO: valida e completa os acontecimentos ANTES de baixar mídia, narrar e renderizar (sem IA)
         from src.v2 import preparo
+        from src.v2 import evidencia
+        if evidencia.ativo():        # EXPERIMENTAL (desligado por padrão): só grava; não muda nenhuma decisão, sem IA
+            try:
+                import copy as _copy
+                sombra = evidencia.preparar(_copy.deepcopy(v), _copy.deepcopy(v['acervo']))
+                (pasta / f'{nome}-evidencia-sombra.json').write_text(json.dumps(sombra, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+                print('  [evidência/sombra] ' + evidencia.resumo(sombra).replace('\n', '\n  '))
+            except Exception as e:
+                print(f'  [evidência/sombra] falhou sem afetar o vídeo: {str(e)[:120]}')
         rel = preparo.preparar(v)
         v['_preparo'] = rel
         (pasta / f'{nome}-preparo.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')

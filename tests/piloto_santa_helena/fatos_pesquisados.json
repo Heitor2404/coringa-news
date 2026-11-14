@@ -1,0 +1,163 @@
+{
+ "relevante": true,
+ "sensivel": false,
+ "motivo": "Há material amplo e confiável (Wikipédia PT/EN) sobre a erupção de 1980 do Monte Santa Helena. O texto do Krakatoa (1883), a erupção de Tonga e as notícias sobre 'o vulcão não está onde deveria' foram descartados por não tratarem do tema. As mortes são citadas só como estatística, sem violência explícita.",
+ "angulo": "Uma montanha que 'cresceu' por dois meses, com uma protuberância visível, e desabou em segundos no maior deslizamento de terra já registrado, o que liberou uma explosão lateral mais rápida que a própria avalanche. No centro, o vulcanólogo que gritou 'Vancouver! Vancouver! This is it!' pelo rádio.",
+ "fatos": [
+  {
+   "fato": "Às 8h32 de domingo, 18 de maio de 1980, a erupção catastrófica do Monte Santa Helena começou, no condado de Skamania, estado de Washington (EUA).",
+   "tipo": "cena",
+   "surpresa": 5,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "Durante cerca de dois meses antes da erupção, o vulcão teve uma série de terremotos e explosões de vapor. Eles foram causados por uma injeção de magma sob o vulcão.",
+   "tipo": "contexto",
+   "surpresa": 5,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "A injeção de magma criou uma protuberância enorme e um sistema de fraturas na encosta norte da montanha. A montanha estava literalmente inchando.",
+   "tipo": "virada",
+   "surpresa": 7,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "Um terremoto de magnitude 5,1 desencadeou a maciça avalancha de detritos.",
+   "tipo": "numero",
+   "surpresa": 6,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "Toda a face norte, já enfraquecida, deslizou de uma só vez. Foi o maior deslizamento de terra já registrado na história.",
+   "tipo": "numero",
+   "surpresa": 8,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "A avalanche de detritos teve volume de 2,5 km³ (0,6 milhas cúbicas).",
+   "tipo": "numero",
+   "surpresa": 7,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "Ao perder a face norte, a rocha rica em gás e vapor sob alta pressão ficou sem a 'tampa'. Ela explodiu de repente em direção ao lago Spirit.",
+   "tipo": "virada",
+   "surpresa": 8,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "A mistura quente de lava e rocha pulverizada foi lançada tão rápido que ultrapassou a própria avalanche, que já descia a montanha.",
+   "tipo": "virada",
+   "surpresa": 9,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "A coluna de erupção subiu 24 km (80.000 pés, 15 milhas) na atmosfera. Isso é mais ou menos o dobro da altitude em que voam os aviões comerciais.",
+   "tipo": "numero",
+   "surpresa": 7,
+   "fonte": "Wikipedia (inglês); comparação com os aviões é do editor, fora do material"
+  },
+  {
+   "fato": "A pluma vulcânica atingiu 11 estados dos Estados Unidos.",
+   "tipo": "numero",
+   "surpresa": 7,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "A altitude do cume caiu de 2.950 m (9.677 pés) para 2.549 m (8.363 pés). A montanha perdeu cerca de 400 metros de altura.",
+   "tipo": "numero",
+   "surpresa": 8,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "No lugar do cume ficou uma cratera em forma de ferradura, com 1,6 km de largura.",
+   "tipo": "numero",
+   "surpresa": 6,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "Neve, gelo e geleiras inteiras derreteram. Isso formou uma série de grandes deslizamentos de lama vulcânicos, que chegaram até o rio Columbia.",
+   "tipo": "consequencia",
+   "surpresa": 7,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "A erupção matou 57 pessoas.",
+   "tipo": "numero",
+   "surpresa": 5,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "Foram destruídas 250 casas, 47 pontes, 24 km de ferrovias e 298 km de rodovias.",
+   "tipo": "consequencia",
+   "surpresa": 7,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "Foi o evento vulcânico mais mortal e economicamente destrutivo da história dos Estados Unidos.",
+   "tipo": "contexto",
+   "surpresa": 5,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "A erupção teve índice de explosividade vulcânica (IEV) 5. Foi a primeira nos Estados Unidos continentais desde a erupção bem menor do Lassen Peak, na Califórnia, em 1915.",
+   "tipo": "contexto",
+   "surpresa": 6,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "O vulcanólogo David A. Johnston, do USGS, tinha 30 anos. Estava num posto de observação a cerca de 10 km (6 milhas) do vulcão na manhã da erupção.",
+   "tipo": "pessoa",
+   "surpresa": 7,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "Johnston foi o primeiro a avisar da erupção. Pelo rádio, transmitiu: 'Vancouver! Vancouver! This is it!' antes de ser atingido pela explosão lateral.",
+   "tipo": "cena",
+   "surpresa": 10,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "O corpo de Johnston nunca foi encontrado, apesar de buscas minuciosas. Em 1993, funcionários de rodovias estaduais acharam restos do trailer do USGS dele.",
+   "tipo": "virada",
+   "surpresa": 9,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "Johnston era conhecido por suas análises de gases vulcânicos e da relação deles com as erupções. Antes, estudou o vulcão Augustine (Alasca), o campo vulcânico de San Juan (Colorado) e vulcões extintos em Michigan.",
+   "tipo": "pessoa",
+   "surpresa": 5,
+   "fonte": "Wikipedia (inglês)"
+  },
+  {
+   "fato": "O vulcão fica a cerca de 154 km ao sul de Seattle e 80 km a nordeste de Portland. Faz parte do Arco Vulcânico das Cascatas, no Anel de Fogo do Pacífico.",
+   "tipo": "contexto",
+   "surpresa": 3,
+   "fonte": "Wikipédia"
+  },
+  {
+   "fato": "Os povos indígenas conhecem a montanha por outros nomes: Lawetlat'la (cowlitz) e Loowit (klickitat). O nome atual vem do diplomata britânico Lord St Helens, amigo do explorador George Vancouver.",
+   "tipo": "contexto",
+   "surpresa": 6,
+   "fonte": "Wikipédia"
+  }
+ ],
+ "protagonista": {
+  "nome": "David A. Johnston",
+  "papel": "Vulcanólogo do USGS que monitorava o vulcão e foi o primeiro a avisar da erupção pelo rádio",
+  "visual": "Young white American man around 30, short wavy light-brown hair, clean-shaven, wearing a 1980 field-scientist outfit: plaid flannel shirt, khaki work pants, hiking boots, holding a handheld radio, standing beside a small trailer on a forested ridge"
+ },
+ "epoca": "Março a 18 de maio de 1980 (erupção às 8h32 de um domingo); com um epílogo em 1993",
+ "lugares": [
+  "Monte Santa Helena, condado de Skamania, Washington, EUA",
+  "Lago Spirit",
+  "Encosta norte do vulcão",
+  "Rio Columbia",
+  "Posto de observação do USGS, a cerca de 10 km do vulcão"
+ ],
+ "fontes": [
+  "Wikipédia",
+  "Wikipedia (inglês)"
+ ]
+}

@@ -1,0 +1,424 @@
+{
+ "eventos": [
+  {
+   "id": "e1",
+   "cenas": [
+    0
+   ],
+   "tipo_original": "transformacao",
+   "critico": true,
+   "tipo": "transformacao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "editorial",
+    "comp": "abertura.pergunta"
+   },
+   "faltam": [],
+   "foto": "a18",
+   "dados": {
+    "valor": 400,
+    "fonte": "Wikipedia (inglês)"
+   }
+  },
+  {
+   "id": "e2",
+   "cenas": [
+    1
+   ],
+   "tipo_original": "lugar",
+   "critico": false,
+   "tipo": "lugar",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a5",
+    "evidencia": "é o que o roteiro pediu (nevado, vulcao); foto de 1982, acontecimento de 1980"
+   },
+   "faltam": [],
+   "foto": "a5",
+   "dados": null
+  },
+  {
+   "id": "e3",
+   "cenas": [
+    2,
+    3
+   ],
+   "tipo_original": "evolucao_temporal",
+   "critico": false,
+   "tipo": "evolucao_temporal",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a4"
+   },
+   "faltam": [],
+   "foto": "a4",
+   "dados": null
+  },
+  {
+   "id": "e4",
+   "cenas": [
+    4,
+    5
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": null,
+   "dados": {
+    "etapas": [
+     "magma sobe",
+     "encosta norte incha",
+     "fraturas se abrem"
+    ]
+   }
+  },
+  {
+   "id": "e5",
+   "cenas": [
+    6,
+    7
+   ],
+   "tipo_original": "pessoa",
+   "critico": false,
+   "tipo": "pessoa",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a12",
+    "evidencia": "é o que o roteiro pediu (acampamento, sentado)"
+   },
+   "faltam": [],
+   "foto": "a12",
+   "dados": {
+    "valor": 30,
+    "fonte": "Wikipedia (inglês)"
+   }
+  },
+  {
+   "id": "e6",
+   "cenas": [
+    8,
+    9
+   ],
+   "tipo_original": "evento_historico",
+   "critico": true,
+   "tipo": "evento_historico",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "bloqueio",
+    "faltam": [
+     "dados para uma composição capaz: foto.historica (img), video.documental (video), linha_tempo.historica (eventos>=2)",
+     "foto/vídeo real que mostre \"encosta em colapso\""
+    ]
+   },
+   "faltam": [],
+   "foto": "a16",
+   "dados": {
+    "valor": 5.1,
+    "fonte": "Wikipédia"
+   }
+  },
+  {
+   "id": "e7",
+   "cenas": [
+    10,
+    11
+   ],
+   "tipo_original": "transformacao",
+   "critico": true,
+   "tipo": "transformacao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "bloqueio",
+    "faltam": [
+     "dados para uma composição capaz: comparacao.antes_depois (img_antes, img_depois), processo.etapas (etapas>=2)",
+     "foto/vídeo real que mostre \"face destacada e descendo\""
+    ]
+   },
+   "faltam": [],
+   "foto": "a25",
+   "dados": {
+    "valor": 2.5,
+    "fonte": "Wikipedia (inglês)"
+   }
+  },
+  {
+   "id": "e8",
+   "cenas": [
+    12
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": null,
+   "dados": {
+    "etapas": [
+     "face norte desliza",
+     "pressão cai",
+     "gás se expande"
+    ]
+   }
+  },
+  {
+   "id": "e9",
+   "cenas": [
+    13
+   ],
+   "tipo_original": "movimento",
+   "critico": true,
+   "tipo": "movimento",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "bloqueio",
+    "faltam": [
+     "dados para uma composição capaz: forcas.vetores (forcas), mecanismo.nivel (de, ate), animacao.quadros (cena)",
+     "foto/vídeo real que mostre \"explosão à frente\""
+    ]
+   },
+   "faltam": [],
+   "foto": "a17",
+   "dados": null
+  },
+  {
+   "id": "e10",
+   "cenas": [
+    14
+   ],
+   "tipo_original": "citacao",
+   "critico": true,
+   "tipo": "citacao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a1",
+    "evidencia": "é o que o roteiro pediu (acampamento, caderno)"
+   },
+   "faltam": [],
+   "foto": "a1",
+   "dados": {
+    "valor": "Vancouver! Vancouver! This is it!",
+    "fonte": "Wikipedia (inglês)"
+   }
+  },
+  {
+   "id": "e11",
+   "cenas": [
+    15
+   ],
+   "tipo_original": "numero",
+   "critico": false,
+   "tipo": "numero",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "numero.animado"
+   },
+   "faltam": [],
+   "foto": "a18",
+   "dados": {
+    "valor": 24,
+    "unidade": "valor",
+    "rotulo": "subiu 24 km e a pluma atingiu 11 estados",
+    "contexto": "",
+    "fonte": "Wikipedia (inglês); comparação com os aviões é do editor, fora do material",
+    "rastreio": "A coluna de erupção subiu 24 km (80.000 pés, 15 milhas) na atmosfera. Isso é mais ou menos o dobro da altitude em que voam os aviões comerciais. [numero]"
+   }
+  },
+  {
+   "id": "e12",
+   "cenas": [
+    16
+   ],
+   "tipo_original": "impacto",
+   "critico": false,
+   "tipo": "impacto",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a0",
+    "evidencia": "é o que o roteiro pediu (memorial, nomes, vitimas); foto de 2007, acontecimento de 1980"
+   },
+   "faltam": [],
+   "foto": "a0",
+   "dados": {
+    "itens": [
+     {
+      "rotulo": "casas",
+      "valor": 250
+     },
+     {
+      "rotulo": "pontes",
+      "valor": 47
+     },
+     {
+      "rotulo": "mortos",
+      "valor": 57
+     }
+    ]
+   }
+  },
+  {
+   "id": "e13",
+   "cenas": [
+    17
+   ],
+   "tipo_original": "comparacao",
+   "critico": true,
+   "tipo": "comparacao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "grafico.barras"
+   },
+   "faltam": [],
+   "foto": "a5",
+   "dados": {
+    "itens": [
+     {
+      "rotulo": "Antes",
+      "valor": 2950
+     },
+     {
+      "rotulo": "Depois",
+      "valor": 2549
+     }
+    ]
+   }
+  },
+  {
+   "id": "e14",
+   "cenas": [
+    18
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": "a21",
+   "dados": {
+    "etapas": [
+     "deslizamento",
+     "perda da tampa",
+     "explosão"
+    ]
+   }
+  }
+ ],
+ "bloqueios": [
+  {
+   "evento": "e6",
+   "cenas": [
+    8,
+    9
+   ],
+   "tipo": "evento_historico",
+   "mostrar": "Tremor sacudindo a encosta inchada",
+   "faltam": [
+    "dados para uma composição capaz: foto.historica (img), video.documental (video), linha_tempo.historica (eventos>=2)",
+    "foto/vídeo real que mostre \"encosta em colapso\""
+   ]
+  },
+  {
+   "evento": "e7",
+   "cenas": [
+    10,
+    11
+   ],
+   "tipo": "transformacao",
+   "mostrar": "Corte do vulcão com a face norte deslizando",
+   "faltam": [
+    "dados para uma composição capaz: comparacao.antes_depois (img_antes, img_depois), processo.etapas (etapas>=2)",
+    "foto/vídeo real que mostre \"face destacada e descendo\""
+   ]
+  },
+  {
+   "evento": "e9",
+   "cenas": [
+    13
+   ],
+   "tipo": "movimento",
+   "mostrar": "Duas frentes descendo: a explosão passa a avalanche",
+   "faltam": [
+    "dados para uma composição capaz: forcas.vetores (forcas), mecanismo.nivel (de, ate), animacao.quadros (cena)",
+    "foto/vídeo real que mostre \"explosão à frente\""
+   ]
+  }
+ ],
+ "revisoes": [
+  {
+   "evento": "e10",
+   "cenas": [
+    14
+   ],
+   "problema": "acontecimento crítico representado pela imagem que o roteiro pediu, sem mostrar o estado narrado",
+   "evidencia": "é o que o roteiro pediu (acampamento, caderno)"
+  }
+ ],
+ "trocas": [
+  {
+   "evento": "e1",
+   "cenas": [
+    0
+   ],
+   "de": "a15",
+   "para": "a18",
+   "motivo": "é o que o roteiro pediu (cume, erupcao, montanha)"
+  },
+  {
+   "evento": "e2",
+   "cenas": [
+    1
+   ],
+   "de": "a14",
+   "para": "a5",
+   "motivo": "é o que o roteiro pediu (nevado, vulcao); foto de 1982, acontecimento de 1980"
+  },
+  {
+   "evento": "e6",
+   "cenas": [
+    8,
+    9
+   ],
+   "de": null,
+   "para": "a16",
+   "motivo": "imagem genérica: só contexto"
+  },
+  {
+   "evento": "e8",
+   "cenas": [
+    12
+   ],
+   "de": "a23",
+   "motivo": "diagrama sem relação com o que a cena pede (\"Esquema do vulcão sem a face norte e o gás se expandindo Gás\")"
+  },
+  {
+   "evento": "e9",
+   "cenas": [
+    13
+   ],
+   "de": null,
+   "para": "a17",
+   "motivo": "imagem genérica: só contexto"
+  }
+ ],
+ "fontes_adicionadas": []
+}

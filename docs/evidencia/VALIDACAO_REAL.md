@@ -107,3 +107,11 @@
     - O gabarito rotula a cena como `estado_final`.
   - **Falsas provas: 0.**
 - **Achado:** o modelo lite chama de "ação" um estado resultante (navio já preso) e de "entidade" uma ação real (navio navegando). A fronteira ação × estado final é o ponto fraco. Com a regra atual isso gera rejeição, não falsa prova.
+
+## OpenRouter (nvidia/nemotron-3.5-super-vl:free) — execução 43635780550
+
+- Script e workflow prontos: `scripts/evidencia_teste_openrouter.py` e `.github/workflows/evidencia-teste-openrouter.yml`.
+  O teste usa o mesmo prompt cego, as mesmas 4 imagens do Ever Given e os mesmos i6 e i2 do teste com o Gemini, com no máximo 2 chamadas.
+- **Impedimento: o repositório não tem o secret `OPENROUTER_API_KEY`. Nenhuma chamada foi feita.** Nada foi medido.
+- Para rodar: criar o secret `OPENROUTER_API_KEY` (Settings → Secrets and variables → Actions) e alterar
+  `.github/evidencia/teste_openrouter.txt`. A chave nunca deve ser colada em chat, arquivo ou commit.

@@ -1,0 +1,39 @@
+name: Piloto V2.2 — entrega do pacote cifrado
+
+# Sem IA e sem gerar nada: copia o pacote JÁ CIFRADO (chave descartável do piloto) da execução indicada em
+# .github/piloto/entrega.txt para o ramo órfão piloto-v22-resultado, porque a máquina de análise não alcança o
+# armazenamento de artefatos. Conteúdo continua cifrado no repositório público.
+on:
+  push:
+    branches: [visual-v2-2-correcao-final]
+    paths: [".github/piloto/entrega.txt"]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  entregar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - id: run
+        run: echo "id=$(tr -dc 0-9 < .github/piloto/entrega.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: piloto-v22-${{ steps.run.outputs.id }}
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+          path: pacote
+      - run: |
+          set -e
+          ls -la pacote
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan piloto-v22-resultado
+          git rm -rq --cached . ; mkdir -p /tmp/p; cp pacote/piloto.tgz.gpg /tmp/p/
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/p/piloto.tgz.gpg piloto-${{ steps.run.outputs.id }}.tgz.gpg
+          git add piloto-${{ steps.run.outputs.id }}.tgz.gpg
+          git commit -qm "pacote cifrado do piloto (execução ${{ steps.run.outputs.id }})"
+          git push -f -q origin piloto-v22-resultado

@@ -5,7 +5,7 @@ name: Piloto V2.2 — entrega do pacote cifrado
 # armazenamento de artefatos. Conteúdo continua cifrado no repositório público.
 on:
   push:
-    branches: [visual-v2-2-correcao-final]
+    branches: [piloto-v24-lagartixa]
     paths: [".github/piloto/entrega.txt"]
 
 permissions:

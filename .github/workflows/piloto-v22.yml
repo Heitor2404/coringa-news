@@ -8,7 +8,7 @@ name: Piloto de produção V2.2 (Coringa Explica)
 # Dispara quando .github/piloto/pedido.txt muda neste ramo (workflow_dispatch exigiria o arquivo na main).
 on:
   push:
-    branches: [visual-v2-2-correcao-final]
+    branches: [piloto-v24-lagartixa]
     paths: [".github/piloto/pedido.txt"]
 
 permissions:
@@ -31,6 +31,15 @@ jobs:
           token: ${{ secrets.COFRE_TOKEN }}
           path: cofre
           sparse-checkout: prompts
+      - name: Prompts EXPERIMENTAIS da Evidência V1 (ramo evidencia-v1 do cofre; os de produção ficam como estão)
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          ref: evidencia-v1
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre_evidencia
+          sparse-checkout: prompts
+      - run: cp cofre_evidencia/prompts/PROMPT_CATALOGO_EVIDENCIA.txt cofre_evidencia/prompts/PROMPT_CASAR_EVIDENCIA.txt cofre/prompts/
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -58,6 +67,9 @@ jobs:
       - name: Gerar UM vídeo (fluxo real, motor V2.2)
         env:
           MOTOR_VISUAL: v2
+          EVIDENCIA_V1: sombra
+          EVIDENCIA_V1_VISAO: "1"
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           APROVACAO: "0"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}

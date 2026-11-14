@@ -127,3 +127,37 @@ Os casos e5/e7 da 2ª execução foram **reconstruídos a partir deste relatóri
 - **Micrografias das cerdas:** continuam sem licença livre (Gorb/Kiel). A ilustração não substitui evidência e não é apresentada como tal.
 - **Wikidata 429:** a coleta continua sem nova tentativa.
 - **Próximo passo:** uma retomada real do piloto a partir de um checkpoint. Ainda não foi feita: espera autorização para gerar vídeo.
+
+## Finalização (Fase 1, antes do piloto real)
+
+**Estado da execução.** Fica em `saida/<dia>/status_execucao.json` (só V2), e o workflow repete o valor no resumo do job.
+
+| Estado | Significado |
+|---|---|
+| `BLOQUEADO_PREPARO` | barrado antes da narração |
+| `BLOQUEADO_MATERIAL` | tema sem material antes do roteiro |
+| `FALHA_OPERACIONAL` | erro de execução |
+| `MP4_GERADO` | vídeo existe, mas o porteiro/fiscal V2.2 não aprovou |
+| `APROVADO_FISCAL` | vídeo existe e o fiscal aprovou |
+
+- Sem MP4 no disco, o estado nunca é `MP4_GERADO`. O último passo do workflow **falha** quando não há MP4: execução sem vídeo nunca aparece como sucesso.
+- O diagnóstico (preparo, contratos, evidência em sombra, checkpoint, registro) fica no pacote cifrado em qualquer estado.
+
+**Segurança.** O repositório é **público**.
+- `saida/` está no `.gitignore` e nunca é commitada.
+- O pacote do piloto é cifrado com chave pública. Agora vai para **todas** as `chave_publica*.asc`: a chave da conta anterior e uma nova chave descartável desta conta.
+- O checkpoint vai para o cache **cifrado com AES256**. A senha é `CHECKPOINT_KEY`, se existir, ou é derivada de `COFRE_TOKEN`. Por que cifrar: execuções de PR de fork poderiam ler caches do ramo de base.
+- A abertura confere o sha256 do pacote. Os hashes e a procedência internos do checkpoint continuam intactos.
+- Sem segredo, o checkpoint não vai para o cache (falha fechada).
+- O log público continua só com números.
+- **Ponto antigo, fora deste ramo de trabalho:** `tests/piloto_lagartixa/roteiro_bruto.txt` (o roteiro da 1ª execução) já está commitado em texto claro desde a etapa anterior. Não contém segredo.
+
+**Teste do fluxo real offline.** `tests/test_v24_fluxo_integrado.py` roda `main.main()` com `MOTOR_VISUAL=v2`. Só as folhas de rede e IA são substituídas.
+
+1. O tema, a pesquisa e o acervo vão para o checkpoint.
+2. O prompt leva a tabela de dados exigidos e a regra de precisão ("enfraquece rapidamente").
+3. O conserto é recusado, e o resultado é `BLOQUEADO_PREPARO`, com diagnóstico e checkpoint preservados.
+4. O contrato é corrigido à mão no checkpoint, e a execução retoma com `--retomar`, sem refazer tema, pesquisa, acervo, roteiro nem conserto.
+5. A edição aparece listada no relatório, e o preparo passa com e5 como ILUSTRAÇÃO.
+
+**Suíte:** 619 passam. As 9 falhas são as mesmas que já existiam em `b73d5a0`: render sem Natural Earth/Playwright e prompts do cofre ausentes localmente.

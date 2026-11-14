@@ -624,6 +624,7 @@ def _aplicar_porteiro(v: dict, q: dict, dados: dict, dur: float, piloto: dict | 
         graves.append('revisão humana pendente (fiscal V2.2): ' + pend[:400])
     if piloto:                                        # o fiscal antigo NÃO libera o que o V2.2 reprovou ou mandou revisar
         q['v22'] = piloto
+        v['_fiscal_v22'] = {k: piloto.get(k) for k in ('bloqueios', 'revisoes', 'aprovacao_automatica') if k in piloto}
         if piloto['bloqueios']:
             q['motivos'] = q['motivos'] + [f"fiscal V2.2 reprovou ({len(piloto['bloqueios'])} problema(s))"]
         elif not piloto.get('aprovacao_automatica'):
@@ -994,6 +995,7 @@ def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None =
 
 def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None, unico: bool = False):
     from src import roteiro
+    _STATUS_ESCRITO.clear()
     parte = max(1, parte)
     arq_serie = _arquivo_serie(pedido, parte)
     serie = json.loads(arq_serie.read_text(encoding='utf-8')) if arq_serie.exists() else None
@@ -1025,6 +1027,8 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         v['_pauta'] = pauta or {}
         nome = f'explica-{slug(pedido)[:40]}' + (f'-parte{parte}' if v.get('parte') else '')
         arq = montar_video(v, pasta, nome)
+        _status_v2(pasta, 'APROVADO_FISCAL' if not v.get('_bloqueado') else 'MP4_GERADO', v, mp4=arq,
+                   motivo=v.get('_bloqueado') or '')
         if v.get('_bloqueado'):
             seguir = 'execução única: não tento outro tema' if unico else 'tento outro tema'
             print(f"  ✘ porteiro: não mando este vídeo ({v['_bloqueado']}); {seguir}")
@@ -1044,12 +1048,46 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
         return True
     except Exception as e:
+        if not _STATUS_ESCRITO:           # V2.4: o MP4 já gravou o próprio status (porteiro); aqui só o que parou antes
+            vv = locals().get('v') if isinstance(locals().get('v'), dict) else {}
+            txt = str(e)
+            st = ('BLOQUEADO_PREPARO' if 'antes da narração' in txt else
+                  'BLOQUEADO_MATERIAL' if re.search(r'material|sem fotos|nenhuma fonte|pulo para o próximo tema', txt, re.I) else
+                  'FALHA_OPERACIONAL')
+            _status_v2(pasta, st, vv, motivo=txt[:600])
         print('  ✘ não consegui fazer essa curiosidade:', str(e)[:300])
         msg = str(e).lower()
         _FALHAS.append(f'{pedido[:60]}: {str(e)[:160]}')
         if 'material ruim' in msg and parte > 1:
             return False                         # parte de série barrada: tenta a mesma parte amanhã (não encerra a série)
         return 'pular' if ('material' in msg or 'sensível' in msg or 'nenhuma fonte' in msg) else False
+
+
+_STATUS_ESCRITO: list = []
+
+
+def _status_v2(pasta: Path, status: str, v: dict | None = None, mp4: Path | None = None, motivo: str = ''):
+    """V2.4 (só MOTOR_VISUAL=v2): estado da execução em <pasta>/status_execucao.json, lido pelo workflow do piloto.
+    BLOQUEADO_PREPARO (barrado antes da narração) · BLOQUEADO_MATERIAL (tema sem material antes do roteiro) ·
+    FALHA_OPERACIONAL (erro de execução) · MP4_GERADO (vídeo existe, porteiro/fiscal não aprovou) · APROVADO_FISCAL.
+    Sem MP4 no disco, nunca é MP4_GERADO/APROVADO_FISCAL."""
+    if os.getenv('MOTOR_VISUAL') != 'v2':
+        return
+    v = v or {}
+    if status in ('MP4_GERADO', 'APROVADO_FISCAL') and not (mp4 and Path(mp4).exists() and Path(mp4).stat().st_size > 0):
+        status, motivo = 'FALHA_OPERACIONAL', f'montagem terminou sem MP4 no disco ({mp4}); {motivo}'
+    prep = v.get('_preparo') or {}
+    info = {'status': status, 'motivo': motivo, 'mp4': str(mp4) if mp4 else None,
+            'mp4_bytes': Path(mp4).stat().st_size if mp4 and Path(mp4).exists() else 0,
+            'titulo': v.get('titulo'), 'bloqueios_preparo': prep.get('bloqueios') or [],
+            'revisoes_preparo': prep.get('revisoes') or [],
+            'contratos_pendentes': (v.get('_contratos') or {}).get('pendentes_depois'),
+            'fiscal_v22': v.get('_fiscal_v22'), 'porteiro': v.get('_bloqueado') or '',
+            'checkpoint': str(pasta / 'checkpoint') if (pasta / 'checkpoint').exists() else None,
+            'quando': datetime.now(BRT).isoformat(timespec='seconds')}
+    (pasta / 'status_execucao.json').write_text(json.dumps(info, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+    _STATUS_ESCRITO.append(status)
+    print(f'  [status] {status}' + (f' — {motivo[:200]}' if motivo else ''))
 
 
 def _parte_pendente() -> tuple[str, int] | None:

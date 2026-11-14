@@ -302,5 +302,7 @@ Regras: (1) declare o tipo cujos dados os FATOS têm — se a fala descreve uma 
 o tipo é "processo" com "etapas"; (2) cada etapa/nó/força usa palavras de uma linha dos FATOS, sem acrescentar nada;
 (3) "observavel": false quando o que precisa ser visto não pode ser fotografado (moléculas, átomos, elétrons, forças,
 campos, cargas): a cena será uma ILUSTRAÇÃO explicativa, que precisa de "dados"; uma foto nunca mostra isso;
-(4) se for crítico e os FATOS não tiverem os dados, deixe "dados" vazio (o sistema barra) — não invente.
+(4) se for crítico e os FATOS não tiverem os dados, deixe "dados" vazio (o sistema barra) — não invente;
+(5) precisão: grandeza que DIMINUI com a distância ou o tempo (força, atração, sinal) "enfraquece rapidamente" — não diga
+que "some"/"desaparece" se os FATOS não disserem que ela chega a zero.
 """

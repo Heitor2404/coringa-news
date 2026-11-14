@@ -72,7 +72,7 @@ jobs:
           linha=$(grep -v '^#' .github/piloto/retomar.txt 2>/dev/null | head -1 | tr -s ' ' || true)
           echo "run=$(echo "$linha" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           etapa=$(echo "$linha" | cut -s -d' ' -f2); echo "etapa=${etapa:-roteiro}" >> "$GITHUB_OUTPUT"
-      - name: Restaurar checkpoint
+      - name: Restaurar checkpoint (cifrado)
         id: ck
         if: steps.ret.outputs.run != ''
         uses: actions/cache/restore@v4
@@ -80,6 +80,19 @@ jobs:
           path: checkpoint_cache
           key: piloto-checkpoint-${{ steps.ret.outputs.run }}
           fail-on-cache-miss: true
+      - name: Abrir checkpoint (chave derivada de segredo; confere sha256)
+        if: steps.ret.outputs.run != ''
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          set -e
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d checkpoint_cache/checkpoint.tgz.gpg 3<<<"$chave"
+          echo "$(cat checkpoint_cache/checkpoint.tgz.sha256)  ck.tgz" | sha256sum -c -
+          mkdir -p checkpoint_origem && tar -xzf ck.tgz -C checkpoint_origem && rm ck.tgz
+          ls checkpoint_origem/checkpoint
       - name: Gerar UM vídeo (fluxo real, motor V2.2)
         env:
           MOTOR_VISUAL: v2
@@ -109,7 +122,7 @@ jobs:
           import resource, subprocess, sys, time
           t = time.time()
           with open('saida/registro.txt', 'w') as f:
-              args = ['--retomar', 'checkpoint_cache', '--retomar-etapa', sys.argv[3]] if sys.argv[2] else ['--curiosidade', sys.argv[1], '--parte', '1']
+              args = ['--retomar', 'checkpoint_origem/checkpoint', '--retomar-etapa', sys.argv[3]] if sys.argv[2] else ['--curiosidade', sys.argv[1], '--parte', '1']
               rc = subprocess.run([sys.executable, 'main.py'] + args, stdout=f, stderr=subprocess.STDOUT).returncode
           print(f'tempo_total_s={time.time() - t:.1f} pico_memoria_mb={resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024:.0f} rc={rc}')
           sys.exit(rc)
@@ -118,28 +131,50 @@ jobs:
           # só números no log público (como na produção); texto completo vai no pacote criptografado
           grep -E '^\s*\[(custo|orçamento)\]|💰|🎞' saida/registro.txt | tail -30 || true
           cat saida/tempo_memoria.txt || true
-      - name: Separar o checkpoint desta execução
-        id: novo
+      - name: Estado da execução
+        id: st
         if: always()
         run: |
+          f=$(ls saida/*/status_execucao.json 2>/dev/null | head -1 || true)
+          if [ -n "$f" ]; then st=$(python -c "import json,sys;print(json.load(open(sys.argv[1]))['status'])" "$f"); else st=FALHA_OPERACIONAL; fi
+          mp4=$(ls saida/*/*.mp4 2>/dev/null | grep -v -- '-piloto/' | head -1 || true)
+          if [ -z "$mp4" ] && { [ "$st" = MP4_GERADO ] || [ "$st" = APROVADO_FISCAL ]; }; then st=FALHA_OPERACIONAL; fi
+          echo "status=$st" >> "$GITHUB_OUTPUT"
+          echo "STATUS=$st mp4=$([ -n "$mp4" ] && echo sim || echo nao)" | tee -a saida/resultado_piloto.txt
+          echo "### Piloto V2.4: \`$st\` (MP4: $([ -n "$mp4" ] && echo sim || echo não))" >> "$GITHUB_STEP_SUMMARY"
+      - name: Cifrar o checkpoint desta execução (AES256, chave derivada de segredo)
+        id: novo
+        if: always()
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
           d=$(ls -d saida/*/checkpoint 2>/dev/null | head -1 || true)
-          if [ -n "$d" ]; then rm -rf checkpoint_cache; cp -r "$d" checkpoint_cache; echo "tem=1" >> "$GITHUB_OUTPUT"; ls checkpoint_cache; fi
-      - name: Guardar checkpoint (cache privado; retomar com retomar.txt = "${{ github.run_id }} roteiro")
+          if [ -z "$d" ]; then echo "sem checkpoint"; exit 0; fi
+          if [ -z "$CHECKPOINT_KEY$COFRE_TOKEN" ]; then echo "sem segredo para cifrar: checkpoint NÃO vai para o cache"; exit 0; fi
+          set -e
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          rm -rf checkpoint_cache && mkdir checkpoint_cache
+          tar -czf ck.tgz -C "$(dirname "$d")" checkpoint
+          sha256sum ck.tgz | cut -d' ' -f1 > checkpoint_cache/checkpoint.tgz.sha256
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 -o checkpoint_cache/checkpoint.tgz.gpg ck.tgz 3<<<"$chave"
+          rm ck.tgz; ls -la checkpoint_cache; echo "tem=1" >> "$GITHUB_OUTPUT"
+      - name: Guardar checkpoint cifrado (cache; retomar com retomar.txt = "${{ github.run_id }} roteiro")
         if: always() && steps.novo.outputs.tem == '1'
         uses: actions/cache/save@v4
         with:
           path: checkpoint_cache
           key: piloto-checkpoint-${{ github.run_id }}
-      - name: Empacotar e cifrar para a chave do piloto
+      - name: Empacotar e cifrar para as chaves do piloto
         if: always()
         run: |
           set -e
           export GNUPGHOME=$(mktemp -d)
-          gpg --batch --quiet --import .github/piloto/chave_publica.asc
-          dest=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
           tar -czf piloto.tgz saida
-          gpg --batch --yes --quiet --trust-model always --encrypt -r "$dest" -o piloto.tgz.gpg piloto.tgz
-          ls -la piloto.tgz.gpg
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o piloto.tgz.gpg piloto.tgz
+          rm piloto.tgz; ls -la piloto.tgz.gpg
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -147,3 +182,9 @@ jobs:
           path: piloto.tgz.gpg
           retention-days: 7
           compression-level: 0
+      - name: Resultado audiovisual (sem MP4 não é sucesso)
+        if: always()
+        run: |
+          st="${{ steps.st.outputs.status }}"
+          echo "status final: ${st:-FALHA_OPERACIONAL}"
+          case "$st" in MP4_GERADO|APROVADO_FISCAL) exit 0 ;; *) echo "::error::execução sem MP4 aprovado para auditoria ($st); diagnóstico no pacote cifrado"; exit 1 ;; esac

@@ -56,7 +56,9 @@ SINONIMOS = {'transformacao_quimica': 'transformacao', 'reacao': 'transformacao'
              'viagem': 'deslocamento', 'etapas': 'processo', 'explosao': 'impacto', 'erupcao': 'impacto', 'serie': 'evolucao_temporal',
              'linha_tempo': 'sequencia_historica', 'fenomeno_natural': 'impacto', 'mapa': 'localizacao', 'grafico': 'comparacao'}
 GENERICAS = {'foto.documental', 'destaque.palavras', 'banner.discreto', 'lower_third', 'foto.sequencia'}   # não desenham acontecimento
-CAMPOS = ('id', 'tipo', 'sujeito', 'acao', 'estado_inicial', 'estado_final', 'mostrar', 'dados', 'capacidade', 'fonte', 'importancia', 'obrigatoria', 'sincronia')
+CAMPOS = ('id', 'tipo', 'sujeito', 'acao', 'estado_inicial', 'estado_final', 'mostrar', 'dados', 'capacidade', 'fonte', 'importancia', 'obrigatoria', 'sincronia',
+          # preenchidos pelo preparo (src/v2/preparo.py), antes da narração
+          'representacao', 'tipo_original', 'reclassificacao', 'partes')
 
 
 def _n(s) -> str:

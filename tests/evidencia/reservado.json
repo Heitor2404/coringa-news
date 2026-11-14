@@ -1,0 +1,1997 @@
+{
+ "grupo": "reservado",
+ "nota": "Casos RESERVADOS de avaliação final. Criados DEPOIS do congelamento da regra (commit b80ba08, sha256 de src/v2/evidencia.py 5d6572fc…600ee). Não podem ser usados para ajustar a solução. Gabarito definido antes de rodar, pela política da proposta: PROVA = mostra a ação/estado exigido E o registro liga a imagem a ESTE acontecimento (categoria/palavra-chave curada, ou entidade + data de criação na fase); RELACIONADA = um sinal só ou vínculo fraco; CONTEXTO = mesmo assunto em outro estado/época, explica, arte, memorial; INCOMPATIVEL = sem vínculo, genérica, outra entidade/acontecimento, escrita ilegível. \"imagem_hipotetica\" = registro montado para o teste (o tipo de imagem existe, mas o arquivo não foi conferido); \"categorias_origem: cenario\" = categorias a confirmar na API.",
+ "dominios": {
+  "espaco_apollo11": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Apollo 11"
+     ],
+     "categorias": [
+      "Apollo 11"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Apollo Lunar Module Eagle",
+      "categorias": [
+       "Apollo Lunar Module Eagle"
+      ]
+     },
+     {
+      "nome": "Buzz Aldrin",
+      "categorias": [
+       "Buzz Aldrin"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "ap_pouso": {
+     "bruto": {
+      "tipo": "evento_historico",
+      "sujeito": "módulo lunar Eagle",
+      "acao": "pousa e os astronautas caminham na Lua",
+      "estado_inicial": "módulo em órbita",
+      "estado_final": "astronautas na superfície lunar",
+      "quando": "20 de julho de 1969",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 20 de julho de 1969, o Eagle pousou e dois homens caminharam na Lua."
+     ]
+    },
+    "ap_lancamento": {
+     "bruto": {
+      "tipo": "evento_historico",
+      "sujeito": "foguete Saturn V",
+      "acao": "decola do Cabo Kennedy",
+      "estado_inicial": "foguete na plataforma",
+      "estado_final": "foguete subindo",
+      "quando": "16 de julho de 1969",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Quatro dias antes, o Saturn V decolou da Flórida."
+     ]
+    }
+   },
+   "imagens": {
+    "as11_40_5903": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Aldrin Apollo 11",
+      "categorias": [
+       "Apollo 11 Hasselblad film magazine 40",
+       "Featured pictures of Apollo program"
+      ],
+      "categorias_origem": "verificado",
+      "datas": {
+       "criacao_declarada": "1969-07-20"
+      },
+      "descricao": "Buzz Aldrin walks on the moon, July 20, 1969"
+     },
+     "verificacao": "https://commons.wikipedia.com/wiki/File:Aldrin_Apollo_11.jpg (data 20 July 1969; categorias listadas na página) · https://nssdc.gsfc.nasa.gov/imgcat/html/object_page/a11_h_40_5903.html",
+     "imagem_hipotetica": false
+    },
+    "dvids_5903": {
+     "registro": {
+      "fonte": "DVIDS",
+      "titulo": "photo-as11_40_5903",
+      "categorias": [],
+      "categorias_origem": "verificado",
+      "datas": {
+       "criacao_declarada": "2009-12-11"
+      },
+      "descricao": "AS11-40-5903 (20 July 1969) --- Astronaut Edwin E. Aldrin Jr. walks on the surface of the moon during the Apollo 11 extravehicular activity"
+     },
+     "verificacao": "https://www.dvidshub.net/image/852318/photo-as11-40-5903 (\"Date Taken: 12.11.2009\": a data do registro é a da postagem, não a da foto)",
+     "imagem_hipotetica": false
+    },
+    "s69_39525": {
+     "registro": {
+      "fonte": "NASA",
+      "titulo": "Apollo 11 liftoff",
+      "categorias": [
+       "Apollo 11",
+       "Launch"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1969-07-16"
+      },
+      "descricao": "The first manned journey to the Moon began ... liftoff of Apollo 11 at 9:32 a.m. EDT on July 16, 1969"
+     },
+     "verificacao": "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11.html (NASA photo ID S69-39525)",
+     "imagem_hipotetica": false
+    },
+    "nhq2019": {
+     "registro": {
+      "fonte": "NASA",
+      "titulo": "Apollo 11 50th Anniversary Celebration",
+      "categorias": [
+       "Apollo 11",
+       "Apollo 11 50th Anniversary"
+      ],
+      "categorias_origem": "verificado",
+      "datas": {
+       "criacao_declarada": "2019-07-19"
+      },
+      "descricao": "Apollo 11 50th Anniversary Celebration. Photo Credit: (NASA/Aubrey Gemignani)"
+     },
+     "verificacao": "https://oanor.com/api/nasa-api/openapi.json (exemplo de resposta da API da NASA: NHQ201907190146, palavra-chave \"Apollo 11\", 2019-07-19)",
+     "imagem_hipotetica": false
+    },
+    "as11_36_5355": {
+     "registro": {
+      "fonte": "NASA",
+      "titulo": "Earth from Apollo 11",
+      "categorias": [
+       "Apollo 11"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1969-07-16"
+      },
+      "descricao": "Photo of the Earth taken from 98,000 miles during the Apollo 11 translunar injection on July 16"
+     },
+     "verificacao": "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11.html (NASA photo ID AS11-36-5355)",
+     "imagem_hipotetica": false
+    },
+    "insignia": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Apollo 11 insignia",
+      "categorias": [
+       "Apollo 11",
+       "Mission patches"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Apollo 11 mission insignia"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Apollo_11 (emblema da missão: águia pousando na Lua — desenho)",
+     "imagem_hipotetica": false
+    },
+    "lua_cheia": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Full Moon 2010",
+      "categorias": [
+       "Full moons"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Full moon"
+     },
+     "verificacao": "foto genérica da Lua cheia",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "ap-01",
+     "tipo_caso": 1,
+     "acontecimento": "ap_pouso",
+     "imagem": "as11_40_5903",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "foto de Aldrin na superfície lunar, 20/07/1969, categoria da missão"
+    },
+    {
+     "id": "ap-02",
+     "tipo_caso": 2,
+     "acontecimento": "ap_lancamento",
+     "imagem": "as11_40_5903",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "mesma missão, outra fase (superfície lunar numa fala sobre a decolagem)"
+    },
+    {
+     "id": "ap-03",
+     "tipo_caso": 9,
+     "acontecimento": "ap_pouso",
+     "imagem": "dvids_5903",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a imagem é a verdadeira, mas o registro DVIDS declara data de 2009: registro contradiz → não prova (perda de recall aceita)"
+    },
+    {
+     "id": "ap-04",
+     "tipo_caso": 1,
+     "acontecimento": "ap_lancamento",
+     "imagem": "s69_39525",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "decolagem em 16/07/1969, palavra-chave da missão"
+    },
+    {
+     "id": "ap-05",
+     "tipo_caso": 2,
+     "acontecimento": "ap_pouso",
+     "imagem": "s69_39525",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "decolagem numa fala sobre o pouso: fase anterior"
+    },
+    {
+     "id": "ap-06",
+     "tipo_caso": 7,
+     "acontecimento": "ap_pouso",
+     "imagem": "nhq2019",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "celebração dos 50 anos (2019): consequência, mesmo com a palavra-chave \"Apollo 11\""
+    },
+    {
+     "id": "ap-07",
+     "tipo_caso": 3,
+     "acontecimento": "ap_pouso",
+     "imagem": "as11_36_5355",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "mesma missão e data próxima, mas mostra a Terra, não o pouso"
+    },
+    {
+     "id": "ap-08",
+     "tipo_caso": 5,
+     "acontecimento": "ap_pouso",
+     "imagem": "insignia",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "ilustracao",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "emblema desenhado (águia pousando): ilustração nunca prova"
+    },
+    {
+     "id": "ap-09",
+     "tipo_caso": 4,
+     "acontecimento": "ap_pouso",
+     "imagem": "lua_cheia",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false,
+      "generica": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "Lua cheia genérica, sem vínculo"
+    }
+   ],
+   "eventos_esperados": {
+    "ap_pouso#com_prova": {
+     "acontecimento": "ap_pouso",
+     "acervo": [
+      "as11_40_5903",
+      "dvids_5903",
+      "nhq2019",
+      "insignia"
+     ],
+     "esperado": "foto_prova",
+     "fundamento": "há prova real"
+    },
+    "ap_pouso#sem_prova": {
+     "acontecimento": "ap_pouso",
+     "acervo": [
+      "dvids_5903",
+      "nhq2019",
+      "as11_36_5355",
+      "insignia",
+      "lua_cheia"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "a única cópia da foto certa tem registro contraditório; o resto é contexto"
+    },
+    "ap_pouso#vazio": {
+     "acontecimento": "ap_pouso",
+     "acervo": [],
+     "esperado": "bloqueio",
+     "fundamento": "sem nenhuma evidência (caso 8)"
+    }
+   }
+  },
+  "historia_muro_berlim": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Fall of the Berlin Wall"
+     ],
+     "categorias": [
+      "Fall of the Berlin Wall"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Berlin Wall",
+      "categorias": [
+       "Berlin Wall"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "bw_abertura": {
+     "bruto": {
+      "tipo": "evento_historico",
+      "sujeito": "Muro de Berlim",
+      "acao": "as passagens se abrem e a multidão atravessa",
+      "estado_inicial": "fronteira fechada",
+      "estado_final": "fronteira aberta, pessoas atravessando",
+      "quando": "9 a 10 de novembro de 1989",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Na noite de 9 de novembro de 1989, as passagens do Muro se abriram."
+     ]
+    }
+   },
+   "imagens": {
+    "b1110_018": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bundesarchiv Bild 183-1989-1110-018, Berlin, Checkpoint Charlie, Nacht des Mauerfalls",
+      "categorias": [
+       "Fall of the Berlin Wall",
+       "Checkpoint Charlie"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1989-11-10"
+      },
+      "descricao": "Berlin, Checkpoint Charlie, Nacht des Mauerfalls"
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:Bundesarchiv_Bild_183-1989-1110-018,_Berlin,_Checkpoint_Charlie,_Nacht_des_Mauerfalls.jpg",
+     "imagem_hipotetica": false
+    },
+    "b1104_006": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bundesarchiv Bild 183-1989-1104-006, Berlin, Demonstration",
+      "categorias": [
+       "Alexanderplatz demonstration"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1989-11-04"
+      },
+      "descricao": "Berlin, Demonstration"
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:Bundesarchiv_Bild_183-1989-1104-006,_Berlin,_Demonstration.jpg (4 November 1989)",
+     "imagem_hipotetica": false
+    },
+    "b1222_034": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bundesarchiv Bild 183-1989-1222-034, Berlin, Grenzöffnung Brandenburger Tor",
+      "categorias": [
+       "Brandenburg Gate",
+       "Berlin Wall"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1989-12-22"
+      },
+      "descricao": "Tausende auf beiden Seiten des Brandenburger Tores feierten die Öffnung des neuen Grenzübergangs"
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:Bundesarchiv_Bild_183-1989-1222-034,_Berlin,_Grenz%C3%B6ffnung_Brandenburger_Tor.jpg (22 December 1989)",
+     "imagem_hipotetica": false
+    },
+    "b1118_018": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bundesarchiv Bild 183-1989-1118-018, Berlin, Grenzübergang Bornholmer Straße",
+      "categorias": [
+       "Bornholmer Straße border crossing",
+       "Berlin Wall"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1989-11-18"
+      },
+      "descricao": "Berlin, Grenzübergang Bornholmer Straße"
+     },
+     "verificacao": "https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_183-1989-1118-018,_Berlin,_Grenz%C3%BCbergang_Bornholmer_Stra%C3%9Fe.jpg (18 November 1989)",
+     "imagem_hipotetica": false
+    },
+    "b1109_030": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bundesarchiv Bild 183-1989-1109-030, Berlin, Schabowski auf Pressekonferenz",
+      "categorias": [
+       "Fall of the Berlin Wall",
+       "Günter Schabowski"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1989-11-09"
+      },
+      "descricao": "Schabowski auf Pressekonferenz"
+     },
+     "verificacao": "https://www.eastsidegalleryexhibition.com/topics/all-change-after-the-fall-of-the-wall/the-fall-of-the-wall-on-november-9th-1989/ (coletiva de Schabowski, 9/11/1989)",
+     "imagem_hipotetica": false
+    },
+    "memorial_bernauer": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Berlin Wall Memorial Bernauer Strasse",
+      "categorias": [
+       "Berlin Wall Memorial",
+       "Berlin Wall"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2012-05-01"
+      },
+      "descricao": "Gedenkstätte Berliner Mauer"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Berlin_Wall_Memorial",
+     "imagem_hipotetica": true
+    },
+    "east_side": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "East Side Gallery mural",
+      "categorias": [
+       "East Side Gallery",
+       "Berlin Wall",
+       "Murals in Berlin"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2015"
+      },
+      "descricao": "Mural on the East Side Gallery"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/East_Side_Gallery (murais pintados no muro a partir de 1990)",
+     "imagem_hipotetica": true
+    },
+    "mauerbau": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bau der Berliner Mauer, August 1961",
+      "categorias": [
+       "Construction of the Berlin Wall",
+       "Berlin Wall"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1961-08-20"
+      },
+      "descricao": "Construction of the wall"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Berlin_Wall (construção a partir de 13/08/1961)",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "bw-01",
+     "tipo_caso": 1,
+     "acontecimento": "bw_abertura",
+     "imagem": "b1110_018",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "Checkpoint Charlie na noite da queda, 10/11/1989"
+    },
+    {
+     "id": "bw-02",
+     "tipo_caso": 4,
+     "acontecimento": "bw_abertura",
+     "imagem": "b1104_006",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "manifestação de 4/11 sem o muro e sem vínculo de registro"
+    },
+    {
+     "id": "bw-03",
+     "tipo_caso": 9,
+     "acontecimento": "bw_abertura",
+     "imagem": "b1222_034",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a visão vê multidão celebrando uma abertura, mas é a do Portão de Brandemburgo em 22/12: outra abertura"
+    },
+    {
+     "id": "bw-04",
+     "tipo_caso": 1,
+     "acontecimento": "bw_abertura",
+     "imagem": "b1118_018",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "passagem aberta com gente atravessando, 18/11/1989 (8 dias depois: estado final, dentro do horizonte) — julgamento a auditar"
+    },
+    {
+     "id": "bw-05",
+     "tipo_caso": 3,
+     "acontecimento": "bw_abertura",
+     "imagem": "b1109_030",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "mesmo dia e mesma categoria, mas é a entrevista coletiva, não o muro"
+    },
+    {
+     "id": "bw-06",
+     "tipo_caso": 7,
+     "acontecimento": "bw_abertura",
+     "imagem": "memorial_bernauer",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "memorial: consequência"
+    },
+    {
+     "id": "bw-07",
+     "tipo_caso": 5,
+     "acontecimento": "bw_abertura",
+     "imagem": "east_side",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "pintura",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "mural pintado depois: arte"
+    },
+    {
+     "id": "bw-08",
+     "tipo_caso": 2,
+     "acontecimento": "bw_abertura",
+     "imagem": "mauerbau",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "construção em 1961: antes"
+    }
+   ],
+   "eventos_esperados": {
+    "bw_abertura#sem_prova": {
+     "acontecimento": "bw_abertura",
+     "acervo": [
+      "b1104_006",
+      "b1222_034",
+      "b1109_030",
+      "memorial_bernauer",
+      "east_side",
+      "mauerbau"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "nenhuma imagem da abertura de 9–10/11"
+    }
+   }
+  },
+  "engenharia_tacoma": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Tacoma Narrows Bridge collapse"
+     ],
+     "categorias": [
+      "Collapse of the Tacoma Narrows Bridge"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Tacoma Narrows Bridge",
+      "categorias": [
+       "Tacoma Narrows Bridge (1940)",
+       "Tacoma Narrows Bridge"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "tn_queda": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "vão central da ponte",
+      "acao": "se parte e cai na água",
+      "estado_inicial": "ponte torcendo ao vento",
+      "estado_final": "vão central caído",
+      "quando": "7 de novembro de 1940",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 7 de novembro de 1940, o vão central se partiu e caiu no estreito."
+     ]
+    }
+   },
+   "imagens": {
+    "loc_46682": {
+     "registro": {
+      "fonte": "Library of Congress",
+      "titulo": "Collapse of the Tacoma Narrows Bridge",
+      "categorias": [
+       "Bridge failures--Washington (State)--Tacoma",
+       "Tacoma Narrows Bridge (Wash.)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1940-11-07"
+      },
+      "descricao": "Tacoma Narrows Bridge collapse"
+     },
+     "verificacao": "https://www.frrandp.com/2021/06/tacoma-narrows-bridge.html (Library of Congress LC-USZ62-46682); assuntos LoC: cenário",
+     "imagem_hipotetica": false
+    },
+    "uw_290_52": {
+     "registro": {
+      "fonte": "University of Washington",
+      "titulo": "Tacoma Narrows Bridge showing fallen middle span after collapse",
+      "categorias": [
+       "Tacoma Narrows Bridge (Tacoma, Wash.)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1940-11-07"
+      },
+      "descricao": "fallen middle span after collapse, November 7, 1940. James Bashford Press Photos"
+     },
+     "verificacao": "https://lib.uw.edu/specialcollections/collections/exhibits/tnb/collapse (PH Coll. 290.52)",
+     "imagem_hipotetica": false
+    },
+    "commons_upload": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Tacoma-narrows-bridge-collapse",
+      "categorias": [
+       "Tacoma Narrows Bridge"
+      ],
+      "categorias_origem": "verificado",
+      "datas": {},
+      "descricao": "",
+      "datetimeoriginal_bruto": {
+       "value": "Uploaddate 2010-01-17",
+       "source": "commons-desc-page"
+      }
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:Tacoma-narrows-bridge-collapse.jpg (o campo de data é \"Uploaddate 2010-01-17\"; categoria Tacoma Narrows Bridge)",
+     "imagem_hipotetica": false
+    },
+    "uw_290_33": {
+     "registro": {
+      "fonte": "University of Washington",
+      "titulo": "Film stills from the Tacoma Narrows Bridge collapse showing twisting motion",
+      "categorias": [
+       "Tacoma Narrows Bridge (Tacoma, Wash.)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1940-11-07"
+      },
+      "descricao": "twisting motion, November 7, 1940"
+     },
+     "verificacao": "https://lib.uw.edu/specialcollections/collections/exhibits/tnb/collapse (PH Coll. 290.33a-f)",
+     "imagem_hipotetica": false
+    },
+    "abertura_1940": {
+     "registro": {
+      "fonte": "WSDOT",
+      "titulo": "Tacoma Narrows Bridge Opening, 1940",
+      "categorias": [
+       "Tacoma Narrows Bridge (1940)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1940-07-01"
+      },
+      "descricao": "Opening day"
+     },
+     "verificacao": "https://www.frrandp.com/2021/06/tacoma-narrows-bridge.html (abertura em 1º/07/1940)",
+     "imagem_hipotetica": false
+    },
+    "fragmento": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Tacoma Narrows Bridge steel fragment",
+      "categorias": [
+       "Tacoma Narrows Bridge (1940)",
+       "Museum exhibits"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2008"
+      },
+      "descricao": "Twisted steel fragment recovered after the 1940 collapse, on public display"
+     },
+     "verificacao": "https://bad.technology/articles/tacoma-narrows-bridge-collapses-four-months-after-opening-engineers-had-ignored-resonance.html (foto de Joe Mabel, CC BY-SA 3.0)",
+     "imagem_hipotetica": false
+    },
+    "pontes_atuais": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Tacoma Narrows Bridges 2008",
+      "categorias": [
+       "Tacoma Narrows Bridge (1950)",
+       "Tacoma Narrows Bridge (2007)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2008"
+      },
+      "descricao": "The twin bridges"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Tacoma_Narrows_Bridge",
+     "imagem_hipotetica": true
+    },
+    "golden_gate": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Golden Gate Bridge",
+      "categorias": [
+       "Golden Gate Bridge"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Suspension bridge"
+     },
+     "verificacao": "ponte pênsil de outro lugar",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "tn-01",
+     "tipo_caso": 1,
+     "acontecimento": "tn_queda",
+     "imagem": "loc_46682",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "a ponte desabando em 7/11/1940 (LoC), entidade + data do dia"
+    },
+    {
+     "id": "tn-02",
+     "tipo_caso": 1,
+     "acontecimento": "tn_queda",
+     "imagem": "uw_290_52",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "vão central caído, 7/11/1940"
+    },
+    {
+     "id": "tn-03",
+     "tipo_caso": 10,
+     "acontecimento": "tn_queda",
+     "imagem": "commons_upload",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "mostra o colapso, mas o registro só tem a data de envio (2010) e a categoria da ponte: vínculo fraco"
+    },
+    {
+     "id": "tn-04",
+     "tipo_caso": 3,
+     "acontecimento": "tn_queda",
+     "imagem": "uw_290_33",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a ponte torcendo antes de cair: estado anterior"
+    },
+    {
+     "id": "tn-05",
+     "tipo_caso": 2,
+     "acontecimento": "tn_queda",
+     "imagem": "abertura_1940",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "inauguração, 1º/07/1940: antes"
+    },
+    {
+     "id": "tn-06",
+     "tipo_caso": 7,
+     "acontecimento": "tn_queda",
+     "imagem": "fragmento",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "fragmento em exposição: consequência"
+    },
+    {
+     "id": "tn-07",
+     "tipo_caso": 2,
+     "acontecimento": "tn_queda",
+     "imagem": "pontes_atuais",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "pontes novas (1950/2007): outra época"
+    },
+    {
+     "id": "tn-08",
+     "tipo_caso": 4,
+     "acontecimento": "tn_queda",
+     "imagem": "golden_gate",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "outra ponte, sem vínculo: a visão cega só vê \"uma ponte pênsil inteira\""
+    }
+   ],
+   "eventos_esperados": {
+    "tn_queda#fraco": {
+     "acontecimento": "tn_queda",
+     "acervo": [
+      "commons_upload",
+      "uw_290_33",
+      "abertura_1940",
+      "fragmento",
+      "golden_gate"
+     ],
+     "esperado": "revisao",
+     "fundamento": "a única foto do colapso tem vínculo fraco: revisão humana, não bloqueio"
+    }
+   }
+  },
+  "biologia_metamorfose": {
+   "referencias": {
+    "evento": {},
+    "entidades": [
+     {
+      "nome": "Danaus plexippus",
+      "apelidos": [
+       "Monarch",
+       "monarca"
+      ],
+      "categorias": [
+       "Danaus plexippus"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "mt_crisalida": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "lagarta da borboleta-monarca",
+      "acao": "se pendura e vira crisálida",
+      "estado_inicial": "lagarta",
+      "estado_final": "crisálida verde",
+      "quando": "",
+      "importancia": "critica"
+     },
+     "falas": [
+      "A lagarta se pendura de cabeça para baixo e vira uma crisálida."
+     ]
+    }
+   },
+   "imagens": {
+    "jd_92417": {
+     "registro": {
+      "fonte": "JungleDragon",
+      "titulo": "Monarch Chrysalis - Danaus plexippus",
+      "categorias": [],
+      "categorias_origem": "verificado",
+      "datas": {},
+      "descricao": "Monarch Chrysalis - Danaus plexippus",
+      "etiquetas_livres": true
+     },
+     "verificacao": "https://www.jungledragon.com/image/92417/monarch_chrysalis_-_danaus_plexippus.html (etiquetas livres)",
+     "imagem_hipotetica": false
+    },
+    "commons_pupa": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Danaus plexippus chrysalis",
+      "categorias": [
+       "Danaus plexippus (pupae)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Monarch chrysalis"
+     },
+     "verificacao": "arquivo do tipo \"crisálida de monarca\" na categoria da espécie",
+     "imagem_hipotetica": true
+    },
+    "jd_63251": {
+     "registro": {
+      "fonte": "JungleDragon",
+      "titulo": "Monarch Caterpillar J-ing - Danaus plexippus",
+      "categorias": [],
+      "categorias_origem": "verificado",
+      "datas": {},
+      "descricao": "caterpillar in the characteristic J shape, getting ready to pupate",
+      "etiquetas_livres": true
+     },
+     "verificacao": "https://www.jungledragon.com/image/63251/monarch_caterpillar_j-ing_-_danaus_plexippus.html",
+     "imagem_hipotetica": false
+    },
+    "jd_92418": {
+     "registro": {
+      "fonte": "JungleDragon",
+      "titulo": "Empty Monarch Chrysalis - Danaus plexippus",
+      "categorias": [],
+      "categorias_origem": "verificado",
+      "datas": {},
+      "descricao": "empty remains of the chrysalis after the adult emerged",
+      "etiquetas_livres": true
+     },
+     "verificacao": "https://www.jungledragon.com/image/92418/empty_monarch_chrysalis_-_danaus_plexippus.html",
+     "imagem_hipotetica": false
+    },
+    "adulto": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Monarch butterfly on flower",
+      "categorias": [
+       "Danaus plexippus (adults)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2015-08-01"
+      },
+      "descricao": "Adult monarch"
+     },
+     "verificacao": "borboleta adulta",
+     "imagem_hipotetica": true
+    },
+    "merian": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Metamorphosis insectorum Surinamensium plate",
+      "categorias": [
+       "Metamorphosis insectorum Surinamensium",
+       "Engravings"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1705"
+      },
+      "descricao": "Plate by Maria Sibylla Merian"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Metamorphosis_insectorum_Surinamensium (gravuras de 1705, outras espécies)",
+     "imagem_hipotetica": false
+    },
+    "machaon": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Papilio machaon pupa",
+      "categorias": [
+       "Papilio machaon (pupae)"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2012-06-01"
+      },
+      "descricao": "Swallowtail chrysalis"
+     },
+     "verificacao": "crisálida de outra espécie",
+     "imagem_hipotetica": true
+    },
+    "ciclo": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Monarch butterfly life cycle diagram",
+      "categorias": [
+       "Danaus plexippus",
+       "Life cycle diagrams"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Life cycle"
+     },
+     "verificacao": "diagrama do ciclo de vida",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "mt-01",
+     "tipo_caso": 10,
+     "acontecimento": "mt_crisalida",
+     "imagem": "jd_92417",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "crisálida de monarca, mas o vínculo é só título/etiqueta livre"
+    },
+    {
+     "id": "mt-02",
+     "tipo_caso": 1,
+     "acontecimento": "mt_crisalida",
+     "imagem": "commons_pupa",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "crisálida na categoria curada da espécie; acontecimento atemporal: espécie + visão (como prevê a proposta, seção 4)"
+    },
+    {
+     "id": "mt-03",
+     "tipo_caso": 1,
+     "acontecimento": "mt_crisalida",
+     "imagem": "jd_63251",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "lagarta em J (começando a pupar), vínculo só por etiqueta livre"
+    },
+    {
+     "id": "mt-04",
+     "tipo_caso": 3,
+     "acontecimento": "mt_crisalida",
+     "imagem": "jd_92418",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "crisálida vazia depois da saída do adulto"
+    },
+    {
+     "id": "mt-05",
+     "tipo_caso": 3,
+     "acontecimento": "mt_crisalida",
+     "imagem": "adulto",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "borboleta adulta: estado errado"
+    },
+    {
+     "id": "mt-06",
+     "tipo_caso": 5,
+     "acontecimento": "mt_crisalida",
+     "imagem": "merian",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "desenho",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "gravura de 1705 de outras espécies: ilustração"
+    },
+    {
+     "id": "mt-07",
+     "tipo_caso": 9,
+     "acontecimento": "mt_crisalida",
+     "imagem": "machaon",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "crisálida de OUTRA espécie: o registro contradiz a entidade"
+    },
+    {
+     "id": "mt-08",
+     "tipo_caso": 5,
+     "acontecimento": "mt_crisalida",
+     "imagem": "ciclo",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "diagrama",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "diagrama do ciclo: explica"
+    }
+   ],
+   "eventos_esperados": {
+    "mt_crisalida#fraco": {
+     "acontecimento": "mt_crisalida",
+     "acervo": [
+      "jd_92417",
+      "jd_92418",
+      "merian",
+      "adulto"
+     ],
+     "esperado": "revisao",
+     "fundamento": "foto certa com vínculo fraco: revisão"
+    }
+   }
+  },
+  "clima_katrina": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Hurricane Katrina"
+     ],
+     "categorias": [
+      "Hurricane Katrina",
+      "Effects of Hurricane Katrina in New Orleans"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "New Orleans",
+      "categorias": [
+       "New Orleans"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "kt_inundacao": {
+     "bruto": {
+      "tipo": "impacto",
+      "sujeito": "Nova Orleans",
+      "acao": "os diques se rompem e a cidade alaga",
+      "estado_inicial": "cidade seca",
+      "estado_final": "bairros inteiros sob a água",
+      "quando": "29 a 31 de agosto de 2005",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Os diques se romperam e a água cobriu bairros inteiros de Nova Orleans."
+     ]
+    }
+   },
+   "imagens": {
+    "fema_15008": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "FEMA - 15008 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana",
+      "categorias": [
+       "Effects of Hurricane Katrina in New Orleans"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2005-08-30"
+      },
+      "descricao": "New Orleans, La. August 30, 2005 -- Aerial of a flooded neighborhood with homes totally submerged to their roofs."
+     },
+     "verificacao": "https://webarchive.library.unt.edu/eot2008/20090506103507/http://www.fema.gov/medialibrary/photographs/15008",
+     "imagem_hipotetica": false
+    },
+    "fema_14891": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "FEMA - 14891 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana",
+      "categorias": [
+       "Effects of Hurricane Katrina in New Orleans",
+       "17th Street Canal"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2005-08-30"
+      },
+      "descricao": "Aerial views of flood waters and damage caused by failure of the Federal levee system ... major levee break on the 17th Street Canal"
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:FEMA_-_14891_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg",
+     "imagem_hipotetica": false
+    },
+    "fema_17284": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "FEMA - 17284 - Photograph by Jocelyn Augustino",
+      "categorias": [
+       "Effects of Hurricane Katrina in New Orleans"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2005-08-31"
+      },
+      "descricao": "New Orleans, LA, August 31, 2005 -- Members of the FEMA Urban Search and Rescue task forces continue to help residents impacted by Hurricane Katrina."
+     },
+     "verificacao": "https://download.osmand.net/wiki/File:FEMA_-_17284_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg",
+     "imagem_hipotetica": false
+    },
+    "goes_28ago": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hurricane Katrina August 28 2005 satellite",
+      "categorias": [
+       "Hurricane Katrina",
+       "Satellite pictures of hurricanes"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2005-08-28"
+      },
+      "descricao": "Katrina over the Gulf of Mexico"
+     },
+     "verificacao": "imagem de satélite do furacão no golfo (tipo de arquivo existente)",
+     "imagem_hipotetica": true
+    },
+    "skyline": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "New Orleans skyline 2015",
+      "categorias": [
+       "Skylines of New Orleans"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2015"
+      },
+      "descricao": "Skyline"
+     },
+     "verificacao": "vista da cidade seca",
+     "imagem_hipotetica": true
+    },
+    "memorial": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Hurricane Katrina Memorial",
+      "categorias": [
+       "Hurricane Katrina",
+       "Memorials in New Orleans"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2008"
+      },
+      "descricao": "Memorial"
+     },
+     "verificacao": "memorial",
+     "imagem_hipotetica": true
+    },
+    "trajetoria": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Katrina 2005 track",
+      "categorias": [
+       "Hurricane Katrina",
+       "Hurricane track maps"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {},
+      "descricao": "Track map"
+     },
+     "verificacao": "mapa da trajetória",
+     "imagem_hipotetica": true
+    },
+    "harvey": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Flooding in Houston from Hurricane Harvey",
+      "categorias": [
+       "Hurricane Harvey flooding in Houston"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2017-08-29"
+      },
+      "descricao": "Flooded streets in Houston, 2017"
+     },
+     "verificacao": "enchente de OUTRO furacão, visualmente parecida",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "kt-01",
+     "tipo_caso": 1,
+     "acontecimento": "kt_inundacao",
+     "imagem": "fema_15008",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "bairro submerso, 30/08/2005 (FEMA)"
+    },
+    {
+     "id": "kt-02",
+     "tipo_caso": 1,
+     "acontecimento": "kt_inundacao",
+     "imagem": "fema_14891",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "rompimento do dique do 17th Street Canal, 30/08/2005"
+    },
+    {
+     "id": "kt-03",
+     "tipo_caso": 1,
+     "acontecimento": "kt_inundacao",
+     "imagem": "fema_17284",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "PROVA",
+     "fundamento": "resgate na cidade alagada, 31/08/2005"
+    },
+    {
+     "id": "kt-04",
+     "tipo_caso": 2,
+     "acontecimento": "kt_inundacao",
+     "imagem": "goes_28ago",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "satelite_ou_aerea",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "o furacão no golfo em 28/08, antes da inundação"
+    },
+    {
+     "id": "kt-05",
+     "tipo_caso": 2,
+     "acontecimento": "kt_inundacao",
+     "imagem": "skyline",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "cidade seca em 2015"
+    },
+    {
+     "id": "kt-06",
+     "tipo_caso": 7,
+     "acontecimento": "kt_inundacao",
+     "imagem": "memorial",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "memorial"
+    },
+    {
+     "id": "kt-07",
+     "tipo_caso": 5,
+     "acontecimento": "kt_inundacao",
+     "imagem": "trajetoria",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "mapa",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "mapa explica"
+    },
+    {
+     "id": "kt-08",
+     "tipo_caso": 9,
+     "acontecimento": "kt_inundacao",
+     "imagem": "harvey",
+     "visao_correta": {
+      "confere_com": "estado_final",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "enchente de outro furacão (Harvey, 2017): o registro diz outro acontecimento"
+    }
+   ],
+   "eventos_esperados": {
+    "kt_inundacao#sem_prova": {
+     "acontecimento": "kt_inundacao",
+     "acervo": [
+      "goes_28ago",
+      "skyline",
+      "memorial",
+      "trajetoria",
+      "harvey"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "nenhuma imagem da inundação de Nova Orleans (a do Harvey é outro acontecimento)"
+    }
+   }
+  },
+  "negativo_penicilina": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Discovery of penicillin"
+     ],
+     "categorias": [
+      "Discovery of penicillin"
+     ]
+    },
+    "entidades": [
+     {
+      "nome": "Alexander Fleming",
+      "categorias": [
+       "Alexander Fleming"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "pn_mofo": {
+     "bruto": {
+      "tipo": "transformacao",
+      "sujeito": "colônias de bactérias na placa",
+      "acao": "o mofo mata as bactérias ao redor",
+      "estado_inicial": "placa com colônias",
+      "estado_final": "halo sem bactérias ao redor do mofo",
+      "quando": "setembro de 1928",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 1928, um mofo matou as bactérias ao redor dele na placa de Fleming."
+     ]
+    }
+   },
+   "imagens": {
+    "fleming_1945": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Alexander Fleming 1945",
+      "categorias": [
+       "Alexander Fleming"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1945"
+      },
+      "descricao": "Portrait of Alexander Fleming"
+     },
+     "verificacao": "https://en.wikipedia.org/wiki/Alexander_Fleming (retrato)",
+     "imagem_hipotetica": true
+    },
+    "placa_moderna": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Penicillium inhibiting bacteria",
+      "categorias": [
+       "Penicillium in Petri dishes"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2016"
+      },
+      "descricao": "Demonstration plate"
+     },
+     "verificacao": "placa moderna de demonstração",
+     "imagem_hipotetica": true
+    },
+    "producao_1943": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Penicillin production 1943",
+      "categorias": [
+       "Penicillin production"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1943"
+      },
+      "descricao": "Production"
+     },
+     "verificacao": "produção industrial",
+     "imagem_hipotetica": true
+    },
+    "placa_azul": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Fleming blue plaque St Marys",
+      "categorias": [
+       "Alexander Fleming",
+       "Blue plaques in London"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Plaque"
+     },
+     "verificacao": "placa comemorativa",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "pn-01",
+     "tipo_caso": 3,
+     "acontecimento": "pn_mofo",
+     "imagem": "fleming_1945",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "retrato do descobridor: pessoa, não o fenômeno"
+    },
+    {
+     "id": "pn-02",
+     "tipo_caso": 10,
+     "acontecimento": "pn_mofo",
+     "imagem": "placa_moderna",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "RELACIONADA",
+     "fundamento": "mostra o fenômeno, sem nenhum vínculo com a placa de 1928 (um sinal só)"
+    },
+    {
+     "id": "pn-03",
+     "tipo_caso": 2,
+     "acontecimento": "pn_mofo",
+     "imagem": "producao_1943",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "produção de 1943: depois e outra coisa"
+    },
+    {
+     "id": "pn-04",
+     "tipo_caso": 7,
+     "acontecimento": "pn_mofo",
+     "imagem": "placa_azul",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "objeto_ou_monumento",
+      "classe_confere": false
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "placa comemorativa"
+    }
+   ],
+   "eventos_esperados": {
+    "pn_mofo#sem_foto": {
+     "acontecimento": "pn_mofo",
+     "acervo": [
+      "fleming_1945",
+      "producao_1943",
+      "placa_azul"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "só retrato e imagens posteriores"
+    },
+    "pn_mofo#demo": {
+     "acontecimento": "pn_mofo",
+     "acervo": [
+      "fleming_1945",
+      "placa_moderna",
+      "placa_azul"
+     ],
+     "esperado": "revisao",
+     "fundamento": "demonstração moderna: humano decide (nunca prova)"
+    }
+   }
+  },
+  "negativo_alexandria": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Destruction of the Library of Alexandria"
+     ],
+     "categorias": []
+    },
+    "entidades": [
+     {
+      "nome": "Library of Alexandria",
+      "categorias": [
+       "Library of Alexandria"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "al_destruicao": {
+     "bruto": {
+      "tipo": "impacto",
+      "sujeito": "Biblioteca de Alexandria",
+      "acao": "é destruída",
+      "estado_inicial": "biblioteca ativa",
+      "estado_final": "biblioteca perdida",
+      "quando": "48 a.C.",
+      "importancia": "critica"
+     },
+     "falas": [
+      "A Biblioteca de Alexandria foi destruída."
+     ]
+    }
+   },
+   "imagens": {
+    "goll_1876": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "The burning of the Library of Alexandria (Hermann Göll, 1876)",
+      "categorias": [
+       "Library of Alexandria",
+       "Engravings by Hermann Göll"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1876"
+      },
+      "descricao": "woodcut"
+     },
+     "verificacao": "https://sites.owu.edu/trident/2026/04/14/the-rise-and-fall-of-the-library-of-alexandria (Göll, 1876, domínio público)",
+     "imagem_hipotetica": false
+    },
+    "von_corven": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "The Great Library of Alexandria (O. Von Corven)",
+      "categorias": [
+       "Library of Alexandria",
+       "Illustrations"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1880"
+      },
+      "descricao": "19th-century illustration"
+     },
+     "verificacao": "https://sites.owu.edu/trident/2026/04/14/the-rise-and-fall-of-the-library-of-alexandria",
+     "imagem_hipotetica": false
+    },
+    "bibliotheca": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bibliotheca Alexandrina",
+      "categorias": [
+       "Bibliotheca Alexandrina"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Modern library building, opened 2002"
+     },
+     "verificacao": "biblioteca moderna",
+     "imagem_hipotetica": true
+    },
+    "serapeum": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Serapeum of Alexandria ruins",
+      "categorias": [
+       "Serapeum of Alexandria"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Ruins"
+     },
+     "verificacao": "ruínas do Serapeu",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "al-01",
+     "tipo_caso": 5,
+     "acontecimento": "al_destruicao",
+     "imagem": "goll_1876",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "desenho",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "gravura de 1876: arte nunca prova"
+    },
+    {
+     "id": "al-02",
+     "tipo_caso": 5,
+     "acontecimento": "al_destruicao",
+     "imagem": "von_corven",
+     "visao_correta": {
+      "confere_com": "estado_inicial",
+      "natureza": "desenho",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "ilustração da biblioteca intacta"
+    },
+    {
+     "id": "al-03",
+     "tipo_caso": 9,
+     "acontecimento": "al_destruicao",
+     "imagem": "bibliotheca",
+     "visao_correta": {
+      "confere_com": "outro_estado",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "outra biblioteca (2002), sem vínculo"
+    },
+    {
+     "id": "al-04",
+     "tipo_caso": 7,
+     "acontecimento": "al_destruicao",
+     "imagem": "serapeum",
+     "visao_correta": {
+      "confere_com": "consequencia",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "ruínas de um anexo: consequência, sem vínculo de registro com a biblioteca — limite: contexto sem vínculo"
+    }
+   ],
+   "eventos_esperados": {
+    "al_destruicao#arte": {
+     "acontecimento": "al_destruicao",
+     "acervo": [
+      "goll_1876",
+      "von_corven",
+      "bibliotheca",
+      "serapeum"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "só arte e imagens posteriores"
+    }
+   }
+  },
+  "negativo_esporte": {
+   "referencias": {
+    "evento": {
+     "nomes": [
+      "Bob Beamon long jump world record"
+     ],
+     "categorias": []
+    },
+    "entidades": [
+     {
+      "nome": "Bob Beamon",
+      "categorias": [
+       "Bob Beamon"
+      ]
+     }
+    ]
+   },
+   "acontecimentos": {
+    "es_salto": {
+     "bruto": {
+      "tipo": "movimento",
+      "sujeito": "Bob Beamon",
+      "acao": "salta 8,90 metros",
+      "quando": "18 de outubro de 1968",
+      "importancia": "critica"
+     },
+     "falas": [
+      "Em 1968, Bob Beamon saltou *8,90 metros*."
+     ]
+    }
+   },
+   "imagens": {
+    "beamon_2014": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Bob Beamon 2014",
+      "categorias": [
+       "Bob Beamon"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2014"
+      },
+      "descricao": "Portrait"
+     },
+     "verificacao": "retrato recente",
+     "imagem_hipotetica": true
+    },
+    "salto_2012": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Long jump at the 2012 Summer Olympics",
+      "categorias": [
+       "Long jump at the 2012 Summer Olympics"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2012-08-04"
+      },
+      "descricao": "Athlete jumping"
+     },
+     "verificacao": "outro atleta, outra competição",
+     "imagem_hipotetica": true
+    },
+    "estadio": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Estadio Olimpico Universitario",
+      "categorias": [
+       "Estadio Olímpico Universitario"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "2010"
+      },
+      "descricao": "Stadium"
+     },
+     "verificacao": "estádio vazio",
+     "imagem_hipotetica": true
+    },
+    "selo": {
+     "registro": {
+      "fonte": "Commons",
+      "titulo": "Stamp Mexico 1968 long jump",
+      "categorias": [
+       "Stamps of Mexico",
+       "1968 Summer Olympics"
+      ],
+      "categorias_origem": "cenario",
+      "datas": {
+       "criacao_declarada": "1968"
+      },
+      "descricao": "Postage stamp"
+     },
+     "verificacao": "selo comemorativo (ilustração)",
+     "imagem_hipotetica": true
+    }
+   },
+   "casos": [
+    {
+     "id": "es-01",
+     "tipo_caso": 3,
+     "acontecimento": "es_salto",
+     "imagem": "beamon_2014",
+     "visao_correta": {
+      "confere_com": "entidade",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "a pessoa certa, décadas depois, sem saltar"
+    },
+    {
+     "id": "es-02",
+     "tipo_caso": 9,
+     "acontecimento": "es_salto",
+     "imagem": "salto_2012",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "foto",
+      "classe_confere": true
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "outro atleta em 2012: o registro diz outra competição"
+    },
+    {
+     "id": "es-03",
+     "tipo_caso": 4,
+     "acontecimento": "es_salto",
+     "imagem": "estadio",
+     "visao_correta": {
+      "confere_com": "nao_mostra",
+      "natureza": "foto",
+      "classe_confere": false
+     },
+     "esperado": "INCOMPATIVEL",
+     "fundamento": "estádio vazio, sem vínculo"
+    },
+    {
+     "id": "es-04",
+     "tipo_caso": 5,
+     "acontecimento": "es_salto",
+     "imagem": "selo",
+     "visao_correta": {
+      "confere_com": "acao",
+      "natureza": "ilustracao",
+      "classe_confere": true
+     },
+     "esperado": "CONTEXTO",
+     "fundamento": "selo: ilustração"
+    }
+   ],
+   "eventos_esperados": {
+    "es_salto#sem_foto": {
+     "acontecimento": "es_salto",
+     "acervo": [
+      "beamon_2014",
+      "estadio",
+      "selo"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "nenhuma foto livre do salto"
+    },
+    "es_salto#parecida": {
+     "acontecimento": "es_salto",
+     "acervo": [
+      "beamon_2014",
+      "salto_2012",
+      "estadio"
+     ],
+     "esperado": "bloqueio",
+     "fundamento": "salto parecido de outro atleta não serve"
+    }
+   }
+  }
+ }
+}

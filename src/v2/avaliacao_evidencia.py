@@ -29,6 +29,10 @@ CENARIOS_REGISTRO = ('completo', 'sem_categoria', 'sem_data')
 def registro(r: dict, cenario: str = 'completo') -> dict:
     cats = [] if cenario == 'sem_categoria' else list(r.get('categorias') or [])
     datas = {} if cenario == 'sem_data' else {k: E.intervalo(v) for k, v in (r.get('datas') or {}).items()}
+    if r.get('datetimeoriginal_bruto') and cenario != 'sem_data':      # valor cru do extmetadata: classificado pelo código
+        origem, iv = E._classificar_data_commons(r['datetimeoriginal_bruto'])
+        if origem != 'desconhecida':
+            datas[origem] = iv
     return E._registro(r.get('fonte'), r.get('titulo'), cats, datas, r.get('descricao'), r.get('autor'), r.get('licenca'),
                        r.get('ancestrais'), pagina=r.get('pagina'), etiquetas_livres=bool(r.get('etiquetas_livres')))
 
@@ -71,7 +75,8 @@ def avaliar_conjunto(fix: dict) -> dict:
                         linha['dependencias'] = a['dependencias']
                         linha['familias'] = a['familias_que_confirmam']
             res['casos'].append(linha)
-        for chave, esp in (dom.get('eventos_esperados') or {}).items():
+        for rotulo, esp in (dom.get('eventos_esperados') or {}).items():
+            chave = esp.get('acontecimento') or rotulo
             ev = _ev(dom, chave)
             casos_ev = {c['imagem']: c for c in dom['casos'] if c['acontecimento'] == chave}
             cands = []
@@ -80,7 +85,7 @@ def avaliar_conjunto(fix: dict) -> dict:
                 cands.append((i, E.avaliar(ev, registro(dom['imagens'][i]['registro']), visao(c, ev, 'correta'))))
             rep = E.decidir(ev, cands)
             modo = 'revisao' if rep['modo'] == 'foto_relacionada' and rep.get('revisao_humana') else rep['modo']
-            res['eventos'].append({'dominio': nome, 'acontecimento': chave, 'esperado': esp['esperado'], 'obtido': modo,
+            res['eventos'].append({'dominio': nome, 'acontecimento': rotulo, 'esperado': esp['esperado'], 'obtido': modo,
                                    'foto': rep.get('foto'), 'fundamento': esp.get('fundamento'), 'faltam': rep.get('faltam')})
     res['metricas'] = metricas(res)
     return res

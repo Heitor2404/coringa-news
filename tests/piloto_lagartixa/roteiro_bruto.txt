@@ -1,0 +1,283 @@
+```json
+{
+  "titulo": "POR QUE LAGARTIXAS NÃO CAEM",
+  "categoria": "CIÊNCIA",
+  "legenda_post": "Por que a lagartixa não cai do teto? Hemidactylus mabouia, a lagartixa das casas brasileiras, não usa cola nem ventosa. O segredo está em milhões de estruturas microscópicas nas patas. E ele já virou curativo, adesivo e robô.",
+  "hashtags": ["lagartixa", "vandderwaals", "biomimetica", "curiosidadescientificas", "geckos"],
+  "titulo_youtube": "Por que a lagartixa não cai do teto? Sem cola nem ventosa",
+  "legenda_tiktok": "Sem cola, sem ventosa: como a lagartixa anda de cabeça para baixo?",
+  "clima": "leve",
+  "produto": null,
+  "estilo_visual": "realistic 3D scientific illustration",
+  "personagem": "",
+  "arco": ["Como a lagartixa anda no teto sem cola nem ventosa, e o que isso inspirou"],
+  "plano": {
+    "assunto": "Como a lagartixa-doméstica adere ao teto sem cair",
+    "intencao": "Entender que a aderência vem de forças moleculares (Van der Waals) em estruturas microscópicas das patas, e que isso inspirou tecnologias.",
+    "por_que_agora": "",
+    "promessa": "Explicar por que a lagartixa não cai: não é cola nem ventosa, é atração entre moléculas.",
+    "publico": "leigo",
+    "complexidade": "media",
+    "angulo": {"tipo": "mecanismo", "pergunta": "Se não há cola nem ventosa, o que segura a lagartixa no teto?"},
+    "modos": ["mecanismo", "curiosidade_factual"],
+    "estrategia": {
+      "abertura": "A lagartixa do teto não usa cola nem ventosa.",
+      "progressao": [
+        "Quem é a lagartixa e que força ela tem",
+        "Milhões de estruturas microscópicas nas patas",
+        "Elas chegam tão perto da parede que as moléculas se atraem",
+        "Essa atração é a força de Van der Waals, nascida de dipolos instantâneos",
+        "A força some com a distância, por isso a escala é microscópica",
+        "Aplicações: adesivo de 2007, curativo de 2008, robô de 2010"
+      ],
+      "payoff": "Quem segura a lagartixa é a atração entre moléculas, não cola nem sucção.",
+      "fechamento": "A revelação nomeia a atração molecular e as aplicações mostram a importância da descoberta."
+    },
+    "evidencias": [
+      {"afirmacao": "A lagartixa não usa ventosas: o truque são milhões de estruturas microscópicas nas patas.", "fonte": "Olhar Digital", "certeza": "alta", "natureza": "fato"},
+      {"afirmacao": "A aderência vem das forças de Van der Waals, não de adesivo.", "fonte": "Portal UAI; Wikipédia", "certeza": "alta", "natureza": "fato"},
+      {"afirmacao": "A força depende da distância e desaparece rápido quando as moléculas se afastam.", "fonte": "Wikipedia (inglês)", "certeza": "alta", "natureza": "fato"},
+      {"afirmacao": "Dipolo instantâneo: a nuvem de elétrons se desloca e surgem dois polos por um breve período.", "fonte": "Wikipédia", "certeza": "alta", "natureza": "fato"},
+      {"afirmacao": "2007 adesivo de nanotubos, 2008 supercurativo, 2010 robô com pés inspirados em lagartixa.", "fonte": "Inovação Tecnológica; BBC", "certeza": "media", "natureza": "fato"}
+    ],
+    "incertezas": ["A força suficiente para sustentar um humano vem de uma manchete, então o roteiro a trata como estimativa."],
+    "visual": {
+      "precisa_mostrar": "A lagartixa no teto, as cerdas microscópicas, o esquema da atração molecular e as aplicações.",
+      "disponivel": "Fotos de lagartixa, close da sola com cerdas (a3), desenho dos dedos (a0), robô com adesivo (a18).",
+      "faltando": "Esquema de dipolos e da distância; imagens do adesivo de 2007, do curativo de 2008 e do robô de 2010.",
+      "riscos": "O mecanismo molecular só funciona desenhado como esquema; a18 é de 2025, não do robô de 2010."
+    },
+    "duracao_alvo_s": 52,
+    "viabilidade": {"ok": true, "motivo": "O dossiê sustenta o mecanismo e as aplicações.", "alternativa": ""}
+  },
+  "cenas": [
+    {
+      "tipo": "gancho",
+      "fala": "A lagartixa do teto não usa *cola* nem ventosa.",
+      "titulo": "SEM *COLA*, SEM VENTOSA",
+      "subtitulo": "Como ela não cai?",
+      "cenario": "A small house gecko walking upside down across a white ceiling, indoor night light",
+      "bloco": {"funcao": "abertura", "avanca": "Promete explicar o que segura a lagartixa"},
+      "mostrar": "lagartixa andando no teto",
+      "busca": "gecko walking ceiling",
+      "visual": "a5",
+      "evento": "e1",
+      "acontecimento": {
+        "id": "e1", "tipo": "movimento", "quem": "lagartixa-doméstica", "onde": "teto de uma casa", "quando": "atual", "recurso": "foto",
+        "sujeito": "lagartixa", "acao": "andar no teto", "estado_inicial": "parede", "estado_final": "teto",
+        "mostrar": "Lagartixa andando em superfície vertical ou no teto",
+        "dados": {}, "fonte": "Super Rádio Tupi; Olhar Digital", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "A *Hemidactylus mabouia* é pequena, noturna e comum nas casas brasileiras.",
+      "fala_tts": "Hemidáctilus mabúia",
+      "cenario": "A small tropical house gecko on a dark wall at night in a Brazilian home",
+      "bloco": {"funcao": "contexto", "avanca": "Apresenta a protagonista e onde ela vive"},
+      "mostrar": "lagartixa-doméstica em casa",
+      "busca": "Hemidactylus mabouia",
+      "visual": "a7",
+      "evento": "e2",
+      "acontecimento": {
+        "id": "e2", "tipo": "ambiente", "quem": "lagartixa-doméstica-tropical", "onde": "casas brasileiras", "quando": "atual", "recurso": "foto",
+        "sujeito": "Hemidactylus mabouia", "acao": "viver nas casas", "estado_inicial": "", "estado_final": "",
+        "mostrar": "A espécie em ambiente doméstico",
+        "dados": {}, "fonte": "Wikipédia", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Essa aderência teria força para sustentar até um *humano*.",
+      "cenario": "A close-up of a gecko clinging firmly to a smooth surface",
+      "bloco": {"funcao": "virada", "avanca": "Mostra o tamanho da força de aderência"},
+      "mostrar": "lagartixa agarrada com firmeza",
+      "busca": "gecko clinging wall",
+      "visual": "a14",
+      "evento": "e3",
+      "acontecimento": {
+        "id": "e3", "tipo": "escala", "quem": "lagartixa", "onde": "", "quando": "atual", "recurso": "foto",
+        "sujeito": "força de aderência", "acao": "sustentar peso", "estado_inicial": "lagartixa pequena", "estado_final": "força comparável ao peso de um humano",
+        "mostrar": "Lagartixa pequena presa à superfície",
+        "dados": {}, "fonte": "Portal UAI", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "O segredo são *milhões* de estruturas microscópicas nas patas.",
+      "cenario": "Extreme macro of a gecko toe pad covered in microscopic hair-like bristles",
+      "bloco": {"funcao": "mecanismo", "avanca": "Revela onde está o segredo: as patas"},
+      "mostrar": "cerdas microscópicas na sola do pé",
+      "busca": "gecko foot bristles",
+      "visual": "a3",
+      "evento": "e4",
+      "acontecimento": {
+        "id": "e4", "tipo": "mecanismo", "quem": "lagartixa", "onde": "sola da pata", "quando": "atual", "recurso": "foto",
+        "sujeito": "patas da lagartixa", "acao": "aderir por estruturas microscópicas", "estado_inicial": "pata comum", "estado_final": "milhões de estruturas em contato",
+        "mostrar": "Close da sola do pé com as cerdas",
+        "dados": {}, "fonte": "Olhar Digital", "importancia": "critica", "obrigatoria": true, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Os dedos têm *lamelas*, dobras que o próprio nome Hemidactylus já entrega.",
+      "fala_tts": "Hemidáctilus",
+      "cenario": "Scientific anatomical drawing of gecko toes with adhesive lamellae",
+      "bloco": {"funcao": "contexto", "avanca": "Nomeia as lamelas dos dedos"},
+      "mostrar": "dedos com lamelas",
+      "busca": "gecko toe lamellae",
+      "visual": "a0",
+      "evento": "e5",
+      "acontecimento": {
+        "id": "e5", "tipo": "mecanismo", "quem": "lagartixa", "onde": "dedos", "quando": "atual", "recurso": "foto",
+        "sujeito": "dedos da lagartixa", "acao": "apresentar lamelas", "estado_inicial": "", "estado_final": "",
+        "mostrar": "Desenho dos dedos com lamelas",
+        "dados": {}, "fonte": "Wikipédia", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Elas chegam tão perto da parede que as *moléculas* se atraem.",
+      "lugar": "ESCALA MICROSCÓPICA",
+      "cenario": "Realistic 3D illustration of microscopic bristle tips touching a wall surface at molecular scale",
+      "bloco": {"funcao": "mecanismo", "avanca": "Explica que a proximidade gera atração"},
+      "mostrar": "ponta da cerda encostando na parede",
+      "busca": "van der Waals gecko adhesion",
+      "visual": "ia",
+      "evento": "e6",
+      "acontecimento": {
+        "id": "e6", "tipo": "mecanismo", "quem": "cerdas da lagartixa", "onde": "superfície do teto", "quando": "atual", "recurso": "esquema",
+        "sujeito": "pontas das cerdas", "acao": "encostar na parede", "estado_inicial": "cerda afastada", "estado_final": "cerda em contato, moléculas se atraindo",
+        "mostrar": "Esquema da cerda encostando e a atração aparecendo",
+        "dados": {"etapas": ["cerda se aproxima", "contato extremamente próximo", "moléculas se atraem"]}, "fonte": "Portal UAI; Wikipedia (inglês)", "importancia": "critica", "obrigatoria": true, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Essa atração fraca existe em toda matéria: é a força de *Van der Waals*.",
+      "fala_tts": "Van der Vals",
+      "cenario": "Realistic 3D illustration of two neighboring molecules with a faint attraction between them",
+      "bloco": {"funcao": "mecanismo", "avanca": "Nomeia a força que segura a lagartixa"},
+      "mostrar": "duas moléculas se atraindo levemente",
+      "busca": "van der Waals force diagram",
+      "visual": "ia",
+      "evento": "e7",
+      "acontecimento": {
+        "id": "e7", "tipo": "mecanismo", "quem": "moléculas", "onde": "", "quando": "", "recurso": "esquema",
+        "sujeito": "força de Van der Waals", "acao": "atrair moléculas vizinhas", "estado_inicial": "moléculas separadas", "estado_final": "moléculas atraídas",
+        "mostrar": "Esquema de duas moléculas com seta de atração fraca",
+        "dados": {"etapas": ["duas moléculas vizinhas", "atração fraca entre elas"]}, "fonte": "Wikipédia", "importancia": "critica", "obrigatoria": true, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Por um instante, os elétrons se deslocam e a molécula ganha *dois polos*.",
+      "cenario": "Realistic 3D illustration of an electron cloud shifting to one side of a molecule, forming two poles",
+      "bloco": {"funcao": "mecanismo", "avanca": "Explica a origem da atração: dipolo instantâneo"},
+      "mostrar": "nuvem de elétrons deslocada formando dois polos",
+      "busca": "instantaneous dipole electron cloud",
+      "visual": "ia",
+      "evento": "e8",
+      "acontecimento": {
+        "id": "e8", "tipo": "transformacao", "quem": "molécula apolar", "onde": "", "quando": "", "recurso": "esquema",
+        "sujeito": "nuvem de elétrons", "acao": "deslocar-se para um lado", "estado_inicial": "nuvem simétrica", "estado_final": "dipolo instantâneo com dois polos",
+        "mostrar": "Nuvem de elétrons simétrica passando a deslocada, com polos + e -",
+        "dados": {"etapas": ["nuvem de elétrons simétrica", "nuvem se desloca por um instante", "aparecem dois polos"]}, "fonte": "Wikipédia", "importancia": "critica", "obrigatoria": true, "sincronia": {"polos": ["dois", "polos"]}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Só que essa força some quando as moléculas se *afastam*.",
+      "cenario": "Realistic 3D illustration showing the attraction between two molecules fading as they move apart",
+      "bloco": {"funcao": "mecanismo", "avanca": "Explica por que a escala microscópica é necessária"},
+      "mostrar": "atração enfraquecendo com a distância",
+      "busca": "intermolecular force distance",
+      "visual": "ia",
+      "evento": "e9",
+      "acontecimento": {
+        "id": "e9", "tipo": "proporcao", "quem": "moléculas", "onde": "", "quando": "", "recurso": "esquema",
+        "sujeito": "força de Van der Waals", "acao": "enfraquecer com a distância", "estado_inicial": "moléculas próximas, atração presente", "estado_final": "moléculas afastadas, atração quase nula",
+        "mostrar": "Moléculas se afastando e a seta de atração desaparecendo",
+        "dados": {"etapas": ["moléculas próximas", "moléculas se afastam", "atração desaparece"]}, "fonte": "Wikipedia (inglês)", "importancia": "critica", "obrigatoria": true, "sincronia": {"afastam": ["afastam"]}
+      }
+    },
+    {
+      "tipo": "revelacao",
+      "fala": "Ninguém cola, ninguém suga: quem segura é a *atração entre moléculas*.",
+      "pergunta": "O que segura a lagartixa?",
+      "resposta": "ATRAÇÃO MOLECULAR",
+      "detalhe": "Sem cola, sem ventosa: só Van der Waals",
+      "cor": "verde",
+      "cenario": "A house gecko on a ceiling, clean and sharp",
+      "bloco": {"funcao": "payoff", "avanca": "Responde a pergunta central do vídeo"},
+      "mostrar": "lagartixa no teto com a resposta",
+      "busca": "gecko on ceiling",
+      "visual": "a16",
+      "evento": "e10",
+      "acontecimento": {
+        "id": "e10", "tipo": "mecanismo", "quem": "lagartixa-doméstica", "onde": "teto", "quando": "atual", "recurso": "foto",
+        "sujeito": "lagartixa", "acao": "aderir por forças moleculares", "estado_inicial": "sem aderência explicada", "estado_final": "aderência por Van der Waals",
+        "mostrar": "Lagartixa aderida com a resposta na tela",
+        "dados": {}, "fonte": "Portal UAI; Wikipédia", "importancia": "critica", "obrigatoria": true, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Em *2007*, nasceu um adesivo quatro vezes melhor que a pata.",
+      "lugar": "LABORATÓRIO · 2007",
+      "cenario": "A scientist in a laboratory holding a small carbon nanotube adhesive patch",
+      "bloco": {"funcao": "consequencia", "avanca": "Primeira aplicação: adesivo de nanotubos"},
+      "mostrar": "adesivo de nanotubos em laboratório",
+      "busca": "gecko inspired nanotube adhesive",
+      "visual": "ia",
+      "evento": "e11",
+      "acontecimento": {
+        "id": "e11", "tipo": "sequencia_historica", "quem": "cientistas", "onde": "laboratório", "quando": "2007", "recurso": "ia",
+        "sujeito": "adesivo de nanotubos", "acao": "superar a pata da lagartixa", "estado_inicial": "pata da lagartixa", "estado_final": "adesivo quatro vezes melhor",
+        "mostrar": "Adesivo de nanotubos em laboratório",
+        "dados": {"eventos": [{"ano": "2007", "texto": "adesivo de nanotubos"}]}, "fonte": "Inovação Tecnológica", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Em *2008*, saiu um supercurativo inspirado na pata da lagartixa.",
+      "lugar": "2008",
+      "cenario": "A transparent medical bandage with microscopic gecko-inspired texture on a laboratory table",
+      "bloco": {"funcao": "consequencia", "avanca": "Segunda aplicação: curativo"},
+      "mostrar": "supercurativo inspirado na lagartixa",
+      "busca": "gecko inspired bandage",
+      "visual": "ia",
+      "evento": "e12",
+      "acontecimento": {
+        "id": "e12", "tipo": "sequencia_historica", "quem": "cientistas", "onde": "laboratório", "quando": "2008", "recurso": "ia",
+        "sujeito": "supercurativo", "acao": "imitar a pata da lagartixa", "estado_inicial": "", "estado_final": "curativo adesivo",
+        "mostrar": "Curativo adesivo inspirado em lagartixa",
+        "dados": {"eventos": [{"ano": "2008", "texto": "supercurativo"}]}, "fonte": "BBC", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "historia",
+      "fala": "Em *2010*, um robô com pés de lagartixa lembrou o homem-aranha.",
+      "lugar": "2010",
+      "cenario": "A small robot with gecko-inspired adhesive feet climbing a vertical glass wall",
+      "bloco": {"funcao": "consequencia", "avanca": "Terceira aplicação: robô escalador"},
+      "mostrar": "robô com pés adesivos subindo parede",
+      "busca": "gecko robot climbing",
+      "visual": "a18",
+      "evento": "e13",
+      "acontecimento": {
+        "id": "e13", "tipo": "sequencia_historica", "quem": "cientistas e robô", "onde": "laboratório", "quando": "2010", "recurso": "foto",
+        "sujeito": "robô com pés de lagartixa", "acao": "escalar superfícies", "estado_inicial": "", "estado_final": "",
+        "mostrar": "Robô com adesivos inspirados em lagartixa",
+        "dados": {"eventos": [{"ano": "2010", "texto": "robô com pés de lagartixa"}]}, "fonte": "Inovação Tecnológica", "importancia": "apoio", "obrigatoria": false, "sincronia": {}
+      }
+    },
+    {
+      "tipo": "fechamento",
+      "fala": "Segue o *Coringa Explica*.",
+      "titulo": "Segue o *@coringa.explica*",
+      "bloco": {"funcao": "ligacao", "avanca": "Chamada final para seguir o perfil"}
+    }
+  ]
+}
+```

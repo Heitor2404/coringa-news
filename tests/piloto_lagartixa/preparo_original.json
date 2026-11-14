@@ -1,0 +1,317 @@
+{
+ "eventos": [
+  {
+   "id": "e1",
+   "cenas": [
+    0
+   ],
+   "tipo_original": "movimento",
+   "critico": false,
+   "tipo": "movimento",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "editorial",
+    "comp": "abertura.pergunta"
+   },
+   "faltam": [],
+   "foto": "a5",
+   "dados": null
+  },
+  {
+   "id": "e2",
+   "cenas": [
+    1
+   ],
+   "tipo_original": "ambiente",
+   "critico": false,
+   "tipo": "ambiente",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a7",
+    "evidencia": "é o que o roteiro pediu (casa, lagartixa)"
+   },
+   "faltam": [],
+   "foto": "a7",
+   "dados": null
+  },
+  {
+   "id": "e3",
+   "cenas": [
+    2
+   ],
+   "tipo_original": "escala",
+   "critico": false,
+   "tipo": "escala",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a14"
+   },
+   "faltam": [],
+   "foto": "a14",
+   "dados": null
+  },
+  {
+   "id": "e4",
+   "cenas": [
+    3
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_declarada",
+    "foto": "a3",
+    "evidencia": "é o que o roteiro pediu (cerdas, microscopicas, sola); foto de 2009, acontecimento de 2026"
+   },
+   "faltam": [],
+   "foto": "a3",
+   "dados": null
+  },
+  {
+   "id": "e5",
+   "cenas": [
+    4,
+    5
+   ],
+   "tipo_original": "mecanismo",
+   "critico": false,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a0"
+   },
+   "faltam": [],
+   "foto": "a0",
+   "dados": null
+  },
+  {
+   "id": "e6",
+   "cenas": [
+    6
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": "a21",
+   "dados": {
+    "etapas": [
+     "cerda se aproxima",
+     "contato extremamente próximo",
+     "moléculas se atraem"
+    ]
+   }
+  },
+  {
+   "id": "e7",
+   "cenas": [
+    7,
+    8
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": "a24",
+   "dados": {
+    "etapas": [
+     "duas moléculas vizinhas",
+     "atração fraca entre elas"
+    ]
+   }
+  },
+  {
+   "id": "e8",
+   "cenas": [
+    9,
+    10
+   ],
+   "tipo_original": "transformacao",
+   "critico": true,
+   "tipo": "transformacao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "composicao",
+    "comp": "processo.etapas"
+   },
+   "faltam": [],
+   "foto": null,
+   "dados": {
+    "etapas": [
+     "nuvem de elétrons simétrica",
+     "nuvem se desloca por um instante",
+     "aparecem dois polos"
+    ]
+   }
+  },
+  {
+   "id": "e9",
+   "cenas": [
+    11
+   ],
+   "tipo_original": "proporcao",
+   "critico": true,
+   "tipo": "proporcao",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "bloqueio",
+    "faltam": [
+     "dados para uma composição capaz: proporcao (pct)",
+     "composição com dados (este tipo não se mostra com foto)"
+    ]
+   },
+   "faltam": [],
+   "foto": "a2",
+   "dados": {
+    "etapas": [
+     "moléculas próximas",
+     "moléculas se afastam",
+     "atração desaparece"
+    ]
+   }
+  },
+  {
+   "id": "e10",
+   "cenas": [
+    12
+   ],
+   "tipo_original": "mecanismo",
+   "critico": true,
+   "tipo": "mecanismo",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "editorial",
+    "comp": "revelacao.surpresa"
+   },
+   "faltam": [],
+   "foto": "a16",
+   "dados": null
+  },
+  {
+   "id": "e11",
+   "cenas": [
+    13
+   ],
+   "tipo_original": "sequencia_historica",
+   "critico": false,
+   "tipo": "sequencia_historica",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a1"
+   },
+   "faltam": [],
+   "foto": "a1",
+   "dados": {
+    "eventos": [
+     {
+      "ano": "2007",
+      "texto": "adesivo de nanotubos"
+     }
+    ]
+   }
+  },
+  {
+   "id": "e12",
+   "cenas": [
+    14
+   ],
+   "tipo_original": "sequencia_historica",
+   "critico": false,
+   "tipo": "sequencia_historica",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a4"
+   },
+   "faltam": [],
+   "foto": "a4",
+   "dados": {
+    "eventos": [
+     {
+      "ano": "2008",
+      "texto": "supercurativo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "e13",
+   "cenas": [
+    15
+   ],
+   "tipo_original": "sequencia_historica",
+   "critico": false,
+   "tipo": "sequencia_historica",
+   "reclassificacao": null,
+   "representacao": {
+    "modo": "foto_contexto",
+    "foto": "a19"
+   },
+   "faltam": [],
+   "foto": "a19",
+   "dados": {
+    "eventos": [
+     {
+      "ano": "2010",
+      "texto": "robô com pés de lagartixa"
+     }
+    ]
+   }
+  }
+ ],
+ "bloqueios": [
+  {
+   "evento": "e9",
+   "cenas": [
+    11
+   ],
+   "tipo": "proporcao",
+   "mostrar": "Moléculas se afastando e a seta de atração desaparecendo",
+   "faltam": [
+    "dados para uma composição capaz: proporcao (pct)",
+    "composição com dados (este tipo não se mostra com foto)"
+   ]
+  }
+ ],
+ "revisoes": [
+  {
+   "evento": "e4",
+   "cenas": [
+    3
+   ],
+   "problema": "acontecimento crítico representado pela imagem que o roteiro pediu, sem mostrar o estado narrado",
+   "evidencia": "é o que o roteiro pediu (cerdas, microscopicas, sola); foto de 2009, acontecimento de 2026"
+  }
+ ],
+ "trocas": [
+  {
+   "evento": "e9",
+   "cenas": [
+    11
+   ],
+   "de": null,
+   "para": "a2",
+   "motivo": "imagem genérica: só contexto"
+  }
+ ],
+ "fontes_adicionadas": [
+  "Portal UAI",
+  "Inovação Tecnológica",
+  "BBC"
+ ]
+}

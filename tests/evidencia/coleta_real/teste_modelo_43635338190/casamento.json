@@ -1,0 +1,21 @@
+{
+ "modelo": "gemini-3.5-flash-lite",
+ "ordem_das_imagens": [
+  "a6_commons",
+  "a10_outro_navio",
+  "a12_2020",
+  "a1_roterda"
+ ],
+ "acontecimentos": [
+  "i6",
+  "i2"
+ ],
+ "texto": "{\n  \"avaliacoes\": [\n    {\n      \"acontecimento\": \"i6\",\n      \"imagem\": 0,\n      \"confere_com\": \"acao\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"Imagem de satélite mostra o navio encalhado de través em um canal estreito.\"\n    },\n    {\n      \"acontecimento\": \"i6\",\n      \"imagem\": 1,\n      \"confere_com\": \"outro_estado\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"O navio aparece navegando livremente em águas abertas, em estado diferente do encalhe.\"\n    },\n    {\n      \"acontecimento\": \"i6\",\n      \"imagem\": 2,\n      \"confere_com\": \"outro_estado\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"O navio aparece atracado em um porto, em situação distinta de estar encalhado transversalmente.\"\n    },\n    {\n      \"acontecimento\": \"i6\",\n      \"imagem\": 3,\n      \"confere_com\": \"outro_estado\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"O navio aparece parado no porto com guindastes ao fundo, sem relação com o encalhe.\"\n    },\n    {\n      \"acontecimento\": \"i2\",\n      \"imagem\": 0,\n      \"confere_com\": \"nao_mostra\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"Mostra um navio encalhado bloqueando um canal, e não a navegação em rota entre os portos citados.\"\n    },\n    {\n      \"acontecimento\": \"i2\",\n      \"imagem\": 1,\n      \"confere_com\": \"entidade\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"Mostra o navio de grande porte em navegação no mar aberto.\"\n    },\n    {\n      \"acontecimento\": \"i2\",\n      \"imagem\": 2,\n      \"confere_com\": \"entidade\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"Mostra a proa do navio carregado de contêineres próximo a estruturas portuárias.\"\n    },\n    {\n      \"acontecimento\": \"i2\",\n      \"imagem\": 3,\n      \"confere_com\": \"entidade\",\n      \"classe_confere\": true,\n      \"explica\": false,\n      \"confianca\": \"alta\",\n      \"por_que\": \"Mostra o navio completo estacionado junto a guindastes em uma área portuária.\"\n    }\n  ]\n}",
+ "segundos": 3.5,
+ "uso": {
+  "prompt_token_count": 5065,
+  "candidates_token_count": 771,
+  "thoughts_token_count": null,
+  "total_token_count": 5836
+ }
+}

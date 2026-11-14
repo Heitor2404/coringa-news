@@ -90,3 +90,20 @@
   - Os modelos lite (3.5-flash-lite) responderam a todos os 7 catálogos.
   - Modelos visíveis que não testei: 3.7-flash e 3.5-flash.
 - **Respostas brutas:** `tests/evidencia/coleta_real/teste_modelo_43635010212/`.
+
+## Casamento com gemini-3.5-flash-lite — execução 43635338190 (uma chamada, sem nova tentativa)
+
+- **Funcionou:** 3,5 s; 5.065 tokens de entrada e 771 de saída (plano grátis). 4 imagens × i6 (positivo) e i2 (negativo).
+- **Identificação:**
+  - i6 → **só a a6** ("navio encalhado de través", `acao`, confiança alta). As outras três vieram como `outro_estado`. Correto.
+  - i2 → a a6 veio como `nao_mostra`; a10 (homônimo de 2011 navegando), a12 e a1 vieram como `entidade`. Não confundiu nada com prova.
+- **Avaliação pela regra (inalterada), com registros reais e catálogo real:**
+  - **nav-07 (a10 × i2): CONTEXTO = gabarito.**
+  - **nav-08 (a12 × i2): CONTEXTO = gabarito.**
+  - **nav-01 (a6 × i6): CONTEXTO ≠ gabarito (PROVA). É rejeição indevida.**
+    - O casamento disse `acao` para o navio preso.
+    - O catálogo, em outra chamada, disse "nada acontecendo".
+    - A trava de discordância catálogo × casamento derrubou a confirmação.
+    - O gabarito rotula a cena como `estado_final`.
+  - **Falsas provas: 0.**
+- **Achado:** o modelo lite chama de "ação" um estado resultante (navio já preso) e de "entidade" uma ação real (navio navegando). A fronteira ação × estado final é o ponto fraco. Com a regra atual isso gera rejeição, não falsa prova.

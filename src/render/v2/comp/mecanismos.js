@@ -99,7 +99,7 @@
         <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
         <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
       </div>
-      ${+p.degraus > 1 ? `<div class="abs esc-deg" data-g="degraus" style="right:150px;top:1142px;display:flex;align-items:center;gap:16px">
+      ${+p.degraus > 1 ? `<div class="abs esc-deg" data-g="degraus" style="left:72px;top:1218px;display:flex;align-items:center;gap:16px;padding:8px 16px;background:rgba(6,18,26,.92);box-shadow:0 6px 18px rgba(0,0,0,.4)">
           <svg width="120" height="60" viewBox="0 0 190 96" style="overflow:visible">${Array.from({ length: +p.degraus }, (_, i) => {
             const w = 190 / +p.degraus, h = 96 / +p.degraus; return `<rect class="dg dg${i}" x="${i * w}" y="${96 - (i + 1) * h}" width="${w - 4}" height="${(i + 1) * h}" fill="rgba(63,208,224,.18)" stroke="#3FD0E0" stroke-width="2"/>`; }).join('')}
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>

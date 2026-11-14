@@ -36,7 +36,7 @@ jobs:
           npm install --no-audit --no-fund
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           python scripts/v2_natural_earth.py
-      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py tests/test_v22_fotos.py tests/test_v22_video.py tests/test_v22_inedito.py
+      - run: pytest -q -rs tests/test_v2.py tests/test_v21.py tests/test_v22_centro.py tests/test_v22_contrato.py tests/test_v22_mapas.py tests/test_v22_fotos.py tests/test_v22_video.py tests/test_v22_inedito.py tests/test_v22_eclusa.py
       - name: Galeria de validação (artefato)
         if: always()
         run: python -m src.v2.galeria --saida saida/galeria_v2

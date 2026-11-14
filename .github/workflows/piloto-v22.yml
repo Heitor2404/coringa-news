@@ -1,0 +1,108 @@
+name: Piloto de produção V2.2 (Coringa Explica)
+
+# EXPERIMENTAL, isolado e reversível. Roda o fluxo REAL do Coringa (python main.py --curiosidade, execução única) com o
+# motor visual V2.2 ligado só por MOTOR_VISUAL=v2. Mesmo cofre, mesmo roteirista (Claude Code pela assinatura, Gemini
+# de reserva), mesma voz e configurações da produção. Diferenças em relação ao "Gerar vídeos do dia", todas de
+# isolamento: sem aprovação e sem envio no Telegram, sem salvar histórico no repositório, resultado entregue
+# CRIPTOGRAFADO para a chave pública descartável em .github/piloto/ (repositório público). Não toca o NTC.
+# Dispara quando .github/piloto/pedido.txt muda neste ramo (workflow_dispatch exigiria o arquivo na main).
+on:
+  push:
+    branches: [visual-v2-2-correcao-final]
+    paths: [".github/piloto/pedido.txt"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: piloto-v22
+  cancel-in-progress: false
+
+jobs:
+  piloto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar o cofre
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: prompts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+      - name: Natural Earth (cache)
+        uses: actions/cache@v4
+        with:
+          path: src/render/v2/dados/ne
+          key: natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}
+      - name: Instalar dependências (as mesmas da produção + dados do V2)
+        timeout-minutes: 25
+        run: |
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 180 sudo apt-get install -y -qq fonts-noto-color-emoji) || echo "apt fora do ar"
+          pip install -r requirements.txt
+          npm install --no-audit --no-fund
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+          timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
+          python scripts/v2_natural_earth.py
+      - name: Gerar UM vídeo (fluxo real, motor V2.2)
+        env:
+          MOTOR_VISUAL: v2
+          APROVACAO: "0"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ORCAMENTO_MODO: ${{ vars.ORCAMENTO_MODO }}
+          EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          TEMAS_PLANILHA: ${{ vars.TEMAS_PLANILHA }}
+          VOZ: ${{ vars.VOZ || 'pt-BR-AntonioNeural' }}
+          VOZ_TOM: ${{ vars.VOZ_TOM || '+0Hz' }}
+          VOZ_VELOCIDADE: ${{ vars.VOZ_VELOCIDADE || '+10%' }}
+        run: |
+          mkdir -p saida
+          ini=$(date +%s)
+          python - "$(cat .github/piloto/pedido.txt)" > saida/tempo_memoria.txt <<'PY' && ok=1 || ok=0
+          import resource, subprocess, sys, time
+          t = time.time()
+          with open('saida/registro.txt', 'w') as f:
+              rc = subprocess.run([sys.executable, 'main.py', '--curiosidade', sys.argv[1], '--parte', '1'], stdout=f, stderr=subprocess.STDOUT).returncode
+          print(f'tempo_total_s={time.time() - t:.1f} pico_memoria_mb={resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024:.0f} rc={rc}')
+          sys.exit(rc)
+          PY
+          echo "duracao_total_s=$(( $(date +%s) - ini )) ok=$ok" | tee saida/resultado_piloto.txt
+          # só números no log público (como na produção); texto completo vai no pacote criptografado
+          grep -E '^\s*\[(custo|orçamento)\]|💰|🎞' saida/registro.txt | tail -30 || true
+          cat saida/tempo_memoria.txt || true
+      - name: Empacotar e cifrar para a chave do piloto
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --quiet --import .github/piloto/chave_publica.asc
+          dest=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          tar -czf piloto.tgz saida
+          gpg --batch --yes --quiet --trust-model always --encrypt -r "$dest" -o piloto.tgz.gpg piloto.tgz
+          ls -la piloto.tgz.gpg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: piloto-v22-${{ github.run_id }}
+          path: piloto.tgz.gpg
+          retention-days: 7
+          compression-level: 0

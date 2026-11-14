@@ -660,7 +660,12 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
                       'pergunta': _pergunta_fixa(v),
                       'fontes': v.get('fontes', [])[:3] + (['Wikimedia Commons'] if creditos else [])},
              'scenes': cenas, 'captions': caps}
-    renderizar(dados, audio, saida, trab, musica=musica)
+    piloto = None
+    if os.getenv('MOTOR_VISUAL') == 'v2' and not teste:     # PILOTO V2.2 (experimental, reversível; padrão = motor atual)
+        from src.v2 import piloto as piloto_v2
+        piloto = piloto_v2.renderizar(dados, audio, saida, trab, musica, pasta, nome)
+    else:
+        renderizar(dados, audio, saida, trab, musica=musica)
     marca('vídeo montado')
     nota = None if teste else fiscal_final(saida, cenas, v)[0]     # só a nota do vídeo pronto (≈1 min), sem 2ª montagem
 
@@ -701,6 +706,8 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         graves.append(f'texto em cima de texto ({len(tela)}x, ex.: {tela[0]})')
     if dur > 80:
         graves.append(f'vídeo com {dur:.0f}s (máximo 80)')
+    if piloto and piloto['bloqueios']:                # fiscal V2.2 bloqueou: registra (o vídeo da 1ª tentativa fica guardado)
+        graves.append('fiscal V2.2: ' + '; '.join(piloto['bloqueios'])[:400])
     v['_bloqueado'] = '; '.join(graves) if graves and not teste else ''
     tx = textos_post(v, creditos)
     resumo = resumo_telegram(v, q)

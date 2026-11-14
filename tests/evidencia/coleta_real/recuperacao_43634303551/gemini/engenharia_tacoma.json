@@ -1,0 +1,16 @@
+{
+ "ordem_das_imagens": [
+  "commons_upload",
+  "loc_46682"
+ ],
+ "catalogo_reaproveitado_de": "coleta 43631002615 (2 imagens)",
+ "catalogo": {
+  "modelo": "gemini-3.5-flash-lite",
+  "segundos": 2.4,
+  "texto": "{\n  \"imagens\": [\n    {\n      \"i\": 0,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Uma grande ponte suspensa está desabando, com uma seção da pista torcida e caindo em direção à água.\",\n      \"elemento_principal\": \"ponte\",\n      \"acao_em_curso\": true,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"preto e branco antigo\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 1,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Detalhe de uma ponte suspensa com a estrutura da pista torcida e curvada acentuadamente em direção ao solo.\",\n      \"elemento_principal\": \"ponte\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": true\n      },\n      \"epoca_aparente\": \"preto e branco antigo\",\n      \"confianca\": \"alta\"\n    }\n  ]\n}"
+ },
+ "casamento": {
+  "modelo": "gemini-3.8-flash",
+  "erro": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+ }
+}

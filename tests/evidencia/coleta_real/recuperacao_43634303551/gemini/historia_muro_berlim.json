@@ -1,0 +1,15 @@
+{
+ "ordem_das_imagens": [
+  "b1109_030"
+ ],
+ "catalogo_reaproveitado_de": "coleta 43631002615 (1 imagens)",
+ "catalogo": {
+  "modelo": "gemini-3.5-flash-lite",
+  "segundos": 1.9,
+  "texto": "{\n  \"imagens\": [\n    {\n      \"i\": 0,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Uma grande quantidade de repórteres e câmeras de televisão cobre uma coletiva de imprensa com pessoas sentadas à mesa.\",\n      \"elemento_principal\": \"multidão\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida dos anos 1970 ou 1980\",\n      \"confianca\": \"alta\"\n    }\n  ]\n}"
+ },
+ "casamento": {
+  "modelo": "gemini-3.8-flash",
+  "erro": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+ }
+}

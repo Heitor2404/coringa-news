@@ -14,27 +14,27 @@
 | desenvolvimento | nav-08 | a12_2020 | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa |
 | desenvolvimento | nav-09 | a0_diagrama | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | diagrama / incerto / baixa |
 | desenvolvimento | nav-10 | a5_arabe | INCOMPATIVEL | INCOMPATIVEL | INCOMPATIVEL | INCOMPATIVEL | diagrama / incerto / baixa |
-| desenvolvimento | nav-11 | a11_igreja | CONTEXTO | CONTEXTO | sem registro | — | — |
-| desenvolvimento | nav-12 | a14_placa | CONTEXTO | CONTEXTO | sem registro | — | — |
+| desenvolvimento | nav-11 | a11_igreja | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa | (recuperado)
+| desenvolvimento | nav-12 | a14_placa | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa | (recuperado)
 | desenvolvimento | geo-01 | a25_rosenquist | PROVA | PROVA | sem registro | — | — |
 | desenvolvimento | geo-02 | a25_rosenquist | PROVA | PROVA | sem registro | — | — |
 | desenvolvimento | geo-03 | a25_rosenquist | CONTEXTO | CONTEXTO | sem registro | — | — |
 | desenvolvimento | geo-08 | a0_memorial | CONTEXTO | CONTEXTO | sem registro | — | — |
-| desenvolvimento | geo-09 | a23_animacao | CONTEXTO | CONTEXTO | sem registro | — | — |
-| desenvolvimento | geo-12 | a18_post | PROVA | PROVA | sem registro | — | — |
-| reservado | ap-01 | as11_40_5903 | PROVA | PROVA | sem registro | — | — |
-| reservado | ap-02 | as11_40_5903 | CONTEXTO | CONTEXTO | sem registro | — | — |
+| desenvolvimento | geo-09 | a23_animacao | CONTEXTO | CONTEXTO | CONTEXTO | — | — | (recuperado)
+| desenvolvimento | geo-12 | a18_post | PROVA | PROVA | PROVA | — | — | (recuperado)
+| reservado | ap-01 | as11_40_5903 | PROVA | PROVA | PROVA | RELACIONADA | foto / incerto / baixa | (recuperado)
+| reservado | ap-02 | as11_40_5903 | CONTEXTO | CONTEXTO | CONTEXTO | RELACIONADA | foto / incerto / baixa | (recuperado)
 | reservado | ap-03 | dvids_5903 | CONTEXTO | CONTEXTO | sem registro | — | — |
 | reservado | ap-04 | s69_39525 | PROVA | PROVA | RELACIONADA | CONTEXTO | foto / incerto / baixa |
 | reservado | ap-05 | s69_39525 | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa |
 | reservado | ap-06 | nhq2019 | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa |
 | reservado | ap-07 | as11_36_5355 | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa |
-| reservado | ap-08 | insignia | CONTEXTO | CONTEXTO | sem registro | — | — |
+| reservado | ap-08 | insignia | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | ilustracao_digital / incerto / baixa | (recuperado)
 | reservado | ap-09 | lua_cheia | INCOMPATIVEL | INCOMPATIVEL | sem registro | — | — |
-| reservado | bw-01 | b1110_018 | PROVA | PROVA | sem registro | — | — |
-| reservado | bw-02 | b1104_006 | INCOMPATIVEL | INCOMPATIVEL | sem registro | — | — |
-| reservado | bw-03 | b1222_034 | CONTEXTO | CONTEXTO | sem registro | — | — |
-| reservado | bw-04 | b1118_018 | PROVA | PROVA | sem registro | — | — |
+| reservado | bw-01 | b1110_018 | PROVA | PROVA | CONTEXTO | — | — | (recuperado)
+| reservado | bw-02 | b1104_006 | INCOMPATIVEL | INCOMPATIVEL | INCOMPATIVEL | — | — | (recuperado)
+| reservado | bw-03 | b1222_034 | CONTEXTO | CONTEXTO | CONTEXTO | — | — | (recuperado)
+| reservado | bw-04 | b1118_018 | PROVA | PROVA | PROVA | — | — | (recuperado)
 | reservado | bw-05 | b1109_030 | CONTEXTO | CONTEXTO | INCOMPATIVEL | INCOMPATIVEL | foto / incerto / baixa |
 | reservado | tn-01 | loc_46682 | PROVA | PROVA | CONTEXTO | CONTEXTO | foto / incerto / baixa |
 | reservado | tn-02 | uw_290_52 | PROVA | PROVA | sem registro | — | — |
@@ -46,10 +46,34 @@
 | reservado | mt-04 | jd_92418 | CONTEXTO | CONTEXTO | CONTEXTO | CONTEXTO | foto / incerto / baixa |
 | reservado | mt-06 | merian | CONTEXTO | INCOMPATIVEL | INCOMPATIVEL | INCOMPATIVEL | pintura / incerto / baixa |
 | reservado | kt-01 | fema_15008 | PROVA | PROVA | PROVA | PROVA | satelite_ou_aerea / estado_final / alta |
-| reservado | kt-02 | fema_14891 | PROVA | PROVA | sem registro | — | — |
-| reservado | kt-03 | fema_17284 | PROVA | PROVA | sem registro | — | — |
-| reservado | al-01 | goll_1876 | CONTEXTO | CONTEXTO | sem registro | — | — |
-| reservado | al-02 | von_corven | CONTEXTO | CONTEXTO | sem registro | — | — |
+| reservado | kt-02 | fema_14891 | PROVA | PROVA | PROVA | — | — | (recuperado)
+| reservado | kt-03 | fema_17284 | PROVA | PROVA | PROVA | — | — | (recuperado)
+| reservado | al-01 | goll_1876 | CONTEXTO | CONTEXTO | CONTEXTO | — | — | (recuperado)
+| reservado | al-02 | von_corven | CONTEXTO | CONTEXTO | CONTEXTO | — | — | (recuperado)
 
 - Falsas provas com dados reais: 0 []
-- Provas esperadas não alcançadas com o registro real: 11 ['geo-01', 'geo-02', 'geo-12', 'ap-01', 'ap-04', 'bw-01', 'bw-04', 'tn-01', 'tn-02', 'kt-02', 'kt-03']
+- Provas esperadas não alcançadas com o registro real: 6 ['geo-01', 'geo-02', 'ap-04', 'bw-01', 'tn-01', 'tn-02']
+- Sem registro real (ausência de evidência coletada): 11 ['nav-02', 'nav-05', 'geo-01', 'geo-02', 'geo-03', 'geo-08', 'ap-03', 'ap-09', 'tn-02', 'tn-04', 'tn-06']
+- Natureza: catálogo real × rótulo do gabarito divergem em 3: ['nav-12 (rótulo cartaz, catálogo foto)', 'ap-08 (rótulo ilustracao, catálogo ilustracao_digital)', 'mt-06 (rótulo desenho, catálogo pintura)']
+- Casamento real: só clima_katrina respondeu (coleta 43631002615); os 5 da recuperação 43634303551 deram 503 de novo.
+
+## Recuperação 43634303551 (única, sem repetição)
+
+- **Commons:** 16 entradas tinham falhado por 429.
+  - 14 registros recuperados com consultas em lote e pausa; 2 buscas sem resultado (Rosenquist, memorial de Johnston Ridge).
+  - 8 imagens baixadas. Outros 6 downloads levaram 429 de novo em upload.wikimedia e foram encerrados.
+- **Gemini (6 chamadas novas, o limite):**
+  - o catálogo das 4 imagens recuperadas dos domínios com casamento respondeu;
+  - os 5 casamentos deram **503 de novo**: 0 respostas.
+
+### Erros reais encontrados (regra NÃO alterada, conforme a ordem)
+
+1. **bw-01 (rejeição indevida):** a foto de Checkpoint Charlie, de 10/11/1989, cai para CONTEXTO.
+   - O gênero é lido de TODAS as categorias, e uma delas descreve um objeto dentro da cena ("You-are-entering-the-American-Sector **sign** at Checkpoint Charlie").
+   - Além disso, a categoria real do acontecimento ("Fall and demolition of the Berlin Wall…") não contém o nome de referência "Fall of the Berlin Wall".
+2. **nav-12 (risco de falsa prova, não materializado):** a placa do supermercado está na categoria do acontecimento.
+   - Não há categoria de gênero, e o catálogo real a chamou de "foto", não de "cartaz".
+   - Se o casamento disser "estado_final", nada a barra; com "ação", o catálogo (nada acontecendo) a barra.
+3. **ap-04 (rejeição indevida):** a NASA devolve "APOLLO XI" sem palavras-chave.
+4. **tn-01 (rejeição indevida):** o arquivo HABS traz a data da documentação ("after 1968"); a data da foto está no título.
+5. **ap-01 / ap-02:** sem casamento, a foto certa fica RELACIONADA (revisão), nunca PROVA. Para a fala da decolagem, a foto da Lua também fica RELACIONADA (revisão) em vez de CONTEXTO, porque a fase não pode ser julgada sem a leitura do estado.

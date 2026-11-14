@@ -244,22 +244,33 @@ def _registro_real(bruto: dict, titulo_fix: str) -> dict | None:
     return E._registro('pagina', titulo_fix, [], {}, titulo_fix, '', '', None, pagina=bruto.get('url'), etiquetas_livres=True)
 
 
-def _visao_real(g: dict, imagem: str, acontecimento: str) -> dict | None:
-    """Catálogo + casamento REAIS (Gemini cego). Sem resposta do casamento, 'confere_com' fica 'incerto'."""
-    if not g or imagem not in g['ordem_das_imagens']:
-        return None
-    i = g['ordem_das_imagens'].index(imagem)
-    try:
-        cat = next(a for a in json.loads(g['catalogo']['texto'])['imagens'] if int(a.get('i', -1)) == i)
-    except Exception:
-        cat = None
-    cas = None
-    if 'texto' in g.get('casamento', {}):
+def _catalogos(gem: dict, extra: dict | None) -> tuple[dict, dict]:
+    """{dom/img: resposta do catálogo} e {dom/img/acontecimento: resposta do casamento}, de todas as execuções reais."""
+    cats, cass = {}, {}
+    for dom, g in gem.items():
+        ordem = g['ordem_das_imagens']
+        for fonte in ('catalogo',):
+            try:
+                for a in json.loads(g[fonte]['texto'])['imagens']:
+                    cats[f"{dom}/{ordem[int(a['i'])]}"] = a
+            except Exception:
+                pass
         try:
-            cas = next((a for a in json.loads(g['casamento']['texto'])['avaliacoes']
-                        if int(a.get('imagem', -1)) == i and a.get('acontecimento') == acontecimento), None)
+            for a in json.loads(g['casamento']['texto'])['avaliacoes']:
+                cass[f"{dom}/{ordem[int(a['imagem'])]}/{a.get('acontecimento')}"] = a
         except Exception:
-            cas = None
+            pass
+    if extra and 'texto' in (extra.get('resposta') or {}):
+        try:
+            for a in json.loads(extra['resposta']['texto'])['imagens']:
+                cats[extra['ordem'][int(a['i'])]] = a
+        except Exception:
+            pass
+    return cats, cass
+
+
+def _visao_real(cat: dict | None, cas: dict | None) -> dict | None:
+    """Catálogo + casamento REAIS (Gemini cego). Sem resposta do casamento, 'confere_com' fica 'incerto'."""
     if not cat and not cas:
         return None
     tv = (cat or {}).get('texto_visivel') or {}
@@ -273,25 +284,39 @@ def _visao_real(g: dict, imagem: str, acontecimento: str) -> dict | None:
 
 
 def validacao_real() -> dict:
-    base = RAIZ_TESTES / 'evidencia'
-    regs = json.loads((base / 'coleta_real' / 'registros.json').read_text(encoding='utf-8'))
-    gem = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in (base / 'coleta_real' / 'gemini').glob('*.json')}
+    base = RAIZ_TESTES / 'evidencia' / 'coleta_real'
+    regs = json.loads((base / 'registros.json').read_text(encoding='utf-8'))
+    gem = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in (base / 'gemini').glob('*.json')}
+    extra = None
+    rec = base / 'recuperacao_43634303551'
+    if rec.exists():                       # recuperação: registros que voltaram + catálogo das imagens recuperadas
+        for k, v in json.loads((rec / 'registros_recuperados.json').read_text(encoding='utf-8')).items():
+            if v.get('bruto'):
+                regs[k] = {**regs.get(k, {}), 'bruto': v['bruto'], 'arquivo': v.get('arquivo'), 'recuperado': True}
+        for p in (rec / 'gemini').glob('*.json'):
+            if p.stem == '_catalogo_recuperadas':
+                extra = json.loads(p.read_text(encoding='utf-8'))
+            elif 'texto' in (json.loads(p.read_text(encoding='utf-8')).get('casamento') or {}):
+                gem[p.stem] = json.loads(p.read_text(encoding='utf-8'))
+    cats, cass = _catalogos(gem, extra)
     linhas = []
     for arq in ('desenvolvimento.json', 'reservado.json'):
-        fix = json.loads((base / arq).read_text(encoding='utf-8'))
+        fix = json.loads((RAIZ_TESTES / 'evidencia' / arq).read_text(encoding='utf-8'))
         for dom, d in fix['dominios'].items():
             for c in d['casos']:
-                r = regs.get(f"{dom}/{c['imagem']}")
+                k = f"{dom}/{c['imagem']}"
+                r = regs.get(k)
                 if not r:
                     continue
                 ev = _ev(d, c['acontecimento'])
                 reg_real = _registro_real(r.get('bruto'), d['imagens'][c['imagem']]['registro'].get('titulo'))
                 vis_rot = visao(c, ev, 'correta')
-                vis_real = _visao_real(gem.get(dom), c['imagem'], c['acontecimento'])
+                vis_real = _visao_real(cats.get(k), cass.get(f"{k}/{c['acontecimento']}"))
                 lin = {'conjunto': fix['grupo'], 'id': c['id'], 'dominio': dom, 'imagem': c['imagem'], 'esperado': c['esperado'],
                        'cenario': E.avaliar(ev, registro(d['imagens'][c['imagem']]['registro']), vis_rot)['nivel'],
                        'registro_real': E.avaliar(ev, reg_real, vis_rot)['nivel'] if reg_real else 'sem registro',
-                       'real': None, 'gemini': vis_real, 'arquivo': r.get('arquivo')}
+                       'real': None, 'gemini': vis_real, 'arquivo': r.get('arquivo'), 'recuperado': bool(r.get('recuperado')),
+                       'natureza_rotulo': (c.get('visao_correta') or {}).get('natureza')}
                 if reg_real and vis_real:
                     a = E.avaliar(ev, reg_real, vis_real)
                     lin['real'], lin['motivo_real'] = a['nivel'], '; '.join(a['motivos'][:2])
@@ -309,7 +334,15 @@ def validacao_real_md(v: dict) -> str:
         g = x['gemini'] or {}
         gtxt = f"{g.get('natureza')} / {g.get('confere_com')} / {g.get('confianca')}" if g else '—'
         l.append(f"| {x['conjunto']} | {x['id']} | {x['imagem']} | {x['esperado']} | {x['cenario']} | {x['registro_real']} | {x['real'] or '—'} | {gtxt} |")
+    l[-len(v['linhas']):] = [ln + (' (recuperado)' if x['recuperado'] else '') for ln, x in zip(l[-len(v['linhas']):], v['linhas'])]
     fp = [x['id'] for x in v['linhas'] if 'PROVA' in (x['registro_real'], x['real']) and x['esperado'] != 'PROVA']
     fr = [x['id'] for x in v['linhas'] if x['esperado'] == 'PROVA' and x['registro_real'] != 'PROVA']
-    l += ['', f'- Falsas provas com dados reais: {len(fp)} {fp}', f'- Provas esperadas não alcançadas com o registro real: {len(fr)} {fr}']
+    sem = [x['id'] for x in v['linhas'] if x['registro_real'] == 'sem registro']
+    div = [f"{x['id']} (rótulo {x['natureza_rotulo']}, catálogo {x['gemini'].get('natureza')})" for x in v['linhas']
+           if x['gemini'] and x['gemini'].get('natureza') and x['gemini']['natureza'] != x['natureza_rotulo']]
+    l += ['', f'- Falsas provas com dados reais: {len(fp)} {fp}',
+          f'- Provas esperadas não alcançadas com o registro real: {len(fr)} {fr}',
+          f'- Sem registro real (ausência de evidência coletada): {len(sem)} {sem}',
+          f'- Natureza: catálogo real × rótulo do gabarito divergem em {len(div)}: {div}',
+          '- Casamento real: só clima_katrina respondeu (coleta 43631002615); os 5 da recuperação 43634303551 deram 503 de novo.']
     return '\n'.join(l) + '\n'

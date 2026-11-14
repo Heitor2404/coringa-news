@@ -1,0 +1,24 @@
+[recuperação] 16 entradas falharam por 429
+[recuperação] naval/a11_igreja: registro=sim arquivo=naval__a11_igreja.jpg 
+[recuperação] naval/a14_placa: registro=sim arquivo=naval__a14_placa.jpg 
+[recuperação] geologia/a25_rosenquist: registro=não arquivo=None busca sem resultado
+[recuperação] geologia/a18_post: registro=sim arquivo=geologia__a18_post.jpg 
+[recuperação] geologia/a23_animacao: registro=sim arquivo=None 
+[recuperação] geologia/a0_memorial: registro=não arquivo=None busca sem resultado
+[recuperação] espaco_apollo11/as11_40_5903: registro=sim arquivo=espaco_apollo11__as11_40_5903.jpg 
+[recuperação] espaco_apollo11/insignia: registro=sim arquivo=espaco_apollo11__insignia.jpg 
+[recuperação] historia_muro_berlim/b1110_018: registro=sim arquivo=None 
+[recuperação] historia_muro_berlim/b1104_006: registro=sim arquivo=None 
+[recuperação] historia_muro_berlim/b1222_034: registro=sim arquivo=None 
+[recuperação] historia_muro_berlim/b1118_018: registro=sim arquivo=None 
+[recuperação] clima_katrina/fema_14891: registro=sim arquivo=clima_katrina__fema_14891.jpg 
+[recuperação] clima_katrina/fema_17284: registro=sim arquivo=clima_katrina__fema_17284.jpg 
+[recuperação] negativo_alexandria/goll_1876: registro=sim arquivo=None 
+[recuperação] negativo_alexandria/von_corven: registro=sim arquivo=negativo_alexandria__von_corven.jpg 
+[gemini] catálogo das recuperadas: 4 imagens · ok
+[gemini] naval: casamento com 11 imagens · 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] espaco_apollo11: casamento com 5 imagens · 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] historia_muro_berlim: casamento com 1 imagens · 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] engenharia_tacoma: casamento com 2 imagens · 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] biologia_metamorfose: casamento com 4 imagens · 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] chamadas novas: 6 de no máximo 6

@@ -1,0 +1,19 @@
+{
+ "ordem_das_imagens": [
+  "s69_39525",
+  "nhq2019",
+  "as11_36_5355",
+  "as11_40_5903",
+  "insignia"
+ ],
+ "catalogo_reaproveitado_de": "coleta 43631002615 (3 imagens)",
+ "catalogo": {
+  "modelo": "gemini-3.5-flash-lite",
+  "segundos": 3.8,
+  "texto": "{\n  \"imagens\": [\n    {\n      \"i\": 0,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"foguete em plataforma de lançamento emitindo fumaça e chamas durante a decolagem à noite\",\n      \"elemento_principal\": \"foguete\",\n      \"acao_em_curso\": true,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": true,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida antiga\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 1,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"jovem mexendo em cabos e componentes elétricos em uma mesa de experimentos\",\n      \"elemento_principal\": \"pessoa\",\n      \"acao_em_curso\": true,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 2,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"planeta Terra visto do espaço contra o fundo escuro\",\n      \"elemento_principal\": \"planeta\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    }\n  ]\n}"
+ },
+ "casamento": {
+  "modelo": "gemini-3.8-flash",
+  "erro": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+ }
+}

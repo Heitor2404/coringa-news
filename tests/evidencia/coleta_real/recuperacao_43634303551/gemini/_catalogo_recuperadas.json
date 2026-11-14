@@ -1,0 +1,13 @@
+{
+ "ordem": [
+  "naval/a11_igreja",
+  "naval/a14_placa",
+  "espaco_apollo11/as11_40_5903",
+  "espaco_apollo11/insignia"
+ ],
+ "resposta": {
+  "modelo": "gemini-3.5-flash-lite",
+  "segundos": 4.9,
+  "texto": "{\n  \"imagens\": [\n    {\n      \"i\": 0,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"grande edifício religioso com cúpulas e cruzes ao ar livre, cercado por árvores e edificações menores.\",\n      \"elemento_principal\": \"edifício\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 1,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"placa informativa com texto em idioma estrangeiro posicionada em frente a uma entrada.\",\n      \"elemento_principal\": \"placa\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": true,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 2,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"astronauta em traje espacial completo de pé sobre uma superfície rochosa e cinzenta.\",\n      \"elemento_principal\": \"pessoa\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida antiga\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 3,\n      \"natureza\": \"ilustracao_digital\",\n      \"conteudo\": \"emblema circular com uma águia pousada sobre a superfície lunar, tendo o planeta Terra e texto ao fundo.\",\n      \"elemento_principal\": \"emblema\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": true,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"arte digital moderna\",\n      \"confianca\": \"alta\"\n    }\n  ]\n}"
+ }
+}

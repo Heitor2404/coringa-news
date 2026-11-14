@@ -1,0 +1,2426 @@
+{
+ "naval/a6_commons": {
+  "dominio": "naval",
+  "imagem": "a6_commons",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a11-g.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 cropped.jpg",
+    "titulo_achado": "File:Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 cropped.jpg"
+   }
+  ],
+  "arquivo": "naval__a6_commons.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 102400564,
+    "ns": 6,
+    "title": "File:Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 cropped.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2021-03-26T22:22:20Z",
+      "size": 2472808,
+      "width": 2661,
+      "height": 1766,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg/1280px-Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 680,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/1/15/Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg/1280px-Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 680,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/1/15/Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/15/Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal%2C_Egypt_-_March_24th%2C_2021_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal,_Egypt_-_March_24th,_2021_cropped.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=102400564",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2021-03-26 22:22:20",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021 cropped",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Aerial photographs of Egypt|Extracted images|Attribution Copernicus|2 watercraft|Photos of Egypt by Sentinel-2|Top views of watercraft|Satellite pictures of 2021 Suez Canal obstruction",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021. Image is about 2.64 kilometers wide.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2021-03-25 15:35",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/pierre_markuse/51070311183/\">Container Ship 'Ever Given' stuck in the Suez Canal, Egypt - March 24th, 2021</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Contains modified Copernicus Sentinel data [2021], processed by <a rel=\"nofollow\" class=\"external text\" href=\"https://twitter.com/Pierre_Markuse\">Pierre Markuse</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY 2.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution 2.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-2.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:2 watercraft"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Aerial photographs of Egypt"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Attribution Copernicus"
+     },
+     {
+      "ns": 14,
+      "title": "Category:CC-BY-2.0"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Extracted images"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Photos of Egypt by Sentinel-2"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Satellite pictures of 2021 Suez Canal obstruction"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Top views of watercraft"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a9_openverse": {
+  "dominio": "naval",
+  "imagem": "a9_openverse",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a22-g.jpg"
+   }
+  ],
+  "arquivo": "naval__a9_openverse.jpg",
+  "bruto": null
+ },
+ "naval/a8_iss": {
+  "dominio": "naval",
+  "imagem": "a8_iss",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Ever Given in Suez Canal viewed from ISS.jpg",
+    "titulo_achado": "File:Ever Given in Suez Canal viewed from ISS.jpg"
+   }
+  ],
+  "arquivo": "naval__a8_iss.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 103042469,
+    "ns": 6,
+    "title": "File:Ever Given in Suez Canal viewed from ISS.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2021-07-31T20:26:20Z",
+      "size": 580178,
+      "width": 1674,
+      "height": 1159,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg/1280px-Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 709,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg/1280px-Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 709,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Ever_Given_in_Suez_Canal_viewed_from_ISS.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=103042469",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2021-07-31 20:26:20",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Ever Given in Suez Canal viewed from ISS",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD NASA|Images with extracted images|Aerial photographs of Suez Canal|Satellite pictures of 2021 Suez Canal obstruction",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "The container ship Ever Given stuck in the Suez Canal in Egypt, viewed from the International Space Station",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2021-03-27 13:01:03",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS064&amp;roll=E&amp;frame=48480\">https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS064&amp;roll=E&amp;frame=48480</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "NASA JSC ISS image library",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Aerial photographs of Suez Canal"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images with extracted images"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD NASA"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Satellite pictures of 2021 Suez Canal obstruction"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a2_aster": {
+  "dominio": "naval",
+  "imagem": "a2_aster",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a3-g.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Suez Canal Crisis (ASTER).jpg",
+    "titulo_achado": "File:Suez Canal Crisis (ASTER).jpg"
+   }
+  ],
+  "arquivo": "naval__a2_aster.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 146874001,
+    "ns": 6,
+    "title": "File:Suez Canal Crisis (ASTER).jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2024-03-29T05:00:34Z",
+      "size": 218132,
+      "width": 1421,
+      "height": 1734,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Suez_Canal_Crisis_%28ASTER%29.jpg/1280px-Suez_Canal_Crisis_%28ASTER%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 1250,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/2/20/Suez_Canal_Crisis_%28ASTER%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Suez_Canal_Crisis_%28ASTER%29.jpg/1280px-Suez_Canal_Crisis_%28ASTER%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 1250,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/2/20/Suez_Canal_Crisis_%28ASTER%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/20/Suez_Canal_Crisis_%28ASTER%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Suez_Canal_Crisis_(ASTER).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=146874001",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2024-03-29 05:00:34",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Suez Canal Crisis (ASTER)",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD NASA|Photos by ASTER|Photographs taken on 2021-04-04|Files from NASA with known IDs|Satellite pictures of 2021 Suez Canal obstruction|ASTER files uploaded by OptimusPrimeBot",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "GPSLatitude": {
+        "value": "29.700000",
+        "source": "commons-desc-page"
+       },
+       "GPSLongitude": {
+        "value": "32.600000",
+        "source": "commons-desc-page"
+       },
+       "GPSMapDatum": {
+        "value": "WGS-84",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Even after the mega-freighter Ever Given was freed from its grounding in the Suez Canal om March 29, 5 days later shipping traffic still had not recovered from the crisis. At the southern entrance to the Canal, in the Gulf of Suez. Over 100 freighters waited their turn to enter the Canal and proceed to the Mediterranean Sea. The image was acquired April 4, covers an area of 21.3 by 34.5 km, and is located at 29.7 degrees north, 32.6 degrees east.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "Taken on 4 April 2021",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "This image or video was catalogued by Jet Propulsion Laboratory of the United States <a href=\"https://en.wikipedia.org/wiki/NASA\" class=\"extiw\" title=\"w:NASA\">National Aeronautics and Space Administration</a> (NASA) under <b>Photo ID:</b> <a rel=\"nofollow\" class=\"external text\" href=\"https://images.nasa.gov/search?q=suezsouth&amp;page=1&amp;media=image,video,audio&amp;yearStart=1920&amp;yearEnd=2026\">suezsouth</a>.",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "NASA/METI/AIST/Japan Space Systems, and U.S./Japan ASTER Science Team",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:ASTER files uploaded by OptimusPrimeBot"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Files from NASA with known IDs"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD NASA"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Photographs taken on 2021-04-04"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Photos by ASTER"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Satellite pictures of 2021 Suez Canal obstruction"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a1_roterda": {
+  "dominio": "naval",
+  "imagem": "a1_roterda",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a1-g.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:IMO 9811000 EVER GIVEN (09).jpg",
+    "titulo_achado": "File:IMO 9811000 EVER GIVEN (09).jpg",
+    "erro": "não encontrado"
+   }
+  ],
+  "arquivo": "naval__a1_roterda.jpg",
+  "bruto": null
+ },
+ "naval/a12_2020": {
+  "dominio": "naval",
+  "imagem": "a12_2020",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a27-g.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:EVER GIVEN (49643352087).jpg",
+    "titulo_achado": "File:EVER GIVEN (49643352087).jpg"
+   }
+  ],
+  "arquivo": "naval__a12_2020.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 89201715,
+    "ns": 6,
+    "title": "File:EVER GIVEN (49643352087).jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2021-03-29T16:50:58Z",
+      "size": 3902352,
+      "width": 2934,
+      "height": 1640,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/EVER_GIVEN_%2849643352087%29.jpg/1280px-EVER_GIVEN_%2849643352087%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 572,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/0/0b/EVER_GIVEN_%2849643352087%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/EVER_GIVEN_%2849643352087%29.jpg/1280px-EVER_GIVEN_%2849643352087%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 572,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/0/0b/EVER_GIVEN_%2849643352087%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/EVER_GIVEN_%2849643352087%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:EVER_GIVEN_(49643352087).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=89201715",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2021-03-29 16:50:58",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "EVER GIVEN (49643352087)",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Amazonehaven|Images with extracted images|Flickr images reviewed by FlickreviewR 2|Netherlands photographs taken on 2020-03-09|Photographs by Kees Torn|Files with coordinates missing SDC location of creation (51° N, 4° E)|Ships moored at container terminals in Port of Rotterdam|Ever Given (ship, 2018) in Rotterdam",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "GPSLatitude": {
+        "value": "51.947350",
+        "source": "commons-desc-page"
+       },
+       "GPSLongitude": {
+        "value": "4.068020",
+        "source": "commons-desc-page"
+       },
+       "GPSMapDatum": {
+        "value": "WGS-84",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Amezonehaven (sic) 9-3-2020",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2020-03-09 08:50",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/68359921@N08/49643352087/\">EVER GIVEN</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/68359921@N08\">kees torn</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 2.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 2.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/2.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-2.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Amazonehaven"
+     },
+     {
+      "ns": 14,
+      "title": "Category:CC-BY-SA-2.0"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Ever Given (ship, 2018) in Rotterdam"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Files with coordinates missing SDC location of creation (51° N, 4° E)"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Flickr images reviewed by FlickreviewR 2"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images with extracted images"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Netherlands photographs taken on 2020-03-09"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Photographs by Kees Torn"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Ships moored at container terminals in Port of Rotterdam"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a10_outro_navio": {
+  "dominio": "naval",
+  "imagem": "a10_outro_navio",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a23-g.jpg"
+   },
+   {
+    "tipo": "busca",
+    "consulta": "Ever Given container ship NOAA",
+    "titulo_achado": "File:Ever Given container ship (cropped).jpg"
+   }
+  ],
+  "arquivo": "naval__a10_outro_navio.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 102310306,
+    "ns": 6,
+    "title": "File:Ever Given container ship (cropped).jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2021-03-25T16:23:20Z",
+      "size": 1187701,
+      "width": 1735,
+      "height": 1330,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Ever_Given_container_ship_%28cropped%29.jpg/1280px-Ever_Given_container_ship_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 785,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Ever_Given_container_ship_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Ever_Given_container_ship_%28cropped%29.jpg/1280px-Ever_Given_container_ship_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 785,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Ever_Given_container_ship_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Ever_Given_container_ship_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Ever_Given_container_ship_(cropped).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=102310306",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2021-03-25 16:23:20",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Ever Given container ship (cropped)",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Ever Given (ship, 1986)|Extracted images|Flickr images uploaded by Flickr upload bot",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "With NOAA's predicted, real-time, and forecasted currents, people can safely dock and undock ships, maneuver them in confined waterways, and safely navigate through coastal waters. This helps to avoid ship collisions or delay the arrival of goods. Note, this is not the Ever Given involved in the 2021 Suez Canal grounding.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2011-01-19 09:32:16",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/Flickr\" class=\"mw-redirect\" title=\"Flickr\">Flickr</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/40322276@N04/5369581593\">Container Ship</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Robert Schwemmer for <a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/40322276@N04\">NOAA's National Ocean Service</a>",
+        "source": "commons-desc-page"
+       },
+       "Permission": {
+        "value": "<table id=\"FlickrReview\" style=\"width:100%; margin:0.3em auto; text-align:start; background-color:var(--background-color-success-subtle,#d5fdf4); padding: 3px; border:1px solid var(--border-color-base,#a2a9b1); color:inherit;\" dir=\"ltr\" lang=\"en\">\n\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/60px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"48\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/120px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"160\" data-file-height=\"153\"></span></span>\n</td>\n<td>This image, which was originally posted to <b><a href=\"https://en.wikipedia.org/wiki/Flickr\" class=\"extiw\" title=\"en:Flickr\">Flickr</a></b>, was uploaded to Commons using <b><a href=\"//commons.wikimedia.org/wiki/User:Flickr_upload_bot\" title=\"User:Flickr upload bot\">Flickr upload bot</a></b> on 13 April 2012, 20:14 by <span id=\"flickr_upload_bot_reviewer\"><b><a href=\"//commons.wikimedia.org/wiki/User:High_Contrast\" title=\"User:High Contrast\">High Contrast</a></b></span>. On that date, it was confirmed to be licensed under the terms of the license indicated.\n</td>\n<td><span typeof=\"mw:File\"><span><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Flickr_dots.svg/60px-Flickr_dots.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"50\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Flickr_dots.svg/120px-Flickr_dots.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"512\" data-file-height=\"512\"></span></span>\n</td></tr></tbody></table>\n<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span> <span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"share alike\"><img alt=\"share alike\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Cc-sa_white.svg/40px-Cc-sa_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Cc-sa_white.svg/60px-Cc-sa_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by-sa/2.0/deed.en\" class=\"extiw\" title=\"creativecommons:by-sa/2.0/deed.en\">Attribution-Share Alike 2.0 Generic</a> license.</div><div class=\"rlicense-desc\" style=\"text-align:start;\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li>\n<li><b>share alike</b> – If you remix, transform, or build upon the material, you must distribute your contributions under the <a href=\"https://creativecommons.org/share-your-work/licensing-considerations/compatible-licenses\" class=\"extiw\" title=\"ccorg:share-your-work/licensing-considerations/compatible-licenses\">same or compatible license</a> as the original.</li></ul></dd></dl></div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by-sa/2.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY-SA 2.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution-Share Alike 2.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 2.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 2.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/2.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-2.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:CC-BY-SA-2.0"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Ever Given (ship, 1986)"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Extracted images"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Flickr images uploaded by Flickr upload bot"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a0_diagrama": {
+  "dominio": "naval",
+  "imagem": "a0_diagrama",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a0-g.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:SUEZCANAL SECTION.jpg",
+    "titulo_achado": "File:SUEZCANAL SECTION.jpg"
+   }
+  ],
+  "arquivo": "naval__a0_diagrama.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 744144,
+    "ns": 6,
+    "title": "File:SUEZCANAL SECTION.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2006-04-30T08:27:39Z",
+      "size": 487073,
+      "width": 2179,
+      "height": 1671,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/SUEZCANAL_SECTION.jpg/1280px-SUEZCANAL_SECTION.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 785,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/e/e3/SUEZCANAL_SECTION.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/SUEZCANAL_SECTION.jpg/1280px-SUEZCANAL_SECTION.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 785,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/e/e3/SUEZCANAL_SECTION.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e3/SUEZCANAL_SECTION.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:SUEZCANAL_SECTION.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=744144",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2006-04-30 08:27:39",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "SUEZCANAL SECTION",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Suez Canal|PD chart|Official documents of Egypt|Drawings of cross sections",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Typical Cross sections of Suez canal",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "1995",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<div class=\"poem\">\n<p>Pic extract from the book:<br>\nRules of navigation<br>\nEdition 1995<br>\nArab Republic of Egypt<br>\nSuez Canal Authority\n</p>\n</div>\nFree of charge, delivered to vessels command during transit.",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Suez Canal Authority, Engineering Department",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Drawings of cross sections"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Official documents of Egypt"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD chart"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Suez Canal"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a5_arabe": {
+  "dominio": "naval",
+  "imagem": "a5_arabe",
+  "tentativas": [
+   {
+    "tipo": "local",
+    "ok": "tests/piloto_ever_given/img/a10-g.jpg"
+   },
+   {
+    "tipo": "busca",
+    "consulta": "SUEZCANAL SECTION-ar",
+    "titulo_achado": "File:SUEZCANAL SECTION-ar.jpg"
+   }
+  ],
+  "arquivo": "naval__a5_arabe.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 39095038,
+    "ns": 6,
+    "title": "File:SUEZCANAL SECTION-ar.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2015-03-19T21:31:22Z",
+      "size": 541954,
+      "width": 2179,
+      "height": 1671,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/SUEZCANAL_SECTION-ar.jpg/1280px-SUEZCANAL_SECTION-ar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 785,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/a/ae/SUEZCANAL_SECTION-ar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/SUEZCANAL_SECTION-ar.jpg/1280px-SUEZCANAL_SECTION-ar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 785,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/a/ae/SUEZCANAL_SECTION-ar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/SUEZCANAL_SECTION-ar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:SUEZCANAL_SECTION-ar.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=39095038",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2015-03-19 21:31:22",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "SUEZCANAL SECTION-ar",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Suez Canal|GPL|Retouched pictures|Drawings of cross sections|Images translated by باسم|Geology charts and diagrams Lab-ar",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "مقطع عرضي نمطي يُظهر أقسام قناة السُويس.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2015-03-19",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "Derivative from <a href=\"//commons.wikimedia.org/wiki/File:SUEZCANAL_SECTION.jpg\" title=\"File:SUEZCANAL SECTION.jpg\">this file</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<ul><li>Original: Unspecified</li>\n<li>Derivative: <a href=\"//commons.wikimedia.org/wiki/User:%D8%A8%D8%A7%D8%B3%D9%85\" title=\"User:باسم\">باسم</a></li></ul>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Drawings of cross sections"
+     },
+     {
+      "ns": 14,
+      "title": "Category:GPL"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Geology charts and diagrams Lab-ar"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images translated by باسم"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Retouched pictures"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Suez Canal"
+     }
+    ]
+   }
+  }
+ },
+ "naval/a11_igreja": {
+  "dominio": "naval",
+  "imagem": "a11_igreja",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "A Church beside the Suez Canal",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=A+Church+beside+the+Suez+Canal+filetype%3Abitmap&srnamespace=6&srlimit=1&format=j"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "naval/a14_placa": {
+  "dominio": "naval",
+  "imagem": "a14_placa",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Sign about delivery bottlenecks due to March 2021 Suez Canal obstruction at German supermarket",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=Sign+about+delivery+bottlenecks+due+to+March+2021+Suez+Canal+obstruction+at+Germa"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "geologia/a25_rosenquist": {
+  "dominio": "geologia",
+  "imagem": "a25_rosenquist",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Mount St. Helens Rosenquist landslide 1980",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=Mount+St.+Helens+Rosenquist+landslide+1980+filetype%3Abitmap&srnamespace=6&srlimi"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "geologia/a18_post": {
+  "dominio": "geologia",
+  "imagem": "a18_post",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "MSH80 eruption mount st helens 05-18-80",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=MSH80+eruption+mount+st+helens+05-18-80+filetype%3Abitmap&srnamespace=6&srlimit=1"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "geologia/a23_animacao": {
+  "dominio": "geologia",
+  "imagem": "a23_animacao",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Mount St Helens landslide animation",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=Mount+St+Helens+landslide+animation+filetype%3Abitmap&srnamespace=6&srlimit=1&for"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "geologia/a0_memorial": {
+  "dominio": "geologia",
+  "imagem": "a0_memorial",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Johnston Ridge memorial Mount St. Helens victims",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=Johnston+Ridge+memorial+Mount+St.+Helens+victims+filetype%3Abitmap&srnamespace=6&"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "espaco_apollo11/as11_40_5903": {
+  "dominio": "espaco_apollo11",
+  "imagem": "as11_40_5903",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Aldrin Apollo 11.jpg",
+    "titulo_achado": "File:Aldrin Apollo 11.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Aldrin Apollo 11.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3AAldrin+Apollo+11.jpg&prop=imageinfo%7Ccategories&iiprop=url%7Csize%7Cmime%7Cextmetadata%"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "espaco_apollo11/dvids_5903": {
+  "dominio": "espaco_apollo11",
+  "imagem": "dvids_5903",
+  "tentativas": [
+   {
+    "tipo": "indisponivel",
+    "motivo": "mesma foto via DVIDS: API da DVIDS não usada pelo acervo"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "espaco_apollo11/s69_39525": {
+  "dominio": "espaco_apollo11",
+  "imagem": "s69_39525",
+  "tentativas": [
+   {
+    "tipo": "nasa",
+    "consulta": "S69-39525",
+    "achou": true
+   }
+  ],
+  "arquivo": "espaco_apollo11__s69_39525.jpg",
+  "bruto": {
+   "fonte": "NASA",
+   "item": {
+    "href": "https://images-assets.nasa.gov/image/s69-39525/collection.json",
+    "data": [
+     {
+      "center": "JSC",
+      "date_created": "1969-07-16T00:00:00Z",
+      "description": "S69-39525 (16 July 1969) --- The huge, 363-feet tall Apollo 11 (Spacecraft 107/Lunar Module 5/Saturn 506) space vehicle is launched from Pad A, Launch Complex 39, Kennedy Space Center (KSC), at 9:32 a.m. (EDT), July 16, 1969. Onboard the Apollo 11 spacecraft were astronauts Neil A. Armstrong, commander; Michael Collins, command module pilot; and Edwin E. Aldrin Jr., lunar module pilot.  Apollo 11 is the United States first lunar landing mission. While astronauts Armstrong and Aldrin descend in the Lunar Module (LM) \"Eagle\" to explore the Sea of Tranquility region of the moon, astronaut Collins will remain with the Command and Service Modules (CSM) \"Columbia\" in lunar orbit.",
+      "media_type": "image",
+      "nasa_id": "s69-39525",
+      "title": "APOLLO XI - LAUNCH - KSC"
+     }
+    ],
+    "links": [
+     {
+      "href": "https://images-assets.nasa.gov/image/s69-39525/s69-39525~medium.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 556,
+      "size": 45000,
+      "height": 1280
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/s69-39525/s69-39525~small.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 278,
+      "size": 14000,
+      "height": 640
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/s69-39525/s69-39525~thumb.jpg",
+      "rel": "preview",
+      "render": "image",
+      "width": 278,
+      "size": 14000,
+      "height": 640
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/s69-39525/s69-39525~large.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 835,
+      "size": 97000,
+      "height": 1920
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/s69-39525/s69-39525~orig.jpg",
+      "rel": "canonical",
+      "render": "image"
+     }
+    ]
+   }
+  }
+ },
+ "espaco_apollo11/nhq2019": {
+  "dominio": "espaco_apollo11",
+  "imagem": "nhq2019",
+  "tentativas": [
+   {
+    "tipo": "nasa",
+    "consulta": "NHQ201907190146",
+    "achou": true
+   }
+  ],
+  "arquivo": "espaco_apollo11__nhq2019.jpg",
+  "bruto": {
+   "fonte": "NASA",
+   "item": {
+    "href": "https://images-assets.nasa.gov/image/NHQ201907190146/collection.json",
+    "data": [
+     {
+      "album": [
+       "201907_Apollo_50th_in_DC"
+      ],
+      "center": "HQ",
+      "date_created": "2019-07-19T00:00:00Z",
+      "description": "A visitor learns about circuits at the Apollo 11 50th Anniversary celebration on the National Mall, Friday, July 19, 2019 in Washington. Apollo 11 was the first mission to land astronauts on the Moon and launched on July 16, 1969 with astronauts Neil Armstrong, Michael Collins, and Buzz Aldrin. Photo Credit: (NASA/Aubrey Gemignani)",
+      "keywords": [
+       "Apollo 11",
+       "Apollo 11 50th Anniversary",
+       "DC",
+       "Washington"
+      ],
+      "location": "National Mall",
+      "media_type": "image",
+      "nasa_id": "NHQ201907190146",
+      "photographer": "NASA/Aubrey Gemignani",
+      "title": "Apollo 11 50th Anniversary Celebration"
+     }
+    ],
+    "links": [
+     {
+      "href": "https://images-assets.nasa.gov/image/NHQ201907190146/NHQ201907190146~medium.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 1280,
+      "size": 112000,
+      "height": 916
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/NHQ201907190146/NHQ201907190146~small.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 640,
+      "size": 39000,
+      "height": 458
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/NHQ201907190146/NHQ201907190146~thumb.jpg",
+      "rel": "preview",
+      "render": "image",
+      "width": 640,
+      "size": 39000,
+      "height": 458
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/NHQ201907190146/NHQ201907190146~large.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 1920,
+      "size": 211000,
+      "height": 1375
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/NHQ201907190146/NHQ201907190146~orig.tif",
+      "rel": "canonical",
+      "render": "image",
+      "height": 3712,
+      "width": 5182,
+      "size": 19000000
+     }
+    ]
+   }
+  }
+ },
+ "espaco_apollo11/as11_36_5355": {
+  "dominio": "espaco_apollo11",
+  "imagem": "as11_36_5355",
+  "tentativas": [
+   {
+    "tipo": "nasa",
+    "consulta": "as11-36-5355",
+    "achou": true
+   }
+  ],
+  "arquivo": "espaco_apollo11__as11_36_5355.jpg",
+  "bruto": {
+   "fonte": "NASA",
+   "item": {
+    "href": "https://images-assets.nasa.gov/image/as11-36-5355/collection.json",
+    "data": [
+     {
+      "center": "JSC",
+      "date_created": "1969-07-16T00:00:00Z",
+      "description": "AS11-36-5355 (17 July 1969) --- Most of Africa and portions of Europe and Asia can be seen in this spectacular photograph taken from the Apollo 11 spacecraft during its trans-lunar coast toward the moon. Apollo 11, with astronauts Neil A. Armstrong, commander; Michael Collins, command module pilot; and Edwin E. Aldrin Jr., lunar module pilot, onboard was already 98,000 nautical miles from Earth when this picture was made. While astronauts Armstrong and Aldrin descended in the Lunar Module (LM) \"Eagle\" to explore the Sea of Tranquility region of the moon, astronaut Collins remained with the Command and Service Modules (CSM) \"Columbia\" in lunar orbit.",
+      "keywords": [
+       "APOLLO 11",
+       "APOLLO PROJECT",
+       "CLOUDS",
+       "EARTH (PLANET)",
+       "ONBOARD ACTIVITIES",
+       "EARTH OBSERVATIONS (FROM SPACE)",
+       "PHOTOGRAPHY"
+      ],
+      "media_type": "image",
+      "nasa_id": "as11-36-5355",
+      "title": "View of Earth, showing Africa, Europe and Asia taken by Apollo 11 crewmember"
+     }
+    ],
+    "links": [
+     {
+      "href": "https://images-assets.nasa.gov/image/as11-36-5355/as11-36-5355~medium.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 1280,
+      "size": 47000,
+      "height": 1280
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/as11-36-5355/as11-36-5355~small.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 640,
+      "size": 13000,
+      "height": 640
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/as11-36-5355/as11-36-5355~thumb.jpg",
+      "rel": "preview",
+      "render": "image",
+      "width": 640,
+      "size": 13000,
+      "height": 640
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/as11-36-5355/as11-36-5355~large.jpg",
+      "rel": "alternate",
+      "render": "image",
+      "width": 1920,
+      "size": 97000,
+      "height": 1920
+     },
+     {
+      "href": "https://images-assets.nasa.gov/image/as11-36-5355/as11-36-5355~orig.jpg",
+      "rel": "canonical",
+      "render": "image"
+     }
+    ]
+   }
+  }
+ },
+ "espaco_apollo11/insignia": {
+  "dominio": "espaco_apollo11",
+  "imagem": "insignia",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Apollo 11 insignia.png",
+    "titulo_achado": "File:Apollo 11 insignia.png"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Apollo 11 insignia.png",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3AApollo+11+insignia.png&prop=imageinfo%7Ccategories&iiprop=url%7Csize%7Cmime%7Cextmetadat"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "espaco_apollo11/lua_cheia": {
+  "dominio": "espaco_apollo11",
+  "imagem": "lua_cheia",
+  "tentativas": [
+   {
+    "tipo": "indisponivel",
+    "motivo": "hipotética"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "historia_muro_berlim/b1110_018": {
+  "dominio": "historia_muro_berlim",
+  "imagem": "b1110_018",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1110-018, Berlin, Checkpoint Charlie, Nacht des Mauerfalls.jpg",
+    "titulo_achado": "File:Bundesarchiv Bild 183-1989-1110-018, Berlin, Checkpoint Charlie, Nacht des Mauerfalls.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1110-018, Berlin, Checkpoint Charlie, Nacht des Mauerfalls.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3ABundesarchiv+Bild+183-1989-1110-018%2C+Berlin%2C+Checkpoint+Charlie%2C+Nacht+des+Mauerfa"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "historia_muro_berlim/b1104_006": {
+  "dominio": "historia_muro_berlim",
+  "imagem": "b1104_006",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1104-006, Berlin, Demonstration.jpg",
+    "titulo_achado": "File:Bundesarchiv Bild 183-1989-1104-006, Berlin, Demonstration.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1104-006, Berlin, Demonstration.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3ABundesarchiv+Bild+183-1989-1104-006%2C+Berlin%2C+Demonstration.jpg&prop=imageinfo%7Ccate"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "historia_muro_berlim/b1222_034": {
+  "dominio": "historia_muro_berlim",
+  "imagem": "b1222_034",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1222-034, Berlin, Grenzöffnung Brandenburger Tor.jpg",
+    "titulo_achado": "File:Bundesarchiv Bild 183-1989-1222-034, Berlin, Grenzöffnung Brandenburger Tor.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1222-034, Berlin, Grenzöffnung Brandenburger Tor.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3ABundesarchiv+Bild+183-1989-1222-034%2C+Berlin%2C+Grenz%C3%B6ffnung+Brandenburger+Tor.jpg"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "historia_muro_berlim/b1118_018": {
+  "dominio": "historia_muro_berlim",
+  "imagem": "b1118_018",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1118-018, Berlin, Grenzübergang Bornholmer Straße.jpg",
+    "titulo_achado": "File:Bundesarchiv Bild 183-1989-1118-018, Berlin, Grenzübergang Bornholmer Straße.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:Bundesarchiv Bild 183-1989-1118-018, Berlin, Grenzübergang Bornholmer Straße.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3ABundesarchiv+Bild+183-1989-1118-018%2C+Berlin%2C+Grenz%C3%BCbergang+Bornholmer+Stra%C3%9"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "historia_muro_berlim/b1109_030": {
+  "dominio": "historia_muro_berlim",
+  "imagem": "b1109_030",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Bundesarchiv Bild 183-1989-1109-030 Schabowski Pressekonferenz",
+    "titulo_achado": "File:Bundesarchiv Bild 183-1989-1109-030, Berlin, Schabowski auf Pressekonferenz.jpg"
+   }
+  ],
+  "arquivo": "historia_muro_berlim__b1109_030.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 5424805,
+    "ns": 6,
+    "title": "File:Bundesarchiv Bild 183-1989-1109-030, Berlin, Schabowski auf Pressekonferenz.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2010-04-09T02:56:54Z",
+      "size": 113461,
+      "width": 798,
+      "height": 512,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bundesarchiv_Bild_183-1989-1109-030%2C_Berlin%2C_Schabowski_auf_Pressekonferenz.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 1024,
+      "thumbheight": 657,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bundesarchiv_Bild_183-1989-1109-030%2C_Berlin%2C_Schabowski_auf_Pressekonferenz.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 657
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bundesarchiv_Bild_183-1989-1109-030%2C_Berlin%2C_Schabowski_auf_Pressekonferenz.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_183-1989-1109-030,_Berlin,_Schabowski_auf_Pressekonferenz.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=5424805",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2010-04-09 02:56:54",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "<div class=\"fn\">\n<div class=\"language de\" style=\"display:inline;font-weight:bold;\"><b>Berlin, Schabowski auf Pressekonferenz</b></div> <abbr class=\"BArchtooltips\" title=\"Short title assigned by the archive\"><span typeof=\"mw:File\"><span><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Info_non-talk.svg/20px-Info_non-talk.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"15\" height=\"15\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Info_non-talk.svg/40px-Info_non-talk.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"62\" data-file-height=\"62\"></span></span></abbr></div>",
+        "source": "commons-desc-page"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Gerhard Beil|Manfred Banaschak|Riccardo Ehrman|Helga Labs|Images with annotations|Peter Brinkmann|Images from the German Federal Archive|Images with 10+ annotations|Photographs by Thomas Lehmann|Günter Schabowski's press conference of 9 November 1989",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Artist": {
+        "value": "<bdi><a href=\"https://www.wikidata.org/wiki/Q110761628\" class=\"extiw\" title=\"d:Q110761628\"><span title=\"German photographer\">Thomas Lehmann</span></a></bdi>",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "<div class=\"description\">\n<div style=\"background:var(--background-color-neutral, #eaecf0); color:inherit; font-size:86%; direction:ltr;\">For documentary purposes the German Federal Archive often retained the <b>original image captions</b>, which may be <b>erroneous, biased, obsolete or politically extreme</b>. <abbr class=\"BArchtooltips\" title=\"Files from the inventories “Bild 101 Propagandakompanien der Wehrmacht” and “Bild 183 ADN” may have particularly biased or politically extreme descriptions.\"><span typeof=\"mw:File\"><span><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Info_non-talk.svg/20px-Info_non-talk.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"15\" height=\"15\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Info_non-talk.svg/40px-Info_non-talk.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"62\" data-file-height=\"62\"></span></span></abbr></div><div class=\"language de\">ADN-ZB/Lehmann/ 9.11.89/Berlin: Pressekonferenz/ Günter Schabowski, Mitglied des Politbüros und Sekretär des ZK der SED, informierte im Internationalen Pressezentrum über Verlauf und Ergebnisse des zweiten Beratungstages des 10. Plenums des ZK der SED. Günter Schabowski stand den in- und ausländischen Journalisten Rede und Antwort.</div></div>",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "9 November 1989<div style=\"display: none;\">date QS:P571,+1989-11-09T00:00:00Z/11</div>",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<table style=\"width:100%; clear: both; text-align: center; margin: 0.5em auto; background-color: var(--background-color-interactive-subtle, #f9f9f9); color: inherit; border: 2px solid var(--border-color-muted, #e0e0e0);\" dir=\"ltr\" lang=\"en\" class=\"layouttemplate partnershiptemplate\" role=\"presentation\">\n<tbody><tr>\n<td style=\"width:100px;\"><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/Commons:Bundesarchiv/en\" title=\"Logo Bundesarchiv\"><img alt=\"Logo Bundesarchiv\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Bundesarchiv-Logo-ohne-Wappen.svg/120px-Bundesarchiv-Logo-ohne-Wappen.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"100\" height=\"83\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Bundesarchiv-Logo-ohne-Wappen.svg/250px-Bundesarchiv-Logo-ohne-Wappen.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"240\" data-file-height=\"200\"></a></span>\n</td>\n<td>This image was provided to Wikimedia Commons by the <a rel=\"nofollow\" class=\"external text\" href=\"http://www.bundesarchiv.de/\">German Federal Archive</a> (Deutsches Bundesarchiv) as part of a <a href=\"//commons.wikimedia.org/wiki/Commons:Bundesarchiv\" title=\"Commons:Bundesarchiv\">cooperation project</a>. The German Federal Archive guarantees an authentic representation only using the originals (negative and/or positive), resp. the digitalization of the originals as provided by the <a rel=\"nofollow\" class=\"external text\" href=\"http://www.bild.bundesarchiv.de\">Digital Image Archive</a>.\n</td></tr></tbody></table>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 3.0 de",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0 de",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Attribution": {
+        "value": "Bundesarchiv, Bild 183-1989-1109-030 / Lehmann, Thomas / CC-BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-3.0-de",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:CC-BY-SA-3.0-DE"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Gerhard Beil"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Günter Schabowski's press conference of 9 November 1989"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Helga Labs"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images from the German Federal Archive"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images with 10+ annotations"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images with annotations"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Manfred Banaschak"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Peter Brinkmann"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Photographs by Thomas Lehmann"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Riccardo Ehrman"
+     }
+    ]
+   }
+  }
+ },
+ "engenharia_tacoma/commons_upload": {
+  "dominio": "engenharia_tacoma",
+  "imagem": "commons_upload",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:Tacoma-narrows-bridge-collapse.jpg",
+    "titulo_achado": "File:Tacoma-narrows-bridge-collapse.jpg"
+   }
+  ],
+  "arquivo": "engenharia_tacoma__commons_upload.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 9002953,
+    "ns": 6,
+    "title": "File:Tacoma-narrows-bridge-collapse.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2010-01-16T23:33:25Z",
+      "size": 28476,
+      "width": 365,
+      "height": 300,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Tacoma-narrows-bridge-collapse.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 1024,
+      "thumbheight": 842,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Tacoma-narrows-bridge-collapse.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 842
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Tacoma-narrows-bridge-collapse.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Tacoma-narrows-bridge-collapse.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=9002953",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2010-01-16 23:33:25",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Tacoma-narrows-bridge-collapse",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD US Government|Files with no machine-readable author|Files with no machine-readable source|Media missing infobox template|CC-PD-Mark|Tacoma Narrows Bridge collapsing",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:CC-PD-Mark"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Files with no machine-readable author"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Files with no machine-readable source"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Media missing infobox template"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD US Government"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Tacoma Narrows Bridge collapsing"
+     }
+    ]
+   }
+  }
+ },
+ "engenharia_tacoma/loc_46682": {
+  "dominio": "engenharia_tacoma",
+  "imagem": "loc_46682",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Tacoma Narrows Bridge collapse 1940 Library of Congress",
+    "titulo_achado": "File:VERTICAL OSCILLATIONS, 3-4 VIEW, 7 NOVEMBER 1940, FROM 16MM FILM SHOT PROFESSOR F.B. FARQUHARSON, UNIVERSITY OF WASHINGTON. (LABORATORY STUDIES ON THE TACOMA NARROWS BRIDGE, AT HAER WASH,27-TACO,11-33.tif"
+   }
+  ],
+  "arquivo": "engenharia_tacoma__loc_46682.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 34522524,
+    "ns": 6,
+    "title": "File:VERTICAL OSCILLATIONS, 3-4 VIEW, 7 NOVEMBER 1940, FROM 16MM FILM SHOT PROFESSOR F.B. FARQUHARSON, UNIVERSITY OF WASHINGTON. (LABORATORY STUDIES ON THE TACOMA NARROWS BRIDGE, AT HAER WASH,27-TACO,11-33.tif",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2014-08-04T21:19:42Z",
+      "size": 19862744,
+      "width": 5000,
+      "height": 3972,
+      "pagecount": 1,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/VERTICAL_OSCILLATIONS%2C_3-4_VIEW%2C_7_NOVEMBER_1940%2C_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON%2C_UNIVERSITY_OF_WASHINGTON._%28LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE%2C_AT_HAER_WASH%2C27-TACO%2C11-33.tif/lossy-page1-1280px-thumbnail.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 813,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/VERTICAL_OSCILLATIONS%2C_3-4_VIEW%2C_7_NOVEMBER_1940%2C_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON%2C_UNIVERSITY_OF_WASHINGTON._%28LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE%2C_AT_HAER_WASH%2C27-TACO%2C11-33.tif/lossy-page1-3840px-thumbnail.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/VERTICAL_OSCILLATIONS%2C_3-4_VIEW%2C_7_NOVEMBER_1940%2C_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON%2C_UNIVERSITY_OF_WASHINGTON._%28LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE%2C_AT_HAER_WASH%2C27-TACO%2C11-33.tif/lossy-page1-1280px-thumbnail.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 813,
+       "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/VERTICAL_OSCILLATIONS%2C_3-4_VIEW%2C_7_NOVEMBER_1940%2C_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON%2C_UNIVERSITY_OF_WASHINGTON._%28LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE%2C_AT_HAER_WASH%2C27-TACO%2C11-33.tif/lossy-page1-3840px-thumbnail.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/70/VERTICAL_OSCILLATIONS%2C_3-4_VIEW%2C_7_NOVEMBER_1940%2C_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON%2C_UNIVERSITY_OF_WASHINGTON._%28LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE%2C_AT_HAER_WASH%2C27-TACO%2C11-33.tif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:VERTICAL_OSCILLATIONS,_3-4_VIEW,_7_NOVEMBER_1940,_FROM_16MM_FILM_SHOT_PROFESSOR_F.B._FARQUHARSON,_UNIVERSITY_OF_WASHINGTON._(LABORATORY_STUDIES_ON_THE_TACOMA_NARROWS_BRIDGE,_AT_HAER_WASH,27-TACO,11-33.tif",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=34522524",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2014-08-04 21:19:42",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "<div class=\"fn\">\nVERTICAL OSCILLATIONS, 3-4 VIEW, 7 NOVEMBER 1940, FROM 16MM FILM SHOT PROFESSOR F.B. FARQUHARSON, UNIVERSITY OF WASHINGTON. (LABORATORY STUDIES ON THE TACOMA NARROWS BRIDGE, AT UNIVERSITY OF WASHINGTON (SEATTLE- UNIVERSITY OF WASHINGTON, DEPARTMENT OF CIVIL ENGINEERING, 1941) - Tacoma Narrows Bridge, Spanning Narrows at State Route 16, Tacoma, Pierce County, WA</div>",
+        "source": "commons-desc-page"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Files with no machine-readable author|Images uploaded by Fæ|PD US NPS|Files from the Historic American Buildings Survey|GWToolset Batch Upload|Tacoma Narrows Bridge collapsing",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "DateTimeOriginal": {
+        "value": "Documentation compiled after 1968",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.loc.gov/pictures/item/wa0453.photos.370518p\">https://www.loc.gov/pictures/item/wa0453.photos.370518p</a>",
+        "source": "commons-desc-page"
+       },
+       "Permission": {
+        "value": "<table class=\"licensetpl\" style=\"display:none\">\n<tbody><tr>\n<td><span class=\"licensetpl_short\">Public domain</span><span class=\"licensetpl_long\">Public domain</span><span class=\"licensetpl_link_req\">false</span><span class=\"licensetpl_attr_req\">false</span>\n</td></tr></tbody></table>\n<table style=\"width: 100%; clear: both; margin: 0.5em auto; background-color: var(--background-color-progressive-subtle, #f7f8ff); color: var(--color-base, #202122); border: var(--border-subtle, 2px solid #8888aa); border-spacing: 8px; padding: 0px;\" dir=\"ltr\" class=\"layouttemplate\" lang=\"en\">\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span title=\"Public domain\"><img alt=\"Public domain\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/PD-icon.svg/120px-PD-icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"64\" height=\"64\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/PD-icon.svg/250px-PD-icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"196\" data-file-height=\"196\"></span></span>\n</td>\n<td><i>This image or media file contains material based on a work of a <a href=\"https://en.wikipedia.org/wiki/National_Park_Service\" class=\"extiw\" title=\"w:National Park Service\">National Park Service</a> employee, created as part of that person's official duties. As a <a href=\"https://en.wikipedia.org/wiki/Work_of_the_United_States_Government\" class=\"extiw\" title=\"w:Work of the United States Government\">work</a> of the <a href=\"https://en.wikipedia.org/wiki/Federal_Government_of_the_United_States\" class=\"extiw\" title=\"w:Federal Government of the United States\">U.S. federal government</a>, such work is in the <b><a href=\"https://en.wikipedia.org/wiki/public_domain\" class=\"extiw\" title=\"w:public domain\">public domain</a></b> in the United States. See the <a rel=\"nofollow\" class=\"external text\" href=\"https://www.nps.gov/\">NPS website</a> and <a rel=\"nofollow\" class=\"external text\" href=\"https://www.nps.gov/aboutus/disclaimer.htm\">NPS copyright policy</a> for more information.</i>\n</td>\n<td><figure class=\"mw-halign-right\" typeof=\"mw:File\"><span><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_of_the_United_States_National_Park_Service.svg/60px-Logo_of_the_United_States_National_Park_Service.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"52\" height=\"68\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_of_the_United_States_National_Park_Service.svg/120px-Logo_of_the_United_States_National_Park_Service.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"553\" data-file-height=\"720\"></span><figcaption></figcaption></figure>\n</td></tr></tbody></table>",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/tiff"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Files from the Historic American Buildings Survey"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Files with no machine-readable author"
+     },
+     {
+      "ns": 14,
+      "title": "Category:GWToolset Batch Upload"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images uploaded by Fæ"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD US NPS"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Tacoma Narrows Bridge collapsing"
+     }
+    ]
+   }
+  }
+ },
+ "engenharia_tacoma/uw_290_52": {
+  "dominio": "engenharia_tacoma",
+  "imagem": "uw_290_52",
+  "tentativas": [
+   {
+    "tipo": "indisponivel",
+    "motivo": "acervo da University of Washington: sem API usada pelo acervo"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "engenharia_tacoma/uw_290_33": {
+  "dominio": "engenharia_tacoma",
+  "imagem": "uw_290_33",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Tacoma Narrows Bridge twisting 1940",
+    "titulo_achado": null,
+    "erro": "não encontrado"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "engenharia_tacoma/fragmento": {
+  "dominio": "engenharia_tacoma",
+  "imagem": "fragmento",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Tacoma Narrows Bridge 1940 steel fragment",
+    "titulo_achado": null,
+    "erro": "não encontrado"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "biologia_metamorfose/jd_92417": {
+  "dominio": "biologia_metamorfose",
+  "imagem": "jd_92417",
+  "tentativas": [
+   {
+    "tipo": "pagina",
+    "consulta": "https://www.jungledragon.com/image/92417/monarch_chrysalis_-_danaus_plexippus.html",
+    "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/92417_medium.jpg"
+   }
+  ],
+  "arquivo": "biologia_metamorfose__jd_92417.jpg",
+  "bruto": {
+   "fonte": "pagina",
+   "url": "https://www.jungledragon.com/image/92417/monarch_chrysalis_-_danaus_plexippus.html",
+   "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/92417_medium.jpg"
+  }
+ },
+ "biologia_metamorfose/jd_63251": {
+  "dominio": "biologia_metamorfose",
+  "imagem": "jd_63251",
+  "tentativas": [
+   {
+    "tipo": "pagina",
+    "consulta": "https://www.jungledragon.com/image/63251/monarch_caterpillar_j-ing_-_danaus_plexippus.html",
+    "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/63251_medium.jpg"
+   }
+  ],
+  "arquivo": "biologia_metamorfose__jd_63251.jpg",
+  "bruto": {
+   "fonte": "pagina",
+   "url": "https://www.jungledragon.com/image/63251/monarch_caterpillar_j-ing_-_danaus_plexippus.html",
+   "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/63251_medium.jpg"
+  }
+ },
+ "biologia_metamorfose/jd_92418": {
+  "dominio": "biologia_metamorfose",
+  "imagem": "jd_92418",
+  "tentativas": [
+   {
+    "tipo": "pagina",
+    "consulta": "https://www.jungledragon.com/image/92418/empty_monarch_chrysalis_-_danaus_plexippus.html",
+    "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/92418_medium.jpg"
+   }
+  ],
+  "arquivo": "biologia_metamorfose__jd_92418.jpg",
+  "bruto": {
+   "fonte": "pagina",
+   "url": "https://www.jungledragon.com/image/92418/empty_monarch_chrysalis_-_danaus_plexippus.html",
+   "og_image": "https://d2whrnehvcoq4r.cloudfront.net/images/3232/92418_medium.jpg"
+  }
+ },
+ "biologia_metamorfose/merian": {
+  "dominio": "biologia_metamorfose",
+  "imagem": "merian",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Metamorphosis insectorum Surinamensium plate",
+    "titulo_achado": "File:Spiders - Metamorphosis insectorum surinamensium (1705), 74 plate 18 - BL.jpg"
+   }
+  ],
+  "arquivo": "biologia_metamorfose__merian.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 31451525,
+    "ns": 6,
+    "title": "File:Spiders - Metamorphosis insectorum surinamensium (1705), 74 plate 18 - BL.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2014-03-04T23:21:44Z",
+      "size": 1019806,
+      "width": 1358,
+      "height": 1784,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg/1280px-Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 1345,
+      "responsiveUrls": {
+       "2": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg/1280px-Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 1345,
+       "srcset": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Spiders_-_Metamorphosis_insectorum_surinamensium_%281705%29%2C_74_plate_18_-_BL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Spiders_-_Metamorphosis_insectorum_surinamensium_(1705),_74_plate_18_-_BL.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=31451525",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2014-03-04 23:21:44",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Spiders - Metamorphosis insectorum surinamensium (1705), 74 plate 18 - BL",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Images from the British Library|CC-Zero|Artworks without Wikidata item|1705 illustrations|Artworks with known accession number|GWToolset Batch Upload|Images released by British Library Images Online, March 2014|Uploaded by the British Library|Metamorphosis insectorum Surinamensium - Plate 18",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Artist": {
+        "value": "<div class=\"fn value\">\nMaria Sibylla Merian (1647-1717)</div>",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "Spiders in their webs",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "1705<div style=\"display: none;\">date QS:P571,+1705-00-00T00:00:00Z/9</div>",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "This file has been provided by the British Library from its digital collections. Links to the British Library's website may be broken as the library recovers from a October 2023 cyber attack, and will be updated once material becomes accessible online. For more information on the attack see: <a rel=\"nofollow\" class=\"external free\" href=\"https://www.bl.uk/about/cyber-attack\">https://www.bl.uk/about/cyber-attack</a> <br>\n<small><a rel=\"nofollow\" class=\"external text\" href=\"http://explore.bl.uk/BLVU1:LSCOP-ALL:BLL01002463857\">Catalogue entry</a>.</small>",
+        "source": "commons-desc-page"
+       },
+       "Permission": {
+        "value": "<table style=\"width:100%; clear:both; text-align:center; margin:0.5em auto; background-color:var(--background-color-neutral-subtle, #f8f9fa); border: 2px solid var(--border-color-subtle, #c8ccd1); padding: 0; border-spacing: 8px; color:var(--color-base, #202122);\" dir=\"ltr\" class=\"layouttemplate licensetpl\" lang=\"en\">\n<tbody><tr>\n<td style=\"width:90px;\" rowspan=\"2\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"Creative Commons\"><img alt=\"Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Cc.logo.circle.svg/40px-Cc.logo.circle.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"28\" height=\"28\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Cc.logo.circle.svg/60px-Cc.logo.circle.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span> <span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"CC-Zero\"><img alt=\"CC-Zero\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Cc-zero.svg/40px-Cc-zero.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"28\" height=\"28\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Cc-zero.svg/60px-Cc-zero.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span>\n</td>\n<td>This file is made available under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"https://creativecommons.org/publicdomain/zero/1.0/deed.en\" class=\"extiw\" title=\"ccorg:publicdomain/zero/1.0/deed.en\">CC0 1.0 Universal Public Domain Dedication</a>.\n</td></tr>\n<tr style=\"text-align:left;\">\n<td>The person who associated a work with this deed has dedicated the work to the <a href=\"https://en.wikipedia.org/wiki/en:public_domain\" class=\"extiw\" title=\"w:en:public domain\">public domain</a> by waiving all of their rights to the work worldwide under copyright law, including all related and neighboring rights, to the extent allowed by law. You can copy, modify, distribute and perform the work, even for commercial purposes, all without asking permission.\n<p><span class=\"licensetpl_link\" style=\"display:none;\">http://creativecommons.org/publicdomain/zero/1.0/deed.en</span><span class=\"licensetpl_short\" style=\"display:none;\">CC0</span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Zero, Public Domain Dedication</span><span class=\"licensetpl_link_req\" style=\"display:none;\">false</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">false</span>\n</p>\n</td></tr></tbody></table>",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "CC0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Zero, Public Domain Dedication",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:1705 illustrations"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Artworks with known accession number"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Artworks without Wikidata item"
+     },
+     {
+      "ns": 14,
+      "title": "Category:CC-Zero"
+     },
+     {
+      "ns": 14,
+      "title": "Category:GWToolset Batch Upload"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images from the British Library"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images released by British Library Images Online, March 2014"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Metamorphosis insectorum Surinamensium - Plate 18"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Uploaded by the British Library"
+     }
+    ]
+   }
+  }
+ },
+ "clima_katrina/fema_15008": {
+  "dominio": "clima_katrina",
+  "imagem": "fema_15008",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:FEMA - 15008 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "titulo_achado": "File:FEMA - 15008 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg"
+   }
+  ],
+  "arquivo": "clima_katrina__fema_15008.jpg",
+  "bruto": {
+   "fonte": "Commons",
+   "pagina": {
+    "pageid": 8078692,
+    "ns": 6,
+    "title": "File:FEMA - 15008 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "timestamp": "2009-10-15T09:08:20Z",
+      "size": 1968206,
+      "width": 4288,
+      "height": 2848,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg/1280px-FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 1024,
+      "thumbheight": 680,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg/3840px-FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      },
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg/1280px-FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 1024,
+       "height": 680,
+       "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg/3840px-FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/32/FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:FEMA_-_15008_-_Photograph_by_Jocelyn_Augustino_taken_on_08-30-2005_in_Louisiana.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=8078692",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2009-10-15 09:08:20",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "FEMA - 15008 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Taken with Nikon D2X|PD US FEMA|Images from FEMA, Hurricane Katrina in Louisiana|Aerial photographs from the Federal Emergency Management Agency",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "New Orleans, La. August 30, 2005 -- Aerial of a flooded neighborhood with homes totally submerged to their roofs. New Orleans is being evacuated as a result of floods from hurricane Katrina. Thousand of people have been rescued from the flood waters by moving to their roofs and attics. Photo by Jocelyn Augustino/FEMA",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2005-08-30",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "This image is from the <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/www.fema.gov/media-library/search/15008\">FEMA Photo Library</a> (obsolete as of 2019).<br>An archived copy may be found at the <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/http://www.fema.gov/media-library/assets/images/15008\">Wayback Machine</a> (note: link may be permanently dead, as not all photos were backed up in this way).<br>If the FEMA link is permanently dead, the photo can be found at <a rel=\"nofollow\" class=\"external text\" href=\"https://aad.archives.gov/aad/fielded-search.jsp?dt=1680&amp;bc=&amp;tf=I\">NARA Access to Archival Databases</a> (only works if photo was taken between 1989 and October 2004), or at <a rel=\"nofollow\" class=\"external text\" href=\"https://www.city-data.com/disaster-photos/15008.html\">City-data.com</a>.",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Jocelyn Augustino",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ],
+    "categories": [
+     {
+      "ns": 14,
+      "title": "Category:Aerial photographs from the Federal Emergency Management Agency"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Images from FEMA, Hurricane Katrina in Louisiana"
+     },
+     {
+      "ns": 14,
+      "title": "Category:PD US FEMA"
+     },
+     {
+      "ns": 14,
+      "title": "Category:Taken with Nikon D2X"
+     }
+    ]
+   }
+  }
+ },
+ "clima_katrina/fema_14891": {
+  "dominio": "clima_katrina",
+  "imagem": "fema_14891",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:FEMA - 14891 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "titulo_achado": "File:FEMA - 14891 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:FEMA - 14891 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3AFEMA+-+14891+-+Photograph+by+Jocelyn+Augustino+taken+on+08-30-2005+in+Louisiana.jpg&prop"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "clima_katrina/fema_17284": {
+  "dominio": "clima_katrina",
+  "imagem": "fema_17284",
+  "tentativas": [
+   {
+    "tipo": "commons",
+    "consulta": "File:FEMA - 17284 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "titulo_achado": "File:FEMA - 17284 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg"
+   },
+   {
+    "tipo": "commons",
+    "consulta": "File:FEMA - 17284 - Photograph by Jocelyn Augustino taken on 08-30-2005 in Louisiana.jpg",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&titles=File%3AFEMA+-+17284+-+Photograph+by+Jocelyn+Augustino+taken+on+08-30-2005+in+Louisiana.jpg&prop"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "negativo_alexandria/goll_1876": {
+  "dominio": "negativo_alexandria",
+  "imagem": "goll_1876",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "burning of the Library of Alexandria Hermann Göll",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=burning+of+the+Library+of+Alexandria+Hermann+G%C3%B6ll+filetype%3Abitmap&srnamesp"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ },
+ "negativo_alexandria/von_corven": {
+  "dominio": "negativo_alexandria",
+  "imagem": "von_corven",
+  "tentativas": [
+   {
+    "tipo": "busca",
+    "consulta": "Ancientlibraryalex Von Corven Great Library of Alexandria",
+    "erro": "429 Client Error: Too Many Requests for url: https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=Ancientlibraryalex+Von+Corven+Great+Library+of+Alexandria+filetype%3Abitmap&srnam"
+   }
+  ],
+  "arquivo": null,
+  "bruto": null
+ }
+}

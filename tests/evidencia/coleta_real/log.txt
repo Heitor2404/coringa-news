@@ -1,0 +1,50 @@
+[coleta] naval/a6_commons: arquivo=naval__a6_commons.jpg registro=sim
+[coleta] naval/a9_openverse: arquivo=naval__a9_openverse.jpg registro=não
+[coleta] naval/a8_iss: arquivo=naval__a8_iss.jpg registro=sim
+[coleta] naval/a2_aster: arquivo=naval__a2_aster.jpg registro=sim
+[coleta] naval/a1_roterda: arquivo=naval__a1_roterda.jpg registro=não
+[coleta] naval/a12_2020: arquivo=naval__a12_2020.jpg registro=sim
+[coleta] naval/a10_outro_navio: arquivo=naval__a10_outro_navio.jpg registro=sim
+[coleta] naval/a0_diagrama: arquivo=naval__a0_diagrama.jpg registro=sim
+[coleta] naval/a5_arabe: arquivo=naval__a5_arabe.jpg registro=sim
+[coleta] naval/a11_igreja: arquivo=None registro=não
+[coleta] naval/a14_placa: arquivo=None registro=não
+[coleta] geologia/a25_rosenquist: arquivo=None registro=não
+[coleta] geologia/a18_post: arquivo=None registro=não
+[coleta] geologia/a23_animacao: arquivo=None registro=não
+[coleta] geologia/a0_memorial: arquivo=None registro=não
+[coleta] espaco_apollo11/as11_40_5903: arquivo=None registro=não
+[coleta] espaco_apollo11/dvids_5903: arquivo=None registro=não
+[coleta] espaco_apollo11/s69_39525: arquivo=espaco_apollo11__s69_39525.jpg registro=sim
+[coleta] espaco_apollo11/nhq2019: arquivo=espaco_apollo11__nhq2019.jpg registro=sim
+[coleta] espaco_apollo11/as11_36_5355: arquivo=espaco_apollo11__as11_36_5355.jpg registro=sim
+[coleta] espaco_apollo11/insignia: arquivo=None registro=não
+[coleta] espaco_apollo11/lua_cheia: arquivo=None registro=não
+[coleta] historia_muro_berlim/b1110_018: arquivo=None registro=não
+[coleta] historia_muro_berlim/b1104_006: arquivo=None registro=não
+[coleta] historia_muro_berlim/b1222_034: arquivo=None registro=não
+[coleta] historia_muro_berlim/b1118_018: arquivo=None registro=não
+[coleta] historia_muro_berlim/b1109_030: arquivo=historia_muro_berlim__b1109_030.jpg registro=sim
+[coleta] engenharia_tacoma/commons_upload: arquivo=engenharia_tacoma__commons_upload.jpg registro=sim
+[coleta] engenharia_tacoma/loc_46682: arquivo=engenharia_tacoma__loc_46682.jpg registro=sim
+[coleta] engenharia_tacoma/uw_290_52: arquivo=None registro=não
+[coleta] engenharia_tacoma/uw_290_33: arquivo=None registro=não
+[coleta] engenharia_tacoma/fragmento: arquivo=None registro=não
+[coleta] biologia_metamorfose/jd_92417: arquivo=biologia_metamorfose__jd_92417.jpg registro=sim
+[coleta] biologia_metamorfose/jd_63251: arquivo=biologia_metamorfose__jd_63251.jpg registro=sim
+[coleta] biologia_metamorfose/jd_92418: arquivo=biologia_metamorfose__jd_92418.jpg registro=sim
+[coleta] biologia_metamorfose/merian: arquivo=biologia_metamorfose__merian.jpg registro=sim
+[coleta] clima_katrina/fema_15008: arquivo=clima_katrina__fema_15008.jpg registro=sim
+[coleta] clima_katrina/fema_14891: arquivo=None registro=não
+[coleta] clima_katrina/fema_17284: arquivo=None registro=não
+[coleta] negativo_alexandria/goll_1876: arquivo=None registro=não
+[coleta] negativo_alexandria/von_corven: arquivo=None registro=não
+[gemini] naval: 9 imagens · catálogo ok · casamento 504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status': 'DEADLINE_EXCEEDED'}}
+[gemini] geologia: nenhuma imagem real coletada: sem chamada
+[gemini] espaco_apollo11: 3 imagens · catálogo ok · casamento 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] historia_muro_berlim: 1 imagens · catálogo ok · casamento 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] engenharia_tacoma: 2 imagens · catálogo ok · casamento 504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status': 'DEADLINE_EXCEEDED'}}
+[gemini] biologia_metamorfose: 4 imagens · catálogo ok · casamento 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+[gemini] clima_katrina: 1 imagens · catálogo ok · casamento ok
+[gemini] negativo_alexandria: nenhuma imagem real coletada: sem chamada
+[gemini] chamadas feitas: 12 de no máximo 18

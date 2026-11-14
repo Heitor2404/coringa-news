@@ -9,13 +9,13 @@
 |---|---|---|---|
 | e1 impacto ★ | foto_direta a3 | foto_relacionada a3 (revisão) | foto_prova a8 |
 | e2 deslocamento | foto_declarada a10 | foto_contexto a1 | foto_relacionada a6 |
-| e3 movimento ★ | foto_direta a9 | bloqueio | bloqueio |
+| e3 movimento ★ | foto_direta a9 | bloqueio | foto_relacionada a6 (revisão) |
 | e4 mecanismo ★ | foto_direta a6 | foto_relacionada a6 (revisão) | foto_prova a6 |
 | e5 localizacao ★ | foto_direta a3 | bloqueio | foto_relacionada a6 (revisão) |
 | e6 numero ★ | composicao a2 | composicao numero.animado | composicao numero.animado |
 | e7 numero ★ | composicao  | composicao numero.animado | composicao numero.animado |
-| e8 processo | foto_direta a6 | foto_contexto a4 | foto_contexto a6 |
-| e9 transformacao ★ | bloqueio a9 | foto_relacionada a9 (revisão) | foto_relacionada a9 (revisão) |
+| e8 processo | foto_direta a6 | foto_contexto a4 | foto_relacionada a2 |
+| e9 transformacao ★ | bloqueio a9 | foto_relacionada a9 (revisão) | foto_relacionada a2 (revisão) |
 | e10 numero | composicao a1 | composicao numero.animado | composicao numero.animado |
 | e11 evento_historico | foto_declarada a1 | foto_contexto a2 | foto_relacionada a6 |
 | e12 evolucao_temporal ★ | editorial a14 | editorial revelacao.surpresa | editorial revelacao.surpresa |
@@ -25,9 +25,10 @@ legado: 2 bloqueio(s), 3 revisão(ões), 11 divergência(s)
 - revisão e4: imagem ligada ao acontecimento, sem as duas famílias de evidência: entidade citada na descrição/título: "Ever Given"; indício do casamento atual ("fato"), que viu a legenda: só revisão humana
 - revisão e9: imagem ligada ao acontecimento, sem as duas famílias de evidência: entidade citada na descrição/título: "Ever Given"; indício do casamento atual ("fato"), que viu a legenda: só revisão humana
 
-rotulado: 1 bloqueio(s), 2 revisão(ões), 11 divergência(s)
+rotulado: 0 bloqueio(s), 3 revisão(ões), 11 divergência(s)
+- revisão e3: imagem ligada ao acontecimento, sem as duas famílias de evidência: categoria do acontecimento: "2021 Suez Canal obstruction"; categoria da entidade: "Ever Given (ship, 2018)"
 - revisão e5: imagem ligada ao acontecimento, sem as duas famílias de evidência: categoria do acontecimento: "2021 Suez Canal obstruction"; categoria da entidade: "Ever Given (ship, 2018)"
-- revisão e9: imagem ligada ao acontecimento, sem as duas famílias de evidência: entidade citada na descrição/título: "Ever Given"; indício do casamento atual ("fato"), que viu a legenda: só revisão humana
+- revisão e9: imagem ligada ao acontecimento, sem as duas famílias de evidência: categoria da entidade: "Suez Canal"; leitura visual viu a legenda (não é independente do registro)
 
 ## santa_helena
 
@@ -52,4 +53,5 @@ legado: 3 bloqueio(s), 0 revisão(ões), 12 divergência(s)
 
 rotulado: 0 bloqueio(s), 1 revisão(ões), 12 divergência(s)
 - revisão e9: imagem ligada ao acontecimento, sem as duas famílias de evidência: categoria do acontecimento: "1980 eruption of Mount St. Helens"; categoria da entidade: "1980 eruption of Mount St. Helens"
+
 

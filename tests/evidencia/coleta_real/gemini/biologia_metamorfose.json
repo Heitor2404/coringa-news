@@ -1,0 +1,17 @@
+{
+ "ordem_das_imagens": [
+  "jd_92417",
+  "jd_63251",
+  "jd_92418",
+  "merian"
+ ],
+ "catalogo": {
+  "modelo": "gemini-3.5-flash-lite",
+  "segundos": 3.2,
+  "texto": "{\n  \"imagens\": [\n    {\n      \"i\": 0,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Crisálida verde de inseto suspensa verticalmente, exibindo detalhes de sua estrutura corporal e pontos brilhantes.\",\n      \"elemento_principal\": \"crisálida\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 1,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Lagarta listrada pendurada de cabeça para baixo em formato de J sob uma folha verde.\",\n      \"elemento_principal\": \"lagarta\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 2,\n      \"natureza\": \"foto\",\n      \"conteudo\": \"Exúvia ou crisálida vazia e translúcida suspensa por fios de seda, revelando o interior vazio.\",\n      \"elemento_principal\": \"crisálida\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": false,\n        \"escrita\": \"\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": false\n      },\n      \"epoca_aparente\": \"foto colorida moderna\",\n      \"confianca\": \"alta\"\n    },\n    {\n      \"i\": 3,\n      \"natureza\": \"pintura\",\n      \"conteudo\": \"Ilustração botânica e entomológica detalhada mostrando aranhas, formigas, teias e pequenos insetos em galhos com folhas e frutos.\",\n      \"elemento_principal\": \"aranha\",\n      \"acao_em_curso\": false,\n      \"generica\": false,\n      \"texto_visivel\": {\n        \"presente\": true,\n        \"escrita\": \"latina\",\n        \"e_o_conteudo\": false,\n        \"sobreposto\": true\n      },\n      \"epoca_aparente\": \"gravura antiga colorizada\",\n      \"confianca\": \"alta\"\n    }\n  ]\n}"
+ },
+ "casamento": {
+  "modelo": "gemini-3.8-flash",
+  "erro": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+ }
+}

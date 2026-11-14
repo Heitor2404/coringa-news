@@ -531,7 +531,9 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
 
     # tempo (família REGISTRO): a fase da imagem contra a fase exigida pelo que a visão diz que ela mostra
     confere = (vis or {}).get('confere_com')
-    alvo = confere if confere in ('acao', 'estado_inicial', 'estado_final') else ('acao' if 'acao' in exige else None)
+    # sem leitura visual do estado, vale a fase MAIS permissiva que o tipo aceita (estado final > ação): desconhecido não restringe
+    alvo = confere if confere in ('acao', 'estado_inicial', 'estado_final') else \
+        ('estado_final' if 'estado_final' in exige else 'acao' if 'acao' in exige else None)
     contradiz = False
     if alvo and fs in ('antes', 'depois', 'durante'):
         if alvo == 'acao' and fs != 'durante':

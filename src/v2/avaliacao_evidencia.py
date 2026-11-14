@@ -231,3 +231,85 @@ def pilotos_md(r: dict) -> str:
                 l.append(f"- revisão {rv['evento']}: {rv['problema'][:200]}")
         l.append('')
     return '\n'.join(l) + '\n'
+
+
+# ───────────────────────── validação com dados REAIS (coleta única no CI) ─────────────────────────
+def _registro_real(bruto: dict, titulo_fix: str) -> dict | None:
+    if not bruto:
+        return None
+    if bruto['fonte'] == 'Commons':
+        return E.registro_commons(bruto['pagina'])
+    if bruto['fonte'] == 'NASA':
+        return E.registro_nasa((bruto['item'].get('data') or [{}])[0])
+    return E._registro('pagina', titulo_fix, [], {}, titulo_fix, '', '', None, pagina=bruto.get('url'), etiquetas_livres=True)
+
+
+def _visao_real(g: dict, imagem: str, acontecimento: str) -> dict | None:
+    """Catálogo + casamento REAIS (Gemini cego). Sem resposta do casamento, 'confere_com' fica 'incerto'."""
+    if not g or imagem not in g['ordem_das_imagens']:
+        return None
+    i = g['ordem_das_imagens'].index(imagem)
+    try:
+        cat = next(a for a in json.loads(g['catalogo']['texto'])['imagens'] if int(a.get('i', -1)) == i)
+    except Exception:
+        cat = None
+    cas = None
+    if 'texto' in g.get('casamento', {}):
+        try:
+            cas = next((a for a in json.loads(g['casamento']['texto'])['avaliacoes']
+                        if int(a.get('imagem', -1)) == i and a.get('acontecimento') == acontecimento), None)
+        except Exception:
+            cas = None
+    if not cat and not cas:
+        return None
+    tv = (cat or {}).get('texto_visivel') or {}
+    return {'origem': 'gemini_cego', 'viu_legenda': False, 'natureza': (cat or {}).get('natureza'),
+            'generica': bool((cat or {}).get('generica')), 'texto_visivel': tv,
+            'confere_com': (cas or {}).get('confere_com', 'incerto'), 'classe_confere': (cas or {}).get('classe_confere'),
+            'confianca': (cas or {}).get('confianca', 'baixa' if not cas else 'media'),
+            'catalogo': {'natureza': (cat or {}).get('natureza'), 'generica': bool((cat or {}).get('generica')),
+                         'acao_em_curso': (cat or {}).get('acao_em_curso')} if cat else None,
+            'casamento_respondeu': bool(cas)}
+
+
+def validacao_real() -> dict:
+    base = RAIZ_TESTES / 'evidencia'
+    regs = json.loads((base / 'coleta_real' / 'registros.json').read_text(encoding='utf-8'))
+    gem = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in (base / 'coleta_real' / 'gemini').glob('*.json')}
+    linhas = []
+    for arq in ('desenvolvimento.json', 'reservado.json'):
+        fix = json.loads((base / arq).read_text(encoding='utf-8'))
+        for dom, d in fix['dominios'].items():
+            for c in d['casos']:
+                r = regs.get(f"{dom}/{c['imagem']}")
+                if not r:
+                    continue
+                ev = _ev(d, c['acontecimento'])
+                reg_real = _registro_real(r.get('bruto'), d['imagens'][c['imagem']]['registro'].get('titulo'))
+                vis_rot = visao(c, ev, 'correta')
+                vis_real = _visao_real(gem.get(dom), c['imagem'], c['acontecimento'])
+                lin = {'conjunto': fix['grupo'], 'id': c['id'], 'dominio': dom, 'imagem': c['imagem'], 'esperado': c['esperado'],
+                       'cenario': E.avaliar(ev, registro(d['imagens'][c['imagem']]['registro']), vis_rot)['nivel'],
+                       'registro_real': E.avaliar(ev, reg_real, vis_rot)['nivel'] if reg_real else 'sem registro',
+                       'real': None, 'gemini': vis_real, 'arquivo': r.get('arquivo')}
+                if reg_real and vis_real:
+                    a = E.avaliar(ev, reg_real, vis_real)
+                    lin['real'], lin['motivo_real'] = a['nivel'], '; '.join(a['motivos'][:2])
+                linhas.append(lin)
+    return {'linhas': linhas}
+
+
+def validacao_real_md(v: dict) -> str:
+    l = ['# Validação com dados reais (coleta única no CI)', '',
+         '- **cenário**: registro montado no gabarito + visão rotulada · **registro real**: metadados coletados + visão rotulada · '
+         '**real**: metadados coletados + resposta do Gemini cego (sem resposta do casamento → "incerto", nunca PROVA)', '',
+         '| Conjunto | Caso | Imagem | Esperado | Cenário | Registro real | Real (Gemini) | Gemini: natureza / confere / confiança |',
+         '|---|---|---|---|---|---|---|---|']
+    for x in v['linhas']:
+        g = x['gemini'] or {}
+        gtxt = f"{g.get('natureza')} / {g.get('confere_com')} / {g.get('confianca')}" if g else '—'
+        l.append(f"| {x['conjunto']} | {x['id']} | {x['imagem']} | {x['esperado']} | {x['cenario']} | {x['registro_real']} | {x['real'] or '—'} | {gtxt} |")
+    fp = [x['id'] for x in v['linhas'] if 'PROVA' in (x['registro_real'], x['real']) and x['esperado'] != 'PROVA']
+    fr = [x['id'] for x in v['linhas'] if x['esperado'] == 'PROVA' and x['registro_real'] != 'PROVA']
+    l += ['', f'- Falsas provas com dados reais: {len(fp)} {fp}', f'- Provas esperadas não alcançadas com o registro real: {len(fr)} {fr}']
+    return '\n'.join(l) + '\n'

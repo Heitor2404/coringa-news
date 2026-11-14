@@ -297,6 +297,22 @@ PROMPT_ROTEIRO_EXPLICA = cofre.prompt('PROMPT_ROTEIRO_EXPLICA')
 # V2.2: contrato de acontecimentos (público) anexado ao pedido do roteiro; o texto do cofre não muda
 from src.v2.contrato import BLOCO_PROMPT as CONTRATO_ACONTECIMENTOS  # noqa: E402
 
+def _bloco_contrato() -> str:
+    """Só MOTOR_VISUAL=v2: o mesmo contrato com os dados exigidos por tipo (V2.4). A produção usa CONTRATO_ACONTECIMENTOS."""
+    from src.v2 import contrato as _contrato
+    return _contrato.bloco_prompt()
+
+
+def contratos_v2(v: dict, fatos: str | None = None, chamar=None) -> dict:
+    """V2.4 (só MOTOR_VISUAL=v2): pré-validação + no máximo 1 chamada de conserto dos contratos (src/v2/prevalidacao.py)."""
+    from src.v2 import prevalidacao
+    if fatos is not None:
+        v['fatos'] = fatos
+    rel = prevalidacao.reparar(v, chamar=chamar)
+    print('  [contratos] ' + prevalidacao.resumo(rel).replace('\n', '\n  '))
+    return rel
+
+
 BLOCO_PARTE1 = """SÉRIE EM CAPÍTULOS — esta é a PARTE 1 de {n}.
 - OBRIGATÓRIO: planeje em "arco" a história completa em EXATAMENTE {n} partes (1 frase por parte), cortando nos suspenses naturais.
 - Esta PARTE 1 conta SÓ o primeiro capítulo do arco, com calma e detalhe (não resuma a história toda).
@@ -358,14 +374,15 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     from . import acervo as acervo_mod, fontes as fontes_mod
     from .orcamento import marca
     gemini.RESERVAS_USADAS.clear()
-    fatos, fontes, link, dossie = fontes_mod.coletar(tema, tema.get('pedido', ''), parte)
+    from src.v2 import checkpoint          # V2.4: sem checkpoint ativo (produção), só executa a função
+    fatos, fontes, link, dossie = checkpoint.etapa('pesquisa', lambda: fontes_mod.coletar(tema, tema.get('pedido', ''), parte))
     if parte <= 1:                                # série só quando o tema merece (o padrão é vídeo único)
         n = int(tema.get('partes') or 0) or decidir_partes(tema, fatos)
         capitulos = capitulos and n > 1
     else:
         n = len((serie or {}).get('arco') or []) or 2
     pasta = Path(__file__).resolve().parent.parent / 'tmp' / ('acervo-' + re.sub(r'[^a-z0-9]+', '-', tema['pergunta'].lower())[:40])
-    acervo = acervo_mod.coletar(tema, dossie, pasta)        # sem fotos reais suficientes: ValueError → próximo tema
+    acervo = checkpoint.etapa('acervo', lambda: acervo_mod.coletar(tema, dossie, pasta))   # sem fotos reais suficientes: ValueError → próximo tema
     # 12/11 (polvo): viabilidade visual pelo TIPO de conteúdo ANTES do roteiro (nenhuma chamada nova; pula o tema cedo)
     tipo = viabilidade.classificar(tema, fatos, dossie)
     viab = viabilidade.avaliar(acervo, tipo)
@@ -378,7 +395,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
         v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
             pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
             partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
-            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)) + CONTRATO_ACONTECIMENTOS)
+            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)) + (_bloco_contrato() if os.getenv('MOTOR_VISUAL') == 'v2' else CONTRATO_ACONTECIMENTOS))
     v['tipo_conteudo'] = tipo
     v['arco'] = (v.get('arco') or []) if capitulos else (v.get('arco') or [])[:1]
     if capitulos and parte <= 1 and len(v['arco']) > n:
@@ -404,6 +421,8 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     v = arrumar_final(v, parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0)
     recursos.rebaixar(v, fatos)                 # plano-mestre F: gráfico com dado fora dos fatos não vai à tela
     v = acontecimentos.normalizar(dividir(geocodificar(v)))    # 12/11: quem/onde/quando/recurso de cada ideia
+    if os.getenv('MOTOR_VISUAL') == 'v2':      # V2.4: contratos visuais conferidos e consertados ANTES do acervo/narração
+        contratos_v2(v, fatos)
     v = storyboard.construir(v)                # plano-mestre D: uma estrutura por cena (só registro)
     v = acervo_mod.casar(v, acervo)
     # 2ª busca: para cada frase ainda sem foto, procura imagem real do ASSUNTO DA FRASE (Loki, Templários, o bombardeiro...)

@@ -87,3 +87,7 @@ As correções funcionaram nos casos da 1ª execução (testes `tests/test_prepa
 - 8 imagens retidas por privacidade.
 - Registros reais: 18 do Commons e 7 da NASA (6 legados).
 - A Wikidata deu 429 em 2 nomes.
+
+---
+
+**Correção estrutural (V2.4, offline, sem vídeo):** ver [`CORRECAO_V24_CONTRATOS.md`](CORRECAO_V24_CONTRATOS.md) — pré-validação e conserto rastreado dos contratos, checkpoint/retomada por etapa e separação entre evidência visual e ilustração de mecanismo.

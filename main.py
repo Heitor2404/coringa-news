@@ -654,6 +654,10 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             except Exception as e:
                 print(f'  [evidência/sombra] falhou sem afetar o vídeo: {str(e)[:120]}')
         rel = preparo.preparar(v)
+        if v.get('_contratos'):       # V2.4: o que a pré-validação corrigiu/consertou vai junto (auditoria)
+            rel['contratos'] = v['_contratos']
+        if v.get('_checkpoint'):
+            rel['checkpoint'] = v['_checkpoint']
         v['_preparo'] = rel
         (pasta / f'{nome}-preparo.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
         print('  [preparo] ' + preparo.resumo(rel).replace('\n', '\n  '))
@@ -1000,12 +1004,24 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         print('  ✘ não achei a parte 1 dessa série. Escreva a curiosidade igual à da parte 1.')
         return False
     try:
-        t = serie['tema'] if serie else roteiro.tema_livre(pedido)
-        if pauta and not serie:
-            t['partes'] = pauta.get('partes') or 0          # 0 = o editor decide depois de pesquisar
-            t['noticia'] = pauta.get('contexto') or ''
-        print(f'  pergunta: {t["pergunta"]}')
-        v = roteiro.escrever_explica(t, parte, serie)
+        from src.v2 import checkpoint
+        if checkpoint.ATUAL and checkpoint.ATUAL.carregar_de_origem('roteiro'):
+            # V2.4: retomada do roteiro pronto (pesquisa, acervo e roteiro NÃO são refeitos); contratos conferidos de novo
+            # (pegam uma edição à mão do checkpoint; o conserto só chama a IA se ainda houver contrato crítico inválido)
+            pronto = checkpoint.etapa('roteiro', lambda: None)
+            t, v = pronto['tema'], pronto['v']
+            print(f'  pergunta: {t["pergunta"]} (roteiro retomado do checkpoint)')
+            roteiro.contratos_v2(v)
+        else:
+            t = serie['tema'] if serie else checkpoint.etapa('tema', lambda: roteiro.tema_livre(pedido))
+            if pauta and not serie:
+                t['partes'] = pauta.get('partes') or 0          # 0 = o editor decide depois de pesquisar
+                t['noticia'] = pauta.get('contexto') or ''
+            print(f'  pergunta: {t["pergunta"]}')
+            v = roteiro.escrever_explica(t, parte, serie)
+            checkpoint.etapa('roteiro', lambda: {'tema': t, 'v': v})      # sem checkpoint ativo: não faz nada
+        if checkpoint.ATUAL:
+            v['_checkpoint'] = checkpoint.registro()
         v['_pauta'] = pauta or {}
         nome = f'explica-{slug(pedido)[:40]}' + (f'-parte{parte}' if v.get('parte') else '')
         arq = montar_video(v, pasta, nome)
@@ -1178,6 +1194,8 @@ def main():
     ap.add_argument('--so-virais', action='store_true', help='só faz notícia com nota de viralização alta')
     ap.add_argument('--mascote', default='', help='"gerar" = 4 versões do Coringa 3D; "1".."4" = gera as expressões da versão escolhida')
     ap.add_argument('--fabula', default=None, nargs='?', const='', help='vídeo do canal Ninguém Te Contou (tema opcional)')
+    ap.add_argument('--retomar', default='', help='V2.4 (MOTOR_VISUAL=v2): pasta de checkpoint de uma execução anterior')
+    ap.add_argument('--retomar-etapa', default='roteiro', help='até onde reaproveitar: tema | pesquisa | acervo | roteiro (padrão)')
     ap.add_argument('--teste', action='store_true', help='offline (voz de teste local)')
     ap.add_argument('--teste-edge', action='store_true', help='vídeo de exemplo com a voz real + amostras de vozes')
     a = ap.parse_args()
@@ -1235,6 +1253,18 @@ def main():
             import traceback
             traceback.print_exc()
             _aviso_sem_video(f'erro inesperado no sistema: {str(e)[:200]}')
+        return
+    if a.retomar and os.getenv('MOTOR_VISUAL') != 'v2':
+        raise SystemExit('--retomar só existe no motor V2 (MOTOR_VISUAL=v2)')
+    if os.getenv('MOTOR_VISUAL') == 'v2' and (a.curiosidade.strip() or a.retomar):
+        # V2.4: checkpoint por etapa (pesquisa → acervo → roteiro) em saida/<dia>/checkpoint; produção não passa aqui
+        from src.v2 import checkpoint
+        man = checkpoint.manifesto_de(Path(a.retomar)) if a.retomar else {}
+        pedido = a.curiosidade.strip() or man.get('pedido', '')
+        parte = a.parte if a.curiosidade.strip() else int(man.get('parte') or 1)
+        checkpoint.ativar(pasta / 'checkpoint', Path(a.retomar) if a.retomar else None, a.retomar_etapa if a.retomar else None,
+                          pedido=pedido, parte=parte)
+        fazer_curiosidade(pedido, parte, pasta, unico=True)
         return
     if a.curiosidade.strip():
         fazer_curiosidade(a.curiosidade.strip(), a.parte, pasta, unico=True)     # 1 vídeo, mesmo se reprovado

@@ -220,6 +220,8 @@ def acontecimento(bruto: dict, falas: list[str] | None = None, referencias: dict
         'mostrar': ac.get('mostrar'), 'onde': bruto.get('onde'),
         'intervalo': intervalo(bruto.get('quando') or (ac.get('dados') or {}).get('data')),
         'exige': exige(tp, ac),
+        # V2.4: o elemento que precisa ser visto é registrável por câmera? (forças, moléculas → não: só ilustração)
+        'observavel': contrato.observabilidade({**ac, 'tipo': tp}),
         'falas': falas,
         'afirmacoes': afirmacoes(falas, tp),
         'referencias': {'evento': refs.get('evento') or {},
@@ -569,6 +571,14 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
         if confere in ('acao', 'estado_inicial', 'estado_final'):
             deps.append('leitura visual e data do registro discordam: vale a restrição')
 
+    # V2.4: fenômeno não observável (escala molecular, força, campo): foto nenhuma mostra o mecanismo. A imagem do
+    # assunto (a pata, o animal) pode ser CONTEXTO; o acontecimento se representa por ILUSTRAÇÃO (composição), que
+    # explica e nunca é evidência. Corrige a ressalva do piloto: "relacionada" para uma força que some.
+    if ev.get('observavel') in ('nao', 'parcial'):
+        teto = _min(teto, 'CONTEXTO')
+        vetos.append('fenômeno não observável' + (' (a ação narrada acontece em escala que a câmera não registra)' if ev['observavel'] == 'parcial' else '')
+                     + ': foto não mostra; representação = ilustração com dados')
+
     # tipo que imagem não representa (número, comparação, citação…)
     if not exige:
         teto = _min(teto, 'CONTEXTO'); vetos.append(f'tipo "{ev.get("tipo")}" se representa por composição/editorial, não por imagem')
@@ -686,11 +696,14 @@ def decidir(ev: dict, candidatos: list[tuple[str, dict]], comp: str | None = Non
     sem_fonte = [a for a in verificacao or [] if a.get('status') == 'sem_fonte']
     rep = {'verificacao_factual': verificacao or [], 'afirmacoes_sem_fonte': [a.get('texto') for a in sem_fonte]}
     if comp:
-        rep.update(modo='composicao', comp=comp)
+        from src.v2 import contrato
+        rep.update(modo='composicao', comp=comp, funcao=contrato.funcao_comp(comp))
+        if rep['funcao'] == 'ilustracao':      # explica um mecanismo: não é registro de nada, não conta como evidência
+            rep['nao_e_evidencia'] = True
         if melhor and nivel == 'PROVA':
             rep['foto_de_apoio'] = melhor[0]
     elif melhor and nivel == 'PROVA':
-        rep.update(modo='foto_prova', foto=melhor[0], nivel=nivel, motivos=melhor[1]['motivos'])
+        rep.update(modo='foto_prova', foto=melhor[0], nivel=nivel, motivos=melhor[1]['motivos'], funcao='evidencia')
         if ev.get('tipo') == 'evento_historico':
             rep['dados_composicao'] = {'comp': 'foto.historica', 'img': melhor[0]}
     elif editorial:
@@ -703,6 +716,11 @@ def decidir(ev: dict, candidatos: list[tuple[str, dict]], comp: str | None = Non
         rep.update(modo='foto_contexto', foto=melhor[0], nivel=nivel, motivos=melhor[1]['motivos'])
     elif not ev.get('critico'):
         rep.update(modo='sem_imagem')
+    elif ev.get('observavel') in ('nao', 'parcial'):
+        falta = ['ILUSTRAÇÃO (composição) com dados rastreados na pesquisa: o fenômeno não é observável e foto nenhuma o mostra']
+        if melhor:
+            falta.append(f'melhor candidata {melhor[0]}: {melhor[1]["nivel"]} — só contexto do assunto')
+        rep.update(modo='bloqueio', faltam=falta)
     else:
         exige = ' ou '.join(ev.get('exige') or []) or 'composição com dados'
         falta = [f'imagem com vínculo de REGISTRO a este acontecimento (categoria/palavra-chave da fonte, ou entidade + data '
@@ -789,6 +807,7 @@ def preparar(v: dict, acervo: list[dict], registros: dict | None = None, visoes:
         if rep.get('foto'):
             usadas.add(rep['foto'])
         item = {'id': ev['id'], 'cenas': idx, 'tipo': ev['tipo'], 'critico': ev['critico'], 'exige': ev['exige'],
+                'observavel': ev.get('observavel'), 'funcao': rep.get('funcao'),
                 'intervalo': _fmt_iv(ev['intervalo']), 'antigo': {'modo': rep_old.get('modo'), 'foto': e_old.get('foto')},
                 'novo': rep}
         out['eventos'].append(item)
@@ -810,5 +829,7 @@ def resumo(rel: dict) -> str:
     for e in rel['eventos']:
         n = e['novo']
         l.append(f"  {e['id']} {e['tipo']}{' crítico' if e['critico'] else ''}: antigo {e['antigo']['modo']} {e['antigo']['foto'] or ''} → "
-                 f"novo {n['modo']} {n.get('foto') or n.get('comp') or ''}".rstrip())
+                 f"novo {n['modo']} {n.get('foto') or n.get('comp') or ''}".rstrip()
+                 + (' [ILUSTRAÇÃO, não é evidência]' if n.get('nao_e_evidencia') else '')
+                 + (' [não observável]' if e.get('observavel') in ('nao', 'parcial') and n['modo'] != 'composicao' else ''))
     return '\n'.join(l)

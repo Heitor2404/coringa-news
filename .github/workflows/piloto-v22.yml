@@ -9,7 +9,7 @@ name: Piloto de produção V2.2 (Coringa Explica)
 on:
   push:
     branches: [piloto-v24-lagartixa]
-    paths: [".github/piloto/pedido.txt"]
+    paths: [".github/piloto/pedido.txt", ".github/piloto/retomar.txt"]
 
 permissions:
   contents: read
@@ -64,6 +64,22 @@ jobs:
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund || echo "Claude Code não instalou: sigo com o Gemini"
           python scripts/v2_natural_earth.py
+      # V2.4: retomada sem refazer pesquisa/acervo/roteiro. .github/piloto/retomar.txt = "<run_id> [roteiro|acervo|pesquisa]"
+      # (vazio = execução nova). O checkpoint fica no CACHE do Actions (não é público, ao contrário dos artefatos).
+      - name: Ler pedido de retomada
+        id: ret
+        run: |
+          linha=$(grep -v '^#' .github/piloto/retomar.txt 2>/dev/null | head -1 | tr -s ' ' || true)
+          echo "run=$(echo "$linha" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          etapa=$(echo "$linha" | cut -s -d' ' -f2); echo "etapa=${etapa:-roteiro}" >> "$GITHUB_OUTPUT"
+      - name: Restaurar checkpoint
+        id: ck
+        if: steps.ret.outputs.run != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: checkpoint_cache
+          key: piloto-checkpoint-${{ steps.ret.outputs.run }}
+          fail-on-cache-miss: true
       - name: Gerar UM vídeo (fluxo real, motor V2.2)
         env:
           MOTOR_VISUAL: v2
@@ -89,11 +105,12 @@ jobs:
         run: |
           mkdir -p saida
           ini=$(date +%s)
-          python - "$(cat .github/piloto/pedido.txt)" > saida/tempo_memoria.txt <<'PY' && ok=1 || ok=0
+          python - "$(cat .github/piloto/pedido.txt)" "${{ steps.ret.outputs.run }}" "${{ steps.ret.outputs.etapa }}" > saida/tempo_memoria.txt <<'PY' && ok=1 || ok=0
           import resource, subprocess, sys, time
           t = time.time()
           with open('saida/registro.txt', 'w') as f:
-              rc = subprocess.run([sys.executable, 'main.py', '--curiosidade', sys.argv[1], '--parte', '1'], stdout=f, stderr=subprocess.STDOUT).returncode
+              args = ['--retomar', 'checkpoint_cache', '--retomar-etapa', sys.argv[3]] if sys.argv[2] else ['--curiosidade', sys.argv[1], '--parte', '1']
+              rc = subprocess.run([sys.executable, 'main.py'] + args, stdout=f, stderr=subprocess.STDOUT).returncode
           print(f'tempo_total_s={time.time() - t:.1f} pico_memoria_mb={resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024:.0f} rc={rc}')
           sys.exit(rc)
           PY
@@ -101,6 +118,18 @@ jobs:
           # só números no log público (como na produção); texto completo vai no pacote criptografado
           grep -E '^\s*\[(custo|orçamento)\]|💰|🎞' saida/registro.txt | tail -30 || true
           cat saida/tempo_memoria.txt || true
+      - name: Separar o checkpoint desta execução
+        id: novo
+        if: always()
+        run: |
+          d=$(ls -d saida/*/checkpoint 2>/dev/null | head -1 || true)
+          if [ -n "$d" ]; then rm -rf checkpoint_cache; cp -r "$d" checkpoint_cache; echo "tem=1" >> "$GITHUB_OUTPUT"; ls checkpoint_cache; fi
+      - name: Guardar checkpoint (cache privado; retomar com retomar.txt = "${{ github.run_id }} roteiro")
+        if: always() && steps.novo.outputs.tem == '1'
+        uses: actions/cache/save@v4
+        with:
+          path: checkpoint_cache
+          key: piloto-checkpoint-${{ github.run_id }}
       - name: Empacotar e cifrar para a chave do piloto
         if: always()
         run: |

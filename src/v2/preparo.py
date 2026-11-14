@@ -19,6 +19,7 @@ Acontecimento crítico que continua sem representação → BLOQUEIO antecipado 
 """
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from pathlib import Path
@@ -288,13 +289,13 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         ac['partes'] = len(idx)
         ac['_quem'], ac['_quando'] = bruto.get('quem'), bruto.get('quando')
         cena_ctx = {'mostrar': c0.get('mostrar'), 'tipo': c0.get('tipo'), '_falas': [re.sub(r'[*]', '', v['cenas'][k].get('fala', '')) for k in idx]}
-        ev = {'id': chave, 'cenas': idx, 'tipo_original': ac.get('tipo'), 'critico': contrato.critico(ac) if ac.get('tipo') != 'desconhecido' else True}
+        ev = {'id': chave, 'cenas': idx, 'tipo_original': ac.get('tipo_original') or ac.get('tipo'), 'critico': contrato.critico(ac) if ac.get('tipo') != 'desconhecido' else True}
 
         # 2) tipo
         novo, motivo = reclassificar(ac, cena_ctx)
         if novo != ac.get('tipo'):
             ac['tipo_original'], ac['tipo'], ac['reclassificacao'] = ac.get('tipo'), novo, motivo
-        ev['tipo'] = ac['tipo']; ev['reclassificacao'] = motivo
+        ev['tipo'] = ac['tipo']; ev['reclassificacao'] = motivo or ac.get('reclassificacao')   # V2.4: a pré-validação pode ter feito
         # a época geral do vídeo só vale como data de um acontecimento SEM data em história datada; fenômeno científico sem
         # momento histórico (mecanismo, natureza, geral) não ganha o ano da reportagem (lagartixa: "2026" × foto de 2009)
         ano_evento = _ano(bruto.get('quando')) or _ano((ac.get('dados') or {}).get('data')) \
@@ -352,7 +353,11 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         if atual and not av_atual['compativel']:
             troca = {'evento': chave, 'cenas': idx, 'de': atual['id'], 'motivo': '; '.join(av_atual['motivos'])}
             escolhida, av_esc = None, None
-        pode_foto = ac['tipo'] in FOTO_PODE
+        # V2.4: fenômeno que a câmera não registra (forças, moléculas) nunca é representado por foto — nem "direta" nem
+        # "declarada"; só por ILUSTRAÇÃO com dados da pesquisa. A foto do assunto pode continuar como apoio/contexto.
+        obs = contrato.observabilidade(ac)
+        ev['observavel'] = obs
+        pode_foto = ac['tipo'] in FOTO_PODE and obs == 'sim'
         comp = _composicao_viavel(ac)
         if not comp and (escolhida is None or (pode_foto and av_esc['forca'] < 3)):
             vistos, avs = set(), []
@@ -390,7 +395,7 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
             rep = {'modo': 'foto_direta', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
         elif all(v['cenas'][k].get('tipo') in EDITORIAL for k in idx) or (c0.get('tipo') == 'numero' and not any('cena' in f for f in faltam)):
             rep = {'modo': 'editorial', 'comp': EDITORIAL.get(c0.get('tipo'), 'numero.animado')}
-        elif escolhida is not None and av_esc['forca'] >= 2:
+        elif escolhida is not None and av_esc['forca'] >= 2 and (pode_foto or not ev['critico']):
             rep = {'modo': 'foto_declarada', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
             if ev['critico']:
                 rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'acontecimento crítico representado pela imagem que o roteiro pediu, sem mostrar o estado narrado',
@@ -400,10 +405,24 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         else:
             capazes = ', '.join(f"{cp} ({', '.join(req)})" for cp, req in contrato.TIPOS.get(ac['tipo'], {}).get('comps', {}).items())
             falta_img = (f"foto/vídeo real que mostre \"{ac.get('estado_final') or ac.get('mostrar')}\"" if pode_foto
+                         else 'ILUSTRAÇÃO com dados da pesquisa (fenômeno não observável: foto não mostra)' if obs != 'sim'
                          else 'composição com dados (este tipo não se mostra com foto)')
             rep = {'modo': 'bloqueio', 'faltam': faltam + [f'dados para uma composição capaz: {capazes or "nenhuma"}', falta_img]}
             rel['bloqueios'].append({'evento': chave, 'cenas': idx, 'tipo': ac['tipo'], 'mostrar': ac.get('mostrar'), 'faltam': rep['faltam']})
         ac['representacao'] = rep
+        # V2.4: função visual — evidência (registro real) × ilustração (explica um mecanismo, NUNCA prova) × dado
+        funcao = funcao_visual(rep)
+        ac['funcao_visual'] = funcao
+        ev['funcao'] = funcao
+        ev['evidencia_visual'] = funcao == 'evidencia'
+        if funcao == 'ilustracao':
+            from src.v2 import prevalidacao
+            ras = prevalidacao.rastreio(ac.get('dados') or {}, linhas)
+            ev['ilustracao'] = {'nao_prova': True, 'ilustra': ac['tipo'], 'rastreio': ras['itens'],
+                                'base': sorted({i['fonte'] for i in ras['itens'] if i.get('ok')})}
+            if not ras['algum']:
+                rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'ilustração sem base na pesquisa: nenhum item dos dados aparece nos fatos',
+                                        'evidencia': json.dumps(ac.get('dados') or {}, ensure_ascii=False)[:160]})
         ev.update(representacao=rep, faltam=faltam, foto=(escolhida or {}).get('id'), dados=ac.get('dados'))
         for key in ('_quem', '_quando'):
             ac.pop(key, None)
@@ -413,6 +432,20 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
             c['acontecimento'] = {**{kk: bruto_k[kk] for kk in ('quem', 'onde', 'quando', 'recurso') if kk in bruto_k}, **ac}
         rel['eventos'].append(ev)
     return rel
+
+
+def funcao_visual(rep: dict) -> str:
+    """evidencia | ilustracao | dado | editorial | contexto | nenhuma (bloqueio/sem imagem)."""
+    modo = rep.get('modo')
+    if modo == 'composicao':
+        return contrato.funcao_comp(rep.get('comp')) or 'dado'
+    if modo in ('foto_direta', 'foto_declarada'):
+        return 'evidencia'
+    if modo == 'foto_contexto':
+        return 'contexto'
+    if modo == 'editorial':
+        return 'editorial'
+    return 'nenhuma'
 
 
 def _composicao_viavel(ac: dict) -> str | None:
@@ -435,6 +468,7 @@ def resumo(rel: dict) -> str:
         r = e['representacao']
         linhas.append(f"  {e['id']} {e['tipo']}{' (era ' + e['tipo_original'] + ')' if e.get('reclassificacao') else ''}"
                       f"{' crítico' if e['critico'] else ''} → {r['modo']}{' ' + r.get('comp', '') if r.get('comp') else ''}"
+                      f"{' [ILUSTRAÇÃO, não é evidência]' if e.get('funcao') == 'ilustracao' else ''}"
                       f"{' ' + str(r.get('foto')) if r.get('foto') else ''}")
     for b in rel['bloqueios']:
         linhas.append(f"  ✘ {b['evento']} ({b['tipo']}, cenas {b['cenas']}): falta " + ' | '.join(b['faltam']))

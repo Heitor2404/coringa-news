@@ -468,9 +468,27 @@ def visao_legada(x: dict, relacao_casamento: str | None = None) -> dict:
             'descricao': x.get('mostra', '')}
 
 
+def _semantica(vis: dict | None) -> dict | None:
+    """Ação em curso × estado resultante: "ação" sem movimento visível (o próprio casamento diz que tudo está parado, ou
+    o catálogo diz que nada acontece e o casamento não afirma movimento) é o ESTADO RESULTANTE da ação. O navio parado e
+    preso representa o encalhe (estado final do encalhe), nunca a liberação; os vetos de fase, identidade e natureza seguem."""
+    if not vis or vis.get('confere_com') != 'acao':
+        return vis
+    cat = vis.get('catalogo') or {}
+    parado = vis.get('movimento_visivel') is False or (cat.get('acao_em_curso') is False and vis.get('movimento_visivel') is not True)
+    if not parado:
+        return vis
+    return {**vis, 'confere_com': 'estado_final', 'reinterpretado': 'ação sem movimento visível = estado resultante da ação'}
+
+
 def _visao_ok(vis: dict | None, exige: list[str]) -> tuple[bool, str]:
     if not vis:
         return False, 'sem leitura visual'
+    if vis.get('discordancia'):
+        return False, 'as duas leituras visuais discordam: ' + '; '.join(
+            f"{x.get('provedor')}={x.get('confere_com')}" for x in vis['discordancia'])
+    if vis.get('reinterpretado') and not vis.get('dupla_concordante'):
+        return False, 'casamento disse "ação" numa imagem parada: o estado resultante só vale com segunda leitura concordante'
     if vis.get('origem') == 'legado' or vis.get('viu_legenda'):
         return False, 'leitura visual viu a legenda (não é independente do registro)'
     if vis.get('confere_com') not in exige:
@@ -495,7 +513,7 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
     """Nível de REPRESENTAÇÃO de uma imagem para um acontecimento + todos os sinais, vetos e dependências registrados.
     Não verifica afirmações (ver verificar_afirmacoes)."""
     exige = list(ev.get('exige') or [])
-    vis = vis or None
+    vis = _semantica(vis or None)
     vin = vinculo(reg, ev.get('referencias') or {})
     origem_data, iv_img = data_da_imagem(reg)
     pub = (reg.get('datas') or {}).get('publicacao')
@@ -577,6 +595,12 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
     v_ok, v_motivo = _visao_ok(vis, exige)
     if vis and (vis.get('origem') == 'legado' or vis.get('viu_legenda')):
         deps.append('leitura visual não é independente: a IA viu legenda/nome do arquivo')
+    if vis and vis.get('discordancia'):
+        deps.append('discordância entre provedores de visão: revisão humana, nunca aprovação automática')
+    if vis and vis.get('dupla_concordante'):
+        deps.append('duas leituras visuais concordam: continua UMA família (VISÃO), não substitui o registro')
+    if vis and vis.get('reinterpretado'):
+        deps.append(vis['reinterpretado'])
 
     # incompatível: nada liga a imagem ao acontecimento, ou a visão diz que é outra coisa
     if vis and vis.get('generica') and not r_algum:
@@ -598,7 +622,8 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
         nivel, motivos = 'RELACIONADA', [v_motivo, 'vínculo do registro fraco: ' + '; '.join(vin['evidencia'][:2])]
     elif v_ok:
         nivel, motivos = 'RELACIONADA', [v_motivo, 'nenhum registro liga a imagem a ESTE acontecimento (pode ser outro caso parecido)']
-    elif r_forte and (not vis or vis.get('confere_com') in (None, 'incerto') or vis.get('origem') == 'legado' or vis.get('viu_legenda')):
+    elif r_forte and (not vis or vis.get('confere_com') in (None, 'incerto') or vis.get('origem') == 'legado' or vis.get('viu_legenda')
+                      or (vis.get('reinterpretado') and not vis.get('dupla_concordante') and vis.get('confere_com') in exige)):
         nivel, motivos = 'RELACIONADA', vin['evidencia'][:2] + [v_motivo]
     elif r_algum and vis and vis.get('indicio_legado') and vis.get('confere_com') in (None, 'incerto'):
         nivel, motivos = 'RELACIONADA', vin['evidencia'][:2] + ['indício do casamento atual ("fato"), que viu a legenda: só revisão humana']
@@ -635,7 +660,8 @@ def _saida(nivel, motivos, ev, reg, vis, vin, origem_data, iv_img, fs, natureza,
             'sinais': {'registro': {'fonte': reg.get('fonte'), 'titulo': reg.get('titulo'), 'pagina': reg.get('pagina'), 'licenca': reg.get('licenca'), 'vinculo_evento': vin.get('evento'), 'vinculo_entidade': vin.get('entidade'),
                                     'evidencia': vin.get('evidencia'), 'data_origem': origem_data, 'data': _fmt_iv(iv_img),
                                     'fase_da_imagem': fs, 'legado': reg.get('legado', False)},
-                       'visao': {k: (vis or {}).get(k) for k in ('origem', 'viu_legenda', 'confere_com', 'classe_confere', 'confianca', 'natureza')} if vis else None,
+                       'visao': {k: (vis or {}).get(k) for k in ('origem', 'viu_legenda', 'confere_com', 'classe_confere', 'confianca', 'natureza',
+                                                                  'provedor', 'modelo', 'reinterpretado', 'discordancia', 'dupla_concordante')} if vis else None,
                        'natureza': natureza},
             'dependencias': deps,
             'nao_comprova': [a.get('texto') for a in ev.get('afirmacoes') or []],

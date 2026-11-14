@@ -27,16 +27,30 @@ def _lufs(arq: Path) -> dict:
 
 
 def _sincronia(dados: dict) -> list[dict]:
-    """Contrato 'sincronia' → instantes das palavras ditas (legendas da voz de produção). Mesmo passo do inedito.py."""
+    """Contrato 'sincronia' → instantes das palavras ditas (legendas da voz de produção).
+    Correção do piloto: a fala de um acontecimento pode ser dividida em vários planos; as palavras são procuradas em
+    TODOS os planos do mesmo acontecimento (mesmo id), e cada plano recebe os instantes relativos ao próprio início."""
     from src.v2 import contrato
     ws = [w for c in dados.get('captions', []) for w in c.get('words', [])]
-    out = []
+    grupos = {}
     for k, sc in enumerate(dados['scenes']):
         ac = sc.get('acontecimento')
         if isinstance(ac, dict) and ac.get('sincronia'):
-            pal = [{'w': w['w'], 's': w['s']} for w in ws if sc['start'] - .05 <= w['s'] < sc['end']]
-            sc['acontecimento'] = contrato.resolver_sincronia(ac, pal, sc['start'])
-            out.append({'cena': k, 'sincronia': ac.get('sincronia'), 'faltou': sc['acontecimento'].get('sincronia_faltou')})
+            grupos.setdefault(ac.get('id') or sc.get('evento') or f'cena{k}', []).append(k)
+    out = []
+    for eid, ks in grupos.items():
+        ini, fim = dados['scenes'][ks[0]]['start'], dados['scenes'][ks[-1]]['end']
+        pal = [{'w': w['w'], 's': w['s']} for w in ws if ini - .05 <= w['s'] < fim]
+        ac0 = dados['scenes'][ks[0]]['acontecimento']
+        res = contrato.resolver_sincronia(ac0, pal, ini)                 # instantes relativos ao 1º plano
+        for k in ks:
+            sc = dados['scenes'][k]
+            desl = sc['start'] - ini
+            dados_k = dict(res.get('dados') or {})
+            for chave in (ac0.get('sincronia') or {}):
+                dados_k[chave] = [{**x, 't': round(x['t'] - desl, 3)} for x in res['dados'].get(chave, [])]
+            sc['acontecimento'] = {**res, 'dados': dados_k}
+        out.append({'evento': eid, 'cenas': ks, 'sincronia': ac0.get('sincronia'), 'faltou': res.get('sincronia_faltou')})
     return out
 
 
@@ -81,10 +95,17 @@ def renderizar(dados: dict, audio: Path, saida: Path, trab: Path, musica: Path |
                 'pico_memoria_mb_filhos': round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024),
                 'tamanho_mb': round(saida.stat().st_size / 1e6, 2)}
         audio_med = _lufs(saida)
+        # diagnóstico do áudio (correção do piloto: −18,5 LUFS não pôde ser explicado sem a narração separada)
+        for nome_a, origem_a in (('narracao.ogg', audio), ('mistura.ogg', trab / '_render_v2' / 'mix.wav')):
+            if Path(origem_a).exists():
+                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(origem_a), '-c:a', 'libopus', '-b:a', '64k', str(dest / nome_a)], check=False)
+        audio_med['entrada_mistura'] = _lufs(trab / '_render_v2' / 'mix.wav') if (trab / '_render_v2' / 'mix.wav').exists() else None
     except Exception as e:
         erro_render = f'{type(e).__name__}: {str(e)[:500]}'
         perf = {'render_s': round(time.time() - t0, 1), 'erro': erro_render}
-    rel = fiscal_v2.avaliar(v2, direcao, geo, d1, audio=audio_med or None, catalogo=cat, conflitos_legenda=conflitos, renderizadas=vis)
+    quadros = {k: dest / f'quadro_{k:02d}.jpg' for k in range(len(v2['scenes'])) if (dest / f'quadro_{k:02d}.jpg').exists()}
+    rel = fiscal_v2.avaliar(v2, direcao, geo, d1, audio=audio_med or None, catalogo=cat, conflitos_legenda=conflitos, renderizadas=vis,
+                            quadros=quadros)
     (dest / 'fiscal.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
     (dest / 'fiscal.md').write_text(fiscal_v2.tabela_md(rel), encoding='utf-8')
     relatorio = {'tempos': T, 'desempenho_render': perf, 'audio': audio_med, 'sincronia_contrato': sinc, 'erros_pagina': erros,

@@ -99,6 +99,7 @@ def _montar_cenas(v, reais, imgs, tempos, trab, ia_ids=frozenset()) -> list[dict
         elif m:
             c['img'], c['real'] = str(m['arq']), True
             c['ano_foto'], c['tipo_img'] = m.get('ano'), m.get('tipo_img', 'foto')
+            c['acervo_id'], c['credito'] = m.get('id'), m.get('credito')   # crédito da imagem que REALMENTE vai na cena
             if m.get('legenda'):
                 c['legenda_foto'] = m['legenda']      # etiqueta tirada do próprio arquivo (título/ano no Commons)
         elif imgs.get(iid):
@@ -356,7 +357,8 @@ def pacote_diagnostico(v: dict, dados: dict, pasta: Path, nome: str):
         with zipfile.ZipFile(arq, 'w', zipfile.ZIP_DEFLATED) as z:
             base = {k: val for k, val in v.items() if k not in ('acervo', 'dossie', '_telegram')}
             z.writestr('roteiro.json', json.dumps(base, ensure_ascii=False, indent=1, default=str))
-            z.writestr('acervo.json', json.dumps([{k: val for k, val in x.items() if k not in ('mini', 'arq')}
+            z.writestr('acervo.json', json.dumps([{**{k: val for k, val in x.items() if k not in ('mini', 'arq')},
+                                                   'arquivo': Path(str(x['arq'])).name if x.get('arq') else None}
                                                   for x in v.get('acervo') or []], ensure_ascii=False, indent=1, default=str))
             dd = json.loads(json.dumps(dados, default=str))
             for sc in dd.get('scenes', []):
@@ -523,7 +525,7 @@ def resumo_telegram(v: dict, q: dict) -> str:
     pauta = v.get('_pauta') or {}
     linhas = [f"🎬 {v['titulo']}" + (f" — PARTE {v['parte']}" if v.get('parte') and not tem_parte else ''),
               f"⏱ {q['dur']:.0f}s · {q['palavras']} palavras · {q['ideias']} ideias",
-              f"⭐ fiscal: {q['nota']:.0f}/10"
+              (f"⭐ fiscal: {q['nota']:.0f}/10" + (' (antigo; quem decide é o fiscal V2.2)' if q.get('v22') else ''))
               if q['nota'] is not None else '⭐ fiscal: não rodou',
               '🖼 ' + ' · '.join(f'{n} {t}' for t, n in sorted(c.items(), key=lambda x: -x[1]))]
     if q.get('erros'):
@@ -569,7 +571,7 @@ def _midia_de_item(x: dict, trab: Path) -> dict:
         return {'tipo': 'video', 'arq': clipe, 'w': x['video']['w'], 'h': x['video']['h'], 'ano': x.get('ano'),
                 'thumb': x.get('arq')}
     return {'tipo': 'foto', 'arq': midia.graduar(Path(x['arq'])), 'legenda': x.get('legenda', ''),
-            'ano': x.get('ano'), 'tipo_img': x.get('tipo_img', 'foto')}
+            'ano': x.get('ano'), 'tipo_img': x.get('tipo_img', 'foto'), 'id': x.get('id'), 'credito': x.get('credito')}
 
 
 def _midia_do_acervo(v: dict, trab: Path):
@@ -611,6 +613,17 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     t0 = time.time()
 
     imgs, reais, creditos, ia_ids = {}, {}, [], set()
+    if os.getenv('MOTOR_VISUAL') == 'v2' and not teste and v.get('acervo') is not None:
+        # CORREÇÃO DO PILOTO: valida e completa os acontecimentos ANTES de baixar mídia, narrar e renderizar (sem IA)
+        from src.v2 import preparo
+        rel = preparo.preparar(v)
+        v['_preparo'] = rel
+        (pasta / f'{nome}-preparo.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+        print('  [preparo] ' + preparo.resumo(rel).replace('\n', '\n  '))
+        if rel['bloqueios']:
+            motivo = '; '.join(f"{b['evento']} ({b['tipo']}): falta " + ' | '.join(b['faltam']) for b in rel['bloqueios'])
+            _tg('sendMessage', {'text': f"⛔ Roteiro de \"{v['titulo']}\" barrado ANTES da narração: {motivo}"[:4000]})
+            raise ValueError(f'material ruim: roteiro incompleto antes da narração — {motivo}')
     if v.get('acervo') is not None and not teste:
         reais, imgs, creditos, ia_ids = _midia_do_acervo(v, trab)
     elif v.get('imagens') and not teste:
@@ -654,12 +667,19 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     saida = pasta / f'{nome}.mp4'
     # UMA montagem só: as imagens já foram conferidas antes (acervo + casamento + fiscal da IA)
     cenas = _montar_cenas(v, reais, imgs, tempos, trab, ia_ids)
+    na_tela = list(dict.fromkeys(c['credito'] for c in cenas if c.get('img') and c.get('credito'))) if os.getenv('MOTOR_VISUAL') == 'v2' else []
+    if na_tela:                                       # créditos = as imagens que de fato aparecem (id ↔ arquivo coerentes)
+        creditos = na_tela + [x for x in creditos if x not in na_tela and not any(x == m.get('credito') for m in reais.values())]
     dados = {'duration': dur,
              'meta': {'titulo': v['titulo'], 'categoria': v.get('categoria', ''), 'data': datetime.now(BRT).strftime('%d/%m'),
                       'serie': v.get('serie', ''), 'parte': v.get('parte', 0), 'marca': '@coringa.explica',
                       'pergunta': _pergunta_fixa(v),
                       'fontes': v.get('fontes', [])[:3] + (['Wikimedia Commons'] if creditos else [])},
              'scenes': cenas, 'captions': caps}
+    if os.getenv('MOTOR_VISUAL') == 'v2' and not teste:
+        # o motor V2 valida cada número contra a lista de fontes: ela não pode ser cortada nas 3 primeiras
+        dados['meta']['fontes'] = list(v.get('fontes', [])) + (['Wikimedia Commons'] if creditos else [])
+        dados['meta']['preparo'] = v.get('_preparo') or {}
     piloto = None
     if os.getenv('MOTOR_VISUAL') == 'v2' and not teste:     # PILOTO V2.2 (experimental, reversível; padrão = motor atual)
         from src.v2 import piloto as piloto_v2
@@ -708,6 +728,12 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         graves.append(f'vídeo com {dur:.0f}s (máximo 80)')
     if piloto and piloto['bloqueios']:                # fiscal V2.2 bloqueou: registra (o vídeo da 1ª tentativa fica guardado)
         graves.append('fiscal V2.2: ' + '; '.join(piloto['bloqueios'])[:400])
+    if piloto:                                        # o fiscal antigo NÃO libera o que o V2.2 reprovou ou mandou revisar
+        q['v22'] = piloto
+        if piloto['bloqueios']:
+            q['motivos'] = q['motivos'] + [f"fiscal V2.2 reprovou ({len(piloto['bloqueios'])} problema(s))"]
+        elif not piloto.get('aprovacao_automatica'):
+            q['motivos'] = q['motivos'] + ['fiscal V2.2 pede revisão humana']
     v['_bloqueado'] = '; '.join(graves) if graves and not teste else ''
     tx = textos_post(v, creditos)
     resumo = resumo_telegram(v, q)

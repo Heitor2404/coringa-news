@@ -202,3 +202,59 @@ O e2 ("A espécie Hemidactylus mabouia usa lamelas nos dedos para se segurar") �
 **Artefatos**
 - Pacote cifrado: `piloto-v22-resultado/piloto-43700052750.tgz.gpg`.
 - Checkpoints cifrados no cache: `piloto-checkpoint-43654018515` (origem) e `piloto-checkpoint-43700052750` (cópia com procedência).
+
+---
+
+# Plano visual direcionado + retomada única — execução 43728184399 (código b98bf77)
+
+**Resultado: `BLOQUEADO_PREPARO` em e2. Sem MP4.** Não haverá nova tentativa.
+
+- Checkpoint: `43700052750`, etapa `roteiro`. Não refez pesquisa, acervo nem roteiro, e não chamou o conserto de contratos.
+- Tempo: 143 s de geração (3 min 34 s de job). Custo: USD 0,00. O Claude estava no limite semanal, que volta às 05:00 UTC; o plano saiu do Gemini.
+
+## O que foi implementado
+
+**Plano visual (`src/v2/planejamento.py`, uma chamada).** Vale para todo acontecimento crítico **observável** que, com o acervo final, continua sem imagem de força ≥ 2 e sem composição viável.
+- **Composição didática:** aceita com as travas do conserto (cada item rastreado na pesquisa; crítico continua crítico).
+- **Foto genérica como ILUSTRAÇÃO identificada:** a tela usa o `banner.discreto` que já existe, com o rótulo "ILUSTRAÇÃO · imagem ilustrativa · não identifica a espécie". Ela só é aceita se:
+  - o `trecho_imagem` estiver literalmente no catálogo/descrição;
+  - o `trecho_fato` estiver literalmente nos fatos e compartilhar palavras com a fala;
+  - a imagem não tiver táxon (não é foto de espécie identificada nem de outra espécie, inclusive pelo título);
+  - a imagem estiver catalogada como genérica e tiver licença no crédito.
+- Uma foto ilustrativa sempre gera **revisão humana** e nunca conta como evidência.
+
+**Evidência V1:**
+- `dados.ano` passa a restringir a época (e11: 2025).
+- Um mecanismo ligado à imagem só pela entidade (a espécie) fica em CONTEXTO.
+- A visão registra `estado` (completa/incompleta), as `falhas` e `concordancia = None` quando não houve dupla leitura.
+- A restrição de privacidade da NVIDIA não mudou.
+
+## O que aconteceu
+
+**Plano visual.** Um pendente (e2), uma chamada. A IA respondeu **"impossível"**: o contrato não tem dados para uma composição e o acervo não tem imagem que mostre o detalhe. Pela regra, o bloqueio fica.
+- Offline, a proposta "a3 como ilustração" seria aceita (testada). Mas a decisão real cabe ao plano, e o código não força nada.
+
+**Preparo V2.3.** Igual à 43700052750:
+
+| Acontecimento | Decisão |
+|---|---|
+| e2 | bloqueio |
+| e3 | foto declarada a3 (revisão) |
+| e11 | foto direta a13 |
+| e12 | foto declarada a9 (revisão) |
+| e4–e10 | ilustrações |
+
+**Evidência V1 (sombra).**
+- Catálogo do Gemini: OK (33 s). Casamento: o Gemini deu 503; o fallback para a NVIDIA deu 422.
+- Visão **INCOMPLETA** ("casamento sem resposta"), registrada como tal. Ausência de discordância não foi apresentada como concordância.
+- Sem leitura visual, a V1 não confirma nada: e2, e3, e11 e e12 ficam em CONTEXTO (bloqueio na sombra), sem decidir nada.
+
+## Ressalva científica (não corrigida)
+
+A frase da revelação (e13), "o réptil gruda apenas ajustando cargas elétricas moleculares", é imprecisa. A lagartixa não "ajusta" cargas: a adesão vem de forças de Van der Waals entre as espátulas e a superfície. Qualquer versão publicada exige revisão.
+
+O texto **não** foi alterado: uma correção exige editar o checkpoint, com o original preservado em `.original/` e o diff registrado.
+
+**Artefatos**
+- Pacote cifrado: `piloto-v22-resultado/piloto-43728184399.tgz.gpg`.
+- Checkpoint cifrado no cache: `piloto-checkpoint-43728184399`.

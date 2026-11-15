@@ -258,3 +258,48 @@ O texto **não** foi alterado: uma correção exige editar o checkpoint, com o o
 **Artefatos**
 - Pacote cifrado: `piloto-v22-resultado/piloto-43728184399.tgz.gpg`.
 - Checkpoint cifrado no cache: `piloto-checkpoint-43728184399`.
+
+---
+
+# Edição editorial auditada + retomada final — execução 43730252500 (código 304192c)
+
+**Resultado: `MP4_GERADO`. O vídeo existe, mas o fiscal V2.2 reprovou: não é `APROVADO_FISCAL`.**
+- MP4: 64,8 s, 1080×1920, H.264/AAC.
+- Tempo: 374 s de geração (7 min 39 s de job). Pico de memória: 545 MB.
+- Custo: USD 0,00 (Claude: 0 chamadas; Gemini: grátis).
+
+## O que foi editado
+
+A edição ficou em `.github/piloto/edicao.json`, aplicada só ao checkpoint `43728184399`, com trava por sha256 do texto antigo.
+- **e2** passou a: "Essas faixas na parte de baixo dos dedos são chamadas lamelas."
+  - Novo contrato: anatomia genérica, `critica`/`obrigatoria` mantidos.
+  - Imagem: a3 como **foto ilustrativa** com o banner "ILUSTRAÇÃO · imagem ilustrativa · espécie não identificada". Crédito: Bjørn Christian Tørrissen, CC BY-SA 3.0.
+- **e13** passou a: "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas."
+- `resumo` e `suspense` foram atualizados.
+- A retomada listou **23 alterações campo a campo** e gravou quem editou e por quê. A cópia original ficou em `.original/`.
+
+## Preparo V2.3
+
+- 0 bloqueios e 3 revisões (e2 ilustrativa, e3 e e12 com foto declarada).
+- e11: foto direta a13. e4–e10: ilustrações.
+- Nenhuma identidade de espécie atribuída.
+- Contratos: 0 chamadas. Plano visual: 0 pendentes, 0 chamadas.
+
+## Fiscal V2.2: 4 bloqueios, 3 revisões, aprovação automática não
+
+| Código | Cena | Problema |
+|---|---|---|
+| **S5** | 1 (e2) | "acontecimento crítico sem representação adequada". O fiscal V2.2 ainda não reconhece `foto_ilustrativa` como representação: ele exige composição. O preparo aceitou a foto; o fiscal não. É uma divergência entre os dois e foi mantida, sem contornar o porteiro. |
+| **D1** | 14 (revelação) | "FORÇAS MOLECULARES" sai do quadro (57,8–62,0 s): o título da composição `revelacao.surpresa` é largo demais. |
+| **A1** | — | Loudness −15,1 LUFS (meta −14 ± 1). |
+| **A1** | — | Pico verdadeiro −0,5 dBTP (limite −1). |
+
+- Revisões (S7): e2 ilustrativa, e3 e e12 com foto declarada.
+- Avisos/observações: a3 repetida nas cenas 1–3 (cerca de 10 s, estético); foto parada por 5,1 s (cena 13); `detalhe` com 72 caracteres, acima do limite de 60 (cena 14).
+- Fiscal antigo: 7/10. Fiscal sombra: o Gemini não respondeu em 150 s.
+
+**Evidência V1:** sombra sem leitura visual (`EVIDENCIA_V1_VISAO=0`).
+
+**Artefatos**
+- Pacote cifrado: `piloto-v22-resultado/piloto-43730252500.tgz.gpg`.
+- Checkpoint cifrado no cache: `piloto-checkpoint-43730252500`.

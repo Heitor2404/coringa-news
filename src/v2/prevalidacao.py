@@ -169,7 +169,7 @@ TIPOS_REPARO = [t for t in contrato.TIPOS if t not in PROIBIDOS_NO_REPARO]
 
 
 def montar_prompt(v: dict, pendentes: list[dict]) -> str:
-    tabela = '\n'.join(f'  {t}: {contrato.requisitos_texto(t)}' for t in TIPOS_REPARO)
+    tabela = '\n'.join(f'  {t}: {contrato.requisitos_texto(t)}' for t in TIPOS_REPARO) + '\n' + contrato.FORMATO_CAMPOS
     evs = []
     for e in pendentes:
         ac = v['cenas'][e['cenas'][0]]['acontecimento']

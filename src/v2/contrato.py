@@ -294,6 +294,23 @@ def normalizar_dados(ac: dict) -> tuple[dict, list[str]]:
     return ac, motivos
 
 
+FORMATO_CAMPOS = """FORMATO DE CADA CAMPO (o que não estiver neste formato é recusado e a cena é barrada):
+  esquema (mecanismo/processo/transformação que a câmera não vê — moléculas, luz, forças, órgãos, peças internas):
+    {"objetos": [{"id": "a", "forma": "superficie|corpo|cerdas|ramos|particulas|seta", "rotulo": "PALAVRA DA FALA",
+                  "x": 0-1, "y": 0-1, "w": 0-1, "h": 0-1}],          ← 2 a 7 objetos, x/y = centro na área do desenho
+     "estados": [{"rotulo": "INÍCIO EM POUCAS PALAVRAS", "objetos": {"a": {"dx": 0, "dy": -0.3, "escala": 1.2, "rot": 0, "opacidade": 1}},
+                  "relacoes": [{"de": "a", "para": "b", "tipo": "atracao|repulsao|contato|empurra", "forca": 0-1, "rotulo": "≤ 16"}]}]}
+    ← 2 a 4 estados DIFERENTES (algo se move, aparece, cresce ou passa a se relacionar); rótulos com as palavras da fala.
+    Exemplo (vulcão): objetos CROSTA (superficie, y 0.3) e MAGMA (corpo, y 0.8); estado 1 "MAGMA ACUMULA";
+    estado 2 "PRESSÃO EMPURRA A CROSTA" com MAGMA dy -0.3 e relação MAGMA→CROSTA "empurra" rotulo "PRESSÃO".
+  forcas: [{"nome": "Peso", "angulo": -90, "intensidade": 0-1}]  (ângulo em graus, 90 = para cima; nome de força física)
+  itens: [{"rotulo": "Brasil", "valor": 3.7}] (número de verdade)   serie: [[1950, 2.5], [1970, 3.7], …] (≥ 4 pontos)
+  eventos: [{"ano": 1904, "texto": "≤ 46"}]   pontos: [{"nome": "...", "lon": -79.5, "lat": 9.0}]
+  valor: número (sem texto) + "fonte"   pct: número 0–100   de/ate: números   aneis: [{"raio_km": 30, "rotulo": "..."}]
+  nos/etapas: rótulos CURTOS (≤ 24 letras); frase inteira não é etapa
+Se os FATOS não têm o número/valor/coordenada, NÃO declare tipo numérico: use o tipo que os FATOS sustentam ou deixe vazio."""
+
+
 def bloco_prompt() -> str:
     """BLOCO_PROMPT da V2.4 (só com MOTOR_VISUAL=v2): o mesmo contrato, com os dados EXIGIDOS por tipo gerados da tabela
     TIPOS (antes o roteirista não sabia, p.ex., que "nivel" exige de/até ou sentido) e o campo `observavel`."""
@@ -308,7 +325,7 @@ campos, cargas): a cena será uma ILUSTRAÇÃO explicativa, que precisa de "dado
 (4) se for crítico e os FATOS não tiverem os dados, deixe "dados" vazio (o sistema barra) — não invente;
 (5) precisão: grandeza que DIMINUI com a distância ou o tempo (força, atração, sinal) "enfraquece rapidamente" — não diga
 que "some"/"desaparece" se os FATOS não disserem que ela chega a zero.
-"""
+""" + FORMATO_CAMPOS + "\n"
 
 
 # ═════════════════════════ V2.4 — composição que DEMONSTRA × composição que só ESCREVE ═════════════════════════

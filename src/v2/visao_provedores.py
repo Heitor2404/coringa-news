@@ -274,6 +274,22 @@ def ler_roteiro(eventos: list[dict], imagens: dict[str, bytes], prompt_catalogo:
                     if c.get('discordancia'):
                         reg['discordancias'].append({'par': list(k), 'leituras': c['discordancia']})
                     pares[k] = c
+    # V2.4: estado da leitura. Sem catálogo (ex.: 503) nenhuma imagem pode ir à NVIDIA (privacidade não verificada):
+    # a dupla leitura NÃO aconteceu, e "nenhuma discordância" não é concordância entre provedores.
+    falhas = []
+    if not catalogo:
+        falhas.append('catálogo cego indisponível' + (f" ({next((c.get('erro') for c in orc.registro if c.get('tarefa') == 'catalogo' and c.get('erro')), '')[:60]})"))
+    if not pares:
+        falhas.append('casamento sem resposta')
+    if ids and not ok_nv:
+        falhas.append(f'NVIDIA não consultada: {len(retidas)} de {len(ids)} imagem(ns) retida(s) por privacidade')
+    nao_lidas = [list(k) for k in pedir if not any(d['par'] == list(k) for d in reg['dupla'])]
+    if nao_lidas:
+        falhas.append(f'{len(nao_lidas)} par(es) pediam dupla leitura e não foram lidos pelo 2º provedor')
+    reg['dupla_nao_feita'] = nao_lidas
+    reg['estado'] = 'incompleta' if falhas else 'completa'
+    reg['falhas'] = falhas
+    reg['concordancia'] = (None if not reg['dupla'] else 'com discordâncias' if reg['discordancias'] else 'concordante')
     visoes = {k: para_visao(a, catalogo.get(k[1])) for k, a in pares.items()}
     for i in ids:                                   # imagem sem par lido: só o catálogo (confere incerto)
         visoes.setdefault(i, para_visao(None, catalogo.get(i)))

@@ -442,6 +442,19 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
                                         'evidencia': rep['evidencia']})
         elif not ev['critico']:
             rep = {'modo': 'foto_contexto' if escolhida is not None else 'sem_imagem', 'foto': (escolhida or {}).get('id')}
+        elif (ilu := _ilustrativa_valida(ac, por_id, c0, ano_evento)):
+            # V2.4: plano visual aceito — foto GENÉRICA como ilustração identificada na tela; nunca prova (revisão humana)
+            x, plano = ilu
+            rep = {'modo': 'foto_ilustrativa', 'foto': x['id'], 'evidencia': plano.get('parte') or plano.get('trecho_imagem'), 'nao_prova': True}
+            escolhida = x
+            for k in idx:
+                v['cenas'][k]['foto'] = x['id']
+                v['cenas'][k].pop('_sem_imagem', None)
+                v['cenas'][k]['rotulo_ilustracao'] = plano['rotulo']
+                if x.get('credito'):
+                    v['cenas'][k]['credito'] = x['credito']
+            rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'acontecimento crítico representado por imagem ILUSTRATIVA genérica (não prova a espécie/o fato)',
+                                    'evidencia': f"{x['id']}: \"{plano.get('trecho_imagem')}\" · fato: \"{plano.get('trecho_fato')}\""})
         else:
             capazes = ', '.join(f"{cp} ({', '.join(req)})" for cp, req in contrato.TIPOS.get(ac['tipo'], {}).get('comps', {}).items())
             falta_img = (f"foto/vídeo real que mostre \"{ac.get('estado_final') or ac.get('mostrar')}\"" if pode_foto
@@ -455,7 +468,11 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         ac['funcao_visual'] = funcao
         ev['funcao'] = funcao
         ev['evidencia_visual'] = funcao == 'evidencia'
-        if funcao == 'ilustracao':
+        if rep['modo'] == 'foto_ilustrativa':
+            pl = ac.get('plano_visual') or {}
+            ev['ilustracao'] = {'nao_prova': True, 'ilustra': ac['tipo'], 'foto_generica': rep['foto'], 'rotulo': pl.get('rotulo'),
+                                'trecho_imagem': pl.get('trecho_imagem'), 'trecho_fato': pl.get('trecho_fato'), 'base': [pl.get('fonte_fato')]}
+        elif funcao == 'ilustracao':
             from src.v2 import prevalidacao
             ras = prevalidacao.rastreio(ac.get('dados') or {}, linhas)
             ev['ilustracao'] = {'nao_prova': True, 'ilustra': ac['tipo'], 'rastreio': ras['itens'],
@@ -474,11 +491,24 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
     return rel
 
 
+def _ilustrativa_valida(ac: dict, por_id: dict, cena: dict, ano_evento) -> tuple[dict, dict] | None:
+    """O plano visual aceito continua válido contra o acervo de agora (imagem presente, compatível, sem IA)."""
+    pl = ac.get('plano_visual') if isinstance(ac.get('plano_visual'), dict) else None
+    if not pl or pl.get('modo') != 'foto_ilustrativa':
+        return None
+    x = por_id.get(pl.get('foto'))
+    if not x or x.get('ia') or not avaliar_imagem(x, ac, cena, ano_evento)['compativel']:
+        return None
+    return x, pl
+
+
 def funcao_visual(rep: dict) -> str:
     """evidencia | ilustracao | dado | editorial | contexto | nenhuma (bloqueio/sem imagem)."""
     modo = rep.get('modo')
     if modo == 'composicao':
         return contrato.funcao_comp(rep.get('comp')) or 'dado'
+    if modo == 'foto_ilustrativa':
+        return 'ilustracao'
     if modo in ('foto_direta', 'foto_declarada'):
         return 'evidencia'
     if modo == 'foto_contexto':

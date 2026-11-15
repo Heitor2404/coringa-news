@@ -60,7 +60,9 @@ CAMPOS = ('id', 'tipo', 'sujeito', 'acao', 'estado_inicial', 'estado_final', 'mo
           # preenchidos pelo preparo (src/v2/preparo.py), antes da narração
           'representacao', 'tipo_original', 'reclassificacao', 'partes',
           # V2.4: o que precisa ser visto pode ser fotografado? (declarado pelo roteirista; ver observabilidade())
-          'observavel', 'funcao_visual', 'reparo')
+          'observavel', 'funcao_visual', 'reparo',
+          # V2.4: plano visual direcionado aceito (src/v2/planejamento.py) — foto genérica como ILUSTRAÇÃO identificada
+          'plano_visual')
 
 
 def _n(s) -> str:

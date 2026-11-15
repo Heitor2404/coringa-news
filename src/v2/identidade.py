@@ -106,8 +106,10 @@ def da_imagem(x: dict) -> dict:
     (crédito/fonte/autor)."""
     mostra = ' '.join(str(x.get(k) or '') for k in ('mostra', 'titulo', 'desc', 'descricao', 'legenda'))
     credito = ' '.join(str(x.get(k) or '') for k in ('credito', 'fonte', 'autor'))
+    # título de arquivo é um nome curto: nele, um binômio com epíteto latino vale mesmo sem marca ("Geco Tarentola mauritanica")
+    tit = [f'{g} {e}' for g, e in BINOMIO.findall(str(x.get('titulo') or '')) if EPITETO.search(e) and _n(g) not in NAO_NOME]
     return {'mostra_n': _n(mostra), 'credito_n': _n(credito),
-            'taxons': binomios(mostra, [x.get('titulo')] + list(x.get('categorias') or [])),
+            'taxons': binomios(mostra, [x.get('titulo')] + tit + list(x.get('categorias') or [])),
             'micrografia': bool(MICROGRAFIA.search(_n(mostra + ' ' + str(x.get('tipo_img') or ''))))}
 
 

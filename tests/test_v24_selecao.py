@@ -52,7 +52,8 @@ def test_e2_foto_da_especie_e_so_contexto(img):
 def test_e3_sola_no_vidro_representa_a_anatomia_visivel_e_nunca_a_escala_microscopica():
     a = _forca('e3', 'a3')
     assert a['forca'] == 2 and any('escala microscópica' in m for m in a['motivos'])
-    assert _forca('e3', 'a3', ano=2009)['forca'] < 3 or True      # época não muda o teto de escala
+    datado = _forca('e3', 'a3', ano=2009)                         # mesmo com época, a escala impede "mostra o fato"
+    assert datado['forca'] < 3
     for img in ('a2', 'a10', 'a12', 'a19', 'a20'):               # outras lagartixas/lagartos: contexto, no máximo
         assert _forca('e3', img)['forca'] <= 1, img
 

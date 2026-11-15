@@ -302,7 +302,12 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 ano = re.search(r'(1[5-9]\d\d|20\d\d)', etq + ' ' + str(sc.get('lugar') or ''))
                 historica = bool(ano and int(ano.group(1)) < 1960 and etq.startswith('FOTO'))
                 rc = acervo_v2.recorte_conteudo(img) if img else [0, 0, 1, 1]
-                if img and (historica or rc != [0.0, 0.0, 1.0, 1.0]):
+                if img and sc.get('rotulo_ilustracao'):
+                    # V2.4: foto genérica usada como ILUSTRAÇÃO — identificada na tela com o componente de aviso que já existe
+                    nova.update(comp='banner.discreto', params={'rotulo': 'ILUSTRAÇÃO', 'texto': _limpo(sc['rotulo_ilustracao'])[:60]})
+                    nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto', 'variante': len(usadas.get(img, []))}
+                    d.update(comp='banner.discreto', motivo='V2.4: imagem ilustrativa identificada (não é prova)')
+                elif img and (historica or rc != [0.0, 0.0, 1.0, 1.0]):
                     nova.update(comp='foto.historica', params={'img': img, 'recorte': rc, 'ano': ano.group(1) if ano else '', 'credito': sc.get('credito') or 'Wikimedia Commons',
                                                                'descricao': _maiuscula(_limpo(sc.get('mostrar'))[:60])})
                     d.update(comp='foto.historica', motivo='M5: foto de arquivo' + (' com recorte de scanner' if rc != [0.0, 0.0, 1.0, 1.0] else ''))

@@ -221,7 +221,9 @@ def acontecimento(bruto: dict, falas: list[str] | None = None, referencias: dict
         'sujeito': ac.get('sujeito') or bruto.get('quem'),
         'acao': ac.get('acao'), 'estado_inicial': ac.get('estado_inicial'), 'estado_final': ac.get('estado_final'),
         'mostrar': ac.get('mostrar'), 'onde': bruto.get('onde'),
-        'intervalo': intervalo(bruto.get('quando') or (ac.get('dados') or {}).get('data')),
+        # V2.4: sem "quando", o ano declarado nos dados DESTE acontecimento é a restrição temporal (e11: 2025)
+        'intervalo': intervalo(bruto.get('quando') or (ac.get('dados') or {}).get('data')
+                               or (str((ac.get('dados') or {}).get('ano')) if re.fullmatch(r'1\d{3}|20\d{2}', str((ac.get('dados') or {}).get('ano') or '')) else None)),
         'exige': exige(tp, ac),
         # V2.4: o elemento que precisa ser visto é registrável por câmera? (forças, moléculas → não: só ilustração)
         'observavel': contrato.observabilidade({**ac, 'tipo': tp}),
@@ -656,6 +658,11 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
         nivel, motivos = 'INCOMPATIVEL', [v_motivo]
     if nivel == 'CONTEXTO' and not r_algum:
         nivel, motivos = 'INCOMPATIVEL', ['sem vínculo de registro: semelhança não basta para contexto'] + motivos
+    # V2.4: mecanismo/processo cujo ÚNICO vínculo é a entidade (a espécie, o objeto) e que a visão não confirmou:
+    # a imagem mostra a entidade relacionada, não o mecanismo narrado → contexto
+    from src.v2 import contrato as _ct
+    if nivel == 'RELACIONADA' and not v_ok and ev.get('tipo') in _ct.MECANISMOS and vin['evento'] != 'categoria' and vin['entidade']:
+        nivel, motivos = 'CONTEXTO', ['mostra a espécie/entidade relacionada, não o mecanismo narrado'] + motivos
     final = _min(nivel, teto)
     if final != nivel:
         motivos = vetos + motivos
@@ -882,4 +889,7 @@ def resumo(rel: dict) -> str:
                  f"novo {n['modo']} {n.get('foto') or n.get('comp') or ''}".rstrip()
                  + (' [ILUSTRAÇÃO, não é evidência]' if n.get('nao_e_evidencia') else '')
                  + (' [não observável]' if e.get('observavel') in ('nao', 'parcial') and n['modo'] != 'composicao' else ''))
+    vz = rel.get('visao') or {}
+    if vz.get('estado') == 'incompleta':
+        l.append('  ⚠ visão INCOMPLETA: ' + '; '.join(vz.get('falhas') or []) + ' — ausência de discordância NÃO é concordância')
     return '\n'.join(l)

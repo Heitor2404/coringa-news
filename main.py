@@ -654,7 +654,14 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
                 print('  [evidência/sombra] ' + evidencia.resumo(sombra).replace('\n', '\n  '))
             except Exception as e:
                 print(f'  [evidência/sombra] falhou sem afetar o vídeo: {str(e)[:120]}')
+        try:                         # V2.4: 1 tentativa de plano visual para crítico observável sem imagem nem composição
+            from src.v2 import planejamento
+            print('  [plano visual] ' + planejamento.resumo(planejamento.planejar(v)).replace('\n', '\n  '))
+        except Exception as e:
+            print(f'  [plano visual] falhou (o preparo decide sem plano): {str(e)[:120]}')
         rel = preparo.preparar(v)
+        if v.get('_plano_visual'):
+            rel['plano_visual'] = v['_plano_visual']
         if v.get('_contratos'):       # V2.4: o que a pré-validação corrigiu/consertou vai junto (auditoria)
             rel['contratos'] = v['_contratos']
         if v.get('_checkpoint'):

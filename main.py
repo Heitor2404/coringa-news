@@ -692,6 +692,13 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             rel['previa'] = pv
             rel['bloqueios'] += pv['bloqueios']
             print('  [prévia] ' + previa.resumo(pv).replace('\n', '\n  '))
+            if not rel['bloqueios']:  # V2.5: o que a fala manda mostrar × o que a tela representa (1 alternativa, sem IA)
+                from src.v2 import cobertura
+                cb = cobertura.avaliar(v, pv)
+                rel['cobertura'] = cb
+                rel['bloqueios'] += cb['bloqueios']
+                rel['revisoes'] += cb['revisoes']
+                print('  [cobertura] ' + cobertura.resumo(cb).replace('\n', '\n  '))
         v['_preparo'] = rel
         (pasta / f'{nome}-preparo.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
         print('  [preparo] ' + preparo.resumo(rel).replace('\n', '\n  '))

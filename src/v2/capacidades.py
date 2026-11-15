@@ -125,20 +125,69 @@ def detectar(cena: dict) -> list[dict]:
     return achados
 
 
-def _num(v) -> bool:
+# ───────────── V2.5: esquema ÚNICO dos campos que as composições consomem ─────────────
+# Auditoria renderizada (src/v2/auditoria_capacidades.py): dado que "existe" mas não serve (frase no lugar de número,
+# item sem valor, país inexistente, anel sem raio) passava no seletor e virava tela degradada SEM bloqueio — barras de
+# altura zero, proporção vazia, impacto parado, nível com valores inventados pelo padrão da composição.
+# Agora cada campo é conferido pelo que a composição precisa para DESENHAR; o que não serve vira limitação explícita.
+_SENTIDO_FORCA = re.compile(r'peso|gravid|queda|empux|sustenta|normal|tra[cç][aã]o|elev|levant|atrito|arrasto|resist|impuls|motor|propul|empurr', re.I)
+
+
+def _num(x) -> bool:
     try:
-        float(v); return not isinstance(v, bool)
+        float(str(x).replace(',', '.'))
+        return not isinstance(x, bool)
     except (TypeError, ValueError):
         return False
 
 
+def _txt(x, mx: int = 400) -> bool:
+    return isinstance(x, str) and 0 < len(x.strip()) <= mx
+
+
+def _rotulo(x) -> str:
+    return str((x.get('rotulo') or x.get('nome') or x.get('titulo') or '') if isinstance(x, dict) else x or '').strip()
+
+
+def _arquivo(x) -> bool:
+    from pathlib import Path
+    return isinstance(x, str) and bool(x) and Path(x.replace('file://', '')).exists()
+
+
+ITEM = {
+    'pontos': lambda x: isinstance(x, dict) and _num(x.get('lon')) and _num(x.get('lat')) and -180 <= float(x['lon']) <= 180 and -85 <= float(x['lat']) <= 85,
+    'rota': lambda x: (isinstance(x, (list, tuple)) and len(x) == 2 and all(_num(v) for v in x)) or ITEM['pontos'](x),
+    'itens': lambda x: isinstance(x, dict) and bool(_rotulo(x)) and _num(x.get('valor')),
+    'serie': lambda x: (isinstance(x, (list, tuple)) and len(x) == 2 and _num(x[1])) or (isinstance(x, dict) and _num(x.get('valor'))),
+    'eventos': lambda x: isinstance(x, dict) and bool(re.search(r'\d{1,4}', str(x.get('ano') or x.get('data') or ''))),
+    'etapas': lambda x: bool(_rotulo(x)) or (isinstance(x, dict) and bool(str(x.get('texto') or '').strip())),
+    'nos': lambda x: 0 < len(_rotulo(x)) <= 60,
+    'aneis': lambda x: isinstance(x, dict) and _num(x.get('raio_km')) and float(x['raio_km']) > 0,
+    'forcas': lambda x: (isinstance(x, dict) and bool(_rotulo(x)) and (_num(x.get('angulo')) or bool(_SENTIDO_FORCA.search(_rotulo(x)))))
+    or (isinstance(x, str) and bool(_SENTIDO_FORCA.search(x))),
+}
+ESCALAR = {
+    'valor': _num, 'de': _num, 'ate': _num,
+    'pct': lambda x: _num(x) and 0 <= float(x) <= 100,
+    'sentido': lambda x: x in ('subir', 'descer'),
+    'img': _arquivo, 'img_antes': _arquivo, 'img_depois': _arquivo, 'video': _arquivo,
+    'texto': _txt, 'autor': lambda x: _txt(x, 40), 'nome': lambda x: _txt(x, 40), 'veiculo': lambda x: _txt(x, 40), 'trecho': _txt,
+    'fonte': lambda x: _txt(x, 120) or (isinstance(x, list) and bool(x)),
+}
+
+
 def _valido(campo: str, x) -> bool:
-    """Um item só conta se for utilizável: ponto com lon/lat no mundo, item de gráfico com valor numérico."""
-    if campo in ('pontos', 'rota') and isinstance(x, dict):
-        return _num(x.get('lon')) and _num(x.get('lat')) and -180 <= float(x['lon']) <= 180 and -85 <= float(x['lat']) <= 85
-    if isinstance(x, dict) and 'valor' in x:
-        return _num(x['valor'])
-    return True
+    """Um item só conta se a composição consegue desenhá-lo (ver ITEM)."""
+    f = ITEM.get(campo)
+    return f(x) if f else True
+
+
+def _pais_valido(x) -> bool:
+    try:
+        from src.v2 import geo
+        return isinstance(x, str) and geo.pais(x) is not None
+    except Exception:                       # sem a camada Natural Earth não há como conferir: não aceita
+        return False
 
 
 def _tem(req: str, params: dict, contexto: str) -> bool:
@@ -146,16 +195,27 @@ def _tem(req: str, params: dict, contexto: str) -> bool:
         return re.search(req.split(':', 1)[1], contexto) is not None
     m = re.match(r'(\w+)>=(\d+)', req)
     if m:
-        itens = params.get(m.group(1)) or []
-        return len(itens) >= int(m.group(2)) and all(_valido(m.group(1), x) for x in itens)
-    if req == 'valor':
-        return _num(params.get('valor'))
+        itens = params.get(m.group(1))
+        return isinstance(itens, list) and len(itens) >= int(m.group(2)) and all(_valido(m.group(1), x) for x in itens)
     if req == 'esquema':                          # V2.4: mecanismo.estados só com esquema completo (objetos + estados que mudam)
         from src.v2 import contrato
         return not contrato.esquema_problemas(params.get('esquema'))
-    if req == 'forcas':                           # V2.4: cada força precisa de nome (o ângulo, se faltar, vem do nome no render)
-        fs = params.get('forcas') or []
-        return bool(fs) and all((isinstance(f, dict) and str(f.get('nome') or '').strip()) or (isinstance(f, str) and f.strip()) for f in fs)
+    if req in ITEM:                               # lista sem mínimo explícito: ≥ 1 item, todos desenháveis
+        itens = params.get(req)
+        return isinstance(itens, list) and len(itens) >= 1 and all(_valido(req, x) for x in itens)
+    if req == 'pais':
+        return _pais_valido(params.get(req))
+    if req == 'cena':                             # animacao.quadros: quadros que o palco consegue produzir
+        q = params.get('quadros')
+        if isinstance(q, dict) and q.get('base'):
+            return _arquivo(str(q['base']).split('%')[0]) or bool(list(__import__('pathlib').Path(str(q['base'])).parent.glob('*.png')))
+        try:
+            import manim  # noqa: F401
+            return isinstance(q, dict) and bool(q.get('manim'))
+        except ImportError:
+            return False
+    if req in ESCALAR:
+        return ESCALAR[req](params.get(req))
     return params.get(req) not in (None, '', [], {})
 
 

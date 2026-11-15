@@ -22,7 +22,7 @@
     exemplo: { params: { kicker: 'CICLO DA ÁGUA DO CANAL', titulo: 'De onde vem a *água*?', nos: [{ id: 'chuva', rotulo: 'Chuva', x: .5, y: 0, icone: 'agua' }, { id: 'lago', rotulo: 'Lago Gatún', x: 0, y: .5, icone: 'montanha' }, { id: 'eclusa', rotulo: 'Eclusa', x: 1, y: .5, icone: 'navio' }, { id: 'mar', rotulo: 'Mar', x: .5, y: 1, icone: 'globo' }],
       ligacoes: [{ de: 'chuva', para: 'lago', rotulo: 'enche' }, { de: 'lago', para: 'eclusa', rotulo: 'gravidade' }, { de: 'eclusa', para: 'mar', rotulo: 'escoa' }, { de: 'mar', para: 'chuva', rotulo: 'evapora' }] }, dur: 6, fala: 'A chuva enche o lago, a água desce pela eclusa e vai para o mar.' },
   }, (p, ctx) => {
-    const nos = (p.nos || []).slice(0, 6).map((n, i, a) => typeof n === 'string' || n.x === undefined ? { id: (n && n.id) || 'n' + i, rotulo: typeof n === 'string' ? n : (n.rotulo || n.nome || ''), x: a.length < 2 ? .5 : i / (a.length - 1), y: i % 2 ? .75 : .25, icone: (n && n.icone) || 'engrenagem' } : n);
+    const nos = (Array.isArray(p.nos) ? p.nos : []).slice(0, 6).map((n, i, a) => typeof n === 'string' || n.x === undefined ? { id: (n && n.id) || 'n' + i, rotulo: typeof n === 'string' ? n : (n.rotulo || n.nome || ''), x: a.length < 2 ? .5 : i / (a.length - 1), y: i % 2 ? .75 : .25, icone: (n && n.icone) || 'engrenagem' } : n);
     const X0 = 72 + 115, X1 = 930 - 115, Y0 = 540 + 55, Y1 = 1080 - 55, li = ((p.ligacoes && p.ligacoes.length) ? p.ligacoes : nos.slice(1).map((n, i) => ({ de: nos[i].id, para: n.id }))).slice(0, 7);
     const P = id => { const n = nos.find(x => x.id === id); return n ? [lerp(X0, X1, +n.x), lerp(Y0, Y1, +n.y)] : [540, 800]; };
     const curva = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b), dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
@@ -70,7 +70,7 @@
     transicao: 'mascara',
     exemplo: { params: { kicker: 'BIOLOGIA', titulo: 'Como a planta faz *açúcar*', etapas: [{ titulo: 'Luz', texto: 'A clorofila capta a luz do sol', icone: 'sol' }, { titulo: 'Água', texto: 'As raízes trazem água; ela é quebrada', icone: 'agua' }, { titulo: 'CO₂', texto: 'O gás carbônico entra pelas folhas', icone: 'folha' }, { titulo: 'Glicose', texto: 'Tudo vira açúcar e sobra oxigênio', icone: 'atomo' }] }, dur: 7, fala: 'A folha capta luz, quebra a água, usa o gás carbônico e produz açúcar.' },
   }, (p, ctx) => {
-    const et = (p.etapas || []).slice(0, 5).map(e => typeof e === 'string' ? { titulo: e.split(/\s+/).slice(0, 3).join(' '), texto: e } : e), n = et.length;
+    const et = (Array.isArray(p.etapas) ? p.etapas : []).slice(0, 5).map(e => typeof e === 'string' ? { titulo: e.split(/\s+/).slice(0, 3).join(' '), texto: e } : e), n = et.length;
     return {
       html: `${prancheta}${titulo(p.kicker || 'PROCESSO', p.titulo)}
         <div class="abs" style="left:126px;top:560px;width:6px;height:500px;background:rgba(127,227,240,.18)"></div>
@@ -104,7 +104,7 @@
     id: 'forcas.vetores', nome: 'Vetores e forças', tratamento: 'ciencia', tom: 'escuro',
     objetivo: 'Mostrar por que algo flutua, cai, acelera ou fica parado: as forças como setas proporcionais.',
     funcoes: ['forca', 'fisica', 'equilibrio', 'movimento'],
-    params: { titulo: '≤ 36', objeto: "'navio' | 'caixa' | 'bola'", meio: "'agua' | 'ar'", forcas: '1–4 × {nome ≤ 14, angulo (graus, 90 = cima), intensidade 0–1, cor}', resultado: 'conclusão ≤ 40', movimento: 'bool (objeto anda na direção da resultante)' },
+    params: { titulo: '≤ 36', objeto: "'navio' | 'caixa' | 'bola'", meio: "'agua' | 'ar'", forcas: '1–4 × {nome ≤ 14, angulo (graus, 90 = cima), intensidade 0–1, cor}', resultado: 'conclusão ≤ 40', movimento: 'bool (padrão: anda quando as forças não se equilibram)' },
     fundo: 'próprio (prancheta)', layout: 'objeto no centro (540, 820); setas a partir do centro (até 260 px); conclusão em faixa y≈1020',
     paleta: 'setas em cores próprias por força; resultante tracejada branca', animacao: 'setas crescem uma a uma; resultante soma; objeto se move/equilibra',
     duracao: [3, 5, 7], limites: { titulo: 36, nome: 14, resultado: 40 }, legenda: 'livre',
@@ -120,7 +120,7 @@
       if (!Number.isFinite(+f.angulo)) { const m = SENT.find(([r]) => r.test(nome)); if (!m) return null; f.angulo = m[1]; }
       f.angulo = +f.angulo; f.intensidade = Number.isFinite(+f.intensidade) && +f.intensidade > 0 ? Math.min(1, +f.intensidade) : .75;
       f.nome = nome.split(/\s+/).slice(0, 2).join(' '); return f; };
-    const C = [540, 800], fs = (p.forcas || []).map(norm).filter(Boolean).slice(0, 4), R = 270;
+    const C = [540, 800], fs = (Array.isArray(p.forcas) ? p.forcas : []).map(norm).filter(Boolean).slice(0, 4), R = 270;
     const vec = f => [Math.cos(f.angulo * Math.PI / 180) * R * f.intensidade, -Math.sin(f.angulo * Math.PI / 180) * R * f.intensidade];
     const res = fs.reduce((a, f) => { const v = vec(f); return [a[0] + v[0], a[1] + v[1]]; }, [0, 0]);
     const obj = { navio: `<path d="M-150 0 H150 L120 60 H-130 Z" fill="#2b3a4a" stroke="#fff" stroke-width="4"/><rect x="20" y="-70" width="80" height="70" fill="#2b3a4a" stroke="#fff" stroke-width="4"/>`,
@@ -143,8 +143,13 @@
         const tr = .5 + fs.length * passo, kr = eo5((tl - tr) / .5), fr = el.querySelector('.fr');
         const nul = Math.hypot(res[0], res[1]) < 8;
         fr.setAttribute('x2', C[0] + res[0] * kr); fr.setAttribute('y2', C[1] + res[1] * kr); fr.setAttribute('opacity', nul ? 0 : kr);
-        const mv = p.movimento && !nul ? eio(clamp((tl - tr - .3) / 1.2)) : 0, bob = p.meio === 'agua' ? Math.sin(tl * 2) * 5 : 0;
-        el.querySelector('.obj').setAttribute('transform', `translate(${C[0] + res[0] * .4 * mv} ${C[1] + res[1] * .4 * mv + bob})`);
+        // V2.5: forças desequilibradas MOVEM o objeto na direção da resultante (padrão); em equilíbrio ele fica parado.
+        // As setas e os nomes acompanham o objeto (antes a seta ficava solta no lugar e o objeto saía de baixo dela).
+        const mv = (p.movimento ?? true) && !nul ? eio(clamp((tl - tr - .3) / 1.2)) : 0, bob = p.meio === 'agua' ? Math.sin(tl * 2) * 5 : 0;
+        const dx = res[0] * .9 * mv, dy = res[1] * .9 * mv;          // desloca o bastante para o movimento ser visto
+        el.querySelector('.obj').setAttribute('transform', `translate(${C[0] + dx} ${C[1] + dy + bob})`);
+        el.querySelectorAll('.fv, .fr').forEach(l => l.setAttribute('transform', `translate(${dx} ${dy})`));
+        el.querySelectorAll('.fn').forEach(n => { n.style.transform = `translate(${dx}px, ${dy}px)`; });
         aparece(el.querySelector('.rs'), tl, tr + .3, { dy: 14 });
       },
       textos: () => [p.titulo, p.resultado, ...fs.map(f => f.nome)],
@@ -290,7 +295,11 @@
     exemplo: { params: { titulo: 'Um ano é *uma volta*', central: { nome: 'Sol', cor: '#FFD21F', raio: 70 }, orbitante: { nome: 'Terra', cor: '#5B9BFF', raio: 22 }, excentricidade: .3, periodo: '365,25 dias', distancia: '150 milhões de km', fora_de_escala: true }, dur: 6, fala: 'A Terra leva um ano para dar uma volta no Sol.' },
   }, (p, ctx) => {
     const a = 360, e = clamp(+p.excentricidade || 0, 0, .9), b = a * Math.sqrt(1 - e * e), cx = 540, cy = 790, fx = cx + a * e;
-    const C = p.central || { nome: 'Sol', cor: '#FFD21F', raio: 60 }, O = p.orbitante || { nome: 'Planeta', cor: '#5B9BFF', raio: 20 };
+    // V2.5 (auditoria renderizada): o contrato costuma trazer só {nome}; sem raio/cor o corpo central sumia (raio NaN)
+    // e o nome ia para o topo da tela. Cada campo ausente cai num padrão desenhável; string vira {nome}.
+    const corpo = (x, pad) => { x = typeof x === 'string' ? { nome: x } : (x && typeof x === 'object' ? x : {}); return {
+      nome: x.nome || pad.nome, cor: x.cor || pad.cor, raio: Number.isFinite(+x.raio) && +x.raio > 0 ? clamp(+x.raio, 8, 90) : pad.raio }; };
+    const C = corpo(p.central, { nome: 'Sol', cor: '#FFD21F', raio: 60 }), O = corpo(p.orbitante, { nome: 'Planeta', cor: '#5B9BFF', raio: 22 });
     const est = Array.from({ length: 90 }, (_, i) => `<circle cx="${(i * 197) % 1080}" cy="${(i * 331) % 1920}" r="${1 + (i % 3) * .7}" fill="#fff" opacity="${.15 + (i % 5) / 10}"/>`).join('');
     // anomalia excêntrica pela equação de Kepler (M = E − e·sen E): velocidade real ao longo da órbita
     const kepler = M => { let E = M; for (let i = 0; i < 8; i++) E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); return E; };

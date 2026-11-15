@@ -52,7 +52,8 @@ CASOS = [
      {'bloqueio': ['US$ 5,3 mi sem contexto de leilão']}, {}, None),
     ('revelacao', 'D10', _cena('revelacao.surpresa', {'resposta': 'GRAVIDADE', 'virada': .3}), _cena('revelacao.surpresa', {'resposta': 'GRAVIDADE', 'virada': 2.0}),
      {}, {}, [{'start': 1.5, 'end': 2.5, 'words': [{'w': 'GRAVIDADE', 's': 2.0}]}]),
-    ('plano', 'D11', _cena('foto.documental', {'img': IMG_OK}, dur=11), _cena('foto.documental', {'img': IMG_OK}, dur=5), {}, {}, None),
+    # V2.4: foto parada > 4 s passou a ser defeito (D15); a versão CORRETA do caso agora respeita esse limite
+    ('plano', 'D11', _cena('foto.documental', {'img': IMG_OK}, dur=11), _cena('foto.documental', {'img': IMG_OK}, dur=4), {}, {}, None),
     ('dados', 'S4', _cena('foto.documental', {'img': IMG_OK}, 'O porto A movimenta 3 vezes mais.'), _cena('foto.documental', {'img': IMG_OK}),
      {'comp': 'foto.documental', 'aviso': 'dados insuficientes para grafico.barras'}, {'comp': 'foto.documental'}, None),
 ]

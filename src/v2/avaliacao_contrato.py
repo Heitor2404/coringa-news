@@ -17,7 +17,7 @@ import json
 import sys
 from pathlib import Path
 
-from src.v2 import avaliacao_selecao, contrato, fiscal_v2, montagem
+from src.v2 import avaliacao_selecao, contrato, fiscal_v2, manim_cenas, montagem
 
 RAIZ = Path(__file__).resolve().parents[2]
 IMG = str(RAIZ / 'tests' / 'img' / 'fundo_c.jpg')
@@ -84,8 +84,11 @@ def rodar() -> dict:
     out = {'C1': [], 'C2': [], 'C3': [], 'C4': []}
     for cid, cat, fala, ac, ok in CASOS:
         x = _res(*_uma(fala, ac))
-        out['C1'].append({'id': cid, 'categoria': cat, 'fala': fala, **x, 'aceitaveis': sorted(ok),
-                          'passou': x['comp'] in ok and x['aprovacao_automatica']})
+        # V2.5 (auditoria renderizada): animacao.quadros sem Manim instalado renderiza TELA VAZIA. Onde o renderizador
+        # não existe, o certo é a limitação explícita com bloqueio — nunca "aprovar" a composição vazia.
+        sem_render = ok == {'animacao.quadros'} and not manim_cenas.disponivel()
+        out['C1'].append({'id': cid, 'categoria': cat, 'fala': fala, **x, 'aceitaveis': sorted(ok), 'sem_renderizador': sem_render,
+                          'passou': (x['limitacao'] is not None and x['n_bloqueios'] >= 1) if sem_render else (x['comp'] in ok and x['aprovacao_automatica'])})
         sem = {k: v for k, v in ac.items() if k != 'dados'}
         sem['obrigatoria'] = True
         y = _res(*_uma(fala, sem))

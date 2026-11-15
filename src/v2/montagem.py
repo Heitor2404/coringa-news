@@ -354,8 +354,14 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                                                                'descricao': _maiuscula(_limpo(sc.get('mostrar'))[:60])})
                     d.update(comp='foto.historica', motivo='M5: foto de arquivo' + (' com recorte de scanner' if rc != [0.0, 0.0, 1.0, 1.0] else ''))
                 elif img:
+                    pd = dec.get('params') or {}
                     if sc.get('destaque'):
                         nova.update(comp='banner.discreto', params={'rotulo': 'CONTEXTO', 'texto': sc['destaque']})
+                    elif dec.get('comp') == 'lower_third' and capacidades._tem('nome', pd, ''):
+                        # V2.5: pessoa/lugar declarados com nome → identificação na tela sobre a foto real (antes virava
+                        # foto.documental sem dizer quem é)
+                        nova.update(comp='lower_third', params={'nome': _limpo(pd['nome'])[:28], 'descricao': _limpo(pd.get('descricao') or pd.get('papel') or '')[:40],
+                                                                'tipo': 'pessoa' if (dec.get('acontecimento') or {}).get('tipo') == 'pessoa' else 'lugar'})
                     elif sc.get('lugar') and '·' in str(sc.get('lugar')):
                         # lugar com data ("AGUA CLARA · 2016"): identificação no padrão lower third, não etiqueta solta
                         nome, quando = [x.strip() for x in str(sc['lugar']).split('·', 1)]

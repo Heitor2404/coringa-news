@@ -164,13 +164,15 @@ def test_checkpoint_real_completo(tmp_path):
     v = c.carregar('roteiro')['v']
     chamadas = []
     prevalidacao.reparar(v, chamar=lambda p: chamadas.append(p) or {'contratos': []})
-    assert chamadas == []                                            # nada pendente: retomada sem IA de contrato
+    # V2.5 (auditoria renderizada): e7 declarava forcas ["forças de Van der Waals"] — sem sentido físico, a composição
+    # desenhava uma seta sem objeto (o defeito do MP4 43730252500). Agora é contrato pendente: 1 pedido de conserto.
+    assert len(chamadas) == 1 and '"id": "e7"' in chamadas[0].replace("'", '"')
     rel = preparo.preparar(copy.deepcopy(v), copy.deepcopy(v['acervo']))
     ev = {e['id']: e for e in rel['eventos']}
     # V2.4 (auditoria do MP4 43730252500): e4 e e10 são mecanismos críticos cujos nós/etapas são frases inteiras —
     # viravam cartões de texto com ícones genéricos; agora bloqueiam no preparo pedindo o esquema demonstrativo
-    assert [b['evento'] for b in rel['bloqueios']] == ['e2', 'e4', 'e10']
+    assert [b['evento'] for b in rel['bloqueios']] == ['e2', 'e4', 'e7', 'e10']
     assert all(any('mecanismo.estados' in f for f in b['faltam']) for b in rel['bloqueios'][1:])
     assert ev['e11']['representacao']['modo'] == 'foto_direta'
-    for eid in ('e5', 'e6', 'e7', 'e8', 'e9'):                        # mecanismos invisíveis: ilustração
+    for eid in ('e5', 'e6', 'e8', 'e9'):                              # mecanismos invisíveis: ilustração
         assert ev[eid]['funcao'] == 'ilustracao', eid

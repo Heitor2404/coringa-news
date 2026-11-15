@@ -57,6 +57,7 @@ SOLUCAO = {
     'S5': 'fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto',
     'S8': 'dar ao mecanismo um esquema demonstrativo (objetos, estado inicial, mudança, relação, resultado)',
     'S9': 'resolver o esquema/reconstrução pendente com composição demonstrativa ou cortar a cena do roteiro',
+    'D17': 'intercalar registro real, mapa ou demonstração; cartões de texto só como apoio',
     'D15': 'cortar o plano, trocar de foto ou mudar a composição antes de 4 s', 'D16': 'usar outra foto ou outra composição na cena seguinte',
     'S6': 'o roteiro deve declarar o acontecimento da cena (contrato: tipo, mostrar, dados); até lá, um humano confere a cena',
     'E': 'avaliação humana',
@@ -351,6 +352,24 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         if im and cenas[j]['end'] - cenas[k]['start'] > PARADA_MAX + .05:
             A.append(_achado('deterministico', 'D15', 'bloqueio', k, cenas[k]['comp'], round(cenas[k]['start'], 2), 'imagem parada por tempo demais',
                              f"{Path(im).name}: {cenas[j]['end'] - cenas[k]['start']:.1f} s seguidos (máx. {PARADA_MAX} s)"))
+        k = j + 1
+    # D17 (V2.5): três ou mais cartões de TEXTO seguidos = apresentação de slides narrada (bloqueio); cinco ou mais cenas
+    # seguidas da MESMA composição = linguagem visual monótona (revisão humana)
+    CARTOES = {'processo.etapas', 'diagrama.explicativo', 'destaque.palavras', 'banner.importante', 'citacao', 'titulo.capitulo'}
+    seq = 0
+    for k, sc in enumerate(cenas):
+        seq = seq + 1 if sc['comp'] in CARTOES else 0
+        if seq == 3:
+            A.append(_achado('deterministico', 'D17', 'bloqueio', k, sc['comp'], round(sc['start'], 2), 'sequência de cartões de texto (parece slides)',
+                             f"cenas {k - 2}–{k}: {', '.join(c['comp'] for c in cenas[k - 2:k + 1])}"))
+    k = 0
+    while k < len(cenas):
+        j = k
+        while j + 1 < len(cenas) and cenas[j + 1]['comp'] == cenas[k]['comp']:
+            j += 1
+        if j - k + 1 >= 5:
+            A.append(_achado('estetico', 'E-seq', 'revisao', k, cenas[k]['comp'], round(cenas[k]['start'], 2), 'mesma composição em muitas cenas seguidas',
+                             f"{cenas[k]['comp']} nas cenas {k}–{j} ({cenas[j]['end'] - cenas[k]['start']:.0f} s): um humano confere se o ritmo cansa"))
         k = j + 1
     # D1–D3 geometria (amostrada pelo palco)
     for g in _persistentes(geometria or []):

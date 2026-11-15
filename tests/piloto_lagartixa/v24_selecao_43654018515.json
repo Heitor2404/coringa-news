@@ -1,0 +1,443 @@
+{
+ "origem": "execução 43654018515 (checkpoint, etapa roteiro): só os acontecimentos e2, e3, e11, e12 (falas já publicadas no relatório) e o catálogo público do acervo (Commons/NASA/Pixabay)",
+ "fatos": "ÉPOCA/LUGAR: Atualidade · Ambientes urbanos tropicais\n",
+ "cenas": [
+  {
+   "tipo": "historia",
+   "fala": "A espécie Hemidactylus mabouia usa lamelas nos dedos para se segurar.",
+   "foto": null,
+   "visual": "a0",
+   "mostrar": null,
+   "acontecimento": {
+    "id": "e2",
+    "tipo": "mecanismo",
+    "sujeito": "Hemidactylus mabouia",
+    "acao": "exibir lamelas",
+    "estado_inicial": "dedos do réptil",
+    "estado_final": "lamelas expostas",
+    "mostrar": "desenho anatômico das lamelas dos dedos",
+    "dados": {
+     "especie": "Hemidactylus mabouia"
+    },
+    "fonte": "Wikipédia",
+    "importancia": "critica",
+    "obrigatoria": true
+   }
+  },
+  {
+   "tipo": "historia",
+   "fala": "Essas almofadas adesivas possuem estruturas microscópicas que ampliam o contato.",
+   "foto": "a0",
+   "visual": "a3",
+   "mostrar": null,
+   "acontecimento": {
+    "id": "e3",
+    "tipo": "mecanismo",
+    "sujeito": "almofadas adesivas",
+    "acao": "ampliar contato",
+    "estado_inicial": "superfície da pata",
+    "estado_final": "contato microscópico ampliado",
+    "mostrar": "detalhe em close da sola da pata no vidro",
+    "dados": {
+     "estrutura": "microscópica"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true
+   }
+  },
+  {
+   "tipo": "historia",
+   "fala": "Em 2025, a NASA usou essa física",
+   "foto": "a13",
+   "visual": "a13",
+   "mostrar": null,
+   "acontecimento": {
+    "id": "e11",
+    "tipo": "mecanismo",
+    "sujeito": "NASA",
+    "acao": "aplicar física no robô Astrobee",
+    "estado_inicial": "tecnologia biomimética",
+    "estado_final": "teste na ISS",
+    "mostrar": "robô Astrobee manipulando objeto dourado no espaço",
+    "dados": {
+     "ano": 2025,
+     "entidade": "NASA"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true
+   }
+  },
+  {
+   "tipo": "historia",
+   "fala": "no robô Astrobee na Estação Espacial.",
+   "foto": "a13",
+   "visual": null,
+   "mostrar": null,
+   "acontecimento": {
+    "id": "e11",
+    "tipo": "mecanismo",
+    "sujeito": "NASA",
+    "acao": "aplicar física no robô Astrobee",
+    "estado_inicial": "tecnologia biomimética",
+    "estado_final": "teste na ISS",
+    "mostrar": "robô Astrobee manipulando objeto dourado no espaço",
+    "dados": {
+     "ano": 2025,
+     "entidade": "NASA"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true
+   }
+  },
+  {
+   "tipo": "historia",
+   "fala": "A astronauta Suni Williams testou os braços robóticos com almofadas adesivas.",
+   "foto": "a9",
+   "visual": "a9",
+   "mostrar": null,
+   "acontecimento": {
+    "id": "e12",
+    "tipo": "mecanismo",
+    "sujeito": "Suni Williams",
+    "acao": "monitorar robô adesivo",
+    "estado_inicial": "teste espacial",
+    "estado_final": "fixação adesiva confirmada",
+    "mostrar": "Suni Williams ao lado do robô Astrobee",
+    "dados": {
+     "nome": "Suni Williams"
+    },
+    "fonte": "Wikipedia (inglês)",
+    "importancia": "critica",
+    "obrigatoria": true
+   }
+  }
+ ],
+ "acervo": [
+  {
+   "id": "a0",
+   "titulo": "Gecko's secret power - Matteo Gabaglio",
+   "desc": "The drawing represent a Gecko (Tarentola mauretanica Linnaeus, 1758). Its aim is to show the structure of the gecko's toe pads, which allows him to stick and walk even on smooth surfaces. Gecko's adhesive secret is based",
+   "ano": 2015,
+   "credito": "\"Gecko's secret power - Matteo Gabaglio\" — Matteo Gabaglio (CC BY-SA 3.0), via Wikimedia Commons",
+   "fonte": "Wikipédia",
+   "mostra": "Desenho anatômico detalhando a pata e as cerdas de uma lagartixa da espécie Tarentola mauretanica.",
+   "tipo_img": "desenho",
+   "pessoas": [],
+   "lugar": "",
+   "generica": false,
+   "nota": 9.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a1",
+   "titulo": "Gecko Adhesives",
+   "desc": "Scientists at NASA Jet Propulsion Laboratory have developed a tool for grappling non-cooperative objects that incorporates gecko-like adhesives. The adhesives are reusable and can be turned on and off.",
+   "ano": 2014,
+   "credito": "Gecko Adhesives — NASA (JPL)",
+   "fonte": "NASA",
+   "mostra": "Fotografia de um dispositivo com adesivos inspirados em lagartixas desenvolvido no NASA Jet Propulsion Laboratory.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a2",
+   "titulo": "Hemidactylus mabouia (Dominica)",
+   "desc": "Tropical house gecko at Palm Tree House, Woodfordhill, Dominica, West Indies",
+   "ano": 2006,
+   "credito": "\"Hemidactylus mabouia (Dominica)\" — Hans Hillewaert (CC BY-SA 4.0), via Wikimedia Commons",
+   "fonte": "Wikidata",
+   "mostra": "Fotografia de uma lagartixa tropical Hemidactylus mabouia em uma superfície texturizada.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Woodfordhill, Dominica",
+   "generica": true,
+   "nota": 6.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a3",
+   "titulo": "Gecko foot on glass",
+   "desc": "Close-up of the underside of a gecko's foot as it walks on a glass wall. Van der Waals force interactions between the finely divided setae (hairs on the toes) and the glass enables the gecko to stay in place and walk on ",
+   "ano": 2009,
+   "credito": "\"Gecko foot on glass\" — Bjørn Christian Tørrissen (CC BY-SA 3.0), via Wikimedia Commons",
+   "fonte": "Wikipédia",
+   "mostra": "Fotografia em close-up da parte inferior da pata de uma lagartixa caminhando sobre um vidro.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": true,
+   "nota": 10.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a4",
+   "titulo": "Geco Tarentola mauritanica",
+   "desc": "geco trovato in giardino - Gekko found in garden",
+   "ano": 2005,
+   "credito": "\"Geco Tarentola mauritanica\" — Babo (Public domain), via Wikimedia Commons",
+   "fonte": "Wikidata",
+   "mostra": "Fotografia de uma lagartixa Tarentola mauritanica sobre um dedo humano.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": true,
+   "nota": 7.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a5",
+   "titulo": "iss064e059451",
+   "desc": "NASA astronaut and Expedition 64 Flight Engineer Victor Glover works with the Astrobee robot aboard the space station to test an adhesive for robotic grasping and manipulating as part of the Astrobee/Gecko-2 experiment. ",
+   "ano": 2021,
+   "credito": "iss064e059451 — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Fotografia do astronauta Victor Glover trabalhando com o robô Astrobee a bordo da Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [
+    "Victor Glover"
+   ],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a6",
+   "titulo": "Gecko Leaftail 1",
+   "desc": "Head and front legs of a Gecko (unspecified species, leaf-shaped tail)",
+   "ano": 2006,
+   "credito": "\"Gecko Leaftail 1\" — w:User:Lpm (CC BY-SA 3.0), via Wikimedia Commons",
+   "fonte": "Wikidata",
+   "mostra": "Fotografia em close-up da cabeça e das patas dianteiras de uma lagartixa de cauda foliácea pressionada contra uma superfície translúcida.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": true,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a7",
+   "titulo": "iss064e059455",
+   "desc": "NASA astronaut and Expedition 64 Flight Engineer Victor Glover works with the Astrobee robot aboard the space station to test an adhesive for robotic grasping and manipulating as part of the Astrobee/Gecko-2 experiment. ",
+   "ano": 2021,
+   "credito": "iss064e059455 — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto do astronauta Victor Glover trabalhando com o robô Astrobee a bordo da Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [
+    "Victor Glover"
+   ],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a8",
+   "titulo": "Common House Gecko (Hemidactylus mabouia) (10425217396)",
+   "desc": "Hotel Lac Maran, Matoury, Guyane, FRANCE Scanned Slide from 1998",
+   "ano": 1998,
+   "credito": "\"Common House Gecko (Hemidactylus mabouia) (1042521\" — Bernard DUPONT from FRANCE (CC BY-SA 2.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto de uma lagartixa (Hemidactylus mabouia) agarrada a uma superfície escura com musgo em Matoury, Guiana Francesa.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Hotel Lac Maran, Matoury, Guiana Francesa",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a9",
+   "titulo": "Astronaut Suni Williams monitors an Astrobee robotic free-flyer",
+   "desc": "iss072e593606 (Feb. 4, 2025) --- NASA astronaut and Expedition 72 Commander Suni Williams monitors an Astrobee robotic free-flyer outfitted with tentacle-like arms containing gecko-like adhesive pads as it grapples a \"ca",
+   "ano": 2025,
+   "credito": "Astronaut Suni Williams monitors an Astrobee robot — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto da astronauta Suni Williams monitorando um robô Astrobee equipado com braços robóticos com almofadas adesivas inspiradas em lagartixas na Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [
+    "Suni Williams"
+   ],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 9.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a10",
+   "titulo": "Day 30 Tropical House Gecko (Hemidactylus mabouia) (53273202670)",
+   "desc": "Lower Sabie Camp, Kruger NP, Mpumalanga, SOUTH AFRICA",
+   "ano": 2023,
+   "credito": "\"Day 30 Tropical House Gecko (Hemidactylus mabouia)\" — Bernard DUPONT from FRANCE (CC BY-SA 2.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto de uma lagartixa tropical (Hemidactylus mabouia) em uma superfície no Parque Nacional Kruger, África do Sul.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Lower Sabie Camp, Kruger NP, Mpumalanga, África do Sul",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a11",
+   "titulo": "Astronaut Suni Williams monitors an Astrobee robotic free-flyer",
+   "desc": "iss072e593598 (Feb. 4, 2025) --- NASA astronaut and Expedition 72 Commander Suni Williams monitors an Astrobee robotic free-flyer outfitted with tentacle-like arms containing gecko-like adhesive pads preparing to grapple",
+   "ano": 2025,
+   "credito": "Astronaut Suni Williams monitors an Astrobee robot — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto da astronauta Suni Williams monitorando um robô Astrobee com braços robóticos azuis na Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [
+    "Suni Williams"
+   ],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 9.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a12",
+   "titulo": "Day 58 Tropical House Gecko (Hemidactylus mabouia) (53336871536)",
+   "desc": "Lower Sabie Camp, Kruger NP, Mpumalanga, SOUTH AFRICA",
+   "ano": 2023,
+   "credito": "\"Day 58 Tropical House Gecko (Hemidactylus mabouia)\" — Bernard DUPONT from FRANCE (CC BY-SA 2.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto em close de uma lagartixa tropical (Hemidactylus mabouia) em uma superfície no Parque Nacional Kruger, África do Sul.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Lower Sabie Camp, Kruger NP, Mpumalanga, África do Sul",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a13",
+   "titulo": "An Astrobee robotic free-flyer with blue tentacle-like arms",
+   "desc": "iss072e593717 (Feb. 4, 2025) --- The blue tentacle-like arms containing gecko-like adhesive pads, attached to an Astrobee robotic free-flyer, reach out and grapple a \"capture cube\" inside the International Space Station'",
+   "ano": 2025,
+   "credito": "An Astrobee robotic free-flyer with blue tentacle- — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto em detalhe de um robô Astrobee com braços robóticos azuis contendo almofadas adesivas semelhantes às de lagartixas manipulando um objeto dourado a bordo da Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 9.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a14",
+   "titulo": "Day 58 Tropical House Gecko (Hemidactylus mabouia) (53337214379)",
+   "desc": "Lower Sabie Camp, Kruger NP, Mpumalanga, SOUTH AFRICA",
+   "ano": 2023,
+   "credito": "\"Day 58 Tropical House Gecko (Hemidactylus mabouia)\" — Bernard DUPONT from FRANCE (CC BY-SA 2.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto de uma lagartixa tropical (Hemidactylus mabouia) sobre uma superfície escura no Parque Nacional Kruger, África do Sul.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Lower Sabie Camp, Kruger NP, Mpumalanga, África do Sul",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a15",
+   "titulo": "An Astrobee robotic free-flyer with blue tentacle-like arms",
+   "desc": "iss072e593734 (Feb. 4, 2025) --- The blue tentacle-like arms containing gecko-like adhesive pads, attached to an Astrobee robotic free-flyer, reach out and grapple a \"capture cube\" inside the International Space Station'",
+   "ano": 2025,
+   "credito": "An Astrobee robotic free-flyer with blue tentacle- — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto do robô Astrobee com braços robóticos azuis agarrando um pacote revestido de isolamento térmico dourado na Estação Espacial Internacional.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a16",
+   "titulo": "Gecko and prey",
+   "desc": "A tropical house gecko (Hemidactylus mabouia) hunting an insect on the ceiling, at night. Spotted in Ubatuba, Brazil.",
+   "ano": 2011,
+   "credito": "\"Gecko and prey\" — Leoadec (CC BY-SA 3.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto de uma lagartixa tropical (Hemidactylus mabouia) caçando um inseto no teto durante a noite em Ubatuba, Brasil.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Ubatuba, Brasil",
+   "generica": false,
+   "nota": 9.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a17",
+   "titulo": "Gecko on the wall",
+   "desc": "Lateral view of a tropical house gecko (Hemidactylus mabouia) on a wall. Spotted in Ubatuba, Brazil.",
+   "ano": 2011,
+   "credito": "\"Gecko on the wall\" — Leoadec (CC BY-SA 3.0), via Wikimedia Commons",
+   "fonte": "Commons",
+   "mostra": "Foto lateral de uma lagartixa tropical (Hemidactylus mabouia) em uma parede.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Ubatuba, Brasil",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a18",
+   "titulo": "An Astrobee robotic free-flyer with blue tentacle-like arms",
+   "desc": "iss072e593737 (Feb. 4, 2025) --- The blue tentacle-like arms containing gecko-like adhesive pads, attached to an Astrobee robotic free-flyer, reach out and grapple a \"capture cube\" inside the International Space Station'",
+   "ano": 2025,
+   "credito": "An Astrobee robotic free-flyer with blue tentacle- — NASA (JSC)",
+   "fonte": "NASA",
+   "mostra": "Foto de braços robóticos com almofadas adesivas semelhantes a patas de lagartixa acoplados a um robô Astrobee.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "Estação Espacial Internacional",
+   "generica": false,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a19",
+   "titulo": "pixabay #263302: animal, gecko, nature",
+   "desc": "pixabay #263302: animal, gecko, nature",
+   "ano": null,
+   "credito": "",
+   "fonte": "Pixabay vídeo",
+   "mostra": "Quadro de vídeo de um lagarto azul pousado na ponta de um tronco de madeira.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": true,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  },
+  {
+   "id": "a20",
+   "titulo": "pixabay #265271: wildlife, srilanka, endemic, nature, animal, lizard, plant, forest, trees, wilderness, green, leaves",
+   "desc": "pixabay #265271: wildlife, srilanka, endemic, nature, animal, lizard, plant, forest, trees, wilderness, green, leaves",
+   "ano": null,
+   "credito": "",
+   "fonte": "Pixabay vídeo",
+   "mostra": "Quadro de vídeo de um lagarto verde camuflado em um galho com folhas.",
+   "tipo_img": "foto",
+   "pessoas": [],
+   "lugar": "",
+   "generica": true,
+   "nota": 8.0,
+   "arq": "x.jpg"
+  }
+ ]
+}

@@ -130,35 +130,74 @@ def _ano(s) -> int | None:
 
 
 def avaliar_imagem(x: dict, ac: dict, cena: dict, ano_evento: int | None) -> dict:
-    """Compatibilidade e força de representação de um item do acervo para o acontecimento (só o catálogo, sem IA).
-    forca: 3 mostra o fato (assunto + estado/ação narrados + época) · 2 é o que o roteiro pediu · 1 contexto do assunto ·
-    0,5 sem o assunto. Incompatível: texto em escrita que o público não lê; diagrama/mapa sem relação com o pedido."""
+    """Compatibilidade e força de representação de um item do acervo para o acontecimento (catálogo + metadados da
+    fonte, sem IA). forca: 3 mostra o fato · 2 é o que o roteiro pediu · 1 contexto do assunto · 0,5 sem o assunto.
+    Incompatível: texto em escrita que o público não lê; diagrama/mapa sem relação com o pedido; OUTRA identidade
+    (táxon diferente do narrado).
+    V2.4 (piloto 43654018515): a identidade vem do acontecimento (nomes próprios, nome científico) e dos metadados
+    da imagem (título, descrição e crédito da fonte), não só de palavras iguais no catálogo:
+      - instituição responsável (nome que só aparece no CRÉDITO: "NASA") documenta a imagem, não é objeto visual;
+      - "mostra o fato" também por REGISTRO DOCUMENTAL: o objeto nomeado aparece + a ação/contexto narrados +
+        a época do acontecimento (ou, sem época, a instituição do acontecimento assina o registro);
+      - escala: fala de estrutura microscópica com foto comum (não micrografia) → no máximo "o que o roteiro pediu";
+      - imagem genérica de um tema SEM momento histórico (anatomia, mecanismo) pode ser o que o roteiro pediu; de
+        acontecimento datado continua só contexto."""
+    from src.v2 import identidade
     mostra = f"{x.get('mostra', '')} {x.get('titulo', '')}"
     tipo = _n(x.get('tipo_img') or 'foto')
     desenho = any(d in tipo for d in DESENHO)
     if ESCRITA_INCOMPATIVEL.search(_n(x.get('mostra'))) and (COM_TEXTO.search(_n(x.get('mostra'))) or desenho):
         return {'compativel': False, 'forca': 0, 'motivos': [f"texto em escrita incompatível com o vídeo em português ({x.get('mostra', '')[:70]})"]}
+    ident = identidade.do_acontecimento(ac, cena.get('_falas'))
+    conf = identidade.confrontar(ident, x)
+    if conf['conflito']:
+        return {'compativel': False, 'forca': 0, 'motivos': [f"identidade diferente: {conf['conflito']}"]}
+    inst = {w for nm in conf['assinantes'] for w in _palavras(nm)}          # quem assina o registro, não aparece nele
+    nomes = {w for nm in ident['nomes'] for w in _palavras(nm)}
     sujeito = _palavras(ac.get('sujeito') or '') - {'casco', 'frota', 'equipes', 'trecho', 'receita'}
+    sujeito_visual = sujeito - inst
     pedido = f"{ac.get('mostrar', '')} {cena.get('mostrar', '')}"
-    comum = (_palavras(pedido) & _palavras(mostra)) - sujeito - MIDIA     # o nome do assunto e o tipo de imagem não provam nada
+    comum = (_palavras(pedido) & _palavras(mostra)) - sujeito - MIDIA - inst  # o nome do assunto e o tipo de imagem não provam nada
     if desenho and len(comum) < 2:
         return {'compativel': False, 'forca': 0, 'motivos': [f"{tipo} sem relação com o que a cena pede (\"{pedido.strip()[:60]}\")"]}
-    if x.get('generica') or x.get('ia'):
-        return {'compativel': True, 'forca': 1, 'motivos': ['imagem genérica: só contexto']}
-    if sujeito and not sujeito & _palavras(mostra):
+    # o assunto: sujeito com NOME PRÓPRIO (pessoa, objeto nomeado, instituição) precisa aparecer na imagem ou assinar o
+    # registro; sujeito comum ("almofadas adesivas") vale também pelo objeto nomeado do acontecimento ou pelo que a cena pede
+    proprio = identidade.nomes_proprios(ac.get('sujeito') or '', inicio_de_frase=False)
+    if proprio:
+        tem_assunto = any(identidade._contem(nm, identidade.da_imagem(x)['mostra_n']) or nm in conf['assinantes'] for nm in proprio) \
+            or bool(sujeito_visual & _palavras(mostra))
+    else:
+        tem_assunto = not sujeito_visual or bool(sujeito_visual & _palavras(mostra)) or bool(conf['visiveis']) or len(comum) >= 2
+    if not tem_assunto and not x.get('ia'):      # V2.4: genérica sem o assunto não é nem contexto dele
         return {'compativel': True, 'forca': .5, 'motivos': ['sem o assunto do acontecimento']}
-    ano_img = x.get('ano') if isinstance(x.get('ano'), int) else _ano(x.get('ano'))
+    if x.get('ia'):
+        return {'compativel': True, 'forca': 1, 'motivos': ['imagem genérica: só contexto']}
+    if x.get('generica'):
+        if ano_evento is None and len(comum) >= 2 and not desenho:
+            return {'compativel': True, 'forca': 2, 'motivos': [f"imagem genérica do assunto, é o que o roteiro pediu ({', '.join(sorted(comum))})"]
+                    + (['mostra a parte visível; não a escala microscópica narrada'] if conf['escala'] else [])}
+        return {'compativel': True, 'forca': 1, 'motivos': ['imagem genérica: só contexto']}
+    ano_img = x.get('ano') if isinstance(x.get('ano'), int) else (_ano(x.get('ano')) or _ano(x.get('desc')))
     outra_epoca = bool(ano_evento and ano_img and abs(ano_img - ano_evento) > 1)
     evento = ' '.join(str(ac.get(k) or '') for k in ('acao', 'estado_final', 'mostrar')) + ' ' + str(cena.get('mostrar') or '') + ' ' + ' '.join(cena.get('_falas') or [])
     estado = _grupos(ac.get('estado_final')) or _grupos(evento)
     vistos = _grupos(mostra)
-    if not desenho and not outra_epoca and estado & vistos:
+    escala = ['mostra a parte visível; não a escala microscópica narrada'] if conf['escala'] else []
+    if not desenho and not outra_epoca and not escala and estado & vistos:
         return {'compativel': True, 'forca': 3, 'motivos': [f"mostra o fato: {', '.join(sorted(estado & vistos))} ({x.get('mostra', '')[:80]})"]
                 + (['ano da imagem não informado no acervo'] if not ano_img else [])}
+    # registro documental: o objeto nomeado aparece + ação/contexto narrados + época (ou a instituição assina)
+    objeto = [nm for nm in conf['visiveis'] if not (_palavras(nm) <= inst)]
+    acao = (_palavras(evento) & _palavras(mostra)) - nomes - sujeito - MIDIA - inst
+    mesma_epoca = bool(ano_evento and ano_img and abs(ano_img - ano_evento) <= 1)
+    if not desenho and not outra_epoca and not escala and objeto and len(acao) >= 2 and (mesma_epoca or (not ano_evento and conf['assinantes'])):
+        return {'compativel': True, 'forca': 3, 'motivos': [f"registro documental: {', '.join(objeto[:2])} + {', '.join(sorted(acao)[:4])}"
+                                                           + (f' + época {ano_img}' if mesma_epoca else '')
+                                                           + (f" + fonte {', '.join(conf['assinantes'])}" if conf['assinantes'] else '')]}
     epoca = [f'foto de {ano_img}, acontecimento de {ano_evento}'] if outra_epoca else []
     if len(comum) >= 2:
-        return {'compativel': True, 'forca': 2, 'motivos': [f"é o que o roteiro pediu ({', '.join(sorted(comum))})"] + epoca}
-    return {'compativel': True, 'forca': 1, 'motivos': ['contexto do assunto'] + epoca}
+        return {'compativel': True, 'forca': 2, 'motivos': [f"é o que o roteiro pediu ({', '.join(sorted(comum))})"] + epoca + escala}
+    return {'compativel': True, 'forca': 1, 'motivos': ['contexto do assunto'] + epoca + escala}
 
 
 MIDIA = {'satelite', 'aerea', 'aproximada', 'lateral', 'detalhe', 'fotografia', 'retrato', 'close'}
@@ -299,7 +338,8 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
         # a época geral do vídeo só vale como data de um acontecimento SEM data em história datada; fenômeno científico sem
         # momento histórico (mecanismo, natureza, geral) não ganha o ano da reportagem (lagartixa: "2026" × foto de 2009)
         ano_evento = _ano(bruto.get('quando')) or _ano((ac.get('dados') or {}).get('data')) \
-            or (None if atemporal(ac, bruto, v) else ano_geral)
+            or _ano((ac.get('dados') or {}).get('ano')) \
+            or (None if atemporal(ac, bruto, v) else ano_geral)          # V2.4: o ano declarado nos dados do próprio acontecimento
 
         # 3) dados no formato da composição (só com o verificado)
         faltam = []

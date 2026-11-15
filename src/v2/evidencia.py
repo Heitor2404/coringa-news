@@ -202,6 +202,9 @@ def _ac_de(cenas: list[dict], idx: list[int]) -> dict:
     return (cenas[idx[0]].get('acontecimento') or {}) if idx else {}
 
 
+from src.v2 import identidade  # noqa: E402  (V2.4)
+
+
 def acontecimento(bruto: dict, falas: list[str] | None = None, referencias: dict | None = None, ev_id: str | None = None,
                   critico: bool | None = None, tipo: str | None = None) -> dict:
     """Acontecimento do contrato → esquema da evidência. `referencias`: identidade de registro do acontecimento e das
@@ -223,6 +226,8 @@ def acontecimento(bruto: dict, falas: list[str] | None = None, referencias: dict
         # V2.4: o elemento que precisa ser visto é registrável por câmera? (forças, moléculas → não: só ilustração)
         'observavel': contrato.observabilidade({**ac, 'tipo': tp}),
         'falas': falas,
+        # V2.4: nome científico que ESTE acontecimento nomeia (imagem de outro táxon é outra identidade)
+        'taxons': sorted(identidade.do_acontecimento(ac, falas)['taxons']),
         'afirmacoes': afirmacoes(falas, tp),
         'referencias': {'evento': refs.get('evento') or {},
                         'entidades': list(refs.get('entidades') or []) + ([{'nome': bruto['onde']}] if str(bruto.get('onde') or '').strip() else [])},
@@ -517,6 +522,11 @@ def avaliar(ev: dict, reg: dict, vis: dict | None = None) -> dict:
     exige = list(ev.get('exige') or [])
     vis = _semantica(vis or None)
     vin = vinculo(reg, ev.get('referencias') or {})
+    # V2.4: imagem de OUTRO táxon nomeado (desenho de Tarentola para a fala de Hemidactylus) não representa a identidade
+    tax_img = identidade.binomios(f"{reg.get('titulo', '')} {reg.get('descricao', '')}", [reg.get('titulo')] + list(reg.get('categorias') or []))
+    if ev.get('taxons') and tax_img and not (set(ev['taxons']) & tax_img):
+        return _saida('INCOMPATIVEL', [f"identidade diferente: imagem de {', '.join(sorted(tax_img))}; o acontecimento é de {', '.join(ev['taxons'])}"],
+                      ev, reg, vis, vin, *data_da_imagem(reg), 'desconhecida', None, [])
     origem_data, iv_img = data_da_imagem(reg)
     pub = (reg.get('datas') or {}).get('publicacao')
     fs = fase(iv_img, ev.get('intervalo') or {})
@@ -755,6 +765,45 @@ def referencias_basicas(v: dict) -> dict:
     return {'evento': {}, 'entidades': [{'nome': n} for n in vistos[:8]]}
 
 
+def _raizes_nome(s) -> set[str]:
+    return {w[:5] for w in re.findall(r'[a-z]+', _n(s)) if len(w) >= 4 and w not in identidade.NAO_NOME}
+
+
+def referencias_do_evento(refs: dict, bruto: dict, falas: list[str]) -> dict:
+    """V2.4: vínculos ESPECÍFICOS do acontecimento. As referências da coleta são do VÍDEO inteiro (o tema central e
+    todas as entidades do roteiro); herdá-las fazia qualquer foto da espécie "relacionada" à fala do Astrobee (piloto
+    43654018515, e11 × a10). Regra:
+      - referência que ESTE acontecimento cita (raiz do nome no contrato ou nas falas; "Monte Santa Helena" ≈
+        "Mount St. Helens") vale;
+      - acontecimento que declara nomes PRÓPRIOS e não cita nenhuma referência do vídeo é outro assunto (Astrobee,
+        NASA): só valem os nomes dele;
+      - acontecimento sem nome próprio e sem citação (fase anônima da história: "a face norte deslizou") herda as
+        do vídeo, como antes."""
+    refs = refs or {}
+    texto = ' '.join(str(bruto.get(k) or '') for k in ('sujeito', 'quem', 'onde', 'acao', 'mostrar', 'estado_final')) \
+        + ' ' + identidade._texto(bruto.get('dados')) + ' ' + ' '.join(re.sub(r'\*', '', f or '') for f in falas or [])
+    raizes = _raizes_nome(texto)
+
+    def citado(nomes) -> bool:
+        return any(n and (_raizes_nome(n) & raizes) for n in nomes)
+
+    ev_ref = refs.get('evento') or {}
+    nomes_ev = list(ev_ref.get('nomes') or []) + [re.sub(r'^category:', '', c, flags=re.I) for c in ev_ref.get('categorias') or []]
+    ents = list(refs.get('entidades') or [])
+    cit_ev = bool(ev_ref) and citado(nomes_ev)
+    cit_ent = [e for e in ents if citado([e.get('nome')] + list(e.get('apelidos') or []) + list(e.get('categorias') or []))]
+    proprios = identidade.do_acontecimento(bruto, falas)['nomes']
+    if not cit_ev and not cit_ent and not proprios:
+        evento, entidades = ev_ref, ents                     # fase anônima do acontecimento central
+    else:
+        evento, entidades = (ev_ref if cit_ev else {}), cit_ent
+    ja = {_n(e.get('nome')) for e in entidades}
+    for nome in proprios:
+        if _n(nome) not in ja and not any(_n(nome) in _n(e.get('nome')) for e in entidades):
+            entidades = entidades + [{'nome': nome}]; ja.add(_n(nome))
+    return {'evento': evento, 'entidades': entidades}
+
+
 # ───────────────────────── preparo paralelo (não altera o roteiro) ─────────────────────────
 EDITORIAL_COMPLETO = {'revelacao': 'revelacao.surpresa', 'gancho': 'abertura.pergunta', 'fechamento': 'encerramento.editorial',
                       'citacao': 'citacao'}
@@ -777,7 +826,8 @@ def preparar(v: dict, acervo: list[dict], registros: dict | None = None, visoes:
         idx = [k for k, c in enumerate(v['cenas']) if (c.get('acontecimento') or {}).get('id') == e_old['id'] or c.get('evento') == e_old['id']] \
             or [k for k in e_old['cenas'] if k < len(v['cenas'])]
         bruto = _ac_de(v['cenas'], idx)
-        ev = acontecimento(bruto, [v['cenas'][k].get('fala', '') for k in idx], referencias, e_old['id'], e_old['critico'], e_old['tipo'])
+        falas_ev = [v['cenas'][k].get('fala', '') for k in idx]
+        ev = acontecimento(bruto, falas_ev, referencias_do_evento(referencias, bruto, falas_ev), e_old['id'], e_old['critico'], e_old['tipo'])
         ver = verificar_afirmacoes(ev, linhas, bruto.get('fonte'))
         cands = []
         for x in acervo:

@@ -171,12 +171,15 @@ class Checkpoint:
                 if not rel or Path(str(rel)).is_absolute():
                     continue
                 arq = base / rel
+                # V2.4 (43740293581): imagem AUSENTE nunca vira "foto vizinha" em silêncio — a retomada para antes de
+                # baixar/narrar/renderizar, com o arquivo e o item nomeados. Imagem TROCADA à mão segue, mas registrada
+                # como edição (vai para o relatório), nunca em silêncio.
                 if not arq.exists():
-                    self.registro['avisos'].append(f'{etapa}: arquivo ausente {rel} (item {x.get("id")})')
-                    x[campo] = None
-                    continue
+                    raise ArquivoCheckpoint(f'{etapa}: imagem do acervo ausente no checkpoint: {rel} (item {x.get("id")})')
                 if hashes.get(rel) and _sha(arq.read_bytes()) != hashes[rel]:
                     self.registro['editado'].setdefault(etapa, []).append(f'imagem trocada: {rel}')
+                elif rel not in hashes:
+                    self.registro['editado'].setdefault(etapa, []).append(f'imagem sem hash no manifesto: {rel}')
                 destino = self.pasta / rel
                 if arq.resolve() != destino.resolve():
                     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -266,6 +269,40 @@ def _caminho(d: dict, chave: str, valor=None, ler: bool = False):
     return alvo.get(partes[-1]) if ler else alvo.__setitem__(partes[-1], valor)
 
 
+class ArquivoCheckpoint(ValueError):
+    """Checkpoint incompleto: imagem do acervo ausente, trocada ou sem hash."""
+
+
+def verificar_arquivos(pasta: Path) -> dict:
+    """Confere, sem carregar nada: todo arquivo do manifesto existe, abre como imagem e bate com o sha256; todo `arq`
+    relativo dos itens aponta para um arquivo do manifesto. Usado antes da retomada (workflow) e nos testes."""
+    from PIL import Image
+    pasta = Path(pasta)
+    man = json.loads((pasta / 'manifesto.json').read_text(encoding='utf-8'))
+    erros, ok = [], 0
+    for nome, info in man.get('etapas', {}).items():
+        for rel, h in (info.get('arquivos') or {}).items():
+            arq = pasta / rel
+            if not arq.exists():
+                erros.append(f'{nome}: ausente {rel}'); continue
+            if _sha(arq.read_bytes()) != h:
+                erros.append(f'{nome}: sha256 diferente {rel}'); continue
+            try:
+                with Image.open(arq) as im:
+                    im.verify()
+            except Exception as e:
+                erros.append(f'{nome}: não abre {rel} ({str(e)[:60]})'); continue
+            ok += 1
+        obj = json.loads((pasta / info['arquivo']).read_text(encoding='utf-8'))
+        for x in Checkpoint._itens(nome, obj):
+            rel = x.get('arq') if isinstance(x, dict) else None
+            if rel and not Path(str(rel)).is_absolute() and rel not in (info.get('arquivos') or {}):
+                erros.append(f'{nome}: item {x.get("id")} aponta para {rel}, fora do manifesto')
+            elif rel and Path(str(rel)).is_absolute():
+                erros.append(f'{nome}: item {x.get("id")} com caminho absoluto {rel}')
+    return {'ok': ok, 'erros': erros}
+
+
 def _limpo_fala(x) -> str:
     return re.sub(r'\s+', ' ', str(x or '').replace('*', '')).strip()
 
@@ -353,8 +390,12 @@ def editar(pasta: Path, edicao: dict) -> dict:
     return reg
 
 
-if __name__ == '__main__':          # python -m src.v2.checkpoint editar <pasta> <edicao.json>
+if __name__ == '__main__':          # python -m src.v2.checkpoint editar <pasta> <edicao.json> | verificar <pasta>
     import sys
+    if len(sys.argv) == 3 and sys.argv[1] == 'verificar':
+        r = verificar_arquivos(Path(sys.argv[2]))
+        print(f"[checkpoint] {r['ok']} imagem(ns) conferida(s)" + (' · ERROS: ' + '; '.join(r['erros']) if r['erros'] else ''))
+        raise SystemExit(1 if r['erros'] or not r['ok'] else 0)
     if len(sys.argv) == 4 and sys.argv[1] == 'editar':
         r = editar(Path(sys.argv[2]), json.loads(Path(sys.argv[3]).read_text(encoding='utf-8')))
         print('[checkpoint] edição editorial aplicada: ' + '; '.join(r['aplicadas']))

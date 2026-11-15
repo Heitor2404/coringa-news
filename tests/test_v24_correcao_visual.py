@@ -8,6 +8,7 @@ import shutil
 import subprocess
 
 import pytest
+from pathlib import Path
 
 from src.v2 import checkpoint, contrato, fiscal_v2, montagem
 
@@ -146,7 +147,7 @@ def test_edicao_do_piloto_versionada_e_rastreavel():
     """A edição que vai para a retomada única: base_run certo, só fatos com fonte, esquemas válidos, sem foto de prova."""
     from pathlib import Path
     ed = json.loads((Path(__file__).parents[1] / '.github' / 'piloto' / 'edicao.json').read_text())
-    assert ed['base_run'] == '43730252500'
+    assert ed['base_run'] == '43728184399'          # o último checkpoint com as imagens (ver CORRECAO_V24_VISUAL.md)
     ops = ed['operacoes']
     fatos = next(o for o in ops if o.get('acrescentar_fatos'))['acrescentar_fatos']
     assert all(f.rstrip().endswith(')') for f in fatos)
@@ -185,3 +186,42 @@ def test_plano_com_foto_sem_id_de_imagem_recebe_a_midia(tmp_path, monkeypatch):
     monkeypatch.setattr(main, 'conferir_ia', lambda v, imgs, *a, **k: imgs)
     reais, *_ = main._midia_do_acervo(v, tmp_path)
     assert v['cenas'][0]['imagem'] == 'foto_a9' and reais['foto_a9']['arq'] == str(img)
+
+
+def _ck_com_imagem(pasta):
+    from PIL import Image
+    c = checkpoint.Checkpoint(pasta, pedido='p')
+    img = pasta.parent / 'tmp_acervo' / 'a3.jpg'
+    img.parent.mkdir(exist_ok=True)
+    Image.new('RGB', (8, 8), (200, 10, 10)).save(img)
+    v = {'cenas': [{'fala': 'x', 'foto': 'a3'}], 'acervo': [{'id': 'a3', 'arq': str(img)}]}
+    c.salvar('roteiro', {'v': v})
+    return c
+
+
+def test_retomadas_sucessivas_mantem_as_imagens(tmp_path):
+    """Execução A → retomada B → limpeza pós-vídeo → retomada C: as imagens continuam no checkpoint (era o defeito)."""
+    import main
+    _ck_com_imagem(tmp_path / 'A' / 'checkpoint')
+    assert checkpoint.verificar_arquivos(tmp_path / 'A' / 'checkpoint') == {'ok': 1, 'erros': []}
+    b = checkpoint.Checkpoint(tmp_path / 'B' / 'checkpoint', tmp_path / 'A' / 'checkpoint', 'roteiro')
+    v = b.carregar('roteiro')['v']
+    main._limpar_acervo(v)                                              # o que roda depois do MP4 pronto
+    assert checkpoint.verificar_arquivos(tmp_path / 'B' / 'checkpoint')['erros'] == []
+    c = checkpoint.Checkpoint(tmp_path / 'C' / 'checkpoint', tmp_path / 'B' / 'checkpoint', 'roteiro')
+    v2 = c.carregar('roteiro')['v']
+    assert Path(v2['acervo'][0]['arq']).exists()
+
+
+def test_imagem_ausente_ou_trocada_para_a_retomada(tmp_path):
+    from PIL import Image
+    _ck_com_imagem(tmp_path / 'A' / 'checkpoint')
+    arq = next((tmp_path / 'A' / 'checkpoint' / 'arquivos').iterdir())
+    Image.new('RGB', (8, 8), (0, 0, 255)).save(arq)                     # trocada
+    assert any('sha256' in e for e in checkpoint.verificar_arquivos(tmp_path / 'A' / 'checkpoint')['erros'])
+    b = checkpoint.Checkpoint(tmp_path / 'B' / 'checkpoint', tmp_path / 'A' / 'checkpoint', 'roteiro')
+    b.carregar('roteiro')                                               # troca à mão: segue, mas registrada
+    assert any('imagem trocada' in m for m in b.registro['editado']['roteiro'])
+    arq.unlink()                                                        # ausente
+    with pytest.raises(checkpoint.ArquivoCheckpoint, match='ausente'):
+        checkpoint.Checkpoint(tmp_path / 'C' / 'checkpoint', tmp_path / 'A' / 'checkpoint', 'roteiro').carregar('roteiro')

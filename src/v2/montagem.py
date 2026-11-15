@@ -27,6 +27,11 @@ from src.v2 import acervo_v2, capacidades, contrato, fatos
 ESTATICO_MAX = 4.0   # V2.4 (auditoria 43730252500): imagem parada além disso cansa — corta ou troca
 
 
+def _mostra(sc: dict, img: str) -> bool:
+    """A cena põe esta imagem na tela (fundo, imagem da composição ou base)?"""
+    return img in (str((sc.get('fundo') or {}).get('img') or ''), str((sc.get('params') or {}).get('img') or ''))
+
+
 def _juntar(v1: list[dict], ks) -> str:
     """Falas dos planos de UMA ideia: a mesma frase repetida em planos seguidos (divisão da imagem) entra uma vez só."""
     out = []
@@ -290,7 +295,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                         nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
                     d.update(cenas_v1=mesmo, comp=dec['comp'], motivo=dec.get('motivo', ''), origem='contrato', acontecimento=dec.get('acontecimento'))
                     out.append(nova); direcao.append(d)
-                    if img:
+                    if img and _mostra(nova, img):        # V2.4: só conta foto que aparece (esquema não usa a vizinha)
                         usadas.setdefault(img, []).append(len(out) - 1)
                     i = mesmo[-1] + 1
                     continue
@@ -367,7 +372,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 i = j
                 out.append(nova); direcao.append(d)
                 continue
-        if img and tipo not in ('fechamento',):
+        if img and tipo not in ('fechamento',) and _mostra(nova, img):
             usadas.setdefault(img, []).append(len(out))
         out.append(nova); direcao.append(d)
         i += 1

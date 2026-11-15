@@ -92,6 +92,8 @@ jobs:
           echo "$(cat checkpoint_cache/checkpoint.tgz.sha256)  ck.tgz" | sha256sum -c -
           mkdir -p checkpoint_origem && tar -xzf ck.tgz -C checkpoint_origem && rm ck.tgz
           ls checkpoint_origem/checkpoint
+          # V2.4: toda imagem do manifesto existe, abre e bate com o sha256 — senão a retomada nem começa
+          python -m src.v2.checkpoint verificar checkpoint_origem/checkpoint
       - name: Aplicar edição editorial auditada (se houver, para este checkpoint)
         if: steps.ret.outputs.run != '' && hashFiles('.github/piloto/edicao.json') != ''
         run: |
@@ -157,6 +159,8 @@ jobs:
           if [ -z "$d" ]; then echo "sem checkpoint"; exit 0; fi
           if [ -z "$CHECKPOINT_KEY$COFRE_TOKEN" ]; then echo "sem segredo para cifrar: checkpoint NÃO vai para o cache"; exit 0; fi
           set -e
+          # V2.4: checkpoint sem as imagens não vai para o cache (seria uma retomada futura quebrada)
+          if ! python -m src.v2.checkpoint verificar "$d"; then echo "::error::checkpoint desta execução incompleto: NÃO guardado"; exit 1; fi
           chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
           rm -rf checkpoint_cache && mkdir checkpoint_cache
           tar -czf ck.tgz -C "$(dirname "$d")" checkpoint

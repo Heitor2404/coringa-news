@@ -232,3 +232,14 @@ def test_pessoa_com_nome_no_sujeito_ganha_dados_nome_sem_inventar():
     assert ac['dados']['nome'] == 'William Murdoch' and m
     ac, m = contrato.normalizar_dados({'tipo': 'pessoa', 'sujeito': 'o oficial de plantão', 'dados': {}})
     assert ac['dados'] == {} and not m                       # sem nome próprio: nada é inventado
+
+
+def test_nome_da_fonte_nos_dados_nao_e_rastreado_como_afirmacao():
+    # piloto 43754111920 (Torre de Pisa): o conserto de "escala" foi recusado porque "Wikipédia (português)" — a FONTE —
+    # foi procurada nos fatos como se fosse conteúdo
+    from src.v2 import prevalidacao
+    from src.v2 import preparo
+    linhas = preparo.pesquisa({'fatos': 'FATOS:\n- A torre tem 56 metros de altura e a Torre Eiffel tem 330 metros. (Wikipédia (português))\n'})
+    r = prevalidacao.rastreio({'itens': [{'rotulo': 'Torre de Pisa', 'valor': 56}, {'rotulo': 'Torre Eiffel', 'valor': 330}],
+                               'fonte': 'Wikipédia (português)', 'unidade': 'm'}, linhas)
+    assert all(i['campo'] != 'fonte' for i in r['itens'])

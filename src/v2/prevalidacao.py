@@ -26,7 +26,8 @@ from src.v2 import contrato, preparo
 # tipos de "não acontecimento" (a foto do assunto é a representação): um conserto não pode levar um acontecimento
 # crítico para eles — seria trocar o fenômeno por uma foto qualquer
 PROIBIDOS_NO_REPARO = {'pessoa', 'lugar', 'ambiente', 'documento', 'localizacao', 'territorio', 'citacao', 'evento_historico'}
-CHAVES_SEM_TEXTO = {'angulo', 'intensidade', 'sentido', 'lon', 'lat', 't', 'cor', 'unidade', 'moeda', 'ano', 'data', 'id'}
+CHAVES_SEM_TEXTO = {'angulo', 'intensidade', 'sentido', 'lon', 'lat', 't', 'cor', 'unidade', 'moeda', 'ano', 'data', 'id',
+                    'fonte', 'fontes', 'forma', 'destaque', 'nota'}   # V2.5 (piloto Pisa): nome da fonte não é afirmação a rastrear
 CHAVES_NUMERO = {'valor', 'pct', 'de', 'ate'}
 
 

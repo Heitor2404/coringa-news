@@ -31,7 +31,7 @@ Fallbacks silenciosos no caminho real: **0** (todo crítico sem composição cap
 | Pessoa com nome só no sujeito | `dados.nome` derivado do sujeito (sem inventar) |
 
 ## 3. Testes
-- Suíte completa: 748 testes; as falhas restantes são as **5 antigas** da linha de base (polvo, lote, fase3), nenhuma nova.
+- Suíte completa: 745 passaram; as 5 falhas restantes são as **antigas** da linha de base (polvo, lote, fase3), nenhuma nova.
 - `tests/test_v25_matriz.py`, `test_v24_previa.py`, `test_v24_correcao_visual.py`: regras novas, retomadas sucessivas, áudio medido no MP4.
 
 ## 4. Cobertura por nicho (matriz offline, `src/v2/matriz.py`, 49 cenários)
@@ -65,7 +65,11 @@ Casos negativos (imagem enganosa, anacrônica, de outra pessoa, mídia ausente, 
 |---|---|---|---|
 | 1 | Por que o céu é azul? (ciência, inédito) | BLOQUEADO_PREPARO, sem MP4 | roteirista não conhecia o formato do esquema/números → 5 críticos sem dados. **Corrigido** (FORMATO_CAMPOS) |
 | 2 | Naufrágio do Titanic (história, inédito) | BLOQUEADO_PREPARO, sem MP4 | esquema e números OK após a correção; 4 momentos históricos sem foto que os mostre (manobra de Murdoch, iceberg avistado, inspeção de Andrews, destroços 1985) — bloqueio correto, nenhuma foto genérica aceita como prova |
-| 3 | Por que a Torre de Pisa é inclinada? (engenharia/geologia, inédito) | ver anexo da entrega | |
+| 3 | Por que a Torre de Pisa é inclinada? (engenharia/geologia, inédito) | BLOQUEADO_PREPARO, sem MP4 | 11/12 acontecimentos resolvidos (mapa, números, impacto, processos); 1 bloqueio: o conserto de "escala" foi recusado porque o NOME DA FONTE nos dados foi rastreado como afirmação. **Defeito geral corrigido** (`CHAVES_SEM_TEXTO`), com teste. Não repetido (1 geração por assunto) |
+
+Nenhum dos 3 pilotos gerou MP4: os três pararam ANTES da narração, com a causa nomeada, sem mascarar falha. Cada um
+expôs um defeito estrutural diferente (formato dos campos no prompt; momento histórico sem registro; rastreio da fonte);
+dois foram corrigidos de forma geral. Não há MP4 de pilotos para avaliação audiovisual nesta entrega.
 
 ## 8. Limitações remanescentes
 - **História**: depende do acervo ter a foto do MOMENTO narrado; quando não tem, o vídeo é barrado (seguro, mas a taxa de
@@ -84,6 +88,6 @@ Casos negativos (imagem enganosa, anacrônica, de outra pessoa, mídia ausente, 
 - **NÃO SUPORTADA para automação**: história de momentos sem registro fotográfico no acervo.
 
 ## 10. Recomendação
-**NO-GO para ativar a V2 em produção automática.** GO para pilotos supervisionados nas categorias "prontas", sempre com
+**NO-GO para ativar a V2 em produção automática** (0/3 pilotos reais chegaram ao MP4). GO para pilotos supervisionados nas categorias "prontas", sempre com
 avaliação audiovisual humana (o fiscal nunca aprova sozinho: ilustração e monotonia exigem revisão). Próximo passo
 estrutural: representação documental alternativa para momentos históricos sem foto.

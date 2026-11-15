@@ -124,7 +124,8 @@
     const vec = f => [Math.cos(f.angulo * Math.PI / 180) * R * f.intensidade, -Math.sin(f.angulo * Math.PI / 180) * R * f.intensidade];
     const res = fs.reduce((a, f) => { const v = vec(f); return [a[0] + v[0], a[1] + v[1]]; }, [0, 0]);
     const obj = { navio: `<path d="M-150 0 H150 L120 60 H-130 Z" fill="#2b3a4a" stroke="#fff" stroke-width="4"/><rect x="20" y="-70" width="80" height="70" fill="#2b3a4a" stroke="#fff" stroke-width="4"/>`,
-      caixa: `<rect x="-90" y="-90" width="180" height="180" fill="#2b3a4a" stroke="#fff" stroke-width="4"/>`, bola: `<circle r="90" fill="#2b3a4a" stroke="#fff" stroke-width="4"/>` }[p.objeto || 'caixa'];
+      // V2.5: objeto maior e mais claro — no vertical, o corpo que sofre as forças precisa ser visto (auditoria: 1,4% da área)
+      caixa: `<rect x="-130" y="-130" width="260" height="260" fill="#45627a" stroke="#fff" stroke-width="5"/>`, bola: `<circle r="130" fill="#45627a" stroke="#fff" stroke-width="5"/>` }[p.objeto || 'caixa'];
     return {
       html: `${prancheta}${titulo('FORÇAS', p.titulo)}
         <svg class="abs" style="left:0;top:0;overflow:visible" width="1080" height="1920"><defs>${fs.map((f, i) => seta('fv' + ctx.i + i, f.cor || 'var(--ciano)')).join('')}${seta('fr' + ctx.i, '#fff')}</defs>

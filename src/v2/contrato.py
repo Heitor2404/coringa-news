@@ -284,6 +284,12 @@ def normalizar_dados(ac: dict) -> tuple[dict, list[str]]:
             dados[alvo] = dados.pop(k); motivos.append(f'campo "{k}" é "{alvo}"')
     ac['dados'] = dados
     tipo = ac.get('tipo')
+    # V2.5 (piloto Titanic): "pessoa" com o nome no sujeito/quem e "dados" vazio — o nome JÁ está no contrato; copiá-lo
+    # para dados.nome não inventa nada (a identificação na tela usa a foto real; sem foto continua barrado)
+    if tipo == 'pessoa' and not str(dados.get('nome') or '').strip():
+        nome = str(ac.get('sujeito') or ac.get('quem') or '').strip()
+        if nome and len(nome) <= 40 and nome[:1].isupper():
+            dados['nome'] = nome; motivos.append(f'nome da pessoa vem do sujeito ("{nome}")')
     etapas = [str(e).strip() for e in dados.get('etapas') or [] if isinstance(e, str) and str(e).strip()
               and not re.fullmatch(r'[\d.,%\s]+', str(e))]
     if tipo in DINAMICOS and not viaveis(tipo, dados, ac) and len(set(etapas)) >= 2 \

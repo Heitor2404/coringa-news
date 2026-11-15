@@ -225,3 +225,10 @@ def test_imagem_ausente_ou_trocada_para_a_retomada(tmp_path):
     arq.unlink()                                                        # ausente
     with pytest.raises(checkpoint.ArquivoCheckpoint, match='ausente'):
         checkpoint.Checkpoint(tmp_path / 'C' / 'checkpoint', tmp_path / 'A' / 'checkpoint', 'roteiro').carregar('roteiro')
+
+
+def test_pessoa_com_nome_no_sujeito_ganha_dados_nome_sem_inventar():
+    ac, m = contrato.normalizar_dados({'tipo': 'pessoa', 'sujeito': 'William Murdoch', 'dados': {}})
+    assert ac['dados']['nome'] == 'William Murdoch' and m
+    ac, m = contrato.normalizar_dados({'tipo': 'pessoa', 'sujeito': 'o oficial de plantão', 'dados': {}})
+    assert ac['dados'] == {} and not m                       # sem nome próprio: nada é inventado

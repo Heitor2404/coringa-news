@@ -47,9 +47,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - uses: FedericoCarboni/setup-ffmpeg@v3
-        with:
-          ffmpeg-version: release
+      - name: ffmpeg (pacote do sistema; a ação setup-ffmpeg quebrou em 15/11: "Failed to read version from readme")
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
       - name: Natural Earth (cache)
         uses: actions/cache@v4
         with:

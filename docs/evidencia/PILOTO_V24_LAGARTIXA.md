@@ -141,3 +141,64 @@ Assim, mecanismo crítico observável só chega a "foto declarada" (força 2) se
 1. O sujeito visível do contrato (robô, pata) versus a entidade institucional (NASA).
 2. Grupos de estado genéricos para fenômenos científicos.
 3. O vínculo por entidade da V1 aplicado a acontecimentos de outro sujeito.
+
+---
+
+# Correção da seleção de imagens + retomada única — execução 43700052750 (código 1086a91)
+
+**Resultado: `BLOQUEADO_PREPARO`. Sem MP4.**
+
+O bloqueio ficou num único acontecimento, o **e2**, e é legítimo. A retomada usou o checkpoint `43654018515`, a partir da etapa `roteiro`:
+- o cache cifrado abriu e o sha256 conferiu ("OK");
+- não refez pesquisa, acervo nem roteiro, nem houve chamada de conserto;
+- não houve edição à mão do checkpoint;
+- duração: 36 s de geração (1 min 49 s de job); custo USD 0,00.
+
+## O que mudou no preparo V2.3 (`src/v2/identidade.py`, `preparo.avaliar_imagem`)
+
+A identidade agora vem de duas fontes: do acontecimento (nomes próprios e nome científico marcado) e dos metadados da imagem (catálogo, título, descrição e crédito da fonte). Não depende mais só de palavras iguais. Não há regra específica para o tema.
+
+| Regra | O que faz |
+|---|---|
+| **Instituição × objeto** | Nome que só aparece no crédito (NASA) documenta a imagem, não é objeto visual. |
+| **Registro documental** | O objeto nomeado aparece, mais a ação/contexto narrados, mais a época do acontecimento (ou a instituição dele assina): "mostra o fato" (força 3). |
+| **Outra identidade** | Imagem de outro táxon nomeado é incompatível. |
+| **Escala** | Fala microscópica com foto comum: no máximo "o que o roteiro pediu" (força 2). |
+| **Genérica** | Genérica de tema atemporal pode ser "o que o roteiro pediu". Genérica sem o assunto vale 0,5. Genérica de acontecimento datado continua só contexto. |
+| **Sujeito com nome próprio** | Precisa aparecer na imagem ou assinar o registro. |
+| **Época** | `dados.ano` do próprio acontecimento entra como época. |
+
+## Antes × depois
+
+| Ev. | 43654018515 | 43700052750 | Por quê |
+|---|---|---|---|
+| e2 | bloqueio | **bloqueio (legítimo)** | a0 = Tarentola mauretanica: incompatível. Fotos de *H. mabouia* (a2, a8, a10…) mostram a espécie, não as lamelas: só contexto. Não há composição: os dados são só `{especie}`. |
+| e3 | bloqueio | **foto declarada a3** + revisão | Sola da pata no vidro = a anatomia visível pedida. A escala microscópica não é provada (anotado). |
+| e11 | bloqueio | **foto direta a13** (evidência) | Registro documental: Astrobee + robô/dourado/estação espacial + 2025 + crédito NASA. a1 (JPL, 2014) e a5/a7 (Glover, 2021) não chegam lá; lagartixas valem 0,5. |
+| e12 | foto declarada a9 + revisão | foto declarada a9 + revisão | Suni Williams aparece; a5 (Victor Glover) e as lagartixas valem 0,5. Sem época/assinatura da instituição: não chega a 3. |
+
+## Evidência V1 (sombra; não decide)
+
+- Agora usa **referências por acontecimento**: só as que ele cita, mais os nomes próprios dele. A fase anônima continua herdando as do vídeo.
+- Tem veto de táxon.
+- e11 deixou de escolher a lagartixa a10; e12 escolhe a9 (antes, a12).
+
+**Ressalvas desta execução** (sombra):
+- e11 escolheu **a1**, o dispositivo do JPL de 2014, como "relacionada": a V1 ainda não usa `dados.ano` na janela do acontecimento.
+- e3, sem nome próprio, herda a espécie do vídeo e escolhe a8, uma foto da espécie, como "relacionada".
+- Leitura visual: catálogo e casamento pelo Gemini lite (9 s e 7 s). Sem dupla leitura NVIDIA: nenhum par elegível. Nenhuma discordância.
+
+## O que falta para o MP4 (não feito: fora do escopo e exigiria nova geração ou conserto)
+
+O e2 ("A espécie Hemidactylus mabouia usa lamelas nos dedos para se segurar") é um mecanismo crítico **observável** com dados `{especie}`.
+- A pré-validação o deixa para o acervo, e o acervo não tem imagem das lamelas.
+- A base factual também é fraca: a pesquisa só cita a etimologia ("dactylos … lamelas dos dedos").
+- Saídas possíveis, cada uma exige decisão:
+  1. estender o conserto único a críticos observáveis sem imagem de força ≥ 2 **no acervo já coletado**, o que levaria a uma ilustração das lamelas;
+  2. corrigir o contrato/fala no checkpoint à mão, com retomada auditada.
+
+**Testes:** `tests/test_v24_selecao.py`, 26 testes com os dados reais. A suíte inteira tem 644 aprovados e as mesmas 9 falhas antigas (render/cofre locais), conferidas por diff. Ever Given, Santa Helena, Katrina e Tacoma passam sem mudar gabarito.
+
+**Artefatos**
+- Pacote cifrado: `piloto-v22-resultado/piloto-43700052750.tgz.gpg`.
+- Checkpoints cifrados no cache: `piloto-checkpoint-43654018515` (origem) e `piloto-checkpoint-43700052750` (cópia com procedência).

@@ -1,2 +1,1 @@
 # Retomada do piloto V2.4: "<run_id> [roteiro|acervo|pesquisa]". Vazio/comentado = execução nova a partir de pedido.txt.
-43654018515 roteiro

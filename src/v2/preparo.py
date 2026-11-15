@@ -111,7 +111,9 @@ def _mesma_fonte(a, b) -> bool:
 
 def rastrear(valor: float, fonte_declarada: str | None, linhas: list[dict]) -> dict | None:
     """A linha da pesquisa que contém o número (preferindo a da fonte declarada). None = sem fonte rastreável."""
-    cand = [ln for ln in linhas if any(abs(x - valor) < 1e-6 for x in ln['numeros'])]
+    from src.v2.cobertura import valores                   # V2.5: o MESMO leitor de números da cobertura ("5 milhões")
+    cand = [ln for ln in linhas if any(abs(x - valor) < 1e-6 for x in ln['numeros'])
+            or any(abs(x - valor) < 1e-6 for x, _ in valores(ln['texto']))]
     if not cand:
         return None
     melhor = next((ln for ln in cand if fonte_declarada and _mesma_fonte(ln['fonte'], fonte_declarada)), cand[0])
@@ -130,6 +132,15 @@ def _ano(s) -> int | None:
 
 
 def avaliar_imagem(x: dict, ac: dict, cena: dict, ano_evento: int | None) -> dict:
+    """Ver _avaliar_imagem. V2.5: imagem que o próprio catálogo descreve como ilustração/renderização/representação
+    digital NUNCA vale como registro (foto direta ou pedida): no máximo 0,5 (só a ILUSTRAÇÃO declarada pode usá-la)."""
+    a = _avaliar_imagem(x, ac, cena, ano_evento)
+    if a.get('compativel') and a['forca'] > .5 and NAO_REGISTRO.search(_n(f"{x.get('mostra', '')} {x.get('titulo', '')}")):
+        return {**a, 'forca': .5, 'motivos': ['não é registro fotográfico (ilustração/renderização no catálogo)'] + a['motivos']}
+    return a
+
+
+def _avaliar_imagem(x: dict, ac: dict, cena: dict, ano_evento: int | None) -> dict:
     """Compatibilidade e força de representação de um item do acervo para o acontecimento (catálogo + metadados da
     fonte, sem IA). forca: 3 mostra o fato · 2 é o que o roteiro pediu · 1 contexto do assunto · 0,5 sem o assunto.
     Incompatível: texto em escrita que o público não lê; diagrama/mapa sem relação com o pedido; OUTRA identidade
@@ -301,6 +312,7 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
     """Valida e completa os acontecimentos do roteiro `v` (modifica `v['cenas']` e `v['fontes']`). Devolve o relatório:
     {eventos: [...], bloqueios: [...], revisoes: [...], trocas: [...], fontes_adicionadas: [...]}."""
     acervo = acervo if acervo is not None else (v.get('acervo') or [])
+    ultima_foto = None
     por_id = {x['id']: x for x in acervo}
     linhas = pesquisa(v)
     fontes = v.setdefault('fontes', [])
@@ -378,6 +390,7 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
                         fontes.append(r['fonte']); rel['fontes_adicionadas'].append(r['fonte'])
                 else:
                     faltam.append(f"fonte rastreável para o número {c['valor']} dito na cena {k}")
+                    ev['numero_sem_fonte'] = True       # V2.5: número na tela sem fonte bloqueia (mesma regra da montagem: D9)
         # capacidade apresentada como carga (ex.: "levava vinte mil contêineres" com dado de capacidade)
         d = ac.get('dados') or {}
         if any('capacidad' in _n(kk) for kk in d) and re.search(r'\b(levava|transportava|carregava|trazia)\b', _n(' '.join(cena_ctx['_falas']))):
@@ -429,7 +442,20 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
 
         # 5) representação
         # ordem: composição com dados > foto real que mostra o fato > cena editorial do roteiro > imagem pedida > contexto
-        if comp:
+        invalidos = [] if comp else campos_invalidos(ac)
+        if ev.get('numero_sem_fonte'):
+            rep = {'modo': 'bloqueio', 'faltam': faltam + ['número que irá à tela sem fonte na pesquisa (retirar ou qualificar)']}
+            rel['bloqueios'].append({'evento': chave, 'cenas': idx, 'tipo': ac['tipo'], 'mostrar': ac.get('mostrar'), 'faltam': rep['faltam']})
+        elif all(v['cenas'][k].get('tipo') in ('revelacao', 'gancho', 'fechamento') for k in idx):
+            # V2.5: a cena ESTRUTURAL é desenhada pela montagem como revelação/abertura/encerramento — o preparo decide o
+            # mesmo (antes decidia evento.impacto para a revelação e o fiscal via divergência)
+            rep = {'modo': 'editorial', 'comp': EDITORIAL.get(c0.get('tipo'), 'revelacao.surpresa')}
+        elif invalidos and any(c in FATUAIS for c, _ in invalidos):
+            # V2.5: dado DECLARADO e errado (país que não existe, longitude 300, valor em texto) é inconsistência factual:
+            # nenhuma foto/cartão de substituição pode escondê-la, nem em cena de apoio
+            rep = {'modo': 'bloqueio', 'faltam': faltam + [f'dado declarado inválido: {c} = {str(v_)[:60]}' for c, v_ in invalidos if c in FATUAIS]}
+            rel['bloqueios'].append({'evento': chave, 'cenas': idx, 'tipo': ac['tipo'], 'mostrar': ac.get('mostrar'), 'faltam': rep['faltam']})
+        elif comp:
             rep = {'modo': 'composicao', 'comp': comp}
         elif escolhida is not None and pode_foto and av_esc['forca'] >= 3:
             rep = {'modo': 'foto_direta', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
@@ -457,14 +483,33 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
                                         'evidencia': rep['evidencia']})
         elif not ev['critico']:
             rep = {'modo': 'foto_contexto' if escolhida is not None else 'sem_imagem', 'foto': (escolhida or {}).get('id')}
+        elif ac['tipo'] in DOCUMENTAIS and (ctxo := _contexto_documental(ac, cena_ctx, acervo, aval, linhas, escolhida, av_esc,
+                                                                          ' '.join(str(v.get(k) or '') for k in ('titulo', 'pergunta')),
+                                                                          usadas, ultima_foto)):
+            # V2.5 — DOCUMENTÁRIO: fato COMPROVADO na pesquisa + foto REAL do sujeito/lugar/objeto, identificada na tela como
+            # CONTEXTO (não mostra o instante narrado). Não bloqueia por falta da foto do instante; nunca vira prova.
+            x, fato = ctxo
+            rep = {'modo': 'contexto', 'foto': x['id'], 'nao_prova': True, 'fato': fato['trecho'], 'fonte': fato['fonte']}
+            escolhida = x
+            for k in idx:
+                v['cenas'][k]['foto'] = x['id']
+                v['cenas'][k].pop('_sem_imagem', None)
+                v['cenas'][k]['rotulo_contexto'] = _rotulo_contexto(x)
+                if x.get('credito'):
+                    v['cenas'][k]['credito'] = x['credito']
+            rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'fato documentado mostrado com foto de CONTEXTO (não registra o instante narrado)',
+                                    'evidencia': f"{x['id']}: \"{str(x.get('mostra') or '')[:70]}\" · fato: \"{fato['trecho'][:80]}\" ({fato['fonte']})"})
         else:
             capazes = ', '.join(f"{cp} ({', '.join(req)})" for cp, req in contrato.TIPOS.get(ac['tipo'], {}).get('comps', {}).items())
             falta_img = (f"foto/vídeo real que mostre \"{ac.get('estado_final') or ac.get('mostrar')}\"" if pode_foto
                          else 'ILUSTRAÇÃO com dados da pesquisa (fenômeno não observável: foto não mostra)' if obs != 'sim'
                          else 'composição com dados (este tipo não se mostra com foto)')
-            rep = {'modo': 'bloqueio', 'faltam': faltam + [f'dados para uma composição capaz: {capazes or "nenhuma"}', falta_img]}
+            sem_fonte = [] if ac['tipo'] not in DOCUMENTAIS or _fato_rastreado(cena_ctx, linhas) else \
+                ['o fato narrado não tem fonte na pesquisa: retirar ou qualificar a afirmação (uma ilustração não resolve)']
+            rep = {'modo': 'bloqueio', 'faltam': faltam + sem_fonte + [f'dados para uma composição capaz: {capazes or "nenhuma"}', falta_img]}
             rel['bloqueios'].append({'evento': chave, 'cenas': idx, 'tipo': ac['tipo'], 'mostrar': ac.get('mostrar'), 'faltam': rep['faltam']})
         ac['representacao'] = rep
+        ultima_foto = rep.get('foto') or ultima_foto
         # V2.4: função visual — evidência (registro real) × ilustração (explica um mecanismo, NUNCA prova) × dado
         funcao = funcao_visual(rep)
         ac['funcao_visual'] = funcao
@@ -513,11 +558,80 @@ def funcao_visual(rep: dict) -> str:
         return 'ilustracao'
     if modo in ('foto_direta', 'foto_declarada'):
         return 'evidencia'
-    if modo == 'foto_contexto':
+    if modo in ('foto_contexto', 'contexto'):
         return 'contexto'
     if modo == 'editorial':
         return 'editorial'
     return 'nenhuma'
+
+
+NAO_REGISTRO = re.compile(r'\b(ilustra\w*|renderiza\w*|representacao digital|desenho|pintura|modelo 3d|recriacao|reconstituicao|arte digital|concepcao artistica)')   # não é foto real
+DOCUMENTAIS = {'evento_historico', 'pessoa', 'documento', 'lugar', 'ambiente'}
+FATUAIS = {'pais', 'pontos', 'rota', 'valor', 'pct', 'de', 'ate', 'itens', 'serie', 'aneis', 'eventos'}
+
+
+def campos_invalidos(ac: dict) -> list[tuple[str, object]]:
+    """Campos que o contrato DECLAROU (presentes em dados) e que nenhuma composição do tipo consegue usar."""
+    from src.v2 import capacidades
+    d = ac.get('dados') or {}
+    out = []
+    for comp, reqs in contrato.TIPOS.get(ac.get('tipo'), {}).get('comps', {}).items():
+        for r in reqs:
+            campo = re.match(r'\w+', r).group(0)
+            if campo not in d or d[campo] in (None, '', [], {}):
+                continue
+            if campo in capacidades.ITEM:            # lista: INVÁLIDA se algum item não serve (poucos itens = insuficiente)
+                lst = d[campo]
+                ruim = not isinstance(lst, list) or any(not capacidades._valido(campo, x) for x in lst)
+            else:
+                ruim = not capacidades._tem(campo, d, '')
+            if ruim and (campo, d[campo]) not in out:
+                out.append((campo, d[campo]))
+    return out
+
+
+def _fato_rastreado(cena_ctx: dict, linhas: list[dict]) -> dict | None:
+    """O fato inteiro na pesquisa; senão, o trecho NARRATIVO depois da primeira frase (gancho/abertura que divide o
+    mesmo acontecimento não é a afirmação documental)."""
+    from src.v2 import prevalidacao
+    falas = [f for f in cena_ctx.get('_falas') or [] if f.strip()]
+    return prevalidacao.rastrear_texto(' '.join(falas), linhas) or \
+        (prevalidacao.rastrear_texto(' '.join(falas[1:]), linhas) if len(falas) > 1 else None)
+
+
+def _rotulo_contexto(x: dict) -> str:
+    m = re.sub(r'^(foto(grafia)?|imagem|registro|documento)\s+((em\s+)?(preto\s+e\s+branco|colorida|antiga|hist[oó]rica|a[eé]rea|em close(-up)?|impresso|datado|subaqu[aá]tica)\s+)*'
+               r'((de|do|da|dos|das|mostrando)\s+)?', '', str(x.get('mostra') or '').strip(), flags=re.I)
+    m = (m[:1].upper() + m[1:]) if m else 'Foto do assunto'
+    ano = f" · {x['ano']}" if x.get('ano') else ''
+    if x.get('ano'):
+        m = re.sub(rf'\s*(de|em)?\s*(\d{{1,2}}\s+de\s+\w+\s+de\s+)?{x["ano"]}\b,?(\s+sendo\b.*)?', '', m).strip() or m
+    m = m[:46 - len(ano) - 19].rsplit(' ', 1)[0] if len(m) > 46 - len(ano) - 19 else m
+    m = re.sub(r'(\s+(e|de|da|do|das|dos|a|o|em|com|no|na|nos|nas|ao|para|por))+$', '', m, flags=re.I)
+    m = re.sub(r'^((e|de|da|do|das|dos|em|com|datad[oa])\s+)+', '', m, flags=re.I).strip()
+    m = (m[:1].upper() + m[1:]) if m else 'Foto do assunto'
+    return f'{m}{ano} · não é o instante'[:46]          # cabe no limite do banner (46)
+
+
+def _contexto_documental(ac, cena_ctx, acervo, aval, linhas, escolhida, av_esc, assunto: str = '', usadas=None, ultima=None):
+    """(foto, fato) para a representação de CONTEXTO: o fato precisa estar na pesquisa (com fonte) e a foto precisa ser
+    real e compatível com o sujeito (força ≥ 1: mesmo assunto/época, sem conflito de identidade)."""
+    fato = _fato_rastreado(cena_ctx, linhas)
+    if not fato:
+        return None
+    cands = ([(escolhida, av_esc)] if escolhida is not None and av_esc and av_esc['compativel'] else []) + \
+        [(x, aval(x)) for x in acervo if x.get('arq') and x is not escolhida]
+    tema = _palavras(assunto)
+    # força ≥ 1: o sujeito/época do acontecimento; força 0,5: só serve se a foto é do ASSUNTO CENTRAL do vídeo (o navio do
+    # naufrágio, a torre do desabamento) — contexto declarado, nunca a pessoa ou o instante narrado
+    cands = [(x, a) for x, a in cands if a['compativel'] and x.get('tipo_img', 'foto') != 'ia' and not NAO_REGISTRO.search(_n(f"{x.get('mostra', '')} {x.get('titulo', '')}"))
+             and (a['forca'] >= 1 or (a['forca'] >= .5 and tema and _palavras(f"{x.get('mostra', '')} {x.get('titulo', '')}") & tema))]
+    if not cands:
+        return None
+    # variedade: foto que NÃO é a do acontecimento anterior e ainda pouco usada vem antes (mesma foto em sequência = D16)
+    usadas = usadas or {}
+    cands.sort(key=lambda p: (p[0]['id'] == ultima, len(usadas.get(p[0]['id'], [])), -p[1]['forca']))
+    return cands[0][0], fato
 
 
 def _composicao_viavel(ac: dict) -> str | None:

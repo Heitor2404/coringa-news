@@ -265,7 +265,9 @@ def test_fiscal_depois_so_bloqueia_o_que_falta_de_verdade(depois):
     b = [a for a in _bloq(r) if a['codigo'] not in ('D15', 'D16')]
     assert [a['codigo'] for a in b] == ['S5'] and b[0]['evidencia'].startswith('e9:')
     # V2.4: as fotos do Ever Given ficam paradas/repetidas de verdade (ex.: a11 por 7,3 s nas cenas 10–11) — o fiscal mostra
-    assert {a['codigo'] for a in _bloq(r)} >= {'D15', 'D16'} and any('a11-g.jpg' in a['evidencia'] for a in _bloq(r, 'D15'))
+    # V2.5: planos seguidos com a MESMA foto viram um plano só (montagem._juntar_planos_iguais) — a repetição (D16) some,
+    # mas a foto continua parada tempo demais, e isso o fiscal segue mostrando como D15 (não esconde o problema)
+    assert 'D15' in {a['codigo'] for a in _bloq(r)} and any('a11-g.jpg' in a['evidencia'] for a in _bloq(r, 'D15'))
     assert 'flutuando livremente' in b[0]['evidencia']
 
 

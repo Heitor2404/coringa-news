@@ -58,7 +58,7 @@ ESQ_SEM_ROTULO_DO_ASSUNTO = esq([{'id': 'a', 'forma': 'corpo', 'rotulo': 'BLOCO'
                                 [{'rotulo': 'INÍCIO'}, {'rotulo': 'FIM', 'objetos': {'a': {'dy': -.3}}}])
 
 FATOS = ('FATOS:\n- O magma acumulado aumenta a pressão sob a crosta. (Wikipédia)\n- A osmose leva a água através da membrana. (Wikipédia)\n'
-         '- O Ever Given encalhou no Canal de Suez em 2021. (Wikipédia)\n- A população mundial passou de 2,5 bilhões em 1950 para 7,8 bilhões em 2020. (ONU)\n'
+         '- O Ever Given encalhou no Canal de Suez em 2021. (Wikipédia)\n- A população mundial passou de 2,5 bilhões em 1950 para 3,7 bilhões em 1970, 5,3 bilhões em 1990 e 7,8 bilhões em 2020. (ONU)\n'
          '- O Brasil produz 3,7 milhões de toneladas de café. (FAO)\n- Marie Curie ganhou o Nobel de Física em 1903 e o de Química em 1911. (Wikipédia)\n'
          '- A Terra leva 365 dias para orbitar o Sol. (NASA)\n- O pedal gira a coroa, a corrente gira a roda. (Wikipédia)\n'
          '- A Muralha da China tem mais de 21 mil km. (Wikipédia)\n- As baleias-jubarte migram até 8 mil km por ano. (Wikipédia)\n'
@@ -99,8 +99,8 @@ CENARIOS = [
     # ── 4. geografia, territórios e deslocamentos ──
     ('g1', 'geografia', 'dev', 'rota marítima válida', [C('O navio saiu de Xangai para Roterdã.', _ac('e1', 'deslocamento', 'navio', 'rota', {'pontos': P(('Xangai', 121.5, 31.2), ('Roterdã', 4.5, 51.9)), 'tipo': 'maritima'}))], [], {'aprova'}),
     ('g2', 'geografia', 'dev', 'território válido', [C('O Chile é longo e estreito.', _ac('e1', 'territorio', 'Chile', 'Chile', {'pais': 'Chile'}, crit=False))], [], {'aprova'}),
-    ('g3', 'geografia', 'val', 'território inexistente', [C('Esse país é enorme.', _ac('e1', 'territorio', 'país', 'país', {'pais': 'Terra Média'}, crit=False))], [], {'aprova', 'revisao'}),
-    ('g4', 'geografia', 'val', 'localização com coordenada inválida', [C('O Saara fica no norte da África.', _ac('e1', 'localizacao', 'Saara', 'Saara', {'pontos': [{'nome': 'Saara', 'lon': 300, 'lat': 23}]}, crit=False))], [], {'aprova', 'revisao'}),
+    ('g3', 'geografia', 'val', 'território inexistente', [C('Esse país é enorme.', _ac('e1', 'territorio', 'país', 'país', {'pais': 'Terra Média'}, crit=False))], [], {'bloqueia'}),   # V2.5: era falso positivo (auditoria)
+    ('g4', 'geografia', 'val', 'localização com coordenada inválida', [C('O Saara fica no norte da África.', _ac('e1', 'localizacao', 'Saara', 'Saara', {'pontos': [{'nome': 'Saara', 'lon': 300, 'lat': 23}]}, crit=False))], [], {'bloqueia'}),   # V2.5: longitude 300 não pode ser escondida
     ('g5', 'geografia', 'val', 'localização válida', [C('O Saara fica no norte da África.', _ac('e1', 'localizacao', 'Saara', 'Saara', {'pontos': P(('Saara', 13, 23))}, crit=False))], [], {'aprova'}),
     # ── 5. espaço e astronomia ──
     ('e1', 'espaco', 'dev', 'órbita com dado parcial', [C('A Terra leva um ano para dar a volta no Sol.', _ac('e1', 'orbita', 'Terra', 'Terra orbitando o Sol', {'central': {'nome': 'Sol'}, 'orbitante': {'nome': 'Terra'}, 'periodo': '365 dias'}, 'Terra num ponto da órbita', 'volta completa'))], [], {'aprova'}),
@@ -115,7 +115,7 @@ CENARIOS = [
     ('m3', 'engenharia', 'val', 'nível com palavras no lugar de números', [C('A represa encheu.', _ac('e1', 'nivel', 'represa', 'represa enchendo', {'de': 'vazia', 'ate': 'cheia'}, 'represa vazia', 'represa cheia'))], [], {'bloqueia'}),
     ('m4', 'engenharia', 'val', 'avião: forças com sentido', [C('A sustentação vence o peso e o avião sobe.', _ac('e1', 'movimento', 'avião', 'avião subindo', {'forcas': [{'nome': 'Sustentação', 'intensidade': 1}, {'nome': 'Peso', 'intensidade': .6}]}, 'avião na pista', 'avião subindo'))], [], {'aprova'}),
     ('m5', 'engenharia', 'val', 'ponte: escala com itens sem valor', [C('A ponte é maior que o prédio.', _ac('e1', 'escala', 'ponte', 'comparação', {'itens': ['ponte comprida', 'prédio alto']}))], [], {'bloqueia'}),
-    ('m6', 'engenharia', 'val', 'ponte: escala válida', [C('O vão da Golden Gate tem 1.280 metros, mais que o Everest de altura relativa.', _ac('e1', 'escala', 'Golden Gate', 'comparação', {'itens': [{'rotulo': 'Golden Gate', 'valor': 1280, 'forma': 'barra'}, {'rotulo': 'Torre Eiffel', 'valor': 330, 'forma': 'torre'}], 'unidade': 'm', 'fonte': 'Wikipédia'}))], [], {'aprova'}),
+    ('m6', 'engenharia', 'val', 'ponte: escala válida', [C('O vão da Golden Gate tem 1.280 metros, mais que o Everest de altura relativa.', _ac('e1', 'escala', 'Golden Gate', 'comparação', {'itens': [{'rotulo': 'Golden Gate', 'valor': 1280, 'forma': 'barra'}, {'rotulo': 'Torre Eiffel', 'valor': 330, 'forma': 'torre'}], 'unidade': 'm', 'fonte': 'Wikipédia'}))], [], {'revisao', 'bloqueia'}),   # V2.5: fala cita o Everest, dados comparam Torre Eiffel
     # ── 7. estatísticas, números e comparações ──
     ('s1', 'numeros', 'dev', 'série temporal válida', [C('A população cresceu de 1950 a 2020.', _ac('e1', 'evolucao_temporal', 'população', 'crescimento', {'serie': [[1950, 2.5], [1970, 3.7], [1990, 5.3], [2020, 7.8]], 'unidade': 'bi', 'fonte': 'ONU'}, crit=False))], [], {'aprova'}),
     ('s2', 'numeros', 'dev', 'barras sem valores', [C('O Brasil produz mais café.', _ac('e1', 'comparacao', 'café', 'produção', {'itens': [{'rotulo': 'Brasil'}, {'rotulo': 'Colômbia'}]}, crit=True))], [], {'bloqueia'}),

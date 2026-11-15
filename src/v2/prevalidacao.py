@@ -36,13 +36,31 @@ def _raizes(s) -> set[str]:
     return {w[:5] for w in preparo._palavras(s)}
 
 
+NUMERAIS = {x[:5] for x in ('zero um uma dois duas tres quatro cinco seis sete oito nove dez onze doze treze quatorze catorze quinze dezesseis dezessete '
+            'dezoito dezenove vinte trinta quarenta cinquenta sessenta setenta oitenta noventa cem cento duzentos trezentos quatrocentos quinhentos '
+            'seiscentos setecentos oitocentos novecentos mil milhao milhoes bilhao bilhoes').split()}
+
+
 def rastrear_texto(s: str, linhas: list[dict]) -> dict | None:
     """A linha da pesquisa que contém a maior parte das palavras do item (raiz de 5 letras: "afastam" ≈ "afastadas").
     Exige metade das palavras de conteúdo (pelo menos 1). None = o item não vem da pesquisa."""
-    alvo = _raizes(s)
+    alvo = _raizes(s) - NUMERAIS
     if not alvo or not linhas:
         return None
-    melhor = max(linhas, key=lambda ln: len(alvo & _raizes(ln['texto'])))
+    # V2.5: a FONTE precisa sustentar o fato específico — não basta dividir palavras. Na linha escolhida têm de estar
+    # (a) metade das palavras de conteúdo, (b) TODO número escrito com dígitos e (c) TODO nome próprio do item.
+    dig = {d.replace('.', '').replace(',', '') for d in re.findall(r'\d[\d.,]*\d|\d', s)}
+    nomes = {w[:5].lower() for w in re.findall(r'(?<![.!?]\s)(?<!^)\b[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]{3,}', s.strip())}
+    nomes = {preparo._n(x)[:5] for x in nomes}
+
+    def sustenta(ln):
+        t = ln['texto']
+        tdig = {d.replace('.', '').replace(',', '') for d in re.findall(r'\d[\d.,]*\d|\d', t)}
+        return dig <= tdig and nomes <= _raizes(t)
+    cand = [ln for ln in linhas if sustenta(ln)]
+    if not cand:
+        return None
+    melhor = max(cand, key=lambda ln: len(alvo & _raizes(ln['texto'])))
     comum = alvo & _raizes(melhor['texto'])
     if len(comum) < max(1, -(-len(alvo) // 2)):
         return None
@@ -142,7 +160,7 @@ def prevalidar(v: dict) -> dict:
 
 
 # ───────────────────────── conserto (1 chamada) ─────────────────────────
-PROMPT_REPARO = """Você corrige CONTRATOS VISUAIS de um vídeo curto de divulgação científica em português.
+PROMPT_REPARO = """Você corrige CONTRATOS VISUAIS de um vídeo documental curto em português (ciência, história, natureza, geografia, pessoas).
 Cada acontecimento abaixo é CRÍTICO e foi declarado sem os dados que a composição exige. Para cada um, devolva o tipo e
 os dados corretos usando SOMENTE os FATOS da pesquisa. Não invente etapas, nomes, números nem relações.
 

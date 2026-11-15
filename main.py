@@ -604,8 +604,17 @@ def _midia_do_acervo(v: dict, trab: Path):
                 reais[c['imagem']] = _midia_de_item(x, trab)
                 if x.get('credito'):
                     creditos.append(x['credito'])
-            except Exception as e:     # vídeo que não baixou: a frase fica com a foto vizinha (nunca tela vazia)
-                print(f"  [mídia] não consegui usar {x['id']} ({str(e)[:80]}); a frase usa a foto vizinha")
+            except Exception as e:
+                # V2.5: vídeo que não baixou usa o QUADRO DO PRÓPRIO VÍDEO (mesmo item, mesmo conteúdo, registrado); sem
+                # quadro, a falha fica explícita — nunca a "foto vizinha" em silêncio numa cena crítica
+                if x.get('video') and x.get('arq') and Path(x['arq']).exists():
+                    reais[c['imagem']] = {'tipo': 'foto', 'arq': midia.graduar(Path(x['arq'])), 'ano': x.get('ano'), 'id': x['id'],
+                                          'credito': x.get('credito'), 'tipo_img': 'foto', 'quadro_de_video': True}
+                    v.setdefault('_midia_falhas', []).append({'item': x['id'], 'motivo': str(e)[:120], 'uso': 'quadro do próprio vídeo'})
+                    print(f"  [mídia] vídeo {x['id']} indisponível ({str(e)[:60]}): usando o quadro do próprio vídeo (registrado)")
+                else:
+                    v.setdefault('_midia_falhas', []).append({'item': x['id'], 'motivo': str(e)[:120], 'uso': None})
+                    print(f"  [mídia] FALHA: {x['id']} sem arquivo utilizável ({str(e)[:80]}) — registrado; o fiscal confere a cena")
     contexto = _contexto(v)
     clima = [c for c in v['cenas'] if c.get('midia') == 'video' and c.get('imagem') and c['imagem'] not in reais]
     if clima:
@@ -694,7 +703,7 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             print('  [prévia] ' + previa.resumo(pv).replace('\n', '\n  '))
             if not rel['bloqueios']:  # V2.5: o que a fala manda mostrar × o que a tela representa (1 alternativa, sem IA)
                 from src.v2 import cobertura
-                cb = cobertura.avaliar(v, pv)
+                cb = cobertura.avaliar(v, pv, pasta / f'{nome}-previa')
                 rel['cobertura'] = cb
                 rel['bloqueios'] += cb['bloqueios']
                 rel['revisoes'] += cb['revisoes']
@@ -743,7 +752,14 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
         if r == 'sem_resposta':
             raise RuntimeError('sem aprovação no Telegram: o vídeo não foi montado')
         marca('aprovado' if r == 'ok' else 'sem aprovação (Telegram indisponível)')
+    if os.getenv('MOTOR_VISUAL') == 'v2' and v.get('_preparo') is not None:
+        from src.v2 import estados as _est
+        _est.registrar(v, 'PREVIA_APROVADA', True, entradas={'preparo': v['_preparo'].get('eventos')},
+                       artefatos={'previa': f'{nome}-previa'})
     audio, tempos, caps, dur = voz.narrar(v['cenas'], trab, teste=teste)
+    if os.getenv('MOTOR_VISUAL') == 'v2':
+        from src.v2 import estados as _est
+        _est.registrar(v, 'NARRACAO', Path(audio).exists(), entradas={'falas': [c.get('fala') for c in v['cenas']]}, artefatos={'audio': str(audio), 'duracao_s': dur})
     marca('narração pronta')
     musica = escolher_musica(v, nome)
     saida = pasta / f'{nome}.mp4'
@@ -766,6 +782,10 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     if os.getenv('MOTOR_VISUAL') == 'v2' and not teste:     # PILOTO V2.2 (experimental, reversível; padrão = motor atual)
         from src.v2 import piloto as piloto_v2
         piloto = piloto_v2.renderizar(dados, audio, saida, trab, musica, pasta, nome)
+        from src.v2 import estados as _est
+        _est.registrar(v, 'RENDER', Path(saida).exists(), entradas={'audio': str(audio)}, artefatos={'mp4': str(saida)})
+        _est.registrar(v, 'FISCAL', not piloto['bloqueios'], causa='; '.join(piloto['bloqueios'])[:300],
+                       artefatos={'revisoes': piloto.get('revisoes'), 'aprovacao_automatica': piloto.get('aprovacao_automatica')})
     else:
         renderizar(dados, audio, saida, trab, musica=musica)
     marca('vídeo montado')
@@ -1088,7 +1108,7 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         return True
     except Exception as e:
         if not _STATUS_ESCRITO:           # V2.4: o MP4 já gravou o próprio status (porteiro); aqui só o que parou antes
-            vv = locals().get('v') if isinstance(locals().get('v'), dict) else {}
+            vv = locals().get('v') if isinstance(locals().get('v'), dict) else getattr(e, 'v', None) or {}
             txt = str(e)
             st = ('BLOQUEADO_PREPARO' if 'antes da narração' in txt else
                   'BLOQUEADO_MATERIAL' if re.search(r'material|sem fotos|nenhuma fonte|pulo para o próximo tema', txt, re.I) else
@@ -1116,9 +1136,16 @@ def _status_v2(pasta: Path, status: str, v: dict | None = None, mp4: Path | None
     if status in ('MP4_GERADO', 'APROVADO_FISCAL') and not (mp4 and Path(mp4).exists() and Path(mp4).stat().st_size > 0):
         status, motivo = 'FALHA_OPERACIONAL', f'montagem terminou sem MP4 no disco ({mp4}); {motivo}'
     prep = v.get('_preparo') or {}
+    from src.v2 import estados as _est
+    _est.gravar(v, pasta, 'execucao')
     info = {'status': status, 'motivo': motivo, 'mp4': str(mp4) if mp4 else None,
+            'estados': [(e['estado'], e['ok'], e.get('causa')) for e in v.get('_estados') or []],
+            'plano_visual': (v.get('_plano_visual_exec') or {}).get('acontecimentos'),
             'mp4_bytes': Path(mp4).stat().st_size if mp4 and Path(mp4).exists() else 0,
-            'titulo': v.get('titulo'), 'bloqueios_preparo': prep.get('bloqueios') or [],
+            'titulo': v.get('titulo'),
+            'bloqueios_preparo': prep.get('bloqueios') or [{'evento': a['evento'], 'tipo': a['tipo'], 'origem': 'plano visual executável',
+                                                            'faltam': [a['justificativa']]} for a in (v.get('_plano_visual_exec') or {}).get('acontecimentos') or []
+                                                           if a['status'] == 'INVIÁVEL'],
             'revisoes_preparo': prep.get('revisoes') or [],
             'contratos_pendentes': (v.get('_contratos') or {}).get('pendentes_depois'),
             'fiscal_v22': v.get('_fiscal_v22'), 'porteiro': v.get('_bloqueado') or '',

@@ -95,8 +95,7 @@ def validar(v: dict, pasta: Path) -> dict:
         if rep.get('modo') != 'composicao' or not rep.get('comp'):
             continue
         vistos.add(ac['id'])
-        params = dict(ac.get('dados') or {})
-        params.setdefault('titulo', str(ac.get('mostrar') or ac.get('acao') or '')[:36])
+        params = contrato.params_tela(ac, rep['comp'])           # a MESMA tela que a montagem vai desenhar
         try:
             r = renderizar(rep['comp'], params, pasta, ac['id'])
         except Exception as e:                      # sem navegador/erro de render: a prévia não pode atestar → bloqueio

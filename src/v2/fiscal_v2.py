@@ -101,6 +101,7 @@ def _cena_de(cenas, t):
 
 
 PARADA_MAX = 4.0
+PARADA_MOVEL = 6.0
 COMPS_FOTO = ('foto.documental', 'foto.historica', 'lower_third', 'banner.discreto')
 FOTO_REAL = ('foto.documental', 'foto.historica', 'video.documental', 'abertura.pergunta', 'lower_third', 'banner.discreto')
 TECNICO = re.compile(r'BLOQUEAD|SEM VERIFICA|SEM ACERVO|PENDENTE|TODO\b|FIXME|\bundefined\b|\bNaN\b|\bnull\b|\bNone\b|placeholder', re.I)
@@ -150,7 +151,12 @@ def _adequada(sc: dict, d: dict, ac: dict, renderizadas, k) -> str:
         return 'sim'
     if rep.get('modo') == 'editorial' and comp in ('revelacao.surpresa', 'abertura.pergunta', 'encerramento.editorial', 'numero.animado'):
         return 'sim'
-    if rep.get('modo') in ('foto_declarada', 'foto_ilustrativa') and comp in FOTO_REAL and tem_img:
+    if rep.get('modo') in ('contexto', 'foto_ilustrativa'):
+        # V2.5: contexto/ilustração só vale com o SELO na tela (senão a foto passa por registro do instante narrado)
+        selo = 'CONTEXTO' if rep['modo'] == 'contexto' else 'ILUSTRA'
+        if not (comp == 'banner.discreto' and selo in str((sc.get('params') or {}).get('rotulo') or '').upper() and tem_img):
+            return 'nao'
+    if rep.get('modo') in ('foto_declarada', 'foto_ilustrativa', 'contexto') and comp in FOTO_REAL and tem_img:
         return 'declarada'                           # V2.4: ilustração identificada = revisão humana (S7), nunca prova
     return 'nao'
 
@@ -349,9 +355,12 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         if im and j > k:
             A.append(_achado('deterministico', 'D16', 'bloqueio', k + 1, cenas[k + 1]['comp'], round(cenas[k + 1]['start'], 2), 'mesma foto em cenas consecutivas',
                              f"{Path(im).name}: cenas {k}–{j}"))
-        if im and cenas[j]['end'] - cenas[k]['start'] > PARADA_MAX + .05:
+        # com movimento de câmera real (de/para do fundo, aproximação da foto de arquivo) o limite é 6 s; parada, 4 s
+        movel = all((cenas[q].get('fundo') or {}).get('de') or (cenas[q].get('params') or {}).get('momento2') or cenas[q]['comp'] == 'foto.historica'
+                    for q in range(k, j + 1))
+        if im and cenas[j]['end'] - cenas[k]['start'] > (PARADA_MOVEL if movel else PARADA_MAX) + .05:
             A.append(_achado('deterministico', 'D15', 'bloqueio', k, cenas[k]['comp'], round(cenas[k]['start'], 2), 'imagem parada por tempo demais',
-                             f"{Path(im).name}: {cenas[j]['end'] - cenas[k]['start']:.1f} s seguidos (máx. {PARADA_MAX} s)"))
+                             f"{Path(im).name}: {cenas[j]['end'] - cenas[k]['start']:.1f} s seguidos (máx. {PARADA_MOVEL if movel else PARADA_MAX} s{' com movimento' if movel else ''})"))
         k = j + 1
     # D17 (V2.5): três ou mais cartões de TEXTO seguidos = apresentação de slides narrada (bloqueio); cinco ou mais cenas
     # seguidas da MESMA composição = linguagem visual monótona (revisão humana)

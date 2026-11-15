@@ -30,7 +30,8 @@ import re
 TIPOS: dict[str, dict] = {
     'mecanismo':          {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'diagrama.explicativo': ['nos'], 'processo.etapas': ['etapas>=2'], 'forcas.vetores': ['forcas'], 'mecanismo.eclusa': ['sentido']}},
     'transformacao':      {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'comparacao.antes_depois': ['img_antes', 'img_depois'], 'processo.etapas': ['etapas>=2']}},
-    'movimento':          {'critico': True,  'comps': {'forcas.vetores': ['forcas'], 'mecanismo.nivel': ['de', 'ate'], 'animacao.quadros': ['cena']}},
+    # V2.5: movimento NÃO é nível (velocidade de 22 nós virava "caixa d'água a 22 m"): nível só para nível/altura de líquido
+    'movimento':          {'critico': True,  'comps': {'forcas.vetores': ['forcas'], 'animacao.quadros': ['cena']}},
     'nivel':              {'critico': True,  'comps': {'mecanismo.eclusa': ['sentido'], 'mecanismo.nivel': ['de', 'ate']}},
     'deslocamento':       {'critico': True,  'comps': {'mapa.rota': ['pontos>=2']}},
     'processo':           {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'processo.etapas': ['etapas>=2'], 'diagrama.explicativo': ['nos']}},
@@ -42,7 +43,8 @@ TIPOS: dict[str, dict] = {
     'proporcao':          {'critico': False, 'comps': {'proporcao': ['pct']}},
     'numero':             {'critico': False, 'comps': {'numero.animado': ['valor', 'fonte']}},
     'sequencia_historica': {'critico': False, 'comps': {'linha_tempo.historica': ['eventos>=2']}},
-    'evento_historico':   {'critico': True,  'comps': {'foto.historica': ['img'], 'video.documental': ['video'], 'linha_tempo.historica': ['eventos>=2']}},
+    'evento_historico':   {'critico': True,  'comps': {'foto.historica': ['img'], 'video.documental': ['video'], 'linha_tempo.historica': ['eventos>=2'],
+                                                     'fonte.evidencia': ['veiculo', 'trecho']}},   # V2.5: DOCUMENTAÇÃO do fato
     'localizacao':        {'critico': False, 'comps': {'mapa.localizacao': ['pontos>=1']}},
     'territorio':         {'critico': False, 'comps': {'mapa.territorio': ['pais']}},
     'citacao':            {'critico': False, 'comps': {'citacao': ['texto', 'autor']}},
@@ -282,8 +284,22 @@ def normalizar_dados(ac: dict) -> tuple[dict, list[str]]:
         alvo = SINONIMOS_DADOS.get(_n(k))
         if alvo and alvo not in dados and isinstance(dados[k], list):
             dados[alvo] = dados.pop(k); motivos.append(f'campo "{k}" é "{alvo}"')
+    # V2.5 (piloto céu azul): o roteirista escreveu o NOME da composição como caminho ("numero.animado" →
+    # {"numero": {"animado": {...}}}); o conteúdo é o mesmo — achata, sem acrescentar nada
+    for comp in list((TIPOS.get(ac.get('tipo')) or {}).get('comps', {})):
+        a_, _, b_ = comp.partition('.')
+        if isinstance(dados.get(a_), dict) and isinstance(dados[a_].get(b_), dict) and len(dados) == 1:
+            dados = dict(dados[a_][b_]); motivos.append(f'dados aninhados como "{comp}" achatados')
+            break
     ac['dados'] = dados
     tipo = ac.get('tipo')
+    # V2.5 (piloto Pisa): "escala"/"comparação" com UM item numérico é um número (não há o que comparar)
+    its = dados.get('itens') if isinstance(dados.get('itens'), list) else None
+    if tipo in ('escala', 'comparacao') and its and len(its) == 1 and isinstance(its[0], dict) and str(its[0].get('valor', '')).strip():
+        ac['tipo_original'], ac['tipo'] = tipo, 'numero'
+        dados = {'valor': its[0]['valor'], 'rotulo': its[0].get('rotulo') or its[0].get('nome') or '', **({'fonte': ac['fonte']} if ac.get('fonte') else {})}
+        ac['dados'] = dados; tipo = 'numero'
+        motivos.append('comparação com um só item é um número')
     # V2.5 (piloto Titanic): "pessoa" com o nome no sujeito/quem e "dados" vazio — o nome JÁ está no contrato; copiá-lo
     # para dados.nome não inventa nada (a identificação na tela usa a foto real; sem foto continua barrado)
     if tipo == 'pessoa' and not str(dados.get('nome') or '').strip():
@@ -314,7 +330,14 @@ FORMATO_CAMPOS = """FORMATO DE CADA CAMPO (o que não estiver neste formato é r
   eventos: [{"ano": 1904, "texto": "≤ 46"}]   pontos: [{"nome": "...", "lon": -79.5, "lat": 9.0}]
   valor: número (sem texto) + "fonte"   pct: número 0–100   de/ate: números   aneis: [{"raio_km": 30, "rotulo": "..."}]
   nos/etapas: rótulos CURTOS (≤ 24 letras); frase inteira não é etapa
-Se os FATOS não têm o número/valor/coordenada, NÃO declare tipo numérico: use o tipo que os FATOS sustentam ou deixe vazio."""
+Se os FATOS não têm o número/valor/coordenada, NÃO declare tipo numérico: use o tipo que os FATOS sustentam ou deixe vazio.
+COMO CADA ACONTECIMENTO CRÍTICO SERÁ MOSTRADO (escolha ANTES de escrever a fala; sem um destes, não escreva o acontecimento):
+  REGISTRO DIRETO — foto/vídeo do ACERVO que é do próprio fato (identidade e época compatíveis): cite o id em "foto";
+  DOCUMENTO — trecho de fonte da pesquisa (tipo "documento" ou "evento_historico" com dados {"veiculo", "trecho"});
+  CONTEXTO — foto real do ACERVO da pessoa/lugar/objeto do fato; a tela dirá que NÃO é o instante narrado;
+  EXPLICAÇÃO — mapa, cronologia, dado ou esquema com dados da pesquisa;
+  RECONSTRUÇÃO — só identificada como tal, sem detalhes inventados (posição, diálogo, movimento).
+Fato sem fonte na pesquisa não entra (nem como ilustração). Não afirme que uma foto mostra uma ação que ela não mostra."""
 
 
 def bloco_prompt() -> str:
@@ -414,3 +437,26 @@ def comp_aceita(ac: dict, comp: str, dados: dict | None = None) -> bool:
     if comp in TEXTUAIS and ac.get('tipo') in EXIGE_DEMONSTRACAO and critico(ac):
         return estruturado(comp, ac.get('dados') if dados is None else dados)
     return True
+
+
+# V2.5: O QUE VAI PARA A TELA — uma definição só para montagem, prévia e cobertura (antes cada uma montava a sua)
+COM_TITULO = {'mecanismo.estados', 'forcas.vetores', 'diagrama.explicativo', 'processo.etapas', 'mecanismo.nivel', 'evento.impacto',
+              'astronomia.orbita', 'comparacao.grandezas', 'grafico.barras', 'grafico.temporal', 'linha_tempo.historica', 'mapa.rota'}
+
+
+def params_tela(ac: dict, comp: str, dados: dict | None = None) -> dict:
+    """Dados do contrato + título da cena (o "mostrar" do roteiro, ≤ 36) quando a composição tem título e o contrato não
+    trouxe um: o sujeito precisa estar ESCRITO na tela (auditoria: forças sobre uma caixa sem dizer que era o avião)."""
+    p = dict(ac.get('dados') or {} if dados is None else dados)
+    if comp in COM_TITULO and not str(p.get('titulo') or '').strip():
+        t = re.sub(r'\s+', ' ', str(ac.get('mostrar') or ac.get('sujeito') or '')).strip()
+        if t:
+            t = t[:36].rsplit(' ', 1)[0] if len(t) > 36 else t
+            p['titulo'] = re.sub(r'(\s+(e|de|da|do|das|dos|a|o|as|os|em|com|para|por|no|na|nos|nas|ao|à))+$', '', t, flags=re.I)   # nunca termina em conectivo
+    if comp == 'numero.animado':
+        if str(p.get('unidade') or '').strip().lower() in ('valor', 'numero', 'número', 'quantidade', 'unidade', 'total', 'n'):
+            p['unidade'] = ''                     # rótulo genérico do roteirista não é unidade ("1.517 valor")
+        if not str(p.get('rotulo') or '').strip():
+            t = re.sub(r'\s+', ' ', str(ac.get('mostrar') or ac.get('sujeito') or '')).strip()
+            p['rotulo'] = (t[:32].rsplit(' ', 1)[0] if len(t) > 32 else t).upper()   # número nunca sem dizer O QUE mede
+    return p

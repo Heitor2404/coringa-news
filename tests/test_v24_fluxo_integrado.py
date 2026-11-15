@@ -109,8 +109,12 @@ def test_fluxo_real_bloqueia_no_preparo_e_retoma_do_checkpoint_editado(ambiente,
     assert [b['evento'] for b in st['bloqueios_preparo']] == ['e5', 'e6'] and st['contratos_pendentes'] == ['e5']
     assert any('ILUSTRAÇÃO' in f for f in st['bloqueios_preparo'][0]['faltam'])
     assert any('mecanismo.estados' in f for f in st['bloqueios_preparo'][1]['faltam'])
-    prep = json.loads(next(dia.glob('*-preparo.json')).read_text())
-    assert prep['contratos']['reparo']['recusados'][0]['evento'] == 'e5'
+    # V2.5: o bloqueio acontece ANTES, no plano visual executável (dentro do roteiro): sem mídia, voz nem render; o roteiro
+    # e o plano ficam no checkpoint, com o motivo de cada inviável
+    assert all(b['origem'] == 'plano visual executável' for b in st['bloqueios_preparo'])
+    plano = json.loads((dia / 'checkpoint' / 'roteiro.json').read_text())['v']['_plano_visual_exec']
+    assert {a['evento']: a['status'] for a in plano['acontecimentos']}['e5'] == 'INVIÁVEL' and plano['historico']['ajuste']
+    assert not list(dia.glob('*-preparo.json'))
     assert chamadas == {**chamadas, 'tema': 1, 'pesquisa': 1, 'acervo': 1, 'roteiro': 1} and len(chamadas['reparo']) == 1
     assert 'DADOS EXIGIDOS POR TIPO' in chamadas['prompts'][0] and 'enfraquece rapidamente' in chamadas['prompts'][0]
     ck = dia / 'checkpoint'

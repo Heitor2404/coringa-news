@@ -242,7 +242,7 @@ def _pelo_contrato(ac: dict, params: dict, ctx: str) -> dict:
             return {**base, 'comp': comp, 'params': p, 'motivo': f"contrato: {ac['tipo']} ({ac.get('mostrar') or ac.get('acao') or ''}) → {comp}"}
         falhas.append(f'{comp} precisa de {", ".join(f)} válidos'); faltam += [f'{comp}: {x}' for x in f]
     rep = ac.get('representacao') if isinstance(ac.get('representacao'), dict) else {}
-    if rep.get('modo') in ('foto_direta', 'foto_declarada', 'foto_contexto', 'foto_ilustrativa'):
+    if rep.get('modo') in ('foto_direta', 'foto_declarada', 'foto_contexto', 'foto_ilustrativa', 'contexto'):
         # o preparo conferiu no catálogo do acervo que a foto real mostra o fato (ou é o que o roteiro pediu)
         return {**base, 'comp': 'foto.documental', 'params': {}, 'representacao': rep['modo'],
                 'motivo': f"contrato: {ac['tipo']} → foto real ({rep['modo']}: {str(rep.get('evidencia') or '')[:90]})"}

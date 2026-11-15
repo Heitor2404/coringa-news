@@ -32,6 +32,32 @@ def _mostra(sc: dict, img: str) -> bool:
     return img in (str((sc.get('fundo') or {}).get('img') or ''), str((sc.get('params') or {}).get('img') or ''))
 
 
+def _juntar_planos_iguais(out: list[dict], direcao: list[dict]) -> tuple[list[dict], list[dict]]:
+    """V2.5: planos SEGUIDOS com a mesma foto, a mesma composição de foto e o mesmo selo viram UM plano contínuo (dois
+    cortes para a mesma imagem parecem erro de montagem). Não mexe em composição que desenha/explica."""
+    FOTOS = ('foto.documental', 'banner.discreto', 'foto.historica')
+    novo, dnovo = [], []
+    for sc, d in zip(out, direcao):
+        ant = novo[-1] if novo else None
+        img = str((sc.get('fundo') or {}).get('img') or (sc.get('params') or {}).get('img') or '')
+        mesmo_selo = (ant or {}).get('comp') == sc['comp'] and (ant.get('params') or {}).get('rotulo') == (sc.get('params') or {}).get('rotulo')
+        # foto sem selo depois/antes da MESMA foto com selo CONTEXTO: o plano contínuo fica com o selo (o mais prudente)
+        # (vale também para o selo NOTA de um destaque: a nota fica sobre a foto pelo plano inteiro)
+        um_contexto = ant and {ant['comp'], sc['comp']} == {'banner.discreto', 'foto.documental'} and \
+            {'CONTEXTO', 'NOTA'} & {str((ant.get('params') or {}).get('rotulo')), str((sc.get('params') or {}).get('rotulo'))}
+        if ant and img and sc['comp'] in FOTOS and ant['comp'] in FOTOS and abs(ant['end'] - sc['start']) < .3 \
+                and str((ant.get('fundo') or {}).get('img') or (ant.get('params') or {}).get('img') or '') == img \
+                and (mesmo_selo or um_contexto):
+            if um_contexto and ant['comp'] != 'banner.discreto':
+                ant.update(comp='banner.discreto', params=dict(sc['params']))
+            ant.update(end=sc['end'], origem=ant['origem'] + sc['origem'], fala=f"{ant.get('fala', '')} {sc.get('fala', '')}".strip())
+            dnovo[-1]['cenas_v1'] = ant['origem']
+            dnovo[-1].setdefault('notas', []).append('planos seguidos com a mesma foto unidos num plano contínuo')
+            continue
+        novo.append(sc); dnovo.append(d)
+    return novo, dnovo
+
+
 def _juntar(v1: list[dict], ks) -> str:
     """Falas dos planos de UMA ideia: a mesma frase repetida em planos seguidos (divisão da imagem) entra uma vez só."""
     out = []
@@ -185,7 +211,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
         elif tipo == 'revelacao':
             nova.update(comp='revelacao.surpresa', params={'pergunta': sc.get('pergunta'), 'resposta': sc.get('resposta'), 'detalhe': _detalhe_validado(sc),
                                                           'virada': _virada(sc, caps), 'cor': 'amarelo'})
-            mec = next((x for x in reversed(out) if x['comp'] in ('mecanismo.eclusa', 'mecanismo.nivel') and x['params'].get('sentido', 'subir') == 'subir'), None)
+            mec = next((x for x in reversed(out) if x['comp'] == 'mecanismo.eclusa' and x['params'].get('sentido', 'subir') == 'subir'), None)
             esq = next((x for x in reversed(out) if x['comp'] == 'mecanismo.estados'), None) if not mec else None
             if esq:
                 # V2.4: a resposta aparece sobre o ESTADO FINAL do esquema que ela resume (não sobre foto escura)
@@ -280,7 +306,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 if dec.get('origem') == 'contrato':
                     # V2.2: composição desenhada pelo acontecimento DECLARADO, com os dados declarados (antes, toda composição
                     # que não fosse eclusa/nível/escala caía no ramo de foto, mesmo com o seletor certo)
-                    p = dict(dec.get('params') or {})
+                    p = contrato.params_tela(dec.get('acontecimento') or {}, dec['comp'], dec.get('params') or {})
                     if dec['comp'] == 'numero.animado':
                         # número declarado no contrato passa pela MESMA validação de fatos (moeda, natureza, fonte listada)
                         erros = fatos.validar(p, fontes)
@@ -344,7 +370,20 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 ano = re.search(r'(1[5-9]\d\d|20\d\d)', etq + ' ' + str(sc.get('lugar') or ''))
                 historica = bool(ano and int(ano.group(1)) < 1960 and etq.startswith('FOTO'))
                 rc = acervo_v2.recorte_conteudo(img) if img else [0, 0, 1, 1]
-                if img and sc.get('rotulo_ilustracao'):
+                ant = out[-1] if out else None
+                if img and sc.get('rotulo_contexto') and ant and ant['comp'] == 'banner.discreto' and (ant.get('params') or {}).get('rotulo') == 'CONTEXTO' \
+                        and (ant.get('fundo') or {}).get('img') == img:
+                    # V2.5: dois fatos seguidos com a MESMA foto de contexto = UM plano contínuo (não dois cortes iguais)
+                    ant.update(end=nova['end'], origem=ant['origem'] + nova['origem'], fala=f"{ant['fala']} {nova['fala']}".strip())
+                    direcao[-1]['cenas_v1'] = ant['origem']
+                    i = j
+                    continue
+                if img and sc.get('rotulo_contexto'):
+                    # V2.5: foto real de CONTEXTO (pessoa/lugar/objeto do fato) identificada como tal — nunca como registro
+                    nova.update(comp='banner.discreto', params={'rotulo': 'CONTEXTO', 'texto': _limpo(sc['rotulo_contexto'])[:46]})
+                    nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto', 'variante': len(usadas.get(img, []))}
+                    d.update(comp='banner.discreto', motivo='V2.5: foto de contexto identificada (não registra o instante narrado)')
+                elif img and sc.get('rotulo_ilustracao'):
                     # V2.4: foto genérica usada como ILUSTRAÇÃO — identificada na tela com o componente de aviso que já existe
                     nova.update(comp='banner.discreto', params={'rotulo': 'ILUSTRAÇÃO', 'texto': _limpo(sc['rotulo_ilustracao'])[:60]})
                     nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto', 'variante': len(usadas.get(img, []))}
@@ -356,7 +395,8 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 elif img:
                     pd = dec.get('params') or {}
                     if sc.get('destaque'):
-                        nova.update(comp='banner.discreto', params={'rotulo': 'CONTEXTO', 'texto': sc['destaque']})
+                        # V2.5: "CONTEXTO" é o SELO de foto que não registra o instante; destaque de dado é NOTA
+                        nova.update(comp='banner.discreto', params={'rotulo': 'NOTA', 'texto': sc['destaque']})
                     elif dec.get('comp') == 'lower_third' and capacidades._tem('nome', pd, ''):
                         # V2.5: pessoa/lugar declarados com nome → identificação na tela sobre a foto real (antes virava
                         # foto.documental sem dizer quem é)
@@ -392,5 +432,6 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
     for k, sc in enumerate(out):
         if sc['comp'] == 'foto.documental' and sc['end'] - sc['start'] > ESTATICO_MAX:
             direcao[k].setdefault('avisos', []).append(f"foto parada por {sc['end'] - sc['start']:.1f} s (> {ESTATICO_MAX} s)")
+    out, direcao = _juntar_planos_iguais(out, direcao)      # depois do M7 (índices de `usadas` são os de antes)
     meta['motor'] = 'v2'
     return {'duration': dados['duration'], 'meta': meta, 'scenes': out, 'captions': caps}, direcao

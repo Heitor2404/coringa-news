@@ -59,6 +59,11 @@ def executar(origem: Path, edicao: dict | None, saida: Path, render: bool = True
         planejamento.planejar(v, chamar=chamar)
     except Exception as e:
         return _diag('plano visual', f'falha não tratada do provedor: {e}')
+    from src.v2 import plano_exec
+    try:                                        # V2.5: plano VINCULANTE (1 ajuste; retirada segura; ou recusa)
+        pl = plano_exec.vincular(v, '', chamar=chamar)
+    except ValueError as e:
+        return _diag('plano visual executável', str(e)[:500], plano=(v.get('_plano_visual_exec') or {}).get('acontecimentos'))
     rel = preparo.preparar(v)
     if rel['bloqueios']:
         return _diag('preparo', ' | '.join(f"{b['evento']}: {'; '.join(map(str, b['faltam']))[:120]}" for b in rel['bloqueios']),
@@ -66,7 +71,7 @@ def executar(origem: Path, edicao: dict | None, saida: Path, render: bool = True
     pv = previa.validar(v, saida / 'previa')
     if pv['bloqueios']:
         return _diag('prévia', ' | '.join(f"{b['evento']}: {'; '.join(b['faltam'])[:120]}" for b in pv['bloqueios']))
-    cb = cobertura.avaliar(v, pv)
+    cb = cobertura.avaliar(v, pv, saida / 'previa')
     if cb['bloqueios']:
         return _diag('cobertura', ' | '.join(f"{b['evento']}: {'; '.join(b['faltam'])[:120]}" for b in cb['bloqueios']))
     trab = saida / 'trab'
@@ -89,7 +94,7 @@ def executar(origem: Path, edicao: dict | None, saida: Path, render: bool = True
     d1 = {'duration': round(t, 2), 'meta': {'titulo': v.get('titulo') or '', 'categoria': 'CIÊNCIA', 'marca': '@coringa.explica',
                                            'pergunta': next((c.get('pergunta') for c in v['cenas'] if c.get('pergunta')), ''),
                                            'fontes': list(v.get('fontes') or []), 'preparo': rel}, 'scenes': cenas, 'captions': caps}
-    out = {'ok': True, 'etapa': 'fim', 'preparo': preparo.resumo(rel), 'previa': previa.resumo(pv), 'cobertura': cobertura.resumo(cb)}
+    out = {'ok': True, 'etapa': 'fim', 'plano': plano_exec.resumo(pl), 'plano_json': pl.get('acontecimentos'), 'preparo': preparo.resumo(rel), 'previa': previa.resumo(pv), 'cobertura': cobertura.resumo(cb)}
     if render:
         aud = saida / 'voz.wav'
         fonte = ['-f', 'lavfi', '-i', 'sine=f=180:d=1,volume=0.25'] if not audio else ['-i', str(audio)]
@@ -101,6 +106,8 @@ def executar(origem: Path, edicao: dict | None, saida: Path, render: bool = True
         div = []
         for sc in v2['scenes']:
             for i1 in sc.get('origem') or []:
+                if cenas[i1].get('tipo') in ('gancho', 'revelacao', 'fechamento'):
+                    continue                     # cena estrutural é editorial por definição
                 eid = ((cenas[i1].get('acontecimento') or {}).get('id'))
                 rep = dec.get(eid) or {}
                 if rep.get('modo') == 'composicao' and sc['comp'] != rep.get('comp'):

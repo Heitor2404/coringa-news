@@ -443,6 +443,20 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     v['serie'] = 'CORINGA EXPLICA'
     v['parte'] = parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0
     v['link'] = link
+    if os.getenv('MOTOR_VISUAL') == 'v2':      # V2.5: o roteiro só sai daqui VISUALMENTE EXECUTÁVEL (plano vinculante)
+        from src.v2 import estados, plano_exec
+        estados.registrar(v, 'PESQUISA_VALIDADA', bool(fatos), entradas={'fatos': fatos, 'fontes': fontes})
+        estados.registrar(v, 'ACERVO_VERIFICADO', bool(acervo), entradas={'acervo': [x.get('id') for x in acervo]},
+                          artefatos={'imagens': len(acervo)})
+        v['fatos'], v['fontes'], v['acervo'] = fatos, fontes, acervo
+        try:
+            pl = plano_exec.vincular(v, acervo_mod.texto(acervo))  # ValueError = roteiro inviável → próximo tema
+        except ValueError as e:
+            checkpoint.etapa('roteiro', lambda: {'tema': tema, 'v': v})   # roteiro + plano ficam no checkpoint (retomável)
+            e.v = v                                                         # o status da execução mostra o plano
+            raise
+        print('  [plano visual executável] ' + plano_exec.resumo(pl).replace('\n', '\n  '))
+        estados.registrar(v, 'ROTEIRO_VALIDADO', True, entradas={'cenas': v['cenas']})
     v['resumo'] = ' '.join(c['fala'].replace('*', '') for c in v['cenas'] if c['tipo'] != 'fechamento')
     hist = [c['fala'].replace('*', '') for c in v['cenas'] if c['tipo'] not in ('fechamento',)]
     v['suspense'] = hist[-1] if hist else ''

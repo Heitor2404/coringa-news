@@ -150,6 +150,12 @@ def _tem(req: str, params: dict, contexto: str) -> bool:
         return len(itens) >= int(m.group(2)) and all(_valido(m.group(1), x) for x in itens)
     if req == 'valor':
         return _num(params.get('valor'))
+    if req == 'esquema':                          # V2.4: mecanismo.estados só com esquema completo (objetos + estados que mudam)
+        from src.v2 import contrato
+        return not contrato.esquema_problemas(params.get('esquema'))
+    if req == 'forcas':                           # V2.4: cada força precisa de nome (o ângulo, se faltar, vem do nome no render)
+        fs = params.get('forcas') or []
+        return bool(fs) and all((isinstance(f, dict) and str(f.get('nome') or '').strip()) or (isinstance(f, str) and f.strip()) for f in fs)
     return params.get(req) not in (None, '', [], {})
 
 
@@ -168,6 +174,9 @@ def _pelo_contrato(ac: dict, params: dict, ctx: str) -> dict:
         ordem.remove(ac['capacidade']); ordem.insert(0, ac['capacidade'])
     falhas, faltam = [], []
     for comp in ordem:
+        if not contrato.comp_aceita(ac, comp, p):           # V2.4: mecanismo crítico não vira cartão de frases soltas
+            falhas.append(f'{comp} receberia frases soltas (não mostra o mecanismo)'); faltam.append(f'{comp}: nós/etapas estruturados ou esquema')
+            continue
         f = [r for r in comps[comp] if not _tem(r, p, ctx)]
         if not f:
             return {**base, 'comp': comp, 'params': p, 'motivo': f"contrato: {ac['tipo']} ({ac.get('mostrar') or ac.get('acao') or ''}) → {comp}"}

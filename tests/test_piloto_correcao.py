@@ -256,13 +256,16 @@ def test_fiscal_conta_cada_causa_uma_vez(antes):
     eids = [a['evidencia'].split(':')[0] for a in s5]
     assert len(eids) == len(set(eids))                              # nenhum acontecimento contado duas vezes
     assert not _bloq(r, 'S1') and not _bloq(r, 'S2')               # frase isolada não vira causa extra
-    assert len(_bloq(r)) == 12
+    # V2.4: D15/D16 (foto parada > 4 s / mesma foto em cenas seguidas) são regras novas, medidas à parte
+    assert len([a for a in _bloq(r) if a['codigo'] not in ('D15', 'D16')]) == 12
 
 
 def test_fiscal_depois_so_bloqueia_o_que_falta_de_verdade(depois):
     *_, r = depois
-    b = _bloq(r)
+    b = [a for a in _bloq(r) if a['codigo'] not in ('D15', 'D16')]
     assert [a['codigo'] for a in b] == ['S5'] and b[0]['evidencia'].startswith('e9:')
+    # V2.4: as fotos do Ever Given ficam paradas/repetidas de verdade (ex.: a11 por 7,3 s nas cenas 10–11) — o fiscal mostra
+    assert {a['codigo'] for a in _bloq(r)} >= {'D15', 'D16'} and any('a11-g.jpg' in a['evidencia'] for a in _bloq(r, 'D15'))
     assert 'flutuando livremente' in b[0]['evidencia']
 
 

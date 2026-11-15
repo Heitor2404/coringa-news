@@ -208,9 +208,12 @@ def test_primeira_execucao_continua_desbloqueada_e_marca_ilustracoes():
     rel_c = prevalidacao.reparar(v, chamar=_ia([], chamadas))
     assert chamadas == []           # e9 se resolve sem IA; e4 (observável) fica para o acervo; e10 é a revelação
     rel = preparo.preparar(v, [x])
-    assert rel['bloqueios'] == [] and rel_c['pendentes_depois'] == []
+    # V2.4 (auditoria do MP4 43730252500): e6 é mecanismo crítico com etapas que são frases inteiras ("contato
+    # extremamente próximo") — viraria cartão de texto com ícones. Agora o preparo bloqueia e pede o esquema.
+    assert [b['evento'] for b in rel['bloqueios']] == ['e6'] and rel_c['pendentes_depois'] == []
+    assert any('mecanismo.estados' in f for f in rel['bloqueios'][0]['faltam'])
     funcoes = {e['id']: e['funcao'] for e in rel['eventos']}
-    assert {funcoes[k] for k in ('e6', 'e7', 'e8', 'e9')} == {'ilustracao'}
+    assert {funcoes[k] for k in ('e7', 'e8', 'e9')} == {'ilustracao'}
     assert funcoes['e4'] == 'evidencia'                                      # foto real da estrutura: evidência (revisão)
     e9 = next(e for e in rel['eventos'] if e['id'] == 'e9')
     assert e9['tipo_original'] == 'proporcao' and 'etapas' in e9['reclassificacao']

@@ -105,8 +105,10 @@ def test_fluxo_real_bloqueia_no_preparo_e_retoma_do_checkpoint_editado(ambiente,
     # 1ª execução: bloqueio legítimo, diagnóstico e checkpoint preservados
     st = json.loads((dia / 'status_execucao.json').read_text())
     assert st['status'] == 'BLOQUEADO_PREPARO' and st['mp4'] is None
-    assert [b['evento'] for b in st['bloqueios_preparo']] == ['e5'] and st['contratos_pendentes'] == ['e5']
+    # V2.4: e6 (mecanismo crítico com etapas em frases inteiras) também bloqueia — viraria cartão de texto
+    assert [b['evento'] for b in st['bloqueios_preparo']] == ['e5', 'e6'] and st['contratos_pendentes'] == ['e5']
     assert any('ILUSTRAÇÃO' in f for f in st['bloqueios_preparo'][0]['faltam'])
+    assert any('mecanismo.estados' in f for f in st['bloqueios_preparo'][1]['faltam'])
     prep = json.loads(next(dia.glob('*-preparo.json')).read_text())
     assert prep['contratos']['reparo']['recusados'][0]['evento'] == 'e5'
     assert chamadas == {**chamadas, 'tema': 1, 'pesquisa': 1, 'acervo': 1, 'roteiro': 1} and len(chamadas['reparo']) == 1
@@ -116,10 +118,14 @@ def test_fluxo_real_bloqueia_no_preparo_e_retoma_do_checkpoint_editado(ambiente,
 
     # correção à mão do contrato no checkpoint (registrada), e retomada
     rot = json.loads((ck / 'roteiro.json').read_text())
+    esquema = {'objetos': [{'id': 'par', 'forma': 'superficie', 'rotulo': 'PAREDE', 'y': .08, 'w': 1},
+                           {'id': 'esp', 'forma': 'ramos', 'rotulo': 'ESPÁTULAS', 'y': .8, 'w': .8, 'lado': 'cima'}],
+               'estados': [{'rotulo': 'LONGE', 'objetos': {'esp': {'dy': .08}}},
+                           {'rotulo': 'ENCOSTA: AS MOLÉCULAS SE ATRAEM', 'objetos': {'esp': {'dy': -.3}},
+                            'relacoes': [{'de': 'esp', 'para': 'par', 'tipo': 'atracao', 'forca': 1, 'rotulo': 'ATRAÇÃO'}]}]}
     for c in rot['v']['cenas']:
-        if (c.get('acontecimento') or {}).get('id') == 'e5':
-            c['acontecimento']['dados'] = {'etapas': ['cada cerda se divide em espátulas', 'espátulas chegam muito perto da superfície',
-                                                      'surgem forças de Van der Waals']}
+        if (c.get('acontecimento') or {}).get('id') in ('e5', 'e6'):    # V2.4: o conserto agora é o ESQUEMA demonstrativo
+            c['acontecimento']['dados'] = {'esquema': esquema}
     origem = raiz / 'checkpoint_origem'
     import shutil
     shutil.copytree(ck, origem)
@@ -134,6 +140,10 @@ def test_fluxo_real_bloqueia_no_preparo_e_retoma_do_checkpoint_editado(ambiente,
     prep = json.loads(next(dia.glob('*-preparo.json')).read_text())
     assert prep['bloqueios'] == []
     e5 = next(e for e in prep['eventos'] if e['id'] == 'e5')
+    assert e5['representacao'] == {'modo': 'composicao', 'comp': 'mecanismo.estados'}
+    pv = {e['evento']: e for e in prep['previa']['eventos']}                # V2.4: prévia renderizada antes da narração
+    assert pv['e5']['ok'] and pv['e5']['comp'] == 'mecanismo.estados' and len(pv['e5']['quadros']) == 3
+    assert (next(dia.glob('*-previa')) / 'folha.jpg').exists()
     assert e5['funcao'] == 'ilustracao' and e5['ilustracao']['nao_prova'] and e5['evidencia_visual'] is False
     assert prep['checkpoint']['carregadas'] == ['roteiro']
     assert any('acontecimento.dados' in m for m in prep['checkpoint']['editado']['roteiro'])

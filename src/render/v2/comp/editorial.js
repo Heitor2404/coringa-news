@@ -8,10 +8,10 @@
     id: 'revelacao.surpresa', nome: 'Revelação de informação surpreendente', tratamento: 'alerta', tom: 'escuro',
     objetivo: 'Entregar a resposta da pergunta central (payoff) no instante em que é falada, com impacto.',
     funcoes: ['revelacao', 'payoff', 'surpresa'],
-    params: { pergunta: '≤ 40 (a pergunta do início)', resposta: '1–3 palavras (≤ 18 caracteres)', detalhe: '≤ 60 (o porquê, serifa)', virada: 'segundo (na cena) em que a resposta é DITA (o motor calcula pela legenda)', cor: "'amarelo' | 'verde' | 'vermelho'" },
+    params: { pergunta: '≤ 40 (a pergunta do início)', resposta: '1–3 palavras (≤ 24 caracteres; quebra em 2 linhas se precisar)', detalhe: '≤ 60 (o porquê)', virada: 'segundo (na cena) em que a resposta é DITA (o motor calcula pela legenda)', cor: "'amarelo' | 'verde' | 'vermelho'" },
     fundo: 'opcional: a imagem do gancho (fecha o ciclo), muito escurecida — OU, melhor, o próprio acontecimento: cena.base = a composição do mecanismo congelada no estado final (a resposta aparece SOBRE a explicação visual)', layout: 'sem base: pergunta 380, resposta gigante y≈700, detalhe abaixo; com base: pergunta+resposta+detalhe no alto (360–700) e o mecanismo visível embaixo',
     paleta: 'resposta na cor escolhida, brilho; fundo escurecido 75%', animacao: 'antes da virada: pergunta + pulso de expectativa; na virada: clarão, resposta bate (1,25 → 1), barra corre; detalhe aparece',
-    duracao: [2.5, 3.5, 5], limites: { pergunta: 40, resposta: 18, detalhe: 60 }, legenda: 'integrada',
+    duracao: [2.5, 3.5, 5], limites: { pergunta: 40, resposta: 24, detalhe: 60 }, legenda: 'integrada',
     area_segura: 'y 360–1100', legibilidade: 'resposta ≥ 130 px 900',
     rejeicao: ['resposta mostrada antes de ser dita (spoiler)', 'revelação que não responde a pergunta do gancho'],
     transicao: 'corte',
@@ -22,11 +22,14 @@
     return {
       html: `<div class="abs" style="inset:0;background:${base ? 'linear-gradient(180deg,rgba(5,8,14,.9) 0%,rgba(5,8,14,.8) 33%,rgba(5,8,14,0) 46%)' : 'rgba(5,8,14,.74)'}"></div>
         <div class="abs pul" data-deco="1" style="left:540px;top:${Y.pul}px;width:0;height:0">${[0, 1, 2].map(i => `<div class="rv-pr pr${i}" style="position:absolute;left:-150px;top:-150px;width:300px;height:300px;border-radius:50%;border:3px solid ${cor};opacity:0"></div>`).join('')}</div>
-        <div class="abs rv-pq eixo" data-g="pq" data-txt="1" data-centro="1" style="top:${Y.pq}px;font-family:var(--f-serif);font-style:italic;font-size:50px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
+        <div class="abs rv-pq eixo" data-g="pq" data-txt="1" data-centro="1" style="top:${Y.pq}px;font-family:var(--f-titulo);font-weight:600;font-size:46px;color:rgba(255,255,255,.85)">${esc(p.pergunta || '')}</div>
         <div class="abs rv-rs manchete eixo" data-g="rs" data-txt="1" data-centro="1" style="top:${Y.rs}px;white-space:nowrap;font-size:150px;color:${cor};text-shadow:0 0 60px ${cor}55,0 10px 40px rgba(0,0,0,.8);opacity:0">${esc(p.resposta || '')}</div>
         <div class="abs rv-br" style="left:50%;top:790px;height:10px;width:0;background:${cor}"></div>
-        <div class="abs rv-dt serif eixo" data-g="dt" data-txt="1" data-centro="1" style="top:830px;font-size:${base ? 40 : 46}px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
-      montar(el) { const r = el.querySelector('.rv-rs'); r.style.opacity = 1; caber(r, { max: base ? 130 : 150, min: 80, larg: 780 }); r.style.opacity = 0;
+        <div class="abs rv-dt eixo" data-g="dt" data-txt="1" data-centro="1" style="top:830px;font-family:var(--f-titulo);font-weight:600;font-size:${base ? 38 : 42}px;line-height:1.2;color:#fff">${hl(p.detalhe || '')}</div>`,
+      montar(el) { const r = el.querySelector('.rv-rs'); r.style.opacity = 1; caber(r, { max: base ? 130 : 150, min: 80, larg: 780 });
+        /* V2.4: resposta que não cabe numa linha nem a 80 px quebra em duas (antes saía do quadro: "FORÇAS MOLECULARE…") */
+        if (r.scrollWidth > 781) { r.style.whiteSpace = 'normal'; r.style.lineHeight = '1'; r.style.textAlign = 'center'; caber(r, { max: 110, min: 64, larg: 780, alt: 240 }); }
+        r.style.opacity = 0;
         const b = el.querySelector('.rv-br'); b.style.top = (r.offsetTop + r.offsetHeight + 12) + 'px'; el.querySelector('.rv-dt').style.top = (r.offsetTop + r.offsetHeight + (base ? 40 : 60)) + 'px'; },
       upd(tl, el) {
         const v = +p.virada || 1.0;
@@ -124,7 +127,7 @@
     const m = ctx.D.meta.mascote || {}, fts = (p.fontes || ctx.D.meta.fontes || []).slice(0, 5), v = p.variante || 'conclusao';
     const comBase = !!ctx.sc.base || !!ctx.sc.fundo, pose = p.mascote && m[p.mascote] ? m[p.mascote] : null;
     const grande = v === 'pergunta' ? `<div class="abs rz manchete" data-g="rz" data-txt="1" style="left:72px;right:${pose ? 330 : 150}px;top:400px;font-size:84px;line-height:1.02;color:#fff"><span style="color:var(--amarelo)">?</span> ${palavras(p.resumo || '')}</div>`
-      : v === 'marca' ? '' : `<div class="abs rz" data-g="rz" data-txt="1" style="left:72px;right:${pose ? 330 : 150}px;top:400px;font-family:var(--f-serif);font-weight:600;font-size:70px;line-height:1.1;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.5)">${palavras(v === 'cta' ? (p.chamada || p.resumo || '') : (p.resumo || ''))}</div>`;
+      : v === 'marca' ? '' : `<div class="abs rz" data-g="rz" data-txt="1" style="left:72px;right:${pose ? 330 : 150}px;top:400px;font-family:var(--f-titulo);font-weight:800;font-size:64px;line-height:1.08;letter-spacing:-1px;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.5)">${palavras(v === 'cta' ? (p.chamada || p.resumo || '') : (p.resumo || ''))}</div>`;
     return {
       html: `${comBase ? '' : `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 40% 45%,#1c2436 0%,#080c14 70%)"></div>`}
         <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(7,11,18,${comBase ? .55 : 0}) 0%,rgba(7,11,18,${comBase ? .2 : 0}) 45%,rgba(7,11,18,.9) 75%)"></div>

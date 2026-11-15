@@ -39,7 +39,7 @@ from pathlib import Path
 
 from src.v2 import capacidades
 
-MECANISMOS = {'mecanismo.eclusa', 'mecanismo.nivel', 'processo.etapas', 'diagrama.explicativo', 'forcas.vetores', 'astronomia.orbita', 'evento.impacto'}
+MECANISMOS = {'mecanismo.estados', 'mecanismo.eclusa', 'mecanismo.nivel', 'processo.etapas', 'diagrama.explicativo', 'forcas.vetores', 'astronomia.orbita', 'evento.impacto'}
 PERGUNTAS = ['A abertura faz querer ver o resto (sem depender da legenda)?', 'O mecanismo ficou claro só olhando a tela, sem som?',
              'Algum gráfico/mapa ficou bonito mas não explicou nada?', 'Alguma foto parece de banco de imagens, sem relação com a fala?',
              'O ritmo cansa em algum trecho (anotar o segundo)?', 'O encerramento tem cara de marca (mascote, marca, fontes legíveis)?']
@@ -55,6 +55,9 @@ SOLUCAO = {
     'S2': 'trocar a foto pela composição de mecanismo', 'S3': 'inverter o sentido da animação para bater com a fala',
     'S4': 'conseguir os valores com fonte ou deixar a fala sem promessa de comparação',
     'S5': 'fornecer os dados exigidos pela composição capaz (ver evidência) ou criar a composição que falta; nunca trocar por foto',
+    'S8': 'dar ao mecanismo um esquema demonstrativo (objetos, estado inicial, mudança, relação, resultado)',
+    'S9': 'resolver o esquema/reconstrução pendente com composição demonstrativa ou cortar a cena do roteiro',
+    'D15': 'cortar o plano, trocar de foto ou mudar a composição antes de 4 s', 'D16': 'usar outra foto ou outra composição na cena seguinte',
     'S6': 'o roteiro deve declarar o acontecimento da cena (contrato: tipo, mostrar, dados); até lá, um humano confere a cena',
     'E': 'avaliação humana',
 }
@@ -96,6 +99,7 @@ def _cena_de(cenas, t):
     return next((k for k, sc in enumerate(cenas) if sc['start'] <= t < sc['end']), None)
 
 
+PARADA_MAX = 4.0
 COMPS_FOTO = ('foto.documental', 'foto.historica', 'lower_third', 'banner.discreto')
 FOTO_REAL = ('foto.documental', 'foto.historica', 'video.documental', 'abertura.pergunta', 'lower_third', 'banner.discreto')
 TECNICO = re.compile(r'BLOQUEAD|SEM VERIFICA|SEM ACERVO|PENDENTE|TODO\b|FIXME|\bundefined\b|\bNaN\b|\bnull\b|\bNone\b|placeholder', re.I)
@@ -135,6 +139,8 @@ def _adequada(sc: dict, d: dict, ac: dict, renderizadas, k) -> str:
     tem_img = bool((sc.get('fundo') or {}).get('img') or (sc.get('params') or {}).get('img'))
     if renderizadas is not None and k not in renderizadas:
         return 'render'
+    if not ct.comp_aceita(ac, comp, sc.get('params') or {}):   # V2.4: mecanismo crítico em cartão de texto/ícones não é representado
+        return 'textual'
     if comp in ct.capazes(ac['tipo']) and not (comp in ct.GENERICAS and ac['tipo'] not in ('pessoa', 'lugar', 'ambiente')):
         return 'sim'
     if rep.get('modo') == 'composicao' and comp == rep.get('comp'):
@@ -143,8 +149,8 @@ def _adequada(sc: dict, d: dict, ac: dict, renderizadas, k) -> str:
         return 'sim'
     if rep.get('modo') == 'editorial' and comp in ('revelacao.surpresa', 'abertura.pergunta', 'encerramento.editorial', 'numero.animado'):
         return 'sim'
-    if rep.get('modo') == 'foto_declarada' and comp in FOTO_REAL and tem_img:
-        return 'declarada'
+    if rep.get('modo') in ('foto_declarada', 'foto_ilustrativa') and comp in FOTO_REAL and tem_img:
+        return 'declarada'                           # V2.4: ilustração identificada = revisão humana (S7), nunca prova
     return 'nao'
 
 
@@ -274,6 +280,11 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         if 'sim' in modos:
             continue
         na_tela = ', '.join(dict.fromkeys(cenas[k]['comp'] for k in ks))
+        if 'textual' in modos and not ({'declarada'} & set(modos)):
+            A.append(_achado('semantico', 'S8', 'bloqueio', ks[0], na_tela, cenas[ks[0]]['start'],
+                             'mecanismo crítico só escrito na tela (etapas/nós com ícones), sem objeto, estado e mudança',
+                             f"{eid} ({rot}); cenas {ks}: precisa de composição que demonstre (ex.: mecanismo.estados com esquema)"))
+            continue
         if 'declarada' in modos:
             A.append(_achado('semantico', 'S7', 'revisao', ks[0], na_tela, cenas[ks[0]]['start'],
                              'acontecimento crítico mostrado pela imagem pedida, sem prova do estado narrado',
@@ -315,6 +326,32 @@ def avaliar(dados_v2: dict, direcao: list[dict], geometria: list[dict] | None = 
         if d.get('sem_contrato'):
             A.append(_achado('semantico', 'S6', 'revisao', k, cenas[k]['comp'], cenas[k]['start'],
                              'cena sem acontecimento declarado e não reconhecida pelos padrões', f"\"{str(d.get('fala', ''))[:70]}\" → {cenas[k]['comp']}"))
+    # S9 (V2.4): cena crítica marcada como pendente pela resolução visual (ESQUEMA/RECONSTRUÇÃO PENDENTE) e não resolvida
+    resolvidos = {i1 for ev in eventos.values() for i1 in ev['v1']
+                  if any(_adequada(cenas[k], direcao[k] if k < len(direcao) else {}, ev['ac'], renderizadas, k) == 'sim' for k in ev['v2'])}
+    for i1, s1 in enumerate((dados_v1 or {}).get('scenes') or []):
+        r1 = s1.get('resolucao') if isinstance(s1.get('resolucao'), dict) else {}
+        if r1.get('pendente') and i1 not in resolvidos and (r1.get('central') or (ct.declarado(s1) and ct.critico(ct.declarado(s1)))):
+            k = next((k for k, sc in enumerate(cenas) if i1 in sc.get('origem', [])), None)
+            A.append(_achado('semantico', 'S9', 'bloqueio', k, cenas[k]['comp'] if k is not None else None, s1.get('start'),
+                             'cena crítica com esquema/reconstrução pendente', f"cena v1 {i1}: {r1.get('tipo')} — {str(s1.get('fala', ''))[:60]}"))
+    # D15/D16 (V2.4): a mesma foto na tela por mais de 4 s seguidos, ou repetida em cenas consecutivas sem mudança
+    def _img_de(sc):
+        x = str((sc.get('fundo') or {}).get('img') or (sc.get('params') or {}).get('img') or '').replace('file://', '')
+        return x if x and sc['comp'] in COMPS_FOTO else ''
+    k = 0
+    while k < len(cenas):
+        im = _img_de(cenas[k])
+        j = k
+        while im and j + 1 < len(cenas) and _img_de(cenas[j + 1]) == im:
+            j += 1
+        if im and j > k:
+            A.append(_achado('deterministico', 'D16', 'bloqueio', k + 1, cenas[k + 1]['comp'], round(cenas[k + 1]['start'], 2), 'mesma foto em cenas consecutivas',
+                             f"{Path(im).name}: cenas {k}–{j}"))
+        if im and cenas[j]['end'] - cenas[k]['start'] > PARADA_MAX + .05:
+            A.append(_achado('deterministico', 'D15', 'bloqueio', k, cenas[k]['comp'], round(cenas[k]['start'], 2), 'imagem parada por tempo demais',
+                             f"{Path(im).name}: {cenas[j]['end'] - cenas[k]['start']:.1f} s seguidos (máx. {PARADA_MAX} s)"))
+        k = j + 1
     # D1–D3 geometria (amostrada pelo palco)
     for g in _persistentes(geometria or []):
         k = _cena_de(cenas, g['ini'])

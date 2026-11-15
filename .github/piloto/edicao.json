@@ -1,76 +1,847 @@
 {
- "base_run": "43728184399",
- "autor": "Gabriel (correção editorial solicitada após auditoria independente)",
- "motivo": "e2: a fala exigia identificar Hemidactylus mabouia, que nenhuma imagem do acervo mostra com as lamelas; passa a descrever a anatomia genérica da pata, ilustrada por a3 (espécie não identificada). e13: precisão científica (a lagartixa não 'ajusta cargas'; a adesão vem da atração entre moléculas muito próximas).",
+ "base_run": "43730252500",
+ "autor": "Claude (implementação) — correção visual prioritária após o MP4 43730252500, para auditoria do ChatGPT",
+ "motivo": "Roteiro revisado para ser visualizável: os mecanismos (cerdas, espátulas, atração, distância, soltar, soma) passam a ter ESQUEMA demonstrativo (mecanismo.estados); dipolo/repulsão/distância de contato saem (não visualizáveis em 60 s); trecho da NASA reduzido de ~10 s para ~5 s; conclusão volta para a lagartixa. Fatos novos com fonte.",
  "operacoes": [
+  {
+   "acrescentar_fatos": [
+    "★ A pata da lagartixa tem uma estrutura em níveis: lamelas nos dedos, cobertas por cerdas microscópicas, que terminam em espátulas. [contexto] (Huber et al., PNAS 2005)",
+    "★ Uma pata tem até 500 mil cerdas, e a ponta de cada cerda se divide em centenas a mil espátulas, que chegam muito perto da superfície. [contexto] (UC Berkeley 2002 — Autumn et al., PNAS)",
+    "★ Uma cerda sozinha segura pouco, mas a soma das forças de Van der Waals de todas as espátulas pode chegar a mil vezes o peso da lagartixa. [virada] (UC Berkeley 2002 — Autumn et al., PNAS)",
+    "Para soltar o pé, a lagartixa descola os dedos a partir da ponta (hiperextensão digital); inclinar as cerdas além de cerca de 30 graus desfaz a adesão. [contexto] (Scientific American; Higham e Russell, J. Exp. Biol. 2025)",
+    "Em fevereiro de 2025, na Estação Espacial Internacional, Suni Williams acompanhou um robô Astrobee da NASA com braços de almofadas adesivas inspiradas nas lagartixas capturando um cubo. [contexto] (NASA)"
+   ],
+   "acrescentar_fontes": [
+    "Huber et al., PNAS 2005",
+    "UC Berkeley 2002 — Autumn et al., PNAS",
+    "Scientific American",
+    "Higham e Russell, J. Exp. Biol. 2025",
+    "NASA"
+   ]
+  },
   {
    "evento": "e2",
    "esperado_sha256": {
-    "fala": "03a5cf18e807142d632483ba24f16d29d7ced6eaed998b8deda58e5e7752d823"
+    "fala": "4ec1eeda8089e6a7b949f74f3401f44b99d1b62aae59b338c6db8aea81d22d6c"
    },
    "set": {
-    "fala": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
-    "sb.narracao": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
-    "sb.resolucao.sugestao": "FOTO ILUSTRATIVA: lamelas na parte de baixo dos dedos (espécie não identificada)",
-    "bloco.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
-    "sb.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
-    "visual": "a3",
-    "foto": "a3",
-    "cenario": "Close-up of the underside of a gecko's foot showing the toe lamellae (species not identified)",
-    "acontecimento.sujeito": "lamelas dos dedos",
-    "acontecimento.acao": "mostrar as faixas sob os dedos",
-    "acontecimento.estado_inicial": "dedos da pata",
-    "acontecimento.estado_final": "lamelas visíveis sob os dedos",
-    "acontecimento.mostrar": "parte de baixo dos dedos com as lamelas",
-    "acontecimento.dados": {
-     "estrutura": "lamelas dos dedos"
-    },
-    "acontecimento.importancia": "critica",
-    "acontecimento.obrigatoria": true,
-    "acontecimento.plano_visual": {
-     "modo": "foto_ilustrativa",
-     "foto": "a3",
-     "parte": "lamelas na parte de baixo dos dedos",
-     "trecho_imagem": "Close-up of the underside of a gecko's foot",
-     "trecho_fato": "referente às lamelas dos dedos",
-     "fonte_fato": "Wikipédia",
-     "credito": "\"Gecko foot on glass\" — Bjørn Christian Tørrissen (CC BY-SA 3.0), via Wikimedia Commons",
-     "rotulo": "imagem ilustrativa · espécie não identificada",
-     "nao_prova": true,
-     "origem": "edição editorial auditada"
-    }
+    "fala": "Embaixo dos dedos, ela tem faixas chamadas lamelas."
    }
+  },
+  {
+   "substituir_eventos": [
+    "e3",
+    "e4",
+    "e5",
+    "e6",
+    "e7",
+    "e8",
+    "e9",
+    "e10",
+    "e11",
+    "e12"
+   ],
+   "esperado_sha256": "dd555eebd6589b07a347d521011ab8b970ea383931c9c286156655a12bb7516f",
+   "cenas": [
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: o dedo, uma lamela ampliada e as cerdas microscópicas"
+     },
+     "tipo": "historia",
+     "fala": "Cada lamela é coberta por milhares de cerdas microscópicas.",
+     "grupo": 2,
+     "evento": "i2",
+     "cenario": "Esquema: o dedo, uma lamela ampliada e as cerdas microscópicas",
+     "foto": null,
+     "acontecimento": {
+      "id": "e3",
+      "tipo": "mecanismo",
+      "sujeito": "lamela",
+      "acao": "ser coberta por cerdas",
+      "estado_inicial": "dedo com lamelas",
+      "estado_final": "lamela coberta de cerdas",
+      "mostrar": "Esquema: o dedo, uma lamela ampliada e as cerdas microscópicas",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · DEDO",
+       "titulo": "Cada lamela tem *cerdas*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "dedo",
+          "forma": "corpo",
+          "rotulo": "DEDO",
+          "x": 0.32,
+          "y": 0.18,
+          "w": 0.46,
+          "h": 0.16
+         },
+         {
+          "id": "lam",
+          "forma": "corpo",
+          "rotulo": "LAMELA",
+          "x": 0.5,
+          "y": 0.55,
+          "w": 0.8,
+          "h": 0.13
+         },
+         {
+          "id": "cer",
+          "forma": "cerdas",
+          "rotulo": "CERDAS",
+          "x": 0.5,
+          "y": 0.76,
+          "w": 0.76,
+          "h": 0.26,
+          "n": 24,
+          "preso_a": "lam"
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "DEDO COM LAMELAS",
+          "objetos": {
+           "lam": {
+            "opacidade": 0
+           },
+           "cer": {
+            "opacidade": 0
+           }
+          }
+         },
+         {
+          "rotulo": "UMA LAMELA DE PERTO",
+          "objetos": {
+           "dedo": {
+            "opacidade": 0.35
+           },
+           "cer": {
+            "opacidade": 0
+           }
+          },
+          "relacoes": [
+           {
+            "de": "lam",
+            "para": "dedo",
+            "tipo": "contato",
+            "forca": 0.6,
+            "n": 2,
+            "rotulo": "AMPLIADO"
+           }
+          ]
+         },
+         {
+          "rotulo": "COBERTA DE CERDAS",
+          "objetos": {
+           "dedo": {
+            "opacidade": 0.35
+           }
+          },
+          "relacoes": [
+           {
+            "de": "lam",
+            "para": "dedo",
+            "tipo": "contato",
+            "forca": 0.6,
+            "n": 2,
+            "rotulo": "AMPLIADO"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fonte": "Huber et al., PNAS 2005; UC Berkeley 2002 — Autumn et al., PNAS",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: a ponta de uma cerda se ramificando em espátulas"
+     },
+     "tipo": "historia",
+     "fala": "A ponta de cada cerda se abre em centenas de espátulas, pontas achatadas e finíssimas.",
+     "grupo": 3,
+     "evento": "i3",
+     "cenario": "Esquema: a ponta de uma cerda se ramificando em espátulas",
+     "foto": null,
+     "acontecimento": {
+      "id": "e4",
+      "tipo": "mecanismo",
+      "sujeito": "cerda",
+      "acao": "abrir a ponta em espátulas",
+      "estado_inicial": "uma cerda",
+      "estado_final": "centenas de pontas achatadas",
+      "mostrar": "Esquema: a ponta de uma cerda se ramificando em espátulas",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · CERDA",
+       "titulo": "A ponta se abre em *espátulas*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "cer",
+          "forma": "cerdas",
+          "rotulo": "UMA CERDA",
+          "x": 0.5,
+          "y": 0.3,
+          "w": 0.06,
+          "h": 0.42,
+          "n": 1
+         },
+         {
+          "id": "esp",
+          "forma": "ramos",
+          "rotulo": "ESPÁTULAS",
+          "x": 0.5,
+          "y": 0.72,
+          "w": 0.78,
+          "h": 0.36,
+          "n": 9
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "UMA CERDA",
+          "objetos": {
+           "esp": {
+            "opacidade": 0,
+            "escala": 0.4
+           }
+          }
+         },
+         {
+          "rotulo": "A PONTA SE ABRE",
+          "objetos": {
+           "esp": {
+            "opacidade": 1,
+            "escala": 0.7
+           }
+          }
+         },
+         {
+          "rotulo": "CENTENAS DE PONTAS ACHATADAS",
+          "objetos": {
+           "esp": {
+            "opacidade": 1,
+            "escala": 1
+           }
+          }
+         }
+        ]
+       }
+      },
+      "fonte": "UC Berkeley 2002 — Autumn et al., PNAS",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: espátulas se aproximam da parede e a atração aparece"
+     },
+     "tipo": "historia",
+     "fala": "Encostadas na parede, as moléculas das espátulas e da parede se atraem.",
+     "grupo": 4,
+     "evento": "i4",
+     "cenario": "Esquema: espátulas se aproximam da parede e a atração aparece",
+     "foto": null,
+     "acontecimento": {
+      "id": "e5",
+      "tipo": "mecanismo",
+      "sujeito": "espátulas",
+      "acao": "encostar na parede",
+      "estado_inicial": "espátulas longe, sem atração",
+      "estado_final": "moléculas das espátulas e da parede se atraindo",
+      "mostrar": "Esquema: espátulas se aproximam da parede e a atração aparece",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · ADESÃO",
+       "titulo": "Perto, as moléculas se *atraem*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "par",
+          "forma": "superficie",
+          "rotulo": "PAREDE",
+          "x": 0.5,
+          "y": 0.08,
+          "w": 1,
+          "h": 0.13
+         },
+         {
+          "id": "mp",
+          "forma": "particulas",
+          "x": 0.55,
+          "y": 0.21,
+          "w": 0.78,
+          "n": 8
+         },
+         {
+          "id": "esp",
+          "forma": "ramos",
+          "rotulo": "ESPÁTULAS",
+          "x": 0.55,
+          "y": 0.8,
+          "w": 0.8,
+          "h": 0.32,
+          "n": 6,
+          "lado": "cima"
+         },
+         {
+          "id": "me",
+          "forma": "particulas",
+          "rotulo": "MOLÉCULAS",
+          "x": 0.55,
+          "y": 0.6,
+          "w": 0.667,
+          "n": 6,
+          "preso_a": "esp"
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "LONGE: SEM ATRAÇÃO",
+          "objetos": {
+           "esp": {
+            "dy": 0.08
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 0,
+            "n": 6
+           }
+          ]
+         },
+         {
+          "rotulo": "ENCOSTA NA PAREDE",
+          "objetos": {
+           "esp": {
+            "dy": -0.28
+           },
+           "me": {
+            "polar": 0.5
+           },
+           "mp": {
+            "polar": 0.5
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 0.6,
+            "n": 6
+           }
+          ]
+         },
+         {
+          "rotulo": "AS MOLÉCULAS SE ATRAEM",
+          "objetos": {
+           "esp": {
+            "dy": -0.32
+           },
+           "me": {
+            "polar": 1
+           },
+           "mp": {
+            "polar": 1
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 1,
+            "n": 6,
+            "rotulo": "ATRAÇÃO"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fonte": "Wikipédia; UC Berkeley 2002 — Autumn et al., PNAS",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: a atração diminui conforme a espátula se afasta da parede"
+     },
+     "tipo": "historia",
+     "fala": "É a força de Van der Waals: ela só age de muito perto e some quando as superfícies se afastam.",
+     "grupo": 5,
+     "evento": "i5",
+     "cenario": "Esquema: a atração diminui conforme a espátula se afasta da parede",
+     "foto": null,
+     "acontecimento": {
+      "id": "e6",
+      "tipo": "mecanismo",
+      "sujeito": "força de Van der Waals",
+      "acao": "enfraquecer com a distância",
+      "estado_inicial": "colada: atração forte",
+      "estado_final": "mais longe: quase zero",
+      "mostrar": "Esquema: a atração diminui conforme a espátula se afasta da parede",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · DISTÂNCIA",
+       "titulo": "Longe, a atração *enfraquece*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "par",
+          "forma": "superficie",
+          "rotulo": "PAREDE",
+          "x": 0.5,
+          "y": 0.08,
+          "w": 1,
+          "h": 0.13
+         },
+         {
+          "id": "mp",
+          "forma": "particulas",
+          "x": 0.55,
+          "y": 0.21,
+          "w": 0.78,
+          "n": 8
+         },
+         {
+          "id": "esp",
+          "forma": "ramos",
+          "rotulo": "ESPÁTULAS",
+          "x": 0.55,
+          "y": 0.8,
+          "w": 0.8,
+          "h": 0.32,
+          "n": 6,
+          "lado": "cima"
+         },
+         {
+          "id": "me",
+          "forma": "particulas",
+          "rotulo": "MOLÉCULAS",
+          "x": 0.55,
+          "y": 0.6,
+          "w": 0.667,
+          "n": 6,
+          "preso_a": "esp"
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "COLADA: ATRAÇÃO FORTE",
+          "objetos": {
+           "esp": {
+            "dy": -0.32
+           },
+           "me": {
+            "polar": 1
+           },
+           "mp": {
+            "polar": 1
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 1,
+            "n": 6,
+            "rotulo": "ATRAÇÃO"
+           }
+          ]
+         },
+         {
+          "rotulo": "UM POUCO LONGE: FRACA",
+          "objetos": {
+           "esp": {
+            "dy": -0.2
+           },
+           "me": {
+            "polar": 0.4
+           },
+           "mp": {
+            "polar": 0.4
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 0.35,
+            "n": 6,
+            "rotulo": "ATRAÇÃO"
+           }
+          ]
+         },
+         {
+          "rotulo": "MAIS LONGE: QUASE ZERO",
+          "objetos": {
+           "esp": {
+            "dy": 0.05
+           }
+          },
+          "relacoes": [
+           {
+            "de": "me",
+            "para": "mp",
+            "tipo": "atracao",
+            "forca": 0.04,
+            "n": 6
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fonte": "Wikipedia (inglês)",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: a ponta do dedo se ergue e as espátulas descolam aos poucos"
+     },
+     "tipo": "historia",
+     "fala": "Por isso, para soltar, ela descola os dedos a partir da ponta.",
+     "grupo": 6,
+     "evento": "i6",
+     "cenario": "Esquema: a ponta do dedo se ergue e as espátulas descolam aos poucos",
+     "foto": null,
+     "acontecimento": {
+      "id": "e7",
+      "tipo": "mecanismo",
+      "sujeito": "dedo",
+      "acao": "descolar a partir da ponta",
+      "estado_inicial": "todas as espátulas encostadas",
+      "estado_final": "dedo descolado aos poucos",
+      "mostrar": "Esquema: a ponta do dedo se ergue e as espátulas descolam aos poucos",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · SOLTAR",
+       "titulo": "Para soltar, *descola da ponta*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "par",
+          "forma": "superficie",
+          "rotulo": "PAREDE",
+          "x": 0.5,
+          "y": 0.08,
+          "w": 1,
+          "h": 0.13
+         },
+         {
+          "id": "dedo",
+          "forma": "corpo",
+          "rotulo": "DEDO",
+          "x": 0.5,
+          "y": 0.42,
+          "w": 0.72,
+          "h": 0.13
+         },
+         {
+          "id": "esp",
+          "forma": "cerdas",
+          "rotulo": "ESPÁTULAS",
+          "x": 0.5,
+          "y": 0.26,
+          "w": 0.68,
+          "h": 0.18,
+          "n": 18,
+          "lado": "cima",
+          "preso_a": "dedo"
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "PRESO: TODAS ENCOSTADAS",
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "par",
+            "tipo": "atracao",
+            "forca": 1,
+            "n": 10,
+            "rotulo": "ATRAÇÃO"
+           }
+          ]
+         },
+         {
+          "rotulo": "A PONTA DO DEDO SE ERGUE",
+          "objetos": {
+           "dedo": {
+            "rot": -10,
+            "dy": 0.05
+           },
+           "esp": {
+            "rot": -10
+           }
+          },
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "par",
+            "tipo": "atracao",
+            "forca": 0.7,
+            "n": 5
+           }
+          ]
+         },
+         {
+          "rotulo": "DESCOLA AOS POUCOS",
+          "objetos": {
+           "dedo": {
+            "rot": -18,
+            "dy": 0.16
+           },
+           "esp": {
+            "rot": -18
+           }
+          },
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "par",
+            "tipo": "atracao",
+            "forca": 0,
+            "n": 0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fonte": "Scientific American; Higham e Russell, J. Exp. Biol. 2025",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "mecanismo",
+      "avanca": "Esquema: as atrações se somam até segurar a lagartixa no teto"
+     },
+     "tipo": "historia",
+     "fala": "Uma atração sozinha é fraca, mas somadas, elas podem chegar a mil vezes o peso da lagartixa.",
+     "grupo": 7,
+     "evento": "i7",
+     "cenario": "Esquema: as atrações se somam até segurar a lagartixa no teto",
+     "foto": null,
+     "acontecimento": {
+      "id": "e8",
+      "tipo": "mecanismo",
+      "sujeito": "atrações das espátulas",
+      "acao": "somar até segurar o peso",
+      "estado_inicial": "uma atração: fraca demais",
+      "estado_final": "somadas, seguram o peso",
+      "mostrar": "Esquema: as atrações se somam até segurar a lagartixa no teto",
+      "recurso": "esquema",
+      "capacidade": "mecanismo.estados",
+      "observavel": false,
+      "dados": {
+       "kicker": "ESQUEMA · SOMA",
+       "titulo": "Somadas, seguram o *peso*",
+       "esquema": {
+        "objetos": [
+         {
+          "id": "teto",
+          "forma": "superficie",
+          "rotulo": "TETO",
+          "x": 0.5,
+          "y": 0.07,
+          "w": 1,
+          "h": 0.12
+         },
+         {
+          "id": "cor",
+          "forma": "corpo",
+          "rotulo": "LAGARTIXA",
+          "x": 0.45,
+          "y": 0.5,
+          "w": 0.46,
+          "h": 0.15
+         },
+         {
+          "id": "esp",
+          "forma": "cerdas",
+          "rotulo": "ESPÁTULAS",
+          "x": 0.45,
+          "y": 0.3,
+          "w": 0.44,
+          "h": 0.24,
+          "n": 24,
+          "lado": "cima",
+          "preso_a": "cor"
+         },
+         {
+          "id": "peso",
+          "forma": "seta",
+          "rotulo": "PESO",
+          "x": 0.45,
+          "y": 0.6,
+          "h": 0.32,
+          "angulo": -90,
+          "preso_a": "cor"
+         }
+        ],
+        "estados": [
+         {
+          "rotulo": "UMA ATRAÇÃO: FRACA DEMAIS",
+          "objetos": {
+           "cor": {
+            "dy": 0.12
+           }
+          },
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "teto",
+            "tipo": "atracao",
+            "forca": 0.5,
+            "n": 1
+           }
+          ]
+         },
+         {
+          "rotulo": "MAIS ATRAÇÕES SE SOMAM",
+          "objetos": {
+           "cor": {
+            "dy": 0.05
+           }
+          },
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "teto",
+            "tipo": "atracao",
+            "forca": 0.8,
+            "n": 6
+           }
+          ]
+         },
+         {
+          "rotulo": "SOMADAS, SEGURAM O PESO",
+          "objetos": {
+           "cor": {
+            "dy": 0
+           }
+          },
+          "relacoes": [
+           {
+            "de": "esp",
+            "para": "teto",
+            "tipo": "atracao",
+            "forca": 1,
+            "n": 12,
+            "rotulo": "ATRAÇÃO"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fonte": "UC Berkeley 2002 — Autumn et al., PNAS",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "evidencia",
+      "avanca": "A NASA testou a ideia no espaço"
+     },
+     "tipo": "historia",
+     "fala": "Em 2025, a NASA testou isso no espaço,",
+     "grupo": 8,
+     "evento": "i8",
+     "visual": "a9",
+     "foto": "a9",
+     "relacao": "fato",
+     "cenario": "Suni Williams monitors Astrobee with gecko-like adhesive pads",
+     "acontecimento": {
+      "id": "e9",
+      "tipo": "mecanismo",
+      "sujeito": "NASA",
+      "acao": "testar no espaço um robô com almofadas adesivas inspiradas na lagartixa",
+      "estado_inicial": "tecnologia inspirada na lagartixa",
+      "estado_final": "teste na Estação Espacial",
+      "mostrar": "astronauta monitorando robô Astrobee com almofadas adesivas inspiradas em lagartixas na Estação Espacial",
+      "dados": {
+       "ano": 2025,
+       "entidade": "NASA"
+      },
+      "fonte": "NASA",
+      "importancia": "critica",
+      "obrigatoria": true
+     }
+    },
+    {
+     "bloco": {
+      "funcao": "evidencia",
+      "avanca": "Os braços do robô"
+     },
+     "tipo": "historia",
+     "fala": "com braços de robô que grudam como a lagartixa.",
+     "grupo": 9,
+     "evento": "i9",
+     "visual": "a13",
+     "foto": "a13",
+     "relacao": "fato",
+     "cenario": "Astrobee blue tentacle-like arms with gecko-like adhesive pads",
+     "acontecimento": {
+      "id": "e10",
+      "tipo": "ambiente",
+      "sujeito": "braços do robô Astrobee",
+      "acao": "agarrar um objeto com almofadas adesivas",
+      "mostrar": "braços robóticos azuis com almofadas adesivas semelhantes às de lagartixas",
+      "dados": {},
+      "fonte": "NASA",
+      "importancia": "apoio",
+      "obrigatoria": false
+     }
+    }
+   ]
   },
   {
    "evento": "e13",
    "esperado_sha256": {
-    "fala": "a1790e319b355874d71fe23fe69a0e87e20049cdcd87fe2d2479e16cb37e72fe"
+    "fala": "fed8c9647c6d5de5041e2e9c729bf1b70a5ed11c48574e1504781b117e89374e"
    },
    "set": {
-    "fala": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
-    "sb.narracao": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
-    "acontecimento.sujeito": "lagartixa",
-    "acontecimento.acao": "prender-se pela atração entre moléculas muito próximas",
-    "acontecimento.dados": {
-     "payoff": "atração entre moléculas muito próximas"
-    },
-    "acontecimento.importancia": "critica",
-    "acontecimento.obrigatoria": true
+    "detalhe": "Atração entre moléculas muito próximas."
    }
   },
   {
    "campo": "resumo",
-   "trecho_antigo_de": "e2",
-   "trecho_novo": "Essas faixas na parte de baixo dos dedos são chamadas lamelas."
-  },
-  {
-   "campo": "suspense",
-   "valor_de": "e13"
-  },
-  {
-   "campo": "resumo",
-   "trecho_antigo_de": "e13",
-   "trecho_novo": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas."
+   "regenerar": true
   }
  ]
 }

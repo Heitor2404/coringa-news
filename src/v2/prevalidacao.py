@@ -62,7 +62,13 @@ def _folhas(x, chave: str = ''):
 def rastreio(dados: dict, linhas: list[dict]) -> dict:
     """Cada item de texto e cada número dos dados → a linha da pesquisa de onde ele vem."""
     itens = []
-    for chave, x in _folhas(dados or {}):
+    dados = dict(dados or {})
+    esq = dados.pop('esquema', None)
+    if isinstance(esq, dict):                     # V2.4: no esquema só os RÓTULOS são conteúdo; posição/escala é desenho
+        dados['_rotulos_esquema'] = [o.get('rotulo') for o in esq.get('objetos') or [] if isinstance(o, dict) and o.get('rotulo')] + \
+            [x.get('rotulo') for e in esq.get('estados') or [] if isinstance(e, dict)
+             for x in [e] + [r for r in e.get('relacoes') or [] if isinstance(r, dict)] if x.get('rotulo')]
+    for chave, x in _folhas(dados):
         if chave in CHAVES_SEM_TEXTO or x is None or isinstance(x, bool):
             continue
         if chave in CHAVES_NUMERO or isinstance(x, (int, float)):

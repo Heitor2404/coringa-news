@@ -23,16 +23,17 @@ com os dados que faltam. Nunca foto, texto genérico ou diagrama inventado no lu
 """
 from __future__ import annotations
 
+import json
 import re
 
 # tipo → (crítico?, composições capazes em ordem de preferência, dados exigidos por composição)
 TIPOS: dict[str, dict] = {
-    'mecanismo':          {'critico': True,  'comps': {'diagrama.explicativo': ['nos'], 'processo.etapas': ['etapas>=2'], 'forcas.vetores': ['forcas'], 'mecanismo.eclusa': ['sentido']}},
-    'transformacao':      {'critico': True,  'comps': {'comparacao.antes_depois': ['img_antes', 'img_depois'], 'processo.etapas': ['etapas>=2']}},
+    'mecanismo':          {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'diagrama.explicativo': ['nos'], 'processo.etapas': ['etapas>=2'], 'forcas.vetores': ['forcas'], 'mecanismo.eclusa': ['sentido']}},
+    'transformacao':      {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'comparacao.antes_depois': ['img_antes', 'img_depois'], 'processo.etapas': ['etapas>=2']}},
     'movimento':          {'critico': True,  'comps': {'forcas.vetores': ['forcas'], 'mecanismo.nivel': ['de', 'ate'], 'animacao.quadros': ['cena']}},
     'nivel':              {'critico': True,  'comps': {'mecanismo.eclusa': ['sentido'], 'mecanismo.nivel': ['de', 'ate']}},
     'deslocamento':       {'critico': True,  'comps': {'mapa.rota': ['pontos>=2']}},
-    'processo':           {'critico': True,  'comps': {'processo.etapas': ['etapas>=2'], 'diagrama.explicativo': ['nos']}},
+    'processo':           {'critico': True,  'comps': {'mecanismo.estados': ['esquema'], 'processo.etapas': ['etapas>=2'], 'diagrama.explicativo': ['nos']}},
     'evolucao_temporal':  {'critico': False, 'comps': {'grafico.temporal': ['serie>=4']}},
     'impacto':            {'critico': True,  'comps': {'evento.impacto': ['aneis']}},
     'orbita':             {'critico': True,  'comps': {'astronomia.orbita': []}},
@@ -163,7 +164,7 @@ limitação; não troque por uma foto qualquer).
 #   ilustracao esquema didático de um mecanismo/processo (forças, moléculas, etapas); dados rastreados na pesquisa
 #   dado       número, gráfico, mapa, linha do tempo, citação: composição com dado verificado
 FUNCAO_COMP = {
-    'diagrama.explicativo': 'ilustracao', 'processo.etapas': 'ilustracao', 'forcas.vetores': 'ilustracao',
+    'mecanismo.estados': 'ilustracao', 'diagrama.explicativo': 'ilustracao', 'processo.etapas': 'ilustracao', 'forcas.vetores': 'ilustracao',
     'mecanismo.eclusa': 'ilustracao', 'mecanismo.nivel': 'ilustracao', 'animacao.quadros': 'ilustracao',
     'astronomia.orbita': 'ilustracao', 'evento.impacto': 'ilustracao',
     'comparacao.antes_depois': 'evidencia', 'foto.historica': 'evidencia', 'video.documental': 'evidencia',
@@ -308,3 +309,85 @@ campos, cargas): a cena será uma ILUSTRAÇÃO explicativa, que precisa de "dado
 (5) precisão: grandeza que DIMINUI com a distância ou o tempo (força, atração, sinal) "enfraquece rapidamente" — não diga
 que "some"/"desaparece" se os FATOS não disserem que ela chega a zero.
 """
+
+
+# ═════════════════════════ V2.4 — composição que DEMONSTRA × composição que só ESCREVE ═════════════════════════
+# Auditoria do MP4 43730252500 (2/10): processo.etapas, diagrama.explicativo e forcas.vetores receberam frases do
+# contrato e viraram cartões com números e ícones genéricos. Para um mecanismo CRÍTICO, só conta como representação
+# a composição que mostra objetos, estado inicial, mudança, relação e resultado.
+DEMONSTRATIVAS = {'mecanismo.estados', 'mecanismo.eclusa', 'mecanismo.nivel', 'astronomia.orbita', 'evento.impacto',
+                  'comparacao.antes_depois', 'animacao.quadros', 'forcas.vetores'}
+TEXTUAIS = {'processo.etapas', 'diagrama.explicativo'}
+EXIGE_DEMONSTRACAO = {'mecanismo'}   # 'como funciona' crítico: cartão de texto/ícones não representa
+FORMAS_ESQUEMA = {'superficie', 'corpo', 'cerdas', 'ramos', 'particulas', 'seta'}
+RELACOES_ESQUEMA = {'atracao', 'repulsao', 'contato', 'empurra'}
+
+
+def esquema_problemas(esq) -> list[str]:
+    """Confere o esquema de mecanismo.estados: objetos identificados, ≥ 2 estados DIFERENTES, relações entre objetos
+    existentes. Lista vazia = representável. (Geometria certa não prova semântica: a prévia renderizada confere o
+    resto — src/v2/previa.py.)"""
+    if not isinstance(esq, dict):
+        return ['esquema ausente']
+    ob = [o for o in esq.get('objetos') or [] if isinstance(o, dict)]
+    es = [e for e in esq.get('estados') or [] if isinstance(e, dict)]
+    p = []
+    ids = [o.get('id') for o in ob]
+    if not 2 <= len(ob) <= 7:
+        p.append(f'{len(ob)} objeto(s) (2–7)')
+    if len(set(ids)) != len(ids) or not all(ids):
+        p.append('objetos sem id único')
+    for o in ob:
+        if o.get('forma') not in FORMAS_ESQUEMA:
+            p.append(f"forma desconhecida: {o.get('forma')!r}")
+    if not any(str(o.get('rotulo') or '').strip() for o in ob):
+        p.append('nenhum objeto identificado (rótulo)')
+    if not 2 <= len(es) <= 4:
+        p.append(f'{len(es)} estado(s) (2–4)')
+    if any(not str(e.get('rotulo') or '').strip() for e in es):
+        p.append('estado sem rótulo')
+    for e in es:
+        for oid in (e.get('objetos') or {}):
+            if oid not in ids:
+                p.append(f'estado cita objeto inexistente: {oid}')
+        for r in e.get('relacoes') or []:
+            if r.get('de') not in ids or r.get('para') not in ids:
+                p.append(f"relação entre objetos inexistentes: {r.get('de')} → {r.get('para')}")
+            if (r.get('tipo') or 'atracao') not in RELACOES_ESQUEMA:
+                p.append(f"relação desconhecida: {r.get('tipo')!r}")
+
+    def assinatura(e):
+        return (json.dumps(e.get('objetos') or {}, sort_keys=True), json.dumps(sorted((r.get('de'), r.get('para'), r.get('tipo'), r.get('forca'), r.get('n'))
+                                                                                    for r in e.get('relacoes') or []), default=str))
+    if len(es) >= 2 and len({assinatura(e) for e in es}) < len(es):
+        p.append('estados iguais: nada muda na tela')
+    return p
+
+
+def demonstra(comp: str | None) -> bool:
+    return comp in DEMONSTRATIVAS
+
+
+def estruturado(comp: str, dados: dict) -> bool:
+    """Diagrama/etapas com RÓTULOS (nó/etapa que cabe como título: ≤ 24 caracteres, ou etapa com título e texto) —
+    não frases inteiras do contrato despejadas na composição (a causa do 2/10 do MP4 43730252500: "deslocamento
+    temporário da nuvem eletrônica em uma molécula" virou nó com ícone genérico)."""
+    d = dados or {}
+    rot = lambda x: str((x.get('rotulo') or x.get('nome') or '') if isinstance(x, dict) else x or '').strip()
+    if comp == 'diagrama.explicativo':
+        nos = d.get('nos') or []
+        return len(nos) >= 2 and all(0 < len(rot(n)) <= 24 for n in nos)
+    if comp == 'processo.etapas':
+        et = d.get('etapas') or []
+        ok = lambda e: (isinstance(e, dict) and 0 < len(str(e.get('titulo') or '').strip()) <= 24 and str(e.get('texto') or '').strip()) \
+            or (not isinstance(e, dict) and 0 < len(rot(e)) <= 24)
+        return len(et) >= 2 and all(ok(e) for e in et)
+    return True
+
+
+def comp_aceita(ac: dict, comp: str, dados: dict | None = None) -> bool:
+    """Mecanismo CRÍTICO não é representado por composição que só escreve frases soltas (etapas/nós montados a partir
+    de strings do contrato). Diagrama/etapas autorados continuam valendo; mecanismo.estados vem primeiro."""
+    if comp in TEXTUAIS and ac.get('tipo') in EXIGE_DEMONSTRACAO and critico(ac):
+        return estruturado(comp, ac.get('dados') if dados is None else dados)
+    return True

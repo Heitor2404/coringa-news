@@ -24,6 +24,7 @@ import base64
 import datetime as dt
 import hashlib
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -265,6 +266,10 @@ def _caminho(d: dict, chave: str, valor=None, ler: bool = False):
     return alvo.get(partes[-1]) if ler else alvo.__setitem__(partes[-1], valor)
 
 
+def _limpo_fala(x) -> str:
+    return re.sub(r'\s+', ' ', str(x or '').replace('*', '')).strip()
+
+
 def editar(pasta: Path, edicao: dict) -> dict:
     """Aplica uma edição EDITORIAL localizada ao `roteiro.json` de um checkpoint (antes da retomada).
     Formato: {"motivo", "autor", "operacoes": [{"evento": "e2", "esperado_sha256": {"fala": sha}, "set": {"fala": ...,
@@ -293,6 +298,43 @@ def editar(pasta: Path, edicao: dict) -> dict:
                 for campo, valor in (op.get('set') or {}).items():
                     _caminho(c, campo, valor)
                 aplicadas.append(f"{op['evento']} (cena {k}): {', '.join(op.get('set') or {})}")
+        elif op.get('substituir_eventos'):
+            # V2.4: troca um TRECHO do roteiro (os planos de uma sequência de acontecimentos) por planos novos, com a
+            # mesma trava: o texto atual das falas removidas precisa bater com `esperado_sha256` (falas unidas por \n)
+            ids = list(op['substituir_eventos'])
+            idx = [k for k, c in enumerate(v['cenas']) if (c.get('acontecimento') or {}).get('id') in ids]
+            if not idx or idx != list(range(idx[0], idx[-1] + 1)):
+                raise ValueError(f'edição: {ids} não formam um trecho contínuo do roteiro')
+            antigas = '\n'.join(str(v['cenas'][k].get('fala') or '') for k in idx)
+            if _sha(antigas.encode('utf-8')) != op.get('esperado_sha256'):
+                raise ValueError(f'edição: as falas de {ids} não são as esperadas (checkpoint errado?)')
+            novas = op.get('cenas') or []
+            if not novas or any(not (c.get('fala') and isinstance(c.get('acontecimento'), dict) and c['acontecimento'].get('id')) for c in novas):
+                raise ValueError('edição: plano novo sem fala ou sem acontecimento')
+            for eid in ids:
+                falas_antigas.setdefault(eid, ' '.join(str(c.get('fala') or '') for c in v['cenas'] if (c.get('acontecimento') or {}).get('id') == eid))
+            v['cenas'][idx[0]:idx[-1] + 1] = [dict(c) for c in novas]
+            aplicadas.append(f"{', '.join(ids)} (planos {idx[0]}–{idx[-1]}) → {len(novas)} plano(s): "
+                             + ', '.join(dict.fromkeys(c['acontecimento']['id'] for c in novas)))
+        elif op.get('acrescentar_fatos') or op.get('acrescentar_fontes'):
+            # fatos novos entram COM a fonte no fim da linha (mesmo formato da pesquisa) e ficam rastreáveis
+            for f in op.get('acrescentar_fatos') or []:
+                if not re.search(r'\([^()]+\)\s*$', f):
+                    raise ValueError(f'edição: fato sem fonte entre parênteses no fim: {f[:60]}')
+                v['fatos'] = str(v.get('fatos') or '').rstrip('\n') + '\n- ' + f
+            for fo in op.get('acrescentar_fontes') or []:
+                if fo not in (v.get('fontes') or []):
+                    v.setdefault('fontes', []).append(fo)
+            aplicadas.append(f"fatos +{len(op.get('acrescentar_fatos') or [])} · fontes +{len(op.get('acrescentar_fontes') or [])}")
+        elif op.get('campo') and op.get('regenerar'):
+            # o resumo/suspense sai do roteiro FINAL (falas editadas), não de um texto antigo
+            falas = []
+            for c in v['cenas']:
+                if c.get('tipo') == 'fechamento':
+                    continue
+                falas.append(_limpo_fala(c.get('fala_ideia') if c.get('sub') == 0 else c.get('fala') if not c.get('sub') else ''))
+            v[op['campo']] = ' '.join(f for f in falas if f)
+            aplicadas.append(f"{op['campo']}: regenerado das falas finais")
         elif op.get('campo'):
             campo = op['campo']
             if op.get('valor_de'):

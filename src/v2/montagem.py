@@ -24,7 +24,38 @@ from pathlib import Path
 
 from src.v2 import acervo_v2, capacidades, contrato, fatos
 
-ESTATICO_MAX = 5.0
+ESTATICO_MAX = 4.0   # V2.4 (auditoria 43730252500): imagem parada além disso cansa — corta ou troca
+
+
+def _juntar(v1: list[dict], ks) -> str:
+    """Falas dos planos de UMA ideia: a mesma frase repetida em planos seguidos (divisão da imagem) entra uma vez só."""
+    out = []
+    for k in ks:
+        f = _limpo(v1[k].get('fala'))
+        if f and (not out or out[-1] != f):
+            out.append(f)
+    return ' '.join(out)
+
+
+def _kicker(categoria: str, sub: str, limite: int = 32) -> str:
+    """V2.4 (MP4 43730252500: "CIÊNCIA · SEM NENHUMA GOTA DE CO"): nunca corta palavra; se o subtítulo não cabe
+    inteiro, o kicker fica só com a categoria."""
+    k = ' · '.join(x for x in [categoria, sub] if x).upper()
+    return k if len(k) <= limite else str(categoria).upper()[:limite]
+
+
+def _detalhe_validado(sc: dict) -> str | None:
+    """V2.4: o detalhe da revelação sai do conteúdo FINAL validado (a fala da própria cena), não de um resumo antigo do
+    roteiro. Usa a fala se cabe (≤ 60); senão o detalhe do roteiro só se cabe e todas as palavras de conteúdo dele estão
+    na fala final; senão nenhum detalhe (a resposta basta)."""
+    fala = _limpo(sc.get('fala')).strip()
+    if fala and len(fala) <= 60:
+        return fala
+    det = _limpo(sc.get('detalhe')).strip()
+    if not det or len(det) > 60:
+        return None
+    norm = lambda t: {w[:6] for w in re.findall(r'\w{5,}', capacidades._n(t))}
+    return det if norm(det) <= norm(fala) else None
 
 
 def _maiuscula(s: str) -> str:
@@ -116,7 +147,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
         nova = {'start': sc['start'], 'end': sc['end'], 'fala': sc.get('fala', ''), 'origem': [i]}
         d = {'cenas_v1': [i], 'inicio': sc['start'], 'fala': _limpo(sc.get('fala'))}
         if tipo == 'gancho':
-            nova.update(comp='abertura.pergunta', params={'kicker': ' · '.join(x for x in [meta.get('categoria') or 'CURIOSIDADE', _limpo(sc.get('subtitulo')).split(',')[0]] if x).upper()[:32],
+            nova.update(comp='abertura.pergunta', params={'kicker': _kicker(meta.get('categoria') or 'CURIOSIDADE', _limpo(sc.get('subtitulo')).split(',')[0]),
                         'pergunta': sc.get('titulo') or meta.get('titulo'), 'contexto': _maiuscula(', '.join(_limpo(sc.get('subtitulo')).split(',')[1:]).strip())})
             if img:
                 nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
@@ -147,10 +178,16 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 nova.update(comp='numero.animado', params=p)
                 d.update(comp='numero.animado', motivo='M6: número validado' + (' (correção editorial)' if (fatos_corrigidos or {}).get(i) else ''))
         elif tipo == 'revelacao':
-            nova.update(comp='revelacao.surpresa', params={'pergunta': sc.get('pergunta'), 'resposta': sc.get('resposta'), 'detalhe': sc.get('detalhe'),
+            nova.update(comp='revelacao.surpresa', params={'pergunta': sc.get('pergunta'), 'resposta': sc.get('resposta'), 'detalhe': _detalhe_validado(sc),
                                                           'virada': _virada(sc, caps), 'cor': 'amarelo'})
             mec = next((x for x in reversed(out) if x['comp'] in ('mecanismo.eclusa', 'mecanismo.nivel') and x['params'].get('sentido', 'subir') == 'subir'), None)
-            if mec:
+            esq = next((x for x in reversed(out) if x['comp'] == 'mecanismo.estados'), None) if not mec else None
+            if esq:
+                # V2.4: a resposta aparece sobre o ESTADO FINAL do esquema que ela resume (não sobre foto escura)
+                nova['base'] = {'comp': esq['comp'], 'params': {**esq['params'], 'limpa': True}, 't': round((esq['end'] - esq['start']) * .95, 2),
+                                'dur': round(esq['end'] - esq['start'], 2), 'escurece': .45}
+                d.update(comp='revelacao.surpresa', motivo='M1: payoff · sobre o resultado do esquema')
+            elif mec:
                 # M8 (V2.1): a resposta aparece SOBRE o mecanismo que ela explica (congelado nos níveis iguais), não sobre foto escura
                 bp = {**mec['params'], 'planos': False}
                 tf = (bp.get('tempos') or [0, 0, (mec['end'] - mec['start']) * .76])[2] + .9
@@ -221,7 +258,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 tempos[1] = tempos[1] if tempos[1] else round(min(.8, dur * .2) if len(grupo) == 1 else dur * .3, 2)
                 tempos[2] = tempos[2] if tempos[2] is not None else round(max(tempos[1] + 1.5, dur * .78), 2)
                 sentido = 'descer' if descer and not subir else 'subir'
-                nova.update(end=fim, comp=dec['comp'], origem=grupo, fala=' '.join(_limpo(v1[k].get('fala')) for k in grupo),
+                nova.update(end=fim, comp=dec['comp'], origem=grupo, fala=_juntar(v1, grupo),
                             params={'sentido': sentido, 'desnivel_m': desnivel or 26, 'lago': 'LAGO GATÚN' if 'gatun' in capacidades._n(ctx_tema) else 'NÍVEL ALTO',
                                     'mar': 'MAR', 'tempos': tempos, 'kicker': 'MECANISMO · ECLUSA', 'degraus': _degraus(capacidades._n(ctx_tema))} if dec['comp'] == 'mecanismo.eclusa' else
                             {'de': 0, 'ate': desnivel or 10, 'max': (desnivel or 10) * 1.2, 'unidade': 'm', 'objeto': 'navio', 'flutua': True})
@@ -248,7 +285,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                     if dec['comp'] in ('foto.historica',) and not p.get('img') and img:
                         p['img'] = img
                     nova.update(comp=dec['comp'], params=p, end=v1[mesmo[-1]]['end'], origem=mesmo,
-                                fala=' '.join(_limpo(v1[k].get('fala')) for k in mesmo))
+                                fala=_juntar(v1, mesmo))
                     if img and dec['comp'] in ('revelacao.surpresa', 'destaque.palavras'):
                         nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
                     d.update(cenas_v1=mesmo, comp=dec['comp'], motivo=dec.get('motivo', ''), origem='contrato', acontecimento=dec.get('acontecimento'))
@@ -267,7 +304,7 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 # acontecimento crítico sem composição: registra e mantém a imagem (a cena será REPROVADA pelo fiscal).
                 # Correção do piloto: sem imagem, a cena era foto.documental VAZIA (tela preta ~6 s com só a legenda);
                 # agora mostra a própria fala, e os fragmentos da mesma ideia ficam numa cena só
-                nova.update(end=v1[mesmo[-1]]['end'], origem=mesmo, fala=' '.join(_limpo(v1[k].get('fala')) for k in mesmo), limitacao=dec['limitacao'])
+                nova.update(end=v1[mesmo[-1]]['end'], origem=mesmo, fala=_juntar(v1, mesmo), limitacao=dec['limitacao'])
                 if img:
                     nova.update(comp='foto.documental', params={'lugar': _limpo(sc.get('lugar'))[:28]})
                     nova['fundo'] = {'img': img, 'de': 'auto', 'para': 'auto'}
@@ -291,13 +328,13 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 if esc and _num_m(' '.join(v1[k].get('fala', '') for k in range(i, j))):
                     # escala com referências conhecidas (tabela curada, fonte Wikipédia) em vez de foto parada
                     v = _num_m(' '.join(v1[k].get('fala', '') for k in range(i, j)))
-                    nova.update(end=fim, origem=list(range(i, j)), fala=' '.join(_limpo(v1[k].get('fala')) for k in range(i, j)), comp='comparacao.grandezas',
+                    nova.update(end=fim, origem=list(range(i, j)), fala=_juntar(v1, range(i, j)), comp='comparacao.grandezas',
                                 params=capacidades.escala_com_referencias(v, 'Desnível'))
                     d.update(cenas_v1=list(range(i, j)), comp='comparacao.grandezas', motivo=f'escala: "{esc["trecho"]}" → referências conhecidas')
                     i = j
                     out.append(nova); direcao.append(d)
                     continue
-                nova.update(end=fim, origem=list(range(i, j)), fala=' '.join(_limpo(v1[k].get('fala')) for k in range(i, j)))
+                nova.update(end=fim, origem=list(range(i, j)), fala=_juntar(v1, range(i, j)))
                 etq = str(sc.get('etiqueta') or '')
                 ano = re.search(r'(1[5-9]\d\d|20\d\d)', etq + ' ' + str(sc.get('lugar') or ''))
                 historica = bool(ano and int(ano.group(1)) < 1960 and etq.startswith('FOTO'))

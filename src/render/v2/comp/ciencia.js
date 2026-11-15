@@ -22,7 +22,8 @@
     exemplo: { params: { kicker: 'CICLO DA ÁGUA DO CANAL', titulo: 'De onde vem a *água*?', nos: [{ id: 'chuva', rotulo: 'Chuva', x: .5, y: 0, icone: 'agua' }, { id: 'lago', rotulo: 'Lago Gatún', x: 0, y: .5, icone: 'montanha' }, { id: 'eclusa', rotulo: 'Eclusa', x: 1, y: .5, icone: 'navio' }, { id: 'mar', rotulo: 'Mar', x: .5, y: 1, icone: 'globo' }],
       ligacoes: [{ de: 'chuva', para: 'lago', rotulo: 'enche' }, { de: 'lago', para: 'eclusa', rotulo: 'gravidade' }, { de: 'eclusa', para: 'mar', rotulo: 'escoa' }, { de: 'mar', para: 'chuva', rotulo: 'evapora' }] }, dur: 6, fala: 'A chuva enche o lago, a água desce pela eclusa e vai para o mar.' },
   }, (p, ctx) => {
-    const X0 = 72 + 115, X1 = 930 - 115, Y0 = 540 + 55, Y1 = 1080 - 55, nos = (p.nos || []).slice(0, 6), li = (p.ligacoes || []).slice(0, 7);
+    const nos = (p.nos || []).slice(0, 6).map((n, i, a) => typeof n === 'string' || n.x === undefined ? { id: (n && n.id) || 'n' + i, rotulo: typeof n === 'string' ? n : (n.rotulo || n.nome || ''), x: a.length < 2 ? .5 : i / (a.length - 1), y: i % 2 ? .75 : .25, icone: (n && n.icone) || 'engrenagem' } : n);
+    const X0 = 72 + 115, X1 = 930 - 115, Y0 = 540 + 55, Y1 = 1080 - 55, li = ((p.ligacoes && p.ligacoes.length) ? p.ligacoes : nos.slice(1).map((n, i) => ({ de: nos[i].id, para: n.id }))).slice(0, 7);
     const P = id => { const n = nos.find(x => x.id === id); return n ? [lerp(X0, X1, +n.x), lerp(Y0, Y1, +n.y)] : [540, 800]; };
     const curva = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b), dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
       const ux = dx / L, uy = dy / L, ax = x1 + ux * Math.min(110, L * .3), ay = y1 + uy * Math.min(60, L * .3), bx = x2 - ux * Math.min(120, L * .3), by = y2 - uy * Math.min(66, L * .3);
@@ -69,7 +70,7 @@
     transicao: 'mascara',
     exemplo: { params: { kicker: 'BIOLOGIA', titulo: 'Como a planta faz *açúcar*', etapas: [{ titulo: 'Luz', texto: 'A clorofila capta a luz do sol', icone: 'sol' }, { titulo: 'Água', texto: 'As raízes trazem água; ela é quebrada', icone: 'agua' }, { titulo: 'CO₂', texto: 'O gás carbônico entra pelas folhas', icone: 'folha' }, { titulo: 'Glicose', texto: 'Tudo vira açúcar e sobra oxigênio', icone: 'atomo' }] }, dur: 7, fala: 'A folha capta luz, quebra a água, usa o gás carbônico e produz açúcar.' },
   }, (p, ctx) => {
-    const et = (p.etapas || []).slice(0, 5), n = et.length;
+    const et = (p.etapas || []).slice(0, 5).map(e => typeof e === 'string' ? { titulo: e.split(/\s+/).slice(0, 3).join(' '), texto: e } : e), n = et.length;
     return {
       html: `${prancheta}${titulo(p.kicker || 'PROCESSO', p.titulo)}
         <div class="abs" style="left:126px;top:560px;width:6px;height:500px;background:rgba(127,227,240,.18)"></div>
@@ -112,7 +113,14 @@
     transicao: 'mascara',
     exemplo: { params: { titulo: 'Por que o navio *flutua*?', objeto: 'navio', meio: 'agua', forcas: [{ nome: 'Peso', angulo: -90, intensidade: .8, cor: '#FF4D3D' }, { nome: 'Empuxo', angulo: 90, intensidade: .8, cor: '#3FD0E0' }], resultado: 'Empuxo = Peso → equilíbrio' }, dur: 5, fala: 'O peso puxa para baixo e o empuxo da água empurra para cima.' },
   }, (p, ctx) => {
-    const C = [540, 800], fs = (p.forcas || []).slice(0, 4), R = 270;
+    // V2.4: o contrato pode trazer só o nome da força (ou a frase). Sem ângulo numérico, o sentido vem do nome;
+    // sem nome reconhecível, a força não é desenhada (seta sem significado é pior que seta nenhuma).
+    const SENT = [[/peso|gravid|queda/i, -90], [/empux|sustenta|normal|tra[cç][aã]o|elev|levant/i, 90], [/atrito|arrasto|resist/i, 180], [/impuls|motor|propul|empurr/i, 0]];
+    const norm = f => { f = typeof f === 'string' ? { nome: f } : { ...f }; const nome = String(f.nome || '');
+      if (!Number.isFinite(+f.angulo)) { const m = SENT.find(([r]) => r.test(nome)); if (!m) return null; f.angulo = m[1]; }
+      f.angulo = +f.angulo; f.intensidade = Number.isFinite(+f.intensidade) && +f.intensidade > 0 ? Math.min(1, +f.intensidade) : .75;
+      f.nome = nome.split(/\s+/).slice(0, 2).join(' '); return f; };
+    const C = [540, 800], fs = (p.forcas || []).map(norm).filter(Boolean).slice(0, 4), R = 270;
     const vec = f => [Math.cos(f.angulo * Math.PI / 180) * R * f.intensidade, -Math.sin(f.angulo * Math.PI / 180) * R * f.intensidade];
     const res = fs.reduce((a, f) => { const v = vec(f); return [a[0] + v[0], a[1] + v[1]]; }, [0, 0]);
     const obj = { navio: `<path d="M-150 0 H150 L120 60 H-130 Z" fill="#2b3a4a" stroke="#fff" stroke-width="4"/><rect x="20" y="-70" width="80" height="70" fill="#2b3a4a" stroke="#fff" stroke-width="4"/>`,
@@ -140,6 +148,130 @@
         aparece(el.querySelector('.rs'), tl, tr + .3, { dy: 14 });
       },
       textos: () => [p.titulo, p.resultado, ...fs.map(f => f.nome)],
+    };
+  });
+
+  /* 28. mecanismo.estados (V2.4) — ESQUEMA ANIMADO GENÉRICO de um mecanismo: objetos 2D (superfície, corpo,
+   * cerdas, ramos, partículas, seta) que mudam de ESTADO em estado (posição, escala, rotação, opacidade, polaridade)
+   * e RELAÇÕES entre eles (atração, repulsão, contato, empurra) com intensidade. Mostra quem participa, o estado
+   * inicial, o que muda, a relação causal/espacial e o estado resultante. Nada de lagartixa aqui: tudo vem dos dados
+   * (Ever Given: canal + navio + vento; Tacoma: ponte + vento; adesão: espátula + parede + moléculas).
+   * Sempre identificado na tela como ESQUEMA (não é foto nem microscopia). */
+  const FORMAS = ['superficie', 'corpo', 'cerdas', 'ramos', 'particulas', 'seta'];
+  V2.registrar({
+    id: 'mecanismo.estados', nome: 'Mecanismo em estados (esquema animado)', tratamento: 'ciencia', tom: 'escuro',
+    objetivo: 'Demonstrar um mecanismo: objetos identificados, estado inicial, mudança visível, relação causal/espacial e estado resultante.',
+    funcoes: ['mecanismo', 'processo', 'causa_efeito', 'transformacao'],
+    params: { kicker: '≤ 22', titulo: '≤ 36', esquema: '{objetos, estados, tempos}', objetos: `(dentro de esquema) 2–7 × {id, forma (${FORMAS.join('|')}), rotulo ≤ 18, x, y (0–1 na área), w, h (0–1), n, lado ('cima'|'baixo'), cor}`,
+      estados: '(dentro de esquema) 2–4 × {rotulo ≤ 30, objetos: {id: {dx, dy (0–1), escala, rot (graus), opacidade, polar 0–1}}, relacoes: [{de, para, tipo atracao|repulsao|contato|empurra, forca 0–1, n, rotulo ≤ 16}]}', tempos: 'opcional: segundo de cada estado', limpa: 'bool: só as formas (uso como base de outra cena)' },
+    fundo: 'próprio (prancheta)', layout: 'área x 90–990, y 560–1040; faixa de estados y 1050–1100; selo ESQUEMA no alto à direita',
+    paleta: 'objetos petróleo com contorno ciano; atração amarela; repulsão vermelha; contato branco', animacao: 'objetos interpolam entre estados; relações aparecem/somem com a intensidade; faixa mostra INÍCIO → … → RESULTADO',
+    duracao: [3, 5, 8], limites: { titulo: 36, rotulo: 18, estado: 30, objetos: 7, estados: 4 }, legenda: 'livre',
+    area_segura: 'y 340–1100; x 72–990', legibilidade: 'rótulos 30 px 800; estado 32 px 800',
+    rejeicao: ['estados iguais (nada muda)', 'objetos sem rótulo', 'relação entre objetos que não existem', 'apresentar como foto ou microscopia real'],
+    transicao: 'mascara',
+    exemplo: { params: { kicker: 'ESQUEMA · ADESÃO', titulo: 'Perto, as moléculas se *atraem*', esquema: {
+      objetos: [{ id: 'par', forma: 'superficie', rotulo: 'PAREDE', x: .5, y: .08, w: 1, h: .13 }, { id: 'mp', forma: 'particulas', x: .55, y: .21, w: .78, n: 8 },
+        { id: 'esp', forma: 'ramos', rotulo: 'ESPÁTULAS', x: .55, y: .8, w: .8, h: .32, n: 6, lado: 'cima' }, { id: 'me', forma: 'particulas', rotulo: 'MOLÉCULAS', x: .55, y: .6, w: .667, n: 6, preso_a: 'esp' }],
+      estados: [{ rotulo: 'LONGE: SEM ATRAÇÃO', objetos: { esp: { dy: .08 } }, relacoes: [{ de: 'me', para: 'mp', tipo: 'atracao', forca: 0, n: 6 }] },
+        { rotulo: 'ENCOSTA NA PAREDE', objetos: { esp: { dy: -.28 }, me: { polar: .5 }, mp: { polar: .5 } }, relacoes: [{ de: 'me', para: 'mp', tipo: 'atracao', forca: .6, n: 6 }] },
+        { rotulo: 'AS MOLÉCULAS SE ATRAEM', objetos: { esp: { dy: -.32 }, me: { polar: 1 }, mp: { polar: 1 } }, relacoes: [{ de: 'me', para: 'mp', tipo: 'atracao', forca: 1, n: 6, rotulo: 'ATRAÇÃO' }] }] } },
+      dur: 5, fala: 'Quando encosta, as moléculas das duas superfícies se atraem.' },
+  }, (p, ctx) => {
+    const c = p.esquema || p, ob = (c.objetos || []).filter(o => o && o.id && FORMAS.includes(o.forma)).slice(0, 7), es = (c.estados || []).slice(0, 4);
+    const AX0 = 90, AX1 = 990, AY0 = 560, AY1 = 1030, W = AX1 - AX0, Hh = AY1 - AY0;
+    const num = (v, d) => (v === undefined || v === null || isNaN(+v)) ? d : +v;
+    const HPAD = { particulas: 40 / Hh, superficie: .1, seta: .25 };
+    const base = o => ({ x: AX0 + num(o.x, .5) * W, y: AY0 + num(o.y, .5) * Hh, w: num(o.w, .4) * W, h: num(o.h, HPAD[o.forma] || .16) * Hh });
+    const C = { linha: 'var(--ciano)', corpo: 'rgba(16,52,64,.95)', atracao: 'var(--amarelo)', repulsao: 'var(--vermelho)', contato: '#fff', empurra: 'var(--ciano)' };
+    const forma = (o, b) => {
+      const w = b.w, h = b.h, n = Math.max(1, Math.min(40, num(o.n, o.forma === 'particulas' ? 6 : 9))), cor = o.cor || C.linha, baixo = (o.lado || 'baixo') === 'baixo' ? 1 : -1;
+      if (o.forma === 'superficie') return `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="rgba(140,170,180,.22)" stroke="${cor}" stroke-width="3"/>` +
+        Array.from({ length: Math.ceil(w / 34) }, (_, i) => `<line x1="${-w / 2 + i * 34}" y1="${-h / 2}" x2="${-w / 2 + i * 34 + 22}" y2="${h / 2}" stroke="rgba(127,227,240,.28)" stroke-width="2"/>`).join('');
+      if (o.forma === 'corpo') return `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${Math.min(40, h / 2)}" fill="${C.corpo}" stroke="${cor}" stroke-width="4"/>`;
+      if (o.forma === 'cerdas') { const top = -h / 2 * baixo; return `<line x1="${-w / 2}" y1="${top}" x2="${w / 2}" y2="${top}" stroke="${cor}" stroke-width="6" stroke-linecap="round"/>` +
+        Array.from({ length: n }, (_, i) => { const x = -w / 2 + (i + .5) * w / n; return `<path class="cd" d="M${x} ${top} Q${x + 10} ${0} ${x + 4} ${h / 2 * baixo}" fill="none" stroke="${cor}" stroke-width="4" stroke-linecap="round"/>`; }).join(''); }
+      if (o.forma === 'ramos') { const top = -h / 2 * baixo, mid = 0; let s = `<line x1="0" y1="${top}" x2="0" y2="${mid}" stroke="${cor}" stroke-width="10" stroke-linecap="round"/>`;
+        for (let i = 0; i < n; i++) { const x = -w / 2 + (i + .5) * w / n, y2 = h / 2 * baixo; s += `<path d="M0 ${mid} Q${x * .4} ${(mid + y2) / 2} ${x} ${y2 - 10 * baixo}" fill="none" stroke="${cor}" stroke-width="5" stroke-linecap="round"/><rect class="ponta" x="${x - 18}" y="${y2 - 4 - (baixo < 0 ? 0 : 0)}" width="36" height="8" rx="3" fill="#fff"/>`; }
+        return s; }
+      if (o.forma === 'particulas') return Array.from({ length: n }, (_, i) => { const x = n === 1 ? 0 : -w / 2 + i * w / (n - 1);
+        return `<g transform="translate(${x} 0)"><circle r="19" fill="rgba(91,155,255,.35)" stroke="var(--azul)" stroke-width="3"/><text class="pol" data-deco="1" x="0" y="8" text-anchor="middle" font-size="24" font-weight="800" fill="var(--amarelo)" opacity="0">${i % 2 ? '+' : '−'}</text></g>`; }).join('');
+      if (o.forma === 'seta') { const L = h, a = num(o.angulo, -90) * Math.PI / 180, x2 = Math.cos(a) * L, y2 = -Math.sin(a) * L;
+        return `<line x1="0" y1="0" x2="${x2}" y2="${y2}" stroke="${o.cor || 'var(--vermelho)'}" stroke-width="12" stroke-linecap="round" marker-end="url(#me${ctx.i})"/>`; }
+      return '';
+    };
+    const B = Object.fromEntries(ob.map(o => [o.id, base(o)]));
+    const estado = (k, id) => Object.assign({ dx: 0, dy: 0, escala: 1, rot: 0, opacidade: 1, polar: 0 }, ((es[k] || {}).objetos || {})[id] || {});
+    const rels = [...new Set(es.flatMap(e => (e.relacoes || []).map(r => `${r.de}>${r.para}>${r.tipo || 'atracao'}`)))].map(k => { const [de, para, tipo] = k.split('>'); return { de, para, tipo }; })
+      .filter(r => B[r.de] && B[r.para]);
+    const relEm = (k, r) => ((es[k] || {}).relacoes || []).find(x => x.de === r.de && x.para === r.para && (x.tipo || 'atracao') === r.tipo);
+    const NL = r => Math.max(1, Math.min(14, Math.max(...es.flatMap(e => e.relacoes || []).filter(x => x.de === r.de && x.para === r.para).map(x => num(x.n, 6)))));
+    return {
+      html: `${prancheta}${titulo(p.kicker || 'ESQUEMA', p.titulo)}
+        <div class="abs" data-g="selo" style="right:150px;top:345px;font-family:var(--f-dado);font-weight:700;font-size:26px;color:rgba(255,255,255,.75);border:2px solid rgba(255,255,255,.35);padding:4px 10px">ESQUEMA · FORA DE ESCALA</div>
+        <svg class="abs" style="left:0;top:0;overflow:visible" width="1080" height="1920"><defs><marker id="me${ctx.i}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--vermelho)"/></marker>
+          <marker id="ma${ctx.i}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--amarelo)"/></marker>
+          <marker id="mr${ctx.i}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--vermelho)"/></marker></defs>
+          ${ob.map((o, i) => `<g class="ob ob${i}">${forma(o, B[o.id])}</g>`).join('')}
+          ${rels.map((r, j) => `<g class="rl rl${j}">${Array.from({ length: NL(r) }, (_, q) => `<line class="rq" stroke-linecap="round"/><line class="rq2" stroke-linecap="round"/>`).join('')}</g>`).join('')}</svg>
+        ${ob.map((o, i) => o.rotulo ? `<div class="abs or or${i}" data-g="or${i}" data-txt="1" style="font-weight:800;font-size:30px;color:#fff;text-transform:uppercase;white-space:nowrap;background:rgba(5,20,26,.8);padding:2px 10px">${esc(o.rotulo)}</div>` : '').join('')}
+        ${rels.map((r, j) => `<div class="abs rr rr${j}" data-g="rr${j}" data-txt="1" style="font-family:var(--f-dado);font-weight:700;font-size:28px;color:${r.tipo === 'repulsao' ? 'var(--vermelho)' : 'var(--amarelo)'};white-space:nowrap;opacity:0"></div>`).join('')}
+        <div class="abs fx" data-g="fx" style="left:72px;right:90px;top:1060px;display:flex;align-items:center;gap:14px">
+          ${es.map((e, k) => `<div class="fe fe${k}" style="flex:none;width:22px;height:22px;border-radius:50%;border:3px solid var(--ciano)"></div>`).join('')}
+          <div class="fr" data-txt="1" style="flex:1;font-weight:800;font-size:32px;color:#fff;text-transform:uppercase;white-space:nowrap;overflow:hidden"></div></div>`,
+      montar(el) {
+        if (p.limpa) {   // usada como BASE (ex.: revelação sobre o resultado): só as formas, nenhum texto concorrendo
+          el.querySelectorAll('div').forEach(d => { if (d.textContent.trim() || d.matches('.rr, .or, .fx, .fr')) d.style.display = 'none'; }); return;
+        }
+        const t = el.querySelector('.tt'); if (t) caber(t, { max: 60, min: 44, alt: 140 }); el.querySelectorAll('.or').forEach(r => caber(r, { max: 30, min: 26, larg: 520 })); },
+      upd(tl, el, cc) {
+        aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });
+        const n = Math.max(1, es.length), ts = p.tempos || (c.tempos) || es.map((e, k) => k === 0 ? 0 : .5 + k * (cc.dur - 1.2) / n);
+        let k0 = 0; ts.forEach((t, k) => { if (tl >= t) k0 = k; });
+        const k1 = Math.min(es.length - 1, k0 + 1), tr = k0 === k1 ? 1 : eio(clamp((tl - ts[k0]) / .7)), prev = Math.max(0, k0 - 1);
+        const mix = (id, campo) => { const a = estado(k0 === 0 ? 0 : prev, id)[campo], b = estado(k0, id)[campo]; return k0 === 0 ? b : lerp(a, b, tr); };
+        const atual = {}, pai = id => { const o = ob.find(x => x.id === id); return o && o.preso_a && B[o.preso_a] ? o.preso_a : null; };
+        const desl = (id, campo) => mix(id, campo) + (pai(id) ? desl(pai(id), campo) : 0);
+        ob.forEach((o, i) => { const b = B[o.id], dx = desl(o.id, 'dx') * W, dy = desl(o.id, 'dy') * Hh, es_ = mix(o.id, 'escala'), rot = mix(o.id, 'rot'), op = mix(o.id, 'opacidade'), pol = mix(o.id, 'polar');
+          const x = b.x + dx, y = b.y + dy; atual[o.id] = { x, y, w: b.w * es_, h: b.h * es_, op };
+          const g = el.querySelector('.ob' + i); g.setAttribute('transform', `translate(${x} ${y}) rotate(${rot}) scale(${es_})`); g.style.opacity = op * clamp((tl - .15 - i * .08) / .3);
+          g.querySelectorAll('.pol').forEach(t => t.setAttribute('opacity', pol));
+          const r = el.querySelector('.or' + i); if (r) {
+            /* superfície: rótulo dentro, à esquerda; partículas: à esquerda da fileira; seta: ao lado do meio da seta; resto: à direita */
+            const L = o.forma === 'superficie' ? x - b.w / 2 + 24 : o.forma === 'particulas' ? x - b.w * es_ / 2 - r.offsetWidth - 26
+              : o.forma === 'seta' ? x + 26 : x + b.w * es_ / 2 + 18;
+            const T = o.forma === 'seta' ? y + b.h * .45 - 22 : y - 22;
+            r.style.left = clamp(L, 80, 990 - r.offsetWidth) + 'px';
+            r.style.top = clamp(T, 520, 1010) + 'px'; r.style.opacity = op > .3 ? clamp((tl - .3 - i * .08) / .3) : 0; } });
+        /* rótulos visíveis nunca se sobrepõem: o de baixo desce até ficar livre */
+        const rs_ = [...el.querySelectorAll('.or')].filter(r => +r.style.opacity > .05).sort((a, b) => a.offsetTop - b.offsetTop);
+        rs_.forEach((r, q) => { for (let j = 0; j < q; j++) { const o2 = rs_[j]; const sobre = !(r.offsetLeft > o2.offsetLeft + o2.offsetWidth || o2.offsetLeft > r.offsetLeft + r.offsetWidth);
+          if (sobre && r.offsetTop < o2.offsetTop + o2.offsetHeight + 6) r.style.top = (o2.offsetTop + o2.offsetHeight + 6) + 'px'; } });
+        rels.forEach((r, j) => { const A = atual[r.de], Bb = atual[r.para], fa = (relEm(prev, r) || {}).forca || 0, fb = (relEm(k0, r) || {}).forca || 0, f = k0 === 0 ? fb : lerp(fa, fb, tr);
+          const g = el.querySelector('.rl' + j), cima = A.y > Bb.y, ya = A.y + (cima ? -A.h / 2 : A.h / 2), yb = Bb.y + (cima ? Bb.h / 2 : -Bb.h / 2);
+          const xa0 = Math.max(A.x - A.w / 2, Bb.x - Bb.w / 2), xa1 = Math.min(A.x + A.w / 2, Bb.x + Bb.w / 2), qs = g.querySelectorAll('.rq'), q2 = g.querySelectorAll('.rq2'), N = qs.length;
+          const cor = C[r.tipo] || C.atracao, mk = r.tipo === 'repulsao' ? `url(#mr${ctx.i})` : `url(#ma${ctx.i})`;
+          /* quantas linhas aparecem neste estado (n do estado): a soma de atrações cresce/diminui de verdade na tela */
+          const na = num((relEm(prev, r) || {}).n, N), nb = num((relEm(k0, r) || {}).n, (relEm(k0, r) ? N : 0)), nv = k0 === 0 ? nb : lerp(na, nb, tr);
+          const ordem = Array.from({ length: N }, (_, q) => q).sort((a, b) => Math.abs(a - (N - 1) / 2) - Math.abs(b - (N - 1) / 2));
+          qs.forEach((ln, q) => { const x = N === 1 ? (xa0 + xa1) / 2 : lerp(xa0 + 20, xa1 - 20, q / (N - 1)), m = (ya + yb) / 2, pul = .75 + .25 * Math.sin(tl * 6 + q);
+            const vis = f * Math.min(1, A.op, Bb.op) * clamp(nv - ordem.indexOf(q)), atr = r.tipo !== 'repulsao';
+            [[ln, ya], [q2[q], yb]].forEach(([L, y0]) => { L.setAttribute('x1', x); L.setAttribute('y1', atr ? y0 : m); L.setAttribute('x2', x); L.setAttribute('y2', atr ? lerp(y0, m, .85) : y0);
+              L.setAttribute('stroke', cor); L.setAttribute('stroke-width', 2 + 5 * f); L.setAttribute('stroke-dasharray', r.tipo === 'contato' ? '0' : '10 8');
+              L.setAttribute('marker-end', r.tipo === 'contato' ? '' : mk); L.setAttribute('opacity', vis * pul); }); });
+          const rot = (es.flatMap(e => e.relacoes || []).find(x => x.de === r.de && x.para === r.para && x.rotulo) || {}).rotulo, rr = el.querySelector('.rr' + j);
+          rr.textContent = rot || ''; const esq = xa0 - rr.offsetWidth - 20;
+          rr.style.left = (esq >= 80 ? esq : clamp(xa1 + 16, 80, 990 - rr.offsetWidth)) + 'px'; rr.style.top = ((ya + yb) / 2 - 18) + 'px'; rr.style.opacity = rot ? clamp(f * 1.4) : 0;
+          /* não cobre rótulo de objeto: troca de lado; se ainda cobrir, desce para baixo da fileira de baixo */
+          const bate = () => [...el.querySelectorAll('.or')].some(o => +o.style.opacity > .05 && !(rr.offsetLeft > o.offsetLeft + o.offsetWidth + 4 || o.offsetLeft > rr.offsetLeft + rr.offsetWidth + 4
+            || rr.offsetTop > o.offsetTop + o.offsetHeight + 2 || o.offsetTop > rr.offsetTop + rr.offsetHeight + 2));
+          if (rot && bate()) { rr.style.left = clamp(xa1 + 16, 80, 990 - rr.offsetWidth) + 'px'; if (bate()) rr.style.top = (Math.max(ya, yb) + 14) + 'px'; } });
+        es.forEach((e, k) => { const d = el.querySelector('.fe' + k); d.style.background = k <= k0 ? 'var(--ciano)' : 'transparent'; });
+        const fr = el.querySelector('.fr'), rot = (es[k0] || {}).rotulo || '', tag = k0 === 0 ? 'INÍCIO · ' : k0 === es.length - 1 ? 'RESULTADO · ' : '';
+        if (fr.dataset.k !== String(k0)) { fr.dataset.k = String(k0); fr.textContent = tag + rot; caber(fr, { max: 32, min: 26 }); }
+        fr.style.opacity = clamp((tl - ts[k0]) / .3);
+      },
+      textos: () => [p.titulo, ...ob.map(o => o.rotulo), ...es.map(e => e.rotulo), ...es.flatMap(e => (e.relacoes || []).map(r => r.rotulo))],
     };
   });
 

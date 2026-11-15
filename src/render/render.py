@@ -363,10 +363,38 @@ def _montar(dados, pagina, audio, saida, trabalho, musica, workers, nav_args=Non
     subprocess.run(['ffmpeg', '-v', 'error', '-y', *entradas, '-filter_complex', filtro, '-map', '[a]',
                     '-t', f"{dados['duration']:.3f}", '-c:a', 'pcm_s16le', str(mix)], check=True)
     masterizar(mix, master)
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(video), '-i', str(master),
-                    '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-ar', '48000',
-                    '-shortest', '-movflags', '+faststart', str(saida)], check=True)
+    final_medido(video, master, saida)
     return saida
+
+
+def _ebur(arq: Path) -> dict:
+    """Loudness integrado e pico verdadeiro do ARQUIVO FINAL (mesmo medidor do piloto/fiscal: ebur128 peak=true)."""
+    import re as _re
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-i', str(arq), '-af', 'ebur128=peak=true', '-f', 'null', '-'],
+                       capture_output=True, text=True).stderr
+    i = _re.findall(r'I:\s+(-?[\d.]+) LUFS', r); tp = _re.findall(r'Peak:\s+(-?[\d.]+) dBFS', r)
+    return {'lufs': float(i[-1]) if i else None, 'pico_dbtp': float(tp[-1]) if tp else None}
+
+
+def final_medido(video: Path, master: Path, saida: Path, tentativas: int = 4) -> dict:
+    """V2.4 (MP4 43730252500: −15,1 LUFS e −0,5 dBTP DEPOIS do AAC, com o WAV dentro da meta): o codificador muda o
+    volume e cria picos entre amostras. Agora o MP4 final é medido e, fora de −14 ± 0,5 LUFS ou acima de −1,2 dBTP,
+    o áudio é refeito a partir do master com ganho corrigido e limitador mais baixo — no máximo `tentativas` vezes."""
+    ganho, limite, hist = 0.0, LIMITE_AMOSTRA, []
+    for _ in range(tentativas):
+        # 1ª passada: o master como está; depois, ganho corrigido + teto absoluto de amostra (o AAC passa ~1 dB dele)
+        af = ['-af', f'volume={ganho:.2f}dB,alimiter=limit={limite:.4f}:attack=1:release=50:level=false'] if hist else []
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(video), '-i', str(master), '-map', '0:v', '-map', '1:a',
+                        '-c:v', 'copy', *af, '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-shortest', '-movflags', '+faststart', str(saida)], check=True)
+        m = _ebur(saida)
+        hist.append({**m, 'ganho_db': round(ganho, 2), 'limite': round(limite, 4) if len(hist) else None})
+        if m['lufs'] is None or m['lufs'] < -60 or (abs(m['lufs'] - ALVO_LUFS) <= .5 and (m['pico_dbtp'] is None or m['pico_dbtp'] <= -1.2)):
+            break
+        ganho += ALVO_LUFS - m['lufs']
+        if m['pico_dbtp'] is not None and m['pico_dbtp'] > -1.2 and len(hist) > 1:
+            limite *= 10 ** ((-1.6 - m['pico_dbtp']) / 20)
+    (saida.with_suffix('.audio.json')).write_text(json.dumps(hist, ensure_ascii=False))
+    return hist[-1]
 
 
 ALVO_LUFS, ALVO_TP = -14.0, -1.5

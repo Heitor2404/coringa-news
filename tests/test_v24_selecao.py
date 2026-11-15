@@ -167,7 +167,10 @@ def test_checkpoint_real_completo(tmp_path):
     assert chamadas == []                                            # nada pendente: retomada sem IA de contrato
     rel = preparo.preparar(copy.deepcopy(v), copy.deepcopy(v['acervo']))
     ev = {e['id']: e for e in rel['eventos']}
-    assert [b['evento'] for b in rel['bloqueios']] == ['e2']
+    # V2.4 (auditoria do MP4 43730252500): e4 e e10 são mecanismos críticos cujos nós/etapas são frases inteiras —
+    # viravam cartões de texto com ícones genéricos; agora bloqueiam no preparo pedindo o esquema demonstrativo
+    assert [b['evento'] for b in rel['bloqueios']] == ['e2', 'e4', 'e10']
+    assert all(any('mecanismo.estados' in f for f in b['faltam']) for b in rel['bloqueios'][1:])
     assert ev['e11']['representacao']['modo'] == 'foto_direta'
-    for eid in ('e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10'):          # mecanismos invisíveis: ilustração
+    for eid in ('e5', 'e6', 'e7', 'e8', 'e9'):                        # mecanismos invisíveis: ilustração
         assert ev[eid]['funcao'] == 'ilustracao', eid

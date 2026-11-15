@@ -526,7 +526,7 @@ def _composicao_viavel(ac: dict) -> str | None:
     p = dict(ac.get('dados') or {})
     ctx = _n(' '.join(str(ac.get(k) or '') for k in ('acao', 'mostrar')))
     for comp, reqs in comps.items():
-        if comp in contrato.GENERICAS:
+        if comp in contrato.GENERICAS or not contrato.comp_aceita(ac, comp, p):
             continue
         if all(capacidades._tem(r, p, ctx) for r in reqs):
             return comp

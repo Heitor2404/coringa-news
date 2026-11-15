@@ -666,6 +666,15 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
             rel['contratos'] = v['_contratos']
         if v.get('_checkpoint'):
             rel['checkpoint'] = v['_checkpoint']
+        if not rel['bloqueios']:     # V2.4: prévia visual das composições críticas ANTES da narração (sem IA)
+            from src.v2 import previa
+            try:
+                pv = previa.validar(v, pasta / f'{nome}-previa')
+            except Exception as e:   # sem como atestar a tela: bloqueia (nunca aprova às cegas)
+                pv = {'eventos': [], 'bloqueios': [{'evento': '-', 'cenas': [], 'tipo': '-', 'faltam': [f'prévia visual falhou: {str(e)[:160]}']}]}
+            rel['previa'] = pv
+            rel['bloqueios'] += pv['bloqueios']
+            print('  [prévia] ' + previa.resumo(pv).replace('\n', '\n  '))
         v['_preparo'] = rel
         (pasta / f'{nome}-preparo.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
         print('  [preparo] ' + preparo.resumo(rel).replace('\n', '\n  '))

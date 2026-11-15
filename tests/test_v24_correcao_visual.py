@@ -155,3 +155,33 @@ def test_edicao_do_piloto_versionada_e_rastreavel():
         ac = c['acontecimento']
         if ac.get('capacidade') == 'mecanismo.estados':
             assert contrato.esquema_problemas(ac['dados']['esquema']) == [] and ac['observavel'] is False and not c.get('foto')
+
+
+# ───────────── checkpoint: a limpeza pós-vídeo não apaga as imagens do checkpoint ─────────────
+def test_limpeza_nao_apaga_imagens_do_checkpoint(tmp_path):
+    import main
+    ck = tmp_path / 'checkpoint'
+    (ck / 'arquivos').mkdir(parents=True)
+    (ck / 'manifesto.json').write_text('{}')
+    img = ck / 'arquivos' / 'a3_a6.jpg'
+    img.write_bytes(b'x')
+    main._limpar_acervo({'acervo': [{'id': 'a3', 'arq': str(img)}]})
+    assert img.exists()                                                 # era apagada (execução 43740293581)
+    main._limpar_acervo({'acervo': [{'id': 'a3', 'arq': None}]})         # arq vazio não derruba mais a execução
+    tmpd = tmp_path / 'acervo_tmp'
+    tmpd.mkdir()
+    (tmpd / 'b.jpg').write_bytes(b'x')
+    main._limpar_acervo({'acervo': [{'id': 'b', 'arq': str(tmpd / 'b.jpg')}]})
+    assert not tmpd.exists()                                            # a pasta temporária comum continua sendo limpa
+
+
+def test_plano_com_foto_sem_id_de_imagem_recebe_a_midia(tmp_path, monkeypatch):
+    import main
+    img = tmp_path / 'a9.jpg'
+    img.write_bytes(b'x')
+    v = {'acervo': [{'id': 'a9', 'arq': str(img)}], 'cenas': [{'fala': 'x', 'foto': 'a9'}]}
+    monkeypatch.setattr(main, '_midia_de_item', lambda x, trab: {'tipo': 'foto', 'arq': x['arq']})
+    monkeypatch.setattr(main, '_contexto', lambda v: '')
+    monkeypatch.setattr(main, 'conferir_ia', lambda v, imgs, *a, **k: imgs)
+    reais, *_ = main._midia_do_acervo(v, tmp_path)
+    assert v['cenas'][0]['imagem'] == 'foto_a9' and reais['foto_a9']['arq'] == str(img)

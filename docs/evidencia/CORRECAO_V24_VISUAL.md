@@ -58,3 +58,15 @@ rota e fiscal antigo). Expectativas antigas ajustadas só onde a regra mudou por
 cartão de frases agora bloqueia; D15/D16 são regras novas): `test_v24_contratos`, `test_v24_selecao`,
 `test_v24_fluxo_integrado`, `test_piloto_correcao` — cada ajuste comentado no próprio teste. Referências visuais
 regeneradas só para `mecanismo.estados` (nova) e `encerramento.editorial` (tipografia unificada).
+
+## Execução real 43740293581 (retomada única de 43730252500)
+- Pré-validação, preparo e **prévia: 6/6 esquemas OK**, sem chamada de IA de contrato; 50,3 s; áudio final −14,6 LUFS / −1,4 dBTP (A1 resolvido).
+- **FALHA_OPERACIONAL**: o checkpoint 43730252500 guardado no cache estava **sem as imagens do acervo**. Causa: a limpeza
+  pós-vídeo (`main.py`) apagava a pasta das imagens do acervo — que, numa retomada, é `<checkpoint>/arquivos`. Sem
+  fotos, e2 e e9 viraram texto (o fiscal bloqueou corretamente com S5) e, com `arq` vazio, `Path(None)` derrubou a execução
+  depois do MP4. Os planos novos e9/e10 também não tinham id de imagem. Corrigido (`_limpar_acervo`, id de imagem
+  automático) com testes.
+- Incidente: o commit de entrega limpou `retomar.txt` sem `[skip ci]` e disparou uma execução nova (43740825165);
+  cancelada na preparação do ambiente, antes do pipeline (sem chamada de modelo, sem vídeo).
+- Edição para a nova retomada (se autorizada): `base_run` 43728184399 (último checkpoint com as imagens); edição e2/e13
+  já auditada + a desta correção; resultado conferido idêntico (falas, resumo, suspense, fatos) ao roteiro editado de 43730252500.

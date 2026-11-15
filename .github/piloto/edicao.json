@@ -1,8 +1,77 @@
 {
- "base_run": "43730252500",
+ "base_run": "43728184399",
  "autor": "Claude (implementação) — correção visual prioritária após o MP4 43730252500, para auditoria do ChatGPT",
- "motivo": "Roteiro revisado para ser visualizável: os mecanismos (cerdas, espátulas, atração, distância, soltar, soma) passam a ter ESQUEMA demonstrativo (mecanismo.estados); dipolo/repulsão/distância de contato saem (não visualizáveis em 60 s); trecho da NASA reduzido de ~10 s para ~5 s; conclusão volta para a lagartixa. Fatos novos com fonte.",
+ "motivo": "Mesma edição auditada da correção visual, aplicada ao checkpoint 43728184399 (o último com as imagens do acervo; o de 43730252500 perdeu as imagens pela limpeza pós-vídeo — corrigido). Primeiro a edição e2/e13 já auditada (idêntica à aplicada em 43730252500), depois a da correção visual. Roteiro revisado para ser visualizável: os mecanismos (cerdas, espátulas, atração, distância, soltar, soma) passam a ter ESQUEMA demonstrativo (mecanismo.estados); dipolo/repulsão/distância de contato saem (não visualizáveis em 60 s); trecho da NASA reduzido de ~10 s para ~5 s; conclusão volta para a lagartixa. Fatos novos com fonte.",
  "operacoes": [
+  {
+   "evento": "e2",
+   "esperado_sha256": {
+    "fala": "03a5cf18e807142d632483ba24f16d29d7ced6eaed998b8deda58e5e7752d823"
+   },
+   "set": {
+    "fala": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
+    "sb.narracao": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
+    "sb.resolucao.sugestao": "FOTO ILUSTRATIVA: lamelas na parte de baixo dos dedos (espécie não identificada)",
+    "bloco.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
+    "sb.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
+    "visual": "a3",
+    "foto": "a3",
+    "cenario": "Close-up of the underside of a gecko's foot showing the toe lamellae (species not identified)",
+    "acontecimento.sujeito": "lamelas dos dedos",
+    "acontecimento.acao": "mostrar as faixas sob os dedos",
+    "acontecimento.estado_inicial": "dedos da pata",
+    "acontecimento.estado_final": "lamelas visíveis sob os dedos",
+    "acontecimento.mostrar": "parte de baixo dos dedos com as lamelas",
+    "acontecimento.dados": {
+     "estrutura": "lamelas dos dedos"
+    },
+    "acontecimento.importancia": "critica",
+    "acontecimento.obrigatoria": true,
+    "acontecimento.plano_visual": {
+     "modo": "foto_ilustrativa",
+     "foto": "a3",
+     "parte": "lamelas na parte de baixo dos dedos",
+     "trecho_imagem": "Close-up of the underside of a gecko's foot",
+     "trecho_fato": "referente às lamelas dos dedos",
+     "fonte_fato": "Wikipédia",
+     "credito": "\"Gecko foot on glass\" — Bjørn Christian Tørrissen (CC BY-SA 3.0), via Wikimedia Commons",
+     "rotulo": "imagem ilustrativa · espécie não identificada",
+     "nao_prova": true,
+     "origem": "edição editorial auditada"
+    }
+   }
+  },
+  {
+   "evento": "e13",
+   "esperado_sha256": {
+    "fala": "a1790e319b355874d71fe23fe69a0e87e20049cdcd87fe2d2479e16cb37e72fe"
+   },
+   "set": {
+    "fala": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
+    "sb.narracao": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
+    "acontecimento.sujeito": "lagartixa",
+    "acontecimento.acao": "prender-se pela atração entre moléculas muito próximas",
+    "acontecimento.dados": {
+     "payoff": "atração entre moléculas muito próximas"
+    },
+    "acontecimento.importancia": "critica",
+    "acontecimento.obrigatoria": true
+   }
+  },
+  {
+   "campo": "resumo",
+   "trecho_antigo_de": "e2",
+   "trecho_novo": "Essas faixas na parte de baixo dos dedos são chamadas lamelas."
+  },
+  {
+   "campo": "suspense",
+   "valor_de": "e13"
+  },
+  {
+   "campo": "resumo",
+   "trecho_antigo_de": "e13",
+   "trecho_novo": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas."
+  },
   {
    "acrescentar_fatos": [
     "★ A pata da lagartixa tem uma estrutura em níveis: lamelas nos dedos, cobertas por cerdas microscópicas, que terminam em espátulas. [contexto] (Huber et al., PNAS 2005)",

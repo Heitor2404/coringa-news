@@ -574,12 +574,29 @@ def _midia_de_item(x: dict, trab: Path) -> dict:
             'ano': x.get('ano'), 'tipo_img': x.get('tipo_img', 'foto'), 'id': x.get('id'), 'credito': x.get('credito')}
 
 
+def _limpar_acervo(v: dict):
+    """Apaga a pasta temporária das imagens do acervo depois do vídeo pronto — NUNCA a do checkpoint.
+    V2.4 (execução 43740293581): numa retomada, as imagens do acervo moram em <checkpoint>/arquivos; apagar essa pasta
+    deixava o checkpoint guardado no cache sem imagens (a retomada seguinte ficava sem fotos) e, com `arq` vazio,
+    Path(None) derrubava a execução depois do MP4 pronto."""
+    arq = next((x.get('arq') for x in v.get('acervo') or [] if x.get('arq')), None)
+    if not arq:
+        return
+    pasta = Path(arq).parent
+    if (pasta.parent / 'manifesto.json').exists() or pasta.name == 'arquivos':
+        return
+    shutil.rmtree(pasta, ignore_errors=True)
+
+
 def _midia_do_acervo(v: dict, trab: Path):
     """Curiosidade: as fotos já vêm do acervo (casadas com cada frase). Aqui só entram os vídeos de clima e as poucas
     imagens de IA (com a época travada, conferidas pelo fiscal). O que sobrar reaproveita a foto vizinha na montagem."""
     from src import imagens, midia
     por_id = {x['id']: x for x in v['acervo']}
     reais, creditos = {}, []
+    for c in v['cenas']:          # V2.4: plano com foto e sem id de imagem (ex.: inserido por edição auditada) ganha um
+        if c.get('foto') and not c.get('imagem'):
+            c['imagem'] = f"foto_{c['foto']}"
     for c in v['cenas']:
         x = por_id.get(c.get('foto'))
         if x and c.get('imagem') and c['imagem'] not in reais:
@@ -858,8 +875,7 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     if not teste:
         pacote_diagnostico(v, dados, pasta, nome)
         shutil.rmtree(trab, ignore_errors=True)
-        if v.get('acervo'):
-            shutil.rmtree(Path(v['acervo'][0]['arq']).parent, ignore_errors=True)
+        _limpar_acervo(v)
     print(f'  ✔ {saida.name} ({dur:.0f}s de vídeo, {time.time() - t0:.0f}s para gerar)')
     print('  ' + resumo.replace('\n', '\n  '))
     if diag:

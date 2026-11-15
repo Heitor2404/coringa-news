@@ -274,7 +274,10 @@
     transicao: 'flash',
     exemplo: { params: { titulo: 'Tunguska, *1908*', centro: 'EXPLOSÃO', escala_km: 40, aneis: [{ raio_km: 8, rotulo: 'raio ilustrativo' }, { raio_km: 26, rotulo: 'árvores derrubadas (≈)' }] }, dur: 5, fala: 'Em 1908, a explosão de Tunguska derrubou árvores num raio de trinta quilômetros.' },
   }, (p, ctx) => {
-    const C = [540, 790], R = 380, sk = +p.escala_km || 10, an = (p.aneis || []).slice(0, 4).map(a => ({ ...a, r: R * (+a.raio_km) / sk }));
+    // V2.5: sem escala declarada, o maior anel ocupa o raio útil (antes: escala fixa de 10 km → anel de 30 km e rótulo
+    // fora do quadro). Anéis sem raio numérico não são desenhados.
+    const aneis = (Array.isArray(p.aneis) ? p.aneis : []).filter(a => a && Number.isFinite(+a.raio_km) && +a.raio_km > 0).slice(0, 4);
+    const C = [540, 790], R = 380, sk = +p.escala_km || Math.max(1, ...aneis.map(a => +a.raio_km)), an = aneis.map(a => ({ ...a, r: Math.min(R * 1.05, R * (+a.raio_km) / sk) }));
     const arvores = Array.from({ length: 220 }, (_, i) => { const a = i * 2.39996, d = 40 + ((i * 53) % 340); return [C[0] + Math.cos(a) * d, C[1] + Math.sin(a) * d, a]; });
     return {
       html: `<div class="grade"></div>
@@ -288,7 +291,7 @@
           <defs><radialGradient id="nu${ctx.i}"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#FFD21F"/><stop offset="1" stop-color="#FF4D3D" stop-opacity="0"/></radialGradient></defs>
           <line x1="72" x2="${72 + R / 2}" y1="1078" y2="1078" stroke="#fff" stroke-width="4"/><line x1="72" x2="72" y1="1068" y2="1088" stroke="#fff" stroke-width="4"/><line x1="${72 + R / 2}" x2="${72 + R / 2}" y1="1068" y2="1088" stroke="#fff" stroke-width="4"/></svg>
         <div class="abs" data-g="esc" style="left:${72 + R / 2 + 16}px;top:1060px;font-family:var(--f-dado);font-size:26px;color:#fff">${fmt(sk / 2, 0)} km</div>
-        ${an.map((a, i) => `<div class="abs al al${i}" data-g="al${i}" style="left:${clamp(C[0] + a.r * .72 + 10, 100, 700)}px;top:${C[1] - a.r * .72 - 40}px;max-width:330px;font-weight:700;font-size:28px;line-height:1.1;color:${i ? '#FFD21F' : '#FF4D3D'};background:rgba(5,20,26,.8);padding:4px 10px;opacity:0">${esc(fmt(a.raio_km, 0) + ' km · ' + a.rotulo)}</div>`).join('')}
+        ${an.map((a, i) => `<div class="abs al al${i}" data-g="al${i}" style="left:${clamp(C[0] + a.r * .72 + 10, 100, 700)}px;top:${clamp(C[1] - a.r * .72 - 40 + i * 4, 540 + i * 56, 1000)}px;max-width:330px;font-weight:700;font-size:28px;line-height:1.1;color:${i ? '#FFD21F' : '#FF4D3D'};background:rgba(5,20,26,.8);padding:4px 10px;opacity:0">${esc(fmt(a.raio_km, 0) + ' km · ' + a.rotulo)}</div>`).join('')}
         <div class="abs" data-g="ct" data-alinhamento="local" style="left:${C[0] - 100}px;width:200px;top:${C[1] + 30}px;text-align:center;font-family:var(--f-dado);font-weight:700;font-size:26px;color:#fff">${esc(p.centro || '')}</div>`,
       upd(tl, el) {
         aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });

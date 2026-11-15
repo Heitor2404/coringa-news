@@ -20,20 +20,28 @@ from src.v2 import contrato
 PARE = set('para pelo pela pelos pelas como quando onde entre sobre depois antes mais menos muito muita muitos muitas '
            'esse essa isso este esta isto aquele aquela seus suas dele dela eles elas fica ficam está estão sendo foram '
            'cena mostrar mostra esquema imagem foto vídeo video'.split())
+PARE3 = set('que dos das uma com por sem nao sao seu sua foi ser tem era num nas nos aos ate the and mas ela ele'.split())
+TECNICOS = set('id forma cor tipo lado preso_a img video arq lon lat raio x y w h dx dy escala rot opacidade polar forca n angulo intensidade '
+               'casas voltas excentricidade max zero area ordenar destaque virada tempos de_x wh img_wh recorte foco momento2 limpa'.split())
 COBERTURA_MIN = .5
 
 
-def _raizes(t) -> set[str]:
+def _raizes(t, numeros: bool = False) -> set[str]:
     t = unicodedata.normalize('NFKD', str(t or '').lower())
     t = ''.join(c for c in t if not unicodedata.combining(c))
-    return {w[:5] for w in re.findall(r'[a-z]{4,}', t) if w not in PARE}
+    r = {w[:5] for w in re.findall(r'[a-z]{3,}', t) if w not in PARE and w not in PARE3}
+    if numeros:                                  # números contam (o gráfico/nível mostra o valor que a fala diz)
+        r |= {n.replace('.', '').replace(',', '.').rstrip('0').rstrip('.') or '0' for n in re.findall(r'\d[\d.,]*', t)}
+    return r
 
 
 def _textos(x) -> list[str]:
     if isinstance(x, dict):
-        return [s for k, v in x.items() if k not in ('id', 'forma', 'cor', 'tipo', 'lado', 'preso_a', 'img', 'video', 'arq') for s in _textos(v)]
+        return [s for k, v in x.items() if k not in TECNICOS for s in _textos(v)]
     if isinstance(x, list):
         return [s for v in x for s in _textos(v)]
+    if isinstance(x, (int, float)) and not isinstance(x, bool):
+        return [str(x)]
     return [x] if isinstance(x, str) else []
 
 
@@ -50,7 +58,14 @@ def representados(ac: dict, comp: str | None, params: dict, foto: dict | None) -
 
 def avaliar_evento(ac: dict, fala: str, comp: str | None, params: dict, foto: dict | None, previa_ev: dict | None) -> dict:
     nec, rep = necessarios(ac), representados(ac, comp, params, foto)
-    cob = round(len(nec & rep) / len(nec), 2) if nec else 1.0
+    cob_estado = len(nec & rep) / len(nec) if nec else 1.0
+    # o que a tela ESCREVE/MOSTRA (rótulos, nomes, valores) precisa ser aquilo de que a fala fala: mapa com os lugares
+    # ditos, gráfico com os valores ditos; esquema com rótulos de outro assunto não passa
+    rotulos = _raizes(' '.join(_textos(params or {})), numeros=True) | (_raizes(' '.join(str(foto.get(k) or '') for k in ('mostra',)), True) if foto else set())
+    ditos = _raizes(' '.join([fala or '', str(ac.get('mostrar') or ''), str(ac.get('sujeito') or '')]), numeros=True)
+    comuns = rotulos & ditos                     # dois rótulos/valores ditos já ancoram a tela na fala (mapa: origem e destino)
+    cob_fala = 1.0 if len(comuns) >= 2 else (len(comuns) / len(rotulos) if rotulos else 0.0)
+    cob = round(max(cob_estado, cob_fala if rotulos & ditos else 0.0), 2)
     muda = bool(ac.get('estado_inicial')) and _raizes(ac.get('estado_inicial')) != _raizes(ac.get('estado_final'))
     produziu = None
     if previa_ev and previa_ev.get('medidas'):
@@ -59,14 +74,14 @@ def avaliar_evento(ac: dict, fala: str, comp: str | None, params: dict, foto: di
     modo = (ac.get('representacao') or {}).get('modo')
     if modo == 'editorial':
         res, motivo = 'aprovado', 'cena editorial (gancho/revelação/fechamento) resume o que já foi mostrado'
-    elif comp in contrato.TEXTUAIS and contrato.critico(ac) and ac.get('tipo') in contrato.EXIGE_DEMONSTRACAO:
+    elif comp in contrato.TEXTUAIS and not contrato.comp_aceita(ac, comp, params):
         res, motivo = 'bloqueio', 'mecanismo crítico só escrito na tela'
     elif muda and comp and contrato.demonstra(comp) and produziu is False:
         res, motivo = 'bloqueio', 'a fala exige mudança de estado e a composição renderizada não muda'
     elif cob >= COBERTURA_MIN:
-        res, motivo = 'aprovado', f'{len(nec & rep)}/{len(nec)} elementos necessários na tela'
+        res, motivo = 'aprovado', f'{len(nec & rep)}/{len(nec)} elementos do acontecimento · {len(rotulos & ditos)}/{len(rotulos)} rótulos ditos na fala'
     elif cob > 0:
-        res, motivo = 'revisao', f'só {len(nec & rep)}/{len(nec)} elementos necessários na tela: um humano confere'
+        res, motivo = 'revisao', f'cobertura parcial ({cob:.0%}): um humano confere'
     else:
         res, motivo = 'bloqueio', 'nenhum elemento do acontecimento aparece na tela (rótulos/catálogo)'
     if modo in ('foto_ilustrativa', 'foto_declarada') and res == 'aprovado':

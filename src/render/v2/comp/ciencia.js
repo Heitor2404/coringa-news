@@ -132,7 +132,7 @@
           <g class="obj" transform="translate(${C[0]} ${C[1]})">${obj}</g>
           ${fs.map((f, i) => `<line class="fv fv${i}" x1="${C[0]}" y1="${C[1]}" x2="${C[0]}" y2="${C[1]}" stroke="${f.cor || 'var(--ciano)'}" stroke-width="12" stroke-linecap="round" marker-end="url(#fv${ctx.i}${i})"/>`).join('')}
           <line class="fr" x1="${C[0]}" y1="${C[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fff" stroke-width="5" stroke-dasharray="14 10" marker-end="url(#fr${ctx.i})" opacity="0"/></svg>
-        ${fs.map((f, i) => { const v = vec(f); return `<div class="abs fn fn${i}" data-g="fn${i}" style="left:${clamp(C[0] + v[0] * 1.12 + (Math.abs(v[0]) < 20 ? 40 : 0), 80, 760)}px;top:${C[1] + v[1] * 1.12 - 20}px;font-weight:800;font-size:34px;color:${f.cor || 'var(--ciano)'};text-transform:uppercase;opacity:0">${esc(f.nome)}</div>`; }).join('')}
+        ${fs.map((f, i) => { const v = vec(f); return `<div class="abs fn fn${i}" data-g="fn${i}" style="left:${clamp(C[0] + v[0] * 1.12 + (Math.abs(v[0]) < 20 ? 40 : 0), 80, 760)}px;top:${clamp(C[1] + v[1] * 1.12 - 20, 560, 1000)}px;font-weight:800;font-size:34px;color:${f.cor || 'var(--ciano)'};text-transform:uppercase;opacity:0">${esc(f.nome)}</div>`; }).join('')}
         ${p.resultado ? `<div class="abs rs eixo" data-g="rs" data-txt="1" data-centro="1" style="top:1060px;font-family:var(--f-dado);font-weight:700;font-size:36px;color:#fff;background:rgba(5,20,26,.85);padding:12px;border:2px solid var(--ciano)">${esc(p.resultado)}</div>` : ''}`,
       upd(tl, el, c) {
         aparece(el.querySelector('.tt'), tl, .05, { dy: 16 });
@@ -149,7 +149,8 @@
         const dx = res[0] * .9 * mv, dy = res[1] * .9 * mv;          // desloca o bastante para o movimento ser visto
         el.querySelector('.obj').setAttribute('transform', `translate(${C[0] + dx} ${C[1] + dy + bob})`);
         el.querySelectorAll('.fv, .fr').forEach(l => l.setAttribute('transform', `translate(${dx} ${dy})`));
-        el.querySelectorAll('.fn').forEach(n => { n.style.transform = `translate(${dx}px, ${dy}px)`; });
+        el.querySelectorAll('.fn').forEach(n => { const t0 = parseFloat(n.style.top) || 0;   // rótulo nunca sobe para cima do título
+          n.style.transform = `translate(${clamp(dx, 80 - (parseFloat(n.style.left) || 0), 900 - (parseFloat(n.style.left) || 0))}px, ${clamp(dy, 560 - t0, 1000 - t0)}px)`; });
         aparece(el.querySelector('.rs'), tl, tr + .3, { dy: 14 });
       },
       textos: () => [p.titulo, p.resultado, ...fs.map(f => f.nome)],

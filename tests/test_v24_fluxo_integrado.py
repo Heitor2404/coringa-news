@@ -119,7 +119,7 @@ def test_fluxo_real_bloqueia_no_preparo_e_retoma_do_checkpoint_editado(ambiente,
     # correção à mão do contrato no checkpoint (registrada), e retomada
     rot = json.loads((ck / 'roteiro.json').read_text())
     esquema = {'objetos': [{'id': 'par', 'forma': 'superficie', 'rotulo': 'PAREDE', 'y': .08, 'w': 1},
-                           {'id': 'esp', 'forma': 'ramos', 'rotulo': 'ESPÁTULAS', 'y': .8, 'w': .8, 'lado': 'cima'}],
+                           {'id': 'esp', 'forma': 'ramos', 'rotulo': 'CERDAS DA PATA', 'y': .8, 'w': .8, 'lado': 'cima'}],
                'estados': [{'rotulo': 'LONGE', 'objetos': {'esp': {'dy': .08}}},
                            {'rotulo': 'ENCOSTA: AS MOLÉCULAS SE ATRAEM', 'objetos': {'esp': {'dy': -.3}},
                             'relacoes': [{'de': 'esp', 'para': 'par', 'tipo': 'atracao', 'forca': 1, 'rotulo': 'ATRAÇÃO'}]}]}

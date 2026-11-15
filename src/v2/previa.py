@@ -84,6 +84,8 @@ def validar(v: dict, pasta: Path) -> dict:
     """Prévia de todos os acontecimentos CRÍTICOS que o preparo resolveu por composição. Devolve o relatório com os
     bloqueios (mesmo formato do preparo) e grava a galeria (folha.jpg) e o relatório (previa.json) em `pasta`."""
     rel = {'eventos': [], 'bloqueios': []}
+    pasta = Path(pasta)
+    pasta.mkdir(parents=True, exist_ok=True)       # sem composição crítica também grava o relatório (vazio)
     vistos = set()
     for i, c in enumerate(v.get('cenas') or []):
         ac = c.get('acontecimento') if isinstance(c.get('acontecimento'), dict) else None

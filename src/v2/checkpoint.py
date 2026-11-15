@@ -214,6 +214,8 @@ class Checkpoint:
                 else ['arquivo diferente do gravado (sem cópia original para comparar)']
             self.registro['editado'][nome] = mudou or ['mudança só de formatação']
         self._restaurar_arquivos(self._itens(nome, obj), self.origem, info.get('arquivos') or {}, nome)
+        if (self.origem / 'edicao_aplicada.json').exists() and nome == 'roteiro':     # quem editou, por quê, o quê
+            self.registro['edicao'] = json.loads((self.origem / 'edicao_aplicada.json').read_text(encoding='utf-8'))
         self.registro['carregadas'].append(nome)
         # a execução nova também guarda a etapa (com procedência), para poder ser retomada de novo
         self.salvar(nome, obj, procedencia='carregada de ' + str(self.origem) + (' (EDITADA À MÃO)' if nome in self.registro['editado'] else ''))
@@ -252,3 +254,67 @@ def manifesto_de(pasta: Path) -> dict:
 
 def registro() -> dict | None:
     return dict(ATUAL.registro) if ATUAL else None
+
+
+# ───────────────────────── edição editorial auditada (V2.4) ─────────────────────────
+def _caminho(d: dict, chave: str, valor=None, ler: bool = False):
+    partes = chave.split('.')
+    alvo = d
+    for p in partes[:-1]:
+        alvo = alvo.setdefault(p, {}) if not ler else (alvo.get(p) or {})
+    return alvo.get(partes[-1]) if ler else alvo.__setitem__(partes[-1], valor)
+
+
+def editar(pasta: Path, edicao: dict) -> dict:
+    """Aplica uma edição EDITORIAL localizada ao `roteiro.json` de um checkpoint (antes da retomada).
+    Formato: {"motivo", "autor", "operacoes": [{"evento": "e2", "esperado_sha256": {"fala": sha}, "set": {"fala": ...,
+    "acontecimento.sujeito": ...}} | {"campo": "resumo", "substituir_sha256": sha_do_trecho, "trecho_novo": ...,
+    "trecho_antigo_de": "e2"} | {"campo": "suspense", "valor_de": "e13"}]}.
+    Trava: o texto atual de cada campo com `esperado_sha256` precisa bater (edição feita sobre o roteiro certo).
+    A cópia intocada continua em `.original/`; a retomada lista o diff campo a campo (Checkpoint.carregar), e a
+    própria edição fica gravada em `edicao_aplicada.json` (vai para o relatório)."""
+    pasta = Path(pasta)
+    arq = pasta / 'roteiro.json'
+    d = json.loads(arq.read_text(encoding='utf-8'))
+    v = d['v']
+    falas_antigas, aplicadas = {}, []
+    for op in edicao.get('operacoes') or []:
+        if op.get('evento'):
+            idx = [k for k, c in enumerate(v['cenas']) if (c.get('acontecimento') or {}).get('id') == op['evento']]
+            if not idx:
+                raise ValueError(f"edição: acontecimento {op['evento']} não existe no checkpoint")
+            for k in idx:
+                c = v['cenas'][k]
+                for campo, sha in (op.get('esperado_sha256') or {}).items():
+                    atual = str(_caminho(c, campo, ler=True) or '')
+                    if _sha(atual.encode('utf-8')) != sha:
+                        raise ValueError(f"edição: {op['evento']}.{campo} não é o texto esperado (checkpoint errado?)")
+                falas_antigas.setdefault(op['evento'], c.get('fala') or '')
+                for campo, valor in (op.get('set') or {}).items():
+                    _caminho(c, campo, valor)
+                aplicadas.append(f"{op['evento']} (cena {k}): {', '.join(op.get('set') or {})}")
+        elif op.get('campo'):
+            campo = op['campo']
+            if op.get('valor_de'):
+                novo = next(c['fala'] for c in v['cenas'] if (c.get('acontecimento') or {}).get('id') == op['valor_de'])
+                v[campo] = novo
+            else:
+                antigo = falas_antigas.get(op.get('trecho_antigo_de'), '')
+                if not antigo or antigo not in str(v.get(campo) or ''):
+                    raise ValueError(f'edição: trecho antigo não encontrado em {campo}')
+                v[campo] = str(v[campo]).replace(antigo, op['trecho_novo'])
+            aplicadas.append(f'{campo}: atualizado')
+    arq.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding='utf-8')
+    reg = {'motivo': edicao.get('motivo'), 'autor': edicao.get('autor'), 'aplicadas': aplicadas,
+           'quando': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'operacoes': edicao.get('operacoes')}
+    (pasta / 'edicao_aplicada.json').write_text(json.dumps(reg, ensure_ascii=False, indent=1), encoding='utf-8')
+    return reg
+
+
+if __name__ == '__main__':          # python -m src.v2.checkpoint editar <pasta> <edicao.json>
+    import sys
+    if len(sys.argv) == 4 and sys.argv[1] == 'editar':
+        r = editar(Path(sys.argv[2]), json.loads(Path(sys.argv[3]).read_text(encoding='utf-8')))
+        print('[checkpoint] edição editorial aplicada: ' + '; '.join(r['aplicadas']))
+    else:
+        raise SystemExit('uso: python -m src.v2.checkpoint editar <pasta> <edicao.json>')

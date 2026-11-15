@@ -1,0 +1,76 @@
+{
+ "base_run": "43728184399",
+ "autor": "Gabriel (correção editorial solicitada após auditoria independente)",
+ "motivo": "e2: a fala exigia identificar Hemidactylus mabouia, que nenhuma imagem do acervo mostra com as lamelas; passa a descrever a anatomia genérica da pata, ilustrada por a3 (espécie não identificada). e13: precisão científica (a lagartixa não 'ajusta cargas'; a adesão vem da atração entre moléculas muito próximas).",
+ "operacoes": [
+  {
+   "evento": "e2",
+   "esperado_sha256": {
+    "fala": "03a5cf18e807142d632483ba24f16d29d7ced6eaed998b8deda58e5e7752d823"
+   },
+   "set": {
+    "fala": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
+    "sb.narracao": "Essas faixas na parte de baixo dos dedos são chamadas lamelas.",
+    "sb.resolucao.sugestao": "FOTO ILUSTRATIVA: lamelas na parte de baixo dos dedos (espécie não identificada)",
+    "bloco.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
+    "sb.avanca": "Mostra as lamelas na parte de baixo dos dedos (anatomia genérica)",
+    "visual": "a3",
+    "foto": "a3",
+    "cenario": "Close-up of the underside of a gecko's foot showing the toe lamellae (species not identified)",
+    "acontecimento.sujeito": "lamelas dos dedos",
+    "acontecimento.acao": "mostrar as faixas sob os dedos",
+    "acontecimento.estado_inicial": "dedos da pata",
+    "acontecimento.estado_final": "lamelas visíveis sob os dedos",
+    "acontecimento.mostrar": "parte de baixo dos dedos com as lamelas",
+    "acontecimento.dados": {
+     "estrutura": "lamelas dos dedos"
+    },
+    "acontecimento.importancia": "critica",
+    "acontecimento.obrigatoria": true,
+    "acontecimento.plano_visual": {
+     "modo": "foto_ilustrativa",
+     "foto": "a3",
+     "parte": "lamelas na parte de baixo dos dedos",
+     "trecho_imagem": "Close-up of the underside of a gecko's foot",
+     "trecho_fato": "referente às lamelas dos dedos",
+     "fonte_fato": "Wikipédia",
+     "credito": "\"Gecko foot on glass\" — Bjørn Christian Tørrissen (CC BY-SA 3.0), via Wikimedia Commons",
+     "rotulo": "imagem ilustrativa · espécie não identificada",
+     "nao_prova": true,
+     "origem": "edição editorial auditada"
+    }
+   }
+  },
+  {
+   "evento": "e13",
+   "esperado_sha256": {
+    "fala": "a1790e319b355874d71fe23fe69a0e87e20049cdcd87fe2d2479e16cb37e72fe"
+   },
+   "set": {
+    "fala": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
+    "sb.narracao": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas.",
+    "acontecimento.sujeito": "lagartixa",
+    "acontecimento.acao": "prender-se pela atração entre moléculas muito próximas",
+    "acontecimento.dados": {
+     "payoff": "atração entre moléculas muito próximas"
+    },
+    "acontecimento.importancia": "critica",
+    "acontecimento.obrigatoria": true
+   }
+  },
+  {
+   "campo": "resumo",
+   "trecho_antigo_de": "e2",
+   "trecho_novo": "Essas faixas na parte de baixo dos dedos são chamadas lamelas."
+  },
+  {
+   "campo": "suspense",
+   "valor_de": "e13"
+  },
+  {
+   "campo": "resumo",
+   "trecho_antigo_de": "e13",
+   "trecho_novo": "Sem ventosas ou cola, a lagartixa se prende graças à atração entre moléculas muito próximas."
+  }
+ ]
+}

@@ -160,3 +160,21 @@ def test_ids_repetidos_com_imagens_diferentes_nao_se_sobrescrevem(tmp_path):
     arqs = json.loads((c.pasta / 'acervo.json').read_text())
     assert len({x['arq'] for x in arqs}) == 2
     assert {(c.pasta / x['arq']).read_bytes() for x in arqs} == {b'um', b'dois'}
+
+
+def test_edicao_editorial_com_trava_de_texto_e_registro(tmp_path):
+    import hashlib
+    origem, _ = _primeira(tmp_path)
+    sha = hashlib.sha256('E ela some rápido.'.encode()).hexdigest()
+    ed = {'motivo': 'precisão', 'autor': 'editor', 'operacoes': [
+        {'evento': 'e7', 'esperado_sha256': {'fala': sha}, 'set': {'fala': 'E ela enfraquece rapidamente.', 'acontecimento.tipo': 'processo'}}]}
+    with pytest.raises(ValueError, match='não é o texto esperado'):
+        ck.editar(origem, {**ed, 'operacoes': [{**ed['operacoes'][0], 'esperado_sha256': {'fala': '0' * 64}}]})
+    reg = ck.editar(origem, ed)
+    assert reg['aplicadas'] and (origem / 'edicao_aplicada.json').exists()
+    assert json.loads((origem / '.original' / 'roteiro.json').read_text())['v']['cenas'][0]['fala'] == 'E ela some rápido.'
+    ck.ativar(tmp_path / 'exec2' / 'checkpoint', origem, 'roteiro')
+    pronto = ck.etapa('roteiro', lambda: pytest.fail('refeito'))
+    r = ck.registro()
+    assert pronto['v']['cenas'][0]['fala'] == 'E ela enfraquece rapidamente.'
+    assert r['edicao']['motivo'] == 'precisão' and any('cenas[0].fala' in m for m in r['editado']['roteiro'])

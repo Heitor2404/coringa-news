@@ -435,15 +435,10 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
             rep = {'modo': 'foto_direta', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
         elif all(v['cenas'][k].get('tipo') in EDITORIAL for k in idx) or (c0.get('tipo') == 'numero' and not any('cena' in f for f in faltam)):
             rep = {'modo': 'editorial', 'comp': EDITORIAL.get(c0.get('tipo'), 'numero.animado')}
-        elif escolhida is not None and av_esc['forca'] >= 2 and (pode_foto or not ev['critico']):
-            rep = {'modo': 'foto_declarada', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
-            if ev['critico']:
-                rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'acontecimento crítico representado pela imagem que o roteiro pediu, sem mostrar o estado narrado',
-                                        'evidencia': rep['evidencia']})
-        elif not ev['critico']:
-            rep = {'modo': 'foto_contexto' if escolhida is not None else 'sem_imagem', 'foto': (escolhida or {}).get('id')}
-        elif (ilu := _ilustrativa_valida(ac, por_id, c0, ano_evento)):
-            # V2.4: plano visual aceito — foto GENÉRICA como ilustração identificada na tela; nunca prova (revisão humana)
+        elif (ilu := _ilustrativa_valida(ac, por_id, c0, ano_evento)) and not (escolhida is not None and pode_foto and av_esc['forca'] >= 3):
+            # V2.4: plano visual aceito (ou edição editorial auditada): a imagem é declarada ILUSTRAÇÃO — rótulo mais
+            # estrito que "foto declarada", por isso vem antes dela; nunca passa à frente de uma foto que mostra o fato.
+            # Plano visual aceito — foto GENÉRICA como ilustração identificada na tela; nunca prova (revisão humana)
             x, plano = ilu
             rep = {'modo': 'foto_ilustrativa', 'foto': x['id'], 'evidencia': plano.get('parte') or plano.get('trecho_imagem'), 'nao_prova': True}
             escolhida = x
@@ -455,6 +450,13 @@ def preparar(v: dict, acervo: list[dict] | None = None) -> dict:
                     v['cenas'][k]['credito'] = x['credito']
             rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'acontecimento crítico representado por imagem ILUSTRATIVA genérica (não prova a espécie/o fato)',
                                     'evidencia': f"{x['id']}: \"{plano.get('trecho_imagem')}\" · fato: \"{plano.get('trecho_fato')}\""})
+        elif escolhida is not None and av_esc['forca'] >= 2 and (pode_foto or not ev['critico']):
+            rep = {'modo': 'foto_declarada', 'foto': escolhida['id'], 'evidencia': '; '.join(av_esc['motivos'])}
+            if ev['critico']:
+                rel['revisoes'].append({'evento': chave, 'cenas': idx, 'problema': 'acontecimento crítico representado pela imagem que o roteiro pediu, sem mostrar o estado narrado',
+                                        'evidencia': rep['evidencia']})
+        elif not ev['critico']:
+            rep = {'modo': 'foto_contexto' if escolhida is not None else 'sem_imagem', 'foto': (escolhida or {}).get('id')}
         else:
             capazes = ', '.join(f"{cp} ({', '.join(req)})" for cp, req in contrato.TIPOS.get(ac['tipo'], {}).get('comps', {}).items())
             falta_img = (f"foto/vídeo real que mostre \"{ac.get('estado_final') or ac.get('mostrar')}\"" if pode_foto

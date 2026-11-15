@@ -93,11 +93,16 @@ jobs:
           echo "$(cat checkpoint_cache/checkpoint.tgz.sha256)  ck.tgz" | sha256sum -c -
           mkdir -p checkpoint_origem && tar -xzf ck.tgz -C checkpoint_origem && rm ck.tgz
           ls checkpoint_origem/checkpoint
+      - name: Aplicar edição editorial auditada (se houver, para este checkpoint)
+        if: steps.ret.outputs.run != '' && hashFiles('.github/piloto/edicao.json') != ''
+        run: |
+          base=$(python -c "import json;print(json.load(open('.github/piloto/edicao.json')).get('base_run',''))")
+          if [ "$base" = "${{ steps.ret.outputs.run }}" ]; then python -m src.v2.checkpoint editar checkpoint_origem/checkpoint .github/piloto/edicao.json; else echo "edição é de outro checkpoint ($base): ignorada"; fi
       - name: Gerar UM vídeo (fluxo real, motor V2.2)
         env:
           MOTOR_VISUAL: v2
           EVIDENCIA_V1: sombra
-          EVIDENCIA_V1_VISAO: "1"
+          EVIDENCIA_V1_VISAO: "0"      # 15/11: leitura visual da V1 desligada nesta retomada (503/422); V1 segue em sombra
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           APROVACAO: "0"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

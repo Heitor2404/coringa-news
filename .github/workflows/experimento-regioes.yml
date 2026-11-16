@@ -26,18 +26,21 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+      # o cache só casa com o MESMO caminho com que foi gravado (checkpoint_cache): restaura um, move, restaura o outro
       - name: Restaurar checkpoint Pompeia (cifrado)
         uses: actions/cache/restore@v4
         with:
-          path: ck_pompeia
+          path: checkpoint_cache
           key: piloto-checkpoint-43773368638
           fail-on-cache-miss: true
+      - run: mv checkpoint_cache ck_pompeia
       - name: Restaurar checkpoint Panamá (cifrado)
         uses: actions/cache/restore@v4
         with:
-          path: ck_panama
+          path: checkpoint_cache
           key: piloto-checkpoint-43775250571
           fail-on-cache-miss: true
+      - run: mv checkpoint_cache ck_panama
       - name: Abrir checkpoints e pedir as regiões
         env:
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}

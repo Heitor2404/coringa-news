@@ -75,7 +75,11 @@ def medir(mp4: Path, linha: list[dict]) -> dict:
                       'componente': c['componente'], 'backend': c.get('backend'), 'vazio_medio': round(float(np.mean([s['vazio'] for s in sub])), 3),
                       'vazio_max': max(s['vazio'] for s in sub), 'movimento_medio': round(mov, 2), 'estatico': estatico,
                       'estatico_com_movimento_prometido': estatico and c['modalidade'] in MOVIMENTO_ESPERADO,
-                      'demonstra_acao': c['modalidade'] in DEMONSTRAM_ACAO,
+                      # estrutural: modalidade capaz, render ok e quadro com conteúdo. NÃO é prova de demonstração — a prova
+                      # semântica vem da revisão (combinar_revisao); c6 preta e c5 com vídeo errado contavam como "demonstra"
+                      'demonstra_acao': (c['modalidade'] in DEMONSTRAM_ACAO and c.get('estado') == 'renderizado'
+                                         and float(np.mean([s['vazio'] for s in sub])) < .9),
+                      'demonstra_semantico': 'pendente',
                       'cortes_reais_dentro': [t for t in cortes if c['ini'] + .2 < t < c['fim'] - .2]})
     rep = []
     for i in range(len(hashes)):
@@ -129,3 +133,20 @@ def folha_de_contato(mp4: Path, linha: list[dict], saida: Path) -> Path:
 
 def salvar(m: dict, saida: Path):
     saida.write_text(json.dumps(m, ensure_ascii=False, indent=1), encoding='utf-8')
+
+
+def combinar_revisao(m: dict, revisao: dict) -> dict:
+    """a revisão semântica decide: 'sim' confirma; 'parcial'/'nao' derruba; sem revisão fica PENDENTE (nunca aprovado
+    por omissão). Recalcula a porcentagem só com as confirmadas."""
+    por = {}
+    for pl in (revisao or {}).get('planos') or []:
+        v = pl.get('veredito') or {}
+        por[pl.get('evento_id')] = 'pendente' if '_nao_revisado' in v else str(v.get('demonstra') or 'pendente')
+    for c in m['por_cena']:
+        sem = por.get(c['cena'], 'pendente')
+        c['demonstra_semantico'] = sem
+        c['demonstra_acao'] = bool(c['demonstra_acao'] and sem == 'sim')
+    n = max(1, len(m['por_cena']))
+    m['resumo']['pct_cenas_que_demonstram'] = round(100 * sum(c['demonstra_acao'] for c in m['por_cena']) / n, 1)
+    m['resumo']['cenas_demonstracao_pendente'] = [c['cena'] for c in m['por_cena'] if c['demonstra_semantico'] == 'pendente']
+    return m

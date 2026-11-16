@@ -261,13 +261,13 @@
   "instalado": "sim",
   "integrado": "sim",
   "onde": "motor4/revideo + js.revideo",
-  "executavel_ci": "not_tested",
+  "executavel_ci": "falhou (43972774128: Chrome fecha na partida)",
   "qualidade_visual_testada": "pendente_humano",
-  "estado": "operacional_local",
+  "estado": "falhou_ci",
   "limitacoes": "telemetria PostHog desligada (DISABLE_TELEMETRY=true)",
   "licenca": "MIT",
   "custo": "gratuito",
-  "evidencia": "nivel_vasos renderizou 6 s"
+  "evidencia": "local: nivel_vasos renderizou 6 s; CI: TargetCloseError; mitigação ERR-050 não verificada"
  },
  {
   "ferramenta": "Motion Canvas 3.17.2",

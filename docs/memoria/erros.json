@@ -1213,6 +1213,101 @@
     "telegram",
     "v4"
    ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4",
+   "referencia": "execução V4 43972774128",
+   "verificavel": true,
+   "id": "ERR-048",
+   "titulo": "Vídeo de banco de outro lugar aceito como eclusa do Panamá; ROI em pixels",
+   "sintoma": "cena c5 com vídeo do Pixabay 'sunset, canal, city' (canal urbano europeu); bloqueado só porque o crédito vinha vazio.",
+   "causa_raiz": "a escolha confiava só na miniatura vista pelo Gemini, que confundiu canal urbano com eclusa; a ROI devolvida em pixels era aceita; Pixabay sem crédito.",
+   "arquivos": [
+    "src/v4/acervo_v4.py"
+   ],
+   "correcao": "vídeo de banco precisa ter nas tags um nome próprio das consultas (Panama, Miraflores, Gatun); ROI fora de [0,1] é descartada e registrada; Pixabay recebe crédito com a licença explícita.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_video_de_banco_de_outro_lugar_e_descartado_antes_da_visao",
+    "tests/test_v4_integracao.py::test_roi_em_pixels_e_descartada"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (sem nova execução real)",
+   "tags": [
+    "acervo",
+    "v4"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4",
+   "referencia": "execução V4 43972774128",
+   "verificavel": true,
+   "id": "ERR-049",
+   "titulo": "Pico verdadeiro acima de −1 dBTP depois do AAC",
+   "sintoma": "master −1,4 dBTP; MP4 final −0,1 dBTP (revisão de áudio).",
+   "causa_raiz": "o master era medido antes da codificação AAC, que acrescenta ~1,3 dB de pico.",
+   "arquivos": [
+    "src/v4/compositor.py"
+   ],
+   "correcao": "mede o pico no MP4; se > −1 dBTP, recodifica só o áudio com limitador de pico (teto descontado do excesso do AAC); vídeo copiado. No MP4 real: −0,1 → −2,4 dBTP, loudness −14,6 LUFS mantida.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_pico_do_aac_e_corrigido_sem_baixar_a_loudness"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (verificado no MP4 da execução)",
+   "tags": [
+    "audio",
+    "v4"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4",
+   "referencia": "execução V4 43972774128",
+   "verificavel": true,
+   "id": "ERR-050",
+   "titulo": "Revideo: Chrome fecha na partida no runner (mecanismo 2D não renderizou)",
+   "sintoma": "cena c6 (mecanismo.nivel_vasos) com quadro preto: TargetCloseError na partida do Puppeteer.",
+   "causa_raiz": "não identificada: o stderr do Chrome não ia para o log; hipótese: flags de GPU/sandbox incompatíveis com o Chrome do runner.",
+   "arquivos": [
+    "motor4/revideo/render.mjs"
+   ],
+   "correcao": "dumpio (motivo no log) + 2ª tentativa com flags mínimas + 3ª com o chrome-headless-shell do Playwright.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_revideo_registra_o_chrome_e_tenta_flags_minimas"
+   ],
+   "gravidade": "alta",
+   "estado": "mitigação NÃO verificada no runner",
+   "tags": [
+    "revideo",
+    "v4"
+   ]
+  },
+  {
+   "id": "ERR-051",
+   "titulo": "Métrica 'demonstra ação' contava a modalidade declarada, não o que apareceu",
+   "data": "2026-11-16",
+   "versao": "motor V4",
+   "sintoma": "execução 43972774128: 55,6% de cenas 'demonstrando', incluindo c6 (quadro preto) e c5 (vídeo de outro lugar).",
+   "causa_raiz": "demonstra_acao = modalidade ∈ DEMONSTRAM_ACAO; não olhava render, quadro vazio nem a revisão semântica.",
+   "arquivos": [
+    "src/v4/metricas.py",
+    "src/v4/episodio.py"
+   ],
+   "correcao": "estrutural (render ok + quadro com conteúdo) E revisão semântica 'sim'; sem revisão = pendente. Recalculado na execução: 11,1% (só c8).",
+   "testes": [
+    "tests/test_v4_integracao.py::test_demonstracao_exige_render_e_revisao_semantica"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (recalculado sobre a execução)",
+   "referencia": "execução V4 43972774128",
+   "verificavel": true,
+   "tags": [
+    "metricas",
+    "fiscal",
+    "v4"
+   ]
   }
  ]
 }

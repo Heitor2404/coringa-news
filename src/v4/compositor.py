@@ -55,7 +55,32 @@ def final(video: Path, camada: Path | None, audio: Path, saida: Path, trab: Path
     rodar(['ffmpeg', '-v', 'error', '-y', *ent, '-filter_complex', fc, *mapas, '-c:v', 'libx264', '-preset', 'medium', '-crf', '18',
            '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', '-shortest', saida],
           timeout=3600, log=trab / 'final.log')
+    corrigir_pico_aac(saida, audio, trab)
     return sondar(saida)
+
+
+PICO_MAX = -1.0
+
+
+def corrigir_pico_aac(mp4: Path, audio: Path, trab: Path, medir=None) -> dict:
+    """o AAC sobe o pico verdadeiro (master −1,4 dBTP virou −0,1 no MP4, execução 43972774128): mede NO MP4 e, se passar de
+    −1 dBTP, recodifica só o áudio com o ganho que falta (mais 0,3 dB de folga). O vídeo é copiado, não recodificado."""
+    if medir is None:
+        from src.fiscal import medir_audio as medir
+    m = medir(mp4)
+    pico = m.get('pico')
+    if pico is None or pico <= PICO_MAX:
+        return {'corrigido': False, 'pico': pico}
+    excesso = pico - (medir(audio).get('pico') or PICO_MAX)         # quanto o AAC acrescenta ao pico do master
+    teto_db = PICO_MAX - max(excesso, 0.0) - 0.3                     # limitador só nos picos: a loudness fica
+    tmp = trab / 'final_pico.mp4'
+    rodar(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-i', str(audio), '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+           '-af', f'aresample=192000,alimiter=limit={10 ** (teto_db / 20):.4f}:attack=1:release=50:level=false,aresample=48000',
+           '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', '-shortest', tmp],
+          timeout=1200, log=trab / 'final_pico.log')
+    tmp.replace(mp4)
+    depois = medir(mp4)
+    return {'corrigido': True, 'pico_antes': pico, 'teto_limitador_db': round(teto_db, 2), 'pico_depois': depois.get('pico'), 'lufs_depois': depois.get('lufs')}
 
 
 def linha_do_tempo(ep: dict, registros: list[dict], saida: Path) -> list[dict]:

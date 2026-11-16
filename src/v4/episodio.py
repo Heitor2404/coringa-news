@@ -172,6 +172,9 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
     res['metricas_resumo'] = m['resumo']
     res['audio'] = m['audio']
     res['revisao_multimodal'] = _revisao(mp4, ep, lt, pasta)
+    m = metricas.combinar_revisao(m, res['revisao_multimodal'])
+    metricas.salvar(m, pasta / 'metricas.json')
+    res['metricas_resumo'] = m['resumo']
     a = m['audio']
     if a.get('lufs') is not None and abs(a['lufs'] - IDENT['som']['lufs']) > 1.0:
         res['revisoes'].append(f"áudio {a['lufs']} LUFS (alvo −14)")

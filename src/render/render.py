@@ -331,7 +331,8 @@ def _montar(dados, pagina, audio, saida, trabalho, musica, workers, nav_args=Non
     with ProcessPoolExecutor(len(partes)) as ex:
         list(ex.map(_trecho, partes))
     lista = trabalho / 'partes.txt'
-    lista.write_text(''.join(f"file '{p[3]}'\n" for p in partes))
+    # caminho ABSOLUTO: o concat do FFmpeg resolve caminho relativo a partir da pasta da lista, não do processo
+    lista.write_text(''.join(f"file '{Path(p[3]).resolve()}'\n" for p in partes))
     video = trabalho / 'video.mp4'
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(lista), '-c', 'copy', str(video)], check=True)
 

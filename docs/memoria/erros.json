@@ -855,6 +855,30 @@
     "custo",
     "*"
    ]
+  },
+  {
+   "id": "ERR-034",
+   "titulo": "Concat do render quebrava com pasta de saída relativa",
+   "data": "2026-11-16",
+   "versao": "render final de Londres no Actions",
+   "sintoma": "Run 43917549168: ffmpeg concat 'Impossible to open out_render/_render/out_render/_render/parte0.mp4' (código 254).",
+   "causa_raiz": "partes.txt guardava caminhos relativos ao processo; o concat do FFmpeg resolve caminho relativo a partir da pasta da lista. Localmente sempre se usava caminho absoluto.",
+   "arquivos": [
+    "src/render/render.py",
+    "scripts/render_londres.py"
+   ],
+   "correcao": "lista com caminhos absolutos (Path.resolve()); o script do render também resolve as pastas.",
+   "testes": [
+    "tests/test_v3_previa_render.py::test_concat_do_render_usa_caminho_absoluto"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "GitHub Actions run 43917549168",
+   "verificavel": true,
+   "tags": [
+    "render",
+    "*"
+   ]
   }
  ]
 }

@@ -46,7 +46,7 @@ def relatorio(est: dict, fis: dict, cx: dict, render_s: float, mp4: Path, achado
 
 
 def main():
-    sb, mat, out = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+    sb, mat, out = (Path(a).resolve() for a in sys.argv[1:4])
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     with caixa.video('londres-1666-render-referencia', out):

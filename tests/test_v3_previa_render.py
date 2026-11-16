@@ -110,3 +110,9 @@ def test_render_bloqueia_qualquer_ia_e_relatorio_traz_status_fiscal_e_custos(tmp
     for trecho in ('STATUS: AGUARDANDO_APROVACAO_HUMANA', 'não publicado', 'G-ZOOM-RAPIDO', 'cobrança efetiva: US$ 0.00',
                    'chamadas de IA: 0', '-14.4 LUFS', 'PENDÊNCIAS'):
         assert trecho in txt, trecho
+
+
+def test_concat_do_render_usa_caminho_absoluto():
+    """ERR-034: com a pasta de saída relativa, o concat procurava 'out/_render/out/_render/parte0.mp4' (render no Actions)."""
+    src = Path('src/render/render.py').read_text(encoding='utf-8')
+    assert "Path(p[3]).resolve()" in src

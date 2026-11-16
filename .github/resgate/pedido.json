@@ -1,5 +1,5 @@
 {
- "nota": "Resgate audiovisual — Londres 1666. Roteiro reescrito à mão a partir dos FATOS da pesquisa da validação V3.1 (cada frase com fato correspondente em docs/resgate/LONDRES_1666_STORYBOARD.md). Uma narração; sem IA de texto/visão. Rodada 2: só mídia (o Monumento em alta resolução: a gravura de 748 px não permite movimento de câmera).",
+ "nota": "Resgate audiovisual — Londres 1666. Rodada P1b (16/11): só mídia, sem narração nova. Golden Boy em resolução melhor (a foto atual tem 480×640) e placa da Pudding Lane em resolução melhor; catálogo completo das categorias para escolha registrada.",
  "falas": [
   "Em 1666, um incêndio que começou numa padaria destruiu a Londres medieval.",
   "Como o fogo foi tão longe?",
@@ -16,10 +16,40 @@
   "Londres queimou porque a ordem de derrubar as casas chegou tarde demais.",
   "Segue o Coringa Explica."
  ],
- "baixar": [
-  "Monument ground up.jpg",
-  "Golden Urn, The Monument - geograph.org.uk - 2942237.jpg",
-  "Base of The Monument to the Great Fire of London, 10 August 2014.jpg"
- ],
- "so_baixar": true
+ "baixar": [],
+ "so_baixar": true,
+ "categorias": [
+  {
+   "categoria": "Golden Boy of Pye Corner",
+   "min_px": 2000000,
+   "max": 6
+  },
+  {
+   "categoria": "Pudding Lane",
+   "filtro": [
+    "plaque",
+    "faryner",
+    "farriner",
+    "farynor"
+   ],
+   "min_px": 1500000,
+   "max": 5
+  },
+  {
+   "categoria": "Thomas Farriner",
+   "min_px": 1500000,
+   "max": 4
+  },
+  {
+   "categoria": "The Monument (London)",
+   "filtro": [
+    "whole",
+    "full",
+    "monument, london",
+    "the monument"
+   ],
+   "min_px": 6000000,
+   "max": 4
+  }
+ ]
 }

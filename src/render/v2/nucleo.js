@@ -267,6 +267,8 @@
       const vis = (i === 0 ? t < fim : t >= a && t < fim);
       // visibility (e não display:none): o mapa (MapLibre) observa o tamanho do contêiner e encolheria para 0×0
       c.el.style.visibility = vis ? 'visible' : 'hidden';
+      // V2.5: um filho com visibility:visible APARECE mesmo com o pai oculto (CSS) — a cena oculta esconde TUDO dentro dela
+      c.el.classList.toggle('cena-oculta', !vis);
       if (!vis) continue;
       c.el.style.opacity = 1;
       const k = d ? clamp((t - a) / d) : 1;
@@ -297,7 +299,8 @@
   /* ---------------- fiscal geométrico (sem IA) ---------------- */
   // Mesmo princípio do motor antigo, com regras da V2: texto sobre texto de outro bloco, texto fora do quadro, texto
   // importante nas zonas da interface, letra menor que 24 px, legenda encostando em painel/texto da composição.
-  function opac(e) { let o = 1; for (; e && e !== document.body; e = e.parentElement) { const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') return 0; o *= parseFloat(cs.opacity); } return o; }
+  // visibility é herdada mas um filho pode reverter: vale a do PRÓPRIO elemento; display/opacity valem pela cadeia
+  function opac(e) { if (e && getComputedStyle(e).visibility === 'hidden') return 0; let o = 1; for (; e && e !== document.body; e = e.parentElement) { const cs = getComputedStyle(e); if (cs.display === 'none') return 0; o *= parseFloat(cs.opacity); } return o; }
   function grupo(e, raiz) { for (let x = e; x && x !== document.body; x = x.parentElement) { if (x.dataset && x.dataset.g) return x.dataset.g + '#' + (raiz ? raiz.dataset.comp : ''); if (x.id === 'legenda') return 'legenda'; if (x.id === 'marca' || x.id === 'aviso-ia') return x.id; if (raiz && x.parentElement === raiz) return x; } return null; }
   function caixas(raiz, ehCena) {
     const out = []; const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT); let n;
@@ -336,7 +339,7 @@
      legenda. 'alinhamento' = text-align/justify efetivo, para a auditoria achar centralização acidental não declarada. */
   V2.medirCentros = function () {
     const W = document.documentElement.clientWidth || 1080, cx = W / 2, out = [];
-    const visivel = e => { for (let x = e; x && x !== document.body; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) return false; } return true; };
+    const visivel = e => { if (getComputedStyle(e).visibility === 'hidden') return false; for (let x = e; x && x !== document.body; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.display === 'none' || +cs.opacity < .05) return false; } return true; };
     const linhas = e => { const r = document.createRange(); r.selectNodeContents(e); const rs = [...r.getClientRects()].filter(q => q.width > 1 && q.height > 1);
       const por = []; rs.forEach(q => { const l = por.find(z => Math.abs(z.y - q.top) < q.height * .5); if (l) { l.x0 = Math.min(l.x0, q.left); l.x1 = Math.max(l.x1, q.right); } else por.push({ y: q.top, x0: q.left, x1: q.right }); });
       return por.map(l => ({ y: Math.round(l.y), centro: +((l.x0 + l.x1) / 2).toFixed(1), x0: Math.round(l.x0), x1: Math.round(l.x1) })); };

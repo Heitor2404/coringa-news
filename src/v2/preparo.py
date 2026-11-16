@@ -613,6 +613,20 @@ def _rotulo_contexto(x: dict) -> str:
     return f'{m}{ano} · não é o instante'[:46]          # cabe no limite do banner (46)
 
 
+# V2.5 (Pompeia, piloto real): a estatueta de um gato achada na cidade NÃO é contexto de "um morador protegendo a cabeça".
+# Foto de um OBJETO AVULSO só serve de contexto quando o próprio fato/acontecimento fala desse objeto.
+OBJETO_AVULSO = re.compile(r'\b(estatu\w*|escultur\w*|moeda\w*|vaso\w*|anfora\w*|joia\w*|mosaico\w*|afresco\w*|busto\w*|'
+                           r'artefat\w*|ceramica\w*|lamparina\w*|amuleto\w*|figurin\w*|selo\w*|medalha\w*|brinquedo\w*)')
+
+
+def _objeto_alheio(x: dict, ac: dict, fato: str) -> bool:
+    obj = {m.group(0)[:5] for m in OBJETO_AVULSO.finditer(_n(f"{x.get('mostra', '')} {x.get('titulo', '')}"))}
+    if not obj:
+        return False
+    dito = _n(' '.join([fato or ''] + [str(ac.get(k) or '') for k in ('sujeito', 'mostrar', 'acao', 'estado_final')]))
+    return not any(o in dito for o in obj)
+
+
 def _contexto_documental(ac, cena_ctx, acervo, aval, linhas, escolhida, av_esc, assunto: str = '', usadas=None, ultima=None):
     """(foto, fato) para a representação de CONTEXTO: o fato precisa estar na pesquisa (com fonte) e a foto precisa ser
     real e compatível com o sujeito (força ≥ 1: mesmo assunto/época, sem conflito de identidade)."""
@@ -625,7 +639,8 @@ def _contexto_documental(ac, cena_ctx, acervo, aval, linhas, escolhida, av_esc, 
     # força ≥ 1: o sujeito/época do acontecimento; força 0,5: só serve se a foto é do ASSUNTO CENTRAL do vídeo (o navio do
     # naufrágio, a torre do desabamento) — contexto declarado, nunca a pessoa ou o instante narrado
     cands = [(x, a) for x, a in cands if a['compativel'] and x.get('tipo_img', 'foto') != 'ia' and not NAO_REGISTRO.search(_n(f"{x.get('mostra', '')} {x.get('titulo', '')}"))
-             and (a['forca'] >= 1 or (a['forca'] >= .5 and tema and _palavras(f"{x.get('mostra', '')} {x.get('titulo', '')}") & tema))]
+             and (a['forca'] >= 1 or (a['forca'] >= .5 and tema and _palavras(f"{x.get('mostra', '')} {x.get('titulo', '')}") & tema))
+             and not _objeto_alheio(x, ac, f"{fato.get('texto', '')} {' '.join(cena_ctx.get('_falas') or [])}")]
     if not cands:
         return None
     # variedade: foto que NÃO é a do acontecimento anterior e ainda pouco usada vem antes (mesma foto em sequência = D16)

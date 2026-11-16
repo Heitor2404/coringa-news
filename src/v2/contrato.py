@@ -444,7 +444,38 @@ COM_TITULO = {'mecanismo.estados', 'forcas.vetores', 'diagrama.explicativo', 'pr
               'astronomia.orbita', 'comparacao.grandezas', 'grafico.barras', 'grafico.temporal', 'linha_tempo.historica', 'mapa.rota'}
 
 
-def params_tela(ac: dict, comp: str, dados: dict | None = None) -> dict:
+UNIDADES_TEXTO = re.compile(r'^(km²|km2|km/h|km|metros?|m²|m³/s|m³|m|cm|mm|quil[ôo]metros?(\s+por\s+hora)?|cent[íi]metros?|graus(\s+celsius)?|°c|'
+                            r'toneladas?|t|kg|quilos?|litros?|anos?|dias?|horas?|minutos?|segundos?|pessoas|habitantes|mortos|v[íi]timas|'
+                            r'turistas|visitantes|casas|navios|degraus|andares|esp[ée]cies|%)\b', re.I)
+
+
+def unidade_no_texto(valor, textos) -> str:
+    """V2.5: a unidade de um número declarado sem unidade vem do PRÓPRIO texto que o sustenta ("33 km" → km); nunca inventada."""
+    from src.v2 import cobertura as _cob
+    try:
+        alvo = float(valor)
+    except (TypeError, ValueError):
+        return ''
+    for t in textos or []:
+        t = str(t or '')
+        for m in re.finditer(r'\d[\d.,]*(\s+(milh[õo]es|bilh[õo]es|mil)\b)?', t):
+            vs = [n for n, _ in _cob.valores(m.group(0))]
+            if vs and abs(vs[0] - alvo) <= 1e-9 * max(1.0, abs(alvo)):
+                u = UNIDADES_TEXTO.match(t[m.end():].lstrip(' de').strip())
+                if u:
+                    return u.group(0)
+        # número por extenso ("trinta e três quilômetros"): a unidade escrita logo depois, e o número imediatamente antes dela
+        for u in re.finditer(r'\b[a-zA-Zçãõâáàéêíóôú²³/%°]+\b', t):
+            if not UNIDADES_TEXTO.fullmatch(u.group(0)) or re.search(r'\d', t[max(0, u.start() - 50):u.start()]):
+                continue
+            antes = re.sub(r'\s+de\s*$', ' ', t[max(0, u.start() - 50):u.start()])
+            vs = _cob.valores(antes)
+            if vs and abs(vs[-1][0] - alvo) <= 1e-9 * max(1.0, abs(alvo)) and re.search(r'\w+\s*$', antes):
+                return u.group(0)
+    return ''
+
+
+def params_tela(ac: dict, comp: str, dados: dict | None = None, textos: list | None = None) -> dict:
     """Dados do contrato + título da cena (o "mostrar" do roteiro, ≤ 36) quando a composição tem título e o contrato não
     trouxe um: o sujeito precisa estar ESCRITO na tela (auditoria: forças sobre uma caixa sem dizer que era o avião)."""
     p = dict(ac.get('dados') or {} if dados is None else dados)
@@ -456,6 +487,8 @@ def params_tela(ac: dict, comp: str, dados: dict | None = None) -> dict:
     if comp == 'numero.animado':
         if str(p.get('unidade') or '').strip().lower() in ('valor', 'numero', 'número', 'quantidade', 'unidade', 'total', 'n'):
             p['unidade'] = ''                     # rótulo genérico do roteirista não é unidade ("1.517 valor")
+        if not str(p.get('unidade') or '').strip() and p.get('valor') not in (None, ''):
+            p['unidade'] = unidade_no_texto(p.get('valor'), textos)   # "33" sozinho não diz nada; "33 km" da fala/pesquisa diz
         if not str(p.get('rotulo') or '').strip():
             t = re.sub(r'\s+', ' ', str(ac.get('mostrar') or ac.get('sujeito') or '')).strip()
             p['rotulo'] = (t[:32].rsplit(' ', 1)[0] if len(t) > 32 else t).upper()   # número nunca sem dizer O QUE mede

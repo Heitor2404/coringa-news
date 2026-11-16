@@ -48,7 +48,7 @@
           ee.querySelector('.ano').style.color = on > .5 ? 'var(--amarelo)' : '#efe6d2'; ee.style.opacity = inteiro ? .35 + .65 * on : .28;
           const tx = ee.querySelector('.tx'); tx.style.opacity = inteiro ? on : 0; tx.style.transform = `translateY(${(1 - on) * 20}px)`;
           // datas fora do quadro somem; datas cortadas pela borda ficam apagadas (contexto), nunca como texto principal
-          ee.style.visibility = sx > -460 && sx < 1080 ? 'visible' : 'hidden'; });
+          ee.style.visibility = sx > -460 && sx < 1080 ? '' : 'hidden'; });   // '' herda: nunca reverte a cena oculta
         el.querySelectorAll('.gap').forEach((g, j) => { const sx = CX - xs + (X[j] + X[j + 1]) / 2; g.style.opacity = sx > 80 && sx < 900 ? .9 : 0; });
         aparece(el.querySelector('.tt'), tl, .05, { dy: 14 });
       },

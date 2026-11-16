@@ -110,3 +110,6 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 
 /* composição usada como BASE de outra cena (ex.: revelação sobre o mecanismo): sem cabeçalho/rótulos próprios */
 .base-cena [data-g="et"],.base-cena .kicker,.base-cena .pas,.base-cena [data-g="aviso"],.base-cena .re,.base-cena .esc-deg{display:none!important}
+
+/* V2.5: cena fora do tempo some por inteiro, inclusive filhos que reverteram visibility (linha do tempo) */
+.cena-oculta, .cena-oculta * { visibility: hidden !important; }

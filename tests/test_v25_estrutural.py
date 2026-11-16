@@ -167,3 +167,45 @@ def test_nota_de_destaque_nao_vira_selo_de_contexto_e_une_com_a_mesma_foto():
            {'comp': 'foto.documental', 'start': 2, 'end': 4, 'params': {}, 'fundo': {'img': 'a.jpg'}, 'origem': [1], 'fala': 'b'}]
     o, _ = montagem._juntar_planos_iguais(out, [{}, {}])
     assert len(o) == 1 and o[0]['params']['rotulo'] == 'NOTA' and o[0]['end'] == 4
+
+
+# ── render: a linha do tempo não pode vazar para as outras cenas (Pompeia, piloto real: "1748" em quase todo o vídeo) ──
+def test_cena_oculta_esconde_inclusive_filhos_que_reverteram_visibility(tmp_path):
+    from src.v2 import palco
+    d = {'duration': 12, 'meta': {'motor': 'v2'}, 'captions': [], 'scenes': [
+        {'comp': 'numero.animado', 'start': 0, 'end': 6, 'params': {'valor': 33, 'unidade': 'km', 'rotulo': 'ALTURA DA COLUNA'}},
+        {'comp': 'linha_tempo.historica', 'start': 6, 'end': 12, 'params': {'eventos': [{'ano': 79, 'texto': 'Soterramento'}, {'ano': 1748, 'texto': 'Redescoberta'}]}}]}
+    js = """[...document.querySelectorAll('.ano')].filter(e=>getComputedStyle(e).visibility!=='hidden'&&e.getBoundingClientRect().width>0).map(e=>e.textContent)"""
+    with palco.abrir(palco.preparar(d), tmp_path) as pg:
+        for t in (.5, 3, 5.5):
+            pg.evaluate(f'seek({t})')
+            assert pg.evaluate(js) == [], t                  # nenhum ano da linha do tempo visível na cena do número
+        pg.evaluate('seek(11)')
+        assert '1748' in pg.evaluate(js)
+
+
+def test_objeto_avulso_nao_e_contexto_de_outro_fato():
+    linhas = preparo.pesquisa({'fatos': 'FATOS:\n- Arqueólogos encontraram em Pompeia um morador protegendo a cabeça. (Wikipédia)\n'})
+    gato = {'id': 'a0', 'arq': __file__, 'mostra': 'Foto de uma estatueta de bronze representando Bastet como gato, de Pompeia', 'ano': 79, 'tipo_img': 'foto'}
+    ac = _ac('e1', 'evento_historico', 'morador de Pompeia', estado_final='protegendo a cabeça')
+    v = {'titulo': 'Como Pompeia foi soterrada?', 'fatos': 'FATOS:\n- Arqueólogos encontraram em Pompeia um morador protegendo a cabeça. (Wikipédia)\n',
+         'fontes': ['Wikipédia'], 'acervo': [gato],
+         'cenas': [{'tipo': 'historia', 'fala': 'Arqueólogos encontraram em Pompeia um morador protegendo a cabeça.', 'acontecimento': ac, 'grupo': 0, 'evento': 'i0'}]}
+    preparo.preparar(v)
+    assert (v['cenas'][0]['acontecimento'].get('representacao') or {}).get('foto') != 'a0'
+    assert preparo._objeto_alheio({'mostra': 'Moeda romana'}, {'sujeito': 'moeda'}, 'a moeda foi achada') is False
+
+
+def test_numero_sem_unidade_recebe_a_unidade_do_texto_que_o_sustenta():
+    p = contrato.params_tela({'mostrar': 'coluna de cinzas'}, 'numero.animado', {'valor': 33}, ['A coluna subiu 33 km.'])
+    assert p['unidade'] == 'km'
+    assert contrato.unidade_no_texto(3000000, ['3 milhões de pessoas']) == 'pessoas'
+    assert contrato.unidade_no_texto(33, ['trinta e três quilômetros']) == 'quilômetros'
+    assert contrato.unidade_no_texto(6, ['muitos andares']) == ''         # não inventa: o número não está escrito
+
+
+def test_legenda_de_lugar_e_a_mesma_foto_viram_um_plano():
+    out = [{'comp': 'lower_third', 'start': 0, 'end': 2, 'params': {'texto': 'Fórum de Pompeia'}, 'fundo': {'img': 'a.jpg'}, 'origem': [0], 'fala': 'a'},
+           {'comp': 'foto.documental', 'start': 2, 'end': 4, 'params': {}, 'fundo': {'img': 'a.jpg'}, 'origem': [1], 'fala': 'b'}]
+    o, _ = montagem._juntar_planos_iguais(out, [{}, {}])
+    assert len(o) == 1 and o[0]['comp'] == 'lower_third' and o[0]['end'] == 4

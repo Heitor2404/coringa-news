@@ -180,6 +180,7 @@ def vincular(v: dict, acervo_texto: str = '', chamar=None) -> dict:
         if plano['inviaveis']:
             ret, imp = _retirar(v, plano)
             hist['retirados'] = ret
+            hist['nao_retiraveis'] = imp
             if ret:
                 plano = construir(v)
             if plano['inviaveis']:
@@ -187,7 +188,10 @@ def vincular(v: dict, acervo_texto: str = '', chamar=None) -> dict:
                 estados.registrar(v, 'PLANO_VISUAL_EXECUTAVEL', False, causa='inviáveis após 1 ajuste: ' + ', '.join(plano['inviaveis']),
                                   entradas={'cenas': v['cenas']})
                 det = ' | '.join(f"{p['evento']}: {p['justificativa'][:120]}" for p in plano['acontecimentos'] if p['status'] == STATUS_NAO)
-                raise ValueError(f'material ruim: roteiro visualmente inviável antes da narração (plano vinculante, 1 ajuste feito) — {det}')
+                aj = 'ajuste indisponível (provedor de IA fora)' if any(str(f).startswith('ajuste indisponível') for f in feitos) \
+                    else f'1 ajuste com {len(feitos)} correção(ões)'
+                ret_txt = (f"; retirados {', '.join(ret)}" if ret else '') + (f"; não retiráveis sem descaracterizar o roteiro: {', '.join(imp)}" if imp else '')
+                raise ValueError(f'material ruim: roteiro visualmente inviável antes da narração (plano vinculante, {aj}{ret_txt}) — {det}')
     v['_plano_visual_exec'] = {**plano, 'historico': hist}
     estados.registrar(v, 'PLANO_VISUAL_EXECUTAVEL', True, entradas={'cenas': v['cenas']},
                       artefatos={'acontecimentos': len(plano['acontecimentos']), 'com_revisao': sum(p['status'] == STATUS_REV for p in plano['acontecimentos'])})

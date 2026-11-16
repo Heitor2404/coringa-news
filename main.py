@@ -1141,6 +1141,7 @@ def _status_v2(pasta: Path, status: str, v: dict | None = None, mp4: Path | None
     info = {'status': status, 'motivo': motivo, 'mp4': str(mp4) if mp4 else None,
             'estados': [(e['estado'], e['ok'], e.get('causa')) for e in v.get('_estados') or []],
             'plano_visual': (v.get('_plano_visual_exec') or {}).get('acontecimentos'),
+            'plano_visual_historico': (v.get('_plano_visual_exec') or {}).get('historico'),
             'mp4_bytes': Path(mp4).stat().st_size if mp4 and Path(mp4).exists() else 0,
             'titulo': v.get('titulo'),
             'bloqueios_preparo': prep.get('bloqueios') or [{'evento': a['evento'], 'tipo': a['tipo'], 'origem': 'plano visual executável',

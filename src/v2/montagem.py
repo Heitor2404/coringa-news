@@ -35,7 +35,8 @@ def _mostra(sc: dict, img: str) -> bool:
 def _juntar_planos_iguais(out: list[dict], direcao: list[dict]) -> tuple[list[dict], list[dict]]:
     """V2.5: planos SEGUIDOS com a mesma foto, a mesma composição de foto e o mesmo selo viram UM plano contínuo (dois
     cortes para a mesma imagem parecem erro de montagem). Não mexe em composição que desenha/explica."""
-    FOTOS = ('foto.documental', 'banner.discreto', 'foto.historica')
+    FOTOS = ('foto.documental', 'banner.discreto', 'foto.historica', 'lower_third')
+    SOBREPOSTAS = ('banner.discreto', 'lower_third')     # composições que são a FOTO + um texto por cima
     novo, dnovo = [], []
     for sc, d in zip(out, direcao):
         ant = novo[-1] if novo else None
@@ -43,13 +44,14 @@ def _juntar_planos_iguais(out: list[dict], direcao: list[dict]) -> tuple[list[di
         mesmo_selo = (ant or {}).get('comp') == sc['comp'] and (ant.get('params') or {}).get('rotulo') == (sc.get('params') or {}).get('rotulo')
         # foto sem selo depois/antes da MESMA foto com selo CONTEXTO: o plano contínuo fica com o selo (o mais prudente)
         # (vale também para o selo NOTA de um destaque: a nota fica sobre a foto pelo plano inteiro)
-        um_contexto = ant and {ant['comp'], sc['comp']} == {'banner.discreto', 'foto.documental'} and \
-            {'CONTEXTO', 'NOTA'} & {str((ant.get('params') or {}).get('rotulo')), str((sc.get('params') or {}).get('rotulo'))}
+        um_contexto = ant and 'foto.documental' in (ant['comp'], sc['comp']) and ({ant['comp'], sc['comp']} - {'foto.documental'}) <= set(SOBREPOSTAS) \
+            and (ant['comp'] == 'lower_third' or sc['comp'] == 'lower_third' or
+                 {'CONTEXTO', 'NOTA'} & {str((ant.get('params') or {}).get('rotulo')), str((sc.get('params') or {}).get('rotulo'))})
         if ant and img and sc['comp'] in FOTOS and ant['comp'] in FOTOS and abs(ant['end'] - sc['start']) < .3 \
                 and str((ant.get('fundo') or {}).get('img') or (ant.get('params') or {}).get('img') or '') == img \
                 and (mesmo_selo or um_contexto):
-            if um_contexto and ant['comp'] != 'banner.discreto':
-                ant.update(comp='banner.discreto', params=dict(sc['params']))
+            if um_contexto and ant['comp'] not in SOBREPOSTAS:
+                ant.update(comp=sc['comp'], params=dict(sc['params']))
             ant.update(end=sc['end'], origem=ant['origem'] + sc['origem'], fala=f"{ant.get('fala', '')} {sc.get('fala', '')}".strip())
             dnovo[-1]['cenas_v1'] = ant['origem']
             dnovo[-1].setdefault('notas', []).append('planos seguidos com a mesma foto unidos num plano contínuo')
@@ -306,7 +308,8 @@ def converter(dados: dict, base: Path | None = None, fatos_corrigidos: dict | No
                 if dec.get('origem') == 'contrato':
                     # V2.2: composição desenhada pelo acontecimento DECLARADO, com os dados declarados (antes, toda composição
                     # que não fosse eclusa/nível/escala caía no ramo de foto, mesmo com o seletor certo)
-                    p = contrato.params_tela(dec.get('acontecimento') or {}, dec['comp'], dec.get('params') or {})
+                    p = contrato.params_tela(dec.get('acontecimento') or {}, dec['comp'], dec.get('params') or {},
+                                             [v1[k].get('fala') for k in mesmo])
                     if dec['comp'] == 'numero.animado':
                         # número declarado no contrato passa pela MESMA validação de fatos (moeda, natureza, fonte listada)
                         erros = fatos.validar(p, fontes)

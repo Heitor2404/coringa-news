@@ -132,3 +132,30 @@ def test_err_020_tempos_em_lista_e_casas_decimais():
     cenas, _ = diretor.montar({'planos': [pl]}, {}, {}, [{'w': 'um', 's': .4}, {'w': 'dois', 's': 2.5}], {'f1'})
     assert cenas[0]['params']['tempos'] == [.4, 2.5]                        # lista em ordem, não {passo: segundo}
     assert contrato.params_tela({'dados': {'valor': 5.5, 'unidade': 'graus'}}, 'numero.animado')['casas'] == 1
+
+
+def test_err_021_video_sem_clipe_vira_quadro_do_proprio_video(tmp_path):
+    v = M.roteiro()
+    bib, ac, _ = _ac(tmp_path, v)
+    sb = {'planos': [M.plano([0], foto='a3', composicao='video.documental', recurso_visual={'tipo': 'video', 'id': 'a3'})]}
+    av = P.preparar_params(sb, v, ac)                          # a3 não tem clipe no acervo
+    assert sb['planos'][0]['composicao'] == 'doc.plano' and sb['planos'][0]['recurso_visual'] == {'tipo': 'foto', 'id': 'a3'}
+    assert any('ERR-021' in a for a in av)
+
+
+def test_err_022_esquema_autorado_conferido(tmp_path):
+    v = M.roteiro()
+    bib, ac, _ = _ac(tmp_path, v)
+    _, ctx = P.montar_prompt(v, ac, bib)
+    mec = next(e for e in ctx['eventos'] if e['tipo'] == 'mecanismo' and e['critico'])
+    sb = M.storyboard_valido(v)
+    k = mec['trechos'][0]
+    esq = {'objetos': [{'id': 'navio', 'forma': 'corpo', 'rotulo': 'NAVIO', 'x': .3, 'y': .5, 'w': .4, 'h': .2},
+                       {'id': 'vento', 'forma': 'seta', 'rotulo': 'VENTO', 'x': .1, 'y': .3, 'w': .2, 'h': .1}],
+           'estados': [{'rotulo': 'ALINHADO', 'objetos': {'navio': {'rot': 0}}},
+                       {'rotulo': 'EMPURRADO', 'objetos': {'navio': {'rot': 30}}, 'relacoes': [{'de': 'vento', 'para': 'navio', 'tipo': 'empurra'}]}]}
+    sb['planos'][k].update(composicao='mecanismo.estados', funcao_documental='ESQUEMA', recurso_visual={'tipo': 'composicao', 'id': 'mecanismo.estados'},
+                           params={'titulo': 'O vento empurra o casco', 'esquema': esq})
+    assert not [e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == k]
+    esq['estados'][1] = dict(esq['estados'][0])                # nada muda: recusado
+    assert any('estados iguais' in e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == k)

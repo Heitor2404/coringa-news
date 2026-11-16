@@ -122,6 +122,7 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
         ks = por_evento.get(e['id'], [])
         if e['critico'] and ks and e['tipo'] in contrato.EXIGE_DEMONSTRACAO:
             if not any(contrato.demonstra(cenas[k]['comp']) or cenas[k]['comp'] in ('doc.eclusa', 'doc.molde')
+                       or cenas[k]['comp'] in (e.get('viaveis') or [])          # viável = estruturado (contrato.comp_aceita)
                        or (cenas[k].get('direcao') or {}).get('funcao_documental') == 'REGISTRO' for k in ks):
                 a('bloqueio', 'E-MECANISMO', f"{e['id']} (mecanismo crítico) só com foto/cartão: não demonstra (ERR-006)", plano=ks[0])
         if e['critico'] and ks:

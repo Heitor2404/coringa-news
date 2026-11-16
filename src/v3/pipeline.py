@@ -29,6 +29,11 @@ COMPS_ESPECIAIS = {   # composições que o diretor pode pedir com parâmetros p
     'doc.molde': 'esquema de molde/vazio preenchido (params: rotulos {camada, vazio, gesso, molde})',
     'comparacao.antes_depois': 'duas fotos reais do MESMO assunto em datas diferentes (params: img_antes, img_depois = ids do ACERVO, rotulo_antes, rotulo_depois ≤ 18)',
     'video.documental': 'clipe real do acervo (recurso_visual tipo video)',
+    'mecanismo.estados': ('esquema animado que VOCÊ escreve a partir dos FATOS quando o acontecimento não tem composição viável '
+                          '(funcao_documental ESQUEMA; params: {"titulo" ≤ 36, "kicker" ≤ 22, "esquema": {"objetos": 2–7 × {"id", "forma": '
+                          'superficie|corpo|cerdas|ramos|particulas|seta, "rotulo" ≤ 18, "x","y","w","h" 0–1}, "estados": 2–4 × {"rotulo" ≤ 30, '
+                          '"objetos": {"<id>": {"dx","dy" (0–1),"escala","rot","opacidade"}}, "relacoes": [{"de","para","tipo": '
+                          'atracao|repulsao|contato|empurra,"rotulo" ≤ 16}]}}}; estados DIFERENTES: sujeito, estado inicial, ação, resultado)'),
 }
 MAX_TEXTO, MAX_SELO = 34, 40
 ANO = re.compile(r'^(1[0-9]{3}|20[0-9]{2})$')
@@ -213,6 +218,22 @@ def _tem_unidade(txt: str, n: str) -> bool:
     return bool(UNIDADES_TEXTO.match(depois)) or bool(UNIDADES_EXTRA.match(depois))
 
 
+def _textos_params(p) -> list[str]:
+    """Textos que vão para a tela dentro dos parâmetros (inclusive rótulos do esquema), para conferir números."""
+    out = []
+    if isinstance(p, dict):
+        for k, x in p.items():
+            if k in ('tempos', 'x', 'y', 'w', 'h', 'dx', 'dy', 'escala', 'rot', 'opacidade', 'forca', 'n', 'polar', 'casas'):
+                continue
+            out += _textos_params(x)
+    elif isinstance(p, list):
+        for x in p:
+            out += _textos_params(x)
+    elif isinstance(p, (str, int, float)) and not isinstance(p, bool):
+        out.append(str(p))
+    return out
+
+
 def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple[int | None, str]]:
     """Problemas objetivos (plano, problema). Complementa diretor.validar (fato, função, IA, crédito, ano)."""
     from src.v2 import contrato
@@ -245,6 +266,11 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
                 out.append((i, f"mídia {rv.get('id')} sem licença comercial verificada"))
             if rv.get('id'):
                 usos.setdefault(rv['id'], []).append(i)
+        if comp == 'mecanismo.estados' and not (ev and comp in (ev.get('viaveis') or []) and pl.get('params_do_contrato')):
+            for prob in contrato.esquema_problemas((pl.get('params') or {}).get('esquema')):
+                out.append((i, f'esquema autorado inválido: {prob}'))
+            if pl.get('funcao_documental') != 'ESQUEMA':
+                out.append((i, 'esquema autorado precisa do selo ESQUEMA'))
         textual_recusado = comp in contrato.TEXTUAIS and comp not in (ev or {}).get('viaveis', [])   # viável = estruturado (comp_aceita)
         if ev and ev['critico'] and ev['tipo'] in contrato.EXIGE_DEMONSTRACAO and (comp in COMPS_FOTO or textual_recusado) \
                 and pl.get('funcao_documental') != 'REGISTRO' and not any(
@@ -257,7 +283,7 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
                 out.append((i, f'rótulo com {len(t)} caracteres (máx. {MAX_TEXTO}): "{t}"'))
         if len(str(pl.get('selo_texto') or '')) > MAX_SELO:
             out.append((i, f'selo com mais de {MAX_SELO} caracteres'))
-        for t in textos + [str(pl.get('selo_texto') or '')] + [str(x) for x in (pl.get('params') or {}).values() if isinstance(x, (int, float, str))]:
+        for t in textos + [str(pl.get('selo_texto') or '')] + _textos_params(pl.get('params') or {}):
             for n in _numeros(t):
                 if ANO.match(n.replace('.', '')):
                     if not _texto_tem_numero(n, base_num + ' ' + anos_acervo):     # ano: da pesquisa, da fala ou da foto
@@ -429,7 +455,12 @@ def preparar_params(sb: dict, v: dict, acervo: dict) -> list[str]:
         if comp == 'doc.plano':
             continue
         ev = evs.get(pl.get('evento_id'))
-        if pl.get('params_do_contrato') and ev:
+        if comp == 'video.documental':
+            pl.update(_baixar_clipe(pl, v, acervo, i, avisos))
+            comp = pl.get('composicao')
+            if comp == 'doc.plano':
+                continue
+        if pl.get('params_do_contrato') and ev and comp in (ev.get('viaveis') or []):
             pl['params'] = contrato.params_tela(ev['ac'], comp, textos=[falas[t] for t in pl.get('trechos') or []] + [str(v.get('fatos') or '')])
         elif comp == 'comparacao.antes_depois':
             p = dict(pl.get('params') or {})
@@ -439,11 +470,28 @@ def preparar_params(sb: dict, v: dict, acervo: dict) -> list[str]:
                     avisos.append(f'plano {i}: {k} {p.get(k)} não está no acervo')
                 p[k] = x['arq'] if x else None
             pl['params'] = p
-        elif comp == 'video.documental':
-            x = acervo.get((pl.get('recurso_visual') or {}).get('id'))
-            pl['params'] = {'video': x['arq'] if x else None, 'credito': (x or {}).get('credito_curto', '')}
         pl['params'] = {k: val for k, val in (pl.get('params') or {}).items() if val is not None}
     return avisos
+
+
+def _baixar_clipe(pl: dict, v: dict, acervo: dict, i: int, avisos: list) -> dict:
+    """Vídeo do acervo: baixa o CLIPE escolhido (o acervo guarda só o quadro). Sem clipe, o plano usa o quadro do próprio
+    vídeo como foto dirigida (mesmo item, registrado) — nunca outra imagem em silêncio. (ERR-021)"""
+    rid = (pl.get('recurso_visual') or {}).get('id')
+    x = acervo.get(rid) or {}
+    orig = next((a for a in v.get('acervo') or [] if a.get('id') == rid), {})
+    url = (orig.get('video') or {}).get('url')
+    if url:
+        try:
+            from src import midia
+            dest = Path(x['arq']).parent / (f'clipe_{rid}.' + url.split('?')[0].rsplit('.', 1)[-1][:5])
+            clipe = midia._baixar(url, dest, cab=midia.UA if 'wikimedia' in url else {})
+            if clipe and Path(clipe).exists() and Path(clipe).stat().st_size > 10000:
+                return {'params': {'video': str(clipe), 'credito': x.get('credito_curto', '')}}
+        except Exception as e:
+            avisos.append(f'plano {i}: clipe {rid} não baixou ({str(e)[:80]})')
+    avisos.append(f'plano {i}: vídeo {rid} sem clipe local: usa o quadro do próprio vídeo como foto dirigida (ERR-021)')
+    return {'composicao': 'doc.plano', 'recurso_visual': {'tipo': 'foto', 'id': rid}}
 
 
 def _status_criticos(reg: list[dict], ctx: dict, sb: dict) -> list[str]:

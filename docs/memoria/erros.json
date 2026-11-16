@@ -505,6 +505,54 @@
     "processo",
     "mecanismo"
    ]
+  },
+  {
+   "id": "ERR-021",
+   "titulo": "Plano de vídeo apontava para o quadro (jpg) em vez do clipe",
+   "data": "2026-11-16",
+   "versao": "V3.1",
+   "sintoma": "Titanic e Voyager (validação 43818596529): render caiu em saida/video_cache/…/f_0001.jpg inexistente.",
+   "causa_raiz": "O acervo guarda só o quadro do vídeo; o clipe é baixado na montagem e o V3.1 passava o quadro como vídeo.",
+   "arquivos": [
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "baixa o clipe escolhido; sem clipe, o plano vira foto dirigida com o quadro do próprio vídeo (registrado).",
+   "testes": [
+    "tests/test_v3_pipeline.py::test_err_021_video_sem_clipe_vira_quadro_do_proprio_video"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execução 43818596529",
+   "verificavel": true,
+   "tags": [
+    "video"
+   ]
+  },
+  {
+   "id": "ERR-022",
+   "titulo": "Validador e fiscal divergiam sobre o que demonstra um mecanismo; mecanismo sem dados não tinha saída",
+   "data": "2026-11-16",
+   "versao": "V3.1",
+   "sintoma": "Pompeia: processo.etapas estruturado aceito pelo validador e bloqueado pelo fiscal. Lagartixa e céu azul: mecanismo crítico sem composição viável (contrato sem dados) bloqueava o vídeo.",
+   "causa_raiz": "Duas definições de 'demonstra'; o diretor não podia escrever o esquema do mecanismo.",
+   "arquivos": [
+    "src/v3/pipeline.py",
+    "src/v3/fiscal_editorial.py"
+   ],
+   "correcao": "mesma regra nos dois (viável = estruturado por contrato.comp_aceita); mecanismo.estados autorado pelo diretor a partir dos fatos, conferido por contrato.esquema_problemas, selo ESQUEMA e números na pesquisa.",
+   "testes": [
+    "tests/test_v3_pipeline.py::test_err_022_esquema_autorado_conferido"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execução 43818596529",
+   "verificavel": true,
+   "regra_diretor": "Mecanismo sem composição viável: escreva um mecanismo.estados (esquema com estados diferentes) a partir dos FATOS, selo ESQUEMA.",
+   "tags": [
+    "mecanismo",
+    "processo",
+    "transformacao"
+   ]
   }
  ]
 }

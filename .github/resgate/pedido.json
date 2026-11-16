@@ -1,5 +1,5 @@
 {
- "nota": "Render final de Londres (16/11): 1) publicar a chave pública do material; 2) render completo sem IA + prévia privada ao Telegram.",
+ "nota": "Render final de Londres (16/11): MP4 completo SEM IA (storyboard supervisionado, imagens do checkpoint e do Commons, narração já gravada entregue cifrada), prévia PRIVADA ao Telegram com status, fiscal e custos.",
  "falas": [
   "Em 1666, um incêndio que começou numa padaria destruiu a Londres medieval.",
   "Como o fogo foi tão longe?",
@@ -16,8 +16,12 @@
   "Londres queimou porque a ordem de derrubar as casas chegou tarde demais.",
   "Segue o Coringa Explica."
  ],
- "baixar": [],
+ "baixar": [
+  "Thomas Faryner shop plaque Pudding Lane City of London England.jpg",
+  "The Golden Boy of Pye Corner (21807981883).jpg",
+  "8.4.16 London Southbank and City 047 (25737806914).jpg"
+ ],
  "so_baixar": true,
  "categorias": [],
- "modo": "chave"
+ "modo": "render"
 }

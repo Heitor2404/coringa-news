@@ -61,12 +61,13 @@ jobs:
               if isinstance(v, dict) and v.get('cenas'):
                   rot = v
           falas = ped.get('falas') or [c['fala'] for c in rot['cenas']]
-          cenas = [{'fala': f, 'tom': ped.get('tom', '')} for f in falas]
-          audio, tempos, caps, dur = voz.narrar(cenas, Path('out/narracao'))
-          shutil.copy(audio, 'out/narracao.' + Path(audio).suffix.lstrip('.'))
-          Path('out/narracao.json').write_text(json.dumps({'falas': falas, 'tempos': tempos, 'caps': caps, 'dur': dur,
-                                                           'audio': 'narracao.' + Path(audio).suffix.lstrip('.')}, ensure_ascii=False, default=str))
-          print('narração', round(dur, 1), 's', len(falas), 'falas')
+          if not ped.get('so_baixar'):                  # só mídia nova: não regrava a narração (mesma voz e tempos)
+              cenas = [{'fala': f, 'tom': ped.get('tom', '')} for f in falas]
+              audio, tempos, caps, dur = voz.narrar(cenas, Path('out/narracao'))
+              shutil.copy(audio, 'out/narracao.' + Path(audio).suffix.lstrip('.'))
+              Path('out/narracao.json').write_text(json.dumps({'falas': falas, 'tempos': tempos, 'caps': caps, 'dur': dur,
+                                                               'audio': 'narracao.' + Path(audio).suffix.lstrip('.')}, ensure_ascii=False, default=str))
+              print('narração', round(dur, 1), 's', len(falas), 'falas')
           import requests
           UA = {'User-Agent': 'CoringaExplicaBot/1.4 (https://github.com/Heitor2404/coringa-news; educational short videos)'}
           Path('out/extra').mkdir(exist_ok=True)
@@ -88,6 +89,7 @@ jobs:
           Path('out/extra/meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=1))
           PY
           rm -rf out/narracao
+          if python -c "import json,sys;sys.exit(0 if json.load(open('.github/resgate/pedido.json')).get('so_baixar') else 1)"; then rm -rf out/checkpoint; fi
       - name: Cifrar e publicar
         run: |
           export GNUPGHOME=$(mktemp -d)

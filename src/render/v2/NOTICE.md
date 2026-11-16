@@ -8,3 +8,16 @@
 - **Manim Community** (opcional, src/v2/manim_cenas.py) — MIT — https://www.manim.community
 
 As composições em src/render/v2/comp são código próprio do Coringa Explica (não copiam componentes de terceiros).
+
+## Padrões do catálogo HyperFrames reescritos em `comp/doc.js` (V3)
+
+HyperFrames (HeyGen), Apache-2.0, https://github.com/heygen-com/hyperframes, commit `478313ba0e674d51c3b307afa862de8dd87afcf9`
+(16/11/2026). Nenhum arquivo foi copiado: as ideias abaixo foram reimplementadas para o tempo do palco V2 (seek
+determinístico, sem CDN, sem CSS global, sem timeline própria do componente).
+
+| Componente de origem | Uso no Coringa |
+|---|---|
+| `hw-callout-circle` | círculo desenhado à mão em dois traços (`doc.plano`, anotação `circulo`) |
+| `yt-feather-highlight` | foco com máscara esfumada (`doc.plano`, anotação `foco`) |
+| `grain-overlay` | granulação de tratamento (ruído fixo deslocado por quadro, determinístico) |
+| `vignette` | vinheta radial de tratamento |

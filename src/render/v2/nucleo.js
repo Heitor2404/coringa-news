@@ -161,6 +161,7 @@
     zoom: { d: .34 },      // entra ampliada e assenta
     flash: { d: .26 },
     preto: { d: .5 },
+    dissolve: { d: .5 },   // V3: fusão entre planos documentais (a cena anterior segue embaixo)
   };
   function entrada(c) { return TRANS[c.sc.transicao || c.meta.transicao || 'corte'] ? (c.sc.transicao || c.meta.transicao || 'corte') : 'corte'; }
 
@@ -279,6 +280,7 @@
         else if (tr === 'zoom') { c.el.style.transform = `scale(${lerp(1.18, 1, eo5(k))})`; c.el.style.opacity = clamp(k * 3); }
         else if (tr === 'flash') flash = Math.max(flash, .9 * (1 - k));
         else if (tr === 'preto') { preto = Math.max(preto, 1 - k); }
+        else if (tr === 'dissolve') c.el.style.opacity = eio(k);
       }
       if (tr === 'preto' && i > 0 && t < a && t > a - .25) preto = Math.max(preto, (t - (a - .25)) / .25);
       const tl = t - a;

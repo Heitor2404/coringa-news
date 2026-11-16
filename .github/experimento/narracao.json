@@ -1,0 +1,17 @@
+{"nome": "panama-eclusas",
+ "fonte": "fatos da pesquisa do piloto 43775250571 (Wikipedia pt/en e reportagens); texto escrito só com esses fatos",
+ "cenas": [
+  {"tipo": "gancho", "fala": "Em 1914, navios passaram a *escalar* uma montanha no Panamá, sem usar *bombas*."},
+  {"tipo": "historia", "fala": "O canal não foi escavado até o nível do mar."},
+  {"tipo": "historia", "fala": "Ele ergue os navios até o Lago Gatún, *vinte e seis metros* acima do mar."},
+  {"tipo": "historia", "fala": "Um lago artificial, criado em 1913 represando o rio Chagres."},
+  {"tipo": "historia", "fala": "Na subida, o navio entra na câmara pelo nível mais baixo."},
+  {"tipo": "historia", "fala": "As comportas se fecham, e a água desce do lago por *gravidade*, enchendo o compartimento."},
+  {"tipo": "historia", "fala": "O navio boia até o nível da câmara seguinte."},
+  {"tipo": "historia", "fala": "São *três degraus* para subir, e três para descer do outro lado."},
+  {"tipo": "historia", "fala": "Quando foram inauguradas, as eclusas eram a maior obra de *concreto* do planeta."},
+  {"tipo": "historia", "fala": "A largura das câmaras virou o padrão *Panamax*, que ditou o tamanho dos cargueiros no mundo."},
+  {"tipo": "historia", "fala": "Em 2016, novas eclusas passaram a receber navios *uma vez e meia* maiores,"},
+  {"tipo": "historia", "fala": "e reaproveitam cerca de *sessenta por cento* da água em reservatórios ao lado."},
+  {"tipo": "fechamento", "fala": "Segue o *Coringa Explica*."}
+ ]}

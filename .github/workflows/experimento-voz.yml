@@ -1,0 +1,63 @@
+name: Experimento audiovisual — narração (uma gravação)
+
+# Sem pesquisa, roteiro, acervo nem render: só grava a narração de .github/experimento/narracao.json com a MESMA voz
+# da produção (src.voz.narrar: Gemini TTS, Edge de reserva). Usada nos experimentos offline da reestruturação
+# audiovisual. Resultado cifrado para as chaves do piloto (repositório público); sem Telegram, sem publicação.
+on:
+  push:
+    branches: [piloto-v24-lagartixa]
+    paths: [".github/experimento/narracao.json"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: piloto-v22
+  cancel-in-progress: false
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: pip install -r requirements.txt
+      - name: Gravar a narração (uma vez; sem retentativa além da conferência interna da própria voz)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VOZ: ${{ vars.VOZ || 'pt-BR-AntonioNeural' }}
+          VOZ_TOM: ${{ vars.VOZ_TOM || '+0Hz' }}
+          VOZ_VELOCIDADE: ${{ vars.VOZ_VELOCIDADE || '+10%' }}
+        run: |
+          mkdir -p saida
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          from src import voz
+          p = json.loads(Path('.github/experimento/narracao.json').read_text())
+          wav, tempos, caps, dur = voz.narrar(p['cenas'], Path('saida/voz'))
+          shutil.copy(wav, 'saida/narracao.wav')
+          Path('saida/narracao.json').write_text(json.dumps({'nome': p['nome'], 'cenas': p['cenas'], 'tempos': tempos,
+                                                          'legendas': caps, 'duracao': dur}, ensure_ascii=False, indent=1))
+          print('duração', dur)
+          PY
+      - name: Cifrar para as chaves do piloto
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          tar -czf piloto.tgz saida
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o piloto.tgz.gpg piloto.tgz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: piloto-v22-${{ github.run_id }}
+          path: piloto.tgz.gpg
+          retention-days: 7
+          compression-level: 0

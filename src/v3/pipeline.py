@@ -58,7 +58,8 @@ Contrato de cada plano:
  "funcao_narrativa" (gancho|contexto|mecanismo|consequencia|revelacao|fechamento),
  "recurso_visual": {{"tipo": "foto|composicao|video", "id": "<id do ACERVO ou da composição>"}}, "composicao",
  "funcao_documental", "objeto_principal", "plano_inicial", "plano_final" (geral|contexto|objeto|detalhe ou {{"objeto": "<outro objeto>", "enquadramento": "detalhe"}}),
- "acao_visual", "movimento_camera", "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta), "texto", "na_palavra"}}],
+ "acao_visual", "movimento_camera", "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta: outro objeto da foto),
+   "ate_desvio": [dx, dy] (opcional, só seta/trajeto DIDÁTICA a partir do alvo, fração da foto, ex. [0, -0.3] = para cima; rótulo diz "esquema"), "texto", "na_palavra"}}],
  "params_do_contrato": true (para composição viável de um acontecimento: os dados vêm do contrato), "params": {{...}} (só composições especiais),
  "tempos_palavras": {{"<passo>": "<palavra>"}} (opcional), "transicao", "selo_texto", "criterio_de_validacao": ["..."]}}
 
@@ -178,8 +179,22 @@ def montar_prompt(v: dict, acervo: dict, bib=None, plataforma: str = 'Reels, Tik
 
 
 # ---------------------------------------------------------------- validação por código (sem IA)
+DATA_HORA = re.compile(r'\b\d{1,2}/\d{1,2}(?:/(\d{2,4}))?\b|\b\d{1,2}h\d{0,2}\b|\b\d{1,2}:\d{2}\b', re.I)
+UNIDADES_EXTRA = re.compile(r'^(n[óo]s|knots?|mph|p[ée]s|milhas?(\s+n[áa]uticas?)?|l[ée]guas?|s[ée]culos?|d[ée]cadas?|meses|semanas?|'
+                            r'mil\b|milh|bilh|trilh|x|×|%|º|°|h\b|min\b|s\b|ms\b|kw|mw|gw|w\b|v\b|hz|khz|db|psi|atm|bar\b|'
+                            r'passageiros|tripulantes|pessoas|botes|vidas|sobreviventes|andares|degraus|colunas|metros|cent[íi]metros)', re.I)
+
+
+def _n(s) -> str:
+    return diretor._n(s)
+
+
 def _numeros(txt: str) -> list[str]:
-    return re.findall(r'\d+(?:[.,]\d+)*', str(txt or ''))
+    """Números a conferir. Datas (10/04/1912) e horas (23h40) não viram números soltos: o ano dentro delas é conferido
+    à parte (ERR-017, falso positivo do validador que derrubou o Titanic na 1ª validação)."""
+    t = str(txt or '')
+    anos = [m.group(1) for m in DATA_HORA.finditer(t) if m.group(1) and len(m.group(1)) == 4]
+    return re.findall(r'\d+(?:[.,]\d+)*', DATA_HORA.sub(' ', t)) + anos
 
 
 def _num_norm(s: str) -> str:
@@ -195,7 +210,7 @@ def _tem_unidade(txt: str, n: str) -> bool:
     from src.v2.contrato import UNIDADES_TEXTO
     i = txt.find(n)
     depois = txt[i + len(n):].strip() if i >= 0 else ''
-    return bool(UNIDADES_TEXTO.match(depois)) or depois.startswith(('mil', 'milh', 'bilh', 'x', '×', '%', 'º', '°'))
+    return bool(UNIDADES_TEXTO.match(depois)) or bool(UNIDADES_EXTRA.match(depois))
 
 
 def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple[int | None, str]]:
@@ -203,6 +218,7 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
     from src.v2 import contrato
     falas = falas_de(v)
     base_num = ' '.join([str(v.get('fatos') or '')] + falas)
+    anos_acervo = ' '.join(str(x.get('ano')) for x in acervo.values() if x.get('ano'))
     evs = {e['id']: e for e in ctx['eventos']}
     pls = sb.get('planos') or []
     out = []
@@ -229,7 +245,8 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
                 out.append((i, f"mídia {rv.get('id')} sem licença comercial verificada"))
             if rv.get('id'):
                 usos.setdefault(rv['id'], []).append(i)
-        if ev and ev['critico'] and ev['tipo'] in contrato.EXIGE_DEMONSTRACAO and comp in contrato.TEXTUAIS | COMPS_FOTO \
+        textual_recusado = comp in contrato.TEXTUAIS and comp not in (ev or {}).get('viaveis', [])   # viável = estruturado (comp_aceita)
+        if ev and ev['critico'] and ev['tipo'] in contrato.EXIGE_DEMONSTRACAO and (comp in COMPS_FOTO or textual_recusado) \
                 and pl.get('funcao_documental') != 'REGISTRO' and not any(
                     p2.get('evento_id') == ev['id'] and (contrato.demonstra(p2.get('composicao')) or p2.get('composicao') in ('doc.eclusa', 'doc.molde'))
                     for p2 in pls):
@@ -243,6 +260,8 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
         for t in textos + [str(pl.get('selo_texto') or '')] + [str(x) for x in (pl.get('params') or {}).values() if isinstance(x, (int, float, str))]:
             for n in _numeros(t):
                 if ANO.match(n.replace('.', '')):
+                    if not _texto_tem_numero(n, base_num + ' ' + anos_acervo):     # ano: da pesquisa, da fala ou da foto
+                        out.append((i, f'ano {n} ("{t[:40]}") não está nos fatos, na fala nem no acervo'))
                     continue
                 if not _texto_tem_numero(n, base_num):
                     out.append((i, f'número {n} ("{t[:40]}") não está nos fatos nem na fala'))
@@ -251,6 +270,9 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
         for an in pl.get('anotacoes') or []:
             if an.get('tipo') not in ('circulo', 'contorno', 'foco', 'seta', 'trajeto', 'ponto'):
                 out.append((i, f"anotação de tipo desconhecido: {an.get('tipo')}"))
+            d = an.get('ate_desvio')
+            if d is not None and not (isinstance(d, list) and len(d) == 2 and all(isinstance(x, (int, float)) for x in d)):
+                out.append((i, f'ate_desvio precisa ser [dx, dy] em fração da foto (recebido {d!r}) (ERR-018)'))
     for k, ix in usos.items():
         if len(ix) > 2:
             out.append((ix[2], f'foto {k} usada {len(ix)} vezes (máx. 2)'))
@@ -349,7 +371,11 @@ def localizar_regioes(sb: dict, acervo: dict, bib, chamar_visao=None) -> dict:
         x = acervo.get(rv.get('id')) if rv.get('tipo') == 'foto' else None
         if not x or pl.get('composicao') != 'doc.plano':
             continue
-        feito = bib.localizar(Path(x['arq']), objetos_pedidos(pl), chamar_visao)
+        try:
+            feito = bib.localizar(Path(x['arq']), objetos_pedidos(pl), chamar_visao)
+        except Exception as e:             # resposta estranha da visão não derruba o vídeo: plano fica sem âncora (registrado)
+            pl.setdefault('_avisos', []).append(f'visão falhou em {rv.get("id")}: {type(e).__name__}: {str(e)[:120]}')
+            continue
         out.setdefault(x['sha'], {'objetos': {}}).update({k: v for k, v in feito.items() if k != 'objetos'})
         out[x['sha']]['objetos'].update(feito.get('objetos') or {})
     return out
@@ -396,6 +422,10 @@ def preparar_params(sb: dict, v: dict, acervo: dict) -> list[str]:
     avisos = []
     for i, pl in enumerate(sb['planos']):
         comp = pl.get('composicao')
+        fd = str(pl.get('funcao_documental') or '')
+        st = str(pl.get('selo_texto') or '')
+        if fd and _n(st).startswith(_n(fd)):          # "CONTEXTO · foto de 2022" com selo CONTEXTO repetia a palavra
+            pl['selo_texto'] = re.sub(r'^[\s·:,-]+', '', st[len(fd):]).strip()
         if comp == 'doc.plano':
             continue
         ev = evs.get(pl.get('evento_id'))
@@ -463,48 +493,91 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     audio, tempos, caps, dur = narrar(v['cenas'], trab)
     T['narracao_s'] = round(time.time() - t0, 2)
     palavras = diretor.palavras_da_narracao(caps)
-    avisos = aplicar_tempos(sb, tempos, palavras, dur) + preparar_params(sb, v, acervo)
     _, ctx = montar_prompt(v, acervo, bib)
-    cenas, reg = diretor.montar(sb, acervo, regioes, palavras, set(ctx['fatos_ids']))
-    for r, pl in zip(reg, sb['planos']):
-        r['receita'] = pl.get('receita')
-        r['trechos'] = pl.get('trechos')
-        r['erros'] += [e for e in pl.get('_erros') or [] if e not in r['erros']]
-    validos = {i for i, r in enumerate(reg) if not r['erros']}
-    cenas = [c for c in cenas if c['origem'][0] in validos]      # erro do validador V3.1 que sobrou à correção: plano sai
-    # plano não-crítico inválido sai e o vizinho cobre o tempo (registrado); crítico sem plano válido bloqueia
-    falt = _status_criticos(reg, ctx, sb)
-    for e in falt:
+
+    def executar(sb_):
+        """storyboard → cenas (tempos da fala, parâmetros do contrato, montagem). Plano com erro sai; o vizinho cobre."""
+        av = aplicar_tempos(sb_, tempos, palavras, dur) + preparar_params(sb_, v, acervo)
+        cenas_, reg_ = diretor.montar(sb_, acervo, regioes, palavras, set(ctx['fatos_ids']))
+        for r, pl in zip(reg_, sb_['planos']):
+            r['receita'] = pl.get('receita')
+            r['trechos'] = pl.get('trechos')
+            r['erros'] += [e for e in pl.get('_erros') or [] if e not in r['erros']]
+            r['limitacoes'] += pl.get('_avisos') or []
+        ok = {i for i, r in enumerate(reg_) if not r['erros']}
+        cenas_ = [c for c in cenas_ if c['origem'][0] in ok]
+        for k in range(1, len(cenas_)):
+            cenas_[k - 1]['end'] = max(cenas_[k - 1]['end'], cenas_[k]['start'])
+        if cenas_:
+            cenas_[0]['start'], cenas_[-1]['end'] = 0.0, round(dur, 3)
+        dados_ = {'duration': dur, 'meta': {'motor': 'v2', 'plataforma': 'todas', 'titulo': v.get('titulo'), 'categoria': v.get('categoria', ''),
+                                            'serie': v.get('serie', ''), 'parte': v.get('parte', 0), 'marca': '@coringa.explica',
+                                            'pergunta': v.get('pergunta') or '', 'fontes': list(v.get('fontes') or [])},
+                  'scenes': cenas_, 'captions': caps}
+        return cenas_, reg_, dados_, av
+
+    cenas, reg, dados, avisos = executar(sb)
+    _gravar(dest / 'direcao.json', {'storyboard_usado': sb, 'registro': reg, 'avisos': avisos})
+    for e in _status_criticos(reg, ctx, sb):
         res['bloqueios'].append(f'acontecimento crítico {e} sem plano válido (ERR-011)')
-    for k in range(1, len(cenas)):
-        cenas[k - 1]['end'] = cenas[k]['start'] if cenas[k]['start'] > cenas[k - 1]['end'] else cenas[k - 1]['end']
-    if cenas:
-        cenas[0]['start'], cenas[-1]['end'] = 0.0, round(dur, 3)
+    if res['bloqueios']:                     # bloqueio objetivo: nem prévia nem MP4 (nada caro para um vídeo recusado)
+        _gravar(dest / 'resultado.json', res)
+        bib.exportar_manifesto(dest / 'biblioteca_manifesto.jsonl')
+        bib.fechar()
+        return res
+    # prévia por quadros (sem MP4): defeito de página/geometria aparece aqui, barato. Texto sobre texto numa composição =
+    # 1 correção dirigida ao modelo (só aqueles planos); se continuar, bloqueia (ciclo de revisão com limite)
+    t0 = time.time()
+    prev = previa_quadros(dados, dest, trab)
+    graves = _choques(prev, dados)
+    res['revisao_previa'] = {'planos_com_texto_sobreposto': sorted(graves)}
+    if graves and not sreg.get('_correcao_previa'):
+        sreg['_correcao_previa'] = True
+        erros_pv = '\n'.join(f"{k}: a composição {sb['planos'][k].get('composicao')} ficou com textos sobrepostos na prévia "
+                             f"({graves[k]}); troque por outra composição viável, por foto real com anotação, ou simplifique os textos"
+                             for k in sorted(graves))
+        limpo = {'planos': [{kk: vv for kk, vv in pl.items() if not kk.startswith('_') and kk not in ('tempo_inicio', 'tempo_fim')}
+                            for pl in sb['planos']]}
+        sb2, m2 = (chamar or chamar_modelo)(PROMPT_CORRECAO.replace('{erros}', erros_pv).replace('{sb}', json.dumps(limpo, ensure_ascii=False)))
+        sreg['chamadas'].append({**m2, 'motivo': 'prévia'})
+        if sb2 is not None:
+            novos = validar_storyboard(sb2, v, acervo, ctx)
+            for i_, e_ in novos:
+                if i_ is not None and 0 <= i_ < len(sb2['planos']):
+                    sb2['planos'][i_].setdefault('_erros', []).append(e_)
+            sreg['correcoes'].append({'tipo': 'correcao_pela_previa', 'erros': erros_pv, 'resposta': copy.deepcopy(sb2),
+                                      'erros_restantes': [{'plano': i_, 'erro': e_} for i_, e_ in novos]})
+            regioes.update(localizar_regioes(sb2, acervo, bib, chamar_visao))
+            cenas2, reg2, dados2, av2 = executar(sb2)
+            if not _status_criticos(reg2, ctx, sb2):
+                prev2 = previa_quadros(dados2, dest, trab)
+                sb, cenas, reg, dados, avisos, prev = sb2, cenas2, reg2, dados2, av2, prev2
+                graves = _choques(prev, dados)
+        sreg['consumo'] = {'chamadas': len(sreg['chamadas']), 'usd': round(sum(c.get('usd') or 0 for c in sreg['chamadas']), 4),
+                           'segundos': round(sum(c.get('segundos') or 0 for c in sreg['chamadas']), 1),
+                           'caracteres_prompt': sum(c.get('tamanho_prompt') or 0 for c in sreg['chamadas'])}
+        res['consumo_diretor'] = sreg['consumo']
+        _gravar(dest / 'storyboard_ia.json', {**sreg, 'reuso_biblioteca': reuso})
+        _gravar(dest / 'direcao.json', {'storyboard_usado': sb, 'registro': reg, 'avisos': avisos})
+    for k in sorted(graves):
+        res['bloqueios'].append(f"plano {k}: textos sobrepostos na tela depois da correção ({graves[k]}) (ERR-008)")
+    T['previa_s'] = round(time.time() - t0, 2)
+    res['previa'] = {'erros_pagina': prev['erros_pagina'], 'problemas_geometria': len(prev['problemas_geometria'])}
+    _gravar(dest / 'previa_geometria.json', prev['problemas_geometria'])
+    _gravar(dest / 'v2_dados.json', dados)
     for c in cenas:
         rv = (c.get('direcao') or {}).get('recurso_visual') or {}
         x = acervo.get(rv.get('id'))
         if x:
             bib.registrar_uso(x['global'], nome, rv.get('id'), cenas.index(c), (c.get('direcao') or {}).get('funcao_documental') or '',
                               (c.get('direcao') or {}).get('evento_id') or '')
-    dados = {'duration': dur, 'meta': {'motor': 'v2', 'plataforma': 'todas', 'titulo': v.get('titulo'), 'categoria': v.get('categoria', ''),
-                                       'serie': v.get('serie', ''), 'parte': v.get('parte', 0), 'marca': '@coringa.explica',
-                                       'pergunta': v.get('pergunta') or '', 'fontes': list(v.get('fontes') or [])},
-             'scenes': cenas, 'captions': caps}
-    _gravar(dest / 'direcao.json', {'storyboard_usado': sb, 'registro': reg, 'avisos': avisos})
-    _gravar(dest / 'v2_dados.json', dados)
-    if res['bloqueios']:                     # bloqueio objetivo: nem prévia nem MP4 (nada caro para um vídeo recusado)
+    if prev['erros_pagina']:
+        res['revisoes'].append(f"página: {'; '.join(map(str, prev['erros_pagina'][:3]))}")
+    if res['bloqueios']:
         _gravar(dest / 'resultado.json', res)
         bib.exportar_manifesto(dest / 'biblioteca_manifesto.jsonl')
         bib.fechar()
         return res
-    # prévia por quadros (sem MP4): erro de página ou geometria aparece aqui, barato
-    t0 = time.time()
-    prev = previa_quadros(dados, dest, trab)
-    T['previa_s'] = round(time.time() - t0, 2)
-    res['previa'] = {'erros_pagina': prev['erros_pagina'], 'problemas_geometria': len(prev['problemas_geometria'])}
-    _gravar(dest / 'previa_geometria.json', prev['problemas_geometria'])
-    if prev['erros_pagina']:
-        res['revisoes'].append(f"página: {'; '.join(map(str, prev['erros_pagina'][:3]))}")
     t0 = time.time()
     saida = pasta / f'{nome}.mp4'
     if renderizar is None:
@@ -527,6 +600,18 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     _gravar(dest / 'resultado.json', res)
     bib.fechar()
     return res
+
+
+def _choques(prev: dict, dados: dict) -> dict:
+    """Planos (índice do storyboard) com texto sobre texto GRAVE na prévia, fora da legenda. → {plano: exemplo}."""
+    out = {}
+    for g in prev.get('problemas_geometria') or []:
+        if g.get('tipo') != 'choque' or not g.get('grave') or g.get('cap'):
+            continue
+        c = next((c for c in dados['scenes'] if c['start'] <= g.get('t', -1) < c['end']), None)
+        if c:
+            out.setdefault(c['origem'][0], str(g.get('txt'))[:80])
+    return out
 
 
 def previa_quadros(dados: dict, dest: Path, trab: Path) -> dict:

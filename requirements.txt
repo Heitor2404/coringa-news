@@ -7,4 +7,4 @@ faster-whisper>=1.0
 numpy
 pillow
 scenedetect>=0.6
-opencv-python-headless>=4.8
+opencv-contrib-python-headless>=4.8

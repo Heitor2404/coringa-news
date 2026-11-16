@@ -30,6 +30,7 @@ import unicodedata
 from pathlib import Path
 
 FUNCOES_DOC = {'REGISTRO', 'CONTEXTO', 'DOCUMENTO', 'ESQUEMA', 'RECONSTRUÇÃO', 'REPRESENTAÇÃO HISTÓRICA', 'EDITORIAL'}
+TEMPOS_POR_NOME = {'doc.eclusa', 'doc.molde'}     # composições V3 que leem `tempos` como {passo: segundo}
 MOVIMENTOS = {'revelar', 'aproximar', 'localizar', 'acompanhar', 'explicar', 'comparar', 'fixo'}
 CAMPOS = ('evento_id', 'fato_id', 'fonte', 'funcao_narrativa', 'recurso_visual', 'funcao_documental', 'objeto_principal',
           'regiao_de_interesse', 'plano_inicial', 'plano_final', 'acao_visual', 'movimento_camera', 'anotacoes',
@@ -231,7 +232,11 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                 o = obs.get(an.get('alvo') or '') or {}
                 if an['tipo'] in ('seta', 'trajeto'):
                     o2 = obs.get(an.get('ate') or '') or {}
-                    if o.get('ancoravel') and an.get('ate_desvio'):
+                    dv = an.get('ate_desvio')
+                    if dv is not None and not (isinstance(dv, (list, tuple)) and len(dv) == 2 and all(isinstance(x, (int, float)) for x in dv)):
+                        r['limitacoes'].append(f"ate_desvio inválido ({dv!r}) em '{an.get('alvo')}': seta retirada (ERR-018)")
+                        continue
+                    if o.get('ancoravel') and dv:
                         # seta de ESQUEMA que parte de um objeto localizado numa direção dada (ex.: "para cima" = coluna
                         # de cinzas). O desvio é direção didática, não posição de algo na foto: o rótulo precisa dizer "esquema".
                         c1 = o['caixa']
@@ -276,6 +281,16 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                     r['limitacoes'].append(f"passo '{k}' ('{v}') não encontrado na narração")
                 else:
                     p.setdefault('tempos', {})[k] = round(t - a, 2)
+            if isinstance(p.get('tempos'), dict) and pl['composicao'] not in TEMPOS_POR_NOME:
+                # V3.1 (ERR-020): as composições V2 leem `tempos` como LISTA (um instante por etapa, em ordem); um dicionário
+                # virava NaN e empilhava os textos. Lista ordenada; com contagem diferente das etapas, a composição usa o padrão.
+                ts = sorted(p['tempos'].values())
+                n = len(p.get('etapas') or []) or None
+                if n is None or len(ts) == n:
+                    p['tempos'] = ts
+                else:
+                    p.pop('tempos')
+                    r['limitacoes'].append(f"{len(ts)} tempos para {n} etapas: a composição usa o espaçamento padrão")
             sc['params'] = p
         r['tempo'] = [a, b]
         reg.append(r)

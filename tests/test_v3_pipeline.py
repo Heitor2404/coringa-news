@@ -84,3 +84,41 @@ def test_critico_sem_plano_bloqueia(tmp_path):
         os.environ.pop('BIBLIOTECA_DB'); os.environ.pop('BIBLIOTECA_ARMAZEM')
     assert any('e3' in b for b in res['bloqueios']) and not renders and res['mp4'] is None
     assert (tmp_path / 'ever-v3' / 'storyboard_ia.json').exists() and (tmp_path / 'ever-v3' / 'direcao.json').exists()
+
+
+def test_err_017_datas_horas_e_nos_nao_sao_falso_positivo(tmp_path):
+    v = M.roteiro()
+    v['fatos'] += '\n- O navio partiu em 10/04/1912 a 22 nós e o vigia avistou o gelo às 23h40.'
+    bib, ac, _ = _ac(tmp_path, v)
+    _, ctx = P.montar_prompt(v, ac, bib)
+    sb = M.storyboard_valido(v)
+    for t in ('Velocidade: 22 nós', 'Partida: 10/04/1912', 'Avistado às 23h40'):
+        sb['planos'][1]['anotacoes'] = [{'tipo': 'circulo', 'alvo': 'navio', 'texto': t, 'na_palavra': 'canal'}]
+        assert not [e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == 1 and 'número' in e], t
+    sb['planos'][1]['anotacoes'][0]['texto'] = 'Partida: 10/04/1913'          # ano fora da pesquisa continua sendo pego
+    assert [e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == 1 and ('1913' in e or '41' in e)]
+    sb['planos'][1]['anotacoes'][0]['texto'] = '22 nós (41 km/h)'               # conversão feita pelo modelo, fora da pesquisa: pego
+    assert [e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == 1 and ('1913' in e or '41' in e)]
+
+
+def test_err_018_ate_desvio_invalido_nao_derruba(tmp_path):
+    from src.v2 import diretor
+    v = M.roteiro()
+    bib, ac, _ = _ac(tmp_path, v)
+    _, ctx = P.montar_prompt(v, ac, bib)
+    sb = M.storyboard_valido(v)
+    sb['planos'][0]['anotacoes'] = [{'tipo': 'seta', 'alvo': 'navio', 'ate_desvio': True, 'texto': 'esquema'}]
+    assert any('ERR-018' in e for i, e in P.validar_storyboard(sb, v, ac, ctx) if i == 0)
+    pl = {**sb['planos'][0], 'tempo_inicio': 0, 'tempo_fim': 3}
+    x = ac[pl['recurso_visual']['id']]
+    reg = {x['sha']: {'objetos': {'navio': {'caixa': [.3, .3, .2, .2], 'visivel': True, 'ancoravel': True}}}}
+    cenas, r = diretor.montar({'planos': [pl]}, ac, reg, [], {'f1'})
+    assert cenas and not cenas[0]['params']['anot'] and any('ERR-018' in l for l in r[0]['limitacoes'])
+
+
+def test_err_019_sem_saliencia_nao_derruba(monkeypatch):
+    import cv2
+    from src.v2 import regioes
+    if hasattr(cv2, 'saliency'):
+        monkeypatch.delattr(cv2, 'saliency')
+    assert regioes.saliencia(M.BASE / 'img' / 'a23-g.jpg') == {}

@@ -485,6 +485,12 @@ def params_tela(ac: dict, comp: str, dados: dict | None = None, textos: list | N
             t = t[:36].rsplit(' ', 1)[0] if len(t) > 36 else t
             p['titulo'] = re.sub(r'(\s+(e|de|da|do|das|dos|a|o|as|os|em|com|para|por|no|na|nos|nas|ao|à))+$', '', t, flags=re.I)   # nunca termina em conectivo
     if comp == 'numero.animado':
+        try:                                      # V3.1 (ERR-020): 5,5 graus sem `casas` aparecia como "6 graus"
+            val = float(str(p.get('valor')).replace(',', '.'))
+            if 'casas' not in p and val != int(val):
+                p['casas'] = min(2, len(repr(val).split('.')[1].rstrip('0')))
+        except (TypeError, ValueError):
+            pass
         if str(p.get('unidade') or '').strip().lower() in ('valor', 'numero', 'número', 'quantidade', 'unidade', 'total', 'n'):
             p['unidade'] = ''                     # rótulo genérico do roteirista não é unidade ("1.517 valor")
         if not str(p.get('unidade') or '').strip() and p.get('valor') not in (None, ''):

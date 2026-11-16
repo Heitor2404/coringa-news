@@ -37,7 +37,7 @@
    "midia": "foto ampla com o detalhe e o entorno", "requisitos_factuais": ["a relação espacial é afirmada pela pesquisa"],
    "composicoes": ["doc.plano"], "enquadramento": {"inicial": "detalhe", "final": "geral"},
    "movimento": "localizar", "anotacoes": [{"tipo": "trajeto", "quando": "na palavra do deslocamento; rótulo diz 'esquema' se a direção é didática"}], "transicao": "corte",
-   "parametros_obrigatorios": ["objeto_principal", "seta/trajeto com alvo E ate localizados, ou ate_desvio + 'esquema' no rótulo"],
+   "parametros_obrigatorios": ["objeto_principal", "seta/trajeto com alvo E ate localizados, ou ate_desvio [dx, dy] (fração da foto) + 'esquema' no rótulo"],
    "exemplo_aprovado": "V3 Pompeia: o cume do vulcão recua até a cidade, com o trajeto marcado como esquema.",
    "exemplo_reprovado": null,
    "aprovacao": "proprietário, brief de 16/11/2026 (vídeos V3)",

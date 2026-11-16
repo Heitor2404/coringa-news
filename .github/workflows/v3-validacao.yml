@@ -70,10 +70,16 @@ jobs:
       - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/titanic; fi
       - { name: "ck pisa", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43754111920 } }
       - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/pisa; fi
-      - { name: "ck lagartixa", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43730252500 } }
+      - { name: "ck lagartixa", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43728184399 } }
       - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/lagartixa; fi
       - { name: "ck ceu-azul", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43750814971 } }
       - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/ceu-azul; fi
+      - name: Checkpoints dos temas novos de validações anteriores (V3.1)
+        uses: actions/cache/restore@v4
+        with:
+          path: ck_novos
+          key: v3-checkpoints-${{ github.run_id }}
+          restore-keys: v3-checkpoints-
       - name: Abrir os checkpoints (chave derivada de segredo; confere sha256)
         env:
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
@@ -88,11 +94,17 @@ jobs:
               python -m src.v2.checkpoint verificar ab/$n/checkpoint >/dev/null && echo "$n: checkpoint íntegro" || echo "$n: checkpoint INCOMPLETO"
             else echo "$n: não abriu"; fi
           done
+          mkdir -p ck_novos
+          for f in ck_novos/*.tgz.gpg; do [ -f "$f" ] || continue; n=$(basename $f .tgz.gpg)
+            gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d $f 3<<<"$chave" && mkdir -p ab/$n && tar -xzf ck.tgz -C ab/$n && rm ck.tgz && echo "$n: checkpoint de tema novo reaproveitado"
+          done
       - name: Biblioteca de execuções anteriores (manifesto versionado; binários recuperados da origem com sha)
         run: |
           if [ -f data/biblioteca/manifesto.jsonl ]; then python -m src.v3.biblioteca importar data/biblioteca/manifesto.jsonl; fi
       - name: Produzir (fluxo real, MOTOR_VISUAL=v3; uma tentativa por caso)
         env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
           MOTOR_VISUAL: v3
           DIRETOR_MODELO: ${{ vars.DIRETOR_MODELO || 'claude' }}
           APROVACAO: "0"
@@ -118,6 +130,9 @@ jobs:
           ped = json.loads(Path('.github/v3/pedido.json').read_text())
           for c in ped['casos']:
               nome = c['nome']; dest = Path('saida_v3') / nome; dest.mkdir(parents=True, exist_ok=True)
+              novo_ck = Path('ab') / nome / 'checkpoint'
+              if not c.get('checkpoint') and novo_ck.exists():      # tema novo já pesquisado numa validação anterior
+                  c = {**c, 'checkpoint': 'validacao-anterior'}
               if c.get('checkpoint'):
                   ck = Path('ab') / nome / 'checkpoint'
                   if not ck.exists():
@@ -132,6 +147,15 @@ jobs:
                   except subprocess.TimeoutExpired:
                       rc = 'tempo esgotado'
               (dest / 'execucao.json').write_text(json.dumps({'caso': c, 'rc': rc, 'segundos': round(time.time() - t, 1)}, ensure_ascii=False))
+              for ckd in Path('saida').glob('*/checkpoint'):         # guarda a pesquisa do tema novo (cifrada) para não refazer
+                  if c.get('checkpoint') or subprocess.run([sys.executable, '-m', 'src.v2.checkpoint', 'verificar', str(ckd)]).returncode:
+                      continue
+                  import hashlib
+                  chave = os.environ.get('CHECKPOINT_KEY') or hashlib.sha256(('coringa-checkpoint-v1:' + os.environ.get('COFRE_TOKEN', '')).encode()).hexdigest()
+                  Path('ck_novos').mkdir(exist_ok=True)
+                  subprocess.run(['tar', '-czf', '/tmp/ck.tgz', '-C', str(ckd.parent), 'checkpoint'], check=True)
+                  subprocess.run(['gpg', '--batch', '--yes', '--quiet', '--pinentry-mode', 'loopback', '--passphrase-fd', '0', '--symmetric',
+                                  '--cipher-algo', 'AES256', '-o', f'ck_novos/{nome}.tgz.gpg', '/tmp/ck.tgz'], input=chave.encode(), check=True)
               for p in Path('saida').glob('*'):
                   if p.is_dir():
                       shutil.move(str(p), str(dest / 'saida'))
@@ -141,6 +165,12 @@ jobs:
           python -m src.v3.biblioteca verificar > saida_v3/biblioteca_verificacao.json || true
           # log público: só números
           for f in saida_v3/*/saida/*-v3/resultado.json; do python -c "import json,sys;r=json.load(open(sys.argv[1]));print(sys.argv[1].split('/')[1], 'mp4' if r.get('mp4') else 'sem-mp4', len(r['bloqueios']), 'bloq', len(r['revisoes']), 'rev')" "$f"; done || true
+      - name: Guardar checkpoints dos temas novos (cache, cifrados)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ck_novos
+          key: v3-checkpoints-${{ github.run_id }}
       - name: Cifrar (um arquivo por caso) e publicar no ramo de resultado
         if: always()
         run: |

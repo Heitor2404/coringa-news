@@ -1,11 +1,11 @@
 {
- "nota": "V3.1 — uma tentativa por caso. regressao = checkpoints usados no desenvolvimento (V2.x/V3); inedito = nunca usado no desenvolvimento do diretor V3/V3.1. Os novos fazem o fluxo completo (pesquisa → roteiro → diretor).",
+ "rodada": 2, "nota": "V3.1 — uma tentativa por caso. Rodada 2: correções ERR-017 a ERR-020 da rodada 1 (43811511302) e manifesto da biblioteca da rodada 1 importado. regressao = checkpoints usados no desenvolvimento (V2.x/V3); inedito = nunca usado no desenvolvimento do diretor V3/V3.1. Os novos fazem o fluxo completo (pesquisa → roteiro → diretor).",
  "casos": [
   {"nome": "pompeia", "grupo": "regressao", "checkpoint": "43773368638", "nicho": "história"},
   {"nome": "panama", "grupo": "regressao", "checkpoint": "43775250571", "nicho": "engenharia"},
   {"nome": "titanic", "grupo": "regressao", "checkpoint": "43752520420", "nicho": "história"},
   {"nome": "pisa", "grupo": "regressao", "checkpoint": "43754111920", "nicho": "engenharia/geologia"},
-  {"nome": "lagartixa", "grupo": "regressao", "checkpoint": "43730252500", "nicho": "natureza"},
+  {"nome": "lagartixa", "grupo": "regressao", "checkpoint": "43728184399", "nicho": "natureza", "nota": "43730252500 ficou sem imagens (ERR-002 da época); este é o último com as imagens"},
   {"nome": "ceu-azul", "grupo": "inedito", "checkpoint": "43750814971", "nicho": "ciência (óptica)"},
   {"nome": "voyager", "grupo": "inedito", "pedido": "como a sonda Voyager 1 ainda consegue falar com a Terra a mais de 24 bilhões de quilômetros", "nicho": "espaço", "limite_min": 50},
   {"nome": "londres-1666", "grupo": "inedito", "pedido": "por que o Grande Incêndio de Londres de 1666 se espalhou tão rápido", "nicho": "história urbana", "limite_min": 50}

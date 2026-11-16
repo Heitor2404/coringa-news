@@ -51,8 +51,11 @@ def ler_cache(arq: Path | None) -> dict:
 
 
 def saliencia(img: Path) -> dict:
-    """Caixa do que mais chama atenção (resíduo espectral + bordas). Só enquadra: nunca rotula."""
+    """Caixa do que mais chama atenção (resíduo espectral + bordas). Só enquadra: nunca rotula. Sem o módulo de saliência
+    do OpenCV (pacote contrib), devolve {} — a câmera usa o centro (V3.1: o pacote sem contrib derrubava o vídeo)."""
     import cv2
+    if not hasattr(cv2, 'saliency'):
+        return {}
     import numpy as np
     im = cv2.imread(str(img))
     if im is None:

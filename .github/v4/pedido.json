@@ -1,6 +1,6 @@
 {
- "rodada": 2,
- "nota": "Teste integrado ÚNICO do motor V4 (16/11), depois da instalação e integração. Uma execução; prévia PRIVADA no Telegram; NÃO publicar. Rodada 2: reproduz o roteiro que o diretor automático escreveu na execução 43954670866 (limite de 5 h da assinatura atingido na 43955781237); a correção dirigida, se houver, cai para o Gemini na cota grátis.",
+ "rodada": 3,
+ "nota": "Teste integrado ÚNICO do motor V4 (16/11). Rodada 3: mesma direção reproduzida (roteiro da 43954670866); a 43956541084 renderizou mas ficou BLOQUEADA por defeitos de integração (ERR-042..046: caminhos relativos nos backends, licença, máscara rembg, loudness) e a prévia não chegou (Telegram 502). Prévia PRIVADA; NÃO publicar.",
  "video_id": "v4-panama-eclusas",
  "pergunta": "Por que os navios precisam subir para atravessar o Canal do Panamá?",
  "alvo_duracao": [
@@ -21,12 +21,12 @@
   {
    "id": "f3",
    "texto": "Nenhuma bomba é usada: a água que enche as eclusas desce do Lago Gatún por gravidade.",
-   "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
+   "fonte": "https://pancanal.com/en/design-of-the-locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
   },
   {
    "id": "f4",
    "texto": "A água entra por aquedutos gigantes (cerca de 5,5 m de diâmetro) que correm dentro das paredes das eclusas e sai por aberturas no piso das câmaras.",
-   "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://en.wikipedia.org/wiki/Panama_Canal_locks"
+   "fonte": "https://pancanal.com/en/design-of-the-locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://en.wikipedia.org/wiki/Panama_Canal_locks"
   },
   {
    "id": "f5",
@@ -46,7 +46,7 @@
   {
    "id": "f8",
    "texto": "De cada lado, a subida é feita em três degraus quase iguais (Gatún no Atlântico; Pedro Miguel e Miraflores no Pacífico), num total de cerca de 26 m.",
-   "fonte": "https://www.porttechnology.org/technical-papers/designing_of_the_third_set_of_locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
+   "fonte": "https://pancanal.com/en/design-of-the-locks/ ; https://www.porttechnology.org/technical-papers/designing_of_the_third_set_of_locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
   },
   {
    "id": "f9",

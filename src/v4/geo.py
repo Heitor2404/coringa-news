@@ -44,6 +44,7 @@ def osm_rota(regiao: list, rota_osm: dict, cache: Path) -> Path | None:
 
 
 def preparar(params: dict, trab: Path) -> dict:
+    trab = Path(trab).resolve()
     trab.mkdir(parents=True, exist_ok=True)
     o, s, l, n = params['regiao']
     margem = max(l - o, n - s) * 0.6 + 1.0                  # o recorte precisa passar da área visível da câmera

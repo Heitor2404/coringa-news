@@ -86,6 +86,8 @@ def _camada_props(ep: dict, acv: dict, palavras: list[dict], falhas: set | None 
 
 
 def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
+    # ABSOLUTOS: os backends rodam com outro diretório de trabalho (Remotion, Revideo, geo) — execução 43956541084
+    pasta, trab = Path(pasta).resolve(), Path(trab).resolve()
     pasta.mkdir(parents=True, exist_ok=True)
     trab.mkdir(parents=True, exist_ok=True)
     res = {'video_id': pedido['video_id'], 'estado': BLOQUEADO, 'nao_publicado': True, 'etapas': {}, 'bloqueios': [], 'revisoes': []}
@@ -193,7 +195,12 @@ def _revisao(mp4: Path, ep: dict, lt: list[dict], pasta: Path) -> dict:
         dados = {'scenes': [{'start': c['ini'], 'end': c['fim'], 'fala': c['fala'], 'direcao': {'evento_id': c['id']}} for c in ep['cenas']]}
         fichas = [{'evento_id': c['id'], 'tipo': c['modalidade'], 'critico': bool(c.get('acao_fisica')),
                    'representacao_necessaria': c.get('o_que_precisa_aparecer'), 'criterio_visual': c.get('objetivo')} for c in ep['cenas']]
-        r = RM.revisar(mp4, dados, fichas, lambda pr, ims: json_visao(pr, ims, leve=False), pasta / 'revisao_multimodal')
+        def visao(pr, ims):                        # o Gemini às vezes devolve [ {...} ]: usa o 1º objeto; senão não revisado
+            v = json_visao(pr, ims, leve=False)
+            if isinstance(v, list):
+                v = next((x for x in v if isinstance(x, dict)), {'_nao_revisado': 'resposta do modelo em lista vazia'})
+            return v if isinstance(v, dict) else {'_nao_revisado': f'resposta do modelo não é objeto: {type(v).__name__}'}
+        r = RM.revisar(mp4, dados, fichas, visao, pasta / 'revisao_multimodal')
         nao = [p for p in r['planos'] if '_nao_revisado' in (p['veredito'] or {})]
         return {'estado': 'PENDENTE' if nao else 'FEITA', 'chamadas': r['chamadas'], 'achados': r['achados'], 'nao_revisados': len(nao),
                 'planos': r['planos']}

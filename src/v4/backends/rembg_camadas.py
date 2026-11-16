@@ -41,13 +41,18 @@ print(json.dumps({"cobertura": area / tot, "fragmentos": int(n), "maior_fragment
 '''
 
 
+def medidas_do_log(txt: str) -> dict:
+    """só a linha JSON: o onnxruntime escreve avisos depois dela (execução 43956541084 quebrou aqui)"""
+    return json.loads(next(l for l in reversed(txt.splitlines()) if l.strip().startswith('{')))
+
+
 def recortar(foto: Path, saida: Path, trab: Path) -> dict:
     trab.mkdir(parents=True, exist_ok=True)
     scr = trab / '_rembg.py'
     scr.write_text(_SCRIPT)
     py = VENV_REMBG / 'bin' / 'python'
     reg = rodar([py, scr, foto, saida, MODELO], timeout=900, log=trab / 'rembg.log')
-    m = json.loads((trab / 'rembg.log').read_text().strip().splitlines()[-1])
+    m = medidas_do_log((trab / 'rembg.log').read_text())
     motivos = []
     if not .03 <= m['cobertura'] <= .70:
         motivos.append(f"cobertura {m['cobertura']:.0%} fora de 3–70%")

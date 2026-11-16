@@ -26,7 +26,7 @@ def gerar_sfx(nome: str, saida: Path, dur: float | None = None) -> Path:
     d = dur or d0
     filtro = f.format(d=f'{d:.2f}', fo=f'{max(0.1, d - 0.8):.2f}')
     rodar(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', f'anullsrc=r=48000:cl=mono:d={d:.2f}', '-filter_complex',
-           f'{filtro}[s];[0][s]amix=inputs=2:normalize=0,aformat=sample_rates=48000:channel_layouts=mono', '-t', f'{d:.2f}', saida])
+           f'{filtro}[s];[0][s]amix=inputs=2:normalize=0,alimiter=limit=0.5:level=false,aformat=sample_rates=48000:channel_layouts=mono', '-t', f'{d:.2f}', saida])
     return saida
 
 
@@ -50,7 +50,7 @@ def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, 
         arq = gerar_sfx(s['id'], trab / f"sfx_{j}_{s['id']}.wav", s.get('dur'))
         ent += ['-i', str(arq)]
         ms = int(max(0, s['t']) * 1000)
-        fil.append(f"[{k}:a]volume={s.get('ganho_db', -14)}dB,adelay={ms}|{ms}[e{j}]")
+        fil.append(f"[{k}:a]volume={s.get('ganho_db', -16)}dB,adelay={ms}|{ms}[e{j}]")
         efeitos.append(f'[e{j}]')
         k += 1
     rot = ['[voz]'] + (['[mus]'] if musica and Path(musica).exists() else []) + efeitos
@@ -58,7 +58,10 @@ def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, 
     bruto = trab / 'mix_bruto.wav'
     rodar(['ffmpeg', '-v', 'error', '-y', *ent, '-filter_complex', ';'.join(fil), '-map', '[mix]', '-ac', '1', '-ar', '48000', bruto],
           log=trab / 'mix.log')
-    rel = masterizar(bruto, saida)
+    # pré-normalização (−16 LUFS, pico −2): a mistura chegava com +1,2 dBFS e o master parava em −15,2 (execução 43956541084)
+    pre = trab / 'mix_pre.wav'
+    rodar(['ffmpeg', '-v', 'error', '-y', '-i', bruto, '-af', 'loudnorm=I=-16:TP=-2:LRA=11,aresample=48000', '-ar', '48000', '-ac', '1', pre], log=trab / 'pre.log')
+    rel = masterizar(pre, saida)
     return {'master': rel, 'efeitos': [{'id': s['id'], 't': s['t'], 'justificativa': s.get('justificativa')} for s in sfx],
             'musica': str(musica.name) if musica else None}
 

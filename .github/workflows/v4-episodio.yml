@@ -124,7 +124,7 @@ jobs:
           rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
           mkdir -p /tmp/res saida_v4
           # intermediários leves vão junto (clipes por cena para auditoria); acervo baixado e caches não
-          find saida_v4 -path '*/_trabalho/acervo' -prune -exec rm -rf {} + || true
+          find saida_v4 -path '*/_trabalho/acervo/*' \( -name '*.jpg' -o -name '*.mp4' \) -delete || true
           find saida_v4 -path '*/_trabalho/*' \( -name '*.png' -o -name 'palco.mp4' -o -name 'bruto.mp4' -o -name 'cache_osm' \) -exec rm -rf {} + || true
           tar -czf /tmp/v4.tgz saida_v4
           ls -la /tmp/v4.tgz

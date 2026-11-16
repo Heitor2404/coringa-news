@@ -16,13 +16,15 @@ from pathlib import Path
 
 import requests
 
-LIC = re.compile(r'\(([^()]*(?:CC|Public domain|PD|domínio|Domínio|No restrictions|CC0)[^()]*)\)', re.I)
+LIC = re.compile(r'\b(?:CC[ -]?(?:BY|0|PDM)|CC0|GFDL|FAL|OGL|Public domain|PD\b|PD-|domínio público|No restrictions|Attribution|Creative Commons|ShareAlike)', re.I)
 UA = {'User-Agent': 'CoringaExplica/4.0 (contato via GitHub heitor2404/coringa-news)'}
 
 
 def _licenca(credito: str) -> str | None:
-    m = LIC.search(credito or '')
-    return m.group(1).strip() if m else None
+    """a licença está no ÚLTIMO parêntese do crédito montado pelo acervo ('… — autor (LICENÇA), via …'); só a lista
+    fixa de padrões deixava sem licença um vídeo do Commons com outra grafia (execução 43956541084)"""
+    grupos = [g.strip() for g in re.findall(r'\(([^()]{2,60})\)', credito or '') if LIC.search(g)]
+    return grupos[-1] if grupos else None      # só parêntese com cara de licença: "(1913)" não é licença
 
 
 def _miniatura(url: str) -> bytes | None:

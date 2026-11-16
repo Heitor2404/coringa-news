@@ -38,6 +38,9 @@ def _api(metodo: str, data: dict, arquivo=None, tok: str | None = None):
             if r.status_code == 429:
                 time.sleep(int((r.json().get('parameters') or {}).get('retry_after', 10)) + 1)
                 continue
+            if r.status_code >= 500 and tentativa < 2:      # falha passageira do Telegram (502 na execução V4 43956541084)
+                time.sleep(15 * (tentativa + 1))
+                continue
             raise EnvioRecusado(f'{metodo}: {r.status_code} {r.text[:150]}')
         except requests.RequestException as e:
             if tentativa == 2:

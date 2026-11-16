@@ -13,6 +13,7 @@ REMOTION = MOTOR4 / 'remotion'
 
 
 def remotion(comp: str, props: dict, saida: Path, trab: Path, alfa: bool = False) -> dict:
+    trab, saida = Path(trab).resolve(), Path(saida).resolve()
     trab.mkdir(parents=True, exist_ok=True)
     pj = trab / f'props_{comp}.json'
     pj.write_text(json.dumps(props, ensure_ascii=False))
@@ -26,6 +27,7 @@ def remotion(comp: str, props: dict, saida: Path, trab: Path, alfa: bool = False
 
 
 def revideo(params: dict, saida: Path, trab: Path) -> dict:
+    trab, saida = Path(trab).resolve(), Path(saida).resolve()
     trab.mkdir(parents=True, exist_ok=True)
     pj = trab / 'params_revideo.json'
     pj.write_text(json.dumps(params, ensure_ascii=False))
@@ -36,6 +38,7 @@ def revideo(params: dict, saida: Path, trab: Path) -> dict:
 
 
 def manim(cena: str, params: dict, saida: Path, trab: Path) -> dict:
+    trab, saida = Path(trab).resolve(), Path(saida).resolve()
     trab.mkdir(parents=True, exist_ok=True)
     pj = trab / f'params_manim_{cena}.json'
     pj.write_text(json.dumps(params, ensure_ascii=False))

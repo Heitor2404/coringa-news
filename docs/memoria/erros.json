@@ -1067,6 +1067,152 @@
     "layout",
     "*"
    ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (execuções 43954670866, 43955781237, 43956541084)",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste integrado do Canal do Panamá",
+   "id": "ERR-042",
+   "titulo": "V4: backends recebiam caminhos relativos e rodavam em outro diretório",
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "render",
+    "*"
+   ],
+   "sintoma": "execução 43956541084: mapa, mecanismo, 3D, tipografia e a camada de legendas falharam (props/arquivos não encontrados).",
+   "causa_raiz": "o episódio rodou com saída relativa (saida_v4/…) e Remotion/Revideo/geo usam cwd próprio; a verificação técnica usava caminho absoluto e não reproduzia o CI.",
+   "arquivos": [
+    "src/v4/episodio.py",
+    "src/v4/backends/js.py",
+    "src/v4/backends/hyperframes.py",
+    "src/v4/geo.py",
+    "scripts/v4_fumaca.py"
+   ],
+   "correcao": "todos os caminhos resolvidos para absolutos na entrada do orquestrador e de cada backend; verificação técnica passa a rodar com saída relativa.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_backends_recebem_caminhos_absolutos"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (execuções 43954670866, 43955781237, 43956541084)",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste integrado do Canal do Panamá",
+   "id": "ERR-043",
+   "titulo": "V4: acervo chamava as fontes sem as consultas",
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "acervo"
+   ],
+   "sintoma": "execução 43954670866 quebrou no acervo (f_commons() missing 'consultas') antes de qualquer render.",
+   "causa_raiz": "acervo._seguro(fn) chama fn() sem argumentos; o V4 o usou como fábrica de função; pasta do acervo não era criada quando nada baixava.",
+   "arquivos": [
+    "src/v4/acervo_v4.py"
+   ],
+   "correcao": "lambda com as consultas; pasta criada no início.",
+   "testes": [
+    "tests/test_v4_acervo.py::test_acervo_chama_fontes_com_consultas_e_monta"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (execuções 43954670866, 43955781237, 43956541084)",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste integrado do Canal do Panamá",
+   "id": "ERR-044",
+   "titulo": "V4: medidas da máscara rembg ilegíveis por aviso do onnxruntime",
+   "gravidade": "media",
+   "tags": [
+    "v4",
+    "rembg"
+   ],
+   "sintoma": "cena 2.5D falhou com 'Expecting value' embora a máscara fosse boa (cobertura 7,7%, maior fragmento 98%).",
+   "causa_raiz": "o aviso do onnxruntime sai depois da linha JSON e o leitor pegava a última linha.",
+   "arquivos": [
+    "src/v4/backends/rembg_camadas.py"
+   ],
+   "correcao": "lê a última linha que começa com '{'.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_rembg_le_o_json_mesmo_com_aviso_do_onnxruntime_depois"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (execuções 43954670866, 43955781237, 43956541084)",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste integrado do Canal do Panamá",
+   "id": "ERR-045",
+   "titulo": "V4: vídeo do Commons sem licença reconhecida",
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "acervo",
+    "licenca"
+   ],
+   "sintoma": "cena de vídeo real bloqueada por R-ASSET-SEM-LICENCA.",
+   "causa_raiz": "a licença era procurada por uma lista fixa de padrões no crédito.",
+   "arquivos": [
+    "src/v4/acervo_v4.py"
+   ],
+   "correcao": "licença = último parêntese do crédito montado pelo acervo (sem crédito/licença continua bloqueio). Só aceita parêntese com cara de licença (um ano entre parênteses não é licença).",
+   "testes": [
+    "tests/test_v4_integracao.py::test_licenca_vem_do_ultimo_parentese_do_credito"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (execuções 43954670866, 43955781237, 43956541084)",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste integrado do Canal do Panamá",
+   "id": "ERR-046",
+   "titulo": "V4: diretor sem queda quando a assinatura do Claude estoura",
+   "gravidade": "media",
+   "tags": [
+    "v4",
+    "diretor",
+    "custo"
+   ],
+   "sintoma": "execução 43955781237 parou: limite de 5 h da assinatura.",
+   "causa_raiz": "o diretor só caía para o Gemini se o Claude estivesse indisponível, não se falhasse.",
+   "arquivos": [
+    "src/v4/diretor.py"
+   ],
+   "correcao": "uma chamada no Gemini (cota grátis) se o Claude falhar; reprodução cifrada de roteiro já escrito pelo diretor.",
+   "testes": [
+    "tests/test_v4_diretor.py::test_claude_falha_cai_para_gemini_uma_vez",
+    "tests/test_v4_diretor.py::test_reproducao_do_roteiro_cifrado"
+   ]
+  },
+  {
+   "id": "ERR-047",
+   "titulo": "Prévia ao Telegram desistia no primeiro erro 5xx do servidor",
+   "data": "2026-11-16",
+   "versao": "motor V4",
+   "sintoma": "execução 43956541084: getChat respondeu 502 Bad Gateway e a prévia não foi entregue.",
+   "causa_raiz": "_api só repetia em 429 ou erro de rede; 5xx passageiro do Telegram virava recusa definitiva.",
+   "arquivos": [
+    "src/v3/previa_telegram.py"
+   ],
+   "correcao": "5xx tenta de novo (até 3 vezes, espera crescente); 4xx continua recusando sem repetir. Chat autorizado inalterado.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_telegram_tenta_de_novo_em_falha_passageira_do_servidor"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "referencia": "execução V4 43956541084",
+   "verificavel": true,
+   "tags": [
+    "telegram",
+    "v4"
+   ]
   }
  ]
 }

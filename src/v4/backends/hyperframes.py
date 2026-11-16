@@ -86,6 +86,7 @@ def _render(proj: Path, saida: Path, dur: float, log: Path) -> dict:
 
 def render_coringa(nome: str, params: dict, assets: dict[str, Path], dur: float, trab: Path, saida: Path) -> dict:
     """composição própria do Coringa (ex.: camadas): assets = {chave_no_params: arquivo}"""
+    trab, saida = Path(trab).resolve(), Path(saida).resolve()
     proj = trab / f'hf_{nome}'
     shutil.rmtree(proj, ignore_errors=True)
     (proj / 'compositions').mkdir(parents=True)
@@ -118,6 +119,7 @@ def render_registro(nome: str, variaveis: dict, dur: float, trab: Path, saida: P
         pasta = HF_REGISTRO / item['pasta']
     if not pasta.exists():
         raise FalhaBackend(f'checkout do registro ausente: {pasta} (CORINGA_HF_REGISTRO)')
+    trab, saida = Path(trab).resolve(), Path(saida).resolve()
     proj = trab / f'hf_reg_{nome}'
     shutil.rmtree(proj, ignore_errors=True)
     proj.mkdir(parents=True)

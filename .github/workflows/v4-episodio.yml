@@ -42,7 +42,7 @@ jobs:
           path: cofre
           sparse-checkout: prompts
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12", cache: pip }
+        with: { python-version: "3.13", cache: pip }
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - name: Sistema (FFmpeg, Cairo/Pango p/ Manim)
@@ -65,7 +65,7 @@ jobs:
           path: |
             ${{ github.workspace }}/../venv-manim
             ${{ github.workspace }}/../venv-rembg
-          key: venvs-v4-${{ hashFiles('motor4/py/lock-*.txt') }}-py312
+          key: venvs-v4-${{ hashFiles('motor4/py/lock-*.txt') }}-py313
       - name: motor4 node_modules (cache)
         uses: actions/cache@v4
         with: { path: motor4/node_modules, key: "motor4-nm-${{ hashFiles('motor4/package-lock.json') }}" }
@@ -122,7 +122,7 @@ jobs:
           set -e
           export GNUPGHOME=$(mktemp -d)
           rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
-          mkdir -p /tmp/res
+          mkdir -p /tmp/res saida_v4
           # intermediários leves vão junto (clipes por cena para auditoria); acervo baixado e caches não
           find saida_v4 -path '*/_trabalho/acervo' -prune -exec rm -rf {} + || true
           find saida_v4 -path '*/_trabalho/*' \( -name '*.png' -o -name 'palco.mp4' -o -name 'bruto.mp4' -o -name 'cache_osm' \) -exec rm -rf {} + || true

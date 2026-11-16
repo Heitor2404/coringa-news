@@ -1,0 +1,83 @@
+name: Experimento audiovisual — regiões de interesse (visão, uma leitura por foto)
+
+# Abre o checkpoint CIFRADO de pilotos anteriores (cache do Actions, chave derivada de segredo), pede à visão do Gemini
+# (cota gratuita) a caixa dos objetos que a direção quer enquadrar/anotar e devolve SÓ as coordenadas, cifradas para
+# as chaves do piloto. Sem pesquisa, roteiro, render, Telegram ou publicação.
+on:
+  push:
+    branches: [piloto-v24-lagartixa]
+    paths: [".github/experimento/regioes.json"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: piloto-v22
+  cancel-in-progress: false
+
+jobs:
+  regioes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restaurar checkpoint Pompeia (cifrado)
+        uses: actions/cache/restore@v4
+        with:
+          path: ck_pompeia
+          key: piloto-checkpoint-43773368638
+          fail-on-cache-miss: true
+      - name: Restaurar checkpoint Panamá (cifrado)
+        uses: actions/cache/restore@v4
+        with:
+          path: ck_panama
+          key: piloto-checkpoint-43775250571
+          fail-on-cache-miss: true
+      - name: Abrir checkpoints e pedir as regiões
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        run: |
+          set -e
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          export GNUPGHOME=$(mktemp -d)
+          for n in pompeia panama; do
+            gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d ck_$n/checkpoint.tgz.gpg 3<<<"$chave"
+            echo "$(cat ck_$n/checkpoint.tgz.sha256)  ck.tgz" | sha256sum -c -
+            mkdir -p ab_$n && tar -xzf ck.tgz -C ab_$n && rm ck.tgz
+          done
+          mkdir -p saida
+          python - <<'PY'
+          import json, glob
+          from pathlib import Path
+          p = json.loads(Path('.github/experimento/regioes.json').read_text())
+          out = []
+          for x in p['pedidos']:
+              arq = glob.glob(f"ab_{x['run']}/checkpoint/arquivos/{x['id']}_*")
+              if arq:
+                  out.append({'id': f"{x['run']}:{x['id']}", 'arquivo': arq[0], 'objetos': x['objetos']})
+          Path('pedidos.json').write_text(json.dumps(out, ensure_ascii=False))
+          PY
+          python -m src.v2.regioes pedir pedidos.json saida/regioes.json
+      - name: Cifrar para as chaves do piloto
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          mkdir -p saida; tar -czf piloto.tgz saida
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o piloto.tgz.gpg piloto.tgz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: piloto-v22-${{ github.run_id }}
+          path: piloto.tgz.gpg
+          retention-days: 7
+          compression-level: 0

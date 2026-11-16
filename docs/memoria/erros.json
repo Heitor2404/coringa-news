@@ -479,6 +479,32 @@
    "tags": [
     "ambiente"
    ]
+  },
+  {
+   "id": "ERR-020",
+   "titulo": "Parâmetros do contrato em formato que a composição não lê",
+   "data": "2026-11-16",
+   "versao": "V3.1",
+   "sintoma": "Pisa (validação 43811511302): processo.etapas com textos empilhados (183 choques na prévia) e '6 graus' na tela para 5,5 graus.",
+   "causa_raiz": "tempos ia como dicionário {passo: s} e as composições V2 leem lista; numero.animado sem `casas` arredondava.",
+   "arquivos": [
+    "src/v2/diretor.py",
+    "src/v2/contrato.py",
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "tempos convertidos em lista ordenada (ou padrão se a contagem não bate); casas decimais do próprio valor; prévia com texto sobreposto pede 1 correção e depois bloqueia.",
+   "testes": [
+    "tests/test_v3_pipeline.py::test_err_020_tempos_em_lista_e_casas_decimais"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execução 43811511302 (pisa)",
+   "verificavel": true,
+   "tags": [
+    "numero",
+    "processo",
+    "mecanismo"
+   ]
   }
  ]
 }

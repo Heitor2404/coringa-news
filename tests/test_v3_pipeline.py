@@ -122,3 +122,13 @@ def test_err_019_sem_saliencia_nao_derruba(monkeypatch):
     if hasattr(cv2, 'saliency'):
         monkeypatch.delattr(cv2, 'saliency')
     assert regioes.saliencia(M.BASE / 'img' / 'a23-g.jpg') == {}
+
+
+def test_err_020_tempos_em_lista_e_casas_decimais():
+    from src.v2 import contrato, diretor
+    pl = {'evento_id': 'e1', 'fato_id': 'f1', 'funcao_narrativa': 'mecanismo', 'recurso_visual': {'tipo': 'composicao', 'id': 'processo.etapas'},
+          'funcao_documental': 'ESQUEMA', 'acao_visual': 'etapas', 'composicao': 'processo.etapas', 'tempo_inicio': 0, 'tempo_fim': 6,
+          'params': {'etapas': ['a', 'b']}, 'tempos_palavras': {'inicio': 'um', 'cede': 'dois'}, 'fala': 'um dois'}
+    cenas, _ = diretor.montar({'planos': [pl]}, {}, {}, [{'w': 'um', 's': .4}, {'w': 'dois', 's': 2.5}], {'f1'})
+    assert cenas[0]['params']['tempos'] == [.4, 2.5]                        # lista em ordem, não {passo: segundo}
+    assert contrato.params_tela({'dados': {'valor': 5.5, 'unidade': 'graus'}}, 'numero.animado')['casas'] == 1

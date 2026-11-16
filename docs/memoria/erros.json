@@ -555,6 +555,104 @@
     "processo",
     "transformacao"
    ]
+  },
+  {
+   "id": "ERR-023",
+   "titulo": "Masterização final gravava a pior tentativa e não segurava o pico verdadeiro",
+   "data": "2026-11-16",
+   "versao": "V3.1-resgate",
+   "sintoma": "Validação V3.1: Pompeia −15,3, lagartixa −16,8, céu azul −15,1 LUFS; a lagartixa teve −14,7 na 2ª tentativa e gravou −16,8 na última. Londres (resgate, 1ª render): −15,3.",
+   "causa_raiz": "final_medido subia o ganho e baixava o limitador por amostra (48 kHz) ao mesmo tempo; o limitador não via os picos entre amostras que o AAC cria; a última tentativa era sempre a gravada.",
+   "arquivos": [
+    "src/render/render.py"
+   ],
+   "correcao": "ganho linear + limitador a 192 kHz (pico verdadeiro aproximado), compensação medida depois do AAC, e grava a MELHOR tentativa (meta primeiro).",
+   "testes": [
+    "tests/test_v3_resgate.py::test_master_de_crista_alta_fica_na_meta_depois_do_aac",
+    "tests/test_v3_resgate.py::test_a_melhor_tentativa_e_a_gravada"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execuções 43827356241 e resgate Londres",
+   "verificavel": true,
+   "tags": [
+    "audio"
+   ]
+  },
+  {
+   "id": "ERR-024",
+   "titulo": "Degradação silenciosa das cenas",
+   "data": "2026-11-16",
+   "versao": "V3.1-resgate",
+   "sintoma": "Plano descartado com vizinho esticado, anotação retirada, movimento inventado (percurso lateral), vídeo trocado por foto e corte por tempo igual seguiam sem nova decisão editorial.",
+   "causa_raiz": "Os fallbacks só escreviam uma 'limitação' em texto; nada distinguia perda aceitável de perda do acontecimento.",
+   "arquivos": [
+    "src/v2/diretor.py",
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "degradar(impacto aceitavel|revisao|bloqueio, essencial): perda essencial em plano crítico vai ao replanejamento (1 correção) e, se persistir, bloqueia; revisões viram 'revisoes_obrigatorias'; movimento sem percurso vira FIXO.",
+   "testes": [
+    "tests/test_v3_resgate.py::test_objeto_nao_localizado_bloqueia_em_plano_critico_e_e_revisao_fora",
+    "tests/test_v3_resgate.py::test_anotacao_essencial_retirada_bloqueia",
+    "tests/test_v3_resgate.py::test_movimento_imperceptivel_vira_fixo_sem_percurso_inventado",
+    "tests/test_v3_resgate.py::test_video_indisponivel_vira_quadro_com_revisao",
+    "tests/test_v3_resgate.py::test_corte_sem_palavra_e_registrado_e_planos_contiguos"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "auditoria independente (brief de resgate 16/11)",
+   "verificavel": true,
+   "regra_diretor": "Marque 'essencial': true na anotação que É a demonstração do acontecimento; se ela não puder ser executada o plano será replanejado.",
+   "tags": [
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-025",
+   "titulo": "Receitas marcadas como aprovadas sem aprovação humana específica",
+   "data": "2026-11-16",
+   "versao": "V3.1-resgate",
+   "sintoma": "3 receitas 'aprovado' com base numa frase genérica do brief; entravam no prompt como BOA PRÁTICA APROVADA.",
+   "causa_raiz": "A integridade aceitava qualquer texto em 'aprovacao'.",
+   "arquivos": [
+    "src/v3/receitas.json",
+    "src/v3/receitas.py"
+   ],
+   "correcao": "rebaixadas para 'testado' com histórico; 'aprovado' exige FB-xxxx existente ou humano:<nome>:<data>:<video>:<t>.",
+   "testes": [
+    "tests/test_v3_resgate.py::test_nenhuma_receita_aprovada_sem_registro_humano"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "referencia": "auditoria independente (brief de resgate 16/11)",
+   "verificavel": true,
+   "tags": [
+    "receitas"
+   ]
+  },
+  {
+   "id": "ERR-026",
+   "titulo": "Diretor obrigado a um plano por frase de narração já escrita",
+   "data": "2026-11-16",
+   "versao": "V3.1-resgate",
+   "sintoma": "Imagens escolhidas para preencher frases (placa moderna por 6 s, retrato do rei para o padeiro, cartão com descrição interna, mapa parado, contador no fim).",
+   "causa_raiz": "O prompt exigia 1 plano por trecho e a narração era definitiva antes de decidir o que podia ser mostrado.",
+   "arquivos": [
+    "src/v3/plano_av.py",
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "plano audiovisual por acontecimento (fichas) antes do storyboard; o diretor decide DEMONSTRAÇÕES, pode ajustar a narração (validado: sem número novo, 60–140% do tamanho) e escreve planos por demonstração; a narração é gravada depois.",
+   "testes": [
+    "tests/test_v3_resgate.py::test_fichas_do_plano_audiovisual",
+    "tests/test_v3_resgate.py::test_ajuste_de_narracao_nao_aceita_numero_novo_nem_tamanho_absurdo"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "V3.1 Londres (43818596529) × referência supervisionada",
+   "verificavel": true,
+   "tags": [
+    "*"
+   ]
   }
  ]
 }

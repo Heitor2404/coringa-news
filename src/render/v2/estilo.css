@@ -85,6 +85,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--noite);col
 #legenda .w.ag{color:var(--amarelo)}
 #legenda .w.hl{color:var(--amarelo)}
 #legenda.claro .bloco{color:var(--tinta-papel);text-shadow:none}
+#legenda.placa .bloco{background:rgba(6,8,12,.64);padding:8px 24px 14px;border-radius:14px;box-shadow:0 10px 34px rgba(0,0,0,.35)}
 #legenda.claro .w.fut{color:rgba(20,20,20,.55)}
 #legenda.claro .w.ag,#legenda.claro .w.hl{color:#b8860b}
 

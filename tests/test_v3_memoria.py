@@ -32,7 +32,8 @@ def test_erros_pertinentes_por_tipo_de_acontecimento():
 def test_receitas_integras_e_recuperacao_aprovadas_primeiro():
     assert receitas.problemas() == []
     rs = receitas.recuperar({'mecanismo'}, {'mecanismo'})
-    assert rs[0]['id'] == 'R-MECANISMO-ANIMADO' and rs[0]['estado'] == 'aprovado'
+    # resgate V3.1: nenhuma receita tem aprovação humana específica → nenhuma é 'aprovado'; a mais pertinente vem primeiro
+    assert rs[0]['id'] == 'R-MECANISMO-ANIMADO' and rs[0]['estado'] == 'testado'
     assert all(r['estado'] in ('aprovado', 'testado') for r in rs)
     assert not receitas.recuperar({'mecanismo'}, {'mecanismo'}, composicoes={'citacao'})   # composição indisponível tira a receita
 

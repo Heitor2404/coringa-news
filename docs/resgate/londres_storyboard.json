@@ -1,0 +1,817 @@
+{
+ "episodio": "Grande Incêndio de Londres, 1666 — produção de referência (direção supervisionada, resgate V3.1)",
+ "pergunta": "Como o fogo foi tão longe?",
+ "musica": "assets/musica/explica/hidden-truth.mp3",
+ "acervo": {
+  "a1": {
+   "arq": "checkpoint/arquivos/a1_a1.jpg",
+   "ano": 1675,
+   "credito": "Pintura anônima, c. 1675 · domínio público · Wikimedia Commons"
+  },
+  "a5": {
+   "arq": "checkpoint/arquivos/a5_a9.jpg",
+   "credito": "Mapa: Bunchofgrapes (CC BY-SA 3.0) · Wikimedia Commons"
+  },
+  "a10": {
+   "arq": "checkpoint/arquivos/a10_a21.jpg",
+   "ano": 2011,
+   "credito": "Stephen McKay (CC BY-SA 2.0) · geograph / Wikimedia Commons"
+  },
+  "a11": {
+   "arq": "checkpoint/arquivos/a11_a22.jpg",
+   "ano": 1612,
+   "credito": "Xilogravura de 1612 · domínio público · Wikimedia Commons"
+  },
+  "a15": {
+   "arq": "checkpoint/arquivos/a15_a32.jpg",
+   "credito": "Gravura vitoriana segundo Visscher · domínio público · Wikimedia Commons"
+  },
+  "a19": {
+   "arq": "checkpoint/arquivos/a19_a40.jpg",
+   "ano": 1811,
+   "credito": "James Stow, 1811 (CC0) · Wikimedia Commons"
+  },
+  "gb": {
+   "arq": "extra/The_Golden_Boy_of_Pye_Corner_-_geograph.org.uk_-_542982.jpg",
+   "ano": 2007,
+   "credito": "Sue Adair (CC BY-SA 2.0) · geograph / Wikimedia Commons"
+  },
+  "mon": {
+   "arq": "extra/Monument_ground_up.jpg",
+   "ano": 2013,
+   "credito": "RanAlex312 (CC BY-SA 3.0) · Wikimedia Commons"
+  }
+ },
+ "derivados": {
+  "a5_base": {
+   "de": "a5",
+   "funcao": "apagar_cor",
+   "rgb": [
+    240,
+    172,
+    170
+   ],
+   "tol": 95,
+   "preservar": [
+    [
+     0.79,
+     0,
+     0.21,
+     0.1
+    ]
+   ],
+   "motivo": "base do avanço: a área queimada do próprio mapa começa cinza e ganha cor por etapa"
+  }
+ },
+ "regioes_manuais": {
+  "nota": "Caixas [x, y, largura, altura] em fração da imagem, marcadas pelo diretor sobre a grade da própria imagem (substituem a visão nesta produção supervisionada).",
+  "a1": {
+   "cidade_em_chamas": [
+    0.18,
+    0.33,
+    0.6,
+    0.32
+   ],
+   "chamas_centro": [
+    0.36,
+    0.38,
+    0.2,
+    0.2
+   ],
+   "torre_de_londres": [
+    0.8,
+    0.4,
+    0.18,
+    0.22
+   ]
+  },
+  "a5": {
+   "pudding_lane": [
+    0.655,
+    0.55,
+    0.03,
+    0.08
+   ],
+   "royal_exchange": [
+    0.615,
+    0.405,
+    0.03,
+    0.04
+   ],
+   "ludgate": [
+    0.3,
+    0.48,
+    0.02,
+    0.03
+   ],
+   "fleet_street_oeste": [
+    0.15,
+    0.5,
+    0.04,
+    0.05
+   ],
+   "smithfield": [
+    0.27,
+    0.23,
+    0.07,
+    0.04
+   ],
+   "area_queimada": [
+    0.12,
+    0.27,
+    0.75,
+    0.42
+   ],
+   "ponte_e_pudding": [
+    0.5,
+    0.42,
+    0.3,
+    0.3
+   ],
+   "inicio_e_centro": [
+    0.52,
+    0.33,
+    0.24,
+    0.33
+   ],
+   "centro_oeste": [
+    0.22,
+    0.28,
+    0.48,
+    0.38
+   ],
+   "oeste": [
+    0.06,
+    0.3,
+    0.42,
+    0.36
+   ],
+   "noroeste": [
+    0.15,
+    0.18,
+    0.3,
+    0.3
+   ]
+  },
+  "a10": {
+   "texto_placa": [
+    0.42,
+    0.72,
+    0.29,
+    0.12
+   ],
+   "placa": [
+    0.25,
+    0.69,
+    0.49,
+    0.29
+   ]
+  },
+  "a11": {
+   "gancho_e_homens": [
+    0.45,
+    0.15,
+    0.3,
+    0.65
+   ],
+   "homens_puxando": [
+    0.55,
+    0.42,
+    0.25,
+    0.45
+   ],
+   "casa_em_chamas": [
+    0.0,
+    0.0,
+    0.6,
+    0.5
+   ]
+  },
+  "a15": {
+   "fumaca": [
+    0.22,
+    0.17,
+    0.5,
+    0.25
+   ],
+   "cidade": [
+    0.0,
+    0.38,
+    1.0,
+    0.14
+   ]
+  },
+  "a19": {
+   "chamas_vento": [
+    0.38,
+    0.1,
+    0.55,
+    0.5
+   ],
+   "ludgate_em_chamas": [
+    0.08,
+    0.3,
+    0.3,
+    0.5
+   ]
+  },
+  "gb": {
+   "menino": [
+    0.36,
+    0.2,
+    0.12,
+    0.42
+   ],
+   "inscricao": [
+    0.33,
+    0.72,
+    0.25,
+    0.25
+   ]
+  },
+  "mon": {
+   "pedestal": [
+    0.05,
+    0.47,
+    0.88,
+    0.5
+   ],
+   "base_coluna": [
+    0.33,
+    0.45,
+    0.32,
+    0.03
+   ],
+   "topo": [
+    0.4,
+    0.0,
+    0.2,
+    0.08
+   ],
+   "coluna": [
+    0.3,
+    0.0,
+    0.4,
+    0.97
+   ]
+  }
+ },
+ "planos": [
+  {
+   "trechos": [
+    0,
+    1
+   ],
+   "evento_id": "e1",
+   "fato_id": "f22",
+   "funcao_narrativa": "gancho",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a1"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "PINTURA DE c. 1675",
+   "objeto_principal": "chamas_centro",
+   "plano_inicial": "detalhe",
+   "plano_final": {
+    "objeto": "cidade_em_chamas",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "revelar",
+   "transicao": "corte",
+   "acao_visual": "abre no fogo e recua até a cidade inteira em chamas, à beira do Tâmisa",
+   "justificativa": "Gancho: o acontecimento inteiro numa imagem de época. A câmera parte do fogo e revela a escala — a pergunta 'como foi tão longe?' cai sobre a cidade toda queimando."
+  },
+  {
+   "trechos": [
+    2
+   ],
+   "evento_id": "e2",
+   "fato_id": "f22",
+   "funcao_narrativa": "contexto",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a5"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "ESQUEMA",
+   "selo_texto": "MAPA DA CITY DE LONDRES",
+   "objeto_principal": "pudding_lane",
+   "plano_inicial": {
+    "objeto": "area_queimada",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "ponte_e_pudding",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "aproximar",
+   "transicao": "dissolve",
+   "anotacoes": [
+    {
+     "tipo": "ponto",
+     "alvo": "pudding_lane",
+     "texto": "PUDDING LANE",
+     "na_palavra": "Pudding",
+     "essencial": true
+    }
+   ],
+   "avanco": {
+    "base": "a5_base",
+    "etapas": [
+     {
+      "na_palavra": "Pudding",
+      "centro": [
+       0.668,
+       0.59
+      ],
+      "raio": 0.012,
+      "dur": 0.8
+     }
+    ]
+   },
+   "acao_visual": "o mapa da City (ainda sem fogo) aproxima até a Pudding Lane; o ponto e a primeira brasa aparecem no nome da rua",
+   "justificativa": "Mostra ONDE começou, na geografia real, e estabelece o mapa que vai mostrar a propagação depois (a placa moderna fica para a prova do nome, e curta)."
+  },
+  {
+   "trechos": [
+    3
+   ],
+   "evento_id": "e2",
+   "fato_id": "f15",
+   "funcao_narrativa": "contexto",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a10"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "CONTEXTO",
+   "selo_texto": "PLACA NA PUDDING LANE, 2011",
+   "objeto_principal": "texto_placa",
+   "plano_inicial": {
+    "objeto": "placa",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "texto_placa",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "aproximar",
+   "transicao": "corte",
+   "anotacoes": [
+    {
+     "tipo": "contorno",
+     "alvo": "texto_placa",
+     "na_palavra": "Farriner"
+    }
+   ],
+   "acao_visual": "3 s na placa: a câmera vai às linhas que dizem 'loja de Thomas Faryner, o padeiro do rei'",
+   "justificativa": "A placa é a prova escrita do que a fala diz (padaria de Farriner, padeiro do rei). Curta e no texto — não o prédio moderno (falha 5–11 s da V3.1). Nenhum retrato de outra pessoa (falha 12–15 s)."
+  },
+  {
+   "trechos": [
+    4
+   ],
+   "evento_id": "e3",
+   "fato_id": "f16",
+   "funcao_narrativa": "mecanismo",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a11"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "XILOGRAVURA DE 1612",
+   "objeto_principal": "gancho_e_homens",
+   "plano_inicial": {
+    "objeto": "casa_em_chamas",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "gancho_e_homens",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "aproximar",
+   "transicao": "corte",
+   "anotacoes": [
+    {
+     "tipo": "circulo",
+     "alvo": "gancho_e_homens",
+     "texto": "GANCHOS PARA DERRUBAR CASAS",
+     "na_palavra": "derrubar",
+     "essencial": true
+    }
+   ],
+   "acao_visual": "da casa em chamas desce até os homens puxando o gancho; o gancho é marcado na palavra 'derrubar'",
+   "justificativa": "Demonstra a técnica (derrubar casas com ganchos) com um registro de época da própria técnica, em vez de um cartão 'etapas da barreira' (falha 30–34 s da V3.1)."
+  },
+  {
+   "trechos": [
+    5
+   ],
+   "evento_id": "e4",
+   "fato_id": "f5",
+   "funcao_narrativa": "consequencia",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a15"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "GRAVURA VITORIANA DO INCÊNDIO",
+   "objeto_principal": "fumaca",
+   "plano_inicial": {
+    "objeto": "fumaca",
+    "enquadramento": "detalhe"
+   },
+   "plano_final": {
+    "objeto": "cidade",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "revelar",
+   "transicao": "dissolve",
+   "acao_visual": "parte da fumaça e abre até a cidade inteira sob ela, do outro lado do rio",
+   "justificativa": "Não há retrato de Bloodworth no acervo: em vez de inventar, a imagem mostra o que a hesitação significou — a fumaça crescendo sobre a cidade enquanto ninguém derruba nada. O nome fica na narração e na legenda."
+  },
+  {
+   "trechos": [
+    6
+   ],
+   "evento_id": "e5",
+   "fato_id": "f6",
+   "funcao_narrativa": "consequencia",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a11"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "XILOGRAVURA DE 1612",
+   "objeto_principal": "homens_puxando",
+   "plano_inicial": {
+    "objeto": "homens_puxando",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "casa_em_chamas",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "localizar",
+   "transicao": "corte",
+   "acao_visual": "volta à mesma gravura pelo outro lado: dos homens puxando para a casa que já queima",
+   "justificativa": "Mesma técnica, agora ordenada — mas a câmera termina no fogo já no telhado: a ordem chega com a casa em chamas. Segundo e último uso da gravura, com enquadramento oposto."
+  },
+  {
+   "trechos": [
+    7
+   ],
+   "evento_id": "e5",
+   "fato_id": "f6",
+   "funcao_narrativa": "consequencia",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a19"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "GRAVURA DE 1811",
+   "objeto_principal": "chamas_vento",
+   "plano_inicial": {
+    "objeto": "ludgate_em_chamas",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "chamas_vento",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "acompanhar",
+   "transicao": "corte",
+   "acao_visual": "da Ludgate em chamas a câmera segue as labaredas deitadas pelo vento",
+   "justificativa": "A gravura mostra as chamas inclinadas pelo vento sobre a City: a palavra 'vento' tem imagem."
+  },
+  {
+   "trechos": [
+    8,
+    9,
+    10
+   ],
+   "comeca_ate_palavra": "onde",
+   "evento_id": "e6",
+   "fato_id": "f23",
+   "funcao_narrativa": "mecanismo",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a5"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "ESQUEMA",
+   "selo_texto": "ORDEM APROXIMADA DO AVANÇO",
+   "objeto_principal": "area_queimada",
+   "plano_inicial": {
+    "objeto": "inicio_e_centro",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "inicio_e_centro",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "explicar",
+   "transicao": "dissolve",
+   "camera_chaves": [
+    {
+     "na_palavra": "terça",
+     "objeto": "centro_oeste",
+     "enquadramento": "objeto",
+     "dur": 1.8
+    },
+    {
+     "na_palavra": "oeste",
+     "objeto": "oeste",
+     "enquadramento": "objeto",
+     "dur": 1.4
+    },
+    {
+     "na_palavra": "Pye",
+     "objeto": "noroeste",
+     "enquadramento": "objeto",
+     "dur": 1.2
+    }
+   ],
+   "avanco": {
+    "base": "a5_base",
+    "etapas": [
+     {
+      "na_palavra": "segunda",
+      "centro": [
+       0.668,
+       0.59
+      ],
+      "raio": 0.03,
+      "dur": 0.6
+     },
+     {
+      "na_palavra": "norte",
+      "centro": [
+       0.64,
+       0.5
+      ],
+      "raio": 0.12,
+      "dur": 2.0
+     },
+     {
+      "na_palavra": "terça",
+      "centro": [
+       0.52,
+       0.47
+      ],
+      "raio": 0.27,
+      "dur": 2.2
+     },
+     {
+      "na_palavra": "oeste",
+      "centro": [
+       0.45,
+       0.47
+      ],
+      "raio": 0.42,
+      "dur": 1.8
+     }
+    ]
+   },
+   "anotacoes": [
+    {
+     "tipo": "ponto",
+     "alvo": "royal_exchange",
+     "texto": "SEGUNDA: CORAÇÃO DA CIDADE",
+     "na_palavra": "coração",
+     "t1_palavra": "quase",
+     "essencial": true
+    },
+    {
+     "tipo": "ponto",
+     "alvo": "ludgate",
+     "texto": "MURALHA ROMANA",
+     "na_palavra": "muralha",
+     "t1_palavra": "oeste"
+    },
+    {
+     "tipo": "seta",
+     "alvo": "ludgate",
+     "ate": "fleet_street_oeste",
+     "texto": "TERÇA: PARA O OESTE",
+     "na_palavra": "oeste",
+     "t1_palavra": "Pye",
+     "essencial": true
+    },
+    {
+     "tipo": "circulo",
+     "alvo": "smithfield",
+     "texto": "PERTO DE SMITHFIELD",
+     "na_palavra": "Smithfield"
+    }
+   ],
+   "acao_visual": "a área queimada do próprio mapa ganha cor em etapas: brasa na Pudding Lane → norte até o centro (segunda) → quase toda a City (terça) → além da muralha, para o oeste; o limite perto de Smithfield",
+   "justificativa": "O mapa agora DEMONSTRA a propagação (falha 40–48 s da V3.1): cada etapa entra na palavra do dia, sobre geografia real, e só a área que o mapa marca como queimada ganha cor. Selo diz que a ordem é aproximada (a fonte dá dias e direções, não frentes exatas). A câmera acompanha a frente: começa no início e no centro, vai para o oeste na terça e termina no limite noroeste (Smithfield)."
+  },
+  {
+   "trechos": [
+    10
+   ],
+   "comeca_na_palavra": "onde",
+   "evento_id": "e9",
+   "fato_id": "f14",
+   "funcao_narrativa": "consequencia",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "gb"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "CONTEXTO",
+   "selo_texto": "PYE CORNER, 2007",
+   "objeto_principal": "menino",
+   "plano_inicial": {
+    "objeto": "inscricao",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "menino",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "revelar",
+   "transicao": "corte",
+   "anotacoes": [
+    {
+     "tipo": "circulo",
+     "alvo": "menino",
+     "texto": "GOLDEN BOY OF PYE CORNER",
+     "na_palavra": "menino"
+    }
+   ],
+   "acao_visual": "da inscrição 'late Fire of London… 1666' sobe até a estátua dourada",
+   "justificativa": "O marco do ponto onde o fogo parou, com a própria inscrição de 1666 na pedra."
+  },
+  {
+   "trechos": [
+    11
+   ],
+   "evento_id": "e11",
+   "fato_id": "f8",
+   "funcao_narrativa": "consequencia",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "mon"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "CONTEXTO",
+   "selo_texto": "O MONUMENTO, 2013",
+   "objeto_principal": "coluna",
+   "plano_inicial": {
+    "objeto": "pedestal",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "coluna",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "revelar",
+   "transicao": "corte",
+   "camera_chaves": [
+    {
+     "na_palavra": "Monumento",
+     "objeto": "topo",
+     "enquadramento": "objeto",
+     "dur": 2.4
+    },
+    {
+     "na_palavra": "metros",
+     "objeto": "coluna",
+     "enquadramento": "objeto",
+     "dur": 1.4
+    }
+   ],
+   "anotacoes": [
+    {
+     "tipo": "seta",
+     "alvo": "base_coluna",
+     "ate": "topo",
+     "texto": "61,5 METROS DE ALTURA",
+     "na_palavra": "metros",
+     "curva": 0,
+     "essencial": true
+    }
+   ],
+   "acao_visual": "do pedestal (onde ficava a primeira igreja destruída) a câmera sobe até a urna de fogo no alto; na palavra 'metros' abre na coluna inteira e a altura é medida nela",
+   "justificativa": "O número fica preso ao objeto que mede, com foto em alta resolução que permite o movimento (a gravura de 748 px não permitia: ficava parada). Não é o encerramento (falha 58–65 s da V3.1)."
+  },
+  {
+   "trechos": [
+    12,
+    13
+   ],
+   "evento_id": "e10",
+   "fato_id": "f6",
+   "funcao_narrativa": "fechamento",
+   "recurso_visual": {
+    "tipo": "foto",
+    "id": "a1"
+   },
+   "composicao": "doc.plano",
+   "funcao_documental": "REPRESENTAÇÃO HISTÓRICA",
+   "selo_texto": "PINTURA DE c. 1675",
+   "objeto_principal": "torre_de_londres",
+   "plano_inicial": {
+    "objeto": "torre_de_londres",
+    "enquadramento": "objeto"
+   },
+   "plano_final": {
+    "objeto": "chamas_centro",
+    "enquadramento": "objeto"
+   },
+   "movimento_camera": "acompanhar",
+   "transicao": "dissolve",
+   "acao_visual": "volta à pintura do início e percorre a margem em chamas, da Torre de Londres até o centro do fogo, enquanto a resposta é dita",
+   "justificativa": "Fecha com a resposta sobre a imagem mais forte, em loop com a abertura (mesma pintura, enquadramento final diferente). Segundo e último uso."
+  }
+ ],
+ "criticos": [
+  "e2",
+  "e3",
+  "e4",
+  "e5",
+  "e6",
+  "e7"
+ ],
+ "eventos": [
+  [
+   "e1",
+   "evento_historico",
+   [
+    0,
+    1
+   ]
+  ],
+  [
+   "e2",
+   "localizacao",
+   [
+    2,
+    3
+   ]
+  ],
+  [
+   "e3",
+   "processo",
+   [
+    4
+   ]
+  ],
+  [
+   "e4",
+   "pessoa",
+   [
+    5
+   ]
+  ],
+  [
+   "e5",
+   "processo",
+   [
+    6,
+    7
+   ]
+  ],
+  [
+   "e6",
+   "deslocamento",
+   [
+    8,
+    9,
+    10
+   ]
+  ],
+  [
+   "e9",
+   "localizacao",
+   [
+    10
+   ]
+  ],
+  [
+   "e11",
+   "numero",
+   [
+    11
+   ]
+  ],
+  [
+   "e10",
+   "evento_historico",
+   [
+    12,
+    13
+   ]
+  ]
+ ],
+ "fatos_texto": "O Monumento ao Grande Incêndio tem 61,5 metros de altura, a mesma distância que separa sua base do local onde o fogo começou, na Pudding Lane. O incêndio começou numa padaria na Pudding Lane, pouco depois da meia-noite de domingo, 2 de setembro de 1666."
+}

@@ -71,7 +71,8 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
     ach = []
 
     def a(classe, codigo, problema, inicio=None, fim=None, plano=None, evidencia=''):
-        ach.append({'classe': classe, 'codigo': codigo, 'problema': problema, 'inicio': inicio, 'fim': fim, 'plano': plano, 'evidencia': evidencia})
+        ach.append({'classe': classe, 'dimensao': dimensao(codigo), 'codigo': codigo, 'problema': problema, 'inicio': inicio, 'fim': fim,
+                    'plano': plano, 'evidencia': evidencia})
 
     # ---------------- técnico
     so = _sonda(mp4)
@@ -108,6 +109,10 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
     for d in cc['inesperados']:
         k = next((i for i, c in enumerate(cenas) if c['start'] <= d < c['end']), None)
         if k is not None and cenas[k]['comp'] == 'doc.plano':      # dentro de foto dirigida não deveria haver corte seco
+            mot = _mudanca_planejada(cenas[k], d - cenas[k]['start'])
+            if mot:                                                 # o detector viu um movimento/anotação PLANEJADO
+                cc.setdefault('explicados', []).append({'t': d, 'plano': k, 'motivo': mot})
+                continue
             a('revisao', 'T-CORTE-INESPERADO', f'mudança abrupta em {d:.1f}s dentro do plano {k} (foto dirigida)', d, d, k)
     dur_planos = [c['end'] - c['start'] for c in cenas]
     for k, d in enumerate(dur_planos):
@@ -162,6 +167,8 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
         for e in r.get('erros') or []:
             a('revisao', 'D-PLANO-RECUSADO', f"plano de {r.get('evento_id')} recusado pelo validador: {e}")
     resumo = {
+        'por_dimensao': {d: {c: sum(1 for x in ach if x['dimensao'] == d and x['classe'] == c) for c in ('bloqueio', 'revisao', 'estetica')}
+                         for d in ('tecnica', 'semantica', 'estetica')},
         'bloqueios': sum(1 for x in ach if x['classe'] == 'bloqueio'), 'revisoes': sum(1 for x in ach if x['classe'] == 'revisao'),
         'esteticas': sum(1 for x in ach if x['classe'] == 'estetica'), 'planos': len(cenas),
         'duracao_media_plano_s': round(sum(dur_planos) / len(dur_planos), 2) if dur_planos else None,
@@ -172,6 +179,36 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
     }
     return {'resumo': resumo, 'achados': ach, 'cortes': cc, 'medidas_av': av['resumo'],
             'nota': 'bloqueio = objetivo; revisão = olho humano; estética = preferência. Aprovação artística é humana.'}
+
+
+SEMANTICOS = {'E-PERGUNTA', 'E-MECANISMO', 'E-COBERTURA', 'E-OBJETO', 'E-NUMERO', 'E-TEXTO-REPETE', 'D-PLANO-RECUSADO'}
+
+
+def dimensao(codigo: str) -> str:
+    """Três dimensões separadas: técnica (arquivo, áudio, geometria, cortes), semântica (a cena demonstra o
+    acontecimento?) e estética (ritmo, atenção, monotonia, cara de slide)."""
+    if codigo.startswith(('T-', 'G-')):
+        return 'tecnica'
+    if codigo.startswith('M-') or codigo in SEMANTICOS:
+        return 'semantica'
+    return 'estetica'
+
+
+def _mudanca_planejada(cena: dict, tl: float) -> str | None:
+    """A mudança detectada coincide com algo que o storyboard pediu? (câmera em movimento entre chaves, anotação
+    desenhando, etapa de avanço). Sem isso, um zoom rápido ou um círculo grande viram falso 'corte inesperado'."""
+    p = cena.get('params') or {}
+    cam = p.get('cam') or []
+    for k0, k1 in zip(cam, cam[1:]):
+        if k0['caixa'] != k1['caixa'] and k0['t'] - .3 <= tl <= k1['t'] + .3:
+            return f"câmera planejada entre {k0['t']:.1f}s e {k1['t']:.1f}s"
+    for an in p.get('anot') or []:
+        if abs(tl - float(an.get('t0') or 0)) <= .8:
+            return f"anotação '{an.get('texto') or an.get('tipo')}' aparecendo"
+    for e in (p.get('avanco') or {}).get('etapas') or []:
+        if e['t'] - .3 <= tl <= e['t'] + float(e.get('dur') or 1.6) + .3:
+            return 'etapa do avanço'
+    return None
 
 
 def _n(s) -> str:
@@ -198,12 +235,13 @@ def _trechos(ix: list[int]):
 def texto(f: dict) -> str:
     r = f['resumo']
     l = [f"# Fiscal V3.1 — {r['bloqueios']} bloqueio(s), {r['revisoes']} revisão(ões), {r['esteticas']} estética(s)", '',
+         'Por dimensão: ' + ' · '.join(f"{d}: {v['bloqueio']}B/{v['revisao']}R/{v['estetica']}E" for d, v in r.get('por_dimensao', {}).items()), '',
          f"Planos {r['planos']} · média {r['duracao_media_plano_s']} s · parado {r['parado_pct']}% · vazio {r['vazio_medio_pct']}% · "
          f"anotações {r['anotacoes']} · loudness {r['audio']['lufs']} LUFS · cortes planejados achados {r['cortes']['acertos']} (recall {r['cortes']['recall']})", '',
-         '| classe | código | quando | problema |', '|---|---|---|---|']
+         '| classe | dimensão | código | quando | problema |', '|---|---|---|---|---|']
     for a in sorted(f['achados'], key=lambda x: ('bloqueio', 'revisao', 'estetica').index(x['classe'])):
         q = '' if a['inicio'] is None else f"{a['inicio']:.1f}–{(a['fim'] or a['inicio']):.1f}s"
-        l.append(f"| {a['classe']} | {a['codigo']} | {q} | {a['problema']} |")
+        l.append(f"| {a['classe']} | {a.get('dimensao', '')} | {a['codigo']} | {q} | {a['problema']} |")
     return '\n'.join(l) + '\n\n' + f['nota'] + '\n'
 
 

@@ -88,6 +88,9 @@ def tempo_da_palavra(palavras: list[dict], fala: str, palavra: str, ini: float, 
     for i in range(len(ws)):                   # 1º: a palavra exata ("desce" não é "descer")
         if [w['w'] for w in ws[i:i + len(alvo)]] == alvo:
             return ws[i]['s']
+    for w in ws:                               # palavra composta alinhada como um token ("segunda feira")
+        if ' ' in w['w'] and w['w'].split()[:len(alvo)] == alvo:
+            return w['s']
     if len(alvo) == 1:                         # 2º: flexão da mesma palavra (fecham/fecha), mesmo radical de 5 letras e tamanho parecido
         for w in ws:
             if w['w'][:5] == alvo[0][:5] and abs(len(w['w']) - len(alvo[0])) <= 2:
@@ -172,12 +175,26 @@ def validar(plano: dict, fatos_ids: set[str], acervo: dict) -> list[str]:
     return erros
 
 
+IMPACTOS = ('aceitavel', 'revisao', 'bloqueio')
+
+
+def degradar(r: dict, impacto: str, codigo: str, texto: str, essencial: bool = False) -> None:
+    """V3.1-resgate: toda perda/substituição feita para a execução seguir fica REGISTRADA com o impacto editorial.
+    aceitavel = não muda o sentido; revisao = pode comprometer legibilidade/ritmo/direção (olho humano obrigatório);
+    bloqueio = elimina ou distorce o acontecimento (o chamador replaneja ou bloqueia). `essencial` = o elemento perdido
+    era a demonstração pedida para o acontecimento."""
+    assert impacto in IMPACTOS
+    r.setdefault('degradacoes', []).append({'impacto': impacto, 'codigo': codigo, 'texto': texto, 'essencial': essencial})
+    r.setdefault('limitacoes', []).append(texto)
+
+
 def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], fatos_ids: set[str] | None = None) -> tuple[list[dict], list[dict]]:
     """→ (cenas V2, registro por plano). Plano inválido NÃO vira cena: entra no registro com o motivo (o chamador bloqueia)."""
     cenas, reg = [], []
     planos = storyboard['planos']
     for i, pl in enumerate(planos):
-        r = {'evento_id': pl.get('evento_id'), 'composicao': pl.get('composicao'), 'erros': [], 'limitacoes': []}
+        r = {'evento_id': pl.get('evento_id'), 'composicao': pl.get('composicao'), 'erros': [], 'limitacoes': [], 'degradacoes': [],
+             'critico': bool(pl.get('critico'))}
         r['erros'] = validar(pl, fatos_ids or set(), acervo)
         a, b = float(pl['tempo_inicio']), float(pl['tempo_fim'])
         dur = b - a
@@ -193,13 +210,14 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
             roi = alvo.get('caixa') if alvo.get('visivel') else None
             foco = (rg.get('foco') or {}).get('caixa')
             if pl.get('objeto_principal') and not roi:
-                r['limitacoes'].append(f"objeto '{pl['objeto_principal']}' não localizado pela visão: câmera usa o foco da foto, sem anotação nele")
+                degradar(r, 'bloqueio' if pl.get('critico') else 'revisao', 'OBJETO-NAO-LOCALIZADO',
+                         f"objeto '{pl['objeto_principal']}' não localizado: câmera no foco da foto, sem anotação nele", essencial=True)
             def enq(v, padrao):
                 # "detalhe" (do objeto principal) ou {"objeto": "<outro objeto localizado>", "enquadramento": "detalhe"}
                 if isinstance(v, dict):
                     o = obs.get(v.get('objeto') or '') or {}
                     if not o.get('caixa'):
-                        r['limitacoes'].append(f"enquadramento em '{v.get('objeto')}' sem região: uso o objeto principal")
+                        degradar(r, 'revisao', 'ENQUADRAMENTO-SEM-REGIAO', f"enquadramento em '{v.get('objeto')}' sem região: uso o objeto principal")
                     return enquadramento(v.get('enquadramento') or 'objeto', o.get('caixa') or roi, foco, wh)
                 return enquadramento(v or padrao, roi, foco, wh)
             loc = pl.get('movimento_camera') == 'localizar'
@@ -208,33 +226,39 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
             def pouco(a_, b_):                    # mudança de tamanho < 15% e de centro < 6% da foto
                 return abs(a_[2] - b_[2]) / max(a_[2], b_[2]) < .15 and abs((a_[0] + a_[2] / 2) - (b_[0] + b_[2] / 2)) < .06 \
                     and abs((a_[1] + a_[3] / 2) - (b_[1] + b_[3] / 2)) < .06
-            if pl.get('movimento_camera') not in ('fixo', None) and pouco(ini, fim):
-                # o enquadramento pedido não gera movimento perceptível: aperta até o detalhe; se ainda não der, percorre
-                # a foto na horizontal passando pelo assunto (intenção mantida: chegar ao objeto)
+            if pl.get('movimento_camera') not in ('fixo', None) and pouco(ini, fim) and not pl.get('camera_chaves'):
+                # V3.1-resgate: movimento sem percurso perceptível. Aproximar até o detalhe do PRÓPRIO objeto mantém a
+                # intenção; não dá → plano FIXO (antes: percurso lateral inventado, só para a imagem andar).
                 det = enquadramento('detalhe', roi, foco, wh)
-                if not pouco(ini, det):
+                if roi and not pouco(ini, det):
                     fim = det if not loc else fim
                     if loc:
                         ini = det
-                    r['limitacoes'].append('movimento pedido era imperceptível: câmera vai até o detalhe do objeto')
+                    degradar(r, 'aceitavel', 'MOVIMENTO-ATE-DETALHE', 'movimento pedido era imperceptível: câmera vai até o detalhe do objeto')
                 else:
-                    fx, fy, fw, fh = fim
-                    ref = (roi or foco or fim)
-                    lado = -1 if ref[0] + ref[2] / 2 > .5 else 1
-                    ini = [round(min(max(0.0, fx + lado * fw * .35), 1 - fw), 4), fy, fw, fh]
-                    r['limitacoes'].append('objeto já ocupa o quadro: o movimento vira percurso lateral até ele')
+                    ini = fim
+                    pl = {**pl, 'movimento_camera': 'fixo'}
+                    sc['direcao']['movimento_camera'] = 'fixo'
+                    degradar(r, 'aceitavel', 'MOVIMENTO-VIRA-FIXO', 'movimento sem percurso perceptível: plano fixo (nenhum movimento inventado)')
             anot = []
+
+            def _t1(an):                          # a anotação sai na palavra pedida (evita acúmulo de rótulos)
+                if an.get('t1_palavra'):
+                    t = tempo_da_palavra(palavras, pl.get('fala', ''), an['t1_palavra'], a, b)
+                    return round(t - a, 2) if t is not None else None
+                return an.get('t1')
             for an in pl.get('anotacoes') or []:
                 t = tempo_da_palavra(palavras, pl.get('fala', ''), an.get('na_palavra', ''), a, b) if an.get('na_palavra') else None
                 t0 = (t - a) if t is not None else min(dur * .35, 1.2)
                 if an.get('na_palavra') and t is None:
-                    r['limitacoes'].append(f"palavra '{an['na_palavra']}' não encontrada na narração alinhada: anotação em {t0:.1f}s")
+                    degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"palavra '{an['na_palavra']}' não encontrada na narração alinhada: anotação em {t0:.1f}s (fora de sincronia)")
                 o = obs.get(an.get('alvo') or '') or {}
                 if an['tipo'] in ('seta', 'trajeto'):
                     o2 = obs.get(an.get('ate') or '') or {}
                     dv = an.get('ate_desvio')
                     if dv is not None and not (isinstance(dv, (list, tuple)) and len(dv) == 2 and all(isinstance(x, (int, float)) for x in dv)):
-                        r['limitacoes'].append(f"ate_desvio inválido ({dv!r}) em '{an.get('alvo')}': seta retirada (ERR-018)")
+                        degradar(r, 'bloqueio' if an.get('essencial') else 'revisao', 'ANOTACAO-RETIRADA',
+                                 f"ate_desvio inválido ({dv!r}) em '{an.get('alvo')}': seta retirada (ERR-018)", bool(an.get('essencial')))
                         continue
                     if o.get('ancoravel') and dv:
                         # seta de ESQUEMA que parte de um objeto localizado numa direção dada (ex.: "para cima" = coluna
@@ -252,25 +276,53 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                         de = [c1[0] + c1[2] / 2, c1[1] + c1[3] * .55]
                         para = [c2[0] + c2[2] / 2, c2[1] + c2[3] * .35]
                         anot.append({'tipo': an['tipo'], 'de': de, 'para': para, 't0': round(t0, 2), 'texto': an.get('texto', ''),
-                                     'curva': an.get('curva', .18), 'desenho': an.get('desenho', 1.4)})
+                                     'curva': an.get('curva', .18), 'desenho': an.get('desenho', 1.4), 't1': _t1(an)})
                     else:
-                        r['limitacoes'].append(f"{an['tipo']} '{an.get('alvo')}' → '{an.get('ate')}' sem as duas regiões localizadas: anotação retirada")
+                        degradar(r, 'bloqueio' if an.get('essencial') else 'revisao', 'ANOTACAO-RETIRADA',
+                                 f"{an['tipo']} '{an.get('alvo')}' → '{an.get('ate')}' sem as duas regiões localizadas: anotação retirada", bool(an.get('essencial')))
                     continue
                 if not o.get('ancoravel'):
-                    r['limitacoes'].append(f"anotação em '{an.get('alvo')}' retirada: a visão não localizou o objeto com confiança")
+                    degradar(r, 'bloqueio' if an.get('essencial') else 'revisao', 'ANOTACAO-RETIRADA',
+                             f"anotação em '{an.get('alvo')}' retirada: objeto não localizado com confiança", bool(an.get('essencial')))
                     continue
                 tipo = an['tipo']
                 cx_, fx = o['caixa'], fim
                 fora = max(0.0, fx[0] - cx_[0]) + max(0.0, cx_[0] + cx_[2] - fx[0] - fx[2]) + max(0.0, fx[1] - cx_[1]) + max(0.0, cx_[1] + cx_[3] - fx[1] - fx[3])
                 if tipo in ('circulo', 'contorno') and fora > .15 * (cx_[2] + cx_[3]):
                     tipo = 'ponto'                   # região maior que o quadro final: contorno sairia da tela → marcador no centro
-                    r['limitacoes'].append(f"'{an.get('alvo')}' não cabe no quadro final: {an['tipo']} virou marcador com rótulo")
+                    degradar(r, 'aceitavel', 'ANOTACAO-VIRA-MARCADOR', f"'{an.get('alvo')}' não cabe no quadro final: {an['tipo']} virou marcador com rótulo")
                 anot.append({'tipo': tipo, 'caixa': o['caixa'], 't0': round(t0, 2), 'texto': an.get('texto', ''),
-                             't1': an.get('t1'), 'lado': an.get('lado')})
-            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': camera(pl.get('movimento_camera') or 'fixo', ini, fim, dur),
+                             't1': _t1(an), 'lado': an.get('lado')})
+            cam = camera(pl.get('movimento_camera') or 'fixo', ini, fim, dur)
+            if pl.get('camera_chaves'):               # câmera que muda de enquadramento NA PALAVRA (não no meio do plano)
+                cam, atual = [{'t': 0, 'caixa': ini}], ini
+                for ch in pl['camera_chaves']:
+                    t = tempo_da_palavra(palavras, pl.get('fala', ''), ch.get('na_palavra', ''), a, b) if ch.get('na_palavra') else None
+                    if t is None:
+                        degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"chave de câmera em '{ch.get('na_palavra')}' não achada: chave ignorada")
+                        continue
+                    novo = enq({'objeto': ch['objeto'], 'enquadramento': ch.get('enquadramento') or 'objeto'} if ch.get('objeto') else ch.get('enquadramento'), 'geral')
+                    tr = t - a
+                    cam += [{'t': round(max(cam[-1]['t'], tr), 2), 'caixa': atual}, {'t': round(min(dur, max(cam[-1]['t'], tr) + float(ch.get('dur', 1.4))), 2), 'caixa': novo}]
+                    atual = novo
+                if cam[-1]['t'] < dur:
+                    cam.append({'t': round(dur, 2), 'caixa': atual})
+            avanco = None
+            if pl.get('avanco'):                      # área revelada em etapas, cada etapa na palavra da fala
+                et = []
+                for e in pl['avanco'].get('etapas') or []:
+                    t = tempo_da_palavra(palavras, pl.get('fala', ''), e.get('na_palavra', ''), a, b) if e.get('na_palavra') else None
+                    if e.get('na_palavra') and t is None:
+                        degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"etapa do avanço em '{e['na_palavra']}' não achada na narração: tempo proporcional")
+                        t = a + dur * (len(et) + 1) / (len(pl['avanco']['etapas']) + 1)
+                    et.append({'t': round((t if t is not None else a) - a, 2), 'centro': e['centro'], 'raio': float(e['raio']), 'dur': e.get('dur', 1.6)})
+                avanco = {'etapas': et, **({'base': pl['avanco']['base']} if pl['avanco'].get('base') else {})}
+            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam,
                             'anot': anot, 'tratamento': pl.get('tratamento') or x.get('tratamento') or 'atual',
                             'selo': {'funcao': pl['funcao_documental'], 'texto': pl.get('selo_texto', '')},
                             'credito': x.get('credito_curto') or x.get('credito', '')[:70]}
+            if avanco:
+                sc['params']['avanco'] = avanco
             r['camera'] = {'inicial': ini, 'final': fim, 'roi': roi, 'origem_roi': alvo.get('origem') if roi else (rg.get('foco') or {}).get('origem')}
             r['anotacoes'] = len(anot)
         else:
@@ -278,7 +330,7 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
             for k, v in list((pl.get('tempos_palavras') or {}).items()):     # tempos internos da composição pela fala
                 t = tempo_da_palavra(palavras, pl.get('fala', ''), v, a, b)
                 if t is None:
-                    r['limitacoes'].append(f"passo '{k}' ('{v}') não encontrado na narração")
+                    degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"passo '{k}' ('{v}') não encontrado na narração: tempo padrão da composição")
                 else:
                     p.setdefault('tempos', {})[k] = round(t - a, 2)
             if isinstance(p.get('tempos'), dict) and pl['composicao'] not in TEMPOS_POR_NOME:
@@ -290,7 +342,7 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                     p['tempos'] = ts
                 else:
                     p.pop('tempos')
-                    r['limitacoes'].append(f"{len(ts)} tempos para {n} etapas: a composição usa o espaçamento padrão")
+                    degradar(r, 'revisao', 'SINCRONIA-ETAPAS', f"{len(ts)} tempos para {n} etapas: a composição usa o espaçamento padrão")
             sc['params'] = p
         r['tempo'] = [a, b]
         reg.append(r)

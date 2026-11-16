@@ -80,6 +80,7 @@
     params: { img: 'arquivo da foto', wh: '[largura, altura] em pixels', cam: '[{t, caixa:[x,y,w,h] 0–1}] enquadramentos-chave (da direção)',
       centro_y: 'altura do centro do quadro na tela (padrão 760: o assunto fica acima da legenda)',
       anot: '[{tipo: circulo|contorno|foco|seta|trajeto, caixa | de/para, t0, t1, texto ≤ 34, lado}] — caixa da VISÃO, nunca adivinhada',
+      avanco: 'opcional {etapas: [{t, centro: [x, y] (fração da imagem), raio (fração da diagonal), dur}]} — revela a imagem em cor, em etapas, a partir de um ponto (propagação, expansão, inundação); o resto fica cinza. Só sobre mapa/registro que JÁ mostra a área final; selo diz ESQUEMA se a ordem é aproximada',
       tratamento: 'atual | arquivo | gravura | satelite', selo: '{funcao, texto ≤ 44}', credito: '≤ 70', entrada: 'dissolve | corte' },
     fundo: 'próprio: foto + cópia desfocada da própria foto atrás (para enquadramentos mais largos que 9:16)',
     layout: 'foto ocupa o quadro; selo y 300; anotações e rótulos entre y 330 e 1140; legenda 1180–1440 livre',
@@ -94,7 +95,9 @@
     return {
       html: `<div class="abs dp-bg" style="inset:-60px;background:url('${p.img}') center/cover;filter:blur(38px) brightness(.42) ${TRAT[p.tratamento] || TRAT.atual}"></div>
         <div class="abs dp-mundo" data-ocupa="1" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;box-shadow:0 0 120px rgba(0,0,0,.55)">
-          <img src="${p.img}" style="display:block;width:${iw}px;height:${ih}px;filter:${TRAT[p.tratamento] || TRAT.atual}"></div>
+          <img src="${(p.avanco && p.avanco.base) || p.img}" style="display:block;width:${iw}px;height:${ih}px;filter:${p.avanco && !p.avanco.base ? 'grayscale(1) brightness(.62) contrast(.9)' : (TRAT[p.tratamento] || TRAT.atual)}">
+          ${p.avanco ? `<img class="dp-avanco" src="${p.img}" style="position:absolute;left:0;top:0;width:${iw}px;height:${ih}px;filter:${TRAT[p.tratamento] || TRAT.atual} saturate(1.25);clip-path:circle(0px at 0 0)">
+          <div class="dp-frente" style="position:absolute;left:0;top:0;border-radius:50%;border:${Math.round(4 * iw / 1080)}px solid #ff7a1a;box-shadow:0 0 ${Math.round(28 * iw / 1080)}px #ff5a00;opacity:0"></div>` : ''}</div>
         <div class="abs dp-grao" style="inset:0;opacity:.075;mix-blend-mode:overlay;background-image:url(${ruido()});background-size:256px 256px"></div>
         <div class="abs" style="inset:0;background:radial-gradient(ellipse 85% 70% at 50% 42%, transparent 55%, rgba(0,0,0,.5) 100%)"></div>
         <div class="abs" style="left:0;right:0;top:0;height:420px;background:linear-gradient(rgba(0,0,0,.55),transparent)"></div>
@@ -111,6 +114,25 @@
         if (iw * s >= W) tx = clamp(tx, W - iw * s, 0);
         if (ih * s >= H) ty = clamp(ty, H - ih * s, 0); else if (ih * s >= 1500) ty = clamp(ty, 1500 - ih * s, 0);
         el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
+        if (p.avanco) {                                       // V3.1-resgate: área revelada em etapas a partir de um ponto
+          const E = p.avanco.etapas || [], D = Math.hypot(iw, ih);
+          let cx = E.length ? E[0].centro[0] : .5, cy = E.length ? E[0].centro[1] : .5, r = 0;
+          for (let j = 0; j < E.length; j++) {
+            const e0 = j ? E[j - 1] : { t: E[0].t, centro: E[0].centro, raio: 0 }, e1 = E[j];
+            const q = eio(clamp((tl - e1.t) / (+e1.dur || 1.6)));
+            if (tl < e1.t) break;
+            cx = e0.centro[0] + (e1.centro[0] - e0.centro[0]) * q; cy = e0.centro[1] + (e1.centro[1] - e0.centro[1]) * q;
+            r = (e0.raio + (e1.raio - e0.raio) * q);
+          }
+          const R = r * D, X = cx * iw, Y = cy * ih;
+          el.querySelector('.dp-avanco').style.clipPath = `circle(${R.toFixed(1)}px at ${X.toFixed(1)}px ${Y.toFixed(1)}px)`;
+          const fr = el.querySelector('.dp-frente'); fr.style.width = fr.style.height = (2 * R).toFixed(1) + 'px';
+          fr.style.transform = `translate(${(X - R).toFixed(1)}px,${(Y - R).toFixed(1)}px)`;
+          // a frente (anel) só aparece ENQUANTO uma etapa avança, e some quando ela assenta: marca o movimento, não enfeita
+          let qa = 0;
+          for (const e1 of E) { const q = clamp((tl - e1.t) / (+e1.dur || 1.6)); if (q > 0 && q < 1) qa = Math.max(qa, Math.sin(Math.PI * q)); }
+          fr.style.opacity = R > 2 ? .85 * qa : 0;
+        }
         const P = (nx, ny) => [tx + nx * iw * s, ty + ny * ih * s];
         const e = el.querySelector('.dp-selo'); if (e) { e.style.opacity = clamp(tl / .4); }
         anot.forEach((a, i) => {

@@ -39,8 +39,16 @@ MAX_TEXTO, MAX_SELO = 34, 40
 ANO = re.compile(r'^(1[0-9]{3}|20[0-9]{2})$')
 
 PROMPT = """Você é o diretor de um documentário curto vertical (9:16, {plataforma}). Pergunta central: {pergunta}
-Escreva o STORYBOARD: um plano por trecho (ou parte de trecho) da narração, cobrindo TODOS os trechos, em ordem.
-Responda só JSON: {{"planos": [...]}}.
+Trabalhe em três passos, nesta ordem:
+1. DEMONSTRAÇÕES — para cada acontecimento do PLANO AUDIOVISUAL, decida o que a tela vai DEMONSTRAR (sujeito, estado
+   inicial, ação, resultado), com qual mídia/composição, e o critério para conferir. Acontecimento sem mídia que o
+   demonstre: diga como representá-lo honestamente (esquema rotulado, contexto rotulado) — nunca com foto genérica.
+2. AJUSTES DE NARRAÇÃO (opcional) — se a narração promete algo que a tela não pode mostrar, ou se uma frase pode apontar
+   para o que está na tela, reescreva o trecho (mesmo fato, mesmo tamanho ±40%, nenhum número novo).
+3. PLANOS — um plano por DEMONSTRAÇÃO, não por frase: um plano pode cobrir vários trechos seguidos e um trecho pode ser
+   dividido; todos os trechos ficam cobertos, em ordem.
+Responda só JSON: {{"demonstracoes": [{{"evento_id", "como", "midia", "criterio"}}], "ajustes_narracao": [{{"trecho", "texto", "motivo"}}],
+"planos": [...]}}.
 
 Regras de direção (obrigatórias):
 - A foto/vídeo real relevante é o elemento principal. Não cubra fotografia com cartão de texto.
@@ -69,6 +77,9 @@ Contrato de cada plano:
  "tempos_palavras": {{"<passo>": "<palavra>"}} (opcional), "transicao", "selo_texto", "criterio_de_validacao": ["..."]}}
 
 COMPOSIÇÕES ESPECIAIS: {especiais}
+PLANO AUDIOVISUAL (por acontecimento: sujeito · estado → ação → resultado · o que precisa aparecer · mídia e composições
+disponíveis · fatos · como verificar):
+{plano_av}
 ACONTECIMENTOS (id · tipo · crítico · trechos · o que mostrar · composições viáveis com os dados do contrato):
 {eventos}
 FATOS (id: texto): {fatos}
@@ -159,6 +170,8 @@ def montar_prompt(v: dict, acervo: dict, bib=None, plataforma: str = 'Reels, Tik
     regras = memoria.regras_para_producao(tipos)
     linhas_err = [f"- [{e['id']}] {e['regra_diretor']}" for e in errs] + [f"- [{r['id']}] {r['texto']}" for r in regras]
     fat = fatos_numerados(v.get('fatos'))
+    from src.v3 import plano_av
+    fichas_av = plano_av.fichas(v, acervo, fat, evs)
     usos = {}
     if bib:
         for k, x in acervo.items():
@@ -173,13 +186,14 @@ def montar_prompt(v: dict, acervo: dict, bib=None, plataforma: str = 'Reels, Tik
          .replace('{erros}', ('Erros já corrigidos que NÃO podem voltar:\n' + '\n'.join(linhas_err)) if linhas_err else '')
          .replace('{receitas}', receitas_mod.texto_prompt(rs) or '(nenhuma)')
          .replace('{especiais}', '; '.join(f'{k}: {d}' for k, d in COMPS_ESPECIAIS.items()))
+         .replace('{plano_av}', plano_av.texto_prompt(fichas_av) or '(sem contrato)')
          .replace('{eventos}', ev_txt or '(sem contrato de acontecimentos)')
          .replace('{fatos}', '\n'.join(f'{i}: {t}' for i, t in fat)[:9000])
          .replace('{acervo}', ac_txt[:7000])
          .replace('{falas}', '\n'.join(f'{i}: {f}' for i, f in enumerate(falas))))
     ctx = {'receitas': [r['id'] for r in rs], 'receitas_estado': {r['id']: r['estado'] for r in rs}, 'erros': [e['id'] for e in errs],
            'regras_editoriais': [r['id'] for r in regras], 'eventos': [{k: e[k] for k in ('id', 'tipo', 'critico', 'trechos', 'viaveis')} for e in evs],
-           'fatos_ids': [i for i, _ in fat], 'acervo_ids': list(acervo), 'tamanho_prompt': len(p)}
+           'fatos_ids': [i for i, _ in fat], 'acervo_ids': list(acervo), 'tamanho_prompt': len(p), 'plano_av': fichas_av}
     return p, ctx
 
 
@@ -373,6 +387,10 @@ def storyboard_automatico(v: dict, acervo: dict, bib=None, chamar=None) -> tuple
         erros = validar_storyboard(sb, v, acervo, ctx) + [(i, e) for i, pl in enumerate(sb['planos'])
                                                            for e in diretor.validar({**pl, 'tempo_inicio': 0, 'tempo_fim': 9}, fatos_ids, acervo)]
     reg['erros_finais'] = [{'plano': i, 'erro': e} for i, e in erros]
+    from src.v3 import plano_av
+    aceitos, recusados = plano_av.validar_ajustes(sb.get('ajustes_narracao'), v, str(v.get('fatos') or ''))
+    reg['demonstracoes'] = sb.get('demonstracoes') or []
+    reg['ajustes_narracao'] = {'aceitos': aceitos, 'recusados': recusados}
     reg['consumo'] = {'chamadas': len(reg['chamadas']), 'usd': round(sum(c.get('usd') or 0 for c in reg['chamadas']), 4),
                       'segundos': round(sum(c.get('segundos') or 0 for c in reg['chamadas']), 1),
                       'caracteres_prompt': sum(c.get('tamanho_prompt') or 0 for c in reg['chamadas'])}
@@ -408,37 +426,33 @@ def localizar_regioes(sb: dict, acervo: dict, bib, chamar_visao=None) -> dict:
 
 
 def aplicar_tempos(sb: dict, tempos: list[tuple[float, float]], palavras: list[dict], dur: float) -> list[str]:
-    """Cada plano recebe o intervalo dos trechos que cobre (narração alinhada). Trecho dividido entre planos: corta na
-    palavra pedida; sem a palavra, divide igualmente (registrado). Planos contíguos do 0 até o fim do áudio."""
+    """Planos em ordem, contíguos por construção: cada plano começa no início do seu 1º trecho ou na palavra pedida
+    (`comeca_na_palavra`) e termina onde o seguinte começa; o último vai até o fim do áudio. Trecho dividido sem a
+    palavra achada: corte no meio do trecho, registrado como revisão (corte fora da fala)."""
     avisos = []
-    grupos = {}
-    for i, pl in enumerate(sb['planos']):
-        tr = pl.get('trechos') or []
-        if tr:
-            grupos.setdefault(tuple(tr), []).append(i)
-    for tr, ix in grupos.items():
+    pls = [p for p in sb['planos'] if p.get('trechos')]
+    inicios = []
+    for i, pl in enumerate(pls):
+        tr = pl['trechos']
         a, b = tempos[tr[0]][0], tempos[tr[-1]][1]
-        cortes = [a]
-        for k, i in enumerate(ix[1:], start=1):
-            w = sb['planos'][i].get('comeca_na_palavra')
-            t = diretor.tempo_da_palavra(palavras, '', w, a, b) if w else None
-            if t is None or t <= cortes[-1] + 1.2:
-                t = a + (b - a) * k / len(ix)
-                avisos.append(f'plano {i}: divisão do trecho {list(tr)} por tempo igual (palavra {w!r} não achada)')
-            cortes.append(t)
-        cortes.append(b)
-        for k, i in enumerate(ix):
-            sb['planos'][i]['tempo_inicio'], sb['planos'][i]['tempo_fim'] = round(cortes[k], 3), round(cortes[k + 1], 3)
-    pls = [p for p in sb['planos'] if 'tempo_inicio' in p]
-    pls.sort(key=lambda p: p['tempo_inicio'])
-    if pls:
-        pls[0]['tempo_inicio'] = 0.0
-        pls[-1]['tempo_fim'] = round(dur, 3)
-        for p, q in zip(pls, pls[1:]):
-            p['tempo_fim'] = q['tempo_inicio']
+        ini = a
+        divide = i > 0 and pls[i - 1]['trechos'][-1] >= tr[0]
+        w = pl.get('comeca_na_palavra')
+        if w:
+            t = diretor.tempo_da_palavra(palavras, '', w, a, b)
+            if t is not None:
+                ini = t
+        if divide and (not w or ini == a):
+            ini = (a + b) / 2 if not inicios or (a + b) / 2 > inicios[-1] + .8 else inicios[-1] + (b - inicios[-1]) / 2
+            avisos.append(f'plano {i}: divisão do trecho {tr[0]} sem a palavra {w!r}: corte no meio do trecho')
+            pl.setdefault('_degr', []).append(('revisao', 'CORTE-POR-TEMPO-IGUAL', f'corte do trecho {tr[0]} sem a palavra {w!r}: corte fora da fala'))
+        inicios.append(max(ini, inicios[-1] + .5) if inicios else 0.0)
+    for i, pl in enumerate(pls):
+        pl['tempo_inicio'] = round(inicios[i], 3)
+        pl['tempo_fim'] = round(inicios[i + 1] if i + 1 < len(pls) else dur, 3)
+        pl.setdefault('fala', ' '.join(str(x) for x in pl.get('_falas') or []))
     sb['planos'] = pls
     return avisos
-
 
 def preparar_params(sb: dict, v: dict, acervo: dict) -> list[str]:
     """Composições não-foto: parâmetros do CONTRATO do acontecimento (nunca inventados) ou dos especiais conferidos."""
@@ -491,7 +505,9 @@ def _baixar_clipe(pl: dict, v: dict, acervo: dict, i: int, avisos: list) -> dict
         except Exception as e:
             avisos.append(f'plano {i}: clipe {rid} não baixou ({str(e)[:80]})')
     avisos.append(f'plano {i}: vídeo {rid} sem clipe local: usa o quadro do próprio vídeo como foto dirigida (ERR-021)')
-    return {'composicao': 'doc.plano', 'recurso_visual': {'tipo': 'foto', 'id': rid}}
+    degr = list(pl.get('_degr') or []) + [('revisao', 'VIDEO-VIRA-QUADRO',
+                                           f'vídeo {rid} indisponível: o plano usa o quadro do próprio vídeo (perde o movimento real)')]
+    return {'composicao': 'doc.plano', 'recurso_visual': {'tipo': 'foto', 'id': rid}, '_degr': degr}
 
 
 def _status_criticos(reg: list[dict], ctx: dict, sb: dict) -> list[str]:
@@ -535,6 +551,11 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     res['regioes'] = {'reusadas': bib.estat['regioes_reusadas'], 'novas': bib.estat['regioes_novas']}
     # narração (depois do storyboard: a direção não depende de tempo inventado)
     t0 = time.time()
+    ajustes = (sreg.get('ajustes_narracao') or {}).get('aceitos') or []
+    if ajustes:                              # roteiro DEFINITIVO: a narração segue as demonstrações decididas
+        v = {**v, 'cenas': [dict(c) for c in v['cenas']]}
+        for a in ajustes:
+            v['cenas'][a['trecho']]['fala'] = a['texto']
     if narrar is None:
         from src import voz
         narrar = lambda cenas, tr: voz.narrar(cenas, tr)   # noqa: E731
@@ -545,6 +566,9 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
 
     def executar(sb_):
         """storyboard → cenas (tempos da fala, parâmetros do contrato, montagem). Plano com erro sai; o vizinho cobre."""
+        criticos = {e['id'] for e in ctx['eventos'] if e['critico']}
+        for pl in sb_['planos']:
+            pl['critico'] = pl.get('evento_id') in criticos
         av = aplicar_tempos(sb_, tempos, palavras, dur) + preparar_params(sb_, v, acervo)
         cenas_, reg_ = diretor.montar(sb_, acervo, regioes, palavras, set(ctx['fatos_ids']))
         for r, pl in zip(reg_, sb_['planos']):
@@ -552,7 +576,14 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
             r['trechos'] = pl.get('trechos')
             r['erros'] += [e for e in pl.get('_erros') or [] if e not in r['erros']]
             r['limitacoes'] += pl.get('_avisos') or []
+            for imp, cod, txt in pl.get('_degr') or []:
+                diretor.degradar(r, imp, cod, txt)
         ok = {i for i, r in enumerate(reg_) if not r['erros']}
+        for i, r in enumerate(reg_):           # plano descartado: o vizinho cobre o tempo — nunca em silêncio
+            if i not in ok:
+                sobra = any(j in ok and reg_[j].get('evento_id') == r.get('evento_id') for j in range(len(reg_)))
+                diretor.degradar(r, 'bloqueio' if r.get('critico') and not sobra else 'revisao', 'PLANO-DESCARTADO',
+                                 f"plano de {r.get('evento_id')} descartado ({'; '.join(r['erros'])[:160]}): o plano vizinho cobre {r['tempo'][0]:.1f}–{r['tempo'][1]:.1f}s")
         cenas_ = [c for c in cenas_ if c['origem'][0] in ok]
         for k in range(1, len(cenas_)):
             cenas_[k - 1]['end'] = max(cenas_[k - 1]['end'], cenas_[k]['start'])
@@ -578,12 +609,12 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     t0 = time.time()
     prev = previa_quadros(dados, dest, trab)
     graves = _choques(prev, dados)
-    res['revisao_previa'] = {'planos_com_texto_sobreposto': sorted(graves)}
+    graves.update(_perdas_criticas(reg))
+    res['revisao_previa'] = {'planos_com_defeito': {str(k): v_ for k, v_ in sorted(graves.items())}}
     if graves and not sreg.get('_correcao_previa'):
         sreg['_correcao_previa'] = True
-        erros_pv = '\n'.join(f"{k}: a composição {sb['planos'][k].get('composicao')} ficou com textos sobrepostos na prévia "
-                             f"({graves[k]}); troque por outra composição viável, por foto real com anotação, ou simplifique os textos"
-                             for k in sorted(graves))
+        erros_pv = '\n'.join(f"{k}: {graves[k]} — replaneje este plano (outra composição viável, outra mídia do acervo que "
+                             f"mostre o objeto, ou textos mais simples); não retire o acontecimento" for k in sorted(graves))
         limpo = {'planos': [{kk: vv for kk, vv in pl.items() if not kk.startswith('_') and kk not in ('tempo_inicio', 'tempo_fim')}
                             for pl in sb['planos']]}
         sb2, m2 = (chamar or chamar_modelo)(PROMPT_CORRECAO.replace('{erros}', erros_pv).replace('{sb}', json.dumps(limpo, ensure_ascii=False)))
@@ -601,6 +632,7 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
                 prev2 = previa_quadros(dados2, dest, trab)
                 sb, cenas, reg, dados, avisos, prev = sb2, cenas2, reg2, dados2, av2, prev2
                 graves = _choques(prev, dados)
+                graves.update(_perdas_criticas(reg))
         sreg['consumo'] = {'chamadas': len(sreg['chamadas']), 'usd': round(sum(c.get('usd') or 0 for c in sreg['chamadas']), 4),
                            'segundos': round(sum(c.get('segundos') or 0 for c in sreg['chamadas']), 1),
                            'caracteres_prompt': sum(c.get('tamanho_prompt') or 0 for c in sreg['chamadas'])}
@@ -608,7 +640,9 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
         _gravar(dest / 'storyboard_ia.json', {**sreg, 'reuso_biblioteca': reuso})
         _gravar(dest / 'direcao.json', {'storyboard_usado': sb, 'registro': reg, 'avisos': avisos})
     for k in sorted(graves):
-        res['bloqueios'].append(f"plano {k}: textos sobrepostos na tela depois da correção ({graves[k]}) (ERR-008)")
+        res['bloqueios'].append(f"plano {k}: {graves[k]} — persistiu depois do replanejamento")
+    res['degradacoes'] = [{'plano': i, 'evento_id': r.get('evento_id'), **d} for i, r in enumerate(reg) for d in r.get('degradacoes') or []]
+    res['revisoes_obrigatorias'] = [f"plano {d['plano']} ({d['codigo']}): {d['texto']}" for d in res['degradacoes'] if d['impacto'] == 'revisao']
     T['previa_s'] = round(time.time() - t0, 2)
     res['previa'] = {'erros_pagina': prev['erros_pagina'], 'problemas_geometria': len(prev['problemas_geometria'])}
     _gravar(dest / 'previa_geometria.json', prev['problemas_geometria'])
@@ -635,6 +669,18 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     T['render_s'] = round(time.time() - t0, 1)
     t0 = time.time()
     fis = fiscal_editorial.avaliar(saida, dados, reg, ctx, v, sreg)
+    for d in res.get('degradacoes') or []:      # degradações da execução entram no fiscal com o impacto decidido
+        if d['impacto'] != 'aceitavel':
+            fis['achados'].append({'classe': d['impacto'], 'dimensao': 'semantica' if d['essencial'] else 'tecnica', 'codigo': 'D-' + d['codigo'],
+                                   'problema': f"plano {d['plano']}: {d['texto']}", 'inicio': None, 'fim': None, 'plano': d['plano'], 'evidencia': ''})
+    if os.getenv('REVISAO_MULTIMODAL', '1') != '0':
+        from src.v3 import revisao_multimodal
+        t1 = time.time()
+        rv = revisao_multimodal.revisar(saida, dados, ctx.get('plano_av') or [], chamar_visao, dest / 'revisao_multimodal')
+        revisao_multimodal.gravar(rv, dest / 'revisao_multimodal.json')
+        fis['achados'] += rv['achados']
+        T['revisao_multimodal_s'] = round(time.time() - t1, 1)
+        res['revisao_multimodal'] = {'chamadas': rv['chamadas'], 'achados': len(rv['achados'])}
     T['fiscal_s'] = round(time.time() - t0, 1)
     _gravar(dest / 'fiscal_v3.json', fis)
     (dest / 'fiscal_v3.md').write_text(fiscal_editorial.texto(fis), encoding='utf-8')
@@ -650,6 +696,12 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     return res
 
 
+def _perdas_criticas(reg: list[dict]) -> dict:
+    """Planos cuja execução perdeu algo ESSENCIAL ao acontecimento (degradação 'bloqueio'). → {plano: motivo}."""
+    return {i: '; '.join(d['texto'] for d in r.get('degradacoes') or [] if d['impacto'] == 'bloqueio')
+            for i, r in enumerate(reg) if any(d['impacto'] == 'bloqueio' for d in r.get('degradacoes') or [])}
+
+
 def _choques(prev: dict, dados: dict) -> dict:
     """Planos (índice do storyboard) com texto sobre texto GRAVE na prévia, fora da legenda. → {plano: exemplo}."""
     out = {}
@@ -658,7 +710,7 @@ def _choques(prev: dict, dados: dict) -> dict:
             continue
         c = next((c for c in dados['scenes'] if c['start'] <= g.get('t', -1) < c['end']), None)
         if c:
-            out.setdefault(c['origem'][0], str(g.get('txt'))[:80])
+            out.setdefault(c['origem'][0], f"textos sobrepostos na prévia ({str(g.get('txt'))[:60]}) (ERR-008)")
     return out
 
 

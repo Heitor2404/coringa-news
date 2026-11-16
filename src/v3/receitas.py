@@ -18,7 +18,8 @@ def todas(arq: Path | None = None) -> list[dict]:
 
 
 def problemas(arq: Path | None = None) -> list[str]:
-    from src.v3.memoria import ESTADOS
+    import re
+    from src.v3.memoria import ESTADOS, feedbacks
     out, ids = [], set()
     for r in todas(arq):
         for c in CAMPOS:
@@ -26,8 +27,12 @@ def problemas(arq: Path | None = None) -> list[str]:
                 out.append(f"{r.get('id')}: falta {c}")
         if r.get('estado') not in ESTADOS:
             out.append(f"{r.get('id')}: estado inválido {r.get('estado')}")
-        if r.get('estado') == 'aprovado' and not (r.get('exemplo_aprovado') and r.get('aprovacao')):
-            out.append(f"{r['id']}: aprovada sem exemplo aprovado e registro de aprovação")
+        if r.get('estado') == 'aprovado':
+            ap = str(r.get('aprovacao') or '')
+            fb = re.fullmatch(r'FB-\d{4}', ap) and ap in {f['id'] for f in feedbacks()}
+            hum = re.fullmatch(r'humano:[^:]+:\d{4}-\d{2}-\d{2}:[^:]+:[\d:.]+', ap)
+            if not r.get('exemplo_aprovado') or not (fb or hum):
+                out.append(f"{r['id']}: aprovada sem evidência humana específica (aprovacao={ap!r}: use FB-xxxx ou humano:<nome>:<data>:<video>:<t>)")
         if r['id'] in ids:
             out.append(f"{r['id']}: repetida")
         ids.add(r['id'])

@@ -227,6 +227,7 @@
     if (modo === 'oculta') { LEG.style.opacity = 0; LEG.dataset.motivo = 'cena pediu'; return; }
     if (modo === 'integrada' && redundante(cap, at)) { LEG.style.opacity = 0; LEG.dataset.motivo = 'redundante com a tela'; return; }
     LEG.classList.toggle('claro', at.meta.tom === 'claro');
+    LEG.classList.toggle('placa', /^doc\./.test(at.sc.comp || ''));   // V3.1-resgate: legenda sobre FOTO/gravura clara ganha placa escura
     // posição ESTÁVEL por cena (calculada na partida pela ocupação da cena, ver ocupacao())
     LEG.style.top = (at.legTop || V2.Z.legenda[0]) + 'px';
     if (LEG.dataset.k != cap.start) {

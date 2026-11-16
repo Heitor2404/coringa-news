@@ -144,7 +144,8 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
             if t and len(t.split()) >= 4 and t in _n(c.get('fala')):
                 a('revisao', 'E-TEXTO-REPETE', f'plano {k}: rótulo só repete a fala ("{an.get("texto")}")', c['start'], c['end'], k)
         for txt in [an.get('texto') or '' for an in (c.get('params') or {}).get('anot') or []] + [((c.get('params') or {}).get('selo') or {}).get('texto') or '']:
-            for n in re.findall(r'\d+(?:[.,]\d+)*', txt):
+            from src.v3.pipeline import _numeros            # mesma leitura do validador: datas/horas não viram números soltos (ERR-017)
+            for n in _numeros(txt):
                 if not re.match(r'^(1[0-9]{3}|20[0-9]{2})$', n) and n.replace('.', '') not in re.sub(r'[.]', '', fatos_txt + ' ' + ' '.join(str(x.get('fala')) for x in v['cenas'])):
                     a('bloqueio', 'E-NUMERO', f'plano {k}: número {n} na tela fora da pesquisa e da fala (ERR-012)', c['start'], c['end'], k)
     comps = [c['comp'] for c in cenas]

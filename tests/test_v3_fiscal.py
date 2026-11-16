@@ -76,3 +76,11 @@ def test_numero_na_tela_fora_da_pesquisa_bloqueia(mp4):
     ctx = {'eventos': []}
     f = F.avaliar(mp4, d, reg, ctx, {'fatos': 'havia 369 navios na fila', 'cenas': [{'fala': 'x'}] * 3})
     assert any(a['codigo'] == 'E-NUMERO' and a['classe'] == 'bloqueio' for a in f['achados'])
+
+
+def test_data_na_tela_nao_e_numero_fora_da_pesquisa(mp4):
+    d = _dados([('e1', 'a', 'aproximar', 'um'), ('e2', 'b', 'aproximar', 'dois'), ('e3', 'c', 'aproximar', 'tres')])
+    d['scenes'][1]['params']['selo'] = {'texto': 'SOUTHAMPTON, 10/04/1912'}          # Titanic, rodada 3: "04" virava número
+    reg = [{'evento_id': f'e{i + 1}', 'erros': [], 'trechos': [i], 'camera': {'roi': [0, 0, 1, 1]}} for i in range(3)]
+    f = F.avaliar(mp4, d, reg, {'eventos': []}, {'fatos': 'partiu de Southampton em 10 de abril de 1912', 'cenas': [{'fala': 'x'}] * 3})
+    assert not any(a['codigo'] == 'E-NUMERO' for a in f['achados'])

@@ -415,14 +415,16 @@
    "titulo": "Validador do diretor recusava datas, horas e unidades náuticas",
    "data": "2026-11-16",
    "versao": "V3.1",
-   "sintoma": "Titanic (validação 43811511302): '22 nós', '10/04/1912' e '23h40' viraram 'número sem unidade/fora da pesquisa'; o plano crítico e3 caiu e o vídeo foi bloqueado.",
+   "sintoma": "Titanic (validação 43811511302): '22 nós', '10/04/1912' e '23h40' viraram 'número sem unidade/fora da pesquisa'; o plano crítico e3 caiu e o vídeo foi bloqueado. Rodada 3: o FISCAL repetiu o erro ('04' de 10/04/1912) porque tinha leitura própria de números; agora usa a do validador.",
    "causa_raiz": "Extração de números ingênua (partia datas e horas) e lista de unidades sem nós, horas e contagens.",
    "arquivos": [
-    "src/v3/pipeline.py"
+    "src/v3/pipeline.py",
+    "src/v3/fiscal_editorial.py"
    ],
    "correcao": "datas/horas tratadas como token (só o ano é conferido); unidades extras (nós, h, milhas, contagens).",
    "testes": [
-    "tests/test_v3_pipeline.py::test_err_017_datas_horas_e_nos_nao_sao_falso_positivo"
+    "tests/test_v3_pipeline.py::test_err_017_datas_horas_e_nos_nao_sao_falso_positivo",
+    "tests/test_v3_fiscal.py::test_data_na_tela_nao_e_numero_fora_da_pesquisa"
    ],
    "gravidade": "alta",
    "estado": "corrigido",

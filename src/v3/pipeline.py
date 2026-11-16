@@ -38,7 +38,9 @@ COMPS_ESPECIAIS = {   # composições que o diretor pode pedir com parâmetros p
 MAX_TEXTO, MAX_SELO = 34, 40
 ANO = re.compile(r'^(1[0-9]{3}|20[0-9]{2})$')
 
-PROMPT = """Você é o diretor de um documentário curto vertical (9:16, {plataforma}). Pergunta central: {pergunta}
+PROMPT = """Você é o diretor de um vídeo explicativo curto vertical (9:16, {plataforma}) de um canal multitemático
+(história, ciência, biologia, geografia, curiosidades). Abertura forte nos primeiros segundos, descobertas em sequência e
+resposta no fim; ritmo pela informação, não por cortes ou efeitos. Pergunta central: {pergunta}
 Trabalhe em três passos, nesta ordem:
 1. DEMONSTRAÇÕES — para cada acontecimento do PLANO AUDIOVISUAL, decida o que a tela vai DEMONSTRAR (sujeito, estado
    inicial, ação, resultado), com qual mídia/composição, e o critério para conferir. Acontecimento sem mídia que o
@@ -52,13 +54,21 @@ Responda só JSON: {{"demonstracoes": [{{"evento_id", "como", "midia", "criterio
 
 Regras de direção (obrigatórias):
 - A foto/vídeo real relevante é o elemento principal. Não cubra fotografia com cartão de texto.
-- Todo movimento tem intenção (revelar, aproximar, localizar, acompanhar, explicar, comparar); sem intenção: "fixo".
+- Todo movimento tem intenção (revelar, aproximar, localizar, acompanhar, explicar, comparar); sem intenção: "fixo"
+  (plano fixo é legítimo: não acrescente zoom, círculo ou seta só para a imagem "andar").
+- "layout": "cobrir" (foto/vídeo cobre o quadro inteiro) ou "integral" (documento/mapa/gravura que precisa ser
+  visto inteiro, com margem). Se o essencial não cabe cobrindo o quadro, use "integral" ou outro recurso; nunca corte o
+  essencial.
+- Anotação só quando acrescenta o que imagem e narração não deixam claro; prefira nenhuma, um ponto ou uma seta breve.
 - Anotação só sobre objeto que está NA foto ("objeto_principal"/"alvo" serão localizados pela visão; se não achar, cai).
 - Mecanismo/processo é mostrado por composição que ANIMA a ação (veja as viáveis de cada acontecimento), não por cartões.
 - Selo honesto: REGISTRO (foto do próprio fato, ano compatível), CONTEXTO (lugar/objeto relacionado, não o instante),
   DOCUMENTO, ESQUEMA, RECONSTRUÇÃO, REPRESENTAÇÃO HISTÓRICA (gravura/pintura de época).
 - Não invente fatos nem números: todo número na tela está nos FATOS, com unidade. Rótulo ≤ 34 caracteres, selo ≤ 40.
-- Não repita a mesma foto em planos seguidos; no máximo 2 usos por vídeo. Varie transições: {transicoes}.
+- Não repita a mesma foto em planos seguidos; no máximo 2 usos por vídeo.
+- Transição: "corte" por padrão. Outra só com motivo narrativo ("dissolve": passagem de tempo ou mesmo lugar;
+  "preto": mudança de capítulo). Nunca use transição para disfarçar troca incoerente de mídia, nem varie por variar.
+  Disponíveis: {transicoes}.
 - "na_palavra": palavra exata da narração em que a anotação aparece.
 {erros}
 
@@ -71,7 +81,7 @@ Contrato de cada plano:
  "funcao_narrativa" (gancho|contexto|mecanismo|consequencia|revelacao|fechamento),
  "recurso_visual": {{"tipo": "foto|composicao|video", "id": "<id do ACERVO ou da composição>"}}, "composicao",
  "funcao_documental", "objeto_principal", "plano_inicial", "plano_final" (geral|contexto|objeto|detalhe ou {{"objeto": "<outro objeto>", "enquadramento": "detalhe"}}),
- "acao_visual", "movimento_camera", "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta: outro objeto da foto),
+ "acao_visual", "movimento_camera", "layout" (cobrir|integral), "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta: outro objeto da foto),
    "ate_desvio": [dx, dy] (opcional, só seta/trajeto DIDÁTICA a partir do alvo, fração da foto, ex. [0, -0.3] = para cima; rótulo diz "esquema"), "texto", "na_palavra"}}],
  "params_do_contrato": true (para composição viável de um acontecimento: os dados vêm do contrato), "params": {{...}} (só composições especiais),
  "tempos_palavras": {{"<passo>": "<palavra>"}} (opcional), "transicao", "selo_texto", "criterio_de_validacao": ["..."]}}
@@ -269,6 +279,8 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
             out.append((i, f"função narrativa inválida: {pl.get('funcao_narrativa')}"))
         if (pl.get('transicao') or 'corte') not in TRANSICOES:
             out.append((i, f"transição inexistente: {pl.get('transicao')}"))
+        if pl.get('layout') not in (None, 'cobrir', 'integral'):
+            out.append((i, f"layout inexistente: {pl.get('layout')} (cobrir|integral)"))
         comp = pl.get('composicao')
         rv = pl.get('recurso_visual') or {}
         ev = evs.get(pl.get('evento_id'))
@@ -609,6 +621,7 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     t0 = time.time()
     prev = previa_quadros(dados, dest, trab)
     graves = _choques(prev, dados)
+    graves.update(_camera_graves(prev, dados))
     graves.update(_perdas_criticas(reg))
     res['revisao_previa'] = {'planos_com_defeito': {str(k): v_ for k, v_ in sorted(graves.items())}}
     if graves and not sreg.get('_correcao_previa'):
@@ -632,6 +645,7 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
                 prev2 = previa_quadros(dados2, dest, trab)
                 sb, cenas, reg, dados, avisos, prev = sb2, cenas2, reg2, dados2, av2, prev2
                 graves = _choques(prev, dados)
+                graves.update(_camera_graves(prev, dados))
                 graves.update(_perdas_criticas(reg))
         sreg['consumo'] = {'chamadas': len(sreg['chamadas']), 'usd': round(sum(c.get('usd') or 0 for c in sreg['chamadas']), 4),
                            'segundos': round(sum(c.get('segundos') or 0 for c in sreg['chamadas']), 1),
@@ -644,7 +658,8 @@ def montar_video(v: dict, pasta: Path, nome: str, trab: Path, musica: Path | Non
     res['degradacoes'] = [{'plano': i, 'evento_id': r.get('evento_id'), **d} for i, r in enumerate(reg) for d in r.get('degradacoes') or []]
     res['revisoes_obrigatorias'] = [f"plano {d['plano']} ({d['codigo']}): {d['texto']}" for d in res['degradacoes'] if d['impacto'] == 'revisao']
     T['previa_s'] = round(time.time() - t0, 2)
-    res['previa'] = {'erros_pagina': prev['erros_pagina'], 'problemas_geometria': len(prev['problemas_geometria'])}
+    res['previa'] = {'erros_pagina': prev['erros_pagina'], 'problemas_geometria': len(prev['problemas_geometria']),
+                     'camera': [g for g in prev.get('camera') or [] if g['codigo'] not in CAMERA_GRAVE]}
     _gravar(dest / 'previa_geometria.json', prev['problemas_geometria'])
     _gravar(dest / 'v2_dados.json', dados)
     for c in cenas:
@@ -723,9 +738,29 @@ def previa_quadros(dados: dict, dest: Path, trab: Path) -> dict:
             for k, sc in enumerate(dados['scenes']):
                 palco.capturar(pg, round(sc['start'] + (sc['end'] - sc['start']) * .7, 2), dest / f'previa_{k:02d}.jpg', 80)
             erros = list(pg.erros) + list(pg.evaluate('V2.avisos') or [])
+            cam = _camera(pg, dados)
     except Exception as e:
         erros.append(f'prévia falhou: {str(e)[:200]}')
-    return {'erros_pagina': erros, 'problemas_geometria': geo}
+        cam = []
+    return {'erros_pagina': erros, 'problemas_geometria': geo, 'camera': cam}
+
+
+def _camera(pg, dados: dict) -> list[dict]:
+    """Plano Mestre §4.5: trajetória da câmera quadro a quadro (espelho) + o palco real medido (10 amostras/s)."""
+    from src.v3 import geometria
+    return geometria.auditar_dados(dados) + (geometria.auditar_palco(pg, dados) if pg is not None else [])
+
+
+CAMERA_GRAVE = ('G-BORDA', 'G-ENCOLHE', 'G-ESPELHO')
+
+
+def _camera_graves(prev: dict, dados: dict) -> dict:
+    """Planos (índice do storyboard) com borda/encolhimento/divergência de câmera → replanejamento; persiste = bloqueio."""
+    out = {}
+    for g in prev.get('camera') or []:
+        if g['codigo'] in CAMERA_GRAVE:
+            out.setdefault(dados['scenes'][g['plano']]['origem'][0], f"{g['codigo']} em {g['inicio']}s: {g['texto']}")
+    return out
 
 
 def _gravar(arq: Path, obj):

@@ -329,6 +329,17 @@
     }
     return out;
   }
+  // Plano Mestre §4.5: o que a imagem principal REALMENTE ocupa na tela em t (inclui transformações de transição)
+  window.geometria = async function (t) {
+    await window.seek(t);
+    return cenas.filter(c => c.el.style.visibility !== 'hidden').map(c => {
+      const m = c.el.querySelector('[data-ocupa]'); if (!m) return null;
+      const r = m.getBoundingClientRect();
+      return { cena: cenas.indexOf(c), comp: c.meta.id, layout: m.dataset.layout || '', x0: r.left, y0: r.top, x1: r.right, y1: r.bottom,
+               opacidade: +getComputedStyle(c.el).opacity, transform: m.style.transform, em_transicao: !!(c.el.style.transform || c.el.style.clipPath) };
+    }).filter(Boolean);
+  };
+
   window.inspecionar = function (t) {
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end); if (!at) return [];
     const tl = t - at.sc.start; if (tl < 0.6 || at.sc.end - t < 0.3) return [];      // entrada/saída animadas não contam

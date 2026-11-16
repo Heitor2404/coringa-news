@@ -89,8 +89,9 @@ def previa(p: dict, saida: Path, por_plano: int = 4) -> dict:
                 tira.paste(im, (j * 276, 0))
             tira.save(saida / f'previa_{k:02d}.jpg', quality=82)
         erros = list(pg.erros) + list(pg.evaluate('V2.avisos') or [])
+        cam = pipeline._camera(pg, dados)
     graves = pipeline._choques({'problemas_geometria': geo}, dados)
-    res = {'erros_pagina': erros, 'choques_graves': graves, 'geometria': len(geo),
+    res = {'erros_pagina': erros, 'choques_graves': graves, 'geometria': len(geo), 'camera': cam,
            'degradacoes': [{'plano': i, **d} for i, r in enumerate(p['reg']) for d in r.get('degradacoes') or []]}
     (saida / 'previa.json').write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
     return res

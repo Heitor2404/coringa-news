@@ -79,7 +79,10 @@ def test_movimento_imperceptivel_e_corrigido():
     reg = {'s1': {'foco': {'caixa': [0, 0, 1, 1]}, 'objetos': {'tudo': {'caixa': [0, 0, 1, 1], 'visivel': True, 'ancoravel': True}}}}
     cenas, r = diretor.montar({'planos': [_pl(objeto_principal='tudo')]}, AC, reg, PAL, {'f1'})
     cam = cenas[0]['params']['cam']
-    assert cam[0]['caixa'] != cam[-1]['caixa'] and r[0]['limitacoes']
+    # Plano Mestre §4.2 (16/11): movimento imperceptível vira plano FIXO de verdade — um enquadramento, sem a antiga
+    # "respiração" de 3% — e a troca fica registrada como degradação (não é silenciosa).
+    assert len(cam) == 1
+    assert any(d['codigo'] == 'MOVIMENTO-VIRA-FIXO' for d in r[0]['degradacoes'])
 
 
 def test_composicao_recebe_tempos_pela_fala():

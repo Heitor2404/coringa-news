@@ -653,6 +653,173 @@
    "tags": [
     "*"
    ]
+  },
+  {
+   "id": "ERR-027",
+   "titulo": "V3 sem bloqueio virava APROVADO_FISCAL e seguia para o Telegram",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "No fluxo main.py com MOTOR_VISUAL=v3, zero bloqueios gravava APROVADO_FISCAL e chamava telegram(), mesmo com revisões pendentes e sem revisão multimodal.",
+   "causa_raiz": "_montar_video_v3 só preenchia _bloqueado quando havia bloqueio; o resto do fluxo tratava vazio como liberado.",
+   "arquivos": [
+    "src/v3/estado_final.py",
+    "main.py"
+   ],
+   "correcao": "estados explícitos BLOQUEADO / AGUARDANDO_APROVACAO_HUMANA / APROVADO_HUMANO / PUBLICAVEL; máximo automático = AGUARDANDO; multimodal ausente = pendência; dois portões (fluxo e telegram()) só deixam passar PUBLICAVEL, que exige aprovação e autorização humanas.",
+   "testes": [
+    "tests/test_v3_p0_travas.py::test_zero_bloqueios_aguarda_humano_nunca_publicavel",
+    "tests/test_v3_p0_travas.py::test_main_v3_nao_envia_telegram_sem_publicavel",
+    "tests/test_v3_p0_travas.py::test_publicavel_so_com_aprovacao_humana_e_autorizacao"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "publicacao",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-028",
+   "titulo": "Orçamento só monitorava; nenhuma trava de dinheiro real",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "orcamento_video.py em modo monitorar ('não bloqueia'), medindo só o equivalente do Claude Code; provedor pago podia ser chamado sem teto, sem custo conhecido e sem limite de tentativas.",
+   "causa_raiz": "Fase 1 do orçamento foi desenhada como observação; não havia livro-caixa por provedor nem preflight.",
+   "arquivos": [
+    "src/caixa.py",
+    "src/claude.py",
+    "src/gemini.py",
+    "src/voz.py",
+    "src/imagens.py",
+    "main.py"
+   ],
+   "correcao": "src/caixa.py: três métricas separadas (cobrado, crédito, cota), provedores com faturamento declarado (desconhecido = negado; pago/confirmar = negado sem CAIXA_RATIFICADO), preflight com reserva e futuros contra o teto (0,80 provisório), custo desconhecido = negado, limites de tentativas/chamadas/tempo, persistência entre execuções e trava contra execução paralela. Ligado só no V3.",
+   "testes": [
+    "tests/test_v3_p0_travas.py::test_pago_sem_ratificacao_negado",
+    "tests/test_v3_p0_travas.py::test_custo_desconhecido_negado",
+    "tests/test_v3_p0_travas.py::test_orcamento_esgotado_e_futuros_reservados",
+    "tests/test_v3_p0_travas.py::test_api_falha_tambem_conta_e_persiste_entre_execucoes",
+    "tests/test_v3_p0_travas.py::test_corrida_duas_execucoes_mesmo_video"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "custo",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-029",
+   "titulo": "Foto principal encolhia e aparecia a cópia desfocada (doc.plano)",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "Londres 8–12 s e 12–15 s: mapa e placa em faixa com fundo desfocado; enquadramento mais largo que 9:16 reduzia a escala abaixo da cobertura.",
+   "causa_raiz": "doc.js calculava s = min(W/caixa.w, (H−380)/caixa.h) e só travava a borda quando a foto já cobria o eixo; não existia contrato de layout.",
+   "arquivos": [
+    "src/render/v2/comp/doc.js",
+    "src/v3/geometria.py",
+    "src/v2/diretor.py"
+   ],
+   "correcao": "layout explícito 'cobrir' (escala ≥ cobertura em todo o caminho, sem fundo visível) × 'integral' (documento/mapa inteiro sobre mesa escura; sobra só abaixo da linha da legenda); escolha automática registrada como degradação; espelho Python da conta e medição do palco real quadro a quadro.",
+   "testes": [
+    "tests/test_v3_geometria.py::test_cobrir_nunca_mostra_borda_nem_encolhe_no_meio_do_caminho",
+    "tests/test_v3_geometria.py::test_caixa_larga_nao_encolhe_a_foto_e_layout_nao_e_silencioso",
+    "tests/test_v3_geometria.py::test_palco_real_igual_ao_espelho_e_sem_borda"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "camera",
+    "geometria",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-030",
+   "titulo": "Plano 'fixo' tinha zoom de 3%",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "Planos fixos 'respiravam' sozinhos; movimento sem intenção escondia slide.",
+   "causa_raiz": "diretor.camera('fixo') gerava duas chaves com 3% de aproximação linear.",
+   "arquivos": [
+    "src/v2/diretor.py"
+   ],
+   "correcao": "fixo = uma chave, nenhuma transformação no tempo.",
+   "testes": [
+    "tests/test_v3_geometria.py::test_fixo_nao_tem_transformacao_no_tempo",
+    "tests/test_v3_diretor.py::test_movimento_imperceptivel_e_corrigido"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "camera"
+   ]
+  },
+  {
+   "id": "ERR-031",
+   "titulo": "Detalhe de documento caía embaixo da legenda; câmera com arranque/freada bruscos e percurso torto",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "Londres 13,5–15 s: linha destacada da placa sob a legenda (antes e na primeira correção); Monumento: zoom 49%/s, salto de 42 px num quadro, centro do quadro descia e voltava durante o zoom.",
+   "causa_raiz": "Escala de cobertura sem folga vertical num documento de baixa resolução; easing cúbico (pico 3× a média); chaves de câmera com duração pedida, sem relação com a distância; interpolação (log s, u, v) não mantém o centro em linha reta.",
+   "arquivos": [
+    "src/render/v2/comp/doc.js",
+    "src/v3/geometria.py",
+    "src/v2/diretor.py"
+   ],
+   "correcao": "integral aceita barra escura só abaixo da legenda e prefere composição limpa; seno in-out (pico 1,57×); duração mínima pela distância e pausa mínima de 0,5 s entre movimentos; centro interpolado em linha reta com limite por quadro; auditoria acusa salto, pan/zoom rápido, aceleração e para-e-anda.",
+   "testes": [
+    "tests/test_v3_geometria.py::test_detalhe_de_documento_fica_acima_da_legenda",
+    "tests/test_v3_geometria.py::test_aceleracao_suave_pico_de_velocidade",
+    "tests/test_v3_geometria.py::test_auditoria_acusa_salto_e_zoom_rapido",
+    "tests/test_v3_geometria.py::test_foto_pequena_nao_vira_cartao_deslizando"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "camera",
+    "geometria"
+   ]
+  },
+  {
+   "id": "ERR-032",
+   "titulo": "Prompt e fiscal empurravam efeitos sem motivo",
+   "data": "2026-11-16",
+   "versao": "P0/P1 Plano Mestre V1",
+   "sintoma": "Prompt V3 pedia 'Varie transições' e se apresentava como documentário; fiscal punia foto fixa sem anotação > 3 s (E-ATENCAO) e imagem parada mesmo em plano fixo pedido; zoom de transição empilhava com zoom de câmera.",
+   "causa_raiz": "Regras antigas de 'atenção' viraram incentivo para zoom/círculo inútil; transição tratada como variedade.",
+   "arquivos": [
+    "src/v3/pipeline.py",
+    "src/v2/diretor.py",
+    "src/v3/fiscal_editorial.py",
+    "src/v3/receitas.json"
+   ],
+   "correcao": "prompt multitemático, transição 'corte' por padrão e só com motivo, layout no contrato; fiscal: fixo legítimo (nota estética só > 6 s), parado onde se pediu movimento = revisão; transição zoom sobre câmera em movimento vira corte (registrado); receitas com corte por padrão e transição motivada anotada.",
+   "testes": [
+    "tests/test_v3_geometria.py::test_prompt_multitematico_sem_variedade_gratuita_de_transicao",
+    "tests/test_v3_geometria.py::test_transicao_zoom_nao_empilha_com_zoom_de_camera",
+    "tests/test_v3_fiscal.py::test_plano_fixo_nao_e_punido_e_movimento_parado_e",
+    "tests/test_v3_geometria.py::test_receitas_sem_transicao_decorativa_por_padrao"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (aguarda avaliação humana do MP4)",
+   "referencia": "Plano Mestre V1 §3/§4/§5; Londres trechos 7–19, 33–47, 47–58",
+   "verificavel": true,
+   "tags": [
+    "direcao",
+    "fiscal",
+    "*"
+   ]
   }
  ]
 }

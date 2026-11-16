@@ -126,13 +126,17 @@ def _uma(prompt: str, ref: bytes | None, seed: int, rotulo: str) -> bytes | None
             try:
                 p = prompt if not tentativa else prompt[:400]
                 # o schnell não usa referência: reforça a descrição no texto
-                d = fn(p, ref if nome in ('flux2', 'gemini') else None, seed)
+                from . import caixa  # trava: cloudflare/gemini-imagem podem cobrar → negados sem ratificação (pula o motor)
+                prov = {'flux2': 'cloudflare', 'schnell': 'cloudflare', 'pollinations': 'pollinations', 'gemini': 'gemini_imagem'}[nome]
+                d = caixa.operar(prov, 'imagem', lambda: fn(p, ref if nome in ('flux2', 'gemini') else None, seed), pior_usd=0.05)
                 if d:
                     print(f'  [imagem/{nome}] ok: {rotulo}')
                     return d
                 break
             except Exception as e:
                 print(f'  [imagem/{nome}] {rotulo} falhou: {str(e)[:140]}')
+                if type(e).__name__ == 'OperacaoNegada':
+                    break       # trava do caixa: pula este motor sem insistir
                 time.sleep(2)
     return None
 

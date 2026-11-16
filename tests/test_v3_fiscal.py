@@ -84,3 +84,18 @@ def test_data_na_tela_nao_e_numero_fora_da_pesquisa(mp4):
     reg = [{'evento_id': f'e{i + 1}', 'erros': [], 'trechos': [i], 'camera': {'roi': [0, 0, 1, 1]}} for i in range(3)]
     f = F.avaliar(mp4, d, reg, {'eventos': []}, {'fatos': 'partiu de Southampton em 10 de abril de 1912', 'cenas': [{'fala': 'x'}] * 3})
     assert not any(a['codigo'] == 'E-NUMERO' for a in f['achados'])
+
+
+def test_plano_fixo_nao_e_punido_e_movimento_parado_e(mp4):
+    """Plano Mestre §3/§4.2: foto fixa sem anotação é legítima (sem incentivo a zoom/círculo inútil); imagem parada onde
+    a direção pediu MOVIMENTO é movimento mal executado → revisão."""
+    d = _dados([('e1', 'a', 'fixo', 'um'), ('e2', 'b', 'fixo', 'dois'), ('e3', 'c', 'fixo', 'tres')])
+    reg = [{'evento_id': f'e{i + 1}', 'erros': [], 'limitacoes': [], 'trechos': [i], 'camera': {'roi': [0, 0, 1, 1]}} for i in range(3)]
+    ctx = {'eventos': []}
+    f = F.avaliar(mp4, d, reg, ctx, {'fatos': '', 'cenas': [{'fala': 'x'}] * 3})
+    assert not [a for a in f['achados'] if a['codigo'] in ('E-ATENCAO', 'E-PARADO') and a['classe'] != 'estetica']
+    assert all(a['classe'] == 'estetica' for a in f['achados'] if a['codigo'] == 'E-SLIDESHOW')
+    d['scenes'][1]['params']['cam'] = [{'t': 0, 'caixa': [0, 0, 1, 1]}, {'t': 3, 'caixa': [.3, .3, .4, .4]}]
+    f = F.avaliar(mp4, d, reg, ctx, {'fatos': '', 'cenas': [{'fala': 'x'}] * 3})
+    parado = [a for a in f['achados'] if a['codigo'] == 'E-PARADO']
+    assert parado and all(a['classe'] == 'revisao' for a in parado)

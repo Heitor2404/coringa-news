@@ -109,8 +109,11 @@ def pedir(prompt: str, leve: bool = False) -> str:
     # Fase 1 (12/11): o orçamento do vídeo só CALCULA o pior caso e o que faria; o comando acima não muda
     from . import orcamento_video
     dec = orcamento_video.antes(prompt, modelo, sistema=sistema)
+    from . import caixa                           # trava (Plano Mestre §5): assinatura → só registra o crédito
+    g0 = GASTO['usd']
     try:
-        return _executar(cmd, prompt, modelo)
+        return caixa.operar('claude_code', custo._quem_chamou(),
+                            lambda: _executar(cmd, prompt, modelo), credito=lambda: GASTO['usd'] - g0)
     finally:
         orcamento_video.depois(dec)
 

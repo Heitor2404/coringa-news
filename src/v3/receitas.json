@@ -42,7 +42,7 @@
      "quando": "na palavra do nome do lugar"
     }
    ],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "objeto_principal = o marco reconhecível do lugar",
     "selo_texto = lugar + ano da foto"
@@ -52,6 +52,16 @@
    "motivo": "sem movimento com intenção o plano parece slide",
    "testes": [
     "tests/test_v3_diretor.py::test_movimento_imperceptivel_e_corrigido"
+   ],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
    ]
   },
   {
@@ -97,7 +107,7 @@
      "quando": "na palavra que nomeia o objeto"
     }
    ],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "objeto_principal",
     "anotacoes[].na_palavra (palavra que está na fala)",
@@ -120,8 +130,16 @@
      "estado": "testado",
      "data": "2026-11-16",
      "evidencia": "rebaixada no resgate V3.1: frase genérica do brief não é aprovação editorial individual; falta avaliação humana de um vídeo que use a receita"
+    },
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
     }
-   ]
+   ],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   }
   },
   {
    "id": "R-LOCALIZA-RECUA",
@@ -228,7 +246,7 @@
    },
    "movimento": "explicar",
    "anotacoes": [],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "params_do_contrato: true",
     "tempos_palavras: passo → palavra da fala"
@@ -249,8 +267,16 @@
      "estado": "testado",
      "data": "2026-11-16",
      "evidencia": "rebaixada no resgate V3.1: frase genérica do brief não é aprovação editorial individual; falta avaliação humana de um vídeo que use a receita"
+    },
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
     }
-   ]
+   ],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   }
   },
   {
    "id": "R-ANTES-DEPOIS",
@@ -329,7 +355,7 @@
    },
    "movimento": "acompanhar",
    "anotacoes": [],
-   "transicao": "whip",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "params_do_contrato: true"
    ],
@@ -338,6 +364,16 @@
    "motivo": "",
    "testes": [
     "tests/test_v21.py::test_rota_maritima_reta_sobre_continente_e_rejeitada"
+   ],
+   "transicao_motivada": {
+    "tipo": "whip",
+    "quando": "só se o deslocamento físico for o assunto e a câmera do plano seguinte continuar o movimento"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão whip → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
    ]
   },
   {
@@ -470,7 +506,7 @@
      "quando": "no trecho citado do documento"
     }
    ],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "funcao_documental = REGISTRO só com ano compatível; senão CONTEXTO ou REPRESENTAÇÃO HISTÓRICA"
    ],
@@ -479,6 +515,16 @@
    "motivo": "honestidade documental",
    "testes": [
     "tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"
+   ],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
    ]
   },
   {
@@ -513,7 +559,7 @@
    "enquadramento": {},
    "movimento": "explicar",
    "anotacoes": [],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "funcao_documental = ESQUEMA ou RECONSTRUÇÃO"
    ],
@@ -522,6 +568,16 @@
    "motivo": "nenhuma mídia gerada por IA como registro",
    "testes": [
     "tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"
+   ],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
    ]
   },
   {
@@ -600,14 +656,24 @@
    "enquadramento": {},
    "movimento": "explicar",
    "anotacoes": [],
-   "transicao": "dissolve",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "params_do_contrato: true"
    ],
    "exemplo_aprovado": null,
    "exemplo_reprovado": null,
    "motivo": "",
-   "testes": []
+   "testes": [],
+   "transicao_motivada": {
+    "tipo": "dissolve",
+    "quando": "só para passagem de tempo ou mesmo lugar"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão dissolve → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
+   ]
   },
   {
    "id": "R-REVELACAO-FINAL",
@@ -640,14 +706,24 @@
    },
    "movimento": "revelar",
    "anotacoes": [],
-   "transicao": "iris",
+   "transicao": "corte",
    "parametros_obrigatorios": [
     "fala do plano contém a resposta da pergunta central"
    ],
    "exemplo_aprovado": null,
    "exemplo_reprovado": "V3 Pompeia/Panamá: encerramento com área vazia (AV-VAZIO).",
    "motivo": "",
-   "testes": []
+   "testes": [],
+   "transicao_motivada": {
+    "tipo": "iris",
+    "quando": "só se a revelação vier do centro de interesse e não houver zoom de câmera no início"
+   },
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "transição padrão iris → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    }
+   ]
   },
   {
    "id": "R-GANCHO-IMPACTO",

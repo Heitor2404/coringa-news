@@ -66,7 +66,7 @@ def texto_prompt(rs: list[dict]) -> str:
         linhas.append(f"[{r['id']} · {rot}] {r['objetivo']} Usar quando: {'; '.join(r['adequado'])}. Não usar: {'; '.join(r['inadequado'])}. "
                       f"Composições: {', '.join(r['composicoes'])}. Câmera: {r['movimento']}"
                       + (f" ({enq.get('inicial')}→{enq.get('final')})" if enq.get('inicial') else '')
-                      + (f". Anotação: {an}" if an else '') + f". Transição: {r['transicao']}. Obrigatório: {'; '.join(r['parametros_obrigatorios'])}."
+                      + (f". Anotação: {an}" if an else '') + f". Transição: {r['transicao']}" + (f" ({r['transicao_motivada']['tipo']} {r['transicao_motivada']['quando']})" if r.get('transicao_motivada') else '') + ". Obrigatório: {'; '.join(r['parametros_obrigatorios'])}."
                       + (f" Exemplo aprovado (padrão, não copie fatos): {r['exemplo_aprovado']}" if r.get('exemplo_aprovado') else '')
                       + (f" Exemplo reprovado: {r['exemplo_reprovado']}" if r.get('exemplo_reprovado') else ''))
     return '\n'.join(linhas)

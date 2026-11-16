@@ -919,8 +919,12 @@ def _montar_video_v3(v: dict, pasta: Path, nome: str, trab: Path) -> Path:
     v.setdefault('pergunta', _pergunta_fixa(v))
     res = pipeline.montar_video(v, pasta, nome, trab, musica=escolher_musica(v, nome))
     v['_v3'] = res
-    if res['bloqueios']:
-        v['_bloqueado'] = 'fiscal V3.1: ' + '; '.join(res['bloqueios'])[:500]
+    from src.v3 import estado_final
+    ef = estado_final.decidir(res)              # Plano Mestre §6: 0 bloqueios → AGUARDANDO_APROVACAO_HUMANA, nunca publicável
+    v['_estado_final'] = ef
+    estado_final.gravar(ef, Path(res['pasta']) / 'estado_final.json')
+    if ef['estado'] == estado_final.BLOQUEADO:
+        v['_bloqueado'] = 'fiscal V3.1: ' + '; '.join(ef['motivos'])[:500]
     saida = Path(res['mp4']) if res.get('mp4') else pasta / f'{nome}.mp4'
     creditos = []
     try:
@@ -1019,6 +1023,11 @@ def telegram(arq: Path, legenda: str, v: dict | None = None):
     textos prontos de cada rede."""
     if not (os.getenv('TELEGRAM_BOT_TOKEN') and os.getenv('TELEGRAM_CHAT_ID')):
         return
+    if (v or {}).get('_estado_final') is not None:   # V3: segundo portão (defesa em profundidade)
+        from src.v3 import estado_final
+        if not estado_final.pode_enviar(v['_estado_final']):
+            print(f"  [telegram] V3 em {v['_estado_final'].get('estado')}: não envio")
+            return
     try:
         info = (v or {}).get('_telegram') or {}
         envio = _versao_telegram(arq) if arq.suffix == '.mp4' else arq
@@ -1074,7 +1083,14 @@ def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None =
     unico=True (curiosidade pedida à mão / teste, 13/11): no máximo UM vídeo — reprovado, não há outro tema depois."""
     from src import orcamento_video          # Fase 1 (monitorar): orçamento do vídeo; no diário já vem aberto
     with orcamento_video.video(pedido):
-        return _fazer_curiosidade(pedido, parte, pasta, pauta, unico)
+        if os.getenv('MOTOR_VISUAL') != 'v3':
+            return _fazer_curiosidade(pedido, parte, pasta, pauta, unico)
+        from src import caixa                 # V3: trava financeira real (Plano Mestre §5); persistida na pasta da execução
+        with caixa.video(pedido, pasta):
+            try:
+                return _fazer_curiosidade(pedido, parte, pasta, pauta, unico)
+            finally:
+                print('  [caixa] ' + json.dumps(caixa.resumo(), ensure_ascii=False))
 
 
 def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None, unico: bool = False):
@@ -1111,8 +1127,12 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         v['_pauta'] = pauta or {}
         nome = f'explica-{slug(pedido)[:40]}' + (f'-parte{parte}' if v.get('parte') else '')
         arq = montar_video(v, pasta, nome)
-        _status_v2(pasta, 'APROVADO_FISCAL' if not v.get('_bloqueado') else 'MP4_GERADO', v, mp4=arq,
-                   motivo=v.get('_bloqueado') or '')
+        ef = v.get('_estado_final')
+        if ef is not None:                       # V3: estado explícito; sem bloqueio = aguarda o humano, sem envio
+            _status_v2(pasta, ef['estado'], v, mp4=arq, motivo=v.get('_bloqueado') or '; '.join(ef['pendencias'])[:600])
+        else:
+            _status_v2(pasta, 'APROVADO_FISCAL' if not v.get('_bloqueado') else 'MP4_GERADO', v, mp4=arq,
+                       motivo=v.get('_bloqueado') or '')
         if v.get('_bloqueado'):
             seguir = 'execução única: não tento outro tema' if unico else 'tento outro tema'
             print(f"  ✘ porteiro: não mando este vídeo ({v['_bloqueado']}); {seguir}")
@@ -1129,13 +1149,19 @@ def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None 
         serie['atualizado'] = datetime.now(BRT).strftime('%Y-%m-%d')
         serie.pop('adiada', None)
         arq_serie.write_text(json.dumps(serie, ensure_ascii=False, indent=1), encoding='utf-8')
+        if ef is not None:
+            from src.v3 import estado_final
+            if not estado_final.pode_enviar(ef):  # V3: nenhuma saída sem APROVADO_HUMANO + autorização de publicação
+                print(f"  [V3] {ef['estado']}: MP4 guardado para o humano; nada enviado")
+                return True
         telegram(arq, (pasta / (arq.stem + '.txt')).read_text(encoding='utf-8'), v)
         return True
     except Exception as e:
         if not _STATUS_ESCRITO:           # V2.4: o MP4 já gravou o próprio status (porteiro); aqui só o que parou antes
             vv = locals().get('v') if isinstance(locals().get('v'), dict) else getattr(e, 'v', None) or {}
             txt = str(e)
-            st = ('BLOQUEADO_PREPARO' if 'antes da narração' in txt else
+            st = ('BLOQUEADO_ORCAMENTO' if type(e).__name__ in ('OperacaoNegada', 'CaixaOcupado') else
+                  'BLOQUEADO_PREPARO' if 'antes da narração' in txt else
                   'BLOQUEADO_MATERIAL' if re.search(r'material|sem fotos|nenhuma fonte|pulo para o próximo tema', txt, re.I) else
                   'FALHA_OPERACIONAL')
             _status_v2(pasta, st, vv, motivo=txt[:600])
@@ -1158,7 +1184,7 @@ def _status_v2(pasta: Path, status: str, v: dict | None = None, mp4: Path | None
     if os.getenv('MOTOR_VISUAL') not in ('v2', 'v3'):
         return
     v = v or {}
-    if status in ('MP4_GERADO', 'APROVADO_FISCAL') and not (mp4 and Path(mp4).exists() and Path(mp4).stat().st_size > 0):
+    if status in ('MP4_GERADO', 'APROVADO_FISCAL', 'AGUARDANDO_APROVACAO_HUMANA') and not (mp4 and Path(mp4).exists() and Path(mp4).stat().st_size > 0):
         status, motivo = 'FALHA_OPERACIONAL', f'montagem terminou sem MP4 no disco ({mp4}); {motivo}'
     prep = v.get('_preparo') or {}
     from src.v2 import estados as _est

@@ -43,8 +43,10 @@ def _rest_tts(modelo: str, texto: str, voz: str, formato: str, chave: str = '', 
              'generationConfig': {'responseModalities': ['AUDIO'], 'speechConfig': {'voiceConfig': vc}}}
     if sistema:
         corpo['systemInstruction'] = {'parts': [{'text': sistema}]}
-    r = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent',
-                      headers={'x-goog-api-key': chave or os.getenv('GEMINI_API_KEY', '')}, json=corpo, timeout=300)
+    from . import caixa                          # trava (Plano Mestre §5)
+    r = caixa.operar('gemini', 'tts', lambda: requests.post(
+        f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent',
+        headers={'x-goog-api-key': chave or os.getenv('GEMINI_API_KEY', '')}, json=corpo, timeout=300))
     if r.status_code >= 400:
         raise RuntimeError(f'{r.status_code} {r.text[:160]}')
     return base64.b64decode(r.json()['candidates'][0]['content']['parts'][0]['inlineData']['data'])

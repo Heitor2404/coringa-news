@@ -36,14 +36,53 @@
   const credito = (c) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="right:60px;top:1132px;max-width:680px;text-align:right;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
 
   // câmera: quadros-chave [{t, caixa:[x,y,w,h] (0–1 da imagem)}] → {cx, cy, w, h} em pixels da imagem no instante tl
-  function camEm(cam, tl, iw, ih) {
-    const ks = (cam && cam.length ? cam : [{ t: 0, caixa: [0, 0, 1, 1] }]).map(k => ({ t: +k.t || 0, x: k.caixa[0] * iw, y: k.caixa[1] * ih, w: k.caixa[2] * iw, h: k.caixa[3] * ih, ease: k.ease }));
-    let a = ks[0], b = ks[0], k = 0;
+  /* Câmera do doc.plano (Plano Mestre §4). Cada enquadramento-chave vira um ESTADO {ls: log da escala, cx, cy: ponto
+   * da imagem no centro de composição}. Entre chaves: escala em log e centro em linha reta (sem desvio de percurso), e a
+   * posição é LIMITADA a cada quadro ao que o layout permite: em 'cobrir' a escala nunca fica abaixo da que cobre o
+   * quadro e a imagem nunca descobre a borda — nem nas pontas nem NO MEIO do caminho. 'integral' (documento/mapa inteiro) pode deixar margem, de
+   * propósito, sobre um fundo próprio. A caixa da direção cabe em 1080×1540 centrada em y 760 (o assunto fica acima
+   * da legenda), como antes. */
+  const FIT_H = 1540, CY = 760, SMAX = 1.8, BARRA = 1140;
+  // limites verticais da posição (ty) para uma escala s. 'cobrir': a imagem cobre de 0 a H. 'integral': o topo nunca
+  // deixa vão (ou a imagem cabe inteira) e a borda de baixo fica entre a linha da legenda (BARRA) e H: a sobra, se
+  // houver, é uma barra escura de legenda embaixo — nunca em cima nem no meio do quadro.
+  function faixaY(s, ih, layout) {
+    if (layout !== 'integral') return [Math.min(0, H - ih * s), Math.max(0, H - ih * s)];
+    return [BARRA - ih * s, Math.max(0, H - ih * s)];
+  }
+  function estadoCam(k, iw, ih, layout) {
+    const b = { x: k.caixa[0] * iw, y: k.caixa[1] * ih, w: k.caixa[2] * iw, h: k.caixa[3] * ih };
+    const bcx = b.x + b.w / 2, bcy = b.y + b.h / 2;
+    const nat = Math.max(W / iw, H / ih), teto = Math.max(nat, SMAX);
+    const sb = Math.min(W / b.w, FIT_H / b.h);
+    // integral: nunca amplia além de SMAX (prefere margem a imagem macia); cobrir: nunca abaixo da escala que cobre
+    let s = layout === 'integral' ? Math.min(sb, SMAX) : clamp(sb, nat, teto);
+    // integral quase cobrindo: margem pequena parece acidente → cobre, se o assunto continuar perto do lugar dele
+    if (layout === 'integral' && s < nat && s >= .82 * nat && nat <= SMAX * 1.12 && Math.abs(clamp(CY - bcy * nat, H - ih * nat, 0) + bcy * nat - CY) < 250) s = nat;
+    let tx = W / 2 - bcx * s, ty = CY - bcy * s;
+    // integral: prefere a composição limpa (cobrindo, ou inteira dentro do quadro) se o assunto andar < 250 px por isso
+    if (layout === 'integral') { const tc = clamp(ty, Math.min(0, H - ih * s), Math.max(0, H - ih * s)); if (Math.abs(tc - ty) < 250) ty = tc; }
+    const dx = W - iw * s, [lo, hi] = faixaY(s, ih, layout);
+    tx = clamp(tx, Math.min(0, dx), Math.max(0, dx)); ty = clamp(ty, lo, hi);
+    // imagem menor que o quadro nos dois eixos (foto pequena): fica parada, centrada e encostada no topo — mover um
+    // "cartão" pela tela não é movimento de câmera
+    if (layout === 'integral' && iw * s < W && ih * s < H) { tx = dx / 2; ty = clamp(0, lo, hi); }
+    // estado = escala (log) + ponto da imagem que fica no centro de composição (W/2, CY): o centro anda em linha reta
+    return { t: +k.t || 0, ease: k.ease, ls: Math.log(s), cx: (W / 2 - tx) / s, cy: (CY - ty) / s };
+  }
+  function limitar(s, cx, cy, iw, ih, layout) {      // posição dentro do que o layout permite para esta escala
+    const dx = W - iw * s, [lo, hi] = faixaY(s, ih, layout);
+    if (layout === 'integral' && iw * s < W && ih * s < H) return { s, tx: dx / 2, ty: clamp(0, lo, hi) };
+    return { s, tx: clamp(W / 2 - cx * s, Math.min(0, dx), Math.max(0, dx)), ty: clamp(CY - cy * s, lo, hi) };
+  }
+  function camEm(cam, tl, iw, ih, layout) {
+    const ks = (cam && cam.length ? cam : [{ t: 0, caixa: [0, 0, 1, 1] }]).map(k => estadoCam(k, iw, ih, layout));
+    let a = ks[0], b = ks[0], k = 1;
     for (let i = 0; i < ks.length - 1; i++) if (tl >= ks[i].t) { a = ks[i]; b = ks[i + 1]; k = clamp((tl - a.t) / Math.max(.01, b.t - a.t)); }
     if (tl >= ks[ks.length - 1].t) { a = b = ks[ks.length - 1]; k = 1; }
-    const e = (b.ease === 'linear' ? k : eio(k));
-    const w = Math.exp(lerp(Math.log(a.w), Math.log(b.w), e)), h = Math.exp(lerp(Math.log(a.h), Math.log(b.h), e));
-    return { cx: lerp(a.x + a.w / 2, b.x + b.w / 2, e), cy: lerp(a.y + a.h / 2, b.y + b.h / 2, e), w, h };
+    // seno in-out: pico de velocidade 1,57× a média (o cúbico dava 3×: arranque e freada bruscos)
+    const e = (b.ease === 'linear' ? k : (1 - Math.cos(Math.PI * k)) / 2);
+    return limitar(Math.exp(lerp(a.ls, b.ls, e)), lerp(a.cx, b.cx, e), lerp(a.cy, b.cy, e), iw, ih, layout);
   }
 
   // anotações: desenho em SVG de tela (traço constante) + rótulo HTML posicionado fora da região, dentro da área segura
@@ -78,11 +117,11 @@
     objetivo: 'Fazer a fotografia explicar: o espectador olha para onde a narração aponta, no momento em que ela aponta.',
     funcoes: ['lugar', 'pessoa', 'objeto', 'ambiente', 'documento', 'evento_historico', 'contexto'],
     params: { img: 'arquivo da foto', wh: '[largura, altura] em pixels', cam: '[{t, caixa:[x,y,w,h] 0–1}] enquadramentos-chave (da direção)',
-      centro_y: 'altura do centro do quadro na tela (padrão 760: o assunto fica acima da legenda)',
+      layout: "'cobrir' (padrão: foto/vídeo cobre o quadro, sem borda, sem encolher) | 'integral' (documento/mapa inteiro com margem intencional)",
       anot: '[{tipo: circulo|contorno|foco|seta|trajeto, caixa | de/para, t0, t1, texto ≤ 34, lado}] — caixa da VISÃO, nunca adivinhada',
       avanco: 'opcional {etapas: [{t, centro: [x, y] (fração da imagem), raio (fração da diagonal), dur}]} — revela a imagem em cor, em etapas, a partir de um ponto (propagação, expansão, inundação); o resto fica cinza. Só sobre mapa/registro que JÁ mostra a área final; selo diz ESQUEMA se a ordem é aproximada',
       tratamento: 'atual | arquivo | gravura | satelite', selo: '{funcao, texto ≤ 44}', credito: '≤ 70', entrada: 'dissolve | corte' },
-    fundo: 'próprio: foto + cópia desfocada da própria foto atrás (para enquadramentos mais largos que 9:16)',
+    fundo: "próprio: 'cobrir' não mostra fundo; 'integral' usa mesa escura com sombra (composição intencional, não sobra acidental)",
     layout: 'foto ocupa o quadro; selo y 300; anotações e rótulos entre y 330 e 1140; legenda 1180–1440 livre',
     paleta: 'a da foto (tratamento de cor comum); anotações amarelas', animacao: 'câmera entre enquadramentos-chave com aceleração suave; anotação desenha no tempo da palavra',
     duracao: [2, 4.5, 9], limites: { texto: 34, selo: 44 }, legenda: 'livre',
@@ -91,10 +130,13 @@
     transicao: 'dissolve',
     exemplo: { params: { img: '@lago_navios', wh: [1600, 1067], cam: [{ t: 0, caixa: [0, 0, 1, 1] }, { t: 3, caixa: [.3, .3, .4, .4] }], anot: [{ tipo: 'circulo', caixa: [.4, .4, .2, .2], t0: 1.5, texto: 'NAVIO' }], selo: { funcao: 'CONTEXTO', texto: 'LAGO GATÚN, 2000' } }, dur: 4, fala: 'No meio do caminho há um lago.' },
   }, (p, ctx) => {
-    const [iw, ih] = p.wh || [1600, 900], CY = +p.centro_y || 760, anot = (p.anot || []).map((a, k) => ({ ...a, _id: ctx.i + '_' + k }));
+    const [iw, ih] = p.wh || [1600, 900], LAY = p.layout === 'integral' ? 'integral' : 'cobrir', anot = (p.anot || []).map((a, k) => ({ ...a, _id: ctx.i + '_' + k }));
+    // fundo próprio e intencional: 'integral' = mesa escura (documento/mapa inteiro, com margem de propósito);
+    // 'cobrir' = a foto cobre o quadro inteiro, então o fundo nunca aparece (não há mais cópia desfocada da foto)
+    const fundo = LAY === 'integral' ? 'background:radial-gradient(ellipse 90% 60% at 50% 40%, #23262c 0%, #121418 60%, #0a0b0d 100%)' : 'background:#0b0c0e';
     return {
-      html: `<div class="abs dp-bg" style="inset:-60px;background:url('${p.img}') center/cover;filter:blur(38px) brightness(.42) ${TRAT[p.tratamento] || TRAT.atual}"></div>
-        <div class="abs dp-mundo" data-ocupa="1" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;box-shadow:0 0 120px rgba(0,0,0,.55)">
+      html: `<div class="abs dp-bg" data-layout="${LAY}" style="inset:0;${fundo}"></div>
+        <div class="abs dp-mundo" data-ocupa="1" data-layout="${LAY}" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;${LAY === 'integral' ? 'box-shadow:0 18px 70px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)' : ''}">
           <img src="${(p.avanco && p.avanco.base) || p.img}" style="display:block;width:${iw}px;height:${ih}px;filter:${p.avanco && !p.avanco.base ? 'grayscale(1) brightness(.62) contrast(.9)' : (TRAT[p.tratamento] || TRAT.atual)}">
           ${p.avanco ? `<img class="dp-avanco" src="${p.img}" style="position:absolute;left:0;top:0;width:${iw}px;height:${ih}px;filter:${TRAT[p.tratamento] || TRAT.atual} saturate(1.25);clip-path:circle(0px at 0 0)">
           <div class="dp-frente" style="position:absolute;left:0;top:0;border-radius:50%;border:${Math.round(4 * iw / 1080)}px solid #ff7a1a;box-shadow:0 0 ${Math.round(28 * iw / 1080)}px #ff5a00;opacity:0"></div>` : ''}</div>
@@ -105,14 +147,7 @@
         ${anot.map((a, i) => a.texto ? `<div class="abs dp-rot dr${i}" data-g="rotulo" data-txt="1" style="left:0;top:0;max-width:600px;padding:10px 18px;background:rgba(8,10,14,.82);border-left:6px solid ${a.cor || AMARELO};font-weight:900;font-size:34px;line-height:1.08;text-transform:uppercase;color:#fff;opacity:0">${hl(a.texto)}</div>` : '').join('')}
         ${selo(p.selo)}${credito(p.credito)}`,
       upd(tl, el) {
-        const c = camEm(p.cam, tl, iw, ih);
-        const nat = Math.max(W / iw, H / ih);                  // escala que cobre a tela
-        let s = Math.min(W / c.w, (H - 380) / c.h);            // a caixa inteira cabe acima da legenda
-        s = Math.min(s, Math.max(nat, 1.8));                   // nunca estoura a resolução
-        let tx = W / 2 - c.cx * s, ty = CY - c.cy * s;
-        // sem faixa vazia: se a foto (nesta escala) cobre a tela num eixo, a câmera não deixa sobrar borda nesse eixo
-        if (iw * s >= W) tx = clamp(tx, W - iw * s, 0);
-        if (ih * s >= H) ty = clamp(ty, H - ih * s, 0); else if (ih * s >= 1500) ty = clamp(ty, 1500 - ih * s, 0);
+        const { s, tx, ty } = camEm(p.cam, tl, iw, ih, LAY);
         el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
         if (p.avanco) {                                       // V3.1-resgate: área revelada em etapas a partir de um ponto
           const E = p.avanco.etapas || [], D = Math.hypot(iw, ih);

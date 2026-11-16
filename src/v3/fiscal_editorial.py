@@ -92,7 +92,18 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
         if x['codigo'] == 'AV-PERGUNTA':
             a('bloqueio', 'E-PERGUNTA', x['evidencia'])
         elif x['codigo'] == 'AV-PARADO':
-            a('revisao', 'E-PARADO', f"imagem parada {x['inicio']}–{x['fim']} s", x['inicio'], x['fim'], evidencia=x['evidencia'])
+            # Plano Mestre §4.2: plano fixo é legítimo. Parado onde a direção pediu FIXO = só nota estética se longo;
+            # parado onde a direção pediu MOVIMENTO (ou avanço) = movimento mal executado → revisão.
+            sob = [k for k, c in enumerate(cenas) if c['start'] < x['fim'] and c['end'] > x['inicio']]   # planos sob o trecho parado
+            movidos = [k for k in sob if not (cenas[k]['comp'] == 'doc.plano' and len((cenas[k].get('params') or {}).get('cam') or []) <= 1
+                                              and not (cenas[k].get('params') or {}).get('avanco'))]
+            k = movidos[0] if movidos else (sob[0] if sob else None)
+            if not movidos:
+                if x['fim'] - x['inicio'] >= 6:
+                    a('estetica', 'E-PARADO-LONGO', f"plano fixo de {x['fim'] - x['inicio']:.0f}s ({x['inicio']}–{x['fim']} s): confira se a imagem sustenta o tempo",
+                      x['inicio'], x['fim'], k, evidencia=x['evidencia'])
+            else:
+                a('revisao', 'E-PARADO', f"imagem parada {x['inicio']}–{x['fim']} s num plano com movimento/avanço pedido", x['inicio'], x['fim'], k, evidencia=x['evidencia'])
         elif x['codigo'] == 'AV-VAZIO':
             pass                                          # agregado abaixo (um achado por trecho contínuo)
         elif x['codigo'] == 'AV-REPETE':
@@ -141,9 +152,11 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
         if c['comp'] == 'doc.plano':
             if d.get('objeto_principal') and not (r.get('camera') or {}).get('roi'):
                 a('revisao', 'E-OBJETO', f"plano {k}: '{d.get('objeto_principal')}' não localizado na foto (câmera no foco geral)", c['start'], c['end'], k)
+            # Plano Mestre §3: não premiar zoom/círculo inútil. Foto fixa sem anotação é legítima; só uma nota estética
+            # quando é longa — a correção é revisar a imagem/narração, não acrescentar efeito.
             sem_atencao = (d.get('movimento_camera') in (None, 'fixo')) and not (c.get('params') or {}).get('anot')
-            if sem_atencao and c['end'] - c['start'] > 3:
-                a('revisao', 'E-ATENCAO', f'plano {k}: foto fixa sem anotação por {c["end"] - c["start"]:.1f}s (cara de slide)', c['start'], c['end'], k)
+            if sem_atencao and c['end'] - c['start'] > 6:
+                a('estetica', 'E-ATENCAO', f'plano {k}: foto fixa sem anotação por {c["end"] - c["start"]:.1f}s — confira se a imagem sustenta o tempo (não resolver com efeito)', c['start'], c['end'], k)
         for an in (c.get('params') or {}).get('anot') or []:
             t = _n(an.get('texto'))
             if t and len(t.split()) >= 4 and t in _n(c.get('fala')):
@@ -162,7 +175,11 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
     slide = sum(1 for c in cenas if c['comp'] == 'doc.plano' and (c.get('direcao') or {}).get('movimento_camera') in (None, 'fixo')
                 and not (c.get('params') or {}).get('anot'))
     if cenas and slide / len(cenas) > .4:
-        a('revisao', 'E-SLIDESHOW', f'{slide} de {len(cenas)} planos são foto fixa sem anotação: sequência com cara de apresentação de slides')
+        a('estetica', 'E-SLIDESHOW', f'{slide} de {len(cenas)} planos são foto fixa sem anotação: confira a progressão de informação (não acrescentar efeito por isso)')
+    from src.v3 import geometria                    # Plano Mestre §4.5: trajetória contínua da câmera, quadro a quadro
+    for g in geometria.auditar_dados(dados):
+        classe = 'bloqueio' if g['codigo'] in ('G-BORDA', 'G-ENCOLHE') else 'revisao'
+        a(classe, g['codigo'], f"plano {g['plano']}: {g['texto']}", g['inicio'], g['inicio'], g['plano'])
     for r in registro:
         for e in r.get('erros') or []:
             a('revisao', 'D-PLANO-RECUSADO', f"plano de {r.get('evento_id')} recusado pelo validador: {e}")

@@ -34,7 +34,7 @@ TEMPOS_POR_NOME = {'doc.eclusa', 'doc.molde'}     # composições V3 que leem `t
 MOVIMENTOS = {'revelar', 'aproximar', 'localizar', 'acompanhar', 'explicar', 'comparar', 'fixo'}
 CAMPOS = ('evento_id', 'fato_id', 'fonte', 'funcao_narrativa', 'recurso_visual', 'funcao_documental', 'objeto_principal',
           'regiao_de_interesse', 'plano_inicial', 'plano_final', 'acao_visual', 'movimento_camera', 'anotacoes',
-          'composicao', 'transicao', 'tempo_inicio', 'tempo_fim', 'criterio_de_validacao')
+          'composicao', 'transicao', 'layout', 'tempo_inicio', 'tempo_fim', 'criterio_de_validacao')
 OBRIGATORIOS = ('evento_id', 'fato_id', 'funcao_narrativa', 'recurso_visual', 'funcao_documental', 'acao_visual',
                 'composicao', 'tempo_inicio', 'tempo_fim')
 
@@ -49,7 +49,7 @@ Regras de direção:
 - Diferencie: REGISTRO (a foto é do próprio fato), CONTEXTO (lugar/objeto relacionado, não o instante),
   DOCUMENTO, ESQUEMA (desenho didático), RECONSTRUÇÃO (identificada), REPRESENTAÇÃO HISTÓRICA (gravura/pintura de época).
 - Uma foto atual de ruína não é registro de um acontecimento antigo. Não invente fatos, detalhes de ação nem fontes.
-- Não repita a mesma foto em planos seguidos; varie enquadramento e transição.
+- Não repita a mesma foto em planos seguidos; varie o enquadramento. Transição: corte, salvo motivo narrativo.
 - "na_palavra": cite a palavra da narração em que a anotação deve aparecer.
 
 Contrato de cada plano:
@@ -130,8 +130,8 @@ def enquadramento(nome, roi: list | None, foco: list | None, wh) -> list:
         return _expandir(base, 50, asp)        # expande até bater nos limites da foto
     m = {'contexto': 1.6, 'objeto': .45, 'detalhe': .12}.get(nome, .45)
     if nome in ('objeto', 'contexto') and base[2] / base[3] > 2.2 * asp:
-        # objeto muito mais largo que o quadro vertical (um corpo deitado, uma ponte): mostra a largura inteira e deixa a
-        # cópia desfocada da foto preencher em cima e embaixo, em vez de cortar uma fatia sem sentido
+        # objeto muito mais largo que o quadro vertical (um corpo deitado, uma ponte): mostra a largura inteira; o
+        # diretor escolhe o layout 'integral' (margem intencional) em vez de cortar uma fatia sem sentido
         x, y, w, h = base
         w2 = min(1.0, w * (1 + m * .4)); h2 = min(1.0, max(h * (1 + m), w2 / asp * .5))
         return [round(min(max(0.0, x + w / 2 - w2 / 2), 1 - w2), 4), round(min(max(0.0, y + h / 2 - h2 / 2), 1 - h2), 4), round(w2, 4), round(h2, 4)]
@@ -139,11 +139,10 @@ def enquadramento(nome, roi: list | None, foco: list | None, wh) -> list:
 
 
 def camera(mov: str, ini: list, fim: list, dur: float, t0: float = 0.0) -> list[dict]:
-    """Enquadramentos-chave em tempo local da cena. Sem intenção ('fixo'): leve respiração de 3% (não é movimento
-    narrativo; evita a imagem congelada). Movimento dura o plano inteiro, com assentamento no fim."""
+    """Enquadramentos-chave em tempo local da cena. 'fixo' = UM enquadramento, sem transformação no tempo (Plano Mestre
+    §4.2: nada de zoom automático para esconder slide). Movimento dura o plano inteiro, com assentamento no fim."""
     if mov == 'fixo' or ini == fim:
-        x, y, w, h = fim
-        return [{'t': 0, 'caixa': fim}, {'t': dur, 'caixa': [x + w * .015, y + h * .015, w * .97, h * .97], 'ease': 'linear'}]
+        return [{'t': 0, 'caixa': fim}]
     if mov in ('localizar',):                  # começa no objeto e recua para mostrar onde ele está
         return [{'t': 0, 'caixa': ini}, {'t': max(.6, t0), 'caixa': ini}, {'t': dur * .92, 'caixa': fim}]
     return [{'t': 0, 'caixa': ini}, {'t': dur * .9, 'caixa': fim}]
@@ -303,7 +302,19 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                         continue
                     novo = enq({'objeto': ch['objeto'], 'enquadramento': ch.get('enquadramento') or 'objeto'} if ch.get('objeto') else ch.get('enquadramento'), 'geral')
                     tr = t - a
-                    cam += [{'t': round(max(cam[-1]['t'], tr), 2), 'caixa': atual}, {'t': round(min(dur, max(cam[-1]['t'], tr) + float(ch.get('dur', 1.4))), 2), 'caixa': novo}]
+                    # Plano Mestre §4.2: pausa mínima de 0,5 s entre dois movimentos (sem para-e-anda) e duração mínima
+                    # pela distância (zoom ≤ ~45%/s, pan ≤ 700 px/s no pico) — não acelera porque a palavra mudou
+                    from src.v3 import geometria as _g
+                    ini_mov = max(cam[-1]['t'] + (.5 if len(cam) > 1 else 0), tr)
+                    d_mov = max(float(ch.get('dur', 1.4)), _g.duracao_minima(atual, novo, wh))
+                    if ini_mov - tr > .6:
+                        degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"câmera em '{ch.get('na_palavra')}' começa {ini_mov - tr:.1f}s depois da palavra (movimento anterior)")
+                    if ini_mov > dur - .4:            # não sobra tempo nem para começar: a chave cai (nada de tempo fora de ordem)
+                        degradar(r, 'revisao', 'MOVIMENTO-SEM-TEMPO', f"chave de câmera em '{ch.get('na_palavra')}' não cabe no plano: ignorada")
+                        continue
+                    if ini_mov + d_mov > dur + .01:
+                        degradar(r, 'revisao', 'MOVIMENTO-SEM-TEMPO', f"movimento em '{ch.get('na_palavra')}' precisa de {d_mov:.1f}s e o plano só tem {max(0, dur - ini_mov):.1f}s")
+                    cam += [{'t': round(ini_mov, 2), 'caixa': atual}, {'t': round(min(dur, ini_mov + d_mov), 2), 'caixa': novo}]
                     atual = novo
                 if cam[-1]['t'] < dur:
                     cam.append({'t': round(dur, 2), 'caixa': atual})
@@ -317,7 +328,27 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                         t = a + dur * (len(et) + 1) / (len(pl['avanco']['etapas']) + 1)
                     et.append({'t': round((t if t is not None else a) - a, 2), 'centro': e['centro'], 'raio': float(e['raio']), 'dur': e.get('dur', 1.6)})
                 avanco = {'etapas': et, **({'base': pl['avanco']['base']} if pl['avanco'].get('base') else {})}
-            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam,
+            # Plano Mestre §4.1: layout explícito. 'cobrir' (a foto cobre o quadro em todo o caminho) quando toda caixa
+            # cabe; senão 'integral' (documento/mapa inteiro, com margem intencional). Nunca silencioso.
+            from src.v3 import geometria
+            documento = pl.get('funcao_documental') in ('DOCUMENTO', 'REPRESENTACAO_HISTORICA', 'REPRESENTAÇÃO HISTÓRICA', 'ESQUEMA') \
+                or x.get('tipo') in ('mapa', 'documento', 'gravura')
+            layout, pior = geometria.escolher_layout([k['caixa'] for k in cam], wh, pl.get('layout'), documento)
+            if layout == 'cobrir' and pior < .9:
+                essencial = bool(roi) and min(geometria.visivel(roi, wh, 'cobrir'), 1.0) < .9
+                degradar(r, 'revisao', 'ENQUADRAMENTO-CORTADO',
+                         f"layout 'cobrir' pedido: só {pior:.0%} do enquadramento cabe no quadro vertical", essencial)
+            elif layout == 'cobrir' and geometria.nat(wh) > geometria.SMAX:
+                degradar(r, 'revisao', 'RESOLUCAO-BAIXA', f"foto de {wh[0]}×{wh[1]} precisa de {geometria.nat(wh):.1f}× para cobrir o quadro: imagem macia")
+            elif layout == 'integral' and not pl.get('layout'):
+                baixa = geometria.nat(wh) > geometria.SMAX * 1.12
+                degradar(r, 'revisao' if baixa or not documento else 'aceitavel', 'LAYOUT-INTEGRAL',
+                         f"foto de {wh[0]}×{wh[1]} sem resolução para cobrir o quadro: inteira, com margem (troque a mídia se puder)" if baixa else
+                         f"enquadramento mais largo que o quadro ({pior:.0%} caberia cobrindo): imagem inteira com margem intencional")
+            if sc['transicao'] == 'zoom' and len(cam) > 1 and cam[1]['caixa'] != cam[0]['caixa']:
+                sc['transicao'] = 'corte'            # zoom de transição sobre zoom de câmera: não empilha (Plano Mestre §4.2)
+                degradar(r, 'aceitavel', 'TRANSICAO-ZOOM-EMPILHADA', "transição 'zoom' num plano com câmera em movimento: virou corte")
+            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam, 'layout': layout,
                             'anot': anot, 'tratamento': pl.get('tratamento') or x.get('tratamento') or 'atual',
                             'selo': {'funcao': pl['funcao_documental'], 'texto': pl.get('selo_texto', '')},
                             'credito': x.get('credito_curto') or x.get('credito', '')[:70]}

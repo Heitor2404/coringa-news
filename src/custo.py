@@ -23,7 +23,7 @@ ETAPAS = {
     'fiscal': 'fiscal de imagem', 'conferir_ia': 'fiscal de IA', 'fiscal_final': 'fiscal final',
     'sombra': 'fiscal sombra', '_gemini_direto': 'fiscal sombra',
 }
-_PULAR = {'custo.py', 'claude.py', 'gemini.py', 'orcamento_video.py', 'contextlib.py', 'threading.py', 'thread.py',
+_PULAR = {'custo.py', 'claude.py', 'gemini.py', 'orcamento_video.py', 'caixa.py', 'contextlib.py', 'threading.py', 'thread.py',
           'concurrent'}
 
 _etapa = contextvars.ContextVar('etapa', default=None)

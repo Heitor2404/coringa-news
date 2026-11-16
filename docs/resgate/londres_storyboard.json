@@ -667,7 +667,7 @@
    "selo_texto": "O MONUMENTO, 2013",
    "objeto_principal": "coluna",
    "plano_inicial": {
-    "objeto": "pedestal",
+    "objeto": "base_coluna",
     "enquadramento": "objeto"
    },
    "plano_final": {
@@ -679,15 +679,9 @@
    "camera_chaves": [
     {
      "na_palavra": "Monumento",
-     "objeto": "topo",
-     "enquadramento": "objeto",
-     "dur": 2.4
-    },
-    {
-     "na_palavra": "metros",
      "objeto": "coluna",
      "enquadramento": "objeto",
-     "dur": 1.4
+     "dur": 3.4
     }
    ],
    "anotacoes": [
@@ -702,7 +696,8 @@
     }
    ],
    "acao_visual": "do pedestal (onde ficava a primeira igreja destruída) a câmera sobe até a urna de fogo no alto; na palavra 'metros' abre na coluna inteira e a altura é medida nela",
-   "justificativa": "O número fica preso ao objeto que mede, com foto em alta resolução que permite o movimento (a gravura de 748 px não permitia: ficava parada). Não é o encerramento (falha 58–65 s da V3.1)."
+   "justificativa": "O número fica preso ao objeto que mede, com foto em alta resolução que permite o movimento (a gravura de 748 px não permitia: ficava parada). Não é o encerramento (falha 58–65 s da V3.1).",
+   "nota_direcao_p1": "16/11 (P1): um movimento só — da base da coluna à coluna inteira em 'Monumento'; antes subia ao topo e voltava (zoom 49%/s, salto de 42 px num quadro)."
   },
   {
    "trechos": [

@@ -51,7 +51,8 @@ def test_anotacao_essencial_retirada_bloqueia(tmp_path):
     cenas, r = diretor.montar({'planos': [p]}, ac, reg, PAL, {'f1'})
     assert cenas and not cenas[0]['params']['anot']
     assert any(d['codigo'] == 'ANOTACAO-RETIRADA' and d['impacto'] == 'bloqueio' and d['essencial'] for d in r[0]['degradacoes'])
-    assert P._perdas_criticas(r) == {0: r[0]['degradacoes'][-1]['texto']}        # vai para o replanejamento
+    perda = next(d['texto'] for d in r[0]['degradacoes'] if d['codigo'] == 'ANOTACAO-RETIRADA')
+    assert P._perdas_criticas(r) == {0: perda}        # vai para o replanejamento
 
 
 def test_movimento_imperceptivel_vira_fixo_sem_percurso_inventado(tmp_path):
@@ -99,7 +100,13 @@ def test_camera_anotacao_e_avanco_entram_na_palavra(tmp_path):
     pa = cenas[0]['params']
     assert pa['anot'][0]['t0'] == 1.4 and pa['anot'][0]['t1'] == 2.3
     assert [e['t'] for e in pa['avanco']['etapas']] == [0.6, 2.3]
-    assert any(k['t'] == 2.3 for k in pa['cam']) and any(k['t'] == 3.3 for k in pa['cam'])
+    # a câmera começa NA palavra; o fim respeita a duração pedida OU a mínima pela distância (Plano Mestre §4.2, 16/11:
+    # não acelerar porque a palavra mudou) — antes o fim era sempre palavra + dur
+    from src.v3 import geometria
+    ks = pa['cam']
+    i = next(i for i, k in enumerate(ks) if k['t'] == 2.3)
+    minima = geometria.duracao_minima(ks[i]['caixa'], ks[i + 1]['caixa'], x['wh'])
+    assert ks[i + 1]['t'] >= min(2.3 + max(1, minima), 3.9) - .01
 
 
 def test_palavra_composta_alinhada_como_um_token():

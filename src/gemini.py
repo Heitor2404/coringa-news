@@ -56,12 +56,16 @@ def _tentar(fn, modelos=None):
                 continue
             for tentativa in range(len(esperas) + 1):
                 try:
-                    r = fn(modelo)
+                    from . import caixa      # trava (Plano Mestre §5): cota grátis → registra; desconhecido/pago → nega
+                    from . import custo as _c
+                    r = caixa.operar('gemini', _c._quem_chamou(), lambda: fn(modelo))
                     from . import custo
                     custo.registrar('gemini', modelo)        # grátis: só conta o pedido (separado do Claude)
                     time.sleep(4)   # respeita o limite de pedidos por minuto do plano grátis
                     return r
                 except Exception as e:  # cota, sobrecarga, etc.
+                    if type(e).__name__ == 'OperacaoNegada':
+                        raise       # a trava do caixa recusou: não insiste em outro modelo/chave
                     erro = e
                     msg = str(e)
                     if '429' in msg or 'RESOURCE_EXHAUSTED' in msg:
@@ -229,8 +233,9 @@ def _groq(prompt: str, json_mode: bool) -> str:
         corpo = {'model': modelo, 'temperature': 0.6, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 8000}
         if json_mode:
             corpo['response_format'] = {'type': 'json_object'}
-        r = requests.post('https://api.groq.com/openai/v1/chat/completions', json=corpo, timeout=180,
-                          headers={'Authorization': f'Bearer {chave}'})
+        from . import caixa
+        r = caixa.operar('groq', 'groq', lambda: requests.post('https://api.groq.com/openai/v1/chat/completions', json=corpo,
+                                                                timeout=180, headers={'Authorization': f'Bearer {chave}'}))
         if r.ok:
             return r.json()['choices'][0]['message']['content']
         erro = f'{modelo}: {r.status_code} {r.text[:120]}'
@@ -243,9 +248,11 @@ def _cloudflare_txt(prompt: str, json_mode: bool) -> str:
     if not (conta and token):
         raise RuntimeError('sem chaves da Cloudflare')
     modelo = os.getenv('CF_MODELO_TEXTO', '@cf/meta/llama-3.3-70b-instruct-fp8-fast')
-    r = requests.post(f'https://api.cloudflare.com/client/v4/accounts/{conta}/ai/run/{modelo}', timeout=120,
-                      headers={'Authorization': f'Bearer {token}'},
-                      json={'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 4000})
+    from . import caixa
+    r = caixa.operar('cloudflare', 'cloudflare', lambda: requests.post(
+        f'https://api.cloudflare.com/client/v4/accounts/{conta}/ai/run/{modelo}', timeout=120,
+        headers={'Authorization': f'Bearer {token}'}, json={'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 4000}),
+        pior_usd=0.01)
     r.raise_for_status()
     resp = r.json()['result']['response']
     return resp if isinstance(resp, str) else json.dumps(resp, ensure_ascii=False)

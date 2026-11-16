@@ -1,0 +1,101 @@
+name: Resgate audiovisual — Londres 1666 (material + narração)
+
+# Produção de referência dirigida à mão (docs/resgate/). Sem IA de texto/visão: só abre o checkpoint cifrado do tema
+# (pesquisa já feita na validação V3.1) e grava a NARRAÇÃO (Gemini TTS, cota grátis; Edge como reserva) das falas do
+# pedido, com tempos por palavra (faster-whisper local). Resultado cifrado para as chaves do piloto, ramo resgate-resultado.
+on:
+  push:
+    branches: [piloto-v24-lagartixa]
+    paths: [".github/resgate/pedido.json"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: piloto-v22
+  cancel-in-progress: false
+
+jobs:
+  material:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: pip install -r requirements.txt
+      - name: Checkpoint do tema (cache da validação V3.1)
+        uses: actions/cache/restore@v4
+        with:
+          path: ck_novos
+          key: v3-checkpoints-${{ github.run_id }}
+          restore-keys: v3-checkpoints-
+      - name: Abrir e narrar
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          VOZ: ${{ vars.VOZ || 'pt-BR-AntonioNeural' }}
+        run: |
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          mkdir -p out
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d ck_novos/londres-1666.tgz.gpg 3<<<"$chave"
+          tar -xzf ck.tgz -C out && rm ck.tgz
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          from src import voz
+          ped = json.loads(Path('.github/resgate/pedido.json').read_text())
+          ck = Path('out/checkpoint')
+          rot = None
+          for p in ck.rglob('*.json'):
+              try:
+                  d = json.loads(p.read_text())
+              except Exception:
+                  continue
+              v = d.get('v') if isinstance(d, dict) else None
+              if isinstance(v, dict) and v.get('cenas'):
+                  rot = v
+          falas = ped.get('falas') or [c['fala'] for c in rot['cenas']]
+          cenas = [{'fala': f, 'tom': ped.get('tom', '')} for f in falas]
+          audio, tempos, caps, dur = voz.narrar(cenas, Path('out/narracao'))
+          shutil.copy(audio, 'out/narracao.' + Path(audio).suffix.lstrip('.'))
+          Path('out/narracao.json').write_text(json.dumps({'falas': falas, 'tempos': tempos, 'caps': caps, 'dur': dur,
+                                                           'audio': 'narracao.' + Path(audio).suffix.lstrip('.')}, ensure_ascii=False, default=str))
+          print('narração', round(dur, 1), 's', len(falas), 'falas')
+          import requests
+          UA = {'User-Agent': 'CoringaExplicaBot/1.4 (https://github.com/Heitor2404/coringa-news; educational short videos)'}
+          Path('out/extra').mkdir(exist_ok=True)
+          meta = {}
+          for t in ped.get('baixar') or []:
+              r = requests.get('https://commons.wikimedia.org/w/api.php', headers=UA, timeout=60, params={
+                  'action': 'query', 'titles': 'File:' + t, 'prop': 'imageinfo', 'iiprop': 'url|extmetadata', 'iiurlwidth': 2400, 'format': 'json'}).json()
+              pg = next(iter(r['query']['pages'].values()))
+              ii = (pg.get('imageinfo') or [{}])[0]
+              url = ii.get('thumburl') or ii.get('url')
+              if not url:
+                  print('não achou', t); continue
+              dest = Path('out/extra') / t.replace(' ', '_')
+              dest.write_bytes(requests.get(url, headers=UA, timeout=120).content)
+              em = ii.get('extmetadata') or {}
+              meta[t] = {k: (em.get(k) or {}).get('value') for k in ('LicenseShortName', 'Artist', 'DateTimeOriginal', 'ImageDescription', 'UsageTerms')}
+              meta[t]['pagina'] = ii.get('descriptionurl')
+              print('baixou', t, dest.stat().st_size)
+          Path('out/extra/meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=1))
+          PY
+          rm -rf out/narracao
+      - name: Cifrar e publicar
+        run: |
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          tar -czf /tmp/m.tgz -C out .
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/londres-${{ github.run_id }}.tgz.gpg /tmp/m.tgz
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan resgate-resultado
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/londres-*.tgz.gpg .
+          git add *.gpg && git commit -qm "resgate: material Londres (${{ github.run_id }})" && git push -f -q origin resgate-resultado

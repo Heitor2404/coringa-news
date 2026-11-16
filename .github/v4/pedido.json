@@ -1,27 +1,88 @@
 {
- "rodada": 1,
- "nota": "Teste integrado ÚNICO do motor V4 (16/11), depois da instalação e integração. Uma execução; prévia PRIVADA no Telegram; NÃO publicar.",
+ "rodada": 2,
+ "nota": "Teste integrado ÚNICO do motor V4 (16/11), depois da instalação e integração. Uma execução; prévia PRIVADA no Telegram; NÃO publicar. Rodada 2: reproduz o roteiro que o diretor automático escreveu na execução 43954670866 (limite de 5 h da assinatura atingido na 43955781237); a correção dirigida, se houver, cai para o Gemini na cota grátis.",
  "video_id": "v4-panama-eclusas",
  "pergunta": "Por que os navios precisam subir para atravessar o Canal do Panamá?",
- "alvo_duracao": [75, 90],
- "fatos": [
-  {"id": "f1", "texto": "O Canal do Panamá tem cerca de 80 km e liga o Oceano Atlântico (Mar do Caribe) ao Oceano Pacífico.", "fonte": "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"},
-  {"id": "f2", "texto": "As eclusas levantam os navios cerca de 26 metros acima do nível do mar, até a superfície do Lago Gatún, para atravessar a divisa continental.", "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://www.embassyofpanama.org/panama-canal"},
-  {"id": "f3", "texto": "Nenhuma bomba é usada: a água que enche as eclusas desce do Lago Gatún por gravidade.", "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"},
-  {"id": "f4", "texto": "A água entra por aquedutos gigantes (cerca de 5,5 m de diâmetro) que correm dentro das paredes das eclusas e sai por aberturas no piso das câmaras.", "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://en.wikipedia.org/wiki/Panama_Canal_locks"},
-  {"id": "f5", "texto": "Cada câmara das eclusas originais precisa de cerca de 101 mil metros cúbicos de água para encher.", "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"},
-  {"id": "f6", "texto": "Uma câmara pode encher em cerca de oito minutos.", "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"},
-  {"id": "f7", "texto": "As comportas só podem abrir quando o nível da água dos dois lados está igual.", "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"},
-  {"id": "f8", "texto": "De cada lado, a subida é feita em três degraus quase iguais (Gatún no Atlântico; Pedro Miguel e Miraflores no Pacífico), num total de cerca de 26 m.", "fonte": "https://www.porttechnology.org/technical-papers/designing_of_the_third_set_of_locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"},
-  {"id": "f9", "texto": "O canal foi inaugurado em 15 de agosto de 1914, com a travessia do navio SS Ancon.", "fonte": "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"},
-  {"id": "f10", "texto": "A primeira tentativa de construir o canal foi francesa, a partir de 1880, e fracassou por problemas financeiros e doenças.", "fonte": "https://www.embassyofpanama.org/panama-canal"},
-  {"id": "f11", "texto": "Nas eclusas originais, subir um navio gasta cerca de 98,5 mil metros cúbicos de água doce do Lago Gatún, e descê-lo gasta o mesmo: essa água termina no mar.", "fonte": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8545131"}
+ "alvo_duracao": [
+  75,
+  90
  ],
- "familias_obrigatorias": ["registro_foto (gancho com navio diante da eclusa)", "registro_video (eclusa operando)", "mapa (Atlântico → Panamá → Pacífico, rota real)",
-                           "documento (registro histórico da obra ou planta)", "esquema_2d (mecanismo: válvula, aqueduto, água subindo, navio subindo)",
-                           "composicao_25d (recorte do navio real passando para o esquema)", "cena_3d (profundidade da câmara e nível)",
-                           "dados (26 m com referência de escala)", "tipografia (frase-chave pontual)"],
- "consultas_catalogo": ["title kinetic text", "number counter", "timeline history", "diagram"],
+ "fatos": [
+  {
+   "id": "f1",
+   "texto": "O Canal do Panamá tem cerca de 80 km e liga o Oceano Atlântico (Mar do Caribe) ao Oceano Pacífico.",
+   "fonte": "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"
+  },
+  {
+   "id": "f2",
+   "texto": "As eclusas levantam os navios cerca de 26 metros acima do nível do mar, até a superfície do Lago Gatún, para atravessar a divisa continental.",
+   "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://www.embassyofpanama.org/panama-canal"
+  },
+  {
+   "id": "f3",
+   "texto": "Nenhuma bomba é usada: a água que enche as eclusas desce do Lago Gatún por gravidade.",
+   "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
+  },
+  {
+   "id": "f4",
+   "texto": "A água entra por aquedutos gigantes (cerca de 5,5 m de diâmetro) que correm dentro das paredes das eclusas e sai por aberturas no piso das câmaras.",
+   "fonte": "https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article ; https://en.wikipedia.org/wiki/Panama_Canal_locks"
+  },
+  {
+   "id": "f5",
+   "texto": "Cada câmara das eclusas originais precisa de cerca de 101 mil metros cúbicos de água para encher.",
+   "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"
+  },
+  {
+   "id": "f6",
+   "texto": "Uma câmara pode encher em cerca de oito minutos.",
+   "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"
+  },
+  {
+   "id": "f7",
+   "texto": "As comportas só podem abrir quando o nível da água dos dois lados está igual.",
+   "fonte": "https://en.wikipedia.org/wiki/Panama_Canal_locks"
+  },
+  {
+   "id": "f8",
+   "texto": "De cada lado, a subida é feita em três degraus quase iguais (Gatún no Atlântico; Pedro Miguel e Miraflores no Pacífico), num total de cerca de 26 m.",
+   "fonte": "https://www.porttechnology.org/technical-papers/designing_of_the_third_set_of_locks/ ; https://www.khl.com/news/the-panama-canal-designing-the-original-locks/1028715.article"
+  },
+  {
+   "id": "f9",
+   "texto": "O canal foi inaugurado em 15 de agosto de 1914, com a travessia do navio SS Ancon.",
+   "fonte": "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"
+  },
+  {
+   "id": "f10",
+   "texto": "A primeira tentativa de construir o canal foi francesa, a partir de 1880, e fracassou por problemas financeiros e doenças.",
+   "fonte": "https://www.embassyofpanama.org/panama-canal"
+  },
+  {
+   "id": "f11",
+   "texto": "Nas eclusas originais, subir um navio gasta cerca de 98,5 mil metros cúbicos de água doce do Lago Gatún, e descê-lo gasta o mesmo: essa água termina no mar.",
+   "fonte": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8545131"
+  }
+ ],
+ "familias_obrigatorias": [
+  "registro_foto (gancho com navio diante da eclusa)",
+  "registro_video (eclusa operando)",
+  "mapa (Atlântico → Panamá → Pacífico, rota real)",
+  "documento (registro histórico da obra ou planta)",
+  "esquema_2d (mecanismo: válvula, aqueduto, água subindo, navio subindo)",
+  "composicao_25d (recorte do navio real passando para o esquema)",
+  "cena_3d (profundidade da câmara e nível)",
+  "dados (26 m com referência de escala)",
+  "tipografia (frase-chave pontual)"
+ ],
+ "consultas_catalogo": [
+  "title kinetic text",
+  "number counter",
+  "timeline history",
+  "diagram"
+ ],
  "notas_diretor": "Mapa: componente mapa.rota com regiao [-80.15, 8.85, -79.45, 9.45] (graus), câmera FIXA, rota_osm {\"tags\": {\"waterway\": \"~canal|fairway\"}, \"nome\": \"Panam\", \"salto_max_km\": 4, \"inicio\": [-79.92, 9.38]}, rótulos Mar do Caribe / Oceano Pacífico / Lago Gatún, pontos Colón e Cidade do Panamá, localizador. Mecanismo: mecanismo.nivel_vasos com desnivel_m ≈ 9 (um degrau de ~26/3 m). 3D: tresd.camara 0→9 m. Dados: dados.escala com alvo 26 m e referência 'prédio de ~9 andares' (≈ 3 m por andar, aproximado). Busca de acervo em inglês: 'Miraflores Locks ship', 'Gatun Locks', 'Panama Canal construction 1913', 'Panama Canal locks video'. Payoff: o gasto de água doce do f11.",
- "video": "v4-panama-eclusas"
+ "video": "v4-panama-eclusas",
+ "roteiro_ia_cifrado": ".github/v4/material/roteiro_ia_43954670866.bin",
+ "roteiro_ia_origem": "execução 43954670866 (Claude Code sonnet; mesma especificação, quebrou no acervo antes do render)"
 }

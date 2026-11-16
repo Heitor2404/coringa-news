@@ -75,17 +75,32 @@ Itens do catálogo HyperFrames relevantes (busca local):
 
 
 def pedir(pedido: dict, correcoes=None, anterior=None) -> dict:
-    from src import claude
+    """Claude Code (assinatura); se faltar ou falhar (ex.: limite de 5 h), UMA chamada no Gemini (cota grátis).
+    Primeira chamada pode ser substituída pela REPRODUÇÃO de um roteiro que o próprio diretor já escreveu
+    (pedido['roteiro_ia_cifrado'], cifrado para o Actions) — economia de chamada, não roteiro manual."""
+    from src import claude, gemini
     from src.gemini import extrair_json
-    txt = None
+    if not correcoes and pedido.get('roteiro_ia_cifrado'):
+        from pathlib import Path
+        from src.v3 import material
+        rot = json.loads(material.decifrar(material._segredo(), (Path(__file__).resolve().parents[2] / pedido['roteiro_ia_cifrado']).read_bytes()))
+        rot['_origem'] = f"reprodução do roteiro do diretor automático ({pedido.get('roteiro_ia_origem', '?')})"
+        return rot
+    p = prompt(pedido, correcoes, anterior)
+    txt, erro = None, None
     if claude.disponivel():
-        txt = claude.pedir(prompt(pedido, correcoes, anterior))
-    else:                                           # sem Claude Code: Gemini na cota grátis (registrado pelo caixa)
-        from src import gemini
-        txt = gemini.texto(prompt(pedido, correcoes, anterior))
+        try:
+            txt = claude.pedir(p)
+        except Exception as e:
+            erro = str(e)[:200]
+            print(f'  [diretor] Claude falhou ({erro}); uma chamada no Gemini (cota grátis)')
     if not txt:
-        raise RuntimeError('nenhum modelo de direção disponível (Claude Code/Gemini)')
-    return extrair_json(txt)
+        txt = gemini.texto(p)
+    if not txt:
+        raise RuntimeError(f'nenhum modelo de direção disponível (Claude: {erro})')
+    r = extrair_json(txt)
+    r['_origem'] = 'gemini (queda)' if erro or not claude.disponivel() else 'claude_code'
+    return r
 
 
 CHAVES_TEMPO = {'t', 'de', 'ate', 'rotulo_t'}

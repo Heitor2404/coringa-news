@@ -113,7 +113,7 @@ def pedir(prompt: str, leve: bool = False) -> str:
     g0 = GASTO['usd']
     try:
         return caixa.operar('claude_code', custo._quem_chamou(),
-                            lambda: _executar(cmd, prompt, modelo), credito=lambda: GASTO['usd'] - g0)
+                            lambda: _executar(cmd, prompt, modelo), credito=lambda: GASTO['usd'] - g0, modelo=str(modelo or 'claude'))
     finally:
         orcamento_video.depois(dec)
 

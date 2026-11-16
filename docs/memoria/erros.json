@@ -905,6 +905,120 @@
     "telegram",
     "*"
    ]
+  },
+  {
+   "id": "ERR-036",
+   "titulo": "Recuo automático: o gancho e as gravuras começavam cheios e terminavam pequenos",
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção",
+   "sintoma": "Londres final 0–7 s (ocupação 1,00 → 0,46), 21–25 s (0,82 → 0,31), 29–33 s (0,88 → 0,59).",
+   "causa_raiz": "R-GANCHO-IMPACTO (detalhe→contexto), R-REVELACAO-FINAL (objeto→geral) e R-LOCALIZA-RECUA mandavam recuar; camera('localizar') recuava sempre; receitas 'testado' entravam no prompt como padrão.",
+   "arquivos": [
+    "src/v3/decisao.py",
+    "src/v3/receitas.json",
+    "src/v3/receitas.py",
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "câmera fixa por padrão; recuo só com 'revela' (objeto fora antes, dentro depois) e objeto principal no quadro; trecho de recuo sem isso é recusado (registrado); receitas do gancho/fechamento sem recuo; R-LOCALIZA-RECUA → proposto; receita não aprovada aparece como hipótese, não padrão; gancho com recuo sem 'revela' é recusado pelo validador.",
+   "testes": [
+    "tests/test_v3_decisao_visual.py::test_abertura_nao_recua_reduzindo_a_presenca_da_imagem",
+    "tests/test_v3_decisao_visual.py::test_receita_de_gancho_nao_produz_recuo_automatico",
+    "tests/test_v3_decisao_visual.py::test_localizar_sem_revelacao_nao_recua",
+    "tests/test_v3_decisao_visual.py::test_recuo_que_revela_e_mantem_quadro_cheio_e_permitido"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana das microcenas)",
+   "referencia": "auditoria do Heitor sobre Londres final (16/11)",
+   "verificavel": true,
+   "tags": [
+    "camera",
+    "receitas",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-037",
+   "titulo": "Cartão sobre fundo escuro como saída automática ('integral')",
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção",
+   "sintoma": "Placa, mapa, gravuras e Golden Boy em faixa/cartão (ocupação 0,31–0,65) em P1, P1b e final.",
+   "causa_raiz": "Qualquer enquadramento mais largo que 9:16 caía no layout integral; o 'geral' era calculado em 1080×1540 (mais largo que o quadro), então até o enquadramento geral virava cartão.",
+   "arquivos": [
+    "src/v3/decisao.py",
+    "src/v3/geometria.py",
+    "src/render/v2/comp/doc.js",
+    "src/v2/diretor.py",
+    "src/render/v2/nucleo.js"
+   ],
+   "correcao": "ordem: vertical que preserva o importante → outra mídia ('alternativas') → composição EDITORIAL (visão geral inteira + detalhe ampliado, sem fundo vazio) para documento/mapa/gravura/pintura → revisão/bloqueio; 'geral' passou a ser o maior recorte 9:16; espelho Python + palco medem a ocupação dos dois painéis.",
+   "testes": [
+    "tests/test_v3_decisao_visual.py::test_gravura_horizontal_nao_vira_cartao_de_slideshow",
+    "tests/test_v3_decisao_visual.py::test_mapa_amplo_continua_legivel_e_ocupando_o_quadro",
+    "tests/test_v3_decisao_visual.py::test_documento_horizontal_tem_composicao_editorial",
+    "tests/test_v3_decisao_visual.py::test_foto_sem_resolucao_troca_pela_alternativa_do_acervo",
+    "tests/test_v3_geometria.py::test_palco_real_igual_ao_espelho_e_sem_borda"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana das microcenas)",
+   "referencia": "auditoria do Heitor sobre Londres final (16/11)",
+   "verificavel": true,
+   "tags": [
+    "layout",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-038",
+   "titulo": "Forma visual não era decidida: tudo virava doc.plano",
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção",
+   "sintoma": "Londres: 11 de 11 planos em doc.plano; mecanismo ou mapa podiam sair como foto com zoom.",
+   "causa_raiz": "O diretor V3 recebia doc.plano como saída padrão (COMPS_FOTO) e só via outras composições quando o contrato as marcava viáveis; o acervo não dizia se a mídia era mapa, documento ou gravura.",
+   "arquivos": [
+    "src/v3/linguagem.py",
+    "src/v3/plano_av.py",
+    "src/v3/pipeline.py"
+   ],
+   "correcao": "forma por acontecimento (registro, mapa, esquema, documento, comparação, tipografia) na ficha, no prompt (antes da câmera) e no validador; natureza da mídia lida do título/descrição; ação essencial com só foto é recusada; regras unificadas das referências no prompt.",
+   "testes": [
+    "tests/test_v3_linguagem.py::test_forma_pelo_acontecimento",
+    "tests/test_v3_linguagem.py::test_acao_essencial_nao_aceita_foto_com_zoom",
+    "tests/test_v3_linguagem.py::test_ficha_traz_forma_antes_da_camera"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana das microcenas)",
+   "referencia": "auditoria do Heitor sobre Londres final (16/11)",
+   "verificavel": true,
+   "tags": [
+    "direcao",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-039",
+   "titulo": "Fiscal aprovava decisões ruins (só olhava erro técnico)",
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção",
+   "sintoma": "Vídeos passavam com imagem encolhendo, fundo vazio e recuo sem motivo.",
+   "causa_raiz": "Não havia medida de ocupação nem de legibilidade; o fiscal media borda/encolhimento só em 'cobrir'.",
+   "arquivos": [
+    "src/v3/fiscal_editorial.py",
+    "src/v3/geometria.py"
+   ],
+   "correcao": "fiscal_editorial.decisoes: imagem pequena, queda de ocupação, gancho que perde impacto, objeto principal fora, mapa ilegível, anotação sob a legenda/fora do quadro, crítico sem representação, ação sem esquema — limites calibrados nos 13 vereditos humanos.",
+   "testes": [
+    "tests/test_v3_decisao_visual.py::test_fiscal_de_decisao_concorda_com_o_veredito_humano",
+    "tests/test_v3_decisao_visual.py::test_fiscal_acha_seta_desenhada_para_fora_do_quadro_no_mapa_aprovado",
+    "tests/test_v3_decisao_visual.py::test_critico_de_acao_essencial_so_com_foto_e_bloqueado"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda avaliação humana das microcenas)",
+   "referencia": "auditoria do Heitor sobre Londres final (16/11)",
+   "verificavel": true,
+   "tags": [
+    "fiscal",
+    "*"
+   ]
   }
  ]
 }

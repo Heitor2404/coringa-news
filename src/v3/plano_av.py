@@ -58,7 +58,11 @@ def fichas(v: dict, acervo: dict, fatos: list[tuple[str, str]], eventos: list[di
             status = 'demonstravel' if comps else ('esquema_a_escrever' if e.get('tipo') in ('mecanismo', 'processo') else 'parcial')
         else:
             status = 'demonstravel' if (midias or comps) else 'indisponivel'
+        from src.v3 import linguagem                   # 16/11: a FORMA visual sai antes da câmera
+        forma = linguagem.forma_do_evento(e, {linguagem.natureza(acervo[k]) for k in midias if k in acervo})
         out.append({'evento_id': e['id'], 'tipo': e.get('tipo'), 'critico': e.get('critico'), 'trechos': e['trechos'],
+                    'forma_visual': forma['forma'], 'justificativa_forma': forma['justificativa'], 'composicoes_forma': forma['comps'],
+                    'naturezas_midia': {k: linguagem.natureza(acervo[k]) for k in midias if k in acervo},
                     'sujeito': ac.get('sujeito') or ac.get('quem'), 'estado_inicial': ac.get('estado_inicial'), 'acao': ac.get('acao'),
                     'transformacao': ac.get('estado_final'), 'consequencia': sb.get('avanca'),
                     'representacao_necessaria': rep, 'midia_disponivel': midias, 'composicoes_viaveis': comps,
@@ -68,9 +72,10 @@ def fichas(v: dict, acervo: dict, fatos: list[tuple[str, str]], eventos: list[di
 
 def texto_prompt(fs: list[dict]) -> str:
     return '\n'.join(
-        f"{f['evento_id']} [{f['tipo']}{' · CRÍTICO' if f['critico'] else ''} · {f['status']}] sujeito: {f['sujeito']} · "
+        f"{f['evento_id']} [{f['tipo']}{' · CRÍTICO' if f['critico'] else ''} · {f['status']}] FORMA: {f.get('forma_visual')} "
+        f"({f.get('justificativa_forma')}; composições: {', '.join(f.get('composicoes_forma') or []) or 'nenhuma'}) · sujeito: {f['sujeito']} · "
         f"{f['estado_inicial'] or '?'} → {f['acao'] or '?'} → {f['transformacao'] or '?'} · precisa mostrar: {f['representacao_necessaria']} · "
-        f"mídia: {', '.join(f['midia_disponivel']) or 'nenhuma'} · composições: {', '.join(f['composicoes_viaveis']) or 'nenhuma'} · "
+        f"mídia: {', '.join(f'{k} ({n})' for k, n in (f.get('naturezas_midia') or {}).items()) or ', '.join(f['midia_disponivel']) or 'nenhuma'} · composições: {', '.join(f['composicoes_viaveis']) or 'nenhuma'} · "
         f"fatos: {', '.join(f['evidencia']) or '—'} · verificar: {f['criterio_visual']}" for f in fs)
 
 

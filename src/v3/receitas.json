@@ -143,7 +143,7 @@
   },
   {
    "id": "R-LOCALIZA-RECUA",
-   "estado": "testado",
+   "estado": "proposto",
    "objetivo": "Começar no detalhe e recuar para mostrar onde ele está (relação entre a parte e o todo).",
    "funcoes_narrativas": [
     "contexto",
@@ -161,7 +161,8 @@
    ],
    "inadequado": [
     "foto pequena (recuo vira faixa)",
-    "um único objeto sem contexto ao redor"
+    "um único objeto sem contexto ao redor",
+    "recuo para mostrar a foto inteira (vira faixa/cartão)"
    ],
    "midia": "foto ampla com o detalhe e o entorno",
    "requisitos_factuais": [
@@ -184,10 +185,12 @@
    "transicao": "corte",
    "parametros_obrigatorios": [
     "objeto_principal",
-    "seta/trajeto com alvo E ate localizados, ou ate_desvio [dx, dy] (fração da foto) + 'esquema' no rótulo"
+    "seta/trajeto com alvo E ate localizados, ou ate_desvio [dx, dy] (fração da foto) + 'esquema' no rótulo",
+    "'revela' com o objeto que entra no quadro com o recuo",
+    "quadro continua cheio no fim (ocupação 1,0)"
    ],
    "exemplo_aprovado": "V3 Pompeia: o cume do vulcão recua até a cidade, com o trajeto marcado como esquema.",
-   "exemplo_reprovado": null,
+   "exemplo_reprovado": "Londres 21–25 s e 29–33 s: gravuras recuam até cartão sobre fundo escuro (ocupação 0,88 → 0,59; 0,82 → 0,31).",
    "motivo": "mostra causa e consequência no mesmo espaço sem cartão",
    "testes": [
     "tests/test_v3_diretor.py::test_seta_com_direcao_dada_precisa_dizer_esquema"
@@ -202,6 +205,10 @@
      "estado": "testado",
      "data": "2026-11-16",
      "evidencia": "rebaixada no resgate V3.1: frase genérica do brief não é aprovação editorial individual; falta avaliação humana de um vídeo que use a receita"
+    },
+    {
+     "data": "2026-11-16",
+     "mudanca": "testado → proposto: produziu recuos sem revelação (Londres); só volta a testado com revelação demonstrada"
     }
    ]
   },
@@ -687,7 +694,7 @@
     "*"
    ],
    "adequado": [
-    "a melhor foto ainda não usada (ou a de abertura, recuando para o todo)"
+    "a melhor foto ainda não usada, cobrindo o quadro"
    ],
    "inadequado": [
     "tela de texto",
@@ -702,13 +709,14 @@
    ],
    "enquadramento": {
     "inicial": "objeto",
-    "final": "geral"
+    "final": "objeto"
    },
-   "movimento": "revelar",
+   "movimento": "fixo",
    "anotacoes": [],
    "transicao": "corte",
    "parametros_obrigatorios": [
-    "fala do plano contém a resposta da pergunta central"
+    "fala do plano contém a resposta da pergunta central",
+    "recuo só com 'revela' nomeado e quadro cheio no fim"
    ],
    "exemplo_aprovado": null,
    "exemplo_reprovado": "V3 Pompeia/Panamá: encerramento com área vazia (AV-VAZIO).",
@@ -722,13 +730,17 @@
     {
      "data": "2026-11-16",
      "mudanca": "transição padrão iris → corte (Plano Mestre §2.4: transições raras e motivadas)"
+    },
+    {
+     "data": "2026-11-16",
+     "mudanca": "objeto→geral + revelar (recuo automático) → fixo; recuo só com 'revela'"
     }
    ]
   },
   {
    "id": "R-GANCHO-IMPACTO",
    "estado": "testado",
-   "objetivo": "Primeiros 2 s: o assunto na tela, grande, com movimento — antes de qualquer explicação.",
+   "objetivo": "Primeiros 2 s: o assunto na tela, grande, ocupando o quadro — a imagem não encolhe depois.",
    "funcoes_narrativas": [
     "gancho"
    ],
@@ -740,7 +752,8 @@
    ],
    "inadequado": [
     "abertura com cartão de pergunta sobre fundo neutro",
-    "foto de IA (ERR-014)"
+    "foto de IA (ERR-014)",
+    "recuo que reduz a presença da imagem (começa cheio e termina pequeno)"
    ],
    "midia": "foto real forte",
    "requisitos_factuais": [],
@@ -748,20 +761,27 @@
     "doc.plano"
    ],
    "enquadramento": {
-    "inicial": "detalhe",
-    "final": "contexto"
+    "inicial": "objeto",
+    "final": "objeto"
    },
-   "movimento": "revelar",
+   "movimento": "fixo",
    "anotacoes": [],
    "transicao": "corte",
    "parametros_obrigatorios": [
-    "primeiro plano começa em 0 s"
+    "primeiro plano começa em 0 s",
+    "ocupação do quadro não cai durante o plano"
    ],
    "exemplo_aprovado": null,
-   "exemplo_reprovado": "Foto marcada 'ai generated' no gancho (V2 Pompeia).",
+   "exemplo_reprovado": "Londres final 0–7 s: pintura começa cobrindo o quadro e recua até uma faixa (ocupação 1,00 → 0,46). Foto marcada 'ai generated' no gancho (V2 Pompeia).",
    "motivo": "",
    "testes": [
     "tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"
+   ],
+   "historico_estado": [
+    {
+     "data": "2026-11-16",
+     "mudanca": "detalhe→contexto + revelar (recuo automático no gancho) → objeto fixo; motivo: abertura de Londres reprovada"
+    }
    ]
   }
  ]

@@ -146,7 +146,8 @@ jobs:
               t = time.time()
               with open(dest / 'registro.txt', 'w') as f:
                   try:
-                      rc = subprocess.run([sys.executable, 'main.py'] + args, stdout=f, stderr=subprocess.STDOUT, timeout=c.get('limite_min', 45) * 60).returncode
+                      rc = subprocess.run([sys.executable, 'main.py'] + args, stdout=f, stderr=subprocess.STDOUT, timeout=c.get('limite_min', 45) * 60,
+                                          env={**os.environ, 'MICROCENA': c.get('microcena') or ''}).returncode
                   except subprocess.TimeoutExpired:
                       rc = 'tempo esgotado'
               (dest / 'execucao.json').write_text(json.dumps({'caso': c, 'rc': rc, 'segundos': round(time.time() - t, 1)}, ensure_ascii=False))
@@ -168,6 +169,12 @@ jobs:
           python -m src.v3.biblioteca verificar > saida_v3/biblioteca_verificacao.json || true
           # log público: só números
           for f in saida_v3/*/saida/*-v3/resultado.json; do python -c "import json,sys;r=json.load(open(sys.argv[1]));print(sys.argv[1].split('/')[1], 'mp4' if r.get('mp4') else 'sem-mp4', len(r['bloqueios']), 'bloq', len(r['revisoes']), 'rev')" "$f"; done || true
+      - name: Prévias PRIVADAS ao Telegram (status, decisões, fiscal, custos; não é publicação)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/enviar_previas_v3.py saida_v3 || echo "envio de prévias falhou (resultado continua cifrado no ramo)"
       - name: Guardar checkpoints dos temas novos (cache, cifrados)
         if: always()
         uses: actions/cache/save@v4

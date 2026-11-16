@@ -60,7 +60,8 @@ def recuperar(tipos: set[str], funcoes: set[str], composicoes: set[str] | None =
 def texto_prompt(rs: list[dict]) -> str:
     linhas = []
     for r in rs:
-        rot = 'BOA PRÁTICA APROVADA' if r['estado'] == 'aprovado' else 'opção testada'
+        # só o que o humano aprovou é PADRÃO; o resto é hipótese em teste (16/11: receita não aprovada não é padrão de qualidade)
+        rot = 'PADRÃO APROVADO' if r['estado'] == 'aprovado' else 'HIPÓTESE EM TESTE — não é padrão; use só se o acontecimento pedir'
         enq = r.get('enquadramento') or {}
         an = '; '.join(f"{a['tipo']} {a['quando']}" for a in r.get('anotacoes') or [])
         linhas.append(f"[{r['id']} · {rot}] {r['objetivo']} Usar quando: {'; '.join(r['adequado'])}. Não usar: {'; '.join(r['inadequado'])}. "

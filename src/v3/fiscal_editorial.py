@@ -180,6 +180,7 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
     for g in geometria.auditar_dados(dados):
         classe = 'bloqueio' if g['codigo'] in ('G-BORDA', 'G-ENCOLHE') else 'revisao'
         a(classe, g['codigo'], f"plano {g['plano']}: {g['texto']}", g['inicio'], g['inicio'], g['plano'])
+    ach.extend(decisoes(dados, registro, indice_gancho=0, eventos=(ctx or {}).get('eventos')))   # 16/11: decisão ruim
     for r in registro:
         for e in r.get('erros') or []:
             a('revisao', 'D-PLANO-RECUSADO', f"plano de {r.get('evento_id')} recusado pelo validador: {e}")
@@ -199,6 +200,96 @@ def avaliar(mp4: Path, dados: dict, registro: list[dict], ctx: dict, v: dict, sr
 
 
 SEMANTICOS = {'E-PERGUNTA', 'E-MECANISMO', 'E-COBERTURA', 'E-OBJETO', 'E-NUMERO', 'E-TEXTO-REPETE', 'D-PLANO-RECUSADO'}
+
+
+# ---------------------------------------------------------------- DECISÕES VISUAIS RUINS (16/11)
+# Medidas da composição real (as mesmas contas do palco: geometria.ocupacao/editorial; o palco é conferido contra elas em
+# geometria.auditar_palco). Limites CALIBRADOS em 13 vereditos humanos de Londres (tests/dados/londres_decisoes_humanas.json):
+# aprovados mantêm ocupação 1,00; reprovados ficam entre 0,31 e 0,65; o mapa reprovado por legibilidade estava a 0,61
+# px de tela por px do mapa, o aprovado a 1,64. São limites de trabalho para estes casos, não verdade universal.
+OCUP_MIN, OCUP_GRAVE, QUEDA_MAX, MAPA_ESCALA_MIN = 0.80, 0.55, 0.15, 0.80
+FAIXA_LEGENDA = (1180, 1440)
+
+
+def _maior_trecho(flags: list[bool], passo: float) -> float:
+    melhor = atual = 0
+    for f in flags:
+        atual = atual + 1 if f else 0
+        melhor = max(melhor, atual)
+    return melhor * passo
+
+
+def decisoes(dados: dict, registro: list[dict], indice_gancho: int | None = 0, eventos: list[dict] | None = None, passo: float = 0.1) -> list[dict]:
+    """Achados de DECISÃO (não de erro técnico): imagem pequena sobre fundo vazio, queda de ocupação sem revelação,
+    gancho que perde impacto, objeto principal fora do quadro, mapa ilegível, anotação sob a legenda/fora do quadro,
+    acontecimento crítico sem a forma que ele pede. O que não se prova por geometria fica como revisão — nunca aprovação."""
+    from src.v3 import geometria as G, linguagem
+    out = []
+
+    def a(classe, codigo, problema, ini=None, fim=None, plano=None):
+        out.append({'classe': classe, 'dimensao': 'semantica' if codigo in ('F-CRITICO-SEM-REPRESENTACAO', 'F-ACAO-SEM-ESQUEMA', 'F-FORMA-DIVERGE') else 'estetica',
+                    'codigo': codigo, 'problema': problema, 'inicio': ini, 'fim': fim, 'plano': plano, 'evidencia': 'geometria da composição'})
+    cenas = dados.get('scenes') or []
+    for k, sc in enumerate(cenas):
+        p = sc.get('params') or {}
+        if sc.get('comp') != 'doc.plano' or not p.get('wh'):
+            continue
+        dur = sc['end'] - sc['start']
+        n = max(1, int(dur / passo))
+        am = [G.ocupacao(p, i * passo) for i in range(n + 1)]
+        oc = [o['ocupacao'] for o in am]
+        t0, t1 = round(sc['start'], 2), round(sc['end'], 2)
+        grave, baixo = _maior_trecho([o < OCUP_GRAVE for o in oc], passo), _maior_trecho([o < OCUP_MIN for o in oc], passo)
+        if grave >= 1.0:
+            a('bloqueio', 'F-IMAGEM-PEQUENA', f'plano {k}: imagem principal ocupa só {min(oc):.0%} do quadro por {grave:.1f}s (fundo vazio)', t0, t1, k)
+        elif baixo >= 0.5:
+            a('revisao', 'F-IMAGEM-PEQUENA', f'plano {k}: imagem principal ocupa {min(oc):.0%} do quadro por {baixo:.1f}s', t0, t1, k)
+        queda = max((max(oc[:j + 1]) - oc[j] for j in range(len(oc))), default=0)
+        if queda > QUEDA_MAX:
+            if k == indice_gancho or (sc.get('direcao') or {}).get('funcao_narrativa') == 'gancho':
+                a('bloqueio', 'F-GANCHO-PERDE-IMPACTO', f'plano {k} (abertura): a imagem encolhe {queda:.0%} do quadro', t0, t1, k)
+            else:
+                a('revisao', 'F-OCUPACAO-QUEDA', f"plano {k}: ocupação cai {queda:.0%} durante o plano" + (' (há revelação declarada, mas a imagem não pode encolher)' if p.get('revela') else ' sem revelação declarada'), t0, t1, k)
+        ss = [o['escala_util'] for o in am]
+        if ss[-1] < 0.85 * max(ss) and not p.get('revela') and queda <= QUEDA_MAX:
+            a('estetica', 'F-RECUO-SEM-REVELACAO', f"plano {k}: recuo de câmera sem revelação declarada (quadro continua cheio): confira se acrescenta informação", t0, t1, k)
+        if p.get('roi'):
+            vis = [G.visivel_em(p['roi'], o, p['wh']) for o in am[int(0.3 / passo):]]
+            if vis and min(vis) < 0.6:
+                a('revisao', 'F-OBJETO-FORA', f'plano {k}: o objeto principal fica {1 - min(vis):.0%} fora do quadro', t0, t1, k)
+        if p.get('natureza') == 'mapa':
+            ileg = _maior_trecho([e < MAPA_ESCALA_MIN for e in ss], passo)
+            if ileg >= 1.5:
+                a('revisao', 'F-MAPA-ILEGIVEL', f'plano {k}: mapa a {min(ss):.2f} px/px por {ileg:.1f}s — rótulos ilegíveis no quadro vertical', t0, t1, k)
+        for an in p.get('anot') or []:
+            ini, fim = float(an.get('t0') or 0), an.get('t1')
+            fim = dur if fim is None else min(dur, float(fim))
+            ponto = an.get('caixa') and [an['caixa'][0] + an['caixa'][2] / 2, an['caixa'][1] + an['caixa'][3] / 2] or an.get('para')
+            if not ponto or fim <= ini:
+                continue
+            ruins = 0
+            for i in range(int(ini / passo), int(fim / passo) + 1):
+                o = am[min(i, len(am) - 1)]
+                x = o['tx'] + ponto[0] * p['wh'][0] * o['s']
+                y = o['ty'] + ponto[1] * p['wh'][1] * o['s']
+                ruins += int(not (0 <= x <= G.W and 0 <= y <= G.H) or FAIXA_LEGENDA[0] <= y <= FAIXA_LEGENDA[1])
+            if ruins * passo >= 0.5:
+                a('revisao', 'F-ANOTACAO-PREJUDICADA', f"plano {k}: anotação '{an.get('texto') or an.get('tipo')}' sob a legenda ou fora do quadro por {ruins * passo:.1f}s", t0, t1, k)
+    for ev in eventos or []:
+        if not ev.get('critico'):
+            continue
+        idx = [k for k, r in enumerate(registro or []) if (r or {}).get('evento_id') == ev.get('id') and k < len(cenas)]
+        if not idx:
+            a('bloqueio', 'F-CRITICO-SEM-REPRESENTACAO', f"acontecimento crítico {ev['id']} ({ev.get('tipo')}) narrado sem plano que o represente")
+            continue
+        nats = {(cenas[k].get('params') or {}).get('natureza') for k in idx}
+        f = linguagem.forma_do_evento(ev, nats)
+        comps = {cenas[k]['comp'] for k in idx}
+        if f['acao_essencial'] and comps <= {'doc.plano'}:
+            a('bloqueio', 'F-ACAO-SEM-ESQUEMA', f"{ev['id']} ({ev.get('tipo')}): a ação é o essencial e só há foto — falta a explicação animada", plano=idx[0])
+        elif f['forma'] == 'mapa' and not (comps & {'mapa.localizacao', 'mapa.rota', 'mapa.territorio'}) and 'mapa' not in nats:
+            a('revisao', 'F-FORMA-DIVERGE', f"{ev['id']} pede mapa explicativo; os planos não mostram mapa", plano=idx[0])
+    return out
 
 
 def dimensao(codigo: str) -> str:

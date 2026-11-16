@@ -193,6 +193,12 @@ def auditar_dados(dados: dict) -> list[dict]:
         p = sc.get('params') or {}
         if sc.get('comp') != 'doc.plano' or not p.get('wh'):
             continue
+        if p.get('layout') == 'editorial':
+            e = editorial(p['wh'], p.get('visao_geral'), (p.get('cam') or [{'caixa': None}])[0].get('caixa'))
+            if not e['resolucao_ok']:
+                out.append({'codigo': 'G-RESOLUCAO', 't': 0, 'texto': f"detalhe editorial ampliado {e['detalhe']['s']:.2f}× sobre os pixels da fonte",
+                            'plano': k, 'inicio': round(sc['start'], 2)})
+            continue
         for a in auditar(p.get('cam'), sc['end'] - sc['start'], p['wh'], p.get('layout') or 'cobrir'):
             out.append({**a, 'plano': k, 'inicio': round(sc['start'] + a['t'], 2)})
     return out
@@ -214,6 +220,15 @@ def auditar_palco(pg, dados: dict, fps: int = 10) -> list[dict]:
             if g['layout'] == 'cobrir' and (g['x0'] > .5 or g['y0'] > .5 or g['x1'] < W - .5 or g['y1'] < H - .5):
                 out.append({'codigo': 'G-BORDA', 'plano': g['cena'], 'inicio': round(t, 2),
                             'texto': f"borda no palco: imagem em ({g['x0']:.0f},{g['y0']:.0f})–({g['x1']:.0f},{g['y1']:.0f})"})
+            # ocupação medida no palco (união dos painéis de imagem, recortada ao quadro) × espelho
+            pain = g.get('paineis') or [[g['x0'], g['y0'], g['x1'], g['y1']]]
+            oc_palco = sum(max(0, min(W, x1) - max(0, x0)) * max(0, min(H, y1) - max(0, y0)) for x0, y0, x1, y1 in pain) / (W * H)
+            oc_esp = ocupacao(p, t - sc['start'])['ocupacao']
+            if abs(min(1.0, oc_palco) - oc_esp) > .01:
+                out.append({'codigo': 'G-ESPELHO', 'plano': g['cena'], 'inicio': round(t, 2),
+                            'texto': f"ocupação no palco {oc_palco:.3f} × espelho {oc_esp:.3f}"})
+            if g['layout'] == 'editorial':
+                continue
             s, tx, ty = transform(p.get('cam'), t - sc['start'], p['wh'], p.get('layout') or 'cobrir')
             esp = (tx, ty, tx + p['wh'][0] * s, ty + p['wh'][1] * s)
             if max(abs(a - b) for a, b in zip(esp, (g['x0'], g['y0'], g['x1'], g['y1']))) > 2:
@@ -221,3 +236,60 @@ def auditar_palco(pg, dados: dict, fps: int = 10) -> list[dict]:
                             'texto': f"palco ≠ espelho: {tuple(round(x) for x in esp)} × {(round(g['x0']), round(g['y0']), round(g['x1']), round(g['y1']))}"})
         t += 1 / fps
     return out
+
+
+# ---------------------------------------------------------------- composição EDITORIAL (16/11)
+# Para documento, mapa, gravura ou pintura horizontal que precisa ser vista inteira: em cima, a VISÃO GERAL na largura
+# do quadro (a fonte inteira, sem cortar); embaixo, o DETALHE da informação principal ampliado, cobrindo o painel até o
+# pé do quadro (a legenda fica sobre ele). Um marcador na visão geral mostra de onde vem o detalhe. Sem fundo vazio:
+# os dois painéis ocupam o quadro todo, menos o filete entre eles. Mesmas contas em doc.js.
+GAP_EDITORIAL = 16
+VISAO_MAX = 0.55                       # a visão geral ocupa no máximo 55% da altura
+
+
+def editorial(wh, visao=None, detalhe=None) -> dict:
+    iw, ih = wh
+    vx, vy, vw, vh = [v * d for v, d in zip(visao or [0, 0, 1, 1], (iw, ih, iw, ih))]
+    s1 = min(W / vw, VISAO_MAX * H / vh)
+    h1 = vh * s1
+    ox = (W - vw * s1) / 2                              # se a fonte for alta demais, centraliza (filetes laterais)
+    t1 = (ox - vx * s1, -vy * s1)
+    y0 = h1 + GAP_EDITORIAL
+    hd = H - y0
+    dx, dy, dw, dh = [v * d for v, d in zip(detalhe or visao or [0, 0, 1, 1], (iw, ih, iw, ih))]
+    cobre = max(W / iw, hd / ih)
+    util = max(1.0, BARRA - y0)                         # parte do painel acima da legenda
+    sd = min(W / dw, util / dh)
+    sd = min(max(sd, cobre), max(cobre, SMAX))
+    cx, cy = dx + dw / 2, dy + dh / 2
+    tx = min(0.0, max(W - iw * sd, W / 2 - cx * sd))
+    ty = min(y0, max(y0 + hd - ih * sd, (y0 + min(BARRA, H)) / 2 - cy * sd))
+    janela = [(-tx) / sd / iw, (y0 - ty) / sd / ih, W / sd / iw, hd / sd / ih]
+    return {'visao': {'s': s1, 'tx': t1[0], 'ty': t1[1], 'rect': [ox, 0.0, vw * s1, h1]},
+            'detalhe': {'s': sd, 'tx': tx, 'ty': ty, 'rect': [0.0, y0, float(W), hd], 'janela': janela},
+            'escala_util': max(s1, sd), 'resolucao_ok': sd <= SMAX * 1.12 or sd <= cobre * 1.001 and cobre <= SMAX * 1.12}
+
+
+def ocupacao(params: dict, t: float) -> dict:
+    """Fração do quadro coberta pela(s) imagem(ns) do plano em t, e a escala útil (px de tela por px da fonte, no
+    painel mais ampliado: é a que decide se rótulos e texto são legíveis)."""
+    wh, lay = params['wh'], params.get('layout') or 'cobrir'
+    iw, ih = wh
+    if lay == 'editorial':
+        e = editorial(wh, params.get('visao_geral'), (params.get('cam') or [{'caixa': None}])[0].get('caixa'))
+        area = sum(r[2] * r[3] for r in (e['visao']['rect'], e['detalhe']['rect']))
+        return {'ocupacao': min(1.0, area / (W * H)), 'escala_util': e['escala_util'], 's': e['detalhe']['s'],
+                'tx': e['detalhe']['tx'], 'ty': e['detalhe']['ty']}
+    s, tx, ty = transform(params.get('cam'), t, wh, lay)
+    area = max(0.0, min(W, tx + iw * s) - max(0.0, tx)) * max(0.0, min(H, ty + ih * s) - max(0.0, ty))
+    return {'ocupacao': area / (W * H), 'escala_util': s, 's': s, 'tx': tx, 'ty': ty}
+
+
+def visivel_em(caixa, o: dict, wh) -> float:
+    """Fração da caixa (0–1 da imagem) que aparece no quadro com a transformação `o` (de ocupacao)."""
+    iw, ih = wh
+    s, tx, ty = o['s'], o['tx'], o['ty']
+    x0, y0 = tx + caixa[0] * iw * s, ty + caixa[1] * ih * s
+    x1, y1 = x0 + caixa[2] * iw * s, y0 + caixa[3] * ih * s
+    a = max(1e-9, (x1 - x0) * (y1 - y0))
+    return max(0.0, min(x1, W) - max(x0, 0)) * max(0.0, min(y1, H) - max(y0, 0)) / a

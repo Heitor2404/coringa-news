@@ -29,6 +29,9 @@ antes de preservar a arquitetura.
 | feedback humano por timestamp | `docs/memoria/feedback.jsonl` → `python -m src.v3.memoria abertos` |
 | regras editoriais (estado) | `docs/memoria/regras_editoriais.json` |
 | receitas de direção | `src/v3/receitas.json` |
+| forma visual por acontecimento e regras das referências | `src/v3/linguagem.py`, `docs/v3/LINGUAGEM_CORINGA.md` |
+| layout (vertical → alternativa → editorial → revisão) e câmera (fixo; recuo só com `revela`) | `src/v3/decisao.py` |
+| fiscal de decisão ruim (ocupação, mapa, gancho) e calibração | `fiscal_editorial.decisoes`, `tests/dados/londres_decisoes_humanas.json` |
 | ferramentas avaliadas (não reavaliar) | `docs/v3/INVENTARIO_FERRAMENTAS.md` |
 | última entrega / GO-NO-GO | `docs/v3/ENTREGA_V3_1.md` |
 

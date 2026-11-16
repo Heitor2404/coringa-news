@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from src.v2 import diretor
+from src.v3 import linguagem
 from src.v3 import receitas as receitas_mod
 
 TRANSICOES = {'corte', 'dissolve', 'zoom', 'mascara', 'deslize', 'whip', 'iris', 'preto'}
@@ -42,8 +43,9 @@ PROMPT = """Você é o diretor de um vídeo explicativo curto vertical (9:16, {p
 (história, ciência, biologia, geografia, curiosidades). Abertura forte nos primeiros segundos, descobertas em sequência e
 resposta no fim; ritmo pela informação, não por cortes ou efeitos. Pergunta central: {pergunta}
 Trabalhe em três passos, nesta ordem:
-1. DEMONSTRAÇÕES — para cada acontecimento do PLANO AUDIOVISUAL, decida o que a tela vai DEMONSTRAR (sujeito, estado
-   inicial, ação, resultado), com qual mídia/composição, e o critério para conferir. Acontecimento sem mídia que o
+1. DEMONSTRAÇÕES E FORMA — para cada acontecimento do PLANO AUDIOVISUAL, decida o que a tela vai DEMONSTRAR (sujeito,
+   estado inicial, ação, resultado) e a FORMA visual (registro, mapa, esquema, documento, comparacao, tipografia) ANTES
+   de qualquer câmera: a ficha traz a forma indicada pelo acontecimento; outra forma só com "justificativa_forma". Acontecimento sem mídia que o
    demonstre: diga como representá-lo honestamente (esquema rotulado, contexto rotulado) — nunca com foto genérica.
 2. AJUSTES DE NARRAÇÃO (opcional) — se a narração promete algo que a tela não pode mostrar, ou se uma frase pode apontar
    para o que está na tela, reescreva o trecho (mesmo fato, mesmo tamanho ±40%, nenhum número novo).
@@ -52,13 +54,17 @@ Trabalhe em três passos, nesta ordem:
 Responda só JSON: {{"demonstracoes": [{{"evento_id", "como", "midia", "criterio"}}], "ajustes_narracao": [{{"trecho", "texto", "motivo"}}],
 "planos": [...]}}.
 
+Linguagem do canal (uma identidade só):
+{linguagem}
+
 Regras de direção (obrigatórias):
-- A foto/vídeo real relevante é o elemento principal. Não cubra fotografia com cartão de texto.
-- Todo movimento tem intenção (revelar, aproximar, localizar, acompanhar, explicar, comparar); sem intenção: "fixo"
-  (plano fixo é legítimo: não acrescente zoom, círculo ou seta só para a imagem "andar").
-- "layout": "cobrir" (foto/vídeo cobre o quadro inteiro) ou "integral" (documento/mapa/gravura que precisa ser
-  visto inteiro, com margem). Se o essencial não cabe cobrindo o quadro, use "integral" ou outro recurso; nunca corte o
-  essencial.
+- A foto/vídeo real relevante é o elemento principal quando a forma é registro. Não cubra fotografia com cartão de texto.
+- Câmera FIXA é o padrão. "aproximar" só até o "objeto_principal". Recuo ("revelar"/"localizar" do detalhe para o todo)
+  só com "revela": [objetos que entram no quadro com o recuo]; sem isso o motor recusa o recuo. Nada de movimento para
+  disfarçar mídia fraca ou esticar a duração.
+- "layout": "cobrir" (foto cobre o quadro) ou "editorial" (documento/mapa/gravura/pintura horizontal que precisa ser
+  vista inteira: visão geral + detalhe ampliado). Não existe fundo vazio: se nada disso funciona, troque a mídia
+  ("alternativas": [ids do ACERVO] em ordem de preferência) ou o recurso.
 - Anotação só quando acrescenta o que imagem e narração não deixam claro; prefira nenhuma, um ponto ou uma seta breve.
 - Anotação só sobre objeto que está NA foto ("objeto_principal"/"alvo" serão localizados pela visão; se não achar, cai).
 - Mecanismo/processo é mostrado por composição que ANIMA a ação (veja as viáveis de cada acontecimento), não por cartões.
@@ -81,7 +87,8 @@ Contrato de cada plano:
  "funcao_narrativa" (gancho|contexto|mecanismo|consequencia|revelacao|fechamento),
  "recurso_visual": {{"tipo": "foto|composicao|video", "id": "<id do ACERVO ou da composição>"}}, "composicao",
  "funcao_documental", "objeto_principal", "plano_inicial", "plano_final" (geral|contexto|objeto|detalhe ou {{"objeto": "<outro objeto>", "enquadramento": "detalhe"}}),
- "acao_visual", "movimento_camera", "layout" (cobrir|integral), "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta: outro objeto da foto),
+ "forma_visual" (registro|mapa|esquema|documento|comparacao|tipografia), "justificativa_forma" (só se diferir da ficha),
+ "acao_visual", "movimento_camera", "revela": [objetos que o recuo revela], "alternativas": [ids], "layout" (cobrir|editorial), "anotacoes": [{{"tipo": "circulo|contorno|foco|seta|trajeto|ponto", "alvo", "ate" (seta: outro objeto da foto),
    "ate_desvio": [dx, dy] (opcional, só seta/trajeto DIDÁTICA a partir do alvo, fração da foto, ex. [0, -0.3] = para cima; rótulo diz "esquema"), "texto", "na_palavra"}}],
  "params_do_contrato": true (para composição viável de um acontecimento: os dados vêm do contrato), "params": {{...}} (só composições especiais),
  "tempos_palavras": {{"<passo>": "<palavra>"}} (opcional), "transicao", "selo_texto", "criterio_de_validacao": ["..."]}}
@@ -196,6 +203,7 @@ def montar_prompt(v: dict, acervo: dict, bib=None, plataforma: str = 'Reels, Tik
          .replace('{erros}', ('Erros já corrigidos que NÃO podem voltar:\n' + '\n'.join(linhas_err)) if linhas_err else '')
          .replace('{receitas}', receitas_mod.texto_prompt(rs) or '(nenhuma)')
          .replace('{especiais}', '; '.join(f'{k}: {d}' for k, d in COMPS_ESPECIAIS.items()))
+         .replace('{linguagem}', linguagem.texto_prompt())
          .replace('{plano_av}', plano_av.texto_prompt(fichas_av) or '(sem contrato)')
          .replace('{eventos}', ev_txt or '(sem contrato de acontecimentos)')
          .replace('{fatos}', '\n'.join(f'{i}: {t}' for i, t in fat)[:9000])
@@ -279,11 +287,20 @@ def validar_storyboard(sb: dict, v: dict, acervo: dict, ctx: dict) -> list[tuple
             out.append((i, f"função narrativa inválida: {pl.get('funcao_narrativa')}"))
         if (pl.get('transicao') or 'corte') not in TRANSICOES:
             out.append((i, f"transição inexistente: {pl.get('transicao')}"))
-        if pl.get('layout') not in (None, 'cobrir', 'integral'):
-            out.append((i, f"layout inexistente: {pl.get('layout')} (cobrir|integral)"))
+        if pl.get('layout') not in (None, 'cobrir', 'editorial', 'integral'):
+            out.append((i, f"layout inexistente: {pl.get('layout')} (cobrir|editorial)"))
         comp = pl.get('composicao')
         rv = pl.get('recurso_visual') or {}
         ev = evs.get(pl.get('evento_id'))
+        # 16/11: a forma visual vem do acontecimento; foto com zoom não substitui explicação animada
+        erro_forma = linguagem.validar_plano(pl, ev, acervo.get(rv.get('id')) if rv.get('tipo') in ('foto', 'video') else None)
+        if erro_forma and 'a ação é o essencial' in erro_forma and any(
+                p2.get('evento_id') == (ev or {}).get('id') and p2.get('composicao') in linguagem.FORMAS['esquema']['comps'] for p2 in pls):
+            erro_forma = None                       # outro plano do mesmo acontecimento já anima a ação: esta foto é contexto
+        if erro_forma:
+            out.append((i, erro_forma))
+        if pl.get('movimento_camera') in ('revelar', 'localizar') and not pl.get('revela') and pl.get('funcao_narrativa') == 'gancho':
+            out.append((i, "gancho com recuo sem 'revela': a abertura não pode começar cheia e terminar pequena (use fixo ou aproximar)"))
         if comp not in COMPS_FOTO | set(COMPS_ESPECIAIS) and not (ev and comp in (ev.get('viaveis') or [])):
             out.append((i, f"composição {comp} não é viável para {pl.get('evento_id')} (viáveis: {', '.join((ev or {}).get('viaveis') or []) or 'nenhuma'})"))
         if rv.get('tipo') in ('foto', 'video'):

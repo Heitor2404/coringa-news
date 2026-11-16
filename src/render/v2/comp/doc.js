@@ -31,7 +31,7 @@
     for (let i = 0; i < im.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = 128 + ((s >> 8) % 90) - 45; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
     g.putImageData(im, 0, 0); RUIDO = c.toDataURL('image/png'); return RUIDO;
   }
-  const selo = (p) => p && p.funcao ? `<div class="abs dp-selo" data-g="selo" style="left:60px;top:345px;max-width:880px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85)">
+  const selo = (p, topo) => p && p.funcao ? `<div class="abs dp-selo" data-g="selo" style="left:60px;top:${topo == null ? 345 : topo}px;max-width:880px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85)">
       <span style="padding:5px 12px;border:2px solid ${SELO_COR[p.funcao] || '#fff'};color:${SELO_COR[p.funcao] || '#fff'};background:rgba(8,10,14,.55)">${esc(p.funcao)}</span><span class="tx">${esc(p.texto || '')}</span></div>` : '';
   // lado do crédito: direita (padrão) ou esquerda — quando uma anotação precisa do canto direito livre
   const credito = (c, lado) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="${lado === 'esquerda' ? 'left:60px;text-align:left' : 'right:60px;text-align:right'};top:1132px;max-width:680px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
@@ -86,6 +86,25 @@
     return limitar(Math.exp(lerp(a.ls, b.ls, e)), lerp(a.cx, b.cx, e), lerp(a.cy, b.cy, e), iw, ih, layout);
   }
 
+  /* Composição EDITORIAL (16/11) — documento, mapa, gravura ou pintura horizontal vista inteira: VISÃO GERAL na largura
+   * do quadro em cima + DETALHE ampliado da informação principal cobrindo o painel até o pé do quadro, com um marcador
+   * na visão geral mostrando de onde vem o detalhe. Sem fundo vazio. Mesmas contas de src/v3/geometria.editorial. */
+  const GAP_ED = 16, VISAO_MAX = .55;
+  function editorial(iw, ih, visao, detalhe) {
+    const v = (visao || [0, 0, 1, 1]), d = (detalhe || visao || [0, 0, 1, 1]);
+    const vx = v[0] * iw, vy = v[1] * ih, vw = v[2] * iw, vh = v[3] * ih;
+    const s1 = Math.min(W / vw, VISAO_MAX * H / vh), h1 = vh * s1, ox = (W - vw * s1) / 2;
+    const y0 = h1 + GAP_ED, hd = H - y0;
+    const dx = d[0] * iw, dy = d[1] * ih, dw = d[2] * iw, dh = d[3] * ih;
+    const cobre = Math.max(W / iw, hd / ih), util = Math.max(1, BARRA - y0);
+    let sd = Math.min(W / dw, util / dh); sd = Math.min(Math.max(sd, cobre), Math.max(cobre, SMAX));
+    const cx = dx + dw / 2, cy = dy + dh / 2;
+    const tx = Math.min(0, Math.max(W - iw * sd, W / 2 - cx * sd));
+    const ty = Math.min(y0, Math.max(y0 + hd - ih * sd, (y0 + Math.min(BARRA, H)) / 2 - cy * sd));
+    return { s1, ox, tx1: ox - vx * s1, ty1: -vy * s1, vw1: vw * s1, h1, y0, hd, sd, tx, ty,
+             jan: [(-tx) / sd, (y0 - ty) / sd, W / sd, hd / sd] };
+  }
+
   // anotações: desenho em SVG de tela (traço constante) + rótulo HTML posicionado fora da região, dentro da área segura
   function anotSVG(a, i) {
     const cor = a.cor || AMARELO;
@@ -118,11 +137,11 @@
     objetivo: 'Fazer a fotografia explicar: o espectador olha para onde a narração aponta, no momento em que ela aponta.',
     funcoes: ['lugar', 'pessoa', 'objeto', 'ambiente', 'documento', 'evento_historico', 'contexto'],
     params: { img: 'arquivo da foto', wh: '[largura, altura] em pixels', cam: '[{t, caixa:[x,y,w,h] 0–1}] enquadramentos-chave (da direção)',
-      layout: "'cobrir' (padrão: foto/vídeo cobre o quadro, sem borda, sem encolher) | 'integral' (documento/mapa inteiro com margem intencional)",
+      layout: "'cobrir' (padrão: foto/vídeo cobre o quadro, sem borda, sem encolher) | 'editorial' (documento/mapa/gravura horizontal: visão geral inteira em cima + detalhe ampliado embaixo; cam[0].caixa = detalhe, visao_geral = caixa da visão) | 'integral' (legado: não é mais escolhido automaticamente)",
       anot: '[{tipo: circulo|contorno|foco|seta|trajeto, caixa | de/para, t0, t1, texto ≤ 34, lado}] — caixa da VISÃO, nunca adivinhada',
       avanco: 'opcional {etapas: [{t, centro: [x, y] (fração da imagem), raio (fração da diagonal), dur}]} — revela a imagem em cor, em etapas, a partir de um ponto (propagação, expansão, inundação); o resto fica cinza. Só sobre mapa/registro que JÁ mostra a área final; selo diz ESQUEMA se a ordem é aproximada',
       tratamento: 'atual | arquivo | gravura | satelite', selo: '{funcao, texto ≤ 44}', credito: '≤ 70', credito_lado: 'direita | esquerda', entrada: 'dissolve | corte' },
-    fundo: "próprio: 'cobrir' não mostra fundo; 'integral' usa mesa escura com sombra (composição intencional, não sobra acidental)",
+    fundo: "nenhum visível: 'cobrir' cobre o quadro; 'editorial' são dois painéis de imagem que ocupam o quadro todo",
     layout: 'foto ocupa o quadro; selo y 300; anotações e rótulos entre y 330 e 1140; legenda 1180–1440 livre',
     paleta: 'a da foto (tratamento de cor comum); anotações amarelas', animacao: 'câmera entre enquadramentos-chave com aceleração suave; anotação desenha no tempo da palavra',
     duracao: [2, 4.5, 9], limites: { texto: 34, selo: 44 }, legenda: 'livre',
@@ -131,25 +150,32 @@
     transicao: 'dissolve',
     exemplo: { params: { img: '@lago_navios', wh: [1600, 1067], cam: [{ t: 0, caixa: [0, 0, 1, 1] }, { t: 3, caixa: [.3, .3, .4, .4] }], anot: [{ tipo: 'circulo', caixa: [.4, .4, .2, .2], t0: 1.5, texto: 'NAVIO' }], selo: { funcao: 'CONTEXTO', texto: 'LAGO GATÚN, 2000' } }, dur: 4, fala: 'No meio do caminho há um lago.' },
   }, (p, ctx) => {
-    const [iw, ih] = p.wh || [1600, 900], LAY = p.layout === 'integral' ? 'integral' : 'cobrir', anot = (p.anot || []).map((a, k) => ({ ...a, _id: ctx.i + '_' + k }));
+    const [iw, ih] = p.wh || [1600, 900], LAY = ['integral', 'editorial'].includes(p.layout) ? p.layout : 'cobrir', anot = (p.anot || []).map((a, k) => ({ ...a, _id: ctx.i + '_' + k }));
+    const ED = LAY === 'editorial' ? editorial(iw, ih, p.visao_geral, (p.cam && p.cam[0] && p.cam[0].caixa) || null) : null;
     // fundo próprio e intencional: 'integral' = mesa escura (documento/mapa inteiro, com margem de propósito);
     // 'cobrir' = a foto cobre o quadro inteiro, então o fundo nunca aparece (não há mais cópia desfocada da foto)
     const fundo = LAY === 'integral' ? 'background:radial-gradient(ellipse 90% 60% at 50% 40%, #23262c 0%, #121418 60%, #0a0b0d 100%)' : 'background:#0b0c0e';
+    const filtro = TRAT[p.tratamento] || TRAT.atual;
+    const visaoHTML = ED ? `<div class="abs dp-visao" data-ocupa="1" data-layout="editorial" style="left:${ED.ox}px;top:0;width:${ED.vw1}px;height:${ED.h1}px;overflow:hidden">
+          <img src="${p.img}" style="position:absolute;left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;transform:translate(${ED.tx1 - ED.ox}px,${ED.ty1}px) scale(${ED.s1});filter:${filtro}">
+          <div style="position:absolute;left:${ED.tx1 - ED.ox + ED.jan[0] * ED.s1}px;top:${ED.ty1 + ED.jan[1] * ED.s1}px;width:${ED.jan[2] * ED.s1}px;height:${ED.jan[3] * ED.s1}px;border:4px solid ${AMARELO};box-shadow:0 0 0 2px rgba(0,0,0,.55)"></div></div>
+        <div class="abs" style="left:0;top:${ED.h1}px;width:${W}px;height:${GAP_ED}px;background:#0b0c0e"></div>` : '';
+    const abre = ED ? `<i data-marca-topo="${Math.round(ED.y0 + 30)}" style="display:none"></i><div class="abs dp-det" data-ocupa="1" data-layout="editorial" style="left:0;top:${ED.y0}px;width:${W}px;height:${ED.hd}px;overflow:hidden">` : '';
     return {
-      html: `<div class="abs dp-bg" data-layout="${LAY}" style="inset:0;${fundo}"></div>
-        <div class="abs dp-mundo" data-ocupa="1" data-layout="${LAY}" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;${LAY === 'integral' ? 'box-shadow:0 18px 70px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)' : ''}">
+      html: `<div class="abs dp-bg" data-layout="${LAY}" style="inset:0;${fundo}"></div>${visaoHTML}${abre}
+        <div class="abs dp-mundo" ${ED ? '' : 'data-ocupa="1"'} data-layout="${LAY}" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;${LAY === 'integral' ? 'box-shadow:0 18px 70px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)' : ''}">
           <img src="${(p.avanco && p.avanco.base) || p.img}" style="display:block;width:${iw}px;height:${ih}px;filter:${p.avanco && !p.avanco.base ? 'grayscale(1) brightness(.62) contrast(.9)' : (TRAT[p.tratamento] || TRAT.atual)}">
           ${p.avanco ? `<img class="dp-avanco" src="${p.img}" style="position:absolute;left:0;top:0;width:${iw}px;height:${ih}px;filter:${TRAT[p.tratamento] || TRAT.atual} saturate(1.25);clip-path:circle(0px at 0 0)">
-          <div class="dp-frente" style="position:absolute;left:0;top:0;border-radius:50%;border:${Math.round(4 * iw / 1080)}px solid #ff7a1a;box-shadow:0 0 ${Math.round(28 * iw / 1080)}px #ff5a00;opacity:0"></div>` : ''}</div>
+          <div class="dp-frente" style="position:absolute;left:0;top:0;border-radius:50%;border:${Math.round(4 * iw / 1080)}px solid #ff7a1a;box-shadow:0 0 ${Math.round(28 * iw / 1080)}px #ff5a00;opacity:0"></div>` : ''}</div>${ED ? '</div>' : ''}
         <div class="abs dp-grao" style="inset:0;opacity:.075;mix-blend-mode:overlay;background-image:url(${ruido()});background-size:256px 256px"></div>
         <div class="abs" style="inset:0;background:radial-gradient(ellipse 85% 70% at 50% 42%, transparent 55%, rgba(0,0,0,.5) 100%)"></div>
-        <div class="abs" style="left:0;right:0;top:0;height:420px;background:linear-gradient(rgba(0,0,0,.55),transparent)"></div>
+        ${ED ? '' : '<div class="abs" style="left:0;right:0;top:0;height:420px;background:linear-gradient(rgba(0,0,0,.55),transparent)"></div>'}
         <svg class="abs dp-an" style="left:0;top:0;overflow:visible" width="1080" height="1920" viewBox="0 0 1080 1920">${anot.map(anotSVG).join('')}</svg>
         ${anot.map((a, i) => a.texto ? `<div class="abs dp-rot dr${i}" data-g="rotulo" data-txt="1" style="left:0;top:0;max-width:600px;padding:10px 18px;background:rgba(8,10,14,.82);border-left:6px solid ${a.cor || AMARELO};font-weight:900;font-size:34px;line-height:1.08;text-transform:uppercase;color:#fff;opacity:0">${hl(a.texto)}</div>` : '').join('')}
-        ${selo(p.selo)}${credito(p.credito, p.credito_lado)}`,
+        ${selo(p.selo, ED ? ED.y0 + 78 : null)}${credito(p.credito, p.credito_lado)}`,
       upd(tl, el) {
-        const { s, tx, ty } = camEm(p.cam, tl, iw, ih, LAY);
-        el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
+        const { s, tx, ty } = ED ? { s: ED.sd, tx: ED.tx, ty: ED.ty } : camEm(p.cam, tl, iw, ih, LAY);
+        el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty - (ED ? ED.y0 : 0)}px) scale(${s})`;
         if (p.avanco) {                                       // V3.1-resgate: área revelada em etapas a partir de um ponto
           const E = p.avanco.etapas || [], D = Math.hypot(iw, ih);
           let cx = E.length ? E[0].centro[0] : .5, cy = E.length ? E[0].centro[1] : .5, r = 0;

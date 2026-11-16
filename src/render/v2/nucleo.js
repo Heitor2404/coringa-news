@@ -302,7 +302,8 @@
     document.getElementById('preto').style.opacity = preto;
     const at = cenas.find(c => t >= c.sc.start && t < c.sc.end) || cenas[cenas.length - 1];
     const mc = document.getElementById('marca');
-    if (mc && at) { mc.classList.toggle('claro', at.meta.tom === 'claro'); document.querySelector('.vinheta').style.opacity = at.meta.tom === 'claro' ? 0 : 1; mc.style.opacity = (at.meta.marca === false || at.temKicker) ? 0 : 1; }
+    if (mc && at) { const mt = at.el && at.el.querySelector('[data-marca-topo]'); mc.style.top = mt ? mt.dataset.marcaTopo + 'px' : '';   // composição editorial: a marca desce para o painel de detalhe
+      mc.classList.toggle('claro', at.meta.tom === 'claro'); document.querySelector('.vinheta').style.opacity = at.meta.tom === 'claro' ? 0 : 1; mc.style.opacity = (at.meta.marca === false || at.temKicker) ? 0 : 1; }
     legenda(t);
     if (pend.length) await Promise.all(pend);
   };
@@ -333,9 +334,10 @@
   window.geometria = async function (t) {
     await window.seek(t);
     return cenas.filter(c => c.el.style.visibility !== 'hidden').map(c => {
-      const m = c.el.querySelector('[data-ocupa]'); if (!m) return null;
+      const ms = [...c.el.querySelectorAll('[data-ocupa]')], m = ms[0]; if (!m) return null;
       const r = m.getBoundingClientRect();
-      return { cena: cenas.indexOf(c), comp: c.meta.id, layout: m.dataset.layout || '', x0: r.left, y0: r.top, x1: r.right, y1: r.bottom,
+      const paineis = ms.map(e => { const q = e.getBoundingClientRect(); return [q.left, q.top, q.right, q.bottom]; });
+      return { cena: cenas.indexOf(c), comp: c.meta.id, layout: m.dataset.layout || '', x0: r.left, y0: r.top, x1: r.right, y1: r.bottom, paineis,
                opacidade: +getComputedStyle(c.el).opacity, transform: m.style.transform, em_transicao: !!(c.el.style.transform || c.el.style.clipPath) };
     }).filter(Boolean);
   };

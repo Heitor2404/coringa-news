@@ -1,38 +1,10 @@
 {
- "rodada": 3,
- "nota": "V3.1 — uma tentativa por caso. Rodada 3: só os casos sem MP4 aprovado na rodada 2 (43818596529), depois das correções ERR-021 e ERR-022. Panamá, Pisa e Londres ficam com o resultado da rodada 2.",
+ "rodada": 4,
+ "nota": "Correção estrutural da direção (16/11): 4 MICROCENAS de ~5–8 s pelo diretor automático real (sem storyboard manual), uma tentativa cada. O recorte (src/v3/microcena.py) escolhe por regra um acontecimento do tipo pedido no roteiro já pesquisado. Prévia PRIVADA no Telegram; não é publicação. Sem provedores pagos.",
  "casos": [
-  {
-   "nome": "pompeia",
-   "grupo": "regressao",
-   "checkpoint": "43773368638",
-   "nicho": "história"
-  },
-  {
-   "nome": "titanic",
-   "grupo": "regressao",
-   "checkpoint": "43752520420",
-   "nicho": "história"
-  },
-  {
-   "nome": "lagartixa",
-   "grupo": "regressao",
-   "checkpoint": "43728184399",
-   "nicho": "natureza",
-   "nota": "43730252500 ficou sem imagens (ERR-002 da época); este é o último com as imagens"
-  },
-  {
-   "nome": "ceu-azul",
-   "grupo": "inedito",
-   "checkpoint": "43750814971",
-   "nicho": "ciência (óptica)"
-  },
-  {
-   "nome": "voyager",
-   "grupo": "inedito",
-   "pedido": "como a sonda Voyager 1 ainda consegue falar com a Terra a mais de 24 bilhões de quilômetros",
-   "nicho": "espaço",
-   "limite_min": 50
-  }
+  {"nome": "titanic", "grupo": "microcena", "checkpoint": "43752520420", "nicho": "história", "microcena": "historia", "limite_min": 25},
+  {"nome": "panama", "grupo": "microcena", "checkpoint": "43775250571", "nicho": "geografia", "microcena": "geografia", "limite_min": 25},
+  {"nome": "lagartixa", "grupo": "microcena", "checkpoint": "43728184399", "nicho": "biologia", "microcena": "biologia", "limite_min": 25},
+  {"nome": "ceu-azul", "grupo": "microcena", "checkpoint": "43750814971", "nicho": "ciência", "microcena": "ciencia", "limite_min": 25}
  ]
 }

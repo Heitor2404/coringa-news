@@ -58,7 +58,7 @@ def _tentar(fn, modelos=None):
                 try:
                     from . import caixa      # trava (Plano Mestre §5): cota grátis → registra; desconhecido/pago → nega
                     from . import custo as _c
-                    r = caixa.operar('gemini', _c._quem_chamou(), lambda: fn(modelo))
+                    r = caixa.operar('gemini', _c._quem_chamou(), lambda: fn(modelo), modelo=str(modelo))
                     from . import custo
                     custo.registrar('gemini', modelo)        # grátis: só conta o pedido (separado do Claude)
                     time.sleep(4)   # respeita o limite de pedidos por minuto do plano grátis

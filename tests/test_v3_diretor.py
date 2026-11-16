@@ -28,7 +28,8 @@ def test_enquadramento_sempre_vertical_sem_faixa():
     for nome in ('geral', 'contexto', 'objeto', 'detalhe'):
         x, y, w, h = diretor.enquadramento(nome, [.4, .3, .1, .4], None, [3000, 2000])
         assert 0 <= x <= 1 - w + 1e-6 and 0 <= y <= 1 - h + 1e-6
-        assert abs((w * 3000) / (h * 2000) - 1080 / 1540) < .02          # proporção da tela acima da legenda
+        # 'geral' = maior recorte que cobre o quadro 9:16 (16/11); os outros cabem acima da legenda (1080×1540)
+        assert abs((w * 3000) / (h * 2000) - (1080 / 1920 if nome == 'geral' else 1080 / 1540)) < .02
 
 
 def test_objeto_largo_nao_vira_fatia():

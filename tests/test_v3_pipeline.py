@@ -22,7 +22,8 @@ def test_prompt_traz_so_o_contexto_recuperado(tmp_path):
     v = M.roteiro()
     bib, ac, _ = _ac(tmp_path, v)
     p, ctx = P.montar_prompt(v, ac, bib)
-    assert 'R-APROXIMA-OBJETO · opção testada' in p and 'R-EXPERIMENTO' not in p              # proposta não entra
+    # 16/11: receita não aprovada por humano entra só como hipótese, nunca como padrão
+    assert 'R-APROXIMA-OBJETO · HIPÓTESE EM TESTE' in p and 'R-EXPERIMENTO' not in p and 'PADRÃO APROVADO' not in p
     assert 'BOA PRÁTICA APROVADA' not in p                                                       # sem aprovação humana específica
     assert 'ERR-006' in p and 'ERR-016' not in p                                                # só erros pertinentes, com regra
     assert all(f'{i}: ' in p for i in range(len(v['cenas'])))                                     # todos os trechos indexados

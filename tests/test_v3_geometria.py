@@ -112,10 +112,12 @@ def _pl(**kw):
     return base
 
 
-def test_layout_integral_automatico_fica_registrado():
+def test_enquadramento_largo_em_foto_sem_solucao_fica_registrado_sem_cartao():
+    # 16/11: o 'integral' automático (cartão sobre fundo escuro) deixou de existir. Foto (não documento/mapa/arte) com
+    # pedido mais largo que 9:16 e sem objeto principal localizado: cobre o quadro e pede revisão — nunca em silêncio.
     cenas, reg = diretor.montar({'planos': [_pl()]}, AC, {}, PAL, {'f1'})
-    assert cenas[0]['params']['layout'] == 'integral'
-    assert any(d['codigo'] == 'LAYOUT-INTEGRAL' and d['impacto'] == 'revisao' for d in reg[0]['degradacoes'])
+    assert cenas[0]['params']['layout'] == 'cobrir'
+    assert any(d['codigo'] == 'SEM-COMPOSICAO-VERTICAL' and d['impacto'] == 'revisao' for d in reg[0]['degradacoes'])
 
 
 def test_cobrir_pedido_com_corte_do_enquadramento_pede_revisao():
@@ -125,7 +127,10 @@ def test_cobrir_pedido_com_corte_do_enquadramento_pede_revisao():
 
 
 def test_transicao_zoom_nao_empilha_com_zoom_de_camera():
-    cenas, reg = diretor.montar({'planos': [_pl(transicao='zoom')]}, AC, {}, PAL, {'f1'})
+    # aproximação com motivo (objeto principal localizado), para a câmera de fato se mover
+    reg_ = {'s1': {'objetos': {'casa': {'caixa': [.4, .4, .12, .15], 'visivel': True, 'ancoravel': True}}}}
+    pl = _pl(transicao='zoom', movimento_camera='aproximar', objeto_principal='casa', plano_inicial='geral', plano_final='objeto')
+    cenas, reg = diretor.montar({'planos': [pl]}, AC, reg_, PAL, {'f1'})
     assert cenas[0]['transicao'] == 'corte'
     assert any(d['codigo'] == 'TRANSICAO-ZOOM-EMPILHADA' for d in reg[0]['degradacoes'])
     cenas, _ = diretor.montar({'planos': [_pl(transicao='zoom', movimento_camera='fixo')]}, AC, {}, PAL, {'f1'})
@@ -174,15 +179,20 @@ def test_palco_real_igual_ao_espelho_e_sem_borda(img, tmp_path):
     planos = [('larga', 'cobrir', [{'t': 0, 'caixa': [.1, .1, .3, .7]}, {'t': 3, 'caixa': [.55, .2, .25, .5]}]),
               ('larga', 'integral', [{'t': 0, 'caixa': [0, 0, 1, 1]}, {'t': 3, 'caixa': [.4, .5, .2, .3]}]),
               ('alta', 'cobrir', [{'t': 0, 'caixa': [0, .2, 1, .7]}, {'t': 1, 'caixa': [0, .2, 1, .7]}, {'t': 3, 'caixa': [.3, 0, .3, .2]}]),
-              ('pequena', 'integral', [{'t': 0, 'caixa': [.2, .2, .4, .4]}])]
+              ('pequena', 'integral', [{'t': 0, 'caixa': [.2, .2, .4, .4]}]),
+              ('larga', 'editorial', [{'t': 0, 'caixa': [.55, .4, .2, .3]}])]
     for k, (nome, lay, cam) in enumerate(planos):
         arq, wh = img[nome]
         cenas.append({'comp': 'doc.plano', 'start': 3.5 * k, 'end': 3.5 * (k + 1), 'transicao': 'corte' if k != 2 else 'dissolve',
                       'origem': [k], 'fala': '', 'params': {'img': arq, 'wh': wh, 'cam': cam, 'layout': lay, 'anot': [],
                                                              'selo': {'funcao': 'CONTEXTO', 'texto': ''}, 'credito': 'teste'}})
-    dados = {'duration': 14.0, 'scenes': cenas, 'captions': [], 'creditos': []}
+    dados = {'duration': 17.5, 'scenes': cenas, 'captions': [], 'creditos': []}
     with palco.abrir(palco.preparar(copy.deepcopy(dados)), tmp_path / 'p') as pg:
-        amostras = sum(len(pg.evaluate(f'geometria({t / 4:.3f})')) for t in range(56))
+        amostras = sum(len(pg.evaluate(f'geometria({t / 4:.3f})')) for t in range(70))
+        ed = pg.evaluate('geometria(16.0)')[0]
         ach = G.auditar_palco(pg, dados, fps=8)
-    assert amostras >= 50
+    assert amostras >= 60
+    assert ed['layout'] == 'editorial' and len(ed['paineis']) == 2              # visão geral + detalhe, medidos no palco
+    oc = sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in ed['paineis']) / (1080 * 1920)
+    assert oc > .97
     assert not ach, ach

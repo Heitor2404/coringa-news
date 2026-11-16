@@ -369,7 +369,7 @@ def depois(bilhete: dict | None, ok: bool = True, cobrado_usd: float | None = No
     if not bilhete or not _ATUAL:
         return
     c = _ATUAL
-    op = {k: bilhete[k] for k in ('provedor', 'etapa', 'faturamento')} | {
+    op = {k: bilhete[k] for k in ('provedor', 'etapa', 'faturamento')} | ({'modelo': bilhete['modelo']} if bilhete.get('modelo') else {}) | {
         'ok': ok, 'credito_usd': credito_usd, 'cota': cota, 'segundos': round(time.time() - bilhete['t0'], 1), **({'erro': erro[:200]} if erro else {})}
     valido = isinstance(cobrado_usd, (int, float)) and not isinstance(cobrado_usd, bool) and cobrado_usd == cobrado_usd and cobrado_usd >= 0
     if bilhete['pago']:
@@ -402,10 +402,13 @@ def depois(bilhete: dict | None, ok: bool = True, cobrado_usd: float | None = No
     c['_pendentes_locais'].append(op)                       # sem cobrança: grava no fechamento (sem um push por chamada)
 
 
-def operar(provedor: str, etapa: str, fn, pior_usd: float | None = None, futuros_usd: float = 0.0, credito=None, medidor=None):
+def operar(provedor: str, etapa: str, fn, pior_usd: float | None = None, futuros_usd: float = 0.0, credito=None, medidor=None,
+           modelo: str = ''):
     """antes() → fn() → depois(), com a cobrança lida por `medidor(resposta) -> usd` quando o provedor cobra.
     Sem medidor, provedor que cobra é negado ANTES de chamar. Falha da chamada = pior caso. OperacaoNegada propaga."""
     b = antes(provedor, etapa, pior_usd, futuros_usd, medidor=medidor is not None)
+    if b is not None and modelo:
+        b['modelo'] = modelo
     try:
         r = fn()
     except Exception as e:

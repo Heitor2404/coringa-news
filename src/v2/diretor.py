@@ -127,7 +127,9 @@ def enquadramento(nome, roi: list | None, foco: list | None, wh) -> list:
     asp = (1080 / 1540) * ih / iw              # largura/altura normalizadas que dão 1080×1540 na tela
     base = roi or foco or [0.25, 0.25, 0.5, 0.5]
     if nome == 'geral':
-        return _expandir(base, 50, asp)        # expande até bater nos limites da foto
+        # o maior recorte que COBRE o quadro 9:16 (antes: proporção 1080×1540, mais larga que o quadro — cobrindo, só
+        # 80% cabia e o motor caía no cartão 'integral'; 16/11)
+        return _expandir(base, 50, (1080 / 1920) * ih / iw)
     m = {'contexto': 1.6, 'objeto': .45, 'detalhe': .12}.get(nome, .45)
     if nome in ('objeto', 'contexto') and base[2] / base[3] > 2.2 * asp:
         # objeto muito mais largo que o quadro vertical (um corpo deitado, uma ponte): mostra a largura inteira; o
@@ -202,6 +204,17 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
               'fala': pl.get('fala', ''), 'origem': [i], 'direcao': {k: pl.get(k) for k in CAMPOS}}
         if pl['composicao'] == 'doc.plano':
             x = acervo.get(rv.get('id')) or {}
+            # 16/11 — preferência 2 (src/v3/decisao.py): foto sem resolução para o quadro vertical e que não é
+            # documento/mapa/arte → primeira mídia de 'alternativas' que sirva (registrada; anotações ficam com os alvos)
+            if x and pl.get('alternativas'):
+                from src.v3 import decisao as _dc, geometria as _g, linguagem as _lg
+                if _g.nat(x.get('wh') or [1600, 1000]) > _g.SMAX * 1.12 and _lg.natureza(x) not in _dc.DOCUMENTAIS:
+                    alt = next((acervo[k] for k in pl['alternativas'] if k in acervo and not acervo[k].get('ia')
+                                and _g.nat(acervo[k].get('wh') or [1, 1]) <= _g.SMAX * 1.12), None)
+                    if alt:
+                        degradar(r, 'aceitavel', 'MIDIA-ALTERNATIVA', f"{rv.get('id')} ({x.get('wh')}) sem resolução para 9:16: trocada por {alt.get('id')}")
+                        x, rv = alt, {**rv, 'id': alt.get('id')}
+                        pl = {**pl, 'recurso_visual': rv}
             wh = x.get('wh') or [1600, 1000]
             rg = regioes.get(x.get('sha'), {}) if x else {}
             obs = rg.get('objetos') or {}
@@ -333,27 +346,20 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                         t = a + dur * (len(et) + 1) / (len(pl['avanco']['etapas']) + 1)
                     et.append({'t': round((t if t is not None else a) - a, 2), 'centro': e['centro'], 'raio': float(e['raio']), 'dur': e.get('dur', 1.6)})
                 avanco = {'etapas': et, **({'base': pl['avanco']['base']} if pl['avanco'].get('base') else {})}
-            # Plano Mestre §4.1: layout explícito. 'cobrir' (a foto cobre o quadro em todo o caminho) quando toda caixa
-            # cabe; senão 'integral' (documento/mapa inteiro, com margem intencional). Nunca silencioso.
-            from src.v3 import geometria
-            documento = pl.get('funcao_documental') in ('DOCUMENTO', 'REPRESENTACAO_HISTORICA', 'REPRESENTAÇÃO HISTÓRICA', 'ESQUEMA') \
-                or x.get('tipo') in ('mapa', 'documento', 'gravura')
-            layout, pior = geometria.escolher_layout([k['caixa'] for k in cam], wh, pl.get('layout'), documento)
-            if layout == 'cobrir' and pior < .9:
-                essencial = bool(roi) and min(geometria.visivel(roi, wh, 'cobrir'), 1.0) < .9
-                degradar(r, 'revisao', 'ENQUADRAMENTO-CORTADO',
-                         f"layout 'cobrir' pedido: só {pior:.0%} do enquadramento cabe no quadro vertical", essencial)
-            elif layout == 'cobrir' and geometria.nat(wh) > geometria.SMAX:
-                degradar(r, 'revisao', 'RESOLUCAO-BAIXA', f"foto de {wh[0]}×{wh[1]} precisa de {geometria.nat(wh):.1f}× para cobrir o quadro: imagem macia")
-            elif layout == 'integral' and not pl.get('layout'):
-                baixa = geometria.nat(wh) > geometria.SMAX * 1.12
-                degradar(r, 'revisao' if baixa or not documento else 'aceitavel', 'LAYOUT-INTEGRAL',
-                         f"foto de {wh[0]}×{wh[1]} sem resolução para cobrir o quadro: inteira, com margem (troque a mídia se puder)" if baixa else
-                         f"enquadramento mais largo que o quadro ({pior:.0%} caberia cobrindo): imagem inteira com margem intencional")
+            # 16/11: decisão de composição por regra (src/v3/decisao.py) — vertical que preserva o importante → outra
+            # mídia (já trocada acima) → editorial (documento/mapa/arte) → revisão/bloqueio; recuo só com revelação.
+            from src.v3 import decisao
+            dec = decisao.decidir(pl, x, wh, cam, roi, obs, enquadramento('objeto', roi, foco, wh) if roi else fim,
+                                  enquadramento('detalhe', roi, foco, wh) if roi else fim, avanco, gancho=i == 0 or pl.get('funcao_narrativa') == 'gancho')
+            for imp, cod, txt, ess in dec['degradacoes']:
+                degradar(r, imp, cod, txt, ess)
+            layout, cam = dec['layout'], dec['cam']
             if sc['transicao'] == 'zoom' and len(cam) > 1 and cam[1]['caixa'] != cam[0]['caixa']:
                 sc['transicao'] = 'corte'            # zoom de transição sobre zoom de câmera: não empilha (Plano Mestre §4.2)
                 degradar(r, 'aceitavel', 'TRANSICAO-ZOOM-EMPILHADA', "transição 'zoom' num plano com câmera em movimento: virou corte")
-            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam, 'layout': layout,
+            sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam, 'layout': layout, 'natureza': dec['natureza'],
+                            **({'visao_geral': dec['visao_geral']} if dec.get('visao_geral') else {}),
+                            **({'roi': roi} if roi else {}), **({'revela': pl['revela']} if pl.get('revela') else {}),
                             'anot': anot, 'tratamento': pl.get('tratamento') or x.get('tratamento') or 'atual',
                             'selo': {'funcao': pl['funcao_documental'], 'texto': pl.get('selo_texto', '')},
                             'credito': x.get('credito_curto') or x.get('credito', '')[:70],

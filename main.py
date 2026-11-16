@@ -917,6 +917,12 @@ def _montar_video_v3(v: dict, pasta: Path, nome: str, trab: Path) -> Path:
     mídia e o fiscal V3.1 decide. Sem aprovação/Telegram: o porteiro marca `_bloqueado` e o workflow guarda o resultado."""
     from src.v3 import pipeline
     v.setdefault('pergunta', _pergunta_fixa(v))
+    if os.getenv('MICROCENA'):                  # validação de generalização (16/11): um acontecimento, ~5–8 s, fluxo real
+        from src.v3 import microcena
+        v = microcena.recortar(v, os.environ['MICROCENA'])
+        (pasta / 'microcena.json').write_text(json.dumps(v['_microcena'], ensure_ascii=False, indent=1), encoding='utf-8')
+        print(f"  [microcena] {v['_microcena']['perfil']}: {v['_microcena']['evento']} ({v['_microcena']['tipo']}), "
+              f"trechos {v['_microcena']['trechos_originais']}, {v['_microcena']['palavras']} palavras")
     res = pipeline.montar_video(v, pasta, nome, trab, musica=escolher_musica(v, nome))
     v['_v3'] = res
     from src.v3 import estado_final
@@ -1090,7 +1096,13 @@ def fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None =
             try:
                 return _fazer_curiosidade(pedido, parte, pasta, pauta, unico)
             finally:
-                print('  [caixa] ' + json.dumps(caixa.resumo(), ensure_ascii=False))
+                rc = caixa.resumo()
+                print('  [caixa] ' + json.dumps(rc, ensure_ascii=False))
+                try:
+                    (pasta / 'caixa_resumo.json').write_text(json.dumps({**rc, 'operacoes': caixa._ATUAL['livro']['operacoes'][-80:]
+                                                                         + caixa._ATUAL['_pendentes_locais'][-80:]}, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+                except Exception:
+                    pass
 
 
 def _fazer_curiosidade(pedido: str, parte: int, pasta: Path, pauta: dict | None = None, unico: bool = False):

@@ -1,0 +1,770 @@
+{
+ "fonte": "Londres 1666: versões P1 (e8cc5dc), P1b (7ae2c26) e final (render 43920582178); vereditos do Heitor em 16/11",
+ "cenas": [
+  {
+   "versao": "p1",
+   "plano": 2,
+   "veredito": "reprovado",
+   "motivo": "placa: enquadramento ruim (12–15 s)",
+   "inicio": 12.27,
+   "dur": 3.037,
+   "natureza": "documento",
+   "funcao_narrativa": "contexto",
+   "params": {
+    "wh": [
+     1274,
+     960
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.2059,
+       0.4529,
+       0.5782,
+       0.5471
+      ]
+     },
+     {
+      "t": 2.7333000000000007,
+      "caixa": [
+       0.3939,
+       0.6181,
+       0.3422,
+       0.3238
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": [
+     {
+      "tipo": "contorno",
+      "caixa": [
+       0.42,
+       0.72,
+       0.29,
+       0.12
+      ],
+      "t0": 1.38,
+      "texto": "",
+      "t1": null,
+      "lado": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "p1",
+   "plano": 7,
+   "veredito": "reprovado",
+   "motivo": "mapa pequeno com grande região escura (38–44 s)",
+   "inicio": 33.724,
+   "dur": 13.246,
+   "natureza": "mapa",
+   "funcao_narrativa": "mecanismo",
+   "params": {
+    "wh": [
+     2000,
+     1265
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.466,
+       0.1027,
+       0.348,
+       0.7845
+      ]
+     },
+     {
+      "t": 4.17,
+      "caixa": [
+       0.466,
+       0.1027,
+       0.348,
+       0.7845
+      ]
+     },
+     {
+      "t": 5.97,
+      "caixa": [
+       0.1768,
+       0.1508,
+       0.5664,
+       0.6385
+      ]
+     },
+     {
+      "t": 9.81,
+      "caixa": [
+       0.1768,
+       0.1508,
+       0.5664,
+       0.6385
+      ]
+     },
+     {
+      "t": 11.21,
+      "caixa": [
+       0.0222,
+       0.2007,
+       0.4956,
+       0.5586
+      ]
+     },
+     {
+      "t": 11.71,
+      "caixa": [
+       0.0222,
+       0.2007,
+       0.4956,
+       0.5586
+      ]
+     },
+     {
+      "t": 12.91,
+      "caixa": [
+       0.123,
+       0.1125,
+       0.354,
+       0.435
+      ]
+     },
+     {
+      "t": 13.25,
+      "caixa": [
+       0.123,
+       0.1125,
+       0.354,
+       0.435
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": [
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.615,
+       0.405,
+       0.03,
+       0.04
+      ],
+      "t0": 2.78,
+      "texto": "SEGUNDA: CORAÇÃO DA CIDADE",
+      "t1": 5.24,
+      "lado": null
+     },
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.3,
+       0.48,
+       0.02,
+       0.03
+      ],
+      "t0": 7.56,
+      "texto": "MURALHA ROMANA",
+      "t1": 9.81,
+      "lado": null
+     },
+     {
+      "tipo": "seta",
+      "de": [
+       0.31,
+       0.4965
+      ],
+      "para": [
+       0.16999999999999998,
+       0.5175
+      ],
+      "t0": 9.81,
+      "texto": "TERÇA: PARA O OESTE",
+      "curva": 0.18,
+      "desenho": 1.4,
+      "t1": 11.43
+     },
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.27,
+       0.23,
+       0.07,
+       0.04
+      ],
+      "t0": 12.55,
+      "texto": "PERTO DE SMITHFIELD",
+      "t1": null,
+      "lado": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "p1",
+   "plano": 8,
+   "veredito": "reprovado",
+   "motivo": "Golden Boy: assunto minúsculo",
+   "inicio": 46.97,
+   "dur": 2.371,
+   "natureza": "foto",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     480,
+     640
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.2738,
+       0.6123,
+       0.3625,
+       0.3877
+      ]
+     },
+     {
+      "t": 2.133900000000002,
+      "caixa": [
+       0.1353,
+       0.1055,
+       0.5695,
+       0.609
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": [
+     {
+      "tipo": "circulo",
+      "caixa": [
+       0.36,
+       0.2,
+       0.12,
+       0.42
+      ],
+      "t0": 0.75,
+      "texto": "GOLDEN BOY OF PYE CORNER",
+      "t1": null,
+      "lado": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "p1b",
+   "plano": 2,
+   "veredito": "reprovado",
+   "motivo": "placa: excesso de fundo preto",
+   "inicio": 12.27,
+   "dur": 3.037,
+   "natureza": "documento",
+   "funcao_narrativa": "contexto",
+   "params": {
+    "wh": [
+     3840,
+     2400
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.04,
+       0.12,
+       0.92,
+       0.72
+      ]
+     },
+     {
+      "t": 2.7333000000000007,
+      "caixa": [
+       0.36,
+       0.2,
+       0.58,
+       0.27
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": []
+   }
+  },
+  {
+   "versao": "p1b",
+   "plano": 7,
+   "veredito": "aprovado",
+   "motivo": "mapa: preenchimento vertical e movimento geográfico preservados",
+   "inicio": 33.724,
+   "dur": 13.246,
+   "natureza": "mapa",
+   "funcao_narrativa": "mecanismo",
+   "params": {
+    "wh": [
+     2000,
+     1265
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.47,
+       0.15,
+       0.33,
+       0.52
+      ]
+     },
+     {
+      "t": 4.17,
+      "caixa": [
+       0.47,
+       0.15,
+       0.33,
+       0.52
+      ]
+     },
+     {
+      "t": 6.37,
+      "caixa": [
+       0.29,
+       0.15,
+       0.33,
+       0.52
+      ]
+     },
+     {
+      "t": 9.81,
+      "caixa": [
+       0.29,
+       0.15,
+       0.33,
+       0.52
+      ]
+     },
+     {
+      "t": 11.61,
+      "caixa": [
+       0.08,
+       0.2,
+       0.33,
+       0.48
+      ]
+     },
+     {
+      "t": 13.25,
+      "caixa": [
+       0.08,
+       0.2,
+       0.33,
+       0.48
+      ]
+     }
+    ],
+    "layout": "cobrir",
+    "anot": [
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.615,
+       0.405,
+       0.03,
+       0.04
+      ],
+      "t0": 2.78,
+      "texto": "SEGUNDA: CORAÇÃO DA CIDADE",
+      "t1": 5.24,
+      "lado": null
+     },
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.3,
+       0.48,
+       0.02,
+       0.03
+      ],
+      "t0": 7.56,
+      "texto": "MURALHA ROMANA",
+      "t1": 9.81,
+      "lado": null
+     },
+     {
+      "tipo": "seta",
+      "de": [
+       0.31,
+       0.4965
+      ],
+      "para": [
+       0.16999999999999998,
+       0.5175
+      ],
+      "t0": 9.81,
+      "texto": "TERÇA: PARA O OESTE",
+      "curva": 0.18,
+      "desenho": 1.4,
+      "t1": 11.43
+     },
+     {
+      "tipo": "circulo",
+      "caixa": [
+       0.27,
+       0.23,
+       0.07,
+       0.04
+      ],
+      "t0": 12.55,
+      "texto": "",
+      "t1": null,
+      "lado": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "p1b",
+   "plano": 8,
+   "veredito": "aprovado",
+   "motivo": "Golden Boy aprovado",
+   "inicio": 46.97,
+   "dur": 2.371,
+   "natureza": "foto",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     3672,
+     4041
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.33,
+       0.2,
+       0.32,
+       0.5
+      ]
+     },
+     {
+      "t": 2.133900000000002,
+      "caixa": [
+       0.25,
+       0.2,
+       0.48,
+       0.76
+      ]
+     }
+    ],
+    "layout": "cobrir",
+    "anot": []
+   }
+  },
+  {
+   "versao": "p1b",
+   "plano": 9,
+   "veredito": "aprovado",
+   "motivo": "monumento: foto completa mantida (problema só na linha)",
+   "inicio": 49.341,
+   "dur": 8.248,
+   "natureza": "foto",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     3840,
+     5775
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.3,
+       0.5,
+       0.48,
+       0.48
+      ]
+     },
+     {
+      "t": 2.38,
+      "caixa": [
+       0.3,
+       0.5,
+       0.48,
+       0.48
+      ]
+     },
+     {
+      "t": 4.98,
+      "caixa": [
+       0.3,
+       0.06,
+       0.48,
+       0.92
+      ]
+     },
+     {
+      "t": 8.25,
+      "caixa": [
+       0.3,
+       0.06,
+       0.48,
+       0.92
+      ]
+     }
+    ],
+    "layout": "cobrir",
+    "anot": [
+     {
+      "tipo": "seta",
+      "de": [
+       0.365,
+       0.966
+      ],
+      "para": [
+       0.365,
+       0.0845
+      ],
+      "t0": 6.11,
+      "texto": "",
+      "curva": 0,
+      "desenho": 1.4,
+      "t1": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 0,
+   "veredito": "reprovado",
+   "motivo": "abertura: recuo que reduz a presença da imagem",
+   "inicio": 0.0,
+   "dur": 7.4,
+   "natureza": "pintura",
+   "funcao_narrativa": "gancho",
+   "params": {
+    "wh": [
+     1920,
+     1118
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.348,
+       0.2057,
+       0.224,
+       0.5485
+      ]
+     },
+     {
+      "t": 6.66,
+      "caixa": [
+       0.126,
+       0.0566,
+       0.708,
+       0.8669
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": []
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 1,
+   "veredito": "reprovado",
+   "motivo": "mapa: perda de legibilidade e ocupação",
+   "inicio": 7.4,
+   "dur": 4.87,
+   "natureza": "mapa",
+   "funcao_narrativa": "contexto",
+   "params": {
+    "wh": [
+     2000,
+     1265
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.0525,
+       0.0,
+       0.885,
+       0.9976
+      ]
+     },
+     {
+      "t": 4.382999999999999,
+      "caixa": [
+       0.473,
+       0.3525,
+       0.354,
+       0.435
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": [
+     {
+      "tipo": "ponto",
+      "caixa": [
+       0.655,
+       0.55,
+       0.03,
+       0.08
+      ],
+      "t0": 4.23,
+      "texto": "PUDDING LANE",
+      "t1": null,
+      "lado": null
+     }
+    ]
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 2,
+   "veredito": "reprovado",
+   "motivo": "documento horizontal sem composição editorial",
+   "inicio": 12.27,
+   "dur": 3.037,
+   "natureza": "documento",
+   "funcao_narrativa": "contexto",
+   "params": {
+    "wh": [
+     3840,
+     2400
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.37,
+       0.075,
+       0.54,
+       0.726
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": []
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 4,
+   "veredito": "reprovado",
+   "motivo": "gravura: encolhimento, cara de slideshow",
+   "inicio": 21.45,
+   "dur": 3.821,
+   "natureza": "gravura",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     1560,
+     873
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.4151,
+       0.155,
+       0.1099,
+       0.28
+      ]
+     },
+     {
+      "t": 3.4389000000000016,
+      "caixa": [
+       0.0,
+       0.0,
+       1.0,
+       1.0
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": []
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 6,
+   "veredito": "reprovado",
+   "motivo": "gravura: encolhimento, cara de slideshow",
+   "inicio": 29.684,
+   "dur": 4.04,
+   "natureza": "gravura",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     1920,
+     1314
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.0125,
+       0.0937,
+       0.435,
+       0.9063
+      ]
+     },
+     {
+      "t": 3.635999999999996,
+      "caixa": [
+       0.3305,
+       0.0,
+       0.649,
+       0.725
+      ]
+     }
+    ],
+    "layout": "integral",
+    "anot": []
+   }
+  },
+  {
+   "versao": "final",
+   "plano": 8,
+   "veredito": "aprovado",
+   "motivo": "Golden Boy aprovado (mantido)",
+   "inicio": 46.97,
+   "dur": 2.371,
+   "natureza": "foto",
+   "funcao_narrativa": "consequencia",
+   "params": {
+    "wh": [
+     3672,
+     4041
+    ],
+    "cam": [
+     {
+      "t": 0,
+      "caixa": [
+       0.33,
+       0.2,
+       0.32,
+       0.5
+      ]
+     },
+     {
+      "t": 2.133900000000002,
+      "caixa": [
+       0.25,
+       0.2,
+       0.48,
+       0.76
+      ]
+     }
+    ],
+    "layout": "cobrir",
+    "anot": []
+   }
+  }
+ ],
+ "nota": "Só cenas com veredito explícito do Heitor. Calibração: aprovados mantêm ocupação 1,00; reprovados ficam entre 0,31 e 0,65."
+}

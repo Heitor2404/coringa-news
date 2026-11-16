@@ -58,9 +58,18 @@ def liberar_publicacao(estado: dict, autorizacao: str) -> dict:
     return {**estado, 'estado': PUBLICAVEL, 'publicacao': {'autorizacao': autorizacao}}
 
 
-def pode_enviar(estado: dict) -> bool:
-    """Único portão para qualquer saída (Telegram, redes). Só PUBLICAVEL passa."""
+def pode_publicar(estado: dict) -> bool:
+    """Portão da PUBLICAÇÃO em redes sociais e da entrega de produção. Só PUBLICAVEL passa."""
     return (estado or {}).get('estado') == PUBLICAVEL
+
+
+pode_enviar = pode_publicar          # nome antigo (main.telegram, entrega de produção)
+
+
+def pode_enviar_previa(estado: dict) -> bool:
+    """Prévia PRIVADA ao Telegram (decisão de 16/11): autorizada em qualquer estado conhecido, com o estado visível na
+    mensagem (src/v3/previa_telegram.py). Não é publicação."""
+    return (estado or {}).get('estado') in ESTADOS
 
 
 def gravar(estado: dict, arq: Path) -> None:

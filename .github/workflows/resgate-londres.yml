@@ -1,8 +1,11 @@
-name: Resgate audiovisual — Londres 1666 (material + narração)
+name: Resgate audiovisual — Londres 1666 (material + narração / render completo sem IA)
 
 # Produção de referência dirigida à mão (docs/resgate/). Sem IA de texto/visão: só abre o checkpoint cifrado do tema
 # (pesquisa já feita na validação V3.1) e grava a NARRAÇÃO (Gemini TTS, cota grátis; Edge como reserva) das falas do
 # pedido, com tempos por palavra (faster-whisper local). Resultado cifrado para as chaves do piloto, ramo resgate-resultado.
+# Modos (pedido.json "modo"): material (padrão, o de sempre) · chave (publica a chave PÚBLICA derivada do CHECKPOINT_KEY
+# para cifrar a narração) · render (MP4 completo SEM IA: storyboard + imagens + narração já gravada; prévia PRIVADA ao
+# Telegram com status, fiscal e custos; resultado cifrado no ramo resgate-render, sem sobrescrever).
 on:
   push:
     branches: [piloto-v24-lagartixa]
@@ -21,6 +24,8 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - id: modo
+        run: echo "m=$(python3 -c "import json;print(json.load(open('.github/resgate/pedido.json')).get('modo','material'))")" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -34,6 +39,7 @@ jobs:
           key: v3-checkpoints-${{ github.run_id }}
           restore-keys: v3-checkpoints-
       - name: Abrir e narrar
+        if: steps.modo.outputs.m == 'material'
         env:
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
           COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
@@ -121,6 +127,7 @@ jobs:
           rm -rf out/narracao
           if python -c "import json,sys;sys.exit(0 if json.load(open('.github/resgate/pedido.json')).get('so_baixar') else 1)"; then rm -rf out/checkpoint; fi
       - name: Cifrar e publicar
+        if: steps.modo.outputs.m == 'material'
         run: |
           export GNUPGHOME=$(mktemp -d)
           rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
@@ -131,3 +138,78 @@ jobs:
           git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp /tmp/londres-*.tgz.gpg .
           git add *.gpg && git commit -qm "resgate: material Londres (${{ github.run_id }})" && git push -f -q origin resgate-resultado
+
+      # ------------------------------------------------------------------ modo chave
+      - name: Chave pública do material (derivada do CHECKPOINT_KEY; a privada nunca sai do runner)
+        if: steps.modo.outputs.m == 'chave'
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python -m src.v3.material publica > /tmp/material_pub.txt
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan resgate-chave
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/material_pub.txt .
+          git add material_pub.txt && git commit -qm "chave pública do material (${{ github.run_id }})" && git push -f -q origin resgate-chave
+
+      # ------------------------------------------------------------------ modo render (sem IA)
+      - name: Dependências do render
+        if: steps.modo.outputs.m == 'render'
+        timeout-minutes: 15
+        run: |
+          (timeout 120 sudo apt-get install -y -qq fonts-noto-color-emoji) || echo "apt fora do ar"
+          npm install --no-audit --no-fund
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+      - name: Material do render (checkpoint + Commons + narração cifrada)
+        if: steps.modo.outputs.m == 'render'
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          mkdir -p mat/extra
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d ck_novos/londres-1666.tgz.gpg 3<<<"$chave"
+          tar -xzf ck.tgz -C mat && rm ck.tgz
+          python -m src.v3.material decifrar .github/resgate/narracao.enc /tmp/narracao.tgz
+          tar -xzf /tmp/narracao.tgz -C mat && rm /tmp/narracao.tgz
+          python - <<'PY'
+          import json, requests
+          from pathlib import Path
+          UA = {'User-Agent': 'CoringaExplicaBot/1.4 (https://github.com/Heitor2404/coringa-news; educational short videos)'}
+          for t in json.loads(Path('.github/resgate/pedido.json').read_text()).get('baixar') or []:
+              r = requests.get('https://commons.wikimedia.org/w/api.php', headers=UA, timeout=60, params={
+                  'action': 'query', 'titles': 'File:' + t, 'prop': 'imageinfo', 'iiprop': 'url', 'iiurlwidth': 2600, 'format': 'json'}).json()
+              ii = (next(iter(r['query']['pages'].values())).get('imageinfo') or [{}])[0]
+              dest = Path('mat/extra') / t.replace(' ', '_')
+              dest.write_bytes(requests.get(ii.get('thumburl') or ii['url'], headers=UA, timeout=180).content)
+              print('baixou', t, dest.stat().st_size)
+          PY
+          ls mat mat/extra
+      - name: Render completo (sem IA) e prévia privada ao Telegram
+        if: steps.modo.outputs.m == 'render'
+        timeout-minutes: 30
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/render_londres.py docs/resgate/londres_storyboard.json mat out_render --telegram
+      - name: Guardar o resultado (cifrado; ramo resgate-render, sem sobrescrever)
+        if: always() && steps.modo.outputs.m == 'render'
+        run: |
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          rm -rf out_render/_render
+          tar -czf /tmp/r.tgz -C out_render .
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/londres-render-${{ github.run_id }}.tgz.gpg /tmp/r.tgz
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          if git fetch -q origin resgate-render 2>/dev/null; then git checkout -q -B resgate-render FETCH_HEAD; else git checkout -q --orphan resgate-render; git rm -rq --cached .; fi
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          git checkout -q HEAD -- . 2>/dev/null || true
+          cp /tmp/londres-render-*.tgz.gpg .
+          git add londres-render-*.tgz.gpg && git commit -qm "render Londres (${{ github.run_id }})" && git push -q origin resgate-render
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.modo.outputs.m == 'render'
+        with:
+          name: londres-render-cifrado-${{ github.run_id }}
+          path: /tmp/londres-render-*.tgz.gpg
+          retention-days: 90

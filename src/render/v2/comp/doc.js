@@ -33,7 +33,8 @@
   }
   const selo = (p) => p && p.funcao ? `<div class="abs dp-selo" data-g="selo" style="left:60px;top:345px;max-width:880px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85)">
       <span style="padding:5px 12px;border:2px solid ${SELO_COR[p.funcao] || '#fff'};color:${SELO_COR[p.funcao] || '#fff'};background:rgba(8,10,14,.55)">${esc(p.funcao)}</span><span class="tx">${esc(p.texto || '')}</span></div>` : '';
-  const credito = (c) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="right:60px;top:1132px;max-width:680px;text-align:right;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
+  // lado do crédito: direita (padrão) ou esquerda — quando uma anotação precisa do canto direito livre
+  const credito = (c, lado) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="${lado === 'esquerda' ? 'left:60px;text-align:left' : 'right:60px;text-align:right'};top:1132px;max-width:680px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
 
   // câmera: quadros-chave [{t, caixa:[x,y,w,h] (0–1 da imagem)}] → {cx, cy, w, h} em pixels da imagem no instante tl
   /* Câmera do doc.plano (Plano Mestre §4). Cada enquadramento-chave vira um ESTADO {ls: log da escala, cx, cy: ponto
@@ -120,7 +121,7 @@
       layout: "'cobrir' (padrão: foto/vídeo cobre o quadro, sem borda, sem encolher) | 'integral' (documento/mapa inteiro com margem intencional)",
       anot: '[{tipo: circulo|contorno|foco|seta|trajeto, caixa | de/para, t0, t1, texto ≤ 34, lado}] — caixa da VISÃO, nunca adivinhada',
       avanco: 'opcional {etapas: [{t, centro: [x, y] (fração da imagem), raio (fração da diagonal), dur}]} — revela a imagem em cor, em etapas, a partir de um ponto (propagação, expansão, inundação); o resto fica cinza. Só sobre mapa/registro que JÁ mostra a área final; selo diz ESQUEMA se a ordem é aproximada',
-      tratamento: 'atual | arquivo | gravura | satelite', selo: '{funcao, texto ≤ 44}', credito: '≤ 70', entrada: 'dissolve | corte' },
+      tratamento: 'atual | arquivo | gravura | satelite', selo: '{funcao, texto ≤ 44}', credito: '≤ 70', credito_lado: 'direita | esquerda', entrada: 'dissolve | corte' },
     fundo: "próprio: 'cobrir' não mostra fundo; 'integral' usa mesa escura com sombra (composição intencional, não sobra acidental)",
     layout: 'foto ocupa o quadro; selo y 300; anotações e rótulos entre y 330 e 1140; legenda 1180–1440 livre',
     paleta: 'a da foto (tratamento de cor comum); anotações amarelas', animacao: 'câmera entre enquadramentos-chave com aceleração suave; anotação desenha no tempo da palavra',
@@ -145,7 +146,7 @@
         <div class="abs" style="left:0;right:0;top:0;height:420px;background:linear-gradient(rgba(0,0,0,.55),transparent)"></div>
         <svg class="abs dp-an" style="left:0;top:0;overflow:visible" width="1080" height="1920" viewBox="0 0 1080 1920">${anot.map(anotSVG).join('')}</svg>
         ${anot.map((a, i) => a.texto ? `<div class="abs dp-rot dr${i}" data-g="rotulo" data-txt="1" style="left:0;top:0;max-width:600px;padding:10px 18px;background:rgba(8,10,14,.82);border-left:6px solid ${a.cor || AMARELO};font-weight:900;font-size:34px;line-height:1.08;text-transform:uppercase;color:#fff;opacity:0">${hl(a.texto)}</div>` : '').join('')}
-        ${selo(p.selo)}${credito(p.credito)}`,
+        ${selo(p.selo)}${credito(p.credito, p.credito_lado)}`,
       upd(tl, el) {
         const { s, tx, ty } = camEm(p.cam, tl, iw, ih, LAY);
         el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty}px) scale(${s})`;

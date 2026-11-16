@@ -306,7 +306,12 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
                     # pela distância (zoom ≤ ~45%/s, pan ≤ 700 px/s no pico) — não acelera porque a palavra mudou
                     from src.v3 import geometria as _g
                     ini_mov = max(cam[-1]['t'] + (.5 if len(cam) > 1 else 0), tr)
-                    d_mov = max(float(ch.get('dur', 1.4)), _g.duracao_minima(atual, novo, wh))
+                    d_min = _g.duracao_minima(atual, novo, wh)
+                    d_mov = max(float(ch.get('dur', 1.4)), d_min)
+                    if ch.get('dur_exata') and float(ch.get('dur', 1.4)) < d_min:   # pedido explícito da direção: respeita,
+                        d_mov = float(ch['dur'])                                      # mas nunca em silêncio
+                        degradar(r, 'revisao', 'MOVIMENTO-ACIMA-DO-LIMITE',
+                                 f"câmera em '{ch.get('na_palavra')}' em {d_mov:.1f}s (o limite provisório pede {d_min:.1f}s): pedido da direção")
                     if ini_mov - tr > .6:
                         degradar(r, 'revisao', 'SINCRONIA-PALAVRA', f"câmera em '{ch.get('na_palavra')}' começa {ini_mov - tr:.1f}s depois da palavra (movimento anterior)")
                     if ini_mov > dur - .4:            # não sobra tempo nem para começar: a chave cai (nada de tempo fora de ordem)
@@ -351,7 +356,8 @@ def montar(storyboard: dict, acervo: dict, regioes: dict, palavras: list[dict], 
             sc['params'] = {'img': x.get('arq'), 'wh': wh, 'cam': cam, 'layout': layout,
                             'anot': anot, 'tratamento': pl.get('tratamento') or x.get('tratamento') or 'atual',
                             'selo': {'funcao': pl['funcao_documental'], 'texto': pl.get('selo_texto', '')},
-                            'credito': x.get('credito_curto') or x.get('credito', '')[:70]}
+                            'credito': x.get('credito_curto') or x.get('credito', '')[:70],
+                            **({'credito_lado': pl['credito_lado']} if pl.get('credito_lado') in ('direita', 'esquerda') else {})}
             if avanco:
                 sc['params']['avanco'] = avanco
             r['camera'] = {'inicial': ini, 'final': fim, 'roi': roi, 'origem_roi': alvo.get('origem') if roi else (rg.get('foco') or {}).get('origem')}

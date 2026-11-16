@@ -1,5 +1,5 @@
 {
- "nota": "Rodada P1c (16/11): só mídia. Monumento INTEIRO (chão ao topo da urna) em foto vertical de alta resolução — a foto atual corta a urna e o chão.",
+ "nota": "Render final de Londres (16/11): 1) publicar a chave pública do material; 2) render completo sem IA + prévia privada ao Telegram.",
  "falas": [
   "Em 1666, um incêndio que começou numa padaria destruiu a Londres medieval.",
   "Como o fogo foi tão longe?",
@@ -18,12 +18,6 @@
  ],
  "baixar": [],
  "so_baixar": true,
- "categorias": [
-  {
-   "categoria": "The Monument to the Great Fire of London",
-   "min_px": 8000000,
-   "max": 8,
-   "vertical": 1.4
-  }
- ]
+ "categorias": [],
+ "modo": "chave"
 }

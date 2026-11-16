@@ -40,20 +40,21 @@ def tg(monkeypatch, tmp_path):
     monkeypatch.setenv('TELEGRAM_BOT_TOKEN', 'tok')
     monkeypatch.setenv('TELEGRAM_CHAT_ID', '12345')
     chamadas = []
-    tipo = {'v': 'private'}
+    chat = {'type': 'private'}
+    membros = {'n': 2}
 
     def post(url, data=None, files=None, timeout=None):
         metodo = url.rsplit('/', 1)[1]
         chamadas.append((metodo, dict(data or {})))
-        return _R({'type': tipo['v']} if metodo == 'getChat' else {})
+        return _R(dict(chat) if metodo == 'getChat' else membros['n'] if metodo == 'getChatMemberCount' else {})
     monkeypatch.setattr(PT.requests, 'post', post)
     mp4 = tmp_path / 'v.mp4'
     mp4.write_bytes(b'0' * 1000)
-    return chamadas, tipo, mp4
+    return chamadas, chat, mp4, membros
 
 
 def test_previa_vai_so_ao_chat_privado_autorizado_com_status(tg):
-    chamadas, tipo, mp4 = tg
+    chamadas, chat, mp4, _ = tg
     r = PT.enviar(mp4, {'estado': EF.AGUARDANDO, 'pendencias': ['x']}, 'Londres', 'relatório')
     assert [m for m, _ in chamadas] == ['getChat', 'sendVideo', 'sendMessage']
     assert {d['chat_id'] for _, d in chamadas} == {'12345'}
@@ -62,30 +63,51 @@ def test_previa_vai_so_ao_chat_privado_autorizado_com_status(tg):
 
 
 def test_previa_de_video_bloqueado_tambem_vai_com_status(tg):
-    chamadas, tipo, mp4 = tg
+    chamadas, chat, mp4, _ = tg
     PT.enviar(mp4, {'estado': EF.BLOQUEADO, 'motivos': ['G-BORDA']}, 'Londres', 'r')
     assert 'STATUS: BLOQUEADO' in chamadas[1][1]['caption'] and 'G-BORDA' in chamadas[1][1]['caption']
 
 
-@pytest.mark.parametrize('chat', ['-100123', '-55', 'meu_canal', ''])
-def test_recusa_grupo_canal_ou_sem_chat(tg, monkeypatch, chat):
-    chamadas, tipo, mp4 = tg
-    monkeypatch.setenv('TELEGRAM_CHAT_ID', chat)
+@pytest.mark.parametrize('cid', ['@meu_canal', 'meu_canal', ''])
+def test_recusa_sem_chat_ou_id_nao_numerico(tg, monkeypatch, cid):
+    chamadas, chat, mp4, _ = tg
+    monkeypatch.setenv('TELEGRAM_CHAT_ID', cid)
     with pytest.raises(PT.EnvioRecusado):
         PT.enviar(mp4, {'estado': EF.AGUARDANDO}, 'x', 'r')
     assert not [m for m, _ in chamadas if m.startswith('send')]
 
 
-def test_recusa_se_o_telegram_disser_que_nao_e_privado(tg):
-    chamadas, tipo, mp4 = tg
-    tipo['v'] = 'group'
-    with pytest.raises(PT.EnvioRecusado, match='não é privado'):
+def test_grupo_privado_pequeno_do_dono_e_aceito(tg, monkeypatch):
+    chamadas, chat, mp4, membros = tg
+    monkeypatch.setenv('TELEGRAM_CHAT_ID', '-1001234')
+    chat['type'] = 'supergroup'
+    r = PT.enviar(mp4, {'estado': EF.AGUARDANDO}, 'x', 'r')
+    assert 'supergroup privado autorizado (2 membros)' == r['chat']
+    assert {d['chat_id'] for m, d in chamadas} == {'-1001234'}
+
+
+@pytest.mark.parametrize('ajuste', [{'username': 'canal_publico'}, {'type': 'channel', 'username': 'x'}, {'type': 'mistério'}])
+def test_recusa_chat_publico_ou_desconhecido(tg, monkeypatch, ajuste):
+    chamadas, chat, mp4, _ = tg
+    monkeypatch.setenv('TELEGRAM_CHAT_ID', '-100777')
+    chat.update({'type': 'supergroup', **ajuste})
+    with pytest.raises(PT.EnvioRecusado):
         PT.enviar(mp4, {'estado': EF.AGUARDANDO}, 'x', 'r')
-    assert [m for m, _ in chamadas] == ['getChat']
+    assert not [m for m, _ in chamadas if m.startswith('send')]
+
+
+def test_recusa_grupo_com_muita_gente(tg, monkeypatch):
+    chamadas, chat, mp4, membros = tg
+    monkeypatch.setenv('TELEGRAM_CHAT_ID', '-100777')
+    chat['type'] = 'group'
+    membros['n'] = 40
+    with pytest.raises(PT.EnvioRecusado, match='40 membros'):
+        PT.enviar(mp4, {'estado': EF.AGUARDANDO}, 'x', 'r')
+    assert not [m for m, _ in chamadas if m.startswith('send')]
 
 
 def test_recusa_estado_desconhecido(tg):
-    chamadas, tipo, mp4 = tg
+    chamadas, chat, mp4, _ = tg
     with pytest.raises(PT.EnvioRecusado):
         PT.enviar(mp4, {'estado': 'APROVADO_FISCAL'}, 'x', 'r')
     assert chamadas == []
@@ -116,3 +138,14 @@ def test_concat_do_render_usa_caminho_absoluto():
     """ERR-034: com a pasta de saída relativa, o concat procurava 'out/_render/out/_render/parte0.mp4' (render no Actions)."""
     src = Path('src/render/render.py').read_text(encoding='utf-8')
     assert "Path(p[3]).resolve()" in src
+
+
+def test_mp4_acima_do_limite_do_bot_e_recomprimido(tmp_path, monkeypatch):
+    import subprocess
+    src = tmp_path / 'grande.mp4'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=s=1080x1920:d=2', '-f', 'lavfi', '-i',
+                    'sine=d=2', '-c:v', 'libx264', '-crf', '1', '-c:a', 'aac', '-shortest', str(src)], check=True)
+    limite = src.stat().st_size / 1048576 / 3
+    monkeypatch.setattr(PT, 'LIMITE_MB', limite)
+    out = PT._caber(src)
+    assert out != src and out.stat().st_size <= limite * 1048576 and src.exists()

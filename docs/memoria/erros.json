@@ -879,6 +879,32 @@
     "render",
     "*"
    ]
+  },
+  {
+   "id": "ERR-035",
+   "titulo": "Trava da prévia exigia chat 'private' e recompressão não garantia o limite do bot",
+   "data": "2026-11-16",
+   "versao": "render final de Londres no Actions",
+   "sintoma": "Run 43919175364: MP4 completo gerado, mas a prévia não foi enviada (chat configurado é grupo/canal privado, id negativo). Recompressão de uma passada podia ultrapassar 50 MB.",
+   "causa_raiz": "'privado' foi implementado como tipo 'private' do Telegram, mas o canal de avaliação do bot atual é um grupo/canal privado; a recompressão calculava a taxa sem medir o resultado.",
+   "arquivos": [
+    "src/v3/previa_telegram.py"
+   ],
+   "correcao": "destino continua sendo só o TELEGRAM_CHAT_ID do bot atual; aceito se não for público (sem @nome) e, em grupo/canal, com no máximo 5 membros (tipo e contagem registrados); recompressão mede o arquivo e reduz a taxa até caber, senão recusa.",
+   "testes": [
+    "tests/test_v3_previa_render.py::test_grupo_privado_pequeno_do_dono_e_aceito",
+    "tests/test_v3_previa_render.py::test_recusa_chat_publico_ou_desconhecido",
+    "tests/test_v3_previa_render.py::test_recusa_grupo_com_muita_gente",
+    "tests/test_v3_previa_render.py::test_mp4_acima_do_limite_do_bot_e_recomprimido"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "referencia": "GitHub Actions run 43919175364",
+   "verificavel": true,
+   "tags": [
+    "telegram",
+    "*"
+   ]
   }
  ]
 }

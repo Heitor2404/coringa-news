@@ -3,8 +3,8 @@
 Permissões separadas (decisão de 16/11):
   * prévia privada — autorizada para qualquer estado (inclusive BLOQUEADO ou pendente), sempre com o estado visível;
   * publicação em redes — continua proibida (estado_final.pode_publicar exige PUBLICAVEL; não há código que publique).
-Destino único: TELEGRAM_CHAT_ID do bot atual, e só se o Telegram confirmar que é um chat PRIVADO (getChat → 'private').
-Não há parâmetro de destino: grupos, canais e outros chats ficam de fora por construção.
+Destino único: TELEGRAM_CHAT_ID do bot atual (o canal privado de avaliação), e só se o Telegram confirmar que não é
+público: conversa privada, ou grupo/canal sem @nome e com no máximo MAX_MEMBROS membros. Não há parâmetro de destino.
 """
 from __future__ import annotations
 
@@ -46,29 +46,46 @@ def _api(metodo: str, data: dict, arquivo=None, tok: str | None = None):
     raise EnvioRecusado(f'{metodo}: limite de tentativas')
 
 
-def chat_autorizado() -> str:
-    """O único destino possível. Recusa se faltar configuração ou se o chat não for privado."""
+MAX_MEMBROS = 5          # grupo/canal privado do dono + bot(s); mais que isso já não é "privado"
+
+
+def chat_autorizado() -> tuple[str, dict]:
+    """O único destino possível: o TELEGRAM_CHAT_ID do bot atual. Recusa se faltar configuração, se o chat for PÚBLICO
+    (tem @nome) ou se for grupo/canal com mais de MAX_MEMBROS membros. Devolve (chat, {tipo, membros}) sem o id."""
     tok, chat = os.getenv('TELEGRAM_BOT_TOKEN'), (os.getenv('TELEGRAM_CHAT_ID') or '').strip()
     if not (tok and chat):
         raise EnvioRecusado('TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID ausentes')
-    if not chat.lstrip('-').isdigit() or chat.startswith('-'):
-        raise EnvioRecusado('TELEGRAM_CHAT_ID não é um chat privado (grupos e canais têm id negativo)')
+    if not chat.lstrip('-').isdigit():
+        raise EnvioRecusado('TELEGRAM_CHAT_ID não é um id numérico (@canal público não é aceito)')
     info = _api('getChat', {'chat_id': chat}) or {}
-    if info.get('type') != 'private':
-        raise EnvioRecusado(f"chat {info.get('type')!r} não é privado: não envio")
-    return chat
+    tipo = info.get('type')
+    if tipo not in ('private', 'group', 'supergroup', 'channel'):
+        raise EnvioRecusado(f'tipo de chat desconhecido {tipo!r}: não envio')
+    if info.get('username') and tipo != 'private':
+        raise EnvioRecusado(f'{tipo} público (@nome): não envio prévia')
+    membros = 2 if tipo == 'private' else int(_api('getChatMemberCount', {'chat_id': chat}) or 0)
+    if tipo != 'private' and not 0 < membros <= MAX_MEMBROS:
+        raise EnvioRecusado(f'{tipo} com {membros} membros (> {MAX_MEMBROS}): não é privado, não envio')
+    return chat, {'tipo': tipo, 'membros': membros}
 
 
 def _caber(mp4: Path) -> Path:
-    if mp4.stat().st_size <= LIMITE_MB * 1024 * 1024:
+    """Cópia recomprimida para o limite do Bot API (o original fica intacto). Mede o resultado e reduz a taxa até caber."""
+    limite = LIMITE_MB * 1024 * 1024
+    if mp4.stat().st_size <= limite:
         return mp4
     dur = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(mp4)],
                                capture_output=True, text=True).stdout or 60)
-    kbps = int(LIMITE_MB * 8 * 1024 * 0.92 / dur) - 192
+    kbps = max(200, int(limite * 8 / 1024 * 0.90 / dur) - 160)
     out = mp4.with_name(mp4.stem + '_telegram.mp4')
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', f'{kbps}k',
-                    '-maxrate', f'{kbps}k', '-bufsize', f'{2 * kbps}k', '-c:a', 'copy', '-movflags', '+faststart', str(out)], check=True)
-    return out
+    for _ in range(6):
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', f'{kbps}k',
+                        '-maxrate', f'{kbps}k', '-bufsize', f'{kbps}k', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',
+                        str(out)], check=True)
+        if out.stat().st_size <= limite:
+            return out
+        kbps = max(100, int(kbps * 0.8))
+    raise EnvioRecusado(f'não consegui deixar o MP4 abaixo de {LIMITE_MB} MB')
 
 
 def legenda(estado: dict, titulo: str) -> str:
@@ -83,10 +100,10 @@ def enviar(mp4: Path, estado: dict, titulo: str, relatorio: str) -> dict:
     from src.v3 import estado_final
     if not estado_final.pode_enviar_previa(estado):
         raise EnvioRecusado(f"estado desconhecido {estado.get('estado')!r}: sem status visível não envio")
-    chat = chat_autorizado()
+    chat, info = chat_autorizado()
     envio = _caber(Path(mp4))
     _api('sendVideo', {'chat_id': chat, 'caption': legenda(estado, titulo), 'supports_streaming': 'true'}, ('video', envio))
     partes = [relatorio[i:i + 3900] for i in range(0, len(relatorio), 3900)] or ['(sem relatório)']
     for p in partes:
         _api('sendMessage', {'chat_id': chat, 'text': p})
-    return {'chat': 'privado autorizado', 'arquivo': envio.name, 'mb': round(envio.stat().st_size / 1048576, 1), 'mensagens': len(partes)}
+    return {'chat': f"{info['tipo']} privado autorizado ({info['membros']} membros)", 'arquivo': envio.name, 'mb': round(envio.stat().st_size / 1048576, 1), 'mensagens': len(partes)}

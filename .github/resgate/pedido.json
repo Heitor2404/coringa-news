@@ -1,5 +1,5 @@
 {
- "nota": "Render final de Londres (16/11): MP4 completo SEM IA (storyboard supervisionado, imagens do checkpoint e do Commons, narração já gravada entregue cifrada), prévia PRIVADA ao Telegram com status, fiscal e custos. (tentativa 2: concat com caminho absoluto, ERR-034)",
+ "nota": "Render final de Londres (16/11): MP4 completo SEM IA (storyboard supervisionado, imagens do checkpoint e do Commons, narração já gravada entregue cifrada), prévia PRIVADA ao Telegram com status, fiscal e custos. (tentativa 3: prévia ao canal privado do bot atual, ERR-035)",
  "falas": [
   "Em 1666, um incêndio que começou numa padaria destruiu a Londres medieval.",
   "Como o fogo foi tão longe?",
@@ -24,5 +24,5 @@
  "so_baixar": true,
  "categorias": [],
  "modo": "render",
- "tentativa": 2
+ "tentativa": 3
 }

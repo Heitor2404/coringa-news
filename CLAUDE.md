@@ -22,6 +22,12 @@ antes de preservar a arquitetura.
   `src/render/v2` (palco Chromium com `seek` determinístico) → `src/render/render.py` (FFmpeg).
 - Arquitetura e decisões: `docs/v3/ARQUITETURA_V3_1.md`. Histórico: `docs/evidencia/*.md` (leia só o que precisar).
 
+## Motor V4 (ramo `motor-integral-v4`, experimental)
+- `python -m src.v4 {sondar|episodio|auditar|relatorio|telegram}`; arquitetura `docs/v4/ARQUITETURA_V4.md`; capacidades
+  `docs/v4/CAPACIDADES.md` (status honesto); backends em `motor4/` (Node isolado, versões exatas) + `src/v4/backends/`.
+- Contrato único de cena e regras verificáveis: `src/v4/contrato.py`; componentes por modalidade: `src/v4/componentes.py`.
+- Teste técnico (não estético): `scripts/v4_fumaca.py`; episódio real só no Actions (`.github/v4/pedido.json`).
+
 ## Onde está cada coisa
 | Preciso de… | Arquivo |
 |---|---|

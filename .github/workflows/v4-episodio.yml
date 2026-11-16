@@ -1,0 +1,139 @@
+name: V4 — motor integral (episódio de teste, prévia privada)
+
+# Motor audiovisual V4: HyperFrames + Remotion (MapLibre/Three/Lottie/captions) + Revideo (API Motion Canvas) + Manim +
+# PixiJS/GSAP + rembg + palco V2 + FFmpeg, por contrato único de cena. Disparo: editar .github/v4/pedido.json no ramo
+# experimental. Prévia PRIVADA no Telegram (chat autorizado; status visível; NÃO PUBLICADO). Resultado cifrado (GPG)
+# no ramo órfão v4-resultado. Nada de produção, main, NTC, merge ou publicação. Sem provedores pagos.
+on:
+  push:
+    branches: [motor-integral-v4]
+    paths: [".github/v4/pedido.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: motor-v4
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  HYPERFRAMES_NO_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  HF_COMMIT: 95e4e7f880f5005211412e926b307f4a53f47246
+  CORINGA_HF_REGISTRO: ${{ github.workspace }}/../hyperframes
+  CORINGA_VENV_MANIM: ${{ github.workspace }}/../venv-manim
+  CORINGA_VENV_REMBG: ${{ github.workspace }}/../venv-rembg
+  U2NET_HOME: ${{ github.workspace }}/../u2net
+
+jobs:
+  episodio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar o cofre (prompts privados do pipeline herdado)
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: prompts
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Sistema (FFmpeg, Cairo/Pango p/ Manim)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libcairo2-dev libpango1.0-dev pkg-config fonts-noto-color-emoji
+          ffmpeg -version | head -1; google-chrome --version
+      - name: Natural Earth (cache)
+        uses: actions/cache@v4
+        with: { path: src/render/v2/dados/ne, key: "natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}" }
+      - name: Registro HyperFrames fixado (cache)
+        uses: actions/cache@v4
+        with: { path: "${{ github.workspace }}/../hyperframes", key: "hf-registro-95e4e7f" }
+      - name: Modelo rembg (cache, baixa uma vez)
+        uses: actions/cache@v4
+        with: { path: "${{ github.workspace }}/../u2net", key: "u2net-isnet-general-use-v1" }
+      - name: Ambientes Python isolados (cache)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/../venv-manim
+            ${{ github.workspace }}/../venv-rembg
+          key: venvs-v4-${{ hashFiles('motor4/py/lock-*.txt') }}-py312
+      - name: motor4 node_modules (cache)
+        uses: actions/cache@v4
+        with: { path: motor4/node_modules, key: "motor4-nm-${{ hashFiles('motor4/package-lock.json') }}" }
+      - name: Instalar (versões fixadas)
+        timeout-minutes: 40
+        run: |
+          pip install -r requirements.txt
+          npm install --no-audit --no-fund
+          (cd motor4 && npm ci --no-audit --no-fund)
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+          timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund || echo "Claude Code não instalou: diretor cai para o Gemini"
+          [ -d "$CORINGA_VENV_MANIM/bin" ] || (python -m venv "$CORINGA_VENV_MANIM" && "$CORINGA_VENV_MANIM/bin/pip" install -q -r motor4/py/lock-manim.txt)
+          [ -d "$CORINGA_VENV_REMBG/bin" ] || (python -m venv "$CORINGA_VENV_REMBG" && "$CORINGA_VENV_REMBG/bin/pip" install -q -r motor4/py/lock-rembg.txt)
+          if [ ! -d "$CORINGA_HF_REGISTRO/registry" ]; then
+            git init -q "$CORINGA_HF_REGISTRO" && cd "$CORINGA_HF_REGISTRO" && git remote add origin https://github.com/heygen-com/hyperframes
+            GIT_LFS_SKIP_SMUDGE=1 git fetch -q --depth 1 origin $HF_COMMIT && GIT_LFS_SKIP_SMUDGE=1 git checkout -q FETCH_HEAD && cd -
+          fi
+          python scripts/v2_natural_earth.py
+          mkdir -p ~/.fonts && cp motor4/identidade/ttf/*.ttf ~/.fonts/ && fc-cache -f
+          "$CORINGA_VENV_REMBG/bin/python" -c "from rembg import new_session; new_session('isnet-general-use')"
+      - name: Sondar capacidades (versões e estados)
+        run: python -m src.v4 sondar
+      - name: Episódio (uma execução)
+        timeout-minutes: 200
+        env:
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          CAIXA_ARMAZEM: git
+          ORCAMENTO_MODO: ${{ vars.ORCAMENTO_MODO }}
+          DIRETOR_MODELO: ${{ vars.DIRETOR_MODELO || 'claude' }}
+          REMOTION_CHROME: /usr/bin/google-chrome
+          CORINGA_CHROME: /usr/bin/google-chrome
+        run: |
+          mkdir -p saida_v4
+          python -m src.v4 episodio .github/v4/pedido.json saida_v4/panama 2>&1 | tee saida_v4/registro.txt
+      - name: Auditoria e engenharia reversa automática (sem IA)
+        if: always()
+        run: |
+          python -m src.v4 auditar saida_v4/panama || true
+          python -m src.v4 relatorio saida_v4/panama || true
+          cp motor4/capacidades.json saida_v4/ || true
+      - name: Prévia PRIVADA ao Telegram (status visível; NÃO publicado)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m src.v4 telegram saida_v4/panama || echo "envio falhou (resultado continua cifrado no ramo)"
+      - name: Cifrar e publicar no ramo de resultado
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          mkdir -p /tmp/res
+          # intermediários leves vão junto (clipes por cena para auditoria); acervo baixado e caches não
+          find saida_v4 -path '*/_trabalho/acervo' -prune -exec rm -rf {} + || true
+          find saida_v4 -path '*/_trabalho/*' \( -name '*.png' -o -name 'palco.mp4' -o -name 'bruto.mp4' -o -name 'cache_osm' \) -exec rm -rf {} + || true
+          tar -czf /tmp/v4.tgz saida_v4
+          ls -la /tmp/v4.tgz
+          split -b 90m /tmp/v4.tgz /tmp/v4.tgz.parte_
+          for p in /tmp/v4.tgz.parte_*; do gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/$(basename $p)-${{ github.run_id }}.gpg $p; done
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan v4-resultado
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/res/* .
+          git add *.gpg
+          git commit -qm "V4 episódio cifrado (execução ${{ github.run_id }})"
+          git push -f -q origin v4-resultado

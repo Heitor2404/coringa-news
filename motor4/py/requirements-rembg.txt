@@ -1,0 +1,2 @@
+# rembg em CPU — ambiente isolado (.venv-rembg). Modelo baixado UMA vez para U2NET_HOME (cache do Actions).
+rembg[cpu]==2.0.87

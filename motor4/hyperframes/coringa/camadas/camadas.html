@@ -1,0 +1,78 @@
+<template>
+  <!-- camadas.recorte (Coringa): foto real + recorte do assunto (rembg) + água PixiJS. A foto começa INTEIRA e parada;
+       a passagem documental→esquema só acontece se o contrato pedir ('acao': 'subir'), sem pan/zoom decorativo.
+       Tudo é função do tempo: PixiJS desenhado no hf-seek, textos numa timeline GSAP pausada. -->
+  <style>
+    #root { position: absolute; inset: 0; background: #0B0F17; overflow: hidden; }
+    #pixi { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+    .rot { position: absolute; padding: 8px 18px; background: rgba(8,10,14,.84); border-left: 6px solid #FFD21F; font-family: Mont; font-weight: 900;
+           font-size: 36px; color: #fff; text-transform: uppercase; white-space: nowrap; opacity: 0; }
+    #medida { position: absolute; font-family: JBM; font-weight: 700; font-size: 48px; color: #FFD21F; text-shadow: 0 2px 14px #000; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="camadas" data-width="1080" data-height="1920">
+    <canvas id="pixi" width="1080" height="1920"></canvas>
+    <div id="r0" class="rot"></div>
+    <div id="medida">+0 m</div>
+  </div>
+  <script>
+    (function () {
+      const P = window.CORINGA_PARAMS;
+      const W = 1080, H = 1920;
+      const tl = gsap.timeline({ paused: true });
+      // rótulo e medida (timeline GSAP determinística)
+      const r0 = document.getElementById('r0'); r0.textContent = (P.rotulo && P.rotulo.texto) || '';
+      r0.style.left = (P.rotulo && P.rotulo.x || 72) + 'px'; r0.style.top = (P.rotulo && P.rotulo.y || 460) + 'px';
+      if (P.rotulo) tl.fromTo(r0, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .35, ease: 'power3.out' }, P.rotulo.t || 0);
+      const med = document.getElementById('medida');
+      // PixiJS v8: inicialização assíncrona registrada como buildReady (o render espera)
+      window.__hf = window.__hf || {}; window.__hf.buildReady = window.__hf.buildReady || {};
+      const estado = {};
+      window.__hf.buildReady['camadas-pixi'] = (async () => {
+        const app = new PIXI.Application();
+        await app.init({ canvas: document.getElementById('pixi'), width: W, height: H, background: '#0B0F17', autoStart: false, antialias: true, preference: 'webgl' });
+        const [tf, tr] = await Promise.all([PIXI.Assets.load(P.foto.src), PIXI.Assets.load(P.recorte.src)]);
+        // enquadramento FIXO: a foto cobre o quadro centrada no objeto (cover); o recorte usa exatamente a mesma transformação
+        const s = Math.max(W / tf.width, H / tf.height);
+        const cx = (P.foco ? P.foco[0] : .5) * tf.width, cy = (P.foco ? P.foco[1] : .5) * tf.height;
+        const ox = Math.min(0, Math.max(W - tf.width * s, W / 2 - cx * s)), oy = Math.min(0, Math.max(H - tf.height * s, H / 2 - cy * s));
+        const foto = new PIXI.Sprite(tf); foto.scale.set(s); foto.position.set(ox, oy);
+        const esquema = new PIXI.Graphics();
+        const agua = new PIXI.Graphics();
+        const navio = new PIXI.Sprite(tr); navio.scale.set(s); navio.position.set(ox, oy);
+        app.stage.addChild(foto, esquema, agua, navio);
+        Object.assign(estado, { app, foto, esquema, agua, navio, s, ox, oy, th: tf.height });
+        draw(0);
+      })();
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      function draw(t) {
+        if (!estado.app) return;
+        const A = P.acao || {}; const de = A.de ?? 1, ate = A.ate ?? 4;
+        const k = A.tipo === 'subir' ? ease(clamp((t - de) / Math.max(.01, ate - de))) : 0;
+        const vira = A.tipo === 'subir' ? clamp((t - de + .6) / .6) : 0;           // documental → esquema
+        // a foto escurece para dar lugar ao esquema (sem desfoque, sem encolher)
+        estado.foto.alpha = 1 - .55 * vira;
+        const yBase = A.y_agua_px ?? 1250, sobe = (A.sobe_px ?? 420) * k;
+        const ySup = yBase - sobe;
+        estado.esquema.clear();
+        if (vira > 0) {
+          for (let y = 0; y < H; y += 120) estado.esquema.rect(0, y, W, 2).fill({ color: 0x7FE3F0, alpha: .10 * vira });
+          estado.esquema.rect(0, yBase, W, 3).fill({ color: 0xFFFFFF, alpha: .5 * vira });            // nível inicial
+        }
+        estado.agua.clear();
+        if (vira > 0) {
+          const pts = [];
+          for (let x = 0; x <= W; x += 20) pts.push(x, ySup + Math.sin(x / 70 + t * 3) * 6);
+          estado.agua.poly([0, H, ...pts, W, H]).fill({ color: 0x2F8FD8, alpha: .62 * vira });
+          estado.agua.rect(0, ySup - 3, W, 6).fill({ color: 0x7CC7F2, alpha: vira });
+        }
+        estado.navio.position.set(estado.ox, estado.oy - sobe);                  // o recorte sobe JUNTO com a água
+        med.style.opacity = vira; med.style.left = '72px'; med.style.top = (ySup - 70) + 'px';
+        med.textContent = '+' + Math.round(k * (A.metros ?? 26)) + ' m';
+        estado.app.render();
+      }
+      window.addEventListener('hf-seek', e => draw(e.detail.time));
+      window.__timelines['camadas'] = tl;
+    })();
+  </script>
+</template>

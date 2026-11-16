@@ -13,9 +13,9 @@
    "credito": "Mapa: Bunchofgrapes (CC BY-SA 3.0) · Wikimedia Commons"
   },
   "a10": {
-   "arq": "checkpoint/arquivos/a10_a21.jpg",
-   "ano": 2011,
-   "credito": "Stephen McKay (CC BY-SA 2.0) · geograph / Wikimedia Commons"
+   "arq": "extra/Thomas_Faryner_shop_plaque_Pudding_Lane_City_of_London_England.jpg",
+   "ano": 2025,
+   "credito": "Acabashi (CC BY-SA 4.0) · Wikimedia Commons"
   },
   "a11": {
    "arq": "checkpoint/arquivos/a11_a22.jpg",
@@ -32,14 +32,14 @@
    "credito": "James Stow, 1811 (CC0) · Wikimedia Commons"
   },
   "gb": {
-   "arq": "extra/The_Golden_Boy_of_Pye_Corner_-_geograph.org.uk_-_542982.jpg",
-   "ano": 2007,
-   "credito": "Sue Adair (CC BY-SA 2.0) · geograph / Wikimedia Commons"
+   "arq": "extra/The_Golden_Boy_of_Pye_Corner_(21807981883).jpg",
+   "ano": 2015,
+   "credito": "Flickr 29057345@N04 (CC BY 2.0) · Wikimedia Commons"
   },
   "mon": {
-   "arq": "extra/Monument_ground_up.jpg",
-   "ano": 2013,
-   "credito": "RanAlex312 (CC BY-SA 3.0) · Wikimedia Commons"
+   "arq": "extra/8.4.16_London_Southbank_and_City_047_(25737806914).jpg",
+   "ano": 2016,
+   "credito": "donald judge (CC BY 2.0) · Flickr / Wikimedia Commons"
   }
  },
  "derivados": {
@@ -151,20 +151,50 @@
     0.18,
     0.3,
     0.3
+   ],
+   "p7_leste": [
+    0.47,
+    0.15,
+    0.33,
+    0.52
+   ],
+   "p7_centro": [
+    0.29,
+    0.15,
+    0.33,
+    0.52
+   ],
+   "p7_oeste": [
+    0.08,
+    0.2,
+    0.33,
+    0.48
+   ],
+   "p7_smithfield": [
+    0.13,
+    0.14,
+    0.3,
+    0.4
    ]
   },
   "a10": {
-   "texto_placa": [
-    0.42,
-    0.72,
-    0.29,
-    0.12
-   ],
    "placa": [
-    0.25,
-    0.69,
-    0.49,
-    0.29
+    0.04,
+    0.12,
+    0.92,
+    0.72
+   ],
+   "paragrafo": [
+    0.37,
+    0.22,
+    0.56,
+    0.23
+   ],
+   "nome_padeiro": [
+    0.4,
+    0.28,
+    0.5,
+    0.11
    ]
   },
   "a11": {
@@ -217,42 +247,60 @@
   },
   "gb": {
    "menino": [
-    0.36,
-    0.2,
-    0.12,
-    0.42
+    0.41,
+    0.24,
+    0.15,
+    0.4
    ],
    "inscricao": [
+    0.29,
+    0.76,
     0.33,
-    0.72,
+    0.19
+   ],
+   "nicho_e_inscricao": [
     0.25,
-    0.25
+    0.2,
+    0.48,
+    0.76
    ]
   },
   "mon": {
-   "pedestal": [
-    0.05,
-    0.47,
-    0.88,
-    0.5
-   ],
-   "base_coluna": [
-    0.33,
-    0.45,
-    0.32,
-    0.03
-   ],
-   "topo": [
-    0.4,
-    0.0,
-    0.2,
-    0.08
-   ],
-   "coluna": [
+   "pedestal_e_base": [
     0.3,
-    0.0,
-    0.4,
-    0.97
+    0.5,
+    0.48,
+    0.48
+   ],
+   "monumento_inteiro": [
+    0.3,
+    0.06,
+    0.48,
+    0.92
+   ],
+   "chao": [
+    0.52,
+    0.955,
+    0.06,
+    0.02
+   ],
+   "topo_urna": [
+    0.465,
+    0.07,
+    0.06,
+    0.02
+   ],
+   "chao_lado": [
+    0.355,
+    0.955,
+    0.02,
+    0.02
+   ],
+   "topo_lado": [
+    0.355,
+    0.081,
+    0.02,
+    0.01
    ]
   }
  },
@@ -347,27 +395,33 @@
    },
    "composicao": "doc.plano",
    "funcao_documental": "CONTEXTO",
-   "selo_texto": "PLACA NA PUDDING LANE, 2011",
-   "objeto_principal": "texto_placa",
+   "selo_texto": "PLACA NA PUDDING LANE, 2025",
+   "objeto_principal": "paragrafo",
    "plano_inicial": {
     "objeto": "placa",
-    "enquadramento": "objeto"
+    "enquadramento": [
+     0.04,
+     0.12,
+     0.92,
+     0.72
+    ]
    },
    "plano_final": {
-    "objeto": "texto_placa",
-    "enquadramento": "objeto"
+    "objeto": "paragrafo",
+    "enquadramento": [
+     0.36,
+     0.2,
+     0.58,
+     0.27
+    ]
    },
    "movimento_camera": "aproximar",
    "transicao": "corte",
-   "anotacoes": [
-    {
-     "tipo": "contorno",
-     "alvo": "texto_placa",
-     "na_palavra": "Farriner"
-    }
-   ],
+   "anotacoes": [],
    "acao_visual": "3 s na placa: a câmera vai às linhas que dizem 'loja de Thomas Faryner, o padeiro do rei'",
-   "justificativa": "A placa é a prova escrita do que a fala diz (padaria de Farriner, padeiro do rei). Curta e no texto — não o prédio moderno (falha 5–11 s da V3.1). Nenhum retrato de outra pessoa (falha 12–15 s)."
+   "justificativa": "A placa é a prova escrita do que a fala diz (padaria de Farriner, padeiro do rei). Curta e no texto — não o prédio moderno (falha 5–11 s da V3.1). Nenhum retrato de outra pessoa (falha 12–15 s).",
+   "layout": "integral",
+   "nota_direcao_p1b": "16/11 (P1b): placa frontal em alta resolução (4052×2533). Inteira na largura da tela, legível, acima da legenda; avanço lento até o parágrafo. Sem contorno: o texto da placa já diz o que a fala diz."
   },
   {
    "trechos": [
@@ -508,34 +562,40 @@
    "funcao_documental": "ESQUEMA",
    "selo_texto": "ORDEM APROXIMADA DO AVANÇO",
    "objeto_principal": "area_queimada",
-   "plano_inicial": {
-    "objeto": "inicio_e_centro",
-    "enquadramento": "objeto"
-   },
-   "plano_final": {
-    "objeto": "inicio_e_centro",
-    "enquadramento": "objeto"
-   },
+   "plano_inicial": [
+    0.47,
+    0.15,
+    0.33,
+    0.52
+   ],
+   "plano_final": [
+    0.08,
+    0.2,
+    0.33,
+    0.48
+   ],
    "movimento_camera": "explicar",
    "transicao": "dissolve",
    "camera_chaves": [
     {
      "na_palavra": "terça",
-     "objeto": "centro_oeste",
-     "enquadramento": "objeto",
-     "dur": 1.8
+     "enquadramento": [
+      0.29,
+      0.15,
+      0.33,
+      0.52
+     ],
+     "dur": 2.2
     },
     {
      "na_palavra": "oeste",
-     "objeto": "oeste",
-     "enquadramento": "objeto",
-     "dur": 1.4
-    },
-    {
-     "na_palavra": "Pye",
-     "objeto": "noroeste",
-     "enquadramento": "objeto",
-     "dur": 1.2
+     "enquadramento": [
+      0.08,
+      0.2,
+      0.33,
+      0.48
+     ],
+     "dur": 1.8
     }
    ],
    "avanco": {
@@ -607,12 +667,14 @@
     {
      "tipo": "circulo",
      "alvo": "smithfield",
-     "texto": "PERTO DE SMITHFIELD",
+     "texto": "",
      "na_palavra": "Smithfield"
     }
    ],
    "acao_visual": "a área queimada do próprio mapa ganha cor em etapas: brasa na Pudding Lane → norte até o centro (segunda) → quase toda a City (terça) → além da muralha, para o oeste; o limite perto de Smithfield",
-   "justificativa": "O mapa agora DEMONSTRA a propagação (falha 40–48 s da V3.1): cada etapa entra na palavra do dia, sobre geografia real, e só a área que o mapa marca como queimada ganha cor. Selo diz que a ordem é aproximada (a fonte dá dias e direções, não frentes exatas). A câmera acompanha a frente: começa no início e no centro, vai para o oeste na terça e termina no limite noroeste (Smithfield)."
+   "justificativa": "O mapa agora DEMONSTRA a propagação (falha 40–48 s da V3.1): cada etapa entra na palavra do dia, sobre geografia real, e só a área que o mapa marca como queimada ganha cor. Selo diz que a ordem é aproximada (a fonte dá dias e direções, não frentes exatas). A câmera acompanha a frente: começa no início e no centro, vai para o oeste na terça e termina no limite noroeste (Smithfield).",
+   "layout": "cobrir",
+   "nota_direcao_p1b": "16/11 (P1b): mapa em altura cheia (cobrir), a câmera acompanha o avanço de leste para oeste; antes o mapa inteiro ficava em faixa pequena (38–44 s, reprovado)."
   },
   {
    "trechos": [
@@ -628,28 +690,33 @@
    },
    "composicao": "doc.plano",
    "funcao_documental": "CONTEXTO",
-   "selo_texto": "PYE CORNER, 2007",
+   "selo_texto": "GOLDEN BOY, PYE CORNER, 2015",
    "objeto_principal": "menino",
    "plano_inicial": {
-    "objeto": "inscricao",
-    "enquadramento": "objeto"
+    "objeto": "menino",
+    "enquadramento": [
+     0.33,
+     0.2,
+     0.32,
+     0.5
+    ]
    },
    "plano_final": {
-    "objeto": "menino",
-    "enquadramento": "objeto"
+    "objeto": "nicho_e_inscricao",
+    "enquadramento": [
+     0.25,
+     0.2,
+     0.48,
+     0.76
+    ]
    },
    "movimento_camera": "revelar",
    "transicao": "corte",
-   "anotacoes": [
-    {
-     "tipo": "circulo",
-     "alvo": "menino",
-     "texto": "GOLDEN BOY OF PYE CORNER",
-     "na_palavra": "menino"
-    }
-   ],
+   "anotacoes": [],
    "acao_visual": "da inscrição 'late Fire of London… 1666' sobe até a estátua dourada",
-   "justificativa": "O marco do ponto onde o fogo parou, com a própria inscrição de 1666 na pedra."
+   "justificativa": "O marco do ponto onde o fogo parou, com a própria inscrição de 1666 na pedra.",
+   "layout": "cobrir",
+   "nota_direcao_p1b": "16/11 (P1b): foto de 3672×4041 (antes 480×640). Do menino à inscrição de 1666, cobrindo o quadro."
   },
   {
    "trechos": [
@@ -664,32 +731,46 @@
    },
    "composicao": "doc.plano",
    "funcao_documental": "CONTEXTO",
-   "selo_texto": "O MONUMENTO, 2013",
-   "objeto_principal": "coluna",
+   "selo_texto": "O MONUMENTO, 2016",
+   "objeto_principal": "monumento_inteiro",
    "plano_inicial": {
-    "objeto": "base_coluna",
-    "enquadramento": "objeto"
+    "objeto": "pedestal_e_base",
+    "enquadramento": [
+     0.3,
+     0.5,
+     0.48,
+     0.48
+    ]
    },
    "plano_final": {
-    "objeto": "coluna",
-    "enquadramento": "objeto"
+    "objeto": "monumento_inteiro",
+    "enquadramento": [
+     0.3,
+     0.06,
+     0.48,
+     0.92
+    ]
    },
    "movimento_camera": "revelar",
    "transicao": "corte",
    "camera_chaves": [
     {
-     "na_palavra": "Monumento",
-     "objeto": "coluna",
-     "enquadramento": "objeto",
-     "dur": 3.4
+     "na_palavra": "ergueram",
+     "enquadramento": [
+      0.3,
+      0.06,
+      0.48,
+      0.92
+     ],
+     "dur": 2.6
     }
    ],
    "anotacoes": [
     {
      "tipo": "seta",
-     "alvo": "base_coluna",
-     "ate": "topo",
-     "texto": "61,5 METROS DE ALTURA",
+     "alvo": "chao_lado",
+     "ate": "topo_lado",
+     "texto": "",
      "na_palavra": "metros",
      "curva": 0,
      "essencial": true
@@ -697,7 +778,9 @@
    ],
    "acao_visual": "do pedestal (onde ficava a primeira igreja destruída) a câmera sobe até a urna de fogo no alto; na palavra 'metros' abre na coluna inteira e a altura é medida nela",
    "justificativa": "O número fica preso ao objeto que mede, com foto em alta resolução que permite o movimento (a gravura de 748 px não permitia: ficava parada). Não é o encerramento (falha 58–65 s da V3.1).",
-   "nota_direcao_p1": "16/11 (P1): um movimento só — da base da coluna à coluna inteira em 'Monumento'; antes subia ao topo e voltava (zoom 49%/s, salto de 42 px num quadro)."
+   "nota_direcao_p1": "16/11 (P1): um movimento só — da base da coluna à coluna inteira em 'Monumento'; antes subia ao topo e voltava (zoom 49%/s, salto de 42 px num quadro).",
+   "layout": "cobrir",
+   "nota_direcao_p1b": "16/11 (P1b): foto do monumento inteiro, do chão à urna (3840×5775). Da base ao monumento inteiro em \"ergueram\"; a seta dos 61,5 m vai do chão ao topo da urna com a câmera já parada. A foto anterior cortava a urna e o chão. Seta como linha de medida AO LADO do monumento (não sobre a coluna), sem rótulo: a legenda mostra \"61,5 metros\" no mesmo instante."
   },
   {
    "trechos": [

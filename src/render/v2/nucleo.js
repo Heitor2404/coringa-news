@@ -162,6 +162,8 @@
     flash: { d: .26 },
     preto: { d: .5 },
     dissolve: { d: .5 },   // V3: fusão entre planos documentais (a cena anterior segue embaixo)
+    whip: { d: .55 },      // V3.1: chicote lateral com desfoque de movimento (as duas cenas andam juntas) — padrão whip-pan-cut (HyperFrames, Apache-2.0)
+    iris: { d: .6 },       // V3.1: revelação circular a partir do centro de interesse — padrão iris-reveal (HyperFrames, Apache-2.0)
   };
   function entrada(c) { return TRANS[c.sc.transicao || c.meta.transicao || 'corte'] ? (c.sc.transicao || c.meta.transicao || 'corte') : 'corte'; }
 
@@ -273,7 +275,11 @@
       if (!vis) continue;
       c.el.style.opacity = 1;
       const k = d ? clamp((t - a) / d) : 1;
-      c.el.style.clipPath = ''; c.el.style.transform = '';
+      c.el.style.clipPath = ''; c.el.style.transform = ''; c.el.style.filter = '';
+      if (nx && entrada(nx) === 'whip' && t >= nx.sc.start) {     // a cena que SAI no chicote acompanha a que entra
+        const kn = clamp((t - nx.sc.start) / TRANS.whip.d);
+        c.el.style.transform = `translateX(${-eio(kn) * 100}%)`; c.el.style.filter = `blur(${(Math.sin(Math.PI * kn) * 16).toFixed(2)}px)`;
+      }
       if (k < 1 && i > 0) {
         if (tr === 'mascara') { const e = eio(k) * 140; c.el.style.clipPath = `polygon(0 0, ${e}% 0, ${e - 40}% 100%, 0 100%)`; }
         else if (tr === 'deslize') c.el.style.transform = `translateY(${(1 - eo5(k)) * 100}%)`;
@@ -281,6 +287,8 @@
         else if (tr === 'flash') flash = Math.max(flash, .9 * (1 - k));
         else if (tr === 'preto') { preto = Math.max(preto, 1 - k); }
         else if (tr === 'dissolve') c.el.style.opacity = eio(k);
+        else if (tr === 'whip') { c.el.style.transform = `translateX(${(1 - eio(k)) * 100}%)`; c.el.style.filter = `blur(${(Math.sin(Math.PI * k) * 16).toFixed(2)}px)`; }
+        else if (tr === 'iris') c.el.style.clipPath = `circle(${(eio(k) * 78).toFixed(2)}% at 50% 40%)`;
       }
       if (tr === 'preto' && i > 0 && t < a && t > a - .25) preto = Math.max(preto, (t - (a - .25)) / .25);
       const tl = t - a;

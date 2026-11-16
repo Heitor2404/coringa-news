@@ -1,0 +1,164 @@
+{
+ "versao": 1,
+ "nota": "Receitas de DIREÇÃO por função narrativa e tipo de acontecimento. Padrão de direção, nunca fatos de um tema. Estados: proposto → testado → aprovado | reprovado | obsoleto. Só 'aprovado' entra no prompt como boa prática; 'testado' entra como opção; 'proposto', 'reprovado' e 'obsoleto' não entram.",
+ "receitas": [
+  {
+   "id": "R-APRESENTA-LOCAL", "estado": "testado",
+   "objetivo": "Situar o espectador: onde a história acontece, antes de qualquer detalhe.",
+   "funcoes_narrativas": ["gancho", "contexto"], "tipos_acontecimento": ["lugar", "localizacao", "ambiente"],
+   "adequado": ["foto ampla real do lugar", "primeira menção a um lugar"], "inadequado": ["lugar sem foto real (use mapa.localizacao)", "foto atual apresentada como o lugar na época do fato"],
+   "midia": "foto ampla (paisagem, vista aérea) ou mapa", "requisitos_factuais": ["nome do lugar na pesquisa"],
+   "composicoes": ["doc.plano", "mapa.localizacao"], "enquadramento": {"inicial": "objeto", "final": "geral"},
+   "movimento": "localizar", "anotacoes": [{"tipo": "ponto", "quando": "na palavra do nome do lugar"}], "transicao": "dissolve",
+   "parametros_obrigatorios": ["objeto_principal = o marco reconhecível do lugar", "selo_texto = lugar + ano da foto"],
+   "exemplo_aprovado": null,
+   "exemplo_reprovado": "Foto do lugar parada por 4 s com faixa CONTEXTO (V2: 73% de imagem parada).",
+   "motivo": "sem movimento com intenção o plano parece slide", "testes": ["tests/test_v3_diretor.py::test_movimento_imperceptivel_e_corrigido"]
+  },
+  {
+   "id": "R-APROXIMA-OBJETO", "estado": "aprovado",
+   "objetivo": "Levar o olho do geral até o objeto que a narração nomeia, e marcar o objeto na palavra exata.",
+   "funcoes_narrativas": ["gancho", "contexto", "revelacao", "consequencia"], "tipos_acontecimento": ["evento_historico", "pessoa", "documento", "impacto", "objeto"],
+   "adequado": ["o objeto está NA foto e a visão o localiza", "a fala cita o objeto"], "inadequado": ["objeto pequeno demais (< 3% da foto)", "objeto não aparece (anotação cai)"],
+   "midia": "foto real com o objeto visível", "requisitos_factuais": ["o que a foto mostra está no catálogo do acervo"],
+   "composicoes": ["doc.plano"], "enquadramento": {"inicial": "geral", "final": "objeto"},
+   "movimento": "aproximar", "anotacoes": [{"tipo": "circulo", "quando": "na palavra que nomeia o objeto"}], "transicao": "dissolve",
+   "parametros_obrigatorios": ["objeto_principal", "anotacoes[].na_palavra (palavra que está na fala)", "texto ≤ 34"],
+   "exemplo_aprovado": "V3 Pompeia: a câmera atravessa o depósito até o molde de uma vítima real, circulado na palavra 'protegendo'.",
+   "exemplo_reprovado": "V2 Pompeia: foto do molde parada com faixa CONTEXTO e depois cartão de texto.",
+   "aprovacao": "proprietário, brief de 16/11/2026: 'A V3 demonstrou melhoria com storyboards dirigidos manualmente' (vídeos V3 Pompeia/Panamá)",
+   "motivo": "o espectador sabe para onde olhar e quando", "testes": ["tests/test_v3_diretor.py::test_anotacao_so_onde_a_visao_localizou_com_confianca", "tests/test_v3_diretor.py::test_palavra_exata_antes_do_radical"]
+  },
+  {
+   "id": "R-LOCALIZA-RECUA", "estado": "aprovado",
+   "objetivo": "Começar no detalhe e recuar para mostrar onde ele está (relação entre a parte e o todo).",
+   "funcoes_narrativas": ["contexto", "consequencia", "revelacao"], "tipos_acontecimento": ["localizacao", "lugar", "impacto", "evento_historico"],
+   "adequado": ["dois objetos localizáveis na mesma foto (ex.: causa ao fundo, efeito na frente)"], "inadequado": ["foto pequena (recuo vira faixa)", "um único objeto sem contexto ao redor"],
+   "midia": "foto ampla com o detalhe e o entorno", "requisitos_factuais": ["a relação espacial é afirmada pela pesquisa"],
+   "composicoes": ["doc.plano"], "enquadramento": {"inicial": "detalhe", "final": "geral"},
+   "movimento": "localizar", "anotacoes": [{"tipo": "trajeto", "quando": "na palavra do deslocamento; rótulo diz 'esquema' se a direção é didática"}], "transicao": "corte",
+   "parametros_obrigatorios": ["objeto_principal", "seta/trajeto com alvo E ate localizados, ou ate_desvio + 'esquema' no rótulo"],
+   "exemplo_aprovado": "V3 Pompeia: o cume do vulcão recua até a cidade, com o trajeto marcado como esquema.",
+   "exemplo_reprovado": null,
+   "aprovacao": "proprietário, brief de 16/11/2026 (vídeos V3)",
+   "motivo": "mostra causa e consequência no mesmo espaço sem cartão", "testes": ["tests/test_v3_diretor.py::test_seta_com_direcao_dada_precisa_dizer_esquema"]
+  },
+  {
+   "id": "R-MECANISMO-ANIMADO", "estado": "aprovado",
+   "objetivo": "Quando a fala explica COMO algo funciona: sujeito, estado inicial, ação, transformação, resultado — animados.",
+   "funcoes_narrativas": ["mecanismo", "revelacao"], "tipos_acontecimento": ["mecanismo", "processo", "nivel", "movimento", "transformacao"],
+   "adequado": ["há composição que anima esse mecanismo com os dados do contrato", "a foto real do sujeito abre ou fecha o trecho"], "inadequado": ["etapas viram frases soltas (cartões)", "esquema sem selo ESQUEMA"],
+   "midia": "composição animada viável para o acontecimento + foto real de ancoragem", "requisitos_factuais": ["dados estruturados do contrato (etapas, forças, níveis)"],
+   "composicoes": ["mecanismo.estados", "doc.eclusa", "mecanismo.eclusa", "mecanismo.nivel", "forcas.vetores", "diagrama.explicativo"], "enquadramento": {"inicial": "composição", "final": "composição"},
+   "movimento": "explicar", "anotacoes": [], "transicao": "dissolve",
+   "parametros_obrigatorios": ["params_do_contrato: true", "tempos_palavras: passo → palavra da fala"],
+   "exemplo_aprovado": "V3 Panamá: foto real da câmara marcada → esquema segue a água do lago até a câmara, ela enche e o navio sobe.",
+   "exemplo_reprovado": "V2: 4 s de foto parada e um esquema com um degrau só.",
+   "aprovacao": "proprietário, brief de 16/11/2026 (vídeos V3)",
+   "motivo": "mecanismo substituído por cartão foi erro recorrente (ERR-006)", "testes": ["tests/test_v3_memoria.py::test_err_006_mecanismo_nao_vira_cartao"]
+  },
+  {
+   "id": "R-ANTES-DEPOIS", "estado": "testado",
+   "objetivo": "Mostrar a mudança no MESMO lugar/objeto entre dois momentos.",
+   "funcoes_narrativas": ["consequencia", "revelacao", "fechamento"], "tipos_acontecimento": ["transformacao", "evolucao_temporal", "impacto"],
+   "adequado": ["duas fotos reais do mesmo assunto com enquadramento parecido e datas na pesquisa"], "inadequado": ["lugares diferentes apresentados como antes/depois", "datas sem fonte"],
+   "midia": "2 fotos reais datadas do mesmo assunto", "requisitos_factuais": ["as duas datas"],
+   "composicoes": ["comparacao.antes_depois"], "enquadramento": {"inicial": "antes", "final": "depois"},
+   "movimento": "comparar", "anotacoes": [], "transicao": "corte",
+   "parametros_obrigatorios": ["params: img_antes, img_depois (ids do acervo), rotulo_antes, rotulo_depois ≤ 18"],
+   "exemplo_aprovado": null, "exemplo_reprovado": null, "motivo": "", "testes": []
+  },
+  {
+   "id": "R-DESLOCAMENTO", "estado": "testado",
+   "objetivo": "Viagem, rota, propagação: de onde para onde, em que ordem.",
+   "funcoes_narrativas": ["contexto", "mecanismo", "consequencia"], "tipos_acontecimento": ["deslocamento", "localizacao"],
+   "adequado": ["pontos com coordenadas no contrato"], "inadequado": ["rota sem coordenadas", "rota marítima atravessando continente"],
+   "midia": "mapa (dados do contrato)", "requisitos_factuais": ["pontos geocodificados"],
+   "composicoes": ["mapa.rota", "mapa.localizacao"], "enquadramento": {"inicial": "mapa", "final": "mapa"},
+   "movimento": "acompanhar", "anotacoes": [], "transicao": "whip",
+   "parametros_obrigatorios": ["params_do_contrato: true"], "exemplo_aprovado": null, "exemplo_reprovado": null, "motivo": "", "testes": ["tests/test_v21.py::test_rota_maritima_reta_sobre_continente_e_rejeitada"]
+  },
+  {
+   "id": "R-NUMERO-COM-REFERENCIA", "estado": "testado",
+   "objetivo": "Número que importa, com unidade e o que ele mede, de preferência comparado a algo conhecido.",
+   "funcoes_narrativas": ["contexto", "consequencia", "revelacao"], "tipos_acontecimento": ["numero", "escala", "comparacao", "proporcao"],
+   "adequado": ["número está na pesquisa com unidade"], "inadequado": ["número sem unidade", "número fora da pesquisa", "três cartões de número seguidos"],
+   "midia": "composição de dado", "requisitos_factuais": ["valor + unidade + fonte"],
+   "composicoes": ["numero.animado", "comparacao.grandezas", "grafico.barras", "proporcao"], "enquadramento": {"inicial": "composição", "final": "composição"},
+   "movimento": "fixo", "anotacoes": [], "transicao": "corte",
+   "parametros_obrigatorios": ["params_do_contrato: true"], "exemplo_aprovado": null,
+   "exemplo_reprovado": "V2 Pompeia: número em fundo bege sem relação com a imagem.", "motivo": "unidade ausente foi erro recorrente (ERR-004)",
+   "testes": ["tests/test_v3_memoria.py::test_err_004_numero_sem_unidade"]
+  },
+  {
+   "id": "R-EVOLUCAO-TEMPORAL", "estado": "proposto",
+   "objetivo": "Sequência de datas/fases que a narração percorre.",
+   "funcoes_narrativas": ["contexto", "consequencia"], "tipos_acontecimento": ["sequencia_historica", "evolucao_temporal"],
+   "adequado": ["≥ 3 datas na pesquisa"], "inadequado": ["linha do tempo ocupando só a faixa do meio da tela por > 4 s (vazio)"],
+   "midia": "composição de linha do tempo", "requisitos_factuais": ["datas com fonte"],
+   "composicoes": ["linha_tempo.historica", "grafico.temporal"], "enquadramento": {}, "movimento": "acompanhar", "anotacoes": [], "transicao": "corte",
+   "parametros_obrigatorios": ["params_do_contrato: true"], "exemplo_aprovado": null,
+   "exemplo_reprovado": "V3 Pompeia 35–39 s: linha do tempo com 60% da área útil vazia.", "motivo": "fiscal AV-VAZIO", "testes": []
+  },
+  {
+   "id": "R-REGISTRO-DOCUMENTAL", "estado": "testado",
+   "objetivo": "O próprio registro do fato (foto, documento, gravura de época) como prova, com selo correto.",
+   "funcoes_narrativas": ["gancho", "revelacao", "consequencia"], "tipos_acontecimento": ["evento_historico", "documento", "citacao", "pessoa"],
+   "adequado": ["foto/documento do próprio fato (ano compatível)"], "inadequado": ["foto atual de ruína como registro de fato antigo", "foto de IA"],
+   "midia": "foto/documento de época", "requisitos_factuais": ["ano da foto compatível com o fato (±2)"],
+   "composicoes": ["doc.plano", "foto.historica", "fonte.evidencia"], "enquadramento": {"inicial": "geral", "final": "detalhe"},
+   "movimento": "revelar", "anotacoes": [{"tipo": "contorno", "quando": "no trecho citado do documento"}], "transicao": "dissolve",
+   "parametros_obrigatorios": ["funcao_documental = REGISTRO só com ano compatível; senão CONTEXTO ou REPRESENTAÇÃO HISTÓRICA"],
+   "exemplo_aprovado": null, "exemplo_reprovado": "Contexto fotográfico usado como prova (ERR-003).", "motivo": "honestidade documental",
+   "testes": ["tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"]
+  },
+  {
+   "id": "R-RECONSTRUCAO-IDENTIFICADA", "estado": "testado",
+   "objetivo": "Quando não existe registro do instante: esquema/reconstrução claramente rotulado.",
+   "funcoes_narrativas": ["mecanismo", "consequencia"], "tipos_acontecimento": ["impacto", "transformacao", "evento_historico"],
+   "adequado": ["fato documentado sem imagem do instante"], "inadequado": ["reconstrução sem selo", "imagem de IA apresentada como real"],
+   "midia": "composição esquemática", "requisitos_factuais": ["o que o esquema afirma está na pesquisa"],
+   "composicoes": ["doc.molde", "mecanismo.estados", "evento.impacto"], "enquadramento": {}, "movimento": "explicar", "anotacoes": [], "transicao": "dissolve",
+   "parametros_obrigatorios": ["funcao_documental = ESQUEMA ou RECONSTRUÇÃO"], "exemplo_aprovado": null, "exemplo_reprovado": null,
+   "motivo": "nenhuma mídia gerada por IA como registro", "testes": ["tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"]
+  },
+  {
+   "id": "R-CONSEQUENCIA-FOCO", "estado": "testado",
+   "objetivo": "Mostrar o resultado do acontecimento isolando o que mudou (foco esfumado no que importa).",
+   "funcoes_narrativas": ["consequencia"], "tipos_acontecimento": ["impacto", "transformacao", "evento_historico"],
+   "adequado": ["foto do resultado com a área afetada localizável"], "inadequado": ["foto genérica do tema"],
+   "midia": "foto real do resultado", "requisitos_factuais": ["o resultado está na pesquisa"],
+   "composicoes": ["doc.plano"], "enquadramento": {"inicial": "contexto", "final": "objeto"}, "movimento": "aproximar",
+   "anotacoes": [{"tipo": "foco", "quando": "na palavra do resultado"}], "transicao": "corte",
+   "parametros_obrigatorios": ["objeto_principal = área afetada"], "exemplo_aprovado": null, "exemplo_reprovado": null, "motivo": "", "testes": []
+  },
+  {
+   "id": "R-EXPERIMENTO", "estado": "proposto",
+   "objetivo": "Fenômeno científico: condição inicial → intervenção → observação, com foto real do fenômeno.",
+   "funcoes_narrativas": ["mecanismo", "revelacao"], "tipos_acontecimento": ["processo", "mecanismo", "transformacao"],
+   "adequado": ["foto real do fenômeno + composição de estados"], "inadequado": ["só texto explicando"],
+   "midia": "foto do fenômeno + mecanismo.estados", "requisitos_factuais": ["etapas na pesquisa"],
+   "composicoes": ["doc.plano", "mecanismo.estados", "processo.etapas"], "enquadramento": {}, "movimento": "explicar", "anotacoes": [], "transicao": "dissolve",
+   "parametros_obrigatorios": ["params_do_contrato: true"], "exemplo_aprovado": null, "exemplo_reprovado": null, "motivo": "", "testes": []
+  },
+  {
+   "id": "R-REVELACAO-FINAL", "estado": "testado",
+   "objetivo": "Fecha a pergunta central com a imagem mais forte, sem cartão de texto.",
+   "funcoes_narrativas": ["revelacao", "fechamento"], "tipos_acontecimento": ["*"],
+   "adequado": ["a melhor foto ainda não usada (ou a de abertura, recuando para o todo)"], "inadequado": ["tela de texto", "foto repetida do plano anterior"],
+   "midia": "foto real forte", "requisitos_factuais": ["a resposta está na pesquisa"],
+   "composicoes": ["doc.plano"], "enquadramento": {"inicial": "objeto", "final": "geral"}, "movimento": "revelar", "anotacoes": [], "transicao": "iris",
+   "parametros_obrigatorios": ["fala do plano contém a resposta da pergunta central"], "exemplo_aprovado": null,
+   "exemplo_reprovado": "V3 Pompeia/Panamá: encerramento com área vazia (AV-VAZIO).", "motivo": "", "testes": []
+  },
+  {
+   "id": "R-GANCHO-IMPACTO", "estado": "testado",
+   "objetivo": "Primeiros 2 s: o assunto na tela, grande, com movimento — antes de qualquer explicação.",
+   "funcoes_narrativas": ["gancho"], "tipos_acontecimento": ["*"],
+   "adequado": ["foto/vídeo real mais impactante do tema"], "inadequado": ["abertura com cartão de pergunta sobre fundo neutro", "foto de IA (ERR-014)"],
+   "midia": "foto real forte", "requisitos_factuais": [],
+   "composicoes": ["doc.plano"], "enquadramento": {"inicial": "detalhe", "final": "contexto"}, "movimento": "revelar", "anotacoes": [], "transicao": "corte",
+   "parametros_obrigatorios": ["primeiro plano começa em 0 s"], "exemplo_aprovado": null, "exemplo_reprovado": "Foto marcada 'ai generated' no gancho (V2 Pompeia).", "motivo": "", "testes": ["tests/test_v3_diretor.py::test_plano_invalido_nao_vira_cena"]
+  }
+ ]
+}

@@ -8,3 +8,7 @@ node_modules/
 
 # V2: camadas do Natural Earth (baixadas por scripts/v2_natural_earth.py)
 src/render/v2/dados/ne/
+
+# V3.1: biblioteca de mídia (banco e binários ficam fora do Git; o manifesto versionado é data/biblioteca/manifesto.jsonl)
+data/biblioteca/coringa.sqlite3
+data/biblioteca/arquivos/

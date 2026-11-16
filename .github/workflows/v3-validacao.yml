@@ -1,0 +1,164 @@
+name: V3.1 — validação do diretor automático (regressão + inéditos)
+
+# Executa o FLUXO REAL (main.py) com MOTOR_VISUAL=v3: o diretor automático (modelo) escreve o storyboard, a biblioteca
+# global cataloga e reusa a mídia, o fiscal V3.1 decide. Regressão = retomada dos checkpoints cifrados de pilotos
+# anteriores (sem nova pesquisa); inéditos = checkpoint nunca usado no desenvolvimento V3 + temas novos (fluxo completo).
+# Sem Telegram, sem publicação, sem merge. Resultado cifrado para as chaves do piloto, um arquivo por caso, no ramo
+# órfão v3-validacao-resultado. Disparo: editar .github/v3/pedido.json.
+on:
+  push:
+    branches: [piloto-v24-lagartixa]
+    paths: [".github/v3/pedido.json"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: piloto-v22
+  cancel-in-progress: false
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar o cofre
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre
+          sparse-checkout: prompts
+      - name: Prompts experimentais da Evidência V1 (como no piloto)
+        uses: actions/checkout@v4
+        with:
+          repository: Heitor2404/coringa-cofre
+          ref: evidencia-v1
+          token: ${{ secrets.COFRE_TOKEN }}
+          path: cofre_evidencia
+          sparse-checkout: prompts
+      - run: cp cofre_evidencia/prompts/PROMPT_CATALOGO_EVIDENCIA.txt cofre_evidencia/prompts/PROMPT_CASAR_EVIDENCIA.txt cofre/prompts/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
+      - name: Natural Earth (cache)
+        uses: actions/cache@v4
+        with:
+          path: src/render/v2/dados/ne
+          key: natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}
+      - name: Dependências (as mesmas do piloto + análise de cortes)
+        timeout-minutes: 25
+        run: |
+          (timeout 120 sudo apt-get update -qq -o Acquire::Retries=2 && timeout 180 sudo apt-get install -y -qq fonts-noto-color-emoji) || echo "apt fora do ar"
+          pip install -r requirements.txt
+          npm install --no-audit --no-fund
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+          timeout 300 npm install -g @anthropic-ai/claude-code@2.1.322 --no-audit --no-fund || echo "Claude Code não instalou: diretor cai para o Gemini"
+          python scripts/v2_natural_earth.py
+      # checkpoints cifrados (cache do Actions). O cache só casa com o MESMO caminho com que foi gravado: restaura e move.
+      - { name: "ck pompeia", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43773368638 } }
+      - run: mkdir -p ck && if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/pompeia; fi
+      - { name: "ck panama", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43775250571 } }
+      - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/panama; fi
+      - { name: "ck titanic", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43752520420 } }
+      - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/titanic; fi
+      - { name: "ck pisa", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43754111920 } }
+      - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/pisa; fi
+      - { name: "ck lagartixa", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43730252500 } }
+      - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/lagartixa; fi
+      - { name: "ck ceu-azul", uses: actions/cache/restore@v4, with: { path: checkpoint_cache, key: piloto-checkpoint-43750814971 } }
+      - run: if [ -d checkpoint_cache ]; then mv checkpoint_cache ck/ceu-azul; fi
+      - name: Abrir os checkpoints (chave derivada de segredo; confere sha256)
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          chave="${CHECKPOINT_KEY:-$(printf 'coringa-checkpoint-v1:%s' "$COFRE_TOKEN" | sha256sum | cut -d' ' -f1)}"
+          export GNUPGHOME=$(mktemp -d)
+          for d in ck/*/; do n=$(basename $d)
+            if gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 -o ck.tgz -d $d/checkpoint.tgz.gpg 3<<<"$chave" \
+               && echo "$(cat $d/checkpoint.tgz.sha256)  ck.tgz" | sha256sum -c - >/dev/null; then
+              mkdir -p ab/$n && tar -xzf ck.tgz -C ab/$n && rm ck.tgz
+              python -m src.v2.checkpoint verificar ab/$n/checkpoint >/dev/null && echo "$n: checkpoint íntegro" || echo "$n: checkpoint INCOMPLETO"
+            else echo "$n: não abriu"; fi
+          done
+      - name: Biblioteca de execuções anteriores (manifesto versionado; binários recuperados da origem com sha)
+        run: |
+          if [ -f data/biblioteca/manifesto.jsonl ]; then python -m src.v3.biblioteca importar data/biblioteca/manifesto.jsonl; fi
+      - name: Produzir (fluxo real, MOTOR_VISUAL=v3; uma tentativa por caso)
+        env:
+          MOTOR_VISUAL: v3
+          DIRETOR_MODELO: ${{ vars.DIRETOR_MODELO || 'claude' }}
+          APROVACAO: "0"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ORCAMENTO_MODO: ${{ vars.ORCAMENTO_MODO }}
+          EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          VOZ: ${{ vars.VOZ || 'pt-BR-AntonioNeural' }}
+          VOZ_TOM: ${{ vars.VOZ_TOM || '+0Hz' }}
+          VOZ_VELOCIDADE: ${{ vars.VOZ_VELOCIDADE || '+10%' }}
+        run: |
+          mkdir -p saida_v3
+          python - <<'PY'
+          import json, os, shutil, subprocess, sys, time
+          from pathlib import Path
+          ped = json.loads(Path('.github/v3/pedido.json').read_text())
+          for c in ped['casos']:
+              nome = c['nome']; dest = Path('saida_v3') / nome; dest.mkdir(parents=True, exist_ok=True)
+              if c.get('checkpoint'):
+                  ck = Path('ab') / nome / 'checkpoint'
+                  if not ck.exists():
+                      (dest / 'registro.txt').write_text('checkpoint indisponível (cache expirado ou não abriu)\n'); continue
+                  args = ['--retomar', str(ck), '--retomar-etapa', 'roteiro']
+              else:
+                  args = ['--curiosidade', c['pedido'], '--parte', '1']
+              t = time.time()
+              with open(dest / 'registro.txt', 'w') as f:
+                  try:
+                      rc = subprocess.run([sys.executable, 'main.py'] + args, stdout=f, stderr=subprocess.STDOUT, timeout=c.get('limite_min', 45) * 60).returncode
+                  except subprocess.TimeoutExpired:
+                      rc = 'tempo esgotado'
+              (dest / 'execucao.json').write_text(json.dumps({'caso': c, 'rc': rc, 'segundos': round(time.time() - t, 1)}, ensure_ascii=False))
+              for p in Path('saida').glob('*'):
+                  if p.is_dir():
+                      shutil.move(str(p), str(dest / 'saida'))
+              print(nome, 'rc', rc, f'{time.time() - t:.0f}s', flush=True)
+          PY
+          python -m src.v3.biblioteca exportar saida_v3/biblioteca_manifesto.jsonl
+          python -m src.v3.biblioteca verificar > saida_v3/biblioteca_verificacao.json || true
+          # log público: só números
+          for f in saida_v3/*/saida/*-v3/resultado.json; do python -c "import json,sys;r=json.load(open(sys.argv[1]));print(sys.argv[1].split('/')[1], 'mp4' if r.get('mp4') else 'sem-mp4', len(r['bloqueios']), 'bloq', len(r['revisoes']), 'rev')" "$f"; done || true
+      - name: Cifrar (um arquivo por caso) e publicar no ramo de resultado
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          mkdir -p /tmp/res
+          for d in saida_v3/*/; do n=$(basename $d)
+            find $d -name 'checkpoint' -type d -prune -exec rm -rf {} + || true
+            tar -czf /tmp/$n.tgz -C saida_v3 $n
+            gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/$n-${{ github.run_id }}.tgz.gpg /tmp/$n.tgz
+          done
+          tar -czf /tmp/geral.tgz saida_v3/*.json* 2>/dev/null && gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/geral-${{ github.run_id }}.tgz.gpg /tmp/geral.tgz || true
+          ls -la /tmp/res
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan v3-validacao-resultado
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/res/* .
+          git add *.gpg
+          git commit -qm "V3.1 validação cifrada (execução ${{ github.run_id }})"
+          git push -f -q origin v3-validacao-resultado

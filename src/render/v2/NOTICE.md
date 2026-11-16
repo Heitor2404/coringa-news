@@ -21,3 +21,13 @@ determinístico, sem CDN, sem CSS global, sem timeline própria do componente).
 | `yt-feather-highlight` | foco com máscara esfumada (`doc.plano`, anotação `foco`) |
 | `grain-overlay` | granulação de tratamento (ruído fixo deslocado por quadro, determinístico) |
 | `vignette` | vinheta radial de tratamento |
+
+## V3.1 — transições reescritas em `nucleo.js`
+
+HyperFrames commit `8e8eeb2` (16/11/2026), Apache-2.0. Ideia reimplementada, nenhum arquivo copiado:
+
+| Componente de origem | Uso no Coringa |
+|---|---|
+| `whip-pan-cut` | transição `whip`: a cena que sai e a que entra deslizam juntas, com desfoque de movimento no meio (deslocamento geográfico/temporal) |
+| `iris-reveal` | transição `iris`: revelação circular a partir do centro de interesse (revelação final) |
+| `before-after-wipe` | não portado: `comparacao.antes_depois` (fotos.js) já faz a varredura com divisória |

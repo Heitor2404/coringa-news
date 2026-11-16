@@ -667,6 +667,8 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     t0 = time.time()
 
     imgs, reais, creditos, ia_ids = {}, {}, [], set()
+    if os.getenv('MOTOR_VISUAL') == 'v3' and not teste and v.get('acervo') is not None:
+        return _montar_video_v3(v, pasta, nome, trab)
     if os.getenv('MOTOR_VISUAL') == 'v2' and not teste and v.get('acervo') is not None:
         # CORREÇÃO DO PILOTO: valida e completa os acontecimentos ANTES de baixar mídia, narrar e renderizar (sem IA)
         from src.v2 import preparo
@@ -910,6 +912,29 @@ def montar_video(v: dict, pasta: Path, nome: str, teste=False) -> Path:
     return saida
 
 
+def _montar_video_v3(v: dict, pasta: Path, nome: str, trab: Path) -> Path:
+    """V3.1 (MOTOR_VISUAL=v3, experimental): o diretor automático escreve o storyboard, a biblioteca global fornece a
+    mídia e o fiscal V3.1 decide. Sem aprovação/Telegram: o porteiro marca `_bloqueado` e o workflow guarda o resultado."""
+    from src.v3 import pipeline
+    v.setdefault('pergunta', _pergunta_fixa(v))
+    res = pipeline.montar_video(v, pasta, nome, trab, musica=escolher_musica(v, nome))
+    v['_v3'] = res
+    if res['bloqueios']:
+        v['_bloqueado'] = 'fiscal V3.1: ' + '; '.join(res['bloqueios'])[:500]
+    saida = Path(res['mp4']) if res.get('mp4') else pasta / f'{nome}.mp4'
+    creditos = []
+    try:
+        dados = json.loads((Path(res['pasta']) / 'v2_dados.json').read_text(encoding='utf-8'))
+        creditos = list(dict.fromkeys((sc.get('params') or {}).get('credito') for sc in dados['scenes'] if (sc.get('params') or {}).get('credito')))
+    except Exception:
+        pass
+    tx = textos_post(v, creditos)
+    (pasta / f'{nome}.txt').write_text('\n'.join([f"V3.1 · bloqueios: {len(res['bloqueios'])} · revisões: {len(res['revisoes'])}", '',
+                                                  tx['instagram'], '', tx['tiktok'], '', tx['youtube']]) + '\n', encoding='utf-8')
+    print(f"  [V3.1] {'MP4 ' + saida.name if res.get('mp4') else 'sem MP4'} · bloqueios {len(res['bloqueios'])} · revisões {len(res['revisoes'])}")
+    return saida
+
+
 def _versao_telegram(arq: Path) -> Path:
     """Bots do Telegram só aceitam vídeo até 50 MB. Se passar, manda uma cópia comprimida (o original, em qualidade
     máxima, continua nos arquivos da execução do GitHub)."""
@@ -1130,7 +1155,7 @@ def _status_v2(pasta: Path, status: str, v: dict | None = None, mp4: Path | None
     BLOQUEADO_PREPARO (barrado antes da narração) · BLOQUEADO_MATERIAL (tema sem material antes do roteiro) ·
     FALHA_OPERACIONAL (erro de execução) · MP4_GERADO (vídeo existe, porteiro/fiscal não aprovou) · APROVADO_FISCAL.
     Sem MP4 no disco, nunca é MP4_GERADO/APROVADO_FISCAL."""
-    if os.getenv('MOTOR_VISUAL') != 'v2':
+    if os.getenv('MOTOR_VISUAL') not in ('v2', 'v3'):
         return
     v = v or {}
     if status in ('MP4_GERADO', 'APROVADO_FISCAL') and not (mp4 and Path(mp4).exists() and Path(mp4).stat().st_size > 0):
@@ -1359,9 +1384,9 @@ def main():
             traceback.print_exc()
             _aviso_sem_video(f'erro inesperado no sistema: {str(e)[:200]}')
         return
-    if a.retomar and os.getenv('MOTOR_VISUAL') != 'v2':
-        raise SystemExit('--retomar só existe no motor V2 (MOTOR_VISUAL=v2)')
-    if os.getenv('MOTOR_VISUAL') == 'v2' and (a.curiosidade.strip() or a.retomar):
+    if a.retomar and os.getenv('MOTOR_VISUAL') not in ('v2', 'v3'):
+        raise SystemExit('--retomar só existe nos motores documentais (MOTOR_VISUAL=v2 ou v3)')
+    if os.getenv('MOTOR_VISUAL') in ('v2', 'v3') and (a.curiosidade.strip() or a.retomar):
         # V2.4: checkpoint por etapa (pesquisa → acervo → roteiro) em saida/<dia>/checkpoint; produção não passa aqui
         from src.v2 import checkpoint
         man = checkpoint.manifesto_de(Path(a.retomar)) if a.retomar else {}

@@ -395,7 +395,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
         v = _melhor_de_dois(serie=capitulos and parte <= 1, prompt=PROMPT_ROTEIRO_EXPLICA.format(
             pergunta=tema['pergunta'], formato=tema.get('formato', 'explica'), noticia=tema.get('noticia', ''), fatos=fatos,
             partes=bloco_partes(parte, serie, n) if capitulos else UNICO,
-            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)) + (_bloco_contrato() if os.getenv('MOTOR_VISUAL') == 'v2' else CONTRATO_ACONTECIMENTOS))
+            categoria=tema.get('categoria', 'CIÊNCIA'), acervo=acervo_mod.texto(acervo)) + (_bloco_contrato() if os.getenv('MOTOR_VISUAL') in ('v2', 'v3') else CONTRATO_ACONTECIMENTOS))
     v['tipo_conteudo'] = tipo
     v['arco'] = (v.get('arco') or []) if capitulos else (v.get('arco') or [])[:1]
     if capitulos and parte <= 1 and len(v['arco']) > n:
@@ -421,7 +421,7 @@ def escrever_explica(tema: dict, parte: int = 1, serie: dict | None = None, capi
     v = arrumar_final(v, parte if (parte > 1 or len(v.get('arco') or []) > 1) else 0)
     recursos.rebaixar(v, fatos)                 # plano-mestre F: gráfico com dado fora dos fatos não vai à tela
     v = acontecimentos.normalizar(dividir(geocodificar(v)))    # 12/11: quem/onde/quando/recurso de cada ideia
-    if os.getenv('MOTOR_VISUAL') == 'v2':      # V2.4: contratos visuais conferidos e consertados ANTES do acervo/narração
+    if os.getenv('MOTOR_VISUAL') in ('v2', 'v3'):   # V2.4: contratos visuais conferidos e consertados ANTES do acervo/narração
         contratos_v2(v, fatos)
     v = storyboard.construir(v)                # plano-mestre D: uma estrutura por cena (só registro)
     v = acervo_mod.casar(v, acervo)

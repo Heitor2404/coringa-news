@@ -73,8 +73,10 @@ def test_prompt_v2_declara_os_dados_exigidos_por_tipo_e_o_da_producao_nao_muda()
 def test_roteiro_so_usa_o_bloco_novo_e_a_prevalidacao_com_motor_v2():
     import inspect
     src = inspect.getsource(roteiro.escrever_explica)
-    assert "_bloco_contrato() if os.getenv('MOTOR_VISUAL') == 'v2' else CONTRATO_ACONTECIMENTOS" in src
-    assert "if os.getenv('MOTOR_VISUAL') == 'v2':" in src and 'contratos_v2(v, fatos)' in src
+    # V3.1: o motor v3 usa o mesmo contrato e a mesma pré-validação do v2; a produção (sem MOTOR_VISUAL) continua igual
+    assert "_bloco_contrato() if os.getenv('MOTOR_VISUAL') in ('v2', 'v3') else CONTRATO_ACONTECIMENTOS" in src
+    assert "if os.getenv('MOTOR_VISUAL') in ('v2', 'v3'):" in src and 'contratos_v2(v, fatos)' in src
+    assert "if os.getenv('MOTOR_VISUAL') == 'v2':" in src          # plano vinculante V2.5 só no v2 (no v3 decide o diretor)
     assert "checkpoint.etapa('pesquisa'" in src and "checkpoint.etapa('acervo'" in src
 
 

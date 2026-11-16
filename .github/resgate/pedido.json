@@ -20,14 +20,8 @@
  "so_baixar": true,
  "categorias": [
   {
-   "categoria": "Monument to the Great Fire of London",
-   "min_px": 6000000,
-   "max": 8,
-   "vertical": 1.4
-  },
-  {
-   "categoria": "Exterior of the Monument to the Great Fire of London",
-   "min_px": 6000000,
+   "categoria": "The Monument to the Great Fire of London",
+   "min_px": 8000000,
    "max": 8,
    "vertical": 1.4
   }

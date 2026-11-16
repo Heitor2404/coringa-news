@@ -697,11 +697,10 @@
    ],
    "correcao": "src/caixa.py: três métricas separadas (cobrado, crédito, cota), provedores com faturamento declarado (desconhecido = negado; pago/confirmar = negado sem CAIXA_RATIFICADO), preflight com reserva e futuros contra o teto (0,80 provisório), custo desconhecido = negado, limites de tentativas/chamadas/tempo, persistência entre execuções e trava contra execução paralela. Ligado só no V3.",
    "testes": [
-    "tests/test_v3_p0_travas.py::test_pago_sem_ratificacao_negado",
-    "tests/test_v3_p0_travas.py::test_custo_desconhecido_negado",
-    "tests/test_v3_p0_travas.py::test_orcamento_esgotado_e_futuros_reservados",
-    "tests/test_v3_p0_travas.py::test_api_falha_tambem_conta_e_persiste_entre_execucoes",
-    "tests/test_v3_p0_travas.py::test_corrida_duas_execucoes_mesmo_video"
+    "tests/test_v3_p0_travas.py::test_pago_sem_ratificacao_negado_antes_de_chamar",
+    "tests/test_v3_p0_travas.py::test_teto_conta_reservas_e_futuros",
+    "tests/test_v3_p0_travas.py::test_tentativas_pagas_limitadas_por_etapa",
+    "tests/test_v3_p0_travas.py::test_corrida_local_duas_execucoes_mesmo_video"
    ],
    "gravidade": "alta",
    "estado": "corrigido (aguarda avaliação humana do MP4)",
@@ -818,6 +817,42 @@
    "tags": [
     "direcao",
     "fiscal",
+    "*"
+   ]
+  },
+  {
+   "id": "ERR-033",
+   "titulo": "Cobrança paga podia ser registrada como zero; trava só valia no mesmo computador",
+   "data": "2026-11-16",
+   "versao": "P0b (auditoria do Heitor sobre e8cc5dc)",
+   "sintoma": "caixa.operar() chamava depois() sem cobrado_usd (operação paga registrada com US$ 0); preflight aceitava pior caso 0 por padrão; livro e trava de arquivo locais não protegiam runners diferentes do Actions.",
+   "causa_raiz": "A cobrança era um parâmetro opcional com padrão 0, sem leitura da resposta do provedor; o armazém era só o disco do runner.",
+   "arquivos": [
+    "src/caixa.py",
+    "src/imagens.py",
+    "src/gemini.py",
+    "src/voz.py",
+    "src/claude.py",
+    ".github/workflows/v3-validacao.yml",
+    "requirements.txt"
+   ],
+   "correcao": "provedor que cobra exige medidor da cobrança real (sem medidor = negado antes de chamar) e pior caso > 0; medidor que não lê, falha da chamada ou depois() sem cobrança registram o PIOR CASO e travam novos pagos; reserva abandonada vira gasto na próxima abertura; grátis que cobra é bloqueado; armazém git (ramo caixa-livro, cifrado, compare-and-swap por push sem força) com arrendamento entre runners; workflow V3 usa CAIXA_ARMAZEM=git.",
+   "testes": [
+    "tests/test_v3_p0_travas.py::test_pago_sem_medidor_e_negado_antes_de_chamar",
+    "tests/test_v3_p0_travas.py::test_medidor_que_nao_le_conta_pior_caso_e_trava",
+    "tests/test_v3_p0_travas.py::test_falha_da_chamada_paga_conta_pior_caso",
+    "tests/test_v3_p0_travas.py::test_depois_sem_cobranca_informada_nao_vira_zero",
+    "tests/test_v3_p0_travas.py::test_imagem_cloudflare_bloqueada_mesmo_ratificada_sem_medidor",
+    "tests/test_v3_p0_travas.py::test_reexecucao_independente_ve_o_gasto_do_outro_runner",
+    "tests/test_v3_p0_travas.py::test_runner_morto_reserva_vira_gasto_e_arrendamento_segura",
+    "tests/test_v3_p0_travas.py::test_duas_execucoes_simultaneas_em_runners_diferentes_so_uma_abre"
+   ],
+   "gravidade": "critica",
+   "estado": "corrigido (provedores pagos seguem desabilitados)",
+   "referencia": "revisão do Heitor em 16/11 (commit e8cc5dc)",
+   "verificavel": true,
+   "tags": [
+    "custo",
     "*"
    ]
   }

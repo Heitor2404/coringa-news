@@ -106,6 +106,9 @@ jobs:
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
           COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
           MOTOR_VISUAL: v3
+          # trava financeira entre runners: livro cifrado no ramo caixa-livro, gravado por compare-and-swap (src/caixa.py).
+          # Provedores que cobram continuam NEGADOS: CAIXA_RATIFICADO não é definido aqui.
+          CAIXA_ARMAZEM: git
           DIRETOR_MODELO: ${{ vars.DIRETOR_MODELO || 'claude' }}
           APROVACAO: "0"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

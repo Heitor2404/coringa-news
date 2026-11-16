@@ -8,3 +8,4 @@ numpy
 pillow
 scenedetect>=0.6
 opencv-contrib-python-headless>=4.8
+cryptography>=42          # livro do caixa cifrado no ramo caixa-livro (src/caixa.py)

@@ -41,9 +41,9 @@ def _miniatura(url: str) -> bytes | None:
 def candidatos(busca: dict) -> list[dict]:
     from src import acervo
     q = [x for x in busca.get('consultas_en') or [] if x][:4]
-    if busca.get('tipo') == 'video':
-        return [c for c in acervo._seguro(acervo.f_videos)(q) if c.get('video')]
-    return acervo._seguro(acervo.f_commons)(q) or []
+    if busca.get('tipo') == 'video':                    # acervo._seguro chama a fonte SEM argumentos: lambda
+        return [c for c in acervo._seguro(lambda: acervo.f_videos(q)) if c.get('video')]
+    return acervo._seguro(lambda: acervo.f_commons(q))
 
 
 def escolher(cands: list[dict], deve_mostrar: str, usados: set[str]) -> tuple[dict | None, dict]:
@@ -96,6 +96,7 @@ def baixar(c: dict, pasta: Path, aid: str) -> dict:
 def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
     """preenche params.asset das cenas com busca; devolve (acervo{id: item}, registro)"""
     acv, reg, usados = {}, [], set()
+    pasta.mkdir(parents=True, exist_ok=True)
     for c in ep['cenas']:
         b = c.get('busca')
         if not b or (c.get('params') or {}).get('asset') not in (None, 'auto'):

@@ -104,7 +104,8 @@ jobs:
                                 'pagina': ii.get('descriptionurl'), 'url': ii.get('thumburl') or ii.get('url')})
               filtro = [f.lower() for f in c.get('filtro') or []]
               ok = [x for x in itens if (x['w'] or 0) * (x['h'] or 0) >= c.get('min_px', 3_000_000) and x['licenca'].lower().startswith(LIVRE)
-                    and (not filtro or any(f in x['titulo'].lower() for f in filtro)) and x['titulo'].lower().endswith(('.jpg', '.jpeg', '.png'))]
+                    and (not filtro or any(f in x['titulo'].lower() for f in filtro)) and x['titulo'].lower().endswith(('.jpg', '.jpeg', '.png'))
+                    and (x['h'] or 0) >= c.get('vertical', 0) * (x['w'] or 1)]
               ok.sort(key=lambda x: -(x['w'] * x['h']))
               for x in ok[:c.get('max', 6)]:
                   dest = Path('out/extra') / x['titulo'].replace(' ', '_')

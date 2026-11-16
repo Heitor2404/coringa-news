@@ -49,7 +49,7 @@ def revisar(mp4: Path, dados: dict, fichas: list[dict], chamar_visao, pasta: Pat
             try:
                 r = chamar_visao(PROMPT.format(ini=c['start'], fim=c['end'], fala=c.get('fala') or '', evento=d.get('evento_id'),
                                                tipo=f.get('tipo'), precisa=f.get('representacao_necessaria') or '—',
-                                               criterio=f.get('criterio_visual') or '—'), [img])
+                                               criterio=f.get('criterio_visual') or '—'), [img.read_bytes()])
                 chamadas += 1
             except Exception as e:
                 r = {'_nao_revisado': f'{type(e).__name__}: {str(e)[:120]}'}

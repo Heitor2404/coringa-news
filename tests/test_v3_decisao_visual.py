@@ -189,3 +189,14 @@ def test_foto_sem_resolucao_troca_pela_alternativa_do_acervo():
     cenas, reg = diretor.montar({'planos': [pl]}, acervo, {}, [{'w': 'x', 's': 0, 'e': .3}], {'f1'})
     assert cenas[0]['params']['img'] == '/b.jpg' and cenas[0]['params']['layout'] == 'cobrir'
     assert any(d['codigo'] == 'MIDIA-ALTERNATIVA' for d in reg[0]['degradacoes'])
+
+
+def test_documento_em_retrato_nao_vira_editorial_com_faixas_pretas():
+    """ERR-041 (microcena Panamá, 16/11): carta náutica 11330×18230 (retrato) virou editorial; a visão geral não
+    preenchia a largura e ficou com faixas pretas laterais. Editorial só serve para documento mais largo que o painel."""
+    sc, reg = _cena('Carta náutica do Canal do Panamá, 1914 (mapa)', (11330, 18230),
+                    {'canal': [0.4, 0.3, 0.3, 0.5]}, objeto_principal='canal', layout='editorial',
+                    plano_inicial='contexto', plano_final='contexto')
+    p = sc['params']
+    assert p.get('layout') != 'editorial', 'documento em retrato não preenche a largura na visão geral'
+    assert min(o for o, _ in amostras(sc)) >= 0.99, 'sem fundo vazio'

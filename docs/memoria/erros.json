@@ -1019,6 +1019,54 @@
     "fiscal",
     "*"
    ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção (microcenas 43930812668)",
+   "gravidade": "alta",
+   "estado": "corrigido (sem nova execução real)",
+   "referencia": "microcenas 16/11, execução 43930812668",
+   "verificavel": true,
+   "id": "ERR-040",
+   "titulo": "Revisão multimodal mandava o caminho da tira em vez dos bytes da imagem",
+   "sintoma": "M-NAO-REVISADO em todos os planos das 4 microcenas (ValidationError: Blob data … PosixPath); o fiscal ficou sem revisão semântica.",
+   "causa_raiz": "revisao_multimodal.revisar passava Path ao chamar_visao; o teste antigo usava modelo falso que aceitava qualquer coisa.",
+   "arquivos": [
+    "src/v3/revisao_multimodal.py"
+   ],
+   "correcao": "envia img.read_bytes(); teste com modelo falso que exige JPEG em bytes, como o Gemini.",
+   "testes": [
+    "tests/test_v3_resgate.py::test_revisao_multimodal_entrega_bytes_ao_modelo_de_visao"
+   ],
+   "tags": [
+    "fiscal",
+    "ia"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "correção estrutural da direção (microcenas 43930812668)",
+   "gravidade": "alta",
+   "estado": "corrigido (sem nova execução real)",
+   "referencia": "microcenas 16/11, execução 43930812668",
+   "verificavel": true,
+   "id": "ERR-041",
+   "titulo": "Composição editorial em documento retrato e cabeçalho sobre o painel de detalhe",
+   "sintoma": "Microcena Panamá bloqueada: carta náutica 11330×18230 em editorial com faixas pretas ao lado da visão geral; selo × crédito e rótulo × marca sobrepostos (ERR-008).",
+   "causa_raiz": "decisao aceitava layout 'editorial' pedido pelo diretor sem conferir se a visão geral preenche a largura; no editorial o selo descia para y0+78 e o crédito ficava fixo em 1132 px (posição do cobrir); a área segura dos rótulos era a do cobrir.",
+   "arquivos": [
+    "src/v3/decisao.py",
+    "src/render/v2/comp/doc.js"
+   ],
+   "correcao": "editorial só quando a visão geral é mais larga que o painel (W × 55% H); documento em retrato vai para recorte vertical 9:16 no objeto (EDITORIAL-RECUSADO); no editorial o selo fica no topo (130 px), o crédito no rodapé da visão geral e os rótulos desviam dessas faixas.",
+   "testes": [
+    "tests/test_v3_decisao_visual.py::test_documento_em_retrato_nao_vira_editorial_com_faixas_pretas",
+    "tests/test_v3_geometria.py::test_editorial_sem_choque_entre_selo_credito_e_marca"
+   ],
+   "tags": [
+    "layout",
+    "*"
+   ]
   }
  ]
 }

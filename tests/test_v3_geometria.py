@@ -196,3 +196,20 @@ def test_palco_real_igual_ao_espelho_e_sem_borda(img, tmp_path):
     oc = sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in ed['paineis']) / (1080 * 1920)
     assert oc > .97
     assert not ach, ach
+
+
+def test_editorial_sem_choque_entre_selo_credito_e_marca(img, tmp_path):
+    """ERR-041 (microcena Panamá, 16/11): no editorial o selo desce para o painel de detalhe e o crédito ficava fixo em
+    1132 px (posição do layout cobrir) — selo × crédito sobrepostos bloquearam o vídeo (ERR-008)."""
+    from src.v2 import palco
+    arq, wh = img['larga']
+    # visão geral alta (≈ painel de 55%): o detalhe começa em y ≈ 1072, onde o cobrir punha o crédito; ponto no topo do detalhe
+    dados = {'duration': 4, 'captions': [], 'creditos': [], 'scenes': [
+        {'comp': 'doc.plano', 'start': 0, 'end': 4, 'transicao': 'corte', 'origem': [0], 'fala': '',
+         'params': {'img': arq, 'wh': wh, 'cam': [{'t': 0, 'caixa': [.5, .3, .3, .6]}], 'layout': 'editorial',
+                    'anot': [{'tipo': 'ponto', 'caixa': [.6, .31, .02, .02], 't0': .3, 'texto': '80 km de rota'}],
+                    'visao_geral': [.3, 0, .6, 1], 'selo': {'funcao': 'DOCUMENTO', 'texto': 'carta náutica, 1914'},
+                    'credito': '"Admiralty Chart No 657 Panama Canal and Approaches" — United Kingdom Hydrographic Office'}}]}
+    with palco.abrir(palco.preparar(copy.deepcopy(dados)), tmp_path / 'p') as pg:
+        geo = palco.medir(pg, 4, .5)
+    assert not [g for g in geo if g.get('tipo') == 'choque' and g.get('grave') and not g.get('cap')], geo

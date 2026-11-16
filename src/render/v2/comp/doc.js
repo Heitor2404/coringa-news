@@ -34,7 +34,7 @@
   const selo = (p, topo) => p && p.funcao ? `<div class="abs dp-selo" data-g="selo" style="left:60px;top:${topo == null ? 345 : topo}px;max-width:880px;display:flex;align-items:center;gap:14px;font-family:var(--f-dado);font-weight:700;font-size:28px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85)">
       <span style="padding:5px 12px;border:2px solid ${SELO_COR[p.funcao] || '#fff'};color:${SELO_COR[p.funcao] || '#fff'};background:rgba(8,10,14,.55)">${esc(p.funcao)}</span><span class="tx">${esc(p.texto || '')}</span></div>` : '';
   // lado do crédito: direita (padrão) ou esquerda — quando uma anotação precisa do canto direito livre
-  const credito = (c, lado) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="${lado === 'esquerda' ? 'left:60px;text-align:left' : 'right:60px;text-align:right'};top:1132px;max-width:680px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
+  const credito = (c, lado, topo, fonte) => c ? `<div class="abs dp-cred" data-g="credito" data-opcional="1" style="${lado === 'esquerda' ? 'left:60px;text-align:left' : 'right:60px;text-align:right'};top:${topo == null ? 1132 : topo}px;max-width:680px;font-family:var(--f-dado);font-size:${fonte || 26}px;line-height:1.15;color:rgba(255,255,255,.62);text-shadow:0 1px 6px #000">${esc(c)}</div>` : '';
 
   // câmera: quadros-chave [{t, caixa:[x,y,w,h] (0–1 da imagem)}] → {cx, cy, w, h} em pixels da imagem no instante tl
   /* Câmera do doc.plano (Plano Mestre §4). Cada enquadramento-chave vira um ESTADO {ls: log da escala, cx, cy: ponto
@@ -160,7 +160,7 @@
           <img src="${p.img}" style="position:absolute;left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;transform:translate(${ED.tx1 - ED.ox}px,${ED.ty1}px) scale(${ED.s1});filter:${filtro}">
           <div style="position:absolute;left:${ED.tx1 - ED.ox + ED.jan[0] * ED.s1}px;top:${ED.ty1 + ED.jan[1] * ED.s1}px;width:${ED.jan[2] * ED.s1}px;height:${ED.jan[3] * ED.s1}px;border:4px solid ${AMARELO};box-shadow:0 0 0 2px rgba(0,0,0,.55)"></div></div>
         <div class="abs" style="left:0;top:${ED.h1}px;width:${W}px;height:${GAP_ED}px;background:#0b0c0e"></div>` : '';
-    const abre = ED ? `<i data-marca-topo="${Math.round(ED.y0 + 30)}" style="display:none"></i><div class="abs dp-det" data-ocupa="1" data-layout="editorial" style="left:0;top:${ED.y0}px;width:${W}px;height:${ED.hd}px;overflow:hidden">` : '';
+    const abre = ED ? `<div class="abs dp-det" data-ocupa="1" data-layout="editorial" style="left:0;top:${ED.y0}px;width:${W}px;height:${ED.hd}px;overflow:hidden">` : '';
     return {
       html: `<div class="abs dp-bg" data-layout="${LAY}" style="inset:0;${fundo}"></div>${visaoHTML}${abre}
         <div class="abs dp-mundo" ${ED ? '' : 'data-ocupa="1"'} data-layout="${LAY}" style="left:0;top:0;width:${iw}px;height:${ih}px;transform-origin:0 0;${LAY === 'integral' ? 'box-shadow:0 18px 70px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)' : ''}">
@@ -172,7 +172,7 @@
         ${ED ? '' : '<div class="abs" style="left:0;right:0;top:0;height:420px;background:linear-gradient(rgba(0,0,0,.55),transparent)"></div>'}
         <svg class="abs dp-an" style="left:0;top:0;overflow:visible" width="1080" height="1920" viewBox="0 0 1080 1920">${anot.map(anotSVG).join('')}</svg>
         ${anot.map((a, i) => a.texto ? `<div class="abs dp-rot dr${i}" data-g="rotulo" data-txt="1" style="left:0;top:0;max-width:600px;padding:10px 18px;background:rgba(8,10,14,.82);border-left:6px solid ${a.cor || AMARELO};font-weight:900;font-size:34px;line-height:1.08;text-transform:uppercase;color:#fff;opacity:0">${hl(a.texto)}</div>` : '').join('')}
-        ${selo(p.selo, ED ? ED.y0 + 78 : null)}${credito(p.credito, p.credito_lado)}`,
+        ${selo(p.selo, ED ? 130 : null)}${credito(p.credito, p.credito_lado, ED ? ED.h1 - 64 : null, ED ? 20 : null)}`,
       upd(tl, el) {
         const { s, tx, ty } = ED ? { s: ED.sd, tx: ED.tx, ty: ED.ty } : camEm(p.cam, tl, iw, ih, LAY);
         el.querySelector('.dp-mundo').style.transform = `translate(${tx}px,${ty - (ED ? ED.y0 : 0)}px) scale(${s})`;
@@ -237,9 +237,12 @@
             const bw = r.offsetWidth, bh = r.offsetHeight, gap = 34;
             const cand = a.lado === 'abaixo' ? [[caixa.cx - bw / 2, caixa.y1 + gap]] : a.lado === 'acima' ? [[caixa.cx - bw / 2, caixa.y0 - gap - bh]] : [];
             cand.push([caixa.cx - bw / 2, caixa.y0 - gap - bh], [caixa.cx - bw / 2, caixa.y1 + gap], [caixa.x1 + gap, caixa.cy - bh / 2], [caixa.x0 - gap - bw, caixa.cy - bh / 2]);
-            const ok = ([x, y]) => x >= 60 && x + bw <= 1020 && y >= 400 && y + bh <= 1140;
+            // editorial: selo no topo (130) e crédito no rodapé da visão geral; o rótulo não pode cair nessas faixas
+            const y0r = ED ? 200 : 400, livre = (y) => !ED || y + bh <= ED.h1 - 72 || y >= ED.y0 + 8;
+            const ok = ([x, y]) => x >= 60 && x + bw <= 1020 && y >= y0r && y + bh <= 1140 && livre(y);
             let [x, y] = cand.find(ok) || cand[0];
-            x = clamp(x, 60, 1020 - bw); y = clamp(y, 400, 1140 - bh);
+            x = clamp(x, 60, 1020 - bw); y = clamp(y, y0r, 1140 - bh);
+            if (!livre(y)) y = (ED.y0 + 8 + bh <= 1140) ? ED.y0 + 8 : ED.h1 - 72 - bh;
             r.style.transform = `translate(${x}px,${y + (1 - eo5(clamp((tl - t0 - .25) / .4))) * 16}px)`;
             if (caixa.ponto) { const ln = g.querySelector('.t1'); const lx = clamp(caixa.cx, x, x + bw), ly = y + bh / 2 < caixa.cy ? y + bh : y;
               ln.setAttribute('x1', caixa.cx); ln.setAttribute('y1', caixa.cy); ln.setAttribute('x2', lx); ln.setAttribute('y2', ly); ln.setAttribute('opacity', clamp((tl - t0 - .2) / .3)); }

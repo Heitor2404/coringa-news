@@ -209,3 +209,20 @@ def test_corte_detectado_durante_movimento_planejado_nao_e_falso_alarme():
                        'avanco': {'etapas': [{'t': 8.0, 'dur': 1.0}]}}}
     assert 'câmera' in F._mudanca_planejada(cena, 2.0) and 'anotação' in F._mudanca_planejada(cena, 6.3)
     assert F._mudanca_planejada(cena, 8.5) == 'etapa do avanço' and F._mudanca_planejada(cena, 11.0) is None
+
+
+def test_revisao_multimodal_entrega_bytes_ao_modelo_de_visao(tmp_path):
+    """ERR-040: a revisão passava o caminho da tira (Path) ao Gemini, que exige bytes — falhou em todos os planos das
+    microcenas (16/11) e o fiscal ficou sem revisão semântica. O modelo falso agora exige bytes JPEG, como o real."""
+    mp4 = tmp_path / 'v.mp4'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=gray:s=320x568:d=4:r=30', '-c:v', 'libx264', '-preset',
+                    'ultrafast', str(mp4)], check=True)
+    vistos = []
+
+    def visao(prompt, imagens):
+        assert all(isinstance(b, (bytes, bytearray)) and b[:2] == b'\xff\xd8' for b in imagens), [type(b) for b in imagens]
+        vistos.append(len(imagens))
+        return {'demonstra': 'sim', 'midia_corresponde': True, 'objeto_principal_visivel': True, 'problemas': []}
+
+    r = RM.revisar(mp4, {'scenes': [{'start': 0, 'end': 4, 'fala': 'x', 'direcao': {'evento_id': 'e1'}}]}, [], visao, tmp_path / 'rv')
+    assert vistos == [1] and r['chamadas'] == 1 and 'M-NAO-REVISADO' not in [a['codigo'] for a in r['achados']]

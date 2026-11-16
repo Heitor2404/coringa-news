@@ -41,11 +41,19 @@ def decidir(pl: dict, x: dict, wh, cam: list[dict], roi, obs: dict, enq_obj, enq
     critico = bool(pl.get('critico'))
     out = {'natureza': nat, 'degradacoes': deg}
 
+    def horizontal(c):          # a visão geral só preenche a largura se o trecho for mais largo que W × (VISAO_MAX·H)
+        return c[2] * wh[0] >= c[3] * wh[1] * G.W / (G.VISAO_MAX * G.H) * .98
+
+    def contem(c):
+        return roi is None or (c[0] <= roi[0] and c[1] <= roi[1] and c[0] + c[2] >= roi[0] + roi[2] and c[1] + c[3] >= roi[1] + roi[3])
+
+    def visao_geral():          # o maior enquadramento amplo pedido que contém o objeto principal; senão a fonte inteira
+        return max((c for c in caixas if c[2] * c[3] >= AMPLO and contem(c)), key=lambda c: c[2] * c[3], default=[0, 0, 1, 1])
+
+    amplo_h = horizontal(visao_geral())
+
     def editorial():
-        def contem(c):
-            return roi is None or (c[0] <= roi[0] and c[1] <= roi[1] and c[0] + c[2] >= roi[0] + roi[2] and c[1] + c[3] >= roi[1] + roi[3])
-        # visão geral: o maior enquadramento amplo pedido que contém o objeto principal; senão a fonte inteira
-        visao = max((c for c in caixas if c[2] * c[3] >= AMPLO and contem(c)), key=lambda c: c[2] * c[3], default=[0, 0, 1, 1])
+        visao = visao_geral()
         detalhe = enq_obj if roi else (caixas[-1] if caixas[-1][2] * caixas[-1][3] < AMPLO else [.25, .25, .5, .5])
         e = G.editorial(wh, visao, detalhe)
         deg.append(('aceitavel', 'COMPOSICAO-EDITORIAL', f"{nat} horizontal visto inteiro: visão geral + detalhe ampliado (sem fundo vazio)", False))
@@ -56,6 +64,12 @@ def decidir(pl: dict, x: dict, wh, cam: list[dict], roi, obs: dict, enq_obj, enq
         out.update(layout='editorial', cam=[{'t': 0, 'caixa': detalhe}], visao_geral=[round(v, 4) for v in visao])
         return out
 
+    if pedido in ('editorial', 'integral') and not amplo_h:
+        # documento em retrato: o editorial deixaria faixas vazias ao lado da visão geral → recorte vertical (preferência 1)
+        deg.append(('aceitavel', 'EDITORIAL-RECUSADO', f'{nat} em retrato ({wh[0]}×{wh[1]}): a visão geral não preencheria a largura; recorte vertical', False))
+        cam = [{**k, 'caixa': k['caixa'] if _cabe(k['caixa'], wh) else _recorte_916(k['caixa'], wh, roi)} for k in cam]
+        caixas = [k['caixa'] for k in cam]
+        pedido = 'cobrir'
     if pedido == 'editorial' or (pedido == 'integral' and documental and not avanco):
         return editorial()
     if pedido == 'cobrir':
@@ -63,15 +77,15 @@ def decidir(pl: dict, x: dict, wh, cam: list[dict], roi, obs: dict, enq_obj, enq
         if not all(_cabe(c, wh) for c in caixas):
             deg.append(('revisao', 'ENQUADRAMENTO-CORTADO', 'layout cobrir pedido: parte do enquadramento fica fora do quadro vertical',
                         bool(roi) and not roi_cabe))
-    elif all(_cabe(c, wh) for c in caixas) and res_ok and (not documental or roi_cabe) and not (documental and amplo and not gancho and not avanco):
+    elif all(_cabe(c, wh) for c in caixas) and res_ok and (not documental or roi_cabe) and not (documental and amplo_h and not gancho and not avanco):
         layout = 'cobrir'
-    elif roi is not None and roi_cabe and res_ok and (gancho or avanco or not (documental and amplo)):
+    elif roi is not None and roi_cabe and res_ok and (gancho or avanco or not (documental and amplo_h)):
         # 1. recorte vertical no objeto principal (o que importa cabe; o resto do pedido largo sai)
         novo = enq_obj if _cabe(enq_obj, wh) else enq_det
         cam = [{**k, 'caixa': k['caixa'] if _cabe(k['caixa'], wh) else novo} for k in cam]
         deg.append(('aceitavel', 'ENQUADRAMENTO-VERTICAL', 'enquadramento pedido mais largo que 9:16: recortado no objeto principal', False))
         layout = 'cobrir'
-    elif documental and not avanco:
+    elif documental and not avanco and amplo_h:
         return editorial()                                              # 3. editorial
     else:
         layout = 'cobrir'                                               # 4. sem solução boa: revisão/bloqueio
@@ -83,6 +97,16 @@ def decidir(pl: dict, x: dict, wh, cam: list[dict], roi, obs: dict, enq_obj, enq
                         'o enquadramento pedido não cabe em 9:16 e a mídia não é documento/mapa/arte: troque a mídia ou o recurso', critico))
     out.update(layout=layout, cam=_politica_camera(pl, cam, wh, obs, roi, deg, gancho))
     return out
+
+
+def _recorte_916(c, wh, roi=None) -> list:
+    """maior recorte 9:16 dentro da caixa c (corta as laterais), centrado no objeto principal quando houver"""
+    a = (G.W / G.H) * wh[1] / wh[0]                       # largura normalizada que corresponde a 1 de altura em 9:16
+    w = min(c[2], c[3] * a)
+    h = min(c[3], w / a)
+    cx = (roi[0] + roi[2] / 2) if roi else c[0] + c[2] / 2
+    x = min(max(cx - w / 2, c[0]), c[0] + c[2] - w)
+    return [round(x, 4), round(c[1] + (c[3] - h) / 2, 4), round(w, 4), round(h, 4)]
 
 
 def _politica_camera(pl, cam, wh, obs, roi, deg, gancho) -> list[dict]:

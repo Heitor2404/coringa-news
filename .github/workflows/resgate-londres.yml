@@ -198,7 +198,7 @@ jobs:
         run: |
           export GNUPGHOME=$(mktemp -d)
           rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
-          rm -rf out_render/_render
+          rm -rf out_render/_render out_render/*_telegram.mp4      # a cópia recomprimida do Telegram não precisa ficar
           tar -czf /tmp/r.tgz -C out_render .
           gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/londres-render-${{ github.run_id }}.tgz.gpg /tmp/r.tgz
           git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
@@ -206,7 +206,10 @@ jobs:
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           git checkout -q HEAD -- . 2>/dev/null || true
           cp /tmp/londres-render-*.tgz.gpg .
-          git add londres-render-*.tgz.gpg && git commit -qm "render Londres (${{ github.run_id }})" && git push -q origin resgate-render
+          for f in londres-render-*.tgz.gpg; do               # limite de 100 MB por arquivo no GitHub: divide em partes
+            if [ "$(stat -c %s "$f")" -gt 95000000 ] && [ ! -e "$f.parte-aa" ]; then split -b 90m "$f" "$f.parte-" && rm "$f"; fi
+          done
+          git add londres-render-*.tgz.gpg* && git commit -qm "render Londres (${{ github.run_id }})" && git push -q origin resgate-render
       - uses: actions/upload-artifact@v4
         if: always() && steps.modo.outputs.m == 'render'
         with:

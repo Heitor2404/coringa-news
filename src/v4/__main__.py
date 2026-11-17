@@ -26,8 +26,8 @@ def _telegram(saida: Path):
     a = res.get('audio') or {}
     fam = (res.get('contrato') or {}).get('familias') or {}
     diag = res.get('estado') == 'DIAGNOSTICO_NAO_EDITORIAL'
-    if diag:
-        est = {**est, 'estado': 'DIAGNOSTICO_NAO_EDITORIAL'}
+    if diag:     # o status visível continua um dos estados conhecidos (BLOQUEADO); o rótulo de diagnóstico vai no título e no texto
+        est = {**est, 'estado': 'BLOQUEADO', 'motivos': ['DIAGNÓSTICO: cena(s) não renderizada(s) — não é episódio'] + list(est.get('motivos') or [])}
     linhas = [("DIAGNÓSTICO TÉCNICO — NÃO É EPISÓDIO (cena(s) não renderizada(s)); PRÉVIA PRIVADA, NÃO PUBLICADO" if diag
                else "EPISÓDIO V4 — PRÉVIA PRIVADA, NÃO PUBLICADO"), f"STATUS: {res.get('estado')} (motor) · {est['estado']}",
               f"{r.get('duracao', 0):.1f}s · {r.get('cenas')} cenas · plano médio {r.get('plano_medio_s')}s · vazio médio {r.get('vazio_medio')} · "
@@ -44,7 +44,7 @@ def _telegram(saida: Path):
     linhas.append('Aprovação estética: só o Heitor.')
     mp4 = Path(res['mp4']) if res.get('mp4') and Path(res['mp4']).exists() else None
     if mp4:
-        env = previa_telegram.enviar(mp4, est, 'Coringa V4 — Canal do Panamá', '\n'.join(linhas))
+        env = previa_telegram.enviar(mp4, est, ('DIAGNÓSTICO (não é episódio) — ' if diag else '') + 'Coringa V4 — Canal do Panamá', '\n'.join(linhas))
     else:
         chat, _ = previa_telegram.chat_autorizado()
         env = previa_telegram._api('sendMessage', {'chat_id': chat, 'text': ('PRÉVIA PRIVADA — sem MP4\n' + '\n'.join(linhas))[:3900]})

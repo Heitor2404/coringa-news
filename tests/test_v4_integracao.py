@@ -266,3 +266,17 @@ def test_informacao_parada_e_vazio_geometrico():
     assert M.parada_max([2, 2, 0, 2], .5) == .5
     det = {'params': {'wh': [1920, 1440], 'layout': 'cobrir', 'cam': [{'t': 0, 'caixa': [0.2, 0.0, 0.42, 1.0]}]}}
     assert M.vazio_geometrico(det, 0, 6) <= .01
+
+
+def test_diagnostico_sai_como_status_visivel(monkeypatch, tmp_path):
+    """execução 43986419846: o Telegram recusou 'DIAGNOSTICO_NAO_EDITORIAL' (estado desconhecido) e nada chegou."""
+    import json
+    import src.v4.__main__ as M
+    from src.v3 import estado_final, previa_telegram as PT
+    mp4 = tmp_path / 'x_DIAGNOSTICO.mp4'
+    mp4.write_bytes(b'0')
+    (tmp_path / 'resultado.json').write_text(json.dumps({'estado': 'DIAGNOSTICO_NAO_EDITORIAL', 'bloqueios': ['G-CENA-NAO-PRONTA c6'], 'mp4': str(mp4)}))
+    vistos = {}
+    monkeypatch.setattr(PT, 'enviar', lambda mp4, est, titulo, rel: vistos.update(est=est, titulo=titulo, rel=rel) or {})
+    M._telegram(tmp_path)
+    assert estado_final.pode_enviar_previa(vistos['est']) and vistos['titulo'].startswith('DIAGNÓSTICO') and 'NÃO É EPISÓDIO' in vistos['rel']

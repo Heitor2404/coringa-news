@@ -208,6 +208,9 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
             clipe = clipe_diagnostico(c, '; '.join(r.get('motivos') or []), trab)
         regs.append(r)
         clipes.append({'arq': clipe, 'dur': round(c['fim'] - c['ini'], 3), 'transicao': c.get('transicao')})
+        # resumo no LOG do Actions (sem segredos): a execução 43986419846 virou diagnóstico e o log não dizia qual cena
+        print(f"  [cena {c['id']}] {c['modalidade']} → {r.get('componente_usado') or c['componente']}: {r.get('estado')}"
+              + (f" | {' || '.join(r.get('motivos') or [])[:600]}" if r.get('estado') != 'renderizado' else ''), flush=True)
     lt = compositor.linha_do_tempo(ep, regs, pasta / 'linha_do_tempo.json')
     # 6. composição: vídeo, camada de identidade, som
     video = compositor.concatenar(clipes, trab, trab / 'video.mp4')

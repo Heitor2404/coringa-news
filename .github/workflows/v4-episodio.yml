@@ -136,7 +136,7 @@ jobs:
           for p in /tmp/v4.tgz.parte_*; do gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/$(basename $p)-${{ github.run_id }}.gpg $p; done
           git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout --orphan v4-resultado
-          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          git rm -rqf --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp /tmp/res/* .
           git add *.gpg
           git commit -qm "V4 episódio cifrado (execução ${{ github.run_id }})"

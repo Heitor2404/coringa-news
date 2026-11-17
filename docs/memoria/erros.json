@@ -1489,6 +1489,32 @@
     "metricas",
     "v4"
    ]
+  },
+  {
+   "id": "ERR-059",
+   "titulo": "Execução 43986419846: diagnóstico sem prévia, sem resultado guardado e sem dizer qual cena falhou",
+   "data": "2026-11-17",
+   "versao": "motor V4",
+   "sintoma": "estado DIAGNOSTICO_NAO_EDITORIAL; Telegram recusou o estado; o passo de cifragem falhou (git rm com arquivos modificados pela sondagem); log sem resumo por cena.",
+   "causa_raiz": "estado novo fora da lista de status visíveis; workflow com 'git rm --cached' sem -f; episódio só gravava os motivos em arquivos do pacote.",
+   "arquivos": [
+    "src/v4/__main__.py",
+    ".github/workflows/v4-episodio.yml",
+    "src/v4/episodio.py"
+   ],
+   "correcao": "diagnóstico vai como BLOQUEADO visível com título 'DIAGNÓSTICO (não é episódio)'; git rm -f; resumo por cena (estado e motivos) no log do Actions.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_diagnostico_sai_como_status_visivel"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execução V4 43986419846",
+   "verificavel": true,
+   "tags": [
+    "v4",
+    "telegram",
+    "ci"
+   ]
   }
  ]
 }

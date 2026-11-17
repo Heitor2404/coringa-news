@@ -143,7 +143,7 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     ts = escolher(pl, n) if tempos == 'auto' else [float(x) for x in tempos.split(',')]
     qs = [int(round(t * FPS)) for t in ts]
     chrome = os.environ.get('CORINGA_CHROME') or os.environ.get('REMOTION_CHROME') or '/usr/bin/google-chrome'
-    r = subprocess.run(['node', 'medir.mjs', str(pf), str(pc), ','.join(map(str, qs)), str(out.resolve()), chrome], cwd=RAIZ / 'motor4' / 'remotion',
+    r = subprocess.run(['node', 'medir.mjs', str(pf.resolve()), str(pc.resolve()), ','.join(map(str, qs)), str(out.resolve()), chrome], cwd=RAIZ / 'motor4' / 'remotion',
                        capture_output=True, text=True, timeout=3600)
     (out / 'medir.log').write_text(r.stdout + r.stderr)
     if r.returncode:

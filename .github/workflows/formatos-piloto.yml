@@ -27,7 +27,7 @@ env:
 jobs:
   formatos:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -72,14 +72,14 @@ jobs:
           python -m src.v4.formatos quadros $PLANO_ATLAS saida_formatos/atlas
           python -m src.v4.formatos quadros $PLANO_DOSSIE saida_formatos/dossie
       - name: Render ATLAS
-        timeout-minutes: 70
+        timeout-minutes: 170
         env:
           REMOTION_CHROME: /usr/bin/google-chrome
           CORINGA_CHROME: /usr/bin/google-chrome
         run: python -m src.v4.formatos render $PLANO_ATLAS saida_formatos/atlas
       - name: Render DOSSIÊ
         if: always()
-        timeout-minutes: 30
+        timeout-minutes: 60
         env:
           REMOTION_CHROME: /usr/bin/google-chrome
           CORINGA_CHROME: /usr/bin/google-chrome

@@ -1831,6 +1831,33 @@
     "formatos",
     "acervo"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos (direção de arte)",
+   "referencia": "execução 44114805861",
+   "verificavel": true,
+   "id": "ERR-072",
+   "titulo": "Validação de quadros com caminho relativo e mesa com filtro SVG por quadro",
+   "sintoma": "passo QUADROS não achou props_formato.json (caminho relativo para o node em outra pasta); render do DOSSIÊ estourou 30 min.",
+   "causa_raiz": "medir.mjs roda em motor4/remotion e recebia caminhos relativos à raiz; a textura da mesa era feTurbulence em tela cheia recalculada a cada quadro (≈1 s/quadro local, >2,5× no Actions).",
+   "arquivos": [
+    "scripts/formatos_validar.py",
+    "motor4/remotion/src/formatos/Palco.tsx",
+    "scripts/formatos_mesa.py",
+    ".github/workflows/formatos-piloto.yml"
+   ],
+   "correcao": "caminhos absolutos; textura da mesa estática gerada uma vez (0,25 s/quadro); tempo do render ATLAS ajustado ao custo medido do mapa raster (≈0,85 s/quadro local); render só com quadros verificados.",
+   "testes": [
+    "tests/test_formatos.py::test_mesa_estatica_e_medicao_com_caminho_absoluto"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "tags": [
+    "formatos",
+    "render",
+    "validacao"
+   ]
   }
  ]
 }

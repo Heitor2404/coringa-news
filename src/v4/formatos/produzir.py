@@ -233,6 +233,9 @@ def render(saida: Path) -> dict:
     pf = _ler(saida / 'preflight.json')
     if not pf['pronto']:
         raise SystemExit('preflight vermelho: não renderizo (nada de diagnóstico virando episódio)')
+    rq = saida / 'quadros' / 'relatorio.json'
+    if not rq.exists() or not _ler(rq).get('ok'):
+        raise SystemExit('quadros renderizados com problema (ou não conferidos): não renderizo o vídeo')
     pl, meta, imgs = _ler(saida / 'plano_resolvido.json'), _ler(saida / 'narracao.json'), _ler(saida / 'ativos.json')
     trab = (saida / '_trabalho').resolve()
     trab.mkdir(parents=True, exist_ok=True)

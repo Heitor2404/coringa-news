@@ -5,7 +5,7 @@
 //           (foco + âncora em tela), com pan ponderado pela escala na transição e deriva lenta no beat.
 // tecnico = planta técnica escura (estrutura abstrata).   mesa = mesa de investigação: madeira escura, luz de luminária, profundidade.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { Img, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import type * as ML from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as turf from '@turf/turf';
@@ -238,39 +238,19 @@ export const PalcoTecnico: React.FC<{ P: FormatoProps; opac: number }> = ({ P, o
   );
 };
 
-// MESA DE INVESTIGAÇÃO: madeira escura com veio (ruído determinístico), poça de luz de luminária, vinheta, pastas fora de
-// foco nas bordas (profundidade) e uma régua de escala. Nada aleatório por quadro: só a câmera respira devagar.
+// MESA DE INVESTIGAÇÃO: madeira escura com veio e objetos fora de foco (imagem estática gerada por
+// scripts/formatos_mesa.py — o filtro SVG por quadro estourou o tempo de render no Actions, 44114805861), luz de
+// luminária, vinheta e aproximação lenta. Nada aleatório por quadro.
 export const PalcoMesa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const T = P.tokens.palco.mesa as any;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
-  const resp = 1.03 + .025 * Math.sin((t / Math.max(1, P.duracao)) * Math.PI);    // aproximação lenta e contínua
+  const resp = 1.03 + .025 * Math.sin((t / Math.max(1, P.duracao)) * Math.PI);
   return (
     <div style={{ position: 'absolute', inset: 0, opacity: opac, background: T.fundo, overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: -60, transform: `scale(${resp})`, transformOrigin: '50% 40%' }}>
-        <svg width={W + 120} height={H + 120} style={{ position: 'absolute', inset: 0 }}>
-          <defs>
-            <filter id="veio" x="0" y="0" width="100%" height="100%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.0035 0.09" numOctaves={4} seed={7} />
-              <feColorMatrix type="matrix" values={`0 0 0 0 ${T.madeira_r ?? .23}  0 0 0 0 ${T.madeira_g ?? .14}  0 0 0 0 ${T.madeira_b ?? .08}  0 0 0 .9 -.28`} />
-            </filter>
-            <filter id="poro"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} seed={3} /><feColorMatrix type="saturate" values="0" />
-              <feComponentTransfer><feFuncA type="linear" slope=".06" /></feComponentTransfer></filter>
-          </defs>
-          <rect width="100%" height="100%" fill={T.madeira ?? '#1A120C'} />
-          <rect width="100%" height="100%" filter="url(#veio)" />
-          <rect width="100%" height="100%" filter="url(#poro)" />
-        </svg>
-        {/* objetos de cena FORA de foco (profundidade): pasta e folhas sob a luz, nas bordas */}
-        <div style={{ position: 'absolute', left: -120, top: 1420, width: 640, height: 470, background: '#7A6440', transform: 'rotate(-9deg)', filter: 'blur(5px) brightness(.42)', borderRadius: 6,
-          boxShadow: '0 30px 60px rgba(0,0,0,.6)' }} />
-        <div style={{ position: 'absolute', left: -60, top: 1395, width: 220, height: 60, background: '#7A6440', transform: 'rotate(-9deg)', filter: 'blur(5px) brightness(.42)', borderRadius: '6px 6px 0 0' }} />
-        <div style={{ position: 'absolute', left: 760, top: 160, width: 520, height: 680, background: '#CFC6B4', transform: 'rotate(11deg)', filter: 'blur(6px) brightness(.25)',
-          boxShadow: '0 30px 60px rgba(0,0,0,.6)' }} />
-        <div style={{ position: 'absolute', left: 820, top: 1500, width: 520, height: 70, background: '#B39B6A', transform: 'rotate(-22deg)', filter: 'blur(4px) brightness(.35)' }} />
-      </div>
-      {/* luz de luminária: quente, de cima, com queda suave (iluminação editorial sutil) */}
+      <Img src={staticFile('formatos/mesa_madeira.jpg')} style={{ position: 'absolute', left: -60, top: -60, width: W + 120, height: H + 120,
+        transform: `scale(${resp})`, transformOrigin: '50% 40%' }} />
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 85% 55% at 50% 40%, ${T.luz} 0%, rgba(255,214,150,.05) 45%, rgba(0,0,0,0) 70%)`, mixBlendMode: 'screen' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 95% 70% at 50% 42%, rgba(0,0,0,0) 40%, rgba(0,0,0,.78) 100%)' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 62%, rgba(0,0,0,.7) 100%)' }} />

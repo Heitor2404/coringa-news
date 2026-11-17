@@ -309,3 +309,10 @@ def test_download_de_midia_espera_o_limite_do_commons(monkeypatch):
     monkeypatch.setattr(requests, 'get', lambda *a, **k: R(next(seq)))
     monkeypatch.setattr(time, 'sleep', lambda s: None)
     assert produzir._origem({'url': 'https://upload.wikimedia.org/x.jpg'}, None) == (b'ok', 'https://upload.wikimedia.org/x.jpg')
+
+
+def test_mesa_estatica_e_medicao_com_caminho_absoluto():
+    """44114805861: QUADROS com caminho relativo (node em outra pasta) e mesa com feTurbulence por quadro (30 min estourados)"""
+    palco = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert 'feTurbulence' not in palco and 'mesa_madeira.jpg' in palco and (RAIZ / 'motor4/remotion/public/formatos/mesa_madeira.jpg').exists()
+    assert 'pf.resolve()' in (RAIZ / 'scripts/formatos_validar.py').read_text()

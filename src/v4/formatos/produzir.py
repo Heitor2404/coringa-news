@@ -35,9 +35,13 @@ def narrar(plano: dict, saida: Path) -> dict:
     """→ saida/narracao.json {palavras, duracao, origem} + saida/voz.wav"""
     saida.mkdir(parents=True, exist_ok=True)
     n = plano['narracao']
+    pac = None
     if n.get('cifrada'):
         from src.v3 import material
         pac = json.loads(material.decifrar(material._segredo(), (RAIZ / n['cifrada']).read_bytes()))
+        if n.get('texto') and pac.get('texto') and pac['texto'] != n['texto']:
+            pac = None                                   # texto do plano mudou: a gravação antiga não serve
+    if pac:
         flac = saida / 'voz.flac'
         flac.write_bytes(base64.b64decode(pac['flac_b64']))
         rodar(['ffmpeg', '-v', 'error', '-y', '-i', flac, '-ar', '48000', saida / 'voz.wav'])
@@ -58,6 +62,16 @@ def narrar(plano: dict, saida: Path) -> dict:
 
 
 # ---------------------------------------------------------------- mídia
+def nome_publico(asset: str) -> str:
+    import hashlib
+    return 'm_' + hashlib.sha1(asset.encode()).hexdigest()[:16]
+
+
+def _sha(arq: Path) -> str:
+    import hashlib
+    return hashlib.sha256(Path(arq).read_bytes()).hexdigest()
+
+
 def assets_do_plano(plano: dict) -> list[str]:
     return sorted({(L.get('p') or {}).get('asset') for b in plano['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset')})
 
@@ -68,12 +82,14 @@ def ativos(plano: dict, saida: Path) -> dict:
     por = {it['id']: it for it in viabilidade.carregar()['itens']}
     PUBLICO.mkdir(parents=True, exist_ok=True)
     out = {}
-    for k, a in enumerate(assets_do_plano(plano)):
+    for a in assets_do_plano(plano):
         it = por[a]
-        x = acervo_v4.baixar({'url': it['url'], 'titulo': it['titulo'], 'credito': it['credito']}, saida / 'ativos', f'f{k}')
-        dest = PUBLICO / f'f{k}.jpg'
+        nome = nome_publico(a)              # nome PRÓPRIO por mídia: dois episódios na mesma pasta não se sobrescrevem (44084129999)
+        x = acervo_v4.baixar({'url': it['url'], 'titulo': it['titulo'], 'credito': it['credito']}, saida / 'ativos', nome)
+        dest = PUBLICO / f'{nome}.jpg'
         shutil.copy(x['arq'], dest)
-        out[a] = {'src': f'_formato/f{k}.jpg', 'w': x.get('w'), 'h': x.get('h'), 'credito': it['credito'], 'licenca': it['licenca']}
+        out[a] = {'src': f'_formato/{nome}.jpg', 'w': x.get('w'), 'h': x.get('h'), 'credito': it['credito'], 'licenca': it['licenca'],
+                  'url': it['url'], 'sha256': _sha(dest)}
     _gravar(saida / 'ativos.json', out)
     return out
 
@@ -108,8 +124,12 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         it = bib.get(a)
         ok = bool(it and it.get('licenca') and it.get('credito') and (it.get('prova') or {}).get('midia_corresponde') is True)
         add(f'mídia comprovada {a[:60]}', ok, (it or {}).get('licenca', 'fora da biblioteca'))
-        f = RAIZ / 'motor4' / 'remotion' / 'public' / imgs.get(a, {}).get('src', '_nada')
-        add(f'arquivo de mídia {a[:50]}', f.exists() and (imgs.get(a) or {}).get('w'), str(f.name))
+        f = PUBLICO.parent / imgs.get(a, {}).get('src', '_nada')
+        reg = imgs.get(a) or {}
+        add(f'arquivo de mídia {a[:50]}', f.exists() and reg.get('w'), str(f.name))
+        # o arquivo que vai ao render É o baixado da origem DESTA mídia (impressão digital), não outro com o mesmo nome
+        add(f'arquivo é a mídia certa {a[:44]}', f.exists() and reg.get('sha256') == _sha(f) and reg.get('url') == (it or {}).get('url')
+            and f.name == nome_publico(a) + '.jpg', reg.get('sha256', 'sem impressão digital')[:16])
         lic = (it or {}).get('licenca', '#')
         cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a for m in (L['p'].get('meta') or []))
         add(f'crédito visível {a[:50]}', any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])

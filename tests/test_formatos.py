@@ -190,3 +190,33 @@ def test_workflow_passa_o_segredo_que_decifra_a_narracao():
     passo = next(s for s in wf['jobs']['formatos']['steps'] if 'narrar' in str(s.get('run', '')))
     assert 'COFRE_TOKEN' in passo['env'] and 'GEMINI_API_KEY' in passo['env']
     assert set(wf[True if True in wf else 'on'].keys()) <= {'push', 'workflow_dispatch'}
+
+
+def test_midia_de_um_episodio_nao_sobrescreve_a_do_outro(tmp_path, monkeypatch):
+    """44084129999: ATLAS e DOSSIÊ gravavam f0/f1 na mesma pasta; o DOSSIÊ sobrescreveu e o gancho do ATLAS saiu com a
+    foto de 1913 e o crédito da foto de Miraflores. Agora: nome próprio por mídia + impressão digital no preflight."""
+    from PIL import Image
+    from src.v4 import acervo_v4
+    pub = tmp_path / 'public' / '_formato'
+    monkeypatch.setattr(produzir, 'PUBLICO', pub)
+    cor = {}
+
+    def baixar(c, pasta, aid):
+        pasta.mkdir(parents=True, exist_ok=True)
+        arq = pasta / f'{aid}.jpg'
+        cor.setdefault(c['url'], (len(cor) * 80 % 255, 40, 200))
+        Image.new('RGB', (1920, 1440), cor[c['url']]).save(arq)
+        return {'arq': str(arq), 'w': 1920, 'h': 1440}
+    monkeypatch.setattr(acervo_v4, 'baixar', baixar)
+    a = produzir.ativos(ATLAS, tmp_path / 'atlas')
+    d = produzir.ativos(DOSSIE, tmp_path / 'dossie')
+    assert len({v['src'] for v in {**a, **d}.values()}) == len(set(a) | set(d))      # um arquivo por mídia
+    for ativo, reg in a.items():
+        assert produzir._sha(pub.parent / reg['src']) == reg['sha256']                 # o do ATLAS continua intacto
+    # arquivo trocado por baixo → o preflight pega (impressão digital)
+    alvo = next(iter(a.values()))
+    Image.new('RGB', (1920, 1440), (1, 2, 3)).save(pub.parent / alvo['src'])
+    (tmp_path / 'atlas' / 'narracao.json').write_text(json.dumps({'palavras': _pal('x ' * 300), 'duracao': 80.0}))
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=mono', '-t', '1', str(tmp_path / 'atlas' / 'voz.wav')], check=True)
+    r = produzir.preflight(ATLAS, tmp_path / 'atlas', palco_real=False)
+    assert not r['pronto'] and any(i['item'].startswith('arquivo é a mídia certa') and not i['ok'] for i in r['itens'])

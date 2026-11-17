@@ -54,3 +54,17 @@ outro arquivo. Slots e zonas: `src/v4/formatos/formatos.json` (marca y 282–334
   Remotion após o render. A verificação visual é por quadros parados e pela folha do MP4.
 - Limite de progressão (4 s) é alarme de trabalho; as referências ficam em 1–2 s. Calibrar só com o seu veredito.
 - ATLAS sem imagem de satélite (sem tiles de terceiros): estilo próprio com Natural Earth/OSM.
+
+## Execução integrada 44084129999 (17/11) — prévias privadas no Telegram
+
+| | ATLAS (79,0 s) | DOSSIÊ (24,4 s) |
+|---|---|---|
+| Estado do motor | AGUARDANDO_APROVACAO_HUMANA | BLOQUEADO (janela 12–16 s sem mudança) |
+| Áudio no MP4 | −14,8 LUFS · −1,1 dBTP | −14,9 LUFS · −1,2 dBTP |
+| Janelas pretas/congeladas | 0 | 1 |
+| Custo de IA | 0 (narração cifrada reutilizada) | 1 chamada de TTS (cota grátis) |
+| Defeito encontrado depois | **mídia trocada** em 0–6 s e 55–59 s (ERR-066) | — |
+
+Corrigido sem nova execução: ERR-066 (nome próprio + impressão digital por mídia) e ERR-067 (progressão ≤ 3 s; planos
+ajustados com a narração real). A narração do DOSSIÊ ficou cifrada no repositório: uma nova execução custa 0 chamada de IA.
+Primeira execução (44083616015) parou antes de renderizar: segredo ausente no passo de narração (ERR-065).

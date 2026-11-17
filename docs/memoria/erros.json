@@ -1684,6 +1684,55 @@
     "ci",
     "formatos"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos",
+   "referencia": "execução 44084129999 (prévias privadas)",
+   "verificavel": true,
+   "id": "ERR-066",
+   "titulo": "Mídia de um episódio sobrescreveu a do outro (foto e crédito trocados no ATLAS)",
+   "sintoma": "gancho do ATLAS com a foto de 1913 e o crédito 'Miraflores · Adam Jones · CC BY-SA 2.0'; cena das comportas com Gatún 1910.",
+   "causa_raiz": "`ativos` gravava f0/f1 na mesma pasta pública para os dois planos; o DOSSIÊ baixou depois; o preflight só checava se o arquivo existia.",
+   "arquivos": [
+    "src/v4/formatos/produzir.py"
+   ],
+   "correcao": "nome próprio por mídia (hash do identificador) + impressão digital sha256 e URL de origem registradas no download e conferidas no preflight.",
+   "testes": [
+    "tests/test_formatos.py::test_midia_de_um_episodio_nao_sobrescreve_a_do_outro"
+   ],
+   "gravidade": "critica",
+   "estado": "corrigido (sem nova execução)",
+   "tags": [
+    "formatos",
+    "acervo",
+    "*"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos",
+   "referencia": "execução 44084129999 (prévias privadas)",
+   "verificavel": true,
+   "id": "ERR-067",
+   "titulo": "Regra de progressão do plano mais frouxa que o portão do MP4",
+   "sintoma": "DOSSIÊ: plano validado com intervalos de 4 s e MP4 bloqueado por janela parada 12–16 s.",
+   "causa_raiz": "progressão máx. 4 s no plano × janela de 4 s no portão: um intervalo de 4 s pode encher uma janela inteira.",
+   "arquivos": [
+    "src/v4/formatos/formatos.json",
+    "src/v4/formatos/planos/"
+   ],
+   "correcao": "progressão máx. 3 s (referências: 1–2 s); planos ajustados com eventos reais da fala (15 AGO entra em '15'; SS Ancon; nó das paredes).",
+   "testes": [
+    "tests/test_formatos.py::test_planos_aprovados_passam_na_validacao",
+    "tests/test_formatos.py::test_foto_ou_texto_parado_sem_informacao_nova"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (sem nova execução)",
+   "tags": [
+    "formatos",
+    "ritmo"
+   ]
   }
  ]
 }

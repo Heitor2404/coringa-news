@@ -95,10 +95,11 @@
   }
  },
  "regras": {
-  "progressao_max_s": 4.0,
+  "progressao_max_s": 3.0,
   "titulo_max_linhas": 3,
   "asset_max_usos": 2,
-  "fim_tolerancia_s": 0.5
+  "fim_tolerancia_s": 0.5,
+  "nota_progressao": "3 s < janela de 4 s do portão do MP4 (44084129999: plano com 4 s passou e o MP4 ficou parado 12–16 s); referências: 1–2 s"
  },
  "zonas_identidade": {
   "marca": [

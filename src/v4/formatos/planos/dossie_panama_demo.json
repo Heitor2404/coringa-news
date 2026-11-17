@@ -12,7 +12,8 @@
   ],
   "derivados": [
    "1914 − 1880 = 34 anos"
-  ]
+  ],
+  "cifrada": ".github/v4/material/narracao_dossie_44084129999.bin"
  },
  "fatos_ref": ".github/v4/pedido.json",
  "duracao": "@fim",
@@ -139,7 +140,7 @@
      "componente": "dossie.documentCard",
      "slot": "foto",
      "t0": "@julho",
-     "t1": "@navio-0.5",
+     "t1": "@15-0.4",
      "p": {
       "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
       "cabecalho": "REGISTRO FOTOGRÁFICO",
@@ -156,7 +157,7 @@
      "componente": "dossie.evidenceHighlight",
      "slot": "foto",
      "t0": "@seguravam",
-     "t1": "@navio-0.5",
+     "t1": "@15-0.4",
      "p": {
       "tipo": "circulo",
       "alvo": "doc1913",
@@ -176,13 +177,24 @@
      "id": "inaug",
      "componente": "editorial.statCard",
      "slot": "centro",
-     "t0": "@navio-0.1",
+     "t0": "@15",
      "t1": "@trinta-0.4",
      "p": {
       "titulo": "INAUGURAÇÃO · 1914",
       "valor": "15 AGO",
       "rotulo": "navio Ancon cruza o canal",
       "inclina": 1
+     }
+    },
+    {
+     "id": "ancon",
+     "componente": "editorial.statCard",
+     "slot": "base",
+     "t0": "@ancon",
+     "t1": "@trinta-0.4",
+     "p": {
+      "estilo": "pilula",
+      "valor": "SS ANCON · 1ª TRAVESSIA"
      }
     },
     {

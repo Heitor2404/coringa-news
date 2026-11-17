@@ -7,3 +7,4 @@ Prévia ÚNICA da direção de arte final (pedido do Heitor de 17/11 10:44: "ger
 ATLAS e uma do DOSSIÊ"): preflight local verde (ATLAS 25/25, DOSSIÊ 30/30), quadros renderizados sem problema
 (ATLAS 11, DOSSIÊ 8), 26 testes verdes; narrações reutilizadas (cifradas, zero IA). 2026-11-17T15:08:11Z. Não repetir.
 Refeita 1× em 2026-11-17T15:18:18Z: a 44110855696 parou no download de mídia (429 do Wikimedia, ERR-071) antes do preflight; nada renderizado, nenhuma cota gasta.
+Refeita 2× em 2026-11-17T15:28:47Z: a 44112788790 recebeu de novo 429 "daab851" (User-Agent fora da política da Wikimedia; ERR-071 atualizado) antes do preflight; nada renderizado, nenhuma cota gasta.

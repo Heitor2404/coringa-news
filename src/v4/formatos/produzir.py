@@ -97,7 +97,9 @@ def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
     import time
 
     import requests
-    from src.v4.acervo_v4 import UA
+    # UA no formato da política de robôs da Wikimedia (nome/versão + URL de contato): o UA sem URL do acervo_v4 recebe
+    # 429 "daab851" em upload.wikimedia.org (44110855696, 44112788790); este é o mesmo que baixou tudo na coleta 44097219552
+    UA = {'User-Agent': 'CoringaExplica/formatos-coleta (pesquisa editorial; https://github.com/Heitor2404)'}
     for k in range(6):          # Wikimedia devolve 429 a downloads seguidos (44110855696): respeita Retry-After e espaça
         r = requests.get(it['url'], headers=UA, timeout=120)
         if r.status_code != 429:

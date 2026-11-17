@@ -1812,16 +1812,16 @@
   {
    "data": "2026-11-17",
    "versao": "formatos (direção de arte)",
-   "referencia": "execução 44110855696",
+   "referencia": "execuções 44110855696 e 44112788790",
    "verificavel": true,
    "id": "ERR-071",
    "titulo": "Download de mídia sem espera para o limite do Wikimedia",
    "sintoma": "passo de mídia caiu com 429 (upload.wikimedia.org); nada foi renderizado, nenhuma cota gasta.",
-   "causa_raiz": "seis downloads seguidos de arquivos originais sem tratar 429/Retry-After.",
+   "causa_raiz": "User-Agent sem URL de contato (fora da política de robôs da Wikimedia): upload.wikimedia.org responde 429 \"daab851\" mesmo com espera; a coleta 44097219552, com UA conforme, baixou os mesmos arquivos.",
    "arquivos": [
     "src/v4/formatos/produzir.py"
    ],
-   "correcao": "até 6 tentativas respeitando Retry-After e 1,5 s entre mídias.",
+   "correcao": "UA conforme a política (nome + URL), espera com Retry-After e 1,5 s entre mídias.",
    "testes": [
     "tests/test_formatos.py::test_download_de_midia_espera_o_limite_do_commons"
    ],

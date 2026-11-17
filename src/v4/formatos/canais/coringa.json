@@ -100,7 +100,7 @@
   "lufs": -14,
   "true_peak": -1.0,
   "tolerancia_lufs": 0.5,
-  "musica_db": -24,
+  "musica_db": -26,
   "ducking": {
    "threshold": 0.03,
    "ratio": 6,

@@ -36,10 +36,12 @@ def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, 
     """sfx = [{id, t, ganho_db, dur}] em tempo do episódio. Trilha com sidechain da voz. Depois: masterização medida."""
     from src.render.render import masterizar
     trab.mkdir(parents=True, exist_ok=True)
-    ent = ['-i', str(narracao)]
-    fil = [f'[0:a]aresample=48000,aformat=channel_layouts=mono,apad=whole_dur={duracao:.3f}[voz]']
-    k = 1
     preset = preset or {}
+    ent = ['-i', str(narracao)]
+    # padrão do canal: voz com compressão de fala (referência LRA ≈ 2 LU; picos de TTS de +1 dBTP roubavam o ganho do master)
+    vc = ',acompressor=threshold=-26dB:ratio=3:attack=4:release=90:makeup=4,alimiter=limit=0.7:attack=1:release=40:level=false' if (preset or {}).get('lufs') is not None else ''
+    fil = [f'[0:a]aresample=48000,aformat=channel_layouts=mono{vc},apad=whole_dur={duracao:.3f}[voz]']
+    k = 1
     mus_db = preset.get('musica_db', IDENT['som']['musica_db_sob_voz'])
     dk = {'threshold': .03, 'ratio': 6, 'attack_ms': 20, 'release_ms': 300, **(preset.get('ducking') or {})}
     if musica and Path(musica).exists():
@@ -65,9 +67,32 @@ def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, 
     # pré-normalização (−16 LUFS, pico −2): a mistura chegava com +1,2 dBFS e o master parava em −15,2 (execução 43956541084)
     pre = trab / 'mix_pre.wav'
     rodar(['ffmpeg', '-v', 'error', '-y', '-i', bruto, '-af', 'loudnorm=I=-16:TP=-2:LRA=11,aresample=48000', '-ar', '48000', '-ac', '1', pre], log=trab / 'pre.log')
-    rel = masterizar(pre, saida)
+    rel = master_canal(bruto, saida, trab, preset) if preset.get('lufs') is not None else masterizar(pre, saida)
     return {'master': rel, 'efeitos': [{'id': s['id'], 't': s['t'], 'justificativa': s.get('justificativa')} for s in sfx],
             'musica': str(musica.name) if musica else None}
+
+
+def master_canal(bruto: Path, saida: Path, trab: Path, preset: dict) -> dict:
+    """master do PADRÃO SONORO do canal (formatos): ganho LINEAR até o alvo (não muda a distância fala × pausas da mistura;
+    o master antigo achatava as pausas 15 → 11,8 dB) + limitador de pico VERDADEIRO (superamostrado a 192 kHz), medido
+    e corrigido no máximo 3 vezes. Alvo e teto vêm do canal (−14 LUFS, ≤ −1 dBTP)."""
+    from src.fiscal import medir_audio
+    alvo, tp = float(preset.get('lufs', -14)), float(preset.get('true_peak', -1.0))
+    # o AAC do MP4 sobe o pico verdadeiro ~1 dB (medido: −1,5 no WAV → −0,5 no AAC): o WAV fica 1,2 dB abaixo do teto
+    lim = 10 ** ((tp - 1.2 - .3) / 20)
+    atual, fonte, med = None, bruto, {}
+    for k in range(3):
+        med0 = medir_audio(fonte) if atual is None else med
+        g = alvo - med0['lufs']
+        dst = trab / f'master_{k}.wav'
+        rodar(['ffmpeg', '-v', 'error', '-y', '-i', fonte, '-af', f'volume={g:.2f}dB,aresample=192000,alimiter=limit={lim:.4f}:attack=1:release=60:level=false,aresample=48000',
+               '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', dst])
+        med = medir_audio(dst)
+        fonte, atual = dst, k
+        if abs(med['lufs'] - alvo) <= .3 and med.get('pico', 0) <= tp - 1.2:
+            break
+    Path(fonte).replace(saida)
+    return {'arquivo': str(saida), 'medido': med, 'alvo': {'lufs': alvo, 'true_peak': tp}, 'cadeia': 'ganho linear → limitador de pico verdadeiro (192 kHz), medido'}
 
 
 def silencio(dur: float, saida: Path) -> Path:

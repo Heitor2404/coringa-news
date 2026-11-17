@@ -12,10 +12,10 @@ import time
 import traceback
 from pathlib import Path
 
-from src.v4 import acervo_v4, compositor, contrato, diretor, geo, metricas, som
+from src.v4 import acervo_v4, compositor, contrato, diretor, geo, metricas, portoes, som
 from src.v4.backends import hyperframes as HF
 from src.v4.backends import js, legado, rembg_camadas
-from src.v4.componentes import COMPONENTES, SELO
+from src.v4.componentes import ALTERNATIVAS, COMPONENTES, DEMONSTRAM_ACAO, SELO
 from src.v4.util import IDENT, FalhaBackend, normalizar_clipe, sondar
 
 PENDENTE = 'AGUARDANDO_APROVACAO_HUMANA'
@@ -47,8 +47,14 @@ def render_cena(c: dict, acv: dict, trab: Path, primeira: bool = False) -> tuple
         g = geo.preparar(p, pasta)
         props = {**p, 'duracao': dur, 'geo': g}
         if p.get('rota') and not g['meta'].get('rota_km'):
-            props['rota'] = None                       # sem geometria real: NÃO se desenha rota (registrado)
+            # a cena PROMETE uma rota e não há geometria real: mapa sem rota é decorativo (auditoria 16/11, c2) → não pronta
+            raise FalhaBackend('rota pedida sem geometria real (OSM): ' + str(g['meta'].get('rota_motivo_ausente')))
         reg = {**js.remotion('MapaRota', props, bruto, pasta), 'geo_meta': g['meta'], 'rota_desenhada': bool(props.get('rota'))}
+    elif comp == 'mecanismo.eclusa':
+        q = dict(p)
+        if q.get('tempos') and all(isinstance(x, (int, float)) and 0 <= x <= 1.0001 for x in q['tempos']):
+            q['tempos'] = [round(x * dur, 2) for x in q['tempos']]          # frações da cena → segundos (lista)
+        reg = legado.render_v2('mecanismo.eclusa', q, dur, pasta / 'v2', bruto, c.get('fala', ''))
     elif comp == 'mecanismo.nivel_vasos':
         reg = js.revideo({**p, 'duracao': dur}, bruto, pasta)
     elif comp == 'tresd.camara':
@@ -70,6 +76,64 @@ def render_cena(c: dict, acv: dict, trab: Path, primeira: bool = False) -> tuple
     return clipe, {**reg, 'estado': 'renderizado', 'segundos': round(time.time() - t0, 1), 'saida': sondar(clipe)}
 
 
+def render_validado(c: dict, acv: dict, trab: Path, primeira: bool = False) -> tuple[Path | None, dict]:
+    """componente pedido → alternativas pré-validadas. Cada clipe passa pelos portões (tamanho, duração, não preto,
+    mudança visual quando a cena promete ação). Devolve (clipe, registro) ou (None, registro com os motivos)."""
+    exige = c['modalidade'] in DEMONSTRAM_ACAO or bool(c.get('acao_fisica'))
+    dur = round(c['fim'] - c['ini'], 3)
+    cadeia = [(c['componente'], None)] + ALTERNATIVAS.get(c['componente'], [])
+    tentativas = []
+    for k, (comp, traduz) in enumerate(cadeia):
+        cc = dict(c, id=c['id'] if not k else f"{c['id']}_alt{k}", componente=comp,
+                  params=traduz({**(c.get('params') or {}), 'duracao': dur}) if traduz else c.get('params'))
+        try:
+            clipe, r = render_cena(cc, acv, trab, primeira=primeira)
+        except Exception as e:
+            tentativas.append({'componente': comp, 'estado': 'falhou', 'erro': str(e)[-900:], 'trace': traceback.format_exc()[-600:]})
+            continue
+        v = portoes.validar_clipe(clipe, dur, exige)
+        tentativas.append({'componente': comp, 'estado': 'renderizado' if v['ok'] else 'reprovado_portao', 'motivos': v['motivos'],
+                           'backend': r.get('backend')})
+        if v['ok']:
+            if k:
+                c['componente_usado'] = comp
+                c['params_usados'] = cc['params']
+            return clipe, {**r, 'componente_usado': comp, 'alternativa': bool(k), 'tentativas': tentativas}
+    motivos = [f"{t['componente']}: " + ('; '.join(t.get('motivos') or []) or str(t.get('erro', ''))[-240:]) for t in tentativas]
+    return None, {'backend': COMPONENTES.get(c['componente'], {}).get('backend'), 'estado': 'nao_pronta', 'motivos': motivos, 'tentativas': tentativas}
+
+
+def clipe_diagnostico(c: dict, motivo: str, trab: Path) -> Path:
+    """cena NÃO pronta: placa explícita de diagnóstico (nunca tela preta disfarçada de conteúdo). O MP4 inteiro vira
+    material de DIAGNÓSTICO, não episódio."""
+    from src.v4.util import rodar
+    pasta = trab / 'cenas' / c['id']
+    pasta.mkdir(parents=True, exist_ok=True)
+    arq = pasta / 'diagnostico.mp4'
+    dur = c['fim'] - c['ini']
+    fonte = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+    txt = f"CENA {c['id']} NAO RENDERIZADA\nDIAGNOSTICO - NAO E EPISODIO\n{c['componente']}"
+    vf = f"drawtext=fontfile={fonte}:text='{txt}':fontcolor=white:fontsize=46:x=(w-text_w)/2:y=700:line_spacing=18" if Path(fonte).exists() else 'null'
+    rodar(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', f"color=c=0x5a1010:s=1080x1920:r=30:d={dur:.3f}", '-vf', vf,
+           '-pix_fmt', 'yuv420p', arq])
+    (pasta / 'motivo.txt').write_text(motivo, encoding='utf-8')
+    return arq
+
+
+def texto_repete_fala(c: dict, limite: float = .7) -> bool:
+    """o componente já ESCREVE a fala na tela (tipografia/linhas): legenda por cima = a mesma frase duas vezes
+    (auditoria 16/11, c9). A legenda some só nessa cena; o texto do componente é a leitura."""
+    import re
+    p = c.get('params_usados') or c.get('params') or {}
+    na_tela = ' '.join(str(x.get('texto', '')) for x in p.get('linhas') or [] if isinstance(x, dict))
+    if not na_tela:
+        return False
+    fala = set(re.findall(r'\w+', str(c.get('fala', '')).lower()))
+    tela = set(re.findall(r'\w+', na_tela.lower()))
+    # medido sobre o TEXTO DA TELA: se quase tudo que está escrito é dito no mesmo momento, a legenda duplica a leitura
+    return bool(tela) and len(fala & tela) / len(tela) >= limite
+
+
 def _camada_props(ep: dict, acv: dict, palavras: list[dict], falhas: set | None = None) -> dict:
     cenas = []
     for c in ep['cenas']:
@@ -81,7 +145,8 @@ def _camada_props(ep: dict, acv: dict, palavras: list[dict], falhas: set | None 
         rot = IDENT['selo']['rotulos'].get(selo) if selo else None
         if rot and a and a.get('ano') and c['modalidade'] in ('registro_foto', 'registro_video', 'documento'):
             rot = f"{rot} · {a['ano']}"
-        cenas.append({'ini': c['ini'], 'fim': c['fim'], 'selo': rot, 'credito': a.get('credito') if a else None})
+        cenas.append({'ini': c['ini'], 'fim': c['fim'], 'selo': rot, 'credito': a.get('credito') if a else None,
+                      'legenda': not texto_repete_fala(c)})
     return {'duracao': ep['cenas'][-1]['fim'], 'palavras': palavras, 'cenas': cenas}
 
 
@@ -128,20 +193,19 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
     # 5. render por cena
     regs, clipes = [], []
     for i, c in enumerate(ep['cenas']):
-        try:
-            clipe, r = render_cena(c, acv, trab / 'cenas', primeira=i == 0)
-        except Exception as e:
-            r = {'backend': COMPONENTES.get(c['componente'], {}).get('backend'), 'estado': 'falhou', 'erro': str(e)[-1200:],
-                 'trace': traceback.format_exc()[-800:]}
-            clipe = trab / 'cenas' / c['id'] / 'falha.mp4'
-            clipe.parent.mkdir(parents=True, exist_ok=True)
-            # cena que falhou ocupa o tempo com quadro PRETO + aviso na auditoria (não é disfarçada de conteúdo)
-            from src.v4.util import rodar
-            rodar(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', f"color=c=black:s=1080x1920:r=30:d={c['fim'] - c['ini']:.3f}", '-pix_fmt', 'yuv420p', clipe])
-            res['bloqueios'].append(f"cena {c['id']} ({c['componente']}) falhou no backend: {str(e)[:200]}")
-        if c['id'] in erro_cena:
-            r['violacoes_contrato'] = [v for v in viol_final if v['cena'] == c['id']]
-            res['bloqueios'].append(f"cena {c['id']}: " + '; '.join(v['regra'] for v in r['violacoes_contrato'] if v['gravidade'] == 'erro'))
+        erros = [v for v in viol_final if v['cena'] == c['id'] and v['gravidade'] == 'erro']
+        if any(v['regra'].startswith('R-ASSET') for v in erros):
+            # mídia sem licença/ausente NÃO vai ao render (auditoria 16/11: c5 foi renderizada antes do bloqueio)
+            r = {'backend': COMPONENTES.get(c['componente'], {}).get('backend'), 'estado': 'nao_pronta',
+                 'motivos': [f"{v['regra']}: {v['texto']}" for v in erros]}
+            clipe = None
+        else:
+            clipe, r = render_validado(c, acv, trab / 'cenas', primeira=i == 0)
+        if erros:
+            r['violacoes_contrato'] = erros
+            res['bloqueios'].append(f"cena {c['id']}: " + '; '.join(v['regra'] for v in erros))
+        if clipe is None:
+            clipe = clipe_diagnostico(c, '; '.join(r.get('motivos') or []), trab)
         regs.append(r)
         clipes.append({'arq': clipe, 'dur': round(c['fim'] - c['ini'], 3), 'transicao': c.get('transicao')})
     lt = compositor.linha_do_tempo(ep, regs, pasta / 'linha_do_tempo.json')
@@ -149,7 +213,7 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
     video = compositor.concatenar(clipes, trab, trab / 'video.mp4')
     camada = trab / 'camada.webm'
     try:
-        reg_cam = js.remotion('Camada', _camada_props(ep, acv, palavras, {c['id'] for c, r in zip(ep['cenas'], regs) if r.get('estado') == 'falhou'}), camada, trab / 'camada', alfa=True)
+        reg_cam = js.remotion('Camada', _camada_props(ep, acv, palavras, {c['id'] for c, r in zip(ep['cenas'], regs) if r.get('estado') != 'renderizado'}), camada, trab / 'camada', alfa=True)
     except Exception as e:
         camada, reg_cam = None, {'erro': str(e)[-600:]}
         res['bloqueios'].append('camada de identidade/legendas falhou: ' + str(e)[:160])
@@ -180,9 +244,17 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
         res['revisoes'].append(f"áudio {a['lufs']} LUFS (alvo −14)")
     if a.get('pico') is not None and a['pico'] > IDENT['som']['true_peak'] + .3:
         res['revisoes'].append(f"pico {a['pico']} dBTP (> −1)")
+    g = portoes.decidir(ep['cenas'], regs, res['revisao_multimodal'], m['por_cena'])
+    res['portoes'] = g
+    res['bloqueios'] += g['bloqueios']
+    res['revisoes'] += g['revisoes']
+    if g['estado'] == portoes.DIAGNOSTICO:
+        diag = mp4.with_name(mp4.stem + '_DIAGNOSTICO.mp4')
+        mp4.replace(diag)
+        mp4 = diag
     res['mp4'] = str(mp4)
     res['segundos'] = round(time.time() - t0, 1)
-    res['estado'] = BLOQUEADO if res['bloqueios'] else PENDENTE
+    res['estado'] = g['estado'] if g['estado'] == portoes.DIAGNOSTICO else (BLOQUEADO if res['bloqueios'] else PENDENTE)
     _gravar(pasta / 'resultado.json', res)
     return res
 

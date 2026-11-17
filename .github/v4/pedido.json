@@ -1,6 +1,6 @@
 {
- "rodada": 3,
- "nota": "Teste integrado ÚNICO do motor V4 (16/11). Rodada 3: mesma direção reproduzida (roteiro da 43954670866); a 43956541084 renderizou mas ficou BLOQUEADA por defeitos de integração (ERR-042..046: caminhos relativos nos backends, licença, máscara rembg, loudness) e a prévia não chegou (Telegram 502). Prévia PRIVADA; NÃO publicar.",
+ "rodada": 4,
+ "nota": "Episódio ÚNICO do Panamá depois das correções estruturais da auditoria de 16/11 (execução reprovada 43972774128). Direção NOVA (sem cota de famílias); mesmos fatos e pergunta. Prévia PRIVADA no Telegram; NÃO publicar; aprovação só humana.",
  "video_id": "v4-panama-eclusas",
  "pergunta": "Por que os navios precisam subir para atravessar o Canal do Panamá?",
  "alvo_duracao": [
@@ -60,20 +60,9 @@
   },
   {
    "id": "f11",
-   "texto": "Nas eclusas originais, subir um navio gasta cerca de 98,5 mil metros cúbicos de água doce do Lago Gatún, e descê-lo gasta o mesmo: essa água termina no mar.",
-   "fonte": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8545131"
+   "texto": "Uma travessia completa nas eclusas originais usa cerca de 52 milhões de galões (≈ 197 milhões de litros) de água doce do Lago Gatún — cerca de metade para subir e metade para descer — e essa água termina no mar.",
+   "fonte": "https://1997-2001.state.gov/regions/wha/panama/991206_faqs.html"
   }
- ],
- "familias_obrigatorias": [
-  "registro_foto (gancho com navio diante da eclusa)",
-  "registro_video (eclusa operando)",
-  "mapa (Atlântico → Panamá → Pacífico, rota real)",
-  "documento (registro histórico da obra ou planta)",
-  "esquema_2d (mecanismo: válvula, aqueduto, água subindo, navio subindo)",
-  "composicao_25d (recorte do navio real passando para o esquema)",
-  "cena_3d (profundidade da câmara e nível)",
-  "dados (26 m com referência de escala)",
-  "tipografia (frase-chave pontual)"
  ],
  "consultas_catalogo": [
   "title kinetic text",
@@ -81,8 +70,6 @@
   "timeline history",
   "diagram"
  ],
- "notas_diretor": "Mapa: componente mapa.rota com regiao [-80.15, 8.85, -79.45, 9.45] (graus), câmera FIXA, rota_osm {\"tags\": {\"waterway\": \"~canal|fairway\"}, \"nome\": \"Panam\", \"salto_max_km\": 4, \"inicio\": [-79.92, 9.38]}, rótulos Mar do Caribe / Oceano Pacífico / Lago Gatún, pontos Colón e Cidade do Panamá, localizador. Mecanismo: mecanismo.nivel_vasos com desnivel_m ≈ 9 (um degrau de ~26/3 m). 3D: tresd.camara 0→9 m. Dados: dados.escala com alvo 26 m e referência 'prédio de ~9 andares' (≈ 3 m por andar, aproximado). Busca de acervo em inglês: 'Miraflores Locks ship', 'Gatun Locks', 'Panama Canal construction 1913', 'Panama Canal locks video'. Payoff: o gasto de água doce do f11.",
- "video": "v4-panama-eclusas",
- "roteiro_ia_cifrado": ".github/v4/material/roteiro_ia_43954670866.bin",
- "roteiro_ia_origem": "execução 43954670866 (Claude Code sonnet; mesma especificação, quebrou no acervo antes do render)"
+ "notas_diretor": "Mapa: mapa.rota com regiao [-80.15, 8.85, -79.45, 9.45], câmera FIXA, rota_osm {\"tags\": {\"waterway\": \"~canal|fairway\"}, \"nome\": \"Panam\", \"salto_max_km\": 4, \"inicio\": [-79.92, 9.38]}; rótulos Mar do Caribe / Oceano Pacífico / Lago Gatún; pontos Colón e Cidade do Panamá. Mecanismo da eclusa: mecanismo.eclusa (corte lateral validado: navio entra, comporta fecha, válvula abre, água do lago desce, navio sobe, níveis iguais, comporta abre), desnivel_m ≈ 9 por degrau (26/3). Registro real só onde a mídia puder mostrar o lugar (busca em inglês: 'Miraflores Locks ship', 'Gatun Locks', 'Panama Canal construction 1913'). Payoff: a água doce do lago (f11) que termina no mar — mostre o destino da água, não só um número.",
+ "video": "v4-panama-eclusas"
 }

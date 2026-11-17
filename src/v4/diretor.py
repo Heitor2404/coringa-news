@@ -23,12 +23,19 @@ para dar movimento. TRANSIÇÃO: corte. 'dissolve' só com justificativa (tempo/
 DEMONSTRAÇÃO: se a fala descreve ação física (sobe, enche, flui, abre, atravessa), a modalidade TEM de mostrar a ação
 (esquema_2d, cena_3d, composicao_25d, registro_video ou mapa animado) — nunca foto parada ou só texto.
 MAPA: localização correta, rota só com geometria real (rota_osm), nomes legíveis; nada de mapa decorativo.
-SOM: efeito só ligado a um acontecimento visível (água entrando, comporta fechando), com justificativa."""
+SOM: efeito só ligado a um acontecimento visível (água entrando, comporta fechando), com justificativa.
+FORMA PELO ACONTECIMENTO: escolha a modalidade que melhor DEMONSTRA cada fala — não existe cota de ferramentas nem de
+modalidades. Use poucas formas bem feitas; repetir a forma que funciona é melhor que trocar por variedade.
+PROVA: cena com ação física declara "prova" = {sujeito, estado_inicial, acao, resultado}: o que o espectador VÊ mudar.
+PROGRESSO: cada cena mostra informação nova; nada de segurar foto/texto parado > 4 s sem nova prova visual.
+REGISTRO REAL: só se a mídia puder mostrar o lugar/objeto da fala; se não houver, use mapa ou esquema rotulado (nunca
+vídeo genérico de outro lugar). Payoff com imagem forte, não slide de texto."""
 
 SAIDA = """Responda SÓ com JSON:
 {"titulo": "...", "cenas": [{
   "id": "c1", "fala": "texto narrado desta cena (8–30 palavras)", "objetivo": "o que a cena acrescenta",
-  "o_que_precisa_aparecer": "o que o espectador precisa VER", "acao_fisica": true|false,
+  "o_que_precisa_aparecer": "o que o espectador precisa VER", "acao_fisica": true|false, "essencial": true|false,
+  "prova": {"sujeito": "...", "estado_inicial": "...", "acao": "...", "resultado": "..."} | null,
   "modalidade": "<modalidade>", "componente": "<componente>", "params": {...},
   "busca": {"tipo": "foto|video", "consultas_en": ["termos para Wikimedia Commons"], "deve_mostrar": "..."} | null,
   "camera": {"tipo": "fixa", "enquadramento": "objeto|contexto|geral"} ou {"tipo":"revelar","revela":[...],"justificativa":"..."},
@@ -47,7 +54,6 @@ def prompt(pedido: dict, correcoes: list[dict] | None = None, anterior: dict | N
         r = componentes.buscar_registro(q, 5)
         if r:
             cat.append(f"  '{q}': " + '; '.join(f"{x['item']} ({x['orientacao']}, vars={x['variaveis'][:6]})" for x in r))
-    fam = ', '.join(pedido.get('familias_obrigatorias') or [])
     base = f"""Você é o DIRETOR do Coringa Explica. Escreva e dirija UM episódio vertical 9:16 de {pedido['alvo_duracao'][0]}–{pedido['alvo_duracao'][1]} s
 (≈ {int(pedido['alvo_duracao'][0] * 2.6)}–{int(pedido['alvo_duracao'][1] * 2.6)} palavras narradas no total), como UMA história coerente.
 
@@ -64,7 +70,6 @@ MODALIDADES: {json.dumps(componentes.MODALIDADES, ensure_ascii=False)}
 Itens do catálogo HyperFrames relevantes (busca local):
 {chr(10).join(cat) or '  (nenhum em retrato/responsivo)'}
 
-{('FAMÍLIAS QUE O EPISÓDIO PRECISA COBRIR (cada uma onde a NARRATIVA pedir, sem catálogo de efeitos): ' + fam) if fam else ''}
 {pedido.get('notas_diretor', '')}
 
 {SAIDA}"""

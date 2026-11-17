@@ -1,0 +1,136 @@
+{
+ "execucao": "43972774128",
+ "veredito_humano": "REPROVADO artisticamente (auditoria do Heitor, 16/11)",
+ "cenas": [
+  {
+   "id": "c1",
+   "modalidade": "registro_foto",
+   "componente": "registro.foto",
+   "acao_fisica": false
+  },
+  {
+   "id": "c2",
+   "modalidade": "mapa",
+   "componente": "mapa.rota",
+   "acao_fisica": false
+  },
+  {
+   "id": "c3",
+   "modalidade": "dados",
+   "componente": "dados.escala",
+   "acao_fisica": false
+  },
+  {
+   "id": "c4",
+   "modalidade": "documento",
+   "componente": "registro.foto",
+   "acao_fisica": false
+  },
+  {
+   "id": "c5",
+   "modalidade": "registro_video",
+   "componente": "registro.video",
+   "acao_fisica": true
+  },
+  {
+   "id": "c6",
+   "modalidade": "esquema_2d",
+   "componente": "mecanismo.nivel_vasos",
+   "acao_fisica": true
+  },
+  {
+   "id": "c7",
+   "modalidade": "cena_3d",
+   "componente": "tresd.camara",
+   "acao_fisica": true
+  },
+  {
+   "id": "c8",
+   "modalidade": "composicao_25d",
+   "componente": "camadas.recorte",
+   "acao_fisica": true
+  },
+  {
+   "id": "c9",
+   "modalidade": "tipografia",
+   "componente": "tipo.lottie",
+   "acao_fisica": false
+  }
+ ],
+ "estados": {
+  "c1": "renderizado",
+  "c2": "renderizado",
+  "c3": "renderizado",
+  "c4": "renderizado",
+  "c5": "renderizado",
+  "c6": "falhou",
+  "c7": "renderizado",
+  "c8": "renderizado",
+  "c9": "renderizado"
+ },
+ "revisao": [
+  {
+   "evento_id": "c1",
+   "veredito": {
+    "demonstra": "sim",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c2",
+   "veredito": {
+    "demonstra": "parcial",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c3",
+   "veredito": {
+    "demonstra": "sim",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c4",
+   "veredito": {
+    "demonstra": "sim",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c5",
+   "veredito": {
+    "demonstra": "nao",
+    "midia_corresponde": false
+   }
+  },
+  {
+   "evento_id": "c6",
+   "veredito": {
+    "demonstra": "nao",
+    "midia_corresponde": false
+   }
+  },
+  {
+   "evento_id": "c7",
+   "veredito": {
+    "demonstra": "parcial",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c8",
+   "veredito": {
+    "demonstra": "sim",
+    "midia_corresponde": true
+   }
+  },
+  {
+   "evento_id": "c9",
+   "veredito": {
+    "demonstra": "sim",
+    "midia_corresponde": true
+   }
+  }
+ ]
+}

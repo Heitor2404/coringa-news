@@ -6,6 +6,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
 import { ThreeCanvas } from '@remotion/three';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { C, FD, FT, Fontes, W, H, clamp, easeIO, lerp } from './ident';
+import { arrumar } from './MapaRota';
 
 export type Camara3DProps = {
   duracao: number;
@@ -35,21 +36,25 @@ export const Camara3D: React.FC<Camara3DProps> = (P) => {
   const nivel = lerp(P.nivel_baixo_m, P.nivel_alto_m, k);
   const vis = (t0: number) => clamp((t - t0) / .35);
   // rótulos ancorados por PROJEÇÃO dos pontos 3D com a mesma câmera da cena (nada de posição chutada)
-  const CAM = { pos: [-(L * 1.05), Hp * 2.1 + 18, L * 1.25] as [number, number, number], fov: 34 };
-  const cam = new PerspectiveCamera(CAM.fov, W / H, .5, 900); cam.position.set(...CAM.pos); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
-  const rot = .18, base = -Hp / 2;
+  // auditoria 16/11 (c7): de longe e rasante a câmara virava uma tira no alto. Agora 3/4 PERTO da comporta de montante:
+  // comporta, lago, água subindo e navio no mesmo quadro vertical; o alvo fica no meio da zona de conteúdo.
+  const XN = L / 2 - 14;                                    // navio junto da comporta de montante (onde a ação acontece)
+  const ALVO: [number, number, number] = [L / 2 - 4, Hp * .05, 0];
+  const CAM = { pos: [L / 2 - 46, Hp * 1.9 + 10, Wd * 3.6] as [number, number, number], fov: 52 };
+  const cam = new PerspectiveCamera(CAM.fov, W / H, .5, 900); cam.position.set(...CAM.pos); cam.lookAt(...ALVO); cam.updateMatrixWorld();
+  const rot = 0, base = -Hp / 2;
   const tela = (x: number, y: number, z: number) => { const c = Math.cos(rot), s2 = Math.sin(rot);
     const v = new Vector3(x * c + z * s2, y + base, -x * s2 + z * c).project(cam); return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * H }; };
   const ANC = { agua: () => tela(-L / 2 + 4, nivel, Wd / 2), lago: () => tela(L / 2 + 22, P.nivel_alto_m, Wd / 2 + 3),
-                comporta: () => tela(L / 2 + 1, Hp, 0), navio: () => tela(0, nivel + 8, 0) };
+                comporta: () => tela(L / 2 + 1, Hp, 0), navio: () => tela(XN, nivel + 8, 0) };
   return (
     <AbsoluteFill style={{ background: `linear-gradient(${C.noite}, ${C.grafite})` }}>
       <Fontes />
-      <ThreeCanvas width={W} height={H} camera={{ position: CAM.pos, fov: CAM.fov, near: .5, far: 900 }} onCreated={({ camera }) => camera.lookAt(0, 0, 0)}>
+      <ThreeCanvas width={W} height={H} camera={{ position: CAM.pos, fov: CAM.fov, near: .5, far: 900 }} onCreated={({ camera }) => camera.lookAt(...ALVO)}>
         <ambientLight intensity={.55} />
         <directionalLight position={[-30, 60, 40]} intensity={1.4} />
         <directionalLight position={[40, 20, -30]} intensity={.35} />
-        <group position={[0, -Hp / 2, 0]} rotation={[0, .18, 0]}>
+        <group position={[0, -Hp / 2, 0]}>
           {/* piso e paredes (corte: parede frontal omitida para mostrar o interior) */}
           <mesh position={[0, -.5, 0]}><boxGeometry args={[L + 8, 1, Wd + 8]} /><meshStandardMaterial color={C.concreto} roughness={.95} /></mesh>
           <mesh position={[0, Hp / 2, -Wd / 2 - 1.5]}><boxGeometry args={[L + 8, Hp, 3]} /><meshStandardMaterial color="#9AA2AD" roughness={.95} /></mesh>
@@ -61,16 +66,16 @@ export const Camara3D: React.FC<Camara3DProps> = (P) => {
           {/* água da câmara: sobe */}
           <mesh position={[0, nivel / 2, 0]}><boxGeometry args={[L, Math.max(.05, nivel), Wd]} /><meshStandardMaterial color={C.agua} transparent opacity={.78} /></mesh>
           {/* navio: flutua na superfície (calado ≈ 2,5 m) */}
-          <Casco y={nivel - 2.5} />
+          <group position={[XN, 0, 0]}><Casco y={nivel - 2.5} /></group>
         </group>
       </ThreeCanvas>
       {P.rotulo_selo && <div style={{ position: 'absolute', left: 72, top: 400, fontFamily: FD, fontWeight: 700, fontSize: 30, letterSpacing: 4, color: C.tecnico_linha }}>{P.rotulo_selo}</div>}
-      {P.rotulos.map((r, i) => {
-        const a = ANC[r.ancora](); const x = Math.min(W - 420, Math.max(72, a.x - 40)), y = Math.min(1150, Math.max(420, a.y - 70));
+      {(() => { const txts = P.rotulos.map(r => r.texto.replace('{nivel}', nivel.toFixed(0)));
+        const pos = arrumar(P.rotulos.map((r, i) => { const a = ANC[r.ancora](); const w = txts[i].length * 22 + 44; return { x: a.x - 40, y: a.y - 70, w, h: 58 }; }));
+        return P.rotulos.map((r, i) => { const x = pos[i].x, y = pos[i].y;
         return <div key={i} data-ancora={r.ancora} style={{ position: 'absolute', left: x, top: y, opacity: vis(r.t), padding: '8px 16px', background: 'rgba(8,10,14,.82)',
           borderLeft: `6px solid ${C.amarelo}`, fontFamily: FT, fontWeight: 900, fontSize: 34, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-          {r.texto.replace('{nivel}', nivel.toFixed(0))}</div>;
-      })}
+          {txts[i]}</div>; }); })()}
     </AbsoluteFill>
   );
 };

@@ -88,23 +88,32 @@ def escolher(cands: list[dict], deve_mostrar: str, usados: set[str], consultas: 
     if not cands:
         return None, {'motivo': 'sem candidato com licença' + (f' e do mesmo lugar ({sorted(nomes)}; {len(fora)} vídeo(s) de outro lugar descartados)' if fora else '')}
     cands = sorted(cands, key=lambda c: -(min(c.get('w') or 0, c.get('h') or 0)))[:6]
-    if os.getenv('GEMINI_API_KEY'):
-        try:
-            from src.gemini import json_visao
-            imgs = [_miniatura(c['url']) for c in cands]
-            ok = [(c, b) for c, b in zip(cands, imgs) if b]
-            r = json_visao(f"""Escolha a imagem que MELHOR mostra: "{deve_mostrar}". Rejeite as que não mostram (ou mostram
-outra coisa, outro lugar, ou só texto). Responda JSON {{"escolha": índice ou -1, "motivo": "...",
-"roi": [x, y, w, h] normalizado do objeto principal na imagem escolhida}}. Imagens: 0..{len(ok) - 1}.""", [b for _, b in ok], leve=False)
-            k = int(r.get('escolha', -1))
-            if 0 <= k < len(ok):
-                return ok[k][0], {'metodo': 'visao_gemini', 'motivo': r.get('motivo'), 'roi': _roi_valida(r.get('roi')),
-                                  **({'roi_descartada': r.get('roi')} if r.get('roi') and not _roi_valida(r.get('roi')) else {})}
-            return None, {'metodo': 'visao_gemini', 'motivo': 'nenhuma mostra o pedido: ' + str(r.get('motivo'))[:160]}
-        except Exception as e:
-            info = {'metodo': 'resolucao', 'visao_falhou': str(e)[:160]}
-            return cands[0], info
-    return cands[0], {'metodo': 'resolucao', 'visao': 'indisponível'}
+    if not os.getenv('GEMINI_API_KEY'):
+        # auditoria 16/11: sem visão a 1ª opção NÃO vira prova — nada entra como REGISTRO
+        return None, {'metodo': 'nenhum', 'prova': 'INCERTO', 'motivo': 'visão indisponível: sem prova do que a mídia mostra'}
+    lugar = ', '.join(sorted(nomes)) or 'o lugar do pedido'
+    try:
+        from src.gemini import json_visao
+        imgs = [_miniatura(c['url']) for c in cands]
+        ok = [(c, b) for c, b in zip(cands, imgs) if b]
+        if not ok:
+            return None, {'metodo': 'visao_gemini', 'prova': 'INCERTO', 'motivo': 'nenhuma miniatura legível'}
+        r = json_visao(f"""Escolha a imagem que MELHOR mostra: "{deve_mostrar}" (lugar: {lugar}). Rejeite as que mostram outra
+coisa, OUTRO LUGAR, ou só texto. Seja estrito: na dúvida, -1. Responda JSON {{"escolha": índice ou -1, "motivo": "...",
+"local_confere": true|false (o lugar visível é compatível com {lugar}), "objeto_confere": true|false (o objeto/ação pedido aparece),
+"roi": [x, y, w, h] normalizado 0–1 do objeto principal}}. Imagens: 0..{len(ok) - 1}.""", [b for _, b in ok], leve=False)
+        if isinstance(r, list):
+            r = next((x for x in r if isinstance(x, dict)), {})
+        k = int(r.get('escolha', -1))
+        info = {'metodo': 'visao_gemini', 'motivo': r.get('motivo'), 'local_confere': r.get('local_confere'), 'objeto_confere': r.get('objeto_confere')}
+        if not 0 <= k < len(ok):
+            return None, {**info, 'prova': 'REPROVADO', 'motivo': 'nenhuma mostra o pedido: ' + str(r.get('motivo'))[:160]}
+        if r.get('local_confere') is not True or r.get('objeto_confere') is not True:
+            return None, {**info, 'prova': 'INCERTO', 'motivo': 'escolha sem confirmação de lugar e objeto: ' + str(r.get('motivo'))[:160]}
+        roi = _roi_valida(r.get('roi'))
+        return ok[k][0], {**info, 'prova': 'PROVADO', 'roi': roi, **({'roi_descartada': r.get('roi')} if r.get('roi') and not roi else {})}
+    except Exception as e:
+        return None, {'metodo': 'visao_gemini', 'prova': 'INCERTO', 'motivo': f'visão falhou: {str(e)[:160]}'}
 
 
 def baixar(c: dict, pasta: Path, aid: str) -> dict:

@@ -39,9 +39,9 @@ const STYLE = (fc: Record<string, any>): any => ({
     { id: 'lagos', type: 'fill', source: 'lagos', paint: { 'fill-color': C.agua, 'fill-opacity': .95 } },
     { id: 'rios', type: 'line', source: 'rios', paint: { 'line-color': C.agua_clara, 'line-width': 2, 'line-opacity': .7 } },
     { id: 'rota-sombra', type: 'line', source: 'rota_viva', layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#000', 'line-width': 16, 'line-opacity': .35, 'line-blur': 6 } },
+      paint: { 'line-color': '#000', 'line-width': 24, 'line-opacity': .4, 'line-blur': 6 } },
     { id: 'rota', type: 'line', source: 'rota_viva', layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': C.amarelo, 'line-width': 9 } },
+      paint: { 'line-color': C.amarelo, 'line-width': 14 } },
   ],
 });
 
@@ -53,6 +53,25 @@ function camEm(cam: MapaProps['camera'], t: number) {
   }
   return cam[cam.length - 1];
 }
+
+// ÁREA SEGURA dos rótulos (auditoria 16/11, c2: cidade cortada na borda e oceano sob a legenda): nada fora de x 60–1020 nem na
+// faixa de legenda (y ≥ 1170); rótulos não se sobrepõem (o seguinte desce/sobe até achar lugar).
+export const SEGURA = { x0: 60, x1: 1020, y0: 200, y1: 1150 };
+type Caixa = { x: number; y: number; w: number; h: number };
+const cruza = (a: Caixa, b: Caixa) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+export function arrumar(pedidas: Caixa[]): Caixa[] {
+  const out: Caixa[] = [];
+  for (const c0 of pedidas) {
+    let c = { ...c0, x: Math.min(Math.max(c0.x, SEGURA.x0), SEGURA.x1 - c0.w), y: Math.min(Math.max(c0.y, SEGURA.y0), SEGURA.y1 - c0.h) };
+    for (let k = 1; k < 24 && out.some(o => cruza(o, c)); k++) {
+      const dy = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (c0.h * .6 + 6);
+      c = { ...c, y: Math.min(Math.max(c0.y + dy, SEGURA.y0), SEGURA.y1 - c0.h) };
+    }
+    out.push(c);
+  }
+  return out;
+}
+const larguraTexto = (txt: string, px: number, esp = 0) => txt.length * (px * .62 + esp) + 36;
 
 const Localizador: React.FC<{ lonlat: [number, number]; vis: number }> = ({ lonlat, vis }) => {
   const R = 118;
@@ -117,21 +136,36 @@ export const MapaRota: React.FC<MapaProps> = (P) => {
       <Fontes />
       <div ref={ref} style={{ position: 'absolute', width: W, height: H }} />
       {/* rótulos em HTML (fontes locais da identidade, sem servidor de glifos), legíveis no celular (≥ 30 px) */}
-      {(P.areas || []).map((a, i) => { const p = proj(a.lonlat); return (
-        <div key={'a' + i} style={{ position: 'absolute', left: p.x, top: p.y, transform: 'translate(-50%,-50%)', opacity: vis(a.t),
-          fontFamily: a.estilo === 'pais' ? FT : FD, fontWeight: a.estilo === 'pais' ? 800 : 700, fontSize: a.estilo === 'oceano' ? 38 : 34,
-          letterSpacing: a.estilo === 'oceano' ? 10 : 3, color: a.estilo === 'lago' ? '#DDF3FF' : 'rgba(220,235,255,.86)', textTransform: 'uppercase',
-          textShadow: '0 2px 12px rgba(0,0,0,.9)', whiteSpace: 'nowrap' }}>{a.nome}</div>); })}
-      {P.pontos.map((pt, i) => { const p = proj(pt.lonlat); const v = vis(pt.t); const esq = pt.lado === 'esq'; return (
-        <div key={'p' + i} style={{ position: 'absolute', left: p.x, top: p.y, opacity: v }}>
-          <div style={{ position: 'absolute', width: 30, height: 30, left: -15, top: -15, borderRadius: 15, background: pt.tipo === 'eclusa' ? C.amarelo : '#fff',
-            border: `6px solid ${pt.tipo === 'eclusa' ? '#fff' : C.amarelo}`, boxShadow: '0 0 0 8px rgba(255,210,31,.28), 0 6px 18px rgba(0,0,0,.6)', transform: `scale(${.6 + .4 * v})` }} />
-          <div style={{ position: 'absolute', top: -26, [esq ? 'right' : 'left']: 34, whiteSpace: 'nowrap', padding: '8px 16px', background: 'rgba(8,10,14,.84)',
-            borderLeft: `6px solid ${C.amarelo}`, fontFamily: FT, fontWeight: 900, fontSize: 34, color: '#fff', textTransform: 'uppercase' } as any}>{pt.nome}</div>
-        </div>); })}
+      {(() => {
+        const areas = (P.areas || []).map(a => { const p = proj(a.lonlat); const fs = a.estilo === 'oceano' ? 38 : 34; const esp = a.estilo === 'oceano' ? 10 : 3;
+          const w = larguraTexto(a.nome, fs, esp), h = fs + 14; return { tipo: 'area' as const, a, p, w, h, cx: { x: p.x - w / 2, y: p.y - h / 2, w, h } }; });
+        const pts = P.pontos.map(pt => { const p = proj(pt.lonlat); const w = larguraTexto(pt.nome, 34), h = 56;
+          let esq = pt.lado === 'esq' || pt.lado === ('esquerda' as any);
+          if (!esq && p.x + 34 + w > SEGURA.x1) esq = true;           // não cabe à direita: vai para a esquerda
+          if (esq && p.x - 34 - w < SEGURA.x0) esq = false;
+          return { tipo: 'ponto' as const, pt, p, w, h, esq, cx: { x: esq ? p.x - 34 - w : p.x + 34, y: p.y - 26, w, h } }; });
+        const todos = [...pts, ...areas];
+        const pos = arrumar(todos.map(x => x.cx));
+        return todos.map((x, i) => {
+          const c = pos[i];
+          if (x.tipo === 'area') { const a = x.a; return (
+            <div key={'a' + i} data-rotulo="area" style={{ position: 'absolute', left: c.x, top: c.y, width: c.w, textAlign: 'center', opacity: vis(a.t),
+              fontFamily: a.estilo === 'pais' ? FT : FD, fontWeight: a.estilo === 'pais' ? 800 : 700, fontSize: a.estilo === 'oceano' ? 38 : 34,
+              letterSpacing: a.estilo === 'oceano' ? 10 : 3, color: a.estilo === 'lago' ? '#DDF3FF' : 'rgba(220,235,255,.86)', textTransform: 'uppercase',
+              textShadow: '0 2px 12px rgba(0,0,0,.9)', whiteSpace: 'nowrap' }}>{a.nome}</div>); }
+          const pt = x.pt, v = vis(pt.t);
+          return (<React.Fragment key={'p' + i}>
+            <div style={{ position: 'absolute', left: x.p.x - 15, top: x.p.y - 15, width: 30, height: 30, borderRadius: 15, opacity: v,
+              background: pt.tipo === 'eclusa' ? C.amarelo : '#fff', border: `6px solid ${pt.tipo === 'eclusa' ? '#fff' : C.amarelo}`,
+              boxShadow: '0 0 0 8px rgba(255,210,31,.28), 0 6px 18px rgba(0,0,0,.6)', transform: `scale(${.6 + .4 * v})` }} />
+            <div data-rotulo="ponto" style={{ position: 'absolute', left: c.x, top: c.y, opacity: v, whiteSpace: 'nowrap', padding: '8px 16px', background: 'rgba(8,10,14,.84)',
+              borderLeft: `6px solid ${C.amarelo}`, fontFamily: FT, fontWeight: 900, fontSize: 34, color: '#fff', textTransform: 'uppercase' }}>{pt.nome}</div>
+          </React.Fragment>);
+        });
+      })()}
       {P.rota && P.rota.rotulo_distancia && rota && (() => {
         const meio = turf.along(rota, km / 2, { units: 'kilometers' }).geometry.coordinates as [number, number]; const p = proj(meio);
-        return <div style={{ position: 'absolute', left: Math.min(W - 420, Math.max(80, p.x + 60)), top: p.y - 40, opacity: vis(P.rota.rotulo_t ?? P.rota.ate),
+        return <div style={{ position: 'absolute', left: Math.min(SEGURA.x1 - 260, Math.max(SEGURA.x0, p.x + 60)), top: Math.min(SEGURA.y1 - 60, Math.max(SEGURA.y0, p.y - 40)), opacity: vis(P.rota.rotulo_t ?? P.rota.ate),
           fontFamily: FD, fontWeight: 700, fontSize: 40, color: C.amarelo, textShadow: '0 2px 14px #000', whiteSpace: 'nowrap' }}>{P.rota.rotulo_distancia}</div>;
       })()}
       {P.localizador && <Localizador lonlat={P.localizador.lonlat} vis={vis(P.localizador.t)} />}

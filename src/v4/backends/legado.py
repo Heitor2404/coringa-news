@@ -66,3 +66,21 @@ def render_video(arq: Path, wh: list, roi: list | None, inicio: float, dur: floa
            f'crop={int(cw)}:{int(ch)}:{int(x)}:{int(y)},scale={W}:{H}:flags=lanczos,fps={FPS},format=yuv420p', '-an', '-c:v', 'libx264',
            '-preset', 'veryfast', '-crf', '17', saida], log=trab / 'ffmpeg_video.log')
     return {'backend': 'ffmpeg', 'recorte': [int(x), int(y), int(cw), int(ch)], 'escala': round(escala, 2), 'fonte_wh': [iw, ih]}
+
+
+def render_v2(comp: str, params: dict, dur: float, trab: Path, saida: Path, fala: str = '') -> dict:
+    """qualquer composição do palco V2 (ex.: mecanismo.eclusa, já validada em pilotos anteriores) como clipe do V4.
+    Marca/legenda vêm da camada única do V4, então a página sai sem marca e sem legenda própria."""
+    from src.render.render import _trecho
+    from src.v2 import palco
+    trab.mkdir(parents=True, exist_ok=True)
+    dados = {'meta': {'motor': 'v2', 'marca': False}, 'duration': dur, 'captions': [], 'creditos': [],
+             'scenes': [{'comp': comp, 'start': 0, 'end': dur, 'transicao': 'corte', 'origem': [0], 'fala': fala, 'params': params}]}
+    d2 = palco.preparar(json.loads(json.dumps(dados)))
+    pagina = palco.pagina(d2, trab)
+    bruto = trab / 'palco.mp4'
+    _trecho((str(pagina), 0, int(round(dur * FPS)), str(bruto), palco.NAVEGADOR))
+    if not bruto.exists():
+        raise FalhaBackend(f'palco V2 não gerou quadros para {comp}')
+    bruto.rename(saida)
+    return {'backend': 'legacy-v2', 'comp': comp, 'params': params}

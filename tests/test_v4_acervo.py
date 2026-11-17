@@ -25,7 +25,11 @@ def test_acervo_chama_fontes_com_consultas_e_monta(tmp_path, monkeypatch):
     monkeypatch.setattr(acervo, 'f_commons', commons)
     monkeypatch.setattr(acervo, 'f_videos', videos)
     monkeypatch.setattr(acervo, '_baixar_item', lambda x, arq: dict(x, arq=str(img)))
-    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    # visão confirma lugar e objeto (sem isso nada vira REGISTRO — auditoria 16/11, teste próprio abaixo)
+    monkeypatch.setenv('GEMINI_API_KEY', 'x')
+    monkeypatch.setattr(acervo_v4, '_miniatura', lambda url: b'jpg')
+    import src.gemini as gem
+    monkeypatch.setattr(gem, 'json_visao', lambda pr, ims, leve=False: {'escolha': 0, 'local_confere': True, 'objeto_confere': True, 'roi': [.1, .1, .5, .5]})
     ep = {'cenas': [{'id': 'c1', 'params': {'asset': 'auto'}, 'busca': {'tipo': 'foto', 'consultas_en': ['Miraflores Locks ship']}},
                     {'id': 'c2', 'params': {'asset': 'auto'}, 'busca': {'tipo': 'video', 'consultas_en': ['Panama locks video']}}]}
     acv, reg = acervo_v4.montar(ep, tmp_path / 'acervo')

@@ -19,7 +19,7 @@ import numpy as np
 from src.v4.componentes import DEMONSTRAM_ACAO
 from src.v4.util import H, W
 
-ZONA = (270, 1240)                    # zona de conteúdo (entre a interface do app no topo e a faixa de legendas)
+ZONA = (150, 1170)                    # zona de conteúdo SEM a faixa de legendas (1180–1440): palavra mudando não é ação
 MOVIMENTO_ESPERADO = {'esquema_2d', 'cena_3d', 'composicao_25d', 'registro_video', 'mapa', 'dados', 'tipografia'}
 
 
@@ -51,13 +51,40 @@ def _cortes_reais(mp4: Path) -> list[float]:
     return [round(a.get_seconds(), 2) for a, _ in detect(str(mp4), ContentDetector(threshold=27.0))[1:]]
 
 
+def _z(q: np.ndarray) -> np.ndarray:
+    h = q.shape[0]
+    return q[int(ZONA[0] / H * h):int(ZONA[1] / H * h)].astype(np.int16)
+
+
+def parada_max(movs: list[float], passo: float, limite: float = .6) -> float:
+    """maior trecho contínuo (s) sem mudança na zona de conteúdo: informação parada, não 'cortes por minuto'"""
+    melhor = atual = 0.0
+    for m in movs:
+        atual = atual + passo if m < limite else 0.0
+        melhor = max(melhor, atual)
+    return round(melhor, 2)
+
+
+def vazio_geometrico(det: dict, ini: float, fim: float) -> float | None:
+    """foto/documento no palco: a área sem imagem vem da GEOMETRIA da composição (casco escuro não é fundo vazio)"""
+    p = (det or {}).get('params') or {}
+    if not p.get('wh') or not p.get('cam'):
+        return None
+    from src.v3 import geometria as G
+    try:
+        oc = [G.ocupacao(p, t)['ocupacao'] for t in np.linspace(0, max(.01, fim - ini), 5)]
+    except Exception:
+        return None
+    return round(1 - float(np.mean(oc)), 3)
+
+
 def medir(mp4: Path, linha: list[dict]) -> dict:
     from src.fiscal import medir_audio
     fps = 2.0
     qs = _quadros(mp4, fps)
     seg = []
     for i in range(len(qs)):
-        mov = float(np.abs(qs[i].astype(np.int16) - qs[i - 1].astype(np.int16)).mean()) if i else 0.0
+        mov = float(np.abs(_z(qs[i]) - _z(qs[i - 1])).mean()) if i else 0.0
         seg.append({'t': round(i / fps, 2), 'vazio': round(_vazio(qs[i]), 3), 'movimento': round(mov, 2), 'brilho': round(float(qs[i].mean()), 1)})
     cortes = _cortes_reais(mp4)
     cenas = []
@@ -71,14 +98,16 @@ def medir(mp4: Path, linha: list[dict]) -> dict:
         hashes.append((c['cena'], _dhash(meio)))
         mov = float(np.mean([s['movimento'] for s in sub[1:]] or [0]))
         estatico = mov < .6
+        vg = vazio_geometrico(c.get('detalhes'), c['ini'], c['fim']) if c.get('backend') == 'legacy' else None
         cenas.append({'cena': c['cena'], 'ini': c['ini'], 'fim': c['fim'], 'duracao': round(c['fim'] - c['ini'], 2), 'modalidade': c['modalidade'],
-                      'componente': c['componente'], 'backend': c.get('backend'), 'vazio_medio': round(float(np.mean([s['vazio'] for s in sub])), 3),
+                      'componente': c['componente'], 'backend': c.get('backend'), 'vazio_medio': vg if vg is not None else round(float(np.mean([s['vazio'] for s in sub])), 3),
+                      'vazio_fonte': 'geometria' if vg is not None else 'pixels', 'informacao_parada_s': parada_max([s['movimento'] for s in sub[1:]], 1 / fps),
                       'vazio_max': max(s['vazio'] for s in sub), 'movimento_medio': round(mov, 2), 'estatico': estatico,
                       'estatico_com_movimento_prometido': estatico and c['modalidade'] in MOVIMENTO_ESPERADO,
                       # estrutural: modalidade capaz, render ok e quadro com conteúdo. NÃO é prova de demonstração — a prova
                       # semântica vem da revisão (combinar_revisao); c6 preta e c5 com vídeo errado contavam como "demonstra"
                       'demonstra_acao': (c['modalidade'] in DEMONSTRAM_ACAO and c.get('estado') == 'renderizado'
-                                         and float(np.mean([s['vazio'] for s in sub])) < .9),
+                                         and (vg if vg is not None else float(np.mean([s['vazio'] for s in sub]))) < .9),
                       'demonstra_semantico': 'pendente',
                       'cortes_reais_dentro': [t for t in cortes if c['ini'] + .2 < t < c['fim'] - .2]})
     rep = []

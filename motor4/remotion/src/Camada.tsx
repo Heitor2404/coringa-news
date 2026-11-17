@@ -9,7 +9,7 @@ import { C, FD, FT, Fontes, IDT, clamp } from './ident';
 export type CamadaProps = {
   duracao: number;
   palavras: { w: string; s: number; e: number; hl?: boolean }[];
-  cenas: { ini: number; fim: number; selo?: string | null; credito?: string | null; legenda_tom?: 'escuro' | 'claro' }[];
+  cenas: { ini: number; fim: number; selo?: string | null; credito?: string | null; legenda_tom?: 'escuro' | 'claro'; legenda?: boolean }[];
   combinar_ms?: number;
 };
 
@@ -42,7 +42,7 @@ export const Camada: React.FC<CamadaProps> = (P) => {
         letterSpacing: 3, color: '#fff', padding: '4px 12px', border: '2px solid rgba(255,255,255,.75)', background: 'rgba(0,0,0,.35)', textTransform: 'uppercase' }}>{cena.selo}</div>}
       {cena && cena.credito && <div style={{ position: 'absolute', right: 160, top: IDT.credito.y, maxWidth: 760, textAlign: 'right', opacity: sv,
         fontFamily: FD, fontSize: IDT.credito.tamanho, lineHeight: 1.2, color: IDT.credito.cor, textShadow: '0 1px 6px #000' }}>{cena.credito}</div>}
-      {g && <div style={{ position: 'absolute', left: 150, right: 150, top: IDT.areas_seguras.legenda_topo, display: 'flex', justifyContent: 'center' }}>
+      {g && cena?.legenda !== false && <div style={{ position: 'absolute', left: 150, right: 150, top: IDT.areas_seguras.legenda_topo, display: 'flex', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', fontFamily: FT, fontWeight: L.peso, fontSize: L.tamanho, lineHeight: 1.08, letterSpacing: -1, textTransform: 'uppercase',
           color: L.cor, textShadow: L.sombra, background: cena?.legenda_tom === 'claro' ? L.placa : 'transparent', padding: '6px 20px', borderRadius: 14 }}>
           {g.map((tk, i) => {

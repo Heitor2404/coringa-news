@@ -25,12 +25,18 @@ def _telegram(saida: Path):
     r = res.get('metricas_resumo') or {}
     a = res.get('audio') or {}
     fam = (res.get('contrato') or {}).get('familias') or {}
-    linhas = [f"EPISÓDIO V4 — PRÉVIA PRIVADA, NÃO PUBLICADO", f"STATUS: {est['estado']}",
+    diag = res.get('estado') == 'DIAGNOSTICO_NAO_EDITORIAL'
+    if diag:
+        est = {**est, 'estado': 'DIAGNOSTICO_NAO_EDITORIAL'}
+    linhas = [("DIAGNÓSTICO TÉCNICO — NÃO É EPISÓDIO (cena(s) não renderizada(s)); PRÉVIA PRIVADA, NÃO PUBLICADO" if diag
+               else "EPISÓDIO V4 — PRÉVIA PRIVADA, NÃO PUBLICADO"), f"STATUS: {res.get('estado')} (motor) · {est['estado']}",
               f"{r.get('duracao', 0):.1f}s · {r.get('cenas')} cenas · plano médio {r.get('plano_medio_s')}s · vazio médio {r.get('vazio_medio')} · "
               f"estático {r.get('pct_estatico')}% · áudio {a.get('lufs')} LUFS / pico {a.get('pico')}",
-              'famílias: ' + ', '.join(f'{k}×{v}' for k, v in (fam.get('modalidades') or {}).items() if v) + (f" · faltam: {', '.join(fam.get('faltam'))}" if fam.get('faltam') else '')]
+              'famílias: ' + ', '.join(f'{k}×{v}' for k, v in (fam.get('modalidades') or {}).items() if v)]
     for b in (res.get('bloqueios') or [])[:8]:
         linhas.append(f'- [bloqueio] {b[:180]}')
+    for x in (res.get('revisoes') or [])[:8]:
+        linhas.append(f'- [revisão] {x[:160]}')
     for p in (est.get('pendencias') or [])[:6]:
         linhas.append(f'- [pendente] {str(p)[:160]}')
     cx = res.get('caixa') or {}

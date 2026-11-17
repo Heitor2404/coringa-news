@@ -45,6 +45,13 @@ COMPONENTES = {
                                          'passos': 'lista de 5 frases curtas (entra, fecha, válvula abre, sobe, abre)',
                                          'tempos': '{entra, fecha, valvula, enche, abre, sai} em segundos (somam ≤ duração)'},
                               'exemplo': {'titulo': 'COMO A ECLUSA LEVANTA O NAVIO', 'desnivel_m': 9, 'nomes': {'baixo': 'mar', 'alto': 'lago', 'objeto': 'navio'}}},
+    'mecanismo.eclusa': {'backend': 'legacy-v2:mecanismo.eclusa', 'modalidades': ['esquema_2d'], 'acervo': None,
+                         'params': {'sentido': 'subir|descer', 'desnivel_m': 'desnível de UM degrau ou total (dos fatos)', 'lago': 'nível alto ≤ 18',
+                                    'mar': 'nível baixo ≤ 18', 'etapas': '3 textos ≤ 40 (entra/fecha · enche · iguala/sai)',
+                                    'tempos': '3 frações da cena em que cada etapa começa', 'degraus': 'nº de câmaras reais (1 = um degrau)'},
+                         'exemplo': {'sentido': 'subir', 'desnivel_m': 9, 'lago': 'LAGO GATÚN', 'mar': 'MAR', 'degraus': 1,
+                                     'etapas': ['Navio entra, comporta fecha', 'Água do lago desce e enche', 'Níveis iguais: comporta abre'], 'tempos': [0, .3, .75]},
+                         'nota': 'corte lateral comprovado no palco V2: válvula, túnel, água subindo, navio na linha d\'água, comporta só abre com níveis iguais'},
     'camadas.recorte': {'backend': 'hyperframes:camadas+rembg', 'modalidades': ['composicao_25d'], 'acervo': 'foto',
                         'params': {'asset': 'foto com o assunto inteiro e separável do fundo', 'foco': '[x,y] normalizado',
                                    'acao': '{tipo: subir|nenhuma, de, ate, sobe_px, metros, y_agua_px}', 'rotulo': '{texto, t, x, y}'},
@@ -90,3 +97,33 @@ def resumo_prompt() -> str:
     linhas.append(f"\nCatálogo HyperFrames acessível: {r['total']} itens (blocos {r['por_tipo'].get('block')}, componentes "
                   f"{r['por_tipo'].get('component')}); em tela cheia 9:16 só retrato/responsivo. Use hf.registro com o nome exato.")
     return '\n'.join(linhas)
+
+
+def _eclusa_de_nivel_vasos(p: dict) -> dict:
+    n = p.get('nomes') or {}
+    passos = [x for x in (p.get('passos') or []) if x]
+    t = p.get('tempos') or {}
+    dur = float(p.get('duracao') or 7)
+    marcas = [float(t.get(k, d)) for k, d in (('entra', 0), ('valvula', dur * .3), ('abre', dur * .75))]
+    return {'sentido': 'subir', 'desnivel_m': p.get('desnivel_m') or 9, 'lago': str(n.get('alto') or 'LAGO')[:18].upper(),
+            'mar': str(n.get('baixo') or 'MAR')[:18].upper(), 'degraus': 1, 'kicker': 'ESQUEMA · ECLUSA',
+            'etapas': [passos[0] if passos else 'Navio entra, comporta fecha', passos[2] if len(passos) > 2 else 'Água desce e enche a câmara',
+                       passos[-1] if passos else 'Níveis iguais: comporta abre'],
+            'tempos': [round(min(x, dur - .5), 2) for x in marcas]}
+
+
+def _eclusa_de_camara3d(p: dict) -> dict:
+    dur = float(p.get('duracao') or 8)
+    enc = p.get('encher') or {}
+    return {'sentido': 'subir', 'desnivel_m': max(1, (p.get('nivel_alto_m') or 9) - (p.get('nivel_baixo_m') or 0)), 'lago': 'LAGO GATÚN',
+            'mar': 'NÍVEL BAIXO', 'degraus': 1, 'kicker': 'ESQUEMA · ECLUSA',
+            'etapas': ['Comporta fechada', 'Água desce do lago e enche', 'Níveis iguais: comporta abre'],
+            'tempos': [0, round(float(enc.get('de', dur * .1)), 2), round(min(float(enc.get('ate', dur * .7)), dur - .5), 2)]}
+
+
+# backend falhou ou o clipe não passou nos portões → alternativa PRÉ-VALIDADA que demonstra o mesmo acontecimento
+# (auditoria 16/11: nunca tela preta). Cada alternativa traz o tradutor de parâmetros do componente original.
+ALTERNATIVAS = {
+    'mecanismo.nivel_vasos': [('mecanismo.eclusa', _eclusa_de_nivel_vasos)],
+    'tresd.camara': [('mecanismo.eclusa', _eclusa_de_camara3d)],
+}

@@ -21,6 +21,7 @@ from src.v3 import linguagem
 
 DOCUMENTAIS = ('documento', 'mapa', 'gravura', 'pintura')
 RECUO = 0.85                  # escala final < 85% da anterior = recuo
+DETALHE_MIN = 1.5     # detalhe precisa ampliar ≥ 1,5× a visão geral (c4 do Panamá: 1,23× = mesma foto duas vezes, reprovado na auditoria)
 AMPLO = 0.45                  # pedido que cobre ≥ 45% da área da fonte = "ver o todo"
 
 
@@ -56,6 +57,12 @@ def decidir(pl: dict, x: dict, wh, cam: list[dict], roi, obs: dict, enq_obj, enq
         visao = visao_geral()
         detalhe = enq_obj if roi else (caixas[-1] if caixas[-1][2] * caixas[-1][3] < AMPLO else [.25, .25, .5, .5])
         e = G.editorial(wh, visao, detalhe)
+        ganho = e['detalhe']['s'] / max(1e-6, e['visao']['s'])
+        if ganho < DETALHE_MIN:
+            # auditoria V4 16/11 (c4): "detalhe" quase igual à visão geral = a MESMA foto duas vezes. Uma foto só.
+            deg.append(('aceitavel', 'DETALHE-REPETE-GERAL', f'detalhe amplia só {ganho:.2f}× a visão geral: foto única em recorte vertical', False))
+            out.update(layout='cobrir', cam=[{'t': 0, 'caixa': _recorte_916(visao, wh, roi)}])
+            return out
         deg.append(('aceitavel', 'COMPOSICAO-EDITORIAL', f"{nat} horizontal visto inteiro: visão geral + detalhe ampliado (sem fundo vazio)", False))
         if len(set(map(tuple, caixas))) > 1 or pl.get('camera_chaves'):
             deg.append(('aceitavel', 'MOVIMENTO-EDITORIAL-FIXO', 'composição editorial é fixa: o movimento pedido não entra', False))

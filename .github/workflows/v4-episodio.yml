@@ -53,6 +53,9 @@ jobs:
       - name: Natural Earth (cache)
         uses: actions/cache@v4
         with: { path: src/render/v2/dados/ne, key: "natural-earth-v5.1.2-${{ hashFiles('scripts/v2_natural_earth.py') }}" }
+      - name: Geometria OSM (cache; a rota não depende do Overpass em toda execução)
+        uses: actions/cache@v4
+        with: { path: "${{ github.workspace }}/../osm_cache", key: "osm-${{ github.run_id }}", restore-keys: "osm-" }
       - name: Registro HyperFrames fixado (cache)
         uses: actions/cache@v4
         with: { path: "${{ github.workspace }}/../hyperframes", key: "hf-registro-95e4e7f" }
@@ -101,6 +104,7 @@ jobs:
           DIRETOR_MODELO: ${{ vars.DIRETOR_MODELO || 'claude' }}
           REMOTION_CHROME: /usr/bin/google-chrome
           CORINGA_CHROME: /usr/bin/google-chrome
+          CORINGA_OSM_CACHE: ${{ github.workspace }}/../osm_cache
         run: |
           mkdir -p saida_v4
           python -m src.v4 episodio .github/v4/pedido.json saida_v4/panama 2>&1 | tee saida_v4/registro.txt

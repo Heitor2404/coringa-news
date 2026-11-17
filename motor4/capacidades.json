@@ -159,7 +159,7 @@
   "executavel_ci": "not_tested",
   "qualidade_visual_testada": "pendente_humano",
   "estado": "not_tested",
-  "limitacoes": "só com rede (Actions); sem geometria → sem rota (nunca linha inventada)",
+  "limitacoes": "Overpass falhou/sem resposta na 43972774128; agora espelhos + cache persistente no Actions; mapa que promete rota sem geometria não fica pronto",
   "licenca": "ODbL (atribuição)",
   "custo": "gratuito",
   "evidencia": "not_tested (bloqueado neste ambiente; roda no Actions)"
@@ -437,5 +437,20 @@
    "slideshow",
    "style-sampling"
   ]
+ },
+ {
+  "ferramenta": "Palco V2 — mecanismo.eclusa (alternativa do mecanismo 2D)",
+  "funcao": "corte lateral da eclusa: válvula, túnel, água subindo, navio na linha d'água, comporta só abre com níveis iguais",
+  "versao_instalada": "repo",
+  "instalado": "sim",
+  "integrado": "sim",
+  "onde": "src/v4/backends/legado.render_v2 + componentes.ALTERNATIVAS",
+  "executavel_ci": "not_tested (palco V2 roda no CI em execuções anteriores)",
+  "qualidade_visual_testada": "pendente_humano",
+  "estado": "operacional_local",
+  "limitacoes": "esquema ilustrativo: comportas de levantar e túnel sob a câmara (no Panamá: duas folhas e aquedutos nas paredes) — rotulado",
+  "licenca": "código próprio",
+  "custo": "gratuito",
+  "evidencia": "16/11: render local de 7 s pela cadeia de alternativas, aprovado nos portões técnicos"
  }
 ]

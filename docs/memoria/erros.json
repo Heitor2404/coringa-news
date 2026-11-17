@@ -1308,6 +1308,187 @@
     "fiscal",
     "v4"
    ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-052",
+   "titulo": "Backend que falha vira 7 s de tela preta dentro do episódio",
+   "sintoma": "c6: 98,5% de pixels pretos com só a legenda.",
+   "causa_raiz": "produzir() criava falha.mp4 preto e o concatenava como cena.",
+   "arquivos": [
+    "src/v4/episodio.py",
+    "src/v4/portoes.py",
+    "src/v4/componentes.py",
+    "src/v4/backends/legado.py"
+   ],
+   "correcao": "render_validado: componente → alternativas pré-validadas (mecanismo.eclusa do palco V2) com tradução de parâmetros; cada clipe passa pelos portões (tamanho, duração, não preto, mudança visual quando promete ação). Sem alternativa: placa vermelha de DIAGNÓSTICO e o MP4 inteiro vira _DIAGNOSTICO (não é episódio).",
+   "testes": [
+    "tests/test_v4_integracao.py::test_clipe_preto_ou_congelado_reprova_no_portao",
+    "tests/test_v4_integracao.py::test_backend_que_falha_cai_na_alternativa_pre_validada"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "render",
+    "portoes"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-053",
+   "titulo": "Fiscal não governava o estado: revisão 'não'/'parcial' não bloqueava",
+   "sintoma": "estado BLOQUEADO só por licença/backend; c5 'não corresponde' e c2/c7 'parcial' sem efeito.",
+   "causa_raiz": "res['estado'] dependia só de res['bloqueios']; a revisão era anotação.",
+   "arquivos": [
+    "src/v4/portoes.py",
+    "src/v4/episodio.py"
+   ],
+   "correcao": "portoes.decidir: mídia que não corresponde ao fato em registro → bloqueio; 'não' em acontecimento essencial → bloqueio; 'parcial', revisão ausente e informação parada > 4 s → revisão humana; cena não pronta → DIAGNÓSTICO. Regressão negativa com os vereditos da execução reprovada.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_episodio_reprovado_aciona_os_portoes",
+    "tests/test_v4_integracao.py::test_revisao_ausente_e_info_parada_nunca_viram_aprovacao"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "fiscal",
+    "portoes"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-054",
+   "titulo": "Acervo falhava aberto: sem visão ou com erro, a 1ª opção virava registro",
+   "sintoma": "escolher() devolvia cands[0] sem GEMINI ou com exceção.",
+   "causa_raiz": "a falta de prova era tratada como prova.",
+   "arquivos": [
+    "src/v4/acervo_v4.py"
+   ],
+   "correcao": "PROVADO só com escolha + local_confere + objeto_confere da visão; sem visão/erro/sem confirmação = INCERTO (nada entra como registro); mídia com erro de contrato (R-ASSET-*) não vai ao render.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_acervo_falha_fechado_sem_prova_de_lugar_e_objeto"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "acervo"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-055",
+   "titulo": "Mesma foto duas vezes na cena (visão geral + 'detalhe' 1,23×)",
+   "sintoma": "c4: foto de 1913 idêntica em cima e embaixo por 10 s.",
+   "causa_raiz": "a composição editorial não exigia que o detalhe ampliasse de fato.",
+   "arquivos": [
+    "src/v3/decisao.py"
+   ],
+   "correcao": "detalhe precisa ampliar ≥ 1,5× a visão geral; senão foto única em recorte vertical (DETALHE-REPETE-GERAL). Limiar entre o caso reprovado (1,23×) e a placa de Londres (≈1,8×); calibrado em um só exemplo negativo.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_detalhe_que_repete_a_visao_geral_vira_foto_unica"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "layout",
+    "v4"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-056",
+   "titulo": "Mapa sem rota aceito como mapa que ensina; rótulos cortados e sob a legenda",
+   "sintoma": "c2: rota não desenhada (OSM não voltou); 'Cidade do Panamá' cortada; oceano sob a legenda.",
+   "causa_raiz": "rota ausente só era registrada; rótulos posicionados por projeção sem área segura nem colisão; Overpass sem espelho nem cache persistente.",
+   "arquivos": [
+    "src/v4/episodio.py",
+    "src/v4/geo.py",
+    "motor4/remotion/src/MapaRota.tsx",
+    ".github/workflows/v4-episodio.yml"
+   ],
+   "correcao": "rota prometida sem geometria real = cena não pronta (vai a alternativa/diagnóstico, nunca mapa decorativo); OSM com espelhos, 2ª consulta sem filtro de nome, cache persistente no Actions e tentativas gravadas; rótulos com área segura (x 60–1020, y 200–1150) e colisão; rota 14 px.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_mapa_que_promete_rota_sem_geometria_nao_fica_pronto",
+    "tests/test_v4_integracao.py::test_osm_tenta_espelhos_e_consulta_sem_nome_e_registra"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "mapa",
+    "v4"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-057",
+   "titulo": "3D como faixa fina no topo, rótulos sobrepostos e cortados",
+   "sintoma": "c7: câmara de longe e rasante; aquedutos/água invisíveis.",
+   "causa_raiz": "câmera distante (pos −63/+47/+75, FOV 34°) olhando o centro de uma câmara longa num quadro vertical; rótulos sem colisão.",
+   "arquivos": [
+    "motor4/remotion/src/Camara3D.tsx"
+   ],
+   "correcao": "vista 3/4 perto da comporta de montante (FOV 52°), navio junto da ação, rótulos pela mesma área segura/colisão do mapa; alternativa mecanismo.eclusa se o clipe não passar nos portões.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_backend_que_falha_cai_na_alternativa_pre_validada"
+   ],
+   "gravidade": "media",
+   "tags": [
+    "3d",
+    "v4"
+   ]
+  },
+  {
+   "data": "2026-11-16",
+   "versao": "motor V4 (auditoria do Heitor)",
+   "referencia": "auditoria V4 Panamá 16/11 sobre a execução 43972774128 (REPROVADO artisticamente)",
+   "verificavel": true,
+   "estado": "corrigido (aguarda o episódio de validação e o julgamento humano)",
+   "id": "ERR-058",
+   "titulo": "Diretor forçado a usar nove famílias; legenda repetindo o texto do componente; métricas misturando legenda e assunto",
+   "sintoma": "vitrine de ferramentas; c9 com a mesma frase duas vezes; foto escura medida como 50% vazia.",
+   "causa_raiz": "familias_obrigatorias no pedido/prompt; legenda sempre ligada; movimento e vazio medidos no quadro inteiro.",
+   "arquivos": [
+    "src/v4/diretor.py",
+    "src/v4/contrato.py",
+    ".github/v4/pedido.json",
+    "src/v4/episodio.py",
+    "motor4/remotion/src/Camada.tsx",
+    "src/v4/metricas.py"
+   ],
+   "correcao": "sem cota de famílias (forma pelo acontecimento) e cadeia sujeito→estado→ação→resultado obrigatória em ação física; legenda some só quando ≥ 70% do texto da tela é dito; movimento na zona de conteúdo sem a faixa de legenda, informação parada por cena, vazio de foto pela geometria.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_acao_fisica_exige_cadeia_visivel_no_contrato",
+    "tests/test_v4_integracao.py::test_legenda_some_so_quando_o_componente_escreve_a_fala",
+    "tests/test_v4_integracao.py::test_informacao_parada_e_vazio_geometrico"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "direcao",
+    "metricas",
+    "v4"
+   ]
   }
  ]
 }

@@ -78,6 +78,12 @@ def validar(ep: dict, acervo: dict | None = None, geo: dict | None = None) -> li
         alvo = f"{c.get('fala', '')} {c.get('o_que_precisa_aparecer', '')}"
         if (c.get('acao_fisica') or ACAO.search(c.get('o_que_precisa_aparecer') or '')) and mod not in DEMONSTRAM_ACAO:
             _v(out, cid, 'R-ACAO-SEM-DEMONSTRACAO', 'erro', f'a cena precisa mostrar ação ({alvo[:70]!r}) e {mod} não demonstra movimento')
+        # PROVA NARRATIVA (auditoria 16/11): ação física declara sujeito → estado inicial → ação → resultado
+        if c.get('acao_fisica'):
+            pv = c.get('prova') or {}
+            falta = [k for k in ('sujeito', 'estado_inicial', 'acao', 'resultado') if not str(pv.get(k) or '').strip()]
+            if falta:
+                _v(out, cid, 'R-ACAO-SEM-PROVA', 'erro', f"cena de ação sem a cadeia visível: falta {', '.join(falta)}")
         # ACERVO: registro precisa de asset com licença e crédito do PRÓPRIO asset
         p = c.get('params') or {}
         if comp in COMPONENTES and COMPONENTES[comp]['acervo'] in ('foto', 'video'):
@@ -133,5 +139,6 @@ def familias(ep: dict) -> dict:
     """cobertura de famílias (teste integrado): o que de fato está no contrato, por modalidade e backend"""
     mods = [c.get('modalidade') for c in ep.get('cenas') or []]
     comps = [c.get('componente') for c in ep.get('cenas') or []]
-    return {'modalidades': {m: mods.count(m) for m in MODALIDADES}, 'componentes': {k: comps.count(k) for k in set(comps)},
-            'faltam': [m for m in ('registro_foto', 'registro_video', 'mapa', 'documento', 'esquema_2d', 'composicao_25d', 'cena_3d', 'dados', 'tipografia') if m not in mods]}
+    # só o que foi usado: NÃO existe cota de famílias no episódio editorial (auditoria 16/11, 3.7); a prova de cada
+    # ferramenta é a suíte técnica (capacidades), não o filme
+    return {'modalidades': {m: mods.count(m) for m in MODALIDADES if m in mods}, 'componentes': {k: comps.count(k) for k in set(comps)}}

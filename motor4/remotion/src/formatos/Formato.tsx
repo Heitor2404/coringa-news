@@ -80,6 +80,15 @@ export const Formato: React.FC<FormatoProps> = (P) => {
     return 0;
   };
   const temMapa = P.palco.some(p => p.tipo === 'mapa');
+  // "respiração" lenta dos objetos de papel (documento, foto, ficha, calendário): +1,5 % ao longo da vida da camada, em
+  // torno do centro da caixa; a marcação sobre um documento herda a do alvo (continua no trecho certo).
+  const porId = Object.fromEntries(P.camadas.map(L => [L.id, L]));
+  const respira = (L: any) => {
+    const A = L.componente === 'dossie.evidenceHighlight' && L.p?.alvo ? porId[L.p.alvo] : L;
+    if (!A || !(A.componente === 'dossie.documentCard' || ['ficha', 'calendario'].includes(A.p?.estilo))) return undefined;
+    const s = 1 + .015 * clamp((t - A.t0) / Math.max(1, A.t1 - A.t0));
+    return { transform: `scale(${s})`, transformOrigin: `${A.caixa.x + A.caixa.w / 2}px ${A.caixa.y + A.caixa.h / 2}px` };
+  };
   useEffect(() => {
     if (!P.medir) return;
     const h = delayRender(`medir ${frame}`);
@@ -102,7 +111,7 @@ export const Formato: React.FC<FormatoProps> = (P) => {
         if (!Comp || t < L.t0 || t > L.t1 + sai) return null;
         const k = easeOut((t - L.t0) / entra);
         const v = clamp((t - L.t0) / entra) * clamp((L.t1 + sai - t) / sai);
-        return <div key={L.id} data-camada={L.id} data-componente={L.componente} style={{ position: 'absolute', inset: 0, opacity: v }}>
+        return <div key={L.id} data-camada={L.id} data-componente={L.componente} style={{ position: 'absolute', inset: 0, opacity: v, ...respira(L) }}>
           <Comp c={{ t, P, L, v, k }} /></div>;
       })}
     </AbsoluteFill>

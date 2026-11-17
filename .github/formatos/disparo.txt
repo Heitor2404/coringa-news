@@ -2,3 +2,7 @@ Execução integrada ÚNICA dos formatos (piloto ATLAS + demonstração DOSSIÊ)
 ("só gere a prévia integrada quando tudo estiver pronto"); preflight local verde em 2026-11-17T12:29:27Z; commit 3fb4960. Não repetir.
 
 Refeita 1× em 2026-11-17T12:32:37Z: a 44083616015 parou antes de renderizar (segredo ausente no passo de narração, ERR-065); nenhuma cota gasta.
+
+Prévia ÚNICA da direção de arte final (pedido do Heitor de 17/11 10:44: "gere apenas uma nova prévia completa do
+ATLAS e uma do DOSSIÊ"): preflight local verde (ATLAS 25/25, DOSSIÊ 30/30), quadros renderizados sem problema
+(ATLAS 11, DOSSIÊ 8), 26 testes verdes; narrações reutilizadas (cifradas, zero IA). 2026-11-17T15:08:11Z. Não repetir.

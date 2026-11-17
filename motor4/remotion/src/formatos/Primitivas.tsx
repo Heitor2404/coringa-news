@@ -294,7 +294,7 @@ export const DocumentCard: React.FC<{ c: Ctx }> = ({ c }) => {
         {/* luz da luminária sobre o papel (mesma direção da mesa) */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,236,200,.10) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,.16) 100%)' }} />
       </div>
-      {est === 'foto' && <><Fita x={-26} y={12} r={-22} /><Fita x={fw - 88} y={12} r={20} /></>}
+      {est === 'foto' && <><Fita x={-18} y={20} r={-22} /><Fita x={fw - 96} y={20} r={20} /></>}
       {est === 'documento' && <div style={{ position: 'absolute', left: 60, top: -10, width: 34, height: 96, border: '5px solid #B9BEC6', borderRadius: 18, borderBottomColor: 'transparent',
         boxShadow: '0 3px 6px rgba(0,0,0,.4)' }} />}
       <div style={{ paddingTop: 14, ...(est === 'documento' ? { marginTop: 14, padding: '10px 16px', background: C.papel, display: 'inline-block', boxShadow: '0 10px 24px rgba(0,0,0,.5)' } : {}) }}>

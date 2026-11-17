@@ -1,0 +1,38 @@
+{
+ "nome": "s2_gatun_eclusas",
+ "tipo": "satelite",
+ "cantos": [
+  [
+   -79.98046875,
+   9.318990192397909
+  ],
+  [
+   -79.87060546875,
+   9.318990192397909
+  ],
+  [
+   -79.87060546875,
+   9.232248799418674
+  ],
+  [
+   -79.98046875,
+   9.232248799418674
+  ]
+ ],
+ "px": [
+  1280,
+  1024
+ ],
+ "zoom_tiles": 14,
+ "fonte": {
+  "imagem": "Sentinel-2 cloudless 2016 (EOX, camada s2cloudless_3857), tiles WMTS",
+  "licenca": "CC BY 4.0 (edição 2016)",
+  "relevo_sombreado": "Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)",
+  "coleta": "Actions 44100398329"
+ },
+ "atribuicao": "Sentinel-2 cloudless 2016 by EOX (s2maps.eu · modified Copernicus Sentinel data 2016 & 2017) · CC BY 4.0",
+ "sha256": "e5f1a2488ff5acbcd791c77710d416c778886497c6a5fcbcedfe506e9a7f1d6a",
+ "gerado": "2026-11-17",
+ "arquivo": "s2_gatun_eclusas.webp",
+ "acabamento": "scripts/formatos_raster.py:acabamento (gama .78, saturação 1.18, borda suave 7% em alfa)"
+}

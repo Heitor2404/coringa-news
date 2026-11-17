@@ -68,3 +68,32 @@ outro arquivo. Slots e zonas: `src/v4/formatos/formatos.json` (marca y 282–334
 Corrigido sem nova execução: ERR-066 (nome próprio + impressão digital por mídia) e ERR-067 (progressão ≤ 3 s; planos
 ajustados com a narração real). A narração do DOSSIÊ ficou cifrada no repositório: uma nova execução custa 0 chamada de IA.
 Primeira execução (44083616015) parou antes de renderizar: segredo ausente no passo de narração (ERR-065).
+
+
+## Direção de arte final (17/11) — composições, rasters e validação nos quadros
+
+**Composições** (`formatos.json → composicoes`): cada beat escolhe uma. Ela fixa o palco, o QUADRO livre onde a câmera
+enquadra o território do beat (`roi` = oeste, sul, leste, norte) e os slots das camadas. Câmera = `plano.camera_roi`
+(foco + âncora em tela; pan proporcional à escala na transição; deriva lenta no beat), igual em `Palco.tsx`.
+
+| composição | uso |
+|---|---|
+| atlas.protagonista | o mapa é a informação; só etiqueta curta fora do território |
+| atlas.manchete | gancho/fecho: título em cima, território embaixo |
+| atlas.painel | território em cima, número/perfil embaixo (ligados pelos nomes) |
+| atlas.lateral | território alto + coluna de dados |
+| atlas.documento | prova fotográfica grande sobre o mapa esmaecido |
+| atlas.tecnica | estrutura abstrata em tela cheia |
+| dossie.capa / documento / ficha / calendario / relacao | pasta; documento real + marcações na região exata; ficha com prova presa e carimbo; mês real com o dia; régua proporcional |
+
+**Rasters** (`motor4/formatos/dados/raster/`, procedência em `ATRIBUICAO.md` e `.json`): NE2 (domínio público) no
+largo; Sentinel-2 cloudless **2016** (CC BY 4.0) no canal/eclusas, coletados por `formatos-coleta.yml` (sem IA).
+
+**Regras novas** (plano): F-COMPOSICAO, F-COBRE-TERRITORIO, F-MAPA-BAIXA-RESOLUCAO, F-RECONSTRUCAO. **No quadro
+renderizado** (`python -m src.v4.formatos quadros`, `scripts/formatos_validar.py`, `motor4/remotion/medir.mjs`):
+R-COLISAO, R-COBRE-TERRITORIO, R-ZONA-IDENTIDADE, R-ROTULO-COBERTO, R-TRANSBORDA, R-TEXTO-PEQUENO (≥ 26 px; crédito
+≥ 18 px), R-TEXTO-CORTADO, R-CENA-VAZIA — a própria página registra a geometria real depois que o mapa e as fontes ficam
+prontos. **No MP4**: ritmo medido (`ritmo.py`, mesma métrica das referências) com portão ≤ 3 s parado.
+
+**Mídia**: a biblioteca guarda o sha256 DA ORIGEM; `ativos` confere antes de usar; o preflight confere o arquivo do
+render contra o registrado (ERR-066). Reconstruções editoriais são sempre rotuladas.

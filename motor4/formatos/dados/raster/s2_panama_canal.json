@@ -1,0 +1,38 @@
+{
+ "nome": "s2_panama_canal",
+ "tipo": "satelite",
+ "cantos": [
+  [
+   -80.5078125,
+   9.795677582829734
+  ],
+  [
+   -79.1015625,
+   9.795677582829734
+  ],
+  [
+   -79.1015625,
+   8.407168163601074
+  ],
+  [
+   -80.5078125,
+   8.407168163601074
+  ]
+ ],
+ "px": [
+  2048,
+  2048
+ ],
+ "zoom_tiles": 11,
+ "fonte": {
+  "imagem": "Sentinel-2 cloudless 2016 (EOX, camada s2cloudless_3857), tiles WMTS",
+  "licenca": "CC BY 4.0 (edição 2016)",
+  "relevo_sombreado": "Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)",
+  "coleta": "Actions 44100398329"
+ },
+ "atribuicao": "Sentinel-2 cloudless 2016 by EOX (s2maps.eu · modified Copernicus Sentinel data 2016 & 2017) · CC BY 4.0",
+ "sha256": "4716029855ec493a66456ac23ae1beb60e22debd9a9af4beba674009737c1555",
+ "gerado": "2026-11-17",
+ "arquivo": "s2_panama_canal.webp",
+ "acabamento": "scripts/formatos_raster.py:acabamento (gama .78, saturação 1.18, borda suave 7% em alfa)"
+}

@@ -1,6 +1,7 @@
-"""python -m src.v4.formatos {validar|narrar|ativos|preflight|render} <plano.json> [saida]
+"""python -m src.v4.formatos {validar|narrar|ativos|preflight|quadros|render|folhas|telegram} <plano.json> [saida]
 
-Ordem no Actions: narrar → ativos → preflight (para se vermelho) → render. Nenhum passo repete chamada de IA.
+Ordem no Actions: narrar → ativos → preflight → quadros (styleframes + colisões nos quadros renderizados) → render →
+folhas (contato + antes/depois) → telegram. Para no primeiro vermelho. Nenhum passo repete chamada de IA.
 """
 import json
 import sys
@@ -30,6 +31,15 @@ def main(a):
             print(f"  [{'OK ' if i['ok'] else 'NÃO'}] {i['item']}" + (f" — {i['detalhe']}" if i['detalhe'] else ''))
         print(json.dumps({'pronto': r['pronto'], 'itens': len(r['itens']), 'falhas': sum(not i['ok'] for i in r['itens'])}))
         sys.exit(0 if r['pronto'] else 1)
+    elif cmd == 'quadros':
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('fv', Path(__file__).resolve().parents[3] / 'scripts' / 'formatos_validar.py')
+        fv = importlib.util.module_from_spec(spec); spec.loader.exec_module(fv)
+        r = fv.main(saida, saida / 'quadros', 'auto', int(pl.get('styleframes', 6)))
+        sys.exit(0 if r['ok'] else 1)
+    elif cmd == 'folhas':
+        print(json.dumps(produzir.folhas(saida, pl.get('antes')), ensure_ascii=False))
+        produzir.evolucao(saida, pl)
     elif cmd == 'telegram':
         print(json.dumps(produzir.telegram(saida, pl['titulo']), ensure_ascii=False, default=str))
     elif cmd == 'render':

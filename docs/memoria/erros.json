@@ -1733,6 +1733,81 @@
     "formatos",
     "ritmo"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos (direção de arte)",
+   "verificavel": true,
+   "id": "ERR-068",
+   "referencia": "coleta 44097219552",
+   "titulo": "Mosaico de satélite preto salvo sem erro",
+   "sintoma": "satélite do canal/eclusas inteiramente preto; o relevo veio certo.",
+   "causa_raiz": "identificador da camada EOX errado (s2cloudless-2016_3857 não existe; a 2016 é s2cloudless_3857): 404 em todos os tiles, e o mosaico colava só os que vieram.",
+   "arquivos": [
+    "scripts/formatos_raster.py"
+   ],
+   "correcao": "camada correta (única edição CC BY 4.0) e tile ausente = falha.",
+   "testes": [
+    "tests/test_formatos.py::test_mosaico_com_tile_ausente_falha_em_vez_de_virar_satelite_preto"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (coleta 44100398329 ok)",
+   "tags": [
+    "formatos",
+    "mapa",
+    "licenca"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos (direção de arte)",
+   "verificavel": true,
+   "id": "ERR-069",
+   "referencia": "validação local sobre quadros renderizados (17/11)",
+   "titulo": "Rótulos e território do mapa calculados com a câmera do quadro anterior",
+   "sintoma": "na medição do quadro 55,2 s o território das eclusas aparecia com 8 px, longe do lugar; no vídeo os rótulos andariam 1 quadro atrasados.",
+   "causa_raiz": "o quadro era liberado (continueRender) no \"idle\" do MapLibre, antes de o React refazer o desenho com a câmera nova.",
+   "arquivos": [
+    "motor4/remotion/src/formatos/Palco.tsx"
+   ],
+   "correcao": "libera o quadro só depois do novo desenho (estado pronto=quadro) — a medição passa a ver a geometria certa.",
+   "testes": [
+    "tests/test_formatos.py::test_mapa_sem_raster_nitido_e_camada_sobre_o_territorio_sao_erro"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "tags": [
+    "formatos",
+    "mapa",
+    "render"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos (direção de arte)",
+   "verificavel": true,
+   "id": "ERR-070",
+   "referencia": "execução 44084129999 + direção de arte 17/11",
+   "titulo": "Esquema grande cobrindo o território explicado e mapa chapado",
+   "sintoma": "perfil de degraus e cartões em cima do canal; mapa vetorial escuro e repetitivo; DOSSIÊ com cara de slide sobre fundo preto.",
+   "causa_raiz": "câmera do mapa escrita à mão e slots fixos que ignoravam onde o território estava; sem base raster; sem composições de mesa.",
+   "arquivos": [
+    "src/v4/formatos/formatos.json",
+    "src/v4/formatos/plano.py",
+    "motor4/remotion/src/formatos/"
+   ],
+   "correcao": "composições com QUADRO livre: a câmera enquadra o roi do beat nele (F-COBRE-TERRITORIO no plano e R-COBRE-TERRITORIO no quadro renderizado); rasters NE2/Sentinel-2 2016 com F-MAPA-BAIXA-RESOLUCAO; mesa de investigação, pasta, ficha, calendário e régua proporcional.",
+   "testes": [
+    "tests/test_formatos.py::test_mapa_sem_raster_nitido_e_camada_sobre_o_territorio_sao_erro",
+    "tests/test_formatos.py::test_raster_do_palco_tem_procedencia_licenca_e_resolucao",
+    "tests/test_formatos.py::test_reconstrucao_editorial_sempre_rotulada"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido (aguarda prévia e olho humano)",
+   "tags": [
+    "formatos",
+    "direcao_de_arte"
+   ]
   }
  ]
 }

@@ -1,0 +1,713 @@
+{
+ "formato": "atlas",
+ "canal": "coringa",
+ "video_id": "atlas-piloto-panama",
+ "titulo": "Por que os navios sobem no Canal do Panamá?",
+ "tipo_producao": "piloto supervisionado (direção de arte 17/11): mesma narração cifrada e fatos da 44049021691; câmera e layout por composição",
+ "narracao": {
+  "cifrada": ".github/v4/material/narracao_44049021691.bin"
+ },
+ "geo": "motor4/formatos/dados/panama.topo.json",
+ "fatos_ref": ".github/v4/pedido.json",
+ "duracao": 79.05,
+ "destaques": [
+  {
+   "fonte": "paises",
+   "nome": "Panama",
+   "cor": "destaque",
+   "t0": 5.854,
+   "t1": 7.484
+  },
+  {
+   "fonte": "lagos",
+   "nome": "Lago Gatun",
+   "cor": "destaque",
+   "t0": 14.089,
+   "t1": 22.884
+  },
+  {
+   "fonte": "lagos",
+   "nome": "Lago Gatun",
+   "cor": "destaque2",
+   "t0": 61.352,
+   "t1": 70.028
+  },
+  {
+   "fonte": "paises",
+   "nome": "Panama",
+   "cor": "destaque",
+   "t0": 72.141
+  }
+ ],
+ "rotas": [
+  {
+   "t0": 8.027,
+   "t1": 11.65,
+   "cor": "destaque",
+   "some": 22.884
+  },
+  {
+   "t0": 62.64,
+   "t1": 68.61,
+   "cor": "destaque2",
+   "some": 70.028
+  }
+ ],
+ "rotulos": [
+  {
+   "nome": "Mar do Caribe",
+   "lonlat": [
+    -80.2,
+    10.6
+   ],
+   "t0": 6.483,
+   "t1": 7.484,
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Oceano Pacífico",
+   "lonlat": [
+    -80.4,
+    7.35
+   ],
+   "t0": 6.84,
+   "t1": 7.484,
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Colón",
+   "lonlat": [
+    -79.9,
+    9.36
+   ],
+   "t0": 9.75,
+   "t1": 12.403,
+   "estilo": "ponto"
+  },
+  {
+   "nome": "Atlântico",
+   "lonlat": [
+    -79.84,
+    9.33
+   ],
+   "t0": 11.066,
+   "t1": 12.403,
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Pacífico",
+   "lonlat": [
+    -79.56,
+    8.92
+   ],
+   "t0": 11.822,
+   "t1": 12.403,
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Lago Gatún",
+   "lonlat": [
+    -79.88,
+    9.17
+   ],
+   "t0": 16.357,
+   "t1": 22.884,
+   "estilo": "lago"
+  },
+  {
+   "nome": "Gatún",
+   "lonlat": [
+    -79.92,
+    9.27
+   ],
+   "t0": 27.31,
+   "t1": 31.609,
+   "estilo": "ponto"
+  },
+  {
+   "nome": "Pedro Miguel",
+   "lonlat": [
+    -79.615,
+    9.017
+   ],
+   "t0": 29.036,
+   "t1": 31.609,
+   "estilo": "ponto"
+  },
+  {
+   "nome": "Miraflores",
+   "lonlat": [
+    -79.592,
+    8.997
+   ],
+   "t0": 30.025,
+   "t1": 31.609,
+   "estilo": "ponto"
+  },
+  {
+   "nome": "Miraflores",
+   "lonlat": [
+    -79.592,
+    8.997
+   ],
+   "t0": 50.544,
+   "t1": 55.654,
+   "estilo": "ponto"
+  },
+  {
+   "nome": "Lago Gatún",
+   "lonlat": [
+    -79.88,
+    9.17
+   ],
+   "t0": 61.352,
+   "t1": 70.028,
+   "estilo": "lago"
+  },
+  {
+   "nome": "Caribe",
+   "lonlat": [
+    -79.84,
+    9.36
+   ],
+   "t0": 68.61,
+   "t1": 70.028,
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Pacífico",
+   "lonlat": [
+    -79.56,
+    8.9
+   ],
+   "t0": 68.81,
+   "t1": 70.028,
+   "estilo": "oceano"
+  }
+ ],
+ "clipes": [
+  {
+   "t0": 31.49,
+   "t1": 40.91,
+   "componente": "mecanismo.eclusa",
+   "fatos": [
+    "f3",
+    "f7",
+    "f8"
+   ],
+   "params": {
+    "sentido": "subir",
+    "desnivel_m": 9,
+    "lago": "LAGO GATÚN",
+    "mar": "NÍVEL BAIXO",
+    "degraus": 1,
+    "etapas": [
+     "Navio entra, comporta fecha",
+     "Válvula abre: água do lago entra",
+     "Níveis iguais: o navio subiu"
+    ],
+    "tempos": [
+     0.11,
+     5.31,
+     7.81
+    ]
+   }
+  }
+ ],
+ "beats": [
+  {
+   "id": "b1-gancho",
+   "composicao": "atlas.documento",
+   "t": 0.0,
+   "roi": [
+    -83.2,
+    6.9,
+    -77.0,
+    9.9
+   ],
+   "zoom_max": 6.2,
+   "prova": "navio real dentro da eclusa de Miraflores (foto CC BY-SA) sobre o mapa do istmo",
+   "camadas": [
+    {
+     "id": "foto-gancho",
+     "componente": "dossie.documentCard",
+     "slot": "foto",
+     "t0": 0.3,
+     "t1": 5.904,
+     "p": {
+      "asset": "commons:Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg",
+      "estilo": "foto",
+      "meta": [
+       "ECLUSA DE MIRAFLORES · PANAMÁ",
+       "FOTO: ADAM JONES · CC BY-SA 2.0"
+      ]
+     }
+    },
+    {
+     "id": "pergunta",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "titulo",
+     "t0": 2.43,
+     "t1": 5.904,
+     "p": {
+      "linhas": [
+       {
+        "texto": "SOBE UMA",
+        "t": 2.48,
+        "tamanho": 72
+       },
+       {
+        "texto": "MONTANHA?",
+        "t": 3.124,
+        "tamanho": 72,
+        "destaque": true
+       }
+      ]
+     }
+    }
+   ],
+   "deriva": 0.006
+  },
+  {
+   "id": "b1b-oceanos",
+   "composicao": "atlas.protagonista",
+   "t": 5.904,
+   "roi": [
+    -83.2,
+    6.9,
+    -77.0,
+    9.9
+   ],
+   "zoom_max": 6.35,
+   "transicao": 1.0,
+   "prova": "o istmo entre dois oceanos, no relevo real",
+   "camadas": [],
+   "deriva": 0.006
+  },
+  {
+   "id": "b2-rota",
+   "composicao": "atlas.protagonista",
+   "t": 7.484,
+   "roi": [
+    -79.97,
+    8.9,
+    -79.52,
+    9.36
+   ],
+   "transicao": 1.6,
+   "prova": "rota real (OSM) de mar a mar sobre a imagem orbital",
+   "camadas": [
+    {
+     "id": "km",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": 9.44,
+     "t1": 12.303,
+     "p": {
+      "estilo": "pilula",
+      "valor": 80,
+      "prefixo": "≈ ",
+      "unidade": "KM",
+      "rotulo": "DE MAR A MAR",
+      "contagem": true,
+      "dur_contagem": 1.0
+     }
+    }
+   ]
+  },
+  {
+   "id": "b3-lago",
+   "composicao": "atlas.protagonista",
+   "t": 12.403,
+   "roi": [
+    -80.1,
+    8.99,
+    -79.63,
+    9.34
+   ],
+   "transicao": 1.2,
+   "prova": "o lago Gatún no meio do canal, destacado",
+   "camadas": [
+    {
+     "id": "lago-nota",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": 14.613,
+     "t1": 16.664,
+     "p": {
+      "estilo": "pilula",
+      "valor": "MAIS ALTO QUE O MAR"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b3b-altura",
+   "composicao": "atlas.painel",
+   "t": 16.764,
+   "roi": [
+    -80.1,
+    8.99,
+    -79.63,
+    9.34
+   ],
+   "transicao": 1.0,
+   "prova": "26 m acima do mar + divisa continental",
+   "camadas": [
+    {
+     "id": "altura",
+     "componente": "editorial.statCard",
+     "slot": "painel",
+     "t0": 19.571,
+     "t1": 22.884,
+     "p": {
+      "titulo": "LAGO GATÚN",
+      "valor": 26,
+      "unidade": "m",
+      "rotulo": "acima do nível do mar",
+      "contagem": true,
+      "dur_contagem": 1.4
+     }
+    },
+    {
+     "id": "divisa",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": 21.611,
+     "t1": 22.884,
+     "p": {
+      "estilo": "pilula",
+      "valor": "ATRAVESSA A DIVISA CONTINENTAL"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b4-degraus",
+   "composicao": "atlas.painel",
+   "t": 22.934,
+   "roi": [
+    -79.97,
+    8.9,
+    -79.52,
+    9.36
+   ],
+   "transicao": 1.0,
+   "prova": "perfil do canal ligado aos nomes das eclusas no mapa",
+   "camadas": [
+    {
+     "id": "perfil",
+     "componente": "editorial.hierarchy",
+     "slot": "painel",
+     "t0": 23.084,
+     "t1": 31.509,
+     "p": {
+      "escada": false,
+      "alturas": [
+       0,
+       0.333,
+       0.667,
+       1,
+       0.667,
+       0.333,
+       0
+      ],
+      "niveis": [
+       {
+        "rotulo": "Atlântico"
+       },
+       {
+        "rotulo": "Gatún"
+       },
+       {
+        "rotulo": "Gatún"
+       },
+       {
+        "rotulo": "Lago",
+        "valor": "26 m"
+       },
+       {
+        "rotulo": "P. Miguel"
+       },
+       {
+        "rotulo": "Miraflores"
+       },
+       {
+        "rotulo": "Pacífico"
+       }
+      ],
+      "ativo": [
+       {
+        "i": 1,
+        "t0": 27.3
+       },
+       {
+        "i": 2,
+        "t0": 27.6
+       },
+       {
+        "i": 3,
+        "t0": 27.9
+       },
+       {
+        "i": 4,
+        "t0": 29.0
+       },
+       {
+        "i": 5,
+        "t0": 30.0
+       }
+      ],
+      "legenda_base": "3 degraus de cada lado",
+      "legenda_t": 25.9
+     }
+    }
+   ]
+  },
+  {
+   "id": "b6-gravidade",
+   "composicao": "atlas.tecnica",
+   "t": 40.93,
+   "prova": "caminho da água: lago → aquedutos → paredes → piso; zero bombas",
+   "camadas": [
+    {
+     "id": "zero",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": 41.0,
+     "t1": 50.4,
+     "p": {
+      "estilo": "pilula",
+      "valor": 0,
+      "unidade": "BOMBAS",
+      "rotulo": "SÓ GRAVIDADE"
+     }
+    },
+    {
+     "id": "fluxo",
+     "componente": "editorial.flowConnections",
+     "slot": "corpo",
+     "t0": 42.3,
+     "t1": 50.4,
+     "p": {
+      "fluxo": true,
+      "largura": 700,
+      "nos": [
+       {
+        "rotulo": "Lago Gatún",
+        "sub": "nível alto",
+        "t": 42.4
+       },
+       {
+        "rotulo": "Aquedutos",
+        "sub": "≈ 5,5 m de diâmetro",
+        "t": 44.5,
+        "seta": "desce"
+       },
+       {
+        "rotulo": "Paredes da eclusa",
+        "t": 47.4
+       },
+       {
+        "rotulo": "Piso da câmara",
+        "sub": "aberturas",
+        "t": 49.3,
+        "destaque": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "b7-volume",
+   "composicao": "atlas.painel",
+   "t": 50.494,
+   "roi": [
+    -79.64,
+    8.975,
+    -79.56,
+    9.045
+   ],
+   "transicao": 1.4,
+   "prova": "eclusas de Miraflores vistas de cima + volume e tempo de uma câmara",
+   "camadas": [
+    {
+     "id": "volume",
+     "componente": "editorial.statCard",
+     "slot": "painel",
+     "t0": 51.676,
+     "t1": 55.554,
+     "p": {
+      "titulo": "POR CÂMARA",
+      "valor": 101,
+      "prefixo": "≈ ",
+      "unidade": "mil m³",
+      "rotulo": "de água para encher",
+      "contagem": true,
+      "dur_contagem": 1.2
+     }
+    },
+    {
+     "id": "minutos",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": 54.83,
+     "t1": 55.554,
+     "p": {
+      "estilo": "pilula",
+      "valor": 8,
+      "prefixo": "≈ ",
+      "unidade": "MIN",
+      "rotulo": "PARA ENCHER"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b7b-comportas",
+   "composicao": "atlas.documento",
+   "t": 55.554,
+   "prova": "comportas reais (1913)",
+   "camadas": [
+    {
+     "id": "comportas",
+     "componente": "dossie.documentCard",
+     "slot": "foto",
+     "t0": 55.604,
+     "t1": 58.816,
+     "p": {
+      "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+      "estilo": "foto",
+      "data_carimbo": "18 JUL 1913",
+      "t_carimbo": 57.46,
+      "meta": [
+       "COMPORTAS DO MAR SOB PRESSÃO · GATÚN",
+       "FOTO: HARRIS & EWING · DOMÍNIO PÚBLICO"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "b8-agua",
+   "composicao": "atlas.painel",
+   "t": 58.916,
+   "roi": [
+    -79.97,
+    8.9,
+    -79.52,
+    9.36
+   ],
+   "transicao": 1.2,
+   "prova": "a água doce do lago percorre o canal e termina no mar",
+   "camadas": [
+    {
+     "id": "preco",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": 59.922,
+     "t1": 63.207,
+     "p": {
+      "estilo": "pilula",
+      "valor": "O PREÇO: ÁGUA DOCE DO LAGO"
+     }
+    },
+    {
+     "id": "litros",
+     "componente": "editorial.statCard",
+     "slot": "painel",
+     "t0": 63.307,
+     "t1": 69.928,
+     "p": {
+      "titulo": "POR TRAVESSIA",
+      "valor": 197,
+      "prefixo": "≈ ",
+      "unidade": "milhões de L",
+      "rotulo": "metade sobe, metade desce",
+      "contagem": true,
+      "dur_contagem": 1.3
+     }
+    },
+    {
+     "id": "mar",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": 68.61,
+     "t1": 69.928,
+     "p": {
+      "estilo": "pilula",
+      "valor": "TUDO TERMINA NO MAR"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b9-payoff",
+   "composicao": "atlas.manchete",
+   "t": 70.028,
+   "roi": [
+    -83.2,
+    6.9,
+    -77.0,
+    9.9
+   ],
+   "zoom_max": 6.3,
+   "transicao": 1.6,
+   "prova": "retorno ao mapa inicial + síntese",
+   "camadas": [
+    {
+     "id": "payoff",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "titulo",
+     "t0": 72.434,
+     "t1": 79.0,
+     "p": {
+      "linhas": [
+       {
+        "texto": "UM LAGO NO ALTO",
+        "t": 72.534,
+        "tamanho": 76
+       },
+       {
+        "texto": "DESDE 1914",
+        "t": 74.235,
+        "tamanho": 76,
+        "destaque": true
+       },
+       {
+        "texto": "SÓ GRAVIDADE",
+        "t": 77.05,
+        "tamanho": 76
+       }
+      ]
+     }
+    }
+   ],
+   "deriva": 0.004
+  }
+ ],
+ "camera": "roi",
+ "rasters": [
+  {
+   "nome": "ne2_istmo_panama"
+  },
+  {
+   "nome": "s2_panama_canal",
+   "de": 8.2,
+   "ajuste": {
+    "brilho_max": 1.0,
+    "contraste": 0.12,
+    "saturacao": 0.1
+   }
+  },
+  {
+   "nome": "s2_miraflores_eclusas",
+   "de": 12.1,
+   "ajuste": {
+    "contraste": 0.12,
+    "saturacao": 0.1
+   }
+  }
+ ]
+}

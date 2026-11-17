@@ -1,18 +1,75 @@
-// Composição única dos FORMATOS. Palco persistente + camadas (primitivas) em slots fixos. Marca e legendas NÃO são
-// desenhadas aqui: vêm da camada global (Camada.tsx), como em todo o V4.
-import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
+// Composição única dos FORMATOS. Palco persistente + camadas (primitivas) nos slots da COMPOSIÇÃO do beat. Marca e
+// legendas NÃO são desenhadas aqui: vêm da camada global (Camada.tsx), como em todo o V4.
+// Com props.medir, o quadro registra no console a geometria REAL depois de pronto (mapa ocioso, fontes carregadas):
+// caixas visíveis de cada camada, território do beat, rótulos, menor corpo de texto e textos cortados → scripts/formatos_validar.py.
+import React, { useEffect } from 'react';
+import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Fontes, clamp } from '../ident';
 import { PalcoMapa, PalcoMesa, PalcoTecnico, palcoEm } from './Palco';
 import { PRIMITIVAS, easeOut } from './Primitivas';
 import type { FormatoProps } from './tipos';
+
+type R = { x: number; y: number; w: number; h: number };
+const uniao = (rs: R[]) => {
+  if (!rs.length) return null;
+  const x0 = Math.min(...rs.map(r => r.x)), y0 = Math.min(...rs.map(r => r.y));
+  const x1 = Math.max(...rs.map(r => r.x + r.w)), y1 = Math.max(...rs.map(r => r.y + r.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+};
+const opacidade = (el: Element | null) => { let o = 1; for (let e = el as HTMLElement | null; e && e !== document.body; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity || '1'); return o; };
+const ret = (d: DOMRect): R => ({ x: d.left, y: d.top, w: d.width, h: d.height });
+
+function medir(frame: number) {
+  const out: any = { frame, camadas: [], textos: [], cortados: [], rotulos: [], roi: null };
+  document.querySelectorAll('[data-camada]').forEach(c => {
+    if (opacidade(c) < .05) return;
+    const rs: R[] = [];
+    c.querySelectorAll('*').forEach(el => {
+      const s = getComputedStyle(el), r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1 || opacidade(el) < .05) return;
+      const fundo = s.backgroundColor && !/rgba\(.*, 0\)$/.test(s.backgroundColor) && s.backgroundColor !== 'transparent';
+      if (el.tagName === 'IMG' || el.tagName === 'svg' || fundo || s.backgroundImage !== 'none' || parseFloat(s.borderTopWidth) > 0 || parseFloat(s.borderLeftWidth) > 0) rs.push(ret(r));
+    });
+    const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+      if (!n.textContent?.trim()) continue;
+      const el = n.parentElement!, rg = document.createRange(); rg.selectNodeContents(n);
+      const r = rg.getBoundingClientRect();
+      if (r.width < 1 || opacidade(el) < .3) continue;
+      rs.push(ret(r));
+      const esc = el.getBoundingClientRect().height / Math.max(1, (el as HTMLElement).offsetHeight || 1);
+      out.textos.push({ camada: c.getAttribute('data-camada'), txt: n.textContent.trim().slice(0, 40), px: Math.round(parseFloat(getComputedStyle(el).fontSize) * (esc || 1) * 10) / 10,
+        meta: !!el.closest('[data-meta]') });
+    }
+    c.querySelectorAll('*').forEach(el => {
+      const h = el as HTMLElement, s = getComputedStyle(h);
+      if ((s.overflow === 'hidden' || s.textOverflow === 'ellipsis') && h.scrollWidth > h.clientWidth + 2 && h.textContent?.trim() && opacidade(h) > .3 && !h.querySelector('img'))
+        out.cortados.push({ camada: c.getAttribute('data-camada'), txt: h.textContent.trim().slice(0, 50) });
+    });
+    const u = uniao(rs);
+    if (u) out.camadas.push({ id: c.getAttribute('data-camada'), componente: c.getAttribute('data-componente'), caixa: u });
+  });
+  document.querySelectorAll('[data-rotulo]').forEach(el => { if (opacidade(el) > .3) out.rotulos.push({ tipo: el.getAttribute('data-rotulo'), txt: el.textContent, caixa: ret(el.getBoundingClientRect()) }); });
+  document.querySelectorAll('[data-meta]').forEach(el => {
+    if (opacidade(el) < .3 || el.closest('[data-camada]') || !el.textContent?.trim()) return;
+    const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) if (n.textContent?.trim())
+      out.textos.push({ camada: null, txt: n.textContent.trim().slice(0, 40), px: parseFloat(getComputedStyle(n.parentElement!).fontSize), meta: true });
+    const h = el as HTMLElement, s = getComputedStyle(h);
+    if ((s.overflow === 'hidden' || s.textOverflow === 'ellipsis') && h.scrollWidth > h.clientWidth + 2) out.cortados.push({ camada: el.getAttribute('data-meta'), txt: h.textContent!.trim().slice(0, 50) });
+    const r = h.getBoundingClientRect();
+    out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r) }]);
+  });
+  const roi = document.querySelector('[data-roi]');
+  if (roi && opacidade(roi) > .3) out.roi = ret(roi.getBoundingClientRect());
+  console.log('MEDIDA ' + JSON.stringify(out));
+}
 
 export const Formato: React.FC<FormatoProps> = (P) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
   const { entra, sai } = P.tokens.tempo;
-  // opacidade de cada tipo de palco: dissolve de 0,5 s na troca
   const i = palcoEm(P.palco, t);
   const op = (tipo: string) => {
     const atual = P.palco[i];
@@ -23,6 +80,17 @@ export const Formato: React.FC<FormatoProps> = (P) => {
     return 0;
   };
   const temMapa = P.palco.some(p => p.tipo === 'mapa');
+  useEffect(() => {
+    if (!P.medir) return;
+    const h = delayRender(`medir ${frame}`);
+    let n = 0;
+    const tenta = () => {
+      const w = window as any;
+      const mapaPronto = !temMapa || op('mapa') <= 0 || w.__mapaQuadro === frame;
+      if ((mapaPronto && (document as any).fonts?.status === 'loaded') || n++ > 200) { medir(frame); continueRender(h); } else setTimeout(tenta, 40);
+    };
+    setTimeout(tenta, 60);
+  }, [frame]);
   return (
     <AbsoluteFill style={{ background: P.tokens.palco.mesa.fundo }}>
       <Fontes />

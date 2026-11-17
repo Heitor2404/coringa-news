@@ -1,7 +1,7 @@
 name: Formatos — piloto ATLAS + demonstração DOSSIÊ (prévia privada)
 
 # Formatos padronizados (src/v4/formatos). Disparo SÓ manual, depois de preflight local verde e autorização.
-# Ordem: narrar → ativos → PREFLIGHT (para se vermelho, nada é renderizado) → render → prévia PRIVADA no Telegram →
+# Ordem: narrar → ativos → PREFLIGHT → QUADROS (styleframes + colisões nos quadros renderizados; vermelho = nada renderizado) → render → folhas → prévia PRIVADA no Telegram →
 # resultado cifrado (GPG) no ramo órfão formatos-resultado. Sem publicação, merge, main, NTC ou provedor pago.
 on:
   # disparo explícito: alterar .github/formatos/disparo.txt (registro de quem autorizou e por quê); nada mais dispara
@@ -65,6 +65,12 @@ jobs:
         run: |
           python -m src.v4.formatos preflight $PLANO_ATLAS saida_formatos/atlas
           python -m src.v4.formatos preflight $PLANO_DOSSIE saida_formatos/dossie
+      - name: Styleframes + colisões/leitura nos QUADROS RENDERIZADOS (para aqui se vermelho)
+        env:
+          CORINGA_CHROME: /usr/bin/google-chrome
+        run: |
+          python -m src.v4.formatos quadros $PLANO_ATLAS saida_formatos/atlas
+          python -m src.v4.formatos quadros $PLANO_DOSSIE saida_formatos/dossie
       - name: Render ATLAS
         timeout-minutes: 70
         env:
@@ -78,6 +84,14 @@ jobs:
           REMOTION_CHROME: /usr/bin/google-chrome
           CORINGA_CHROME: /usr/bin/google-chrome
         run: python -m src.v4.formatos render $PLANO_DOSSIE saida_formatos/dossie
+      - name: Folhas de contato + comparação antes/depois + relatório de evolução
+        if: always()
+        env:
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+        run: |
+          python -m src.v4.formatos folhas $PLANO_ATLAS saida_formatos/atlas || echo "folhas ATLAS falharam"
+          python -m src.v4.formatos folhas $PLANO_DOSSIE saida_formatos/dossie || echo "folhas DOSSIÊ falharam"
       - name: Prévias PRIVADAS ao Telegram (NÃO publicado)
         if: always()
         env:
@@ -94,6 +108,7 @@ jobs:
           rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
           mkdir -p /tmp/res saida_formatos
           find saida_formatos -path '*/_trabalho/*' \( -name '*.png' -o -name 'jan_*.mp4' -o -name 'p[0-9]*.mp4' \) -delete || true
+          find saida_formatos -path '*/quadros/*' \( -name 'f_*.png' -o -name 'c_*.png' \) -delete || true
           tar -czf /tmp/f.tgz saida_formatos
           split -b 90m /tmp/f.tgz /tmp/f.tgz.parte_
           for p in /tmp/f.tgz.parte_*; do gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/$(basename $p)-${{ github.run_id }}.gpg $p; done

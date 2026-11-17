@@ -5,14 +5,21 @@ export type Tokens = {
   cores: Record<string, string>;
   fontes: { titulo: string; dado: string };
   tempo: { entra: number; sai: number };
-  palco: { mapa: { mar: string; terra: string; borda: string; agua: string; destaque: string; destaque2: string }; tecnico: { fundo: string; linha: string; grade: string }; mesa: { fundo: string; luz: string } };
+  palco: { mapa: { mar: string; terra: string; borda: string; agua: string; destaque: string; destaque2: string }; tecnico: { fundo: string; linha: string; grade: string };
+    mesa: { fundo: string; luz: string; madeira?: string; madeira_r?: number; madeira_g?: number; madeira_b?: number } };
 };
 export type PalcoKey = {
   t: number;                         // a partir deste instante (s)
   tipo: 'mapa' | 'tecnico' | 'mesa';
-  camera?: { centro: [number, number]; zoom: number };
+  camera?: { centro: [number, number]; zoom: number } | { foco: [number, number]; ancora: [number, number]; zoom: number };
   dur_camera?: number;               // tempo da mudança de escala (s); 0 = corte
+  deriva?: number;                   // zoom/s durante o beat (movimento lento e contínuo)
+  veu?: string;                      // véu da composição (legibilidade sem cobrir o território)
+  roi?: [number, number, number, number];   // território do beat (oeste, sul, leste, norte)
+  composicao?: string;
 };
+export type Raster = { nome: string; src: string; cantos: [number, number][]; de?: number | null; ate?: number | null; atribuicao: string; tipo: string;
+  ajuste?: { saturacao?: number; contraste?: number; brilho_min?: number; brilho_max?: number } };
 export type Destaque = { fonte: 'paises' | 'lagos'; nome: string; cor?: 'destaque' | 'destaque2' | 'agua'; t0: number; t1?: number };
 export type Rota = { t0: number; t1: number; ate?: number; cor?: 'destaque' | 'agua'; some?: number };
 export type Rotulo = { nome: string; lonlat: [number, number]; t0: number; t1?: number; estilo?: 'ponto' | 'area' | 'oceano' | 'lago' };
@@ -22,6 +29,8 @@ export type FormatoProps = {
   formato: 'atlas' | 'dossie';
   tokens: Tokens;
   geo?: { topo: any; meta?: any } | null;
+  rasters?: Raster[];
+  medir?: boolean;                   // registra no console a geometria REAL do quadro (validação sobre quadros renderizados)
   palco: PalcoKey[];
   destaques?: Destaque[];
   rotas?: Rota[];

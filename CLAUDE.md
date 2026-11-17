@@ -35,6 +35,8 @@ antes de preservar a arquitetura.
 - `python -m src.v4.formatos {validar|narrar|ativos|preflight|render|telegram} <plano> <saida>`; planos em
   `src/v4/formatos/planos/`; slots/regras `formatos.json`; identidade por canal `canais/<canal>.json`; componentes
   `motor4/remotion/src/formatos/`; docs `docs/v4/formatos/` (engenharia reversa das referências + matriz de primitivas).
+- Direção de arte (17/11): beats escolhem COMPOSIÇÕES (`formatos.json → composicoes`); câmera do mapa calculada do `roi`;
+  rasters licenciados em `motor4/formatos/dados/raster/`; validação nos quadros renderizados: `python -m src.v4.formatos quadros`.
 - Execução real: alterar `.github/formatos/disparo.txt` (workflow `formatos-piloto.yml`), só com preflight local verde e
   autorização. Resultado cifrado no ramo `formatos-resultado`. Referências de terceiros NUNCA no repositório.
 

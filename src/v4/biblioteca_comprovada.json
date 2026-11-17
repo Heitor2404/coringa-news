@@ -143,6 +143,134 @@
     "escolha": "visao_gemini na busca (antes da regra de falha fechada)",
     "confirmacao_humana": null
    }
+  },
+  {
+   "id": "commons:Aktie_Canal_de_Panama_1880.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Aktie_Canal_de_Panama_1880.jpg/1920px-Aktie_Canal_de_Panama_1880.jpg",
+   "pagina": "https://commons.wikimedia.org/wiki/File:Aktie_Canal_de_Panama_1880.jpg",
+   "titulo": "Aktie Canal de Panama 1880",
+   "credito": "\"Aktie Canal de Panama 1880\" — Compagnie Universelle du Canal Interocéanique de Panama, reprodução de Palauenc05 (Public domain), via Wikimedia Commons",
+   "licenca": "Public domain",
+   "wh": [
+    1920,
+    1429
+   ],
+   "ano": 1880,
+   "roi": null,
+   "lugar": [
+    "panama",
+    "franca"
+   ],
+   "natureza": "documento",
+   "mostra": "ação de 500 francos da Compagnie Universelle du Canal Interocéanique de Panama (nov. 1880), capital de 300 milhões de francos, assinatura impressa de Ferdinand de Lesseps",
+   "termos": [
+    "acao",
+    "acoes",
+    "franca",
+    "frances",
+    "francesa",
+    "1880",
+    "companhia",
+    "lesseps",
+    "capital",
+    "dinheiro",
+    "canal",
+    "panama"
+   ],
+   "sha256_origem": "43ff455eaa07f99442632a87ade57a13956c8a0bfd2ee52dd8c3c4acd9616e94",
+   "autor_api": "Issued by Compagnie Universelle Canal Océanique de Panama, reproduced from an original document by Palauenc05",
+   "data_api": "1880-11-29",
+   "descricao_api": "Share of 500 Francs of Panama Canal, issued November 20./29, 1880. Printed signature of Ferdinand de Lesseps, size: 140 mm x 178 mm.",
+   "prova": {
+    "metodo": "conferência documental: licença, autor, data e descrição LIDOS da API do Commons (coleta 44097219552) + conferência visual do arquivo baixado (Claude, 17/11)",
+    "execucao": "44097219552",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "confirmacao_humana": null
+   }
+  },
+  {
+   "id": "commons:NSRW_Panama_Canal_French_Excavator.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/58/NSRW_Panama_Canal_French_Excavator.jpg",
+   "pagina": "https://commons.wikimedia.org/wiki/File:NSRW_Panama_Canal_French_Excavator.jpg",
+   "titulo": "NSRW Panama Canal French Excavator",
+   "credito": "\"NSRW Panama Canal French Excavator\" — The New Student's Reference Work, 1914 (Public domain), via Wikimedia Commons",
+   "licenca": "Public domain",
+   "wh": [
+    1463,
+    1084
+   ],
+   "ano": 1914,
+   "roi": null,
+   "lugar": [
+    "panama",
+    "franca"
+   ],
+   "natureza": "foto",
+   "mostra": "escavadeira francesa tomada pela vegetação (publicada em 1914): o equipamento da tentativa francesa ficou na mata",
+   "termos": [
+    "escavadeira",
+    "francesa",
+    "frances",
+    "abandonada",
+    "fracasso",
+    "maquina",
+    "canal",
+    "panama"
+   ],
+   "sha256_origem": "813bcf2edcee010f98024734dba80deb4a75a7b525e677adf6563eaa3366cc34",
+   "autor_api": "Unknown authorUnknown author",
+   "data_api": "1914",
+   "descricao_api": "",
+   "prova": {
+    "metodo": "conferência documental: licença, autor, data e descrição LIDOS da API do Commons (coleta 44097219552) + conferência visual do arquivo baixado (Claude, 17/11)",
+    "execucao": "44097219552",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "confirmacao_humana": null
+   }
+  },
+  {
+   "id": "commons:SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/5a/SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+   "pagina": "https://commons.wikimedia.org/wiki/File:SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+   "titulo": "SS Ancon entering west chamber cph.3b17471u",
+   "credito": "\"SS Ancon entering west chamber, Miraflores lower locks\" — autor desconhecido, Library of Congress cph.3b17471 (Public domain), via Wikimedia Commons",
+   "licenca": "Public domain",
+   "wh": [
+    1494,
+    1078
+   ],
+   "ano": 1914,
+   "roi": null,
+   "lugar": [
+    "panama",
+    "miraflores"
+   ],
+   "natureza": "foto",
+   "mostra": "SS Ancon embandeirado entrando na câmara oeste das eclusas de Miraflores em 15/08/1914 (primeira travessia oficial)",
+   "termos": [
+    "ancon",
+    "navio",
+    "inauguracao",
+    "travessia",
+    "1914",
+    "miraflores",
+    "eclusa",
+    "canal",
+    "panama"
+   ],
+   "sha256_origem": "afeb54c5a41840e4c8a735635dd105968a9c9a2367057b38f1785a305ba1c176",
+   "autor_api": "Unknown authorUnknown author",
+   "data_api": "1914-08-15",
+   "descricao_api": "SS Ancon entering west chamber, Mira Flores lower locks, Panama Canal",
+   "prova": {
+    "metodo": "conferência documental: licença, autor, data e descrição LIDOS da API do Commons (coleta 44097219552) + conferência visual do arquivo baixado (Claude, 17/11)",
+    "execucao": "44097219552",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "confirmacao_humana": null
+   }
   }
  ],
  "reprovados": [

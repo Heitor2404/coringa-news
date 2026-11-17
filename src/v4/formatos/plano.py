@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import re
 import unicodedata
 from pathlib import Path
@@ -20,6 +21,8 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[3]
 CFG = json.loads((Path(__file__).with_name('formatos.json')).read_text(encoding='utf-8'))
 SLOTS = CFG['slots']
+COMP = {k: v for k, v in CFG.get('composicoes', {}).items() if not k.startswith('_')}
+RASTER_DIR = RAIZ / 'motor4' / 'formatos' / 'dados' / 'raster'
 REGRAS = CFG['regras']
 SAI = 0.3
 
@@ -68,6 +71,8 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         c['t0'], c['t1'] = a(c['t0']), a(c['t1'])
         c['params']['tempos'] = [round(a(x) - c['t0'], 2) for x in c['params'].get('tempos') or []]
     for b in p['beats']:
+        if b.get('t') is not None:
+            b['t'] = a(b['t'])
         for L in b['camadas']:
             L['t0'], L['t1'] = a(L['t0']), a(L['t1'])
             q = L.get('p') or {}
@@ -83,24 +88,137 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
                 q['zoom']['t0'] = a(q['zoom']['t0'])
             if q.get('legenda_t') is not None:
                 q['legenda_t'] = a(q['legenda_t'])
+            for k in ('t_marca', 't_total', 't_carimbo', 't_abre'):
+                if q.get(k) is not None:
+                    q[k] = a(q[k])
+            if isinstance(q.get('carimbo'), dict) and q['carimbo'].get('t') is not None:
+                q['carimbo']['t'] = a(q['carimbo']['t'])
+            for lista in ('campos', 'marcas', 'etiquetas', 'ativos'):
+                for x in q.get(lista) or []:
+                    if isinstance(x, dict) and x.get('t') is not None:
+                        x['t'] = a(x['t'])
     if isinstance(p.get('duracao'), str):
         p['duracao'] = a(p['duracao'])
+    if p.get('camera') == 'roi':
+        p['palco'] = palco_dos_beats(p)
     return p
+
+
+# ---------------------------------------------------------------- câmera geográfica (mesma matemática do Palco.tsx)
+def merc(lon: float, lat: float) -> tuple[float, float]:
+    """Web Mercator normalizado 0–1 (MapLibre: mundo = 512·2^zoom px)"""
+    s_ = math.sin(math.radians(max(-85.0, min(85.0, lat))))
+    return (lon + 180) / 360, .5 - math.log((1 + s_) / (1 - s_)) / (4 * math.pi)
+
+
+def camera_roi(roi, quadro, zmax: float | None = None, folga: float = .86) -> dict:
+    """enquadra o território (roi = oeste, sul, leste, norte) DENTRO do quadro livre da composição"""
+    o, s_, l, n = roi
+    (x0, y0), (x1, y1) = merc(o, n), merc(l, s_)
+    qx, qy, qw, qh = quadro
+    z = math.log2(min(qw * folga / ((x1 - x0) * 512), qh * folga / ((y1 - y0) * 512)))
+    if zmax is not None:
+        z = min(z, zmax)
+    fx, fy = (x0 + x1) / 2, (y0 + y1) / 2
+    lon = fx * 360 - 180
+    lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * fy))))
+    return {'foco': [round(lon, 6), round(lat, 6)], 'ancora': [qx + qw / 2, qy + qh / 2], 'zoom': round(z, 3)}
+
+
+def _ease(t: float) -> float:
+    return 4 * t * t * t if t < .5 else 1 - (-2 * t + 2) ** 3 / 2
+
+
+def _cam(c: dict) -> dict:
+    if 'foco' in c:
+        return c
+    return {'foco': c['centro'], 'ancora': [540, 960], 'zoom': c['zoom']}
+
+
+def camera_em(palco: list[dict], t: float) -> dict | None:
+    """câmera no instante t: transição com pan ponderado pela escala (zoom-in pana cedo) + deriva lenta no beat"""
+    ks = [k for k in palco if k.get('camera')]
+    if not ks:
+        return None
+    a = ks[0]
+    for k in ks:
+        if t >= k['t']:
+            a = k
+    i = ks.index(a)
+    ca, d = _cam(a['camera']), a.get('dur_camera', 1.2)
+    if i > 0 and d > 0 and t < a['t'] + d:
+        cb = _cam(ks[i - 1]['camera'])
+        e = _ease(max(0., min(1., (t - a['t']) / d)))
+        z = cb['zoom'] + (ca['zoom'] - cb['zoom']) * e
+        u = e if abs(ca['zoom'] - cb['zoom']) < 1e-3 else (2 ** -cb['zoom'] - 2 ** -z) / (2 ** -cb['zoom'] - 2 ** -ca['zoom'])
+        (bx, by), (ax, ay) = merc(*cb['foco']), merc(*ca['foco'])
+        fx, fy = bx + (ax - bx) * u, by + (ay - by) * u
+        anc = [cb['ancora'][0] + (ca['ancora'][0] - cb['ancora'][0]) * e, cb['ancora'][1] + (ca['ancora'][1] - cb['ancora'][1]) * e]
+        return {'fx': fx, 'fy': fy, 'ancora': anc, 'zoom': z}
+    fx, fy = merc(*ca['foco'])
+    z = ca['zoom'] + a.get('deriva', 0) * max(0., t - a['t'] - max(0, d))
+    return {'fx': fx, 'fy': fy, 'ancora': ca['ancora'], 'zoom': z}
+
+
+def roi_tela(cam: dict, roi) -> dict:
+    o, s_, l, n = roi
+    ws = 512 * 2 ** cam['zoom']
+    (x0, y0), (x1, y1) = merc(o, n), merc(l, s_)
+    px = lambda x: cam['ancora'][0] + (x - cam['fx']) * ws
+    py = lambda y: cam['ancora'][1] + (y - cam['fy']) * ws
+    return {'x': px(x0), 'y': py(y0), 'w': px(x1) - px(x0), 'h': py(y1) - py(y0)}
+
+
+def raster_info(nome: str) -> dict:
+    m = json.loads((RASTER_DIR / f'{nome}.json').read_text(encoding='utf-8'))
+    (o, n), (l, s_) = m['cantos'][0], m['cantos'][2]
+    ppg = m.get('px_por_grau_fonte') or m['px'][0] / (l - o)   # resolução REAL da fonte (não a superamostrada)
+    m['nitido_ate'] = round(math.log2(ppg * 360 / 512) + 1.0, 2)   # até 2× de ampliação ainda lê como relevo/imagem
+    m['bbox'] = [o, s_, l, n]
+    return m
+
+
+def palco_dos_beats(p: dict) -> list[dict]:
+    """cada beat → uma chave de palco: tipo da composição, câmera que enquadra o roi no quadro, véu da composição"""
+    out, ultima = [], None
+    for b in p['beats']:
+        c = COMP.get(b.get('composicao') or '')
+        if not c:
+            continue
+        t = b.get('t', min((L['t0'] for L in b['camadas']), default=0.0))
+        k = {'t': t, 'tipo': c['palco'], 'composicao': b['composicao'], 'veu': c.get('veu', 'nenhum')}
+        if c['palco'] == 'mapa':
+            if b.get('roi'):
+                # sem quadro (documento sobre o mapa): o território é o CONTEXTO de fundo, enquadrado na tela toda
+                k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], b.get('zoom_max'))
+                if c.get('quadro'):
+                    k['roi'] = b['roi']
+            elif ultima:
+                k['camera'] = ultima               # documento sobre o mapa: a câmera fica onde estava (contexto)
+            k['dur_camera'] = b.get('transicao', 1.4)
+            k['deriva'] = b.get('deriva', .012)
+            ultima = k.get('camera', ultima)
+        out.append(k)
+    if out:
+        out[0]['t'] = 0.0
+    return out
 
 
 def camadas(plano: dict) -> list[dict]:
     out = []
     for b in plano['beats']:
         for L in b['camadas']:
-            out.append({**L, 'beat': b['id'], 'caixa': caixa(L)})
+            out.append({**L, 'beat': b['id'], 'composicao': b.get('composicao'), 'caixa': caixa(L, b.get('composicao'))})
     return out
 
 
-def caixa(L: dict) -> dict:
+def caixa(L: dict, comp: str | None = None) -> dict:
     if isinstance(L.get('caixa'), dict):
         return L['caixa']
     if L.get('caixa'):
         x, y, w, h = L['caixa']
+    elif comp and L.get('slot') in (COMP.get(comp) or {}).get('slots', {}):
+        x, y, w, h = COMP[comp]['slots'][L['slot']]
     else:
         x, y, w, h = SLOTS[L['slot']]
     return {'x': x, 'y': y, 'w': w, 'h': h}
@@ -116,7 +234,7 @@ def _largura(txt: str, px: float, peso: float = .72) -> float:
 
 def fonte_nivel(w: float) -> int:
     """mesma regra do componente Hierarchy (Primitivas.tsx)"""
-    return 22 if w > 150 else (18 if w > 110 else 16)
+    return 26 if w > 150 else (22 if w > 110 else 20)
 
 
 def _cabe(L: dict) -> list[str]:
@@ -143,6 +261,11 @@ def _cabe(L: dict) -> list[str]:
     elif c == 'editorial.hierarchy':
         n = len(p.get('niveis') or [])
         w = (b['w'] - 10 * (n - 1)) / max(1, n)
+        if p.get('rotulos_abaixo') is not False and n > 5:     # nomes embaixo em 2 fileiras, corpo 26 (Primitivas.Hierarchy)
+            for nv in p.get('niveis') or []:
+                if _largura(nv['rotulo'], 26, .62) > 220:
+                    out.append(f"nível {nv['rotulo']!r} não cabe em 220 px a 26 px")
+            return out
         for nv in p.get('niveis') or []:
             if max((_largura(x, fonte_nivel(w), .62) for x in str(nv['rotulo']).split()), default=0) > w - 8:
                 out.append(f"nível {nv['rotulo']!r} não cabe em {w:.0f} px")
@@ -185,6 +308,11 @@ def eventos(plano: dict) -> list[float]:
             ev.append(q['legenda_t'])
         if q.get('contagem'):
             ev.append(L['t0'] + (q.get('dur_contagem') or 1.2))
+        ev += [q[k] for k in ('t_marca', 't_total', 't_carimbo', 't_abre') if isinstance(q.get(k), (int, float))]
+        if isinstance(q.get('carimbo'), dict) and isinstance(q['carimbo'].get('t'), (int, float)):
+            ev.append(q['carimbo']['t'])
+        for lista in ('campos', 'ativos'):
+            ev += [x['t'] for x in q.get(lista) or [] if isinstance(x, dict) and isinstance(x.get('t'), (int, float))]
     return sorted(ev)
 
 
@@ -202,11 +330,18 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     if not plano.get('palco') or plano['palco'][0]['t'] > 0:
         v('erro', 'F-PALCO', 't=0', 'o palco precisa existir desde o primeiro quadro')
     Ls = camadas(plano)
+    if imagens:
+        _mirar(Ls, imagens)
     for L in Ls:
         onde = f"{L['beat']}/{L['id']}"
         if L['componente'] not in F['componentes']:
             v('erro', 'F-COMPONENTE', onde, f"{L['componente']} não é do formato {plano['formato']}")
-        if not L.get('caixa') and L.get('slot') not in SLOTS:
+        comp = COMP.get(L.get('composicao') or '')
+        if L.get('composicao') and not comp:
+            v('erro', 'F-COMPOSICAO', onde, f"composição {L['composicao']!r} desconhecida")
+        elif comp and not (L.get('slot') in comp['slots'] or L.get('caixa_livre')):
+            v('erro', 'F-SLOT', onde, f"slot {L.get('slot')!r} não existe na composição {L['composicao']} ({', '.join(comp['slots'])})")
+        elif not comp and L.get('slot') not in SLOTS and not isinstance(L.get('caixa'), (list, dict)):
             v('erro', 'F-SLOT', onde, f"slot {L.get('slot')!r} desconhecido")
         if not (0 <= L['t0'] < L['t1'] <= dur + .01):
             v('erro', 'F-TEMPO', onde, f"tempo {L['t0']}–{L['t1']} fora de 0–{dur}")
@@ -218,6 +353,57 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     for c in plano.get('clipes') or []:
         if c['componente'] not in F['clipes']:
             v('erro', 'F-CLIPE', f"{c['t0']}", f"clipe {c['componente']} não aprovado no formato")
+    # composições: formato, palco, máximo de camadas simultâneas, reconstrução identificada
+    for b in plano['beats']:
+        comp = COMP.get(b.get('composicao') or '')
+        if not comp:
+            if plano.get('camera') == 'roi':
+                v('erro', 'F-COMPOSICAO', b['id'], 'beat sem composição num plano de câmera automática')
+            continue
+        if comp['formato'] != plano['formato']:
+            v('erro', 'F-COMPOSICAO', b['id'], f"{b['composicao']} é do formato {comp['formato']}")
+        if comp['palco'] == 'mapa' and comp.get('quadro') and not b.get('roi'):
+            v('erro', 'F-COMPOSICAO', b['id'], f"{b['composicao']} enquadra um território: falta roi (oeste, sul, leste, norte)")
+        Lb = [L for L in Ls if L['beat'] == b['id'] and L['componente'] != 'dossie.evidenceHighlight']
+        for L in Lb:
+            junto = sum(1 for M in Lb if M['t0'] < L['t1'] and L['t0'] < M['t1'])
+            if junto > comp.get('max_camadas', 9):
+                v('erro', 'F-COMPOSICAO', f"{b['id']}/{L['id']}", f"{junto} camadas ao mesmo tempo (máx. {comp['max_camadas']} em {b['composicao']}): vira slide")
+                break
+    for L in Ls:
+        q = L.get('p') or {}
+        if q.get('estilo') in ('calendario', 'ficha', 'regua') and not str(q.get('reconstrucao') or '').strip():
+            v('erro', 'F-RECONSTRUCAO', f"{L['beat']}/{L['id']}", f"{q['estilo']} é reconstrução editorial: precisa do rótulo 'reconstrucao' visível (nunca passa por arquivo histórico)")
+    # território: a câmera enquadra o roi no quadro e NENHUMA camada do beat o cobre (início e fim do beat, com a deriva)
+    if plano.get('camera') == 'roi':
+        ks = plano.get('palco') or []
+        tempos_b = {}
+        for k, b in zip([k for k in ks], [b for b in plano['beats'] if COMP.get(b.get('composicao') or '')]):
+            tempos_b[b['id']] = k['t']
+        fins = {}
+        ids = list(tempos_b)
+        for i, bid in enumerate(ids):
+            fins[bid] = tempos_b[ids[i + 1]] if i + 1 < len(ids) else dur
+        rasters = [raster_info(r['nome']) for r in plano.get('rasters') or []]
+        for b in plano['beats']:
+            comp = COMP.get(b.get('composicao') or '')
+            if not comp or comp['palco'] != 'mapa' or not b.get('roi') or not comp.get('quadro'):
+                continue
+            t0 = tempos_b[b['id']] + next((k.get('dur_camera', 0) for k in ks if k['t'] == tempos_b[b['id']]), 0)
+            qx, qy, qw, qh = comp['quadro']
+            for t in (min(t0, fins[b['id']]), fins[b['id']] - .05):
+                cam = camera_em(ks, t)
+                r = roi_tela(cam, b['roi'])
+                if r['x'] < qx - 8 or r['y'] < qy - 8 or r['x'] + r['w'] > qx + qw + 8 or r['y'] + r['h'] > qy + qh + 8:
+                    v('erro', 'F-COBRE-TERRITORIO', b['id'], f"território sai do quadro livre em {t:.1f}s ({r['x']:.0f},{r['y']:.0f},{r['w']:.0f}×{r['h']:.0f})")
+                for L in Ls:
+                    if L['beat'] == b['id'] and L['t0'] <= t <= L['t1'] + SAI and _cruza(L['caixa'], r):
+                        v('erro', 'F-COBRE-TERRITORIO', f"{b['id']}/{L['id']}", f"camada cobre o território explicado em {t:.1f}s")
+                if rasters:
+                    ok = [ri for ri in rasters if ri['bbox'][0] <= b['roi'][0] and ri['bbox'][1] <= b['roi'][1] and ri['bbox'][2] >= b['roi'][2]
+                          and ri['bbox'][3] >= b['roi'][3] and ri['nitido_ate'] >= cam['zoom']]
+                    if not ok:
+                        v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} sem raster nítido que cubra o território (mapa de baixa qualidade)")
     # zonas fixas da identidade (marca no topo, faixa de legenda): nenhuma caixa entra nelas (colisão de 17/11)
     for L in Ls:
         for nome, (x, y, w, h) in CFG.get('zonas_identidade', {}).items():
@@ -226,9 +412,12 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     # colisão: caixas de camadas simultâneas
     for i, a in enumerate(Ls):
         for b in Ls[i + 1:]:
-            junto = a['t0'] < b['t1'] + SAI and b['t0'] < a['t1'] + SAI
-            ok = (a['componente'] == 'dossie.evidenceHighlight' and (a.get('p') or {}).get('alvo') == b['id']) or \
-                 (b['componente'] == 'dossie.evidenceHighlight' and (b.get('p') or {}).get('alvo') == a['id'])
+            # mesma cena: conta a saída (0,3 s); troca de beat: a saída de um sob a entrada do outro é o dissolve da transição
+            folga = SAI if a['beat'] == b['beat'] else -.02
+            junto = a['t0'] < b['t1'] + folga and b['t0'] < a['t1'] + folga
+            ev_a, ev_b = a['componente'] == 'dossie.evidenceHighlight', b['componente'] == 'dossie.evidenceHighlight'
+            alvo_a, alvo_b = (a.get('p') or {}).get('alvo'), (b.get('p') or {}).get('alvo')
+            ok = (ev_a and alvo_a == b['id']) or (ev_b and alvo_b == a['id']) or (ev_a and ev_b and alvo_a == alvo_b)
             if junto and not ok and _cruza(a['caixa'], b['caixa']):
                 v('erro', 'F-COLISAO', f"{a['id']}×{b['id']}", f"{a['slot'] or 'caixa'} e {b['slot'] or 'caixa'} ao mesmo tempo ({max(a['t0'], b['t0']):.1f}s)")
             if junto and (a.get('p') or {}).get('asset') and (a.get('p') or {}).get('asset') == (b.get('p') or {}).get('asset'):
@@ -273,18 +462,30 @@ def _mirar(Ls: list[dict], imagens: dict) -> None:
     por = {L['id']: L for L in Ls}
     for L in Ls:
         q = L.get('p') or {}
-        if L['componente'] == 'dossie.evidenceHighlight' and q.get('parte') and q.get('alvo') in por:
+        if L['componente'] == 'dossie.evidenceHighlight' and (q.get('parte') or q.get('regiao')) and q.get('alvo') in por:
             alvo = por[q['alvo']]
             im = imagens.get((alvo.get('p') or {}).get('asset'))
             if im:
-                L['caixa'] = {k: round(v, 1) for k, v in geom_documento(alvo, im)[q['parte']].items()}
+                g = geom_documento(alvo, im)
+                if q.get('regiao'):              # região da PRÓPRIA imagem (frações 0–1): marca exatamente o trecho citado
+                    f, (a0, b0, a1, b1) = g['foto'], q['regiao']
+                    L['caixa'] = {'x': round(f['x'] + a0 * f['w'], 1), 'y': round(f['y'] + b0 * f['h'], 1),
+                                  'w': round((a1 - a0) * f['w'], 1), 'h': round((b1 - b0) * f['h'], 1)}
+                else:
+                    L['caixa'] = {k: round(v, 1) for k, v in g[q['parte']].items()}
 
 
 def props(plano: dict, tokens: dict, geo: dict | None, imagens: dict) -> dict:
     furos = [{'t0': c['t0'], 't1': c['t1']} for c in plano.get('clipes') or []]
     Ls = camadas(plano)
     _mirar(Ls, imagens)
-    return {'duracao': plano['duracao'], 'formato': plano['formato'], 'tokens': tokens, 'geo': geo, 'palco': plano['palco'],
+    rasters = []
+    for r in plano.get('rasters') or []:
+        m = raster_info(r['nome'])
+        rasters.append({'nome': r['nome'], 'src': f"_formato/raster/{m.get('arquivo') or r['nome'] + '.jpg'}", 'cantos': m['cantos'], 'de': r.get('de'), 'ate': r.get('ate'),
+                        'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': r.get('ajuste') or {}})
+    return {'duracao': plano['duracao'], 'formato': plano['formato'], 'tokens': tokens, 'geo': geo, 'palco': plano['palco'], 'rasters': rasters,
+            'composicoes': {k: {'quadro': v.get('quadro'), 'veu': v.get('veu')} for k, v in COMP.items()},
             'destaques': plano.get('destaques') or [], 'rotas': plano.get('rotas') or [], 'rotulos': plano.get('rotulos') or [],
             'camadas': [{'id': L['id'], 'componente': L['componente'], 't0': L['t0'], 't1': L['t1'], 'caixa': L['caixa'], 'p': L.get('p') or {}}
                         for L in Ls], 'imagens': imagens, 'furos': furos}

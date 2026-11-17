@@ -3,7 +3,7 @@
  "canal": "coringa",
  "video_id": "dossie-demo-panama",
  "titulo": "Dossiê: Canal do Panamá (demonstração)",
- "tipo_producao": "demonstração do formato (texto supervisionado só com fatos verificados f9, f10 e a procedência das fotos)",
+ "tipo_producao": "demonstração do formato (direção de arte 17/11): mesmo texto e narração cifrada da 44084129999; evidências reais do Commons com licença lida da API",
  "narracao": {
   "texto": "Dossiê: Canal do Panamá. A primeira tentativa foi francesa, a partir de 1880. Fracassou: faltou dinheiro, sobraram doenças. Em julho de 1913, as comportas já seguravam a água. E em 15 de agosto de 1914, o navio Ancon inaugurou a travessia. Trinta e quatro anos entre o primeiro corte e o primeiro navio.",
   "fatos": [
@@ -13,218 +13,420 @@
   "derivados": [
    "1914 − 1880 = 34 anos"
   ],
-  "cifrada": ".github/v4/material/narracao_dossie_44084129999.bin"
+  "cifrada": ".github/v4/material/narracao_dossie_44084129999.bin",
+  "fatos_extra": [
+   {
+    "texto": "a companhia francesa faliu/foi liquidada em 1889; febre amarela e malária mataram milhares de trabalhadores",
+    "fontes": [
+     "https://panama.lindahall.org/french-attempt/",
+     "https://www.citeco.fr/10000-years-history-economics/industrial-revolutions/panama-financial-scandal"
+    ]
+   },
+   {
+    "texto": "ação de 500 francos emitida em 20/29 nov. 1880, capital social de 300 milhões de francos (lido no próprio documento)",
+    "fontes": [
+     "https://commons.wikimedia.org/wiki/File:Aktie_Canal_de_Panama_1880.jpg"
+    ]
+   }
+  ]
  },
  "fatos_ref": ".github/v4/pedido.json",
  "duracao": "@fim",
- "palco": [
-  {
-   "t": 0,
-   "tipo": "mesa"
-  }
- ],
  "beats": [
   {
-   "id": "d1-capa",
-   "fatos": [],
-   "prova": "capa do dossiê com documento real e procedência",
+   "id": "b1-capa",
+   "composicao": "dossie.capa",
+   "t": 0,
+   "prova": "abre o dossiê com a primeira evidência real (eclusas de Gatún c.1910)",
    "camadas": [
     {
-     "id": "capa",
+     "id": "pasta",
      "componente": "dossie.documentCard",
-     "slot": "foto",
-     "t0": "@dossiê",
-     "t1": "@francesa-0.4",
+     "slot": "pasta",
+     "t0": 0.1,
+     "t1": "@a-0.15",
      "p": {
+      "estilo": "pasta",
       "asset": "commons:Gatun_Locks_LOC_det.4a24807.jpg",
-      "cabecalho": "DOSSIÊ · CANAL DO PANAMÁ",
-      "cabecalho_dir": "ARQ. 01",
+      "aba": "DOSSIÊ Nº 01",
+      "selo": "ARQUIVO CORINGA",
+      "titulo": "CANAL DO PANAMÁ",
+      "sub": "1880 → 1914",
+      "t_abre": 0.5,
       "meta": [
-       "ECLUSAS DE GATÚN · c. 1910",
+       "FOTO: ECLUSAS DE GATÚN, c.1910",
        "DETROIT PUBLISHING CO. · DOMÍNIO PÚBLICO"
-      ],
-      "sepia": true
-     }
-    }
-   ]
-  },
-  {
-   "id": "d2-linha",
-   "fatos": [
-    "f10",
-    "f9"
-   ],
-   "prova": "linha do tempo 1880 → 1913 → 1914 acompanha a fala",
-   "camadas": [
-    {
-     "id": "linha",
-     "componente": "editorial.timeline",
-     "slot": "topo",
-     "t0": "@primeira",
-     "t1": "@fim",
-     "p": {
-      "marcos": [
-       {
-        "data": "1880",
-        "texto": "França começa",
-        "t": "@1880"
-       },
-       {
-        "data": "1913",
-        "texto": "comportas prontas",
-        "t": "@1913"
-       },
-       {
-        "data": "1914",
-        "texto": "1º navio",
-        "t": "@1914"
-       }
       ]
      }
     }
    ]
   },
   {
-   "id": "d3-franca",
-   "fatos": [
-    "f10"
-   ],
-   "prova": "tentativa francesa marcada como fracasso, com as causas",
+   "id": "b2-acao",
+   "composicao": "dossie.documento",
+   "t": "@a-0.1",
+   "prova": "documento REAL da companhia francesa de 1880 (ação de 500 francos)",
    "camadas": [
     {
-     "id": "franca",
-     "componente": "editorial.statCard",
-     "slot": "centro",
-     "t0": "@francesa",
-     "t1": "@julho-0.3",
-     "p": {
-      "titulo": "TENTATIVA FRANCESA",
-      "valor": "1880",
-      "rotulo": "primeira obra do canal",
-      "inclina": -1.5
-     }
-    },
-    {
-     "id": "carimbo",
-     "componente": "dossie.evidenceHighlight",
-     "slot": "centro",
-     "t0": "@fracassou",
-     "t1": "@julho-0.3",
-     "p": {
-      "tipo": "carimbo",
-      "texto": "FRACASSOU",
-      "alvo": "franca",
-      "tamanho": 70
-     }
-    },
-    {
-     "id": "causas",
-     "componente": "editorial.statCard",
-     "slot": "base",
-     "t0": "@dinheiro",
-     "t1": "@julho-0.3",
-     "p": {
-      "estilo": "pilula",
-      "valor": "SEM DINHEIRO · DOENÇAS"
-     }
-    }
-   ]
-  },
-  {
-   "id": "d4-1913",
-   "fatos": [],
-   "prova": "documento datado: comportas sob pressão, 18 jul 1913",
-   "camadas": [
-    {
-     "id": "doc1913",
+     "id": "acao",
      "componente": "dossie.documentCard",
-     "slot": "foto",
-     "t0": "@julho",
-     "t1": "@15-0.4",
+     "slot": "doc",
+     "t0": "@a-0.1",
+     "t1": "@fracassou-0.1",
      "p": {
-      "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
-      "cabecalho": "REGISTRO FOTOGRÁFICO",
-      "cabecalho_dir": "18 JUL 1913",
+      "estilo": "documento",
+      "asset": "commons:Aktie_Canal_de_Panama_1880.jpg",
       "meta": [
-       "COMPORTAS SOB PRESSÃO · OBRA",
-       "HARRIS & EWING · DOMÍNIO PÚBLICO"
-      ],
-      "sepia": true
+       "AÇÃO DE 500 FRANCOS · NOV. 1880",
+       "REPRODUÇÃO: PALAUENC05 · DOMÍNIO PÚBLICO"
+      ]
      }
     },
     {
-     "id": "data1913",
+     "id": "acao-cia",
      "componente": "dossie.evidenceHighlight",
-     "slot": "foto",
-     "t0": "@seguravam",
-     "t1": "@15-0.4",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@francesa-0.2",
+     "t1": "@fracassou-0.1",
+     "p": {
+      "tipo": "sublinhado",
+      "alvo": "acao",
+      "regiao": [
+       0.14,
+       0.12,
+       0.86,
+       0.215
+      ]
+     }
+    },
+    {
+     "id": "acao-1880",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@1880-0.1",
+     "t1": "@fracassou-0.1",
      "p": {
       "tipo": "circulo",
-      "alvo": "doc1913",
-      "parte": "cabecalho_dir"
+      "alvo": "acao",
+      "regiao": [
+       0.6,
+       0.29,
+       0.69,
+       0.355
+      ]
+     }
+    },
+    {
+     "id": "acao-capital",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@partir",
+     "t1": "@fracassou-0.1",
+     "p": {
+      "tipo": "sublinhado",
+      "alvo": "acao",
+      "regiao": [
+       0.25,
+       0.35,
+       0.76,
+       0.405
+      ]
+     }
+    },
+    {
+     "id": "acao-nota",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@partir",
+     "t1": "@fracassou-0.1",
+     "p": {
+      "estilo": "pilula",
+      "valor": "CAPITAL: 300 MILHÕES DE FRANCOS"
      }
     }
    ]
   },
   {
-   "id": "d5-1914",
-   "fatos": [
-    "f9"
-   ],
-   "prova": "data da inauguração e o navio",
+   "id": "b3-ficha",
+   "composicao": "dossie.ficha",
+   "t": "@fracassou-0.1",
+   "prova": "síntese da tentativa francesa + prova real (escavadeira francesa na mata)",
    "camadas": [
     {
-     "id": "inaug",
+     "id": "ficha",
      "componente": "editorial.statCard",
-     "slot": "centro",
-     "t0": "@15",
-     "t1": "@trinta-0.4",
+     "slot": "ficha",
+     "t0": "@fracassou-0.1",
+     "t1": "@em-0.1",
      "p": {
-      "titulo": "INAUGURAÇÃO · 1914",
-      "valor": "15 AGO",
-      "rotulo": "navio Ancon cruza o canal",
-      "inclina": 1
-     }
-    },
-    {
-     "id": "ancon",
-     "componente": "editorial.statCard",
-     "slot": "base",
-     "t0": "@ancon",
-     "t1": "@trinta-0.4",
-     "p": {
-      "estilo": "pilula",
-      "valor": "SS ANCON · 1ª TRAVESSIA"
-     }
-    },
-    {
-     "id": "anos",
-     "componente": "editorial.titleOrPayoff",
-     "slot": "centro",
-     "t0": "@trinta",
-     "t1": "@fim",
-     "p": {
-      "linhas": [
+      "estilo": "ficha",
+      "titulo": "TENTATIVA Nº 1 · FRANÇA",
+      "numero": "1880–1889",
+      "reconstrucao": "FICHA CORINGA · RECONSTRUÇÃO EDITORIAL",
+      "asset": "commons:NSRW_Panama_Canal_French_Excavator.jpg",
+      "meta": [
+       "ESCAVADEIRA FRANCESA NA MATA",
+       "PUBL. 1914 · DOMÍNIO PÚBLICO"
+      ],
+      "carimbo": {
+       "texto": "FRACASSOU",
+       "t": "@fracassou"
+      },
+      "campos": [
        {
-        "texto": "34 ANOS",
-        "t": "@trinta",
-        "tamanho": 150,
+        "rotulo": "empresa",
+        "valor": "CIA. UNIVERSAL DO CANAL",
+        "t": "@fracassou+0.4"
+       },
+       {
+        "rotulo": "dinheiro",
+        "valor": "FALÊNCIA EM 1889",
+        "t": "@dinheiro",
         "destaque": true
        },
        {
-        "texto": "DO 1º CORTE",
-        "t": "@corte",
-        "tamanho": 72
+        "rotulo": "doenças",
+        "valor": "FEBRE AMARELA E MALÁRIA",
+        "t": "@doenças",
+        "destaque": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "b4-jul1913",
+   "composicao": "dossie.calendario",
+   "t": "@em-0.1",
+   "prova": "a data com contexto: julho de 1913, dia 18 (data escrita na própria foto)",
+   "camadas": [
+    {
+     "id": "cal1913",
+     "componente": "editorial.statCard",
+     "slot": "calendario",
+     "t0": "@em-0.1",
+     "t1": "@comportas-0.1",
+     "p": {
+      "estilo": "calendario",
+      "mes": 7,
+      "ano": 1913,
+      "dia": 18,
+      "t_marca": "@1913",
+      "nota": "18 JUL: COMPORTAS",
+      "reconstrucao": "CALENDÁRIO · RECONSTRUÇÃO"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b5-comportas",
+   "composicao": "dossie.documento",
+   "t": "@comportas-0.1",
+   "prova": "foto REAL de 18/07/1913 com a data escrita no negativo",
+   "camadas": [
+    {
+     "id": "comportas",
+     "componente": "dossie.documentCard",
+     "slot": "doc",
+     "t0": "@comportas-0.1",
+     "t1": "@2:em-0.1",
+     "p": {
+      "estilo": "foto",
+      "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+      "data_carimbo": "18 JUL 1913",
+      "t_carimbo": "@comportas+0.5",
+      "meta": [
+       "COMPORTAS DO MAR SOB PRESSÃO · GATÚN",
+       "FOTO: HARRIS & EWING · DOMÍNIO PÚBLICO"
+      ]
+     }
+    },
+    {
+     "id": "comportas-data",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@seguravam",
+     "t1": "@2:em-0.1",
+     "p": {
+      "tipo": "sublinhado",
+      "alvo": "comportas",
+      "regiao": [
+       0.27,
+       0.905,
+       0.8,
+       0.965
+      ]
+     }
+    },
+    {
+     "id": "comportas-agua",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@água-0.1",
+     "t1": "@2:em-0.1",
+     "p": {
+      "tipo": "circulo",
+      "alvo": "comportas",
+      "regiao": [
+       0.35,
+       0.25,
+       0.7,
+       0.42
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "b6-ago1914",
+   "composicao": "dossie.calendario",
+   "t": "@2:em-0.1",
+   "prova": "a data da inauguração: 15 de agosto de 1914",
+   "camadas": [
+    {
+     "id": "cal1914",
+     "componente": "editorial.statCard",
+     "slot": "calendario",
+     "t0": "@2:em-0.1",
+     "t1": "@navio-0.1",
+     "p": {
+      "estilo": "calendario",
+      "mes": 8,
+      "ano": 1914,
+      "dia": 15,
+      "t_marca": "@15",
+      "nota": "15 AGO: INAUGURAÇÃO",
+      "reconstrucao": "CALENDÁRIO · RECONSTRUÇÃO"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b7-ancon",
+   "composicao": "dossie.documento",
+   "t": "@navio-0.1",
+   "prova": "foto REAL do SS Ancon em Miraflores no dia 15/08/1914",
+   "camadas": [
+    {
+     "id": "ancon",
+     "componente": "dossie.documentCard",
+     "slot": "doc",
+     "t0": "@navio-0.1",
+     "t1": "@trinta-0.1",
+     "p": {
+      "estilo": "foto",
+      "asset": "commons:SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+      "data_carimbo": "15 AGO 1914",
+      "t_carimbo": "@ancon",
+      "meta": [
+       "SS ANCON ENTRANDO EM MIRAFLORES",
+       "LIBRARY OF CONGRESS · DOMÍNIO PÚBLICO"
+      ]
+     }
+    },
+    {
+     "id": "ancon-navio",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "doc",
+     "caixa_livre": true,
+     "t0": "@ancon",
+     "t1": "@trinta-0.1",
+     "p": {
+      "tipo": "circulo",
+      "alvo": "ancon",
+      "regiao": [
+       0.17,
+       0.28,
+       0.63,
+       0.78
+      ]
+     }
+    },
+    {
+     "id": "ancon-nota",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@inaugurou",
+     "t1": "@trinta-0.1",
+     "p": {
+      "estilo": "pilula",
+      "valor": "1ª TRAVESSIA OFICIAL"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b8-relacao",
+   "composicao": "dossie.relacao",
+   "t": "@trinta-0.1",
+   "prova": "régua proporcional 1880→1914 com as três evidências presas no ano: 33 anos de espera, depois tudo em 13 meses",
+   "camadas": [
+    {
+     "id": "regua",
+     "componente": "editorial.timeline",
+     "slot": "regua",
+     "t0": "@trinta-0.1",
+     "t1": "@fim",
+     "p": {
+      "estilo": "regua",
+      "inicio": 1880,
+      "fim": 1914,
+      "total": "34 ANOS",
+      "t_total": "@anos",
+      "total_rotulo": "do primeiro corte ao primeiro navio",
+      "reconstrucao": "RÉGUA EM ESCALA · RECONSTRUÇÃO",
+      "marcos": [
+       {
+        "ano": 1880,
+        "texto": "1º corte",
+        "asset": "commons:Aktie_Canal_de_Panama_1880.jpg",
+        "t": "@trinta",
+        "linha": 0
        },
        {
-        "texto": "AO 1º NAVIO",
-        "t": "@2:navio",
-        "tamanho": 72
+        "ano": 1913,
+        "texto": "comportas",
+        "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+        "t": "@trinta+0.25",
+        "linha": 0,
+        "desloca": -283
+       },
+       {
+        "ano": 1914,
+        "texto": "1º navio",
+        "asset": "commons:SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+        "t": "@trinta+0.5",
+        "linha": 0,
+        "desloca": -50
+       }
+      ],
+      "ativos": [
+       {
+        "i": 0,
+        "t": "@corte"
+       },
+       {
+        "i": 2,
+        "t": "@2:navio"
        }
       ]
      }
     }
    ]
   }
- ]
+ ],
+ "camera": "roi",
+ "antes": ".github/v4/material/antes_formatos_44084129999.bin",
+ "antes_ritmo": {
+  "segundos": 24,
+  "segundos_parados": 13,
+  "maior_trecho_parado_s": 4
+ },
+ "styleframes": 6
 }

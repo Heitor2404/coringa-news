@@ -9,7 +9,9 @@ Etapas separadas (cada uma é um comando; o Actions roda em sequência e PARA no
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -73,23 +75,69 @@ def _sha(arq: Path) -> str:
 
 
 def assets_do_plano(plano: dict) -> list[str]:
-    return sorted({(L.get('p') or {}).get('asset') for b in plano['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset')})
+    """mídias citadas: p.asset e as presas em marcos da régua (p.marcos[].asset)"""
+    out = set()
+    for b in plano['beats']:
+        for L in b['camadas']:
+            q = L.get('p') or {}
+            if q.get('asset'):
+                out.add(q['asset'])
+            out |= {m['asset'] for m in q.get('marcos') or [] if isinstance(m, dict) and m.get('asset')}
+    return sorted(out)
 
 
-def ativos(plano: dict, saida: Path) -> dict:
-    """baixa SÓ itens da biblioteca comprovada; devolve {asset: {src, w, h, credito, licenca}}"""
-    from src.v4 import acervo_v4, viabilidade
+def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
+    """bytes DA ORIGEM da mídia (URL da biblioteca) — ou do cache local indexado por sha256 — e de onde vieram"""
+    sha = it.get('sha256_origem')
+    if cache and sha:
+        for f in cache.glob(f'{sha}.*'):
+            return f.read_bytes(), f'cache:{f.name}'
+    if cache and not sha and (cache / f"{nome_publico(it['id'])}.jpg").exists():     # só desenvolvimento local (sem rede)
+        return (cache / f"{nome_publico(it['id'])}.jpg").read_bytes(), 'cache-local-sem-origem'
+    import requests
+    from src.v4.acervo_v4 import UA
+    r = requests.get(it['url'], headers=UA, timeout=120)
+    r.raise_for_status()
+    return r.content, it['url']
+
+
+def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
+    """baixa SÓ itens da biblioteca comprovada, confere a impressão digital DA ORIGEM (sha256_origem) e grava com nome
+    próprio por mídia; copia os rasters do palco com o sha256 do .json de procedência. → {asset: {src, w, h, ...}}"""
+    import io
+
+    from PIL import Image
+
+    from src.v4 import viabilidade
+    from src.v4.formatos import plano as P
     por = {it['id']: it for it in viabilidade.carregar()['itens']}
     PUBLICO.mkdir(parents=True, exist_ok=True)
+    (saida / 'ativos').mkdir(parents=True, exist_ok=True)
+    cache = cache or (Path(os.environ['CORINGA_MIDIA_LOCAL']) if os.environ.get('CORINGA_MIDIA_LOCAL') else None)
     out = {}
     for a in assets_do_plano(plano):
         it = por[a]
+        bruto, veio = _origem(it, cache)
+        sha_o = hashlib.sha256(bruto).hexdigest()
+        if it.get('sha256_origem') and sha_o != it['sha256_origem']:
+            raise RuntimeError(f'{a}: o arquivo da origem mudou (sha256 {sha_o[:12]} ≠ {it["sha256_origem"][:12]}) — não entra no vídeo')
+        im = Image.open(io.BytesIO(bruto)).convert('RGB')
+        if max(im.size) > 2000:
+            im.thumbnail((2000, 2000))
         nome = nome_publico(a)              # nome PRÓPRIO por mídia: dois episódios na mesma pasta não se sobrescrevem (44084129999)
-        x = acervo_v4.baixar({'url': it['url'], 'titulo': it['titulo'], 'credito': it['credito']}, saida / 'ativos', nome)
         dest = PUBLICO / f'{nome}.jpg'
-        shutil.copy(x['arq'], dest)
-        out[a] = {'src': f'_formato/{nome}.jpg', 'w': x.get('w'), 'h': x.get('h'), 'credito': it['credito'], 'licenca': it['licenca'],
-                  'url': it['url'], 'sha256': _sha(dest)}
+        im.save(dest, 'JPEG', quality=92)
+        shutil.copy(dest, saida / 'ativos' / dest.name)
+        out[a] = {'src': f'_formato/{nome}.jpg', 'w': im.size[0], 'h': im.size[1], 'credito': it['credito'], 'licenca': it['licenca'],
+                  'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o, 'origem_conferida': bool(it.get('sha256_origem')), 'veio_de': veio}
+    rast = PUBLICO / 'raster'
+    rast.mkdir(parents=True, exist_ok=True)
+    for r in plano.get('rasters') or []:
+        m = P.raster_info(r['nome'])
+        src = P.RASTER_DIR / (m.get('arquivo') or f"{r['nome']}.jpg")
+        shutil.copy(src, rast / src.name)
+        out[f"raster:{r['nome']}"] = {'src': f'_formato/raster/{src.name}', 'sha256': _sha(rast / src.name), 'sha256_json': m['sha256'],
+                                      'atribuicao': m['atribuicao'], 'licenca': (m.get('fonte') or {}).get('licenca')}
     _gravar(saida / 'ativos.json', out)
     return out
 
@@ -130,9 +178,17 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         # o arquivo que vai ao render É o baixado da origem DESTA mídia (impressão digital), não outro com o mesmo nome
         add(f'arquivo é a mídia certa {a[:44]}', f.exists() and reg.get('sha256') == _sha(f) and reg.get('url') == (it or {}).get('url')
             and f.name == nome_publico(a) + '.jpg', reg.get('sha256', 'sem impressão digital')[:16])
+        add(f'origem conferida (sha256 da URL) {a[:40]}', reg.get('origem_conferida') is True or not (it or {}).get('sha256_origem'),
+            f"{reg.get('sha256_origem', '?')[:16]} via {str(reg.get('veio_de', '?'))[:40]}" + ('' if (it or {}).get('sha256_origem') else ' (1º registro)'))
         lic = (it or {}).get('licenca', '#')
         cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a for m in (L['p'].get('meta') or []))
         add(f'crédito visível {a[:50]}', any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
+    for r in pl.get('rasters') or []:
+        reg = imgs.get(f"raster:{r['nome']}") or {}
+        f = PUBLICO.parent / reg.get('src', '_nada')
+        js = P.RASTER_DIR / f"{r['nome']}.json"
+        add(f"raster {r['nome']} com procedência e licença", js.exists() and bool(reg.get('licenca')) and bool(reg.get('atribuicao')), reg.get('licenca') or 'sem .json')
+        add(f"raster {r['nome']} é o arquivo registrado", f.exists() and reg.get('sha256') == _sha(f) == reg.get('sha256_json'), (reg.get('sha256') or '')[:16])
     if pl.get('geo'):
         g = RAIZ / pl['geo']
         ok = g.exists()
@@ -214,14 +270,88 @@ def render(saida: Path) -> dict:
         janelas.append({'de': round(a, 1), 'ate': round(b, 1), 'problemas': q})
         a = b
     from src.fiscal import medir_audio
+    from src.v4.formatos import ritmo
     au = medir_audio(mp4)
+    rit = ritmo.medir(mp4)          # COMPROVA a correção do congelamento (ERR-067) com a métrica das referências
     res = {'video_id': pl['video_id'], 'formato': pl['formato'], 'mp4': str(mp4), 'duracao': pl['duracao'], 'info': info, 'som': reg_som,
-           'audio': au, 'janelas': janelas, 'nao_publicado': True,
+           'audio': au, 'janelas': janelas, 'nao_publicado': True, 'ritmo': {k: v for k, v in rit.items()},
            'portoes': {'preto_ou_congelado': [j for j in janelas if j['problemas']],
                        'audio_ok': au.get('lufs') is not None and abs(au['lufs'] + 14) <= 1.0 and (au.get('pico') or 0) <= -1.0}}
-    res['estado'] = 'AGUARDANDO_APROVACAO_HUMANA' if not res['portoes']['preto_ou_congelado'] and res['portoes']['audio_ok'] else 'BLOQUEADO'
+    res['portoes']['ritmo_ok'] = rit['maior_trecho_parado_s'] <= 3
+    res['estado'] = 'AGUARDANDO_APROVACAO_HUMANA' if not res['portoes']['preto_ou_congelado'] and res['portoes']['audio_ok'] and res['portoes']['ritmo_ok'] else 'BLOQUEADO'
     _gravar(saida / 'resultado.json', res)
     return res
+
+
+# ---------------------------------------------------------------- folhas e comparação (prévia privada)
+def _quadro(mp4: Path, t: float, w: int = 540) -> 'Image.Image':
+    import io
+
+    from PIL import Image
+    r = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{t:.2f}', '-i', str(mp4), '-frames:v', '1', '-vf', f'scale={w}:{w * 16 // 9}', '-f', 'image2', '-c:v', 'mjpeg', '-q:v', '3', '-'],
+                       capture_output=True, check=True)
+    return Image.open(io.BytesIO(r.stdout)).convert('RGB')
+
+
+def folhas(saida: Path, antes: str | None = None) -> dict:
+    """folha de contato do MP4 final (12 quadros) e, se houver o pacote cifrado do 'antes', a comparação lado a lado
+    nos MESMOS instantes dos styleframes (antes = execução 44084129999, depois = este MP4)"""
+    import base64
+    import io
+
+    from PIL import Image, ImageDraw, ImageFont
+    r = _ler(saida / 'resultado.json')
+    mp4, dur = Path(r['mp4']), r['duracao']
+    fnt = ImageFont.truetype(str(RAIZ / 'motor4' / 'identidade' / 'ttf' / 'jetbrains-mono-latin-700-normal.ttf'), 24)
+    ts = [round(dur * (i + .5) / 12, 2) for i in range(12)]
+    o = Image.new('RGB', (270 * 6, (480 + 30) * 2), '#111')
+    d = ImageDraw.Draw(o)
+    for i, t in enumerate(ts):
+        x, y = (i % 6) * 270, (i // 6) * 510
+        o.paste(_quadro(mp4, t, 270), (x, y + 30))
+        d.text((x + 6, y + 2), f'{t:.1f}s', fill='#FFD21F', font=fnt)
+    out = {'folha': str(saida / 'folha_final.jpg')}
+    o.save(out['folha'], quality=85)
+    if antes and (RAIZ / antes).exists():
+        from src.v3 import material
+        pac = json.loads(material.decifrar(material._segredo(), (RAIZ / antes).read_bytes()))['formatos'].get(r['formato'], {})
+        if pac:
+            ks = sorted(pac, key=float)
+            W, Hh = 360, 640
+            o = Image.new('RGB', ((W * 2 + 24) * min(3, len(ks)), (Hh + 44) * ((len(ks) + 2) // 3)), '#0B0B0B')
+            d = ImageDraw.Draw(o)
+            for i, k in enumerate(ks):
+                x, y = (i % 3) * (W * 2 + 24), (i // 3) * (Hh + 44)
+                o.paste(Image.open(io.BytesIO(base64.b64decode(pac[k]))).convert('RGB').resize((W, Hh)), (x, y + 40))
+                o.paste(_quadro(mp4, float(k), W).resize((W, Hh)), (x + W, y + 40))
+                d.text((x + 6, y + 8), f'{float(k):.1f}s  ANTES', fill='#9AA4B2', font=fnt)
+                d.text((x + W + 6, y + 8), 'DEPOIS', fill='#FFD21F', font=fnt)
+            out['comparativo'] = str(saida / 'comparativo_antes_depois.jpg')
+            o.save(out['comparativo'], quality=84)
+    _gravar(saida / 'folhas.json', out)
+    return out
+
+
+def evolucao(saida: Path, pl: dict) -> Path:
+    """relatório curto de evolução: o que mudou (doc fixo do formato) + números medidos agora × antes × referências"""
+    r = _ler(saida / 'resultado.json')
+    q = _ler(saida / 'quadros' / 'relatorio.json') if (saida / 'quadros' / 'relatorio.json').exists() else {}
+    ims = _ler(saida / 'ativos.json')
+    base = (RAIZ / 'docs' / 'v4' / 'formatos' / f"EVOLUCAO_{pl['formato'].upper()}.md")
+    a = pl.get('antes_ritmo') or {}
+    rit = r.get('ritmo') or {}
+    linhas = [base.read_text(encoding='utf-8').strip() if base.exists() else '', '',
+              'MEDIDO NESTA PRÉVIA:',
+              f"- maior trecho parado: {rit.get('maior_trecho_parado_s')} s (antes {a.get('maior_trecho_parado_s', '?')} s; ref. A 2 s, ref. B 1 s)",
+              f"- segundos parados: {rit.get('segundos_parados')}/{rit.get('segundos')} (antes {a.get('segundos_parados', '?')}/{a.get('segundos', '?')})",
+              f"- quadros renderizados conferidos: {len(q.get('quadros', []))}, problemas: {len(q.get('problemas', []))}",
+              f"- mídias: {sum(1 for k in ims if not k.startswith('raster:'))} com sha256 da origem "
+              f"({sum(1 for k, v in ims.items() if not k.startswith('raster:') and v.get('origem_conferida'))} conferidas contra a biblioteca); "
+              f"rasters: {sum(1 for k in ims if k.startswith('raster:'))} com .json de procedência",
+              'Teste técnico verde não é aprovação: a avaliação estética é do Heitor.']
+    out = saida / 'evolucao.md'
+    out.write_text('\n'.join(linhas) + '\n', encoding='utf-8')
+    return out
 
 
 # ---------------------------------------------------------------- prévia privada
@@ -244,6 +374,24 @@ def telegram(saida: Path, titulo: str) -> dict:
     linhas += [f"- {j['de']}–{j['ate']}s: {'; '.join(j['problemas'])}" for j in r['portoes']['preto_ou_congelado']][:8]
     est = {'estado': estado_final.AGUARDANDO if r['estado'] == estado_final.AGUARDANDO else estado_final.BLOQUEADO,
            'motivos': [] if r['estado'] == estado_final.AGUARDANDO else ['portões do MP4 final']}
+    rit = r.get('ritmo') or {}
+    linhas += [f"ritmo medido (zona de conteúdo, 4 q/s): maior trecho parado {rit.get('maior_trecho_parado_s')} s · "
+               f"{rit.get('segundos_parados')}/{rit.get('segundos')} s parados (ref. A: 2 s; ref. B: 1 s)"]
+    ev = saida / 'evolucao.md'
+    if ev.exists():
+        linhas += ['', ev.read_text(encoding='utf-8')]
     env = previa_telegram.enviar(Path(r['mp4']), est, titulo, '\n'.join(linhas))
+    chat, _ = previa_telegram.chat_autorizado()
+    fol = _ler(saida / 'folhas.json') if (saida / 'folhas.json').exists() else {}
+    extras = [(saida / 'quadros' / 'styleframes.jpg', 'styleframes (quadros renderizados, com legenda)'),
+              (saida / 'quadros' / 'celular.jpg', 'leitura em tela de celular (405×720)'),
+              (Path(fol['folha']) if fol.get('folha') else None, 'folha de contato do MP4 final'),
+              (Path(fol['comparativo']) if fol.get('comparativo') else None, 'ANTES (44084129999) × DEPOIS, mesmos instantes')]
+    enviados = 0
+    for arq, leg in extras:
+        if arq and arq.exists():
+            previa_telegram._api('sendDocument', {'chat_id': chat, 'caption': f'{titulo} — {leg} (prévia privada, não publicado)'[:1000]}, ('document', arq))
+            enviados += 1
+    env['anexos'] = enviados
     _gravar(saida / 'telegram.json', {'enviado': True, **env})
     return env

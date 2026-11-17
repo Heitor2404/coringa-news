@@ -36,8 +36,20 @@
    "grade": "rgba(127,227,240,.07)"
   },
   "mesa": {
-   "fundo": "#05080F",
-   "luz": "rgba(255,210,31,.07)"
+   "fundo": "#0A0806",
+   "luz": "rgba(255,214,150,.22)",
+   "madeira": "#1A120C",
+   "madeira_r": 0.23,
+   "madeira_g": 0.14,
+   "madeira_b": 0.08
+  },
+  "raster": {
+   "mar_fundo": "#04101F",
+   "mar_raso": "#2C6F96",
+   "sat_terra": 0.95,
+   "luz_terra": 0.84,
+   "nota": "grade aplicada aos rasters de relevo (scripts/formatos_ne2.py) e ao satélite (scripts/formatos_raster.py)",
+   "contraste_terra": 1.12
   }
  },
  "legenda": {

@@ -159,3 +159,20 @@ def main(saida: Path):
 
 if __name__ == '__main__':
     main(Path(sys.argv[1]))
+
+
+def acabamento(jpg: Path, gama: float = .78, sat: float = 1.18, borda: float = .07) -> Path:
+    """grade final do satélite para o palco (mais luz nos médios, cor um pouco mais viva) e BORDA SUAVE em alfa:
+    o recorte detalhado se funde ao relevo largo por baixo, sem a aresta do retângulo aparecer (WebP com alfa)"""
+    a = np.asarray(Image.open(jpg).convert('RGB'), dtype=np.float32) / 255
+    a = a ** gama
+    m = a.mean(axis=2, keepdims=True)
+    a = np.clip(m + (a - m) * sat, 0, 1)
+    h, w = a.shape[:2]
+    yy, xx = np.mgrid[0:h, 0:w]
+    d = np.minimum.reduce([xx / w, (w - 1 - xx) / w, yy / h, (h - 1 - yy) / h])
+    alfa = np.clip(d / borda, 0, 1) ** 1.5
+    rgba = np.dstack([a * 255, alfa * 255]).astype(np.uint8)
+    out = jpg.with_suffix('.webp')
+    Image.fromarray(rgba, 'RGBA').save(out, 'WEBP', quality=86, method=6)
+    return out

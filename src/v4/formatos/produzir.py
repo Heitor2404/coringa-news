@@ -94,10 +94,17 @@ def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
             return f.read_bytes(), f'cache:{f.name}'
     if cache and not sha and (cache / f"{nome_publico(it['id'])}.jpg").exists():     # só desenvolvimento local (sem rede)
         return (cache / f"{nome_publico(it['id'])}.jpg").read_bytes(), 'cache-local-sem-origem'
+    import time
+
     import requests
     from src.v4.acervo_v4 import UA
-    r = requests.get(it['url'], headers=UA, timeout=120)
+    for k in range(6):          # Wikimedia devolve 429 a downloads seguidos (44110855696): respeita Retry-After e espaça
+        r = requests.get(it['url'], headers=UA, timeout=120)
+        if r.status_code != 429:
+            break
+        time.sleep(min(60, int(r.headers.get('Retry-After') or 0) or 5 * (k + 1)))
     r.raise_for_status()
+    time.sleep(1.5)
     return r.content, it['url']
 
 

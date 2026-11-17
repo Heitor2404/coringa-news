@@ -1808,6 +1808,29 @@
     "formatos",
     "direcao_de_arte"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos (direção de arte)",
+   "referencia": "execução 44110855696",
+   "verificavel": true,
+   "id": "ERR-071",
+   "titulo": "Download de mídia sem espera para o limite do Wikimedia",
+   "sintoma": "passo de mídia caiu com 429 (upload.wikimedia.org); nada foi renderizado, nenhuma cota gasta.",
+   "causa_raiz": "seis downloads seguidos de arquivos originais sem tratar 429/Retry-After.",
+   "arquivos": [
+    "src/v4/formatos/produzir.py"
+   ],
+   "correcao": "até 6 tentativas respeitando Retry-After e 1,5 s entre mídias.",
+   "testes": [
+    "tests/test_formatos.py::test_download_de_midia_espera_o_limite_do_commons"
+   ],
+   "gravidade": "baixa",
+   "estado": "corrigido",
+   "tags": [
+    "formatos",
+    "acervo"
+   ]
   }
  ]
 }

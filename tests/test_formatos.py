@@ -293,3 +293,19 @@ def test_ritmo_medido_acha_trecho_parado():
     from src.v4.formatos import ritmo
     r = ritmo.resumo([3, 2, .1, .2, .1, .3, 4])
     assert r['maior_trecho_parado_s'] == 4 and r['segundos_parados'] == 4
+
+
+def test_download_de_midia_espera_o_limite_do_commons(monkeypatch):
+    """44110855696: 429 do upload.wikimedia.org derrubou o passo de mídia antes do preflight"""
+    import requests
+    import time
+    seq = iter([429, 429, 200])
+
+    class R:
+        def __init__(s, c): s.status_code, s.headers, s.content = c, {'Retry-After': '0'}, b'ok'
+        def raise_for_status(s):
+            if s.status_code >= 400:
+                raise requests.HTTPError(str(s.status_code))
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: R(next(seq)))
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    assert produzir._origem({'url': 'https://upload.wikimedia.org/x.jpg'}, None) == (b'ok', 'https://upload.wikimedia.org/x.jpg')

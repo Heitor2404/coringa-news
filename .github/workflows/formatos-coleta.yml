@@ -1,0 +1,46 @@
+name: Formatos — coleta de dados cartográficos e mídia licenciada (sem IA, sem render)
+
+# Baixa o que a sessão de desenvolvimento não alcança: relevo (Terrain Tiles/AWS Open Data), Sentinel-2 cloudless 2016
+# (EOX, CC BY 4.0) e mídia histórica do Wikimedia Commons com licença lida da própria API. Nada é publicado; o
+# resultado sai cifrado (GPG) no ramo órfão formatos-coleta. Disparo: alterar .github/formatos/coleta.txt.
+on:
+  push:
+    branches: [motor-integral-v4]
+    paths: [".github/formatos/coleta.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: formatos-coleta
+  cancel-in-progress: false
+
+jobs:
+  coleta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - name: Dependências (já usadas no projeto)
+        run: pip install -q numpy pillow requests
+      - name: Coleta
+        run: python scripts/formatos_coleta.py saida_coleta
+      - name: Cifrar e publicar no ramo de coleta
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          mkdir -p /tmp/res saida_coleta
+          tar -czf /tmp/c.tgz saida_coleta
+          gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/coleta-${{ github.run_id }}.tgz.gpg /tmp/c.tgz
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan formatos-coleta
+          git rm -rqf --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/res/* .
+          git add *.gpg
+          git commit -qm "coleta cifrada (execução ${{ github.run_id }})"
+          git push -f -q origin formatos-coleta

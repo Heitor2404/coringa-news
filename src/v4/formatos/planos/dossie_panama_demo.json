@@ -1,0 +1,218 @@
+{
+ "formato": "dossie",
+ "canal": "coringa",
+ "video_id": "dossie-demo-panama",
+ "titulo": "Dossiê: Canal do Panamá (demonstração)",
+ "tipo_producao": "demonstração do formato (texto supervisionado só com fatos verificados f9, f10 e a procedência das fotos)",
+ "narracao": {
+  "texto": "Dossiê: Canal do Panamá. A primeira tentativa foi francesa, a partir de 1880. Fracassou: faltou dinheiro, sobraram doenças. Em julho de 1913, as comportas já seguravam a água. E em 15 de agosto de 1914, o navio Ancon inaugurou a travessia. Trinta e quatro anos entre o primeiro corte e o primeiro navio.",
+  "fatos": [
+   "f10",
+   "f9"
+  ],
+  "derivados": [
+   "1914 − 1880 = 34 anos"
+  ]
+ },
+ "fatos_ref": ".github/v4/pedido.json",
+ "duracao": "@fim",
+ "palco": [
+  {
+   "t": 0,
+   "tipo": "mesa"
+  }
+ ],
+ "beats": [
+  {
+   "id": "d1-capa",
+   "fatos": [],
+   "prova": "capa do dossiê com documento real e procedência",
+   "camadas": [
+    {
+     "id": "capa",
+     "componente": "dossie.documentCard",
+     "slot": "foto",
+     "t0": "@dossiê",
+     "t1": "@francesa-0.4",
+     "p": {
+      "asset": "commons:Gatun_Locks_LOC_det.4a24807.jpg",
+      "cabecalho": "DOSSIÊ · CANAL DO PANAMÁ",
+      "cabecalho_dir": "ARQ. 01",
+      "meta": [
+       "ECLUSAS DE GATÚN · c. 1910",
+       "DETROIT PUBLISHING CO. · DOMÍNIO PÚBLICO"
+      ],
+      "sepia": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "d2-linha",
+   "fatos": [
+    "f10",
+    "f9"
+   ],
+   "prova": "linha do tempo 1880 → 1913 → 1914 acompanha a fala",
+   "camadas": [
+    {
+     "id": "linha",
+     "componente": "editorial.timeline",
+     "slot": "topo",
+     "t0": "@primeira",
+     "t1": "@fim",
+     "p": {
+      "marcos": [
+       {
+        "data": "1880",
+        "texto": "França começa",
+        "t": "@1880"
+       },
+       {
+        "data": "1913",
+        "texto": "comportas prontas",
+        "t": "@1913"
+       },
+       {
+        "data": "1914",
+        "texto": "1º navio",
+        "t": "@1914"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "d3-franca",
+   "fatos": [
+    "f10"
+   ],
+   "prova": "tentativa francesa marcada como fracasso, com as causas",
+   "camadas": [
+    {
+     "id": "franca",
+     "componente": "editorial.statCard",
+     "slot": "centro",
+     "t0": "@francesa",
+     "t1": "@julho-0.3",
+     "p": {
+      "titulo": "TENTATIVA FRANCESA",
+      "valor": "1880",
+      "rotulo": "primeira obra do canal",
+      "inclina": -1.5
+     }
+    },
+    {
+     "id": "carimbo",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "centro",
+     "t0": "@fracassou",
+     "t1": "@julho-0.3",
+     "p": {
+      "tipo": "carimbo",
+      "texto": "FRACASSOU",
+      "alvo": "franca",
+      "tamanho": 70
+     }
+    },
+    {
+     "id": "causas",
+     "componente": "editorial.statCard",
+     "slot": "base",
+     "t0": "@dinheiro",
+     "t1": "@julho-0.3",
+     "p": {
+      "estilo": "pilula",
+      "valor": "SEM DINHEIRO · DOENÇAS"
+     }
+    }
+   ]
+  },
+  {
+   "id": "d4-1913",
+   "fatos": [],
+   "prova": "documento datado: comportas sob pressão, 18 jul 1913",
+   "camadas": [
+    {
+     "id": "doc1913",
+     "componente": "dossie.documentCard",
+     "slot": "foto",
+     "t0": "@julho",
+     "t1": "@navio-0.5",
+     "p": {
+      "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+      "cabecalho": "REGISTRO FOTOGRÁFICO",
+      "cabecalho_dir": "18 JUL 1913",
+      "meta": [
+       "COMPORTAS SOB PRESSÃO · OBRA",
+       "HARRIS & EWING · DOMÍNIO PÚBLICO"
+      ],
+      "sepia": true
+     }
+    },
+    {
+     "id": "data1913",
+     "componente": "dossie.evidenceHighlight",
+     "slot": "foto",
+     "t0": "@seguravam",
+     "t1": "@navio-0.5",
+     "p": {
+      "tipo": "circulo",
+      "alvo": "doc1913",
+      "parte": "cabecalho_dir"
+     }
+    }
+   ]
+  },
+  {
+   "id": "d5-1914",
+   "fatos": [
+    "f9"
+   ],
+   "prova": "data da inauguração e o navio",
+   "camadas": [
+    {
+     "id": "inaug",
+     "componente": "editorial.statCard",
+     "slot": "centro",
+     "t0": "@navio-0.1",
+     "t1": "@trinta-0.4",
+     "p": {
+      "titulo": "INAUGURAÇÃO · 1914",
+      "valor": "15 AGO",
+      "rotulo": "navio Ancon cruza o canal",
+      "inclina": 1
+     }
+    },
+    {
+     "id": "anos",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "centro",
+     "t0": "@trinta",
+     "t1": "@fim",
+     "p": {
+      "linhas": [
+       {
+        "texto": "34 ANOS",
+        "t": "@trinta",
+        "tamanho": 150,
+        "destaque": true
+       },
+       {
+        "texto": "DO 1º CORTE",
+        "t": "@corte",
+        "tamanho": 72
+       },
+       {
+        "texto": "AO 1º NAVIO",
+        "t": "@2:navio",
+        "tamanho": 72
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

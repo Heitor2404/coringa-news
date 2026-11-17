@@ -1,0 +1,68 @@
+"""DIRETOR ORIENTADO POR FORMATO: o modelo NÃO inventa estilo nem animação — escolhe beats e PREENCHE primitivas aprovadas
+em slots fixos, com mídia que já existe (biblioteca comprovada) e fatos verificados. A saída passa por `plano.validar`
+(colisão, texto que não cabe, progressão, repetição, modalidades) e pelo preflight; erro volta UMA vez como correção.
+
+Uso: `pedir(fatos, formato, narracao_palavras|None, chamar)`; `chamar(prompt) -> str` é injetado (Claude/Gemini do V4),
+então o módulo é testável sem gastar cota.
+"""
+from __future__ import annotations
+
+import json
+
+from src.v4.formatos import plano as P
+
+ESQUEMA = {
+    'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula', contagem: bool}",
+    'editorial.peopleCard': '{asset (retrato da biblioteca), nome, papel}',
+    'editorial.hierarchy': "{niveis: [{rotulo, valor?}], ativo: [{i, t0}], alturas?: [0–1] (perfil), legenda_base?, legenda_t?}",
+    'editorial.timeline': "{marcos: [{data, texto ≤ 22, t}]}",
+    'dossie.documentCard': "{asset, cabecalho, cabecalho_dir (data), meta: ['DESCRIÇÃO · DATA', 'AUTOR · LICENÇA'], estilo: 'registro'|'documento', zoom?: {t0, escala ≥ 1.5, foco:[x,y]}}",
+    'dossie.evidenceHighlight': "{tipo: 'carimbo'|'sublinhado'|'circulo', texto?, alvo: id de camada, parte?: 'cabecalho_dir'}",
+    'editorial.comparison': '{itens: [{rotulo, valor, t?}], unidade}',
+    'editorial.flowConnections': '{nos: [{rotulo ≤ 16, sub?, t, seta?}], fluxo: bool}',
+    'editorial.titleOrPayoff': "{linhas: [{texto ≤ 16, t, destaque?, tamanho?}]} (≤ 3 linhas; nunca slide longo)",
+}
+
+
+def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, correcoes: list[dict] | None = None, anterior: str = '') -> str:
+    F = P.CFG['formatos'][formato]
+    slots = '\n'.join(f'- {k}: x={v[0]} y={v[1]} w={v[2]} h={v[3]}' for k, v in P.SLOTS.items())
+    comps = '\n'.join(f'- {c}: {ESQUEMA[c]}' for c in F['componentes'])
+    fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto", 60–90 s, só com os fatos)')
+    base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as
+primitivas e slots abaixo; posições são fixas. {F['descricao']}
+REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;
+nada de duas camadas no mesmo slot ao mesmo tempo; mídia SÓ da lista comprovada (nunca invente registro); número com unidade;
+no máximo {F['max_componentes_distintos']} primitivas distintas; tempos ancorados na fala ("@palavra", "@2:palavra+0.3", "@fim").
+PALCOS: {', '.join(F['palcos'])} (troca de palco só quando a explicação muda de nível). CLIPES APROVADOS: {', '.join(F['clipes']) or 'nenhum'}.
+SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (use os ids):\n""" + \
+        '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nNARRAÇÃO:\n{fala}\n
+Responda SÓ o JSON do plano: {{"formato","canal","video_id","titulo","duracao":"@fim","palco":[...],"destaques":[...],"rotas":[...],
+"rotulos":[...],"clipes":[...],"beats":[{{"id","fatos":[...],"prova","camadas":[{{"id","componente","slot","t0","t1","p":{{...}}}}]}}]}}"""
+    if correcoes:
+        base += '\n\nSEU PLANO VIOLOU REGRAS VERIFICADAS EM CÓDIGO; corrija só isto e devolva o JSON inteiro:\n' + \
+                '\n'.join(f"- [{v['regra']}] {v['onde']}: {v['texto']}" for v in correcoes) + '\nANTERIOR:\n' + anterior[:20000]
+    return base
+
+
+def pedir(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, chamar) -> tuple[dict, list[dict]]:
+    """→ (plano, violações restantes). No máximo UMA correção dirigida (cota é recurso escasso)."""
+    from src.gemini import extrair_json
+    bruto = chamar(prompt(fatos, formato, palavras, inventario))
+    pl = extrair_json(bruto)
+    viol = _violacoes(pl, palavras)
+    if viol:
+        bruto = chamar(prompt(fatos, formato, palavras, inventario, viol, json.dumps(pl, ensure_ascii=False)))
+        pl = extrair_json(bruto)
+        viol = _violacoes(pl, palavras)
+    return pl, viol
+
+
+def _violacoes(pl: dict, palavras: list[dict] | None) -> list[dict]:
+    try:
+        r = P.resolver_tempos(pl, palavras or [])
+    except (ValueError, KeyError) as e:
+        return [{'gravidade': 'erro', 'regra': 'F-ANCORA', 'onde': '-', 'texto': str(e)}]
+    if isinstance(r.get('duracao'), str) or not r.get('duracao'):
+        r['duracao'] = (palavras[-1]['e'] + .6) if palavras else 0
+    return [v for v in P.validar(r) if v['gravidade'] == 'erro']

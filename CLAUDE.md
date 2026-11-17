@@ -31,6 +31,13 @@ antes de preservar a arquitetura.
   acervo (`src/v4/viabilidade.py` + `biblioteca_comprovada.json`), parâmetros, contrato, narração reutilizada e geometria do palco
   contra as zonas V4. Só dispare o Actions com 9/9 prontas e autorização do Heitor.
 
+## Formatos padronizados (ATLAS / DOSSIÊ) — caminho de produção a partir de 17/11
+- `python -m src.v4.formatos {validar|narrar|ativos|preflight|render|telegram} <plano> <saida>`; planos em
+  `src/v4/formatos/planos/`; slots/regras `formatos.json`; identidade por canal `canais/<canal>.json`; componentes
+  `motor4/remotion/src/formatos/`; docs `docs/v4/formatos/` (engenharia reversa das referências + matriz de primitivas).
+- Execução real: alterar `.github/formatos/disparo.txt` (workflow `formatos-piloto.yml`), só com preflight local verde e
+  autorização. Resultado cifrado no ramo `formatos-resultado`. Referências de terceiros NUNCA no repositório.
+
 ## Onde está cada coisa
 | Preciso de… | Arquivo |
 |---|---|

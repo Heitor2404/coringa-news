@@ -1,0 +1,104 @@
+name: Formatos — piloto ATLAS + demonstração DOSSIÊ (prévia privada)
+
+# Formatos padronizados (src/v4/formatos). Disparo SÓ manual, depois de preflight local verde e autorização.
+# Ordem: narrar → ativos → PREFLIGHT (para se vermelho, nada é renderizado) → render → prévia PRIVADA no Telegram →
+# resultado cifrado (GPG) no ramo órfão formatos-resultado. Sem publicação, merge, main, NTC ou provedor pago.
+on:
+  # disparo explícito: alterar .github/formatos/disparo.txt (registro de quem autorizou e por quê); nada mais dispara
+  push:
+    branches: [motor-integral-v4]
+    paths: [".github/formatos/disparo.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: formatos
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  PLANO_ATLAS: src/v4/formatos/planos/atlas_panama.json
+  PLANO_DOSSIE: src/v4/formatos/planos/dossie_panama_demo.json
+
+jobs:
+  formatos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Sistema (FFmpeg)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji && google-chrome --version
+      - name: motor4 node_modules (cache)
+        uses: actions/cache@v4
+        with: { path: motor4/node_modules, key: "motor4-nm-${{ hashFiles('motor4/package-lock.json') }}" }
+      - name: Instalar (versões fixadas; nada novo)
+        timeout-minutes: 30
+        run: |
+          pip install -r requirements.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+          timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+          mkdir -p ~/.fonts && cp motor4/identidade/ttf/*.ttf ~/.fonts/ && fc-cache -f
+      - name: Narração (ATLAS reutiliza a cifrada; DOSSIÊ = uma chamada de TTS, cota grátis)
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -m src.v4.formatos narrar $PLANO_ATLAS saida_formatos/atlas
+          python -m src.v4.formatos narrar $PLANO_DOSSIE saida_formatos/dossie
+      - name: Mídia comprovada (só itens da biblioteca)
+        run: |
+          python -m src.v4.formatos ativos $PLANO_ATLAS saida_formatos/atlas
+          python -m src.v4.formatos ativos $PLANO_DOSSIE saida_formatos/dossie
+      - name: PREFLIGHT (sem IA; para aqui se algo faltar)
+        env:
+          CORINGA_CHROME: /usr/bin/google-chrome
+        run: |
+          python -m src.v4.formatos preflight $PLANO_ATLAS saida_formatos/atlas
+          python -m src.v4.formatos preflight $PLANO_DOSSIE saida_formatos/dossie
+      - name: Render ATLAS
+        timeout-minutes: 70
+        env:
+          REMOTION_CHROME: /usr/bin/google-chrome
+          CORINGA_CHROME: /usr/bin/google-chrome
+        run: python -m src.v4.formatos render $PLANO_ATLAS saida_formatos/atlas
+      - name: Render DOSSIÊ
+        if: always()
+        timeout-minutes: 30
+        env:
+          REMOTION_CHROME: /usr/bin/google-chrome
+          CORINGA_CHROME: /usr/bin/google-chrome
+        run: python -m src.v4.formatos render $PLANO_DOSSIE saida_formatos/dossie
+      - name: Prévias PRIVADAS ao Telegram (NÃO publicado)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m src.v4.formatos telegram $PLANO_ATLAS saida_formatos/atlas || echo "envio ATLAS falhou"
+          python -m src.v4.formatos telegram $PLANO_DOSSIE saida_formatos/dossie || echo "envio DOSSIÊ falhou"
+      - name: Cifrar e publicar no ramo de resultado
+        if: always()
+        run: |
+          set -e
+          export GNUPGHOME=$(mktemp -d)
+          rec=$(for k in .github/piloto/chave_publica*.asc; do printf -- '--recipient-file %s ' "$k"; done)
+          mkdir -p /tmp/res saida_formatos
+          find saida_formatos -path '*/_trabalho/*' \( -name '*.png' -o -name 'jan_*.mp4' -o -name 'p[0-9]*.mp4' \) -delete || true
+          tar -czf /tmp/f.tgz saida_formatos
+          split -b 90m /tmp/f.tgz /tmp/f.tgz.parte_
+          for p in /tmp/f.tgz.parte_*; do gpg --batch --yes --quiet --trust-model always --encrypt $rec -o /tmp/res/$(basename $p)-${{ github.run_id }}.gpg $p; done
+          git config user.name "coringa-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan formatos-resultado
+          git rm -rqf --cached . ; find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/res/* .
+          git add *.gpg
+          git commit -qm "formatos cifrados (execução ${{ github.run_id }})"
+          git push -f -q origin formatos-resultado

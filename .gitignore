@@ -13,3 +13,5 @@ src/render/v2/dados/ne/
 data/biblioteca/coringa.sqlite3
 data/biblioteca/arquivos/
 saida_v4/
+motor4/remotion/public/_formato/
+saida_formatos/

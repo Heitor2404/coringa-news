@@ -14,7 +14,7 @@ import { C, FD, FT, Fontes, W, H, clamp, easeIO, lerp } from './ident';
 // MapLibre 6 (ESM) carregado da pasta pública como módulo nativo (o webpack do Remotion quebra o worker em módulo
 // separado: o mapa nunca disparava 'load'). Mesmos arquivos de node_modules/maplibre-gl/dist, versão fixada.
 let _ml: Promise<typeof ML> | null = null;
-const carregarML = () => (_ml ??= import(/* webpackIgnore: true */ staticFile('maplibre/maplibre-gl.js')).then((m: any) => {
+export const carregarML = () => (_ml ??= import(/* webpackIgnore: true */ staticFile('maplibre/maplibre-gl.js')).then((m: any) => {
   m.setWorkerUrl(staticFile('maplibre/maplibre-gl-worker.js')); return m as typeof ML; }));
 
 export type Ponto = { nome: string; lonlat: [number, number]; t: number; tipo?: 'cidade' | 'eclusa' | 'oceano' | 'lago' | 'destaque'; lado?: 'esq' | 'dir' };
@@ -45,7 +45,7 @@ const STYLE = (fc: Record<string, any>): any => ({
   ],
 });
 
-function camEm(cam: MapaProps['camera'], t: number) {
+export function camEm(cam: MapaProps['camera'], t: number) {
   if (cam.length === 1 || t <= cam[0].t) return cam[0];
   for (let i = 0; i < cam.length - 1; i++) {
     const a = cam[i], b = cam[i + 1];

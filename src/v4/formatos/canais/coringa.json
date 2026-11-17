@@ -1,0 +1,55 @@
+{
+ "canal": "coringa",
+ "nota": "Tokens do canal Coringa Explica. Outros canais = outro arquivo nesta pasta (configuração, não fork).",
+ "identidade": "motor4/identidade/identidade.json",
+ "cores": {
+  "fundo": "#05080F",
+  "destaque": "#FFD21F",
+  "destaque_escuro": "#C99A00",
+  "texto": "#FFFFFF",
+  "papel": "#F2EDE3",
+  "tinta": "#0B0F17",
+  "alerta": "#E5483A",
+  "agua": "#2F8FD8",
+  "ciano": "#3FD0E0"
+ },
+ "fontes": {
+  "titulo": "Mont, sans-serif",
+  "dado": "JBM, monospace"
+ },
+ "tempo": {
+  "entra": 0.45,
+  "sai": 0.3
+ },
+ "palco": {
+  "mapa": {
+   "mar": "#0A1626",
+   "terra": "#34445A",
+   "borda": "#9FB3D1",
+   "agua": "#2F8FD8",
+   "destaque": "#FFD21F",
+   "destaque2": "#3FD0E0"
+  },
+  "tecnico": {
+   "fundo": "#06131A",
+   "linha": "#7FE3F0",
+   "grade": "rgba(127,227,240,.07)"
+  },
+  "mesa": {
+   "fundo": "#05080F",
+   "luz": "rgba(255,210,31,.07)"
+  }
+ },
+ "legenda": {
+  "atlas": {
+   "caixa_alta": true
+  },
+  "dossie": {
+   "caixa_alta": true
+  }
+ },
+ "som": {
+  "lufs": -14,
+  "true_peak": -1.0
+ }
+}

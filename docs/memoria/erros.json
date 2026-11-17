@@ -1601,6 +1601,66 @@
     "ci",
     "custo"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos ATLAS/DOSSIÊ",
+   "referencia": "plano mestre padronizado (17/11) + falhas do Panamá",
+   "verificavel": true,
+   "estado": "prevenido por validação/preflight (aguarda execução e avaliação humana)",
+   "id": "ERR-063",
+   "titulo": "Cada episódio inventava estilo e composição; erros de layout só apareciam no render",
+   "sintoma": "Panamá V4: colisões, cartões fora de lugar, vitrine de ferramentas, cenas sem progressão — descobertos após execuções caras.",
+   "causa_raiz": "posições e animações eram livres por componente; nada era verificável antes do render.",
+   "arquivos": [
+    "src/v4/formatos/plano.py",
+    "src/v4/formatos/formatos.json",
+    "motor4/remotion/src/formatos/"
+   ],
+   "correcao": "dois formatos (ATLAS, DOSSIÊ) com slots fixos e primitivas que desenham DENTRO da caixa; validação determinística de colisão (camadas e zonas da identidade), texto que não cabe, progressão ≤ 4 s, mídia duplicada/repetida, excesso de modalidades e rota sem geometria.",
+   "testes": [
+    "tests/test_formatos.py::test_legenda_titulo_e_cartao_no_mesmo_lugar_e_colisao",
+    "tests/test_formatos.py::test_mesma_midia_duas_vezes_no_mesmo_plano",
+    "tests/test_formatos.py::test_foto_ou_texto_parado_sem_informacao_nova",
+    "tests/test_formatos.py::test_excesso_de_modalidades_vira_erro",
+    "tests/test_formatos.py::test_mesma_midia_tres_vezes_no_episodio",
+    "tests/test_formatos.py::test_texto_que_nao_cabe_e_componente_fora_do_formato",
+    "tests/test_formatos.py::test_camada_na_zona_da_marca_ou_da_legenda_e_erro"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "formatos",
+    "layout",
+    "*"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos ATLAS/DOSSIÊ",
+   "referencia": "plano mestre padronizado (17/11) + falhas do Panamá",
+   "verificavel": true,
+   "estado": "prevenido por validação/preflight (aguarda execução e avaliação humana)",
+   "id": "ERR-064",
+   "titulo": "Render começava sem 100% dos recursos (mídia, rota, narração)",
+   "sintoma": "placas de diagnóstico, mapa sem rota, vídeo sem prova (43972774128, 44049021691).",
+   "causa_raiz": "dependências externas (Overpass, busca de mídia, TTS) resolvidas durante o render.",
+   "arquivos": [
+    "src/v4/formatos/produzir.py",
+    "motor4/formatos/dados/panama.topo.json",
+    ".github/workflows/formatos-piloto.yml"
+   ],
+   "correcao": "narrar → ativos (só biblioteca comprovada) → PREFLIGHT (sem IA/rede; mídia, licença e crédito visíveis, geometria versionada com atribuição, narração cobre o plano, clipe V2 sem colisão) → render; preflight vermelho impede o render.",
+   "testes": [
+    "tests/test_formatos.py::test_preflight_sem_narracao_ou_sem_midia_nao_deixa_renderizar",
+    "tests/test_formatos.py::test_toda_midia_dos_planos_e_comprovada_e_creditada",
+    "tests/test_formatos.py::test_geometria_versionada_tem_rota_medida_e_atribuicao"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "formatos",
+    "preflight",
+    "*"
+   ]
   }
  ]
 }

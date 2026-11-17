@@ -1,0 +1,117 @@
+{
+ "versao": 1,
+ "nota": "Dois formatos aprovados para produção padronizada (engenharia reversa das referências A/B em docs/v4/formatos/). Posições FIXAS (slots, px em 1080×1920): marca y 292, legenda 1240–1455, crédito 1170 ficam livres.",
+ "slots": {
+  "topo": [
+   72,
+   340,
+   936,
+   176
+  ],
+  "centro": [
+   90,
+   560,
+   900,
+   500
+  ],
+  "base": [
+   72,
+   1068,
+   936,
+   96
+  ],
+  "inferior": [
+   72,
+   720,
+   936,
+   440
+  ],
+  "alto": [
+   72,
+   340,
+   936,
+   360
+  ],
+  "principal": [
+   72,
+   360,
+   936,
+   800
+  ],
+  "direita": [
+   620,
+   380,
+   400,
+   360
+  ],
+  "foto": [
+   72,
+   520,
+   936,
+   640
+  ]
+ },
+ "formatos": {
+  "atlas": {
+   "descricao": "Mapa como palco persistente; destaques territoriais, rota medida, cartões de números, hierarquias; mapa técnico escuro para estrutura abstrata; retorno ao mapa inicial no fecho.",
+   "palcos": [
+    "mapa",
+    "tecnico"
+   ],
+   "componentes": [
+    "editorial.statCard",
+    "editorial.peopleCard",
+    "editorial.hierarchy",
+    "editorial.comparison",
+    "editorial.flowConnections",
+    "editorial.titleOrPayoff",
+    "dossie.documentCard",
+    "dossie.evidenceHighlight",
+    "editorial.timeline"
+   ],
+   "clipes": [
+    "mecanismo.eclusa"
+   ],
+   "max_componentes_distintos": 7
+  },
+  "dossie": {
+   "descricao": "Mesa escura com objetos informativos: documentos com proveniência, datas, linha do tempo, carimbos e destaques, comparações; mapa simplificado só se ajudar.",
+   "palcos": [
+    "mesa",
+    "tecnico"
+   ],
+   "componentes": [
+    "dossie.documentCard",
+    "dossie.evidenceHighlight",
+    "editorial.timeline",
+    "editorial.statCard",
+    "editorial.peopleCard",
+    "editorial.comparison",
+    "editorial.flowConnections",
+    "editorial.titleOrPayoff"
+   ],
+   "clipes": [],
+   "max_componentes_distintos": 6
+  }
+ },
+ "regras": {
+  "progressao_max_s": 4.0,
+  "titulo_max_linhas": 3,
+  "asset_max_usos": 2,
+  "fim_tolerancia_s": 0.5
+ },
+ "zonas_identidade": {
+  "marca": [
+   72,
+   282,
+   420,
+   52
+  ],
+  "legenda": [
+   150,
+   1240,
+   780,
+   215
+  ]
+ }
+}

@@ -80,8 +80,29 @@
   },
   {
    "t0": 62.64,
-   "t1": 68.61,
+   "t1": 64.207,
    "cor": "destaque2",
+   "largura": 14,
+   "de": 0.14,
+   "para": 0.7,
+   "some": 70.028
+  },
+  {
+   "t0": 66.49,
+   "t1": 67.59,
+   "cor": "destaque2",
+   "largura": 14,
+   "de": 0.14,
+   "para": 0,
+   "some": 70.028
+  },
+  {
+   "t0": 67.442,
+   "t1": 68.542,
+   "cor": "destaque2",
+   "largura": 14,
+   "de": 0.7,
+   "para": 1,
    "some": 70.028
   }
  ],
@@ -510,7 +531,23 @@
       "lado": "direita"
      }
     }
-   ]
+   ],
+   "movimento": "aproxima"
+  },
+  {
+   "id": "b5-mecanismo",
+   "composicao": "atlas.protagonista",
+   "t": 31.609,
+   "roi": [
+    -79.97,
+    8.9,
+    -79.52,
+    9.36
+   ],
+   "movimento": "fixo",
+   "transicao": 0.8,
+   "prova": "sob o clipe aprovado do mecanismo (furo 31,5–40,9 s): o mapa só segura o canal",
+   "camadas": []
   },
   {
    "id": "b6-gravidade",
@@ -723,13 +760,13 @@
         "rotulo": "metade para subir",
         "fracao": 0.5,
         "cor": "agua",
-        "t": "@metade"
+        "t": 66.49
        },
        {
         "rotulo": "metade para descer",
         "fracao": 0.5,
         "cor": "escuro",
-        "t": "@2:metade"
+        "t": 67.442
        }
       ]
      }
@@ -814,11 +851,11 @@
    }
   }
  ],
- "antes": ".github/v4/material/antes_formatos_44084129999.bin",
+ "antes": ".github/v4/material/antes_atlas_44122592315.bin",
  "antes_ritmo": {
   "segundos": 79,
-  "segundos_parados": 33,
-  "maior_trecho_parado_s": 4
+  "segundos_parados": 4,
+  "maior_trecho_parado_s": 2
  },
  "styleframes": 12
 }

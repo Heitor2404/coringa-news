@@ -80,8 +80,29 @@
   },
   {
    "t0": "@gasta",
-   "t1": "@tudo",
+   "t1": "@197+0.6",
    "cor": "destaque2",
+   "largura": 14,
+   "de": 0.14,
+   "para": 0.7,
+   "some": "@4:por"
+  },
+  {
+   "t0": "@metade",
+   "t1": "@metade+1.1",
+   "cor": "destaque2",
+   "largura": 14,
+   "de": 0.14,
+   "para": 0,
+   "some": "@4:por"
+  },
+  {
+   "t0": "@2:metade",
+   "t1": "@2:metade+1.1",
+   "cor": "destaque2",
+   "largura": 14,
+   "de": 0.7,
+   "para": 1,
    "some": "@4:por"
   }
  ],
@@ -510,7 +531,23 @@
       "lado": "direita"
      }
     }
-   ]
+   ],
+   "movimento": "aproxima"
+  },
+  {
+   "id": "b5-mecanismo",
+   "composicao": "atlas.protagonista",
+   "t": "@funciona",
+   "roi": [
+    -79.97,
+    8.9,
+    -79.52,
+    9.36
+   ],
+   "movimento": "fixo",
+   "transicao": 0.8,
+   "prova": "sob o clipe aprovado do mecanismo (furo 31,5–40,9 s): o mapa só segura o canal",
+   "camadas": []
   },
   {
    "id": "b6-gravidade",

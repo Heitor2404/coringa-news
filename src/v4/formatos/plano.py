@@ -93,7 +93,7 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
                     q[k] = a(q[k])
             if isinstance(q.get('carimbo'), dict) and q['carimbo'].get('t') is not None:
                 q['carimbo']['t'] = a(q['carimbo']['t'])
-            for lista in ('campos', 'marcas', 'etiquetas', 'ativos'):
+            for lista in ('campos', 'marcas', 'etiquetas', 'ativos', 'partes'):
                 for x in q.get(lista) or []:
                     if isinstance(x, dict) and x.get('t') is not None:
                         x['t'] = a(x['t'])
@@ -379,7 +379,7 @@ def eventos(plano: dict) -> list[float]:
         ev += [q[k] for k in ('t_marca', 't_total', 't_carimbo', 't_abre') if isinstance(q.get(k), (int, float))]
         if isinstance(q.get('carimbo'), dict) and isinstance(q['carimbo'].get('t'), (int, float)):
             ev.append(q['carimbo']['t'])
-        for lista in ('campos', 'ativos'):
+        for lista in ('campos', 'ativos', 'partes'):
             ev += [x['t'] for x in q.get(lista) or [] if isinstance(x, dict) and isinstance(x.get('t'), (int, float))]
     return sorted(ev)
 

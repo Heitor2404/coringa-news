@@ -1905,6 +1905,32 @@
     "formatos",
     "validacao"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos ATLAS (gramática da referência)",
+   "referencia": "execução 44155276352",
+   "verificavel": true,
+   "id": "ERR-075",
+   "titulo": "Mostrador que nunca enchia e trechos de câmera parada sem mudança visível",
+   "sintoma": "portão de ritmo BLOQUEOU a prévia: maior trecho parado 5 s (65–69 s) e 3 s (28–30 s); 20 de 79 s parados.",
+   "causa_raiz": "as partes do mostrador ('@metade') não eram resolvidas no plano (lista 'partes' fora do resolvedor), então o meio-círculo ficava vazio; com a câmera FIXA da referência, a água do lago e os degraus mudavam pouco no quadro.",
+   "arquivos": [
+    "src/v4/formatos/plano.py",
+    "motor4/remotion/src/formatos/Primitivas.tsx",
+    "motor4/remotion/src/formatos/Palco.tsx",
+    "src/v4/formatos/planos/atlas_panama.json"
+   ],
+   "correcao": "'partes' resolvidas e contadas como evento; cada metade enche na palavra; a água corre do lago para cada mar na fala (trechos com direção); escada com aproximação lenta (ref. 25–28 s) e beat próprio sob o clipe. Medido em trechos renderizados locais: maior trecho parado 2 s.",
+   "testes": [
+    "tests/test_formatos.py::test_partes_do_mostrador_ancoradas_na_fala"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido (sem nova prévia: aguarda autorização)",
+   "tags": [
+    "formatos",
+    "ritmo"
+   ]
   }
  ]
 }

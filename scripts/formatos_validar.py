@@ -45,7 +45,9 @@ def escolher(pl: dict, n: int) -> list[float]:
         Ls = [L for L in b['camadas'] if L['componente'] != 'dossie.evidenceHighlight'] or b['camadas']
         if not Ls:              # beat só de mapa (o território é a informação): meio do beat, câmera assentada
             fim = inicio(bs[i + 1]) if i + 1 < len(bs) else pl['duracao']
-            ts.append(round(min(fim - .3, inicio(b) + max(.9, (fim - inicio(b)) * .7)), 2))
+            t = round(min(fim - .3, inicio(b) + max(.9, (fim - inicio(b)) * .7)), 2)
+            if not any(a <= t <= z for a, z in furos):     # sob o clipe o vídeo mostra o clipe, não o palco
+                ts.append(t)
             continue
         fim = min(L['t1'] for L in Ls)
         ini = max(L['t0'] for L in b['camadas'])

@@ -471,7 +471,12 @@ export const Dial: React.FC<{ c: Ctx }> = ({ c }) => {
       transform: `translateY(${(1 - c.k) * 30}px)` }}>
       {p.titulo && <div style={{ position: 'absolute', left: 40, top: 22, fontFamily: FD(c), fontWeight: 700, fontSize: 26, letterSpacing: 2, color: C.alerta, textTransform: 'uppercase' }}>{p.titulo}</div>}
       <svg style={{ position: 'absolute', left: 0, top: 0 }} width={b.w} height={b.h}>
-        {pts.map((q, i) => { const u = i / (pts.length - 1); return <circle key={i} cx={q.x} cy={q.y} r={R / 34} fill={u <= kv ? corDe(u) : 'rgba(11,15,23,.12)'} />; })}
+        {pts.map((q, i) => {
+          // cada parte se preenche NA PALAVRA que a cita (varredura de 0,6 s): o mostrador muda junto com a fala
+          const u = i / (pts.length - 1), pi = Math.max(0, lim.findIndex(l => u <= l + 1e-6)), ini = pi ? lim[pi - 1] : 0;
+          const tp = partes[pi]?.t, cheio = tp != null ? c.t >= tp + (u - ini) / Math.max(1e-3, lim[pi] - ini) * .6 : u <= kv;
+          return <circle key={i} cx={q.x} cy={q.y} r={R / 27} fill={cheio ? corDe(u) : 'rgba(11,15,23,.12)'} />;
+        })}
       </svg>
       <div style={{ position: 'absolute', left: cx + R + 30, right: 34, top: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: 92, lineHeight: 1, color: C.tinta, whiteSpace: 'nowrap' }}>{p.prefixo || ''}{typeof val === 'number' ? val.toLocaleString('pt-BR') : val}</div>

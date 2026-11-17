@@ -377,3 +377,14 @@ def test_planta_tecnica_rebobina_e_medicao_conta_o_desenho_svg():
     assert 'turf.rewind' in palco and 'reverse: true' in palco
     fmt = (RAIZ / 'motor4/remotion/src/formatos/Formato.tsx').read_text()
     assert 'ownerSVGElement' in fmt and 'data-ancora-geo' in fmt
+
+
+def test_partes_do_mostrador_ancoradas_na_fala():
+    """44155276352: '@metade' das partes do mostrador não era resolvido → o meio-círculo nunca enchia (5 s parados)"""
+    pal = [{'w': w, 's': i * .5, 'e': i * .5 + .4} for i, w in enumerate('metade sobe metade desce'.split())]
+    pl = copy.deepcopy(ATLAS)
+    _camada(pl, 'litros')['p']['partes'][0]['t'] = '@metade'
+    _camada(pl, 'litros')['p']['partes'][1]['t'] = '@2:metade'
+    r = P.resolver_tempos(pl, pal)
+    partes = next(L for b in r['beats'] for L in b['camadas'] if L['id'] == 'litros')['p']['partes']
+    assert [x['t'] for x in partes] == [0.0, 1.0]

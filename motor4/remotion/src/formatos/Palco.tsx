@@ -118,7 +118,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       ...(P.rotas || []).flatMap((r, i) => [
         { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': 24, 'line-opacity': .5, 'line-blur': 8 } },
         { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': 15 } },
-        { id: `rota_l_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': cor(r.cor), 'line-width': 9 } }]),
+        { id: `rota_l_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': cor(r.cor), 'line-width': (r as any).largura ?? 9 } }]),
     ];
     carregarML().then(ml => {
       m = new ml.Map({ container: ref.current!, style: { version: 8, sources, layers } as any, center: c0.centro, zoom: c0.zoom, interactive: false,
@@ -154,7 +154,10 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     (P.rotas || []).forEach((r, i) => {
       const k = easeIO(clamp((t - r.t0) / Math.max(.01, r.t1 - r.t0))) * (r.ate ?? 1);
       const some = r.some != null ? clamp((r.some - t) / .4 + 1) : 1;
-      const parte = !rota || k <= 0 || some <= 0 ? turf.featureCollection([]) : turf.featureCollection([turf.lineSliceAlong(rota, 0, Math.max(.01, km * k), { units: 'kilometers' })]);
+      // trecho com direção: de (fração) → para (fração); a água "desce" do lago para cada mar no instante da fala
+      const de = (r as any).de ?? 0, para = (r as any).para ?? 1, fim = de + (para - de) * k;
+      const a0 = Math.min(de, fim), a1 = Math.max(de, fim);
+      const parte = !rota || k <= 0 || some <= 0 || a1 - a0 < 1e-4 ? turf.featureCollection([]) : turf.featureCollection([turf.lineSliceAlong(rota, km * a0, Math.max(km * a0 + .01, km * a1), { units: 'kilometers' })]);
       (map.getSource(`rota_${i}`) as ML.GeoJSONSource).setData(parte as any);
       ['rota_l_', 'rota_c_'].forEach(id => map.setPaintProperty(`${id}${i}`, 'line-opacity', some));
       map.setPaintProperty(`rota_s_${i}`, 'line-opacity', .5 * some);

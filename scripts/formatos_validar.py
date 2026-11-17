@@ -249,11 +249,8 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     geo = json.loads((RAIZ / pl['geo']).read_text()) if pl.get('geo') else None
     pf = out / 'props_formato.json'
     pf.write_text(json.dumps(P.props(pl, {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta') if k in can}, geo, imgs), ensure_ascii=False))
-    cenas = [{'ini': 0.0, 'fim': pl['duracao'], 'selo': None, 'credito': None, 'legenda': True}]
     pc = out / 'props_camada.json'
-    cam = {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}
-    if pl['formato'] == 'atlas':
-        cam['legenda_caixa'] = P.zonas('atlas')['legenda']
+    cam = P.props_camada(pl, meta)
     pc.write_text(json.dumps(cam, ensure_ascii=False))
     if tempos == 'auto':
         amos = amostrar(pl)

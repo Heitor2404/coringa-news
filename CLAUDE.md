@@ -27,6 +27,9 @@ antes de preservar a arquitetura.
   `docs/v4/CAPACIDADES.md` (status honesto); backends em `motor4/` (Node isolado, versões exatas) + `src/v4/backends/`.
 - Contrato único de cena e regras verificáveis: `src/v4/contrato.py`; componentes por modalidade: `src/v4/componentes.py`.
 - Teste técnico (não estético): `scripts/v4_fumaca.py`; episódio real só no Actions (`.github/v4/pedido.json`).
+- **Antes de qualquer execução:** `python -m src.v4 prerender .github/v4/pedido.json [roteiro.json] [narracao.json]` (sem IA): viabilidade do
+  acervo (`src/v4/viabilidade.py` + `biblioteca_comprovada.json`), parâmetros, contrato, narração reutilizada e geometria do palco
+  contra as zonas V4. Só dispare o Actions com 9/9 prontas e autorização do Heitor.
 
 ## Onde está cada coisa
 | Preciso de… | Arquivo |

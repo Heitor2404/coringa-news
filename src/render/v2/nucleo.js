@@ -256,7 +256,7 @@
     PALCO.insertAdjacentHTML('beforeend', `<div id="preto" class="abs" style="inset:0;background:#000;opacity:0;z-index:50"></div>
       <div id="flash" class="abs" style="inset:0;background:#fff;opacity:0;z-index:51;mix-blend-mode:screen"></div>
       <div class="vinheta"></div><div class="grao"></div>
-      <div id="marca"><i></i>${esc((D.meta && D.meta.marca_curta) || 'CORINGA EXPLICA')}</div>
+      ${D.meta && D.meta.marca === false ? '' : `<div id="marca"><i></i>${esc((D.meta && D.meta.marca_curta) || 'CORINGA EXPLICA')}</div>`}
       ${(D.scenes || []).some(s => s.ia) ? '<div id="aviso-ia">IMAGEM GERADA POR IA</div>' : ''}`);
     PALCO.appendChild(LEG);
   }

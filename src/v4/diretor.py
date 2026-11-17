@@ -47,6 +47,20 @@ Tempos DENTRO de params (t, de, ate, rotulo_t, encher.de/ate, tempos.*, camera[]
 Componentes com acervo (registro.foto, registro.video, camadas.recorte) usam params.asset = "auto" e o bloco "busca"."""
 
 
+def inventario_midia(pedido: dict) -> str:
+    """o que JÁ existe comprovado (biblioteca) antes de o diretor escolher formas — vídeo real só se houver vídeo comprovado"""
+    from src.v4 import viabilidade
+    bib = viabilidade.carregar()
+    its = bib.get('itens') or []
+    if not its:
+        return ''
+    linhas = [f"- {it['natureza']}: {it['mostra']} ({it.get('ano') or 's/d'}; {it['licenca']})" for it in its]
+    videos = [it for it in its if it.get('natureza') == 'video']
+    return ('MÍDIA REAL JÁ COMPROVADA (procedência, licença e correspondência verificadas) — planeje o REGISTRO com ela:\n' + '\n'.join(linhas)
+            + ('' if videos else '\nNÃO HÁ VÍDEO REAL COMPROVADO: não peça registro_video; use foto comprovada, mapa, esquema ou tipografia.')
+            + '\nSem mídia comprovada para uma cena, o motor troca a forma automaticamente (nunca imagem de outro lugar).')
+
+
 def prompt(pedido: dict, correcoes: list[dict] | None = None, anterior: dict | None = None) -> str:
     fatos = '\n'.join(f"- {f['id']}: {f['texto']} [fonte: {f['fonte']}]" for f in pedido['fatos'])
     cat = []
@@ -71,12 +85,22 @@ Itens do catálogo HyperFrames relevantes (busca local):
 {chr(10).join(cat) or '  (nenhum em retrato/responsivo)'}
 
 {pedido.get('notas_diretor', '')}
+{inventario_midia(pedido)}
 
 {SAIDA}"""
     if correcoes:
         base += '\n\nSEU ROTEIRO ANTERIOR violou regras verificadas em código. Corrija SÓ o necessário e devolva o JSON inteiro:\n' + \
                 '\n'.join(f"- cena {v['cena']}: [{v['regra']}] {v['texto']}" for v in correcoes) + '\n\nANTERIOR:\n' + json.dumps(anterior, ensure_ascii=False)[:24000]
     return base
+
+
+def reproduzir(pedido: dict) -> dict:
+    """o roteiro cifrado do pedido (sem chamada de IA)"""
+    from pathlib import Path
+    from src.v3 import material
+    rot = json.loads(material.decifrar(material._segredo(), (Path(__file__).resolve().parents[2] / pedido['roteiro_ia_cifrado']).read_bytes()))
+    rot['_origem'] = f"reprodução do roteiro do diretor automático ({pedido.get('roteiro_ia_origem', '?')})"
+    return rot
 
 
 def pedir(pedido: dict, correcoes=None, anterior=None) -> dict:

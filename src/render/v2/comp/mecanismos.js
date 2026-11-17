@@ -49,10 +49,13 @@
     const comporta = (cls, x, y0, y1) => `<g class="${cls}"><rect x="${x}" y="${y0}" width="${PAR}" height="${y1 - y0}" fill="#FFD21F" stroke="#0b0f17" stroke-width="4"/>
       ${Array.from({ length: Math.floor((y1 - y0) / 56) }, (_, k) => `<line x1="${x}" x2="${x + PAR}" y1="${y0 + 28 + k * 56}" y2="${y0 + 48 + k * 56}" stroke="#0b0f17" stroke-width="5"/>`).join('')}</g>`;
     const torre = x => `<rect x="${x - 14}" y="80" width="${PAR + 28}" height="${TOPO - 80}" fill="#42566a" stroke="#9fb6c8" stroke-width="3"/><rect x="${x - 14}" y="70" width="${PAR + 28}" height="14" fill="#9fb6c8"/>`;
+    // V4 (p.v4): a identidade V4 põe marca (292) e selo (345) e a legenda em 1240–1455 — o esquema não desenha cabeçalho
+    // próprio, desce os passos e põe a nota de escala numa linha só acima da legenda (colisões em 44049021691)
+    const V4 = !!p.v4, TP = V4 ? 12 : 0;
     const html = `<div class="grade"></div>
-      <div class="abs kicker" data-g="kicker" style="left:72px;top:345px;color:var(--ciano)"><span style="display:inline-block;width:14px;height:14px;border:3px solid var(--ciano);transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(p.kicker || 'MECANISMO · ECLUSA')}</div>
-      <div class="abs pas" style="left:72px;top:388px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:110px;height:10px;background:rgba(127,227,240,.25)"></div>`).join('')}</div>
-      ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:412px;font-weight:900;font-size:46px;line-height:1.04;text-transform:uppercase;opacity:0;text-shadow:0 3px 14px rgba(0,0,0,.6)"><span style="font-family:var(--f-dado);color:var(--ciano);margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
+      ${V4 ? '' : `<div class="abs kicker" data-g="kicker" style="left:72px;top:345px;color:var(--ciano)"><span style="display:inline-block;width:14px;height:14px;border:3px solid var(--ciano);transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(p.kicker || 'MECANISMO · ECLUSA')}</div>`}
+      <div class="abs pas" style="left:72px;top:${388 + TP}px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:110px;height:10px;background:rgba(127,227,240,.25)"></div>`).join('')}</div>
+      ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:${412 + TP}px;font-weight:900;font-size:46px;line-height:1.04;text-transform:uppercase;opacity:0;text-shadow:0 3px 14px rgba(0,0,0,.6)"><span style="font-family:var(--f-dado);color:var(--ciano);margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
       <svg class="abs cv" data-ocupa="1" style="left:0;top:${SY}px" width="${SW}" height="${SH}" viewBox="0 0 ${MW} ${MW / ASP}" preserveAspectRatio="xMidYMid slice">
         <defs><linearGradient id="ag${ctx.i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fd8e8" stop-opacity=".78"/><stop offset="1" stop-color="#0c6676" stop-opacity=".92"/></linearGradient>
           <pattern id="cc${ctx.i}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="36" height="36" fill="#34495b"/><line x1="0" y1="0" x2="0" y2="36" stroke="#3e566a" stroke-width="12"/></pattern>
@@ -99,12 +102,17 @@
         <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
         <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
       </div>
-      ${+p.degraus > 1 ? `<div class="abs esc-deg" data-g="degraus" style="left:72px;top:1218px;display:flex;align-items:center;gap:16px;padding:8px 16px;background:rgba(6,18,26,.92);box-shadow:0 6px 18px rgba(0,0,0,.4)">
+      ${+p.degraus > 1 && V4 ? `<div class="abs esc-deg" data-g="degraus" style="left:72px;top:1162px;display:flex;align-items:center;gap:12px;padding:6px 14px;background:rgba(6,18,26,.92)">
+          <svg width="80" height="40" viewBox="0 0 190 96" style="overflow:visible">${Array.from({ length: +p.degraus }, (_, i) => {
+            const w = 190 / +p.degraus, h = 96 / +p.degraus; return `<rect class="dg dg${i}" x="${i * w}" y="${96 - (i + 1) * h}" width="${w - 4}" height="${(i + 1) * h}" fill="rgba(63,208,224,.18)" stroke="#3FD0E0" stroke-width="2"/>`; }).join('')}
+            <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
+          <div style="font-family:var(--f-dado);font-weight:700;font-size:22px;color:rgba(255,255,255,.85);white-space:nowrap">1 CÂMARA PARA OS ${esc(String(D))} m · <span style="color:#FFD21F">NO CANAL: ${+p.degraus}</span> · FORA DE ESCALA</div></div>`
+        : +p.degraus > 1 ? `<div class="abs esc-deg" data-g="degraus" style="left:72px;top:1218px;display:flex;align-items:center;gap:16px;padding:8px 16px;background:rgba(6,18,26,.92);box-shadow:0 6px 18px rgba(0,0,0,.4)">
           <svg width="120" height="60" viewBox="0 0 190 96" style="overflow:visible">${Array.from({ length: +p.degraus }, (_, i) => {
             const w = 190 / +p.degraus, h = 96 / +p.degraus; return `<rect class="dg dg${i}" x="${i * w}" y="${96 - (i + 1) * h}" width="${w - 4}" height="${(i + 1) * h}" fill="rgba(63,208,224,.18)" stroke="#3FD0E0" stroke-width="2"/>`; }).join('')}
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
           <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
-        : `<div class="abs" data-g="aviso" data-opcional="1" style="right:160px;top:1176px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
+        : `<div class="abs" data-g="aviso" data-opcional="1" style="right:${V4 ? 72 : 160}px;top:${V4 ? 1180 : 1176}px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
       <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:#fff;background:rgba(5,20,26,.88);padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
 
     // ---- linha do tempo física ----

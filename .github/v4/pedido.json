@@ -1,6 +1,6 @@
 {
- "rodada": 4,
- "nota": "Episódio ÚNICO do Panamá depois das correções estruturais da auditoria de 16/11 (execução reprovada 43972774128). Direção NOVA (sem cota de famílias); mesmos fatos e pergunta. Prévia PRIVADA no Telegram; NÃO publicar; aprovação só humana.",
+ "rodada": 5,
+ "nota": "Pré-render verificado localmente (17/11): roteiro e narração da 44049021691 reutilizados; viabilidade do acervo antes de fechar o storyboard (biblioteca comprovada); sem busca nova nem chamada de IA até o render. Execução SÓ com autorização do Heitor. Prévia PRIVADA; NÃO publicar.",
  "video_id": "v4-panama-eclusas",
  "pergunta": "Por que os navios precisam subir para atravessar o Canal do Panamá?",
  "alvo_duracao": [
@@ -71,5 +71,9 @@
   "diagram"
  ],
  "notas_diretor": "Mapa: mapa.rota com regiao [-80.15, 8.85, -79.45, 9.45], câmera FIXA, rota_osm {\"tags\": {\"waterway\": \"~canal|fairway\"}, \"nome\": \"Panam\", \"salto_max_km\": 4, \"inicio\": [-79.92, 9.38]}; rótulos Mar do Caribe / Oceano Pacífico / Lago Gatún; pontos Colón e Cidade do Panamá. Mecanismo da eclusa: mecanismo.eclusa (corte lateral validado: navio entra, comporta fecha, válvula abre, água do lago desce, navio sobe, níveis iguais, comporta abre), desnivel_m ≈ 9 por degrau (26/3). Registro real só onde a mídia puder mostrar o lugar (busca em inglês: 'Miraflores Locks ship', 'Gatun Locks', 'Panama Canal construction 1913'). Payoff: a água doce do lago (f11) que termina no mar — mostre o destino da água, não só um número.",
- "video": "v4-panama-eclusas"
+ "video": "v4-panama-eclusas",
+ "roteiro_ia_cifrado": ".github/v4/material/roteiro_ia_44049021691.bin",
+ "roteiro_ia_origem": "execução 44049021691 (diretor automático, sem cota de famílias)",
+ "narracao_cifrada": ".github/v4/material/narracao_44049021691.bin",
+ "buscar_novas": false
 }

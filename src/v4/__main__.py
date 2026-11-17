@@ -74,6 +74,31 @@ def main(a: list[str]):
         res['caixa'] = cx
         (saida / 'resultado.json').write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
         print(json.dumps({k: res.get(k) for k in ('estado', 'mp4', 'segundos')}, ensure_ascii=False))
+    elif cmd == 'prerender':
+        # python -m src.v4 prerender <pedido.json> [roteiro.json] [narracao.json]  — SEM IA e sem rede. No Actions, sem os
+        # arquivos claros, usa o roteiro e a narração cifrados do pedido. Sai com código 1 se alguma cena não estiver pronta.
+        from src.v4 import contrato, diretor, episodio, prerender, viabilidade
+        pedido = json.loads(Path(a[1]).read_text(encoding='utf-8'))
+        rot = json.loads(Path(a[2]).read_text(encoding='utf-8')) if len(a) > 2 else diretor.reproduzir(pedido)
+        ep = diretor.esqueleto(rot, pedido)
+        contrato.impor(ep)
+        ep, viab = viabilidade.resolver(ep, pedido)
+        narr = json.loads(Path(a[3]).read_text(encoding='utf-8')) if len(a) > 3 else episodio.carregar_narracao(pedido, ep)
+        if narr and narr.get('falas_hash') == prerender.hash_falas(ep['cenas']):
+            for c, (i, f) in zip(ep['cenas'], narr['tempos']):
+                c['ini'], c['fim'] = round(i, 3), round(f, 3)
+                c['params'] = diretor.segundos(c.get('params') or {}, c['fim'] - c['ini'])
+        pre = prerender.verificar(ep, pedido, narr, Path('saida_v4/_prerender'))
+        for v in viab:
+            if v.get('decisao') or v.get('repeticao'):
+                print(f"  [viabilidade {v['cena']}] {v.get('decisao', '')} {v.get('motivo', '')} {v.get('repeticao', '')}".rstrip())
+        for x in pre['cenas']:
+            print(f"  [{x['estado']}] {x['cena']} {x['modalidade']:<14} {x['componente']:<18} {x['asset'] or ''}"
+                  + (f" | {' || '.join(x['problemas'])}" if x['problemas'] else ''))
+        for g in pre['gerais']:
+            print('  [GERAL] ' + g)
+        print(json.dumps({'pronto': pre['pronto'], 'cenas_prontas': sum(x['estado'] == 'pronta' for x in pre['cenas']), 'total': len(pre['cenas'])}))
+        sys.exit(0 if pre['pronto'] else 1)
     elif cmd == 'auditar':
         from src.v4 import metricas
         saida = Path(a[1])

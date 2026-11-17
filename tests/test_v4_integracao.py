@@ -1,4 +1,5 @@
 """Regressões da execução real 43956541084 (Canal do Panamá): causas gerais, não casos do vídeo."""
+import pytest
 from pathlib import Path
 
 from src.v4.acervo_v4 import _licenca
@@ -49,17 +50,27 @@ def test_telegram_tenta_de_novo_em_falha_passageira_do_servidor(monkeypatch):
         PT._api('getChat', {'chat_id': 1})
 
 
-def test_video_de_banco_de_outro_lugar_e_descartado_antes_da_visao():
-    """execução 43972774128: vídeo do Pixabay 'sunset, canal, city' (outro país) foi aceito pela visão como eclusa do
-    Panamá. Vídeo de banco só se identifica pelas tags: sem nome próprio do pedido, é outro lugar."""
+def test_video_sem_nome_do_lugar_nas_tags_fica_incerto_e_depende_da_visao():
+    """43972774128: 'sunset, canal, city' passou como eclusa do Panamá; 44049021691: 19 vídeos descartados só por não terem
+    o nome nas tags. Agora: tag é pista, não prova; aceitar exige a visão confirmar lugar E objeto (falha fechada)."""
     from src.v4 import acervo_v4 as A
     nomes = A.nomes_proprios(['Panama Canal locks video', 'Miraflores Locks ship', 'Gatun Locks ship transit'])
     assert nomes == {'panama', 'miraflores', 'gatun'}
     errado = {'url': 'https://cdn.pixabay.com/video/x.mp4', 'titulo': 'pixabay #230248: sunset, canal, city, light', 'video': {'url': 'x'}}
     certo = {'url': 'https://cdn.pixabay.com/video/y.mp4', 'titulo': 'pixabay #1: panama, canal, ship, lock', 'video': {'url': 'y'}}
     assert not A.mesmo_lugar(errado, nomes) and A.mesmo_lugar(certo, nomes)
-    esc, info = A.escolher([errado], 'navio na eclusa', set(), ['Panama Canal locks video'])
-    assert esc is None and 'outro lugar' in info['motivo']
+    # 17/11: sem o nome nas tags NÃO é prova de outro lugar — fica INCERTO; só a confirmação de lugar+objeto aceita
+    import src.gemini as gem
+    with pytest.MonkeyPatch.context() as mp:
+        mp.delenv('GEMINI_API_KEY', raising=False)
+        esc, info = A.escolher([errado], 'navio na eclusa', set(), ['Panama Canal locks video'])
+        assert esc is None and info['prova'] == 'INCERTO'
+        mp.setenv('GEMINI_API_KEY', 'x')
+        mp.setattr(A, '_miniatura', lambda url: b'jpg')
+        mp.setattr(gem, 'json_visao', lambda *a, **k: {'escolha': 0, 'local_confere': False, 'objeto_confere': True})
+        assert A.escolher([errado], 'navio na eclusa', set(), ['Panama Canal locks video'])[0] is None
+        mp.setattr(gem, 'json_visao', lambda *a, **k: {'escolha': 0, 'local_confere': True, 'objeto_confere': True})
+        assert A.escolher([dict(errado)], 'navio na eclusa', set(), ['Panama Canal locks video'])[1]['prova'] == 'PROVADO'
 
 
 def test_roi_em_pixels_e_descartada():
@@ -280,3 +291,110 @@ def test_diagnostico_sai_como_status_visivel(monkeypatch, tmp_path):
     monkeypatch.setattr(PT, 'enviar', lambda mp4, est, titulo, rel: vistos.update(est=est, titulo=titulo, rel=rel) or {})
     M._telegram(tmp_path)
     assert estado_final.pode_enviar_previa(vistos['est']) and vistos['titulo'].startswith('DIAGNÓSTICO') and 'NÃO É EPISÓDIO' in vistos['rel']
+
+
+# ---------- 17/11: viabilidade antes do storyboard, pré-render sem IA (diagnóstico 44049021691) ----------
+
+def _ep_44049021691():
+    """estrutura da direção da 44049021691 (ids, modalidades, componentes, buscas, provas) — sem as falas do roteiro privado"""
+    def cena(i, mod, comp, acao=True, busca=None, params=None, prova=None, fala='x'):
+        return {'id': i, 'modalidade': mod, 'componente': comp, 'acao_fisica': acao, 'busca': busca, 'params': params or {}, 'fala': fala,
+                'prova': prova or {'sujeito': 's', 'estado_inicial': 'e', 'acao': 'a', 'resultado': 'r'}, 'ini': 0, 'fim': 7,
+                'objetivo': 'o', 'o_que_precisa_aparecer': 'o', 'camera': {'tipo': 'fixa'}, 'transicao': {'tipo': 'corte'}}
+    ecl = lambda s, d, g, et: {'sentido': s, 'desnivel_m': d, 'lago': 'Lago Gatún', 'mar': 'Mar', 'etapas': et, 'tempos': [0, .35, .7], 'degraus': g}
+    mapa = {'regiao': [-80.15, 8.85, -79.45, 9.45], 'camera': [{'t': 0, 'centro': [-79.8, 9.15], 'zoom': 9.5}],
+            'rota_osm': {'tags': {'waterway': '~canal|fairway'}, 'nome': 'Panam'}, 'rota': {'de': .1, 'ate': .7},
+            'pontos': [{'nome': 'Colón', 'lonlat': [-79.9, 9.36], 't': .1}], 'areas': [{'nome': 'Lago Gatún', 'lonlat': [-79.9, 9.2], 't': .7, 'estilo': 'lago'}]}
+    return {'versao_contrato': __import__('src.v4.contrato', fromlist=['x']).VERSAO, 'cenas': [
+        cena('c1', 'registro_video', 'registro.video', busca={'tipo': 'video', 'consultas_en': ['Miraflores Locks ship', 'Panama Canal ship locks transit'],
+             'deve_mostrar': 'Navio dentro de uma eclusa do Canal do Panamá'}, params={'asset': 'auto'},
+             prova={'sujeito': 'Navio na eclusa', 'estado_inicial': 'entrando na câmara', 'acao': 'o navio avança e sobe na câmara', 'resultado': 'preso entre paredes altas'}),
+        cena('c2', 'mapa', 'mapa.rota', acao=False, params=mapa),
+        cena('c3', 'esquema_2d', 'mecanismo.eclusa', params=ecl('subir', 26, 3, ['Navio no nível do mar', 'Sobe pelas câmaras', 'Chega ao lago']),
+             prova={'sujeito': 'navio', 'estado_inicial': 'nível do mar', 'acao': 'o navio sobe pelas câmaras em degraus', 'resultado': 'chega ao lago'}),
+        cena('c4', 'registro_video', 'registro.video', busca={'tipo': 'video', 'consultas_en': ['Gatun Locks', 'Gatun Locks ship chambers'],
+             'deve_mostrar': 'Câmaras sucessivas das eclusas de Gatún com navio'}, params={'asset': 'auto'},
+             prova={'sujeito': 'câmaras de Gatún', 'estado_inicial': 'níveis escalonados', 'acao': 'o navio passa para a câmara mais alta', 'resultado': 'subida em degraus'}),
+        cena('c5', 'esquema_2d', 'mecanismo.eclusa', params=ecl('subir', 9, 1, ['Navio entra, comporta fecha', 'Válvula abre, água entra', 'Níveis iguais, comporta abre']),
+             prova={'sujeito': 'câmara', 'estado_inicial': 'comporta fechada', 'acao': 'a válvula abre, a água entra e a comporta abre', 'resultado': 'navio sobe'}),
+        cena('c6', 'cena_3d', 'tresd.camara', params={'nivel_baixo_m': 0, 'nivel_alto_m': 9, 'encher': {'de': .15, 'ate': .9}, 'rotulos': [{'texto': 'Lago', 't': .1, 'ancora': 'lago'}]}),
+        cena('c7', 'registro_video', 'registro.video', busca={'tipo': 'video', 'consultas_en': ['Panama Canal lock gates opening'],
+             'deve_mostrar': 'Comportas de uma eclusa do Panamá abrindo'}, params={'asset': 'auto'},
+             prova={'sujeito': 'comporta', 'estado_inicial': 'comporta fechada', 'acao': 'a comporta abre quando os níveis se igualam', 'resultado': 'navio segue'}),
+        cena('c8', 'esquema_2d', 'mecanismo.eclusa', params=ecl('descer', 26, 3, ['Água sai do lago', 'Desce pelos 3 degraus', '≈197 milhões de L vão ao mar']),
+             fala='Uma travessia gasta 197 milhões de litros do lago. Tudo termina no mar.'),
+        cena('c9', 'tipografia', 'tipo.lottie', acao=False, params={'linhas': [{'texto': 'Só gravidade', 't': .1}]}),
+    ]} | {}
+
+
+def _continuo(ep):
+    for k, c in enumerate(ep['cenas']):
+        c['ini'], c['fim'] = 7.0 * k, 7.0 * (k + 1)
+    return ep
+
+
+def test_viabilidade_troca_video_sem_prova_por_foto_comprovada_e_limita_esquema():
+    """44049021691: c1/c4/c7 pediram vídeo sem existir vídeo comprovado → placas de diagnóstico; c3/c5/c8 = mesmo esquema."""
+    from src.v4 import viabilidade
+    ep, rel = viabilidade.resolver(_ep_44049021691(), {'titulo': 'Canal do Panamá'})
+    por = {c['id']: c for c in ep['cenas']}
+    for k in ('c1', 'c4', 'c7'):
+        assert por[k]['componente'] == 'registro.foto' and por[k]['params']['asset'].startswith('bib:commons:') and por[k].get('demonstrada_em')
+    assert len({por[k]['params']['asset'] for k in ('c1', 'c4', 'c7')}) == 3                   # sem repetir a mesma foto
+    assert 'Miraflores' in por['c1']['params']['asset'] and 'Gatun' in por['c4']['params']['asset']
+    assert sum(c['componente'] == 'mecanismo.eclusa' for c in ep['cenas']) == 2 and por['c8']['componente'] == 'mapa.rota'
+    assert por['c8']['params']['regiao'] == por['c2']['params']['regiao']                        # derivado do mapa do próprio episódio
+    assert all(r.get('decisao') != 'inviavel' for r in rel)
+
+
+def test_sem_midia_comprovada_nem_alternativa_fica_inviavel_e_nao_inventa():
+    from src.v4 import viabilidade
+    ep = _ep_44049021691()
+    vazia = {'itens': [], 'reprovados': []}
+    _, rel = viabilidade.resolver(ep, {'titulo': 'Canal do Panamá'}, vazia)
+    assert [r['cena'] for r in rel if r.get('decisao') == 'inviavel'] == ['c1', 'c4', 'c7']
+    # item de OUTRO lugar ou reprovado nunca entra
+    bib = viabilidade.carregar()
+    outro = {'itens': [dict(bib['itens'][0], lugar=['amsterdam'])], 'reprovados': []}
+    assert not viabilidade.candidatos(ep['cenas'][0], outro, {'panama', 'miraflores'})
+    rep = {'itens': bib['itens'][:1], 'reprovados': [{'id': bib['itens'][0]['id']}]}
+    assert not viabilidade.candidatos(ep['cenas'][0], rep, {'panama', 'miraflores'})
+
+
+def test_biblioteca_so_tem_item_com_procedencia_licenca_e_prova():
+    from src.v4 import viabilidade
+    bib = viabilidade.carregar()
+    assert bib['itens'] and all(it['licenca'] and it['credito'] and it['url'].startswith('https://') and it['prova']['midia_corresponde'] is True
+                                and it['lugar'] for it in bib['itens'])
+    assert any('pixabay' in r['id'] for r in bib['reprovados'])
+
+
+def test_contrato_aceita_registro_que_ancora_acao_so_com_cena_que_demonstra():
+    from src.v4 import contrato, viabilidade
+    ep, _ = viabilidade.resolver(_ep_44049021691(), {'titulo': 'Canal do Panamá'})
+    regras = {(v['cena'], v['regra']) for v in contrato.validar(ep)}
+    assert ('c1', 'R-ACAO-DEMONSTRADA-EM') in regras and ('c1', 'R-ACAO-SEM-DEMONSTRACAO') not in regras
+    ep['cenas'][0]['demonstrada_em'] = 'c9'                                                       # tipografia não demonstra
+    assert ('c1', 'R-ACAO-SEM-DEMONSTRACAO') in {(v['cena'], v['regra']) for v in contrato.validar(ep)}
+
+
+def test_prerender_aprova_as_9_cenas_e_reprova_midia_nao_resolvida(tmp_path):
+    from src.v4 import prerender, viabilidade
+    ep, _ = viabilidade.resolver(_continuo(_ep_44049021691()), {'titulo': 'Canal do Panamá'})
+    narr = {'falas_hash': prerender.hash_falas(ep['cenas']), 'tempos': [[0, 7]] * 9}
+    pre = prerender.verificar(ep, {}, narr, tmp_path, palco_real=False)
+    assert pre['pronto'], pre
+    ep['cenas'][0].update(componente='registro.video', modalidade='registro_video', params={'asset': None})
+    pre = prerender.verificar(ep, {}, narr, tmp_path, palco_real=False)
+    assert not pre['pronto'] and pre['cenas'][0]['estado'] == 'NAO_PRONTA' and 'placa de diagnóstico' in ' '.join(pre['cenas'][0]['problemas'])
+    assert not prerender.verificar(ep, {}, None, tmp_path, palco_real=False)['pronto']           # sem narração reutilizável
+
+
+def test_esquema_v2_no_modo_v4_nao_cruza_marca_selo_nem_legenda(tmp_path):
+    """44049021691: cabeçalho do esquema sob o selo V4 e nota de escala dentro da faixa de legenda (medido no palco real)."""
+    from src.v4 import prerender
+    p = {'sentido': 'subir', 'desnivel_m': 26, 'lago': 'Lago Gatún', 'mar': 'Nível do mar', 'degraus': 3,
+         'etapas': ['Navio no nível do mar', 'Sobe pelas câmaras', 'Chega ao lago, 26 m acima'], 'tempos': [0, 2.4, 4.9]}
+    antigo = prerender.geometria_palco('mecanismo.eclusa', p, 7.0, False, tmp_path / 'a')
+    assert any("zona V4 'legenda'" in g for g in antigo) and any("zona V4 'selo'" in g for g in antigo)
+    assert prerender.geometria_palco('mecanismo.eclusa', {**p, 'v4': True}, 7.0, False, tmp_path / 'b') == []

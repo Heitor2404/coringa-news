@@ -77,7 +77,13 @@ def validar(ep: dict, acervo: dict | None = None, geo: dict | None = None) -> li
         # DEMONSTRAÇÃO: ação física narrada não pode ficar em foto parada / tipografia
         alvo = f"{c.get('fala', '')} {c.get('o_que_precisa_aparecer', '')}"
         if (c.get('acao_fisica') or ACAO.search(c.get('o_que_precisa_aparecer') or '')) and mod not in DEMONSTRAM_ACAO:
-            _v(out, cid, 'R-ACAO-SEM-DEMONSTRACAO', 'erro', f'a cena precisa mostrar ação ({alvo[:70]!r}) e {mod} não demonstra movimento')
+            # registro comprovado que ancora a ação mostrada NOUTRA cena (viabilidade, 17/11) — só vale se essa cena existe
+            # e de fato demonstra (modalidade capaz); senão continua erro
+            dem = next((o for o in cenas if o.get('id') == c.get('demonstrada_em')), None)
+            if dem is not None and dem.get('modalidade') in DEMONSTRAM_ACAO and mod in ('registro_foto', 'documento'):
+                _v(out, cid, 'R-ACAO-DEMONSTRADA-EM', 'aviso', f"registro real ancora a ação; a demonstração está em {dem['id']} ({dem['modalidade']})")
+            else:
+                _v(out, cid, 'R-ACAO-SEM-DEMONSTRACAO', 'erro', f'a cena precisa mostrar ação ({alvo[:70]!r}) e {mod} não demonstra movimento')
         # PROVA NARRATIVA (auditoria 16/11): ação física declara sujeito → estado inicial → ação → resultado
         if c.get('acao_fisica'):
             pv = c.get('prova') or {}

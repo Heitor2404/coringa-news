@@ -1226,9 +1226,9 @@
    "arquivos": [
     "src/v4/acervo_v4.py"
    ],
-   "correcao": "vídeo de banco precisa ter nas tags um nome próprio das consultas (Panama, Miraflores, Gatun); ROI fora de [0,1] é descartada e registrada; Pixabay recebe crédito com a licença explícita.",
+   "correcao": "vídeo de banco precisa ter nas tags um nome próprio das consultas (Panama, Miraflores, Gatun); ROI fora de [0,1] é descartada e registrada; Pixabay recebe crédito com a licença explícita. REVISTO em 17/11 (Heitor, após 44049021691): a ausência do nome nas tags NÃO descarta — o candidato fica INCERTO e só vira prova com a visão confirmando lugar E objeto (falha fechada); o nome nas tags só ordena.",
    "testes": [
-    "tests/test_v4_integracao.py::test_video_de_banco_de_outro_lugar_e_descartado_antes_da_visao",
+    "tests/test_v4_integracao.py::test_video_sem_nome_do_lugar_nas_tags_fica_incerto_e_depende_da_visao",
     "tests/test_v4_integracao.py::test_roi_em_pixels_e_descartada"
    ],
    "gravidade": "alta",
@@ -1514,6 +1514,92 @@
     "v4",
     "telegram",
     "ci"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "motor V4",
+   "referencia": "diagnóstico 44049021691 + decisão do Heitor (17/11)",
+   "verificavel": true,
+   "estado": "corrigido; pré-render local 9/9 prontas (sem nova execução)",
+   "id": "ERR-060",
+   "titulo": "Diretor escolhia vídeo real antes de saber se existia mídia comprovada",
+   "sintoma": "44049021691: c1, c4 e c7 em registro_video sem vídeo comprovado → três placas de diagnóstico.",
+   "causa_raiz": "o acervo só era consultado DEPOIS do storyboard fechado; o diretor não conhecia a mídia disponível; mídia já comprovada em execuções anteriores não era reaproveitada.",
+   "arquivos": [
+    "src/v4/viabilidade.py",
+    "src/v4/biblioteca_comprovada.json",
+    "src/v4/episodio.py",
+    "src/v4/diretor.py",
+    "src/v4/contrato.py"
+   ],
+   "correcao": "viabilidade antes de fechar o storyboard: biblioteca de mídia comprovada (procedência, licença, prova de correspondência) reutilizada; sem vídeo comprovado → foto comprovada do mesmo lugar/objeto ancorando a ação demonstrada noutra cena (R-ACAO-DEMONSTRADA-EM só com cena capaz); sem nada → inviável (sem inventar); o diretor recebe o inventário antes de escrever.",
+   "testes": [
+    "tests/test_v4_integracao.py::test_viabilidade_troca_video_sem_prova_por_foto_comprovada_e_limita_esquema",
+    "tests/test_v4_integracao.py::test_sem_midia_comprovada_nem_alternativa_fica_inviavel_e_nao_inventa",
+    "tests/test_v4_integracao.py::test_biblioteca_so_tem_item_com_procedencia_licenca_e_prova",
+    "tests/test_v4_integracao.py::test_contrato_aceita_registro_que_ancora_acao_so_com_cena_que_demonstra"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "acervo",
+    "direcao"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "motor V4",
+   "referencia": "diagnóstico 44049021691 + decisão do Heitor (17/11)",
+   "verificavel": true,
+   "estado": "corrigido; pré-render local 9/9 prontas (sem nova execução)",
+   "id": "ERR-061",
+   "titulo": "Esquema V2 colidia com a identidade V4 e o mesmo esquema aparecia três vezes",
+   "sintoma": "44049021691: cabeçalho do esquema sob o selo V4; nota de escala dentro da faixa de legenda; marca V2 sob a marca V4; mecanismo.eclusa em c3, c5 e c8.",
+   "causa_raiz": "o palco V2 desenhava cabeçalho, nota e marca próprios (meta.marca=False era ignorado); nada limitava repetição de esquema.",
+   "arquivos": [
+    "src/render/v2/comp/mecanismos.js",
+    "src/render/v2/nucleo.js",
+    "src/v4/episodio.py",
+    "src/v4/viabilidade.py"
+   ],
+   "correcao": "modo V4 do esquema (sem cabeçalho, passos abaixo do selo, nota em uma linha acima da legenda); o palco respeita marca=False; mesmo esquema no máximo 2×, a 3ª ocorrência vira outra forma com parâmetros do próprio episódio (fluxo no mapa).",
+   "testes": [
+    "tests/test_v4_integracao.py::test_esquema_v2_no_modo_v4_nao_cruza_marca_selo_nem_legenda",
+    "tests/test_v4_integracao.py::test_viabilidade_troca_video_sem_prova_por_foto_comprovada_e_limita_esquema"
+   ],
+   "gravidade": "media",
+   "tags": [
+    "v4",
+    "identidade",
+    "esquema"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "motor V4",
+   "referencia": "diagnóstico 44049021691 + decisão do Heitor (17/11)",
+   "verificavel": true,
+   "estado": "corrigido; pré-render local 9/9 prontas (sem nova execução)",
+   "id": "ERR-062",
+   "titulo": "Problemas detectáveis antes do render só apareciam depois da execução cara",
+   "sintoma": "três execuções seguidas descobriram no Actions defeitos verificáveis localmente (mídia, colisões, parâmetros).",
+   "causa_raiz": "não havia etapa de pré-render sem IA nem reutilização da narração.",
+   "arquivos": [
+    "src/v4/prerender.py",
+    "src/v4/__main__.py",
+    "src/v4/episodio.py",
+    ".github/v4/pedido.json"
+   ],
+   "correcao": "`python -m src.v4 prerender` (sem IA/rede): componentes, parâmetros, mídia comprovada, contrato, backend com alternativa, narração reutilizável (hash das falas) e geometria real do palco contra as zonas V4; o episódio para ANTES de renderizar se algo não estiver pronto; roteiro e narração da 44049021691 reutilizados (cifrados).",
+   "testes": [
+    "tests/test_v4_integracao.py::test_prerender_aprova_as_9_cenas_e_reprova_midia_nao_resolvida"
+   ],
+   "gravidade": "alta",
+   "tags": [
+    "v4",
+    "ci",
+    "custo"
    ]
   }
  ]

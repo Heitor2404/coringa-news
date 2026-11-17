@@ -12,7 +12,7 @@ import time
 import traceback
 from pathlib import Path
 
-from src.v4 import acervo_v4, compositor, contrato, diretor, geo, metricas, portoes, som
+from src.v4 import acervo_v4, compositor, contrato, diretor, geo, metricas, portoes, prerender, som, viabilidade
 from src.v4.backends import hyperframes as HF
 from src.v4.backends import js, legado, rembg_camadas
 from src.v4.componentes import ALTERNATIVAS, COMPONENTES, DEMONSTRAM_ACAO, SELO
@@ -54,6 +54,7 @@ def render_cena(c: dict, acv: dict, trab: Path, primeira: bool = False) -> tuple
         q = dict(p)
         if q.get('tempos') and all(isinstance(x, (int, float)) and 0 <= x <= 1.0001 for x in q['tempos']):
             q['tempos'] = [round(x * dur, 2) for x in q['tempos']]          # frações da cena → segundos (lista)
+        q['v4'] = True                                  # identidade V4: sem cabeçalho próprio, nota fora da legenda
         reg = legado.render_v2('mecanismo.eclusa', q, dur, pasta / 'v2', bruto, c.get('fala', ''))
     elif comp == 'mecanismo.nivel_vasos':
         reg = js.revideo({**p, 'duracao': dur}, bruto, pasta)
@@ -150,6 +151,23 @@ def _camada_props(ep: dict, acv: dict, palavras: list[dict], falhas: set | None 
     return {'duracao': ep['cenas'][-1]['fim'], 'palavras': palavras, 'cenas': cenas}
 
 
+def carregar_narracao(pedido: dict, ep: dict) -> dict | None:
+    """narração já gravada (cifrada no repositório) — só se as falas forem EXATAMENTE as mesmas"""
+    if not pedido.get('narracao_cifrada'):
+        return None
+    from src.v3 import material
+    arq = Path(__file__).resolve().parents[2] / pedido['narracao_cifrada']
+    try:
+        n = json.loads(material.decifrar(material._segredo(), arq.read_bytes()))
+    except Exception as e:
+        print(f'  [narração] pacote não decifrou ({str(e)[:80]}): TTS normal', flush=True)
+        return None
+    if n.get('falas_hash') != prerender.hash_falas(ep['cenas']) or len(n.get('tempos') or []) != len(ep['cenas']):
+        print('  [narração] falas diferentes do pacote: TTS normal', flush=True)
+        return None
+    return n
+
+
 def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
     # ABSOLUTOS: os backends rodam com outro diretório de trabalho (Remotion, Revideo, geo) — execução 43956541084
     pasta, trab = Path(pasta).resolve(), Path(trab).resolve()
@@ -162,30 +180,60 @@ def produzir(pedido: dict, pasta: Path, trab: Path) -> dict:
     _gravar(pasta / 'roteiro_ia_1.json', rot)
     ep = diretor.esqueleto(rot, pedido)
     impostas = contrato.impor(ep)
+    # 1b. VIABILIDADE do acervo ANTES de fechar o storyboard (17/11): registro sem mídia comprovada troca de forma por regra
+    ep, viab = viabilidade.resolver(ep, pedido)
     viol = [v for v in contrato.validar(ep) if v['gravidade'] == 'erro' and not v['regra'].startswith('R-ASSET')]
     if viol:
         rot = diretor.pedir(pedido, viol, rot)
         _gravar(pasta / 'roteiro_ia_2.json', rot)
         ep = diretor.esqueleto(rot, pedido)
         impostas += contrato.impor(ep)
+        ep, viab = viabilidade.resolver(ep, pedido)
     res['etapas']['direcao'] = {'correcao_dirigida': bool(viol), 'violacoes_1a': viol, 'correcoes_impostas': impostas}
-    # 2. acervo
-    acv, reg_acv = acervo_v4.montar(ep, trab / 'acervo')
-    res['etapas']['acervo'] = reg_acv
-    # 3. narração real e tempos
-    from src import voz
-    wav, tempos, caps, dur = voz.narrar([{'fala': c['fala']} for c in ep['cenas']], trab / 'voz')
+    res['etapas']['viabilidade'] = viab
+    # 2. narração (reutilizada quando as falas são as mesmas) e tempos
+    narr = carregar_narracao(pedido, ep)
+    if narr:
+        wav = trab / 'voz' / 'voz.wav'
+        wav.parent.mkdir(parents=True, exist_ok=True)
+        import base64
+        flac = wav.with_suffix('.flac')
+        flac.write_bytes(base64.b64decode(narr['flac_b64']))
+        from src.v4.util import rodar
+        rodar(['ffmpeg', '-v', 'error', '-y', '-i', flac, '-ar', '48000', wav])
+        tempos, palavras, dur = narr['tempos'], narr['palavras'], narr['duracao']
+    else:
+        from src import voz
+        wav, tempos, caps, dur = voz.narrar([{'fala': c['fala']} for c in ep['cenas']], trab / 'voz')
+        palavras = []
+        for bl in caps:
+            ws = bl['words']
+            for k, w in enumerate(ws):
+                fim = ws[k + 1]['s'] if k + 1 < len(ws) else bl['end']
+                palavras.append({'w': w['w'], 's': w['s'], 'e': round(fim, 3), 'hl': bool(w.get('hl'))})
     for c, (a, b) in zip(ep['cenas'], tempos):
         c['ini'], c['fim'] = round(a, 3), round(b, 3)
         c['params'] = diretor.segundos(c.get('params') or {}, c['fim'] - c['ini'])
-    palavras = []
-    for bl in caps:
-        ws = bl['words']
-        for k, w in enumerate(ws):
-            fim = ws[k + 1]['s'] if k + 1 < len(ws) else bl['end']
-            palavras.append({'w': w['w'], 's': w['s'], 'e': round(fim, 3), 'hl': bool(w.get('hl'))})
-    res['etapas']['narracao'] = {'duracao': dur, 'palavras': len(palavras)}
-    # 4. contrato final (com acervo)
+    res['etapas']['narracao'] = {'duracao': dur, 'palavras': len(palavras), 'reutilizada': (narr or {}).get('origem')}
+    # 3. PRÉ-RENDER obrigatório: nenhuma cena pode estar destinada a virar placa de diagnóstico
+    pre = prerender.verificar(ep, pedido, narr, trab / 'prerender')
+    res['prerender'] = pre
+    _gravar(pasta / 'prerender.json', pre)
+    if not pre['pronto']:
+        res['bloqueios'].append('PRÉ-RENDER não pronto: ' + '; '.join(pre['gerais'] + [f"{x['cena']}: {x['problemas'][0]}" for x in pre['cenas'] if x['problemas']])[:900])
+        res['estado'] = 'BLOQUEADO_PRE_RENDER'
+        _gravar(pasta / 'episodio.json', ep)
+        _gravar(pasta / 'resultado.json', res)
+        return res
+    # 4. acervo: itens comprovados da biblioteca (+ busca nova, com falha fechada, só se o pedido permitir)
+    acv = viabilidade.acervo_da_biblioteca(ep, trab / 'acervo')
+    reg_acv = [{'cena': r['cena'], 'estado': 'biblioteca', 'asset': r.get('asset')} for r in viab if r.get('asset')]
+    if pedido.get('buscar_novas'):
+        mais, reg2 = acervo_v4.montar(ep, trab / 'acervo')
+        acv.update(mais)
+        reg_acv += reg2
+    res['etapas']['acervo'] = reg_acv
+    # 5. contrato final (com acervo)
     viol_final = contrato.validar(ep, acv)
     res['contrato'] = {'violacoes': viol_final, 'familias': contrato.familias(ep)}
     _gravar(pasta / 'episodio.json', ep)

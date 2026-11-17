@@ -63,8 +63,8 @@ def nomes_proprios(consultas: list[str]) -> set[str]:
 
 
 def mesmo_lugar(c: dict, nomes: set[str]) -> bool:
-    """vídeo de banco (Pixabay etc.) só se identifica pelas tags: sem nenhum nome próprio do pedido, é outro lugar.
-    Execução 43972774128: 'sunset, canal, city' (Holanda) passou na visão como eclusa do Panamá."""
+    """o nome do lugar aparece nos metadados? É PISTA de ordenação, não prova: sem o nome o candidato fica INCERTO (vai à
+    visão com exigência de lugar+objeto); com o nome ainda precisa da confirmação visual."""
     if not nomes:
         return True
     texto = _sem_acento(f"{c.get('titulo', '')} {c.get('desc', '')} {c.get('descricao', '')} {c.get('url', '')}")
@@ -83,11 +83,13 @@ def _roi_valida(roi) -> list | None:
 def escolher(cands: list[dict], deve_mostrar: str, usados: set[str], consultas: list[str] | None = None) -> tuple[dict | None, dict]:
     cands = [c for c in cands if c.get('url') not in usados and (_licenca(c.get('credito')) or c.get('video'))]
     nomes = nomes_proprios(consultas or [])
-    fora = [c for c in cands if c.get('video') and not mesmo_lugar(c, nomes)]
-    cands = [c for c in cands if c not in fora]
+    # 17/11 (Heitor): tag SEM o nome do lugar não prova que a mídia é de outro lugar — o candidato fica INCERTO e só vira
+    # prova se a visão confirmar lugar e objeto (abaixo). Os com o nome nas tags vêm primeiro.
+    for c in cands:
+        c['_lugar_nas_tags'] = mesmo_lugar(c, nomes)
     if not cands:
-        return None, {'motivo': 'sem candidato com licença' + (f' e do mesmo lugar ({sorted(nomes)}; {len(fora)} vídeo(s) de outro lugar descartados)' if fora else '')}
-    cands = sorted(cands, key=lambda c: -(min(c.get('w') or 0, c.get('h') or 0)))[:6]
+        return None, {'prova': 'INCERTO', 'motivo': 'sem candidato com licença'}
+    cands = sorted(cands, key=lambda c: (not c['_lugar_nas_tags'], -(min(c.get('w') or 0, c.get('h') or 0))))[:6]
     if not os.getenv('GEMINI_API_KEY'):
         # auditoria 16/11: sem visão a 1ª opção NÃO vira prova — nada entra como REGISTRO
         return None, {'metodo': 'nenhum', 'prova': 'INCERTO', 'motivo': 'visão indisponível: sem prova do que a mídia mostra'}

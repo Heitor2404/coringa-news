@@ -1,0 +1,154 @@
+{
+ "nota": "Mídia COMPROVADA e licenciada, reutilizável entre execuções: procedência (URL Commons), licença e crédito do próprio arquivo, e evidência de correspondência factual (revisão multimodal positiva do vídeo onde apareceu). Sem confirmação humana individual: a aprovação estética continua do Heitor. Itens reprovados nunca entram.",
+ "itens": [
+  {
+   "id": "commons:Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg/1920px-Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg",
+   "titulo": "Locomotives Tow Container Ship through Miraflores Locks - Panama Canal",
+   "credito": "\"Locomotives Tow Container Ship through Miraflores \" — Adam Jones (CC BY-SA 2.0), via Wikimedia Commons",
+   "licenca": "CC BY-SA 2.0",
+   "wh": [
+    1920,
+    1440
+   ],
+   "ano": 2013,
+   "roi": [
+    0.02,
+    0.04,
+    0.98,
+    0.76
+   ],
+   "lugar": [
+    "panama",
+    "miraflores"
+   ],
+   "natureza": "foto",
+   "mostra": "navio porta-contêineres dentro da câmara da eclusa de Miraflores, rebocado por locomotivas, paredes de concreto visíveis",
+   "termos": [
+    "navio",
+    "ship",
+    "eclusa",
+    "lock",
+    "locks",
+    "camara",
+    "chamber",
+    "miraflores",
+    "locomotiva",
+    "locomotives",
+    "container",
+    "paredes",
+    "walls",
+    "canal",
+    "panama"
+   ],
+   "prova": {
+    "metodo": "revisao_multimodal (Gemini) do MP4 publicado em prévia",
+    "execucao": "43972774128",
+    "cena": "c1",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "escolha": "visao_gemini na busca (antes da regra de falha fechada)",
+    "confirmacao_humana": null
+   }
+  },
+  {
+   "id": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg/1920px-General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+   "titulo": "General view from temporary tower on north end of approach wall. Looking south. Sea gates under pressure, July 18, 1913 ",
+   "credito": "\"General view from temporary tower on north end of \" — Harris & Ewing, photographer (Public domain), via Wikimedia Commons",
+   "licenca": "Public domain",
+   "wh": [
+    1920,
+    1519
+   ],
+   "ano": 1913,
+   "roi": [
+    0.03,
+    0.02,
+    0.94,
+    0.96
+   ],
+   "lugar": [
+    "panama"
+   ],
+   "natureza": "foto",
+   "mostra": "comportas (sea gates) de uma eclusa do Canal do Panamá vistas do alto durante a obra, 18/07/1913",
+   "termos": [
+    "comporta",
+    "comportas",
+    "gate",
+    "gates",
+    "eclusa",
+    "lock",
+    "locks",
+    "obra",
+    "construction",
+    "1913",
+    "canal",
+    "panama",
+    "agua",
+    "water"
+   ],
+   "prova": {
+    "metodo": "revisao_multimodal (Gemini) do MP4 publicado em prévia",
+    "execucao": "43972774128",
+    "cena": "c4",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "escolha": "visao_gemini na busca (antes da regra de falha fechada)",
+    "confirmacao_humana": null
+   }
+  },
+  {
+   "id": "commons:Gatun_Locks_LOC_det.4a24807.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Gatun_Locks_LOC_det.4a24807.jpg/1920px-Gatun_Locks_LOC_det.4a24807.jpg",
+   "titulo": "Gatun Locks LOC det.4a24807",
+   "credito": "\"Gatun Locks LOC det.4a24807\" — Detroit Publishing Company (Public domain), via Wikimedia Commons",
+   "licenca": "Public domain",
+   "wh": [
+    1920,
+    1539
+   ],
+   "ano": 1910,
+   "roi": null,
+   "lugar": [
+    "panama",
+    "gatun"
+   ],
+   "natureza": "foto",
+   "mostra": "eclusas de Gatún (c. 1910): câmaras em sequência, em níveis diferentes, com navio no canal",
+   "termos": [
+    "gatun",
+    "eclusa",
+    "eclusas",
+    "lock",
+    "locks",
+    "camaras",
+    "chambers",
+    "sequencia",
+    "niveis",
+    "degraus",
+    "steps",
+    "navio",
+    "ship",
+    "canal",
+    "panama"
+   ],
+   "prova": {
+    "metodo": "revisao_multimodal (Gemini) do MP4 publicado em prévia",
+    "execucao": "43972774128",
+    "cena": "c8",
+    "midia_corresponde": true,
+    "demonstra": "sim",
+    "escolha": "visao_gemini na busca (antes da regra de falha fechada)",
+    "confirmacao_humana": null
+   }
+  }
+ ],
+ "reprovados": [
+  {
+   "id": "pixabay:230248",
+   "motivo": "canal urbano ao pôr do sol (outro lugar); revisão: midia_corresponde=false (43972774128 c5)"
+  }
+ ]
+}

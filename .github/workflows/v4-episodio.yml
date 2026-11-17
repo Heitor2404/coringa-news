@@ -5,9 +5,7 @@ name: V4 — motor integral (episódio de teste, prévia privada)
 # experimental. Prévia PRIVADA no Telegram (chat autorizado; status visível; NÃO PUBLICADO). Resultado cifrado (GPG)
 # no ramo órfão v4-resultado. Nada de produção, main, NTC, merge ou publicação. Sem provedores pagos.
 on:
-  push:
-    branches: [motor-integral-v4]
-    paths: [".github/v4/pedido.json"]
+  # só manual (17/11): nenhuma execução sem autorização explícita do Heitor — push no pedido NÃO dispara mais
   workflow_dispatch:
 
 permissions:
@@ -91,6 +89,10 @@ jobs:
           "$CORINGA_VENV_REMBG/bin/python" -c "from rembg import new_session; new_session('isnet-general-use')"
       - name: Sondar capacidades (versões e estados)
         run: python -m src.v4 sondar
+      - name: Pré-render (sem IA; para antes de renderizar se alguma cena não estiver pronta)
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+        run: python -m src.v4 prerender .github/v4/pedido.json
       - name: Episódio (uma execução)
         timeout-minutes: 200
         env:

@@ -28,7 +28,10 @@ function medir(frame: number) {
       const s = getComputedStyle(el), r = el.getBoundingClientRect();
       if (r.width < 1 || r.height < 1 || opacidade(el) < .05) return;
       const fundo = s.backgroundColor && !/rgba\(.*, 0\)$/.test(s.backgroundColor) && s.backgroundColor !== 'transparent';
-      if (el.tagName === 'IMG' || el.tagName === 'svg' || fundo || s.backgroundImage !== 'none' || parseFloat(s.borderTopWidth) > 0 || parseFloat(s.borderLeftWidth) > 0) rs.push(ret(r));
+      // SVG: conta o DESENHO (linha, círculo, caminho), não a tela inteira do <svg> que o contém
+      const forma = (el as any).ownerSVGElement && !['defs', 'pattern', 'filter', 'svg'].includes(el.tagName) && !el.closest('defs');
+      const caixaHtml = !(el as any).ownerSVGElement && el.tagName !== 'svg' && (el.tagName === 'IMG' || fundo || s.backgroundImage !== 'none' || parseFloat(s.borderTopWidth) > 0 || parseFloat(s.borderLeftWidth) > 0);
+      if (forma || caixaHtml) rs.push(ret(r));
     });
     const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
     for (let n = tw.nextNode(); n; n = tw.nextNode()) {
@@ -59,6 +62,15 @@ function medir(frame: number) {
     if ((s.overflow === 'hidden' || s.textOverflow === 'ellipsis') && h.scrollWidth > h.clientWidth + 2) out.cortados.push({ camada: el.getAttribute('data-meta'), txt: h.textContent!.trim().slice(0, 50) });
     const r = h.getBoundingClientRect();
     out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r) }]);
+  });
+  // pinos ancorados: o centro desenhado precisa bater com o MapLibre (map.project) neste quadro — não descolam no pan/zoom
+  const mapa = (window as any).__mapa;
+  out.pinos = [];
+  document.querySelectorAll('[data-ancora-geo]').forEach(el => {
+    if (opacidade(el) < .3 || !mapa) return;
+    const ll = JSON.parse(el.getAttribute('data-ancora-geo')!), r = el.getBoundingClientRect(), pj = mapa.project(ll);
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    out.pinos.push({ lonlat: ll, centro: [cx, cy], mapa: [pj.x, pj.y], desvio: Math.hypot(cx - pj.x, cy - pj.y) });
   });
   const roi = document.querySelector('[data-roi]');
   if (roi && opacidade(roi) > .3) out.roi = ret(roi.getBoundingClientRect());

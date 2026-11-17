@@ -59,6 +59,7 @@
     "tecnico"
    ],
    "componentes": [
+    "atlas.geoPin",
     "editorial.statCard",
     "editorial.peopleCard",
     "editorial.hierarchy",
@@ -102,7 +103,8 @@
   "nota_progressao": "3 s < janela de 4 s do portão do MP4 (44084129999: plano com 4 s passou e o MP4 ficou parado 12–16 s); referências: 1–2 s",
   "texto_min_px": 26,
   "texto_meta_min_px": 18,
-  "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px"
+  "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px",
+  "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)"
  },
  "zonas_identidade": {
   "marca": [
@@ -120,152 +122,6 @@
  },
  "composicoes": {
   "_nota": "Composições aprováveis e reutilizáveis (direção de arte 17/11). Cada beat escolhe UMA; ela fixa o palco, o QUADRO onde o território do beat (roi) é enquadrado pela câmera e os slots livres para as camadas. A câmera é calculada do roi para caber no quadro: nenhuma camada cobre o território que está sendo explicado (F-COBRE-TERRITORIO, conferido também nos quadros renderizados).",
-  "atlas.protagonista": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    456,
-    880,
-    630
-   ],
-   "veu": "nenhum",
-   "slots": {
-    "etiqueta": [
-     72,
-     350,
-     936,
-     96
-    ],
-    "nota": [
-     72,
-     1088,
-     936,
-     80
-    ]
-   },
-   "max_camadas": 2,
-   "uso": "o mapa é a informação: só etiquetas curtas fora do território"
-  },
-  "atlas.manchete": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    650,
-    880,
-    500
-   ],
-   "veu": "topo",
-   "slots": {
-    "titulo": [
-     72,
-     346,
-     936,
-     290
-    ]
-   },
-   "max_camadas": 1,
-   "uso": "gancho/fecho: pergunta ou síntese sobre o território"
-  },
-  "atlas.painel": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    352,
-    880,
-    380
-   ],
-   "veu": "base",
-   "slots": {
-    "painel": [
-     60,
-     752,
-     960,
-     330
-    ],
-    "nota": [
-     72,
-     1088,
-     936,
-     80
-    ]
-   },
-   "max_camadas": 3,
-   "uso": "território em cima, explicação (número, perfil, comparação) embaixo, ligados pelos mesmos nomes"
-  },
-  "atlas.lateral": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    60,
-    420,
-    500,
-    740
-   ],
-   "veu": "direita",
-   "slots": {
-    "lado": [
-     590,
-     380,
-     430,
-     800
-    ]
-   },
-   "max_camadas": 2,
-   "uso": "território alto/estreito + coluna de dados"
-  },
-  "atlas.documento": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": null,
-   "veu": "documento",
-   "slots": {
-    "foto": [
-     60,
-     536,
-     960,
-     632
-    ],
-    "titulo": [
-     72,
-     346,
-     936,
-     150
-    ]
-   },
-   "max_camadas": 2,
-   "uso": "prova fotográfica grande sobre o mapa esmaecido (o mapa continua como contexto)"
-  },
-  "atlas.tecnica": {
-   "formato": "atlas",
-   "palco": "tecnico",
-   "quadro": null,
-   "veu": "nenhum",
-   "slots": {
-    "tela": [
-     72,
-     350,
-     936,
-     820
-    ],
-    "etiqueta": [
-     72,
-     350,
-     936,
-     96
-    ],
-    "corpo": [
-     72,
-     470,
-     936,
-     700
-    ]
-   },
-   "max_camadas": 2,
-   "uso": "estrutura abstrata em tela cheia, sem território para cobrir"
-  },
   "dossie.capa": {
    "formato": "dossie",
    "palco": "mesa",
@@ -346,6 +202,190 @@
    },
    "max_camadas": 1,
    "uso": "síntese de um caso: campos que entram na fala, prova real presa e carimbo de conclusão (reconstrução rotulada)"
+  },
+  "atlas.abertura": {
+   "formato": "atlas",
+   "palco": "mapa",
+   "quadro": [
+    100,
+    640,
+    880,
+    640
+   ],
+   "veu": "topo",
+   "movimento": "aproxima",
+   "slots": {
+    "pergunta": [
+     72,
+     350,
+     936,
+     260
+    ]
+   },
+   "max_camadas": 3,
+   "pinos": true,
+   "referencia": "mapa desde o 1º quadro, país destacado, pino ancorado e pergunta gigante acima do território (ref. 0–10 s: question_9s ≈ x240–842 y331–546 em 1080)",
+   "uso": "gancho: o território já na tela, um pino com a prova, a pergunta em cima"
+  },
+  "atlas.protagonista": {
+   "formato": "atlas",
+   "palco": "mapa",
+   "quadro": [
+    100,
+    470,
+    880,
+    720
+   ],
+   "veu": "nenhum",
+   "movimento": "aproxima",
+   "slots": {
+    "etiqueta": [
+     72,
+     350,
+     936,
+     96
+    ],
+    "nota": [
+     72,
+     1200,
+     936,
+     88
+    ]
+   },
+   "max_camadas": 3,
+   "pinos": true,
+   "uso": "o mapa é a informação: camadas geográficas e pinos acumulam; só etiquetas curtas fora do território"
+  },
+  "atlas.escada": {
+   "formato": "atlas",
+   "palco": "mapa",
+   "quadro": [
+    100,
+    660,
+    880,
+    520
+   ],
+   "veu": "topo",
+   "movimento": "fixo",
+   "slots": {
+    "escada": [
+     40,
+     350,
+     1000,
+     290
+    ],
+    "nota": [
+     72,
+     1200,
+     936,
+     88
+    ]
+   },
+   "max_camadas": 3,
+   "pinos": true,
+   "referencia": "hierarquia persistente na faixa superior e território no meio (ref. 25 s: hierarchy_25s ≈ x57–1044 y268–542; territory y538–1243), descida abaixo da marca",
+   "uso": "degraus/níveis que acendem na fala, ligados aos pinos do mapa pelo mesmo nome"
+  },
+  "atlas.painel": {
+   "formato": "atlas",
+   "palco": "mapa",
+   "quadro": [
+    100,
+    352,
+    880,
+    450
+   ],
+   "veu": "base",
+   "movimento": "fixo",
+   "slots": {
+    "painel": [
+     60,
+     830,
+     960,
+     356
+    ],
+    "nota": [
+     72,
+     1200,
+     936,
+     88
+    ]
+   },
+   "max_camadas": 3,
+   "pinos": true,
+   "referencia": "cartão de dados ~86 % da largura sobre o mapa, câmera fixa enquanto o número muda (ref. 10–22 s; SIFT escala 1,000 em 11 e 21 s)",
+   "uso": "território em cima, número/mostrador embaixo; câmera parada enquanto o dado muda"
+  },
+  "atlas.tecnica": {
+   "formato": "atlas",
+   "palco": "tecnico",
+   "quadro": [
+    80,
+    390,
+    920,
+    440
+   ],
+   "veu": "nenhum",
+   "movimento": "fixo",
+   "slots": {
+    "etiqueta": [
+     72,
+     350,
+     936,
+     96
+    ],
+    "corpo": [
+     90,
+     640,
+     900,
+     560
+    ]
+   },
+   "max_camadas": 2,
+   "pinos": false,
+   "referencia": "mapa técnico azul-marinho com grade (~169 px em 1080) e cartão sobre a parte baixa do território (ref. 37–44 s)",
+   "uso": "conceito abstrato sobre o território em planta técnica"
+  },
+  "atlas.manchete": {
+   "formato": "atlas",
+   "palco": "mapa",
+   "quadro": [
+    100,
+    660,
+    880,
+    600
+   ],
+   "veu": "topo",
+   "movimento": "recua",
+   "slots": {
+    "titulo": [
+     72,
+     350,
+     936,
+     290
+    ]
+   },
+   "max_camadas": 1,
+   "pinos": false,
+   "referencia": "retorno ao plano largo com recuo lento (ref. 59–66 s: SIFT escala mediana 0,954/s)",
+   "uso": "fecho: síntese sobre o território inteiro"
+  }
+ },
+ "zonas_por_formato": {
+  "atlas": {
+   "legenda": [
+    150,
+    1392,
+    780,
+    150
+   ],
+   "creditos": [
+    72,
+    1300,
+    936,
+    88
+   ],
+   "_nota": "ATLAS: legenda mais baixa (centro ≈ 1430–1470; referência ≈ 1496, limitada pela área segura base_texto 1480 do Coringa) e faixa própria de créditos cartográficos logo acima, legível (20 px), sem disputar a legenda"
   }
  }
 }

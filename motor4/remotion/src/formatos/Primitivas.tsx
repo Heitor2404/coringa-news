@@ -5,6 +5,7 @@ import React from 'react';
 import { Img, staticFile } from 'remotion';
 import { clamp, lerp } from '../ident';
 import type { Camada, FormatoProps } from './tipos';
+import { cameraEm, mercX, mercY } from './Palco';
 
 export const easeOut = (x: number) => 1 - Math.pow(1 - clamp(x), 3);
 export type Ctx = { t: number; P: FormatoProps; L: Camada; v: number; k: number };   // v = visibilidade 0–1, k = progresso de entrada
@@ -90,6 +91,7 @@ export const StatCard: React.FC<{ c: Ctx }> = ({ c }) => {
   const p = c.L.p, C = cores(c), b = c.L.caixa;
   if (p.estilo === 'calendario') return <Calendario c={c} />;
   if (p.estilo === 'ficha') return <Ficha c={c} />;
+  if (p.estilo === 'dial') return <Dial c={c} />;
   const conta = p.contagem && typeof p.valor === 'number' ? p.valor * easeOut((c.t - c.L.t0) / (p.dur_contagem || 1.2)) : p.valor;
   const txt = typeof conta === 'number' ? num(conta, p.casas || 0) : String(p.valor);
   if (p.estilo === 'pilula') return (
@@ -129,36 +131,59 @@ export const PeopleCard: React.FC<{ c: Ctx }> = ({ c }) => {
 // 6. editorial.hierarchy — degraus/níveis; o nível ativo acende em sequência (t por nível)
 export const Hierarchy: React.FC<{ c: Ctx }> = ({ c }) => {
   const p = c.L.p, C = cores(c), b = c.L.caixa;
-  const n = p.niveis.length, gap = 10, w = (b.w - gap * (n - 1)) / n;
+  const n = p.niveis.length, gap = 14, prof = 12, w = (b.w - prof - gap * (n - 1)) / n;
   const embaixo = p.rotulos_abaixo !== false && n > 5;          // muitos níveis: nomes embaixo, em 2 fileiras (≥ 26 px)
   const hb = (p.legenda_base ? b.h - 46 : b.h) - (embaixo ? 84 : 0);   // a legenda da base fica DENTRO da caixa
-  const passo = (hb - 120) / Math.max(1, n - 1) * (p.escada === false ? 0 : 1);
+  const base = Math.min(120, hb * .25);                         // altura mínima do bloco (escada baixa na faixa superior)
+  const passo = (hb - base - prof - 40) / Math.max(1, n - 1) * (p.escada === false ? 0 : 1);
+  const ativoEm = (i: number) => {
+    const nv = p.niveis[i];
+    const ts = [nv.t, ...(p.ativo || []).filter((a: any) => a.i === i && c.t >= a.t0 && (a.t1 == null || c.t < a.t1)).map((a: any) => a.t0)].filter((x: any) => x != null && c.t >= x);
+    return ts.length ? Math.max(...ts) : null;
+  };
+  const alt = (i: number) => (p.alturas ? base + p.alturas[i] * (hb - base - prof - 40) : base + i * passo);
+  const xs = (i: number) => i * (w + gap);
+  // salto (referência: seta que pula para o nível que acende): do último nível aceso ao novo, por 1,2 s
+  const acesos = p.niveis.map((_: any, i: number) => ({ i, t: ativoEm(i) })).filter((a: any) => a.t != null).sort((a: any, z: any) => a.t - z.t);
+  const novo = acesos[acesos.length - 1], ant = acesos[acesos.length - 2];
+  const ks = novo && ant && novo.i !== ant.i ? clamp((c.t - novo.t) / .55) * clamp((novo.t + 1.6 - c.t) / .4) : 0;
   return (
     <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h }}>
       {p.niveis.map((nv: any, i: number) => {
         const ent = aparece(c, c.L.t0 + i * (p.cadencia ?? .18));
-        const ativo = (nv.t != null && c.t >= nv.t) || (p.ativo || []).some((a: any) => c.t >= a.t0 && (a.t1 == null || c.t < a.t1) && a.i === i);
-        const altura = p.alturas ? 120 + p.alturas[i] * (hb - 160) : 120 + i * passo;   // escada ou perfil (alturas 0–1)
-        const topo = hb - altura;
+        const ativo = ativoEm(i) != null;
+        const altura = alt(i), topo = hb - altura;
+        const face = ativo ? C.destaque : C.papel, lado = ativo ? C.destaque_escuro : '#BDB6A6', cima = ativo ? '#FFE680' : '#FFFDF6';
         return (
-          <div key={i} style={{ position: 'absolute', left: i * (w + gap), top: topo + (1 - ent) * 40, width: w, height: altura, opacity: ent,
-            background: ativo ? C.destaque : C.papel, color: C.tinta, boxShadow: `0 -6px 0 ${ativo ? C.destaque_escuro : 'rgba(0,0,0,.18)'} inset, 0 14px 30px rgba(0,0,0,.45)`,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14 }}>
-            {nv.valor != null && <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: w > 150 ? 54 : 44, lineHeight: 1 }}>{nv.valor}</div>}
-            {!embaixo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: w > 150 ? 26 : w > 110 ? 22 : 20, textTransform: 'uppercase', textAlign: 'center', marginTop: 6, padding: '0 6px', lineHeight: 1.15 }}>{nv.rotulo}</div>}
+          <div key={i} style={{ position: 'absolute', left: xs(i), top: topo + (1 - ent) * 40, width: w + prof, height: altura + prof, opacity: ent,
+            filter: 'drop-shadow(0 16px 22px rgba(0,0,0,.5))' }}>
+            <div style={{ position: 'absolute', left: prof / 2, top: 0, width: w, height: prof, background: cima, transform: 'skewX(-45deg)', transformOrigin: '0 100%' }} />
+            <div style={{ position: 'absolute', left: w, top: prof / 2, width: prof, height: altura, background: lado, transform: 'skewY(-45deg)', transformOrigin: '0 0' }} />
+            <div style={{ position: 'absolute', left: 0, top: prof, width: w, height: altura, background: face, color: C.tinta,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14 }}>
+              {nv.valor != null && <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: w > 150 ? 54 : 40, lineHeight: 1 }}>{nv.valor}</div>}
+              {!embaixo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: w > 150 ? 26 : w > 110 ? 22 : 20, textTransform: 'uppercase', textAlign: 'center', marginTop: 6, padding: '0 6px', lineHeight: 1.15 }}>{nv.rotulo}</div>}
+            </div>
           </div>);
       })}
+      {ks > 0 && (() => {
+        const x0 = xs(ant.i) + w / 2, y0 = hb - alt(ant.i) - 8, x1 = xs(novo.i) + w / 2, y1 = hb - alt(novo.i) - 8;
+        const yc = Math.min(y0, y1) - 70, d = `M${x0} ${y0} Q${(x0 + x1) / 2} ${yc} ${x1} ${y1}`, L = Math.hypot(x1 - x0, y1 - y0) * 1.3 + 60;
+        return <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', opacity: Math.min(1, ks * 2) }} width={b.w} height={b.h}>
+          <path d={d} fill="none" stroke="#fff" strokeWidth={5} strokeLinecap="round" strokeDasharray={L} strokeDashoffset={L * (1 - clamp((c.t - novo.t) / .55))} />
+          <circle cx={x1} cy={y1} r={9} fill={C.destaque} stroke="#0B0F17" strokeWidth={3} opacity={clamp((c.t - novo.t - .4) / .2)} /></svg>;
+      })()}
       {embaixo && p.niveis.map((nv: any, i: number) => {
         const ent = aparece(c, c.L.t0 + i * (p.cadencia ?? .18));
-        const ativo = (nv.t != null && c.t >= nv.t) || (p.ativo || []).some((a: any) => c.t >= a.t0 && (a.t1 == null || c.t < a.t1) && a.i === i);
-        const cx = i * (w + gap) + w / 2, fila = i % 2;
+        const ativo = ativoEm(i) != null;
+        const cx = xs(i) + w / 2, fila = i % 2;
         return <React.Fragment key={'r' + i}>
-          <div style={{ position: 'absolute', left: cx - 1.5, top: hb, width: 3, height: 8 + fila * 38, background: ativo ? C.destaque : 'rgba(255,255,255,.45)', opacity: ent }} />
-          <div style={{ position: 'absolute', left: cx - 110, width: 220, top: hb + 8 + fila * 38, textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
+          <div style={{ position: 'absolute', left: cx - 1.5, top: hb + prof, width: 3, height: 8 + fila * 38, background: ativo ? C.destaque : 'rgba(255,255,255,.45)', opacity: ent }} />
+          <div style={{ position: 'absolute', left: cx - 110, width: 220, top: hb + prof + 8 + fila * 38, textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
             color: ativo ? C.destaque : '#F4F1EA', textTransform: 'uppercase', whiteSpace: 'nowrap', textShadow: '0 2px 8px #000', opacity: ent }}>{nv.rotulo}</div>
         </React.Fragment>;
       })}
-      {p.legenda_base && <div style={{ position: 'absolute', left: 0, right: 0, top: hb + (embaixo ? 92 : 12), textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
+      {p.legenda_base && <div style={{ position: 'absolute', left: 0, right: 0, top: hb + prof + (embaixo ? 92 : 12), textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
         color: '#fff', letterSpacing: 2, textTransform: 'uppercase', textShadow: '0 2px 8px #000', opacity: aparece(c, p.legenda_t ?? c.L.t0 + .6) }}>{p.legenda_base}</div>}
     </div>);
 };
@@ -389,7 +414,78 @@ export const Title: React.FC<{ c: Ctx }> = ({ c }) => {
     </div>);
 };
 
+// atlas.geoPin — objeto ANCORADO no território: a posição sai da MESMA câmera do palco (cameraEm), então o pino segue
+// pan/zoom quadro a quadro. 'local' = ponto + nome; 'foto' = prova fotográfica circular ligada ao ponto por um fio
+// (gramática da referência: retrato circular preso ao lugar; aqui só fotos reais com crédito). Geometria = plano.caixa_pino.
+export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
+  const p = c.L.p, C = cores(c);
+  const cam = cameraEm(c.P.palco, c.t), ws = 512 * 2 ** cam.zoom;
+  const ax = cam.ancora[0] + (mercX(p.lonlat[0]) - cam.fx) * ws, ay = cam.ancora[1] + (mercY(p.lonlat[1]) - cam.fy) * ws;
+  const k = c.k, pulso = p.t_ativo != null && c.t >= p.t_ativo ? clamp((c.t - p.t_ativo) / .5) : 0;
+  const ponto = <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 12, top: ay - 12, width: 24, height: 24, borderRadius: 12,
+    background: C.destaque, border: '4px solid #0B0F17', boxShadow: `0 0 0 3px #fff, 0 0 0 ${3 + 14 * pulso * (1 - pulso) * 4}px rgba(255,210,31,.35), 0 4px 14px rgba(0,0,0,.6)`,
+    transform: `scale(${.4 + .6 * k})` }} />;
+  if (p.tipo !== 'foto') {
+    const dir = p.lado !== 'esquerda';
+    return <>{ponto}<div style={{ position: 'absolute', ...(dir ? { left: ax + 26 } : { right: 1080 - (ax - 26) }), top: ay - 28, height: 56, display: 'flex', alignItems: 'center',
+      padding: '0 16px', background: '#0B0F17', borderLeft: `6px solid ${pulso > 0 ? C.destaque : '#F4F1EA'}`, fontFamily: FT(c), fontWeight: 900, fontSize: 30, color: '#fff',
+      textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 18px rgba(0,0,0,.5)', opacity: k, transform: `translateX(${(1 - k) * (dir ? -12 : 12)}px)` }}>{p.rotulo}</div></>;
+  }
+  const im = c.P.imagens?.[p.asset], r = p.raio ?? 112, [dx, dy] = p.desloc || [0, -190];
+  const cx = ax + dx, cy = ay + dy, d = Math.hypot(dx, dy) || 1;
+  const ex = cx - dx / d * (r + 6), ey = cy - dy / d * (r + 6);
+  return <>
+    <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', opacity: k }} width={1080} height={1920}>
+      <line x1={ax} y1={ay} x2={lerp(ax, ex, k)} y2={lerp(ay, ey, k)} stroke="#fff" strokeWidth={4} /></svg>
+    {ponto}
+    <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: 2 * r, height: 2 * r, borderRadius: r, overflow: 'hidden', background: '#111',
+      boxShadow: `0 0 0 6px ${C.destaque}, 0 0 0 9px #0B0F17, 0 18px 40px rgba(0,0,0,.6)`, transform: `scale(${.55 + .45 * k})`, opacity: k }}>
+      {im && <Img src={staticFile(im.src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${(p.foco || [.5, .5])[0] * 100}% ${(p.foco || [.5, .5])[1] * 100}%` }} />}
+    </div>
+    <div style={{ position: 'absolute', left: cx - 300, width: 600, top: cy + r + 12, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: aparece(c, c.L.t0 + .25) }}>
+      <div style={{ padding: '10px 20px', background: C.papel, color: C.tinta, fontFamily: FT(c), fontWeight: 800, fontSize: 30, lineHeight: '32px', textTransform: 'uppercase',
+        whiteSpace: 'nowrap', boxShadow: '0 8px 20px rgba(0,0,0,.5)' }}>{p.rotulo}</div>
+      {p.meta && <div data-meta="credito" style={{ marginTop: 4, fontFamily: FD(c), fontSize: 18, lineHeight: '22px', color: 'rgba(255,255,255,.88)', textShadow: '0 1px 4px #000', whiteSpace: 'nowrap' }}>{p.meta}</div>}
+    </div>
+  </>;
+};
+
+// editorial.statCard estilo 'dial' — número com CONTEXTO proporcional: meio-círculo de pontos dividido pelas partes
+// (gramática do cartão de dados da referência; aqui, por exemplo, metade da água sobe e metade desce)
+export const Dial: React.FC<{ c: Ctx }> = ({ c }) => {
+  const p = c.L.p, C = cores(c), b = c.L.caixa;
+  const partes = p.partes || [], tot = partes.reduce((s: number, x: any) => s + x.fracao, 0) || 1;
+  const R = Math.min(b.h - 120, (b.w * .48)) , cx = 40 + R, cy = 70 + R;
+  const fileiras = 7, pts: { x: number; y: number; a: number }[] = [];
+  for (let f = 0; f < fileiras; f++) {
+    const rr = R * (.48 + .52 * f / (fileiras - 1)), n = Math.round(14 + f * 4.2);
+    for (let j = 0; j < n; j++) { const a = Math.PI * (j / (n - 1)); pts.push({ x: cx - Math.cos(a) * rr, y: cy - Math.sin(a) * rr, a }); }
+  }
+  pts.sort((u, v) => u.a - v.a);
+  const kv = p.contagem ? easeOut((c.t - c.L.t0 - .2) / (p.dur_contagem || 1.2)) : 1;
+  const lim: number[] = []; let acc = 0; partes.forEach((x: any) => { acc += x.fracao / tot; lim.push(acc); });
+  const corDe = (u: number) => { const i = lim.findIndex(l => u <= l + 1e-6); const k = partes[Math.max(0, i)]?.cor; return k === 'agua' ? C.agua : k === 'alerta' ? C.alerta : k === 'cinza' ? '#9AA0A6' : C.destaque_escuro; };
+  const val = typeof p.valor === 'number' ? Math.round(p.valor * kv) : p.valor;
+  return (
+    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, background: C.papel, boxShadow: '0 30px 70px rgba(0,0,0,.6)',
+      transform: `translateY(${(1 - c.k) * 30}px)` }}>
+      {p.titulo && <div style={{ position: 'absolute', left: 40, top: 22, fontFamily: FD(c), fontWeight: 700, fontSize: 26, letterSpacing: 2, color: C.alerta, textTransform: 'uppercase' }}>{p.titulo}</div>}
+      <svg style={{ position: 'absolute', left: 0, top: 0 }} width={b.w} height={b.h}>
+        {pts.map((q, i) => { const u = i / (pts.length - 1); return <circle key={i} cx={q.x} cy={q.y} r={R / 34} fill={u <= kv ? corDe(u) : 'rgba(11,15,23,.12)'} />; })}
+      </svg>
+      <div style={{ position: 'absolute', left: cx + R + 30, right: 34, top: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: 92, lineHeight: 1, color: C.tinta, whiteSpace: 'nowrap' }}>{p.prefixo || ''}{typeof val === 'number' ? val.toLocaleString('pt-BR') : val}</div>
+        {p.unidade && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: 34, color: C.tinta, marginTop: 4, whiteSpace: 'nowrap' }}>{p.unidade}</div>}
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+          {partes.map((x: any, i: number) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: FD(c), fontWeight: 700, fontSize: 26, color: C.tinta, textTransform: 'uppercase',
+            whiteSpace: 'nowrap', opacity: aparece(c, (x.t ?? c.L.t0 + .6)) }}><i style={{ width: 18, height: 18, borderRadius: 9, background: corDe(lim[i] - 1e-3), display: 'inline-block' }} />{x.rotulo}</div>)}
+        </div>
+      </div>
+    </div>);
+};
+
 export const PRIMITIVAS: Record<string, React.FC<{ c: Ctx }>> = {
+  'atlas.geoPin': GeoPin,
   'editorial.statCard': StatCard, 'editorial.peopleCard': PeopleCard, 'editorial.hierarchy': Hierarchy, 'editorial.timeline': Timeline,
   'dossie.documentCard': DocumentCard, 'dossie.evidenceHighlight': Evidence, 'editorial.comparison': Comparison,
   'editorial.flowConnections': Flow, 'editorial.titleOrPayoff': Title,

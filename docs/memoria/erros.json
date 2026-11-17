@@ -1858,6 +1858,53 @@
     "render",
     "validacao"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos ATLAS (gramática da referência)",
+   "verificavel": true,
+   "id": "ERR-073",
+   "referencia": "styleframes locais 17/11",
+   "titulo": "Planta técnica desenhava um retângulo no lugar do país",
+   "sintoma": "mapa técnico sem o território do Panamá, só uma moldura.",
+   "causa_raiz": "TopoJSON → GeoJSON no sentido anti-horário; o d3-geo (esférico) entende o anel como o resto do mundo e o fitExtent enquadra tudo.",
+   "arquivos": [
+    "motor4/remotion/src/formatos/Palco.tsx"
+   ],
+   "correcao": "turf.rewind(reverse) antes do d3-geo.",
+   "testes": [
+    "tests/test_formatos.py::test_planta_tecnica_rebobina_e_medicao_conta_o_desenho_svg"
+   ],
+   "gravidade": "media",
+   "estado": "corrigido",
+   "tags": [
+    "formatos",
+    "mapa"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "formatos ATLAS (gramática da referência)",
+   "verificavel": true,
+   "id": "ERR-074",
+   "referencia": "validação de quadros 17/11",
+   "titulo": "Medição contava a tela inteira do SVG como área da camada",
+   "sintoma": "R-TRANSBORDA de ~10 000 px e colisões falsas com marca/legenda em todo pino.",
+   "causa_raiz": "o fio do pino é um <svg> de 1080×1920; a união das caixas usava o retângulo do <svg> em vez do desenho.",
+   "arquivos": [
+    "motor4/remotion/src/formatos/Formato.tsx",
+    "scripts/formatos_validar.py"
+   ],
+   "correcao": "mede as formas SVG (linha, círculo, caminho); pinos validados por âncora (R-PINO-DESCOLADO) e por colisão.",
+   "testes": [
+    "tests/test_formatos.py::test_planta_tecnica_rebobina_e_medicao_conta_o_desenho_svg"
+   ],
+   "gravidade": "baixa",
+   "estado": "corrigido",
+   "tags": [
+    "formatos",
+    "validacao"
+   ]
   }
  ]
 }

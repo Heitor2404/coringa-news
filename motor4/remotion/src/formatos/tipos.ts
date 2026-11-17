@@ -18,7 +18,7 @@ export type PalcoKey = {
   roi?: [number, number, number, number];   // território do beat (oeste, sul, leste, norte)
   composicao?: string;
 };
-export type Raster = { nome: string; src: string; cantos: [number, number][]; de?: number | null; ate?: number | null; atribuicao: string; tipo: string;
+export type Raster = { dataset?: string; nome: string; src: string; cantos: [number, number][]; de?: number | null; ate?: number | null; atribuicao: string; tipo: string;
   ajuste?: { saturacao?: number; contraste?: number; brilho_min?: number; brilho_max?: number } };
 export type Destaque = { fonte: 'paises' | 'lagos'; nome: string; cor?: 'destaque' | 'destaque2' | 'agua'; t0: number; t1?: number };
 export type Rota = { t0: number; t1: number; ate?: number; cor?: 'destaque' | 'agua'; some?: number };
@@ -30,6 +30,9 @@ export type FormatoProps = {
   tokens: Tokens;
   geo?: { topo: any; meta?: any } | null;
   rasters?: Raster[];
+  composicoes?: Record<string, { quadro: [number, number, number, number] | null; veu?: string }>;
+  creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
+  tecnico?: { pais?: string };
   medir?: boolean;                   // registra no console a geometria REAL do quadro (validação sobre quadros renderizados)
   palco: PalcoKey[];
   destaques?: Destaque[];

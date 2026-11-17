@@ -1,0 +1,125 @@
+{
+  "reference_filename": "insta_post_1794914428786(1).mp4",
+  "measured_original": {
+    "duration_s": 68.223333,
+    "width_px": 512,
+    "height_px": 910,
+    "nominal_fps": 30,
+    "frames": 2043,
+    "avg_fps": 29.945766,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "sample_rate_hz": 48000,
+    "channels": 2,
+    "integrated_lufs": -14.18,
+    "true_peak_dbtp": -2.01,
+    "lra_lu": 2.0
+  },
+  "port_scale_to_1080x1920": {
+    "x": 2.109375,
+    "y": 2.10989010989
+  },
+  "pixel_regions_512x910_estimates": {
+    "caption_y": [
+      691,
+      727
+    ],
+    "esri_attribution": [
+      18,
+      866,
+      508,
+      894
+    ],
+    "portrait_1s": [
+      332,
+      275,
+      453,
+      397
+    ],
+    "question_9s": [
+      114,
+      157,
+      399,
+      259
+    ],
+    "data_card_19s": [
+      36,
+      292,
+      475,
+      667
+    ],
+    "hierarchy_25s": [
+      27,
+      127,
+      495,
+      257
+    ],
+    "geographic_territory_25s": [
+      13,
+      255,
+      504,
+      589
+    ],
+    "technical_map_41s": [
+      0,
+      246,
+      512,
+      614
+    ],
+    "pyramid_52s": [
+      49,
+      409,
+      464,
+      644
+    ]
+  },
+  "representative_srgb_samples_not_brand_tokens": {
+    "near_black": "#0A0B0E",
+    "navy_technical": "#0F2338",
+    "red_initial_map": "#A23525",
+    "headline_gold": "#F1BD4E",
+    "paper": "#F2E9DC",
+    "theme_green": "#719286",
+    "step_ochre": "#D5AF59"
+  },
+  "measured_camera_affine_sift": [
+    {
+      "t0": 0,
+      "t1": 1,
+      "scale": 1.009,
+      "dx_px": -2.6,
+      "dy_px": -3.4,
+      "inliers": 397
+    },
+    {
+      "t0": 1,
+      "t1": 5,
+      "scale": 1.12,
+      "dx_px": -34.8,
+      "dy_px": -49.0,
+      "inliers": 365
+    },
+    {
+      "t0": 5,
+      "t1": 8,
+      "scale": 1.071,
+      "dx_px": -20.8,
+      "dy_px": -29.6,
+      "inliers": 362
+    },
+    {
+      "t0": 8,
+      "t1": 9,
+      "scale": 1.036,
+      "dx_px": -11.6,
+      "dy_px": -14.8,
+      "inliers": 444
+    }
+  ],
+  "attribution_seen_on_reference": [
+    "Esri World Imagery/constituent providers on satellite scenes",
+    "Natural Earth on relief-map scenes"
+  ],
+  "explicit_limitation": "All measurements are derived from a compressed exported 512x910 MP4; no claim of original font family, SVG stroke, easing or tile zoom level. Esri attribution is not permission to use or harvest its tiles.",
+  "usage_note": "Use this as a reference to author an original editing system; not as a collection of original artwork or media to reproduce."
+}

@@ -33,7 +33,11 @@
   "tecnico": {
    "fundo": "#06131A",
    "linha": "#7FE3F0",
-   "grade": "rgba(127,227,240,.07)"
+   "grade": "rgba(127,227,240,.07)",
+   "terra": "#0E2236",
+   "fundo2": "#0B1A2A",
+   "grade_px": 170,
+   "nota_ref": "grade ~169 px e planta azul-marinho medidas na referência (atlas_parametros); tons próprios do Coringa"
   },
   "mesa": {
    "fundo": "#0A0806",

@@ -25,7 +25,6 @@ sys.path.insert(0, str(RAIZ))
 from src.v4.formatos import plano as P  # noqa: E402
 
 FPS = 30
-ZONAS = P.CFG['zonas_identidade']
 TOL = 6
 
 
@@ -86,11 +85,19 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
                 continue
             if _cruza(cam[a]['caixa'], cam[b]['caixa']):
                 add('R-COLISAO', f'{a} × {b} se sobrepõem no quadro renderizado')
+    pinos = {L['id'] for L in decl.values() if L['componente'] == 'atlas.geoPin'}
     if m.get('roi'):
         for c in m['camadas']:
+            if c['id'] in pinos:
+                continue          # o pino É do território (ancorado nele); confere-se que não descola (R-PINO-DESCOLADO)
             if _cruza(c['caixa'], m['roi'], 10):
                 add('R-COBRE-TERRITORIO', f"{c['id']} cobre o território do beat")
-    for nome, (x, y, w, h) in ZONAS.items():
+    for p_ in m.get('pinos') or []:
+        if p_['desvio'] > 3:
+            add('R-PINO-DESCOLADO', f"pino {p_['lonlat']} a {p_['desvio']:.1f} px do ponto do mapa (segue a câmera errada)")
+        if not (0 <= p_['centro'][0] <= 1080 and 0 <= p_['centro'][1] <= 1920):
+            add('R-PINO-FORA', f"pino {p_['lonlat']} fora da tela")
+    for nome, (x, y, w, h) in P.zonas(pl['formato']).items():
         z = {'x': x, 'y': y, 'w': w, 'h': h}
         for c in m['camadas']:
             if _cruza(c['caixa'], z, 2):
@@ -102,7 +109,12 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
         for c in m['camadas']:
             if _cruza(x['caixa'], c['caixa'], 2):
                 add('R-COLISAO', f"{x['tipo']} sob {c['id']}")
-        for nome, (zx, zy, zw, zh) in ZONAS.items():
+        if x['tipo'] == 'atribuicao':   # a faixa de créditos É a zona 'creditos': tem de caber INTEIRA nela
+            zc = P.zonas(pl['formato']).get('creditos')
+            if zc and (x['caixa']['y'] + x['caixa']['h'] > zc[1] + zc[3] + 2 or x['caixa']['y'] < zc[1] - 2):
+                add('R-CREDITOS-TRANSBORDA', f"créditos cartográficos saem da faixa própria ({x['caixa']['h']:.0f} px de altura)")
+            continue
+        for nome, (zx, zy, zw, zh) in P.zonas(pl['formato']).items():
             if _cruza(x['caixa'], {'x': zx, 'y': zy, 'w': zw, 'h': zh}, 2):
                 add('R-ZONA-IDENTIDADE', f"{x['tipo']} invade a {nome}")
     for r in m['rotulos']:
@@ -111,7 +123,7 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
                 add('R-ROTULO-COBERTO', f"rótulo do mapa {r['txt']!r} sob {c['id']}")
     for c in m['camadas']:
         d = decl.get(c['id'])
-        if not d or d['componente'] == 'dossie.evidenceHighlight':
+        if not d or d['componente'] in ('dossie.evidenceHighlight', 'atlas.geoPin'):
             continue
         k, b = d['caixa'], c['caixa']
         exc = max(k['x'] - b['x'], k['y'] - b['y'], (b['x'] + b['w']) - (k['x'] + k['w']), (b['y'] + b['h']) - (k['y'] + k['h']))
@@ -139,7 +151,11 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     pf.write_text(json.dumps(P.props(pl, {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco')}, geo, imgs), ensure_ascii=False))
     cenas = [{'ini': 0.0, 'fim': pl['duracao'], 'selo': None, 'credito': None, 'legenda': True}]
     pc = out / 'props_camada.json'
-    pc.write_text(json.dumps({'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}, ensure_ascii=False))
+    cam = {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}
+    lz = P.zonas(pl['formato']).get('legenda')
+    if lz and pl['formato'] == 'atlas':
+        cam['legenda_topo'] = lz[1]
+    pc.write_text(json.dumps(cam, ensure_ascii=False))
     ts = escolher(pl, n) if tempos == 'auto' else [float(x) for x in tempos.split(',')]
     qs = [int(round(t * FPS)) for t in ts]
     chrome = os.environ.get('CORINGA_CHROME') or os.environ.get('REMOTION_CHROME') or '/usr/bin/google-chrome'

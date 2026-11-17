@@ -30,9 +30,10 @@
   "relevo_sombreado": "Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)",
   "coleta": "Actions 44100398329"
  },
- "atribuicao": "Sentinel-2 cloudless 2016 by EOX (s2maps.eu · modified Copernicus Sentinel data 2016 & 2017) · CC BY 4.0",
+ "atribuicao": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)",
  "sha256": "e3595ab6fe5fc8bef77db1e5e553ddc39d8f4994d760203005f6dc6ac5d1fb34",
  "gerado": "2026-11-17",
  "arquivo": "s2_miraflores_eclusas.webp",
- "acabamento": "scripts/formatos_raster.py:acabamento (gama .78, saturação 1.18, borda suave 7% em alfa)"
+ "acabamento": "scripts/formatos_raster.py:acabamento (gama .78, saturação 1.18, borda suave 7% em alfa)",
+ "dataset": "s2_2016"
 }

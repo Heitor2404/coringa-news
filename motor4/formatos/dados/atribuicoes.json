@@ -1,0 +1,91 @@
+{
+ "_nota": "attribution_manifest do ATLAS: cada camada cartográfica que pode aparecer no quadro, com licença, uso comercial, crédito EXIGIDO na tela e quando ele aparece. Atribuição de mapa NÃO é fonte factual (essas ficam em plano.narracao.fatos). O palco desenha só os créditos das camadas efetivamente visíveis.",
+ "datasets": {
+  "ne2_raster": {
+   "nome": "Natural Earth II (relevo sombreado + cobertura do solo)",
+   "licenca": "Domínio público",
+   "uso_comercial": true,
+   "url_origem": "https://www.naturalearthdata.com/downloads/10m-raster-data/10m-natural-earth-2/",
+   "termos": "https://www.naturalearthdata.com/about/terms-of-use/",
+   "atribuicao_exigida": "Natural Earth",
+   "arquivos": [
+    "raster/ne2_istmo_panama.json"
+   ],
+   "aparece": "raster visível"
+  },
+  "s2_2016": {
+   "nome": "EOxCloudless / Sentinel-2 cloudless 2016",
+   "licenca": "CC BY 4.0 (edição 2016)",
+   "uso_comercial": true,
+   "url_origem": "https://cloudless.eox.at",
+   "termos": "https://cloudless.eox.at/documentation/faq",
+   "atribuicao_exigida": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)",
+   "arquivos": [
+    "raster/s2_panama_canal.json",
+    "raster/s2_miraflores_eclusas.json",
+    "raster/s2_gatun_eclusas.json"
+   ],
+   "aparece": "raster visível"
+  },
+  "terrain_tiles": {
+   "nome": "Terrain Tiles (AWS Open Data; SRTM, GMTED2010, ETOPO1) — só o sombreado do relevo sob o satélite",
+   "licenca": "dados abertos (SRTM/ETOPO1 domínio público; GMTED2010 USGS)",
+   "uso_comercial": true,
+   "url_origem": "https://registry.opendata.aws/terrain-tiles/",
+   "termos": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md",
+   "atribuicao_exigida": null,
+   "arquivos": [],
+   "aparece": "junto com o satélite",
+   "nota": "para o Panamá só entram SRTM, GMTED2010 e ETOPO1 (domínio público): sem crédito obrigatório na tela; registrado aqui e no .json do raster"
+  },
+  "ne_vetor": {
+   "nome": "Natural Earth (países, lagos, rios)",
+   "licenca": "Domínio público",
+   "uso_comercial": true,
+   "url_origem": "https://www.naturalearthdata.com/",
+   "termos": "https://www.naturalearthdata.com/about/terms-of-use/",
+   "atribuicao_exigida": "Natural Earth",
+   "arquivos": [
+    "panama.topo.json"
+   ],
+   "aparece": "sempre que o mapa aparece (fronteiras/destaques)"
+  },
+  "osm_rota": {
+   "nome": "Eixo do Canal do Panamá (OpenStreetMap)",
+   "licenca": "ODbL 1.0",
+   "uso_comercial": true,
+   "url_origem": "https://www.openstreetmap.org/copyright",
+   "termos": "https://www.openstreetmap.org/copyright",
+   "atribuicao_exigida": "© OpenStreetMap contributors",
+   "arquivos": [
+    "panama.topo.json"
+   ],
+   "aparece": "rota visível"
+  }
+ },
+ "proibidos": {
+  "_nota": "camadas SEM licença comercial confirmada para vídeo monetizado: nunca entram no palco (a atribuição na referência não é licença)",
+  "padroes": [
+   "arcgisonline.com",
+   "server.arcgis.com",
+   "services.arcgisonline",
+   "World_Imagery",
+   "esri",
+   "mt0.google",
+   "mt1.google",
+   "khms",
+   "googleapis.com/maps",
+   "api.mapbox.com",
+   "tiles.mapbox",
+   "s2cloudless-2018",
+   "s2cloudless-2019",
+   "s2cloudless-2020",
+   "s2cloudless-2021",
+   "s2cloudless-2022",
+   "s2cloudless-2023",
+   "s2cloudless-2024",
+   "virtualearth",
+   "bing.com/maps"
+  ]
+ }
+}

@@ -169,6 +169,15 @@ def roi_tela(cam: dict, roi) -> dict:
     return {'x': px(x0), 'y': py(y0), 'w': px(x1) - px(x0), 'h': py(y1) - py(y0)}
 
 
+def _creditos(plano: dict) -> dict | None:
+    """créditos cartográficos (manifesto) e a faixa onde aparecem — separados das fontes factuais do roteiro"""
+    if plano.get('formato') != 'atlas':
+        return None
+    from src.v4.formatos import atlas_ref
+    z = zonas('atlas').get('creditos', [72, 1174, 936, 46])
+    return {'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')}, 'caixa': z}
+
+
 def raster_info(nome: str) -> dict:
     m = json.loads((RASTER_DIR / f'{nome}.json').read_text(encoding='utf-8'))
     (o, n), (l, s_) = m['cantos'][0], m['cantos'][2]
@@ -179,24 +188,31 @@ def raster_info(nome: str) -> dict:
 
 
 def palco_dos_beats(p: dict) -> list[dict]:
-    """cada beat → uma chave de palco: tipo da composição, câmera que enquadra o roi no quadro, véu da composição"""
+    """cada beat → uma chave de palco: tipo da composição, câmera que enquadra o roi no quadro, véu da composição.
+    Movimento medido na referência (atlas_ref.DERIVA): 'aproxima' (≈ +2,4 %/s enquanto camadas se revelam), 'fixo'
+    (o dado muda, a câmera para) e 'recua' (fecho: começa mais perto e TERMINA no enquadramento do roi)."""
+    from src.v4.formatos import atlas_ref
+    beats = [b for b in p['beats'] if COMP.get(b.get('composicao') or '')]
+    ini = [b.get('t', min((L['t0'] for L in b['camadas']), default=0.0)) for b in beats]
     out, ultima = [], None
-    for b in p['beats']:
-        c = COMP.get(b.get('composicao') or '')
-        if not c:
-            continue
-        t = b.get('t', min((L['t0'] for L in b['camadas']), default=0.0))
+    for i, b in enumerate(beats):
+        c = COMP[b['composicao']]
+        t = ini[i]
+        fim = ini[i + 1] if i + 1 < len(beats) else p.get('duracao', t + 5)
         k = {'t': t, 'tipo': c['palco'], 'composicao': b['composicao'], 'veu': c.get('veu', 'nenhum')}
         if c['palco'] == 'mapa':
+            k['dur_camera'] = b.get('transicao', 1.6)
+            mov = b.get('movimento') or c.get('movimento') or 'fixo'
+            k['movimento'] = mov
+            k['deriva'] = b['deriva'] if b.get('deriva') is not None else atlas_ref.deriva(mov)
             if b.get('roi'):
-                # sem quadro (documento sobre o mapa): o território é o CONTEXTO de fundo, enquadrado na tela toda
                 k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], b.get('zoom_max'))
+                if mov == 'recua':           # termina no enquadramento: começa |deriva|·duração mais perto
+                    k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - k['deriva'] * max(0, fim - t - k['dur_camera']), 3)}
                 if c.get('quadro'):
                     k['roi'] = b['roi']
             elif ultima:
-                k['camera'] = ultima               # documento sobre o mapa: a câmera fica onde estava (contexto)
-            k['dur_camera'] = b.get('transicao', 1.4)
-            k['deriva'] = b.get('deriva', .012)
+                k['camera'] = ultima
             ultima = k.get('camera', ultima)
         out.append(k)
     if out:
@@ -204,10 +220,52 @@ def palco_dos_beats(p: dict) -> list[dict]:
     return out
 
 
+# ---------------------------------------------------------------- pinos geográficos (atlas.geoPin)
+def zonas(formato: str) -> dict:
+    z = {k: v for k, v in CFG.get('zonas_identidade', {}).items()}
+    z.update({k: v for k, v in (CFG.get('zonas_por_formato', {}).get(formato) or {}).items() if not k.startswith('_')})
+    return z
+
+
+def projetar(cam: dict, lon: float, lat: float) -> tuple[float, float]:
+    ws = 512 * 2 ** cam['zoom']
+    x, y = merc(lon, lat)
+    return cam['ancora'][0] + (x - cam['fx']) * ws, cam['ancora'][1] + (y - cam['fy']) * ws
+
+
+def caixa_pino(q: dict, ax: float, ay: float) -> dict:
+    """caixa ocupada por um pino ancorado em (ax, ay) — MESMA geometria de Primitivas.GeoPin"""
+    if q.get('tipo') == 'foto':
+        r = q.get('raio', 112)
+        dx, dy = q.get('desloc', [0, -190])
+        cx, cy = ax + dx, ay + dy
+        lw = max(2 * r, _largura(q.get('rotulo', ''), 30, .66) + 40)
+        return {'x': cx - lw / 2, 'y': cy - r - 6, 'w': lw, 'h': 2 * r + 12 + 60 + (26 if q.get('meta') else 0)}
+    lw = _largura(q.get('rotulo', ''), 30, .66) + 44
+    lado = q.get('lado', 'direita')
+    return {'x': ax + 26 if lado == 'direita' else ax - 26 - lw, 'y': ay - 28, 'w': lw, 'h': 56}
+
+
+def pinos_em(plano: dict, Ls: list[dict], t: float) -> dict[str, dict]:
+    cam = camera_em(plano.get('palco') or [], t)
+    out = {}
+    if not cam:
+        return out
+    for L in Ls:
+        if L['componente'] == 'atlas.geoPin' and L['t0'] <= t <= L['t1'] + SAI:
+            q = L.get('p') or {}
+            ax, ay = projetar(cam, *q['lonlat'])
+            out[L['id']] = {**caixa_pino(q, ax, ay), 'ancora': (ax, ay)}
+    return out
+
+
 def camadas(plano: dict) -> list[dict]:
     out = []
     for b in plano['beats']:
         for L in b['camadas']:
+            if L.get('componente') == 'atlas.geoPin':     # ancorado no território: caixa calculada pela câmera (pinos_em)
+                out.append({**L, 'beat': b['id'], 'composicao': b.get('composicao'), 'caixa': {'x': -9e3, 'y': -9e3, 'w': 0, 'h': 0}, 'dinamica': True})
+                continue
             out.append({**L, 'beat': b['id'], 'composicao': b.get('composicao'), 'caixa': caixa(L, b.get('composicao'))})
     return out
 
@@ -248,7 +306,17 @@ def _cabe(L: dict) -> list[str]:
                 out.append(f"título {l['texto']!r} não cabe em {b['w']} px a {l.get('tamanho', 104)} px")
     elif c == 'editorial.statCard':
         txt = f"{p.get('prefixo', '')}{p.get('valor')}"
-        if p.get('estilo') == 'pilula':
+        if p.get('estilo') == 'dial':        # número à direita do meio-círculo (Primitivas.Dial)
+            R = min(b['h'] - 120, b['w'] * .48)
+            livre = b['w'] - (40 + 2 * R + 30) - 34
+            if _largura(txt, 92, .7) > livre or _largura(p.get('unidade', ''), 34, .7) > livre:
+                out.append(f'número {txt!r} {p.get("unidade", "")!r} não cabe ao lado do mostrador ({livre:.0f} px)')
+            for x in p.get('partes') or []:
+                if _largura(x['rotulo'], 26, .62) + 28 > livre:
+                    out.append(f"legenda {x['rotulo']!r} não cabe ao lado do mostrador")
+        elif p.get('estilo') in ('calendario', 'ficha'):
+            pass
+        elif p.get('estilo') == 'pilula':
             tot = _largura(txt, 40, .62) + _largura(f" {p.get('unidade', '')}", 40) + _largura(f" · {p.get('rotulo', '')}" if p.get('rotulo') else '', 40, .66) + 60
             if tot > b['w']:
                 out.append(f'pílula {txt} {p.get("rotulo", "")!r} não cabe ({tot:.0f} > {b["w"]} px)')
@@ -339,6 +407,11 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         comp = COMP.get(L.get('composicao') or '')
         if L.get('composicao') and not comp:
             v('erro', 'F-COMPOSICAO', onde, f"composição {L['composicao']!r} desconhecida")
+        elif L.get('dinamica'):
+            if comp and not comp.get('pinos'):
+                v('erro', 'F-COMPOSICAO', onde, f"{L['composicao']} não aceita pinos geográficos")
+            if not (L.get('p') or {}).get('lonlat'):
+                v('erro', 'F-PINO', onde, 'pino sem coordenada (lonlat)')
         elif comp and not (L.get('slot') in comp['slots'] or L.get('caixa_livre')):
             v('erro', 'F-SLOT', onde, f"slot {L.get('slot')!r} não existe na composição {L['composicao']} ({', '.join(comp['slots'])})")
         elif not comp and L.get('slot') not in SLOTS and not isinstance(L.get('caixa'), (list, dict)):
@@ -364,7 +437,7 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             v('erro', 'F-COMPOSICAO', b['id'], f"{b['composicao']} é do formato {comp['formato']}")
         if comp['palco'] == 'mapa' and comp.get('quadro') and not b.get('roi'):
             v('erro', 'F-COMPOSICAO', b['id'], f"{b['composicao']} enquadra um território: falta roi (oeste, sul, leste, norte)")
-        Lb = [L for L in Ls if L['beat'] == b['id'] and L['componente'] != 'dossie.evidenceHighlight']
+        Lb = [L for L in Ls if L['beat'] == b['id'] and L['componente'] not in ('dossie.evidenceHighlight', 'atlas.geoPin')]
         for L in Lb:
             junto = sum(1 for M in Lb if M['t0'] < L['t1'] and L['t0'] < M['t1'])
             if junto > comp.get('max_camadas', 9):
@@ -391,13 +464,15 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                 continue
             t0 = tempos_b[b['id']] + next((k.get('dur_camera', 0) for k in ks if k['t'] == tempos_b[b['id']]), 0)
             qx, qy, qw, qh = comp['quadro']
-            for t in (min(t0, fins[b['id']]), fins[b['id']] - .05):
+            recua = next((k.get('movimento') for k in ks if k['t'] == tempos_b[b['id']]), None) == 'recua'
+            # recuo: começa por dentro do território e TERMINA nele inteiro — confere o fim
+            for t in ((fins[b['id']] - .05,) if recua else (min(t0, fins[b['id']]), fins[b['id']] - .05)):
                 cam = camera_em(ks, t)
                 r = roi_tela(cam, b['roi'])
                 if r['x'] < qx - 8 or r['y'] < qy - 8 or r['x'] + r['w'] > qx + qw + 8 or r['y'] + r['h'] > qy + qh + 8:
                     v('erro', 'F-COBRE-TERRITORIO', b['id'], f"território sai do quadro livre em {t:.1f}s ({r['x']:.0f},{r['y']:.0f},{r['w']:.0f}×{r['h']:.0f})")
                 for L in Ls:
-                    if L['beat'] == b['id'] and L['t0'] <= t <= L['t1'] + SAI and _cruza(L['caixa'], r):
+                    if L['beat'] == b['id'] and not L.get('dinamica') and L['t0'] <= t <= L['t1'] + SAI and _cruza(L['caixa'], r):
                         v('erro', 'F-COBRE-TERRITORIO', f"{b['id']}/{L['id']}", f"camada cobre o território explicado em {t:.1f}s")
                 if rasters:
                     ok = [ri for ri in rasters if ri['bbox'][0] <= b['roi'][0] and ri['bbox'][1] <= b['roi'][1] and ri['bbox'][2] >= b['roi'][2]
@@ -405,8 +480,9 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                     if not ok:
                         v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} sem raster nítido que cubra o território (mapa de baixa qualidade)")
     # zonas fixas da identidade (marca no topo, faixa de legenda): nenhuma caixa entra nelas (colisão de 17/11)
+    ZN = zonas(plano['formato'])
     for L in Ls:
-        for nome, (x, y, w, h) in CFG.get('zonas_identidade', {}).items():
+        for nome, (x, y, w, h) in ZN.items():
             if _cruza(L['caixa'], {'x': x, 'y': y, 'w': w, 'h': h}):
                 v('erro', 'F-ZONA-IDENTIDADE', f"{L['beat']}/{L['id']}", f'caixa cruza a zona da {nome}')
     # colisão: caixas de camadas simultâneas
@@ -418,10 +494,45 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             ev_a, ev_b = a['componente'] == 'dossie.evidenceHighlight', b['componente'] == 'dossie.evidenceHighlight'
             alvo_a, alvo_b = (a.get('p') or {}).get('alvo'), (b.get('p') or {}).get('alvo')
             ok = (ev_a and alvo_a == b['id']) or (ev_b and alvo_b == a['id']) or (ev_a and ev_b and alvo_a == alvo_b)
-            if junto and not ok and _cruza(a['caixa'], b['caixa']):
+            if junto and not ok and not (a.get('dinamica') or b.get('dinamica')) and _cruza(a['caixa'], b['caixa']):
                 v('erro', 'F-COLISAO', f"{a['id']}×{b['id']}", f"{a['slot'] or 'caixa'} e {b['slot'] or 'caixa'} ao mesmo tempo ({max(a['t0'], b['t0']):.1f}s)")
             if junto and (a.get('p') or {}).get('asset') and (a.get('p') or {}).get('asset') == (b.get('p') or {}).get('asset'):
                 v('erro', 'F-MIDIA-DUPLICADA', f"{a['id']}×{b['id']}", 'a mesma mídia duas vezes no mesmo plano (ERR-055)')
+    # pinos geográficos: seguem a câmera; a cada 0,25 s conferem âncora no quadro, colisão e zonas
+    if any(L.get('dinamica') for L in Ls) and plano.get('palco'):
+        vistos = set()
+        ks = plano['palco']
+        for i in range(int(dur / .25) + 1):
+            t = i * .25
+            pins = pinos_em(plano, Ls, t)
+            if not pins:
+                continue
+            k = ks[0]
+            for kk in ks:
+                if t >= kk['t']:
+                    k = kk
+            qd = (COMP.get(k.get('composicao') or '') or {}).get('quadro')
+            ativos = [L for L in Ls if not L.get('dinamica') and L['t0'] <= t <= L['t1'] + SAI]
+            for pid, bx in pins.items():
+                ax, ay = bx['ancora']
+                if qd and not (qd[0] - 40 <= ax <= qd[0] + qd[2] + 40 and qd[1] - 40 <= ay <= qd[1] + qd[3] + 40) and (pid, 'fora') not in vistos:
+                    vistos.add((pid, 'fora'))
+                    v('erro', 'F-PINO-FORA', pid, f'âncora fora do território enquadrado em {t:.2f}s ({ax:.0f},{ay:.0f})')
+                if (bx['x'] < 20 or bx['x'] + bx['w'] > 1060 or bx['y'] < 336) and (pid, 'tela') not in vistos:
+                    vistos.add((pid, 'tela'))
+                    v('erro', 'F-PINO-FORA', pid, f'pino sai da área útil em {t:.2f}s')
+                for L in ativos:
+                    if _cruza(bx, L['caixa']) and (pid, L['id']) not in vistos:
+                        vistos.add((pid, L['id']))
+                        v('erro', 'F-COLISAO', f"{pid}×{L['id']}", f'pino sob/sobre camada em {t:.2f}s')
+                for nome, (x, y, w, h) in ZN.items():
+                    if _cruza(bx, {'x': x, 'y': y, 'w': w, 'h': h}) and (pid, nome) not in vistos:
+                        vistos.add((pid, nome))
+                        v('erro', 'F-ZONA-IDENTIDADE', pid, f'pino invade a {nome} em {t:.2f}s')
+                for qid, by in pins.items():
+                    if qid > pid and _cruza(bx, by) and (pid, qid) not in vistos:
+                        vistos.add((pid, qid))
+                        v('erro', 'F-COLISAO', f'{pid}×{qid}', f'pinos sobrepostos em {t:.2f}s')
     usos = {}
     for L in Ls:
         a = (L.get('p') or {}).get('asset')
@@ -482,10 +593,11 @@ def props(plano: dict, tokens: dict, geo: dict | None, imagens: dict) -> dict:
     rasters = []
     for r in plano.get('rasters') or []:
         m = raster_info(r['nome'])
-        rasters.append({'nome': r['nome'], 'src': f"_formato/raster/{m.get('arquivo') or r['nome'] + '.jpg'}", 'cantos': m['cantos'], 'de': r.get('de'), 'ate': r.get('ate'),
+        rasters.append({'dataset': m.get('dataset'), 'nome': r['nome'], 'src': f"_formato/raster/{m.get('arquivo') or r['nome'] + '.jpg'}", 'cantos': m['cantos'], 'de': r.get('de'), 'ate': r.get('ate'),
                         'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': r.get('ajuste') or {}})
     return {'duracao': plano['duracao'], 'formato': plano['formato'], 'tokens': tokens, 'geo': geo, 'palco': plano['palco'], 'rasters': rasters,
             'composicoes': {k: {'quadro': v.get('quadro'), 'veu': v.get('veu')} for k, v in COMP.items()},
+            'creditos': _creditos(plano), 'tecnico': plano.get('tecnico') or {},
             'destaques': plano.get('destaques') or [], 'rotas': plano.get('rotas') or [], 'rotulos': plano.get('rotulos') or [],
             'camadas': [{'id': L['id'], 'componente': L['componente'], 't0': L['t0'], 't1': L['t1'], 'caixa': L['caixa'], 'p': L.get('p') or {}}
                         for L in Ls], 'imagens': imagens, 'furos': furos}

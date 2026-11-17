@@ -31,8 +31,9 @@
   "sha256": "ed4a69ab9e7cc8514032d113da7a31986c42fa2754202d330c472928ffbbb1b6",
   "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
  },
- "atribuicao": "Relevo: Natural Earth II",
+ "atribuicao": "Natural Earth",
  "sha256": "4d823bbd813772da4a858f5c662e147169b5adaeb85319613136e5868cc666db",
  "gerado": "2026-11-17",
- "arquivo": "ne2_istmo_panama.jpg"
+ "arquivo": "ne2_istmo_panama.jpg",
+ "dataset": "ne2_raster"
 }

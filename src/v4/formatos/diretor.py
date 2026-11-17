@@ -12,7 +12,8 @@ import json
 from src.v4.formatos import plano as P
 
 ESQUEMA = {
-    'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula', contagem: bool}",
+    'atlas.geoPin': "{tipo: 'local'|'foto', lonlat: [lon, lat] (DENTRO do roi do beat), rotulo, t_ativo?, lado?: 'direita'|'esquerda', asset?+meta (foto real com crédito), desloc?: [dx, dy], raio?} — slot 'geo': o pino segue a câmera",
+    'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula'|'dial' (partes: [{rotulo, fracao, cor}]), contagem: bool}",
     'editorial.peopleCard': '{asset (retrato da biblioteca), nome, papel}',
     'editorial.hierarchy': "{niveis: [{rotulo, valor?}], ativo: [{i, t0}], alturas?: [0–1] (perfil), legenda_base?, legenda_t?}",
     'editorial.timeline': "{marcos: [{data, texto ≤ 22, t}]}",
@@ -26,7 +27,11 @@ ESQUEMA = {
 
 def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, correcoes: list[dict] | None = None, anterior: str = '') -> str:
     F = P.CFG['formatos'][formato]
-    slots = '\n'.join(f'- {k}: x={v[0]} y={v[1]} w={v[2]} h={v[3]}' for k, v in P.SLOTS.items())
+    comp = {k: v for k, v in P.COMP.items() if v.get('formato') == formato}
+    slots = ('COMPOSIÇÕES (cada beat escolhe UMA em "composicao"; mapa exige "roi": [oeste, sul, leste, norte]; a câmera é calculada '
+             'do roi e do movimento medido na referência; camadas usam os slots DA composição):\n' +
+             '\n'.join(f"- {k}: {v.get('uso')} · movimento {v.get('movimento', '-')} · slots {', '.join(v['slots'])}" + (' · aceita pinos (slot geo)' if v.get('pinos') else '')
+                       for k, v in comp.items())) if comp else '\n'.join(f'- {k}: x={v[0]} y={v[1]} w={v[2]} h={v[3]}' for k, v in P.SLOTS.items())
     comps = '\n'.join(f'- {c}: {ESQUEMA[c]}' for c in F['componentes'])
     fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto", 60–90 s, só com os fatos)')
     base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as

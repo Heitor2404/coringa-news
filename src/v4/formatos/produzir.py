@@ -92,7 +92,7 @@ def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
     if cache and sha:
         for f in cache.glob(f'{sha}.*'):
             return f.read_bytes(), f'cache:{f.name}'
-    if cache and not sha and (cache / f"{nome_publico(it['id'])}.jpg").exists():     # só desenvolvimento local (sem rede)
+    if cache and (not sha or os.environ.get('CORINGA_DEV')) and (cache / f"{nome_publico(it['id'])}.jpg").exists():   # só desenvolvimento local (sem rede)
         return (cache / f"{nome_publico(it['id'])}.jpg").read_bytes(), 'cache-local-sem-origem'
     import time
 
@@ -187,11 +187,33 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         # o arquivo que vai ao render É o baixado da origem DESTA mídia (impressão digital), não outro com o mesmo nome
         add(f'arquivo é a mídia certa {a[:44]}', f.exists() and reg.get('sha256') == _sha(f) and reg.get('url') == (it or {}).get('url')
             and f.name == nome_publico(a) + '.jpg', reg.get('sha256', 'sem impressão digital')[:16])
-        add(f'origem conferida (sha256 da URL) {a[:40]}', reg.get('origem_conferida') is True or not (it or {}).get('sha256_origem'),
+        add(f'origem conferida (sha256 da URL) {a[:40]}', reg.get('origem_conferida') is True or not (it or {}).get('sha256_origem')
+            or (bool(os.environ.get('CORINGA_DEV')) and reg.get('veio_de') == 'cache-local-sem-origem'),
             f"{reg.get('sha256_origem', '?')[:16]} via {str(reg.get('veio_de', '?'))[:40]}" + ('' if (it or {}).get('sha256_origem') else ' (1º registro)'))
         lic = (it or {}).get('licenca', '#')
-        cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a for m in (L['p'].get('meta') or []))
+        cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
+                        for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else (L['p'].get('meta') or [])))
         add(f'crédito visível {a[:50]}', any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
+    if pl.get('formato') == 'atlas':
+        # manifesto de atribuição cartográfica: toda camada exibível declarada, com uso comercial; nada de fonte proibida;
+        # e atribuição de mapa ≠ fonte factual (não se misturam)
+        from src.v4.formatos import atlas_ref
+        ds = atlas_ref.datasets()
+        txt_plano = json.dumps({k: pl.get(k) for k in ('rasters', 'geo')}, ensure_ascii=False)
+        for r in pl.get('rasters') or []:
+            mr = P.raster_info(r['nome'])
+            d = ds.get(mr.get('dataset') or '')
+            add(f"raster {r['nome']} no manifesto com uso comercial", bool(d and d.get('uso_comercial')), f"{mr.get('dataset')} · {(d or {}).get('licenca')}")
+            txt_plano += json.dumps(mr, ensure_ascii=False)
+        add('nenhuma camada de fonte sem licença comercial (Esri, Google, Mapbox, Sentinel-2 2018+…)', atlas_ref.proibido(txt_plano) is None, atlas_ref.proibido(txt_plano) or 'ok')
+        if pl.get('geo'):
+            meta_geo = (json.loads((RAIZ / pl['geo']).read_text()).get('meta') or {}).get('atribuicao') or []
+            cobre = all(any(k in a for k in ('Natural Earth', 'OpenStreetMap')) for a in meta_geo)
+            add('geometria com datasets do manifesto (Natural Earth, OSM)', cobre and 'ne_vetor' in ds and 'osm_rota' in ds, ' · '.join(meta_geo))
+        fontes_fatos = {u_ for f_ in (pl.get('narracao') or {}).get('fatos', []) for u_ in (f_.get('fontes') or [])}
+        mapa_urls = {d['url_origem'] for d in ds.values()} | {d['termos'] for d in ds.values()}
+        cred = ' '.join(d.get('atribuicao_exigida') or '' for d in ds.values())
+        add('fonte factual ≠ atribuição cartográfica', not (fontes_fatos & mapa_urls) and not any(u_ in cred for u_ in fontes_fatos), f'{len(fontes_fatos)} fontes factuais separadas')
     for r in pl.get('rasters') or []:
         reg = imgs.get(f"raster:{r['nome']}") or {}
         f = PUBLICO.parent / reg.get('src', '_nada')
@@ -264,7 +286,10 @@ def render(saida: Path) -> dict:
         dentro = any(abs(c['t0'] - a) < .01 for c in pl.get('clipes') or [])
         cenas.append({'ini': a, 'fim': b, 'selo': 'ESQUEMA' if dentro else None, 'credito': None, 'legenda': True})
     camada = trab / 'camada.webm'
-    js.remotion('Camada', {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}, camada, trab / 'camada', alfa=True)
+    pcam = {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}
+    if pl['formato'] == 'atlas':
+        pcam['legenda_topo'] = P.zonas('atlas')['legenda'][1]
+    js.remotion('Camada', pcam, camada, trab / 'camada', alfa=True)
     musicas = sorted((RAIZ / 'assets' / 'musica' / 'explica').glob('*.mp3'))
     musica = musicas[sum(map(ord, pl['video_id'])) % len(musicas)] if musicas else None
     master = trab / 'master.wav'

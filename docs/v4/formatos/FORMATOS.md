@@ -112,3 +112,25 @@ render contra o registrado (ERR-066). Reconstruções editoriais são sempre rot
 Referências: A = 2 s / 3 de 68 s parados; B = 1 s / 12 de 176 s. Antes desta, três disparos pararam antes de
 renderizar (429 do Wikimedia por User-Agent fora da política, ERR-071; caminho relativo na medição e mesa cara demais,
 ERR-072); nenhum gastou IA. Prévias, folhas, styleframes, leitura em celular e antes/depois foram ao Telegram privado.
+
+
+## ATLAS — gramática de edição da referência (17/11, tarde)
+
+Fonte: engenharia reversa do Heitor (`src/v4/formatos/atlas_parametros.json`, conteúdo literal) + conferência própria
+da câmera por SIFT na cópia 512×910 (`atlas_camera_verificada.json`: confere a tabela do relatório e estende para o
+vídeo inteiro). Só o que a cópia permite medir; nenhuma fonte, traço ou easing "original" foi inventado.
+
+| Gramática | Implementação | Validação |
+|---|---|---|
+| mapa persistente desde o 1º quadro | composição `atlas.abertura` (sem cartão de foto cobrindo o mapa) | F-COMPOSICAO |
+| câmera medida | `movimento`: aproxima (log2 1,0242 ≈ +0,034 zoom/s), fixo (0) quando o dado muda, recua (log2 0,9544) no fecho, terminando no enquadramento | teste de câmera; F-COBRE-TERRITORIO no fim do recuo |
+| objetos ancorados | `atlas.geoPin` (lugar / foto real) projetado pela MESMA câmera do palco | F-PINO-FORA, colisão a cada 0,25 s; R-PINO-DESCOLADO (≤ 3 px do `map.project`) no quadro |
+| hierarquia que acende | `editorial.hierarchy` em blocos com profundidade + salto entre níveis, composição `atlas.escada` | quadros renderizados |
+| dado com contexto | `statCard` estilo `dial` (meio-círculo proporcional) | F-TEXTO-NAO-CABE do mostrador |
+| planta técnica | palco `tecnico` com o território real, grade 170 px (ref. ~169 px) | ERR-073 |
+| legenda | ATLAS: topo 1392 (centro ≈ 1430–1470; ref. 1496, limitada pela área segura 1480) | zona `legenda` do formato |
+| créditos cartográficos | `motor4/formatos/dados/atribuicoes.json` (manifesto); o palco mostra só as camadas visíveis; faixa própria 1300–1388 | preflight: manifesto, uso comercial, proibidos (Esri/Google/Mapbox/S2 2018+), fonte factual ≠ atribuição; R-CREDITOS-TRANSBORDA |
+
+Esri World Imagery aparece na referência, mas atribuição não é licença: não é usado. Base = Natural Earth II (largo) e
+EOxCloudless 2016 (CC BY 4.0) no detalhe. Fontes factuais do ATLAS ficam em `narracao.fatos` (Linda Hall, Britannica,
+UF Libraries) e nunca se misturam com os créditos do mapa. DOSSIÊ congelado (código preservado; `so-atlas` no disparo).

@@ -88,9 +88,9 @@ def test_excesso_de_modalidades_vira_erro():
 def test_mesma_midia_tres_vezes_no_episodio():
     """a mesma eclusa/mídia repetida três vezes (44049021691)"""
     pl = copy.deepcopy(ATLAS)
-    foto = _camada(pl, 'foto-gancho')
-    for k, t in enumerate((24.0, 60.0)):
-        pl['beats'][-1]['camadas'].append({**copy.deepcopy(foto), 'id': f'rep{k}', 't0': t, 't1': t + 1, 'slot': 'direita'})
+    foto = _camada(pl, 'pino-mira')
+    for k, t in enumerate((24.0, 62.0)):
+        pl['beats'][-1]['camadas'].append({**copy.deepcopy(foto), 'id': f'rep{k}', 't0': t, 't1': t + 1})
     assert 'F-MIDIA-REPETIDA' in _regras(pl)
 
 
@@ -121,7 +121,8 @@ def test_toda_midia_dos_planos_e_comprovada_e_creditada():
     for pl in (ATLAS, DOSSIE):
         for a in produzir.assets_do_plano(pl):
             assert a in bib and bib[a]['prova']['midia_corresponde'] is True
-            meta = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a for m in L['p'].get('meta') or [])
+            meta = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
+                            for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else L['p'].get('meta') or []))
             assert any(x in meta.upper() for x in ('CC BY', 'DOMÍNIO PÚBLICO')), a
 
 
@@ -316,3 +317,63 @@ def test_mesa_estatica_e_medicao_com_caminho_absoluto():
     palco = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
     assert 'feTurbulence' not in palco and 'mesa_madeira.jpg' in palco and (RAIZ / 'motor4/remotion/public/formatos/mesa_madeira.jpg').exists()
     assert 'pf.resolve()' in (RAIZ / 'scripts/formatos_validar.py').read_text()
+
+
+# ---------------------------------------------------------------- gramática da referência ATLAS (atlas_parametros.json)
+def test_atlas_parametros_validos_e_integrados():
+    """o JSON entregue pelo Heitor está no repositório, válido, e o motor usa: porte 512×910 → 1080×1920 e câmera medida"""
+    from src.v4.formatos import atlas_ref as A
+    assert A.PAR['measured_original']['width_px'] == 512 and A.PAR['reference_filename'].startswith('insta_post_')
+    assert A.porta(A.PAR['pixel_regions_512x910_estimates']['hierarchy_25s']) == [57, 268, 987, 274]
+    assert A.legenda_centro_ref() == 1496
+    # a conferência própria bate com a tabela do relatório (±1,5 % de escala) e os presets saem dela
+    for nosso, deles in zip(A.CAM['conferencia_relatorio'], A.PAR['measured_camera_affine_sift']):
+        assert abs(nosso['escala'] - deles['scale']) < .015
+    assert 0.02 < A.DERIVA['aproxima'] < 0.06 and A.DERIVA['fixo'] == 0 and A.DERIVA['recua'] < -0.03
+
+
+def test_camera_aproxima_fica_parada_no_dado_e_recua_no_fecho():
+    import math
+    pl = P.resolver_tempos(ATLAS, [])
+    ks = {k['composicao']: k for k in pl['palco']}
+    assert ks['atlas.painel']['deriva'] == 0 and ks['atlas.protagonista']['deriva'] > 0
+    fecho = pl['palco'][-1]
+    assert fecho['movimento'] == 'recua'
+    fim = P.camera_em(pl['palco'], pl['duracao'] - .05)
+    alvo = P.camera_roi(next(b for b in pl['beats'] if b['id'] == 'b9-payoff')['roi'], P.COMP['atlas.manchete']['quadro'], 6.25)
+    assert math.isclose(fim['zoom'], alvo['zoom'], abs_tol=.02)       # termina no enquadramento do território inteiro
+
+
+def test_pino_segue_o_territorio_e_fora_dele_e_erro():
+    pl = P.resolver_tempos(ATLAS, [])
+    pino = next(L for L in P.camadas(pl) if L['id'] == 'p-gatun')
+    t = pino['t0'] + .5
+    cam = P.camera_em(pl['palco'], t)
+    ax, ay = P.projetar(cam, *pino['p']['lonlat'])
+    qx, qy, qw, qh = P.COMP['atlas.escada']['quadro']
+    assert qx <= ax <= qx + qw and qy <= ay <= qy + qh
+    ruim = copy.deepcopy(ATLAS)
+    _camada(ruim, 'p-gatun')['p']['lonlat'] = [-75.0, 12.0]          # fora do território enquadrado
+    assert 'F-PINO-FORA' in _regras(ruim)
+
+
+def test_camadas_cartograficas_proibidas_e_creditos_corretos():
+    from src.v4.formatos import atlas_ref as A
+    assert A.proibido('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
+    assert A.proibido('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg')
+    assert A.proibido('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg') is None
+    cr = P._creditos(ATLAS)
+    assert cr['datasets']['s2_2016'].startswith('EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH')
+    assert cr['datasets']['osm_rota'] == '© OpenStreetMap contributors' and 'terrain_tiles' not in cr['datasets']
+    # fonte factual ≠ atribuição cartográfica
+    fatos = {u for f in ATLAS['narracao'].get('fatos', []) for u in f['fontes']}
+    assert fatos and not any(u in ' '.join(cr['datasets'].values()) for u in fatos)
+
+
+def test_planta_tecnica_rebobina_e_medicao_conta_o_desenho_svg():
+    """17/11: o país na planta técnica virou retângulo (anel no sentido errado para o d3-geo) e a medição contava a
+    tela inteira do <svg> do fio do pino como "camada" (falso transbordo de 10 000 px)"""
+    palco = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert 'turf.rewind' in palco and 'reverse: true' in palco
+    fmt = (RAIZ / 'motor4/remotion/src/formatos/Formato.tsx').read_text()
+    assert 'ownerSVGElement' in fmt and 'data-ancora-geo' in fmt

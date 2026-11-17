@@ -12,3 +12,4 @@ src/render/v2/dados/ne/
 # V3.1: biblioteca de mídia (banco e binários ficam fora do Git; o manifesto versionado é data/biblioteca/manifesto.jsonl)
 data/biblioteca/coringa.sqlite3
 data/biblioteca/arquivos/
+saida_v4/

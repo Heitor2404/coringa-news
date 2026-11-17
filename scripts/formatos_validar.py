@@ -8,6 +8,8 @@ renderiza Formato + Camada (marca/legenda) com a medição da própria página e
     celular de 400 px de largura; cena vazia (sem camada, rótulo nem território).
 Gera styleframes (1080×1920 com legenda), versão de celular (405×720), folhas de contato e relatorio.json/.md.
 Teste técnico verde NÃO é aprovação estética: a folha vai para o olho humano.
+Amostragem ampliada (gancho, transições, a cada 2,5 s) + máscaras de plataforma + alinhamento de cartões + faixa da legenda +
+atribuição obrigatória presente.
 uso: python scripts/formatos_validar.py <saida_preflight> <dir_saida> [auto|t1,t2,...] [n=6]
 """
 from __future__ import annotations
@@ -22,7 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from src.v4.formatos import plano as P  # noqa: E402
+from src.v4.formatos import layout, plano as P  # noqa: E402
 
 FPS = 30
 TOL = 6
@@ -73,6 +75,62 @@ def escolher(pl: dict, n: int) -> list[float]:
     return ts
 
 
+def amostrar(pl: dict, passo: float = 2.5) -> list[dict]:
+    """amostragem AMPLIADA (não só 1 quadro por composição): gancho (0,5/1,5/2,5 s), cada transição de beat (+0,35 s),
+    o quadro "cheio" de cada beat e um a cada `passo` s dentro dos beats; sob clipes o vídeo mostra o clipe (pula)."""
+    furos = [(c['t0'], c['t1']) for c in pl.get('clipes') or []]
+    dur = pl['duracao']
+    cand = {}
+    for t in (.5, 1.5, 2.5):
+        cand[t] = 'gancho'
+    bs = pl['beats']
+    for i, b in enumerate(bs):
+        a = inicio(b)
+        z = inicio(bs[i + 1]) if i + 1 < len(bs) else dur
+        cand.setdefault(round(a + .35, 2), 'transicao')
+        x = a + passo
+        while x < z - .4:
+            cand.setdefault(round(x, 2), 'interno')
+            x += passo
+    for t in escolher(pl, 10 ** 6):
+        cand[t] = 'cheio'
+    out = []
+    for t in sorted(cand):
+        if t >= dur - .05 or any(a - .05 <= t <= z + .05 for a, z in furos):
+            continue
+        if out and t - out[-1]['t'] < .4:          # quadros quase iguais: fica o de maior prioridade
+            pri = {'cheio': 3, 'gancho': 2, 'transicao': 1, 'interno': 0}
+            if pri[cand[t]] > pri[out[-1]['tipo']]:
+                out[-1] = {'t': t, 'tipo': cand[t]}
+            continue
+        out.append({'t': t, 'tipo': cand[t]})
+    return out
+
+
+def checar_plataformas(m: dict, pl: dict, t: float, perfis: list[str] | None = None) -> list[dict]:
+    """informação essencial (camadas, rótulos, créditos, legenda, marca, cartões) contra as MÁSCARAS de interface simulada
+    de cada plataforma ativa (plataformas.json); recorte do feed do Reels = aviso, não erro"""
+    prob = []
+    elems = [(f"camada {c['id']}", c['caixa']) for c in m['camadas']] + [(f"rótulo {r['txt']!r}", r['caixa']) for r in m['rotulos']]
+    elems += [(f"{x['tipo']}", x['caixa']) for x in m.get('metas') or []]
+    cm = m.get('camada') or {}
+    for k in ('legenda', 'marca'):
+        if cm.get(k):
+            elems.append((k, cm[k]))
+    for nome in perfis or layout.CFG['ativos']:
+        for mk in layout.mascaras(nome):
+            x, y, w, h = mk['caixa']
+            z = {'x': x, 'y': y, 'w': w, 'h': h}
+            for rotulo, bx in elems:
+                if _cruza(bx, z, 2):
+                    if mk.get('aviso'):
+                        if rotulo in ('legenda', 'marca') or rotulo.startswith('camada'):
+                            prob.append({'t': t, 'regra': 'A-RECORTE-FEED', 'texto': f'{rotulo} cortado no feed do {nome} (aviso)', 'aviso': True})
+                        continue
+                    prob.append({'t': t, 'regra': 'R-PLATAFORMA', 'texto': f"{rotulo} sob a interface do {nome} ({mk['tipo']})"})
+    return prob
+
+
 def checar(m: dict, pl: dict, t: float) -> list[dict]:
     R = P.REGRAS
     prob = []
@@ -85,7 +143,11 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
         for b in ids[i + 1:]:
             if alvo.get(a) == b or alvo.get(b) == a or (a in alvo and b in alvo and alvo[a] == alvo[b]):
                 continue
-            if _cruza(cam[a]['caixa'], cam[b]['caixa']):
+            pa, pb = cam[a].get('partes'), cam[b].get('partes')
+            if pa and pb:      # dois pinos: confere parte × parte (a caixa-união inclui espaço vazio entre ponto e rótulo)
+                if any(_cruza(x, y) for x in pa for y in pb):
+                    add('R-COLISAO', f'{a} × {b}: partes dos pinos se sobrepõem')
+            elif _cruza(cam[a]['caixa'], cam[b]['caixa']):
                 add('R-COLISAO', f'{a} × {b} se sobrepõem no quadro renderizado')
     pinos = {L['id'] for L in decl.values() if L['componente'] == 'atlas.geoPin'}
     if m.get('roi'):
@@ -139,6 +201,42 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
         add('R-TEXTO-CORTADO', f"{x['camada']}: {x['txt']!r}")
     if not m['camadas'] and not m['rotulos'] and not m.get('roi'):
         add('R-CENA-VAZIA', 'quadro sem camada, rótulo ou território')
+    # cartões: sistema único — centro no centro do slot (±3 px) e sem inclinação
+    for c in m.get('cartoes') or []:
+        dx, dy = c['centro'][0] - c['alvo'][0], c['centro'][1] - c['alvo'][1]
+        if abs(dx) > 3 or abs(dy) > 3:
+            add('R-CARTAO-DESALINHADO', f"{c['camada']}: centro a ({dx:+.0f}, {dy:+.0f}) px do centro do slot")
+        if abs(c.get('rot') or 0) > .3:
+            add('R-CARTAO-INCLINADO', f"{c['camada']}: inclinado {c['rot']:.1f}°")
+    # legenda: na faixa PRÓPRIA (nunca sobre créditos, cartões, pinos ou rótulos)
+    cm = m.get('camada') or {}
+    lg = cm.get('legenda')
+    if lg and pl['formato'] == 'atlas':
+        zx, zy, zw, zh = P.zonas('atlas')['legenda']
+        if lg['y'] < zy - 2 or lg['y'] + lg['h'] > zy + zh + 2 or lg['x'] < zx - 2 or lg['x'] + lg['w'] > zx + zw + 2:
+            add('R-LEGENDA-FORA', f"legenda sai da faixa própria ({lg['x']:.0f},{lg['y']:.0f},{lg['w']:.0f}×{lg['h']:.0f})")
+        for x in m.get('metas') or []:
+            if _cruza(lg, x['caixa'], 1):
+                add('R-LEGENDA-CREDITO', f"legenda sobre {x['tipo']}")
+        for c in m['camadas']:
+            if _cruza(lg, c['caixa'], 2):
+                add('R-LEGENDA-COLISAO', f"legenda sobre {c['id']}")
+        for r in m['rotulos']:
+            if _cruza(lg, r['caixa'], 2):
+                add('R-LEGENDA-COLISAO', f"legenda sobre o rótulo {r['txt']!r}")
+    # atribuição obrigatória presente sempre que o mapa aparece
+    cr = pl.get('creditos') or P._creditos(pl)
+    if m.get('roi') and cr and pl['formato'] == 'atlas':
+        ats = [x for x in m.get('metas') or [] if x['tipo'] == 'atribuicao']
+        txt = ' '.join(x.get('txt') or '' for x in ats)
+        if not txt:
+            add('R-ATRIBUICAO-AUSENTE', 'mapa visível sem créditos cartográficos')
+        else:   # cada dataset de licença (CC BY, ODbL) VISÍVEL neste quadro tem o seu texto exigido na faixa
+            vis = {d for x in ats for d in x.get('datasets') or []}
+            for d in cr.get('obrigatorias') or []:
+                exig = (cr.get('datasets') or {}).get(d) or ''
+                if d in vis and exig and exig[:28].lower() not in txt.lower():
+                    add('R-ATRIBUICAO-AUSENTE', f'{d} visível sem a atribuição exigida ({exig[:28]!r}…)')
     return prob
 
 
@@ -150,15 +248,21 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     can = P.canal(pl.get('canal', 'coringa'))
     geo = json.loads((RAIZ / pl['geo']).read_text()) if pl.get('geo') else None
     pf = out / 'props_formato.json'
-    pf.write_text(json.dumps(P.props(pl, {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco')}, geo, imgs), ensure_ascii=False))
+    pf.write_text(json.dumps(P.props(pl, {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta') if k in can}, geo, imgs), ensure_ascii=False))
     cenas = [{'ini': 0.0, 'fim': pl['duracao'], 'selo': None, 'credito': None, 'legenda': True}]
     pc = out / 'props_camada.json'
     cam = {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}
-    lz = P.zonas(pl['formato']).get('legenda')
-    if lz and pl['formato'] == 'atlas':
-        cam['legenda_topo'] = lz[1]
+    if pl['formato'] == 'atlas':
+        cam['legenda_caixa'] = P.zonas('atlas')['legenda']
     pc.write_text(json.dumps(cam, ensure_ascii=False))
-    ts = escolher(pl, n) if tempos == 'auto' else [float(x) for x in tempos.split(',')]
+    if tempos == 'auto':
+        amos = amostrar(pl)
+        ts = [a['t'] for a in amos]
+        tipo = {a['t']: a['tipo'] for a in amos}
+        folha_ts = set(escolher(pl, n))
+    else:
+        ts = [float(x) for x in tempos.split(',')]
+        tipo, folha_ts = {t: 'pedido' for t in ts}, set(ts)
     qs = [int(round(t * FPS)) for t in ts]
     chrome = os.environ.get('CORINGA_CHROME') or os.environ.get('REMOTION_CHROME') or '/usr/bin/google-chrome'
     r = subprocess.run(['node', 'medir.mjs', str(pf.resolve()), str(pc.resolve()), ','.join(map(str, qs)), str(out.resolve()), chrome], cwd=RAIZ / 'motor4' / 'remotion',
@@ -173,7 +277,7 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
         if not m:
             problemas.append({'t': t, 'regra': 'R-SEM-MEDIDA', 'texto': 'a página não registrou a geometria'})
             continue
-        problemas += checar(m, pl, t)
+        problemas += checar(m, pl, t) + checar_plataformas(m, pl, t)
         f = Image.open(out / f'f_{q}.png').convert('RGBA')
         f.alpha_composite(Image.open(out / f'c_{q}.png').convert('RGBA'))
         sf = out / f'styleframe_{t:05.2f}.png'
@@ -183,20 +287,47 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
         beat = next((b for b in reversed(pl['beats']) if inicio(b) <= t + 1e-6), None)
         quadros.append({'t': t, 'quadro': q, 'beat': beat and beat['id'], 'composicao': beat and beat.get('composicao'),
                         'camadas': [c['id'] for c in m['camadas']], 'menor_texto_px': menor,
-                        'menor_texto_celular_px': menor and round(menor * 400 / 1080, 1), 'roi': m.get('roi'), 'arquivo': sf.name})
-    folha(out, quadros, 'styleframes.jpg', 'styleframe', (540, 960))
-    folha(out, quadros, 'celular.jpg', 'celular', (405, 720))
-    rel = {'plano': pl.get('video_id'), 'formato': pl['formato'], 'quadros': quadros, 'problemas': problemas, 'ok': not problemas,
+                        'menor_texto_celular_px': menor and round(menor * 400 / 1080, 1), 'roi': m.get('roi'), 'arquivo': sf.name,
+                        'amostra': tipo.get(t), 'folha': t in folha_ts})
+        if t in folha_ts:
+            mascaras_plataformas(out, f, t)
+    fq = [q for q in quadros if q['folha']] or quadros
+    folha(out, fq, 'styleframes.jpg', 'styleframe', (540, 960))
+    folha(out, fq, 'celular.jpg', 'celular', (405, 720))
+    folha(out, quadros, 'amostragem.jpg', 'celular', (270, 480))
+    for nome in layout.CFG['ativos']:
+        folha(out, fq, f'plataforma_{nome}.jpg', f'ui_{nome}', (405, 720))
+    erros = [p for p in problemas if not p.get('aviso')]
+    rel = {'plano': pl.get('video_id'), 'formato': pl['formato'], 'quadros': quadros, 'problemas': problemas, 'ok': not erros,
+           'avisos': [p for p in problemas if p.get('aviso')],
+           'amostragem': {k: sum(1 for q in quadros if q['amostra'] == k) for k in ('gancho', 'transicao', 'interno', 'cheio', 'pedido')},
            'nota': 'validação técnica sobre quadros renderizados; NÃO é aprovação estética (só o Heitor aprova)'}
     (out / 'relatorio.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1))
     linhas = [f"# Quadros renderizados — {pl.get('video_id')} ({pl['formato']})", '', '| t (s) | beat | composição | camadas | menor texto (1080 → celular 400) |', '|---|---|---|---|---|']
     linhas += [f"| {q['t']:.2f} | {q['beat']} | {q['composicao']} | {', '.join(q['camadas'])} | {q['menor_texto_px']} → {q['menor_texto_celular_px']} px |" for q in quadros]
     linhas += ['', f"Problemas: {len(problemas)}"] + [f"- {p['t']:.2f}s {p['regra']}: {p['texto']}" for p in problemas]
     (out / 'relatorio.md').write_text('\n'.join(linhas) + '\n')
-    print(json.dumps({'quadros': len(quadros), 'problemas': len(problemas)}, ensure_ascii=False))
+    print(json.dumps({'quadros': len(quadros), 'problemas': len(erros), 'avisos': len(problemas) - len(erros)}, ensure_ascii=False))
     for p in problemas:
         print(' ', p['t'], p['regra'], p['texto'])
     return rel
+
+
+def mascaras_plataformas(out: Path, f: Image.Image, t: float):
+    """interface SIMULADA por plataforma sobre o styleframe (topo, base, coluna de ícones; recorte do feed tracejado)"""
+    for nome in layout.CFG['ativos']:
+        im = f.convert('RGBA').copy()
+        ov = Image.new('RGBA', im.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(ov)
+        for mk in layout.mascaras(nome):
+            x, y, w, h = mk['caixa']
+            if mk.get('aviso'):
+                d.rectangle([x, y, x + w, y + h], outline=(255, 80, 80, 230), width=4)
+            else:
+                d.rectangle([x, y, x + w, y + h], fill=(255, 40, 120, 92), outline=(255, 40, 120, 220), width=3)
+        im.alpha_composite(ov)
+        ImageDraw.Draw(im).text((24, 24), nome.upper(), fill=(255, 255, 255, 255))
+        im.convert('RGB').resize((405, 720), Image.LANCZOS).save(out / f'ui_{nome}_{t:05.2f}.png')
 
 
 def folha(out: Path, quadros: list[dict], nome: str, pref: str, tam: tuple[int, int]):

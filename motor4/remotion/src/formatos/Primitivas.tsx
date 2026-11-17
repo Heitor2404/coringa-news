@@ -87,8 +87,26 @@ export const Ficha: React.FC<{ c: Ctx }> = ({ c }) => {
     </div>);
 };
 
+// CARTÃO DE DADO — design system único (tokens canal.cartao): sem inclinação, centralizado no slot, largura pelo conteúdo
+// (entre largura_min e o slot), número que encolhe para caber (≥ numero_min_px), hierarquia título → número → rótulo →
+// fonte factual (independente dos créditos do mapa). data-cartao = centro do slot (alinhamento conferido no quadro).
+const KT = (c: Ctx) => ({ pad_x: 40, pad_y: 26, borda_topo: 10, titulo_px: 26, numero_px: 112, numero_min_px: 60, unidade_razao: .46, rotulo_px: 32, fonte_px: 18,
+  largura_min: 520, entra_px: 24, sombra: '0 18px 50px rgba(0,0,0,.5)', ...((c.P.tokens as any).cartao || {}) });
+export const larguraTxt = (s: string, px: number, k = .7) => s.length * px * k;
+export const Cartao: React.FC<{ c: Ctx; largura: number; children: React.ReactNode }> = ({ c, largura, children }) => {
+  const b = c.L.caixa, T = KT(c), C = cores(c);
+  const w = Math.max(Math.min(T.largura_min, b.w), Math.min(b.w, largura));
+  return (
+    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div data-cartao={JSON.stringify([b.x + b.w / 2, b.y + b.h / 2])} style={{ width: w, padding: `${T.pad_y}px ${T.pad_x}px`, background: C.papel, color: C.tinta,
+        boxShadow: T.sombra, borderTop: `${T.borda_topo}px solid ${C.destaque}`, transform: `translateY(${(1 - c.k) * T.entra_px}px)`, boxSizing: 'border-box' }}>{children}</div>
+    </div>);
+};
+const Fonte: React.FC<{ c: Ctx }> = ({ c }) => c.L.p.fonte ? <div data-meta="fonte" style={{ fontFamily: FD(c), fontSize: KT(c).fonte_px, marginTop: 12, color: 'rgba(11,15,23,.62)',
+  textTransform: 'uppercase', letterSpacing: 1 }}>FONTE: {c.L.p.fonte}</div> : null;
+
 export const StatCard: React.FC<{ c: Ctx }> = ({ c }) => {
-  const p = c.L.p, C = cores(c), b = c.L.caixa;
+  const p = c.L.p, C = cores(c), b = c.L.caixa, T = KT(c);
   if (p.estilo === 'calendario') return <Calendario c={c} />;
   if (p.estilo === 'ficha') return <Ficha c={c} />;
   if (p.estilo === 'dial') return <Dial c={c} />;
@@ -96,22 +114,27 @@ export const StatCard: React.FC<{ c: Ctx }> = ({ c }) => {
   const txt = typeof conta === 'number' ? num(conta, p.casas || 0) : String(p.valor);
   if (p.estilo === 'pilula') return (
     <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ padding: '14px 30px', background: C.papel, color: C.tinta, fontFamily: FT(c), fontWeight: 900, fontSize: 40, textTransform: 'uppercase',
-        boxShadow: '0 10px 30px rgba(0,0,0,.45)', transform: `translateY(${(1 - c.k) * 18}px)`, whiteSpace: 'nowrap' }}>
+      <div data-cartao={JSON.stringify([b.x + b.w / 2, b.y + b.h / 2])} style={{ padding: '14px 30px', background: C.papel, color: C.tinta, fontFamily: FT(c), fontWeight: 900, textTransform: 'uppercase',
+        // corpo encolhe 40 → 30 px para caber na faixa (MESMA conta de plano._cabe)
+        fontSize: Math.max(30, Math.min(40, 40 * (b.w - 60) / Math.max(1, larguraTxt(`${p.prefixo || ''}${txt}`, 40, .62) + larguraTxt(p.unidade ? ` ${p.unidade}` : '', 40, .72) + larguraTxt(p.rotulo ? ` · ${p.rotulo}` : '', 40, .66)))),
+        boxShadow: '0 10px 30px rgba(0,0,0,.45)', transform: `translateY(${(1 - c.k) * 18}px)`, whiteSpace: 'nowrap', maxWidth: b.w, overflow: 'hidden', textOverflow: 'ellipsis' }}>
         <span style={{ fontFamily: FD(c), fontWeight: 700 }}>{p.prefixo || ''}{txt}</span>{p.unidade ? ` ${p.unidade}` : ''}{p.rotulo ? <span style={{ fontWeight: 700, opacity: .75 }}> · {p.rotulo}</span> : null}
       </div>
     </div>);
+  // número final (não o da contagem) define o tamanho: o cartão não "respira" enquanto conta
+  const fim = `${p.prefixo || ''}${typeof p.valor === 'number' ? num(p.valor, p.casas || 0) : p.valor}`;
+  const util = b.w - 2 * T.pad_x;
+  const npx = Math.max(T.numero_min_px, Math.min(T.numero_px, util / (larguraTxt(fim, 1, .7) + larguraTxt(` ${p.unidade || ''}`, T.unidade_razao, .7))));
+  const larg = 2 * T.pad_x + Math.max(larguraTxt(fim, npx, .7) + larguraTxt(` ${p.unidade || ''}`, npx * T.unidade_razao, .7),
+    larguraTxt(p.titulo || '', T.titulo_px, .62), Math.min(util, larguraTxt(p.rotulo || '', T.rotulo_px, .66)));
   return (
-    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ minWidth: Math.min(b.w, 620), maxWidth: b.w, padding: '34px 44px 28px', background: C.papel, color: C.tinta, boxShadow: '0 18px 50px rgba(0,0,0,.5)',
-        transform: `translateY(${(1 - c.k) * 26}px) rotate(${p.inclina ?? -1}deg)`, borderTop: `10px solid ${C.destaque}` }}>
-        {p.titulo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: 26, letterSpacing: 3, textTransform: 'uppercase', color: C.alerta, marginBottom: 6 }}>{p.titulo}</div>}
-        <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: p.grande ? 150 : 112, lineHeight: .95, whiteSpace: 'nowrap' }}>
-          {p.prefixo || ''}{txt}<span style={{ fontSize: p.grande ? 64 : 52, fontWeight: 800, marginLeft: 12 }}>{p.unidade || ''}</span></div>
-        {p.rotulo && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: 34, textTransform: 'uppercase', marginTop: 10, lineHeight: 1.1 }}>{p.rotulo}</div>}
-        {p.referencia && <div style={{ fontFamily: FD(c), fontSize: 24, marginTop: 14, opacity: .7 }}>{p.referencia}</div>}
-      </div>
-    </div>);
+    <Cartao c={c} largura={larg}>
+      {p.titulo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: T.titulo_px, letterSpacing: 3, textTransform: 'uppercase', color: C.alerta, marginBottom: 6 }}>{p.titulo}</div>}
+      <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: npx, lineHeight: .95, whiteSpace: 'nowrap' }}>
+        {p.prefixo || ''}{txt}<span style={{ fontSize: npx * T.unidade_razao, fontWeight: 800, marginLeft: 12 }}>{p.unidade || ''}</span></div>
+      {p.rotulo && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: T.rotulo_px, textTransform: 'uppercase', marginTop: 10, lineHeight: 1.1 }}>{p.rotulo}</div>}
+      <Fonte c={c} />
+    </Cartao>);
 };
 
 // 5. editorial.peopleCard — retrato real licenciado em círculo + identidade curta
@@ -134,7 +157,10 @@ export const Hierarchy: React.FC<{ c: Ctx }> = ({ c }) => {
   const n = p.niveis.length, gap = 14, prof = 12, w = (b.w - prof - gap * (n - 1)) / n;
   const embaixo = p.rotulos_abaixo !== false && n > 5;          // muitos níveis: nomes embaixo, em 2 fileiras (≥ 26 px)
   const hb = (p.legenda_base ? b.h - 46 : b.h) - (embaixo ? 84 : 0);   // a legenda da base fica DENTRO da caixa
-  const base = Math.min(120, hb * .25);                         // altura mínima do bloco (escada baixa na faixa superior)
+  // altura mínima do bloco: a da escada baixa na faixa superior, mas NUNCA menor que o conteúdo (valor + nome dentro do bloco)
+  const wb = (b.w - prof - gap * (n - 1)) / n;
+  const conteudo = embaixo ? 0 : 14 + (p.niveis.some((x: any) => x.valor != null) ? (wb > 150 ? 54 : 40) + 6 : 0) + 2 * (wb > 150 ? 26 : 22) * 1.15 + 10;
+  const base = Math.min(Math.max(Math.min(120, hb * .25), conteudo), hb - prof - 10);
   const passo = (hb - base - prof - 40) / Math.max(1, n - 1) * (p.escada === false ? 0 : 1);
   const ativoEm = (i: number) => {
     const nv = p.niveis[i];
@@ -177,9 +203,11 @@ export const Hierarchy: React.FC<{ c: Ctx }> = ({ c }) => {
         const ent = aparece(c, c.L.t0 + i * (p.cadencia ?? .18));
         const ativo = ativoEm(i) != null;
         const cx = xs(i) + w / 2, fila = i % 2;
+        // nome centrado no bloco, mas PRESO dentro da caixa da camada (o primeiro/último nível não vaza pela margem)
+        const tw = Math.min(220, larguraTxt(String(nv.rotulo), 26, .66) + 8), lx = Math.max(0, Math.min(b.w - tw, cx - tw / 2));
         return <React.Fragment key={'r' + i}>
           <div style={{ position: 'absolute', left: cx - 1.5, top: hb + prof, width: 3, height: 8 + fila * 38, background: ativo ? C.destaque : 'rgba(255,255,255,.45)', opacity: ent }} />
-          <div style={{ position: 'absolute', left: cx - 110, width: 220, top: hb + prof + 8 + fila * 38, textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
+          <div style={{ position: 'absolute', left: lx, width: tw, top: hb + prof + 8 + fila * 38, textAlign: 'center', fontFamily: FD(c), fontWeight: 700, fontSize: 26,
             color: ativo ? C.destaque : '#F4F1EA', textTransform: 'uppercase', whiteSpace: 'nowrap', textShadow: '0 2px 8px #000', opacity: ent }}>{nv.rotulo}</div>
         </React.Fragment>;
       })}
@@ -420,18 +448,24 @@ export const Title: React.FC<{ c: Ctx }> = ({ c }) => {
 export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
   const p = c.L.p, C = cores(c);
   const cam = cameraEm(c.P.palco, c.t), ws = 512 * 2 ** cam.zoom;
-  const ax = cam.ancora[0] + (mercX(p.lonlat[0]) - cam.fx) * ws, ay = cam.ancora[1] + (mercY(p.lonlat[1]) - cam.fy) * ws;
+  const dxw = ((mercX(p.lonlat[0]) - cam.fx + .5) % 1 + 1) % 1 - .5;          // cópia do mundo mais perto da câmera
+  const ax = cam.ancora[0] + dxw * ws, ay = cam.ancora[1] + (mercY(p.lonlat[1]) - cam.fy) * ws;
   const k = c.k, pulso = p.t_ativo != null && c.t >= p.t_ativo ? clamp((c.t - p.t_ativo) / .5) : 0;
   const ponto = <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 12, top: ay - 12, width: 24, height: 24, borderRadius: 12,
     background: C.destaque, border: '4px solid #0B0F17', boxShadow: `0 0 0 3px #fff, 0 0 0 ${3 + 14 * pulso * (1 - pulso) * 4}px rgba(255,210,31,.35), 0 4px 14px rgba(0,0,0,.6)`,
     transform: `scale(${.4 + .6 * k})` }} />;
   if (p.tipo !== 'foto') {
-    const dir = p.lado !== 'esquerda';
-    return <>{ponto}<div style={{ position: 'absolute', ...(dir ? { left: ax + 26 } : { right: 1080 - (ax - 26) }), top: ay - 28, height: 56, display: 'flex', alignItems: 'center',
+    // lado resolvido pelo motor (plano.posicionar_pinos → lado_auto): direita, esquerda, acima ou abaixo
+    const lado = p.lado_auto || p.lado || 'direita', dir = lado !== 'esquerda', vert = lado === 'acima' || lado === 'abaixo';
+    const lw = larguraTxt(String(p.rotulo || ''), 30, .66) + 44;
+    return <>{ponto}<div style={{ position: 'absolute', ...(vert ? { left: ax - lw / 2, width: lw, justifyContent: 'center' } : dir ? { left: ax + 26 } : { right: 1080 - (ax - 26) }),
+      top: lado === 'acima' ? ay - 84 : lado === 'abaixo' ? ay + 28 : ay - 28, height: 56, display: 'flex', alignItems: 'center',
       padding: '0 16px', background: '#0B0F17', borderLeft: `6px solid ${pulso > 0 ? C.destaque : '#F4F1EA'}`, fontFamily: FT(c), fontWeight: 900, fontSize: 30, color: '#fff',
       textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 18px rgba(0,0,0,.5)', opacity: k, transform: `translateX(${(1 - k) * (dir ? -12 : 12)}px)` }}>{p.rotulo}</div></>;
   }
-  const im = c.P.imagens?.[p.asset], r = p.raio ?? 112, [dx, dy] = p.desloc || [0, -190];
+  // papel narrativo → escala (tokens canal.pino): protagonista domina o quadro; secundário acompanha
+  const PP = ((c.P.tokens as any).pino || {})[p.papel || 'secundario'] || { raio: 118, rotulo_px: 30, anel: 6 };
+  const im = c.P.imagens?.[p.asset], r = p.raio ?? PP.raio, [dx, dy] = Array.isArray(p.desloc) ? p.desloc : [0, -(r + 80)];
   const cx = ax + dx, cy = ay + dy, d = Math.hypot(dx, dy) || 1;
   const ex = cx - dx / d * (r + 6), ey = cy - dy / d * (r + 6);
   return <>
@@ -439,12 +473,13 @@ export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
       <line x1={ax} y1={ay} x2={lerp(ax, ex, k)} y2={lerp(ay, ey, k)} stroke="#fff" strokeWidth={4} /></svg>
     {ponto}
     <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: 2 * r, height: 2 * r, borderRadius: r, overflow: 'hidden', background: '#111',
-      boxShadow: `0 0 0 6px ${C.destaque}, 0 0 0 9px #0B0F17, 0 18px 40px rgba(0,0,0,.6)`, transform: `scale(${.55 + .45 * k})`, opacity: k }}>
+      boxShadow: `0 0 0 ${PP.anel}px ${C.destaque}, 0 0 0 ${PP.anel + 3}px #0B0F17, 0 18px 40px rgba(0,0,0,.6)`, transform: `scale(${.55 + .45 * k})`, opacity: k }}>
       {im && <Img src={staticFile(im.src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${(p.foco || [.5, .5])[0] * 100}% ${(p.foco || [.5, .5])[1] * 100}%` }} />}
     </div>
     <div style={{ position: 'absolute', left: cx - 300, width: 600, top: cy + r + 12, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: aparece(c, c.L.t0 + .25) }}>
-      <div style={{ padding: '10px 20px', background: C.papel, color: C.tinta, fontFamily: FT(c), fontWeight: 800, fontSize: 30, lineHeight: '32px', textTransform: 'uppercase',
-        whiteSpace: 'nowrap', boxShadow: '0 8px 20px rgba(0,0,0,.5)' }}>{p.rotulo}</div>
+      {/* rótulo nunca mais largo que a foto (+40): quebra em até 2 linhas — MESMA regra de plano.caixa_pino */}
+      <div style={{ padding: '10px 20px', background: C.papel, color: C.tinta, fontFamily: FT(c), fontWeight: 800, fontSize: PP.rotulo_px, lineHeight: `${PP.rotulo_px + 2}px`, textTransform: 'uppercase',
+        maxWidth: Math.max(300, 2 * r + 2 * PP.anel + 40), textAlign: 'center', boxShadow: '0 8px 20px rgba(0,0,0,.5)' }}>{p.rotulo}</div>
       {p.meta && <div data-meta="credito" style={{ marginTop: 4, fontFamily: FD(c), fontSize: 18, lineHeight: '22px', color: 'rgba(255,255,255,.88)', textShadow: '0 1px 4px #000', whiteSpace: 'nowrap' }}>{p.meta}</div>}
     </div>
   </>;
@@ -453,43 +488,62 @@ export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
 // editorial.statCard estilo 'dial' — número com CONTEXTO proporcional: meio-círculo de pontos dividido pelas partes
 // (gramática do cartão de dados da referência; aqui, por exemplo, metade da água sobe e metade desce)
 export const Dial: React.FC<{ c: Ctx }> = ({ c }) => {
-  const p = c.L.p, C = cores(c), b = c.L.caixa;
+  const p = c.L.p, C = cores(c), b = c.L.caixa, T = KT(c);
   const partes = p.partes || [], tot = partes.reduce((s: number, x: any) => s + x.fracao, 0) || 1;
-  const R = Math.min(b.h - 120, (b.w * .48)) , cx = 40 + R, cy = 70 + R;
-  const fileiras = 7, pts: { x: number; y: number; a: number }[] = [];
+  const util = b.w - 2 * T.pad_x;
+  const R = Math.max(90, Math.min(util * .3, b.h - 2 * T.pad_y - T.titulo_px - 120));
+  const fileiras = 6, pts: { x: number; y: number; a: number }[] = [];
   for (let f = 0; f < fileiras; f++) {
-    const rr = R * (.48 + .52 * f / (fileiras - 1)), n = Math.round(14 + f * 4.2);
-    for (let j = 0; j < n; j++) { const a = Math.PI * (j / (n - 1)); pts.push({ x: cx - Math.cos(a) * rr, y: cy - Math.sin(a) * rr, a }); }
+    const rr = R * (.46 + .54 * f / (fileiras - 1)), n = Math.round(12 + f * 3.6);
+    for (let j = 0; j < n; j++) { const a = Math.PI * (j / (n - 1)); pts.push({ x: R - Math.cos(a) * rr, y: R - Math.sin(a) * rr, a }); }
   }
   pts.sort((u, v) => u.a - v.a);
   const kv = p.contagem ? easeOut((c.t - c.L.t0 - .2) / (p.dur_contagem || 1.2)) : 1;
   const lim: number[] = []; let acc = 0; partes.forEach((x: any) => { acc += x.fracao / tot; lim.push(acc); });
   const corDe = (u: number) => { const i = lim.findIndex(l => u <= l + 1e-6); const k = partes[Math.max(0, i)]?.cor; return k === 'agua' ? C.agua : k === 'alerta' ? C.alerta : k === 'cinza' ? '#9AA0A6' : C.destaque_escuro; };
   const val = typeof p.valor === 'number' ? Math.round(p.valor * kv) : p.valor;
+  const fim = `${p.prefixo || ''}${typeof p.valor === 'number' ? num(p.valor, 0) : p.valor}`;
+  const colN = util * .5, npx = Math.max(T.numero_min_px, Math.min(92, colN / larguraTxt(fim, 1, .7)));
   return (
-    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, background: C.papel, boxShadow: '0 30px 70px rgba(0,0,0,.6)',
-      transform: `translateY(${(1 - c.k) * 30}px)` }}>
-      {p.titulo && <div style={{ position: 'absolute', left: 40, top: 22, fontFamily: FD(c), fontWeight: 700, fontSize: 26, letterSpacing: 2, color: C.alerta, textTransform: 'uppercase' }}>{p.titulo}</div>}
-      <svg style={{ position: 'absolute', left: 0, top: 0 }} width={b.w} height={b.h}>
-        {pts.map((q, i) => {
-          // cada parte se preenche NA PALAVRA que a cita (varredura de 0,6 s): o mostrador muda junto com a fala
-          const u = i / (pts.length - 1), pi = Math.max(0, lim.findIndex(l => u <= l + 1e-6)), ini = pi ? lim[pi - 1] : 0;
-          const tp = partes[pi]?.t, cheio = tp != null ? c.t >= tp + (u - ini) / Math.max(1e-3, lim[pi] - ini) * .6 : u <= kv;
-          return <circle key={i} cx={q.x} cy={q.y} r={R / 27} fill={cheio ? corDe(u) : 'rgba(11,15,23,.12)'} />;
-        })}
-      </svg>
-      <div style={{ position: 'absolute', left: cx + R + 30, right: 34, top: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-        <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: 92, lineHeight: 1, color: C.tinta, whiteSpace: 'nowrap' }}>{p.prefixo || ''}{typeof val === 'number' ? val.toLocaleString('pt-BR') : val}</div>
-        {p.unidade && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: 34, color: C.tinta, marginTop: 4, whiteSpace: 'nowrap' }}>{p.unidade}</div>}
-        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-          {partes.map((x: any, i: number) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: FD(c), fontWeight: 700, fontSize: 26, color: C.tinta, textTransform: 'uppercase',
-            whiteSpace: 'nowrap', opacity: aparece(c, (x.t ?? c.L.t0 + .6)) }}><i style={{ width: 18, height: 18, borderRadius: 9, background: corDe(lim[i] - 1e-3), display: 'inline-block' }} />{x.rotulo}</div>)}
+    <Cartao c={c} largura={b.w}>
+      {p.titulo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: T.titulo_px, letterSpacing: 3, textTransform: 'uppercase', color: C.alerta }}>{p.titulo}</div>}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 }}>
+        <svg width={2 * R + 12} height={R + 10} style={{ overflow: 'visible', flex: 'none' }}>
+          {pts.map((q, i) => {
+            const u = i / (pts.length - 1), pi = Math.max(0, lim.findIndex(l => u <= l + 1e-6)), ini = pi ? lim[pi - 1] : 0;
+            const tp = partes[pi]?.t, cheio = tp != null ? c.t >= tp + (u - ini) / Math.max(1e-3, lim[pi] - ini) * .6 : u <= kv;
+            return <circle key={i} cx={q.x + 6} cy={q.y + 4} r={R / 25} fill={cheio ? corDe(u) : 'rgba(11,15,23,.12)'} />;
+          })}
+        </svg>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
+          <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: npx, lineHeight: 1, whiteSpace: 'nowrap' }}>{p.prefixo || ''}{typeof val === 'number' ? val.toLocaleString('pt-BR') : val}</div>
+          {p.unidade && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: 30, marginTop: 4, whiteSpace: 'nowrap' }}>{p.unidade}</div>}
+          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+            {partes.map((x: any, i: number) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: FD(c), fontWeight: 700, fontSize: 26, textTransform: 'uppercase',
+              whiteSpace: 'nowrap', opacity: aparece(c, (x.t ?? c.L.t0 + .6)) }}><i style={{ width: 16, height: 16, borderRadius: 8, background: corDe(lim[i] - 1e-3), display: 'inline-block' }} />{x.rotulo}</div>)}
+          </div>
         </div>
+      </div>
+      <Fonte c={c} />
+    </Cartao>);
+};
+
+// editorial.cta — encerramento curto e reutilizável (canal.cta): entra só quando a revelação final já terminou
+export const CTA: React.FC<{ c: Ctx }> = ({ c }) => {
+  const p = c.L.p, b = c.L.caixa, C = cores(c), K = (c.P.tokens as any).cta || {};
+  return (
+    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div data-cartao={JSON.stringify([b.x + b.w / 2, b.y + b.h / 2])} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 26px', background: '#0B0F17',
+        border: `3px solid ${C.destaque}`, boxShadow: '0 10px 30px rgba(0,0,0,.5)', transform: `translateY(${(1 - c.k) * 16}px)`, whiteSpace: 'nowrap' }}>
+        <i style={{ width: 16, height: 16, background: C.destaque, transform: 'rotate(45deg)', display: 'inline-block' }} />
+        <span style={{ fontFamily: FT(c), fontWeight: 900, fontSize: 36, color: C.destaque, textTransform: 'uppercase' }}>{p.texto || K.texto || 'SIGA'}</span>
+        <span style={{ fontFamily: FD(c), fontWeight: 700, fontSize: 34, color: '#F4F1EA' }}>{p.handle || K.handle}</span>
       </div>
     </div>);
 };
 
 export const PRIMITIVAS: Record<string, React.FC<{ c: Ctx }>> = {
+  'editorial.cta': CTA,
   'atlas.geoPin': GeoPin,
   'editorial.statCard': StatCard, 'editorial.peopleCard': PeopleCard, 'editorial.hierarchy': Hierarchy, 'editorial.timeline': Timeline,
   'dossie.documentCard': DocumentCard, 'dossie.evidenceHighlight': Evidence, 'editorial.comparison': Comparison,

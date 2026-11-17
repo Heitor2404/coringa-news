@@ -1,0 +1,497 @@
+{
+ "formato": "atlas",
+ "canal": "coringa",
+ "video_id": "reuso-chips-china-eua",
+ "titulo": "China × EUA: a guerra dos chips",
+ "tipo_producao": "TESTE DE REUSO do motor ATLAS (sem render completo, sem TTS): mapa-múndi, conexões entre países, empresas, cadeia de fornecimento, número com fonte. Tempos de fala SINTÉTICOS.",
+ "geo": "motor4/formatos/dados/mundo.topo.json",
+ "camera": "roi",
+ "styleframes": 8,
+ "narracao": {
+  "texto": "O chip mais avançado do mundo depende de uma ilha. Taiwan fabrica mais de noventa por cento dos chips mais avançados do planeta. Mas a máquina que imprime esses circuitos vem da Holanda: só a ASML faz litografia EUV. E o projeto de boa parte desses chips nasce nos Estados Unidos. Em sete de outubro de 2022, Washington passou a exigir licença para vender chips avançados e máquinas de fabricação à China. A China consome, mas não consegue fazer tudo sozinha. É uma corrente: projeto americano, máquina holandesa, fábrica em Taiwan. Quem controla um elo, controla a guerra dos chips.",
+  "sintetica": true,
+  "fatos": [
+   {
+    "id": "f-tsmc",
+    "texto": "a TSMC, em Taiwan, produz mais de 90% dos chips mais avançados do mundo",
+    "fontes": [
+     "https://www.kcl.ac.uk/news/comment-how-taiwan-came-to-dominate-the-global-chip-industry",
+     "https://www.taiwannews.com.tw/en/news/6047753"
+    ]
+   },
+   {
+    "id": "f-asml",
+    "texto": "a holandesa ASML é a única empresa que fabrica máquinas de litografia EUV",
+    "fontes": [
+     "https://thewirechina.com/?p=24950",
+     "https://www.lightreading.com/semiconductorsnetwork-platforms/asmls-china-business-endangered-by-us-sanctions/d/d-id/781094"
+    ]
+   },
+   {
+    "id": "f-projeto",
+    "texto": "o projeto dos chips mais avançados costuma ser americano; a fabricação, taiwanesa; a ferramenta, europeia",
+    "fontes": [
+     "https://uk.marketscreener.com/news/why-do-almost-all-chips-come-from-taiwan-ce7f5dd9dc8cf32d"
+    ]
+   },
+   {
+    "id": "f-bis",
+    "texto": "em 7/10/2022 o BIS (Departamento de Comércio dos EUA) passou a exigir licença para exportar à China chips de computação avançada e equipamentos de fabricação de semicondutores",
+    "fontes": [
+     "https://www.govinfo.gov/content/pkg/FR-2023-10-25/html/2023-23049.htm",
+     "https://www.cambridge.org/core/journals/american-journal-of-international-law/article/united-states-announces-export-controls-to-restrict-chinas-ability-to-purchase-and-manufacture-highend-chips/A5295D4E8C992F024040F84EB1B471C5"
+    ]
+   }
+  ]
+ },
+ "duracao": "@fim",
+ "destaques": [
+  {
+   "fonte": "paises",
+   "nome": "Taiwan",
+   "cor": "destaque",
+   "t0": "@mundo",
+   "t1": "@mas-0.2"
+  },
+  {
+   "fonte": "paises",
+   "nome": "Netherlands",
+   "cor": "destaque",
+   "t0": "@holanda",
+   "t1": "@e-0.2"
+  },
+  {
+   "fonte": "paises",
+   "nome": "United States of America",
+   "cor": "destaque",
+   "t0": "@estados",
+   "t1": "@quem"
+  },
+  {
+   "fonte": "paises",
+   "nome": "China",
+   "cor": "destaque2",
+   "t0": "@china",
+   "t1": "@quem"
+  },
+  {
+   "fonte": "paises",
+   "nome": "Taiwan",
+   "cor": "destaque",
+   "t0": "@corrente"
+  }
+ ],
+ "rotas": [
+  {
+   "arco": [
+    [
+     5.39,
+     51.42
+    ],
+    [
+     120.97,
+     24.78
+    ]
+   ],
+   "t0": "@holanda",
+   "t1": "@asml",
+   "some": "@e",
+   "largura": 7
+  },
+  {
+   "arco": [
+    [
+     -121.96,
+     37.35
+    ],
+    [
+     120.97,
+     24.78
+    ]
+   ],
+   "t0": "@nasce",
+   "t1": "@unidos+0.8",
+   "some": "@sete",
+   "largura": 7
+  },
+  {
+   "arco": [
+    [
+     -122.4,
+     37.8
+    ],
+    [
+     121.47,
+     31.23
+    ]
+   ],
+   "t0": "@licenca",
+   "t1": "@china-0.1",
+   "ate": 0.62,
+   "cor": "destaque2",
+   "largura": 7,
+   "nota": "conexão EUA → China interrompida no meio do Pacífico: o bloqueio"
+  }
+ ],
+ "rotulos": [],
+ "clipes": [],
+ "rasters": [],
+ "beats": [
+  {
+   "id": "b1-gancho",
+   "composicao": "atlas.abertura",
+   "t": 0.0,
+   "roi": [
+    116.5,
+    19.5,
+    126.5,
+    27.5
+   ],
+   "movimento": "aproxima",
+   "prova": "o mapa já mostra a ilha; a pergunta em cima",
+   "camadas": [
+    {
+     "id": "pergunta",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "pergunta",
+     "t0": 0.2,
+     "t1": "@taiwan-0.15",
+     "p": {
+      "linhas": [
+       {
+        "texto": "O CHIP DEPENDE",
+        "t": 0.3,
+        "tamanho": 84
+       },
+       {
+        "texto": "DE UMA ILHA?",
+        "t": "@ilha",
+        "tamanho": 104,
+        "destaque": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "b2-tsmc",
+   "composicao": "atlas.painel",
+   "t": "@taiwan-0.15",
+   "roi": [
+    118.6,
+    21.6,
+    123.2,
+    25.6
+   ],
+   "prova": "o número mora sobre a própria ilha",
+   "camadas": [
+    {
+     "id": "pct",
+     "componente": "editorial.statCard",
+     "slot": "painel",
+     "t0": "@noventa",
+     "t1": "@mas-0.45",
+     "p": {
+      "titulo": "TSMC · TAIWAN",
+      "prefixo": "> ",
+      "valor": 90,
+      "unidade": "%",
+      "rotulo": "DOS CHIPS MAIS AVANÇADOS",
+      "contagem": true,
+      "fato": "f-tsmc"
+     }
+    },
+    {
+     "id": "p-tsmc",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@fabrica",
+     "t1": "@mas-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       120.97,
+       24.78
+      ],
+      "rotulo": "TSMC · Hsinchu",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "planeta",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@planeta",
+     "t1": "@mas-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "DO PLANETA INTEIRO"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b3-holanda",
+   "composicao": "atlas.protagonista",
+   "t": "@mas-0.1",
+   "roi": [
+    0,
+    16,
+    126,
+    56
+   ],
+   "transicao": 1.2,
+   "prova": "a ferramenta vem do outro lado do mundo: a conexão desenha a dependência",
+   "camadas": [
+    {
+     "id": "p-asml",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@holanda",
+     "t1": "@e-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       5.39,
+       51.42
+      ],
+      "rotulo": "ASML · Veldhoven",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "euv",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@asml",
+     "t1": "@e-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "SÓ A ASML FAZ EUV",
+      "fato": "f-asml"
+     }
+    },
+    {
+     "id": "p-tw",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@imprime",
+     "t1": "@e-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       120.97,
+       24.78
+      ],
+      "rotulo": "Taiwan",
+      "lado": "esquerda"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b4-eua",
+   "composicao": "atlas.protagonista",
+   "t": "@e-0.1",
+   "roi": [
+    114,
+    12,
+    242,
+    52
+   ],
+   "transicao": 1.2,
+   "prova": "o projeto atravessa o Pacífico",
+   "camadas": [
+    {
+     "id": "p-eua",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@nasce",
+     "t1": "@sete-1.15",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       -121.96,
+       37.35
+      ],
+      "rotulo": "Projeto · EUA",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "cerebro",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@projeto",
+     "t1": "@sete-1.15",
+     "p": {
+      "estilo": "pilula",
+      "valor": "PROJETO AMERICANO",
+      "fato": "f-projeto"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b5-licenca",
+   "composicao": "atlas.painel",
+   "t": "@sete-1.0",
+   "roi": [
+    95,
+    15,
+    200,
+    50
+   ],
+   "prova": "a data e a conexão cortada no meio",
+   "camadas": [
+    {
+     "id": "data",
+     "componente": "editorial.statCard",
+     "slot": "painel",
+     "t0": "@sete",
+     "t1": "@corrente-0.45",
+     "p": {
+      "titulo": "EUA → CHINA",
+      "valor": "7 OUT 2022",
+      "rotulo": "LICENÇA PARA VENDER CHIPS E MÁQUINAS",
+      "fato": "f-bis"
+     }
+    },
+    {
+     "id": "p-pequim",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@consome",
+     "t1": "@corrente-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       121.47,
+       31.23
+      ],
+      "rotulo": "China",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "sozinha",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@sozinha",
+     "t1": "@corrente-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "NÃO FAZ TUDO SOZINHA"
+     }
+    },
+    {
+     "id": "wash",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@washington",
+     "t1": "@consome-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "WASHINGTON EXIGE LICENÇA",
+      "fato": "f-bis"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b6-corrente",
+   "composicao": "atlas.escada",
+   "t": "@corrente-0.15",
+   "roi": [
+    118,
+    18,
+    238,
+    48
+   ],
+   "prova": "os três elos acendem na ordem da fala",
+   "camadas": [
+    {
+     "id": "elos",
+     "componente": "editorial.hierarchy",
+     "slot": "escada",
+     "t0": "@corrente+0.75",
+     "t1": "@quem-0.15",
+     "p": {
+      "escada": false,
+      "niveis": [
+       {
+        "rotulo": "Projeto",
+        "valor": "EUA"
+       },
+       {
+        "rotulo": "Máquina",
+        "valor": "NL"
+       },
+       {
+        "rotulo": "Fábrica",
+        "valor": "TW"
+       }
+      ],
+      "ativo": [
+       {
+        "i": 0,
+        "t0": "@americano"
+       },
+       {
+        "i": 1,
+        "t0": "@holandesa"
+       },
+       {
+        "i": 2,
+        "t0": "@2:fabrica"
+       }
+      ],
+      "rotulos_abaixo": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "b7-fecho",
+   "composicao": "atlas.manchete",
+   "t": "@quem-0.15",
+   "roi": [
+    118,
+    12,
+    238,
+    50
+   ],
+   "prova": "síntese sobre o mapa inteiro",
+   "camadas": [
+    {
+     "id": "fecho",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "titulo",
+     "t0": "@quem",
+     "t1": "@fim",
+     "p": {
+      "linhas": [
+       {
+        "texto": "UM ELO",
+        "t": "@elo",
+        "tamanho": 96,
+        "destaque": true
+       },
+       {
+        "texto": "CONTROLA",
+        "t": "@2:controla",
+        "tamanho": 84
+       },
+       {
+        "texto": "A GUERRA",
+        "t": "@guerra",
+        "tamanho": 84
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

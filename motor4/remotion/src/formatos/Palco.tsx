@@ -46,8 +46,13 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
     fx = mercX(ca.foco[0]); fy = mercY(ca.foco[1]); anc = ca.ancora;
     z = ca.zoom + (a.deriva ?? 0) * Math.max(0, t - a.t - Math.max(0, d));
   }
+  // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(H/512) e centro vertical dentro do mundo
+  z = Math.max(z, Math.log2(H / 512));
   const ws = 512 * 2 ** z;
-  const cx = fx - (anc[0] - W / 2) / ws, cy = fy - (anc[1] - H / 2) / ws;
+  let cy = fy - (anc[1] - H / 2) / ws;
+  cy = Math.min(Math.max(cy, H / 2 / ws), 1 - H / 2 / ws);
+  fy = cy + (anc[1] - H / 2) / ws;
+  const cx = fx - (anc[0] - W / 2) / ws;
   return { centro: [lonDe(cx), latDe(cy)], zoom: z, fx, fy, ancora: anc };
 }
 
@@ -71,6 +76,32 @@ function escalaGrafica(lat: number, zoom: number) {
   return { px: n / mpp, txt: n >= 1000 ? `${(n / 1000).toLocaleString('pt-BR')} km` : `${n} m` };
 }
 
+// anel que cruza a linha de data (Rússia/Chukotka no world-atlas): longitude contínua, senão o MapLibre desenha faixas
+// horizontais atravessando o mundo (reuso China × EUA, vista centrada no Pacífico)
+function desenrolar(fc: any) {
+  const anel = (r: number[][]) => { for (let i = 1; i < r.length; i++) { while (r[i][0] - r[i - 1][0] > 180) r[i][0] -= 360; while (r[i][0] - r[i - 1][0] < -180) r[i][0] += 360; } };
+  for (const f of fc.features || []) {
+    const g = f.geometry; if (!g) continue;
+    if (g.type === 'Polygon') g.coordinates.forEach(anel);
+    else if (g.type === 'MultiPolygon') g.coordinates.forEach((pp: number[][][]) => pp.forEach(anel));
+    else if (g.type === 'LineString') anel(g.coordinates);
+  }
+  return fc;
+}
+
+// arco de círculo máximo com longitude CONTÍNUA (cruza a linha de data sem virar MultiLineString: o Pacífico EUA → Taiwan)
+function arcoContinuo(a: number[], b: number[], n = 120) {
+  const gc = turf.greatCircle(a, b, { npoints: n }) as any;
+  const partes: number[][][] = gc.geometry.type === 'MultiLineString' ? gc.geometry.coordinates : [gc.geometry.coordinates];
+  const pts: number[][] = [];
+  for (const parte of partes) for (const p of parte) {
+    const q = [...p];
+    if (pts.length) { const ant = pts[pts.length - 1][0]; while (q[0] - ant > 180) q[0] -= 360; while (q[0] - ant < -180) q[0] += 360; }
+    if (!pts.length || Math.hypot(q[0] - pts[pts.length - 1][0], q[1] - pts[pts.length - 1][1]) > 1e-6) pts.push(q);
+  }
+  return turf.lineString(pts);
+}
+
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -81,11 +112,17 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const [h0] = useState(() => delayRender('palco: mapa'));
   const fc = useMemo(() => {
     const o = P.geo?.topo?.objects || {};
-    const fx = (k: string) => (o[k] ? (feature(P.geo!.topo, o[k]) as any) : turf.featureCollection([]));
+    const fx = (k: string) => (o[k] ? desenrolar(feature(P.geo!.topo, o[k]) as any) : turf.featureCollection([]));
     return { paises: fx('paises'), lagos: fx('lagos'), rios: fx('rios'), rota: fx('rota') };
   }, [P.geo]);
   const rota = fc.rota.features[0] as any;
   const km = rota ? turf.length(rota, { units: 'kilometers' }) : 0;
+  // rota = trajeto medido do arquivo (OSM) OU conexão entre dois pontos (arco de círculo máximo, desenho do canal —
+  // não é dado de terceiros): a mesma primitiva serve a canais, rotas comerciais e cadeias de fornecimento
+  const linhas = useMemo(() => (P.rotas || []).map((r: any) => {
+    if (r.arco) { const l = arcoContinuo(r.arco[0], r.arco[1]); return { l, km: turf.length(l, { units: 'kilometers' }) }; }
+    return { l: rota, km };
+  }), [P.rotas, rota, km]);
   const cor = (c?: string) => (c === 'agua' ? T.agua : c === 'destaque2' ? T.destaque2 : T.destaque);
   const rasters = P.rasters || [];
 
@@ -96,8 +133,12 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     rasters.forEach(r => { sources[`r_${r.nome}`] = { type: 'image', url: staticFile(r.src), coordinates: r.cantos }; });
     (P.rotas || []).forEach((_, i) => { sources[`rota_${i}`] = { type: 'geojson', data: turf.featureCollection([]) }; });
     const grat: any[] = [];
-    for (let lo = -100; lo <= -60; lo += 1) grat.push(turf.lineString([[lo, -10], [lo, 30]]));
-    for (let la = -10; la <= 30; la += 1) grat.push(turf.lineString([[-100, la], [-60, la]]));
+    // gratícula da região do arquivo (Panamá: 1°; mundo: 10°)
+    const rg = (P.geo?.meta as any)?.regiao || [-100, -10, -60, 30], passoG = rg[2] - rg[0] > 90 ? 10 : 1;
+    const [g0, g1, g2, g3] = [Math.floor(rg[0] / passoG) * passoG - passoG * 4, Math.max(-80, Math.floor(rg[1] / passoG) * passoG - passoG * 4),
+      Math.ceil(rg[2] / passoG) * passoG + passoG * 4, Math.min(80, Math.ceil(rg[3] / passoG) * passoG + passoG * 4)];
+    for (let lo = g0; lo <= g2; lo += passoG) grat.push(turf.lineString([[lo, g1], [lo, g3]]));
+    for (let la = g1; la <= g3; la += passoG) grat.push(turf.lineString([[g0, la], [g2, la]]));
     sources.grat = { type: 'geojson', data: turf.featureCollection(grat) };
     const temRaster = rasters.length > 0;
     const layers: any[] = [
@@ -157,7 +198,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       // trecho com direção: de (fração) → para (fração); a água "desce" do lago para cada mar no instante da fala
       const de = (r as any).de ?? 0, para = (r as any).para ?? 1, fim = de + (para - de) * k;
       const a0 = Math.min(de, fim), a1 = Math.max(de, fim);
-      const parte = !rota || k <= 0 || some <= 0 || a1 - a0 < 1e-4 ? turf.featureCollection([]) : turf.featureCollection([turf.lineSliceAlong(rota, km * a0, Math.max(km * a0 + .01, km * a1), { units: 'kilometers' })]);
+      const { l: lr, km: kr } = linhas[i] || { l: rota, km };
+      const parte = !lr || k <= 0 || some <= 0 || a1 - a0 < 1e-4 ? turf.featureCollection([]) : turf.featureCollection([turf.lineSliceAlong(lr, kr * a0, Math.max(kr * a0 + .01, kr * a1), { units: 'kilometers' })]);
       (map.getSource(`rota_${i}`) as ML.GeoJSONSource).setData(parte as any);
       ['rota_l_', 'rota_c_'].forEach(id => map.setPaintProperty(`${id}${i}`, 'line-opacity', some));
       map.setPaintProperty(`rota_s_${i}`, 'line-opacity', .5 * some);
@@ -176,19 +218,31 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const rots = (P.rotulos || []).filter(r => vis(t, r.t0, r.t1) > 0);
   const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
     return r.estilo === 'ponto' ? { x: p.x + 30, y: p.y - 28, w, h: 56 } : { x: p.x - w / 2, y: p.y - 24, w, h: 48 }; });
-  const pos = arrumar(caixas);
+  // rótulos do mapa dentro da área segura das plataformas (topo, margem, coluna de ícones, faixa da legenda)
+  const S = (P as any).seguro;
+  const pos = arrumar(caixas).map(q => {
+    if (!S) return q;
+    const xd = (y0: number, y1: number) => Math.min(S.dir_max, ...S.direita.filter((d: any) => y1 > d.de_y && y0 < d.ate_y).map((d: any) => d.x));
+    const y = Math.min(Math.max(q.y, S.topo), S.base - q.h);
+    const x = Math.min(Math.max(q.x, S.esq), xd(y, y + q.h) - q.w);
+    return { ...q, x, y };
+  });
   // território do beat em tela (para a medição nos quadros renderizados: nada de camada por cima)
   const roi = ka.roi && map ? (() => { const a = proj([ka.roi![0], ka.roi![3]]), b = proj([ka.roi![2], ka.roi![1]]); return { x: a.x, y: a.y, w: b.x - a.x, h: b.y - a.y }; })() : null;
   const esc = escalaGrafica(c.centro[1], c.zoom);
   // créditos cartográficos AUTOMÁTICOS: só das camadas visíveis neste quadro (manifesto motor4/formatos/dados/atribuicoes.json)
   const CR = P.creditos?.datasets || {};
-  const rotaVis = (P.rotas || []).some(r => t >= r.t0 && (r.some == null || t < r.some + .4));
+  const rotaVis = (P.rotas || []).some((r: any) => !r.arco && t >= r.t0 && (r.some == null || t < r.some + .4));   // só o trajeto OSM exige ODbL
   const vis_ds = new Set<string>(['ne_vetor']);
   rasters.forEach(r => { if (rampa(c.zoom, r.de, r.ate) > .02 && (r as any).dataset) { vis_ds.add((r as any).dataset); if ((r as any).dataset === 's2_2016') vis_ds.add('terrain_tiles'); } });
   if (rotaVis) vis_ds.add('osm_rota');
-  const atrib = Object.keys(CR).length ? [...new Set([...vis_ds].filter(d => CR[d]).map(d => CR[d]))]
+  // obrigatórias (licença) sempre; cortesia (domínio público) só se couber em 2 linhas da faixa própria
+  const cx0 = P.creditos?.caixa || [72, 1174, 936, 46], pxc = (P.creditos as any)?.px || 18, lnc = (P.creditos as any)?.linha || 22;
+  const cabe = (xs: string[]) => xs.join(' · ').length * pxc * .6 <= Math.floor(cx0[3] / lnc) * (cx0[2] - 8) * .97;
+  const obrig = new Set<string>((P.creditos as any)?.obrigatorias || []);
+  let atrib = Object.keys(CR).length ? [...new Set([...vis_ds].filter(d => CR[d] && obrig.has(d)).map(d => CR[d]))]
     : [...new Set([...rasters.filter(r => rampa(c.zoom, r.de, r.ate) > .02).map(r => r.atribuicao), ...(P.geo?.meta?.atribuicao || [])])];
-  const cx0 = P.creditos?.caixa || [72, 1174, 936, 46];
+  for (const d of [...vis_ds].filter(d => CR[d] && !obrig.has(d))) { const tent = [CR[d], ...atrib.filter(x => x !== CR[d])]; if (!atrib.includes(CR[d]) && cabe(tent)) atrib = tent; }
   return (
     <div style={{ position: 'absolute', inset: 0, opacity: opac }}>
       <div ref={ref} style={{ position: 'absolute', width: W, height: H, filter: desfoque > .05 ? `blur(${desfoque}px)` : undefined }} />
@@ -202,9 +256,9 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
           <div style={{ position: 'absolute', right: 0, top: -28, fontFamily: P.tokens.fontes.dado, fontWeight: 700, fontSize: 20, color: '#fff', textShadow: '0 1px 6px #000', whiteSpace: 'nowrap' }}>{esc.txt}</div>
         </div>)}
       {/* atribuição obrigatória (CC BY / ODbL): inteira, legível, faixa própria acima da legenda; muda com as camadas visíveis */}
-      <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], minHeight: cx0[3] - 12,
-        fontFamily: P.tokens.fontes.dado, fontSize: 20, lineHeight: '24px', color: 'rgba(255,255,255,.86)', textShadow: '0 1px 4px #000',
-        background: 'linear-gradient(90deg, rgba(3,6,12,.55), rgba(3,6,12,.25))', padding: '6px 10px', borderRadius: 6 }}>{atrib.join(' · ')}</div>
+      <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
+        display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
+        textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>
@@ -250,15 +304,17 @@ export const PalcoTecnico: React.FC<{ P: FormatoProps; opac: number }> = ({ P, o
     <div style={{ position: 'absolute', inset: 0, opacity: opac, background: `radial-gradient(ellipse at 50% 42%, ${T.fundo2 || '#0B1A2A'} 0%, ${T.fundo} 72%)` }}>
       <svg width={W} height={H} style={{ position: 'absolute', inset: 0 }}>
         <defs>
-          <pattern id="grade" width={esp} height={esp} patternUnits="userSpaceOnUse"><path d={`M${esp} 0H0V${esp}`} fill="none" stroke={T.grade} strokeWidth="1.6" /></pattern>
+          <pattern id="grade" width={esp / 5} height={esp / 5} patternUnits="userSpaceOnUse"><path d={`M${esp / 5} 0H0V${esp / 5}`} fill="none" stroke={T.grade} strokeWidth="1" /></pattern>
+          <pattern id="grade5" width={esp} height={esp} patternUnits="userSpaceOnUse"><path d={`M${esp} 0H0V${esp}`} fill="none" stroke={T.grade_maior || T.grade} strokeWidth="2" /></pattern>
           <filter id="brilho"><feGaussianBlur stdDeviation="6" /></filter>
         </defs>
         <rect width={W} height={H} fill="url(#grade)" />
+        <rect width={W} height={H} fill="url(#grade5)" />
         {d && <>
           <path d={d.viz} fill="rgba(255,255,255,.025)" stroke={T.linha} strokeOpacity={.18} strokeWidth={2} />
           <path d={d.pais} fill={T.terra || '#0E2236'} stroke={T.linha} strokeOpacity={.35} strokeWidth={10} filter="url(#brilho)" />
           <path d={d.pais} fill={T.terra || '#0E2236'} stroke={T.linha} strokeOpacity={.85} strokeWidth={3} />
-          <path d={d.lagos} fill="rgba(127,227,240,.14)" stroke={T.linha} strokeOpacity={.7} strokeWidth={2.5} />
+          <path d={d.lagos} fill={T.agua_fundo || 'rgba(127,227,240,.14)'} fillOpacity={.55} stroke={T.agua_topo || T.linha} strokeOpacity={.9} strokeWidth={2.5} />
           <path d={d.rota} fill="none" stroke={T.linha} strokeOpacity={.55} strokeWidth={3} strokeDasharray="10 8" />
         </>}
       </svg>

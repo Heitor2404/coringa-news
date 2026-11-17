@@ -1,0 +1,462 @@
+{
+ "formato": "atlas",
+ "canal": "coringa",
+ "video_id": "reuso-historia-panama-1880-1914",
+ "titulo": "34 anos: do corte francês ao navio Ancon",
+ "tipo_producao": "TESTE DE REUSO do motor ATLAS (sem render completo, sem TTS): história com mapa, fotos de época, datas e eventos. Tempos de fala SINTÉTICOS. Reusa acervo comprovado (sem pesquisa nova).",
+ "geo": "motor4/formatos/dados/panama.topo.json",
+ "camera": "roi",
+ "styleframes": 8,
+ "narracao": {
+  "texto": "Em 1880 a França começou a abrir um canal no Panamá. O plano era cortar o istmo ao nível do mar. Fracassou: faltou dinheiro e sobraram doenças. As ações da companhia viraram papel. Em 1904 os Estados Unidos assumiram a obra e mudaram o plano: um lago no alto e eclusas nas pontas. Em julho de 1913 as comportas de Gatún já seguravam a água. E em 15 de agosto de 1914 o navio Ancon fez a primeira travessia oficial. Trinta e quatro anos entre o primeiro corte e o primeiro navio.",
+  "sintetica": true,
+  "fatos": [
+   {
+    "id": "f10",
+    "texto": "A primeira tentativa de construir o canal foi francesa, a partir de 1880, e fracassou por problemas financeiros e doenças.",
+    "fontes": [
+     "https://www.embassyofpanama.org/panama-canal"
+    ]
+   },
+   {
+    "id": "f-1904",
+    "texto": "Os EUA assumiram a obra em 1904 e adotaram o projeto com lago elevado e eclusas.",
+    "fontes": [
+     "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"
+    ]
+   },
+   {
+    "id": "f-1913",
+    "texto": "Comportas do mar de Gatún sob pressão, 18 de julho de 1913 (foto de época).",
+    "fontes": [
+     "https://www.loc.gov/item/2016870857/"
+    ]
+   },
+   {
+    "id": "f9",
+    "texto": "O canal foi inaugurado em 15 de agosto de 1914, com a travessia do navio SS Ancon.",
+    "fontes": [
+     "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"
+    ]
+   },
+   {
+    "id": "f-1889",
+    "texto": "A companhia francesa do canal faliu em 1889.",
+    "fontes": [
+     "https://www.britannica.com/story/timeline-and-map-of-the-panama-canal"
+    ]
+   }
+  ]
+ },
+ "duracao": "@fim",
+ "destaques": [
+  {
+   "fonte": "paises",
+   "nome": "Panama",
+   "cor": "destaque",
+   "t0": "@panamá",
+   "t1": "@plano-0.2"
+  },
+  {
+   "fonte": "lagos",
+   "nome": "Lago Gatun",
+   "cor": "destaque2",
+   "t0": "@lago",
+   "t1": "@julho"
+  },
+  {
+   "fonte": "lagos",
+   "nome": "Lago Gatun",
+   "cor": "agua",
+   "t0": "@água",
+   "t1": "@agosto"
+  }
+ ],
+ "rotas": [
+  {
+   "t0": "@istmo",
+   "t1": "@mar",
+   "some": "@fracassou",
+   "nota": "o corte francês, previsto ao nível do mar"
+  },
+  {
+   "t0": "@trinta",
+   "t1": "@2:primeiro",
+   "nota": "o canal inteiro no fecho"
+  }
+ ],
+ "rotulos": [
+  {
+   "nome": "Mar do Caribe",
+   "lonlat": [
+    -80.2,
+    10.6
+   ],
+   "t0": "@plano",
+   "t1": "@fracassou",
+   "estilo": "oceano"
+  },
+  {
+   "nome": "Oceano Pacífico",
+   "lonlat": [
+    -80.4,
+    7.35
+   ],
+   "t0": "@plano",
+   "t1": "@fracassou",
+   "estilo": "oceano"
+  }
+ ],
+ "clipes": [],
+ "rasters": [
+  {
+   "nome": "ne2_istmo_panama"
+  },
+  {
+   "nome": "s2_panama_canal",
+   "de": 8.2,
+   "ajuste": {
+    "brilho_max": 1.0,
+    "contraste": 0.12,
+    "saturacao": 0.1
+   }
+  },
+  {
+   "nome": "s2_miraflores_eclusas",
+   "de": 12.1,
+   "ajuste": {
+    "contraste": 0.12,
+    "saturacao": 0.1
+   }
+  }
+ ],
+ "beats": [
+  {
+   "id": "b1-gancho",
+   "composicao": "atlas.abertura",
+   "t": 0.0,
+   "roi": [
+    -80.25,
+    8.75,
+    -79.35,
+    9.5
+   ],
+   "movimento": "aproxima",
+   "prova": "a escavadeira francesa no próprio istmo, com a data",
+   "camadas": [
+    {
+     "id": "pergunta",
+     "componente": "editorial.titleOrPayoff",
+     "slot": "pergunta",
+     "t0": 0.2,
+     "t1": "@plano-0.15",
+     "p": {
+      "linhas": [
+       {
+        "texto": "1880",
+        "t": 0.3,
+        "tamanho": 104,
+        "destaque": true
+       },
+       {
+        "texto": "A FRANÇA CAVA",
+        "t": "@frança",
+        "tamanho": 84
+       }
+      ]
+     }
+    },
+    {
+     "id": "escavadeira",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": 0.4,
+     "t1": "@plano-0.15",
+     "p": {
+      "tipo": "foto",
+      "papel": "protagonista",
+      "desloc": "auto",
+      "lonlat": [
+       -79.66,
+       9.07
+      ],
+      "rotulo": "Corte de Culebra",
+      "asset": "commons:NSRW_Panama_Canal_French_Excavator.jpg",
+      "meta": "NSRW · DOMÍNIO PÚBLICO"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b2-nivel",
+   "composicao": "atlas.protagonista",
+   "t": "@plano-0.1",
+   "roi": [
+    -81.3,
+    7.9,
+    -78.3,
+    10.1
+   ],
+   "transicao": 1.0,
+   "prova": "o corte reto de mar a mar que a França queria",
+   "camadas": [
+    {
+     "id": "nivel",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@nível",
+     "t1": "@fracassou-0.15",
+     "p": {
+      "estilo": "pilula",
+      "valor": "AO NÍVEL DO MAR · SEM ECLUSAS"
+     }
+    }
+   ],
+   "zoom_max": 6.3
+  },
+  {
+   "id": "b3-falencia",
+   "composicao": "atlas.protagonista",
+   "t": "@fracassou-0.15",
+   "roi": [
+    -80.25,
+    8.75,
+    -79.35,
+    9.5
+   ],
+   "prova": "o motivo e o destino da companhia, sobre o istmo que ficou por cortar",
+   "camadas": [
+    {
+     "id": "motivo",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@faltou",
+     "t1": "@1904-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "SEM DINHEIRO · COM DOENÇAS",
+      "fato": "f10"
+     }
+    },
+    {
+     "id": "papel",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@ações",
+     "t1": "@1904-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "1889 · A COMPANHIA QUEBRA",
+      "fato": "f-1889"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b4-eua",
+   "composicao": "atlas.protagonista",
+   "t": "@1904-0.15",
+   "roi": [
+    -80.05,
+    8.85,
+    -79.45,
+    9.4
+   ],
+   "movimento": "aproxima",
+   "prova": "o plano novo desenhado no território: lago no alto, eclusas nas pontas",
+   "camadas": [
+    {
+     "id": "ano1904",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@estados+0.15",
+     "t1": "@julho-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "1904 · OS EUA ASSUMEM",
+      "fato": "f-1904"
+     }
+    },
+    {
+     "id": "p-gatun",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@eclusas",
+     "t1": "@julho-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       -79.92,
+       9.27
+      ],
+      "rotulo": "Gatún",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "p-mira",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@pontas",
+     "t1": "@julho-0.45",
+     "p": {
+      "tipo": "local",
+      "lonlat": [
+       -79.592,
+       8.997
+      ],
+      "rotulo": "Miraflores",
+      "lado": "direita"
+     }
+    },
+    {
+     "id": "novo",
+     "componente": "editorial.statCard",
+     "slot": "nota",
+     "t0": "@mudaram",
+     "t1": "@julho-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "LAGO NO ALTO + ECLUSAS"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b5-1913",
+   "composicao": "atlas.protagonista",
+   "t": "@julho-0.15",
+   "roi": [
+    -80.05,
+    9.15,
+    -79.8,
+    9.38
+   ],
+   "prova": "a foto de 1913 presa nas eclusas de Gatún",
+   "camadas": [
+    {
+     "id": "comportas",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@comportas",
+     "t1": "@agosto-0.45",
+     "p": {
+      "tipo": "foto",
+      "papel": "protagonista",
+      "desloc": "auto",
+      "lonlat": [
+       -79.92,
+       9.27
+      ],
+      "rotulo": "Gatún · julho 1913",
+      "asset": "commons:General_view_from_temporary_tower_on_north_end_of_approach_wall._Looking_south._Sea_gates_under_pressure%2C_July_18%2C_1913_LCCN2016870857.jpg",
+      "meta": "HARRIS & EWING · DOMÍNIO PÚBLICO"
+     }
+    },
+    {
+     "id": "ano1913",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@julho",
+     "t1": "@agosto-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "JULHO DE 1913",
+      "fato": "f-1913"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b6-ancon",
+   "composicao": "atlas.protagonista",
+   "t": "@agosto-0.15",
+   "roi": [
+    -79.75,
+    8.85,
+    -79.45,
+    9.1
+   ],
+   "prova": "o primeiro navio, no lugar onde passou",
+   "camadas": [
+    {
+     "id": "ancon",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": "@ancon-0.1",
+     "t1": "@trinta-0.45",
+     "p": {
+      "tipo": "foto",
+      "papel": "protagonista",
+      "desloc": "auto",
+      "lonlat": [
+       -79.592,
+       8.997
+      ],
+      "rotulo": "SS Ancon · Miraflores",
+      "asset": "commons:SS_Ancon_entering_west_chamber_cph.3b17471u.jpg",
+      "meta": "LIBRARY OF CONGRESS · DOMÍNIO PÚBLICO"
+     }
+    },
+    {
+     "id": "data1914",
+     "componente": "editorial.statCard",
+     "slot": "etiqueta",
+     "t0": "@agosto",
+     "t1": "@trinta-0.45",
+     "p": {
+      "estilo": "pilula",
+      "valor": "15 AGO 1914",
+      "fato": "f9"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b7-regua",
+   "composicao": "atlas.escada",
+   "t": "@trinta-0.15",
+   "roi": [
+    -81.3,
+    7.9,
+    -78.3,
+    10.1
+   ],
+   "prova": "a régua dos 34 anos sobre o canal inteiro",
+   "camadas": [
+    {
+     "id": "regua",
+     "componente": "editorial.timeline",
+     "slot": "escada",
+     "t0": "@quatro",
+     "t1": "@fim",
+     "p": {
+      "marcos": [
+       {
+        "data": "1880",
+        "texto": "França",
+        "t": "@quatro"
+       },
+       {
+        "data": "1904",
+        "texto": "EUA",
+        "t": "@anos"
+       },
+       {
+        "data": "1913",
+        "texto": "Comportas",
+        "t": "@entre"
+       },
+       {
+        "data": "1914",
+        "texto": "Ancon",
+        "t": "@2:primeiro"
+       }
+      ]
+     }
+    }
+   ],
+   "zoom_max": 6.3
+  }
+ ]
+}

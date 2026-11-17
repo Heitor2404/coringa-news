@@ -31,7 +31,7 @@
    },
    {
     "id": "f-degraus",
-    "texto": "3 eclusas para subir e 3 para descer por travessia; inaugurado em 1914; lago Gatún ~85 pés (≈ 26 m) acima do mar",
+    "texto": "3 eclusas para subir e 3 para descer por travessia; inaugurado em 1914; lago Gatún ~85 pés (≈ 26 m) acima do mar; ~51 milhas (≈ 82 km) do Atlântico ao Pacífico",
     "fontes": [
      "https://www.uflib.ufl.edu/spec/pcm/InterestingFacts.pdf",
      "https://Wikipedia.com/wiki/Panama_Canal"
@@ -69,6 +69,13 @@
    "nome": "Panama",
    "cor": "destaque",
    "t0": "@4:por+0.3"
+  },
+  {
+   "fonte": "lagos",
+   "nome": "Lago Gatun",
+   "cor": "destaque2",
+   "t0": "@trabalho",
+   "nota": "payoff: a água do lago no alto é quem faz o trabalho (gravidade)"
   }
  ],
  "rotas": [
@@ -200,6 +207,37 @@
  ],
  "clipes": [
   {
+   "t0": 0.0,
+   "t1": "@sobe-0.05",
+   "componente": "mecanismo.eclusa",
+   "fatos": [
+    "f-camara"
+   ],
+   "papel": "gancho",
+   "fonte": {
+    "dur": 6.0,
+    "ini": 2.2,
+    "nota": "trecho da animação aprovada em que a água enche a câmara e o navio sobe junto (sem acelerar a física)"
+   },
+   "params": {
+    "sentido": "subir",
+    "desnivel_m": 9,
+    "lago": "LAGO GATÚN",
+    "mar": "NÍVEL BAIXO",
+    "degraus": 1,
+    "etapas": [
+     "Navio de milhares de toneladas",
+     "A água entra e o navio sobe",
+     "Níveis iguais: o navio segue"
+    ],
+    "tempos": [
+     0,
+     1.0,
+     3.6
+    ]
+   }
+  },
+  {
    "t0": 31.49,
    "t1": 40.91,
    "componente": "mecanismo.eclusa",
@@ -231,7 +269,7 @@
   {
    "id": "b1-gancho",
    "composicao": "atlas.abertura",
-   "t": 0,
+   "t": "@sobe-0.05",
    "roi": [
     -83.2,
     6.9,
@@ -239,13 +277,13 @@
     9.9
    ],
    "zoom_max": 6.15,
-   "prova": "mapa desde o 1º quadro, país destacado, prova real presa em Miraflores e a pergunta acima",
+   "prova": "depois do navio subindo na eclusa (gancho em 0–2,4 s): o território, a pergunta e a prova real protagonista",
    "camadas": [
     {
      "id": "pino-mira",
      "componente": "atlas.geoPin",
      "slot": "geo",
-     "t0": 0.4,
+     "t0": "@sobe",
      "t1": "@entre-0.15",
      "p": {
       "tipo": "foto",
@@ -255,12 +293,9 @@
       ],
       "rotulo": "Eclusa de Miraflores",
       "asset": "commons:Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg",
-      "desloc": [
-       170,
-       -150
-      ],
-      "raio": 126,
-      "meta": "FOTO: ADAM JONES · CC BY-SA 2.0"
+      "meta": "FOTO: ADAM JONES · CC BY-SA 2.0",
+      "papel": "protagonista",
+      "desloc": "auto"
      }
     },
     {
@@ -328,7 +363,8 @@
       "unidade": "KM",
       "rotulo": "DE MAR A MAR",
       "contagem": true,
-      "dur_contagem": 1.0
+      "dur_contagem": 1.0,
+      "fato": "f-degraus"
      }
     }
    ]
@@ -384,7 +420,8 @@
       "unidade": "m",
       "rotulo": "acima do nível do mar",
       "contagem": true,
-      "dur_contagem": 1.4
+      "dur_contagem": 1.4,
+      "fato": "f-degraus"
      }
     },
     {
@@ -417,7 +454,7 @@
      "id": "perfil",
      "componente": "editorial.hierarchy",
      "slot": "escada",
-     "t0": "@subida",
+     "t0": "@subida+0.75",
      "t1": "@funciona-0.1",
      "p": {
       "escada": false,
@@ -646,7 +683,8 @@
       "unidade": "mil m³",
       "rotulo": "de água para encher",
       "contagem": true,
-      "dur_contagem": 1.2
+      "dur_contagem": 1.2,
+      "fato": "f-camara"
      }
     },
     {
@@ -692,16 +730,13 @@
       ],
       "rotulo": "Navio na eclusa",
       "asset": "commons:Locomotives_Tow_Container_Ship_through_Miraflores_Locks_-_Panama_Canal.jpg",
-      "desloc": [
-       -150,
-       -250
-      ],
-      "raio": 126,
       "foco": [
        0.55,
        0.5
       ],
-      "meta": "FOTO: ADAM JONES · CC BY-SA 2.0"
+      "meta": "FOTO: ADAM JONES · CC BY-SA 2.0",
+      "papel": "secundario",
+      "desloc": "auto"
      }
     },
     {
@@ -768,7 +803,8 @@
         "cor": "escuro",
         "t": "@2:metade"
        }
-      ]
+      ],
+      "fato": "f-travessia"
      }
     },
     {
@@ -851,11 +887,17 @@
    }
   }
  ],
- "antes": ".github/v4/material/antes_atlas_44122592315.bin",
+ "antes": ".github/v4/material/antes_atlas_44155276352.bin",
  "antes_ritmo": {
+  "execucao": "44155276352",
+  "maior_trecho_parado_s": 5,
+  "segundos_parados": 20,
   "segundos": 79,
-  "segundos_parados": 4,
-  "maior_trecho_parado_s": 2
+  "sem_camera": {
+   "maior_trecho_parado_s": 4,
+   "segundos_parados": 18
+  }
  },
- "styleframes": 12
+ "styleframes": 12,
+ "cta": true
 }

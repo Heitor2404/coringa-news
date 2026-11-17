@@ -11,7 +11,9 @@
    "arquivos": [
     "raster/ne2_istmo_panama.json"
    ],
-   "aparece": "raster visível"
+   "aparece": "raster visível",
+   "obrigatoria": false,
+   "nota_credito": "domínio público: crédito de cortesia, mostrado só quando cabe na faixa"
   },
   "s2_2016": {
    "nome": "EOxCloudless / Sentinel-2 cloudless 2016",
@@ -25,7 +27,8 @@
     "raster/s2_miraflores_eclusas.json",
     "raster/s2_gatun_eclusas.json"
    ],
-   "aparece": "raster visível"
+   "aparece": "raster visível",
+   "obrigatoria": true
   },
   "terrain_tiles": {
    "nome": "Terrain Tiles (AWS Open Data; SRTM, GMTED2010, ETOPO1) — só o sombreado do relevo sob o satélite",
@@ -36,7 +39,8 @@
    "atribuicao_exigida": null,
    "arquivos": [],
    "aparece": "junto com o satélite",
-   "nota": "para o Panamá só entram SRTM, GMTED2010 e ETOPO1 (domínio público): sem crédito obrigatório na tela; registrado aqui e no .json do raster"
+   "nota": "para o Panamá só entram SRTM, GMTED2010 e ETOPO1 (domínio público): sem crédito obrigatório na tela; registrado aqui e no .json do raster",
+   "obrigatoria": false
   },
   "ne_vetor": {
    "nome": "Natural Earth (países, lagos, rios)",
@@ -48,7 +52,9 @@
    "arquivos": [
     "panama.topo.json"
    ],
-   "aparece": "sempre que o mapa aparece (fronteiras/destaques)"
+   "aparece": "sempre que o mapa aparece (fronteiras/destaques)",
+   "obrigatoria": false,
+   "nota_credito": "domínio público: crédito de cortesia, mostrado só quando cabe na faixa"
   },
   "osm_rota": {
    "nome": "Eixo do Canal do Panamá (OpenStreetMap)",
@@ -60,7 +66,8 @@
    "arquivos": [
     "panama.topo.json"
    ],
-   "aparece": "rota visível"
+   "aparece": "rota visível",
+   "obrigatoria": true
   }
  },
  "proibidos": {

@@ -31,13 +31,32 @@
    "destaque2": "#3FD0E0"
   },
   "tecnico": {
-   "fundo": "#06131A",
-   "linha": "#7FE3F0",
-   "grade": "rgba(127,227,240,.07)",
-   "terra": "#0E2236",
-   "fundo2": "#0B1A2A",
+   "_nota": "TEMPLATE TÉCNICO do Coringa — usado pelo palco técnico dos formatos E pelos clipes de mecanismo (params.tema). Fundo grafite-azulado, grade fina + grade maior (170 px ≈ referência), estrutura em ardósia hachurada, água no azul do canal, MOVIMENTO sempre em amarelo, rótulos em papel (mesmo padrão dos cartões).",
+   "fundo": "#070B14",
+   "fundo2": "#0E1828",
+   "grade": "rgba(170,195,230,.055)",
+   "grade_maior": "rgba(170,195,230,.12)",
    "grade_px": 170,
-   "nota_ref": "grade ~169 px e planta azul-marinho medidas na referência (atlas_parametros); tons próprios do Coringa"
+   "linha": "#CFE0F5",
+   "terra": "#0F1C2E",
+   "agua_topo": "#5AB4F0",
+   "agua_fundo": "#1C5A94",
+   "superficie": "#D7EEFF",
+   "jato": "#EAF6FF",
+   "concreto": "#2A3446",
+   "concreto_hachura": "#334058",
+   "rocha": "#121A27",
+   "rocha_ponto": "#192333",
+   "tunel": "#04070D",
+   "estrutura": "#9AAAC0",
+   "torre": "#2F3B50",
+   "fluxo": "#FFD21F",
+   "etapa": "#FFD21F",
+   "progresso": "rgba(255,210,31,.22)",
+   "progresso_on": "#FFD21F",
+   "rotulo_fundo": "rgba(242,237,227,.96)",
+   "rotulo_texto": "#0B0F17",
+   "degrau": "90,180,240"
   },
   "mesa": {
    "fundo": "#0A0806",
@@ -67,5 +86,39 @@
  "som": {
   "lufs": -14,
   "true_peak": -1.0
+ },
+ "cartao": {
+  "_nota": "design system ÚNICO dos cartões de dado (todos os episódios): sem inclinação, centralizado no slot, medidas por token, número que se ajusta ao espaço",
+  "pad_x": 40,
+  "pad_y": 26,
+  "borda_topo": 10,
+  "titulo_px": 26,
+  "numero_px": 112,
+  "numero_min_px": 60,
+  "unidade_razao": 0.46,
+  "rotulo_px": 32,
+  "fonte_px": 18,
+  "largura_min": 520,
+  "entra_px": 24,
+  "sombra": "0 18px 50px rgba(0,0,0,.5)"
+ },
+ "pino": {
+  "_nota": "escala por papel narrativo",
+  "protagonista": {
+   "raio": 210,
+   "rotulo_px": 40,
+   "anel": 8
+  },
+  "secundario": {
+   "raio": 118,
+   "rotulo_px": 30,
+   "anel": 6
+  }
+ },
+ "cta": {
+  "texto": "SIGA",
+  "handle": "@coringa.explica",
+  "min_s": 1.2,
+  "max_s": 2.2
  }
 }

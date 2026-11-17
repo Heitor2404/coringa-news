@@ -1931,6 +1931,237 @@
     "formatos",
     "ritmo"
    ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "prévia 44155276352 · brief ATLAS consolidação 17/11",
+   "id": "ERR-076",
+   "titulo": "Legenda fora do tempo da fala",
+   "sintoma": "Palavras marcadas no silêncio (ex.: 'OCEANOS' depois do fim da frase, 'O CANAL' antes de recomeçar); 22/223 palavras sem fala e um grupo de 0,26 s ('CERCA').",
+   "causa_raiz": "Marcas de tempo do TTS/Whisper começam a palavra seguinte DENTRO da pausa; agrupamento por @remotion/captions sem duração mínima.",
+   "arquivos": [
+    "src/v4/formatos/legenda_sync.py",
+    "src/v4/formatos/produzir.py",
+    "motor4/remotion/src/Camada.tsx"
+   ],
+   "correcao": "realinhar() usa cada pausa real (≥150 ms) como âncora e reescalona entre âncoras; grupos com mínimo 0,35 s (mesma regra em Python e TSX); conferir() no preflight e portão legenda_ok no MP4.",
+   "testes": [
+    "tests/test_formatos.py::test_legenda_realinhada_pelas_pausas_reais_do_audio",
+    "tests/test_formatos.py::test_legenda_sem_troca_brusca"
+   ],
+   "tags": [
+    "legenda",
+    "audio",
+    "atlas"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "prévia 44155276352 · brief ATLAS consolidação 17/11",
+   "id": "ERR-077",
+   "titulo": "Créditos cartográficos sobre a legenda",
+   "sintoma": "Atribuição do mapa praticamente sobre a legenda; slots ignoravam a interface das plataformas.",
+   "causa_raiz": "Uma só zona inferior compartilhada; margens fixas sem perfil de plataforma.",
+   "arquivos": [
+    "src/v4/formatos/layout.py",
+    "src/v4/formatos/plataformas.json",
+    "src/v4/formatos/plano.py",
+    "motor4/remotion/src/formatos/Palco.tsx",
+    "motor4/remotion/src/Camada.tsx"
+   ],
+   "correcao": "faixas próprias (conteúdo → legenda → créditos) dentro da UNIÃO das áreas seguras TikTok/Reels/Shorts; slots viram intenções resolvidas pelo perfil; legenda limitada à altura da faixa.",
+   "testes": [
+    "tests/test_formatos.py::test_faixas_proprias_legenda_creditos_conteudo",
+    "tests/test_formatos.py::test_quadro_contra_interface_simulada_das_plataformas"
+   ],
+   "tags": [
+    "layout",
+    "plataformas",
+    "creditos"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "prévia 44155276352 · brief ATLAS consolidação 17/11",
+   "id": "ERR-078",
+   "titulo": "Medição da legenda nunca aconteceu",
+   "sintoma": "Validação nos quadros não via a caixa real da legenda (camada=null em todos os quadros).",
+   "causa_raiz": "renderStill usa as props resolvidas na selectComposition; medir:true só era passado no renderStill.",
+   "arquivos": [
+    "motor4/remotion/medir.mjs"
+   ],
+   "correcao": "medir:true já na seleção da composição Camada.",
+   "testes": [
+    "tests/test_formatos.py::test_medicao_da_legenda_pede_medir_na_selecao_da_composicao"
+   ],
+   "tags": [
+    "fiscal",
+    "medicao"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "prévia 44155276352 · brief ATLAS consolidação 17/11",
+   "id": "ERR-079",
+   "titulo": "Foto protagonista pequena e pinos fora da área segura",
+   "sintoma": "Foto circular do navio pequena no gancho; rótulo de pino sob a coluna de ícones; validador aceitava x até 1060.",
+   "causa_raiz": "Escala única para qualquer foto; deslocamento manual por episódio; regra F-PINO-FORA com margens da tela, não das plataformas.",
+   "arquivos": [
+    "src/v4/formatos/plano.py",
+    "motor4/remotion/src/formatos/Primitivas.tsx",
+    "src/v4/formatos/canais/coringa.json"
+   ],
+   "correcao": "papel protagonista/secundário (tokens), deslocamento automático em 14 direções, encolhe até 75 % só se nada couber, rótulo quebra em 2 linhas; rótulo de texto troca de lado; F-PINO-FORA usa a área segura.",
+   "testes": [
+    "tests/test_formatos.py::test_pino_protagonista_cabe_na_area_segura_e_encolhe_se_preciso",
+    "tests/test_formatos.py::test_rotulo_de_pino_troca_de_lado_se_sair_da_area_segura"
+   ],
+   "tags": [
+    "pinos",
+    "fotos",
+    "plataformas"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "prévia 44155276352 · brief ATLAS consolidação 17/11",
+   "id": "ERR-080",
+   "titulo": "Gancho sem prova visual e amostragem curta do fiscal",
+   "sintoma": "Abertura explicava geografia antes de mostrar o navio subindo; fiscal olhava só ~10 quadros e deixou passar colisões e textos pequenos.",
+   "causa_raiz": "Sem regra de gancho; escolher() pegava um quadro por composição.",
+   "arquivos": [
+    "src/v4/formatos/plano.py",
+    "scripts/formatos_validar.py",
+    "src/v4/formatos/planos/atlas_panama.json"
+   ],
+   "correcao": "F-GANCHO (prova forte ≤1,5 s e mudança antes de 3 s); clipe aprovado da eclusa em 0–2,4 s; amostragem ampliada (gancho, transições, a cada 2,5 s) + cartões alinhados + atribuição presente.",
+   "testes": [
+    "tests/test_formatos.py::test_gancho_exige_prova_visual_forte_no_inicio",
+    "tests/test_formatos.py::test_amostragem_ampliada_cobre_gancho_transicoes_e_o_meio_dos_beats",
+    "tests/test_formatos.py::test_quadro_cartao_desalinhado_inclinado_e_legenda_fora_da_faixa",
+    "tests/test_formatos.py::test_atribuicao_obrigatoria_visivel_com_o_mapa"
+   ],
+   "tags": [
+    "gancho",
+    "fiscal",
+    "atlas"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação (reuso)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste de reuso China × EUA / história 1880–1914 (scripts/formatos_reuso.py)",
+   "id": "ERR-081",
+   "titulo": "Pinos descolados no mapa-múndi",
+   "sintoma": "No reuso China × EUA os pinos ficavam 37–340 px fora do ponto do mapa; arco EUA → Taiwan derrubava o render.",
+   "causa_raiz": "MapLibre trava zoom mínimo e centro vertical (mundo menor que a tela) e o plano não; vista centrada no Pacífico usa outra cópia do mundo; greatCircle vira MultiLineString na linha de data.",
+   "arquivos": [
+    "src/v4/formatos/plano.py",
+    "motor4/remotion/src/formatos/Palco.tsx",
+    "motor4/remotion/src/formatos/Primitivas.tsx",
+    "motor4/remotion/src/formatos/Formato.tsx"
+   ],
+   "correcao": "_restringir() idêntico em Python e TS; projeção na cópia do mundo mais próxima; arco com longitude contínua; medição compara na mesma cópia.",
+   "testes": [
+    "tests/test_formatos.py::test_camera_respeita_o_limite_do_maplibre_e_a_copia_do_mundo"
+   ],
+   "tags": [
+    "mapa",
+    "camera",
+    "reuso"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação (reuso)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste de reuso China × EUA / história 1880–1914 (scripts/formatos_reuso.py)",
+   "id": "ERR-082",
+   "titulo": "Narração densa lida como silêncio",
+   "sintoma": "Conferência de legenda dava 100 palavras fora da fala numa narração quase sem pausas.",
+   "causa_raiz": "Limiar de fala = 4× o percentil 15 da energia; sem pausas o percentil 15 já é fala.",
+   "arquivos": [
+    "src/v4/formatos/legenda_sync.py"
+   ],
+   "correcao": "limiar limitado a 8 % do pico.",
+   "testes": [
+    "tests/test_formatos.py::test_mascara_de_fala_com_narracao_densa"
+   ],
+   "tags": [
+    "legenda",
+    "audio"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação (reuso)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste de reuso China × EUA / história 1880–1914 (scripts/formatos_reuso.py)",
+   "id": "ERR-083",
+   "titulo": "Cartão entrando com a câmera em voo",
+   "sintoma": "Cartões/escada entravam enquanto o território passava por baixo (Panamá b4 e reuso).",
+   "causa_raiz": "F-COBRE-TERRITORIO só conferia depois da câmera assentada.",
+   "arquivos": [
+    "src/v4/formatos/plano.py"
+   ],
+   "correcao": "confere cada camada estática 0,35 s após entrar quando a câmera ainda voa.",
+   "testes": [
+    "tests/test_formatos.py::test_camada_que_entra_com_a_camera_em_voo_nao_cobre_o_territorio"
+   ],
+   "tags": [
+    "camera",
+    "colisao"
+   ]
+  },
+  {
+   "data": "2026-11-17",
+   "versao": "ATLAS consolidação (reuso)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "teste de reuso China × EUA / história 1880–1914 (scripts/formatos_reuso.py)",
+   "id": "ERR-084",
+   "titulo": "Legenda em 3 linhas fora da faixa",
+   "sintoma": "'UNIDOS ASSUMIRAM A OBRA' quebrava em 3 linhas (226 px numa faixa de 150).",
+   "causa_raiz": "Corpo estimado por número de caracteres, sem a quebra real de palavras; medição registrava antes do corpo aplicado.",
+   "arquivos": [
+    "motor4/remotion/src/Camada.tsx"
+   ],
+   "correcao": "corpo medido com a fonte real (canvas.measureText), maior corpo com ≤ 2 linhas na faixa; medir só depois de aplicado. Rótulos do mapa presos à área segura.",
+   "testes": [
+    "tests/test_formatos.py::test_legenda_mede_o_corpo_com_a_fonte_real_e_rotulos_do_mapa_na_area_segura"
+   ],
+   "tags": [
+    "legenda",
+    "layout"
+   ]
   }
  ]
 }

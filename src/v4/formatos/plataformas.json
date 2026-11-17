@@ -1,0 +1,20 @@
+{
+ "_nota": "Perfis de área segura (master 1080×1920). APROXIMAÇÕES configuráveis — a interface muda com versão do app, idioma e tamanho da descrição. Fontes de referência em 'fontes'. O motor valida contra a UNIÃO dos perfis ativos e posiciona legenda, créditos e slots dentro dela; perfis podem ser ligados/desligados ou ajustados aqui sem tocar no código.",
+ "ativos": ["tiktok", "instagram_reels", "youtube_shorts"],
+ "perfis": {
+  "tiktok": {"nome": "TikTok", "topo": 130, "base": 480, "esquerda": 60,
+    "direita": {"largura": 150, "de_y": 820, "ate_y": 1680, "icones": 5},
+    "fontes": ["https://moda.app/tools/story-safe-zone-checker", "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"]},
+  "instagram_reels": {"nome": "Instagram Reels", "topo": 220, "base": 420, "esquerda": 50,
+    "direita": {"largura": 120, "de_y": 1050, "ate_y": 1640, "icones": 4},
+    "recorte_feed": {"topo": 285, "base": 285, "nota": "prévia 4:5 no feed/grade corta ~285 px em cima e embaixo"},
+    "fontes": ["https://www.admakeai.com/blog/vertical-video-dimensions-2026", "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"]},
+  "youtube_shorts": {"nome": "YouTube Shorts", "topo": 154, "base": 461, "esquerda": 65,
+    "direita": {"largura": 173, "de_y": 900, "ate_y": 1700, "icones": 5},
+    "fontes": ["https://www.aicarousels.com/free-tools/youtube-safe-zone-checker"]}
+ },
+ "faixa_inferior": {
+  "_nota": "hierarquia inferior inspirada na referência (território → número → legenda → créditos), com cada faixa PRÓPRIA e dentro da área visível de todas as plataformas ativas",
+  "creditos_altura": 46, "creditos_px": 18, "creditos_linha": 22, "folga": 12, "legenda_altura": 150, "margem_minima": 72
+ }
+}

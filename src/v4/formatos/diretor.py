@@ -21,6 +21,7 @@ ESQUEMA = {
     'dossie.evidenceHighlight': "{tipo: 'carimbo'|'sublinhado'|'circulo', texto?, alvo: id de camada, parte?: 'cabecalho_dir'}",
     'editorial.comparison': '{itens: [{rotulo, valor, t?}], unidade}',
     'editorial.flowConnections': '{nos: [{rotulo ≤ 16, sub?, t, seta?}], fluxo: bool}',
+    'editorial.cta': "inserido pelo MOTOR no último beat quando cabe (não use)",
     'editorial.titleOrPayoff': "{linhas: [{texto ≤ 16, t, destaque?, tamanho?}]} (≤ 3 linhas; nunca slide longo)",
 }
 

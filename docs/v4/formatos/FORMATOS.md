@@ -134,3 +134,22 @@ vídeo inteiro). Só o que a cópia permite medir; nenhuma fonte, traço ou easi
 Esri World Imagery aparece na referência, mas atribuição não é licença: não é usado. Base = Natural Earth II (largo) e
 EOxCloudless 2016 (CC BY 4.0) no detalhe. Fontes factuais do ATLAS ficam em `narracao.fatos` (Linda Hall, Britannica,
 UF Libraries) e nunca se misturam com os créditos do mapa. DOSSIÊ congelado (código preservado; `so-atlas` no disparo).
+
+## ATLAS — consolidação do motor e padrão visual (17/11, noite)
+Base aprovada: prévia 44155276352. Correções no MOTOR (não no episódio):
+- **Áreas seguras** (`plataformas.json` + `layout.py`): perfis TikTok / Reels / Shorts (aproximações configuráveis, com fontes);
+  a união decide slots, quadro do território e as faixas inferiores próprias (conteúdo → legenda → créditos). Slots das
+  composições ATLAS são intenções `{y, h, w_max}` resolvidas pelo perfil.
+- **Legenda** (`legenda_sync.py`): `realinhar` (pausas reais como âncoras, sem IA) no `narrar`; `conferir` no preflight e
+  como portão `legenda_ok` do MP4; agrupamento com mínimo de 0,35 s idêntico em Python e `Camada.tsx`.
+- **Cartões** (`Primitivas.Cartao/Fonte`, tokens `canal.cartao`): sistema único; pílula encolhe 40 → 30 px.
+- **Planta técnica** (`canal.palco.tecnico` → `mecanismos.js` via `p.tema`): reutilizável por qualquer mecanismo V2.
+- **Pinos**: papel protagonista/secundário (`canal.pino`), `desloc: "auto"`, escala automática ≥ 75 %, rótulo de texto com
+  lado automático; F-PINO-FORA usa a área segura.
+- **Gancho** (F-GANCHO), **CTA** (`inserir_cta`, só se couber), **ritmo sem câmera** (`ritmo.medir_completo`).
+- **Conexões** entre pontos (`rotas[].arco`, círculo máximo) e geometria do mundo (`scripts/formatos_mundo.py`, Natural Earth
+  via world-atlas já instalado) — sem dado OSM, sem nova instalação.
+- **Fiscal**: amostragem ampliada, máscaras de plataforma (folhas `plataforma_*.jpg`), alinhamento/inclinação de cartões,
+  legenda na faixa, atribuição obrigatória presente, pinos parte × parte; `fiscal_4camadas.md`.
+- **Reuso sem render completo**: `scripts/formatos_reuso.py <plano> <saida>` (tempos e voz SINTÉTICOS → ativos → preflight
+  → quadros com todas as regras). Planos em `planos/reuso/` (chips China × EUA; história 1880–1914).

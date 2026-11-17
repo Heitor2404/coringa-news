@@ -40,7 +40,9 @@ function medir(frame: number) {
       const r = rg.getBoundingClientRect();
       if (r.width < 1 || opacidade(el) < .3) continue;
       rs.push(ret(r));
-      const esc = el.getBoundingClientRect().height / Math.max(1, (el as HTMLElement).offsetHeight || 1);
+      // escala real (transform) = caixa desenhada ÷ altura de layout SEM arredondamento (offsetHeight arredonda: 25,9 px falsos)
+      const hl = parseFloat(getComputedStyle(el).height) || (el as HTMLElement).offsetHeight || 1;
+      const esc = el.getBoundingClientRect().height / Math.max(1, hl);
       out.textos.push({ camada: c.getAttribute('data-camada'), txt: n.textContent.trim().slice(0, 40), px: Math.round(parseFloat(getComputedStyle(el).fontSize) * (esc || 1) * 10) / 10,
         meta: !!el.closest('[data-meta]') });
     }
@@ -50,7 +52,9 @@ function medir(frame: number) {
         out.cortados.push({ camada: c.getAttribute('data-camada'), txt: h.textContent.trim().slice(0, 50) });
     });
     const u = uniao(rs);
-    if (u) out.camadas.push({ id: c.getAttribute('data-camada'), componente: c.getAttribute('data-componente'), caixa: u });
+    // pino = partes separadas (ponto, haste, foto, rótulo): colisão entre pinos confere PARTE × PARTE, não a caixa que as une
+    if (u) out.camadas.push({ id: c.getAttribute('data-camada'), componente: c.getAttribute('data-componente'), caixa: u,
+      ...(c.getAttribute('data-componente') === 'atlas.geoPin' ? { partes: rs.filter(r => r.w * r.h < 400000).slice(0, 12) } : {}) });
   });
   document.querySelectorAll('[data-rotulo]').forEach(el => { if (opacidade(el) > .3) out.rotulos.push({ tipo: el.getAttribute('data-rotulo'), txt: el.textContent, caixa: ret(el.getBoundingClientRect()) }); });
   document.querySelectorAll('[data-meta]').forEach(el => {
@@ -61,14 +65,24 @@ function medir(frame: number) {
     const h = el as HTMLElement, s = getComputedStyle(h);
     if ((s.overflow === 'hidden' || s.textOverflow === 'ellipsis') && h.scrollWidth > h.clientWidth + 2) out.cortados.push({ camada: el.getAttribute('data-meta'), txt: h.textContent!.trim().slice(0, 50) });
     const r = h.getBoundingClientRect();
-    out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r) }]);
+    out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r), txt: h.textContent!.trim().slice(0, 400), datasets: (el.getAttribute('data-atribuicao') || '').split(',').filter(Boolean) }]);
+  });
+  // cartões (sistema único): centro desenhado × centro do slot declarado, e rotação (nunca inclinado)
+  out.cartoes = [];
+  document.querySelectorAll('[data-cartao]').forEach(el => {
+    if (opacidade(el) < .5) return;
+    const alvo = JSON.parse(el.getAttribute('data-cartao')!), r = el.getBoundingClientRect();
+    const tf = getComputedStyle(el).transform; let rot = 0;
+    if (tf && tf !== 'none') { const m = tf.match(/matrix\(([^)]+)\)/); if (m) { const [a, b] = m[1].split(',').map(Number); rot = Math.atan2(b, a) * 180 / Math.PI; } }
+    const camada = el.closest('[data-camada]')?.getAttribute('data-camada');
+    out.cartoes.push({ camada, alvo, centro: [r.left + r.width / 2, r.top + r.height / 2], caixa: ret(r), rot });
   });
   // pinos ancorados: o centro desenhado precisa bater com o MapLibre (map.project) neste quadro — não descolam no pan/zoom
   const mapa = (window as any).__mapa;
   out.pinos = [];
   document.querySelectorAll('[data-ancora-geo]').forEach(el => {
     if (opacidade(el) < .3 || !mapa) return;
-    const ll = JSON.parse(el.getAttribute('data-ancora-geo')!), r = el.getBoundingClientRect(), pj = mapa.project(ll);
+    const ll = JSON.parse(el.getAttribute('data-ancora-geo')!), r = el.getBoundingClientRect(), lc = mapa.getCenter().lng, pj = mapa.project([ll[0] + 360 * Math.round((lc - ll[0]) / 360), ll[1]]);
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     out.pinos.push({ lonlat: ll, centro: [cx, cy], mapa: [pj.x, pj.y], desvio: Math.hypot(cx - pj.x, cy - pj.y) });
   });

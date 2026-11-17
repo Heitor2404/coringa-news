@@ -31,6 +31,10 @@
       fala: 'O navio entra e a comporta fecha. A água do lago desce por gravidade e enche a câmara. O navio sobe vinte e seis metros e segue.' },
   }, (p, ctx) => {
     const subir = p.sentido !== 'descer', D = +p.desnivel_m || 26;
+    // TEMA (V4/formatos): linguagem técnica do canal (params.tema). Sem tema = aparência V2 original (pilotos antigos iguais).
+    const TM = Object.assign({ fundo: null, etapa: 'var(--ciano)', progresso: 'rgba(127,227,240,.25)', progresso_on: 'var(--ciano)', agua_topo: '#4fd8e8', agua_fundo: '#0c6676',
+      superficie: '#d6fbff', jato: '#e8fdff', concreto: '#34495b', concreto_hachura: '#3e566a', rocha: '#1d2a33', rocha_ponto: '#26353f', tunel: '#08171d',
+      fluxo: '#fff', estrutura: '#9fb6c8', torre: '#42566a', rotulo_fundo: 'rgba(5,20,26,.88)', rotulo_texto: '#fff', degrau: '63,208,224' }, p.tema || {}), ctx_tema = !!p.tema;
     // ---- mundo (unidades de desenho) ----
     const MW = 1480, TOPO = 290, YH = 340, YL = 650, FUNDO = 860, C0 = 360, C1 = 1060, PAR = 28, SOLEIRA = 570, TUN = 915;
     const PORTAS = [540, 720, 900];
@@ -48,38 +52,39 @@
       <line x1="150" y1="-120" x2="150" y2="-160" stroke="#0b0f17" stroke-width="5"/></g>`;
     const comporta = (cls, x, y0, y1) => `<g class="${cls}"><rect x="${x}" y="${y0}" width="${PAR}" height="${y1 - y0}" fill="#FFD21F" stroke="#0b0f17" stroke-width="4"/>
       ${Array.from({ length: Math.floor((y1 - y0) / 56) }, (_, k) => `<line x1="${x}" x2="${x + PAR}" y1="${y0 + 28 + k * 56}" y2="${y0 + 48 + k * 56}" stroke="#0b0f17" stroke-width="5"/>`).join('')}</g>`;
-    const torre = x => `<rect x="${x - 14}" y="80" width="${PAR + 28}" height="${TOPO - 80}" fill="#42566a" stroke="#9fb6c8" stroke-width="3"/><rect x="${x - 14}" y="70" width="${PAR + 28}" height="14" fill="#9fb6c8"/>`;
+    const torre = x => `<rect x="${x - 14}" y="80" width="${PAR + 28}" height="${TOPO - 80}" fill="${TM.torre}" stroke="${TM.estrutura}" stroke-width="3"/><rect x="${x - 14}" y="70" width="${PAR + 28}" height="14" fill="${TM.estrutura}"/>`;
     // V4 (p.v4): a identidade V4 põe marca (292) e selo (345) e a legenda em 1240–1455 — o esquema não desenha cabeçalho
     // próprio, desce os passos e põe a nota de escala numa linha só acima da legenda (colisões em 44049021691)
     const V4 = !!p.v4, TP = V4 ? 12 : 0;
-    const html = `<div class="grade"></div>
+    const html = `${ctx_tema ? `<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 42%, ${TM.fundo2 || TM.fundo} 0%, ${TM.fundo} 72%)"></div>
+      <div class="abs" style="inset:0;background-image:linear-gradient(${TM.grade} 1px,transparent 1px),linear-gradient(90deg,${TM.grade} 1px,transparent 1px),linear-gradient(${TM.grade_maior} 2px,transparent 2px),linear-gradient(90deg,${TM.grade_maior} 2px,transparent 2px);background-size:${TM.grade_px / 5}px ${TM.grade_px / 5}px,${TM.grade_px / 5}px ${TM.grade_px / 5}px,${TM.grade_px}px ${TM.grade_px}px,${TM.grade_px}px ${TM.grade_px}px"></div>` : '<div class="grade"></div>'}
       ${V4 ? '' : `<div class="abs kicker" data-g="kicker" style="left:72px;top:345px;color:var(--ciano)"><span style="display:inline-block;width:14px;height:14px;border:3px solid var(--ciano);transform:rotate(45deg);margin-right:16px;vertical-align:2px"></span>${esc(p.kicker || 'MECANISMO · ECLUSA')}</div>`}
-      <div class="abs pas" style="left:72px;top:${388 + TP}px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:110px;height:10px;background:rgba(127,227,240,.25)"></div>`).join('')}</div>
-      ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:${412 + TP}px;font-weight:900;font-size:46px;line-height:1.04;text-transform:uppercase;opacity:0;text-shadow:0 3px 14px rgba(0,0,0,.6)"><span style="font-family:var(--f-dado);color:var(--ciano);margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
+      <div class="abs pas" style="left:72px;top:${388 + TP}px;display:flex;gap:10px">${[0, 1, 2].map(i => `<div class="pd pd${i}" style="width:110px;height:10px;background:${TM.progresso}"></div>`).join('')}</div>
+      ${ET.map((t, i) => `<div class="abs et et${i}" data-g="et" data-txt="1" style="left:72px;right:150px;top:${412 + TP}px;font-weight:900;font-size:46px;line-height:1.04;text-transform:uppercase;opacity:0;text-shadow:0 3px 14px rgba(0,0,0,.6)"><span style="font-family:var(--f-dado);color:${TM.etapa};margin-right:14px">${i + 1}</span>${hl(t)}</div>`).join('')}
       <svg class="abs cv" data-ocupa="1" style="left:0;top:${SY}px" width="${SW}" height="${SH}" viewBox="0 0 ${MW} ${MW / ASP}" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="ag${ctx.i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fd8e8" stop-opacity=".78"/><stop offset="1" stop-color="#0c6676" stop-opacity=".92"/></linearGradient>
-          <pattern id="cc${ctx.i}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="36" height="36" fill="#34495b"/><line x1="0" y1="0" x2="0" y2="36" stroke="#3e566a" stroke-width="12"/></pattern>
-          <pattern id="rc${ctx.i}" width="60" height="40" patternUnits="userSpaceOnUse"><rect width="60" height="40" fill="#1d2a33"/><circle cx="14" cy="12" r="5" fill="#26353f"/><circle cx="44" cy="28" r="7" fill="#26353f"/></pattern>
+        <defs><linearGradient id="ag${ctx.i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${TM.agua_topo}" stop-opacity=".82"/><stop offset="1" stop-color="${TM.agua_fundo}" stop-opacity=".95"/></linearGradient>
+          <pattern id="cc${ctx.i}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="36" height="36" fill="${TM.concreto}"/><line x1="0" y1="0" x2="0" y2="36" stroke="${TM.concreto_hachura}" stroke-width="12"/></pattern>
+          <pattern id="rc${ctx.i}" width="60" height="40" patternUnits="userSpaceOnUse"><rect width="60" height="40" fill="${TM.rocha}"/><circle cx="14" cy="12" r="5" fill="${TM.rocha_ponto}"/><circle cx="44" cy="28" r="7" fill="${TM.rocha_ponto}"/></pattern>
           <marker id="sf${ctx.i}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#fff"/></marker></defs>
         <rect x="-400" y="-400" width="${MW + 800}" height="1800" fill="none"/>
         <!-- rocha e concreto -->
         <rect x="-300" y="${FUNDO}" width="${MW + 600}" height="400" fill="url(#rc${ctx.i})"/>
         <path d="M${C1 + PAR} ${SOLEIRA} H${MW + 300} V${FUNDO} H${C1 + PAR} Z" fill="url(#rc${ctx.i})"/>
         <!-- túneis (aquedutos) e portas no piso da câmara -->
-        <path d="${TUN_ENCHE}" fill="none" stroke="#08171d" stroke-width="44" stroke-linejoin="round"/>
-        <path d="${TUN_ESVAZIA}" fill="none" stroke="#08171d" stroke-width="44" stroke-linejoin="round"/>
-        ${PORTAS.map(x => `<rect x="${x - 16}" y="${FUNDO - 4}" width="32" height="${TUN - FUNDO + 4}" fill="#08171d"/>`).join('')}
-        <path class="fl fl-enche" d="${TUN_ENCHE}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
-        <path class="fl fl-esvazia" d="${TUN_ESVAZIA}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <path d="${TUN_ENCHE}" fill="none" stroke="${TM.tunel}" stroke-width="44" stroke-linejoin="round"/>
+        <path d="${TUN_ESVAZIA}" fill="none" stroke="${TM.tunel}" stroke-width="44" stroke-linejoin="round"/>
+        ${PORTAS.map(x => `<rect x="${x - 16}" y="${FUNDO - 4}" width="32" height="${TUN - FUNDO + 4}" fill="${TM.tunel}"/>`).join('')}
+        <path class="fl fl-enche" d="${TUN_ENCHE}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <path class="fl fl-esvazia" d="${TUN_ESVAZIA}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
         <!-- águas -->
         <rect x="-300" y="${YL}" width="${C0 - PAR + 300}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
         <rect x="${C1 + PAR}" y="${YH}" width="${MW + 300 - C1 - PAR}" height="${SOLEIRA - YH}" fill="url(#ag${ctx.i})"/>
         <rect class="cam" x="${C0}" y="${YL}" width="${C1 - C0}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
-        <path class="sup" fill="none" stroke="#d6fbff" stroke-width="5"/>
-        <g class="jatos">${PORTAS.map(() => '<path fill="none" stroke="#e8fdff" stroke-width="5" stroke-linecap="round"/>').join('')}</g>
+        <path class="sup" fill="none" stroke="${TM.superficie}" stroke-width="5"/>
+        <g class="jatos">${PORTAS.map(() => `<path fill="none" stroke="${TM.jato}" stroke-width="5" stroke-linecap="round"/>`).join('')}</g>
         <!-- paredes da câmara -->
         <rect x="${C0 - PAR - 40}" y="${TOPO}" width="40" height="${YL - TOPO}" fill="url(#cc${ctx.i})" opacity="0"/>
-        <rect x="${C0}" y="${FUNDO}" width="${C1 - C0}" height="10" fill="#9fb6c8"/>
+        <rect x="${C0}" y="${FUNDO}" width="${C1 - C0}" height="10" fill="${TM.estrutura}"/>
         ${navio}
         ${torre(C0 - PAR)}${torre(C1)}
         ${comporta('cpE', C0 - PAR, TOPO, FUNDO)}${comporta('cpD', C1, TOPO, SOLEIRA)}
@@ -113,7 +118,7 @@
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
           <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
         : `<div class="abs" data-g="aviso" data-opcional="1" style="right:${V4 ? 72 : 160}px;top:${V4 ? 1180 : 1176}px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
-      <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:#fff;background:rgba(5,20,26,.88);padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
+      <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
 
     // ---- linha do tempo física ----
     function tempos(d) {
@@ -212,13 +217,13 @@
         // cabeçalho
         const f = tl < T[1] ? 0 : tl < T[2] ? 1 : 2;
         el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - (i ? T[i] : 0)) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - (i ? T[i] : 0)) / .35)) * 16 : 0}px)`; });
-        el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? 'var(--ciano)' : 'rgba(127,227,240,.25)');
+        el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? TM.progresso_on : TM.progresso);
         c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada, navio_x: nx, linha_dagua: superficie };
         // escada dos degraus reais: o navio percorre TODAS as câmaras na proporção do nível do esquema
         const dgn = el.querySelector('.dg-navio');
         if (dgn) { const N = +p.degraus, fr = clamp(subir ? m / D : 1 - m / D), w = 190 / N, h = 96 / N, i = Math.min(N - 1, Math.floor(fr * N)), ff = fr * N - i;
           dgn.setAttribute('cx', i * w + (w - 4) * (.15 + .7 * ff)); dgn.setAttribute('cy', 96 - (i + 1) * h - 9);
-          el.querySelectorAll('.dg').forEach((r, j) => r.setAttribute('fill', j <= i ? 'rgba(63,208,224,.45)' : 'rgba(63,208,224,.12)'));
+          el.querySelectorAll('.dg').forEach((r, j) => r.setAttribute('fill', j <= i ? `rgba(${TM.degrau},.45)` : `rgba(${TM.degrau},.12)`));
           aparece(el.querySelector('.esc-deg'), tl, .4, { dy: 10 }); }
       },
       textos: () => [...ET, p.lago, p.mar, String(D)],

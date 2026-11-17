@@ -388,3 +388,228 @@ def test_partes_do_mostrador_ancoradas_na_fala():
     r = P.resolver_tempos(pl, pal)
     partes = next(L for b in r['beats'] for L in b['camadas'] if L['id'] == 'litros')['p']['partes']
     assert [x['t'] for x in partes] == [0.0, 1.0]
+
+
+# ---------------- consolidação ATLAS (17/11): legenda × áudio, plataformas, cartões, gancho, CTA, amostragem ----------------
+
+def _wav_fala(tmp_path, trechos, dur):
+    """voz sintética: tom nos trechos de fala, silêncio digital entre eles (como o TTS)"""
+    import wave
+
+    import numpy as np
+    sr = 16000
+    x = np.zeros(int(dur * sr), dtype=np.float32)
+    for a, b in trechos:
+        n = np.arange(int(a * sr), int(b * sr))
+        x[n] = .4 * np.sin(2 * np.pi * 220 * n / sr)
+    arq = tmp_path / 'voz.wav'
+    with wave.open(str(arq), 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((x * 32767).astype('<i2').tobytes())
+    return arq
+
+
+def test_legenda_realinhada_pelas_pausas_reais_do_audio(tmp_path):
+    """44155276352: palavras marcadas no silêncio ('OCEANOS' depois do fim da fala, 'O CANAL' antes de recomeçar)"""
+    from src.v4.formatos import legenda_sync as LS
+    wav = _wav_fala(tmp_path, [(0.2, 2.0), (2.8, 4.6)], 5.0)
+    # marcas do TTS deslocadas: a 2ª frase "começa" dentro da pausa real (2,0–2,8)
+    pal = [{'w': w, 's': s, 'e': e} for w, s, e in [('UM', .2, .6), ('NAVIO', .6, 1.2), ('SOBE', 1.2, 2.3),
+                                                    ('O', 2.35, 2.5), ('CANAL', 2.5, 3.4), ('CRUZA', 3.4, 4.0), ('O', 4.0, 4.2), ('ISTMO', 4.2, 4.6)]]
+    narr = tmp_path / 'n.json'
+    narr.write_text(json.dumps({'palavras': pal}))
+    assert not LS.conferir(narr, wav)['ok']
+    novo = LS.realinhar(pal, wav)
+    narr.write_text(json.dumps({'palavras': novo}))
+    r = LS.conferir(narr, wav)
+    assert r['ok'], r
+    assert novo[3]['s'] >= 2.75 and novo[2]['e'] <= 2.05
+
+
+def test_legenda_sem_troca_brusca():
+    from src.v4.formatos import legenda_sync as LS
+    pal = [{'w': 'A', 's': 0, 'e': .5}, {'w': 'CERCA', 's': .8, 'e': .95}, {'w': 'DE', 's': 1.4, 'e': 1.6}, {'w': 'OITO', 's': 1.6, 'e': 2.2}]
+    gs = LS.grupos(pal)
+    assert all(g['fim'] - g['ini'] >= .35 for g in gs) and ' '.join(g['txt'] for g in gs) == 'A CERCA DE OITO'
+    tsx = (RAIZ / 'motor4/remotion/src/Camada.tsx').read_text()
+    assert '>= .35' in tsx and '.25' in tsx and '1.6' in tsx           # Camada usa a MESMA regra
+
+
+def test_faixas_proprias_legenda_creditos_conteudo():
+    """créditos cartográficos 'praticamente sobre as legendas' (44155276352): faixas separadas dentro da área segura"""
+    from src.v4.formatos import layout
+    fi = layout.faixa_inferior()
+    cx, cy, cw, ch = fi['creditos']
+    lx, ly, lw, lh = fi['legenda']
+    assert ly + lh <= cy and fi['conteudo_base'] <= ly
+    assert cy + ch <= fi['base_visivel'] and cx >= layout.uniao()['esquerda']
+    for nome in layout.CFG['ativos']:
+        for mk in layout.mascaras(nome):
+            if mk.get('aviso'):
+                continue
+            x, y, w, h = mk['caixa']
+            for bx in (fi['creditos'], fi['legenda']):
+                assert not (bx[0] < x + w and x < bx[0] + bx[2] and bx[1] < y + h and y < bx[1] + bx[3]), (nome, mk, bx)
+
+
+def test_pino_protagonista_cabe_na_area_segura_e_encolhe_se_preciso():
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    pin = next(L for L in P.camadas(pl) if L['id'] == 'pino-mira')
+    assert pin['p']['papel'] == 'protagonista' and pin['p']['raio'] >= .75 * P.papel_pino(pin['p'])['raio']
+    assert pin['p']['raio'] > next(L for L in P.camadas(pl) if L['id'] == 'pino-mira-2')['p']['raio']
+    assert 'F-PINO-FORA' not in {v['regra'] for v in P.validar(pl)}
+    pl2 = copy.deepcopy(ATLAS)
+    _camada(pl2, 'pino-mira')['p']['desloc'] = [400, 0]                # foto empurrada para a coluna de ícones
+    assert 'F-PINO-FORA' in _regras(pl2)
+
+
+def test_rotulo_de_pino_troca_de_lado_se_sair_da_area_segura():
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    m = next(L for L in P.camadas(pl) if L['id'] == 'p-mira')
+    assert m['p']['lado'] == 'direita' and m['p']['lado_auto'] != 'direita'
+
+
+def test_pilula_encolhe_ate_30px_e_so_entao_falha():
+    L = {'componente': 'editorial.statCard', 'slot': 'nota', 'caixa': {'x': 173, 'y': 1130, 'w': 734, 'h': 88},
+         'p': {'estilo': 'pilula', 'valor': 'ATRAVESSA A DIVISA CONTINENTAL'}}
+    assert P._cabe(L) == []
+    L['p']['valor'] = 'ATRAVESSA A DIVISA CONTINENTAL DAS AMÉRICAS DO SUL'
+    assert P._cabe(L)
+
+
+def test_gancho_exige_prova_visual_forte_no_inicio():
+    pl = copy.deepcopy(ATLAS)
+    pl['clipes'] = [c for c in pl['clipes'] if c.get('papel') != 'gancho']
+    _camada(pl, 'pino-mira')['p']['papel'] = 'secundario'
+    _camada(pl, 'pino-mira')['t0'] = 4.0
+    assert 'F-GANCHO' in _regras(pl)
+
+
+def test_cta_so_entra_se_couber_depois_da_revelacao_final():
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    assert 'sem CTA' in pl['cta_decisao'] and not any(L['componente'] == 'editorial.cta' for L in P.camadas(pl))
+    pl2 = copy.deepcopy(ATLAS)
+    pl2['duracao'] = ATLAS['duracao'] + 2.5
+    r = P.resolver_tempos(pl2, [])
+    cta = [L for L in P.camadas(r) if L['componente'] == 'editorial.cta']
+    assert cta and cta[0]['t0'] >= max(x['t'] for x in _camada(r, 'payoff')['p']['linhas']) + .8 and cta[0]['t1'] <= r['duracao']
+
+
+def _medida(**k):
+    return {'camadas': [], 'rotulos': [], 'textos': [], 'cortados': [], 'metas': [], 'pinos': [], 'roi': None, **k}
+
+
+def test_quadro_cartao_desalinhado_inclinado_e_legenda_fora_da_faixa():
+    import scripts.formatos_validar as V
+    from src.v4.formatos import layout
+    pl = {'formato': 'atlas', 'beats': [], 'duracao': 10}
+    lx, ly, lw, lh = layout.faixa_inferior()['legenda']
+    m = _medida(cartoes=[{'camada': 'c1', 'alvo': [540, 900], 'centro': [548, 900], 'caixa': {}, 'rot': -2.0}],
+                camada={'legenda': {'x': lx, 'y': ly - 40, 'w': lw, 'h': lh}})
+    regras = {p['regra'] for p in V.checar(m, pl, 1.0)}
+    assert {'R-CARTAO-DESALINHADO', 'R-CARTAO-INCLINADO', 'R-LEGENDA-FORA'} <= regras
+
+
+def test_quadro_contra_interface_simulada_das_plataformas():
+    import scripts.formatos_validar as V
+    pl = {'formato': 'atlas', 'beats': [], 'duracao': 10}
+    m = _medida(camadas=[{'id': 'x', 'componente': 'editorial.statCard', 'caixa': {'x': 900, 'y': 1300, 'w': 160, 'h': 80}}])
+    assert any(p['regra'] == 'R-PLATAFORMA' for p in V.checar_plataformas(m, pl, 1.0))
+    m = _medida(camadas=[{'id': 'x', 'componente': 'editorial.statCard', 'caixa': {'x': 200, 'y': 700, 'w': 600, 'h': 200}}])
+    assert not V.checar_plataformas(m, pl, 1.0)
+
+
+def test_atribuicao_obrigatoria_visivel_com_o_mapa():
+    import scripts.formatos_validar as V
+    pl = copy.deepcopy(ATLAS)
+    roi = {'x': 100, 'y': 500, 'w': 800, 'h': 600}
+    m = _medida(roi=roi, metas=[{'tipo': 'atribuicao', 'caixa': {'x': 72, 'y': 1394, 'w': 835, 'h': 22}, 'txt': 'Natural Earth', 'datasets': ['ne_vetor', 's2_2016']}])
+    assert 'R-ATRIBUICAO-AUSENTE' in {p['regra'] for p in V.checar(m, pl, 1.0)}
+    m['metas'] = []
+    assert 'R-ATRIBUICAO-AUSENTE' in {p['regra'] for p in V.checar(m, pl, 1.0)}
+
+
+def test_amostragem_ampliada_cobre_gancho_transicoes_e_o_meio_dos_beats():
+    import scripts.formatos_validar as V
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    a = V.amostrar(pl)
+    ts = [x['t'] for x in a]
+    assert len(a) > 3 * len(pl['beats'])
+    assert all(not (c['t0'] - .05 <= t <= c['t1'] + .05) for c in pl['clipes'] for t in ts)
+    furos = sorted((c['t0'], c['t1']) for c in pl['clipes'])
+    livres = [(a_, b_) for a_, b_ in zip([0] + [z for _, z in furos], [x for x, _ in furos] + [pl['duracao']])]
+    for t0, t1 in zip(ts, ts[1:]):
+        if not any(a_ - .05 <= t0 and t1 <= b_ + .05 for a_, b_ in livres):
+            continue
+        assert t1 - t0 <= 3.0, (t0, t1)
+
+
+def test_medicao_da_legenda_pede_medir_na_selecao_da_composicao():
+    """a caixa real da legenda NUNCA foi medida: renderStill usa as props resolvidas na seleção (sem medir)"""
+    js = (RAIZ / 'motor4/remotion/medir.mjs').read_text()
+    assert "fs.readFileSync(pc, 'utf8')), medir: true }" in js
+
+
+def test_ritmo_do_portao_desconta_a_camera():
+    src = (RAIZ / 'src/v4/formatos/produzir.py').read_text()
+    assert "rit['sem_camera']['maior_trecho_parado_s'] <= 3" in src and "'legenda_ok'" in src
+
+
+def test_mascara_de_fala_com_narracao_densa(tmp_path):
+    """narração quase sem pausa: o percentil 15 é FALA — o limiar não pode subir acima dela (tudo virava silêncio)"""
+    from src.v4.formatos import legenda_sync as LS
+    wav = _wav_fala(tmp_path, [(0.05, 3.0), (3.15, 6.0)], 6.1)
+    pal = [{'w': f'P{i}', 's': round(.05 + i * .49, 3), 'e': round(.05 + (i + 1) * .49, 3)} for i in range(6)]
+    pal += [{'w': f'Q{i}', 's': round(3.15 + i * .47, 3), 'e': round(3.15 + (i + 1) * .47, 3)} for i in range(6)]
+    narr = tmp_path / 'n.json'
+    narr.write_text(json.dumps({'palavras': pal}))
+    assert LS.conferir(narr, wav)['ok']
+
+
+def test_conexao_entre_paises_sem_trajeto_osm():
+    """rota 'arco' (dois pontos): desenhada pelo canal, não exige trajeto OSM nem ODbL; Palco usa círculo máximo"""
+    pl = json.loads((RAIZ / 'src/v4/formatos/planos/reuso/atlas_chips.json').read_text())
+    assert all(r.get('arco') for r in pl['rotas'])
+    tsx = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert 'turf.greatCircle' in tsx and '!r.arco' in tsx
+
+
+def test_reuso_em_outras_historias_sem_codigo_novo():
+    """§6: chips (mapa-múndi, conexões, empresas) e história (fotos, datas, régua) passam nas MESMAS regras do motor"""
+    import scripts.formatos_reuso as R
+    for nome in ('atlas_chips', 'atlas_historia_panama'):
+        pl = json.loads((RAIZ / f'src/v4/formatos/planos/reuso/{nome}.json').read_text())
+        pal, falas, dur = R.tempos_sinteticos(pl['narracao']['texto'])
+        r = P.resolver_tempos(pl, pal)
+        r['duracao'] = dur
+        erros = [v for v in P.validar(r) if v['gravidade'] == 'erro']
+        assert not erros, (nome, erros)
+
+
+def test_camera_respeita_o_limite_do_maplibre_e_a_copia_do_mundo():
+    """reuso China × EUA: no mapa-múndi os pinos descolavam 37–340 px (MapLibre trava zoom/centro; Pacífico cruza a data)"""
+    cam = P.camera_roi([100, 8, 250, 58], [100, 470, 807, 650])
+    assert cam['zoom'] >= P.Z_MIN - 1e-9
+    palco = [{'t': 0, 'camera': cam}]
+    c = P.camera_em(palco, 1.0)
+    ws = 512 * 2 ** c['zoom']
+    cy = c['fy'] - (c['ancora'][1] - 960) / ws
+    assert 960 / ws - 1e-9 <= cy <= 1 - 960 / ws + 1e-9
+    x_eua, _ = P.projetar(c, -121.96, 37.35)            # Califórnia na vista centrada no Pacífico: à DIREITA de Taiwan
+    x_tw, _ = P.projetar(c, 120.97, 24.78)
+    assert 0 < x_tw < x_eua < 1080
+    tsx = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert 'Math.log2(H / 512)' in tsx and 'arcoContinuo' in tsx
+    assert '% 1 + 1) % 1 - .5' in (RAIZ / 'motor4/remotion/src/formatos/Primitivas.tsx').read_text()
+
+
+def test_camada_que_entra_com_a_camera_em_voo_nao_cobre_o_territorio():
+    r = copy.deepcopy(ATLAS)
+    _camada(r, 'perfil')['t0'] = next(b['t'] for b in r['beats'] if b['id'] == 'b4-degraus') + .15
+    assert 'F-COBRE-TERRITORIO' in _regras(r)
+
+
+def test_legenda_mede_o_corpo_com_a_fonte_real_e_rotulos_do_mapa_na_area_segura():
+    cam = (RAIZ / 'motor4/remotion/src/Camada.tsx').read_text()
+    assert 'measureText' in cam and 'linhas <= 2' in cam and '[frame, fontes]' in cam
+    assert "'seguro'" in (RAIZ / 'src/v4/formatos/plano.py').read_text() and 'S.dir_max' in (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()

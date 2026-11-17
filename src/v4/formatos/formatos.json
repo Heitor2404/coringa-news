@@ -68,7 +68,8 @@
     "editorial.titleOrPayoff",
     "dossie.documentCard",
     "dossie.evidenceHighlight",
-    "editorial.timeline"
+    "editorial.timeline",
+    "editorial.cta"
    ],
    "clipes": [
     "mecanismo.eclusa"
@@ -104,7 +105,9 @@
   "texto_min_px": 26,
   "texto_meta_min_px": 18,
   "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px",
-  "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)"
+  "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)",
+  "gancho_s": 3.0,
+  "_nota_cta": "editorial.cta não conta como modalidade visual nova (assinatura do canal)"
  },
  "zonas_identidade": {
   "marca": [
@@ -208,19 +211,17 @@
    "palco": "mapa",
    "quadro": [
     100,
-    640,
+    620,
     880,
-    640
+    600
    ],
    "veu": "topo",
    "movimento": "aproxima",
    "slots": {
-    "pergunta": [
-     72,
-     350,
-     936,
-     260
-    ]
+    "pergunta": {
+     "y": 350,
+     "h": 250
+    }
    },
    "max_camadas": 3,
    "pinos": true,
@@ -234,23 +235,19 @@
     100,
     470,
     880,
-    720
+    650
    ],
    "veu": "nenhum",
    "movimento": "aproxima",
    "slots": {
-    "etiqueta": [
-     72,
-     350,
-     936,
-     96
-    ],
-    "nota": [
-     72,
-     1200,
-     936,
-     88
-    ]
+    "etiqueta": {
+     "y": 350,
+     "h": 96
+    },
+    "nota": {
+     "y": 1130,
+     "h": 88
+    }
    },
    "max_camadas": 3,
    "pinos": true,
@@ -263,23 +260,20 @@
     100,
     660,
     880,
-    520
+    450
    ],
    "veu": "topo",
    "movimento": "fixo",
    "slots": {
-    "escada": [
-     40,
-     350,
-     1000,
-     290
-    ],
-    "nota": [
-     72,
-     1200,
-     936,
-     88
-    ]
+    "escada": {
+     "y": 350,
+     "h": 290,
+     "w_max": 1000
+    },
+    "nota": {
+     "y": 1130,
+     "h": 88
+    }
    },
    "max_camadas": 3,
    "pinos": true,
@@ -293,23 +287,20 @@
     100,
     352,
     880,
-    450
+    400
    ],
    "veu": "base",
    "movimento": "fixo",
    "slots": {
-    "painel": [
-     60,
-     830,
-     960,
-     356
-    ],
-    "nota": [
-     72,
-     1200,
-     936,
-     88
-    ]
+    "painel": {
+     "y": 770,
+     "h": 350,
+     "w_max": 960
+    },
+    "nota": {
+     "y": 1130,
+     "h": 88
+    }
    },
    "max_camadas": 3,
    "pinos": true,
@@ -328,18 +319,15 @@
    "veu": "nenhum",
    "movimento": "fixo",
    "slots": {
-    "etiqueta": [
-     72,
-     350,
-     936,
-     96
-    ],
-    "corpo": [
-     90,
-     640,
-     900,
-     560
-    ]
+    "etiqueta": {
+     "y": 350,
+     "h": 96
+    },
+    "corpo": {
+     "y": 640,
+     "h": 570,
+     "w_max": 900
+    }
    },
    "max_camadas": 2,
    "pinos": false,
@@ -353,39 +341,31 @@
     100,
     660,
     880,
-    600
+    550
    ],
    "veu": "topo",
    "movimento": "recua",
    "slots": {
-    "titulo": [
-     72,
-     350,
-     936,
-     290
-    ]
+    "titulo": {
+     "y": 350,
+     "h": 290
+    },
+    "cta": {
+     "y": 1130,
+     "h": 88
+    }
    },
    "max_camadas": 1,
    "pinos": false,
    "referencia": "retorno ao plano largo com recuo lento (ref. 59–66 s: SIFT escala mediana 0,954/s)",
    "uso": "fecho: síntese sobre o território inteiro"
-  }
+  },
+  "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
  },
  "zonas_por_formato": {
   "atlas": {
-   "legenda": [
-    150,
-    1392,
-    780,
-    150
-   ],
-   "creditos": [
-    72,
-    1300,
-    936,
-    88
-   ],
-   "_nota": "ATLAS: legenda mais baixa (centro ≈ 1430–1470; referência ≈ 1496, limitada pela área segura base_texto 1480 do Coringa) e faixa própria de créditos cartográficos logo acima, legível (20 px), sem disputar a legenda"
+   "_nota": "legenda e créditos do ATLAS vêm de layout.faixa_inferior() (plataformas.json)",
+   "dinamico": true
   }
  }
 }

@@ -28,11 +28,12 @@ from PIL import Image, ImageFilter
 UA = {'User-Agent': 'CoringaExplica/formatos (render editorial; contato via GitHub Heitor2404)'}
 DEM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
 BMNG = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_NextGeneration/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg'
-S2 = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2016_3857/default/g/{z}/{y}/{x}.jpg'
+# 2016 = camada 's2cloudless_3857' (a ÚNICA edição CC BY 4.0; 2018+ são CC BY-NC-SA → proibidas em vídeo monetizado)
+S2 = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg'
 ATRIB = {
     'relevo': 'Relevo: Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)',
     'bmng': 'Imagem: NASA Blue Marble Next Generation (domínio público)',
-    's2': 'Sentinel-2 cloudless 2016 © EOX IT Services GmbH (CC BY 4.0; contém dados Copernicus Sentinel modificados 2016)',
+    's2': 'Sentinel-2 cloudless - https://s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017) · CC BY 4.0',
 }
 REGIOES = {
     # nome: (oeste, sul, leste, norte), zoom dos tiles, fonte de satélite
@@ -77,11 +78,16 @@ def mosaico(modelo, bbox, z, modo):
     x1, y1 = tile_xy(l, s, z)
     xs, ys = range(int(x0), int(x1) + 1), range(int(y0), int(y1) + 1)
     out = Image.new(modo, (256 * len(xs), 256 * len(ys)))
+    falta = 0
     for j, y in enumerate(ys):
         for i, x in enumerate(xs):
             im = baixar(modelo.format(z=z, x=x, y=y))
-            if im is not None:
-                out.paste(im.convert(modo).resize((256, 256)), (i * 256, j * 256))
+            if im is None:
+                falta += 1
+                continue
+            out.paste(im.convert(modo).resize((256, 256)), (i * 256, j * 256))
+    if falta:   # mosaico com buraco NUNCA vira palco (a coleta 44097219552 gerou satélite preto sem avisar)
+        raise RuntimeError(f'{falta}/{len(xs) * len(ys)} tiles ausentes em {modelo.split("/")[2]} z{z}')
     nw = tile_lonlat(xs.start, ys.start, z)
     se = tile_lonlat(xs.stop, ys.stop, z)
     return out, [[nw[0], nw[1]], [se[0], nw[1]], [se[0], se[1]], [nw[0], se[1]]]

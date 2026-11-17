@@ -76,6 +76,9 @@ def info(titulos: list[str]) -> list[dict]:
 
 
 def main(saida: Path):
+    if '--so-raster' in sys.argv:
+        formatos_raster.main(saida / 'raster')
+        return
     midia = saida / 'midia'
     midia.mkdir(parents=True, exist_ok=True)
     titulos = list(TITULOS)

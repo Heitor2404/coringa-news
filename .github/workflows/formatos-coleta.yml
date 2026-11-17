@@ -27,7 +27,7 @@ jobs:
       - name: Dependências (já usadas no projeto)
         run: pip install -q numpy pillow requests
       - name: Coleta
-        run: python scripts/formatos_coleta.py saida_coleta
+        run: python scripts/formatos_coleta.py saida_coleta $(grep -q "^so-raster" .github/formatos/coleta.txt && echo --so-raster)
       - name: Cifrar e publicar no ramo de coleta
         if: always()
         run: |

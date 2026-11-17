@@ -1,3 +1,7 @@
 Coleta de dados para a direção de arte final dos formatos (pedido do Heitor, 17/11 10:44): relevo + Sentinel-2 2016
 (canal e eclusas) e mídia histórica licenciada do Commons. Sem IA, sem render, sem serviço pago; resultado cifrado.
 Disparo 1/1 em 2026-11-17.
+
+so-raster
+Refeita 1× (só rasters, sem mídia): a 44097219552 pediu a camada Sentinel-2 com identificador errado (404 → mosaico
+preto, que agora falha em vez de passar calado).

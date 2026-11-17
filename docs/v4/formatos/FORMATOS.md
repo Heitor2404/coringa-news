@@ -97,3 +97,18 @@ prontos. **No MP4**: ritmo medido (`ritmo.py`, mesma métrica das referências) 
 
 **Mídia**: a biblioteca guarda o sha256 DA ORIGEM; `ativos` confere antes de usar; o preflight confere o arquivo do
 render contra o registrado (ERR-066). Reconstruções editoriais são sempre rotuladas.
+
+### Prévia única da direção de arte — execução 44122592315 (17/11)
+
+| | ATLAS (79,05 s) | DOSSIÊ (24,4 s) |
+|---|---|---|
+| Estado do motor | AGUARDANDO_APROVACAO_HUMANA | AGUARDANDO_APROVACAO_HUMANA |
+| Preflight / quadros renderizados | verde / 6 quadros, 0 problemas | verde / 6 quadros, 0 problemas |
+| Áudio no MP4 | −14,8 LUFS · −1,0 dBTP | −14,9 LUFS · −1,2 dBTP |
+| Maior trecho parado (ritmo medido) | 2 s (antes 4 s) | 2 s (antes 4 s) |
+| Segundos parados | 4/79 (antes 33/79) | 2/24 (antes 13/24) |
+| Custo de IA | 0 (narrações cifradas) | 0 |
+
+Referências: A = 2 s / 3 de 68 s parados; B = 1 s / 12 de 176 s. Antes desta, três disparos pararam antes de
+renderizar (429 do Wikimedia por User-Agent fora da política, ERR-071; caminho relativo na medição e mesa cara demais,
+ERR-072); nenhum gastou IA. Prévias, folhas, styleframes, leitura em celular e antes/depois foram ao Telegram privado.

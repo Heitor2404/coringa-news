@@ -645,3 +645,19 @@ def test_legenda_do_atlas_segue_a_referencia_e_vem_do_canal():
     txt = ' '.join(w['w'] for w in c['palavras'])
     assert 'Panamá' in txt and 'Atlântico' in txt and 'liga' in txt and txt.startswith('O ')
     assert all(len(g['txt'].split()) <= 4 for g in LS.grupos(c['palavras'], 3))
+
+
+def test_base_cobre_a_tela_inteira_e_recuo_suavizado():
+    """trecho do mapa-múndi (17/11): a borda do recorte NE2 aparecia; recuo da referência acelera e assenta"""
+    import scripts.formatos_reuso as R
+    pl = json.loads((RAIZ / 'src/v4/formatos/planos/reuso/atlas_chips.json').read_text())
+    pl['rasters'] = [{'nome': 'ne2_asia_leste'}, {'nome': 'ne2_pacifico'}]
+    pal, _, dur = R.tempos_sinteticos(pl['narracao']['texto'])
+    r = P.resolver_tempos(pl, pal); r['duracao'] = dur
+    assert 'F-MAPA-BORDA-DA-BASE' in {v['regra'] for v in P.validar(r)} or 'F-MAPA-SEM-BASE' in {v['regra'] for v in P.validar(r)}
+    a = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    k = a['palco'][-1]
+    assert k['movimento'] == 'recua' and k.get('dur_deriva')
+    t0 = k['t'] + k['dur_camera']
+    z = [P.camera_em(a['palco'], t0 + f * k['dur_deriva'])['zoom'] for f in (0, .1, .5, .9, 1)]
+    assert abs(z[1] - z[0]) < abs(z[2] - z[1]) / 2          # começa devagar

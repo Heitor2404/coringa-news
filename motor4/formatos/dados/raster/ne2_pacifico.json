@@ -3,27 +3,27 @@
  "tipo": "fisico",
  "cantos": [
   [
-   90.0,
-   70.0
+   60.0,
+   85.0
   ],
   [
-   290.0,
-   70.0
+   300.0,
+   85.0
   ],
   [
-   290.0,
-   -20.0
+   300.0,
+   -85.0
   ],
   [
-   90.0,
-   -20.0
+   60.0,
+   -85.0
   ]
  ],
  "px": [
-  3200,
-  1918
+  2880,
+  4306
  ],
- "px_por_grau_fonte": 16.0,
+ "px_por_grau_fonte": 12.0,
  "canal": "coringa",
  "arquivo": "ne2_pacifico.jpg",
  "dataset": "ne2_raster",
@@ -34,6 +34,6 @@
   "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
  },
  "atribuicao": "Natural Earth",
- "sha256": "022f3073c5850fca9efe52159332d0483ceec9a6b92263e9f86fdd7e84325f98",
+ "sha256": "3503900a0be81eeed17805fc3525fada54d97bfdcfb9897b4e265a26d27cc53c",
  "gerado": "2026-11-17"
 }

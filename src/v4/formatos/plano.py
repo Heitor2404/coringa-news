@@ -245,7 +245,11 @@ def camera_em(palco: list[dict], t: float) -> dict | None:
         anc = [cb['ancora'][0] + (ca['ancora'][0] - cb['ancora'][0]) * e, cb['ancora'][1] + (ca['ancora'][1] - cb['ancora'][1]) * e]
         return _restringir({'fx': fx, 'fy': fy, 'ancora': anc, 'zoom': z})
     fx, fy = merc(*ca['foco'])
-    z = ca['zoom'] + a.get('deriva', 0) * max(0., t - a['t'] - max(0, d))
+    dt = max(0., t - a['t'] - max(0, d))
+    if a.get('dur_deriva'):                # recuo: mesma variação total, com aceleração e assentamento (seno)
+        T_ = a['dur_deriva']
+        dt = T_ * (1 - math.cos(math.pi * min(1., dt / T_))) / 2
+    z = ca['zoom'] + a.get('deriva', 0) * dt
     if a.get('zoom_teto') is not None and a.get('deriva', 0) > 0:
         z = min(z, max(ca['zoom'], a['zoom_teto']))
     return _restringir({'fx': fx, 'fy': fy, 'ancora': ca['ancora'], 'zoom': z})
@@ -314,6 +318,15 @@ def bases_do_plano(p: dict) -> list[dict]:
     return [raster_info(r['nome']) for r in p.get('rasters') or []]
 
 
+def tela_lonlat(cam: dict) -> list[float]:
+    """[oeste, sul, leste, norte] visíveis na tela 1080×1920 com esta câmera (longitude contínua em torno do foco)"""
+    ws = 512 * 2 ** cam['zoom']
+    x0 = cam['fx'] - cam['ancora'][0] / ws; x1 = cam['fx'] + (1080 - cam['ancora'][0]) / ws
+    y0 = cam['fy'] - cam['ancora'][1] / ws; y1 = cam['fy'] + (1920 - cam['ancora'][1]) / ws
+    lat = lambda y: math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y))))
+    return [x0 * 360 - 180, max(-85.0, lat(min(y1, 1.0))), x1 * 360 - 180, min(85.0, lat(max(y0, 0.0)))]
+
+
 def cobre(ri: dict, roi) -> bool:
     return ri['bbox'][0] <= roi[0] and ri['bbox'][1] <= roi[1] and ri['bbox'][2] >= roi[2] and ri['bbox'][3] >= roi[3]
 
@@ -370,6 +383,8 @@ def palco_dos_beats(p: dict) -> list[dict]:
                         falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t_ini - k['dur_camera']) - teto
                         if falta > 0:
                             k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - min(.6, falta), 3)}
+                if mov == 'recua':
+                    k['dur_deriva'] = round(max(.1, fim - t - k['dur_camera']), 3)   # recuo SUAVIZADO (referência: acelera e assenta)
                 if mov == 'recua':           # termina no enquadramento: começa |deriva|·duração mais perto
                     k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - k['deriva'] * max(0, fim - t - k['dur_camera']), 3)}
                 if c.get('quadro'):
@@ -742,6 +757,10 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                 # mapa GEOGRÁFICO exige base cartográfica licenciada (relevo/satélite) que cubra o território e seja
                 # nítida no zoom usado — SEMPRE (antes, sem rasters a checagem era pulada e saía mapa vetorial chapado)
                 cob = [ri for ri in rasters if cobre(ri, b['roi'])]
+                # a base cobre a TELA inteira (não só o território): sem isso aparece a borda do recorte (reuso mundo, 17/11)
+                tela = tela_lonlat(cam)
+                if cob and not any(cobre(ri, tela) for ri in rasters) and (fins[b['id']] - .05 == t or recua):
+                    v('erro', 'F-MAPA-BORDA-DA-BASE', b['id'], f"a tela mostra além da base cartográfica ({', '.join(f'{x:.0f}' for x in tela)})")
                 if not cob:
                     v('erro', 'F-MAPA-SEM-BASE', b['id'], 'mapa geográfico sem base cartográfica licenciada cobrindo o território (contorno vetorial chapado não é mapa ATLAS)')
                 elif not any(ri['nitido_ate'] >= cam['zoom'] - 1e-6 for ri in cob):

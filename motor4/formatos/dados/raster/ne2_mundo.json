@@ -4,24 +4,24 @@
  "cantos": [
   [
    -180.0,
-   78.0
+   85.0
   ],
   [
    180.0,
-   78.0
+   85.0
   ],
   [
    180.0,
-   -60.0
+   -85.0
   ],
   [
    -180.0,
-   -60.0
+   -85.0
   ]
  ],
  "px": [
   4320,
-  2454
+  4306
  ],
  "px_por_grau_fonte": 12.0,
  "canal": "coringa",
@@ -34,6 +34,6 @@
   "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
  },
  "atribuicao": "Natural Earth",
- "sha256": "12016309e410a227c722ea4b188c8c1ee50b8f85ad3f79539a868b26e46b0c68",
+ "sha256": "e703067d856281d173ba107f1c43a5fd5ac0a6c03104644e4878409ad07f7268",
  "gerado": "2026-11-17"
 }

@@ -44,7 +44,10 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
     anc = [lerp(cb.ancora[0], ca.ancora[0], e), lerp(cb.ancora[1], ca.ancora[1], e)];
   } else {
     fx = mercX(ca.foco[0]); fy = mercY(ca.foco[1]); anc = ca.ancora;
-    z = ca.zoom + (a.deriva ?? 0) * Math.max(0, t - a.t - Math.max(0, d));
+    let dt = Math.max(0, t - a.t - Math.max(0, d));
+    const Td = (a as any).dur_deriva;
+    if (Td) dt = Td * (1 - Math.cos(Math.PI * Math.min(1, dt / Td))) / 2;          // = plano.camera_em (recuo suavizado)
+    z = ca.zoom + (a.deriva ?? 0) * dt;
     if ((a as any).zoom_teto != null && (a.deriva ?? 0) > 0) z = Math.min(z, Math.max(ca.zoom, (a as any).zoom_teto));   // = plano.camera_em
   }
   // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(H/512) e centro vertical dentro do mundo

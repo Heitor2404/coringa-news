@@ -366,7 +366,8 @@ def palco_dos_beats(p: dict) -> list[dict]:
                     # aproximação CONTÍNUA (referência: ≈ +2 %/s o beat inteiro): se o teto cortaria a deriva no meio, a
                     # câmera começa um pouco mais aberta (até 0,6 de zoom) para o movimento durar o beat todo
                     if k['deriva'] > 0:
-                        falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t - k['dur_camera']) - teto
+                        t_ini = 0.0 if i == 0 else t          # o 1º beat começa no quadro 0 (o clipe do gancho fica por cima)
+                        falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t_ini - k['dur_camera']) - teto
                         if falta > 0:
                             k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - min(.6, falta), 3)}
                 if mov == 'recua':           # termina no enquadramento: começa |deriva|·duração mais perto

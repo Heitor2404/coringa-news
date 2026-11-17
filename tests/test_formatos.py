@@ -181,3 +181,12 @@ def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     for x, y, w, h in P.SLOTS.values():
         for zx, zy, zw, zh in P.CFG['zonas_identidade'].values():
             assert not (x < zx + zw and zx < x + w and y < zy + zh and zy < y + h), 'slot padrão dentro de zona da identidade'
+
+
+def test_workflow_passa_o_segredo_que_decifra_a_narracao():
+    """44083616015: CHECKPOINT_KEY não existe no repositório; a chave deriva do COFRE_TOKEN — sem ele, nada decifra"""
+    import yaml
+    wf = yaml.safe_load((RAIZ / '.github/workflows/formatos-piloto.yml').read_text())
+    passo = next(s for s in wf['jobs']['formatos']['steps'] if 'narrar' in str(s.get('run', '')))
+    assert 'COFRE_TOKEN' in passo['env'] and 'GEMINI_API_KEY' in passo['env']
+    assert set(wf[True if True in wf else 'on'].keys()) <= {'push', 'workflow_dispatch'}

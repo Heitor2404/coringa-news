@@ -1661,6 +1661,29 @@
     "preflight",
     "*"
    ]
+  },
+  {
+   "id": "ERR-065",
+   "titulo": "Workflow dos formatos sem o segredo que decifra a narração",
+   "data": "2026-11-17",
+   "versao": "formatos",
+   "sintoma": "44083616015: 'sem segredo para derivar a chave do material'; nada renderizado.",
+   "causa_raiz": "CHECKPOINT_KEY não existe no repositório; a chave deriva do COFRE_TOKEN, que o passo não recebia.",
+   "arquivos": [
+    ".github/workflows/formatos-piloto.yml"
+   ],
+   "correcao": "passo de narração recebe COFRE_TOKEN; teste estático do workflow.",
+   "testes": [
+    "tests/test_formatos.py::test_workflow_passa_o_segredo_que_decifra_a_narracao"
+   ],
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "referencia": "execução 44083616015",
+   "verificavel": true,
+   "tags": [
+    "ci",
+    "formatos"
+   ]
   }
  ]
 }

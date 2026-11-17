@@ -48,7 +48,9 @@ jobs:
           mkdir -p ~/.fonts && cp motor4/identidade/ttf/*.ttf ~/.fonts/ && fc-cache -f
       - name: Narração (ATLAS reutiliza a cifrada; DOSSIÊ = uma chamada de TTS, cota grátis)
         env:
+          # a chave do material deriva do COFRE_TOKEN quando CHECKPOINT_KEY não existe (execução 44083616015)
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python -m src.v4.formatos narrar $PLANO_ATLAS saida_formatos/atlas

@@ -89,7 +89,6 @@
    "t0": "@gasta",
    "t1": "@197+0.6",
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.14,
    "para": 0.7,
    "some": "@4:por"
@@ -98,7 +97,6 @@
    "t0": "@metade",
    "t1": "@metade+1.1",
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.14,
    "para": 0,
    "some": "@4:por"
@@ -107,7 +105,6 @@
    "t0": "@2:metade",
    "t1": "@2:metade+1.1",
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.7,
    "para": 1,
    "some": "@4:por"
@@ -276,7 +273,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.15,
    "prova": "depois do navio subindo na eclusa (gancho em 0–2,4 s): o território, a pergunta e a prova real protagonista",
    "camadas": [
     {
@@ -308,13 +304,11 @@
       "linhas": [
        {
         "texto": "SOBE UMA",
-        "t": "@sobe",
-        "tamanho": 84
+        "t": "@sobe"
        },
        {
         "texto": "MONTANHA?",
         "t": "@montanha",
-        "tamanho": 104,
         "destaque": true
        }
       ]
@@ -332,8 +326,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.3,
-   "transicao": 1.0,
    "prova": "o istmo entre dois oceanos, no relevo real",
    "camadas": []
   },
@@ -347,7 +339,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.8,
    "prova": "rota real (OSM) de mar a mar sobre a imagem orbital",
    "camadas": [
     {
@@ -379,7 +370,6 @@
     -79.63,
     9.34
    ],
-   "transicao": 1.4,
    "prova": "o lago Gatún no meio do canal, destacado",
    "camadas": [
     {
@@ -405,7 +395,6 @@
     -79.63,
     9.34
    ],
-   "transicao": 1.0,
    "prova": "26 m acima do mar + divisa continental (câmera fixa enquanto o número muda)",
    "camadas": [
     {
@@ -447,7 +436,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.2,
    "prova": "degraus acendem junto com o pino da eclusa no mapa (mesmo nome)",
    "camadas": [
     {
@@ -582,7 +570,6 @@
     9.36
    ],
    "movimento": "fixo",
-   "transicao": 0.8,
    "prova": "sob o clipe aprovado do mecanismo (furo 31,5–40,9 s): o mapa só segura o canal",
    "camadas": []
   },
@@ -613,7 +600,6 @@
      "t1": 50.4,
      "p": {
       "fluxo": true,
-      "largura": 700,
       "nos": [
        {
         "rotulo": "Lago Gatún",
@@ -639,7 +625,8 @@
       ]
      }
     }
-   ]
+   ],
+   "funcao": "mecanismo"
   },
   {
    "id": "b7-volume",
@@ -651,7 +638,6 @@
     -79.56,
     9.045
    ],
-   "transicao": 1.2,
    "prova": "eclusas de Miraflores vistas de cima + volume e tempo de uma câmara",
    "camadas": [
     {
@@ -713,7 +699,6 @@
     -79.56,
     9.045
    ],
-   "transicao": 0.8,
    "prova": "navio real dentro da eclusa de Miraflores, preso ao lugar",
    "camadas": [
     {
@@ -762,7 +747,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.4,
    "prova": "a água doce do lago percorre o canal e termina no mar; metade sobe, metade desce",
    "camadas": [
     {
@@ -830,8 +814,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.25,
-   "transicao": 1.8,
    "prova": "recuo lento ao mapa inicial + síntese",
    "camadas": [
     {
@@ -844,19 +826,16 @@
       "linhas": [
        {
         "texto": "UM LAGO NO ALTO",
-        "t": "@cruza",
-        "tamanho": 76
+        "t": "@cruza"
        },
        {
         "texto": "DESDE 1914",
         "t": "@desde",
-        "tamanho": 76,
         "destaque": true
        },
        {
         "texto": "SÓ GRAVIDADE",
-        "t": "@2:gravidade",
-        "tamanho": 76
+        "t": "@2:gravidade"
        }
       ]
      }
@@ -871,20 +850,11 @@
   },
   {
    "nome": "s2_panama_canal",
-   "de": 8.2,
-   "ajuste": {
-    "brilho_max": 1.0,
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 8.2
   },
   {
    "nome": "s2_miraflores_eclusas",
-   "de": 12.1,
-   "ajuste": {
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 12.1
   }
  ],
  "antes": ".github/v4/material/antes_atlas_44155276352.bin",

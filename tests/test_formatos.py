@@ -96,7 +96,7 @@ def test_mesma_midia_tres_vezes_no_episodio():
 
 def test_texto_que_nao_cabe_e_componente_fora_do_formato():
     pl = copy.deepcopy(ATLAS)
-    _camada(pl, 'payoff')['p']['linhas'][0]['tamanho'] = 120
+    _camada(pl, 'payoff')['p']['linhas'][0]['texto'] = 'UM LAGO NO ALTO DA MONTANHA'      # corpo vem do token do slot
     _camada(pl, 'km')['componente'] = 'tresd.camara'
     r = _regras(pl)
     assert 'F-TEXTO-NAO-CABE' in r and 'F-COMPONENTE' in r
@@ -256,11 +256,15 @@ def test_raster_do_palco_tem_procedencia_licenca_e_resolucao():
 def test_mapa_sem_raster_nitido_e_camada_sobre_o_territorio_sao_erro():
     """direção de arte: mapa de baixa qualidade e esquema cobrindo a rota/território são recusados ANTES do render"""
     pl = copy.deepcopy(ATLAS)
+    pl['rasters'] = []                                 # sem base: antes a checagem era PULADA e saía mapa vetorial chapado
+    assert 'F-MAPA-SEM-BASE' in _regras(pl)
+    pl = copy.deepcopy(ATLAS)
     b = next(b for b in pl['beats'] if b['id'] == 'b2-rota')
-    b['zoom_max'] = None
-    b['roi'] = [-79.62, 8.99, -79.58, 9.02]          # zoom ~13 só com o raster do canal (nítido até 11)
+    b['roi'] = [-79.62, 8.99, -79.58, 9.02]          # território minúsculo: a câmera PARA na nitidez da base, não amplia além
     pl['rasters'] = [r for r in pl['rasters'] if r['nome'] != 's2_miraflores_eclusas']
-    assert 'F-MAPA-BAIXA-RESOLUCAO' in _regras(pl)
+    r = P.resolver_tempos(pl, [])
+    k = next(k for k in r['palco'] if k.get('roi') == b['roi'])
+    assert k['camera']['zoom'] <= P.teto_zoom(r, b['roi']) + 1e-6
     pl = copy.deepcopy(ATLAS)
     perfil = next(L for b in pl['beats'] for L in b['camadas'] if L['id'] == 'perfil')
     perfil['caixa'] = [60, 360, 960, 360]             # o perfil em cima do canal (era o erro da 44084129999)
@@ -340,7 +344,8 @@ def test_camera_aproxima_fica_parada_no_dado_e_recua_no_fecho():
     fecho = pl['palco'][-1]
     assert fecho['movimento'] == 'recua'
     fim = P.camera_em(pl['palco'], pl['duracao'] - .05)
-    alvo = P.camera_roi(next(b for b in pl['beats'] if b['id'] == 'b9-payoff')['roi'], P.COMP['atlas.manchete']['quadro'], 6.25)
+    roi = next(b for b in pl['beats'] if b['id'] == 'b9-payoff')['roi']
+    alvo = P.camera_roi(roi, P.COMP['atlas.manchete']['quadro'], P.teto_zoom(pl, roi))
     assert math.isclose(fim['zoom'], alvo['zoom'], abs_tol=.02)       # termina no enquadramento do território inteiro
 
 
@@ -611,5 +616,32 @@ def test_camada_que_entra_com_a_camera_em_voo_nao_cobre_o_territorio():
 
 def test_legenda_mede_o_corpo_com_a_fonte_real_e_rotulos_do_mapa_na_area_segura():
     cam = (RAIZ / 'motor4/remotion/src/Camada.tsx').read_text()
-    assert 'measureText' in cam and 'linhas <= 2' in cam and '[frame, fontes]' in cam
+    assert 'measureText' in cam and 'linhas <= (L.linhas_max' in cam and '[frame, fontes]' in cam
     assert "'seguro'" in (RAIZ / 'src/v4/formatos/plano.py').read_text() and 'S.dir_max' in (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+
+
+def test_storyboard_nao_escolhe_estetica_nem_diagrama_no_lugar_do_mapa():
+    """auditoria 17/11: o plano podia trocar mapa por diagrama, dispensar a base cartográfica e reescrever a identidade"""
+    pl = copy.deepcopy(ATLAS_BRUTO)
+    b = next(b for b in pl['beats'] if b.get('composicao') == 'atlas.tecnica')
+    b.pop('funcao')
+    _camada(pl, 'payoff')['p']['linhas'][0]['tamanho'] = 140
+    pl['rotas'][0]['largura'] = 20
+    pl['beats'][0]['transicao'] = 3.0
+    viol = P.estilo_no_episodio(pl)
+    assert any('tamanho' in x for x in viol) and any('largura' in x for x in viol) and any('transicao' in x for x in viol)
+    regras = _regras({**copy.deepcopy(ATLAS), '_estilo_no_episodio': viol, 'beats': [dict(x, funcao=None) if x.get('composicao') == 'atlas.tecnica' else x for x in copy.deepcopy(ATLAS)['beats']]})
+    assert {'F-ESTILO-NO-EPISODIO', 'F-TECNICO-SEM-MECANISMO'} <= regras
+    assert 'atlas.tecnica' in P.COMP and P.COMP['atlas.tecnica'].get('exige_funcao')
+
+
+def test_legenda_do_atlas_segue_a_referencia_e_vem_do_canal():
+    """referência A medida: frase em caixa normal, 1–3 palavras, ~56 px, sem karaokê — estilo do CANAL, não do episódio"""
+    from src.v4.formatos import legenda_sync as LS
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    pal = [{'w': w, 's': i * .4, 'e': i * .4 + .35} for i, w in enumerate(['O', 'CANAL', 'DO', 'PANAMÁ', 'LIGA', 'O', 'ATLÂNTICO'])]
+    c = P.props_camada(pl, {'palavras': pal})
+    assert c['estilo']['caixa'] == 'frase' and c['estilo']['max_palavras'] == 3 and c['estilo']['destaque_palavra'] is False
+    txt = ' '.join(w['w'] for w in c['palavras'])
+    assert 'Panamá' in txt and 'Atlântico' in txt and 'liga' in txt and txt.startswith('O ')
+    assert all(len(g['txt'].split()) <= 4 for g in LS.grupos(c['palavras'], 3))

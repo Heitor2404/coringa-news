@@ -17,6 +17,8 @@ SFX = {
     'comporta': (1.6, "sine=f=55:d={d},volume=1.4,afade=t=out:st=0.2:d=1.3[a];anoisesrc=color=pink:amplitude=0.3:d={d},bandpass=f=420:w=200,afade=t=out:st=0.05:d=0.6[b];[a][b]amix=inputs=2:normalize=0"),
     'valvula': (0.9, "anoisesrc=color=white:amplitude=0.25:d={d},bandpass=f=2400:w=900,afade=t=in:d=0.05,afade=t=out:st=0.3:d=0.55"),
     'impacto': (1.8, "sine=f=42:d={d},volume=1.8,afade=t=in:d=0.01,afade=t=out:st=0.08:d=1.6"),
+    'tique': (0.35, "sine=f=1650:d={d},volume=0.6,afade=t=in:d=0.004,afade=t=out:st=0.01:d=0.3,highpass=f=700"),
+    'traco': (1.1, "anoisesrc=color=pink:amplitude=0.22:d={d},bandpass=f=1800:w=1400,afade=t=in:d=0.25,afade=t=out:st=0.5:d=0.6"),
     'sopro': (0.8, "anoisesrc=color=pink:amplitude=0.35:d={d},highpass=f=600,lowpass=f=5000,afade=t=in:d=0.35,afade=t=out:st=0.4:d=0.4"),
 }
 
@@ -30,20 +32,22 @@ def gerar_sfx(nome: str, saida: Path, dur: float | None = None) -> Path:
     return saida
 
 
-def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, trab: Path, saida: Path) -> dict:
+def mixar(narracao: Path, duracao: float, sfx: list[dict], musica: Path | None, trab: Path, saida: Path, preset: dict | None = None) -> dict:
     """sfx = [{id, t, ganho_db, dur}] em tempo do episódio. Trilha com sidechain da voz. Depois: masterização medida."""
     from src.render.render import masterizar
     trab.mkdir(parents=True, exist_ok=True)
     ent = ['-i', str(narracao)]
     fil = [f'[0:a]aresample=48000,aformat=channel_layouts=mono,apad=whole_dur={duracao:.3f}[voz]']
     k = 1
-    mus_db = IDENT['som']['musica_db_sob_voz']
+    preset = preset or {}
+    mus_db = preset.get('musica_db', IDENT['som']['musica_db_sob_voz'])
+    dk = {'threshold': .03, 'ratio': 6, 'attack_ms': 20, 'release_ms': 300, **(preset.get('ducking') or {})}
     if musica and Path(musica).exists():
         ent += ['-stream_loop', '-1', '-i', str(musica)]
         fil.append(f'[{k}:a]aresample=48000,aformat=channel_layouts=mono,atrim=0:{duracao:.3f},volume={mus_db}dB,'
                    f'afade=t=in:d=1.0,afade=t=out:st={max(0, duracao - 2.0):.2f}:d=2.0[mus0]')
         fil.append('[voz]asplit=2[voz][sc]')
-        fil.append('[mus0][sc]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[mus]')
+        fil.append(f"[mus0][sc]sidechaincompress=threshold={dk['threshold']}:ratio={dk['ratio']}:attack={dk['attack_ms']}:release={dk['release_ms']}[mus]")
         k += 1
     efeitos = []
     for j, s in enumerate(sfx):

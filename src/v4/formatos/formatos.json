@@ -107,7 +107,30 @@
   "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px",
   "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)",
   "gancho_s": 3.0,
-  "_nota_cta": "editorial.cta não conta como modalidade visual nova (assinatura do canal)"
+  "_nota_cta": "editorial.cta não conta como modalidade visual nova (assinatura do canal)",
+  "estilo_proibido_no_episodio": {
+   "_nota": "identidade visual vem de tokens/presets; o episódio traz conteúdo, coordenadas, acontecimentos e escolhas narrativas",
+   "camada": [
+    "tamanho",
+    "raio",
+    "largura",
+    "cor_hex",
+    "fonte_px",
+    "inclina",
+    "sombra"
+   ],
+   "rota": [
+    "largura"
+   ],
+   "raster": [
+    "ajuste"
+   ],
+   "beat": [
+    "transicao",
+    "zoom_max",
+    "deriva"
+   ]
+  }
  },
  "zonas_identidade": {
   "marca": [
@@ -332,7 +355,11 @@
    "max_camadas": 2,
    "pinos": false,
    "referencia": "mapa técnico azul-marinho com grade (~169 px em 1080) e cartão sobre a parte baixa do território (ref. 37–44 s)",
-   "uso": "conceito abstrato sobre o território em planta técnica"
+   "uso": "SÓ para explicar um mecanismo ou estrutura física (beat com \"funcao\": \"mecanismo\"|\"estrutura\"): planta técnica do Coringa sobre o território real",
+   "exige_funcao": [
+    "mecanismo",
+    "estrutura"
+   ]
   },
   "atlas.manchete": {
    "formato": "atlas",

@@ -1,0 +1,39 @@
+{
+ "nome": "ne2_asia_leste",
+ "tipo": "fisico",
+ "cantos": [
+  [
+   100.0,
+   42.0
+  ],
+  [
+   140.0,
+   42.0
+  ],
+  [
+   140.0,
+   5.0
+  ],
+  [
+   100.0,
+   5.0
+  ]
+ ],
+ "px": [
+  4800,
+  4963
+ ],
+ "px_por_grau_fonte": 60,
+ "canal": "coringa",
+ "arquivo": "ne2_asia_leste.jpg",
+ "dataset": "ne2_raster",
+ "fonte": {
+  "arquivo": "NE2_HR_LC_SR_W.tif",
+  "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-raster/master/10m_rasters/NE2_HR_LC_SR_W/NE2_HR_LC_SR_W.tif",
+  "sha256": "ed4a69ab9e7cc8514032d113da7a31986c42fa2754202d330c472928ffbbb1b6",
+  "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
+ },
+ "atribuicao": "Natural Earth",
+ "sha256": "8ab7baeffc6e5936939042bd9dba444dfdb6d922b714986619cc92cd3361bcf2",
+ "gerado": "2026-11-17"
+}

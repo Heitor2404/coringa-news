@@ -69,6 +69,7 @@ def ancora(valor, palavras: list[dict], depois: float = 0.0) -> float:
 
 def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
     p = copy.deepcopy(plano)
+    p['_estilo_no_episodio'] = estilo_no_episodio(plano)
     a = lambda v: ancora(v, palavras)
     for k in p.get('palco') or []:
         k['t'] = a(k['t'])
@@ -113,11 +114,48 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
                         x['t'] = a(x['t'])
     if isinstance(p.get('duracao'), str):
         p['duracao'] = a(p['duracao'])
+    aplicar_tokens(p)
     if p.get('camera') == 'roi':
         p['palco'] = palco_dos_beats(p)
         posicionar_pinos(p)
     inserir_cta(p)
+    p['_resolvido'] = True
     return p
+
+
+def aplicar_tokens(p: dict) -> None:
+    """identidade vem do CANAL, não do episódio: corpo dos títulos por slot, espessura de rota/conexão"""
+    can = canal(p.get('canal', 'coringa'))
+    T = can.get('titulo') or {}
+    for b in p.get('beats') or []:
+        for L in b.get('camadas') or []:
+            if L.get('componente') == 'editorial.titleOrPayoff':
+                tk = T.get(L.get('slot')) or T.get('padrao') or {'normal': 84, 'destaque': 104}
+                for l in (L.get('p') or {}).get('linhas') or []:
+                    l['tamanho'] = tk['destaque'] if l.get('destaque') else tk['normal']
+    M = (can.get('palco') or {}).get('mapa') or {}
+    for r in p.get('rotas') or []:
+        r['largura'] = M.get('conexao_px', 7) if r.get('arco') else M.get('rota_px', 9)
+
+
+def estilo_no_episodio(plano_bruto: dict) -> list[str]:
+    """chaves de IDENTIDADE escritas no arquivo do episódio (proibidas no ATLAS): tamanho, raio, espessura, ajuste de cor,
+    transição/zoom da câmera… — o diretor não reinventa a estética por episódio"""
+    if plano_bruto.get('formato') != 'atlas' or plano_bruto.get('_resolvido'):
+        return list(plano_bruto.get('_estilo_no_episodio') or [])
+    P_ = REGRAS.get('estilo_proibido_no_episodio') or {}
+    out = []
+    for b in plano_bruto.get('beats') or []:
+        out += [f"beat {b.get('id')}: {k}" for k in P_.get('beat', []) if k in b]
+        for L in b.get('camadas') or []:
+            q = L.get('p') or {}
+            out += [f"{L.get('id')}: {k}" for k in P_.get('camada', []) if k in q]
+            out += [f"{L.get('id')}: linha com {k}" for l in q.get('linhas') or [] for k in P_.get('camada', []) if isinstance(l, dict) and k in l]
+            if isinstance(q.get('desloc'), list):
+                out.append(f"{L.get('id')}: desloc manual (use 'auto')")
+    out += [f"rota: {k}" for r in plano_bruto.get('rotas') or [] for k in P_.get('rota', []) if k in r]
+    out += [f"raster {r.get('nome')}: {k}" for r in plano_bruto.get('rasters') or [] for k in P_.get('raster', []) if k in r]
+    return out
 
 
 def inserir_cta(p: dict) -> None:
@@ -208,6 +246,8 @@ def camera_em(palco: list[dict], t: float) -> dict | None:
         return _restringir({'fx': fx, 'fy': fy, 'ancora': anc, 'zoom': z})
     fx, fy = merc(*ca['foco'])
     z = ca['zoom'] + a.get('deriva', 0) * max(0., t - a['t'] - max(0, d))
+    if a.get('zoom_teto') is not None and a.get('deriva', 0) > 0:
+        z = min(z, max(ca['zoom'], a['zoom_teto']))
     return _restringir({'fx': fx, 'fy': fy, 'ancora': ca['ancora'], 'zoom': z})
 
 
@@ -218,6 +258,28 @@ def roi_tela(cam: dict, roi) -> dict:
     px = lambda x: cam['ancora'][0] + (x - cam['fx']) * ws
     py = lambda y: cam['ancora'][1] + (y - cam['fy']) * ws
     return {'x': px(x0), 'y': py(y0), 'w': px(x1) - px(x0), 'h': py(y1) - py(y0)}
+
+
+def estilo_legenda(pl: dict) -> dict:
+    return (canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl.get('formato')) or {}
+
+
+def props_camada(pl: dict, meta: dict) -> dict:
+    """camada de legenda/marca — UMA fonte para render, quadros, trechos: estilo da legenda vem do CANAL por formato"""
+    from src.v4.formatos import legenda_sync
+    est = ((canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl['formato']) or {})
+    pal = meta['palavras']
+    if est.get('caixa') == 'frase':
+        pal = legenda_sync.caixa_frase(pal, *legenda_sync.nomes_do_plano(pl))
+    marcas = sorted({0.0, pl['duracao']} | {x for c in pl.get('clipes') or [] for x in (c['t0'], c['t1'])})
+    cenas = []
+    for a, b in zip(marcas, marcas[1:]):
+        dentro = any(abs(c['t0'] - a) < .01 for c in pl.get('clipes') or [])
+        cenas.append({'ini': a, 'fim': b, 'selo': 'ESQUEMA' if dentro else None, 'credito': None, 'legenda': True})
+    out = {'duracao': pl['duracao'], 'palavras': pal, 'cenas': cenas, 'estilo': {k: v for k, v in est.items() if not k.startswith('_')}}
+    if pl['formato'] == 'atlas':
+        out['legenda_caixa'] = zonas('atlas')['legenda']
+    return out
 
 
 def seguro(formato: str | None) -> dict | None:
@@ -248,6 +310,29 @@ def raster_info(nome: str) -> dict:
     return m
 
 
+def bases_do_plano(p: dict) -> list[dict]:
+    return [raster_info(r['nome']) for r in p.get('rasters') or []]
+
+
+def cobre(ri: dict, roi) -> bool:
+    return ri['bbox'][0] <= roi[0] and ri['bbox'][1] <= roi[1] and ri['bbox'][2] >= roi[2] and ri['bbox'][3] >= roi[3]
+
+
+def teto_zoom(p: dict, roi) -> float | None:
+    ns = [ri['nitido_ate'] for ri in bases_do_plano(p) if cobre(ri, roi)]
+    return max(ns) if ns else None
+
+
+def duracao_transicao(a: dict | None, b: dict | None) -> float:
+    """preset de câmera do canal (canal.camera): voo mais longo quando muda mais de escala; o episódio não escolhe"""
+    K = canal().get('camera') or {}
+    if not a or not b:
+        return K.get('transicao_min', .8)
+    dz = abs(_cam(a)['zoom'] - _cam(b)['zoom'])
+    d = K.get('transicao_base', .8) + K.get('transicao_por_zoom', .22) * dz
+    return round(min(K.get('transicao_max', 1.8), max(K.get('transicao_min', .8), d)), 2)
+
+
 def palco_dos_beats(p: dict) -> list[dict]:
     """cada beat → uma chave de palco: tipo da composição, câmera que enquadra o roi no quadro, véu da composição.
     Movimento medido na referência (atlas_ref.DERIVA): 'aproxima' (≈ +2,4 %/s enquanto camadas se revelam), 'fixo'
@@ -262,18 +347,35 @@ def palco_dos_beats(p: dict) -> list[dict]:
         fim = ini[i + 1] if i + 1 < len(beats) else p.get('duracao', t + 5)
         k = {'t': t, 'tipo': c['palco'], 'composicao': b['composicao'], 'veu': c.get('veu', 'nenhum')}
         if c['palco'] == 'mapa':
-            k['dur_camera'] = b.get('transicao', 1.6)
             mov = b.get('movimento') or c.get('movimento') or 'fixo'
             k['movimento'] = mov
-            k['deriva'] = b['deriva'] if b.get('deriva') is not None else atlas_ref.deriva(mov)
+            k['deriva'] = atlas_ref.deriva(mov)
             if b.get('roi'):
-                k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], b.get('zoom_max'))
+                # teto de zoom = nitidez da MELHOR base licenciada que cobre o território (nunca amplia imagem além dela)
+                teto = teto_zoom(p, b['roi'])
+                k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], teto)
+                k['dur_camera'] = duracao_transicao(ultima, k['camera'])
+                # a deriva de aproximação PARA na nitidez da base e quando o território encosta no quadro livre
+                if c.get('quadro'):
+                    (x0, y0), (x1, y1) = merc(b['roi'][0], b['roi'][3]), merc(b['roi'][2], b['roi'][1])
+                    qx_, qy_, qw_, qh_ = c['quadro']
+                    z_fit = math.log2(min(qw_ / ((x1 - x0) * 512), qh_ / ((y1 - y0) * 512)))
+                    teto = z_fit if teto is None else min(teto, z_fit)
+                if teto is not None:
+                    k['zoom_teto'] = round(teto, 3)
+                    # aproximação CONTÍNUA (referência: ≈ +2 %/s o beat inteiro): se o teto cortaria a deriva no meio, a
+                    # câmera começa um pouco mais aberta (até 0,6 de zoom) para o movimento durar o beat todo
+                    if k['deriva'] > 0:
+                        falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t - k['dur_camera']) - teto
+                        if falta > 0:
+                            k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - min(.6, falta), 3)}
                 if mov == 'recua':           # termina no enquadramento: começa |deriva|·duração mais perto
                     k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - k['deriva'] * max(0, fim - t - k['dur_camera']), 3)}
                 if c.get('quadro'):
                     k['roi'] = b['roi']
             elif ultima:
                 k['camera'] = ultima
+            k.setdefault('dur_camera', duracao_transicao(ultima, k.get('camera')))
             ultima = k.get('camera', ultima)
         out.append(k)
     if out:
@@ -636,11 +738,13 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                 for L in Ls:
                     if L['beat'] == b['id'] and not L.get('dinamica') and L['t0'] <= t <= L['t1'] + SAI and _cruza(L['caixa'], r):
                         v('erro', 'F-COBRE-TERRITORIO', f"{b['id']}/{L['id']}", f"camada cobre o território explicado em {t:.1f}s")
-                if rasters:
-                    ok = [ri for ri in rasters if ri['bbox'][0] <= b['roi'][0] and ri['bbox'][1] <= b['roi'][1] and ri['bbox'][2] >= b['roi'][2]
-                          and ri['bbox'][3] >= b['roi'][3] and ri['nitido_ate'] >= cam['zoom']]
-                    if not ok:
-                        v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} sem raster nítido que cubra o território (mapa de baixa qualidade)")
+                # mapa GEOGRÁFICO exige base cartográfica licenciada (relevo/satélite) que cubra o território e seja
+                # nítida no zoom usado — SEMPRE (antes, sem rasters a checagem era pulada e saía mapa vetorial chapado)
+                cob = [ri for ri in rasters if cobre(ri, b['roi'])]
+                if not cob:
+                    v('erro', 'F-MAPA-SEM-BASE', b['id'], 'mapa geográfico sem base cartográfica licenciada cobrindo o território (contorno vetorial chapado não é mapa ATLAS)')
+                elif not any(ri['nitido_ate'] >= cam['zoom'] - 1e-6 for ri in cob):
+                    v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} além da nitidez da base (até {max(ri['nitido_ate'] for ri in cob):.2f})")
     # zonas fixas da identidade (marca no topo, faixa de legenda): nenhuma caixa entra nelas (colisão de 17/11)
     ZN = zonas(plano['formato'])
     for L in Ls:
@@ -714,6 +818,17 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     for x, y in zip(ev, ev[1:]):
         if y - x > REGRAS['progressao_max_s']:
             v('erro', 'F-SEM-PROGRESSAO', f'{x:.1f}–{y:.1f}s', f'{y - x:.1f} s sem informação nova no conteúdo')
+    # palco técnico (diagrama) só para explicar mecanismo/estrutura — mapa geográfico é o padrão do ATLAS
+    for b in plano.get('beats') or []:
+        comp = COMP.get(b.get('composicao') or '') or {}
+        if comp.get('exige_funcao') and b.get('funcao') not in comp['exige_funcao']:
+            v('erro', 'F-TECNICO-SEM-MECANISMO', b.get('id', '-'), f"{b.get('composicao')} só com funcao {comp['exige_funcao']} (diagrama não substitui mapa)")
+    if plano.get('formato') == 'atlas':
+        for c in plano.get('clipes') or []:
+            if not str(c.get('componente', '')).startswith('mecanismo.'):
+                v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe no ATLAS só para demonstrar mecanismo')
+    for x in plano.get('_estilo_no_episodio') or []:
+        v('erro', 'F-ESTILO-NO-EPISODIO', x, 'identidade visual é do canal (tokens/presets), não do episódio')
     # gancho: nos primeiros segundos, algo VISUALMENTE relevante (não só mapa e legenda)
     g = REGRAS.get('gancho_s', 3.0)
     fortes = [c for c in plano.get('clipes') or [] if c['t0'] <= .5] + \
@@ -773,7 +888,7 @@ def props(plano: dict, tokens: dict, geo: dict | None, imagens: dict) -> dict:
     for r in plano.get('rasters') or []:
         m = raster_info(r['nome'])
         rasters.append({'dataset': m.get('dataset'), 'nome': r['nome'], 'src': f"_formato/raster/{m.get('arquivo') or r['nome'] + '.jpg'}", 'cantos': m['cantos'], 'de': r.get('de'), 'ate': r.get('ate'),
-                        'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': r.get('ajuste') or {}})
+                        'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': m.get('ajuste') or {}})
     return {'duracao': plano['duracao'], 'formato': plano['formato'], 'tokens': tokens, 'geo': geo, 'palco': plano['palco'], 'rasters': rasters,
             'composicoes': {k: {'quadro': v.get('quadro'), 'veu': v.get('veu')} for k, v in COMP.items()},
             'creditos': _creditos(plano), 'tecnico': plano.get('tecnico') or {}, 'seguro': seguro(plano.get('formato')),

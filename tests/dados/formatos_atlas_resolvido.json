@@ -83,34 +83,35 @@
    "t0": 8.338,
    "t1": 11.589,
    "cor": "destaque",
-   "some": 23.22
+   "some": 23.22,
+   "largura": 9
   },
   {
    "t0": 62.851,
    "t1": 64.257,
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.14,
    "para": 0.7,
-   "some": 69.686
+   "some": 69.686,
+   "largura": 9
   },
   {
    "t0": 66.5,
    "t1": 67.6,
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.14,
    "para": 0,
-   "some": 69.686
+   "some": 69.686,
+   "largura": 9
   },
   {
    "t0": 67.53,
    "t1": 68.63,
    "cor": "destaque2",
-   "largura": 14,
    "de": 0.7,
    "para": 1,
-   "some": 69.686
+   "some": 69.686,
+   "largura": 9
   }
  ],
  "rotulos": [
@@ -276,7 +277,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.15,
    "prova": "depois do navio subindo na eclusa (gancho em 0–2,4 s): o território, a pergunta e a prova real protagonista",
    "camadas": [
     {
@@ -320,8 +320,8 @@
        {
         "texto": "MONTANHA?",
         "t": 3.047,
-        "tamanho": 104,
-        "destaque": true
+        "destaque": true,
+        "tamanho": 104
        }
       ]
      }
@@ -338,8 +338,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.3,
-   "transicao": 1.0,
    "prova": "o istmo entre dois oceanos, no relevo real",
    "camadas": []
   },
@@ -353,7 +351,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.8,
    "prova": "rota real (OSM) de mar a mar sobre a imagem orbital",
    "camadas": [
     {
@@ -385,7 +382,6 @@
     -79.63,
     9.34
    ],
-   "transicao": 1.4,
    "prova": "o lago Gatún no meio do canal, destacado",
    "camadas": [
     {
@@ -411,7 +407,6 @@
     -79.63,
     9.34
    ],
-   "transicao": 1.0,
    "prova": "26 m acima do mar + divisa continental (câmera fixa enquanto o número muda)",
    "camadas": [
     {
@@ -453,7 +448,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.2,
    "prova": "degraus acendem junto com o pino da eclusa no mapa (mesmo nome)",
    "camadas": [
     {
@@ -591,7 +585,6 @@
     9.36
    ],
    "movimento": "fixo",
-   "transicao": 0.8,
    "prova": "sob o clipe aprovado do mecanismo (furo 31,5–40,9 s): o mapa só segura o canal",
    "camadas": []
   },
@@ -622,7 +615,6 @@
      "t1": 50.4,
      "p": {
       "fluxo": true,
-      "largura": 700,
       "nos": [
        {
         "rotulo": "Lago Gatún",
@@ -648,7 +640,8 @@
       ]
      }
     }
-   ]
+   ],
+   "funcao": "mecanismo"
   },
   {
    "id": "b7-volume",
@@ -660,7 +653,6 @@
     -79.56,
     9.045
    ],
-   "transicao": 1.2,
    "prova": "eclusas de Miraflores vistas de cima + volume e tempo de uma câmara",
    "camadas": [
     {
@@ -723,7 +715,6 @@
     -79.56,
     9.045
    ],
-   "transicao": 0.8,
    "prova": "navio real dentro da eclusa de Miraflores, preso ao lugar",
    "camadas": [
     {
@@ -778,7 +769,6 @@
     -79.52,
     9.36
    ],
-   "transicao": 1.4,
    "prova": "a água doce do lago percorre o canal e termina no mar; metade sobe, metade desce",
    "camadas": [
     {
@@ -846,8 +836,6 @@
     -77.0,
     9.9
    ],
-   "zoom_max": 6.25,
-   "transicao": 1.8,
    "prova": "recuo lento ao mapa inicial + síntese",
    "camadas": [
     {
@@ -866,8 +854,8 @@
        {
         "texto": "DESDE 1914",
         "t": 74.202,
-        "tamanho": 76,
-        "destaque": true
+        "destaque": true,
+        "tamanho": 76
        },
        {
         "texto": "SÓ GRAVIDADE",
@@ -887,29 +875,27 @@
   },
   {
    "nome": "s2_panama_canal",
-   "de": 8.2,
-   "ajuste": {
-    "brilho_max": 1.0,
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 8.2
   },
   {
    "nome": "s2_miraflores_eclusas",
-   "de": 12.1,
-   "ajuste": {
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 12.1
   }
  ],
- "antes": ".github/v4/material/antes_atlas_44122592315.bin",
+ "antes": ".github/v4/material/antes_atlas_44155276352.bin",
  "antes_ritmo": {
+  "execucao": "44155276352",
+  "maior_trecho_parado_s": 5,
+  "segundos_parados": 20,
   "segundos": 79,
-  "segundos_parados": 4,
-  "maior_trecho_parado_s": 2
+  "sem_camera": {
+   "maior_trecho_parado_s": 4,
+   "segundos_parados": 18
+  }
  },
  "styleframes": 12,
  "cta": true,
- "cta_decisao": "sem CTA: só 1.0 s depois da revelação final (mín. 1.2 s)"
+ "_estilo_no_episodio": [],
+ "cta_decisao": "sem CTA: só 1.0 s depois da revelação final (mín. 1.2 s)",
+ "_resolvido": true
 }

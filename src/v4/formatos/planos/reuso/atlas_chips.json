@@ -95,8 +95,7 @@
    ],
    "t0": "@holanda",
    "t1": "@asml",
-   "some": "@e",
-   "largura": 7
+   "some": "@e"
   },
   {
    "arco": [
@@ -111,8 +110,7 @@
    ],
    "t0": "@nasce",
    "t1": "@unidos+0.8",
-   "some": "@sete",
-   "largura": 7
+   "some": "@sete"
   },
   {
    "arco": [
@@ -129,13 +127,23 @@
    "t1": "@china-0.1",
    "ate": 0.62,
    "cor": "destaque2",
-   "largura": 7,
    "nota": "conexão EUA → China interrompida no meio do Pacífico: o bloqueio"
   }
  ],
  "rotulos": [],
  "clipes": [],
- "rasters": [],
+ "rasters": [
+  {
+   "nome": "ne2_mundo"
+  },
+  {
+   "nome": "ne2_pacifico"
+  },
+  {
+   "nome": "ne2_asia_leste",
+   "de": 4.5
+  }
+ ],
  "beats": [
   {
    "id": "b1-gancho",
@@ -160,13 +168,11 @@
       "linhas": [
        {
         "texto": "O CHIP DEPENDE",
-        "t": 0.3,
-        "tamanho": 84
+        "t": 0.3
        },
        {
         "texto": "DE UMA ILHA?",
         "t": "@ilha",
-        "tamanho": 104,
         "destaque": true
        }
       ]
@@ -241,7 +247,6 @@
     126,
     56
    ],
-   "transicao": 1.2,
    "prova": "a ferramenta vem do outro lado do mundo: a conexão desenha a dependência",
    "camadas": [
     {
@@ -300,7 +305,6 @@
     242,
     52
    ],
-   "transicao": 1.2,
    "prova": "o projeto atravessa o Pacífico",
    "camadas": [
     {
@@ -475,18 +479,15 @@
        {
         "texto": "UM ELO",
         "t": "@elo",
-        "tamanho": 96,
         "destaque": true
        },
        {
         "texto": "CONTROLA",
-        "t": "@2:controla",
-        "tamanho": 84
+        "t": "@2:controla"
        },
        {
         "texto": "A GUERRA",
-        "t": "@guerra",
-        "tamanho": 84
+        "t": "@guerra"
        }
       ]
      }

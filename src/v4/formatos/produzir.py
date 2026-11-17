@@ -222,7 +222,7 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         add('fonte factual ≠ atribuição cartográfica', not (fontes_fatos & mapa_urls) and not any(u_ in cred for u_ in fontes_fatos), f'{len(fontes_fatos)} fontes factuais separadas')
     if narr.exists() and (saida / 'voz.wav').exists():
         from src.v4.formatos import legenda_sync
-        ls = legenda_sync.conferir(narr, saida / 'voz.wav')
+        ls = legenda_sync.conferir(narr, saida / 'voz.wav', P.estilo_legenda(plano_bruto).get('max_palavras', 4))
         _gravar(saida / 'legenda_sync.json', ls)
         add('legenda sincronizada com o áudio real', ls['ok'],
             f"atraso {ls['atraso_s']} s · {ls['n_palavras_sem_fala']} palavras fora da fala · {len(ls['fala_sem_legenda'])} falas sem legenda · {len(ls['trocas_bruscas'])} trocas bruscas")
@@ -288,6 +288,36 @@ def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path) -> None:
     _trecho(inteiro, float(f['ini']), float(f['ini']) + furo, saida_mp4)
 
 
+def sfx_do_plano(pl: dict) -> list[dict]:
+    """efeitos do PADRÃO SONORO do canal, ancorados nos acontecimentos visuais do plano (o episódio não escolhe efeito):
+    troca grande de escala → sopro; cartão de dado entra → tique; rota começa → traço; clipe de mecanismo → água.
+    Espaçamento mínimo e ganho baixo: o efeito acompanha a imagem, não compete com a voz."""
+    E = (P.canal(pl.get('canal', 'coringa')).get('som') or {}).get('efeitos') or {}
+    if not E:
+        return []
+    ev = []
+    ks = [k for k in pl.get('palco') or [] if k.get('camera')]
+    for a, b in zip(ks, ks[1:]):
+        if abs(P._cam(a['camera'])['zoom'] - P._cam(b['camera'])['zoom']) >= E['troca_de_escala'].get('min_dzoom', 1.0):
+            ev.append((b['t'], 'troca_de_escala', 'câmera muda de escala'))
+    for L in P.camadas(pl):
+        q = L.get('p') or {}
+        if L['componente'] == 'editorial.statCard' and q.get('estilo') != 'pilula':
+            ev.append((L['t0'], 'cartao', f"cartão {L['id']} entra"))
+    for r in pl.get('rotas') or []:
+        ev.append((r['t0'], 'rota', 'rota começa a ser desenhada'))
+    for c in pl.get('clipes') or []:
+        if str(c.get('componente', '')).startswith('mecanismo.'):
+            ev.append((c['t0'] + .2, 'mecanismo', f"{c['componente']} em ação"))
+    out, ult = [], -9.0
+    for t, tipo, just in sorted(ev):
+        if t - ult < E.get('espaco_min_s', .9) or tipo not in E:
+            continue
+        out.append({'id': E[tipo]['sfx'], 't': round(max(0, t - .05), 2), 'ganho_db': E[tipo]['ganho_db'], 'justificativa': just})
+        ult = t
+    return out
+
+
 def render(saida: Path) -> dict:
     from src.v4 import compositor, portoes, som
     from src.v4.backends import js, legado
@@ -317,21 +347,14 @@ def render(saida: Path) -> dict:
     if t < pl['duracao']:
         partes.append(trab / f'p{len(partes)}.mp4'); _trecho(base, t, pl['duracao'], partes[-1])
     video = compositor.concatenar([{'arq': p} for p in partes], trab, trab / 'video.mp4') if len(partes) > 1 else base
-    # camada global: marca + legendas por palavra (selo só no clipe de esquema, que não tem rótulo próprio no modo V4)
-    cenas = []
-    marcas = sorted({0.0, pl['duracao']} | {x for c in pl.get('clipes') or [] for x in (c['t0'], c['t1'])})
-    for a, b in zip(marcas, marcas[1:]):
-        dentro = any(abs(c['t0'] - a) < .01 for c in pl.get('clipes') or [])
-        cenas.append({'ini': a, 'fim': b, 'selo': 'ESQUEMA' if dentro else None, 'credito': None, 'legenda': True})
+    # camada global: marca + legendas (estilo da legenda = canal por formato; P.props_camada é a fonte única)
     camada = trab / 'camada.webm'
-    pcam = {'duracao': pl['duracao'], 'palavras': meta['palavras'], 'cenas': cenas}
-    if pl['formato'] == 'atlas':
-        pcam['legenda_caixa'] = P.zonas('atlas')['legenda']
+    pcam = P.props_camada(pl, meta)
     js.remotion('Camada', pcam, camada, trab / 'camada', alfa=True)
     musicas = sorted((RAIZ / 'assets' / 'musica' / 'explica').glob('*.mp3'))
     musica = musicas[sum(map(ord, pl['video_id'])) % len(musicas)] if musicas else None
     master = trab / 'master.wav'
-    reg_som = som.mixar(saida / 'voz.wav', pl['duracao'], [], musica, trab / 'som', master)
+    reg_som = som.mixar(saida / 'voz.wav', pl['duracao'], sfx_do_plano(pl), musica, trab / 'som', master, preset=can.get('som'))
     mp4 = saida / f"{pl['video_id']}.mp4"
     info = compositor.final(video, camada, master, mp4, trab)
     # portões no MP4 FINAL: nada preto, nada congelado por janela de 4 s (zona de conteúdo, sem a faixa de legenda)
@@ -350,11 +373,11 @@ def render(saida: Path) -> dict:
     # duas métricas: bruta (comparável às referências) e SEM CÂMERA (zoom/pan não é progresso — decide o portão)
     rit = ritmo.medir_completo(mp4)
     from src.v4.formatos import legenda_sync
-    ls = legenda_sync.conferir(saida / 'narracao.json', saida / 'voz.wav')
+    ls = legenda_sync.conferir(saida / 'narracao.json', saida / 'voz.wav', P.estilo_legenda(pl).get('max_palavras', 4))
     res = {'video_id': pl['video_id'], 'formato': pl['formato'], 'mp4': str(mp4), 'duracao': pl['duracao'], 'info': info, 'som': reg_som,
            'audio': au, 'janelas': janelas, 'nao_publicado': True, 'ritmo': {k: v for k, v in rit.items()},
            'portoes': {'preto_ou_congelado': [j for j in janelas if j['problemas']],
-                       'audio_ok': au.get('lufs') is not None and abs(au['lufs'] + 14) <= 1.0 and (au.get('pico') or 0) <= -1.0}}
+                       'audio_ok': au.get('lufs') is not None and abs(au['lufs'] - (can.get('som') or {}).get('lufs', -14)) <= (can.get('som') or {}).get('tolerancia_lufs', .5) and (au.get('pico') or 0) <= (can.get('som') or {}).get('true_peak', -1.0)}}
     res['portoes']['ritmo_ok'] = rit['sem_camera']['maior_trecho_parado_s'] <= 3
     res['portoes']['legenda_ok'] = ls['ok']
     res['legenda_sync'] = {k: ls[k] for k in ('atraso_s', 'n_palavras_sem_fala', 'fala_sem_legenda', 'trocas_bruscas', 'grupos') if k in ls}

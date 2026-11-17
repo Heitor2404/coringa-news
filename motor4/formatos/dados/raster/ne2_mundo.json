@@ -1,0 +1,39 @@
+{
+ "nome": "ne2_mundo",
+ "tipo": "fisico",
+ "cantos": [
+  [
+   -180.0,
+   78.0
+  ],
+  [
+   180.0,
+   78.0
+  ],
+  [
+   180.0,
+   -60.0
+  ],
+  [
+   -180.0,
+   -60.0
+  ]
+ ],
+ "px": [
+  4320,
+  2454
+ ],
+ "px_por_grau_fonte": 12.0,
+ "canal": "coringa",
+ "arquivo": "ne2_mundo.jpg",
+ "dataset": "ne2_raster",
+ "fonte": {
+  "arquivo": "NE2_HR_LC_SR_W.tif",
+  "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-raster/master/10m_rasters/NE2_HR_LC_SR_W/NE2_HR_LC_SR_W.tif",
+  "sha256": "ed4a69ab9e7cc8514032d113da7a31986c42fa2754202d330c472928ffbbb1b6",
+  "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
+ },
+ "atribuicao": "Natural Earth",
+ "sha256": "12016309e410a227c722ea4b188c8c1ee50b8f85ad3f79539a868b26e46b0c68",
+ "gerado": "2026-11-17"
+}

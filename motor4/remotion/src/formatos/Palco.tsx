@@ -45,6 +45,7 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
   } else {
     fx = mercX(ca.foco[0]); fy = mercY(ca.foco[1]); anc = ca.ancora;
     z = ca.zoom + (a.deriva ?? 0) * Math.max(0, t - a.t - Math.max(0, d));
+    if ((a as any).zoom_teto != null && (a.deriva ?? 0) > 0) z = Math.min(z, Math.max(ca.zoom, (a as any).zoom_teto));   // = plano.camera_em
   }
   // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(H/512) e centro vertical dentro do mundo
   z = Math.max(z, Math.log2(H / 512));

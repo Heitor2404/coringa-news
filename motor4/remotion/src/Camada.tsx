@@ -13,13 +13,14 @@ export type CamadaProps = {
   legenda_topo?: number;            // por formato (ATLAS: mais baixa, perto da referência, dentro da área segura)
   legenda_caixa?: [number, number, number, number];   // faixa PRÓPRIA da legenda (layout.faixa_inferior): ancorada pela BASE
   medir?: boolean;                  // registra a caixa real da legenda e da marca (validação nos quadros)
+  estilo?: { max_palavras?: number; tamanho?: number; tamanho_min?: number; peso?: number; caixa?: string; linhas_max?: number; cor_ativa?: string; cor_futura?: string; destaque_palavra?: boolean };
 };
 
 export const Camada: React.FC<CamadaProps> = (P) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps, ms = t * 1000;
-  const L = IDT.legenda;
+  const L = { ...IDT.legenda, ...(P.estilo || {}) } as typeof IDT.legenda & NonNullable<CamadaProps['estilo']>;   // estilo do CANAL por formato
   // agrupamento = src/v4/formatos/legenda_sync.grupos (MESMA regra, conferida contra o áudio): quebra na pausa real,
   // em 4 palavras ou 1,6 s; grupo curto demais (< 0,35 s) funde com o vizinho — sem trocas bruscas
   const grupos = useMemo(() => {
@@ -54,14 +55,14 @@ export const Camada: React.FC<CamadaProps> = (P) => {
   useEffect(() => { if (fontes && hF != null) continueRender(hF); }, [fontes]);     // libera só DEPOIS do corpo medido aplicado
   const corpoQueCabe = (txt: string, larg: number, alt: number): number => {
     const cv = (corpoQueCabe as any).cv || ((corpoQueCabe as any).cv = document.createElement('canvas').getContext('2d'));
-    for (let px = L.tamanho; px >= 40; px -= 2) {
+    for (let px = L.tamanho; px >= (L.tamanho_min || 40); px -= 2) {
       cv.font = `${L.peso} ${px}px ${FT}`;
       const w = (s: string) => cv.measureText(s).width - Math.max(0, s.length - 1);      // letterSpacing −1
       const pal = txt.split(' '); let linhas = 1, atual = '';
       for (const x of pal) { const tent = atual ? atual + ' ' + x : x; if (w(tent) <= larg) atual = tent; else { linhas++; atual = x; if (w(x) > larg) linhas = 99; } }
-      if (linhas <= 2 && linhas * px * 1.08 <= alt) return px;
+      if (linhas <= (L.linhas_max || 2) && linhas * px * 1.08 <= alt) return px;
     }
-    return 40;
+    return L.tamanho_min || 40;
   };
   const gg = grupos.find(gr => t >= gr.ini && t < gr.fim), g = gg ? gg.tokens : null;
   const cena = P.cenas.find(c => t >= c.ini && t < c.fim);
@@ -90,11 +91,11 @@ export const Camada: React.FC<CamadaProps> = (P) => {
         : { position: 'absolute', left: 150, right: 150, top: P.legenda_topo ?? IDT.areas_seguras.legenda_topo, display: 'flex', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', fontFamily: FT, fontWeight: L.peso, lineHeight: 1.08,
           // faixa própria: corpo encolhe (mín. 50 px) para caber em 2 linhas na largura da área segura
-          fontSize: LC && fontes ? corpoQueCabe(g.map(tk => tk.text).join('').trim().toUpperCase(), LC[2] - 44, LC[3] - 12) : L.tamanho, letterSpacing: -1, textTransform: 'uppercase',
+          fontSize: LC && fontes ? corpoQueCabe(L.caixa === 'frase' ? g.map(tk => tk.text).join('').trim() : g.map(tk => tk.text).join('').trim().toUpperCase(), LC[2] - 44, LC[3] - 12) : L.tamanho, letterSpacing: -1, textTransform: L.caixa === 'frase' ? 'none' : 'uppercase',
           color: L.cor, textShadow: L.sombra, background: cena?.legenda_tom === 'claro' ? L.placa : 'transparent', padding: '6px 20px', borderRadius: 14 }}>
           {g.map((tk, i) => {
             const ativo = ms >= tk.fromMs && ms < tk.toMs, fut = ms < tk.fromMs;
-            return <span key={i} style={{ color: (ativo || hl.has((tk.fromMs / 1000).toFixed(3))) && !fut ? L.cor_ativa : fut ? L.cor_futura : L.cor }}>{tk.text}</span>;
+            return <span key={i} style={{ color: (ativo || (L.destaque_palavra !== false && hl.has((tk.fromMs / 1000).toFixed(3)))) && !fut ? L.cor_ativa : fut ? L.cor_futura : L.cor }}>{tk.text}</span>;
           })}
         </div></div>}
     </AbsoluteFill>

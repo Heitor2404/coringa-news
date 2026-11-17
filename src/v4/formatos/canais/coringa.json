@@ -28,7 +28,9 @@
    "borda": "#9FB3D1",
    "agua": "#2F8FD8",
    "destaque": "#FFD21F",
-   "destaque2": "#3FD0E0"
+   "destaque2": "#3FD0E0",
+   "rota_px": 9,
+   "conexao_px": 7
   },
   "tecnico": {
    "_nota": "TEMPLATE TÉCNICO do Coringa — usado pelo palco técnico dos formatos E pelos clipes de mecanismo (params.tema). Fundo grafite-azulado, grade fina + grade maior (170 px ≈ referência), estrutura em ardósia hachurada, água no azul do canal, MOVIMENTO sempre em amarelo, rótulos em papel (mesmo padrão dos cartões).",
@@ -77,15 +79,59 @@
  },
  "legenda": {
   "atlas": {
-   "caixa_alta": true
+   "_nota": "gramática da referência A (medida): frase em caixa normal, 1 linha, 1–3 palavras por grupo, ~52–56 px em 1080, branco com sombra, grupo inteiro de uma vez (sem karaokê). Posição: faixa própria da área segura (a referência fica ~95 px mais baixa, sob a interface do TikTok).",
+   "caixa_alta": false,
+   "caixa": "frase",
+   "max_palavras": 3,
+   "tamanho": 56,
+   "tamanho_min": 44,
+   "peso": 800,
+   "linhas_max": 1,
+   "cor_ativa": "#FFFFFF",
+   "cor_futura": "#FFFFFF",
+   "destaque_palavra": false
   },
   "dossie": {
    "caixa_alta": true
   }
  },
  "som": {
+  "_nota": "PADRÃO SONORO do canal (todo episódio): master −14 LUFS / pico verdadeiro ≤ −1 dBTP; referência medida −14,1 LUFS, LRA 1,9, pausas 14 dB abaixo da fala (janelas 400 ms). Volumes individuais da referência NÃO são recuperáveis da mixagem — só o resultado final é comparado.",
   "lufs": -14,
-  "true_peak": -1.0
+  "true_peak": -1.0,
+  "tolerancia_lufs": 0.5,
+  "musica_db": -24,
+  "ducking": {
+   "threshold": 0.03,
+   "ratio": 6,
+   "attack_ms": 20,
+   "release_ms": 350
+  },
+  "pausas_abaixo_da_fala_db": [
+   12,
+   16
+  ],
+  "efeitos": {
+   "_nota": "efeito só com acontecimento visual; nunca sobre o início de uma palavra forte; espaçamento mínimo",
+   "espaco_min_s": 0.9,
+   "troca_de_escala": {
+    "sfx": "sopro",
+    "ganho_db": -22,
+    "min_dzoom": 1.0
+   },
+   "cartao": {
+    "sfx": "tique",
+    "ganho_db": -24
+   },
+   "rota": {
+    "sfx": "traco",
+    "ganho_db": -26
+   },
+   "mecanismo": {
+    "sfx": "agua_fluxo",
+    "ganho_db": -24
+   }
+  }
  },
  "cartao": {
   "_nota": "design system ÚNICO dos cartões de dado (todos os episódios): sem inclinação, centralizado no slot, medidas por token, número que se ajusta ao espaço",
@@ -120,5 +166,27 @@
   "handle": "@coringa.explica",
   "min_s": 1.2,
   "max_s": 2.2
+ },
+ "titulo": {
+  "_nota": "corpo dos títulos por SLOT (o episódio não escolhe tamanho): pergunta do gancho e manchete do fecho — baseline Panamá 44155276352",
+  "pergunta": {
+   "normal": 84,
+   "destaque": 104
+  },
+  "titulo": {
+   "normal": 76,
+   "destaque": 76
+  },
+  "padrao": {
+   "normal": 84,
+   "destaque": 104
+  }
+ },
+ "camera": {
+  "_nota": "transição entre beats calculada pelo motor (o episódio não escolhe): base + por nível de zoom + por distância de tela",
+  "transicao_base": 0.8,
+  "transicao_por_zoom": 0.22,
+  "transicao_min": 0.8,
+  "transicao_max": 1.8
  }
 }

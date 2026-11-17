@@ -1,0 +1,39 @@
+{
+ "nome": "ne2_pacifico",
+ "tipo": "fisico",
+ "cantos": [
+  [
+   90.0,
+   70.0
+  ],
+  [
+   290.0,
+   70.0
+  ],
+  [
+   290.0,
+   -20.0
+  ],
+  [
+   90.0,
+   -20.0
+  ]
+ ],
+ "px": [
+  3200,
+  1918
+ ],
+ "px_por_grau_fonte": 16.0,
+ "canal": "coringa",
+ "arquivo": "ne2_pacifico.jpg",
+ "dataset": "ne2_raster",
+ "fonte": {
+  "arquivo": "NE2_HR_LC_SR_W.tif",
+  "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-raster/master/10m_rasters/NE2_HR_LC_SR_W/NE2_HR_LC_SR_W.tif",
+  "sha256": "ed4a69ab9e7cc8514032d113da7a31986c42fa2754202d330c472928ffbbb1b6",
+  "licenca": "Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)"
+ },
+ "atribuicao": "Natural Earth",
+ "sha256": "022f3073c5850fca9efe52159332d0483ceec9a6b92263e9f86fdd7e84325f98",
+ "gerado": "2026-11-17"
+}

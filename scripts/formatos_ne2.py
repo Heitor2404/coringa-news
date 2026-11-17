@@ -3,7 +3,8 @@ reprojetada para Web Mercator (encaixe exato numa fonte `image` do MapLibre) e c
 
 Fonte: NE2_HR_LC_SR_W (1′, 21600×10800), domínio público (naturalearthdata.com/about/terms-of-use). O arquivo bruto
 (700 MB) NÃO é versionado: registra-se URL + sha256 de origem no .json, e o recorte gerado vai para o repositório.
-uso: python scripts/formatos_ne2.py <NE2_HR_LC_SR_W.tif> <nome> <oeste> <sul> <leste> <norte> [canal]
+uso: python scripts/formatos_ne2.py <NE2_HR_LC_SR_W.tif> <nome> <oeste> <sul> <leste> <norte> [canal] [px_por_grau_saida]
+(oeste/leste podem passar de ±180: vista centrada no Pacífico)
 """
 from __future__ import annotations
 
@@ -57,21 +58,41 @@ def grade(a: np.ndarray, tons: dict) -> np.ndarray:
     return np.clip(out, 0, 255).astype(np.uint8)
 
 
-def main(tif: Path, nome: str, o: float, s: float, l: float, n: float, canal: str = 'coringa'):
+def recorte(src, o: float, s: float, l: float, n: float) -> np.ndarray:
+    """recorte equirretangular; longitudes além de ±180 (vista centrada no Pacífico) dão a volta no mundo"""
+    y0, y1 = int((90 - n) * PX_GRAU), int((90 - s) * PX_GRAU)
+    partes, a = [], o
+    while a < l - 1e-9:
+        base = math.floor((a + 180) / 360)
+        fim = min(l, (base + 1) * 360 - 180)
+        xa, xb = int(round((a + 180 - base * 360) * PX_GRAU)), int(round((fim + 180 - base * 360) * PX_GRAU))
+        partes.append(np.asarray(src.crop((xa, y0, xb, y1)).convert('RGB')))
+        a = fim
+    return np.concatenate(partes, axis=1)
+
+
+def main(tif: Path, nome: str, o: float, s: float, l: float, n: float, canal: str = 'coringa', ppg_saida: float = PX_GRAU):
+    """ppg_saida < 60: escala mundial/continental (reamostra ANTES da reprojeção; nitidez declarada = a da saída)"""
     tons = json.loads((RAIZ / 'src' / 'v4' / 'formatos' / 'canais' / f'{canal}.json').read_text())['palco']['raster']
     Image.MAX_IMAGE_PIXELS = None
     src = Image.open(tif)
-    x0, x1 = int((o + 180) * PX_GRAU), int((l + 180) * PX_GRAU)
+    eq = recorte(src, o, s, l, n)
+    x0, x1 = int(round((o + 180) * PX_GRAU)), int(round((l + 180) * PX_GRAU))
     y0, y1 = int((90 - n) * PX_GRAU), int((90 - s) * PX_GRAU)
-    eq = np.asarray(src.crop((x0, y0, x1, y1)).convert('RGB'))
+    ppg = PX_GRAU
+    if ppg_saida < PX_GRAU:
+        f = ppg_saida / PX_GRAU
+        eq = np.asarray(Image.fromarray(eq).resize((int(eq.shape[1] * f), int(eq.shape[0] * f)), Image.LANCZOS))
+        ppg = ppg_saida
     lon0, lon1 = x0 / PX_GRAU - 180, x1 / PX_GRAU - 180
+    sup = SUPER if ppg == PX_GRAU else 1
     lat_n, lat_s = 90 - y0 / PX_GRAU, 90 - y1 / PX_GRAU
-    W = (x1 - x0) * SUPER
+    W = int(round((x1 - x0) * ppg / PX_GRAU)) * sup
     ym_n, ym_s = merc_y(lat_n), merc_y(lat_s)
     H = int(round(W * (ym_n - ym_s) / math.radians(lon1 - lon0)))
     # linha de saída (Mercator) → linha da fonte (equirretangular), interpolação linear entre linhas
     ys = np.array([lat_de(ym_n - (ym_n - ym_s) * (j + .5) / H) for j in range(H)])
-    fy = np.clip((lat_n - ys) * PX_GRAU - .5, 0, eq.shape[0] - 1.001)
+    fy = np.clip((lat_n - ys) * ppg - .5, 0, eq.shape[0] - 1.001)
     j0 = fy.astype(int)
     t = (fy - j0)[:, None, None]
     merc = eq[j0] * (1 - t) + eq[j0 + 1] * t
@@ -81,10 +102,10 @@ def main(tif: Path, nome: str, o: float, s: float, l: float, n: float, canal: st
     arq = DEST / f'{nome}.jpg'
     im.save(arq, quality=90, optimize=True, progressive=True)
     meta = {'nome': nome, 'tipo': 'fisico', 'cantos': [[lon0, lat_n], [lon1, lat_n], [lon1, lat_s], [lon0, lat_s]], 'px': [W, H],
-            'px_por_grau_fonte': PX_GRAU, 'canal': canal,
+            'px_por_grau_fonte': ppg, 'canal': canal, 'arquivo': f'{nome}.jpg', 'dataset': 'ne2_raster',
             'fonte': {'arquivo': 'NE2_HR_LC_SR_W.tif', 'url': ORIGEM, 'sha256': hashlib.sha256(tif.read_bytes()).hexdigest(),
                       'licenca': 'Domínio público (Natural Earth, naturalearthdata.com/about/terms-of-use)'},
-            'atribuicao': 'Relevo: Natural Earth II (domínio público)',
+            'atribuicao': 'Natural Earth',
             'sha256': hashlib.sha256(arq.read_bytes()).hexdigest(), 'gerado': time.strftime('%Y-%m-%d')}
     (DEST / f'{nome}.json').write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     print(nome, W, H, meta['cantos'][0], meta['cantos'][2])
@@ -92,4 +113,4 @@ def main(tif: Path, nome: str, o: float, s: float, l: float, n: float, canal: st
 
 if __name__ == '__main__':
     a = sys.argv
-    main(Path(a[1]), a[2], *map(float, a[3:7]), *(a[7:8] or []))
+    main(Path(a[1]), a[2], *map(float, a[3:7]), *(a[7:8] or ['coringa']), *map(float, a[8:9]))

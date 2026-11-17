@@ -12,14 +12,15 @@ from src.v4.util import CHROME, MOTOR4, VENV_MANIM, FalhaBackend, rodar
 REMOTION = MOTOR4 / 'remotion'
 
 
-def remotion(comp: str, props: dict, saida: Path, trab: Path, alfa: bool = False) -> dict:
+def remotion(comp: str, props: dict, saida: Path, trab: Path, alfa: bool = False, quadros: tuple[int, int] | None = None) -> dict:
     trab, saida = Path(trab).resolve(), Path(saida).resolve()
     trab.mkdir(parents=True, exist_ok=True)
     pj = trab / f'props_{comp}.json'
     pj.write_text(json.dumps(props, ensure_ascii=False))
     fmt = ['--codec=vp8', '--pixel-format=yuva420p', '--image-format=png'] if alfa else ['--codec=h264', '--crf=16']
     reg = rodar(['npx', '--prefix', MOTOR4, 'remotion', 'render', 'src/index.ts', comp, saida, f'--props={pj}', '--gl=swangle',
-                 f'--browser-executable={CHROME}', f'--public-dir={REMOTION / "public"}', '--concurrency=1', '--timeout=120000', *fmt],
+                 f'--browser-executable={CHROME}', f'--public-dir={REMOTION / "public"}', '--concurrency=1', '--timeout=120000', *fmt,
+                 *([f'--frames={quadros[0]}-{quadros[1]}'] if quadros else [])],
                 cwd=REMOTION, timeout=3600, log=trab / f'remotion_{comp}.log')
     if not saida.exists():
         raise FalhaBackend(f'remotion não gerou {saida.name}')

@@ -41,6 +41,9 @@ REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova infor
 nada de duas camadas no mesmo slot ao mesmo tempo; mídia SÓ da lista comprovada (nunca invente registro); número com unidade;
 no máximo {F['max_componentes_distintos']} primitivas distintas; tempos ancorados na fala ("@palavra", "@2:palavra+0.3", "@fim").
 PALCOS: {', '.join(F['palcos'])} (troca de palco só quando a explicação muda de nível). CLIPES APROVADOS: {', '.join(F['clipes']) or 'nenhum'}.
+IDENTIDADE É DO MOTOR: não escreva tamanho, raio, largura, cor, ajuste, transição, zoom_max nem deslocamento manual — o motor aplica
+os tokens do canal. Mapa geográfico SEMPRE sobre base cartográfica da lista "rasters" que cubra o roi; diagrama técnico só em beat
+com "funcao": "mecanismo" ou "estrutura".
 SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (use os ids):\n""" + \
         '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nNARRAÇÃO:\n{fala}\n
 Responda SÓ o JSON do plano: {{"formato","canal","video_id","titulo","duracao":"@fim","palco":[...],"destaques":[...],"rotas":[...],

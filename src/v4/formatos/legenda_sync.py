@@ -95,6 +95,60 @@ def realinhar(palavras: list[dict], wav: Path) -> list[dict]:
     return out
 
 
+def caixa_frase(palavras: list[dict], nomes: set[str], siglas: set[str], pausa_frase: float = .35) -> list[dict]:
+    """palavras do TTS (MAIÚSCULAS, sem pontuação) → caixa de FRASE: maiúscula no início de frase (pausa real ≥ 0,35 s) e
+    em nomes próprios/siglas que aparecem assim no próprio plano (fatos, rótulos, pinos, título)"""
+    import unicodedata
+    n = lambda w: unicodedata.normalize('NFKD', w).encode('ascii', 'ignore').decode().upper()
+    proprios = {n(x): x for x in nomes}
+    sig = {n(x): x for x in siglas}
+    out = []
+    for i, w in enumerate(palavras):
+        k = n(w['w'])
+        if k in sig:
+            txt = sig[k]
+        elif k in proprios:
+            txt = proprios[k]
+        else:
+            txt = w['w'].lower()
+            if i == 0 or w['s'] - palavras[i - 1]['e'] >= pausa_frase:
+                txt = txt[:1].upper() + txt[1:]
+        out.append({**w, 'w': txt})
+    return out
+
+
+def nomes_do_plano(pl: dict) -> tuple[set[str], set[str]]:
+    """nomes próprios = palavras Capitalizadas no MEIO de frase nos textos do plano (fatos, título, rótulos do mapa, pinos),
+    menos as que também aparecem em minúscula (ambíguas: 'canal'); siglas = MAIÚSCULAS de 2–5 letras dos FATOS e do
+    título (rótulos de pílula são caixa-alta de desenho, não contam)"""
+    import re
+    fatos = [pl.get('titulo') or ''] + [f.get('texto', '') for f in (pl.get('narracao') or {}).get('fatos', []) if isinstance(f, dict)]
+    mapa = [r.get('nome', '') for r in pl.get('rotulos') or []]
+    for b in pl.get('beats') or []:
+        for L in b.get('camadas') or []:
+            q = L.get('p') or {}
+            if L.get('componente') == 'atlas.geoPin':
+                mapa.append(str(q.get('rotulo') or ''))
+    textos = fatos + mapa
+    nomes, minus, siglas = set(), set(), set()
+    for t in mapa:                       # rótulo de mapa/pino: nome próprio quando tem 2+ palavras capitalizadas ou é 1 palavra
+        ws = re.findall(r"[\wÀ-ÿ]+", t)
+        caps = [w for w in ws if w[:1].isupper() and w[1:].islower()]
+        if len(caps) >= 2 or len(ws) == 1:
+            nomes |= set(caps)
+    for t in textos:
+        for frase in re.split(r'[.!?;:]\s+', t):
+            ws = re.findall(r"[\wÀ-ÿ]+", frase)
+            for i, w in enumerate(ws):
+                if w[:1].isupper() and w[1:].islower() and i > 0:
+                    nomes.add(w)
+                elif w.islower():
+                    minus.add(w)
+    for t in fatos:
+        siglas |= {m for m in re.findall(r"\b([A-Z]{2,5})\b", t)}
+    return {n for n in nomes if n.lower() not in minus}, siglas
+
+
 def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: float = 1.6, dur_min: float = .35) -> list[dict]:
     """agrupamento da legenda (MESMA regra da Camada.tsx): quebra na pausa real, em 4 palavras ou 1,6 s; grupo curto
     demais (< 0,35 s, troca brusca) é fundido com o vizinho que ainda tem espaço"""
@@ -124,7 +178,7 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
     return out
 
 
-def conferir(narracao: Path, wav: Path) -> dict:
+def conferir(narracao: Path, wav: Path, maximo: int = 4) -> dict:
     meta = json.loads(Path(narracao).read_text())
     pal = meta['palavras']
     fala = mascara_fala(energia(wav))
@@ -151,7 +205,7 @@ def conferir(narracao: Path, wav: Path) -> dict:
                 sem_leg.append([round(i * PASSO, 2), round(j * PASSO, 2)])
             i = j
         i += 1
-    gs = grupos(pal)
+    gs = grupos(pal, maximo)
     flashes = [g for g in gs if g['fim'] - g['ini'] < .3]
     ok = abs(atraso) <= .1 and len(fora) <= max(1, .03 * len(pal)) and not sem_leg and not flashes
     return {'ok': ok, 'atraso_s': round(atraso, 2), 'palavras': len(pal), 'palavras_sem_fala': fora[:12], 'n_palavras_sem_fala': len(fora),

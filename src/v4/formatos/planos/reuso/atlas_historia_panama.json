@@ -114,20 +114,11 @@
   },
   {
    "nome": "s2_panama_canal",
-   "de": 8.2,
-   "ajuste": {
-    "brilho_max": 1.0,
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 8.2
   },
   {
    "nome": "s2_miraflores_eclusas",
-   "de": 12.1,
-   "ajuste": {
-    "contraste": 0.12,
-    "saturacao": 0.1
-   }
+   "de": 12.1
   }
  ],
  "beats": [
@@ -155,13 +146,11 @@
        {
         "texto": "1880",
         "t": 0.3,
-        "tamanho": 104,
         "destaque": true
        },
        {
         "texto": "A FRANÇA CAVA",
-        "t": "@frança",
-        "tamanho": 84
+        "t": "@frança"
        }
       ]
      }
@@ -197,7 +186,6 @@
     -78.3,
     10.1
    ],
-   "transicao": 1.0,
    "prova": "o corte reto de mar a mar que a França queria",
    "camadas": [
     {
@@ -211,8 +199,7 @@
       "valor": "AO NÍVEL DO MAR · SEM ECLUSAS"
      }
     }
-   ],
-   "zoom_max": 6.3
+   ]
   },
   {
    "id": "b3-falencia",
@@ -455,8 +442,7 @@
       ]
      }
     }
-   ],
-   "zoom_max": 6.3
+   ]
   }
  ]
 }

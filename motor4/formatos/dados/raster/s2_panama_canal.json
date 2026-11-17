@@ -35,5 +35,10 @@
  "gerado": "2026-11-17",
  "arquivo": "s2_panama_canal.webp",
  "acabamento": "scripts/formatos_raster.py:acabamento (gama .78, saturação 1.18, borda suave 7% em alfa)",
- "dataset": "s2_2016"
+ "dataset": "s2_2016",
+ "ajuste": {
+  "brilho_max": 1.0,
+  "contraste": 0.12,
+  "saturacao": 0.1
+ }
 }

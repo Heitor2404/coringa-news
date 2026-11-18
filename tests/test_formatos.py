@@ -913,9 +913,12 @@ def test_atlas_diretor_demonstracao_somente_durante_explicacao():
     prompt = diretor.prompt(
         [{"id": "f", "texto": "Uma eclusa enche por gravidade"}],
         "atlas", None, "vídeo real e desenho técnico aprovados")
-    assert 'NUNCA coloque animação técnica de mecanismo na abertura' in prompt
+    assert 'não use animação técnica de mecanismo no gancho' in prompt
     assert 'explicacoes' in prompt and 'mecanismo' in prompt
-    assert 'NÃO substitua o mecanismo em curso por caixas' in prompt
+    assert 'Não substitua o mecanismo por cards soltos' in prompt
+    dossie = diretor.prompt([{"id": "f", "texto": "Um documento histórico"}], "dossie", None, "documento comprovado")
+    assert 'DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS' not in dossie
+    assert 'explicacoes' not in dossie
 
 
 def test_atlas_continuidade_mecanismo_panama_31_50s():
@@ -1008,3 +1011,21 @@ def test_atlas_falha_500_telegram_reenvia_mesmo_mp4_como_documento(tmp_path, mon
     assert chamadas[0][0] == "sendVideo"
     assert chamadas[1][0] == "sendDocument"
     assert chamadas[0][1][1] == chamadas[1][1][1]
+
+
+def test_atlas_contrato_visual_obrigatorio_para_todo_clipe_mecanico():
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-EXPLICACAO-SEM-CONTRATO' not in _regras(pl)
+    pl.pop('explicacoes')
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    pl['explicacoes'][0]['recurso'] = 'mecanismo.qualquer_outro'
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    pl['explicacoes'][0]['t1'] = pl['clipes'][0]['t1'] + 1
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    # O contrato nunca interfere no formato DOSSIÊ.
+    assert 'F-EXPLICACAO-SEM-CONTRATO' not in _regras(DOSSIE, _pal(DOSSIE['narracao']['texto']))

@@ -46,11 +46,31 @@ jobs:
         run: |
           pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
           (cd motor4 && npm ci --no-audit --no-fund)
+      - name: FFmpeg portatil versionado via Python (sem apt e sem action externa)
+        timeout-minutes: 4
+        run: |
+          python -m pip install --disable-pip-version-check "imageio-ffmpeg==0.6.0"
+          python - <<'PY'
+          import os, subprocess
+          from pathlib import Path
+          import imageio_ffmpeg
+          origem = Path(imageio_ffmpeg.get_ffmpeg_exe())
+          assert origem.is_file(), "O pacote não forneceu o executável FFmpeg."
+          dest = Path.home() / ".local" / "bin" / "ffmpeg"
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          if dest.exists() or dest.is_symlink():
+              dest.unlink()
+          dest.symlink_to(origem)
+          with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as p:
+              p.write(str(dest.parent) + "\n")
+          subprocess.run([str(dest), "-version"], check=True, stdout=subprocess.DEVNULL)
+          print("FFmpeg portátil do pacote Python: OK")
+          PY
       - name: Testes de contrato do motor antes dos quadros
         run: |
-          # A prova de quadros não gera MP4: testes FFmpeg têm CI própria e
-          # foram validados no ATLAS geral. Aqui pulamos os cinco testes que usam FFmpeg direta ou indiretamente.
-          python -m pytest -q tests/test_formatos.py -k 'not test_preflight_sem_narracao_ou_sem_midia_nao_deixa_renderizar and not test_midia_de_um_episodio_nao_sobrescreve_a_do_outro and not test_montagem_previa_confere_mp4_com_relogios_distintos and not test_legenda_realinhada_pelas_pausas_reais_do_audio and not test_mascara_de_fala_com_narracao_densa'
+          # O FFmpeg portátil permite validar também áudio e preflight; só
+          # a montagem MP4 (requer ffprobe) fica no workflow completo do motor.
+          python -m pytest -q tests/test_formatos.py -k 'not test_montagem_previa_confere_mp4_com_relogios_distintos'
           (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
       - name: PROVA DE REUSO CHIPS (voz sintetica para temporizacao, SEM TTS)
         timeout-minutes: 20

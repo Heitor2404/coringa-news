@@ -59,3 +59,41 @@ def test_pacotes_nao_sao_aprovados_por_antecipacao():
 def test_biblioteca_nao_importada_no_motor_atlas():
     for p in (ROOT / "src/v4/formatos").glob("*.py"):
         assert "biblioteca_atlas" not in p.read_text(encoding="utf-8"), p
+
+
+def test_candidatas_todas_bloqueadas_ate_auditoria_de_binario():
+    from scripts.atlas_biblioteca import liberado_para_render
+    c = json.loads((ROOT / "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json").read_text(encoding="utf-8"))
+    assert c["status"] == "CANDIDATAS_NAO_AUTORIZADAS_PARA_RENDER"
+    assert len(c["itens"]) >= 5
+    ids = set()
+    for item in c["itens"]:
+        assert item["id"] not in ids
+        ids.add(item["id"])
+        assert item["estado"] == "candidato"
+        assert not liberado_para_render(item)
+        assert item["pagina"].startswith("https://commons.wikimedia.org/wiki/File:")
+        assert item["licenca_pagina_verificada"] is True
+        assert item["credito"] and item["licenca"] and item["licenca_url"]
+        assert item["mostra"] and item["permite_narrar"] and item["nao_comprova"]
+        assert item["sha256"] is None
+    # Uma foto verificada da sede não é prova de uma máquina.
+    asml = next(x for x in c["itens"] if x["id"] == "chips-asml-sede-veldhoven")
+    assert "máquinas litográficas" in asml["nao_comprova"]
+
+
+def test_gatilho_so_com_hash_e_revisao_visual():
+    from scripts.atlas_biblioteca import liberado_para_render, buscar, resumo
+    c = json.loads((ROOT / "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json").read_text(encoding="utf-8"))
+    item = dict(c["itens"][0])
+    item.update({"estado":"liberado", "aprovacao_editorial": True,
+                 "sha256":"a"*64, "prova_correspondencia":"vistoria manual em quadro",
+                 "largura":1920,"altura":1080})
+    assert liberado_para_render(item)
+    for campo in ("aprovacao_editorial","sha256","prova_correspondencia","largura","licenca_url"):
+        adulterado = dict(item)
+        adulterado[campo] = None
+        assert not liberado_para_render(adulterado), campo
+    achados = buscar("tsmc")
+    assert any(x["status"] == "CANDIDATO_BLOQUEADO" for x in achados)
+    assert resumo()["imagens_liberadas_dessas_candidatas"] == 0

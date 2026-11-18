@@ -35,23 +35,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: motor4/package-lock.json
-      # Ubuntu 26.04 de 'ubuntu-latest' trouxe falhas intermitentes de FFmpeg/apt.
-      # Fixar 24.04 aqui preserva ambiente repetível do teste.
-      - name: FFmpeg preferindo binarios preinstalados no runner, fallback controlado
-        timeout-minutes: 6
-        run: |
-          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
-            echo "FFmpeg do runner disponível, dispensando download externo."
-          else
-            echo "FFmpeg ausente, instalando com limites rígidos de tempo."
-            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
-            timeout 150 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
-          fi
-          ffmpeg -version | head -1
-          ffprobe -version | head -1
       - name: Verificar Chrome e preparar fontes aprovadas
         run: |
-          ffmpeg -version | head -1
           google-chrome --version
           mkdir -p ~/.fonts
           cp motor4/identidade/ttf/*.ttf ~/.fonts/
@@ -63,7 +48,9 @@ jobs:
           (cd motor4 && npm ci --no-audit --no-fund)
       - name: Testes de contrato do motor antes dos quadros
         run: |
-          python -m pytest -q tests/test_formatos.py
+          # A prova de quadros não gera MP4: testes FFmpeg têm CI própria e
+          # foram validados no ATLAS geral. Aqui pulamos só os três que geram áudio/vídeo.
+          python -m pytest -q tests/test_formatos.py -k 'not test_preflight_sem_narracao_ou_sem_midia_nao_deixa_renderizar and not test_midia_de_um_episodio_nao_sobrescreve_a_do_outro and not test_montagem_previa_confere_mp4_com_relogios_distintos'
           (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
       - name: PROVA DE REUSO CHIPS (voz sintetica para temporizacao, SEM TTS)
         timeout-minutes: 20

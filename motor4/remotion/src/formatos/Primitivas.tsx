@@ -91,7 +91,9 @@ export const Ficha: React.FC<{ c: Ctx }> = ({ c }) => {
 // (entre largura_min e o slot), número que encolhe para caber (≥ numero_min_px), hierarquia título → número → rótulo →
 // fonte factual (independente dos créditos do mapa). data-cartao = centro do slot (alinhamento conferido no quadro).
 const KT = (c: Ctx) => ({ pad_x: 40, pad_y: 26, borda_topo: 10, titulo_px: 26, numero_px: 112, numero_min_px: 60, unidade_razao: .46, rotulo_px: 32, fonte_px: 18,
-  largura_min: 520, entra_px: 24, sombra: '0 18px 50px rgba(0,0,0,.5)', ...((c.P.tokens as any).cartao || {}) });
+  largura_min: 520, entra_px: 24, sombra: '0 18px 50px rgba(0,0,0,.5)', borda_px: 0, borda_cor: 'transparent', raio_px: 0,
+  titulo_cor: '', numero_cor: '', rotulo_cor: '',
+  ...((c.P.tokens as any).cartao || {}), ...(c.P.formato === 'atlas' ? ((c.P.tokens as any).cartao_atlas || {}) : {}) });
 export const larguraTxt = (s: string, px: number, k = .7) => s.length * px * k;
 export const Cartao: React.FC<{ c: Ctx; largura: number; children: React.ReactNode }> = ({ c, largura, children }) => {
   const b = c.L.caixa, T = KT(c), C = cores(c);
@@ -99,7 +101,9 @@ export const Cartao: React.FC<{ c: Ctx; largura: number; children: React.ReactNo
   return (
     <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div data-cartao={JSON.stringify([b.x + b.w / 2, b.y + b.h / 2])} style={{ width: w, padding: `${T.pad_y}px ${T.pad_x}px`, background: C.papel, color: C.tinta,
-        boxShadow: T.sombra, borderTop: `${T.borda_topo}px solid ${C.destaque}`, transform: `translateY(${(1 - c.k) * T.entra_px}px)`, boxSizing: 'border-box' }}>{children}</div>
+        boxShadow: T.sombra, borderTop: `${T.borda_topo}px solid ${C.destaque}`, borderLeft: `${T.borda_px}px solid ${T.borda_cor}`,
+        borderRight: `${T.borda_px}px solid ${T.borda_cor}`, borderBottom: `${T.borda_px}px solid ${T.borda_cor}`,
+        borderRadius: T.raio_px, transform: `translateY(${(1 - c.k) * T.entra_px}px)`, boxSizing: 'border-box' }}>{children}</div>
     </div>);
 };
 const Fonte: React.FC<{ c: Ctx }> = ({ c }) => c.L.p.fonte ? <div data-meta="fonte" style={{ fontFamily: FD(c), fontSize: KT(c).fonte_px, marginTop: 12, color: 'rgba(11,15,23,.62)',
@@ -131,10 +135,10 @@ export const StatCard: React.FC<{ c: Ctx }> = ({ c }) => {
     larguraTxt(p.titulo || '', T.titulo_px, .62), Math.min(util, larguraTxt(p.rotulo || '', T.rotulo_px, .66)));
   return (
     <Cartao c={c} largura={larg}>
-      {p.titulo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: T.titulo_px, letterSpacing: 3, textTransform: 'uppercase', color: C.alerta, marginBottom: 6 }}>{p.titulo}</div>}
-      <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: npx, lineHeight: .95, whiteSpace: 'nowrap' }}>
+      {p.titulo && <div style={{ fontFamily: FD(c), fontWeight: 700, fontSize: T.titulo_px, letterSpacing: 3, textTransform: 'uppercase', color: T.titulo_cor || C.alerta, marginBottom: 6 }}>{p.titulo}</div>}
+      <div style={{ fontFamily: FT(c), fontWeight: 900, fontSize: npx, lineHeight: .95, whiteSpace: 'nowrap', color: T.numero_cor || C.tinta }}>
         {p.prefixo || ''}{txt}<span style={{ fontSize: npx * T.unidade_razao, fontWeight: 800, marginLeft: 12 }}>{p.unidade || ''}</span></div>
-      {p.rotulo && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: T.rotulo_px, textTransform: 'uppercase', marginTop: 10, lineHeight: 1.1 }}>{p.rotulo}</div>}
+      {p.rotulo && <div style={{ fontFamily: FT(c), fontWeight: 800, fontSize: T.rotulo_px, textTransform: 'uppercase', marginTop: 10, lineHeight: 1.1, color: T.rotulo_cor || C.tinta }}>{p.rotulo}</div>}
       <Fonte c={c} />
     </Cartao>);
 };

@@ -3,7 +3,7 @@
   "canal": "coringa",
   "video_id": "teste-atlas-chips-factual-20261118",
   "titulo": "Por que Taiwan é central na guerra dos chips?",
-  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente. Progressão informativa sincronizada por tokens e composições ATLAS existentes.",
+  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente. Progressão informativa sincronizada por tokens e composições ATLAS existentes. | Duas fotos CC BY 4.0 verificadas apenas na branch experimental: TSMC Fab 18 contextualizada em Taiwan; wafer genérico sem atribuir fabricante. Prévia ainda requer créditos legíveis.",
   "geo": "motor4/formatos/dados/mundo.topo.json",
   "camera": "roi",
   "styleframes": 8,
@@ -199,7 +199,7 @@
           "componente": "editorial.statCard",
           "slot": "painel",
           "t0": "@setenta",
-          "t1": "@mas-0.45",
+          "t1": "@wafers-0.25",
           "p": {
             "titulo": "TSMC · 2025",
             "prefixo": "",
@@ -215,26 +215,18 @@
           "componente": "atlas.geoPin",
           "slot": "geo",
           "t0": "@tsmc",
-          "t1": "@mas-0.45",
+          "t1": "@2025-0.25",
           "p": {
-            "tipo": "local",
+            "tipo": "foto",
             "lonlat": [
-              120.97,
-              24.78
+              120.26204,
+              23.12232
             ],
-            "rotulo": "TSMC · Taiwan",
-            "lado": "direita"
-          }
-        },
-        {
-          "id": "planeta",
-          "componente": "editorial.statCard",
-          "slot": "nota",
-          "t0": "@propria",
-          "t1": "@participação-0.35",
-          "p": {
-            "estilo": "pilula",
-            "valor": "DA PRÓPRIA TSMC"
+            "rotulo": "TSMC · FAB 18",
+            "asset": "commons:TSMC_Fab_18_May_2025.jpg",
+            "meta": "FOTO: 4300STREETCAR · CC BY 4.0",
+            "papel": "secundario",
+            "desloc": "auto"
           }
         },
         {
@@ -262,25 +254,60 @@
             "rotulo": "OU MENORES",
             "fato": "f-tsmc"
           }
+        }
+      ]
+    },
+    {
+      "id": "b2b-wafer",
+      "t": "@wafers-0.2",
+      "composicao": "atlas.tecnica",
+      "camadas": [
+        {
+          "id": "fotografia-wafer",
+          "componente": "dossie.documentCard",
+          "slot": "corpo",
+          "t0": "@wafers-0.15",
+          "t1": "@mas-0.35",
+          "p": {
+            "estilo": "registro",
+            "inclina": 0,
+            "asset": "commons:Silicon_wafer_close_view.jpg",
+            "meta": [
+              "WAFER DE SILÍCIO · FOTO ILUSTRATIVA",
+              "LE HOLLANDAIS VOLANT · CC BY 4.0"
+            ]
+          }
         },
         {
-          "id": "receita-wafer",
+          "id": "wafers-etiqueta",
           "componente": "editorial.statCard",
-          "slot": "nota",
-          "t0": "@receita",
-          "t1": "@propria-0.35",
+          "slot": "etiqueta",
+          "t0": "@wafers",
+          "t1": "@propria-0.25",
           "p": {
             "estilo": "pilula",
-            "valor": "RECEITA DE WAFERS",
+            "valor": "UM WAFER DE SILÍCIO",
             "fato": "f-tsmc"
           }
         },
         {
-          "id": "quota-nao-global",
+          "id": "tsmc-precisao",
           "componente": "editorial.statCard",
-          "slot": "nota",
+          "slot": "etiqueta",
+          "t0": "@propria",
+          "t1": "@participação-0.3",
+          "p": {
+            "estilo": "pilula",
+            "valor": "RECEITA DA PRÓPRIA TSMC",
+            "fato": "f-tsmc"
+          }
+        },
+        {
+          "id": "cuidado-quota",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
           "t0": "@participação",
-          "t1": "@mas-0.45",
+          "t1": "@mas-0.35",
           "p": {
             "estilo": "pilula",
             "valor": "NÃO É QUOTA MUNDIAL",

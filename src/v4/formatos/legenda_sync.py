@@ -132,10 +132,10 @@ def destacar_atlas(palavras: list[dict], plano: dict, maximo: int = 3) -> list[d
 
     def pontuar(p: dict) -> int:
         w = norm(p['w'])
+        if any(c.isdigit() for c in w):
+            return 110  # números curtos como 26 m também devem ser enfatizados
         if len(w) < 3 or w in fracas:
             return -1
-        if any(c.isdigit() for c in w):
-            return 110
         if w in siglas_norm:
             return 95
         if w in nomes_norm:

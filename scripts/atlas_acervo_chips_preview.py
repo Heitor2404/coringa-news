@@ -115,7 +115,7 @@ def main(destino: Path) -> dict:
             if not thumb:
                 raise ValueError("Sem URL de imagem resolvida")
             data = _request_bytes(thumb)
-            if not data.startswith((b"\\xff\\xd8\\xff", b"\\x89PNG")) and data[:4] != b"RIFF":
+            if not data.startswith((b"\xff\xd8\xff", b"\x89PNG")) and data[:4] != b"RIFF":
                 raise ValueError("Bytes recebidos não parecem JPEG/PNG/WEBP")
             orig = Image.open(io.BytesIO(data))
             orig.load()

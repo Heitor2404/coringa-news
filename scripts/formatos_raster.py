@@ -28,11 +28,14 @@ from PIL import Image, ImageFilter
 UA = {'User-Agent': 'CoringaExplica/formatos (render editorial; contato via GitHub Heitor2404)'}
 DEM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
 BMNG = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_NextGeneration/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg'
+# Blue Marble com relevo sombreado e BATIMETRIA (oceano com plataforma continental visível, como a imagem da referência)
+BMNG_BATI = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg'
 # 2016 = camada 's2cloudless_3857' (a ÚNICA edição CC BY 4.0; 2018+ são CC BY-NC-SA → proibidas em vídeo monetizado)
 S2 = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg'
 ATRIB = {
     'relevo': 'Relevo: Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)',
     'bmng': 'Imagem: NASA Blue Marble Next Generation (domínio público)',
+    'bmng_bati': 'Imagem: NASA Blue Marble (relevo sombreado + batimetria), via GIBS (domínio público)',
     's2': 'Sentinel-2 cloudless - https://s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017) · CC BY 4.0',
 }
 REGIOES = {
@@ -41,6 +44,8 @@ REGIOES = {
     'panama_canal': ((-80.45, 8.55, -79.15, 9.75), 11, 's2'),
     'gatun_eclusas': ((-79.97, 9.24, -79.88, 9.31), 14, 's2'),
     'miraflores_eclusas': ((-79.63, 8.98, -79.56, 9.04), 14, 's2'),
+    # escala continental (calibração com a referência A: China e entorno)
+    'asia_continente': ((52.0, -22.0, 168.0, 64.0), 6, 'bmng_bati'),
 }
 
 
@@ -138,16 +143,19 @@ def satelite(img, elev, hs):
     return np.clip(a * .9, 0, 255).astype(np.uint8)
 
 
-def main(saida: Path):
+def main(saida: Path, so: list[str] | None = None):
     saida.mkdir(parents=True, exist_ok=True)
     for nome, (bbox, z, fonte) in REGIOES.items():
+        if so and nome not in so:
+            continue
         dem, cantos = mosaico(DEM, bbox, z, 'RGB')
         elev = elevacao(dem)
         lat = (bbox[1] + bbox[3]) / 2
         hs = sombra(elev, z, lat)
         Image.fromarray(fisico(elev, hs)).filter(ImageFilter.SMOOTH).save(saida / f'{nome}_fisico.jpg', quality=88, optimize=True)
-        img, cantos2 = mosaico(BMNG if fonte == 'bmng' else S2, bbox, z if fonte == 's2' else min(z, 8), 'RGB')
+        img, cantos2 = mosaico({'bmng': BMNG, 'bmng_bati': BMNG_BATI}.get(fonte, S2), bbox, z if fonte == 's2' else min(z, 8), 'RGB')
         img = img.resize(dem.size, Image.LANCZOS)
+        img.save(saida / f'{nome}_bruto.jpg', quality=92)          # sem grade: a grade final é calibrada contra a referência
         Image.fromarray(satelite(img, elev, hs)).save(saida / f'{nome}_satelite.jpg', quality=88, optimize=True)
         meta = {'nome': nome, 'bbox_pedido': bbox, 'zoom_tiles': z, 'cantos': cantos, 'px': list(dem.size),
                 'fontes': {'fisico': [ATRIB['relevo']], 'satelite': [ATRIB[fonte], ATRIB['relevo']]},

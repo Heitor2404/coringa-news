@@ -75,14 +75,24 @@ def info(titulos: list[str]) -> list[dict]:
     return out
 
 
+def pedido() -> tuple[list[str] | None, list[str] | None]:
+    """linhas 'regioes: a,b' e 'busca: termo' do ÚLTIMO bloco de .github/formatos/coleta.txt (pedido registrado)"""
+    arq = Path(__file__).resolve().parents[1] / '.github' / 'formatos' / 'coleta.txt'
+    bloco = arq.read_text(encoding='utf-8').split('\n\n')[-1] if arq.exists() else ''
+    reg = [x.strip() for l in bloco.splitlines() if l.startswith('regioes:') for x in l.split(':', 1)[1].split(',') if x.strip()]
+    bus = [l.split(':', 1)[1].strip() for l in bloco.splitlines() if l.startswith('busca:')]
+    return reg or None, bus or None
+
+
 def main(saida: Path):
+    regioes, buscas = pedido()
     if '--so-raster' in sys.argv:
-        formatos_raster.main(saida / 'raster')
+        formatos_raster.main(saida / 'raster', regioes)
         return
     midia = saida / 'midia'
     midia.mkdir(parents=True, exist_ok=True)
-    titulos = list(TITULOS)
-    for q in BUSCAS:
+    titulos = [] if buscas else list(TITULOS)
+    for q in buscas or BUSCAS:
         d = api(action='query', list='search', srsearch=q, srnamespace=6, srlimit=6)
         titulos += [s['title'] for s in d['query']['search'] if re.search(r'\.(jpe?g|png|tiff?)$', s['title'], re.I)]
     vistos, itens = set(), []
@@ -107,7 +117,7 @@ def main(saida: Path):
         time.sleep(.3)
     (midia / 'midia.json').write_text(json.dumps(itens, ensure_ascii=False, indent=1))
     print('mídia:', sum(1 for x in itens if x.get('arquivo')), 'de', len(itens))
-    formatos_raster.main(saida / 'raster')
+    formatos_raster.main(saida / 'raster', regioes)
 
 
 if __name__ == '__main__':

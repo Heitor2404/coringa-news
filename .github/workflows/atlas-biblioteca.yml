@@ -1,0 +1,38 @@
+name: ATLAS - Biblioteca (curadoria offline, sem render)
+# Não dispara motores, nenhuma API de IA, nenhum arquivo de vídeo.
+on:
+  push:
+    branches: [atlas-biblioteca-20261118]
+    paths:
+      - "src/v4/formatos/biblioteca_atlas/**"
+      - "tests/test_biblioteca_atlas.py"
+      - "docs/v4/formatos/BIBLIOTECA_ATLAS_OPERACIONAL.md"
+      - ".github/workflows/atlas-biblioteca.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-biblioteca
+  cancel-in-progress: true
+
+jobs:
+  auditar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar catálogo com Python puro
+        run: |
+          python -m json.tool src/v4/formatos/biblioteca_atlas/catalogo.json > /dev/null
+          python -m py_compile tests/test_biblioteca_atlas.py
+          python - <<'PY'
+          import runpy
+          ns = runpy.run_path("tests/test_biblioteca_atlas.py")
+          testes = sorted(k for k, v in ns.items() if k.startswith("test_") and callable(v))
+          for nome in testes:
+              ns[nome]()
+              print("OK:", nome)
+          print(f"{len(testes)} testes da Biblioteca ATLAS passaram (offline, zero IA e zero render).")
+          PY

@@ -282,3 +282,5 @@ O usuário relatou **"Deu transmissão interrompida"**. A retomada ao vivo do Gi
 - Nenhuma publicação em rede, merge para produção, mudança de NTC ou DOSSIÊ. Os créditos na faixa baixa permanecem pendência crítica para revisão nas interfaces reais e para licenças CC BY.
 
 Próximo passo: conferir `44405950985`. Se falhar, analisar etapa e log, corrigir branch experimental e reexecutar; se passar, exigir revisão humana no vídeo PRIVADO real (ritmo, voz, créditos, fotos) antes de homologar. Não recomeçar atividades já comprovadas.
+
+**Atualização de execução 44405950985:** na consulta de 18/11, a etapa de narração Edge TTS, obtenção de mídias com SHA, **preflight completo com tempos reais** e **checagem dos quadros renderizados com voz real** estavam todas **SUCCESS**. O job avançou à etapa **"MP4 + áudio + portões de qualidade do ATLAS"**, ainda **IN_PROGRESS**. Não afirmar que MP4 existe, que gates finais passaram ou que foi entregue no Telegram até consultar o estado final da execução e seus logs. A etapa de render final pode ser demorada. Link: https://github.com/Heitor2404/coringa-news/actions/runs/44405950985

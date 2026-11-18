@@ -24,7 +24,7 @@ env:
   SAIDA: saida_chips_reuso
 jobs:
   quadros:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 42
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +35,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: motor4/package-lock.json
+      # Ubuntu 26.04 de 'ubuntu-latest' trouxe falhas intermitentes de FFmpeg/apt.
+      # Fixar 24.04 aqui preserva ambiente repetível do teste.
       - name: FFmpeg preferindo binarios preinstalados no runner, fallback controlado
         timeout-minutes: 6
         run: |

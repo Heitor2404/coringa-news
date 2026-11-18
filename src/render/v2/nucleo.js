@@ -68,7 +68,8 @@
     for (const c of validos) {
       if (resultado.length >= limite) break;
       const xs = [c.x, c.x - c.w / 2, c.x - c.w, zona.esq + (zona.dir - zona.esq - c.w) / 2];
-      const ys = [c.y, c.y + c.h + folga, c.y - c.h - folga];
+      const ys = [c.y, c.y + c.h + 3 * folga, c.y - c.h - 3 * folga,
+        zona.topo, zona.base - c.h];
       let escolhido = null;
       for (const y0 of ys) {
         for (const x0 of xs) {

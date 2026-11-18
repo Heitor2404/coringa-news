@@ -61,6 +61,7 @@
   },
   "faixa_inferior": {
     "_nota": "hierarquia inferior inspirada na referência (território → número → legenda → créditos), com cada faixa PRÓPRIA e dentro da área visível de todas as plataformas ativas",
+    "atlas_creditos_margem_base": 160,
     "creditos_altura": 46,
     "creditos_px": 18,
     "creditos_linha": 22,

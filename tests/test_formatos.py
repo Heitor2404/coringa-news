@@ -746,12 +746,14 @@ def test_atlas_v1_tokens_exclusivos_e_template_documentado():
     assert 'MAPA HERO' in guia and 'CTA final' in guia
 
 
-def test_faixas_atlas_creditos_abaixo_de_legenda_e_dentro_da_area_segura():
+def test_atlas_creditos_no_rodape_e_legenda_na_area_segura():
     from src.v4.formatos import layout
     fi = layout.faixa_inferior()
-    leg, cred = fi['legenda'], fi['creditos']
+    zonas = P.zonas('atlas')
+    leg, cred = zonas['legenda'], zonas['creditos']
+    assert leg == fi['legenda']
     assert leg[1] + leg[3] < cred[1]
-    assert cred[1] + cred[3] <= fi['base_visivel']
+    assert cred[1] + cred[3] == layout.H - 160
     assert leg[0] >= 60 and cred[0] >= 60
 
 

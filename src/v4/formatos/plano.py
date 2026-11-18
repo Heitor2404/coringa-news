@@ -462,6 +462,9 @@ def zonas(formato: str) -> dict:
         from src.v4.formatos import layout
         fi = layout.faixa_inferior()
         z.update(legenda=fi['legenda'], creditos=fi['creditos'])
+        if formato == 'atlas':
+            x, _, w, h = fi['creditos']
+            z['creditos'] = [x, layout.H - layout.CFG['faixa_inferior']['atlas_creditos_margem_base'] - h, w, h]
         if zf.get('marca'):
             z['marca'] = zf['marca']
     else:

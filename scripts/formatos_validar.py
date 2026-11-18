@@ -125,6 +125,10 @@ def checar_plataformas(m: dict, pl: dict, t: float, perfis: list[str] | None = N
             z = {'x': x, 'y': y, 'w': w, 'h': h}
             for rotulo, bx in elems:
                 if _cruza(bx, z, 2):
+                    if pl.get('formato') == 'atlas' and rotulo == 'atribuicao' and mk['tipo'] == 'base':
+                        prob.append({'t': t, 'regra': 'A-CREDITO-RODAPE', 'aviso': True,
+                                     'texto': f'crédito no rodapé pode ser coberto pela interface de {nome}'})
+                        continue
                     if mk.get('aviso'):
                         if rotulo == 'marca':
                             # Identidade do canal precisa aparecer no feed; 40/40 cortes não são um aviso aceitável.

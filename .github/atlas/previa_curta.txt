@@ -13,3 +13,5 @@ Corrigir montagem CFR e verificar cada quadro do MP4 de envio contra os cortes e
 Validar reutilização pela árvore Git e revisar a eclusa em tempo contínuo.
 Preparar apenas dependências oficiais ausentes antes da prévia contínua.
 Segunda execução: recuperar cache exato em runner limpo; conferir o MP4 e a voz, sem repetir o envio.
+
+Revisão privada: créditos cartográficos ATLAS a 160 px da base.

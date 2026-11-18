@@ -3,7 +3,7 @@
  * navio sobe junto com o nível (régua em metros), comporta da frente abre, navio sai. Sentido 'descer' = o inverso.
  * evento.impacto: explosão/impacto/onda de choque em esquema com anéis de alcance em escala.                      */
 (function () {
-  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt } = V2.U;
+  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt, cameraDidatica, planejarRotulos } = V2.U;
 
   /* 18. mecanismo.eclusa — V2.1: corte lateral em ESCALA DE CELULAR, com direção de câmera (planos A–F) e física coerente:
    *  - a água entra/sai pelo TÚNEL com válvula (sistema hidráulico desenhado), nunca atravessando comporta fechada;
@@ -19,7 +19,8 @@
     params: { sentido: "'subir' | 'descer'", desnivel_m: 'desnível em metros (dos fatos)', lago: 'nome do nível alto ≤ 18', mar: 'nome do nível baixo ≤ 18',
       etapas: '3 textos ≤ 40 (entra/fecha · enche/esvazia · iguala/sai)', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala',
       planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26',
-      destaques_fluxo: 'opcional, tempos locais: [{t, alvo:lago|aqueduto|paredes|piso, rotulo}]; destaca peças enquanto mecanismo segue em movimento',
+      destaques_fluxo: 'opcional (legado), tempos locais: [{t, alvo:lago|aqueduto|paredes|piso, rotulo}]; preferir focos para outros mecanismos',
+      focos: 'sequência semântica genérica [{t, alvo, rotulo}] ancorada na fala; o mecanismo define os alvos físicos e a câmera calcula o foco',
       degraus: 'nº de câmaras REAIS em sequência que somam o desnível (ex.: 3 em Gatún). > 1 = aviso explícito + escada com o navio subindo todos os degraus' },
     fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho 340–440 (etapa atual, 3 marcadores); corte esquemático 450–1210 em tela cheia; rótulos de estado (comportas, válvula, níveis) em HTML de tamanho fixo que acompanham a câmera',
     paleta: 'água ciano; concreto azul-acinzentado com textura; comportas amarelas; navio branco/vermelho; GRAVIDADE e Δh em amarelo', animacao: 'navio desloca → comporta fecha (plano B) → válvula abre, fluxo no túnel (plano C) → água e navio sobem juntos (plano D) → níveis iguais, comporta abre (plano E) → navio sai (plano F)',
@@ -121,7 +122,7 @@
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
           <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
         : `<div class="abs" data-g="aviso" data-opcional="1" style="right:${V4 ? 72 : 160}px;top:${V4 ? 1180 : 1176}px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
-      <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
+      <style>.re{font-family:var(--f-dado);font-weight:800;font-size:${V4 ? 34 : 30}px;line-height:1.12;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:6px 12px;max-width:360px;white-space:${V4 ? "normal" : "nowrap"};overflow-wrap:break-word;letter-spacing:.3px;box-sizing:border-box}</style>`;
 
     // ---- linha do tempo física ----
     function tempos(d) {
@@ -196,18 +197,25 @@
         for (let q = 1; q < seq.length; q++) { if (tl < seq[q][1]) break; const kq = eio((tl - seq[q][1]) / .8); const r1 = plano(seq[q][0], est); r = [lerp(r[0], r1[0], kq), lerp(r[1], r1[1], kq), lerp(r[2], r1[2], kq)]; }
         // Direção da explicação contínua: preserva o corte da câmara,
         // sem trocar por cards, e destaca a peça citada na narração.
-        const marcas = p.destaques_fluxo || [], alvos = {
+        const marcas = p.focos || p.destaques_fluxo || [], alvos = {
           lago: [1280, 420], aqueduto: [920, TUN], paredes: [C1, 730], piso: [720, FUNDO]
         };
-        const primeira = marcas.length ? Number(marcas[0].t) : Infinity;
-        if (tl >= primeira) {
-          const kf = eio(clamp((tl - primeira) / .65));
-          const geral = rect(810, 690, 1380);
-          r = [lerp(r[0], geral[0], kf), lerp(r[1], geral[1], kf), lerp(r[2], geral[2], kf)];
-        }
-        const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
         let marca = null;
         for (const m of marcas) if (tl >= Number(m.t) && alvos[m.alvo]) marca = m;
+        if (marca) {
+          const alvoFoco = alvos[marca.alvo];
+          if (V4) {
+            // Enquadramento calculado pela posição da peça física no mecanismo,
+            // conservando câmara e conexões, sem uma câmera por episódio.
+            r = cameraDidatica(r, alvoFoco, [(C0 + C1) / 2, 700], ASP,
+              clamp((tl - Number(marca.t)) / .7), 1240);
+          } else {
+            const kf = eio(clamp((tl - Number(marcas[0].t)) / .65));
+            const geral = rect(810, 690, 1380);
+            r = [lerp(r[0], geral[0], kf), lerp(r[1], geral[1], kf), lerp(r[2], geral[2], kf)];
+          }
+        }
+        const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
         const foco = el.querySelector('.foco-fluxo');
         const alvo = marca ? alvos[marca.alvo] : null;
         if (alvo) {
@@ -216,9 +224,22 @@
           foco.setAttribute('opacity', '.94');
         } else foco.setAttribute('opacity', '0');
         const P = (x, y) => [(x - r[0]) / r[2] * SW, SY + (y - r[1]) / (r[2] / ASP) * SH];
-        const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => { const e = el.querySelector(sel); if (txt !== undefined) e.textContent = txt;
-          const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight; const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, 926 - w), Tt = py + (ay < 0 ? -h - 10 : 10);
-          const dentro = Tt > SY + 10 && Tt + h < SY + SH - 40 && px > 30 && px < 1050; /* âncora fora do quadro: rótulo some */ e.style.left = L + 'px'; e.style.top = Tt + 'px'; e.style.opacity = vis && dentro ? 1 : 0; };
+        const candidatos = [];
+        const pesos = { '.r-foco-fluxo': 100, '.r-nivel': 75, '.r-delta': 68, '.r-val': 55,
+          '.r-grav': 50, '.r-cpE': 40, '.r-cpD': 38, '.r-lago': 22, '.r-mar': 20 };
+        const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => {
+          const e = el.querySelector(sel);
+          if (txt !== undefined) e.textContent = txt;
+          const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight;
+          const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, Math.max(76, 926 - w));
+          const Tt = py + (ay < 0 ? -h - 10 : 10);
+          const dentro = Tt > SY + 10 && Tt + h < SY + SH - 40 && px > 30 && px < 1050;
+          e.style.left = L + 'px'; e.style.top = Tt + 'px';
+          if (!V4) { e.style.opacity = vis && dentro ? 1 : 0; return; }
+          e.style.opacity = 0;
+          candidatos.push({ id: sel, x: L, y: Tt, w, h, visivel: !!(vis && dentro),
+            prioridade: pesos[sel] || 0, ordem: candidatos.length });
+        };
         poe('.r-mar', 150, YL, undefined, true);
         poe('.r-lago', 1300, YH, undefined, true);
         poe('.r-cpE', C0 - PAR / 2, TOPO - 10, (subir ? fechada : (tl < abre[0] ? 1 : 1 - aberta)) > .9 ? 'COMPORTA FECHADA' : 'COMPORTA ABERTA', true);
@@ -229,14 +250,25 @@
         poe('.r-nivel', C0 + 80, nivel, `${fmt(m, 0)} m`, tl > entra[1] - .3, 1, -1);
         poe('.r-delta', C1 - 80, (nivel + sai_) / 2, delta > .3 ? `FALTAM ${fmt(delta, 0)} m` : 'NÍVEIS IGUAIS ✓', tl > fecha[0] && tl < abre[1] + .4, -1, 1);
         poe('.r-foco-fluxo', alvo ? alvo[0] : 0, alvo ? alvo[1] : 0, marca ? marca.rotulo : '', !!marca, 0, -1);
-        // rótulos não se cobrem: na ordem de prioridade, o que bater num já posto desce uma linha; se ainda bater, some
-        const postos = [];
-        for (const sel of ['.r-foco-fluxo', '.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
-          const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
-          const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
-          const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);
-          let b = caixa(); if (bate(b)) { e.style.top = (parseFloat(e.style.top) + (b[3] - b[1]) + 6) + 'px'; b = caixa(); if (bate(b) || b[3] > SY + SH - 40) { e.style.opacity = 0; continue; } }
-          postos.push(b);
+        if (V4) {
+          // Controle de densidade global do componente: um assunto narrado
+          // + no máximo um estado físico. Nunca esconder o assunto prioritário.
+          const visiveis = planejarRotulos(candidatos,
+            { esq: 76, dir: 930, topo: SY + 16, base: SY + SH - 42 }, marca ? 2 : 3, 12);
+          for (const q of visiveis) {
+            const e = el.querySelector(q.id);
+            e.style.left = q.x + 'px'; e.style.top = q.y + 'px'; e.style.opacity = 1;
+          }
+        } else {
+          const postos = [];
+          for (const sel of ['.r-foco-fluxo', '.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
+            const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
+            const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
+            const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);
+            let b = caixa();
+            if (bate(b)) { e.style.top = (parseFloat(e.style.top) + (b[3] - b[1]) + 6) + 'px'; b = caixa(); if (bate(b) || b[3] > SY + SH - 40) { e.style.opacity = 0; continue; } }
+            postos.push(b);
+          }
         }
         // cabeçalho
         const f = tl < T[1] ? 0 : tl < T[2] ? 1 : 2;

@@ -15,3 +15,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: ATLAS V1 mapa hero primeiro quadro, CTA de fecho, Python+TypeScript sem render; teste integrado.
 
 18/11: ATLAS V1 final check — 3-line cartographic credit, real-text-overflow, short meaningful hook, TS typecheck.
+
+18/11: bloquear credito com overflow sem deslocar cards; reteste Python+Remotion TS.

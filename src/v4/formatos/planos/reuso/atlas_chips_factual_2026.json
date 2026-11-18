@@ -3,7 +3,7 @@
   "canal": "coringa",
   "video_id": "teste-atlas-chips-factual-20261118",
   "titulo": "Por que Taiwan é central na guerra dos chips?",
-  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente. Progressão informativa sincronizada por tokens e composições ATLAS existentes. | Duas fotos CC BY 4.0 verificadas apenas na branch experimental: TSMC Fab 18 contextualizada em Taiwan; wafer genérico sem atribuir fabricante. Prévia ainda requer créditos legíveis.",
+  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente. Progressão informativa sincronizada por tokens e composições ATLAS existentes. | Duas fotos CC BY 4.0 verificadas apenas na branch experimental: TSMC Fab 18 contextualizada em Taiwan; wafer genérico sem atribuir fabricante. Prévia ainda requer créditos legíveis. Fotografia utiliza palco ATLAS genérico sem forçar imagem a cobrir o ROI cartográfico.",
   "geo": "motor4/formatos/dados/mundo.topo.json",
   "camera": "roi",
   "styleframes": 8,
@@ -260,7 +260,7 @@
     {
       "id": "b2b-wafer",
       "t": "@wafers-0.2",
-      "composicao": "atlas.painel",
+      "composicao": "atlas.fotografia",
       "camadas": [
         {
           "id": "fotografia-wafer",

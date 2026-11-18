@@ -1,8 +1,9 @@
 /* Contrato visual genérico dos mecanismos V2, sem render e sem dados do Panamá. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync('src/render/v2/nucleo.js', 'utf8');
+const source = fs.readFileSync(path.resolve(__dirname, '../src/render/v2/nucleo.js'), 'utf8');
 const sandbox = {window: {}};
 vm.runInNewContext(source, sandbox, {filename: 'nucleo.js'});
 const {cameraDidatica, planejarRotulos} = sandbox.window.V2.U;

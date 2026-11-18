@@ -49,7 +49,45 @@
     while ((el.scrollWidth > L + 1 || el.offsetHeight > A) && f > min) { f -= passo; el.style.fontSize = f + 'px'; }
     return f;
   }
-  V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber };
+  /* DIREÇÃO VISUAL DIDÁTICA — geometria e prioridades reutilizáveis por QUALQUER mecanismo.
+     Recebe posição semântica e contexto do componente, nunca nome, assunto ou coordenadas de episódio. */
+  function cameraDidatica(base, alvo, contexto, aspecto, progresso = 1, largura = 1240) {
+    if (!alvo || !contexto || !base || !(aspecto > 0)) return base;
+    const k = eo(progresso), w = Math.max(900, largura);
+    // Foco com contexto: aproxima a peça narrada, mas conserva o sistema causal no enquadramento.
+    const cx = .35 * alvo[0] + .65 * contexto[0];
+    const cy = .35 * alvo[1] + .65 * contexto[1];
+    const chegada = [cx - w / 2, cy - w / aspecto / 2, w];
+    return base.map((v, i) => lerp(v, chegada[i], k));
+  }
+  function planejarRotulos(candidatos, zona, limite = 2, folga = 10) {
+    // Ordenação estável: assunto narrado prevalece sobre números de estado e etiquetas secundárias.
+    const validos = candidatos.filter(c => c.visivel && c.w > 0 && c.h > 0 && c.w <= zona.dir - zona.esq)
+      .sort((a, b) => (b.prioridade || 0) - (a.prioridade || 0) || (a.ordem || 0) - (b.ordem || 0));
+    const usados = [], resultado = [];
+    for (const c of validos) {
+      if (resultado.length >= limite) break;
+      const xs = [c.x, c.x - c.w / 2, c.x - c.w, zona.esq + (zona.dir - zona.esq - c.w) / 2];
+      const ys = [c.y, c.y + c.h + folga, c.y - c.h - folga];
+      let escolhido = null;
+      for (const y0 of ys) {
+        for (const x0 of xs) {
+          const x = clamp(x0, zona.esq, zona.dir - c.w);
+          const y = clamp(y0, zona.topo, zona.base - c.h);
+          const caixa = [x - folga, y - folga, x + c.w + folga, y + c.h + folga];
+          if (usados.some(q => caixa[0] < q[2] && q[0] < caixa[2] && caixa[1] < q[3] && q[1] < caixa[3])) continue;
+          escolhido = { id: c.id, x, y };
+          usados.push(caixa);
+          break;
+        }
+        if (escolhido) break;
+      }
+      if (escolhido) resultado.push(escolhido);
+    }
+    return resultado;
+  }
+  V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber,
+    cameraDidatica, planejarRotulos };
 
   /* tokens da identidade (os mesmos de estilo.css): uma escala tipográfica, um ritmo, uma espessura de linha */
   V2.T = {

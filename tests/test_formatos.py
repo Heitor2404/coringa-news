@@ -180,7 +180,7 @@ def test_componentes_registrados_no_remotion():
 def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     """17/11 (ensaio DOSSIÊ): datas da linha do tempo encostavam na marca 'CORINGA EXPLICA' (y 292)"""
     pl = copy.deepcopy(ATLAS)
-    _camada(pl, 'km')['caixa'] = [72, 300, 936, 28]          # zona da marca ATLAS: y 294–338, dentro do feed Reels
+    _camada(pl, 'km')['caixa'] = [72, 1250, 936, 80]  # ocupa a faixa da legenda protegida, não a antiga marca fixa
     r = P.validar(P.resolver_tempos(pl, []))
     assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 1  # ATLAS sem marca sobreposta; legenda continua protegida
     for x, y, w, h in P.SLOTS.values():

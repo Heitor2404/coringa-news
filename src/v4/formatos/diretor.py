@@ -57,7 +57,19 @@ IDENTIDADE É DO MOTOR: não escreva tamanho, raio, largura, cor, ajuste, transi
 os tokens do canal. Mapa geográfico SEMPRE sobre base cartográfica da lista "rasters" que cubra o roi; diagrama técnico só em beat
 com "funcao": "mecanismo" ou "estrutura".
 SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (use os ids):\n""" + \
-        '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nNARRAÇÃO:\n{fala}\n
+        '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nDIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
+- Abra com mapa hero, prova real e/ou pergunta; NUNCA coloque animação técnica de mecanismo na abertura.
+- Para cada trecho, determine a necessidade visual: geografia, acontecimento real, funcionamento, comparação ou dado.
+  Prefira vídeo real que demonstra o fato; animação técnica só quando a explicação precisa de um mecanismo.
+- Quando a narração continua descrevendo o MESMO mecanismo ou seu fluxo, mantenha o desenho visível e destaque
+  suas peças na ordem da fala. NÃO substitua o mecanismo em curso por caixas com os nomes das peças.
+- Declare todo intervalo de demonstração técnica em "explicacoes" (lista de objetos com id, tipo="mecanismo",
+  t0, t1, recurso=componente do clipe aprovado); o clipe deve cobrir todo o intervalo. Ancore t0/t1 à fala.
+  O validador rejeita quebra de continuidade. Se não há mídia/componente que demonstre, sinalize pendência.
+- Mostre o dado final quando for narrado e encerre após a conclusão, sem repetir mapa por efeito decorativo.
+- NÃO aumente artificialmente a duração, não corte narração, não invente imagens e não imponha cotas de animação.
+
+NARRAÇÃO:\n{fala}\n
 {instrucao_saida}"""
     if correcoes:
         base += '\n\nSEU PLANO VIOLOU REGRAS VERIFICADAS EM CÓDIGO; corrija só isto e devolva o JSON inteiro:\n' + \

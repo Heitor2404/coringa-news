@@ -1,0 +1,43 @@
+name: ATLAS - galeria de midias chips (candidatas, sem publicacao)
+# Execução de curadoria visual sem Claude, Gemini, TTS ou render de vídeo.
+on:
+  push:
+    branches: [atlas-biblioteca-20261118]
+    paths:
+      - "scripts/atlas_acervo_chips_preview.py"
+      - "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json"
+      - ".github/workflows/atlas-acervo-chips-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-acervo-chips-preview
+  cancel-in-progress: true
+
+jobs:
+  galeria:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - name: Instalar apenas Pillow
+        run: python -m pip install --disable-pip-version-check "Pillow==11.3.0"
+      - name: Conferir sintaxe e fontes do acervo
+        run: |
+          python -m py_compile scripts/atlas_acervo_chips_preview.py
+          python -m json.tool src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json > /dev/null
+      - name: Recuperar miniaturas Commons, auditar hashes e criar galeria
+        timeout-minutes: 8
+        run: python scripts/atlas_acervo_chips_preview.py saida_galeria_chips
+      - name: Guardar galeria e relatorio SEMPRE (mesmo se houver falhas)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-chips-acervo-candidato
+          path: saida_galeria_chips/
+          if-no-files-found: warn
+          retention-days: 7

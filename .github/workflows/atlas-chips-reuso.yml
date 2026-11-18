@@ -1,0 +1,83 @@
+name: ATLAS Chips - prova de reuso e quadros SEM IA
+# TESTE ISOLADO: somente mapas/componentes aprovados. Nenhum TTS, Claude, API, MP4 ou publicacao.
+on:
+  push:
+    branches: [atlas-piloto-chips-20261118]
+    paths:
+      - ".github/workflows/atlas-chips-reuso.yml"
+      - "docs/v4/formatos/PILOTO_CHIPS_BRIEF_20261118.md"
+      - "src/v4/formatos/planos/reuso/atlas_chips.json"
+      - "scripts/formatos_reuso.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atlas-chips-reuso
+  cancel-in-progress: true
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+  PLANO: src/v4/formatos/planos/reuso/atlas_chips.json
+  SAIDA: saida_chips_reuso
+jobs:
+  quadros:
+    runs-on: ubuntu-latest
+    timeout-minutes: 42
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        with: {ffmpeg-version: release}
+      - name: Verificar Chrome e preparar fontes aprovadas
+        run: |
+          ffmpeg -version | head -1
+          google-chrome --version
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+      - name: Instalar dependencias fixadas
+        timeout-minutes: 15
+        run: |
+          pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+      - name: Testes de contrato do motor antes dos quadros
+        run: |
+          python -m pytest -q tests/test_formatos.py
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: PROVA DE REUSO CHIPS (voz sintetica para temporizacao, SEM TTS)
+        timeout-minutes: 20
+        run: |
+          python scripts/formatos_reuso.py "$PLANO" "$SAIDA"
+      - name: Bloquear se preflight/quadros apresentarem erros
+        run: |
+          python - <<'PY'
+          import json, pathlib, os
+          p = pathlib.Path(os.environ["SAIDA"]) / "reuso.json"
+          r = json.loads(p.read_text(encoding="utf-8"))
+          print("Preflight:", r["preflight"])
+          print("Quadros:", r.get("quadros"))
+          assert r["preflight"]["pronto"], "Preflight bloqueou o reuso: ver relatorio."
+          assert "quadros" in r, "Nenhum quadro gerado."
+          assert not r["quadros"]["problemas"], "Problemas visuais: ver relatorio."
+          print("REUSO ATLAS CHIPS APROVADO NOS TESTES AUTOMATIZADOS (NÃO é aprovação humana).")
+          PY
+      - name: Guardar estiloframes e relatorios para auditoria privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-chips-reuso-sintetico
+          path: |
+            saida_chips_reuso/reuso.json
+            saida_chips_reuso/preflight.json
+            saida_chips_reuso/quadros/
+          if-no-files-found: warn
+          retention-days: 7

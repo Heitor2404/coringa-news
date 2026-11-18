@@ -387,10 +387,11 @@
           "h": 88
         }
       },
-      "max_camadas": 1,
+      "max_camadas": 2,
       "pinos": false,
       "referencia": "retorno ao plano largo com recuo lento (ref. 59–66 s: SIFT escala mediana 0,954/s)",
-      "uso": "fecho: síntese sobre o território inteiro"
+      "uso": "fecho: síntese sobre o território inteiro",
+      "_nota_cta": "Dois elementos não conflitantes: manchete no topo + CTA compacto na banda dedicada inferior; CTA não conta como segunda história"
     },
     "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
   },

@@ -27,3 +27,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: direção visual inteligente ATLAS — continuidade eclusa 31–50, testes de fiscais e portões, validação isolada sem IA/render; branch experimental.
 
 18/11: reteste da área de legenda com marca fixa desligada; continuar sem render ou IA.
+
+18/11: detector de mudança localizada do gráfico 197 milhões, descontando movimento de câmera; teste negativo estático.

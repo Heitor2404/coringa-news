@@ -29,3 +29,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: reteste da área de legenda com marca fixa desligada; continuar sem render ou IA.
 
 18/11: detector de mudança localizada do gráfico 197 milhões, descontando movimento de câmera; teste negativo estático.
+
+18/11: ultima validação — detector local só ATLAS, DOSSIÊ com algoritmo antigo; + teste de isolamento.

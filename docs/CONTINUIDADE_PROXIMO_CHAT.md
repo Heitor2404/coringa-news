@@ -194,3 +194,29 @@ Esta atualização registra o progresso feito após o usuário autorizar autonom
 3. Ter amostra Piper avaliada, considerar teste de voz real integral somente sem assumir licença comercial do produto Edge.
 4. Produzir MP4 privado da guerra dos chips com **voz e fotos reais corretamente atribuídas**, depois validação humana e sem publicação.
 5. Registrar métricas reais de qualidade, custos e reutilização na biblioteca; preservar produção, DOSSIÊ e NTC.
+
+
+## 11. Piloto chips com fotos reais — validação experimental
+
+**Em 18/11, após a interrupção do streaming do ChatGPT,** o teste cartográfico factual `44379818856` terminou SUCCESS: preflight 22 itens, **34 quadros sem erros bloqueadores**, mas 102 avisos de crédito no rodapé (34 × 3 redes). O assistente baixou e inspecionou `styleframes.jpg` e `amostragem.jpg`: confirmou a linguagem do Panamá, mas constatou que o episódio precisava de fotografias reais para não ficar somente mapa + cards.
+
+Na branch **`atlas-piloto-chips-20261118`** foram adicionadas **somente para prévia privada** duas mídias de origem Commons ao `src/v4/biblioteca_comprovada.json`, cada uma com SHA256 **do arquivo exato de miniatura 960 px**, licença e comprovação visual:
+- `commons:TSMC_Fab_18_May_2025.jpg`: fachada TSMC Fab18 em **Tainan**, 2025, 4300streetcar, CC BY 4.0, fonte https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg. Foto circular ancorada em Tainan no plano factual; **não** comprova produção interna/porcentagem.
+- `commons:Silicon_wafer_close_view.jpg`: foto de wafer de silício, Le hollandais volant, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg. Foto **genérica** de wafer em cartão de evidência; **não** atribuída à produção da TSMC. Não foi escolhida a foto da sede ASML como substituto de máquina EUV.
+
+Os direitos e SHA das miniaturas foram rechecados na galeria Wikimedia de execução `44380034537`. O índice global **da produção permaneceu intocado**; esses dois novos registros só existem no ramo experimental e aguardam conferência do MP4/créditos antes de homologar.
+
+O plano `src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json` ganhou beat `b2b-wafer`: foto real durante a palavra **wafers** e notas factuais sucessivas, sem poluir. A tentativa inicial de usar `atlas.tecnica` falhou corretamente (`F-TECNICO-SEM-MECANISMO`); foi substituída por `atlas.painel` com ROI correspondente a Taiwan, mantendo fundo cartográfico e **sem afrouxar o fiscal**. Foram corrigidos intervalos de `F-COLISAO` e `F-SEM-PROGRESSAO`; prévia ainda aguarda validação.
+
+O renderizador `motor4/remotion/src/formatos/Primitivas.tsx` foi alterado **somente para ATLAS**: foto/cartão `dossie.documentCard` fica 0° (reta e centralizada), enquanto estilo inclinado do DOSSIÊ é preservado. Testes em `tests/test_formatos.py` foram adaptados para verificar **quatro cards simultâneos** sem depender dos IDs de conteúdo do episódio.
+
+**Novas validações**:
+- `44382124573`: falhou por teste legado que citava cards removidos do roteiro, corrigido.
+- `44382454681`: preflight encontrou colisão de etiquetas, uso incorreto de palco técnico e parâmetro de estilo proibido; corrigidos.
+- `44383067422`: auditoria apontou `atlas.painel` sem ROI geográfico; corrigido.
+- `44383504685`: falhou em F-SEM-PROGRESSAO de 3s no beat do wafer; corrigido introduzindo nota ligada à fala.
+- **`44383964727`**: validação com fotos, última consulta **in_progress**, conferir status final/logs/artefato. **Não afirmar sucesso até ver os resultados.**
+
+Workflow prévia completa **`.github/workflows/atlas-chips-previa-privada.yml`** está preparado: dispara apenas ao registrar `.github/atlas/chips_previa.txt` no ramo experimental; usa Edge TTS (não Gemini/Claude pago), mídia aprovada por SHA, preflight, quadros, render completo, fiscal e Telegram privado. **NÃO foi disparado nesta atualização**, pois a prova de quadros ainda estava sob revisão. Essa prévia NÃO publica em redes; usa Edge como voz provisória, ainda exigindo aprovação de voz e termos antes de postagem.
+
+**Próximo passo:** conferir resultado de `44383964727`, corrigir se falhar. Se ficar verde, baixar a folha de quadros e inspecionar de verdade — principalmente foto TSMC, wafer, cartões retos, não sobreposição, créditos. Só então disparar a prévia privada completa, inspecionar MP4, marcar limites factuais e atualizar aqui.

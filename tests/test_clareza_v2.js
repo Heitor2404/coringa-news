@@ -34,6 +34,20 @@ for (const alvo of [[430, 740], [1180, 740]]) {
 }
 assert.equal(cameraDidatica(base, null, [720,700], aspecto, 1), base, 'sem alvo deve conservar quadro');
 
+// Com a água no aqueduto, a câmera deve continuar mostrando o navio TODO.
+const barco = [720, 340], tubo = [920, 915];
+const enquadrado = cameraDidatica(base, tubo, [720, 700], aspecto, 1, 1240, barco);
+const dentro = (x,y,cam) => x >= cam[0] && x <= cam[0]+cam[2] &&
+  y >= cam[1] && y <= cam[1]+cam[2]/aspecto;
+assert(dentro(tubo[0],tubo[1],enquadrado), 'o alvo narrado saiu da tela');
+for(const ponto of [[barco[0]-215,barco[1]-160],[barco[0]+215,barco[1]+60]]) {
+  assert(dentro(ponto[0],ponto[1],enquadrado), 'zoom cortou o protagonista móvel');
+}
+assert(enquadrado[2]>=1240, 'câmera excedeu aproximação permitida');
+// Movimentação muda o protagonista, e a câmera recalcula sem coordenadas de episódio.
+const moved = cameraDidatica(base, [720, 860], [720,700], aspecto, 1, 1240, [1330,340]);
+assert(dentro(1330+215,340-160,moved), 'câmera cortou o navio no fim da travessia');
+
 const zona = {esq: 76, dir: 930, topo: 550, base: 1160};
 const r = planejarRotulos([
   {id:'secundario', prioridade:10, x:400, y:600, w:240, h:65, visivel:true, ordem:0},

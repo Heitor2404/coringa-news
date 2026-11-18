@@ -301,7 +301,17 @@
             "fato": "f-tsmc"
           }
         }
-      ]
+      ],
+      "roi": [
+        118.6,
+        21.6,
+        123.2,
+        25.6
+      ],
+      "prova": {
+        "precisa_mostrar": "fotografia real de wafer de silício genérico com crédito, enquanto o mapa mantém localização da TSMC em Taiwan",
+        "nao_alegar": "foto de wafer produzida na TSMC; imagem apenas ilustrativa"
+      }
     },
     {
       "id": "b3-holanda",

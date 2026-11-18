@@ -103,3 +103,26 @@ tests/
 ## Resumo executivo
 
 **Uma biblioteca operacional de capacidades e provas. Não um banco de vídeos sem contexto.** Não parar a produção do segundo piloto até “completar” a biblioteca: manter desenvolvimento e curadoria desacoplados, integrando somente recursos efetivamente aprovados. O catálogo é expansível, mas o motor ATLAS continua limitado à gramática visual homologada.
+
+## Sprint 1 — primeira curadoria fotográfica da guerra dos chips (18/11)
+
+A branch experimental contém `src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json` com **5 candidatas verificadas na página da Wikimedia Commons**. A seleção cobre:
+- **Taiwan:** TSMC Fab 18, exterior em Tainan, 2025, 4300streetcar, CC BY 4.0.
+- **Holanda:** sede corporativa ASML em Veldhoven, foto de 2008, A ansems, domínio público; NÃO representa uma máquina EUV.
+- **China:** exterior da SMIC em Shenzhen, 2022, Lhzss8, CC BY-SA 4.0; obrigações de atribuição/compartilhamento precisam revisão para edição final.
+- **Tecnologia:** wafer de silício em close, Le hollandais volant, CC BY 4.0; não identifica chip, fabricante ou nó de produção.
+- **Processo genérico:** sala limpa de microfabricação da NASA Glenn, domínio público; NÃO é interior da TSMC/ASML/SMIC.
+
+**Exclusão explícita:** foto histórica `Extreme ultraviolet lithography tool.jpg` do Lawrence Livermore (1998) não é imagem de scanner moderno da ASML; não atribuí-la a equipamento contemporâneo.
+
+**Diferença de status:** as páginas/licenças foram checadas, mas as cinco mídias **ainda NÃO foram aprovadas editorialmente** nem copiadas para `src/v4/biblioteca_comprovada.json`. Falta baixar/inspecionar o arquivo aprovado, checar enquadramento vertical, autoria/alterações, SHA256 binário, atribuição completa e adequação à frase exata. A biblioteca não pode renderizá-las enquanto estiverem como candidatas. A presença de arquivo com licença não garante uso honesto.
+
+Ferramentas introduzidas (isoladas do pipeline):
+- `scripts/atlas_biblioteca.py`: `resumo` e `buscar <termo>` com resultados `CANDIDATO_BLOQUEADO`; falha fechada para liberação.
+- `scripts/atlas_acervo_chips_preview.py`: consulta API Wikimedia Commons, baixa miniaturas com origens permitidas, calcula SHA256 da **miniatura** e registra SHA1 do original informado pela fonte; gera galeria, créditos e auditoria JSON. A miniatura NÃO vira automaticamente mídia comprovada, e seu SHA não é SHA do original.
+- `.github/workflows/atlas-acervo-chips-preview.yml`: CI visual, upload de **artefato temporário (7 dias)**, sem IA, vídeo, TTS ou publicação.
+- `tests/test_biblioteca_atlas.py`: sete testes offline com bloqueio de candidata sem SHA, correspondência e revisão editorial.
+
+**Decisão editorial:** se não obtivermos foto livre de equipamento EUV moderno, **não substituir por foto histórica nem pela sede ASML fingindo ser máquina**. Podemos usar mapa, card e texto validado para explicar ASML; a fotografia do equipamento continua como pendência.
+
+**Uso nos vídeos:** biblioteca continua em branch própria, aguardando integração homologada, e não altera o segundo piloto nem o ATLAS aprovado.

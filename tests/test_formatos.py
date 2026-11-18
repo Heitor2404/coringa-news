@@ -1165,9 +1165,11 @@ def test_atlas_foto_prova_deve_usar_painel_reto_sem_falsificar_mecanismo():
     wafer = next(L for L in fotos if L["id"] == "fotografia-wafer")
     assert any(b["id"] == "b2b-wafer" and b["composicao"] == "atlas.painel"
                and wafer in b["camadas"] for b in pl["beats"])
-    assert wafer["slot"] == "painel" and "inclina" not in wafer["p"]
+    assert wafer["slot"] == "foto" and "inclina" not in wafer["p"]
+    assert P.COMP["atlas.painel"]["slots"]["foto"]["h"] >= 550
     assert not [e for e in P.validar(pl) if e["regra"] in {
         "F-TECNICO-SEM-MECANISMO", "F-ESTILO-NO-EPISODIO", "F-COLISAO"
     }]
     ts = (RAIZ / "motor4/remotion/src/formatos/Primitivas.tsx").read_text(encoding="utf-8")
     assert "const inc = c.P.formato === 'atlas' ? 0" in ts
+    assert "fontSize: c.P.formato === 'atlas' ? 28 : 24" in ts

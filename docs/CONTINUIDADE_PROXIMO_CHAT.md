@@ -284,3 +284,16 @@ O usuário relatou **"Deu transmissão interrompida"**. A retomada ao vivo do Gi
 Próximo passo: conferir `44405950985`. Se falhar, analisar etapa e log, corrigir branch experimental e reexecutar; se passar, exigir revisão humana no vídeo PRIVADO real (ritmo, voz, créditos, fotos) antes de homologar. Não recomeçar atividades já comprovadas.
 
 **Atualização de execução 44405950985:** na consulta de 18/11, a etapa de narração Edge TTS, obtenção de mídias com SHA, **preflight completo com tempos reais** e **checagem dos quadros renderizados com voz real** estavam todas **SUCCESS**. O job avançou à etapa **"MP4 + áudio + portões de qualidade do ATLAS"**, ainda **IN_PROGRESS**. Não afirmar que MP4 existe, que gates finais passaram ou que foi entregue no Telegram até consultar o estado final da execução e seus logs. A etapa de render final pode ser demorada. Link: https://github.com/Heitor2404/coringa-news/actions/runs/44405950985
+
+
+## 16. 18/11 — estudo de seis referências e proposta ATLAS V2
+
+Após o usuário **reprovar visualmente o MP4 privado Guerra dos Chips de 58,862 s** (voz considerada ruim, cards destoando, mapas zenitais repetidos, pouco acontecimento e aparência robótica), o assistente analisou o arquivo enviado e buscou referências de edição documental. O workflow `44405950985` terminou `success` na infraestrutura e entregou a prévia privada, mas seu próprio `ATLAS_FISCAL` marcou `estado=BLOQUEADO` por `G-MP4-JANELA 36–40 s: CONGELADO`. **Nunca declarar o vídeo editorialmente aprovado.** O workflow experimental desligou a chave Gemini e usou Edge TTS provisório; o usuário **não aprovou a substituição da voz**.
+
+O usuário aprovou a ideia de estudar neo, Branch Education, Wendover Productions, CNBC, Johnny Harris/Vox Borders e fern, pedindo investigação minuciosa e adaptação à identidade Coringa. Foi produzido o **guia PROPOSTO**, sem modificar código nem a identidade aprovada:
+
+- Documento: `docs/v4/formatos/ESTUDO_REFERENCIAS_E_DIRECAO_ATLAS_V2_20261118.md` (branch `atlas-direcao-visual-20261118`), commit `cba5fdeb85ed2f0abb51b314a100441438169533`.
+- Contém métodos/sources verificadas (neo FAQ; Branch official; fern official; vídeos Johnny Harris/Wendover/CNBC; decupagem terceirizada fern explicitamente delimitada), matriz de seis referências, identidade inalterada, gramática de 6 verbos `LOCALIZAR/MOSTRAR/DEMONSTRAR/CONECTAR/COMPARAR/REVELAR`, schema conceitual de `ficha_cena`, proposta de preview de 22–25s e gates automáticos/humanos.
+- **Gap concreto confirmado:** o catálogo ativo ATLAS só dispõe de mecanismo `mecanismo.eclusa`, e não de litografia/semicondutor; atual `diretor.py` pede `prova`, mas a escolha visual não garante que a narração tenha referente/ação correspondente. São necessárias mídia real **licenciada e comprovada** e capacidade explicativa antes de substituí-la por rota/card.
+- **Não implementado:** componentes, perspectiva de mapa 3D, guardas de voz, workflow final e render do novo trecho. Não houve mudança na produção, NTC/DOSSIÊ nem publicação.
+- **Próxima prioridade:** aprovar/ajustar a proposta editorial, travar voz anteriormente aprovada, montar storyboard de 22–25s para a Guerra dos Chips, checar mídia EUV comprovada/licença e viabilidade do mecanismo simplificado, e só então implementar em branch isolada e renderizar preview curto real.

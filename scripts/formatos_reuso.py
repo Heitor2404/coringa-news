@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import Counter
 import wave
 from pathlib import Path
 
@@ -61,10 +62,28 @@ def main(plano: Path, saida: Path, quadros: bool = True) -> dict:
         spec = importlib.util.spec_from_file_location('fv', RAIZ / 'scripts' / 'formatos_validar.py')
         fv = importlib.util.module_from_spec(spec); spec.loader.exec_module(fv)
         r = fv.main(saida, saida / 'quadros', 'auto', int(pl.get('styleframes', 6)))
-        res['quadros'] = {'n': len(r['quadros']), 'problemas': [p for p in r['problemas'] if not p.get('aviso')], 'amostragem': r.get('amostragem')}
+        avisos = r.get('avisos') or [p for p in r['problemas'] if p.get('aviso')]
+        agrupados = dict(sorted(Counter(p['regra'] for p in avisos).items()))
+        res['quadros'] = {
+            'n': len(r['quadros']),
+            'problemas': [p for p in r['problemas'] if not p.get('aviso')],
+            'amostragem': r.get('amostragem'),
+            'avisos_por_regra': agrupados,
+            'avisos_total': len(avisos),
+        }
+        # O relatório de reuso é técnico; publicação SEMPRE aguarda uma revisão
+        # audiovisual real. Créditos sob interface são risco editorial/jurídico.
+        res['revisao_publicacao'] = {
+            'status': 'AGUARDANDO_APROVACAO_HUMANA',
+            'creditos_tres_plataformas': (
+                'REVER_VISIBILIDADE' if agrupados.get('A-CREDITO-RODAPE') else 'SEM_AVISO_GEOMETRICO'
+            ),
+            'nota': 'Frames/voz sintéticos não são evidência de conformidade editorial.'
+        }
     (saida / 'reuso.json').write_text(json.dumps(res, ensure_ascii=False, indent=1))
     print(json.dumps({'plano': res['plano'], 'preflight': res['preflight']['pronto'], 'falhas': [f['item'] + ' — ' + f['detalhe'] for f in falhas],
-                      'quadros': (res.get('quadros') or {}).get('n'), 'problemas': [(p['t'], p['regra'], p['texto']) for p in (res.get('quadros') or {}).get('problemas', [])]},
+                      'quadros': (res.get('quadros') or {}).get('n'), 'problemas': [(p['t'], p['regra'], p['texto']) for p in (res.get('quadros') or {}).get('problemas', [])],
+                      'avisos_por_regra': (res.get('quadros') or {}).get('avisos_por_regra', {})},
                      ensure_ascii=False, indent=1))
     return res
 

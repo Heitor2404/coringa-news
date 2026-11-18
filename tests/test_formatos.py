@@ -1029,3 +1029,46 @@ def test_atlas_contrato_visual_obrigatorio_para_todo_clipe_mecanico():
 
     # O contrato nunca interfere no formato DOSSIÊ.
     assert 'F-EXPLICACAO-SEM-CONTRATO' not in _regras(DOSSIE, _pal(DOSSIE['narracao']['texto']))
+
+
+def test_atlas_clareza_densidade_e_focos_sao_regras_globais():
+    """Regras de legibilidade e câmera independem de nome, segundos e assunto."""
+    pl = copy.deepcopy(ATLAS)
+    assert not ({'F-POLUICAO-VISUAL', 'F-FOCO-SEM-ALVO', 'F-ROTULO-ILEGIVEL',
+                 'F-FOCO-RAPIDO', 'F-FOCO-TEMPO'} & _regras(pl))
+    # Mais cartões de texto que o limite do canal, ainda que a composição comporte camadas.
+    pl = copy.deepcopy(ATLAS)
+    tit = _camada(pl, 'pergunta')
+    for i in range(2):
+        novo = copy.deepcopy(tit)
+        novo['id'] = f'cartao-sobreposto-{i}'
+        pl['beats'][0]['camadas'].append(novo)
+    assert 'F-POLUICAO-VISUAL' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    c['params']['focos'] = [{'t': 10, 'alvo': 'parte_desconhecida', 'rotulo': 'PEÇA NOVA'}]
+    assert 'F-FOCO-SEM-ALVO' in _regras(pl)
+    c['params']['focos'] = [{'t': 10, 'alvo': 'lago', 'rotulo': 'NOME MUITO EXTENSO E IMPOSSÍVEL DE LER'}]
+    assert 'F-ROTULO-ILEGIVEL' in _regras(pl)
+    c['params']['focos'] = [{'t': 10, 'alvo': 'lago', 'rotulo': 'LAGO'},
+                           {'t': 10.3, 'alvo': 'aqueduto', 'rotulo': 'AQUEDUTO'}]
+    assert 'F-FOCO-RAPIDO' in _regras(pl)
+    c['params']['focos'] = [{'t': c['t1'] - c['t0'] + 1, 'alvo': 'lago', 'rotulo': 'LAGO'}]
+    assert 'F-FOCO-TEMPO' in _regras(pl)
+    assert not ({'F-POLUICAO-VISUAL', 'F-FOCO-SEM-ALVO'} &
+                _regras(DOSSIE, _pal(DOSSIE['narracao']['texto'])))
+
+
+def test_atlas_clareza_vem_do_canal_nao_do_panama():
+    from src.v4.formatos import produzir
+    can = P.canal('coringa')
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    params = produzir.params_clipe(c, can)
+    cfg = {k: v for k, v in can['direcao_visual'].items() if not k.startswith('_')}
+    assert params['direcao_visual'] == cfg
+    assert cfg['rotulos_em_foco'] <= cfg['rotulos_sem_foco']
+    assert cfg['fonte_rotulo_px'] >= 32
+    assert 'direcao_visual' not in c['params']
+    assert 'alvos_componentes' in P.CFG['formatos']['atlas']

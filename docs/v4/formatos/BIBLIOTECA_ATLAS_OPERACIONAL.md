@@ -126,3 +126,20 @@ Ferramentas introduzidas (isoladas do pipeline):
 **Decisão editorial:** se não obtivermos foto livre de equipamento EUV moderno, **não substituir por foto histórica nem pela sede ASML fingindo ser máquina**. Podemos usar mapa, card e texto validado para explicar ASML; a fotografia do equipamento continua como pendência.
 
 **Uso nos vídeos:** biblioteca continua em branch própria, aguardando integração homologada, e não altera o segundo piloto nem o ATLAS aprovado.
+
+## Auditoria e reforço técnico de 18/11 — atualização posterior
+
+**Inventário de mídias candidatas aumentado de 5 para 6** com `ASML air freight containers in Tainan May 2025 1.jpg` (4300streetcar, CC BY 4.0, data da foto 27/05/2025, Commons, containers para transporte de equipamentos ASML; a foto **não** prova o conteúdo dos containers nem que contém uma máquina EUV). Mídias listadas em `src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json`.
+
+**Correção de integridade importante:** a primeira galeria gerava imagens JPEG recomprimidas mas reportava SHA256 das miniaturas **originais**; isso não é verificável contra o arquivo salvo. Em `scripts/atlas_acervo_chips_preview.py`, agora os bytes baixados são preservados sem recompressão (`arquivo_thumb`), com hash computado/checado contra o arquivo efetivamente escrito. Foi adicionada comparação de licença declarada com `LicenseShortName` / `LicenseUrl` retornados pelo Commons, bloqueando divergência de CC BY x CC BY-SA x domínio público. A revisão legal/editorial final continua necessária.
+
+**Novo gate de liberação** em `scripts/atlas_biblioteca.py`: sem **caminho de arquivo efetivo** e sem SHA256 calculado sobre esse arquivo, a liberação é negada, mesmo que metadados declarem `estado=liberado`. Testes criam arquivo de exemplo temporário para verificar alterações, ausência de arquivo e hash falso. Este gate ainda é **experimental, não importado pelo render**.
+
+**CI reais:**
+- [Validação biblioteca `44370287354`](https://github.com/Heitor2404/coringa-news/actions/runs/44370287354) — **7 testes passaram**.
+- [Galeria/hashes/licenças `44371334155`](https://github.com/Heitor2404/coringa-news/actions/runs/44371334155) — **SUCESSO: 6/6 mídias recuperadas, seis hashes conferidos byte a byte e licença comparada com metadata Commons**. Artifact `atlas-chips-acervo-candidato`, expira após 7 dias.
+- Nenhuma foto mudou para o índice `src/v4/biblioteca_comprovada.json`; todas continuam candidatas e o motor produtivo não foi alterado.
+
+**Atenção às imagens EUV:** a imagem de ferramenta experimental histórica do LLNL não representa scanner ASML moderno. O vídeo IBM Research `How EUV lithography works.webm` tem **License review needed** no Commons e está **excluído** até revisão. Se necessário, o storyboard usa mapas e cards ATLAS com dados citados, em vez de simular fotos de máquinas.
+
+O piloto separado agora tem brief com fontes primárias em `docs/v4/formatos/PILOTO_CHIPS_BRIEF_20261118.md` na branch `atlas-piloto-chips-20261118`. Distinguir *prova sintética de reuso* de narração/fatos aprovados para publicar.

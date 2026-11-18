@@ -301,6 +301,7 @@ def props_camada(pl: dict, meta: dict) -> dict:
     if pl['formato'] == 'atlas':
         out['legenda_caixa'] = zonas('atlas')['legenda']
         out['marca_y'] = layout.faixa_inferior().get('marca_y')
+        out['marca_visivel'] = layout.CFG['faixa_inferior'].get('marca_atlas', True)
     return out
 
 
@@ -455,6 +456,8 @@ def zonas(formato: str) -> dict:
             z['marca'] = zf['marca']
     else:
         z.update({k: v for k, v in zf.items() if not k.startswith('_')})
+    if formato == 'atlas' and not layout.CFG['faixa_inferior'].get('marca_atlas', True):
+        z.pop('marca', None)   # ATLAS: sem marca fixa para não bloquear abertura/cartões
     return z
 
 
@@ -846,7 +849,7 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                     v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} além da nitidez das bases VISÍVEIS (até {max(ri['nitido_ate'] for _, ri in ativos):.2f})")
     # A marca é parte da identidade e precisa sobreviver ao recorte 4:5 do feed, antes do render.
     # Regressao 44221167260: 40/40 frames tinham a marca em y=232, acima do recorte do Reels (y=285).
-    if plano.get('formato') == 'atlas':
+    if plano.get('formato') == 'atlas' and layout.CFG['faixa_inferior'].get('marca_atlas', True):
         my = layout.faixa_inferior().get('marca_y')
         zona_marca = zonas('atlas').get('marca')
         if my is not None:

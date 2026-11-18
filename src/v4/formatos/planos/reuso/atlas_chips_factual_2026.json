@@ -379,11 +379,11 @@
           "p": {
             "tipo": "local",
             "lonlat": [
-              -98.58,
-              39.83
+              -121.96,
+              37.35
             ],
-            "rotulo": "EUA · DESIGN",
-            "lado": "direita"
+            "rotulo": "NVIDIA · EUA",
+            "lado": "esquerda"
           }
         },
         {

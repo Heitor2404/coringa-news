@@ -511,10 +511,11 @@ const PinoReferencia: React.FC<{ c: Ctx; ax: number; ay: number; PP: any; TK: an
   const anel = PP.anel ?? 6, corAnel = TK.cor_anel || '#D8A64A';
   const rpx = PP.rotulo_px ?? 30;
   return <div style={{ opacity: sai }}>
-    {kp < 1 && <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 14 - 33 * kp, top: ay - 14 - 33 * kp, width: 28 + 66 * kp, height: 28 + 66 * kp,
+    {/* Âncora permanente e invisível (sem opacity:0): o fiscal mede o pino durante TODO o pan/zoom, não só nos primeiros 0,7 s. */}
+    <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 1, top: ay - 1, width: 2, height: 2, pointerEvents: 'none' }} />
+    {kp < 1 && <div style={{ position: 'absolute', left: ax - 14 - 33 * kp, top: ay - 14 - 33 * kp, width: 28 + 66 * kp, height: 28 + 66 * kp,
       borderRadius: '50%', border: '2.5px solid rgba(255,240,235,.85)', opacity: 1 - kp * .7 }} />}
     {kp < 1 && <div style={{ position: 'absolute', left: ax - 8, top: ay - 8, width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,240,235,.8)', opacity: 1 - kp }} />}
-    {kp >= 1 && <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 1, top: ay - 1, width: 2, height: 2, opacity: 0 }} />}
     <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: 2 * r, height: 2 * r, borderRadius: r, overflow: 'hidden', background: '#222',
       boxShadow: `0 0 0 ${anel}px ${corAnel}, 0 10px 26px rgba(0,0,0,.55)`, transform: `scale(${.4 + .6 * kf})`, opacity: Math.min(1, kf * 1.6) }}>
       {im && <Img src={staticFile(im.src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${(p.foco || [.5, .5])[0] * 100}% ${(p.foco || [.5, .5])[1] * 100}%` }} />}

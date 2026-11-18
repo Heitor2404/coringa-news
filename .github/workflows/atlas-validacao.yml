@@ -35,3 +35,13 @@ jobs:
         run: |
           python -m py_compile src/v4/formatos/diretor.py src/v4/formatos/plano.py tests/test_formatos.py
           python -m pytest -q -ra tests/test_formatos.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Compilar tipagem Remotion (sem render, sem Claude)
+        working-directory: motor4
+        run: |
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit

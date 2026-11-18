@@ -1,0 +1,5 @@
+Solicitacao de AMOSTRA CURTA ATLAS V1 autorizada em conversa (18/11/2026).
+Unica execucao privada (~10 s, 4 janelas do Panama, nenhuma full render).
+Condicoes: 67 testes Python + TypeScript verdes na validacao 44236019967.
+Somente Telegram privado; sem Claude/Gemini, sem merge/main, sem NTC/DOSSIE, sem publicacao.
+O workflow aborta se preflight/styleframes tiverem erros.

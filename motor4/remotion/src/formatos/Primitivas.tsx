@@ -337,7 +337,8 @@ export const DocumentCard: React.FC<{ c: Ctx }> = ({ c }) => {
   const foco = p.zoom?.foco || [.5, .5];
   const est = p.estilo || 'registro';
   const fundo = est === 'documento' ? 'rgba(244,239,228,.0)' : est === 'foto' ? '#F6F3EC' : C.papel;
-  const inc = p.inclina ?? (est === 'foto' ? -1.2 : est === 'documento' ? .6 : -1.2);
+  // ATLAS: documentação/registro sempre reto e alinhado; DOSSIÊ preserva estilo de arquivo original.
+  const inc = c.P.formato === 'atlas' ? 0 : (p.inclina ?? (est === 'foto' ? -1.2 : est === 'documento' ? .6 : -1.2));
   const carimbo = p.data_carimbo && c.t >= (p.t_carimbo ?? c.L.t0 + .5) ? easeOut((c.t - (p.t_carimbo ?? c.L.t0 + .5)) / .3) : 0;
   return (
     <div style={{ position: 'absolute', left: b.x + (b.w - fw - 36) / 2, top: b.y + (b.h - fh - cab - rod - 36) / 2, width: fw + 36, padding: 18,

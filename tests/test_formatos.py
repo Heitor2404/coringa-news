@@ -1147,3 +1147,27 @@ def test_atlas_substituicao_de_cards_nao_conta_como_todos_simultaneos():
         b["camadas"].append(adicional)
     pct["t1"] = max(pct["t1"], pct["t0"] + 1.5)
     assert any(x["regra"] == "F-COMPOSICAO" for x in P.validar(quatro_juntas))
+
+
+def test_atlas_foto_prova_deve_usar_painel_reto_sem_falsificar_mecanismo():
+    """ATLAS aceita foto real como painel; não autoriza foto genérica no palco técnico."""
+    from scripts.formatos_reuso import tempos_sinteticos
+    arq = RAIZ / "src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json"
+    bruto = json.loads(arq.read_text(encoding="utf-8"))
+    pal, _, _ = tempos_sinteticos(bruto["narracao"]["texto"])
+    pl = P.resolver_tempos(bruto, pal)
+    fotos = [L for b in pl["beats"] for L in b["camadas"]
+             if (L.get("p") or {}).get("asset") in {
+                 "commons:TSMC_Fab_18_May_2025.jpg",
+                 "commons:Silicon_wafer_close_view.jpg"
+             }]
+    assert len(fotos) == 2
+    wafer = next(L for L in fotos if L["id"] == "fotografia-wafer")
+    assert any(b["id"] == "b2b-wafer" and b["composicao"] == "atlas.painel"
+               and wafer in b["camadas"] for b in pl["beats"])
+    assert wafer["slot"] == "painel" and "inclina" not in wafer["p"]
+    assert not [e for e in P.validar(pl) if e["regra"] in {
+        "F-TECNICO-SEM-MECANISMO", "F-ESTILO-NO-EPISODIO", "F-COLISAO"
+    }]
+    ts = (RAIZ / "motor4/remotion/src/formatos/Primitivas.tsx").read_text(encoding="utf-8")
+    assert "const inc = c.P.formato === 'atlas' ? 0" in ts

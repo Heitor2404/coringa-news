@@ -1,0 +1,237 @@
+{
+  "versao": 1,
+  "formato": "atlas",
+  "status": "prototipo_nao_ativo",
+  "atualizado_em": "2026-11-18",
+  "politica": "Indexar referências existentes sem copiar arquivos, inventar mídias nem liberar uso sem prova e licença. Não é um motor novo.",
+  "fontes": {
+    "composicoes": "src/v4/formatos/formatos.json",
+    "identidade": "src/v4/formatos/canais/coringa.json",
+    "midias": "src/v4/biblioteca_comprovada.json",
+    "rasters": "motor4/formatos/dados/raster/",
+    "roteiro_teste": "src/v4/formatos/planos/reuso/atlas_chips.json"
+  },
+  "cartografia": [
+    {
+      "id": "mundo_fisico",
+      "raster": "ne2_mundo",
+      "tipo": "base",
+      "uso": "contexto mundial, início e síntese",
+      "estado": "arquivo_existente"
+    },
+    {
+      "id": "pacifico",
+      "raster": "ne2_pacifico",
+      "tipo": "base",
+      "uso": "rotas que cruzam a linha internacional de data; EUA-Ásia",
+      "estado": "arquivo_existente"
+    },
+    {
+      "id": "leste_asiatico",
+      "raster": "ne2_asia_leste",
+      "tipo": "base",
+      "uso": "Taiwan, China, cadeias de suprimento regionais",
+      "estado": "arquivo_existente"
+    },
+    {
+      "id": "asia_continental",
+      "raster": "bmng_asia_continente",
+      "tipo": "base",
+      "uso": "contexto continental com textura de satélite",
+      "estado": "arquivo_existente"
+    },
+    {
+      "id": "istmo_do_panama",
+      "raster": "ne2_istmo_panama",
+      "tipo": "base",
+      "uso": "histórias sobre canal, rotas e infraestrutura",
+      "estado": "arquivo_existente"
+    }
+  ],
+  "composicoes": [
+    {
+      "id": "abertura",
+      "ref": "atlas.abertura",
+      "uso": "gancho geográfico com território e pergunta",
+      "estado": "implementada"
+    },
+    {
+      "id": "mapa_protagonista",
+      "ref": "atlas.protagonista",
+      "uso": "localizações, rotas e relações espaciais",
+      "estado": "implementada"
+    },
+    {
+      "id": "painel",
+      "ref": "atlas.painel",
+      "uso": "dado sobre o mapa, um protagonista de cada vez",
+      "estado": "implementada"
+    },
+    {
+      "id": "hierarquia",
+      "ref": "atlas.escada",
+      "uso": "cadeias ou níveis em ordem da fala",
+      "estado": "implementada"
+    },
+    {
+      "id": "tecnica",
+      "ref": "atlas.tecnica",
+      "uso": "estrutura/mecanismo quando ajuda a explicar",
+      "estado": "implementada"
+    },
+    {
+      "id": "fecho",
+      "ref": "atlas.manchete",
+      "uso": "síntese final sem repetição",
+      "estado": "implementada"
+    }
+  ],
+  "movimentos": [
+    {
+      "id": "localizar",
+      "base": "atlas.geoPin",
+      "uso": "marcar local real; coords verificadas",
+      "estado": "componente_existente"
+    },
+    {
+      "id": "conectar",
+      "base": "rotas",
+      "uso": "relação de países/cadeia comercial; linha representa relação, não voo real",
+      "estado": "componente_existente"
+    },
+    {
+      "id": "destacar",
+      "base": "destaques",
+      "uso": "foco territorial narrado",
+      "estado": "componente_existente"
+    },
+    {
+      "id": "numero",
+      "base": "editorial.statCard",
+      "uso": "revelar número ou variação ligada à fala",
+      "estado": "componente_existente"
+    },
+    {
+      "id": "etapas",
+      "base": "editorial.hierarchy",
+      "uso": "revelar elos da cadeia de produção",
+      "estado": "componente_existente"
+    },
+    {
+      "id": "explicar_mecanismo",
+      "base": "mecanismo.eclusa",
+      "uso": "apenas mecanismos com catálogo e testes; não usar para chips",
+      "estado": "componente_existente"
+    }
+  ],
+  "acervo": {
+    "indice": "src/v4/biblioteca_comprovada.json",
+    "regra": "Uma única fonte de verdade para licença, créditos, SHA, descrição e prova. A biblioteca ATLAS apenas referencia IDs.",
+    "confirmados_com_metadados": 7,
+    "cobertura_atual": "6 itens do Panamá (incluindo documento) e 1 fotografia institucional chinesa; não há fotos de semicondutores aprovadas neste índice.",
+    "proxima_acao": "Pesquisar fotos/vídeos RELEVANTES de fabricação, ASML, TSMC e contexto Taiwan-China; verificar licença, correspondência e crédito antes de indexar.",
+    "nunca": "Não considerar mídia genérica automaticamente adequada; não reutilizar foto do Panamá para chip."
+  },
+  "pacotes_tematicos": [
+    {
+      "id": "chips",
+      "nome": "Guerra dos chips",
+      "estado": "plano_sintetico_existente",
+      "base": "src/v4/formatos/planos/reuso/atlas_chips.json",
+      "mapas": [
+        "mundo_fisico",
+        "pacifico",
+        "leste_asiatico"
+      ],
+      "composicoes": [
+        "abertura",
+        "mapa_protagonista",
+        "painel",
+        "hierarquia",
+        "fecho"
+      ],
+      "pendencias": [
+        "rever dados e fontes atualizadas",
+        "obter mídia licenciada pertinente",
+        "substituir marcadores sintéticos por voz real e fiscal"
+      ],
+      "usar_em_producao": false
+    },
+    {
+      "id": "ormuz",
+      "nome": "Estreito de Ormuz",
+      "estado": "candidato_nao_curado",
+      "mapas": [
+        "mundo_fisico"
+      ],
+      "composicoes": [
+        "abertura",
+        "mapa_protagonista",
+        "painel",
+        "fecho"
+      ],
+      "pendencias": [
+        "rasters regionais",
+        "fatos atuais",
+        "licenças e mídia"
+      ],
+      "usar_em_producao": false
+    },
+    {
+      "id": "fronteiras_historicas",
+      "nome": "Fronteiras históricas",
+      "estado": "candidato_nao_curado",
+      "mapas": [
+        "mundo_fisico"
+      ],
+      "composicoes": [
+        "abertura",
+        "mapa_protagonista",
+        "painel",
+        "fecho"
+      ],
+      "pendencias": [
+        "geometrias datadas com fonte",
+        "licença",
+        "fatos verificados"
+      ],
+      "usar_em_producao": false
+    },
+    {
+      "id": "infraestrutura_global",
+      "nome": "Canais e infraestrutura",
+      "estado": "candidato_nao_curado",
+      "mapas": [
+        "mundo_fisico",
+        "istmo_do_panama"
+      ],
+      "composicoes": [
+        "abertura",
+        "mapa_protagonista",
+        "painel",
+        "tecnica",
+        "fecho"
+      ],
+      "pendencias": [
+        "garantir relevância cartográfica caso a caso"
+      ],
+      "usar_em_producao": false
+    }
+  ],
+  "politica_de_manutencao": {
+    "prioridade": "frequência_reuso × ganho_de_tempo × confiabilidade; começar pelo que existe",
+    "fluxo": [
+      "descobrir",
+      "licença_e_origem",
+      "conferir_semantica",
+      "registrar_sha_e_credito",
+      "aprovar",
+      "reutilizar",
+      "revisar"
+    ],
+    "atualizacao": "Base física versionada é estável; fatos, números, sanções e limites territoriais requerem verificação por episódio.",
+    "limites": "Não construir o mapa do mundo inteiro ou milhares de fotos preventivamente. Sem custo de API e sem duplicação.",
+    "gate": "Nenhuma mídia sem licença/atribuição e nenhuma afirmação antiga sem confirmação recente.",
+    "publicacao": "A biblioteca em si não altera a produção até integração e homologação separadas."
+  }
+}

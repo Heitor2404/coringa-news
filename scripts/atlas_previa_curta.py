@@ -33,6 +33,18 @@ JANELAS = [
 ]
 
 
+def janelas(pl, meta):
+    if os.environ.get("ATLAS_MODO") != "continuo":
+        return JANELAS
+    c, = [c for c in pl["clipes"] if c["componente"] == "mecanismo.eclusa"]
+    # Mantém a fala contínua, preferindo a pausa mais próxima fora do mecanismo.
+    pausas = [(a["e"] + b["s"]) / 2 for a, b in zip(meta["palavras"], meta["palavras"][1:])
+              if b["s"] - a["e"] >= .15]
+    ini = max((t for t in pausas if c["t0"]-6 <= t <= c["t0"]-1), default=max(0, c["t0"]-3))
+    fim = min((t for t in pausas if c["t1"]+1 <= t <= c["t1"]+6), default=min(pl["duracao"], c["t1"]+3))
+    return [("entrada", ini, c["t0"]), ("eclusa_subindo", c["t0"], c["t1"]), ("saida", c["t1"], fim)]
+
+
 def _ler(p: Path):
     return json.loads(p.read_text(encoding="utf-8"))
 
@@ -57,6 +69,26 @@ def montar(partes, voz, registro, destino):
            "-c:v", "libx264", "-preset", "veryfast", "-crf", "17", "-r", str(FPS),
            "-video_track_timescale", "90000", "-c:a", "aac", "-b:a", "160k",
            "-movflags", "+faststart", destino], timeout=300)
+
+
+def conferir_voz_continua(mp4, voz, inicio, n):
+    # Compara a fala entregue com o mesmo intervalo da voz original já alinhada.
+    def pcm(path, *opcoes):
+        raw = subprocess.check_output(["ffmpeg", "-v", "error", "-xerror", *opcoes, "-i", str(path),
+                                      "-map", "0:a:0", "-ac", "1", "-ar", "8000", "-f", "f32le", "-"])
+        return np.frombuffer(raw, np.float32)
+    a = pcm(voz, "-ss", str(inicio), "-t", str(n / FPS))
+    b = pcm(mp4)
+    if abs(len(a) - len(b)) > 8000 / FPS:
+        raise RuntimeError("duração de áudio diverge do trecho contínuo")
+    # AAC pode acrescentar amostras no fim; cada segundo com fala deve corresponder à origem.
+    for i in range(0, min(len(a), len(b)) - 7999, 8000):
+        ref, entregue = a[i:i+8000], b[i:i+8000]
+        if np.linalg.norm(ref) > .05:
+            corr = np.dot(ref, entregue) / max(float(np.linalg.norm(ref) * np.linalg.norm(entregue)), 1e-9)
+            if corr < .93:
+                raise RuntimeError(f"voz do MP4 fora do intervalo original em {i / 8000:.1f}s")
+    print("ATLAS_VOZ_CONTINUA_CONFERIDA", flush=True)
 
 
 def quadros_reproduzidos(video):
@@ -115,7 +147,8 @@ def render(saida: Path) -> Path:
     partes = []
     registro = []
     t0 = time.monotonic()
-    for nome, inicio, fim in JANELAS:
+    reuso = os.environ.get("ATLAS_VISUAL_RESTAURADO") == "1"
+    for nome, inicio, fim in janelas(pl, meta):
         if not (0 <= inicio < fim <= pl["duracao"]):
             raise RuntimeError(f"janela invalida {nome}: {inicio}-{fim}")
         clipes = [c for c in pl.get("clipes", []) if inicio < c["t1"] and c["t0"] < fim]
@@ -131,8 +164,9 @@ def render(saida: Path) -> Path:
 
         f0, f1 = round(inicio * FPS), round(fim * FPS) - 1
         n = f1 - f0 + 1
-        if n <= 0 or n > 90:
-            raise RuntimeError(f"amostra fora do limite de 3s: {nome}")
+        limite = 12 * FPS if os.environ.get("ATLAS_MODO") == "continuo" else 90
+        if not 0 < n <= limite:
+            raise RuntimeError(f"duração inválida na prévia: {nome}")
         video = trab / f"{nome}_video.mp4"
         inicio_render = time.monotonic()
         if eclusa:
@@ -140,23 +174,26 @@ def render(saida: Path) -> Path:
             # somente este MP4 quando o plano, tema e renderizador coincidem.
             cache_key = os.environ.get("ATLAS_ECLUSA_KEY")
             base = trab / f"eclusa_v2_{cache_key or 'local'}.mp4"
-            if not cache_key or not base.exists():
+            base_reutilizada = bool(cache_key and base.is_file() and base.stat().st_size)
+            print(f"ATLAS_BASE_V2 reutilizada={base_reutilizada}", flush=True)
+            if not base_reutilizada:
                 tmp = trab / "eclusa_v2.tmp.mp4"
                 produzir._clipe(clipe, can, (trab / "v2").resolve(), tmp.resolve())
                 tmp.replace(base)
-            alpha = trab / "eclusa_legenda.webm"
-            js.remotion("Camada", camada, alpha, trab / "camada", alfa=True, quadros=(f0, f1))
             primeiro_quadro = f0 - round(clipe["t0"] * FPS)
             offset = primeiro_quadro / FPS
-            rodar(["ffmpeg", "-v", "error", "-y", "-ss", f"{offset:.6f}", "-i", base,
-                   "-c:v", "libvpx", "-i", alpha, "-filter_complex",
-                   "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p", "-frames:v", str(n),
-                   "-an", "-c:v", "libx264", "-crf", "16", video])
-        else:
+            if not reuso:
+                alpha = trab / "eclusa_legenda.webm"
+                js.remotion("Camada", camada, alpha, trab / "camada", alfa=True, quadros=(f0, f1))
+                rodar(["ffmpeg", "-v", "error", "-y", "-ss", f"{offset:.6f}", "-i", base,
+                       "-c:v", "libvpx", "-i", alpha, "-filter_complex",
+                       "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p", "-frames:v", str(n),
+                       "-an", "-c:v", "libx264", "-crf", "16", video])
+        elif not reuso:
             js.remotion("AtlasAmostra", props, video, trab / nome, quadros=(f0, f1))
         partes.append(video)
-        registro.append({"nome": nome, "inicio_original_s": inicio, "fim_original_s": fim,
-                         "frames_renderizados": n, "tempo_execucao_s": round(time.monotonic() - inicio_render, 2)})
+        registro.append({"nome": nome, "inicio_original_s": f0 / FPS, "fim_original_s": fim,
+                         "frames_renderizados": n, "reutilizado": reuso, "tempo_execucao_s": round(time.monotonic() - inicio_render, 2)})
         print(f"ATLAS_AMOSTRA {nome}: {n} frames, {registro[-1]['tempo_execucao_s']}s", flush=True)
 
     candidato = trab / "montagem.mp4"
@@ -164,10 +201,13 @@ def render(saida: Path) -> Path:
     from src.v3.previa_telegram import _caber
     entrega = _caber(candidato)
     conferir_montagem(entrega, partes, registro, base, primeiro_quadro)
+    if os.environ.get("ATLAS_MODO") == "continuo":
+        conferir_voz_continua(entrega, saida / "voz.wav", registro[0]["inicio_original_s"],
+                              sum(j["frames_renderizados"] for j in registro))
     final = saida / "atlas_identidade_v1_amostra_curta.mp4"
     entrega.replace(final)
     registro_json = {
-        "tipo": "MONTAGEM DE TESTE — cortes temporais; nao representa o episodio final nem a continuidade do roteiro",
+        "tipo": "trecho contínuo" if os.environ.get("ATLAS_MODO") == "continuo" else "cinco cortes de revisão",
         "referencia_visual": "docs/v4/formatos/GUIA_VISUAL_ATLAS_V1.md",
         "janelas": registro, "total_frames": sum(r["frames_renderizados"] for r in registro),
         "duracao_aproximada_s": sum(r["frames_renderizados"] for r in registro) / FPS,
@@ -210,6 +250,9 @@ def enviar(saida: Path) -> None:
               "CORTES entre trechos distintos, voz correspondente a cada trecho. "
               "Nao e episodio completo. "
               "Aguardando aprovacao estetica; nada publicado.")
+    if r["tipo"] == "trecho contínuo":
+        a, b = r["janelas"][0]["inicio_original_s"], r["janelas"][-1]["fim_original_s"]
+        titulo = f"ATLAS · Canal do Panamá | Eclusa em sequência ({a:.1f}–{b:.1f} s do episódio). Prévia privada."
     previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
                          ("video", mp4))
     for path, descricao in [

@@ -1,6 +1,6 @@
 name: ATLAS V1 - previa audiovisual curta PRIVADA (sem Claude)
 # Gatilho exclusivo; sem full render, sem DOSSIÊ/NTC/main e sem publicar nada.
-# 5 janelas de ~2.5s do proprio Panama, mantendo mapa + legenda + voz nos tempos originais.
+# Revisão curta do Panamá com o mapa, mecanismo e voz nos tempos originais.
 on:
   push:
     branches: [motor-integral-v4]
@@ -18,6 +18,7 @@ env:
   DO_NOT_TRACK: "1"
   REMOTION_DISABLE_TELEMETRY: "1"
   DISABLE_TELEMETRY: "true"
+  ATLAS_MODO: continuo
   PLANO_ATLAS: src/v4/formatos/planos/atlas_panama.json
   CORINGA_CHROME: /usr/bin/google-chrome
   REMOTION_CHROME: /usr/bin/google-chrome
@@ -65,31 +66,59 @@ jobs:
         run: python -m src.v4.formatos ativos "$PLANO_ATLAS" saida_formatos/atlas
       - name: PREFLIGHT obrigatorio (falha = sem render)
         run: python -m src.v4.formatos preflight "$PLANO_ATLAS" saida_formatos/atlas
-      - name: Quadros, texto/legendas, plataformas, colisoes (falha = sem render)
-        timeout-minutes: 17
-        run: python -m src.v4.formatos quadros "$PLANO_ATLAS" saida_formatos/atlas
-      - name: Identificar entradas da animação da eclusa
-        id: eclusa
-        shell: bash
+      - name: Calcular chaves pelos insumos reais e arquivos versionados
         run: |
-          digest=$({ jq -cS '.clipes' saida_formatos/atlas/plano_resolvido.json
-            jq -cS '.palco' src/v4/formatos/canais/coringa.json
+          ATLAS_AMBIENTE=$({
+            python --version
+            node --version
             python -m playwright --version
+            google-chrome --version
             ffmpeg -version
-            fc-list | LC_ALL=C sort
+            fc-list --format '%{file}\n' | LC_ALL=C sort -u | while IFS= read -r f; do sha256sum "$f"; done
           } | sha256sum | cut -d' ' -f1)
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-      - name: Selecionar cache exato da eclusa
-        run: echo "ATLAS_ECLUSA_KEY=eclusa-v1-${{ runner.os }}-${{ steps.eclusa.outputs.digest }}-${{ hashFiles('src/render/**', 'src/v2/**', 'src/v4/backends/legado.py', 'src/v4/formatos/produzir.py', 'src/v4/util.py', 'motor4/identidade/**') }}" >> "$GITHUB_ENV"
+          export ATLAS_AMBIENTE
+          python -m scripts.atlas_cache chaves saida_formatos/atlas >> "$GITHUB_ENV"
       - uses: actions/cache@v4
+        id: base
         with:
           path: saida_formatos/atlas/_amostra/eclusa_v2_${{ env.ATLAS_ECLUSA_KEY }}.mp4
           key: ${{ env.ATLAS_ECLUSA_KEY }}
-      - name: Somente 5 intervalos (aprox. 13 s), SEM render de episodio completo
+      - uses: actions/cache@v4
+        id: visual
+        with:
+          path: saida_formatos/atlas/intermediarios.enc
+          key: ${{ env.ATLAS_VISUAL_KEY }}
+      - name: Abrir intermediários verificados
+        if: steps.visual.outputs.cache-hit == 'true'
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          if python -m scripts.atlas_cache restaurar saida_formatos/atlas; then
+            echo 'ATLAS_VISUAL_RESTAURADO=1' >> "$GITHUB_ENV"
+          else
+            echo '::warning::Intermediários indisponíveis; refazendo os quadros e cortes.'
+          fi
+      - name: Conferir recuperação em runner independente
+        if: contains(github.event.head_commit.message, '[verificar-cache]')
+        run: |
+          test "${{ steps.base.outputs.cache-hit }}" = true
+          test "$ATLAS_VISUAL_RESTAURADO" = 1
+      - name: Quadros, texto/legendas, plataformas, colisões
+        if: env.ATLAS_VISUAL_RESTAURADO != '1'
+        timeout-minutes: 17
+        run: python -m src.v4.formatos quadros "$PLANO_ATLAS" saida_formatos/atlas
+      - name: Montar e verificar o MP4 dos intervalos de revisão
         timeout-minutes: 38
         run: python scripts/atlas_previa_curta.py render saida_formatos/atlas
+      - name: Guardar intermediários privados após conferir o MP4
+        if: steps.visual.outputs.cache-hit != 'true'
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.atlas_cache salvar saida_formatos/atlas
       - name: Enviar resultado para Telegram PRIVADO (ou explicar bloqueio)
-        if: always()
+        if: always() && !cancelled() && !contains(github.event.head_commit.message, '[verificar-cache]')
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

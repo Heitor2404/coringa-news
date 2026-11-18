@@ -862,3 +862,42 @@ def test_montagem_previa_confere_mp4_com_relogios_distintos(tmp_path):
     montar([cartao, cartao], voz, janelas, destino)
     with pytest.raises(RuntimeError, match="diverge do corte eclusa"):
         conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+
+
+def test_chave_base_ignora_arquivos_gerados_e_reage_ao_tema(tmp_path, monkeypatch):
+    from scripts import atlas_cache as cache
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.chdir(repo)
+    def git(*args):
+        subprocess.run(["git", *args], check=True, capture_output=True)
+    git("init")
+    (repo / "src/v2").mkdir(parents=True)
+    fonte = repo / "src/v2/palco.py"
+    fonte.write_text("original")
+    git("add", ".")
+    git("-c", "user.name=Teste", "-c", "user.email=teste@example.org", "commit", "-m", "fonte")
+    (tmp_path / "plano_resolvido.json").write_text(json.dumps(ATLAS))
+    for arq in ("ativos.json", "narracao.json"):
+        (tmp_path / arq).write_text("{}")
+    monkeypatch.setenv("ATLAS_AMBIENTE", "teste")
+    monkeypatch.setenv("ATLAS_MODO", "continuo")
+    a = cache.chaves(tmp_path)
+    (fonte.parent / "__pycache__").mkdir()
+    (fonte.parent / "__pycache__/palco.pyc").write_bytes(b"temporario")
+    assert cache.chaves(tmp_path) == a
+    pl = copy.deepcopy(ATLAS)
+    pl["clipes"][0]["params"]["desnivel_m"] += 1
+    (tmp_path / "plano_resolvido.json").write_text(json.dumps(pl))
+    b = cache.chaves(tmp_path)
+    assert all(a[k] != b[k] for k in a)
+
+
+def test_previa_continua_inclui_eclusa_inteira_sem_lacuna(monkeypatch):
+    from scripts import atlas_previa_curta as A
+    monkeypatch.setenv("ATLAS_MODO", "continuo")
+    j = A.janelas(ATLAS, {"palavras": []})
+    c = ATLAS["clipes"][0]
+    assert j[0][2] == j[1][1] == c["t0"]
+    assert j[1][2] == j[2][1] == c["t1"]
+    assert j[0][1] < c["t0"] and j[2][2] > c["t1"]

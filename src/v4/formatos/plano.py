@@ -954,6 +954,16 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         for c in plano.get('clipes') or []:
             if not str(c.get('componente', '')).startswith('mecanismo.'):
                 v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe no ATLAS só para demonstrar mecanismo')
+        # ATLAS V1: a primeira prova é cartográfica; mecanismo técnico só entra após o gancho.
+        bs = plano.get('beats') or []
+        primeiro = bs[0] if bs else {}
+        if (primeiro.get('composicao') != 'atlas.abertura' or (primeiro.get('t') or 0) > .05
+                or any(c['t0'] < 3.0 for c in plano.get('clipes') or [])):
+            v('erro', 'F-GANCHO-MAPA-PRIMEIRO', '0–3s',
+              'ATLAS V1: abrir com mapa hero e pergunta/prova forte, sem clipe de mecanismo nos primeiros 3 segundos')
+        if plano.get('cta') is True and not any(L['componente'] == 'editorial.cta' for L in Ls):
+            v('erro', 'F-CTA-FINAL-AUSENTE', 'fecho',
+              'storyboard pediu CTA final, mas não reservou slot: corrigir antes do render')
     for x in plano.get('_estilo_no_episodio') or []:
         v('erro', 'F-ESTILO-NO-EPISODIO', x, 'identidade visual é do canal (tokens/presets), não do episódio')
     # gancho: nos primeiros segundos, algo VISUALMENTE relevante (não só mapa e legenda)

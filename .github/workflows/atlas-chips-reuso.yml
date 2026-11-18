@@ -13,7 +13,7 @@ on:
       - "src/v4/formatos/formatos.json"
       - "src/v4/formatos/plano.py"
       - "motor4/remotion/src/formatos/Primitivas.tsx"
-      - "tests/test_formatos.py"
+      - "motor4/remotion/src/formatos/Formato.tsx"
   workflow_dispatch:
 permissions:
   contents: read

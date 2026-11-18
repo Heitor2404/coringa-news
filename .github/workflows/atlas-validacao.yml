@@ -24,6 +24,10 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+      - name: FFmpeg (necessario para testes de audio e preflight)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
       - name: Instalar dependencias Python de teste
         run: |
           python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt

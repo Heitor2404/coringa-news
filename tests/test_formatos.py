@@ -66,7 +66,7 @@ def test_mesma_midia_duas_vezes_no_mesmo_plano():
 def test_foto_ou_texto_parado_sem_informacao_nova():
     """foto longa sem informação nova (c4/c9 de 43972774128); cena estática mascarada pela legenda"""
     pl = copy.deepcopy(ATLAS)
-    pl['beats'] = [b for b in pl['beats'] if b['id'] != 'b6-gravidade']   # 41–50 s só com o palco técnico
+    pl['clipes'] = []   # retirar a animação contínua expõe falta de demonstração no trecho técnico
     assert 'F-SEM-PROGRESSAO' in _regras(pl)
 
 
@@ -181,7 +181,6 @@ def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     """17/11 (ensaio DOSSIÊ): datas da linha do tempo encostavam na marca 'CORINGA EXPLICA' (y 292)"""
     pl = copy.deepcopy(ATLAS)
     _camada(pl, 'km')['caixa'] = [72, 300, 936, 28]          # zona da marca ATLAS: y 294–338, dentro do feed Reels
-    _camada(pl, 'zero')['caixa'] = [72, 1250, 936, 80]
     r = P.validar(P.resolver_tempos(pl, []))
     assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 1  # ATLAS sem marca sobreposta; legenda continua protegida
     for x, y, w, h in P.SLOTS.values():
@@ -797,10 +796,14 @@ def test_previa_curta_atlas_nao_renderiza_episodio_inteiro():
     for nome, a, b in A.JANELAS:
         assert 0 <= a < b <= pl['duracao'], nome
         assert b - a <= 3.0, nome
-        if nome == 'eclusa_subindo':
+        if nome.startswith('eclusa_'):
             c, = pl['clipes']
             assert c['componente'] == 'mecanismo.eclusa'
-            assert c['t0'] <= a < c['t0'] + c['params']['tempos'][1] < b <= c['t1']
+            assert c['t0'] <= a < b <= c['t1']
+            if nome == 'eclusa_subindo':
+                assert a < c['t0'] + c['params']['tempos'][1] < b
+            elif nome == 'eclusa_fluxo':
+                assert a >= 41 and c['params']['destaques_fluxo']
         else:
             assert all(b <= c['t0'] or a >= c['t1'] for c in pl['clipes']), nome
         total += b - a
@@ -860,10 +863,10 @@ def test_montagem_previa_confere_mp4_com_relogios_distintos(tmp_path):
     janelas = [{"nome": "cartao", "inicio_original_s": 0, "frames_renderizados": 30},
                {"nome": "eclusa_subindo", "inicio_original_s": 1, "frames_renderizados": 30}]
     montar([cartao, eclusa], voz, janelas, destino)
-    conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+    conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 1)
     montar([cartao, cartao], voz, janelas, destino)
     with pytest.raises(RuntimeError, match="diverge do corte eclusa"):
-        conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+        conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 1)
 
 
 def test_chave_base_ignora_arquivos_gerados_e_reage_ao_tema(tmp_path, monkeypatch):
@@ -901,5 +904,57 @@ def test_previa_continua_inclui_eclusa_inteira_sem_lacuna(monkeypatch):
     j = A.janelas(ATLAS, {"palavras": []})
     c = ATLAS["clipes"][0]
     assert j[0][2] == j[1][1] == c["t0"]
-    assert j[1][2] == j[2][1] == c["t1"]
-    assert j[0][1] < c["t0"] and j[2][2] > c["t1"]
+    assert j[1][2] == j[2][1] and j[2][2] == j[3][1] == c["t1"]
+    assert j[0][1] < c["t0"] and j[3][2] > c["t1"]
+    assert all(b-a <= 12 for _, a, b in j[1:-1])
+
+
+def test_atlas_diretor_demonstracao_somente_durante_explicacao():
+    prompt = diretor.prompt(
+        [{"id": "f", "texto": "Uma eclusa enche por gravidade"}],
+        "atlas", None, "vídeo real e desenho técnico aprovados")
+    assert 'NUNCA coloque animação técnica de mecanismo na abertura' in prompt
+    assert 'explicacoes' in prompt and 'mecanismo' in prompt
+    assert 'NÃO substitua o mecanismo em curso por caixas' in prompt
+
+
+def test_atlas_continuidade_mecanismo_panama_31_50s():
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    assert c['t0'] > 3 and c['t0'] == 31.49 and c['t1'] == 50.4
+    assert [x['alvo'] for x in c['params']['destaques_fluxo']] == ['lago', 'aqueduto', 'paredes', 'piso']
+    assert not any(L['componente'] == 'editorial.flowConnections'
+                   for b in pl['beats'] if b['id'] == 'b6-gravidade' for L in b['camadas'])
+    assert 'F-MECANISMO-SEM-CONTINUIDADE' not in _regras(pl)
+    c['t1'] = 40.91
+    assert 'F-MECANISMO-SEM-CONTINUIDADE' in _regras(pl)
+
+
+def test_atlas_resolucao_de_tempos_do_fluxo_no_clipe():
+    from src.v4.formatos import plano
+    orig = copy.deepcopy(ATLAS_BRUTO)
+    pl = plano.resolver_tempos(orig, [])
+    c, = pl['clipes']
+    assert c['params']['destaques_fluxo'][0]['t'] == 9.81
+    assert c['params']['destaques_fluxo'][-1]['t'] == 17.51
+    assert pl['explicacoes'][0]['t1'] == 50.4
+
+
+def test_fiscal_mostra_todos_os_motivos_sem_liberar_status():
+    portas = {
+        'preto_ou_congelado': [{'de': 20, 'ate': 24, 'problemas': ['CONGELADO']}],
+        'audio_ok': True, 'ritmo_ok': False, 'legenda_ok': True
+    }
+    m = produzir.motivos_bloqueio(portas, {'sem_camera': {'maior_trecho_parado_s': 4}})
+    assert any('G-MP4-JANELA' in x for x in m)
+    assert any('G-RITMO' in x and '4 s' in x for x in m)
+    assert produzir.motivos_bloqueio(
+        {**portas, 'preto_ou_congelado': [], 'ritmo_ok': True},
+        {'sem_camera': {'maior_trecho_parado_s': 0}}) == []
+
+
+def test_eclusa_tem_destaques_fisicos_sem_troca_por_cards():
+    js = (RAIZ / 'src/render/v2/comp/mecanismos.js').read_text()
+    for alvo in ('lago', 'aqueduto', 'paredes', 'piso'):
+        assert alvo in js
+    assert "'.foco-fluxo'" in js and "'.r-foco-fluxo'" in js

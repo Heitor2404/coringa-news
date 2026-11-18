@@ -85,6 +85,8 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         r['t0'], r['t1'] = a(r['t0']), a(r['t1'])
         if r.get('some') is not None:
             r['some'] = a(r['some'])
+    for e in p.get('explicacoes') or []:
+        e['t0'], e['t1'] = a(e['t0']), a(e['t1'])
     for c in p.get('clipes') or []:
         c['t0'], c['t1'] = a(c['t0']), a(c['t1'])
         c['params']['tempos'] = [round(a(x) - c['t0'], 2) for x in c['params'].get('tempos') or []]
@@ -969,6 +971,23 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         if plano.get('cta') is True and not any(L['componente'] == 'editorial.cta' for L in Ls):
             v('erro', 'F-CTA-FINAL-AUSENTE', 'fecho',
               'storyboard pediu CTA final, mas não reservou slot: corrigir antes do render')
+    if plano.get('formato') == 'atlas':
+        # A narração ainda explica o MESMO mecanismo: não trocar o desenho por
+        # caixas enquanto a peça ou o fluxo continua sendo descrito.
+        # O diretor declara o intervalo; a checagem é determinística e reutilizável.
+        for e in plano.get('explicacoes') or []:
+            if e.get('tipo') != 'mecanismo':
+                continue
+            a, b, recurso = e.get('t0'), e.get('t1'), e.get('recurso')
+            onde = e.get('id', 'explicacao')
+            if not isinstance(a, (int, float)) or not isinstance(b, (int, float)) or not (0 <= a < b <= dur):
+                v('erro', 'F-EXPLICACAO-TEMPO', onde, 'intervalo do mecanismo deve estar dentro do vídeo')
+                continue
+            if not recurso or not any(c.get('componente') == recurso and c['t0'] <= a + .05
+                                      and c['t1'] >= b - .05 for c in plano.get('clipes') or []):
+                v('erro', 'F-MECANISMO-SEM-CONTINUIDADE', onde,
+                  f'a narração explica {recurso or "mecanismo desconhecido"} em {a:.2f}–{b:.2f}s; '
+                  'o mesmo mecanismo precisa permanecer demonstrável até o fim (não substituir por cards)')
     for x in plano.get('_estilo_no_episodio') or []:
         v('erro', 'F-ESTILO-NO-EPISODIO', x, 'identidade visual é do canal (tokens/presets), não do episódio')
     # gancho: nos primeiros segundos, algo VISUALMENTE relevante (não só mapa e legenda)

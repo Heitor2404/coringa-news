@@ -39,3 +39,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: versão genérica de clareza: câmera por alvo semântico, rótulos com limite/colisões e densidade ATLAS. Testar Python, JS puro e TS sem render.
 
 18/11: reteste idempotente de etapas/focos + utilitários JS puros de câmera e rótulos + contrato de poluição visual; Python+JS+TS.
+
+18/11: rerun clareza geral e idempotência com FFmpeg do runner; sem apt se presente. Python+JS+TS sem render.

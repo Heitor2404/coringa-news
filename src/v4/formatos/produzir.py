@@ -321,6 +321,23 @@ def sfx_do_plano(pl: dict) -> list[dict]:
     return out
 
 
+def motivos_bloqueio(portoes: dict, ritmo: dict, legenda_sync: dict | None = None, audio: dict | None = None) -> list[str]:
+    """Expõe os portões exatos que impedem a publicação; sem resumo genérico."""
+    motivos = []
+    for j in portoes.get('preto_ou_congelado') or []:
+        motivos.append(f"G-MP4-JANELA {j['de']}–{j['ate']}s: " + '; '.join(j.get('problemas') or []))
+    if not portoes.get('audio_ok'):
+        a = audio or {}
+        motivos.append(f"G-AUDIO: LUFS={a.get('lufs')} pico={a.get('pico')} — fora do preset do canal")
+    if not portoes.get('ritmo_ok'):
+        sem = (ritmo or {}).get('sem_camera') or {}
+        motivos.append(f"G-RITMO: {sem.get('maior_trecho_parado_s')} s sem informação visual, limite 3 s (câmera desconsiderada)")
+    if not portoes.get('legenda_ok'):
+        l = legenda_sync or {}
+        motivos.append(f"G-LEGENDA: atraso={l.get('atraso_s')} s; palavras sem fala={l.get('n_palavras_sem_fala')}; trocas bruscas={l.get('trocas_bruscas')}")
+    return motivos
+
+
 def render(saida: Path) -> dict:
     import time
     from src.v4 import compositor, portoes, som
@@ -393,7 +410,9 @@ def render(saida: Path) -> dict:
     res['portoes']['ritmo_ok'] = rit['sem_camera']['maior_trecho_parado_s'] <= 3
     res['portoes']['legenda_ok'] = ls['ok']
     res['legenda_sync'] = {k: ls[k] for k in ('atraso_s', 'n_palavras_sem_fala', 'fala_sem_legenda', 'trocas_bruscas', 'grupos') if k in ls}
-    res['estado'] = 'AGUARDANDO_APROVACAO_HUMANA' if not res['portoes']['preto_ou_congelado'] and all(res['portoes'][k] for k in ('audio_ok', 'ritmo_ok', 'legenda_ok')) else 'BLOQUEADO'
+    res['motivos_bloqueio'] = motivos_bloqueio(res['portoes'], rit, ls, au)
+    res['estado'] = 'BLOQUEADO' if res['motivos_bloqueio'] else 'AGUARDANDO_APROVACAO_HUMANA'
+    print('ATLAS_FISCAL ' + json.dumps({'estado': res['estado'], 'motivos_bloqueio': res['motivos_bloqueio']}, ensure_ascii=False), flush=True)
     _gravar(saida / 'resultado.json', res)
     return res
 
@@ -490,6 +509,8 @@ def fiscal_camadas(saida: Path, pl: dict) -> Path:
          f"- janelas pretas/congeladas: {len(port.get('preto_ou_congelado') or [])} · áudio {ok(port.get('audio_ok'))} ({(r.get('audio') or {}).get('lufs')} LUFS, {(r.get('audio') or {}).get('pico')} dBTP)",
          f"- ritmo sem câmera {ok(port.get('ritmo_ok'))}: maior trecho {(rit.get('sem_camera') or {}).get('maior_trecho_parado_s')} s · legenda × áudio {ok(port.get('legenda_ok'))}",
          '', '## 2. Correção factual (automática — rastreio, não verificação de verdade)']
+    L += [f"- estado: {r.get('estado', 'sem MP4')}"]
+    L += [f"- BLOQUEIO: {m}" for m in r.get('motivos_bloqueio') or []]
     fatos = {f['id']: f for f in (pl.get('narracao') or {}).get('fatos', []) if isinstance(f, dict)}
     for L_ in P.camadas(pl):
         p = L_.get('p') or {}
@@ -530,8 +551,9 @@ def telegram(saida: Path, titulo: str) -> dict:
                f"áudio no MP4: {au.get('lufs')} LUFS · pico {au.get('pico')} dBTP",
                f"janelas de 4 s pretas/congeladas: {len(r['portoes']['preto_ou_congelado'])}"]
     linhas += [f"- {j['de']}–{j['ate']}s: {'; '.join(j['problemas'])}" for j in r['portoes']['preto_ou_congelado']][:8]
+    linhas += [f"BLOQUEIO: {m}" for m in r.get('motivos_bloqueio') or []][:8]
     est = {'estado': estado_final.AGUARDANDO if r['estado'] == estado_final.AGUARDANDO else estado_final.BLOQUEADO,
-           'motivos': [] if r['estado'] == estado_final.AGUARDANDO else ['portões do MP4 final']}
+           'motivos': [] if r['estado'] == estado_final.AGUARDANDO else (r.get('motivos_bloqueio') or ['portões do MP4 final'])}
     rit = r.get('ritmo') or {}
     linhas += [f"ritmo (zona de conteúdo, 4 q/s): bruto {rit.get('maior_trecho_parado_s')} s · sem câmera {(rit.get('sem_camera') or {}).get('maior_trecho_parado_s')} s "
                f"(portão ≤ 3 s; ref. A: 2 s)", f"legenda × áudio real: {'OK' if r['portoes'].get('legenda_ok') else 'FALHA'} {r.get('legenda_sync', {}).get('atraso_s')} s"]

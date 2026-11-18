@@ -1,6 +1,6 @@
 name: ATLAS V1 - previa audiovisual curta PRIVADA (sem Claude)
 # Gatilho exclusivo; sem full render, sem DOSSIÊ/NTC/main e sem publicar nada.
-# 4 janelas de ~2.5s do proprio Panama, mantendo mapa + legenda + voz nos tempos originais.
+# 5 janelas de ~2.5s do proprio Panama, mantendo mapa + legenda + voz nos tempos originais.
 on:
   push:
     branches: [motor-integral-v4]
@@ -68,7 +68,24 @@ jobs:
       - name: Quadros, texto/legendas, plataformas, colisoes (falha = sem render)
         timeout-minutes: 17
         run: python -m src.v4.formatos quadros "$PLANO_ATLAS" saida_formatos/atlas
-      - name: Somente 4 intervalos (aprox. 10 s), SEM render de episodio completo
+      - name: Identificar entradas da animação da eclusa
+        id: eclusa
+        shell: bash
+        run: |
+          digest=$({ jq -cS '.clipes' saida_formatos/atlas/plano_resolvido.json
+            jq -cS '.palco' src/v4/formatos/canais/coringa.json
+            python -m playwright --version
+            ffmpeg -version
+            fc-list | LC_ALL=C sort
+          } | sha256sum | cut -d' ' -f1)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - name: Selecionar cache exato da eclusa
+        run: echo "ATLAS_ECLUSA_KEY=eclusa-v1-${{ runner.os }}-${{ steps.eclusa.outputs.digest }}-${{ hashFiles('src/render/**', 'src/v2/**', 'src/v4/backends/legado.py', 'src/v4/formatos/produzir.py', 'src/v4/util.py', 'motor4/identidade/**') }}" >> "$GITHUB_ENV"
+      - uses: actions/cache@v4
+        with:
+          path: saida_formatos/atlas/_amostra/eclusa_v2_${{ env.ATLAS_ECLUSA_KEY }}.mp4
+          key: ${{ env.ATLAS_ECLUSA_KEY }}
+      - name: Somente 5 intervalos (aprox. 13 s), SEM render de episodio completo
         timeout-minutes: 38
         run: python scripts/atlas_previa_curta.py render saida_formatos/atlas
       - name: Enviar resultado para Telegram PRIVADO (ou explicar bloqueio)

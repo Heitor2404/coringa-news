@@ -1,14 +1,13 @@
-"""Amostra visual privada do ATLAS: ~10 s em 4 cortes do plano completo, SEM renderizar 79 s.
+"""Amostra visual privada do ATLAS: ~13 s em 5 cortes do plano completo, SEM renderizar 79 s.
 
 Cada corte preserva a linha do tempo absoluta do storyboard: cena, mapa, legenda e voz reais.
-Exibe gancho, cartao, palco tecnico e CTA. A animacao V2 (eclusa 31-41s)
-NAO integra esta amostra, pois precisaria de render proprio. Nao e um episodio.
+Exibe gancho, cartão, subida da eclusa, palco técnico e CTA.
 Execucao: python scripts/atlas_previa_curta.py render|enviar saida_formatos/atlas
 """
 from __future__ import annotations
 
 import json
-import subprocess
+import os
 import sys
 import time
 from pathlib import Path
@@ -17,14 +16,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.v4.backends import js
-from src.v4.formatos import plano as P
+from src.v4.formatos import plano as P, produzir
 from src.v4.util import RAIZ, rodar
 
 FPS = 30
-# (id, inicio absoluto, fim absoluto) — intervalos FORA do clipe V2 aprovado.
+# (id, inicio absoluto, fim absoluto).
 JANELAS = [
     ("gancho_mapa", 0.0, 2.40),
     ("cartao_26m", 18.80, 21.40),
+    ("eclusa_subindo", 36.70, 39.50),
     ("palco_tecnico", 41.20, 43.80),
     ("cta_final", 76.30, 78.95),
 ]
@@ -61,9 +61,16 @@ def render(saida: Path) -> Path:
     for nome, inicio, fim in JANELAS:
         if not (0 <= inicio < fim <= pl["duracao"]):
             raise RuntimeError(f"janela invalida {nome}: {inicio}-{fim}")
-        for c in pl.get("clipes") or []:
-            if inicio < c["t1"] and c["t0"] < fim:
-                raise RuntimeError(f"janela {nome} invade clipe V2; jamais renderizar mapa no lugar do mecanismo")
+        clipes = [c for c in pl.get("clipes", []) if inicio < c["t1"] and c["t0"] < fim]
+        eclusa = nome == "eclusa_subindo"
+        if eclusa:
+            if len(clipes) != 1 or clipes[0]["componente"] != "mecanismo.eclusa":
+                raise RuntimeError("janela sem a eclusa do plano")
+            clipe = clipes[0]
+            if not clipe["t0"] <= inicio < fim <= clipe["t1"]:
+                raise RuntimeError("janela cruza o limite da eclusa")
+        elif clipes:
+            raise RuntimeError(f"janela {nome} invade clipe V2")
 
         f0, f1 = round(inicio * FPS), round(fim * FPS) - 1
         n = f1 - f0 + 1
@@ -72,7 +79,24 @@ def render(saida: Path) -> Path:
         video = trab / f"{nome}_video.mp4"
         mux = trab / f"{nome}.mp4"
         inicio_render = time.monotonic()
-        js.remotion("AtlasAmostra", props, video, trab / nome, quadros=(f0, f1))
+        if eclusa:
+            # A base V2 é independente da voz e da legenda; o workflow restaura
+            # somente este MP4 quando o plano, tema e renderizador coincidem.
+            cache_key = os.environ.get("ATLAS_ECLUSA_KEY")
+            base = trab / f"eclusa_v2_{cache_key or 'local'}.mp4"
+            if not cache_key or not base.exists():
+                tmp = trab / "eclusa_v2.tmp.mp4"
+                produzir._clipe(clipe, can, (trab / "v2").resolve(), tmp.resolve())
+                tmp.replace(base)
+            alpha = trab / "eclusa_legenda.webm"
+            js.remotion("Camada", camada, alpha, trab / "camada", alfa=True, quadros=(f0, f1))
+            offset = (f0 - round(clipe["t0"] * FPS)) / FPS
+            rodar(["ffmpeg", "-v", "error", "-y", "-ss", f"{offset:.6f}", "-i", base,
+                   "-c:v", "libvpx", "-i", alpha, "-filter_complex",
+                   "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p", "-frames:v", str(n),
+                   "-an", "-c:v", "libx264", "-crf", "16", video])
+        else:
+            js.remotion("AtlasAmostra", props, video, trab / nome, quadros=(f0, f1))
         rodar(["ffmpeg", "-v", "error", "-y", "-i", str(video),
                "-ss", f"{inicio:.3f}", "-t", f"{n / FPS:.3f}", "-i", str(saida / "voz.wav"),
                "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
@@ -94,7 +118,7 @@ def render(saida: Path) -> Path:
         "janelas": registro, "total_frames": sum(r["frames_renderizados"] for r in registro),
         "duracao_aproximada_s": sum(r["frames_renderizados"] for r in registro) / FPS,
         "tempo_total_render_s": round(time.monotonic() - t0, 2),
-        "componente_mecanismo_v2": "NAO TESTADO nesta amostra — exige trecho especifico",
+        "componente_mecanismo_v2": "mecanismo.eclusa — subida com legenda e voz",
         "publicado": False, "aprovacao_estetica": False
     }
     (saida / "atlas_amostra_relatorio.json").write_text(json.dumps(registro_json, ensure_ascii=False, indent=2))
@@ -126,9 +150,9 @@ def enviar(saida: Path) -> None:
     if not relatorio.exists():
         raise RuntimeError("video sem relatorio de janelas; bloqueio de envio")
     r = _ler(relatorio)
-    titulo = ("ATLAS V1 — AMOSTRA PRIVADA (~10 s): gancho / cartao / fundo tecnico / CTA. "
+    titulo = ("ATLAS V1 — AMOSTRA PRIVADA (~13 s): gancho / cartao / eclusa / fundo tecnico / CTA. "
               "CORTES entre trechos distintos, voz correspondente a cada trecho. "
-              "Nao e episodio completo. Mecanismo V2 fora desta amostra. "
+              "Nao e episodio completo. "
               "Aguardando aprovacao estetica; nada publicado.")
     previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
                          ("video", previa_telegram._caber(mp4)))

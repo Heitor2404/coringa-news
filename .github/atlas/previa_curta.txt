@@ -5,3 +5,5 @@ Somente Telegram privado; sem Claude/Gemini, sem merge/main, sem NTC/DOSSIE, sem
 O workflow aborta se preflight/styleframes tiverem erros.
 
 Tentativa 2: corrigida instalacao do Chromium Playwright para preflight. Sem alteracoes visuais nem render longo.
+
+Amostra de cinco cortes: revisar subida da eclusa, legenda amarela e créditos no celular.

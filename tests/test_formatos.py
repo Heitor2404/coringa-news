@@ -787,17 +787,22 @@ def test_creditos_da_foto_e_mapa_medidos_pelo_texto_real():
 
 
 def test_previa_curta_atlas_nao_renderiza_episodio_inteiro():
-    """Cortes da mesma linha do tempo, sempre fora do V2; limite total < 12s."""
+    """Cortes da mesma linha do tempo, incluindo a subida no V2; limite total < 14s."""
     from scripts import atlas_previa_curta as A
-    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    pl = ATLAS  # fixture já resolvida, com os tempos locais da eclusa
     total = 0
-    assert len(A.JANELAS) == 4
+    assert len(A.JANELAS) == 5
     for nome, a, b in A.JANELAS:
         assert 0 <= a < b <= pl['duracao'], nome
         assert b - a <= 3.0, nome
-        assert all(b <= c['t0'] or a >= c['t1'] for c in pl['clipes']), nome
+        if nome == 'eclusa_subindo':
+            c, = pl['clipes']
+            assert c['componente'] == 'mecanismo.eclusa'
+            assert c['t0'] <= a < c['t0'] + c['params']['tempos'][1] < b <= c['t1']
+        else:
+            assert all(b <= c['t0'] or a >= c['t1'] for c in pl['clipes']), nome
         total += b - a
-    assert total < 12.0
+    assert total < 14.0
     root = (RAIZ / 'motor4/remotion/src/Root.tsx').read_text()
     assert 'id="AtlasAmostra"' in root
     assert '<Formato {...visual} />' in root and '<Camada {...legenda} />' in root

@@ -45,7 +45,7 @@ REGIOES = {
     'gatun_eclusas': ((-79.97, 9.24, -79.88, 9.31), 14, 's2'),
     'miraflores_eclusas': ((-79.63, 8.98, -79.56, 9.04), 14, 's2'),
     # escala continental (calibração com a referência A: China e entorno)
-    'asia_continente': ((52.0, -22.0, 168.0, 64.0), 6, 'bmng_bati'),
+    'asia_continente': ((52.0, -22.0, 168.0, 76.0), 6, 'bmng_bati'),
 }
 
 

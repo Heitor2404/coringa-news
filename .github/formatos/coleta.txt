@@ -2,13 +2,20 @@ Coleta de dados para a direção de arte final dos formatos (pedido do Heitor, 1
 (canal e eclusas) e mídia histórica licenciada do Commons. Sem IA, sem render, sem serviço pago; resultado cifrado.
 Disparo 1/1 em 2026-11-17.
 
-so-raster
+modo so-raster (rodada 44100398329; registro histórico)
 Refeita 1× (só rasters, sem mídia): a 44097219552 pediu a camada Sentinel-2 com identificador errado (404 → mosaico
 preto, que agora falha em vez de passar calado).
 
 Coleta para a REPRODUÇÃO CONTROLADA dos 8 s iniciais da referência A (pedido do Heitor, 17/11 21:32): base
 continental de satélite licenciada (NASA Blue Marble com batimetria, domínio público, via GIBS) e foto licenciada de
 lugar (nenhuma foto de pessoa). Sem IA, sem render.
+regioes: asia_continente
+busca: Great Hall of the People Beijing exterior
+busca: Zhongnanhai gate Xinhuamen
+
+Refeita 1× (pedido do Heitor 17/11 21:32): a 44208969334 saiu só com raster (a linha antiga 'so-raster' do registro
+desligava a mídia) e o recorte parava em 64° N — a referência mostra até ~72° N no 1º quadro (registro medido: centro
+104,2° E 35,1° N, zoom 3,32 em 1080). Agora até 76° N + foto de lugar licenciada.
 regioes: asia_continente
 busca: Great Hall of the People Beijing exterior
 busca: Zhongnanhai gate Xinhuamen

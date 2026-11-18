@@ -932,7 +932,9 @@ def test_atlas_continuidade_mecanismo_panama_31_50s():
 
 def test_atlas_resolucao_de_tempos_do_fluxo_no_clipe():
     from src.v4.formatos import plano
-    orig = copy.deepcopy(ATLAS_BRUTO)
+    orig = copy.deepcopy(ATLAS)  # tempos das demais cenas já resolvidos
+    orig['clipes'][0]['params']['tempos'] = [31.6, 36.8, 49.2]
+    orig['clipes'][0]['params']['destaques_fluxo'] = copy.deepcopy(ATLAS_BRUTO['clipes'][0]['params']['destaques_fluxo'])
     pl = plano.resolver_tempos(orig, [])
     c, = pl['clipes']
     assert c['params']['destaques_fluxo'][0]['t'] == 9.81

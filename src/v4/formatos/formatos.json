@@ -75,7 +75,12 @@
         "mecanismo.eclusa"
       ],
       "alvos_componentes": {
-        "mecanismo.eclusa": ["lago", "aqueduto", "paredes", "piso"]
+        "mecanismo.eclusa": [
+          "lago",
+          "aqueduto",
+          "paredes",
+          "piso"
+        ]
       },
       "contratos_movimento": {
         "mecanismo.eclusa": {
@@ -338,6 +343,11 @@
         "nota": {
           "y": 1130,
           "h": 88
+        },
+        "foto": {
+          "y": 570,
+          "h": 565,
+          "w_max": 920
         }
       },
       "max_camadas": 3,

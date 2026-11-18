@@ -975,3 +975,11 @@ def test_fiscal_ritmo_capta_grafico_pequeno_sem_aceitar_ruido_global():
     # Variação fraca espalhada por toda a tela não vira progresso.
     ruido = np.full_like(d, .2)
     assert mudanca_local_alinhada(ruido) < .5
+
+
+def test_ritmo_local_so_atlas_outros_formatos_preservados():
+    from src.v4.formatos import ritmo
+    import inspect
+    assert inspect.signature(ritmo.medir_completo).parameters['usar_local'].default is False
+    renderer = (RAIZ / 'src/v4/formatos/produzir.py').read_text()
+    assert "usar_local=(pl['formato'] == 'atlas')" in renderer

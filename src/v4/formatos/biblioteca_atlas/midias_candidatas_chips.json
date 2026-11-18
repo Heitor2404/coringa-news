@@ -35,7 +35,18 @@
       ],
       "licenca_pagina_verificada": true,
       "estado": "candidato",
-      "sha256": null
+      "sha256": null,
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/TSMC_Fab_18_May_2025.jpg/960px-TSMC_Fab_18_May_2025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
+        "sha1_arquivo_original_commons": "42d4605cee2dec3212bfa94345ef734f2b3c865e",
+        "largura": 960,
+        "altura": 640,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     },
     {
       "id": "chips-asml-sede-veldhoven",
@@ -65,7 +76,18 @@
       ],
       "licenca_pagina_verificada": true,
       "estado": "candidato",
-      "sha256": null
+      "sha256": null,
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/ASML_headquarters_Veldhoven.jpg/960px-ASML_headquarters_Veldhoven.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "d4a39d13a32fb8378cf248b69480084104fde4c5b4e66ec004c71e2fe7c0c7c3",
+        "sha1_arquivo_original_commons": "58ca217840d7c28ee7572647eee7e168c0617136",
+        "largura": 960,
+        "altura": 720,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     },
     {
       "id": "chips-smic-fabrica-shenzhen",
@@ -96,7 +118,18 @@
       "licenca_pagina_verificada": true,
       "estado": "candidato",
       "sha256": null,
-      "alerta_licenca": "Aplicar atribuição e revisão da obrigação share-alike antes de publicar uma adaptação"
+      "alerta_licenca": "Aplicar atribuição e revisão da obrigação share-alike antes de publicar uma adaptação",
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/SMIC%EF%BC%8CShenzhen_Factory.jpg/960px-SMIC%EF%BC%8CShenzhen_Factory.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "617d8851fd709e0a099bb2bb5af7bf35580e56c2818974783b73b4137b88873b",
+        "sha1_arquivo_original_commons": "e85b9a7a1cdfb9445f5e9abbfd4f3e1c608073bc",
+        "largura": 960,
+        "altura": 720,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     },
     {
       "id": "chips-wafer-silicio",
@@ -122,7 +155,18 @@
       "posicao": null,
       "licenca_pagina_verificada": true,
       "estado": "candidato",
-      "sha256": null
+      "sha256": null,
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Silicon_wafer_close_view.jpg/960px-Silicon_wafer_close_view.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1",
+        "sha1_arquivo_original_commons": "ff74594aa508329f508ba77cef68238ffe568864",
+        "largura": 960,
+        "altura": 720,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     },
     {
       "id": "chips-sala-limpa-nasa",
@@ -148,7 +192,18 @@
       "posicao": null,
       "licenca_pagina_verificada": true,
       "estado": "candidato",
-      "sha256": null
+      "sha256": null,
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Clean_room.jpg/960px-Clean_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "218c14f8493e49dc8de45a8e862a9f88ad344a062612bac0c670d9499c1a727f",
+        "sha1_arquivo_original_commons": "60810afe203d38dcec3136f8968ad0cf8fa04c9c",
+        "largura": 960,
+        "altura": 744,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     },
     {
       "id": "chips-asml-containers-tainan",
@@ -179,7 +234,18 @@
       ],
       "licenca_pagina_verificada": true,
       "estado": "candidato",
-      "sha256": null
+      "sha256": null,
+      "auditoria_miniatura": {
+        "origem": "Commons imageinfo API",
+        "execucao_github": 44376627403,
+        "url_exata": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/ASML_air_freight_containers_in_Tainan_May_2025_1.jpg/960px-ASML_air_freight_containers_in_Tainan_May_2025_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "sha256_bytes": "4ec2a98564f6853dbf29b713edaf4cc628cb33c29791330cfbec47a7c38f018c",
+        "sha1_arquivo_original_commons": "a41f1447d657c09d8a2658191e6cb9281939bb09",
+        "largura": 960,
+        "altura": 640,
+        "licenca_conciliada": true,
+        "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      }
     }
   ],
   "excluidos": [

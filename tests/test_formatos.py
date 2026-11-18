@@ -702,8 +702,6 @@ def test_marca_atlas_dentro_do_feed_e_recorte_e_bloqueador():
     assert P.zonas('atlas').get('marca') is None
     assert P.props_camada({'formato': 'atlas', 'duracao': 2, 'canal': 'coringa', 'clipes': []}, {'palavras': []})['marca_visivel'] is False
     assert marco >= layout.CFG['perfis']['instagram_reels']['recorte_feed']['topo'] + 6
-    z = P.zonas('atlas')['marca']
-    assert z[1] <= marco <= z[1] + z[3]
     pl = {'formato': 'atlas', 'beats': [], 'duracao': 10}
     m = _medida(camada={'marca': {'x': 72, 'y': 232, 'w': 350, 'h': 35}})
     erros = V.checar_plataformas(m, pl, 1.0)
@@ -716,7 +714,7 @@ def test_preflight_bloqueia_marca_cortada_sem_render(monkeypatch):
     """Recorte do feed deve falhar em P.validar ANTES da fase cara de quadros/render."""
     from src.v4.formatos import layout
     pl = copy.deepcopy(ATLAS)
-    assert 'F-MARCA-RECORTE-FEED' not in {x['regra'] for x in P.validar(pl)}
+    assert 'F-MARCA-RECORTE-FEED' not in _regras(pl)
     monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_atlas', True)
     monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_y', 232)
-    assert 'F-MARCA-RECORTE-FEED' in {x['regra'] for x in P.validar(pl)}
+    assert 'F-MARCA-RECORTE-FEED' in _regras(pl)

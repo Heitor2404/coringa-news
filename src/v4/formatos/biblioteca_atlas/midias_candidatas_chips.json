@@ -4,7 +4,7 @@
   "pacote": "guerra_dos_chips",
   "atualizado_em": "2026-11-18",
   "status": "CANDIDATAS_NAO_AUTORIZADAS_PARA_RENDER",
-  "regra": "Fonte e licença conferidas na página Commons. Ainda falta baixar versão aprovada, conferir imagem visualmente, registrar SHA256 do binário, resolução/foco e aprovação editorial. Não adicionar ao índice de mídia comprovada até todos os portões.",
+  "regra": "Fonte e licença conferidas na página Commons. Ainda falta baixar versão aprovada, conferir imagem visualmente, registrar SHA256 do binário, resolução/foco e aprovação editorial. Não adicionar ao índice de mídia comprovada até todos os portões. O Commons pode registrar mídias com revisão de licença pendente; essas ficam bloqueadas até comprovação.",
   "itens": [
     {
       "id": "chips-tsmc-fab18-tainan",
@@ -149,6 +149,37 @@
       "licenca_pagina_verificada": true,
       "estado": "candidato",
       "sha256": null
+    },
+    {
+      "id": "chips-asml-containers-tainan",
+      "titulo": "Contêineres de transporte da ASML em Taiwan",
+      "arquivo_commons": "ASML air freight containers in Tainan May 2025 1.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:ASML_air_freight_containers_in_Tainan_May_2025_1.jpg",
+      "autor": "4300streetcar",
+      "data_foto": "2025-05-27",
+      "licenca": "CC BY 4.0",
+      "licenca_url": "https://creativecommons.org/licenses/by/4.0/",
+      "credito": "ASML air freight containers in Tainan May 2025 1 — 4300streetcar / Wikimedia Commons, CC BY 4.0",
+      "mostra": "Contêineres aéreos ULD destinados ao transporte de equipamentos ASML, fotografados em Tainan, Taiwan",
+      "permite_narrar": [
+        "logística internacional relacionada à ASML em Taiwan",
+        "contêineres de carga aérea identificados na imagem em Tainan"
+      ],
+      "nao_comprova": [
+        "o conteúdo exato de cada contêiner",
+        "que contém um scanner EUV",
+        "que o equipamento foi vendido a um destinatário específico",
+        "que contém equipamentos fabricados naquele dia",
+        "fluxo ou volume mundial de chips"
+      ],
+      "destino": "logistica_asml_taiwan",
+      "posicao": [
+        120.2498,
+        23.1257
+      ],
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null
     }
   ],
   "excluidos": [
@@ -156,6 +187,11 @@
       "id": "euv-llnl-1998",
       "pagina": "https://commons.wikimedia.org/wiki/File:Extreme_ultraviolet_lithography_tool.jpg",
       "motivo": "Foto histórica de ferramenta EUV do Lawrence Livermore National Laboratory (1998), NÃO demonstra o scanner EUV moderno da ASML; resolução 713x605, pouco adequada para vertical. Não rotular como ASML."
+    },
+    {
+      "id": "ibm-euv-video-licenca-em-revisao",
+      "pagina": "https://commons.wikimedia.org/wiki/File:How_EUV_lithography_works.webm",
+      "motivo": "Wikimedia marca License review needed para licenciamento YouTube CC BY; não usar em canal até verificação."
     }
   ],
   "pendencias": [
@@ -163,6 +199,7 @@
     "Conferir conteúdo visual e qualidade em formato 9:16; registrar dimensões e SHA256.",
     "Obter imagem atual e livre de equipamento EUV da ASML OU apresentar recurso editorial genérico sem falsear imagens.",
     "Submeter atribuições, licenças CC BY-SA e direitos incidentais ao revisor editorial.",
-    "Aprovar explicitamente antes de alimentar src/v4/biblioteca_comprovada.json e produzir MP4."
+    "Aprovar explicitamente antes de alimentar src/v4/biblioteca_comprovada.json e produzir MP4.",
+    "Vídeo IBM Research How EUV lithography works.webm: não liberar — Wikimedia Commons assinala License review needed até prova de licença."
   ]
 }

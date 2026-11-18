@@ -15,7 +15,7 @@ export type CamadaProps = {
   marca_y?: number;                 // posição da marca quando ativa
   marca_visivel?: boolean;          // ATLAS: false para não competir com a geografia e documentos
   medir?: boolean;                  // registra a caixa real da legenda e da marca (validação nos quadros)
-  estilo?: { max_palavras?: number; tamanho?: number; tamanho_min?: number; peso?: number; caixa?: string; linhas_max?: number; cor_ativa?: string; cor_futura?: string; destaque_palavra?: boolean };
+  estilo?: { max_palavras?: number; tamanho?: number; tamanho_min?: number; peso?: number; caixa?: string; linhas_max?: number; cor_ativa?: string; cor_futura?: string; destaque_palavra?: boolean; destaque_estatico?: boolean };
 };
 
 export const Camada: React.FC<CamadaProps> = (P) => {
@@ -97,7 +97,12 @@ export const Camada: React.FC<CamadaProps> = (P) => {
           color: L.cor, textShadow: L.sombra, background: cena?.legenda_tom === 'claro' ? L.placa : 'transparent', padding: '6px 20px', borderRadius: 14 }}>
           {g.map((tk, i) => {
             const ativo = ms >= tk.fromMs && ms < tk.toMs, fut = ms < tk.fromMs;
-            return <span key={i} style={{ color: (ativo || (L.destaque_palavra !== false && hl.has((tk.fromMs / 1000).toFixed(3)))) && !fut ? L.cor_ativa : fut ? L.cor_futura : L.cor }}>{tk.text}</span>;
+            const chave = L.destaque_palavra !== false && hl.has((tk.fromMs / 1000).toFixed(3));
+            // ATLAS: palavra-chave fica amarela durante todo o bloco; nunca animar palavra a palavra.
+            // DOSSIÊ mantém comportamento anterior intacto.
+            const cor = L.destaque_estatico ? (chave ? L.cor_ativa : L.cor)
+              : ((ativo || chave) && !fut ? L.cor_ativa : fut ? L.cor_futura : L.cor);
+            return <span key={i} style={{ color: cor }}>{tk.text}</span>;
           })}
         </div></div>}
     </AbsoluteFill>

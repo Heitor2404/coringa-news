@@ -46,6 +46,16 @@
         "altura": 640,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "media",
+        "apta_ao_piloto": true,
+        "uso": "Foto de estabelecimento para situar Taiwan e TSMC em pino fotográfico; 9:16 exige composição com mapa e ROI.",
+        "limite": "Exterior horizontal, não mostra máquina nem linha de fabricação.",
+        "protagonista": "secundario",
+        "aprovacao_de_publicacao": false
       }
     },
     {
@@ -67,7 +77,8 @@
         "máquinas litográficas",
         "produção dentro da fábrica",
         "equipamento EUV atual",
-        "estado físico atual do edifício"
+        "estado físico atual do edifício",
+        "que seja uma foto visualmente adequada para mostrar litografia EUV"
       ],
       "destino": "holanda_asml",
       "posicao": [
@@ -87,6 +98,16 @@
         "altura": 720,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "baixa",
+        "apta_ao_piloto": false,
+        "uso": "Somente identificação geográfica da sede empresarial se necessário.",
+        "limite": "Edifício genérico sem máquina EUV; fotografia de 2008 não deve ilustrar equipamentos ou 2026.",
+        "protagonista": "nao_usar",
+        "aprovacao_de_publicacao": false
       }
     },
     {
@@ -99,16 +120,16 @@
       "licenca": "CC BY-SA 4.0",
       "licenca_url": "https://creativecommons.org/licenses/by-sa/4.0/",
       "credito": "SMIC, Shenzhen Factory — Lhzss8 / Wikimedia Commons, CC BY-SA 4.0",
-      "mostra": "Vista exterior da planta SMIC em Shenzhen, China",
+      "mostra": "Placa de identificação corporativa SMIC, iluminada à noite em Shenzhen, com vegetação; NÃO mostra a fábrica em si.",
       "permite_narrar": [
-        "fábrica da SMIC em Shenzhen",
-        "produção de semicondutores na China (contexto industrial)"
+        "identificação institucional da SMIC em Shenzhen, com ressalva de que a imagem mostra a placa"
       ],
       "nao_comprova": [
         "equipamento EUV instalado",
         "nó de fabricação específico",
         "fábrica da TSMC",
-        "situação atual das sanções"
+        "situação atual das sanções",
+        "arquitetura da fábrica e instalações de fabricação de semicondutores"
       ],
       "destino": "china_smic",
       "posicao": [
@@ -129,6 +150,16 @@
         "altura": 720,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "baixa",
+        "apta_ao_piloto": false,
+        "uso": "Somente a placa de identificação institucional da SMIC à noite.",
+        "limite": "A imagem NÃO mostra a fábrica nem maquinário, apenas uma placa iluminada com árvores em primeiro plano.",
+        "protagonista": "nao_usar",
+        "aprovacao_de_publicacao": false
       }
     },
     {
@@ -166,6 +197,16 @@
         "altura": 720,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "boa",
+        "apta_ao_piloto": true,
+        "uso": "Close macro de wafer com circuitos para ilustrar fisicamente semicondutores, sem atribuir fabricação.",
+        "limite": "Não indica fabricante, ano de produção do chip ou nó de 7 nm.",
+        "protagonista": "secundario",
+        "aprovacao_de_publicacao": false
       }
     },
     {
@@ -203,6 +244,16 @@
         "altura": 744,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "media",
+        "apta_ao_piloto": false,
+        "uso": "Somente representação histórica/genérica da microfabricação com indicação clara da NASA.",
+        "limite": "Visual antigo amarelo/alaranjado; não corresponde a tecnologia ou fábrica atual, logo não é boa prova para a guerra comercial contemporânea.",
+        "protagonista": "nao_usar",
+        "aprovacao_de_publicacao": false
       }
     },
     {
@@ -245,6 +296,16 @@
         "altura": 640,
         "licenca_conciliada": true,
         "uso": "APENAS PREVIEW; não promove à biblioteca comprovada"
+      },
+      "inspecao_visual": {
+        "metodo": "inspecao_humana_assistida por quadro da galeria baixada/hasheada",
+        "data": "2026-11-18",
+        "qualidade": "boa",
+        "apta_ao_piloto": true,
+        "uso": "Contêineres identificados ASML em Taiwan para mostrar logística e conexão geográfica, com precisão editorial.",
+        "limite": "Não comprova que transportem máquinas EUV ou chips, conteúdo não visível.",
+        "protagonista": "secundario",
+        "aprovacao_de_publicacao": false
       }
     }
   ],
@@ -266,6 +327,7 @@
     "Obter imagem atual e livre de equipamento EUV da ASML OU apresentar recurso editorial genérico sem falsear imagens.",
     "Submeter atribuições, licenças CC BY-SA e direitos incidentais ao revisor editorial.",
     "Aprovar explicitamente antes de alimentar src/v4/biblioteca_comprovada.json e produzir MP4.",
-    "Vídeo IBM Research How EUV lithography works.webm: não liberar — Wikimedia Commons assinala License review needed até prova de licença."
+    "Vídeo IBM Research How EUV lithography works.webm: não liberar — Wikimedia Commons assinala License review needed até prova de licença.",
+    "Inspeção visual de seis miniaturas concluída: apenas TSMC exterior, wafer e contêineres ASML são bons candidatos visuais para o segundo piloto; exige arquivos de produção e aprovação de cena."
   ]
 }

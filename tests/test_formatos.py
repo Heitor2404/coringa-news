@@ -1124,3 +1124,21 @@ def test_atlas_garantia_da_saida_nao_altera_abertura_ou_mecanismos_ausentes():
     p['clipes'] = []
     p['explicacoes'] = []
     assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(p)
+
+
+def test_atlas_substituicao_de_cards_nao_conta_como_todos_simultaneos():
+    """Quatro notas que SUBSTITUEM umas às outras não são quatro cards visíveis.
+    Ao forçar quatro simultâneas o bloqueador continua funcionando.
+    """
+    from scripts.formatos_reuso import tempos_sinteticos
+    bruto = json.loads((RAIZ / "src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json").read_text(encoding="utf-8"))
+    palavras, _, _ = tempos_sinteticos(bruto["narracao"]["texto"])
+    pl = P.resolver_tempos(bruto, palavras)
+    assert not [e for e in P.validar(pl) if e["regra"] == "F-COMPOSICAO"]
+    quatro_juntas = copy.deepcopy(pl)
+    b = next(b for b in quatro_juntas["beats"] if b["id"] == "b2-tsmc")
+    pct = next(x for x in b["camadas"] if x["id"] == "pct")
+    for id_ in ("planeta", "receita-wafer", "quota-nao-global"):
+        L = next(x for x in b["camadas"] if x["id"] == id_)
+        L["t0"], L["t1"] = pct["t0"] + .15, pct["t0"] + 1.5
+    assert any(x["regra"] == "F-COMPOSICAO" for x in P.validar(quatro_juntas))

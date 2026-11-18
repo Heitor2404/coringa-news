@@ -165,7 +165,7 @@
           "componente": "editorial.titleOrPayoff",
           "slot": "pergunta",
           "t0": 0.2,
-          "t1": "@taiwan-0.15",
+          "t1": "@estados-0.35",
           "p": {
             "linhas": [
               {
@@ -175,6 +175,22 @@
               {
                 "texto": "DE UMA ILHA?",
                 "t": "@ilha",
+                "destaque": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "potencias",
+          "componente": "editorial.titleOrPayoff",
+          "slot": "pergunta",
+          "t0": "@estados",
+          "t1": "@taiwan-0.15",
+          "p": {
+            "linhas": [
+              {
+                "texto": "EUA × CHINA",
+                "t": "@estados",
                 "destaque": true
               }
             ]

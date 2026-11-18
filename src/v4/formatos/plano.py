@@ -300,6 +300,8 @@ def props_camada(pl: dict, meta: dict) -> dict:
     pal = meta['palavras']
     if est.get('caixa') == 'frase':
         pal = legenda_sync.caixa_frase(pal, *legenda_sync.nomes_do_plano(pl))
+    if pl['formato'] == 'atlas' and est.get('destaque_estatico'):
+        pal = legenda_sync.destacar_atlas(pal, pl, maximo=est.get('max_palavras', 3))
     marcas = sorted({0.0, pl['duracao']} | {x for c in pl.get('clipes') or [] for x in (c['t0'], c['t1'])})
     cenas = []
     for a, b in zip(marcas, marcas[1:]):

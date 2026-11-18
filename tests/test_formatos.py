@@ -769,3 +769,17 @@ def test_atlas_v1_primeiro_quadro_deve_ser_mapa_e_cta_nao_some(monkeypatch):
     monkeypatch.setitem(P.COMP['atlas.manchete'], 'slots', {k: v for k, v in slots.items() if k != 'cta'})
     pl = copy.deepcopy(ATLAS)
     assert 'F-CTA-FINAL-AUSENTE' in _regras(pl)
+
+
+def test_creditos_da_foto_e_mapa_medidos_pelo_texto_real():
+    """Regressão: caixa de créditos cabia, porém texto multi-linha invadia a legenda."""
+    import scripts.formatos_validar as V
+    pl = {'formato': 'atlas', 'beats': [], 'duracao': 10}
+    x, y, w, h = P.zonas('atlas')['creditos']
+    atrib = {'tipo': 'atribuicao', 'caixa': {'x': x, 'y': y, 'w': w, 'h': h},
+              'texto_caixa': {'x': x, 'y': y - 25, 'w': w, 'h': h + 25},
+              'txt': 'Natural Earth · foto licenciada', 'datasets': []}
+    m = _medida(metas=[atrib])
+    assert 'R-CREDITOS-TEXTO-TRANSBORDA' in {p['regra'] for p in V.checar(m, pl, 1.0)}
+    atrib['texto_caixa'] = {'x': x, 'y': y, 'w': w, 'h': h}
+    assert 'R-CREDITOS-TEXTO-TRANSBORDA' not in {p['regra'] for p in V.checar(m, pl, 1.0)}

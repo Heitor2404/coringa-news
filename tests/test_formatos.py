@@ -983,3 +983,28 @@ def test_ritmo_local_so_atlas_outros_formatos_preservados():
     assert inspect.signature(ritmo.medir_completo).parameters['usar_local'].default is False
     renderer = (RAIZ / 'src/v4/formatos/produzir.py').read_text()
     assert "usar_local=(pl['formato'] == 'atlas')" in renderer
+
+
+def test_atlas_falha_500_telegram_reenvia_mesmo_mp4_como_documento(tmp_path, monkeypatch):
+    from scripts import atlas_previa_curta as A
+    from src.v3 import previa_telegram
+    saida = tmp_path
+    (saida / "atlas_identidade_v1_amostra_curta.mp4").write_bytes(b"mp4-validado")
+    (saida / "atlas_amostra_relatorio.json").write_text(json.dumps({
+        "tipo": "trecho contínuo",
+        "janelas": [{"inicio_original_s": 28.9, "fim_original_s": 31.49},
+                    {"inicio_original_s": 31.49, "fim_original_s": 50.4}],
+        "quadros_finais_conferidos": True
+    }))
+    monkeypatch.setattr(previa_telegram, "chat_autorizado", lambda: ("-123456", {}))
+    chamadas = []
+    def fake_api(metodo, data, arquivo=None):
+        chamadas.append((metodo, arquivo))
+        if metodo == "sendVideo":
+            raise previa_telegram.EnvioRecusado("sendVideo: 500 Internal Server Error")
+        return {}
+    monkeypatch.setattr(previa_telegram, "_api", fake_api)
+    A.enviar(saida)
+    assert chamadas[0][0] == "sendVideo"
+    assert chamadas[1][0] == "sendDocument"
+    assert chamadas[0][1][1] == chamadas[1][1][1]

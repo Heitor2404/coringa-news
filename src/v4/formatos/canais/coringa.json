@@ -334,6 +334,9 @@
     "rotulos_sem_foco": 3,
     "fonte_rotulo_px": 34,
     "largura_contextual": 1240,
-    "transicao_foco_s": 0.7
+    "transicao_foco_s": 0.7,
+    "max_camadas_editoriais": 2,
+    "max_caracteres_rotulo": 22,
+    "intervalo_min_foco_s": 0.8
   }
 }

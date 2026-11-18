@@ -31,3 +31,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: detector de mudança localizada do gráfico 197 milhões, descontando movimento de câmera; teste negativo estático.
 
 18/11: ultima validação — detector local só ATLAS, DOSSIÊ com algoritmo antigo; + teste de isolamento.
+
+18/11: validar fallback sendVideo 500 -> sendDocument para o mesmo MP4 e chat privado; sem render, sem IA.

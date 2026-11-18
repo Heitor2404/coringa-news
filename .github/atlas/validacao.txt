@@ -41,3 +41,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: reteste idempotente de etapas/focos + utilitários JS puros de câmera e rótulos + contrato de poluição visual; Python+JS+TS.
 
 18/11: rerun clareza geral e idempotência com FFmpeg do runner; sem apt se presente. Python+JS+TS sem render.
+
+18/11: validação FINAL clareza global com setup FFmpeg testado na prévia. Python, Node, TypeScript, sem IA.

@@ -976,6 +976,21 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             v('erro', 'F-CTA-FINAL-AUSENTE', 'fecho',
               'storyboard pediu CTA final, mas não reservou slot: corrigir antes do render')
     if plano.get('formato') == 'atlas':
+        # Toda demonstração técnica precisa de contrato explícito. Sem esse
+        # metadado o teste de continuidade passaria silenciosamente; esta
+        # obrigação vale para QUALQUER mecanismo ATLAS, nunca para DOSSIÊ/NTC.
+        tecnicos = [c for c in plano.get('clipes') or []
+                    if str(c.get('componente', '')).startswith('mecanismo.')]
+        contratos = [e for e in plano.get('explicacoes') or []
+                     if e.get('tipo') == 'mecanismo']
+        for c in tecnicos:
+            if not any(e.get('recurso') == c['componente']
+                       and isinstance(e.get('t0'), (float, int))
+                       and isinstance(e.get('t1'), (float, int))
+                       and c['t0'] - .05 <= e['t0'] < e['t1'] <= c['t1'] + .05
+                       for e in contratos):
+                v('erro', 'F-EXPLICACAO-SEM-CONTRATO', c['componente'],
+                  'demonstração técnica sem contrato explicativo com tempo e recurso compatíveis')
         # A narração ainda explica o MESMO mecanismo: não trocar o desenho por
         # caixas enquanto a peça ou o fluxo continua sendo descrito.
         # O diretor declara o intervalo; a checagem é determinística e reutilizável.

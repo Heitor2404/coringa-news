@@ -651,7 +651,8 @@ def test_legenda_do_atlas_segue_a_referencia_e_vem_do_canal():
     pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
     pal = [{'w': w, 's': i * .4, 'e': i * .4 + .35} for i, w in enumerate(['O', 'CANAL', 'DO', 'PANAMÁ', 'LIGA', 'O', 'ATLÂNTICO'])]
     c = P.props_camada(pl, {'palavras': pal})
-    assert c['estilo']['caixa'] == 'frase' and c['estilo']['max_palavras'] == 3 and c['estilo']['destaque_palavra'] is False
+    assert c['estilo']['caixa'] == 'frase' and c['estilo']['max_palavras'] == 3 and c['estilo']['destaque_palavra'] is True
+    assert c['estilo']['destaque_estatico'] is True and c['estilo']['cor_ativa'] == '#FFD21F'
     txt = ' '.join(w['w'] for w in c['palavras'])
     assert 'Panamá' in txt and 'Atlântico' in txt and 'liga' in txt and txt.startswith('O ')
     assert all(len(g['txt'].split()) <= 4 for g in LS.grupos(c['palavras'], 3))
@@ -804,3 +805,32 @@ def test_previa_curta_atlas_nao_renderiza_episodio_inteiro():
     assert "scripts/atlas_previa_curta.py render" in flow
     assert "python -m src.v4.formatos render" not in flow
     assert "PLANO_DOSSIE" not in flow
+
+
+def test_atlas_legenda_amarela_uma_palavra_chave_por_bloco_sem_mudar_timing():
+    """ATLAS: branco + max. 1 palavra amarela por grupo, sem karaoke."""
+    from src.v4.formatos import legenda_sync as LS
+    pl = {'formato': 'atlas', 'canal': 'coringa', 'titulo': 'Canal do Panamá',
+          'narracao': {'fatos': [{'texto': 'A água sobe por gravidade e o navio chega a 26 metros'}]}}
+    txt = 'a água sobe por gravidade e o de navio chega a 26 metros'.split()
+    pal = [{'w': w, 's': i * .41, 'e': i * .41 + .35, 'hl': False} for i, w in enumerate(txt)]
+    props = P.props_camada({**pl, 'duracao': 7, 'clipes': []}, {'palavras': pal})
+    saida = props['palavras']
+    esperado = LS.caixa_frase(pal, *LS.nomes_do_plano(pl))
+    assert [(p['w'], p['s'], p['e']) for p in saida] == [(p['w'], p['s'], p['e']) for p in esperado]
+    for grupo in LS.grupos(saida, 3):
+        assert sum(p.get('hl', False) for p in saida[grupo['i0']:grupo['i0'] + grupo['n']]) <= 1
+    assert any(p['w'].lower() == 'gravidade' and p['hl'] for p in saida)
+    assert any(p['w'] == '26' and p['hl'] for p in saida)
+    assert not any(p['w'].lower() in ('a', 'por', 'e', 'o', 'de') and p['hl'] for p in saida)
+    ts = (RAIZ / 'motor4/remotion/src/Camada.tsx').read_text()
+    assert 'L.destaque_estatico ? (chave ? L.cor_ativa : L.cor)' in ts
+
+
+def test_atlas_legenda_sem_palavra_forte_continua_branca():
+    from src.v4.formatos import legenda_sync as LS
+    pal = [{'w': w, 's': i * .4, 'e': i * .4 + .33, 'hl': True}
+           for i, w in enumerate(['a', 'e', 'de', 'para'])]
+    pl = {'titulo': 'Teste', 'narracao': {'fatos': []}, 'beats': []}
+    out = LS.destacar_atlas(pal, pl, maximo=3)
+    assert not any(p['hl'] for p in out)

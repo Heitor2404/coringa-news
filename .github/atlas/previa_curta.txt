@@ -11,3 +11,4 @@ Amostra de cinco cortes: revisar subida da eclusa, legenda amarela e créditos n
 Corrigir montagem CFR e verificar cada quadro do MP4 de envio contra os cortes e a base da eclusa.
 
 Validar reutilização pela árvore Git e revisar a eclusa em tempo contínuo.
+Preparar apenas dependências oficiais ausentes antes da prévia contínua.

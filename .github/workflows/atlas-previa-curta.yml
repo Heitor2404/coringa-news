@@ -39,20 +39,31 @@ jobs:
           cache: npm
           cache-dependency-path: motor4/package-lock.json
       - name: FFmpeg, Chrome e fontes do canal
+        timeout-minutes: 8
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji
+          apt_opts=(-o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          # Estes pacotes vêm do Ubuntu. Evita aguardar índices de repositórios de terceiros.
+          if [[ -s /etc/apt/sources.list.d/ubuntu.sources ]]; then
+            apt_opts+=(-o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=-)
+          fi
+          if ! command -v ffmpeg >/dev/null || ! fc-match -f '%{family}' 'Noto Color Emoji' | grep -q 'Noto Color Emoji'; then
+            sudo timeout 150 apt-get "${apt_opts[@]}" update -qq
+            sudo timeout 240 apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg fonts-noto-color-emoji
+          fi
+          ffprobe -version | head -1
           google-chrome --version
           mkdir -p ~/.fonts
           cp motor4/identidade/ttf/*.ttf ~/.fonts/
-          fc-cache -f
+          fc-cache -f ~/.fonts
       - name: Preparar dependencias exatas
         run: |
           pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
           (cd motor4 && npm ci --no-audit --no-fund)
       - name: Instalar navegador do mecanismo V2 para o preflight (sem render)
         timeout-minutes: 9
-        run: timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
+        run: |
+          timeout 260 python -m playwright install chromium --only-shell
+          python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); p.chromium.launch().close(); p.stop()' || timeout 240 python -m playwright install-deps chromium
       - name: Contrato Python e TypeScript (sem render)
         run: |
           python -m pytest -q tests/test_formatos.py

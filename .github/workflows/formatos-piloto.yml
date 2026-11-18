@@ -34,17 +34,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.13", cache: pip }
       - uses: actions/setup-node@v4
-        with: { node-version: "22" }
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
       - name: Sistema (FFmpeg)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji && google-chrome --version
-      - name: motor4 node_modules (cache)
-        uses: actions/cache@v4
-        with: { path: motor4/node_modules, key: "motor4-nm-${{ hashFiles('motor4/package-lock.json') }}" }
       - name: Instalar (versões fixadas; nada novo)
         timeout-minutes: 30
         run: |
           pip install -r requirements.txt
-          (cd motor4 && npm ci --no-audit --no-fund)
+          (cd motor4 && npm ci --prefer-offline --no-audit --no-fund)
           timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
           mkdir -p ~/.fonts && cp motor4/identidade/ttf/*.ttf ~/.fonts/ && fc-cache -f
       - name: Narração (ATLAS reutiliza a cifrada; DOSSIÊ = uma chamada de TTS, cota grátis)
@@ -91,16 +91,24 @@ jobs:
           COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
         run: |
-          python -m src.v4.formatos folhas $PLANO_ATLAS saida_formatos/atlas || echo "folhas ATLAS falharam"
-          grep -q "^so-atlas" .github/formatos/disparo.txt || python -m src.v4.formatos folhas $PLANO_DOSSIE saida_formatos/dossie || echo "folhas DOSSIÊ falharam"
+          rc=0
+          python -m src.v4.formatos folhas "$PLANO_ATLAS" saida_formatos/atlas || rc=1
+          if ! grep -q "^so-atlas" .github/formatos/disparo.txt; then
+            python -m src.v4.formatos folhas "$PLANO_DOSSIE" saida_formatos/dossie || rc=1
+          fi
+          exit "$rc"
       - name: Prévias PRIVADAS ao Telegram (NÃO publicado)
         if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python -m src.v4.formatos telegram $PLANO_ATLAS saida_formatos/atlas || echo "envio ATLAS falhou"
-          grep -q "^so-atlas" .github/formatos/disparo.txt || python -m src.v4.formatos telegram $PLANO_DOSSIE saida_formatos/dossie || echo "envio DOSSIÊ falhou"
+          rc=0
+          python -m src.v4.formatos telegram "$PLANO_ATLAS" saida_formatos/atlas || rc=1
+          if ! grep -q "^so-atlas" .github/formatos/disparo.txt; then
+            python -m src.v4.formatos telegram "$PLANO_DOSSIE" saida_formatos/dossie || rc=1
+          fi
+          exit "$rc"
       - name: Cifrar e publicar no ramo de resultado
         if: always()
         run: |

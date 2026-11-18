@@ -297,3 +297,14 @@ O usuário aprovou a ideia de estudar neo, Branch Education, Wendover Production
 - **Gap concreto confirmado:** o catálogo ativo ATLAS só dispõe de mecanismo `mecanismo.eclusa`, e não de litografia/semicondutor; atual `diretor.py` pede `prova`, mas a escolha visual não garante que a narração tenha referente/ação correspondente. São necessárias mídia real **licenciada e comprovada** e capacidade explicativa antes de substituí-la por rota/card.
 - **Não implementado:** componentes, perspectiva de mapa 3D, guardas de voz, workflow final e render do novo trecho. Não houve mudança na produção, NTC/DOSSIÊ nem publicação.
 - **Próxima prioridade:** aprovar/ajustar a proposta editorial, travar voz anteriormente aprovada, montar storyboard de 22–25s para a Guerra dos Chips, checar mídia EUV comprovada/licença e viabilidade do mecanismo simplificado, e só então implementar em branch isolada e renderizar preview curto real.
+
+
+## 17. 18/11 — neo vídeo completo, decupagem e ATLAS LONG
+
+O usuário enviou `videoplayback.mp4` e confirmou que o vídeo é do **neo**, *How One Ship Caused a Global Traffic Jam*, pedindo estudo minucioso pensando em **futuros vídeos longos no YouTube**. Estudo completo consolidado em `docs/v4/formatos/DECUPAGEM_NEO_SUEZ_ATLAS_LONGFORM_20261118.md` da branch **`atlas-direcao-visual-20261118`**, commit **`ed0fad18b131ebeae555597f33a39e3604dcc05f`**.
+
+- Arquivo de origem: 489,732 s, 640×320 (2:1), 25 fps; 12.242 quadros decodificados; estudo visual com 245 amostras a cada 2 s, mudanças medidas em 0,2 s; 38 transições fortes estimadas (não número total de planos); −17,66 LUFS, −0,59 dBTP, LRA 5,80. **Não foi feita escuta subjetiva verificável da voz.**
+- Decupagem completa: mapa global→satélite→3D do navio→escavadeira/rebocadores reais→rotas alternativas→congestionamento→efeitos logísticos representados com destaque vermelho em portos/contêineres→desbloqueio real→payoff de navio e mapa.
+- Conclusão crítica: neo usa muito **mapa zenital**; a superioridade não exige obrigatoriamente mapa inclinado 3D, e sim **mapa com função, alternância de escala e objetos/mecanismos reais, progressão dentro de long takes (20–35 s)**. Copiar cenas, assets Getty, cor vermelha ou modelo 3D cinzento não é apropriado; adaptar **gramática causal** preservando tokens do Coringa.
+- Proposta longform **não implementada**: preset horizontal 1920×1080 separado do Short vertical 1080×1920, diretor semântico comum e assets com licença, novo tratamento de legenda/créditos, progressão por ação e mudança de entendimento (não regra cega 3 s), voz aprovada, capítulos/narrativa com consequências, prova de produção de 90–120 s antes de vídeo 8–10 min.
+- Nenhum código alterado, sem merge, sem vídeo produzido, sem postagem, NTC/DOSSIÊ/produção intocados.

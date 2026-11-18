@@ -169,7 +169,13 @@ def main(destino: Path) -> dict:
                 not i["licenca_conciliada_com_commons"]
                 or (not i["licenca_commons"]["url"] and not i["licenca"].startswith("Public domain"))
             )
-            print(f"OK {i['id']}: {orig.size}, hash do arquivo salvo {i['sha256_thumb'][:12]}",flush=True)
+            print(json.dumps({
+                "id": i["id"], "thumb_url": i["thumb_url_resolvida"],
+                "sha256_thumb": i["sha256_thumb"],
+                "sha1_original_commons": i.get("sha1_origem_commons"),
+                "largura": orig.width, "altura": orig.height,
+                "licenca": i["licenca"], "licenca_conferida": i["licenca_conciliada_com_commons"],
+            }, ensure_ascii=False), flush=True)
         except Exception as e:
             i["erro"] = str(e)[:500]
             print(f"FALHA {i['id']}: {i['erro']}",flush=True)

@@ -70,6 +70,12 @@
     const chegada = [cx - w / 2, cy - w / aspecto / 2, w];
     return base.map((v, i) => lerp(v, chegada[i], k));
   }
+  function limitarZoom(rect, aspecto, larguraMin) {
+    if (!rect || !(aspecto > 0) || rect[2] >= larguraMin) return rect;
+    const cx = rect[0] + rect[2] / 2;
+    const cy = rect[1] + rect[2] / aspecto / 2;
+    return [cx - larguraMin / 2, cy - larguraMin / aspecto / 2, larguraMin];
+  }
   function planejarRotulos(candidatos, zona, limite = 2, folga = 10) {
     // Ordenação estável: assunto narrado prevalece sobre números de estado e etiquetas secundárias.
     const validos = candidatos.filter(c => c.visivel && c.w > 0 && c.h > 0 && c.w <= zona.dir - zona.esq)
@@ -98,7 +104,7 @@
     return resultado;
   }
   V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber,
-    cameraDidatica, planejarRotulos };
+    cameraDidatica, planejarRotulos, limitarZoom };
 
   /* tokens da identidade (os mesmos de estilo.css): uma escala tipográfica, um ritmo, uma espessura de linha */
   V2.T = {

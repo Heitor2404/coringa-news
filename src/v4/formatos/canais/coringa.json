@@ -327,5 +327,13 @@
     "largura_min": 520,
     "entra_px": 18,
     "sombra": "0 16px 38px rgba(0,0,0,.45)"
+  },
+  "direcao_visual": {
+    "_nota": "Parâmetros de clareza para QUALQUER mecanismo ATLAS. Abertura e identidade permanecem as aprovadas. Não sobrescrever por episódio.",
+    "rotulos_em_foco": 2,
+    "rotulos_sem_foco": 3,
+    "fonte_rotulo_px": 34,
+    "largura_contextual": 1240,
+    "transicao_foco_s": 0.7
   }
 }

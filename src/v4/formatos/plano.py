@@ -353,6 +353,14 @@ def cobre(ri: dict, roi) -> bool:
     return ri['bbox'][0] <= roi[0] and ri['bbox'][1] <= roi[1] and ri['bbox'][2] >= roi[2] and ri['bbox'][3] >= roi[3]
 
 
+def opacidade_raster(zoom: float, de=None, ate=None) -> float:
+    """Espelha Palco.tsx/rampa: ter raster no manifesto não garante uma imagem visível no zoom atual."""
+    def limitado(v: float) -> float:
+        return max(0.0, min(1.0, v))
+    return (1.0 if de is None else limitado((zoom - (de - .5)) / .8)) * \
+           (1.0 if ate is None else limitado(((ate + .3) - zoom) / .8))
+
+
 def teto_zoom(p: dict, roi) -> float | None:
     ns = [ri['nitido_ate'] for ri in bases_do_plano(p) if cobre(ri, roi)]
     return max(ns) if ns else None
@@ -824,14 +832,18 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                 # mapa GEOGRÁFICO exige base cartográfica licenciada (relevo/satélite) que cubra o território e seja
                 # nítida no zoom usado — SEMPRE (antes, sem rasters a checagem era pulada e saía mapa vetorial chapado)
                 cob = [ri for ri in rasters if cobre(ri, b['roi'])]
+                ativos = [(r, ri) for r, ri in zip(plano.get('rasters') or [], rasters)
+                          if cobre(ri, b['roi']) and opacidade_raster(cam['zoom'], r.get('de'), r.get('ate')) > .02]
                 # a base cobre a TELA inteira (não só o território): sem isso aparece a borda do recorte (reuso mundo, 17/11)
                 tela = tela_lonlat(cam)
                 if cob and not any(cobre(ri, tela) for ri in rasters) and (fins[b['id']] - .05 == t or recua):
                     v('erro', 'F-MAPA-BORDA-DA-BASE', b['id'], f"a tela mostra além da base cartográfica ({', '.join(f'{x:.0f}' for x in tela)})")
                 if not cob:
                     v('erro', 'F-MAPA-SEM-BASE', b['id'], 'mapa geográfico sem base cartográfica licenciada cobrindo o território (contorno vetorial chapado não é mapa ATLAS)')
-                elif not any(ri['nitido_ate'] >= cam['zoom'] - 1e-6 for ri in cob):
-                    v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} além da nitidez da base (até {max(ri['nitido_ate'] for ri in cob):.2f})")
+                elif not ativos:
+                    v('erro', 'F-MAPA-BASE-INVISIVEL', b['id'], f"há rasters no plano, mas todos têm opacidade zero no zoom {cam['zoom']:.2f} (limites de/ate); a tela ficaria chapada")
+                elif not any(ri['nitido_ate'] >= cam['zoom'] - 1e-6 for _, ri in ativos):
+                    v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} além da nitidez das bases VISÍVEIS (até {max(ri['nitido_ate'] for _, ri in ativos):.2f})")
     # zonas fixas da identidade (marca no topo, faixa de legenda): nenhuma caixa entra nelas (colisão de 17/11)
     ZN = zonas(plano['formato'])
     for L in Ls:

@@ -51,12 +51,22 @@
   }
   /* DIREÇÃO VISUAL DIDÁTICA — geometria e prioridades reutilizáveis por QUALQUER mecanismo.
      Recebe posição semântica e contexto do componente, nunca nome, assunto ou coordenadas de episódio. */
-  function cameraDidatica(base, alvo, contexto, aspecto, progresso = 1, largura = 1240) {
+  function cameraDidatica(base, alvo, contexto, aspecto, progresso = 1, largura = 1240, protagonista = null) {
     if (!alvo || !contexto || !base || !(aspecto > 0)) return base;
-    const k = eo(progresso), w = Math.max(900, largura);
-    // Foco com contexto: aproxima a peça narrada, mas conserva o sistema causal no enquadramento.
-    const cx = .35 * alvo[0] + .65 * contexto[0];
-    const cy = .35 * alvo[1] + .65 * contexto[1];
+    const k = eo(progresso);
+    // Caso o processo tenha protagonista (navio, peça móvel, personagem),
+    // enquadrar AO MESMO TEMPO ele inteiro, o fluxo explicado e o contexto.
+    // Geometria declarada no componente; o episódio só aponta o alvo semântico.
+    let cx = .35 * alvo[0] + .65 * contexto[0], cy = .35 * alvo[1] + .65 * contexto[1];
+    let w = Math.max(900, largura);
+    if (protagonista) {
+      const x0 = Math.min(alvo[0] - 75, protagonista[0] - 245, contexto[0] - 80);
+      const x1 = Math.max(alvo[0] + 75, protagonista[0] + 245, contexto[0] + 80);
+      const y0 = Math.min(alvo[1] - 75, protagonista[1] - 185, contexto[1] - 80);
+      const y1 = Math.max(alvo[1] + 75, protagonista[1] + 80, contexto[1] + 80);
+      cx = (x0 + x1) / 2; cy = (y0 + y1) / 2;
+      w = Math.max(w, x1 - x0 + 130, (y1 - y0 + 130) * aspecto);
+    }
     const chegada = [cx - w / 2, cy - w / aspecto / 2, w];
     return base.map((v, i) => lerp(v, chegada[i], k));
   }

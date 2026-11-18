@@ -116,3 +116,19 @@ O usuário pode enviar:
 ### Aviso sobre limite de conversa
 
 O usuário pediu que **o assistente o avise quando a conversa estiver ficando longa**, para preparar a passagem. Não há medidor confiável de tokens restantes da interface. Por isso, manter **este documento atualizado por marcos**, sem aguardar o limite, e, ao perceber sinais de contexto longo ou troca iminente de chat, avisar explicitamente e indicar este arquivo.
+
+
+## 9. Atualização de 18/11 — curadoria real de fotos para a guerra dos chips
+
+Na branch experimental **`atlas-biblioteca-20261118`**, após a criação do catálogo inicial, foi executada a primeira curadoria de imagens reais de terceiros para o tema **GUERRA DOS CHIPS**. As fontes originais foram verificadas na Wikimedia Commons; ainda NÃO foram incorporadas à produção, e continuam com `estado: candidato`:
+- TSMC Fab 18 em Taiwan, exterior (4300streetcar, CC BY 4.0, 2025).
+- Sede ASML em Veldhoven (A ansems, domínio público, 2008). **NÃO é fotografia de equipamento EUV**.
+- Fábrica SMIC em Shenzhen (Lhzss8, CC BY-SA 4.0, 2022; verificar obrigação share-alike na edição).
+- Wafer de silício em close (Le hollandais volant, CC BY 4.0, 2017); não prova marca/modelo/nó.
+- Sala limpa de microfabricação NASA Glenn (domínio público); não é interior da TSMC/ASML/SMIC.
+
+Arquivos criados: `src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json`, `scripts/atlas_biblioteca.py` (consulta offline sem uso produtivo), `scripts/atlas_acervo_chips_preview.py` (baixar miniaturas e auditar), `.github/workflows/atlas-acervo-chips-preview.yml`; testes ampliados para **7 testes** de gate/isolamento.
+
+**Execução CI de download/preview:** `44368431700` — SUCESSO, 5/5 miniaturas recuperadas, hashes e dimensões conferidos, galeria + relatório + créditos salvos em artifact `atlas-chips-acervo-candidato` (ID `14456888348`, retenção 7 dias). A primeira execução `44368262210` falhou por bug no verificador de assinatura de JPEG, já corrigido em `4a027c6c`. O SHA da miniatura NÃO equivale ao do arquivo original. Precisa analisar visualmente fotos, resolver imagem real do equipamento EUV (se apropriado) e só então decidir importação ao índice comprovado.
+
+**Branch `atlas-piloto-chips-20261118` continua separada; não declarar piloto renderizado.** A mudança foi apenas na biblioteca. Documento operacional: `docs/v4/formatos/BIBLIOTECA_ATLAS_OPERACIONAL.md` da branch da biblioteca. O vídeo do Panamá e produção estável não foram alterados.

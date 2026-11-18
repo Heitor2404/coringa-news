@@ -262,8 +262,20 @@ def enviar(saida: Path) -> None:
     if r["tipo"] == "trecho contínuo":
         a, b = r["janelas"][0]["inicio_original_s"], r["janelas"][-1]["fim_original_s"]
         titulo = f"ATLAS · Canal do Panamá | Eclusa em sequência ({a:.1f}–{b:.1f} s do episódio). Prévia privada."
-    previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
-                         ("video", mp4))
+    try:
+        previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
+                             ("video", mp4))
+    except previa_telegram.EnvioRecusado as exc:
+        # Falha real 44324275229: a API do Telegram retornou HTTP 500 três vezes
+        # depois de 748 quadros, áudio e MP4 terem passado. Não perder a entrega
+        # por erro do método sendVideo: enviar o MESMO arquivo já conferido como
+        # documento, exclusivamente ao mesmo chat privado autorizado.
+        if "sendVideo: 500" not in str(exc):
+            raise
+        print("ATLAS_TELEGRAM_FALLBACK_DOCUMENT 500 sendVideo; MP4 inalterado", flush=True)
+        previa_telegram._api("sendDocument",
+                             {"chat_id": chat, "caption": titulo + " (MP4 anexado como arquivo)"},
+                             ("document", mp4))
     for path, descricao in [
         (saida / "quadros" / "styleframes.jpg", "ATLAS V1 — quadros visuais (privado)"),
         (saida / "quadros" / "celular.jpg", "ATLAS V1 — leitura em celular (privado)"),

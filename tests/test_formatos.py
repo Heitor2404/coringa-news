@@ -937,7 +937,7 @@ def test_atlas_resolucao_de_tempos_do_fluxo_no_clipe():
     from src.v4.formatos import plano
     orig = copy.deepcopy(ATLAS)  # forçar resolução das âncoras brutas neste teste
     orig.pop('_resolvido', None)
-    orig['clipes'][0]['params']['tempos'] = [31.6, 36.8, 49.2]
+    orig['clipes'][0]['params']['tempos'] = [31.6, 36.8, 47.5]
     orig['clipes'][0]['params']['destaques_fluxo'] = copy.deepcopy(ATLAS_BRUTO['clipes'][0]['params']['destaques_fluxo'])
     pl = plano.resolver_tempos(orig, [])
     c, = pl['clipes']
@@ -1089,11 +1089,38 @@ def test_focos_e_tempos_do_mecanismo_idempotentes_em_plano_resolvido():
 
     bruto = copy.deepcopy(ATLAS)
     bruto.pop('_resolvido', None)
-    bruto['clipes'][0]['params']['tempos'] = [31.6, 36.8, 49.2]
+    bruto['clipes'][0]['params']['tempos'] = [31.6, 36.8, 47.5]
     bruto['clipes'][0]['params']['destaques_fluxo'] = []
     bruto['clipes'][0]['params']['focos'] = [
         {'t': 43.49, 'alvo': 'lago', 'rotulo': 'ÁGUA DO LAGO'}
     ]
     novo = P.resolver_tempos(bruto, [])['clipes'][0]['params']
     assert novo['focos'][0]['t'] == 12.0
-    assert novo['tempos'] == [.11, 5.31, 17.71]
+    assert novo['tempos'] == [.11, 5.31, 16.01]
+
+
+def test_atlas_fiscal_exige_desfecho_fisico_completo_para_qualquer_clipe_aprovado():
+    """O motor não pode cortar após abrir a comporta, sem mostrar a saída."""
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(pl)
+    clip, = pl['clipes']
+    final = P.CFG['formatos']['atlas']['contratos_movimento']['mecanismo.eclusa']
+    assert final['janela_final_min_s'] > 2
+    assert clip['t1'] - clip['t0'] - clip['params']['tempos'][final['marco_acao_final']] >= final['janela_final_min_s']
+
+    clip['params']['tempos'][2] = (clip['t1'] - clip['t0']) - .8
+    assert 'F-ACAO-FINAL-TRUNCADA' in _regras(pl)
+    clip['params']['tempos'] = []
+    assert 'F-ACAO-FINAL-SEM-MARCO' in _regras(pl)
+
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(DOSSIE, _pal(DOSSIE['narracao']['texto']))
+
+
+def test_atlas_garantia_da_saida_nao_altera_abertura_ou_mecanismos_ausentes():
+    pl = copy.deepcopy(ATLAS)
+    assert pl['clipes'][0]['t0'] > 3
+    assert not any(c['componente'].startswith('mecanismo.') and c['t0'] < 3 for c in pl['clipes'])
+    p = copy.deepcopy(ATLAS)
+    p['clipes'] = []
+    p['explicacoes'] = []
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(p)

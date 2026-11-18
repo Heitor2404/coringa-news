@@ -260,17 +260,16 @@
     {
       "id": "b2b-wafer",
       "t": "@wafers-0.2",
-      "composicao": "atlas.tecnica",
+      "composicao": "atlas.painel",
       "camadas": [
         {
           "id": "fotografia-wafer",
           "componente": "dossie.documentCard",
-          "slot": "corpo",
+          "slot": "painel",
           "t0": "@wafers-0.15",
           "t1": "@mas-0.35",
           "p": {
             "estilo": "registro",
-            "inclina": 0,
             "asset": "commons:Silicon_wafer_close_view.jpg",
             "meta": [
               "WAFER DE SILÍCIO · FOTO ILUSTRATIVA",
@@ -281,9 +280,9 @@
         {
           "id": "wafers-etiqueta",
           "componente": "editorial.statCard",
-          "slot": "etiqueta",
+          "slot": "nota",
           "t0": "@wafers",
-          "t1": "@propria-0.25",
+          "t1": "@participação-0.75",
           "p": {
             "estilo": "pilula",
             "valor": "UM WAFER DE SILÍCIO",
@@ -291,22 +290,10 @@
           }
         },
         {
-          "id": "tsmc-precisao",
-          "componente": "editorial.statCard",
-          "slot": "etiqueta",
-          "t0": "@propria",
-          "t1": "@participação-0.3",
-          "p": {
-            "estilo": "pilula",
-            "valor": "RECEITA DA PRÓPRIA TSMC",
-            "fato": "f-tsmc"
-          }
-        },
-        {
           "id": "cuidado-quota",
           "componente": "editorial.statCard",
-          "slot": "etiqueta",
-          "t0": "@participação",
+          "slot": "nota",
+          "t0": "@participação+0.1",
           "t1": "@mas-0.35",
           "p": {
             "estilo": "pilula",

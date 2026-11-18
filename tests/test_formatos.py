@@ -1163,12 +1163,15 @@ def test_atlas_foto_prova_deve_usar_painel_reto_sem_falsificar_mecanismo():
              }]
     assert len(fotos) == 2
     wafer = next(L for L in fotos if L["id"] == "fotografia-wafer")
-    assert any(b["id"] == "b2b-wafer" and b["composicao"] == "atlas.painel"
+    assert any(b["id"] == "b2b-wafer" and b["composicao"] == "atlas.fotografia"
                and wafer in b["camadas"] for b in pl["beats"])
     assert wafer["slot"] == "foto" and "inclina" not in wafer["p"]
-    assert P.COMP["atlas.painel"]["slots"]["foto"][3] >= 550  # já resolvido para [x,y,w,h] pelo layout
+    assert P.COMP["atlas.fotografia"]["slots"]["foto"][3] >= 600  # já resolvido para [x,y,w,h] pelo layout
+    assert P.COMP["atlas.fotografia"].get("quadro") is None
+    assert P.COMP["atlas.fotografia"]["palco"] == "mapa"
+    assert P.COMP["atlas.fotografia"]["slots"]["foto"][1] + P.COMP["atlas.fotografia"]["slots"]["foto"][3] < P.COMP["atlas.fotografia"]["slots"]["nota"][1]
     assert not [e for e in P.validar(pl) if e["regra"] in {
-        "F-TECNICO-SEM-MECANISMO", "F-ESTILO-NO-EPISODIO", "F-COLISAO"
+        "F-TECNICO-SEM-MECANISMO", "F-ESTILO-NO-EPISODIO", "F-COLISAO", "F-COBRE-TERRITORIO"
     }]
     ts = (RAIZ / "motor4/remotion/src/formatos/Primitivas.tsx").read_text(encoding="utf-8")
     assert "const inc = c.P.formato === 'atlas' ? 0" in ts

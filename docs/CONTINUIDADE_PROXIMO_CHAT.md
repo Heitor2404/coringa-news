@@ -132,3 +132,33 @@ Arquivos criados: `src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json
 **Execução CI de download/preview:** `44368431700` — SUCESSO, 5/5 miniaturas recuperadas, hashes e dimensões conferidos, galeria + relatório + créditos salvos em artifact `atlas-chips-acervo-candidato` (ID `14456888348`, retenção 7 dias). A primeira execução `44368262210` falhou por bug no verificador de assinatura de JPEG, já corrigido em `4a027c6c`. O SHA da miniatura NÃO equivale ao do arquivo original. Precisa analisar visualmente fotos, resolver imagem real do equipamento EUV (se apropriado) e só então decidir importação ao índice comprovado.
 
 **Branch `atlas-piloto-chips-20261118` continua separada; não declarar piloto renderizado.** A mudança foi apenas na biblioteca. Documento operacional: `docs/v4/formatos/BIBLIOTECA_ATLAS_OPERACIONAL.md` da branch da biblioteca. O vídeo do Panamá e produção estável não foram alterados.
+
+
+## 10. Continuação autônoma — auditoria da biblioteca e teste da guerra dos chips
+
+Em 18/11/2026 o usuário autorizou que o assistente continue **autonomamente nas branches experimentais**, corrigindo problemas sem pedir aprovação a cada alteração; isso NÃO revoga a necessidade de revisão visual antes de publicar ou de proteger ATLAS estável, NTC e DOSSIÊ.
+
+### Biblioteca de mídia — branch `atlas-biblioteca-20261118`
+
+- Catálogo ampliado para **6 mídias candidatas**, com contêineres aéreos da ASML fotografados em Taiwan, 2025, licença CC BY 4.0. **Não há comprovação do conteúdo dos contêineres.** Ver `src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json`.
+- Mídia `How EUV lithography works.webm` do IBM Research **não liberada**: página Commons assinala `License review needed`. Fotografia histórica do LLNL também não é scanner ASML moderno.
+- Galeria original recomprimia JPEG e guardava SHA256 **da miniatura pré-recompressão**, divergindo do arquivo realmente salvo. Corrigido: `scripts/atlas_acervo_chips_preview.py` mantém bytes baixados, mede SHA256 do arquivo, registra metadados da licença do Commons; CI reconcilia CC BY, CC BY-SA e domínio público. Não basta a palavra `licenciado` sem as condições do Commons.
+- Consulta `scripts/atlas_biblioteca.py`: agora `liberado_para_render(item, arquivo_local)` **exige arquivo real, SHA-256 conferido, licença/crédito, dimensão, correspondência e aprovação editorial**, não se satisfaz com hash inventado no JSON. Ainda NÃO importada pelo motor.
+- CI comprovada **`44371334155`: sucesso, 6/6 imagens baixadas, seis hashes verificados byte a byte, licença registrada conciliada**. **`44370287354`: sucesso, 7 testes**. Os artefatos são temporários, retenção 7 dias.
+- Documento operacional atualizado `docs/v4/formatos/BIBLIOTECA_ATLAS_OPERACIONAL.md` na branch de biblioteca.
+
+### Piloto guerra dos chips — branch `atlas-piloto-chips-20261118`
+
+- Criado `docs/v4/formatos/PILOTO_CHIPS_BRIEF_20261118.md` com narrativa ATLAS cartográfica, storyboard de composições existentes, e fontes primárias TSMC/ASML/BIS. Corrige risco de confundir **74% da RECEITA DE WAFERS da TSMC em 2025** com quota mundial e tratar restrições de 2022 como regras imutáveis; BIS atualizou políticas em janeiro/novembro de 2026. O plano legado `planos/reuso/atlas_chips.json` ainda é **teste geométrico com voz sintética e fatos não homologados para publicação**.
+- Criado `.github/workflows/atlas-chips-reuso.yml`: **somente testes offline, quadros reais, voz sintética de teste** — não chama IA, não gera MP4 nem publica; usa catálogo e render ATLAS existentes.
+- Primeira execução **`44370810497` SUCESSO**: **86 testes** do motor, preflight **23 itens sem falhas**, **27 quadros renderizados, 0 erros bloqueadores**, mas **81 avisos `A-CREDITO-RODAPE`**: a posição muito baixa dos créditos pode colocá-los sob UI de TikTok/Reels/Shorts em todos os quadros. **Não chamar de homologação visual ou de publicação.** Ver workflow e relatório.
+- Auditoria revelou que a posição baixa de crédito do ATLAS foi **decisão visual consciente**: `src/v4/formatos/plano.py:zonas()` força `creditos` para o rodapé `H-160`, enquanto `layout.faixa_inferior()` calcula a área segura unificada (base aprox. `H-480`). **Não elevar créditos globalmente às cegas** — prejudicaria o enquadramento que usuário aprovou. Registrar risco e validar no aplicativo/plataformas com usuário antes de publicar; possível solução: tratar créditos/cartelas específicas por plataforma mantendo estética.
+- Adicionado relatório por categoria de aviso e estado `AGUARDANDO_APROVACAO_HUMANA` em `scripts/formatos_reuso.py` apenas na branch de chips; workflow reduz artefato de ~153 MB para apenas folhas e relatórios, economizando armazenamento. Revalidação acionada **`44372220176`** (estava em andamento na última consulta; confirmar resultado no GitHub).
+
+### Prioridades de continuação
+
+1. Ver o artefato de **folhas de quadros** da guerra dos chips e decidir qualidade visual/uso de mapa. Lembrar que este teste **não tem fotos definitivas nem voz real** e pode conter fatos do fixture legado.
+2. Resolver o risco dos **81 avisos de crédito** sem desfazer identidade visual aprovada; não ocultar atribuições obrigatórias sob interface.
+3. Integrar novas mídias somente após conferir licença/proveniência/conteúdo real, hashes e teste de alinhamento com frases; separar mídia candidata de comprovada.
+4. Produzir o **verdadeiro piloto audiovisual** com roteiro factual atualizado, voz real e prévia privada, sem publicação, usando o mesmo padrão ATLAS (mapas, cards, fotos e motions existentes).
+5. Preservar branch produtiva, NTC/DOSSIÊ e atualizar esta passagem sempre que mudar o estado.

@@ -21,3 +21,9 @@ Render ÚNICO do ATLAS consolidado (pedido do Heitor, 17/11 17:56 "ATLAS — con
 preflight local verde (28/28), 40 quadros renderizados sem problema contra TikTok/Reels/Shorts, 54 testes de formato +
 317 V3/V4 verdes; reuso provado sem render em 2 histórias (chips 27 quadros, história 23 quadros, 0 problemas).
 Narração cifrada reutilizada (zero IA). DOSSIÊ congelado. 2026-11-17T22:15:16Z. Não repetir.
+
+so-atlas
+Autorizacao do usuario (17/11 23:04 BRT): iniciar validacao e uma previa privada apos testes.
+Tests ATLAS isolados: 60/60 verdes, Actions 44220921517.
+Um render ATLAS Panama atualizado; narracao cifrada reutilizada; sem Claude Code.
+Nao publicar. DOSSIÊ e NTC congelados, main intocada.

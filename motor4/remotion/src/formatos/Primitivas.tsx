@@ -358,7 +358,7 @@ export const DocumentCard: React.FC<{ c: Ctx }> = ({ c }) => {
       {est === 'documento' && <div style={{ position: 'absolute', left: 60, top: -10, width: 34, height: 96, border: '5px solid #B9BEC6', borderRadius: 18, borderBottomColor: 'transparent',
         boxShadow: '0 3px 6px rgba(0,0,0,.4)' }} />}
       <div style={{ paddingTop: 14, ...(est === 'documento' ? { marginTop: 14, padding: '10px 16px', background: C.papel, display: 'inline-block', boxShadow: '0 10px 24px rgba(0,0,0,.5)' } : {}) }}>
-        {meta.map((m: string, i: number) => <div key={i} data-linha={i} data-meta={i === meta.length - 1 ? 'credito' : undefined} style={{ fontFamily: FD(c), fontSize: 24, lineHeight: '36px', color: C.tinta,
+        {meta.map((m: string, i: number) => <div key={i} data-linha={i} data-meta={i === meta.length - 1 ? 'credito' : undefined} style={{ fontFamily: FD(c), fontSize: c.P.formato === 'atlas' ? 28 : 24, lineHeight: '36px', color: C.tinta,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: i === 0 ? 700 : 400 }}>{m}</div>)}
       </div>
       {carimbo > 0 && <div style={{ position: 'absolute', right: 30, top: cab + 40, padding: '8px 18px', border: `5px solid ${C.alerta}`, color: C.alerta, fontFamily: FD(c), fontWeight: 700,

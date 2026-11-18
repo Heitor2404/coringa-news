@@ -68,3 +68,21 @@ O vídeo IBM `How EUV lithography works.webm` está no Commons com **License rev
 - Preservar a posição baixa já aprovada **até inspecionar os quadros nas interfaces reais**, e prever atribuição obrigatória devidamente acessível no vídeo ou na descrição conforme licença/plataforma. Não mascarar o problema com um falso `100% aprovado`.
 - Teste feito com **voz sintetizada de teste**, não narração do vídeo final; os fatos do plano legado não estão aprovados editorialmente.
 - Revisão de workflow posterior (`6d11ae5e`): os artefatos passam a preservar **somente folhas e relatórios**, evitando ocupar cerca de 150MB com cada quadro e cada máscara duplicados.
+
+
+## Fotografia real no teste experimental (18/11 — após auditoria visual)
+
+O segundo teste cartográfico estava tecnicamente verde (34 quadros, zero bloqueadores em `44379818856`), mas a auditoria direta da folha `styleframes.jpg` revelou **ausência de evidências fotográficas** e excesso de composições mapa + card. Para corrigir usando o **catálogo visual existente**, o plano em `atlas_chips_factual_2026.json` passou a conter:
+
+1. **TSMC Fab 18, Tainan** — `commons:TSMC_Fab_18_May_2025.jpg`, retrato real ancorado nas coordenadas da fábrica em Taiwan; autor `4300streetcar`, CC BY 4.0, [página do Commons](https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg). *Mostra exterior do complexo, não a capacidade ou percentual de fabricação.* Exibir no início da explicação sobre TSMC, sem cobrir o card dos dados.
+2. **Wafer de silício em close** — `commons:Silicon_wafer_close_view.jpg`, foto real ilustrativa, autor `Le hollandais volant`, CC BY 4.0, [página do Commons](https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg). *Não implica origem, fabricante, modelo ou processo de fabricação de um chip específico.* Exibir dentro de `atlas.tecnica` + `dossie.documentCard`, **estilo registro, inclinação 0**, durante a palavra `wafers`, com indicação explícita de foto ilustrativa e créditos.
+
+**A integridade do binário é verificada pelo SHA256 da miniatura aprovada de 960 px**, registrada em `src/v4/biblioteca_comprovada.json` **somente nesta branch**; os hashes foram coletados na execução do Commons `44380034537`, que verificou também as licenças. A miniatura foi escolhida deliberadamente para um uso pequeno em quadro, não como filmagem full-HD. Os originais de 21+ MB não são necessários para o retrato circular; se futuramente usar a foto grande, será preciso baixar e auditar o binário ORIGINAL separadamente.
+
+Imagens candidatas que **não** entraram no teste: sede ASML (não é scanner EUV), placa noturna SMIC, sala limpa antiga NASA, contêineres ASML em Taiwan (não comprovam conteúdo). Não encaixar mídia só para aumentar a contagem de fotos.
+
+Aprovação: **prévia privada experimental apenas**. O usuário ainda não aprovou o novo MP4 e não houve liberação para publicação. Créditos precisam ser conferidos dentro das plataformas; CC BY 4.0 requer licença, autor, fonte e indicação de adaptação/re-enquadramento (no vídeo e/ou descrição conforme exigências). O controle de origem falha fechado se o conteúdo mudar.
+
+### Próxima validação
+
+Workflow `.github/workflows/atlas-chips-reuso.yml` exige que ambas as imagens sejam **realmente baixadas e usadas**, com `origem_conferida=True`, licença CC BY 4.0 e dimensões coerentes. A conferência de quadros deve identificar possíveis conflitos entre o mapa, foto circular da fábrica, foto editorial do wafer, legendas e fontes. Não substituir inspeção humana por CI verde.

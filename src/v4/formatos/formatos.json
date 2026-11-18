@@ -413,7 +413,29 @@
       "uso": "fecho: síntese sobre o território inteiro",
       "_nota_cta": "Dois elementos não conflitantes: manchete no topo + CTA compacto na banda dedicada inferior; CTA não conta como segunda história"
     },
-    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
+    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones.",
+    "atlas.fotografia": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": null,
+      "veu": "base",
+      "movimento": "fixo",
+      "slots": {
+        "foto": {
+          "y": 445,
+          "h": 650,
+          "w_max": 920
+        },
+        "nota": {
+          "y": 1130,
+          "h": 88
+        }
+      },
+      "max_camadas": 2,
+      "pinos": false,
+      "referencia": "Foto real com autoria e licença, centrada e sem inclinação; o mapa geográfico pode ceder o foco enquanto a evidência fotográfica é examinada.",
+      "uso": "Evidência fotográfica verificável que ocupa o palco central sem sobrepor uma área cartográfica prometida; não exige mecanismo nem ilustrações fictícias."
+    }
   },
   "zonas_por_formato": {
     "atlas": {

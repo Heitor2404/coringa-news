@@ -65,7 +65,12 @@ function medir(frame: number) {
     const h = el as HTMLElement, s = getComputedStyle(h);
     if ((s.overflow === 'hidden' || s.textOverflow === 'ellipsis') && h.scrollWidth > h.clientWidth + 2) out.cortados.push({ camada: el.getAttribute('data-meta'), txt: h.textContent!.trim().slice(0, 50) });
     const r = h.getBoundingClientRect();
-    out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r), txt: h.textContent!.trim().slice(0, 400), datasets: (el.getAttribute('data-atribuicao') || '').split(',').filter(Boolean) }]);
+    // A caixa pode ter 66px enquanto o TEXTO REAL quebra em 4+ linhas e invade a legenda.
+    // Medir o filho visível impede que a atribuição pareça "dentro da faixa" só pela moldura.
+    const textoReal = el.getAttribute('data-meta') === 'atribuicao' ? el.querySelector('span')?.getBoundingClientRect() : null;
+    out.metas = (out.metas || []).concat([{ tipo: el.getAttribute('data-meta'), caixa: ret(r),
+      ...(textoReal ? { texto_caixa: ret(textoReal) } : {}),
+      txt: h.textContent!.trim().slice(0, 400), datasets: (el.getAttribute('data-atribuicao') || '').split(',').filter(Boolean) }]);
   });
   // cartões (sistema único): centro desenhado × centro do slot declarado, e rotação (nunca inclinado)
   out.cartoes = [];

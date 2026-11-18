@@ -51,7 +51,7 @@ jobs:
           (cd motor4 && npm ci --no-audit --no-fund)
       - name: Instalar navegador do mecanismo V2 para o preflight (sem render)
         timeout-minutes: 9
-        run: python -m playwright install chromium
+        run: timeout 420 python -m playwright install --with-deps chromium || timeout 300 python -m playwright install chromium
       - name: Contrato Python e TypeScript (sem render)
         run: |
           python -m pytest -q tests/test_formatos.py

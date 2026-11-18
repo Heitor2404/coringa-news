@@ -21,3 +21,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: validar amostra visual curta ATLAS: Python, Remotion tipagem, sem render completo.
 
 18/11: ATLAS amarelo semantico, uma palavra por grupo, sem karaoke; validar testes Python + TypeScript, nenhum render.
+
+18/11: rerun destaque amarelo: numeros curtos (26) antes de stopwords, sem karaoke. Zero render.

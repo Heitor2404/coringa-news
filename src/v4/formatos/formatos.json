@@ -77,6 +77,13 @@
       "alvos_componentes": {
         "mecanismo.eclusa": ["lago", "aqueduto", "paredes", "piso"]
       },
+      "contratos_movimento": {
+        "mecanismo.eclusa": {
+          "marco_acao_final": 2,
+          "janela_final_min_s": 2.8,
+          "acao_final": "nivelar, abrir a comporta e mostrar a saída do navio"
+        }
+      },
       "max_componentes_distintos": 7
     },
     "dossie": {

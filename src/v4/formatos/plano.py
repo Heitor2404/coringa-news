@@ -174,12 +174,20 @@ def inserir_cta(p: dict) -> None:
     dur = float(p['duracao'])
     rev = [L['t0'] for L in ult['camadas']] + [x['t'] for L in ult['camadas'] for x in (L.get('p') or {}).get('linhas') or [] if isinstance(x.get('t'), (int, float))]
     ini = max(max(rev, default=0) + .8, dur - K.get('max_s', 2.2))
+    sobreposto = False
     if dur - .05 - ini < K.get('min_s', 1.2):
-        p['cta_decisao'] = f'sem CTA: só {dur - ini:.1f} s depois da revelação final (mín. {K.get("min_s", 1.2)} s)'
-        return
+        if p.get('formato') == 'atlas' and K.get('pode_sobrepor_fecho') and dur >= K.get('min_s', 1.2) + .25:
+            # A conclusão pode ocupar o último segundo da voz. O CTA usa o slot reservado abaixo do título:
+            # aparece COM o fecho, sem cortar a narração nem esticar o vídeo.
+            ini = dur - .05 - K.get('min_s', 1.2)
+            sobreposto = True
+        else:
+            p['cta_decisao'] = f'sem CTA: só {dur - ini:.1f} s depois da revelação final (mín. {K.get("min_s", 1.2)} s)'
+            return
     ult['camadas'].append({'id': 'cta', 'componente': 'editorial.cta', 'slot': 'cta', 't0': round(ini, 2), 't1': round(dur - .05, 2),
                            'p': {'texto': K.get('texto'), 'handle': K.get('handle')}})
-    p['cta_decisao'] = f'CTA de {ini:.1f} a {dur:.1f} s'
+    p['cta_decisao'] = (f'CTA sobreposto ao fecho em slot distinto de {ini:.1f} a {dur:.1f} s'
+                       if sobreposto else f'CTA de {ini:.1f} a {dur:.1f} s')
 
 
 # ---------------------------------------------------------------- câmera geográfica (mesma matemática do Palco.tsx)
@@ -278,7 +286,7 @@ def roi_tela(cam: dict, roi) -> dict:
 
 def tokens_canal(can: dict) -> dict:
     """tokens do canal que o palco/primitivas usam — UMA lista (antes, três cópias esqueciam 'papel' e 'selo')"""
-    return {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta', 'papel', 'selo', 'titulo') if k in can}
+    return {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'cartao_atlas', 'pino', 'cta', 'papel', 'selo', 'titulo') if k in can}
 
 
 def estilo_legenda(pl: dict) -> dict:

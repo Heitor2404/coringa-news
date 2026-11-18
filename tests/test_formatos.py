@@ -707,3 +707,12 @@ def test_marca_atlas_dentro_do_feed_e_recorte_e_bloqueador():
     assert any(e['regra'] == 'R-MARCA-RECORTE-FEED' and not e.get('aviso') for e in erros)
     m['camada']['marca']['y'] = marco
     assert not any(e['regra'] == 'R-MARCA-RECORTE-FEED' for e in V.checar_plataformas(m, pl, 1.0))
+
+
+def test_preflight_bloqueia_marca_cortada_sem_render(monkeypatch):
+    """Recorte do feed deve falhar em P.validar ANTES da fase cara de quadros/render."""
+    from src.v4.formatos import layout
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-MARCA-RECORTE-FEED' not in {x['regra'] for x in P.validar(pl)}
+    monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_y', 232)
+    assert 'F-MARCA-RECORTE-FEED' in {x['regra'] for x in P.validar(pl)}

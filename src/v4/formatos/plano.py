@@ -844,6 +844,19 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                     v('erro', 'F-MAPA-BASE-INVISIVEL', b['id'], f"há rasters no plano, mas todos têm opacidade zero no zoom {cam['zoom']:.2f} (limites de/ate); a tela ficaria chapada")
                 elif not any(ri['nitido_ate'] >= cam['zoom'] - 1e-6 for _, ri in ativos):
                     v('erro', 'F-MAPA-BAIXA-RESOLUCAO', b['id'], f"zoom {cam['zoom']:.2f} além da nitidez das bases VISÍVEIS (até {max(ri['nitido_ate'] for _, ri in ativos):.2f})")
+    # A marca é parte da identidade e precisa sobreviver ao recorte 4:5 do feed, antes do render.
+    # Regressao 44221167260: 40/40 frames tinham a marca em y=232, acima do recorte do Reels (y=285).
+    if plano.get('formato') == 'atlas':
+        my = layout.faixa_inferior().get('marca_y')
+        zona_marca = zonas('atlas').get('marca')
+        if my is not None:
+            if zona_marca and not (zona_marca[1] <= my <= zona_marca[1] + zona_marca[3]):
+                v('erro', 'F-MARCA-ZONA-DESALINHADA', 'identidade', f'marca_y={my} fora da zona declarada {zona_marca}')
+            for nome, perfil in layout.perfis().items():
+                rec = perfil.get('recorte_feed')
+                if rec and (my < rec['topo'] + 3 or my + 36 > 1920 - rec['base'] - 3):
+                    v('erro', 'F-MARCA-RECORTE-FEED', 'identidade',
+                      f'marca y={my} cortada no feed {nome} (faixa {rec["topo"]}–{1920 - rec["base"]})')
     # zonas fixas da identidade (marca no topo, faixa de legenda): nenhuma caixa entra nelas (colisão de 17/11)
     ZN = zonas(plano['formato'])
     for L in Ls:

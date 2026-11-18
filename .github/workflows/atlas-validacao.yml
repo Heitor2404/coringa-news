@@ -2,7 +2,7 @@ name: ATLAS - testes isolados (sem Claude e sem render)
 # Disparo separado da produção: não chama modelo, não gera vídeo e não publica.
 on:
   push:
-    branches: [motor-integral-v4]
+    branches: [motor-integral-v4, atlas-direcao-visual-20261118]
     paths:
       - ".github/atlas/validacao.txt"
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
           python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
       - name: Verificar sintaxe e testes ATLAS (sem API de IA)
         run: |
-          python -m py_compile src/v4/formatos/diretor.py src/v4/formatos/plano.py tests/test_formatos.py
+          python -m py_compile src/v4/formatos/diretor.py src/v4/formatos/plano.py src/v4/formatos/produzir.py scripts/atlas_previa_curta.py tests/test_formatos.py
           python -m pytest -q -ra tests/test_formatos.py
       - uses: actions/setup-node@v4
         with:
@@ -44,4 +44,5 @@ jobs:
         working-directory: motor4
         run: |
           npm ci --no-audit --no-fund
+          node --check ../src/render/v2/comp/mecanismos.js
           npx --no-install tsc -p remotion/tsconfig.json --noEmit

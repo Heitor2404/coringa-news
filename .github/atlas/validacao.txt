@@ -47,3 +47,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: fechamento teste JS em runner /motor4: caminhos estáveis, contrato de alvos e sem instalação apt.
 
 18/11: corrigida posição secundária quando etiquetas disputam o mesmo lugar, agora existe folga real; teste JS + Python + TS.
+
+18/11: testes Python 84/84 verdes na anterior; teste JS agora isolado das APIs DOM; última validação para render privado.

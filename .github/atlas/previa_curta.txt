@@ -19,3 +19,5 @@ Revisão privada: créditos cartográficos ATLAS a 160 px da base.
 18/11: nova prévia privada contínua do Panamá na branch experimental — manter eclusa de 31 a 50 s e destacar caminho da água; 77 testes verdes, narração existente, zero IA, não publicar.
 
 18/11: tentativa 3 — prévia privativa 31–50, FFmpeg por release sem apt, caches salvaguardados ANTES do Telegram, fallback 500 para documento; sem Claude, sem publicação.
+
+18/11: prévia privada de CLAREZA VISUAL geral — aplicar rótulos legíveis, densidade máxima e câmera semântica ao mesmo Panamá; 84 testes Python, JS e TS verdes; sem IA e sem publicação.

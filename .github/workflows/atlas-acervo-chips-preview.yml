@@ -33,6 +33,22 @@ jobs:
       - name: Recuperar miniaturas Commons, auditar hashes e criar galeria
         timeout-minutes: 8
         run: python scripts/atlas_acervo_chips_preview.py saida_galeria_chips
+      - name: Validar hashes e quantidade contra arquivos salvos (sem IA)
+        run: |
+          python - <<'PY'
+          import json, pathlib, hashlib
+          destino = pathlib.Path("saida_galeria_chips")
+          resultado = json.loads((destino / "auditoria_miniaturas.json").read_text(encoding="utf-8"))
+          assert resultado["total"] > 0
+          assert resultado["baixadas"] == resultado["total"], "Nem todas as mídias foram baixadas; ver auditoria."
+          for item in resultado["itens"]:
+              arq = destino / item["arquivo_thumb"]
+              assert arq.is_file() and arq.stat().st_size > 4096, item["id"]
+              digest = hashlib.sha256(arq.read_bytes()).hexdigest()
+              assert digest == item["sha256_thumb"], f"Hash mudou para {item['id']}"
+              assert item["estado"] == "candidato" and item["sha256"] is None
+          print(f"{resultado['total']} mídias verificadas byte a byte; nenhuma liberada para produção.")
+          PY
       - name: Guardar galeria e relatorio SEMPRE (mesmo se houver falhas)
         if: always()
         uses: actions/upload-artifact@v4

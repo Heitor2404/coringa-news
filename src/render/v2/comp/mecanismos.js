@@ -33,6 +33,7 @@
       fala: 'O navio entra e a comporta fecha. A água do lago desce por gravidade e enche a câmara. O navio sobe vinte e seis metros e segue.' },
   }, (p, ctx) => {
     const subir = p.sentido !== 'descer', D = +p.desnivel_m || 26;
+    const DV = p.v4 ? (p.direcao_visual || {}) : {};
     // TEMA (V4/formatos): linguagem técnica do canal (params.tema). Sem tema = aparência V2 original (pilotos antigos iguais).
     const TM = Object.assign({ fundo: null, etapa: 'var(--ciano)', progresso: 'rgba(127,227,240,.25)', progresso_on: 'var(--ciano)', agua_topo: '#4fd8e8', agua_fundo: '#0c6676',
       superficie: '#d6fbff', jato: '#e8fdff', concreto: '#34495b', concreto_hachura: '#3e566a', rocha: '#1d2a33', rocha_ponto: '#26353f', tunel: '#08171d',
@@ -122,7 +123,7 @@
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
           <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
         : `<div class="abs" data-g="aviso" data-opcional="1" style="right:${V4 ? 72 : 160}px;top:${V4 ? 1180 : 1176}px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
-      <style>.re{font-family:var(--f-dado);font-weight:800;font-size:${V4 ? 34 : 30}px;line-height:1.12;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:6px 12px;max-width:360px;white-space:${V4 ? "normal" : "nowrap"};overflow-wrap:break-word;letter-spacing:.3px;box-sizing:border-box}</style>`;
+      <style>.re{font-family:var(--f-dado);font-weight:800;font-size:${V4 ? (DV.fonte_rotulo_px || 34) : 30}px;line-height:1.12;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:6px 12px;max-width:360px;white-space:${V4 ? "normal" : "nowrap"};overflow-wrap:break-word;letter-spacing:.3px;box-sizing:border-box}</style>`;
 
     // ---- linha do tempo física ----
     function tempos(d) {
@@ -205,10 +206,15 @@
         if (marca) {
           const alvoFoco = alvos[marca.alvo];
           if (V4) {
-            // Enquadramento calculado pela posição da peça física no mecanismo,
-            // conservando câmara e conexões, sem uma câmera por episódio.
-            r = cameraDidatica(r, alvoFoco, [(C0 + C1) / 2, 700], ASP,
-              clamp((tl - Number(marca.t)) / .7), 1240);
+            // Foco semântico com transição determinística entre peças,
+            // preservando a câmera ANTERIOR no instante da nova palavra.
+            const i = marcas.indexOf(marca), contexto = [(C0 + C1) / 2, 700];
+            const largura = DV.largura_contextual || 1240;
+            if (i > 0 && alvos[marcas[i-1].alvo]) {
+              r = cameraDidatica(r, alvos[marcas[i-1].alvo], contexto, ASP, 1, largura);
+            }
+            r = cameraDidatica(r, alvoFoco, contexto, ASP,
+              clamp((tl - Number(marca.t)) / (DV.transicao_foco_s || .7)), largura);
           } else {
             const kf = eio(clamp((tl - Number(marcas[0].t)) / .65));
             const geral = rect(810, 690, 1380);
@@ -254,7 +260,8 @@
           // Controle de densidade global do componente: um assunto narrado
           // + no máximo um estado físico. Nunca esconder o assunto prioritário.
           const visiveis = planejarRotulos(candidatos,
-            { esq: 76, dir: 930, topo: SY + 16, base: SY + SH - 42 }, marca ? 2 : 3, 12);
+            { esq: 76, dir: 930, topo: SY + 16, base: SY + SH - 42 },
+            marca ? (DV.rotulos_em_foco || 2) : (DV.rotulos_sem_foco || 3), 12);
           for (const q of visiveis) {
             const e = el.querySelector(q.id);
             e.style.left = q.x + 'px'; e.style.top = q.y + 'px'; e.style.opacity = 1;

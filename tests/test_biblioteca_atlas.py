@@ -115,3 +115,20 @@ def test_gatilho_so_com_hash_e_revisao_visual():
     achados = buscar("tsmc")
     assert any(x["status"] == "CANDIDATO_BLOQUEADO" for x in achados)
     assert resumo()["imagens_liberadas_dessas_candidatas"] == 0
+
+
+def test_candidatas_com_classificacao_visual_sem_falsas_provas():
+    """A inspeção de thumbnail não autoriza confundir placa/edifício com equipamento."""
+    c = json.loads((ROOT / "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json").read_text(encoding="utf-8"))
+    assert len(c["itens"]) == 6
+    for it in c["itens"]:
+        v = it.get("inspecao_visual") or {}
+        assert v.get("metodo") and v.get("limite"), it["id"]
+        assert v.get("aprovacao_de_publicacao") is False
+        assert not (v.get("apta_ao_piloto") and it.get("estado") == "liberado")
+    smic = next(x for x in c["itens"] if x["id"] == "chips-smic-fabrica-shenzhen")
+    assert "Placa" in smic["mostra"] and smic["inspecao_visual"]["apta_ao_piloto"] is False
+    asml = next(x for x in c["itens"] if x["id"] == "chips-asml-sede-veldhoven")
+    assert "máquinas litográficas" in asml["nao_comprova"]
+    bons = {x["id"] for x in c["itens"] if x["inspecao_visual"]["apta_ao_piloto"]}
+    assert bons == {"chips-tsmc-fab18-tainan","chips-wafer-silicio","chips-asml-containers-tainan"}

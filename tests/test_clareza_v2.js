@@ -4,9 +4,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.resolve(__dirname, '../src/render/v2/nucleo.js'), 'utf8');
-const sandbox = {window: {}};
-vm.runInNewContext(source, sandbox, {filename: 'nucleo.js'});
-const {cameraDidatica, planejarRotulos} = sandbox.window.V2.U;
+// Teste puro: não montar o navegador nem simular o DOM; extrair exatamente
+// as funções definidas no núcleo e executar com suas primitivas matemáticas.
+const ini = source.indexOf('  function cameraDidatica(');
+const fim = source.indexOf('  V2.U = {', ini);
+assert(ini > 0 && fim > ini, 'helpers de direção visual não encontrados no núcleo');
+const sandbox = {};
+vm.runInNewContext(
+  'const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));' +
+  'const lerp=(a,b,k)=>a+(b-a)*k;' +
+  'const eo=x=>1-Math.pow(1-clamp(x),3);' +
+  source.slice(ini, fim) +
+  'this.exports={cameraDidatica,planejarRotulos};',
+  sandbox, {filename: 'clareza_nucleo.js'});
+const {cameraDidatica, planejarRotulos} = sandbox.exports;
 assert.equal(typeof cameraDidatica, 'function');
 assert.equal(typeof planejarRotulos, 'function');
 

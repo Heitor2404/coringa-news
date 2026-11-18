@@ -30,6 +30,17 @@ jobs:
         run: |
           python -m py_compile scripts/atlas_acervo_chips_preview.py
           python -m json.tool src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json > /dev/null
+      - name: Testar regra de licenca sem acesso a rede
+        run: |
+          python - <<'PY'
+          from scripts.atlas_acervo_chips_preview import licenca_confere
+          assert licenca_confere("CC BY 4.0", {"short_name":"CC BY 4.0","url":"https://creativecommons.org/licenses/by/4.0/"})
+          assert not licenca_confere("CC BY 4.0", {"short_name":"CC BY-SA 4.0","url":"https://creativecommons.org/licenses/by-sa/4.0/"})
+          assert licenca_confere("CC BY-SA 4.0", {"short_name":"CC BY-SA 4.0","url":"https://creativecommons.org/licenses/by-sa/4.0/"})
+          assert licenca_confere("Public domain (US Government NASA)", {"short_name":"Public domain","url":""})
+          assert not licenca_confere("Public domain (US Government NASA)", {"short_name":"CC BY 4.0","url":"https://creativecommons.org/licenses/by/4.0/"})
+          print("Reconciliação de licenças: aprovado.")
+          PY
       - name: Recuperar miniaturas Commons, auditar hashes e criar galeria
         timeout-minutes: 8
         run: python scripts/atlas_acervo_chips_preview.py saida_galeria_chips
@@ -41,6 +52,9 @@ jobs:
           resultado = json.loads((destino / "auditoria_miniaturas.json").read_text(encoding="utf-8"))
           assert resultado["total"] > 0
           assert resultado["baixadas"] == resultado["total"], "Nem todas as mídias foram baixadas; ver auditoria."
+          assert not resultado["licencas_nao_conciliadas"], (
+              "Licenca declarada difere de metadata Commons: " + repr(resultado["licencas_nao_conciliadas"])
+          )
           for item in resultado["itens"]:
               arq = destino / item["arquivo_thumb"]
               assert arq.is_file() and arq.stat().st_size > 4096, item["id"]

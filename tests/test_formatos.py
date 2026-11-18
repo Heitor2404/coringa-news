@@ -1166,7 +1166,7 @@ def test_atlas_foto_prova_deve_usar_painel_reto_sem_falsificar_mecanismo():
     assert any(b["id"] == "b2b-wafer" and b["composicao"] == "atlas.painel"
                and wafer in b["camadas"] for b in pl["beats"])
     assert wafer["slot"] == "foto" and "inclina" not in wafer["p"]
-    assert P.COMP["atlas.painel"]["slots"]["foto"]["h"] >= 550
+    assert P.COMP["atlas.painel"]["slots"]["foto"][3] >= 550  # já resolvido para [x,y,w,h] pelo layout
     assert not [e for e in P.validar(pl) if e["regra"] in {
         "F-TECNICO-SEM-MECANISMO", "F-ESTILO-NO-EPISODIO", "F-COLISAO"
     }]

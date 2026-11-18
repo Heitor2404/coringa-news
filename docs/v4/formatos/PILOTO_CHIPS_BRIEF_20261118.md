@@ -59,3 +59,12 @@ O vídeo IBM `How EUV lithography works.webm` está no Commons com **License rev
 6. Prévia privada, inspeção do MP4, sem publicação/merge na produção.
 
 **O verdadeiro teste é conseguir um vídeo completo e profissional de um assunto distinto sem mudar a gramática do ATLAS.**
+
+## Resultado técnico do primeiro teste de reuso (GitHub Actions 44370810497)
+
+- `86` testes Python aprovaram; preflight `23/23`, sem falhas; `27` quadros renderizados, **zero erros bloqueadores**.
+- Apareceram `81` avisos `A-CREDITO-RODAPE` (27 quadros × TikTok/Reels/Shorts): **os créditos localizados no rodapé podem ficar atrás das interfaces**. Isso **não** é prova de que a legenda se sobrepõe ao crédito; é uma advertência de interface.
+- Nesta fixture específica só entram bases **Natural Earth**, cujo manifesto (`motor4/formatos/dados/atribuicoes.json`) declara **domínio público/atribuição não obrigatória**, então os 81 avisos são de **visibilidade editorial de crédito de cortesia**, não 81 violações confirmadas de licença. Situação muda com OSM, EOxCloudless ou fotos CC BY/CC BY-SA.
+- Preservar a posição baixa já aprovada **até inspecionar os quadros nas interfaces reais**, e prever atribuição obrigatória devidamente acessível no vídeo ou na descrição conforme licença/plataforma. Não mascarar o problema com um falso `100% aprovado`.
+- Teste feito com **voz sintetizada de teste**, não narração do vídeo final; os fatos do plano legado não estão aprovados editorialmente.
+- Revisão de workflow posterior (`6d11ae5e`): os artefatos passam a preservar **somente folhas e relatórios**, evitando ocupar cerca de 150MB com cada quadro e cada máscara duplicados.

@@ -49,6 +49,9 @@ jobs:
         run: |
           pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
           (cd motor4 && npm ci --no-audit --no-fund)
+      - name: Instalar navegador do mecanismo V2 para o preflight (sem render)
+        timeout-minutes: 9
+        run: python -m playwright install chromium
       - name: Contrato Python e TypeScript (sem render)
         run: |
           python -m pytest -q tests/test_formatos.py

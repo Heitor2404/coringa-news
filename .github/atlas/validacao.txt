@@ -7,3 +7,5 @@ Reexecucao: instalar FFmpeg no runner; tentativa 2.
 Regressao: marca visivel no feed, fiscal bloqueador e preflight sem render; testes isolados.
 
 ATLAS sem marca fixa; contrato de identidade, gates de feed e instrumentacao do renderer; CI isolado.
+
+Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio e perf.

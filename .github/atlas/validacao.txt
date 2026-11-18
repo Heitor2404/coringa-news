@@ -9,3 +9,5 @@ Regressao: marca visivel no feed, fiscal bloqueador e preflight sem render; test
 ATLAS sem marca fixa; contrato de identidade, gates de feed e instrumentacao do renderer; CI isolado.
 
 Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio e perf.
+
+18/11: Guia Visual ATLAS v1, tema ATLAS isolado, CTA no fecho, testes sem Claude e sem render.

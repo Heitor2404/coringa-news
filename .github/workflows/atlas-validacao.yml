@@ -1,0 +1,33 @@
+name: ATLAS - testes isolados (sem Claude e sem render)
+# Disparo separado da produção: não chama modelo, não gera vídeo e não publica.
+on:
+  push:
+    branches: [motor-integral-v4]
+    paths:
+      - ".github/atlas/validacao.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-validacao
+  cancel-in-progress: true
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Instalar dependencias Python de teste
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+      - name: Verificar sintaxe e testes ATLAS (sem API de IA)
+        run: |
+          python -m py_compile src/v4/formatos/diretor.py src/v4/formatos/plano.py tests/test_formatos.py
+          python -m pytest -q -ra tests/test_formatos.py

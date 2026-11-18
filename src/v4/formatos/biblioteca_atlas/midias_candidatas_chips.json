@@ -1,0 +1,168 @@
+{
+  "versao": 1,
+  "formato": "atlas",
+  "pacote": "guerra_dos_chips",
+  "atualizado_em": "2026-11-18",
+  "status": "CANDIDATAS_NAO_AUTORIZADAS_PARA_RENDER",
+  "regra": "Fonte e licença conferidas na página Commons. Ainda falta baixar versão aprovada, conferir imagem visualmente, registrar SHA256 do binário, resolução/foco e aprovação editorial. Não adicionar ao índice de mídia comprovada até todos os portões.",
+  "itens": [
+    {
+      "id": "chips-tsmc-fab18-tainan",
+      "titulo": "TSMC Fab 18 em Tainan, Taiwan",
+      "arquivo_commons": "TSMC Fab 18 May 2025.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg",
+      "autor": "4300streetcar",
+      "data_foto": "2025-05-27",
+      "licenca": "CC BY 4.0",
+      "licenca_url": "https://creativecommons.org/licenses/by/4.0/",
+      "credito": "TSMC Fab 18 May 2025 — 4300streetcar / Wikimedia Commons, CC BY 4.0",
+      "mostra": "Vista exterior da planta de semicondutores TSMC Fab 18 no Southern Taiwan Science Park, Tainan",
+      "permite_narrar": [
+        "existência/localização da Fab 18 na área de Tainan",
+        "fotografia exterior da fábrica"
+      ],
+      "nao_comprova": [
+        "interior da Fab 18",
+        "capacidade de produção atual",
+        "porcentagem de chips avançados",
+        "condição de 2026",
+        "máquina EUV"
+      ],
+      "destino": "taiwan_fabrica",
+      "posicao": [
+        120.26204,
+        23.12232
+      ],
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null
+    },
+    {
+      "id": "chips-asml-sede-veldhoven",
+      "titulo": "Sede da ASML, Veldhoven",
+      "arquivo_commons": "ASML headquarters Veldhoven.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:ASML_headquarters_Veldhoven.jpg",
+      "autor": "A ansems",
+      "data_foto": "2008-05-22",
+      "licenca": "Public domain (author dedication)",
+      "licenca_url": "https://commons.wikimedia.org/wiki/File:ASML_headquarters_Veldhoven.jpg",
+      "credito": "ASML headquarters Veldhoven — A ansems / Wikimedia Commons (domínio público)",
+      "mostra": "Edifício da sede corporativa da ASML em Veldhoven, Países Baixos, fotografia histórica",
+      "permite_narrar": [
+        "a sede da ASML está nos Países Baixos",
+        "identidade da empresa e posição geográfica"
+      ],
+      "nao_comprova": [
+        "máquinas litográficas",
+        "produção dentro da fábrica",
+        "equipamento EUV atual",
+        "estado físico atual do edifício"
+      ],
+      "destino": "holanda_asml",
+      "posicao": [
+        5.41701,
+        51.4045
+      ],
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null
+    },
+    {
+      "id": "chips-smic-fabrica-shenzhen",
+      "titulo": "SMIC — unidade de Shenzhen",
+      "arquivo_commons": "SMIC，Shenzhen Factory.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:SMIC%EF%BC%8CShenzhen_Factory.jpg",
+      "autor": "Lhzss8",
+      "data_foto": "2022-01-01",
+      "licenca": "CC BY-SA 4.0",
+      "licenca_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "credito": "SMIC, Shenzhen Factory — Lhzss8 / Wikimedia Commons, CC BY-SA 4.0",
+      "mostra": "Vista exterior da planta SMIC em Shenzhen, China",
+      "permite_narrar": [
+        "fábrica da SMIC em Shenzhen",
+        "produção de semicondutores na China (contexto industrial)"
+      ],
+      "nao_comprova": [
+        "equipamento EUV instalado",
+        "nó de fabricação específico",
+        "fábrica da TSMC",
+        "situação atual das sanções"
+      ],
+      "destino": "china_smic",
+      "posicao": [
+        114.353149,
+        22.713282
+      ],
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null,
+      "alerta_licenca": "Aplicar atribuição e revisão da obrigação share-alike antes de publicar uma adaptação"
+    },
+    {
+      "id": "chips-wafer-silicio",
+      "titulo": "Detalhe real de wafer de silício",
+      "arquivo_commons": "Silicon wafer close view.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg",
+      "autor": "Le hollandais volant",
+      "data_foto": "2017-10-21",
+      "licenca": "CC BY 4.0",
+      "licenca_url": "https://creativecommons.org/licenses/by/4.0/",
+      "credito": "Silicon wafer close view — Le hollandais volant / Wikimedia Commons, CC BY 4.0",
+      "mostra": "Wafer de silício com estruturas de circuitos integrados, em close",
+      "permite_narrar": [
+        "o que é um wafer",
+        "circuitos microeletrônicos em silício"
+      ],
+      "nao_comprova": [
+        "qualquer modelo de chip moderno específico",
+        "número de transistores de um produto",
+        "origem da fabricação TSMC/SMIC"
+      ],
+      "destino": "processo_wafer",
+      "posicao": null,
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null
+    },
+    {
+      "id": "chips-sala-limpa-nasa",
+      "titulo": "Sala limpa de fabricação microeletrônica — NASA",
+      "arquivo_commons": "Clean room.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Clean_room.jpg",
+      "autor": "NASA Glenn Research Center (GRC-1998-C-01261)",
+      "data_foto": "1998 (catalogação NASA; ano exato da tomada a conferir)",
+      "licenca": "Public domain (US Government NASA)",
+      "licenca_url": "https://commons.wikimedia.org/wiki/File:Clean_room.jpg",
+      "credito": "Clean room — NASA Glenn Research Center (GRC-1998-C-01261), domínio público",
+      "mostra": "Sala limpa genérica com equipamentos/pessoas em instalações de microfabricação associadas ao programa NASA",
+      "permite_narrar": [
+        "explicar o princípio de sala limpa",
+        "mostrar produção microeletrônica de maneira genérica, com legenda ilustrativa"
+      ],
+      "nao_comprova": [
+        "interior de uma fábrica TSMC, ASML ou SMIC",
+        "produção de chips contemporâneos",
+        "máquina de litografia EUV"
+      ],
+      "destino": "processo_sala_limpa",
+      "posicao": null,
+      "licenca_pagina_verificada": true,
+      "estado": "candidato",
+      "sha256": null
+    }
+  ],
+  "excluidos": [
+    {
+      "id": "euv-llnl-1998",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Extreme_ultraviolet_lithography_tool.jpg",
+      "motivo": "Foto histórica de ferramenta EUV do Lawrence Livermore National Laboratory (1998), NÃO demonstra o scanner EUV moderno da ASML; resolução 713x605, pouco adequada para vertical. Não rotular como ASML."
+    }
+  ],
+  "pendencias": [
+    "Baixar versões confirmadas via API/Commons com user agent adequado, evitando cópia manual de URLs que mudam.",
+    "Conferir conteúdo visual e qualidade em formato 9:16; registrar dimensões e SHA256.",
+    "Obter imagem atual e livre de equipamento EUV da ASML OU apresentar recurso editorial genérico sem falsear imagens.",
+    "Submeter atribuições, licenças CC BY-SA e direitos incidentais ao revisor editorial.",
+    "Aprovar explicitamente antes de alimentar src/v4/biblioteca_comprovada.json e produzir MP4."
+  ]
+}

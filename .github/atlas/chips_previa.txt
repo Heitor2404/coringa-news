@@ -1,0 +1,6 @@
+ATLAS CHIPS — prévia privada experimental 2026-11-18
+
+Base de CI: 44403285791 — SUCCESS, 32 preflight / 34 quadros / 0 bloqueadores.
+Escopo: render completo com narração de teste; entrega ao Telegram privado, sem publicação em redes.
+Creditos: 102 avisos de rodapé a revisar em interfaces reais antes de qualquer publicação.
+Sem merge nem alteração de produção, DOSSIÊ ou NTC.

@@ -90,6 +90,10 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
     for c in p.get('clipes') or []:
         c['t0'], c['t1'] = a(c['t0']), a(c['t1'])
         c['params']['tempos'] = [round(a(x) - c['t0'], 2) for x in c['params'].get('tempos') or []]
+        # Os destaques de peças são ancorados na fala em tempo absoluto no JSON
+        # e convertidos em tempo LOCAL do clipe para o renderizador V2.
+        for marca in c['params'].get('destaques_fluxo') or []:
+            marca['t'] = round(a(marca['t']) - c['t0'], 2)
     for b in p['beats']:
         if b.get('t') is not None:
             b['t'] = a(b['t'])

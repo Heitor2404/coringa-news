@@ -162,3 +162,35 @@ Em 18/11/2026 o usuário autorizou que o assistente continue **autonomamente nas
 3. Integrar novas mídias somente após conferir licença/proveniência/conteúdo real, hashes e teste de alinhamento com frases; separar mídia candidata de comprovada.
 4. Produzir o **verdadeiro piloto audiovisual** com roteiro factual atualizado, voz real e prévia privada, sem publicação, usando o mesmo padrão ATLAS (mapas, cards, fotos e motions existentes).
 5. Preservar branch produtiva, NTC/DOSSIÊ e atualizar esta passagem sempre que mudar o estado.
+
+
+## 11. 18/11 — roteiro factual, styleframes e voz Piper
+
+Esta atualização registra o progresso feito após o usuário autorizar autonomia técnica ("Manda bala").
+
+### Diagnóstico e correções no piloto Guerra dos Chips
+
+- Branch: `atlas-piloto-chips-20261118`. Criado `src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json` com **139 palavras, 62,5s sintéticos** e fontes TSMC/ASML/BIS; mantém fixture legado `atlas_chips.json` **sem alterações**. O novo vídeo narra Taiwan/TSMC (74% da receita de wafers da própria empresa com tecnologia avançada em 2025, **não share global**), Holanda/ASML EUV, EUA/Nvidia e política de exportação EUA-China 2022 vs Jan 2026.
+- Sob os mesmos componentes visuais ATLAS, foram corrigidas progressão visual >3s, pino Nvidia fora de safe area, cenas com cards e continuidade factual.
+- **Defeito GENÉRICO no fiscal** `src/v4/formatos/plano.py`: `F-COMPOSICAO` somava camadas sequenciais como simultâneas; agora varre intervalos abertos e exige número real de cards sobrepostos, sem alterar o limite. Teste de regressão `test_atlas_substituicao_de_cards_nao_conta_como_todos_simultaneos` foi adicionado e revisado depois de ter referenciado cards removidos do storyboard; consultar CI atual para confirmação final.
+- Workflow `.github/workflows/atlas-chips-reuso.yml` desacoplado do runner `ubuntu-latest` (que usou Ubuntu 26.04 e falhou instalando FFmpeg): pin `ubuntu-24.04` + `imageio-ffmpeg==0.6.0` portátil; roda **86 testes** (1 montagem MP4 requer ffprobe e fica no CI completo). Não chama Claude/Gemini/Edge.
+- Execução `44379818856` **SUCESSO** (85 testes/1 deselect antes do último teste), preflight verde, **34 quadros reais** sem bloqueios, avisos `102 A-CREDITO-RODAPE` (34×3 plataformas). Os créditos baixos continuam risco editorial antes da publicação; base Natural Earth é domínio público (cortesia), fotos CC BY precisam atribuição realmente acessível.
+- Execução `44381002660` **SUCESSO** (86 testes, 1 deselect), 34 quadros, zero erros bloqueadores; troca entre cartão "OUT 2022" → "JAN 2026" verificada **visualmente** em artefato. Arquivo de amostragem extraído no chat `/mnt/data/atlas_chips_factual_atualizado/quadros/cenas_2022_2026.jpg`, sem inferir que está acessível em novo chat: o artifact CI `44381002660` é a referência.
+- Na sequência, duas fotos reais foram integradas **SOMENTE À BRANCH EXPERIMENTAL DO PILOTO**, com registros em `src/v4/biblioteca_comprovada.json`: foto exterior TSMC Fab 18/Tainan e close wafer, ambas Commons CC BY 4.0, IDs correspondentes, SHA256 conferido. `p-tsmc` virou foto; componente de wafer usa estrutura ATLAS já existente. Ambas foram escolhidas após inspeção visual de thumbnails; **não aprovadas para publicação**. Workflow exige origem/licença e resolução. Tentar foto sem SHA/license/legibilidade deve falhar fechado.
+- Primeira CI multimídia `44381945281`, `44382124573` falhou em TESTE AUTOMATIZADO por `StopIteration` do novo teste de regressão que assumia cards descartados do roteiro, antes de prévia. Corrigido em commit `e5f3ad67`, agora usa cópias sintéticas da camada `pct`, e workflow atualizado `77f8b3b1` para rerun quando testes mudam. **Execução `44382454681` em andamento na última consulta**. Confirmar status, logs, assets e inspecionar styleframes, não chamar integração aprovada antes disso.
+
+### TTS PT-BR experimental, offline e custo zero de API
+
+- Criado `scripts/atlas_voz_livre_amostra.py` e `.github/workflows/atlas-chips-voz-livre.yml`, **sem modificar a voz oficial**.
+- Piper `pt_BR-cadu-medium` da coleção `rhasspy/piper-voices` PINNED commit `cf910fb59f1d79ab3b625a63993a108751c6c25d`; modelo explicitamente re-treinado do base `rdh` CC0, dataset CC0 conforme MODEL_CARD, motor Piper GPL-3.0; rever obrigação jurídica final se incorporar. **Não usar versão antiga Cadu baseada em modelos não comerciais!**
+- Workflow **`44381558476` SUCCESS**, gerou 7,755s em 22.050Hz de narração original do gancho chips; ONNX SHA256 `d5a662e3f606d5a49dd29ba9ce90c304ae45dd9543f8b0c773bcb0de282499de`; WAV SHA256 `291cfb14d6ac2cba5f0a0ebded80877f187f0ce4168158d6f316ecec28edf4b4`; artifact `atlas-chips-amostra-piper-cadu` ID `14462873018` com WAV e MODEL_CARD, retenção 7 dias.
+- Arquivo MP3 convertido do WAV e entregue ao usuário `sandbox:/mnt/data/atlas_chips_voz/voz_ptbr_cadu_amostra.mp3`, **apenas como amostra para ouvir**. Qualidade/naturalidade NÃO comprovada por teste; jamais substituir voz atual sem aprovar audio. Relevante: termos comerciais de Edge/Azure gratuitamente não devem ser pressupostos; recurso Piper é candidata livre sem serviço extra.
+- **Nenhum MP4 real da guerra dos chips foi publicado nem homologado**. Os tests de quadros continuam com WAV de teste e narracao sintética; precisam aprovar fotos, créditos, narração e MP4 final.
+
+### Próximos passos sem pedir autorização em todo ajuste
+
+1. Confirmar CI `44382454681`; resolver falhas reais e ver contato do vídeo **com fotos**.
+2. Inspecionar safe areas/legendas/créditos e sincronização de 2022 vs 2026.
+3. Ter amostra Piper avaliada, considerar teste de voz real integral somente sem assumir licença comercial do produto Edge.
+4. Produzir MP4 privado da guerra dos chips com **voz e fotos reais corretamente atribuídas**, depois validação humana e sem publicação.
+5. Registrar métricas reais de qualidade, custos e reutilização na biblioteca; preservar produção, DOSSIÊ e NTC.

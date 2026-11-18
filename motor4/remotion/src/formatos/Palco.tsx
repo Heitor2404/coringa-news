@@ -293,7 +293,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
 };
 
 export const PalcoTecnico: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
-  const T = P.tokens.palco.tecnico as any;
+  // Preset ATLAS exclusivo: mapas/maquinario em marinho editorial; DOSSIÊ preserva o tema original.
+  const T = ((P.formato === 'atlas' ? (P.tokens.palco as any).tecnico_atlas : null) || P.tokens.palco.tecnico) as any;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -326,6 +327,14 @@ export const PalcoTecnico: React.FC<{ P: FormatoProps; opac: number }> = ({ P, o
         </defs>
         <rect width={W} height={H} fill="url(#grade)" />
         <rect width={W} height={H} fill="url(#grade5)" />
+        {/* Isolinhas de relevo quase invisiveis: textura de mapa, nao desenho escolar nem grade verde. */}
+        {P.formato === 'atlas' && <g fill="none" stroke={T.topografia || 'rgba(127,179,195,.07)'} strokeWidth={2} strokeLinecap="round">
+          <path d="M-110 512 C145 360 245 670 510 496 S925 452 1190 302" />
+          <path d="M-95 552 C165 398 255 710 524 538 S930 499 1175 357" />
+          <path d="M-100 593 C174 439 284 754 549 580 S943 538 1180 402" />
+          <path d="M-125 1660 C165 1492 276 1848 561 1674 S921 1588 1220 1444" />
+          <path d="M-135 1704 C175 1536 288 1888 575 1710 S938 1634 1218 1494" />
+        </g>}
         {d && <>
           <path d={d.viz} fill="rgba(255,255,255,.025)" stroke={T.linha} strokeOpacity={.18} strokeWidth={2} />
           <path d={d.pais} fill={T.terra || '#0E2236'} stroke={T.linha} strokeOpacity={.35} strokeWidth={10} filter="url(#brilho)" />

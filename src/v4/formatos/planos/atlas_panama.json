@@ -282,6 +282,17 @@
               }
             ]
           }
+        },
+        {
+          "id": "gancho-agua",
+          "componente": "editorial.statCard",
+          "slot": "selo",
+          "t0": "@água",
+          "t1": "@entre-0.15",
+          "p": {
+            "estilo": "pilula",
+            "valor": "ÁGUA SOBE"
+          }
         }
       ]
     },

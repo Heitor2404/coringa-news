@@ -5,7 +5,6 @@ on:
     branches: [atlas-piloto-chips-20261118]
     paths:
       - ".github/workflows/atlas-chips-reuso.yml"
-      - "docs/v4/formatos/PILOTO_CHIPS_BRIEF_20261118.md"
       - "src/v4/formatos/planos/reuso/atlas_chips.json"
       - "scripts/formatos_reuso.py"
   workflow_dispatch:

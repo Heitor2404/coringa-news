@@ -3,7 +3,7 @@ name: ATLAS V1 - previa audiovisual curta PRIVADA (sem Claude)
 # Revisão curta do Panamá com o mapa, mecanismo e voz nos tempos originais.
 on:
   push:
-    branches: [motor-integral-v4]
+    branches: [motor-integral-v4, atlas-direcao-visual-20261118]
     paths: [".github/atlas/previa_curta.txt"]
   workflow_dispatch:
 

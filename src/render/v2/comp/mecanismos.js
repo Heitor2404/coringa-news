@@ -210,16 +210,26 @@
             // preservando a câmera ANTERIOR no instante da nova palavra.
             const i = marcas.indexOf(marca), contexto = [(C0 + C1) / 2, 700];
             const largura = DV.largura_contextual || 1240;
+            const protagonista = [nx, ny];
             if (i > 0 && alvos[marcas[i-1].alvo]) {
-              r = cameraDidatica(r, alvos[marcas[i-1].alvo], contexto, ASP, 1, largura);
+              r = cameraDidatica(r, alvos[marcas[i-1].alvo], contexto, ASP, 1, largura, protagonista);
             }
             r = cameraDidatica(r, alvoFoco, contexto, ASP,
-              clamp((tl - Number(marca.t)) / (DV.transicao_foco_s || .7)), largura);
+              clamp((tl - Number(marca.t)) / (DV.transicao_foco_s || .7)), largura, protagonista);
           } else {
             const kf = eio(clamp((tl - Number(marcas[0].t)) / .65));
             const geral = rect(810, 690, 1380);
             r = [lerp(r[0], geral[0], kf), lerp(r[1], geral[1], kf), lerp(r[2], geral[2], kf)];
           }
+        }
+        // Clímax físico: antes de a peça móvel sair, recuperar visão geral.
+        // O alvo narrado pode continuar marcado, mas não esconder o resultado.
+        if (V4 && tl >= sai[0] - .45) {
+          const kSaida = eio(clamp((tl - (sai[0] - .45)) / (DV.transicao_saida_s || .65)));
+          const geral = rect(MW / 2, 605, MW + 260);
+          r = [lerp(r[0], geral[0], kSaida),
+               lerp(r[1], geral[1], kSaida),
+               lerp(r[2], geral[2], kSaida)];
         }
         const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
         const foco = el.querySelector('.foco-fluxo');
@@ -281,7 +291,8 @@
         const f = tl < T[1] ? 0 : tl < T[2] ? 1 : 2;
         el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - (i ? T[i] : 0)) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - (i ? T[i] : 0)) / .35)) * 16 : 0}px)`; });
         el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? TM.progresso_on : TM.progresso);
-        c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada, navio_x: nx, linha_dagua: superficie };
+        c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada,
+          navio_x: nx, linha_dagua: superficie, progresso_saida: ks, acao_concluida: delta < .3 && aberta > .99 && ks > .99 };
         // escada dos degraus reais: o navio percorre TODAS as câmaras na proporção do nível do esquema
         const dgn = el.querySelector('.dg-navio');
         if (dgn) { const N = +p.degraus, fr = clamp(subir ? m / D : 1 - m / D), w = 190 / N, h = 96 / N, i = Math.min(N - 1, Math.floor(fr * N)), ff = fr * N - i;

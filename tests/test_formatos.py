@@ -960,3 +960,18 @@ def test_eclusa_tem_destaques_fisicos_sem_troca_por_cards():
     for alvo in ('lago', 'aqueduto', 'paredes', 'piso'):
         assert alvo in js
     assert "'.foco-fluxo'" in js and "'.r-foco-fluxo'" in js
+
+
+def test_fiscal_ritmo_capta_grafico_pequeno_sem_aceitar_ruido_global():
+    import numpy as np
+    from src.v4.formatos.ritmo import mudanca_local_alinhada
+    d = np.zeros((170, 180, 3), dtype=np.float32)
+    # Quatro pequenas áreas do gráfico mudam, mas a média da tela continua < 0,5.
+    for y in (0, 34):
+        for x in (0, 36):
+            d[y:y+30, x:x+30] = 4
+    assert d.mean() < .5
+    assert mudanca_local_alinhada(d) > .5
+    # Variação fraca espalhada por toda a tela não vira progresso.
+    ruido = np.full_like(d, .2)
+    assert mudanca_local_alinhada(ruido) < .5

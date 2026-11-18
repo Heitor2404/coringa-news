@@ -65,6 +65,8 @@ jobs:
           r = json.loads(p.read_text(encoding="utf-8"))
           print("Preflight:", r["preflight"])
           print("Quadros:", r.get("quadros"))
+          if (r.get("quadros") or {}).get("avisos_por_regra", {}).get("A-CREDITO-RODAPE"):
+              print("::warning::Créditos podem ser cobertos pela interface de plataformas; revisar antes da publicação.")
           assert r["preflight"]["pronto"], "Preflight bloqueou o reuso: ver relatorio."
           assert "quadros" in r, "Nenhum quadro gerado."
           assert not r["quadros"]["problemas"], "Problemas visuais: ver relatorio."
@@ -78,6 +80,11 @@ jobs:
           path: |
             saida_chips_reuso/reuso.json
             saida_chips_reuso/preflight.json
-            saida_chips_reuso/quadros/
+            saida_chips_reuso/quadros/relatorio.json
+            saida_chips_reuso/quadros/relatorio.md
+            saida_chips_reuso/quadros/styleframes.jpg
+            saida_chips_reuso/quadros/celular.jpg
+            saida_chips_reuso/quadros/amostragem.jpg
+            saida_chips_reuso/quadros/plataforma_*.jpg
           if-no-files-found: warn
           retention-days: 7

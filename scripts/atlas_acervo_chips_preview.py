@@ -62,6 +62,26 @@ def consultar_arquivo(nome: str) -> dict:
     raise RuntimeError(f"Commons não devolveu imageinfo para {nome!r}")
 
 
+def licenca_confere(declarada: str, meta: dict) -> bool:
+    """Confronta descrição local com a classificação do próprio Commons.
+
+    Não substitui a leitura humana dos termos; evita liberar troca grosseira
+    entre CC BY, CC BY-SA e domínio público.
+    """
+    nome = str(meta.get("short_name") or "").casefold()
+    url = str(meta.get("url") or "").casefold()
+    declarada = declarada.casefold()
+    if declarada.startswith("cc by-sa"):
+        versao = declarada.rsplit(" ", 1)[-1]
+        return (("by-sa/" + versao) in url or ("by-sa " + versao) in nome)
+    if declarada.startswith("cc by "):
+        versao = declarada.rsplit(" ", 1)[-1]
+        return (("/by/" + versao) in url or ("cc by " + versao) in nome) and "by-sa" not in nome + url
+    if declarada.startswith("public domain"):
+        return any(p in nome for p in ("public domain", "pd-us", "pd "))
+    return False
+
+
 def escolher_font():
     for p in (
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -144,9 +164,10 @@ def main(destino: Path) -> dict:
                 "url": html.unescape((metadata.get("LicenseUrl") or {}).get("value", "")),
                 "restrictions": html.unescape((metadata.get("Restrictions") or {}).get("value", "")),
             }
+            i["licenca_conciliada_com_commons"] = licenca_confere(i["licenca"], i["licenca_commons"])
             i["conferencia_licenca_manual_pendente"] = (
-                not i["licenca_commons"]["short_name"]
-                or not i["licenca_commons"]["url"]
+                not i["licenca_conciliada_com_commons"]
+                or (not i["licenca_commons"]["url"] and not i["licenca"].startswith("Public domain"))
             )
             print(f"OK {i['id']}: {orig.size}, hash do arquivo salvo {i['sha256_thumb'][:12]}",flush=True)
         except Exception as e:
@@ -171,6 +192,7 @@ def main(destino: Path) -> dict:
         "reprovadas_ou_indisponiveis": [i["id"] for i in itens if not i["download_ok"]],
         "hashes_conferidos_dos_arquivos_salvos": [i["id"] for i in itens if i["download_ok"] and i.get("arquivo_thumb")],
         "licencas_com_checagem_manual_pendente": [i["id"] for i in itens if i.get("conferencia_licenca_manual_pendente")],
+        "licencas_nao_conciliadas": [i["id"] for i in itens if i["download_ok"] and not i.get("licenca_conciliada_com_commons")],
         "itens": audit,
     }
     (destino / "auditoria_miniaturas.json").write_text(json.dumps(output,indent=2,ensure_ascii=False),encoding="utf-8")

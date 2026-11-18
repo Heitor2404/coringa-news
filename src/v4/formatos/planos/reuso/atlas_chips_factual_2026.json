@@ -278,14 +278,14 @@
           }
         },
         {
-          "id": "wafers-etiqueta",
+          "id": "tsmc-precisao",
           "componente": "editorial.statCard",
           "slot": "nota",
-          "t0": "@wafers",
-          "t1": "@participação-0.75",
+          "t0": "@propria",
+          "t1": "@participação-0.45",
           "p": {
             "estilo": "pilula",
-            "valor": "UM WAFER DE SILÍCIO",
+            "valor": "DA PRÓPRIA TSMC",
             "fato": "f-tsmc"
           }
         },

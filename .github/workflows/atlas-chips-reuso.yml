@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/atlas-chips-reuso.yml"
       - "src/v4/formatos/planos/reuso/atlas_chips.json"
+      - "src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json"
       - "scripts/formatos_reuso.py"
   workflow_dispatch:
 permissions:
@@ -19,7 +20,7 @@ env:
   DISABLE_TELEMETRY: "true"
   CORINGA_CHROME: /usr/bin/google-chrome
   REMOTION_CHROME: /usr/bin/google-chrome
-  PLANO: src/v4/formatos/planos/reuso/atlas_chips.json
+  PLANO: src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json
   SAIDA: saida_chips_reuso
 jobs:
   quadros:

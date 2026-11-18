@@ -65,7 +65,7 @@ def test_candidatas_todas_bloqueadas_ate_auditoria_de_binario():
     from scripts.atlas_biblioteca import liberado_para_render
     c = json.loads((ROOT / "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json").read_text(encoding="utf-8"))
     assert c["status"] == "CANDIDATAS_NAO_AUTORIZADAS_PARA_RENDER"
-    assert len(c["itens"]) >= 5
+    assert len(c["itens"]) >= 6
     ids = set()
     for item in c["itens"]:
         assert item["id"] not in ids
@@ -80,20 +80,38 @@ def test_candidatas_todas_bloqueadas_ate_auditoria_de_binario():
     # Uma foto verificada da sede não é prova de uma máquina.
     asml = next(x for x in c["itens"] if x["id"] == "chips-asml-sede-veldhoven")
     assert "máquinas litográficas" in asml["nao_comprova"]
+    containers = next(x for x in c["itens"] if x["id"] == "chips-asml-containers-tainan")
+    assert "o conteúdo exato de cada contêiner" in containers["nao_comprova"]
+    assert any(x["id"] == "ibm-euv-video-licenca-em-revisao" for x in c["excluidos"])
 
 
 def test_gatilho_so_com_hash_e_revisao_visual():
+    import hashlib
+    import tempfile
     from scripts.atlas_biblioteca import liberado_para_render, buscar, resumo
     c = json.loads((ROOT / "src/v4/formatos/biblioteca_atlas/midias_candidatas_chips.json").read_text(encoding="utf-8"))
     item = dict(c["itens"][0])
-    item.update({"estado":"liberado", "aprovacao_editorial": True,
-                 "sha256":"a"*64, "prova_correspondencia":"vistoria manual em quadro",
-                 "largura":1920,"altura":1080})
-    assert liberado_para_render(item)
-    for campo in ("aprovacao_editorial","sha256","prova_correspondencia","largura","licenca_url"):
-        adulterado = dict(item)
-        adulterado[campo] = None
-        assert not liberado_para_render(adulterado), campo
+    with tempfile.TemporaryDirectory() as tmp:
+        arquivo = Path(tmp) / "thumb.jpg"
+        arquivo.write_bytes(b"amostra binaria aprovada: apenas teste unitario")
+        item.update({"estado":"liberado", "aprovacao_editorial": True,
+                     "sha256":hashlib.sha256(arquivo.read_bytes()).hexdigest(),
+                     "prova_correspondencia":"revisao editorial de teste",
+                     "largura":1920,"altura":1080})
+        assert not liberado_para_render(item), "Sem arquivo fisico deve bloquear"
+        assert liberado_para_render(item, arquivo), "Arquivo/hashes coerentes devem permitir"
+        for campo in ("aprovacao_editorial","sha256","prova_correspondencia","largura","licenca_url"):
+            adulterado = dict(item)
+            adulterado[campo] = None
+            assert not liberado_para_render(adulterado, arquivo), campo
+        for falso in ("a"*64, "z"*64, ""):
+            adulterado = dict(item)
+            adulterado["sha256"] = falso
+            assert not liberado_para_render(adulterado, arquivo), "Hash falso deve bloquear"
+        arquivo.write_bytes(b"arquivo alterado depois do calculo do hash")
+        assert not liberado_para_render(item, arquivo), "Arquivo adulterado deve bloquear"
+        arquivo.unlink()
+        assert not liberado_para_render(item, arquivo), "Arquivo removido deve bloquear"
     achados = buscar("tsmc")
     assert any(x["status"] == "CANDIDATO_BLOQUEADO" for x in achados)
     assert resumo()["imagens_liberadas_dessas_candidatas"] == 0

@@ -1176,3 +1176,26 @@ def test_atlas_foto_prova_deve_usar_painel_reto_sem_falsificar_mecanismo():
     ts = (RAIZ / "motor4/remotion/src/formatos/Primitivas.tsx").read_text(encoding="utf-8")
     assert "const inc = c.P.formato === 'atlas' ? 0" in ts
     assert "fontSize: c.P.formato === 'atlas' ? 28 : 24" in ts
+
+def test_atlas_fotografia_nao_respira_sobre_icones_de_plataforma():
+    """Regressao chips 44387091456: zoom externo de 1,5% invadiu icones do Shorts.
+
+    A faixa definida pela composicao ja usa a uniao das tres plataformas:
+    nao pode crescer por transform CSS fora do slot. DOSSIÊ continua independente.
+    O workflow ainda confirma o contrato com medidas REAIS dos quadros.
+    """
+    from src.v4.formatos import layout
+
+    x, y, w, h = P.COMP["atlas.fotografia"]["slots"]["foto"]
+    for nome in layout.CFG["ativos"]:
+        for mascara in layout.mascaras(nome):
+            if mascara["tipo"] != "icones":
+                continue
+            mx, my, _, mh = mascara["caixa"]
+            if y < my + mh and y + h > my:
+                assert x + w <= mx, f"Slot fotográfico cruza os ícones de {nome}"
+
+    fonte = (RAIZ / "motor4/remotion/src/formatos/Formato.tsx").read_text(encoding="utf-8")
+    respira = fonte.split("const respira = (L: any) => {", 1)[1].split("useEffect(() => {", 1)[0]
+    assert respira.index("if (P.formato === 'atlas') return undefined;") < respira.index("const s = 1 + .015")
+    assert "A.componente === 'dossie.documentCard'" in respira  # DOSSIÊ mantém o movimento de papel

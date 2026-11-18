@@ -78,7 +78,7 @@ def criar_galeria(itens: list[dict], saida: Path):
     font = escolher_font()
     d.text((54, 34), "ATLAS  /  ACERVO DE SEMICONDUTORES", font=font, fill="#FFD21F")
     d.text((54, 74), "PREVIA DE CURADORIA — NAO APROVADA PARA VIDEO", font=font, fill="#F2EDE3")
-    for i, item in enumerate(itens[:5]):
+    for i, item in enumerate(itens[:6]):
         cx = 48 + (i % 2) * 532
         cy = 130 + (i // 2) * 472
         d.rounded_rectangle((cx, cy, cx + CARD_W, cy + 450), radius=12, fill="#101A2A")
@@ -130,9 +130,25 @@ def main(destino: Path) -> dict:
             i["thumb_url_resolvida"] = thumb
             i["download_ok"] = True
             i["_im"] = orig.convert("RGB")
-            with open(destino / (i["id"] + ".jpg"), "wb") as f:
-                i["_im"].save(f, format="JPEG", quality=86)
-            print(f"OK {i['id']}: {orig.size}, sha256 thumb {i['sha256_thumb'][:12]}",flush=True)
+            # Guardar bytes EXATOS usados no sha256_thumb (sem recompressão).
+            extension = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}.get(orig.format)
+            if not extension:
+                raise ValueError(f"Formato não suportado: {orig.format}")
+            nome_thumb = i["id"] + extension
+            (destino / nome_thumb).write_bytes(data)
+            assert hashlib.sha256((destino / nome_thumb).read_bytes()).hexdigest() == i["sha256_thumb"]
+            i["arquivo_thumb"] = nome_thumb
+            metadata = info.get("extmetadata") or {}
+            i["licenca_commons"] = {
+                "short_name": html.unescape((metadata.get("LicenseShortName") or {}).get("value", "")),
+                "url": html.unescape((metadata.get("LicenseUrl") or {}).get("value", "")),
+                "restrictions": html.unescape((metadata.get("Restrictions") or {}).get("value", "")),
+            }
+            i["conferencia_licenca_manual_pendente"] = (
+                not i["licenca_commons"]["short_name"]
+                or not i["licenca_commons"]["url"]
+            )
+            print(f"OK {i['id']}: {orig.size}, hash do arquivo salvo {i['sha256_thumb'][:12]}",flush=True)
         except Exception as e:
             i["erro"] = str(e)[:500]
             print(f"FALHA {i['id']}: {i['erro']}",flush=True)
@@ -153,6 +169,8 @@ def main(destino: Path) -> dict:
         "total": len(itens),
         "baixadas": sum(i["download_ok"] for i in itens),
         "reprovadas_ou_indisponiveis": [i["id"] for i in itens if not i["download_ok"]],
+        "hashes_conferidos_dos_arquivos_salvos": [i["id"] for i in itens if i["download_ok"] and i.get("arquivo_thumb")],
+        "licencas_com_checagem_manual_pendente": [i["id"] for i in itens if i.get("conferencia_licenca_manual_pendente")],
         "itens": audit,
     }
     (destino / "auditoria_miniaturas.json").write_text(json.dumps(output,indent=2,ensure_ascii=False),encoding="utf-8")

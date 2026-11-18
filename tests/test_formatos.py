@@ -687,8 +687,7 @@ def test_raster_fora_do_zoom_nao_conta_como_base_visivel():
     assert P.opacidade_raster(3.5, de=9.0) == 0
     assert P.opacidade_raster(3.5, ate=1.0) == 0
     assert P.opacidade_raster(3.5) == 1
-    bruto = copy.deepcopy(ATLAS_BRUTO)
-    for r in bruto['rasters']:
+    pl = copy.deepcopy(ATLAS)
+    for r in pl['rasters']:
         r['de'] = 20.0
-    pl = P.resolver_tempos(bruto, [])
     assert 'F-MAPA-BASE-INVISIVEL' in _regras(pl)

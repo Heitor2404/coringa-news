@@ -1,0 +1,76 @@
+name: ATLAS V1 - previa audiovisual curta PRIVADA (sem Claude)
+# Gatilho exclusivo; sem full render, sem DOSSIÊ/NTC/main e sem publicar nada.
+# 4 janelas de ~2.5s do proprio Panama, mantendo mapa + legenda + voz nos tempos originais.
+on:
+  push:
+    branches: [motor-integral-v4]
+    paths: [".github/atlas/previa_curta.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-previa-curta
+  cancel-in-progress: true
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  PLANO_ATLAS: src/v4/formatos/planos/atlas_panama.json
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+
+jobs:
+  previa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: FFmpeg, Chrome e fontes do canal
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji
+          google-chrome --version
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f
+      - name: Preparar dependencias exatas
+        run: |
+          pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+      - name: Contrato Python e TypeScript (sem render)
+        run: |
+          python -m pytest -q tests/test_formatos.py
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Narracao PANAMA ja existente, sem geracao por IA
+        env:
+          CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
+          COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m src.v4.formatos narrar "$PLANO_ATLAS" saida_formatos/atlas
+      - name: Mídia licenciada / bases do ATLAS
+        run: python -m src.v4.formatos ativos "$PLANO_ATLAS" saida_formatos/atlas
+      - name: PREFLIGHT obrigatorio (falha = sem render)
+        run: python -m src.v4.formatos preflight "$PLANO_ATLAS" saida_formatos/atlas
+      - name: Quadros, texto/legendas, plataformas, colisoes (falha = sem render)
+        timeout-minutes: 17
+        run: python -m src.v4.formatos quadros "$PLANO_ATLAS" saida_formatos/atlas
+      - name: Somente 4 intervalos (aprox. 10 s), SEM render de episodio completo
+        timeout-minutes: 38
+        run: python scripts/atlas_previa_curta.py render saida_formatos/atlas
+      - name: Enviar resultado para Telegram PRIVADO (ou explicar bloqueio)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/atlas_previa_curta.py enviar saida_formatos/atlas

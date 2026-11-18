@@ -1,409 +1,409 @@
 {
- "versao": 2,
- "nota": "Dois formatos aprovados para produção padronizada (engenharia reversa das referências A/B em docs/v4/formatos/). Posições FIXAS (slots, px em 1080×1920): marca y 292, legenda 1240–1455, crédito 1170 ficam livres.",
- "slots": {
-  "topo": [
-   72,
-   340,
-   936,
-   176
-  ],
-  "centro": [
-   90,
-   560,
-   900,
-   500
-  ],
-  "base": [
-   72,
-   1068,
-   936,
-   96
-  ],
-  "inferior": [
-   72,
-   720,
-   936,
-   440
-  ],
-  "alto": [
-   72,
-   340,
-   936,
-   360
-  ],
-  "principal": [
-   72,
-   360,
-   936,
-   800
-  ],
-  "direita": [
-   620,
-   380,
-   400,
-   360
-  ],
-  "foto": [
-   72,
-   520,
-   936,
-   640
-  ]
- },
- "formatos": {
-  "atlas": {
-   "descricao": "Mapa como palco persistente; destaques territoriais, rota medida, cartões de números, hierarquias; mapa técnico escuro para estrutura abstrata; retorno ao mapa inicial no fecho.",
-   "palcos": [
-    "mapa",
-    "tecnico"
-   ],
-   "componentes": [
-    "atlas.geoPin",
-    "editorial.statCard",
-    "editorial.peopleCard",
-    "editorial.hierarchy",
-    "editorial.comparison",
-    "editorial.flowConnections",
-    "editorial.titleOrPayoff",
-    "dossie.documentCard",
-    "dossie.evidenceHighlight",
-    "editorial.timeline",
-    "editorial.cta"
-   ],
-   "clipes": [
-    "mecanismo.eclusa"
-   ],
-   "max_componentes_distintos": 7
-  },
-  "dossie": {
-   "descricao": "Mesa escura com objetos informativos: documentos com proveniência, datas, linha do tempo, carimbos e destaques, comparações; mapa simplificado só se ajudar.",
-   "palcos": [
-    "mesa",
-    "tecnico"
-   ],
-   "componentes": [
-    "dossie.documentCard",
-    "dossie.evidenceHighlight",
-    "editorial.timeline",
-    "editorial.statCard",
-    "editorial.peopleCard",
-    "editorial.comparison",
-    "editorial.flowConnections",
-    "editorial.titleOrPayoff"
-   ],
-   "clipes": [],
-   "max_componentes_distintos": 6
-  }
- },
- "regras": {
-  "progressao_max_s": 3.0,
-  "titulo_max_linhas": 3,
-  "asset_max_usos": 2,
-  "fim_tolerancia_s": 0.5,
-  "nota_progressao": "3 s < janela de 4 s do portão do MP4 (44084129999: plano com 4 s passou e o MP4 ficou parado 12–16 s); referências: 1–2 s",
-  "texto_min_px": 26,
-  "texto_meta_min_px": 18,
-  "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px",
-  "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)",
-  "gancho_s": 3.0,
-  "_nota_cta": "editorial.cta não conta como modalidade visual nova (assinatura do canal)",
-  "estilo_proibido_no_episodio": {
-   "_nota": "identidade visual vem de tokens/presets; o episódio traz conteúdo, coordenadas, acontecimentos e escolhas narrativas",
-   "camada": [
-    "tamanho",
-    "raio",
-    "largura",
-    "cor_hex",
-    "fonte_px",
-    "inclina",
-    "sombra"
-   ],
-   "rota": [
-    "largura"
-   ],
-   "raster": [
-    "ajuste"
-   ],
-   "beat": [
-    "transicao",
-    "zoom_max",
-    "deriva"
-   ]
-  }
- },
- "zonas_identidade": {
-  "marca": [
-   72,
-   282,
-   420,
-   52
-  ],
-  "legenda": [
-   150,
-   1240,
-   780,
-   215
-  ]
- },
- "composicoes": {
-  "_nota": "Composições aprováveis e reutilizáveis (direção de arte 17/11). Cada beat escolhe UMA; ela fixa o palco, o QUADRO onde o território do beat (roi) é enquadrado pela câmera e os slots livres para as camadas. A câmera é calculada do roi para caber no quadro: nenhuma camada cobre o território que está sendo explicado (F-COBRE-TERRITORIO, conferido também nos quadros renderizados).",
-  "dossie.capa": {
-   "formato": "dossie",
-   "palco": "mesa",
-   "quadro": null,
-   "slots": {
-    "pasta": [
-     120,
-     410,
-     840,
-     780
-    ]
-   },
-   "max_camadas": 1,
-   "uso": "abre o dossiê: pasta com o assunto e a primeira evidência aparecendo"
-  },
-  "dossie.documento": {
-   "formato": "dossie",
-   "palco": "mesa",
-   "quadro": null,
-   "slots": {
-    "doc": [
-     50,
-     372,
-     980,
-     768
+  "versao": 2,
+  "nota": "Dois formatos aprovados para produção padronizada (engenharia reversa das referências A/B em docs/v4/formatos/). Posições FIXAS (slots, px em 1080×1920): marca y 292, legenda 1240–1455, crédito 1170 ficam livres.",
+  "slots": {
+    "topo": [
+      72,
+      340,
+      936,
+      176
     ],
-    "nota": [
-     72,
-     1148,
-     936,
-     76
+    "centro": [
+      90,
+      560,
+      900,
+      500
+    ],
+    "base": [
+      72,
+      1068,
+      936,
+      96
+    ],
+    "inferior": [
+      72,
+      720,
+      936,
+      440
+    ],
+    "alto": [
+      72,
+      340,
+      936,
+      360
+    ],
+    "principal": [
+      72,
+      360,
+      936,
+      800
+    ],
+    "direita": [
+      620,
+      380,
+      400,
+      360
+    ],
+    "foto": [
+      72,
+      520,
+      936,
+      640
     ]
-   },
-   "max_camadas": 4,
-   "uso": "um documento/foto real grande e legível + marcações sobre ele"
   },
-  "dossie.calendario": {
-   "formato": "dossie",
-   "palco": "mesa",
-   "quadro": null,
-   "slots": {
-    "calendario": [
-     150,
-     380,
-     780,
-     760
+  "formatos": {
+    "atlas": {
+      "descricao": "Mapa como palco persistente; destaques territoriais, rota medida, cartões de números, hierarquias; mapa técnico escuro para estrutura abstrata; retorno ao mapa inicial no fecho.",
+      "palcos": [
+        "mapa",
+        "tecnico"
+      ],
+      "componentes": [
+        "atlas.geoPin",
+        "editorial.statCard",
+        "editorial.peopleCard",
+        "editorial.hierarchy",
+        "editorial.comparison",
+        "editorial.flowConnections",
+        "editorial.titleOrPayoff",
+        "dossie.documentCard",
+        "dossie.evidenceHighlight",
+        "editorial.timeline",
+        "editorial.cta"
+      ],
+      "clipes": [
+        "mecanismo.eclusa"
+      ],
+      "max_componentes_distintos": 7
+    },
+    "dossie": {
+      "descricao": "Mesa escura com objetos informativos: documentos com proveniência, datas, linha do tempo, carimbos e destaques, comparações; mapa simplificado só se ajudar.",
+      "palcos": [
+        "mesa",
+        "tecnico"
+      ],
+      "componentes": [
+        "dossie.documentCard",
+        "dossie.evidenceHighlight",
+        "editorial.timeline",
+        "editorial.statCard",
+        "editorial.peopleCard",
+        "editorial.comparison",
+        "editorial.flowConnections",
+        "editorial.titleOrPayoff"
+      ],
+      "clipes": [],
+      "max_componentes_distintos": 6
+    }
+  },
+  "regras": {
+    "progressao_max_s": 3,
+    "titulo_max_linhas": 3,
+    "asset_max_usos": 2,
+    "fim_tolerancia_s": 0.5,
+    "nota_progressao": "3 s < janela de 4 s do portão do MP4 (44084129999: plano com 4 s passou e o MP4 ficou parado 12–16 s); referências: 1–2 s",
+    "texto_min_px": 26,
+    "texto_meta_min_px": 18,
+    "nota_texto_min": "informação ≥ 26 px em 1080 (≈ 9,6 px num celular de 400 px de largura); crédito/atribuição (data-meta) ≥ 18 px",
+    "camera_presets": "ver src/v4/formatos/atlas_ref.py (aproxima / fixo / recua, medidos na referência)",
+    "gancho_s": 3,
+    "_nota_cta": "editorial.cta não conta como modalidade visual nova (assinatura do canal)",
+    "estilo_proibido_no_episodio": {
+      "_nota": "identidade visual vem de tokens/presets; o episódio traz conteúdo, coordenadas, acontecimentos e escolhas narrativas",
+      "camada": [
+        "tamanho",
+        "raio",
+        "largura",
+        "cor_hex",
+        "fonte_px",
+        "inclina",
+        "sombra"
+      ],
+      "rota": [
+        "largura"
+      ],
+      "raster": [
+        "ajuste"
+      ],
+      "beat": [
+        "transicao",
+        "zoom_max",
+        "deriva"
+      ]
+    }
+  },
+  "zonas_identidade": {
+    "marca": [
+      72,
+      282,
+      420,
+      52
+    ],
+    "legenda": [
+      150,
+      1240,
+      780,
+      215
     ]
-   },
-   "max_camadas": 2,
-   "uso": "data com contexto: a folha do mês real, o dia marcado"
   },
-  "dossie.relacao": {
-   "formato": "dossie",
-   "palco": "mesa",
-   "quadro": null,
-   "slots": {
-    "regua": [
-     40,
-     380,
-     1000,
-     820
-    ]
-   },
-   "max_camadas": 2,
-   "uso": "linha do tempo PROPORCIONAL com as evidências presas no ano: mostra intervalos e agrupamentos"
-  },
-  "dossie.ficha": {
-   "formato": "dossie",
-   "palco": "mesa",
-   "quadro": null,
-   "slots": {
-    "ficha": [
-     80,
-     380,
-     920,
-     800
-    ]
-   },
-   "max_camadas": 1,
-   "uso": "síntese de um caso: campos que entram na fala, prova real presa e carimbo de conclusão (reconstrução rotulada)"
-  },
-  "atlas.abertura": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    620,
-    880,
-    600
-   ],
-   "veu": "nenhum",
-   "movimento": "aproxima",
-   "slots": {
-    "pergunta": {
-     "y": 286,
-     "h": 264
+  "composicoes": {
+    "_nota": "Composições aprováveis e reutilizáveis (direção de arte 17/11). Cada beat escolhe UMA; ela fixa o palco, o QUADRO onde o território do beat (roi) é enquadrado pela câmera e os slots livres para as camadas. A câmera é calculada do roi para caber no quadro: nenhuma camada cobre o território que está sendo explicado (F-COBRE-TERRITORIO, conferido também nos quadros renderizados).",
+    "dossie.capa": {
+      "formato": "dossie",
+      "palco": "mesa",
+      "quadro": null,
+      "slots": {
+        "pasta": [
+          120,
+          410,
+          840,
+          780
+        ]
+      },
+      "max_camadas": 1,
+      "uso": "abre o dossiê: pasta com o assunto e a primeira evidência aparecendo"
     },
-    "selo": {
-     "y": 612,
-     "h": 72,
-     "w_max": 300
-    }
-   },
-   "max_camadas": 3,
-   "pinos": true,
-   "referencia": "mapa desde o 1º quadro, país destacado, pino ancorado e pergunta gigante acima do território (ref. 0–10 s: question_9s ≈ x240–842 y331–546 em 1080)",
-   "uso": "gancho: o território já na tela, um pino com a prova, a pergunta em cima"
-  },
-  "atlas.protagonista": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    470,
-    880,
-    650
-   ],
-   "veu": "nenhum",
-   "movimento": "aproxima",
-   "slots": {
-    "etiqueta": {
-     "y": 350,
-     "h": 96
+    "dossie.documento": {
+      "formato": "dossie",
+      "palco": "mesa",
+      "quadro": null,
+      "slots": {
+        "doc": [
+          50,
+          372,
+          980,
+          768
+        ],
+        "nota": [
+          72,
+          1148,
+          936,
+          76
+        ]
+      },
+      "max_camadas": 4,
+      "uso": "um documento/foto real grande e legível + marcações sobre ele"
     },
-    "nota": {
-     "y": 1130,
-     "h": 88
-    }
-   },
-   "max_camadas": 3,
-   "pinos": true,
-   "uso": "o mapa é a informação: camadas geográficas e pinos acumulam; só etiquetas curtas fora do território"
-  },
-  "atlas.escada": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    660,
-    880,
-    450
-   ],
-   "veu": "topo",
-   "movimento": "fixo",
-   "slots": {
-    "escada": {
-     "y": 350,
-     "h": 290,
-     "w_max": 1000
+    "dossie.calendario": {
+      "formato": "dossie",
+      "palco": "mesa",
+      "quadro": null,
+      "slots": {
+        "calendario": [
+          150,
+          380,
+          780,
+          760
+        ]
+      },
+      "max_camadas": 2,
+      "uso": "data com contexto: a folha do mês real, o dia marcado"
     },
-    "nota": {
-     "y": 1130,
-     "h": 88
-    }
-   },
-   "max_camadas": 3,
-   "pinos": true,
-   "referencia": "hierarquia persistente na faixa superior e território no meio (ref. 25 s: hierarchy_25s ≈ x57–1044 y268–542; territory y538–1243), descida abaixo da marca",
-   "uso": "degraus/níveis que acendem na fala, ligados aos pinos do mapa pelo mesmo nome"
-  },
-  "atlas.painel": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    352,
-    880,
-    400
-   ],
-   "veu": "base",
-   "movimento": "fixo",
-   "slots": {
-    "painel": {
-     "y": 770,
-     "h": 350,
-     "w_max": 960
+    "dossie.relacao": {
+      "formato": "dossie",
+      "palco": "mesa",
+      "quadro": null,
+      "slots": {
+        "regua": [
+          40,
+          380,
+          1000,
+          820
+        ]
+      },
+      "max_camadas": 2,
+      "uso": "linha do tempo PROPORCIONAL com as evidências presas no ano: mostra intervalos e agrupamentos"
     },
-    "nota": {
-     "y": 1130,
-     "h": 88
-    }
-   },
-   "max_camadas": 3,
-   "pinos": true,
-   "referencia": "cartão de dados ~86 % da largura sobre o mapa, câmera fixa enquanto o número muda (ref. 10–22 s; SIFT escala 1,000 em 11 e 21 s)",
-   "uso": "território em cima, número/mostrador embaixo; câmera parada enquanto o dado muda"
-  },
-  "atlas.tecnica": {
-   "formato": "atlas",
-   "palco": "tecnico",
-   "quadro": [
-    80,
-    390,
-    920,
-    440
-   ],
-   "veu": "nenhum",
-   "movimento": "fixo",
-   "slots": {
-    "etiqueta": {
-     "y": 350,
-     "h": 96
+    "dossie.ficha": {
+      "formato": "dossie",
+      "palco": "mesa",
+      "quadro": null,
+      "slots": {
+        "ficha": [
+          80,
+          380,
+          920,
+          800
+        ]
+      },
+      "max_camadas": 1,
+      "uso": "síntese de um caso: campos que entram na fala, prova real presa e carimbo de conclusão (reconstrução rotulada)"
     },
-    "corpo": {
-     "y": 640,
-     "h": 570,
-     "w_max": 900
-    }
-   },
-   "max_camadas": 2,
-   "pinos": false,
-   "referencia": "mapa técnico azul-marinho com grade (~169 px em 1080) e cartão sobre a parte baixa do território (ref. 37–44 s)",
-   "uso": "SÓ para explicar um mecanismo ou estrutura física (beat com \"funcao\": \"mecanismo\"|\"estrutura\"): planta técnica do Coringa sobre o território real",
-   "exige_funcao": [
-    "mecanismo",
-    "estrutura"
-   ]
-  },
-  "atlas.manchete": {
-   "formato": "atlas",
-   "palco": "mapa",
-   "quadro": [
-    100,
-    660,
-    880,
-    550
-   ],
-   "veu": "topo",
-   "movimento": "recua",
-   "slots": {
-    "titulo": {
-     "y": 350,
-     "h": 290
+    "atlas.abertura": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": [
+        100,
+        620,
+        880,
+        600
+      ],
+      "veu": "nenhum",
+      "movimento": "aproxima",
+      "slots": {
+        "pergunta": {
+          "y": 286,
+          "h": 264
+        },
+        "selo": {
+          "y": 612,
+          "h": 72,
+          "w_max": 300
+        }
+      },
+      "max_camadas": 3,
+      "pinos": true,
+      "referencia": "mapa desde o 1º quadro, país destacado, pino ancorado e pergunta gigante acima do território (ref. 0–10 s: question_9s ≈ x240–842 y331–546 em 1080)",
+      "uso": "gancho: o território já na tela, um pino com a prova, a pergunta em cima"
     },
-    "cta": {
-     "y": 1130,
-     "h": 88
-    }
-   },
-   "max_camadas": 1,
-   "pinos": false,
-   "referencia": "retorno ao plano largo com recuo lento (ref. 59–66 s: SIFT escala mediana 0,954/s)",
-   "uso": "fecho: síntese sobre o território inteiro"
+    "atlas.protagonista": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": [
+        100,
+        470,
+        880,
+        650
+      ],
+      "veu": "nenhum",
+      "movimento": "aproxima",
+      "slots": {
+        "etiqueta": {
+          "y": 350,
+          "h": 96
+        },
+        "nota": {
+          "y": 1130,
+          "h": 88
+        }
+      },
+      "max_camadas": 3,
+      "pinos": true,
+      "uso": "o mapa é a informação: camadas geográficas e pinos acumulam; só etiquetas curtas fora do território"
+    },
+    "atlas.escada": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": [
+        100,
+        660,
+        880,
+        450
+      ],
+      "veu": "topo",
+      "movimento": "fixo",
+      "slots": {
+        "escada": {
+          "y": 350,
+          "h": 290,
+          "w_max": 1000
+        },
+        "nota": {
+          "y": 1130,
+          "h": 88
+        }
+      },
+      "max_camadas": 3,
+      "pinos": true,
+      "referencia": "hierarquia persistente na faixa superior e território no meio (ref. 25 s: hierarchy_25s ≈ x57–1044 y268–542; territory y538–1243), descida abaixo da marca",
+      "uso": "degraus/níveis que acendem na fala, ligados aos pinos do mapa pelo mesmo nome"
+    },
+    "atlas.painel": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": [
+        100,
+        352,
+        880,
+        400
+      ],
+      "veu": "base",
+      "movimento": "fixo",
+      "slots": {
+        "painel": {
+          "y": 770,
+          "h": 350,
+          "w_max": 960
+        },
+        "nota": {
+          "y": 1130,
+          "h": 88
+        }
+      },
+      "max_camadas": 3,
+      "pinos": true,
+      "referencia": "cartão de dados ~86 % da largura sobre o mapa, câmera fixa enquanto o número muda (ref. 10–22 s; SIFT escala 1,000 em 11 e 21 s)",
+      "uso": "território em cima, número/mostrador embaixo; câmera parada enquanto o dado muda"
+    },
+    "atlas.tecnica": {
+      "formato": "atlas",
+      "palco": "tecnico",
+      "quadro": [
+        80,
+        390,
+        920,
+        440
+      ],
+      "veu": "nenhum",
+      "movimento": "fixo",
+      "slots": {
+        "etiqueta": {
+          "y": 350,
+          "h": 96
+        },
+        "corpo": {
+          "y": 640,
+          "h": 570,
+          "w_max": 900
+        }
+      },
+      "max_camadas": 2,
+      "pinos": false,
+      "referencia": "mapa técnico azul-marinho com grade (~169 px em 1080) e cartão sobre a parte baixa do território (ref. 37–44 s)",
+      "uso": "SÓ para explicar um mecanismo ou estrutura física (beat com \"funcao\": \"mecanismo\"|\"estrutura\"): planta técnica do Coringa sobre o território real",
+      "exige_funcao": [
+        "mecanismo",
+        "estrutura"
+      ]
+    },
+    "atlas.manchete": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": [
+        100,
+        660,
+        880,
+        550
+      ],
+      "veu": "topo",
+      "movimento": "recua",
+      "slots": {
+        "titulo": {
+          "y": 350,
+          "h": 290
+        },
+        "cta": {
+          "y": 1130,
+          "h": 88
+        }
+      },
+      "max_camadas": 1,
+      "pinos": false,
+      "referencia": "retorno ao plano largo com recuo lento (ref. 59–66 s: SIFT escala mediana 0,954/s)",
+      "uso": "fecho: síntese sobre o território inteiro"
+    },
+    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
   },
-  "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
- },
- "zonas_por_formato": {
-  "atlas": {
-   "_nota": "legenda e créditos do ATLAS vêm de layout.faixa_inferior() (plataformas.json)",
-   "dinamico": true,
-   "marca": [
-    72,
-    222,
-    420,
-    48
-   ]
+  "zonas_por_formato": {
+    "atlas": {
+      "_nota": "Zona de marca acompanha plataformas.faixa_inferior.marca_y=300; limite feed Reels y>=285",
+      "dinamico": true,
+      "marca": [
+        72,
+        294,
+        420,
+        44
+      ]
+    }
   }
- }
 }

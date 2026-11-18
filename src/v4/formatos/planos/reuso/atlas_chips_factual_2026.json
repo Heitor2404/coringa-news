@@ -3,12 +3,12 @@
   "canal": "coringa",
   "video_id": "teste-atlas-chips-factual-20261118",
   "titulo": "Por que Taiwan é central na guerra dos chips?",
-  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente.",
+  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente. Progressão informativa sincronizada por tokens e composições ATLAS existentes.",
   "geo": "motor4/formatos/dados/mundo.topo.json",
   "camera": "roi",
   "styleframes": 8,
   "narracao": {
-    "texto": "Por que uma ilha virou peça central na disputa tecnológica entre Estados Unidos e China? Taiwan abriga fábricas da TSMC, que produz chips para empresas do mundo inteiro. Em 2025, tecnologias de sete nanômetros ou menores representaram setenta e quatro por cento da receita de wafers da própria TSMC. Isso não é a participação no mercado mundial. Mas fabricar chips avançados depende de outros países. Na Holanda, a ASML é a única fabricante de sistemas de litografia EUV, usados na produção de chips avançados. E nos Estados Unidos, empresas como a Nvidia projetam processadores que podem ser fabricados em Taiwan. Em sete de outubro de 2022, Washington impôs controles sobre a exportação de certos chips e equipamentos para a China. Em janeiro de 2026, algumas licenças passaram a ser analisadas caso a caso. É uma cadeia: projeto americano, equipamentos holandeses e fábrica em Taiwan. Se um elo falha, o impacto atravessa o planeta. Essa é a guerra dos chips.",
+    "texto": "Por que uma ilha virou peça central na disputa tecnológica entre Estados Unidos e China? Taiwan abriga fábricas da TSMC. Em 2025, tecnologias de sete nanômetros ou menores representaram setenta e quatro por cento da receita de wafers da própria TSMC. Isso não é a participação no mercado mundial. Mas fabricar chips depende de outros países. Na Holanda, a ASML é a única fabricante de sistemas de litografia EUV. E nos Estados Unidos, empresas como a Nvidia projetam processadores fabricados em Taiwan. Em outubro de 2022, Washington anunciou controles sobre certos chips e equipamentos destinados à China. Em janeiro de 2026, pedidos de licença para certos chips passaram à análise caso a caso. É uma cadeia: projeto americano, equipamentos holandeses e fábrica em Taiwan. Se um elo falha, o impacto atravessa o planeta. Essa é a guerra dos chips.",
     "sintetica": true,
     "fatos": [
       {
@@ -84,6 +84,20 @@
       "nome": "Taiwan",
       "cor": "destaque",
       "t0": "@cadeia"
+    },
+    {
+      "fonte": "paises",
+      "nome": "United States of America",
+      "cor": "destaque",
+      "t0": "@disputa",
+      "t1": "@china-0.15"
+    },
+    {
+      "fonte": "paises",
+      "nome": "China",
+      "cor": "destaque2",
+      "t0": "@china",
+      "t1": "@taiwan-0.15"
     }
   ],
   "rotas": [
@@ -217,10 +231,60 @@
           "componente": "editorial.statCard",
           "slot": "nota",
           "t0": "@propria",
-          "t1": "@mas-0.45",
+          "t1": "@participação-0.35",
           "p": {
             "estilo": "pilula",
             "valor": "DA PRÓPRIA TSMC"
+          }
+        },
+        {
+          "id": "ano-2025",
+          "componente": "editorial.statCard",
+          "slot": "painel",
+          "t0": "@2025",
+          "t1": "@nanometros-0.35",
+          "p": {
+            "titulo": "TSMC · TAIWAN",
+            "valor": "2025",
+            "rotulo": "ANO DOS DADOS",
+            "fato": "f-tsmc"
+          }
+        },
+        {
+          "id": "processo-7nm",
+          "componente": "editorial.statCard",
+          "slot": "painel",
+          "t0": "@nanometros",
+          "t1": "@setenta-0.35",
+          "p": {
+            "titulo": "PROCESSOS AVANÇADOS",
+            "valor": "7 nm",
+            "rotulo": "OU MENORES",
+            "fato": "f-tsmc"
+          }
+        },
+        {
+          "id": "receita-wafer",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@receita",
+          "t1": "@propria-0.35",
+          "p": {
+            "estilo": "pilula",
+            "valor": "RECEITA DE WAFERS",
+            "fato": "f-tsmc"
+          }
+        },
+        {
+          "id": "quota-nao-global",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@participação",
+          "t1": "@mas-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "NÃO É QUOTA MUNDIAL",
+            "fato": "f-tsmc"
           }
         }
       ]
@@ -280,6 +344,17 @@
             "rotulo": "Taiwan",
             "lado": "esquerda"
           }
+        },
+        {
+          "id": "cadeia-outros",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
+          "t0": "@outros",
+          "t1": "@asml-0.35",
+          "p": {
+            "estilo": "pilula",
+            "valor": "DEPENDÊNCIA GLOBAL"
+          }
         }
       ]
     },
@@ -299,15 +374,15 @@
           "id": "p-eua",
           "componente": "atlas.geoPin",
           "slot": "geo",
-          "t0": "@2:estados",
+          "t0": "@nvidia",
           "t1": "@outubro-1.15",
           "p": {
             "tipo": "local",
             "lonlat": [
-              -121.96,
-              37.35
+              -98.58,
+              39.83
             ],
-            "rotulo": "Projeto · EUA",
+            "rotulo": "EUA · DESIGN",
             "lado": "direita"
           }
         },
@@ -370,11 +445,11 @@
           "id": "sozinha",
           "componente": "editorial.statCard",
           "slot": "nota",
-          "t0": "@janeiro",
+          "t0": "@caso",
           "t1": "@cadeia-0.45",
           "p": {
             "estilo": "pilula",
-            "valor": "2026: LICENÇAS CASO A CASO",
+            "valor": "ANÁLISE CASO A CASO",
             "fato": "f-bis-2026"
           }
         },
@@ -383,11 +458,59 @@
           "componente": "editorial.statCard",
           "slot": "nota",
           "t0": "@washington",
-          "t1": "@2:china-0.45",
+          "t1": "@controles-0.35",
           "p": {
             "estilo": "pilula",
             "valor": "WASHINGTON: CONTROLES",
             "fato": "f-bis-2022"
+          }
+        },
+        {
+          "id": "tipo-controle",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@controles",
+          "t1": "@equipamentos-0.35",
+          "p": {
+            "estilo": "pilula",
+            "valor": "CONTROLES DE EXPORTAÇÃO",
+            "fato": "f-bis-2022"
+          }
+        },
+        {
+          "id": "chips-e-equip",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@equipamentos",
+          "t1": "@2:china-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "CHIPS E EQUIPAMENTOS",
+            "fato": "f-bis-2022"
+          }
+        },
+        {
+          "id": "ano-revisao",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@janeiro",
+          "t1": "@licença-0.35",
+          "p": {
+            "estilo": "pilula",
+            "valor": "JANEIRO DE 2026",
+            "fato": "f-bis-2026"
+          }
+        },
+        {
+          "id": "pedidos-licencas",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@licença",
+          "t1": "@caso-0.35",
+          "p": {
+            "estilo": "pilula",
+            "valor": "PEDIDOS DE LICENÇA",
+            "fato": "f-bis-2026"
           }
         }
       ]

@@ -1,0 +1,487 @@
+{
+  "formato": "atlas",
+  "canal": "coringa",
+  "video_id": "teste-atlas-chips-factual-20261118",
+  "titulo": "Por que Taiwan é central na guerra dos chips?",
+  "tipo_producao": "VALIDAÇÃO DE REUSO FACTUAL DO ATLAS. Narração/tempos SINTÉTICOS, sem TTS e sem MP4 para publicação. Mesmo catálogo visual e sem mudanças de motor; revisar mídia de fotos separadamente.",
+  "geo": "motor4/formatos/dados/mundo.topo.json",
+  "camera": "roi",
+  "styleframes": 8,
+  "narracao": {
+    "texto": "Por que uma ilha virou peça central na disputa tecnológica entre Estados Unidos e China? Taiwan abriga fábricas da TSMC, que produz chips para empresas do mundo inteiro. Em 2025, tecnologias de sete nanômetros ou menores representaram setenta e quatro por cento da receita de wafers da própria TSMC. Isso não é a participação no mercado mundial. Mas fabricar chips avançados depende de outros países. Na Holanda, a ASML é a única fabricante de sistemas de litografia EUV, usados na produção de chips avançados. E nos Estados Unidos, empresas como a Nvidia projetam processadores que podem ser fabricados em Taiwan. Em sete de outubro de 2022, Washington impôs controles sobre a exportação de certos chips e equipamentos para a China. Em janeiro de 2026, algumas licenças passaram a ser analisadas caso a caso. É uma cadeia: projeto americano, equipamentos holandeses e fábrica em Taiwan. Se um elo falha, o impacto atravessa o planeta. Essa é a guerra dos chips.",
+    "sintetica": true,
+    "fatos": [
+      {
+        "id": "f-tsmc",
+        "texto": "Em 2025, tecnologias da TSMC de 7 nm ou mais avançadas representaram 74% da receita de wafers da própria TSMC; não é participação de mercado global.",
+        "fontes": [
+          "https://investor.tsmc.com/static/annualReports/2025/english/index.html"
+        ]
+      },
+      {
+        "id": "f-asml",
+        "texto": "A ASML é atualmente a única fabricante de sistemas de litografia EUV, utilizados para etapas críticas na fabricação de chips de ponta.",
+        "fontes": [
+          "https://www.asml.com/investors/annual-report/2025",
+          "https://www.sec.gov/Archives/edgar/data/937966/000162828026041057/a2025conflictmineralsreport.htm"
+        ]
+      },
+      {
+        "id": "f-projeto",
+        "texto": "A Nvidia emprega estratégia fabless, desenvolvendo chips e contratando foundries como TSMC e Samsung para produzi-los; nem todo chip americano é necessariamente fabricado em Taiwan.",
+        "fontes": [
+          "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm"
+        ]
+      },
+      {
+        "id": "f-bis-2022",
+        "texto": "Em 7 de outubro de 2022 o BIS anunciou controles segmentados sobre certos chips e equipamentos voltados à China, com datas diferentes de vigência conforme a regra.",
+        "fontes": [
+          "https://media.bis.gov/press-release/commerce-implements-new-export-controls-advanced-computing-semiconductor-manufacturing-items-peoples"
+        ]
+      },
+      {
+        "id": "f-bis-2026",
+        "texto": "Em 13 de janeiro de 2026 o BIS mudou a política de análise de licenças de certos semicondutores, incluindo H200 e MI325X, de presunção de recusa para exame caso a caso sujeito a condições.",
+        "fontes": [
+          "https://www.bis.gov/press-release/department-commerce-revises-license-review-policy-semiconductors-exported-china"
+        ]
+      }
+    ]
+  },
+  "duracao": "@fim",
+  "destaques": [
+    {
+      "fonte": "paises",
+      "nome": "Taiwan",
+      "cor": "destaque",
+      "t0": "@taiwan",
+      "t1": "@mas-0.2"
+    },
+    {
+      "fonte": "paises",
+      "nome": "Netherlands",
+      "cor": "destaque",
+      "t0": "@holanda",
+      "t1": "@2:estados-0.2"
+    },
+    {
+      "fonte": "paises",
+      "nome": "United States of America",
+      "cor": "destaque",
+      "t0": "@2:estados",
+      "t1": "@se"
+    },
+    {
+      "fonte": "paises",
+      "nome": "China",
+      "cor": "destaque2",
+      "t0": "@2:china",
+      "t1": "@se"
+    },
+    {
+      "fonte": "paises",
+      "nome": "Taiwan",
+      "cor": "destaque",
+      "t0": "@cadeia"
+    }
+  ],
+  "rotas": [
+    {
+      "arco": [
+        [
+          5.39,
+          51.42
+        ],
+        [
+          120.97,
+          24.78
+        ]
+      ],
+      "t0": "@holanda",
+      "t1": "@asml",
+      "some": "@2:estados"
+    },
+    {
+      "arco": [
+        [
+          -121.96,
+          37.35
+        ],
+        [
+          120.97,
+          24.78
+        ]
+      ],
+      "t0": "@2:estados",
+      "t1": "@processadores",
+      "some": "@outubro"
+    }
+  ],
+  "rotulos": [],
+  "clipes": [],
+  "rasters": [
+    {
+      "nome": "ne2_mundo"
+    },
+    {
+      "nome": "ne2_pacifico"
+    },
+    {
+      "nome": "ne2_asia_leste",
+      "de": 4.5
+    }
+  ],
+  "beats": [
+    {
+      "id": "b1-gancho",
+      "composicao": "atlas.abertura",
+      "t": 0,
+      "roi": [
+        116.5,
+        19.5,
+        126.5,
+        27.5
+      ],
+      "movimento": "aproxima",
+      "prova": "o mapa já mostra a ilha; a pergunta em cima",
+      "camadas": [
+        {
+          "id": "pergunta",
+          "componente": "editorial.titleOrPayoff",
+          "slot": "pergunta",
+          "t0": 0.2,
+          "t1": "@taiwan-0.15",
+          "p": {
+            "linhas": [
+              {
+                "texto": "O CHIP DEPENDE",
+                "t": 0.3
+              },
+              {
+                "texto": "DE UMA ILHA?",
+                "t": "@ilha",
+                "destaque": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "b2-tsmc",
+      "composicao": "atlas.painel",
+      "t": "@taiwan-0.15",
+      "roi": [
+        118.6,
+        21.6,
+        123.2,
+        25.6
+      ],
+      "prova": "o número mora sobre a própria ilha",
+      "camadas": [
+        {
+          "id": "pct",
+          "componente": "editorial.statCard",
+          "slot": "painel",
+          "t0": "@setenta",
+          "t1": "@mas-0.45",
+          "p": {
+            "titulo": "TSMC · 2025",
+            "prefixo": "",
+            "valor": 74,
+            "unidade": "%",
+            "rotulo": "DA RECEITA DE WAFERS",
+            "contagem": true,
+            "fato": "f-tsmc"
+          }
+        },
+        {
+          "id": "p-tsmc",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@tsmc",
+          "t1": "@mas-0.45",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              120.97,
+              24.78
+            ],
+            "rotulo": "TSMC · Taiwan",
+            "lado": "direita"
+          }
+        },
+        {
+          "id": "planeta",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@propria",
+          "t1": "@mas-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "DA PRÓPRIA TSMC"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b3-holanda",
+      "composicao": "atlas.protagonista",
+      "t": "@mas-0.1",
+      "roi": [
+        0,
+        16,
+        126,
+        56
+      ],
+      "prova": "a ferramenta vem do outro lado do mundo: a conexão desenha a dependência",
+      "camadas": [
+        {
+          "id": "p-asml",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@holanda",
+          "t1": "@2:estados-0.45",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              5.39,
+              51.42
+            ],
+            "rotulo": "ASML · Veldhoven",
+            "lado": "direita"
+          }
+        },
+        {
+          "id": "euv",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
+          "t0": "@asml",
+          "t1": "@2:estados-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "ASML: SISTEMAS EUV",
+            "fato": "f-asml"
+          }
+        },
+        {
+          "id": "p-tw",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@litografia",
+          "t1": "@2:estados-0.45",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              120.97,
+              24.78
+            ],
+            "rotulo": "Taiwan",
+            "lado": "esquerda"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b4-eua",
+      "composicao": "atlas.protagonista",
+      "t": "@2:estados-0.1",
+      "roi": [
+        114,
+        12,
+        242,
+        52
+      ],
+      "prova": "o projeto atravessa o Pacífico",
+      "camadas": [
+        {
+          "id": "p-eua",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@2:estados",
+          "t1": "@outubro-1.15",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              -121.96,
+              37.35
+            ],
+            "rotulo": "Projeto · EUA",
+            "lado": "direita"
+          }
+        },
+        {
+          "id": "cerebro",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
+          "t0": "@projetam",
+          "t1": "@outubro-1.15",
+          "p": {
+            "estilo": "pilula",
+            "valor": "DESIGN NOS EUA",
+            "fato": "f-projeto"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b5-licenca",
+      "composicao": "atlas.painel",
+      "t": "@outubro-1.0",
+      "roi": [
+        95,
+        15,
+        200,
+        50
+      ],
+      "prova": "a data e a conexão cortada no meio",
+      "camadas": [
+        {
+          "id": "data",
+          "componente": "editorial.statCard",
+          "slot": "painel",
+          "t0": "@outubro",
+          "t1": "@cadeia-0.45",
+          "p": {
+            "titulo": "EUA → CHINA",
+            "valor": "OUT 2022",
+            "rotulo": "CONTROLES SOBRE ITENS ESPECÍFICOS",
+            "fato": "f-bis-2022"
+          }
+        },
+        {
+          "id": "p-pequim",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@2:china",
+          "t1": "@cadeia-0.45",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              116.4074,
+              39.9042
+            ],
+            "rotulo": "Pequim · China",
+            "lado": "direita"
+          }
+        },
+        {
+          "id": "sozinha",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@janeiro",
+          "t1": "@cadeia-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "2026: LICENÇAS CASO A CASO",
+            "fato": "f-bis-2026"
+          }
+        },
+        {
+          "id": "wash",
+          "componente": "editorial.statCard",
+          "slot": "nota",
+          "t0": "@washington",
+          "t1": "@2:china-0.45",
+          "p": {
+            "estilo": "pilula",
+            "valor": "WASHINGTON: CONTROLES",
+            "fato": "f-bis-2022"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b6-corrente",
+      "composicao": "atlas.escada",
+      "t": "@cadeia-0.15",
+      "roi": [
+        118,
+        18,
+        238,
+        48
+      ],
+      "prova": "os três elos acendem na ordem da fala",
+      "camadas": [
+        {
+          "id": "elos",
+          "componente": "editorial.hierarchy",
+          "slot": "escada",
+          "t0": "@cadeia+0.75",
+          "t1": "@se-0.15",
+          "p": {
+            "escada": false,
+            "niveis": [
+              {
+                "rotulo": "Projeto",
+                "valor": "EUA"
+              },
+              {
+                "rotulo": "Equipamentos",
+                "valor": "HOLANDA"
+              },
+              {
+                "rotulo": "Fabricação",
+                "valor": "TAIWAN"
+              }
+            ],
+            "ativo": [
+              {
+                "i": 0,
+                "t0": "@projeto"
+              },
+              {
+                "i": 1,
+                "t0": "@2:equipamentos"
+              },
+              {
+                "i": 2,
+                "t0": "@fabrica"
+              }
+            ],
+            "rotulos_abaixo": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "b7-fecho",
+      "composicao": "atlas.manchete",
+      "t": "@se-0.15",
+      "roi": [
+        118,
+        13,
+        238,
+        49
+      ],
+      "prova": "síntese sobre o mapa inteiro",
+      "camadas": [
+        {
+          "id": "fecho",
+          "componente": "editorial.titleOrPayoff",
+          "slot": "titulo",
+          "t0": "@se",
+          "t1": "@fim",
+          "p": {
+            "linhas": [
+              {
+                "texto": "UM ELO",
+                "t": "@elo",
+                "destaque": true
+              },
+              {
+                "texto": "MUDA O JOGO",
+                "t": "@impacto"
+              },
+              {
+                "texto": "GUERRA DOS CHIPS",
+                "t": "@guerra"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

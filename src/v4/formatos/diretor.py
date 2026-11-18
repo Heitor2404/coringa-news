@@ -57,8 +57,11 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
 - Declare todo clipe técnico em "explicacoes": [{id, tipo:"mecanismo", t0, t1, recurso}],
   onde recurso é o nome do componente aprovado, t0/t1 seguem as palavras da fala,
   e o clipe cobre integralmente o intervalo. O validador reprova se faltarem contratos.
-- Destacamentos físicos são definidos no próprio recurso com alvos compatíveis;
-  não coloque coordenadas de câmera ou identidade visual no storyboard.
+- Focos físicos são selecionados por "focos": [{t, alvo, rotulo}], com alvos
+  SEMÂNTICOS permitidos no catálogo do componente e tempo sincronizado com a fala.
+  O componente calcula a câmera e a posição do rótulo: nunca invente coordenadas.
+- Mostre UMA informação protagonista por vez. Máximo de 2 camadas editoriais
+  simultâneas; rótulos de mecanismo curtos e legíveis, sem excesso de etiquetas.
 - Dado final deve entrar na fala correspondente e encerrar sem repetir uma cena por decoração.
 - Não corte narração para reduzir duração. Na dúvida sobre a cobertura visual, reporte pendência.
 """

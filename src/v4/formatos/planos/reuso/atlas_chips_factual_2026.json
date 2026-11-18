@@ -417,7 +417,7 @@
           "componente": "editorial.statCard",
           "slot": "painel",
           "t0": "@outubro",
-          "t1": "@cadeia-0.45",
+          "t1": "@janeiro-0.35",
           "p": {
             "titulo": "EUA → CHINA",
             "valor": "OUT 2022",
@@ -490,18 +490,6 @@
           }
         },
         {
-          "id": "ano-revisao",
-          "componente": "editorial.statCard",
-          "slot": "nota",
-          "t0": "@janeiro",
-          "t1": "@licença-0.35",
-          "p": {
-            "estilo": "pilula",
-            "valor": "JANEIRO DE 2026",
-            "fato": "f-bis-2026"
-          }
-        },
-        {
           "id": "pedidos-licencas",
           "componente": "editorial.statCard",
           "slot": "nota",
@@ -510,6 +498,19 @@
           "p": {
             "estilo": "pilula",
             "valor": "PEDIDOS DE LICENÇA",
+            "fato": "f-bis-2026"
+          }
+        },
+        {
+          "id": "data-2026",
+          "componente": "editorial.statCard",
+          "slot": "painel",
+          "t0": "@janeiro",
+          "t1": "@cadeia-0.45",
+          "p": {
+            "titulo": "EUA → CHINA",
+            "valor": "JAN 2026",
+            "rotulo": "CERTOS CHIPS",
             "fato": "f-bis-2026"
           }
         }

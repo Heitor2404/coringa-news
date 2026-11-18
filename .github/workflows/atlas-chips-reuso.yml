@@ -34,8 +34,18 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: motor4/package-lock.json
-      - uses: FedericoCarboni/setup-ffmpeg@v3
-        with: {ffmpeg-version: release}
+      - name: FFmpeg preferindo binarios preinstalados no runner, fallback controlado
+        timeout-minutes: 6
+        run: |
+          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
+            echo "FFmpeg do runner disponível, dispensando download externo."
+          else
+            echo "FFmpeg ausente, instalando com limites rígidos de tempo."
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
+            timeout 150 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
       - name: Verificar Chrome e preparar fontes aprovadas
         run: |
           ffmpeg -version | head -1

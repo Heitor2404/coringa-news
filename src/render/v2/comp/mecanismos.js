@@ -3,7 +3,7 @@
  * navio sobe junto com o nível (régua em metros), comporta da frente abre, navio sai. Sentido 'descer' = o inverso.
  * evento.impacto: explosão/impacto/onda de choque em esquema com anéis de alcance em escala.                      */
 (function () {
-  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt, cameraDidatica, planejarRotulos } = V2.U;
+  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt, cameraDidatica, planejarRotulos, limitarZoom } = V2.U;
 
   /* 18. mecanismo.eclusa — V2.1: corte lateral em ESCALA DE CELULAR, com direção de câmera (planos A–F) e física coerente:
    *  - a água entra/sai pelo TÚNEL com válvula (sistema hidráulico desenhado), nunca atravessando comporta fechada;
@@ -196,6 +196,8 @@
         const seq = p.planos === false ? [['A', 0]] : [['A', 0], ['B', fecha[0] - .5], ['C', valv - .1], ['D', enche[0] + (enche[1] - enche[0]) * .3], ['E', enche[1] - .3], ['F', abre[1] + .2]];
         let r = plano(seq[0][0], est);
         for (let q = 1; q < seq.length; q++) { if (tl < seq[q][1]) break; const kq = eio((tl - seq[q][1]) / .8); const r1 = plano(seq[q][0], est); r = [lerp(r[0], r1[0], kq), lerp(r[1], r1[1], kq), lerp(r[2], r1[2], kq)]; }
+        // Mesmo nos planos intermediários, não usar zoom que recorta o conjunto causal.
+        if (V4) r = limitarZoom(r, ASP, DV.largura_minima || 1250);
         // Direção da explicação contínua: preserva o corte da câmara,
         // sem trocar por cards, e destaca a peça citada na narração.
         const marcas = p.focos || p.destaques_fluxo || [], alvos = {

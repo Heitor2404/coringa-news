@@ -1,277 +1,330 @@
 {
- "canal": "coringa",
- "nota": "Tokens do canal Coringa Explica. Outros canais = outro arquivo nesta pasta (configuração, não fork).",
- "identidade": "motor4/identidade/identidade.json",
- "cores": {
-  "fundo": "#05080F",
-  "destaque": "#FFD21F",
-  "destaque_escuro": "#C99A00",
-  "texto": "#FFFFFF",
-  "papel": "#F2EDE3",
-  "tinta": "#0B0F17",
-  "alerta": "#E5483A",
-  "agua": "#2F8FD8",
-  "ciano": "#3FD0E0"
- },
- "fontes": {
-  "titulo": "Mont, sans-serif",
-  "dado": "JBM, monospace"
- },
- "tempo": {
-  "entra": 0.18,
-  "sai": 0.3,
-  "_nota": "entrada medida na referência A: retrato 0,2 s, cédula 0,2 s, rótulo 0,16 s — fade curto (era 0,45 s)"
- },
- "palco": {
-  "mapa": {
-   "mar": "#0A1626",
-   "terra": "#34445A",
-   "borda": "#9FB3D1",
-   "agua": "#2F8FD8",
-   "destaque": "#FFD21F",
-   "destaque2": "#3FD0E0",
-   "rota_px": 9,
-   "conexao_px": 7,
-   "foco": "#A8392B",
-   "pais_opacidade": 0.9,
-   "fronteira_opacidade": 0.0
+  "canal": "coringa",
+  "nota": "Tokens do canal Coringa Explica. Outros canais = outro arquivo nesta pasta (configuração, não fork).",
+  "identidade": "motor4/identidade/identidade.json",
+  "cores": {
+    "fundo": "#05080F",
+    "destaque": "#FFD21F",
+    "destaque_escuro": "#C99A00",
+    "texto": "#FFFFFF",
+    "papel": "#F2EDE3",
+    "tinta": "#0B0F17",
+    "alerta": "#E5483A",
+    "agua": "#2F8FD8",
+    "ciano": "#3FD0E0"
   },
-  "tecnico": {
-   "_nota": "TEMPLATE TÉCNICO do Coringa — usado pelo palco técnico dos formatos E pelos clipes de mecanismo (params.tema). Fundo grafite-azulado, grade fina + grade maior (170 px ≈ referência), estrutura em ardósia hachurada, água no azul do canal, MOVIMENTO sempre em amarelo, rótulos em papel (mesmo padrão dos cartões).",
-   "fundo": "#070B14",
-   "fundo2": "#0E1828",
-   "grade": "rgba(170,195,230,.055)",
-   "grade_maior": "rgba(170,195,230,.12)",
-   "grade_px": 170,
-   "linha": "#CFE0F5",
-   "terra": "#0F1C2E",
-   "agua_topo": "#5AB4F0",
-   "agua_fundo": "#1C5A94",
-   "superficie": "#D7EEFF",
-   "jato": "#EAF6FF",
-   "concreto": "#2A3446",
-   "concreto_hachura": "#334058",
-   "rocha": "#121A27",
-   "rocha_ponto": "#192333",
-   "tunel": "#04070D",
-   "estrutura": "#9AAAC0",
-   "torre": "#2F3B50",
-   "fluxo": "#FFD21F",
-   "etapa": "#FFD21F",
-   "progresso": "rgba(255,210,31,.22)",
-   "progresso_on": "#FFD21F",
-   "rotulo_fundo": "rgba(242,237,227,.96)",
-   "rotulo_texto": "#0B0F17",
-   "degrau": "90,180,240"
+  "fontes": {
+    "titulo": "Mont, sans-serif",
+    "dado": "JBM, monospace"
   },
-  "mesa": {
-   "fundo": "#0A0806",
-   "luz": "rgba(255,214,150,.22)",
-   "madeira": "#1A120C",
-   "madeira_r": 0.23,
-   "madeira_g": 0.14,
-   "madeira_b": 0.08
+  "tempo": {
+    "entra": 0.18,
+    "sai": 0.3,
+    "_nota": "entrada medida na referência A: retrato 0,2 s, cédula 0,2 s, rótulo 0,16 s — fade curto (era 0,45 s)"
   },
-  "raster": {
-   "mar_fundo": "#04101F",
-   "mar_raso": "#2C6F96",
-   "sat_terra": 0.95,
-   "luz_terra": 0.84,
-   "nota": "grade aplicada aos rasters de relevo (scripts/formatos_ne2.py) e ao satélite (scripts/formatos_raster.py)",
-   "contraste_terra": 1.12,
-   "grade_satelite": {
-    "modelo": "polinomio2_rgb",
-    "coef": [
-     [
-      -0.505555,
-      -1.108073,
-      0.480086
-     ],
-     [
-      2.487604,
-      2.09454,
-      -1.203847
-     ],
-     [
-      -0.626924,
-      -0.213853,
-      1.186193
-     ],
-     [
-      5.415711,
-      3.889631,
-      5.874726
-     ],
-     [
-      -3.892242,
-      -4.540164,
-      7.138693
-     ],
-     [
-      -2.739348,
-      -1.879531,
-      -1.006449
-     ],
-     [
-      -3.035023,
-      0.685694,
-      -9.521598
-     ],
-     [
-      -4.931975,
-      -5.992997,
-      -4.060003
-     ],
-     [
-      8.110606,
-      7.231447,
-      1.007129
-     ],
-     [
-      0.011698,
-      0.146294,
-      0.164897
-     ]
+  "palco": {
+    "mapa": {
+      "mar": "#0A1626",
+      "terra": "#34445A",
+      "borda": "#9FB3D1",
+      "agua": "#2F8FD8",
+      "destaque": "#FFD21F",
+      "destaque2": "#3FD0E0",
+      "rota_px": 9,
+      "conexao_px": 7,
+      "foco": "#A8392B",
+      "pais_opacidade": 0.9,
+      "fronteira_opacidade": 0
+    },
+    "tecnico": {
+      "_nota": "TEMPLATE TÉCNICO do Coringa — usado pelo palco técnico dos formatos E pelos clipes de mecanismo (params.tema). Fundo grafite-azulado, grade fina + grade maior (170 px ≈ referência), estrutura em ardósia hachurada, água no azul do canal, MOVIMENTO sempre em amarelo, rótulos em papel (mesmo padrão dos cartões).",
+      "fundo": "#070B14",
+      "fundo2": "#0E1828",
+      "grade": "rgba(170,195,230,.055)",
+      "grade_maior": "rgba(170,195,230,.12)",
+      "grade_px": 170,
+      "linha": "#CFE0F5",
+      "terra": "#0F1C2E",
+      "agua_topo": "#5AB4F0",
+      "agua_fundo": "#1C5A94",
+      "superficie": "#D7EEFF",
+      "jato": "#EAF6FF",
+      "concreto": "#2A3446",
+      "concreto_hachura": "#334058",
+      "rocha": "#121A27",
+      "rocha_ponto": "#192333",
+      "tunel": "#04070D",
+      "estrutura": "#9AAAC0",
+      "torre": "#2F3B50",
+      "fluxo": "#FFD21F",
+      "etapa": "#FFD21F",
+      "progresso": "rgba(255,210,31,.22)",
+      "progresso_on": "#FFD21F",
+      "rotulo_fundo": "rgba(242,237,227,.96)",
+      "rotulo_texto": "#0B0F17",
+      "degrau": "90,180,240"
+    },
+    "mesa": {
+      "fundo": "#0A0806",
+      "luz": "rgba(255,214,150,.22)",
+      "madeira": "#1A120C",
+      "madeira_r": 0.23,
+      "madeira_g": 0.14,
+      "madeira_b": 0.08
+    },
+    "raster": {
+      "mar_fundo": "#04101F",
+      "mar_raso": "#2C6F96",
+      "sat_terra": 0.95,
+      "luz_terra": 0.84,
+      "nota": "grade aplicada aos rasters de relevo (scripts/formatos_ne2.py) e ao satélite (scripts/formatos_raster.py)",
+      "contraste_terra": 1.12,
+      "grade_satelite": {
+        "modelo": "polinomio2_rgb",
+        "coef": [
+          [
+            -0.505555,
+            -1.108073,
+            0.480086
+          ],
+          [
+            2.487604,
+            2.09454,
+            -1.203847
+          ],
+          [
+            -0.626924,
+            -0.213853,
+            1.186193
+          ],
+          [
+            5.415711,
+            3.889631,
+            5.874726
+          ],
+          [
+            -3.892242,
+            -4.540164,
+            7.138693
+          ],
+          [
+            -2.739348,
+            -1.879531,
+            -1.006449
+          ],
+          [
+            -3.035023,
+            0.685694,
+            -9.521598
+          ],
+          [
+            -4.931975,
+            -5.992997,
+            -4.060003
+          ],
+          [
+            8.110606,
+            7.231447,
+            1.007129
+          ],
+          [
+            0.011698,
+            0.146294,
+            0.164897
+          ]
+        ],
+        "origem": "calibrada por registro geográfico contra a referência A (0–8 s): só a transformação de cor imagem→imagem; nenhum pixel da referência é guardado"
+      }
+    },
+    "tecnico_atlas": {
+      "_nota": "ATLAS V1: técnico preto-azulado, grade 34/170px quase invisível, curvas topográficas de baixa opacidade, água azul e fluxo amarelo. DOSSIÊ usa tecnico inalterado.",
+      "fundo": "#070B14",
+      "fundo2": "#0E1828",
+      "grade": "rgba(170,195,230,.032)",
+      "grade_maior": "rgba(170,195,230,.075)",
+      "grade_px": 170,
+      "linha": "#CFE0F5",
+      "terra": "#0F1C2E",
+      "agua_topo": "#5AB4F0",
+      "agua_fundo": "#1C5A94",
+      "superficie": "#D7EEFF",
+      "jato": "#EAF6FF",
+      "concreto": "#2A3446",
+      "concreto_hachura": "#334058",
+      "rocha": "#121A27",
+      "rocha_ponto": "#192333",
+      "tunel": "#04070D",
+      "estrutura": "#9AAAC0",
+      "torre": "#2F3B50",
+      "fluxo": "#FFD21F",
+      "etapa": "#FFD21F",
+      "progresso": "rgba(255,210,31,.22)",
+      "progresso_on": "#FFD21F",
+      "rotulo_fundo": "rgba(242,237,227,.96)",
+      "rotulo_texto": "#0B0F17",
+      "degrau": "90,180,240",
+      "topografia": "rgba(127,179,195,.085)",
+      "filete": "rgba(255,210,31,.38)"
+    }
+  },
+  "legenda": {
+    "atlas": {
+      "_nota": "gramática da referência A (medida): frase em caixa normal, 1 linha, 1–3 palavras por grupo, ~52–56 px em 1080, branco com sombra, grupo inteiro de uma vez (sem karaokê). Posição: faixa própria da área segura (a referência fica ~95 px mais baixa, sob a interface do TikTok).",
+      "caixa_alta": false,
+      "caixa": "frase",
+      "max_palavras": 3,
+      "tamanho": 56,
+      "tamanho_min": 44,
+      "peso": 800,
+      "linhas_max": 1,
+      "cor_ativa": "#FFFFFF",
+      "cor_futura": "#FFFFFF",
+      "destaque_palavra": false
+    },
+    "dossie": {
+      "caixa_alta": true
+    }
+  },
+  "som": {
+    "_nota": "PADRÃO SONORO do canal (todo episódio): master −14 LUFS / pico verdadeiro ≤ −1 dBTP; referência medida −14,1 LUFS, LRA 1,9, pausas 14 dB abaixo da fala (janelas 400 ms). Volumes individuais da referência NÃO são recuperáveis da mixagem — só o resultado final é comparado.",
+    "lufs": -14,
+    "true_peak": -1,
+    "tolerancia_lufs": 0.5,
+    "musica_db": -26,
+    "ducking": {
+      "threshold": 0.03,
+      "ratio": 6,
+      "attack_ms": 20,
+      "release_ms": 350
+    },
+    "pausas_abaixo_da_fala_db": [
+      12,
+      16
     ],
-    "origem": "calibrada por registro geográfico contra a referência A (0–8 s): só a transformação de cor imagem→imagem; nenhum pixel da referência é guardado"
-   }
-  }
- },
- "legenda": {
-  "atlas": {
-   "_nota": "gramática da referência A (medida): frase em caixa normal, 1 linha, 1–3 palavras por grupo, ~52–56 px em 1080, branco com sombra, grupo inteiro de uma vez (sem karaokê). Posição: faixa própria da área segura (a referência fica ~95 px mais baixa, sob a interface do TikTok).",
-   "caixa_alta": false,
-   "caixa": "frase",
-   "max_palavras": 3,
-   "tamanho": 56,
-   "tamanho_min": 44,
-   "peso": 800,
-   "linhas_max": 1,
-   "cor_ativa": "#FFFFFF",
-   "cor_futura": "#FFFFFF",
-   "destaque_palavra": false
+    "efeitos": {
+      "_nota": "efeito só com acontecimento visual; nunca sobre o início de uma palavra forte; espaçamento mínimo",
+      "espaco_min_s": 0.9,
+      "troca_de_escala": {
+        "sfx": "sopro",
+        "ganho_db": -22,
+        "min_dzoom": 1
+      },
+      "cartao": {
+        "sfx": "tique",
+        "ganho_db": -24
+      },
+      "rota": {
+        "sfx": "traco",
+        "ganho_db": -26
+      },
+      "mecanismo": {
+        "sfx": "agua_fluxo",
+        "ganho_db": -24
+      }
+    }
   },
-  "dossie": {
-   "caixa_alta": true
-  }
- },
- "som": {
-  "_nota": "PADRÃO SONORO do canal (todo episódio): master −14 LUFS / pico verdadeiro ≤ −1 dBTP; referência medida −14,1 LUFS, LRA 1,9, pausas 14 dB abaixo da fala (janelas 400 ms). Volumes individuais da referência NÃO são recuperáveis da mixagem — só o resultado final é comparado.",
-  "lufs": -14,
-  "true_peak": -1.0,
-  "tolerancia_lufs": 0.5,
-  "musica_db": -26,
-  "ducking": {
-   "threshold": 0.03,
-   "ratio": 6,
-   "attack_ms": 20,
-   "release_ms": 350
+  "cartao": {
+    "_nota": "design system ÚNICO dos cartões de dado (todos os episódios): sem inclinação, centralizado no slot, medidas por token, número que se ajusta ao espaço",
+    "pad_x": 40,
+    "pad_y": 26,
+    "borda_topo": 10,
+    "titulo_px": 26,
+    "numero_px": 112,
+    "numero_min_px": 60,
+    "unidade_razao": 0.46,
+    "rotulo_px": 32,
+    "fonte_px": 18,
+    "largura_min": 520,
+    "entra_px": 24,
+    "sombra": "0 18px 50px rgba(0,0,0,.5)"
   },
-  "pausas_abaixo_da_fala_db": [
-   12,
-   16
-  ],
-  "efeitos": {
-   "_nota": "efeito só com acontecimento visual; nunca sobre o início de uma palavra forte; espaçamento mínimo",
-   "espaco_min_s": 0.9,
-   "troca_de_escala": {
-    "sfx": "sopro",
-    "ganho_db": -22,
-    "min_dzoom": 1.0
-   },
-   "cartao": {
-    "sfx": "tique",
-    "ganho_db": -24
-   },
-   "rota": {
-    "sfx": "traco",
-    "ganho_db": -26
-   },
-   "mecanismo": {
-    "sfx": "agua_fluxo",
-    "ganho_db": -24
-   }
-  }
- },
- "cartao": {
-  "_nota": "design system ÚNICO dos cartões de dado (todos os episódios): sem inclinação, centralizado no slot, medidas por token, número que se ajusta ao espaço",
-  "pad_x": 40,
-  "pad_y": 26,
-  "borda_topo": 10,
-  "titulo_px": 26,
-  "numero_px": 112,
-  "numero_min_px": 60,
-  "unidade_razao": 0.46,
-  "rotulo_px": 32,
-  "fonte_px": 18,
-  "largura_min": 520,
-  "entra_px": 24,
-  "sombra": "0 18px 50px rgba(0,0,0,.5)"
- },
- "pino": {
-  "_nota": "gramática da referência A (medida quadro a quadro): foto circular com anel quente acima do lugar, rótulo em serifa sobre o ponto, anel de pulso no lugar; foto cresce de 40 % → 100 % em 0,2 s, rótulo desdobra na horizontal 0,2 s depois",
-  "estilo": "referencia",
-  "cor_anel": "#D8A64A",
-  "rotulo_fonte": "serifa",
-  "protagonista": {
-   "raio": 119,
-   "rotulo_px": 34,
-   "anel": 4
+  "pino": {
+    "_nota": "gramática da referência A (medida quadro a quadro): foto circular com anel quente acima do lugar, rótulo em serifa sobre o ponto, anel de pulso no lugar; foto cresce de 40 % → 100 % em 0,2 s, rótulo desdobra na horizontal 0,2 s depois",
+    "estilo": "referencia",
+    "cor_anel": "#D8A64A",
+    "rotulo_fonte": "serifa",
+    "protagonista": {
+      "raio": 132,
+      "rotulo_px": 34,
+      "anel": 4
+    },
+    "secundario": {
+      "raio": 96,
+      "rotulo_px": 30,
+      "anel": 4
+    },
+    "entrada_s": 0.22,
+    "rotulo_atraso_s": 0.2,
+    "rotulo_entrada_s": 0.16,
+    "pulso_s": 0.7
   },
-  "secundario": {
-   "raio": 96,
-   "rotulo_px": 30,
-   "anel": 4
-  },
-  "entrada_s": 0.22,
-  "rotulo_atraso_s": 0.2,
-  "rotulo_entrada_s": 0.16,
-  "pulso_s": 0.7
- },
- "cta": {
-  "texto": "SIGA",
-  "handle": "@coringa.explica",
-  "min_s": 1.2,
-  "max_s": 2.2
- },
- "titulo": {
-  "_nota": "corpo dos títulos por SLOT (o episódio não escolhe tamanho): pergunta do gancho e manchete do fecho — baseline Panamá 44155276352",
-  "pergunta": {
-   "normal": 84,
-   "destaque": 104
+  "cta": {
+    "texto": "SIGA",
+    "handle": "@coringa.explica",
+    "min_s": 1.2,
+    "max_s": 2.2,
+    "pode_sobrepor_fecho": true,
+    "_nota": "ATLAS V1: sobrepor discretamente os 1,2s finais em slot próprio quando narração termina com revelação tardia. Não estender vídeo nem tapar o título."
   },
   "titulo": {
-   "normal": 76,
-   "destaque": 76
+    "_nota": "corpo dos títulos por SLOT (o episódio não escolhe tamanho): pergunta do gancho e manchete do fecho — baseline Panamá 44155276352",
+    "pergunta": {
+      "normal": 84,
+      "destaque": 104
+    },
+    "titulo": {
+      "normal": 76,
+      "destaque": 76
+    },
+    "padrao": {
+      "normal": 84,
+      "destaque": 104
+    }
   },
-  "padrao": {
-   "normal": 84,
-   "destaque": 104
+  "camera": {
+    "_nota": "transição entre beats calculada pelo motor (o episódio não escolhe): base + por nível de zoom + por distância de tela",
+    "transicao_base": 0.8,
+    "transicao_por_zoom": 0.22,
+    "transicao_min": 0.8,
+    "transicao_max": 1.8
+  },
+  "papel": {
+    "_nota": "papéis/documentos sobre o mapa (cédula): inclinação e entrada da referência A — desdobra na vertical em 0,2 s",
+    "inclina": -2.2,
+    "entrada_s": 0.2,
+    "fundo": "#F3EEE3",
+    "tinta": "#1D1A16",
+    "vermelho": "#B4262B",
+    "fio": "rgba(29,26,22,.55)",
+    "sombra": "0 14px 34px rgba(0,0,0,.45)",
+    "largura": 600
+  },
+  "selo": {
+    "_nota": "selo de estado (ELEITO…): retângulo arredondado verde, letras espaçadas",
+    "fundo": "#2E8A73",
+    "texto": "#F4F1EA",
+    "px": 30,
+    "entrada_s": 0.3
+  },
+  "cartao_atlas": {
+    "_nota": "ATLAS V1: papel editorial premium; o DOSSIÊ mantém canal.cartao. Sem rotação, card centralizado, borda discreta, amarelo só como filete.",
+    "pad_x": 40,
+    "pad_y": 26,
+    "borda_topo": 7,
+    "borda_px": 2,
+    "borda_cor": "rgba(11,15,23,.15)",
+    "raio_px": 5,
+    "titulo_cor": "#5A4825",
+    "numero_cor": "#0B0F17",
+    "rotulo_cor": "#0B0F17",
+    "titulo_px": 26,
+    "numero_px": 112,
+    "numero_min_px": 60,
+    "unidade_razao": 0.46,
+    "rotulo_px": 32,
+    "fonte_px": 18,
+    "largura_min": 520,
+    "entra_px": 18,
+    "sombra": "0 16px 38px rgba(0,0,0,.45)"
   }
- },
- "camera": {
-  "_nota": "transição entre beats calculada pelo motor (o episódio não escolhe): base + por nível de zoom + por distância de tela",
-  "transicao_base": 0.8,
-  "transicao_por_zoom": 0.22,
-  "transicao_min": 0.8,
-  "transicao_max": 1.8
- },
- "papel": {
-  "_nota": "papéis/documentos sobre o mapa (cédula): inclinação e entrada da referência A — desdobra na vertical em 0,2 s",
-  "inclina": -2.2,
-  "entrada_s": 0.2,
-  "fundo": "#F3EEE3",
-  "tinta": "#1D1A16",
-  "vermelho": "#B4262B",
-  "fio": "rgba(29,26,22,.55)",
-  "sombra": "0 14px 34px rgba(0,0,0,.45)",
-  "largura": 600
- },
- "selo": {
-  "_nota": "selo de estado (ELEITO…): retângulo arredondado verde, letras espaçadas",
-  "fundo": "#2E8A73",
-  "texto": "#F4F1EA",
-  "px": 30,
-  "entrada_s": 0.3
- }
 }

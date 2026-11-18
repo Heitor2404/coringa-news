@@ -269,7 +269,10 @@ def _trecho(src: Path, a: float, b: float, dest: Path):
 
 def params_clipe(c: dict, can: dict) -> dict:
     """params do clipe aprovado + TEMPLATE TÉCNICO do canal (palco.tecnico): a mesma linguagem técnica em todo mecanismo"""
-    tema = {k: v for k, v in (can.get('palco') or {}).get('tecnico', {}).items() if not k.startswith('_')}
+    p = can.get('palco') or {}
+    # ATLAS tem painel tecnico proprio, sem alterar a mesa/diagramas do DOSSIÊ.
+    preset = p.get('tecnico_atlas') if can.get('canal') == 'coringa' else None
+    tema = {k: v for k, v in (preset or p.get('tecnico') or {}).items() if not k.startswith('_')}
     return {**c['params'], 'v4': True, **({'tema': tema} if tema else {})}
 
 

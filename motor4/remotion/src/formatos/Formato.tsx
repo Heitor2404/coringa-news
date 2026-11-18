@@ -115,6 +115,11 @@ export const Formato: React.FC<FormatoProps> = (P) => {
   // torno do centro da caixa; a marcação sobre um documento herda a do alvo (continua no trecho certo).
   const porId = Object.fromEntries(P.camadas.map(L => [L.id, L]));
   const respira = (L: any) => {
+    // ATLAS: os slots já respeitam as máscaras de Shorts/Reels/TikTok. Escalar a
+    // evidência fora do slot provoca colisão com os ícones (chips, wafer, 20,88 s).
+    // Movimento do mapa e entrada de cada componente continuam; DOSSIÊ mantém a
+    // respiração de papel que pertence à sua identidade visual.
+    if (P.formato === 'atlas') return undefined;
     const A = L.componente === 'dossie.evidenceHighlight' && L.p?.alvo ? porId[L.p.alvo] : L;
     if (!A || !(A.componente === 'dossie.documentCard' || ['ficha', 'calendario'].includes(A.p?.estilo))) return undefined;
     const s = 1 + .015 * clamp((t - A.t0) / Math.max(1, A.t1 - A.t0));

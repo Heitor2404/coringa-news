@@ -27,3 +27,4 @@ Autorizacao do usuario (17/11 23:04 BRT): iniciar validacao e uma previa privada
 Tests ATLAS isolados: 60/60 verdes, Actions 44220921517.
 Um render ATLAS Panama atualizado; narracao cifrada reutilizada; sem Claude Code.
 Nao publicar. DOSSIÊ e NTC congelados, main intocada.
+18/11: gerar uma prévia privada integral do Panamá com o rodapé aprovado e a narração existente. so-atlas.

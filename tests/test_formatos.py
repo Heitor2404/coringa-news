@@ -661,3 +661,34 @@ def test_base_cobre_a_tela_inteira_e_recuo_suavizado():
     t0 = k['t'] + k['dur_camera']
     z = [P.camera_em(a['palco'], t0 + f * k['dur_deriva'])['zoom'] for f in (0, .1, .5, .9, 1)]
     assert abs(z[1] - z[0]) < abs(z[2] - z[1]) / 2          # começa devagar
+
+
+def test_diretor_atlas_descreve_contrato_real_e_nao_proibe_pessoas():
+    """O storyboard de episódios novos não pode receber o contrato antigo que pedia palco manual e omitia rasters."""
+    pr = diretor.prompt([{'id': 'f1', 'texto': 'pessoa e lugar'}], 'atlas', None, '- asset licenciado')
+    assert '"camera":"roi"' in pr and 'NÃO escreva "palco"' in pr
+    assert '"rasters"' in pr and '"roi"' in pr and '"composicao"' in pr
+    assert "'cedula'" in pr and "'selo'" in pr
+    assert 'fotos licenciadas de pessoas reais' in pr
+    assert 'não a substitua por um prédio' in pr
+
+
+def test_pino_referencia_tem_ancora_mensuravel_apos_pulso():
+    """Após 0,7 s o pulso acaba, mas a âncora tem que continuar no DOM para medir pan/zoom."""
+    src = (RAIZ / 'motor4/remotion/src/formatos/Primitivas.tsx').read_text()
+    trecho = src.split('const PinoReferencia:')[1].split("// statCard estilo 'cedula'")[0]
+    assert 'data-ancora-geo={JSON.stringify(p.lonlat)}' in trecho
+    assert "width: 2, height: 2, pointerEvents: 'none'" in trecho
+    assert 'kp >= 1 && <div data-ancora-geo' not in trecho
+
+
+def test_raster_fora_do_zoom_nao_conta_como_base_visivel():
+    """Um arquivo raster existente pode estar 100% transparente por de/ate: impedir mapa chapado."""
+    assert P.opacidade_raster(3.5, de=9.0) == 0
+    assert P.opacidade_raster(3.5, ate=1.0) == 0
+    assert P.opacidade_raster(3.5) == 1
+    bruto = copy.deepcopy(ATLAS_BRUTO)
+    for r in bruto['rasters']:
+        r['de'] = 20.0
+    pl = P.resolver_tempos(bruto, [])
+    assert 'F-MAPA-BASE-INVISIVEL' in _regras(pl)

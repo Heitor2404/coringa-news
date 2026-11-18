@@ -89,7 +89,8 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         e['t0'], e['t1'] = a(e['t0']), a(e['t1'])
     for c in p.get('clipes') or []:
         c['t0'], c['t1'] = a(c['t0']), a(c['t1'])
-        c['params']['tempos'] = [round(a(x) - c['t0'], 2) for x in c['params'].get('tempos') or []]
+        c['params']['tempos'] = [round(a(x) - (0 if plano.get('_resolvido') else c['t0']), 2)
+                                 for x in c['params'].get('tempos') or []]
         # Os destaques de peças são ancorados na fala em tempo absoluto no JSON
         # e convertidos em tempo LOCAL do clipe para o renderizador V2.
         for lista in ('focos', 'destaques_fluxo'):

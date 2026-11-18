@@ -265,7 +265,7 @@
         {
           "id": "fotografia-wafer",
           "componente": "dossie.documentCard",
-          "slot": "painel",
+          "slot": "foto",
           "t0": "@wafers-0.15",
           "t1": "@mas-0.35",
           "p": {

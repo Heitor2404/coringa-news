@@ -490,14 +490,20 @@ def test_gancho_exige_prova_visual_forte_no_inicio():
     assert 'F-GANCHO' in _regras(pl)
 
 
-def test_cta_so_entra_se_couber_depois_da_revelacao_final():
+def test_cta_automatico_no_fecho_sem_alongar_video():
+    """ATLAS V1: quando a revelação termina tarde, CTA discreto sobrepõe o fecho em slot separado."""
     pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
-    assert 'sem CTA' in pl['cta_decisao'] and not any(L['componente'] == 'editorial.cta' for L in P.camadas(pl))
+    cta = [L for L in P.camadas(pl) if L['componente'] == 'editorial.cta']
+    assert len(cta) == 1 and 'sobreposto' in pl['cta_decisao']
+    assert cta[0]['t0'] >= pl['duracao'] - 1.3 and cta[0]['t1'] <= pl['duracao']
+    assert any(L['componente'] == 'editorial.titleOrPayoff' for L in P.camadas(pl))
     pl2 = copy.deepcopy(ATLAS)
     pl2['duracao'] = ATLAS['duracao'] + 2.5
     r = P.resolver_tempos(pl2, [])
-    cta = [L for L in P.camadas(r) if L['componente'] == 'editorial.cta']
-    assert cta and cta[0]['t0'] >= max(x['t'] for x in _camada(r, 'payoff')['p']['linhas']) + .8 and cta[0]['t1'] <= r['duracao']
+    cta2 = [L for L in P.camadas(r) if L['componente'] == 'editorial.cta']
+    assert len(cta2) == 1 and 'sobreposto' not in r['cta_decisao']
+    assert cta2[0]['t0'] >= max(x['t'] for x in _camada(r, 'payoff')['p']['linhas']) + .8
+    assert cta2[0]['t1'] <= r['duracao']
 
 
 def _medida(**k):
@@ -718,3 +724,27 @@ def test_preflight_bloqueia_marca_cortada_sem_render(monkeypatch):
     monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_atlas', True)
     monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_y', 232)
     assert 'F-MARCA-RECORTE-FEED' in _regras(pl)
+
+
+def test_atlas_v1_tokens_exclusivos_e_template_documentado():
+    """Tokens de design ATLAS não podem estilizar o DOSSIÊ acidentalmente."""
+    can = P.canal('coringa')
+    assert can['cartao_atlas']['raio_px'] == 5
+    assert can['cartao_atlas']['borda_px'] > 0
+    assert can['pino']['protagonista']['raio'] > can['pino']['secundario']['raio']
+    assert can['palco']['tecnico_atlas']['fundo'] == '#070B14'
+    ts = (RAIZ / 'motor4/remotion/src/formatos/Primitivas.tsx').read_text()
+    assert "c.P.formato === 'atlas'" in ts and 'cartao_atlas' in ts
+    palco = (RAIZ / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert "P.formato === 'atlas'" in palco and 'tecnico_atlas' in palco
+    guia = (RAIZ / 'docs/v4/formatos/GUIA_VISUAL_ATLAS_V1.md').read_text()
+    assert 'MAPA HERO' in guia and 'CTA final' in guia
+
+
+def test_faixas_atlas_creditos_abaixo_de_legenda_e_dentro_da_area_segura():
+    from src.v4.formatos import layout
+    fi = layout.faixa_inferior()
+    leg, cred = fi['legenda'], fi['creditos']
+    assert leg[1] + leg[3] < cred[1]
+    assert cred[1] + cred[3] <= fi['base_visivel']
+    assert leg[0] >= 60 and cred[0] >= 60

@@ -94,7 +94,10 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         # e convertidos em tempo LOCAL do clipe para o renderizador V2.
         for lista in ('focos', 'destaques_fluxo'):
             for marca in c['params'].get(lista) or []:
-                marca['t'] = round(a(marca['t']) - c['t0'], 2)
+                # Plano bruto: âncoras da narração são ABSOLUTAS.
+                # Fixture/segundo passe de plano resolvido: focos já estão no
+                # relógio LOCAL do clipe — nunca subtrair c['t0'] novamente.
+                marca['t'] = round(a(marca['t']) - (0 if plano.get('_resolvido') else c['t0']), 2)
     for b in p['beats']:
         if b.get('t') is not None:
             b['t'] = a(b['t'])

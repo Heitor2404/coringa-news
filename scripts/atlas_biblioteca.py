@@ -11,7 +11,9 @@ Status 'candidato' NUNCA significa item liberado para produção.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -24,17 +26,32 @@ def ler() -> tuple[dict, dict]:
     return catalogo, candidatas
 
 
-def liberado_para_render(item: dict) -> bool:
-    """Falha fechada: exige liberação editorial E arquivo auditado."""
-    return (item.get("estado") == "liberado"
+def liberado_para_render(item: dict, arquivo_local: Path | None = None) -> bool:
+    """Falha fechada: metadata não basta; conferir SHA dos bytes efetivamente usados.
+
+    O render futuro precisa passar o Path do arquivo real recuperado do acervo.
+    Enquanto só houver links e miniaturas de prévia, NADA fica liberado.
+    """
+    digest = item.get("sha256")
+    if not (item.get("estado") == "liberado"
             and item.get("aprovacao_editorial") is True
-            and isinstance(item.get("sha256"), str)
-            and len(item["sha256"]) == 64
+            and isinstance(digest, str)
+            and re.fullmatch(r"[0-9a-fA-F]{64}", digest)
             and bool(item.get("licenca"))
             and bool(item.get("licenca_url"))
             and bool(item.get("credito"))
             and bool(item.get("prova_correspondencia"))
-            and bool(item.get("largura")) and bool(item.get("altura")))
+            and isinstance(item.get("largura"), int) and item["largura"] >= 480
+            and isinstance(item.get("altura"), int) and item["altura"] >= 360
+            and isinstance(arquivo_local, Path)
+            and arquivo_local.is_file()
+            and arquivo_local.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp", ".mp4", ".webm")):
+        return False
+    h = hashlib.sha256()
+    with arquivo_local.open("rb") as f:
+        for bloco in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(bloco)
+    return h.hexdigest().lower() == digest.lower()
 
 
 def buscar(termo: str, limit: int = 30) -> list[dict]:

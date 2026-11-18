@@ -261,3 +261,14 @@ A execução `44387091456` **FALHOU** após 87 testes Python verdes, preflight d
 
 **Próxima ação:** consultar `44404242103` pelo GitHub (steps e logs); se falhar, corrigir causa na branch experimental sem relaxar o fiscal. Se concluir, assistir ao MP4 REAL recebido no Telegram, verificar voz, ritmo, geografia, visual da foto wafer, autoria de mídias e créditos. Só depois cogitar homologação. Não fazer merge nem afetar produção/NTC/DOSSIÊ.
 
+## 15. 18/11 — voz real e progressao do gancho (atualização após 21:52 UTC)
+
+O workflow privado MP4 **`44404242103` falhou no preflight, não gerou MP4 nem enviou Telegram**. A narração de teste Edge TTS foi gerada em **58,862 segundos**; o fiscal detectou `F-SEM-PROGRESSAO` por **3,1 segundos** sem novo acontecimento visual entre ~2,2 e ~5,3s. Portanto, o verde anterior com temporização sintética não certificava o plano sob voz real. Não reduzir o limite nem tratar as legendas como eventos visuais para falsear aprovação.
+
+A correção editorial foi feita **no plano experimental de chips** `src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json`, commit **`85f94156`**: no beat inicial, a pergunta sobre a ilha termina quando a narração chega a "Estados", e entra um título "EUA × CHINA" ligado à palavra `@estados` com a mesma composição `atlas.abertura` e componente `editorial.titleOrPayoff`. Não foi criado estilo, efeito ou componente exclusivo, nem alteração no motor. O gancho preserva o mapa como palco.
+
+A revalidação de quadros **`44405025069` terminou SUCCESS**: preflight 32/32, 34 quadros, 0 bloqueadores e 102 avisos de créditos no rodapé (inalterados). O assistant baixou e inspecionou a folha de estilo corrigida; fotos, cartões, mapas e texto seguem linguagem ATLAS. Isso ainda **não prova sincronização real sob TTS**, pois reuso usa tempos sintéticos.
+
+Novo acionamento do workflow audiovisual privado mediante atualização do arquivo de gatilho `.github/atlas/chips_previa.txt`: commit **`9743842e`**, execução **`44405950985`**, que estava **in_progress** na última consulta (21:52 UTC). Consultar GitHub antes de dizer se foi gerado vídeo ou enviado ao Telegram; baixar logs e corrigir eventual falha do fiscal sem afrouxar limites. O workflow não publica nas redes.
+
+**Pendências:** risco dos 102 avisos de crédito, condições de CC BY verificáveis no arquivo final, qualidade visual e naturalidade da voz do MP4, alinhamento factual com as falas. Não mexer em produção, NTC ou DOSSIÊ; o ATLAS de chips continua experimental.

@@ -1,0 +1,137 @@
+name: ATLAS Chips - episodio piloto PRIVADO (sem Claude/Gemini/API paga)
+# Disparo explícito SOMENTE ao editar .github/atlas/chips_previa.txt neste ramo.
+# Nunca publica em redes, não faz merge/checkout do ramo produtivo, não altera NTC/DOSSIÊ.
+# Áudio Edge TTS é amostra privada; conferir qualidade, política de uso e narração antes de publicar.
+on:
+  push:
+    branches: [atlas-piloto-chips-20261118]
+    paths: [".github/atlas/chips_previa.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atlas-chips-episodio-privado
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+  # NÃO injetar GEMINI_API_KEY. O motor usa Edge TTS sem chamada faturada.
+  GEMINI_API_KEY: ""
+  PLANO: src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json
+  SAIDA: saida_chips_privada
+
+jobs:
+  privado:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: FFmpeg/FFprobe — testar runner primeiro e instalar com prazo
+        timeout-minutes: 6
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
+            timeout 150 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+          google-chrome --version
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+      - name: Dependências declaradas de Python/Node
+        timeout-minutes: 18
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Verificar que é o piloto de chips, sem clipes técnicos nem publicação
+        run: |
+          python - <<'PY'
+          import json, os, pathlib
+          p = json.loads(pathlib.Path(os.environ["PLANO"]).read_text(encoding="utf-8"))
+          assert p["formato"] == "atlas" and p["canal"] == "coringa"
+          assert "chips" in p["video_id"]
+          assert not p.get("clipes"), "O vídeo de chips não requer mecanismos hidráulicos."
+          assert not os.environ.get("GEMINI_API_KEY"), "Este teste não deve invocar API paga."
+          expected={"commons:TSMC_Fab_18_May_2025.jpg","commons:Silicon_wafer_close_view.jpg"}
+          usados={L.get("p",{}).get("asset") for b in p["beats"] for L in b["camadas"]}
+          assert expected <= usados
+          print("Plano ATLAS chips, duas fotos comprovadas, sem API paga nem publicação: OK")
+          PY
+      - name: Voz Edge de teste e tempos reais (prévia privada, sem API paga)
+        timeout-minutes: 12
+        run: python -m src.v4.formatos narrar "$PLANO" "$SAIDA"
+      - name: Baixar apenas mídias do catálogo e provar SHA de origem
+        timeout-minutes: 12
+        run: python -m src.v4.formatos ativos "$PLANO" "$SAIDA"
+      - name: Preflight COMPLETO — nunca renderizar caso vermelho
+        run: python -m src.v4.formatos preflight "$PLANO" "$SAIDA"
+      - name: 34+ quadros, legibilidade/posicionamentos/plataformas
+        timeout-minutes: 20
+        run: python -m src.v4.formatos quadros "$PLANO" "$SAIDA"
+      - name: MP4 + áudio + portões de qualidade do ATLAS
+        timeout-minutes: 108
+        run: python -m src.v4.formatos render "$PLANO" "$SAIDA"
+      - name: Folhas de contato e avaliação do resultado
+        if: success()
+        timeout-minutes: 12
+        run: python -m src.v4.formatos folhas "$PLANO" "$SAIDA"
+      - name: Entrega SOMENTE ao Telegram privado autorizado
+        if: success()
+        timeout-minutes: 10
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          test -n "$TELEGRAM_BOT_TOKEN" && test -n "$TELEGRAM_CHAT_ID"
+          python -m src.v4.formatos telegram "$PLANO" "$SAIDA"
+      - name: Resumo de auditoria (SEM MP4 público, SEM segredos)
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path(os.environ["SAIDA"])
+          keys = ["narracao.json", "preflight.json", "quadros/relatorio.json","resultado.json"]
+          for name in keys:
+              f = p / name
+              if not f.exists():
+                  print("AUSENTE:",name)
+                  continue
+              r=json.loads(f.read_text(encoding="utf-8"))
+              if name=="narracao.json":
+                  print("VOZ:",r.get("origem"),"duração:",r.get("duracao"))
+              elif name=="preflight.json":
+                  print("PREFLIGHT:",r.get("pronto"),"itens:",len(r.get("itens",[])))
+              elif name.endswith("relatorio.json"):
+                  print("QUADROS:",len(r.get("quadros",[])),"bloqueadores:",sum(not x.get("aviso") for x in r.get("problemas",[])))
+              else:
+                  print("FISCAL FINAL:",r.get("estado"),"bloqueios:",r.get("motivos_bloqueio"))
+          PY
+      - name: Guardar relatório/quadros leves SEM vídeo nem voz em repo público
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-chips-fiscal-privado-sem-midia
+          path: |
+            saida_chips_privada/preflight.json
+            saida_chips_privada/quadros/relatorio.json
+            saida_chips_privada/quadros/relatorio.md
+            saida_chips_privada/quadros/styleframes.jpg
+            saida_chips_privada/quadros/celular.jpg
+            saida_chips_privada/resultado.json
+          if-no-files-found: warn
+          retention-days: 7

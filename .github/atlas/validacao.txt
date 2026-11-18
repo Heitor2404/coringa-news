@@ -1,3 +1,5 @@
 Solicitacao de validacao ATLAS isolada.
 Escopo: teste de Python/pytest em motor-integral-v4, sem render, sem IA, sem publicacao.
 Motivo: validar correcoes do ChatGPT antes de gerar nova previa.
+
+Reexecucao: instalar FFmpeg no runner; tentativa 2.

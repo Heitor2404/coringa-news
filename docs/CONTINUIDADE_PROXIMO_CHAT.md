@@ -272,3 +272,13 @@ A revalidação de quadros **`44405025069` terminou SUCCESS**: preflight 32/32, 
 Novo acionamento do workflow audiovisual privado mediante atualização do arquivo de gatilho `.github/atlas/chips_previa.txt`: commit **`9743842e`**, execução **`44405950985`**, que estava **in_progress** na última consulta (21:52 UTC). Consultar GitHub antes de dizer se foi gerado vídeo ou enviado ao Telegram; baixar logs e corrigir eventual falha do fiscal sem afrouxar limites. O workflow não publica nas redes.
 
 **Pendências:** risco dos 102 avisos de crédito, condições de CC BY verificáveis no arquivo final, qualidade visual e naturalidade da voz do MP4, alinhamento factual com as falas. Não mexer em produção, NTC ou DOSSIÊ; o ATLAS de chips continua experimental.
+
+## 15. 18/11 — retomada após transmissão interrompida
+
+O usuário relatou **"Deu transmissão interrompida"**. A retomada ao vivo do GitHub confirmou:
+- CI sintética `44405025069` (commit `85f94156`) **SUCCESS**, preflight 32 itens, 34 quadros, **0 erros bloqueadores**, 102 avisos `A-CREDITO-RODAPE` persistentes. A correção havia dividido a abertura em dois títulos, terminando a pergunta antes de mostrar `EUA × CHINA` ao citar Estados Unidos, sem relaxar `F-SEM-PROGRESSAO`.
+- O primeiro workflow privado `44404242103` teve **FAILURE** em preflight com Edge TTS de 58,862 s: `F-SEM-PROGRESSAO` (2,2–5,3 s) e por isso nenhum MP4 foi renderizado. Não confundir sucesso sintético com TTS real.
+- A segunda tentativa de episódio privado foi disparada pelo commit `9743842e`, que atualizou apenas `.github/atlas/chips_previa.txt`. Workflow `44405950985` estava **in_progress** na inspeção às 21:54 UTC, na etapa `34+ quadros, legibilidade/posicionamentos/plataformas`. **Consultar status atualizado** antes de dizer que o MP4 ou Telegram foram entregues.
+- Nenhuma publicação em rede, merge para produção, mudança de NTC ou DOSSIÊ. Os créditos na faixa baixa permanecem pendência crítica para revisão nas interfaces reais e para licenças CC BY.
+
+Próximo passo: conferir `44405950985`. Se falhar, analisar etapa e log, corrigir branch experimental e reexecutar; se passar, exigir revisão humana no vídeo PRIVADO real (ritmo, voz, créditos, fotos) antes de homologar. Não recomeçar atividades já comprovadas.

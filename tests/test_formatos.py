@@ -783,3 +783,24 @@ def test_creditos_da_foto_e_mapa_medidos_pelo_texto_real():
     assert 'R-CREDITOS-TEXTO-TRANSBORDA' in {p['regra'] for p in V.checar(m, pl, 1.0)}
     atrib['texto_caixa'] = {'x': x, 'y': y, 'w': w, 'h': h}
     assert 'R-CREDITOS-TEXTO-TRANSBORDA' not in {p['regra'] for p in V.checar(m, pl, 1.0)}
+
+
+def test_previa_curta_atlas_nao_renderiza_episodio_inteiro():
+    """Cortes da mesma linha do tempo, sempre fora do V2; limite total < 12s."""
+    from scripts import atlas_previa_curta as A
+    pl = P.resolver_tempos(copy.deepcopy(ATLAS), [])
+    total = 0
+    assert len(A.JANELAS) == 4
+    for nome, a, b in A.JANELAS:
+        assert 0 <= a < b <= pl['duracao'], nome
+        assert b - a <= 3.0, nome
+        assert all(b <= c['t0'] or a >= c['t1'] for c in pl['clipes']), nome
+        total += b - a
+    assert total < 12.0
+    root = (RAIZ / 'motor4/remotion/src/Root.tsx').read_text()
+    assert 'id="AtlasAmostra"' in root
+    assert '<Formato {...visual} />' in root and '<Camada {...legenda} />' in root
+    flow = (RAIZ / '.github/workflows/atlas-previa-curta.yml').read_text()
+    assert "scripts/atlas_previa_curta.py render" in flow
+    assert "python -m src.v4.formatos render" not in flow
+    assert "PLANO_DOSSIE" not in flow

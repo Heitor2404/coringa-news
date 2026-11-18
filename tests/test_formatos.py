@@ -183,7 +183,7 @@ def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     _camada(pl, 'km')['caixa'] = [72, 300, 936, 28]          # zona da marca ATLAS: y 294–338, dentro do feed Reels
     _camada(pl, 'zero')['caixa'] = [72, 1250, 936, 80]
     r = P.validar(P.resolver_tempos(pl, []))
-    assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 2
+    assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 1  # ATLAS sem marca sobreposta; legenda continua protegida
     for x, y, w, h in P.SLOTS.values():
         for zx, zy, zw, zh in P.CFG['zonas_identidade'].values():
             assert not (x < zx + zw and zx < x + w and y < zy + zh and zy < y + h), 'slot padrão dentro de zona da identidade'
@@ -698,6 +698,9 @@ def test_marca_atlas_dentro_do_feed_e_recorte_e_bloqueador():
     import scripts.formatos_validar as V
     from src.v4.formatos import layout
     marco = layout.CFG['faixa_inferior']['marca_y']
+    assert layout.CFG['faixa_inferior']['marca_atlas'] is False
+    assert P.zonas('atlas').get('marca') is None
+    assert P.props_camada({'formato': 'atlas', 'duracao': 2, 'canal': 'coringa', 'clipes': []}, {'palavras': []})['marca_visivel'] is False
     assert marco >= layout.CFG['perfis']['instagram_reels']['recorte_feed']['topo'] + 6
     z = P.zonas('atlas')['marca']
     assert z[1] <= marco <= z[1] + z[3]
@@ -714,5 +717,6 @@ def test_preflight_bloqueia_marca_cortada_sem_render(monkeypatch):
     from src.v4.formatos import layout
     pl = copy.deepcopy(ATLAS)
     assert 'F-MARCA-RECORTE-FEED' not in {x['regra'] for x in P.validar(pl)}
+    monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_atlas', True)
     monkeypatch.setitem(layout.CFG['faixa_inferior'], 'marca_y', 232)
     assert 'F-MARCA-RECORTE-FEED' in {x['regra'] for x in P.validar(pl)}

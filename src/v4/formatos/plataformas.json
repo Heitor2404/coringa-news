@@ -61,7 +61,7 @@
   },
   "faixa_inferior": {
     "_nota": "hierarquia inferior inspirada na referência (território → número → legenda → créditos), com cada faixa PRÓPRIA e dentro da área visível de todas as plataformas ativas",
-    "creditos_altura": 66,
+    "creditos_altura": 46,
     "creditos_px": 18,
     "creditos_linha": 22,
     "folga": 12,
@@ -72,6 +72,6 @@
     "_nota_topo": "Marca ajustada para permanecer visivel no recorte 4:5 de feed Reels (y>=285), antes da area de conteudo; erro recorrente da execucao 44221167260.",
     "marca_atlas": false,
     "_nota_marca": "ATLAS sem marca fixa sobre os quadros; a marca cortada 40/40 e ao realocar colidiu com composicoes. Em DOSSIÊ, marca preservada. A identidade visual ATLAS vem dos tokens, nao de overlay fixo.",
-    "_nota_creditos": "ATLAS V1: 3 linhas de 22px (antes 2); evita que atribuicoes de foto+mapa avancem sobre a faixa de legendas. Mantem a base exatamente no limite seguro das plataformas."
+    "_nota_creditos": "ATLAS V1: banda exclusiva de 2 linhas de 22px, mantendo slots de mapa, cards e legenda intocados. Medir altura REAL das atribuicoes; se texto nao couber, bloquear no fiscal e revisar atribuicao/diagrama, nunca sobrepor legenda nem cortar licenca."
   }
 }

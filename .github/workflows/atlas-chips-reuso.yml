@@ -10,6 +10,10 @@ on:
       - "src/v4/biblioteca_comprovada.json"
       - "tests/test_formatos.py"
       - "scripts/formatos_reuso.py"
+      - "src/v4/formatos/formatos.json"
+      - "src/v4/formatos/plano.py"
+      - "motor4/remotion/src/formatos/Primitivas.tsx"
+      - "tests/test_formatos.py"
   workflow_dispatch:
 permissions:
   contents: read

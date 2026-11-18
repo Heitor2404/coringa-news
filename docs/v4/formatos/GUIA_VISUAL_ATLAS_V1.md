@@ -57,7 +57,7 @@ Papel off-white, texto escuro, fio ou acento amarelo, sombra curta, borda discre
 - O crédito da foto entra na faixa de créditos quando visível.
 
 ## 7. Legenda, créditos e áreas seguras
-**Master:** 1080×1920, 30 fps. **Plataformas:** TikTok, Reels e Shorts com união dos perfis ativos em `plataformas.json`.
+**Master:** 1080×1920, 30 fps. **Plataformas:** TikTok, Reels e Shorts com união dos perfis ativos em `plataformas.json`. A banda de créditos comporta até três linhas de 22 px; o fiscal mede a ALTURA REAL do texto para barrar overflow.
 - Legenda: branco com sombra, caixa normal, até 3 palavras por grupo e preferencialmente 1 linha, 56 px (mín. 44), sincronizada com pausas da voz; nunca ocupar o crédito.
 - Fontes/créditos cartográficos: faixa própria **abaixo** da legenda, junto ao rodapé visível de todas as plataformas. Não esconder licença nem permitir overflow sobre a legenda.
 - Na configuração atual de segurança, limite inferior comum é y=1440, não y=1920. A referência original põe créditos mais baixos, mas esses pixels podem ficar encobertos pela interface. Segurança e legibilidade vencem deslocamento literal.
@@ -66,14 +66,14 @@ Papel off-white, texto escuro, fio ou acento amarelo, sombra curta, borda discre
 - Legenda × fonte factual × crédito visual são três funções diferentes.
 
 ## 8. Gancho (0–3 segundos)
-**Pergunta/tensão + mapa + prova grande.** Preferencialmente geografia desde o primeiro quadro; primeira mudança de informação deve ocorrer antes dos 3 s. Abertura deve suscitar a pergunta antes de explicar o funcionamento.
+**Pergunta/tensão + mapa + prova grande.** Para o ATLAS V1, mapa hero é OBRIGATÓRIO desde o primeiro quadro; clipes técnicos entram apenas depois dos 3 s. A primeira mudança de informação deve ocorrer antes dos 3 s. Abertura deve suscitar a pergunta antes de explicar o funcionamento.
 Não usar quatro segundos de fundo parado; não esconder a prova atrás de cartão ou introdução do canal.
 No Panamá: mapa + navio/eclusa em foto grande + questão visual; mecanismo completo entra como explicação, não como slide genérico.
 
 ## 9. CTA final
 Mensagem curta, visual limpa: `SIGA` + `@coringa.explica` (ou variante temática aprovada).
 Reservar **1,2 a 2,2 s**, preferencialmente depois da revelação final, sobre mapa hero, sem interromper a conclusão nem forçar alongamento vazio.
-Se a história não reservar espaço, o **storyboard** deve ser sinalizado para revisão antes de render; não suprimir o CTA silenciosamente e chamar de aprovado.
+Se a narração acabar junto da última revelação, o CTA pode aparecer em sobreposição discreta, em slot próprio, nos últimos 1,2 s, sem alongar o vídeo (essa decisão fica registrada em `cta_decisao`). Se faltar slot apropriado para CTA solicitado, o **preflight bloqueia** (`F-CTA-FINAL-AUSENTE`). Nunca suprimi-lo silenciosamente.
 CTA nunca deve tapar fonte, legenda ou informação factual.
 
 ## 10. Controle de ritmo e som

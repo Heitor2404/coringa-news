@@ -7,6 +7,7 @@ on:
       - ".github/workflows/atlas-chips-reuso.yml"
       - "src/v4/formatos/planos/reuso/atlas_chips.json"
       - "src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json"
+      - "src/v4/biblioteca_comprovada.json"
       - "scripts/formatos_reuso.py"
   workflow_dispatch:
 permissions:
@@ -76,6 +77,20 @@ jobs:
         timeout-minutes: 20
         run: |
           python scripts/formatos_reuso.py "$PLANO" "$SAIDA"
+      - name: Provar que duas fotografias correspondem aos arquivos licenciados
+        run: |
+          python - <<'PY'
+          import json, pathlib, os
+          saida = pathlib.Path(os.environ["SAIDA"])
+          a = json.loads((saida / "ativos.json").read_text(encoding="utf-8"))
+          for chave in ("commons:TSMC_Fab_18_May_2025.jpg","commons:Silicon_wafer_close_view.jpg"):
+              reg = a.get(chave)
+              assert reg, "Fotografia obrigatória não foi usada: " + chave
+              assert reg["origem_conferida"] is True, "SHA de origem inválido: " + chave
+              assert reg["licenca"] == "CC BY 4.0", "Licença incorreta: " + chave
+              assert int(reg["w"]) >= 800 and int(reg["h"]) >= 600, "Mídia pequena: " + chave
+          print("Duas fotografias verificadas por arquivo de origem, SHA e licença; sem IA.")
+          PY
       - name: Bloquear se preflight/quadros apresentarem erros
         run: |
           python - <<'PY'

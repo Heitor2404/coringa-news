@@ -233,3 +233,14 @@ O commit **`63f47fbc`** ampliou os paths de trigger de `.github/workflows/atlas-
 A prova anterior **`44379818856`** foi SUCCESS para 34 quadros **sem fotos** (cartografia+cards), não confundir com prova do novo plano **com duas fotos reais**, ainda dependente de validação. O artefato de fotos do piloto tem problemas de texto/crédito detectados em `44383964727`, motivando ajustes. **Não foi disparado** o workflow de MP4 `atlas-chips-previa-privada.yml`, nem publicação/merge, pois as fotos precisam passar na inspeção real primeiro.
 
 **Próximas tarefas:** conferir `44386176261`; se houver falhas, corrigir sem flexibilizar o fiscal. Se verde, **baixar e inspecionar folhas de quadros com as duas fotos** antes de disparar episódio privado com Edge TTS, entregue apenas no Telegram. Depois verificar créditos de imagens CC BY 4.0 e possibilidade de sobreposição de interface de plataformas. Preservar todos os demais motores.
+
+
+## 13. Composição fotográfica reutilizável no ATLAS
+
+A prova CI **`44386176261`** não foi aprovada: **87 testes Python passaram** (1 teste de montagem MP4 deselecionado) e as duas fotografias tiveram SHA/origem/licença validados, mas o preflight bloqueou corretamente porque o cartão de wafer invadia a área do território geográfico (`F-COBRE-TERRITORIO`, em torno dos 15,9/16,7/21,3 segundos). O motor não deve relaxar esse fiscal.
+
+**Solução arquitetural experimental implementada na branch `atlas-piloto-chips-20261118`:** composição reutilizável `atlas.fotografia` em `src/v4/formatos/formatos.json`, com `palco=mapa`, `quadro=null`, foto central reta/verificável (`y=445,h=650`) e nota (`y=1130,h=88`), sem novo mecanismo nem visual exclusivo. Isso permite que o mapa ceda espaço a uma fotografia factual quando faz sentido, como o usuário pediu; não finge que a área do mapa continua visível ao mesmo tempo. A câmera continua cartográfica ao fundo, a foto é protagonista. O beat `b2b-wafer` do plano factual usa a nova composição.
+
+Commits relevantes: **`c6ebdc35`** (catálogo), **`545cd5df`** (plano do wafer) e **`83827ffc`** (teste para foto legível, slots separados, proteção do território e motor DOSSIÊ intacto). Workflow reativado no run **`44387091456`**, ainda não havia conclusão na última consulta. **NÃO afirmar aprovação visual/CI até abrir resultado.** Antes de prévia MP4, inspecionar styleframes e checar pequenos créditos/título das fotografias, que tiveram problemas de truncamento em execução anterior.
+
+Esse último ajuste é geral ao ATLAS, não adapta o motor ao assunto dos chips. O plano da produção não foi mesclado com branches estáveis; não houve postagem.

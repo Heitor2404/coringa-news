@@ -228,7 +228,7 @@
         // O alvo narrado pode continuar marcado, mas não esconder o resultado.
         if (V4 && tl >= sai[0] - .45) {
           const kSaida = eio(clamp((tl - (sai[0] - .45)) / (DV.transicao_saida_s || .65)));
-          const geral = rect(MW / 2, 605, MW + 260);
+          const geral = rect(MW / 2 + (subir ? 150 : -150), 605, MW + 350);
           r = [lerp(r[0], geral[0], kSaida),
                lerp(r[1], geral[1], kSaida),
                lerp(r[2], geral[2], kSaida)];

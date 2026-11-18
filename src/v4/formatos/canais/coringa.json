@@ -169,7 +169,7 @@
   },
   "legenda": {
     "atlas": {
-      "_nota": "gramática da referência A (medida): frase em caixa normal, 1 linha, 1–3 palavras por grupo, ~52–56 px em 1080, branco com sombra, grupo inteiro de uma vez (sem karaokê). Posição: faixa própria da área segura (a referência fica ~95 px mais baixa, sob a interface do TikTok).",
+      "_nota": "ATLAS: branco com UMA palavra-chave amarela por grupo, selecionada por tema/numeros/fatos; amarelo fixo durante o grupo (sem karaokê). Manter tamanho, tempo e faixa segura inalterados.",
       "caixa_alta": false,
       "caixa": "frase",
       "max_palavras": 3,
@@ -177,9 +177,10 @@
       "tamanho_min": 44,
       "peso": 800,
       "linhas_max": 1,
-      "cor_ativa": "#FFFFFF",
+      "cor_ativa": "#FFD21F",
       "cor_futura": "#FFFFFF",
-      "destaque_palavra": false
+      "destaque_palavra": true,
+      "destaque_estatico": true
     },
     "dossie": {
       "caixa_alta": true

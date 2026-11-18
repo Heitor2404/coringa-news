@@ -796,6 +796,42 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     for c in plano.get('clipes') or []:
         if c['componente'] not in F['clipes']:
             v('erro', 'F-CLIPE', f"{c['t0']}", f"clipe {c['componente']} não aprovado no formato")
+    if plano.get('formato') == 'atlas':
+        # Contrato global de clareza: limites vêm do canal e dos recursos
+        # aprovados, nunca das cenas ou números do episódio do Panamá.
+        direcao = canal(plano.get('canal', 'coringa')).get('direcao_visual') or {}
+        max_editoriais = int(direcao.get('max_camadas_editoriais', 2))
+        editoriais = [L for L in Ls if L['componente'] not in (
+            'atlas.geoPin', 'dossie.evidenceHighlight', 'editorial.cta')]
+        limites = sorted({x for L in editoriais for x in (L['t0'], L['t1'])})
+        for a, b in zip(limites, limites[1:]):
+            meio = (a + b) / 2
+            ativos = [L['id'] for L in editoriais if L['t0'] <= meio < L['t1']]
+            if len(ativos) > max_editoriais:
+                v('erro', 'F-POLUICAO-VISUAL', f'{a:.2f}–{b:.2f}s',
+                  f'{len(ativos)} informações editoriais simultâneas (máx. {max_editoriais}): {", ".join(ativos[:8])}')
+                break
+        catalogo = F.get('alvos_componentes') or {}
+        for c in plano.get('clipes') or []:
+            marcacoes = (c.get('params') or {}).get('focos') or (c.get('params') or {}).get('destaques_fluxo') or []
+            if not marcacoes:
+                continue
+            alvos = catalogo.get(c.get('componente'))
+            dur_clipe = c['t1'] - c['t0']
+            anterior = None
+            for idx, marco in enumerate(marcacoes):
+                onde = f"{c['componente']}/foco-{idx}"
+                t, alvo, rotulo = marco.get('t'), marco.get('alvo'), str(marco.get('rotulo') or '')
+                if alvos is None or alvo not in alvos:
+                    v('erro', 'F-FOCO-SEM-ALVO', onde, f'alvo {alvo!r} não consta no catálogo do mecanismo')
+                if not isinstance(t, (int, float)) or not (0 <= t <= dur_clipe + .01):
+                    v('erro', 'F-FOCO-TEMPO', onde, 'foco deve ocorrer dentro do clipe, em tempo local da fala')
+                    continue
+                if not rotulo.strip() or len(rotulo.strip()) > direcao.get('max_caracteres_rotulo', 22):
+                    v('erro', 'F-ROTULO-ILEGIVEL', onde, f'rótulo precisa ter 1–{direcao.get("max_caracteres_rotulo", 22)} caracteres')
+                if anterior is not None and t - anterior < direcao.get('intervalo_min_foco_s', .8):
+                    v('erro', 'F-FOCO-RAPIDO', onde, 'foco troca antes do intervalo mínimo de compreensão visual')
+                anterior = t
     # composições: formato, palco, máximo de camadas simultâneas, reconstrução identificada
     for b in plano['beats']:
         comp = COMP.get(b.get('composicao') or '')

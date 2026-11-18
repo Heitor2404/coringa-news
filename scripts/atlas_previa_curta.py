@@ -13,6 +13,9 @@ import sys
 import time
 from pathlib import Path
 
+# Executavel por caminho: python scripts/atlas_previa_curta.py, sem depender de PYTHONPATH no runner.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from src.v4.backends import js
 from src.v4.formatos import plano as P
 from src.v4.util import RAIZ, rodar

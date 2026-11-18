@@ -24,14 +24,10 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-      - name: FFmpeg (necessario para testes de audio e preflight)
-        timeout-minutes: 5
-        run: |
-          if ! command -v ffmpeg >/dev/null 2>&1; then
-            timeout 120 sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
-            timeout 120 sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          fi
-          ffmpeg -hide_banner -version | sed -n '1p'
+      - name: FFmpeg (sem apt, igual à prévia privada aprovada)
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
       - name: Instalar dependencias Python de teste
         run: |
           python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt

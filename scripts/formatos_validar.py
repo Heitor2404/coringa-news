@@ -109,7 +109,7 @@ def amostrar(pl: dict, passo: float = 2.5) -> list[dict]:
 
 def checar_plataformas(m: dict, pl: dict, t: float, perfis: list[str] | None = None) -> list[dict]:
     """informação essencial (camadas, rótulos, créditos, legenda, marca, cartões) contra as MÁSCARAS de interface simulada
-    de cada plataforma ativa (plataformas.json); recorte do feed do Reels = aviso, não erro"""
+    de cada plataforma ativa (plataformas.json); recorte do feed do Reels = aviso, EXCETO a marca (erro bloqueador)"""
     prob = []
     # partes de pino: recuo de 6 px (anel/sombra), a mesma tolerância do posicionamento no plano
     elems = [(f"camada {c['id']}", ({'x': x['x'] + 6, 'y': x['y'] + 6, 'w': x['w'] - 12, 'h': x['h'] - 12} if c.get('partes') else x))
@@ -126,7 +126,11 @@ def checar_plataformas(m: dict, pl: dict, t: float, perfis: list[str] | None = N
             for rotulo, bx in elems:
                 if _cruza(bx, z, 2):
                     if mk.get('aviso'):
-                        if rotulo in ('legenda', 'marca') or rotulo.startswith('camada'):
+                        if rotulo == 'marca':
+                            # Identidade do canal precisa aparecer no feed; 40/40 cortes não são um aviso aceitável.
+                            prob.append({'t': t, 'regra': 'R-MARCA-RECORTE-FEED',
+                                         'texto': f'marca cortada no feed do {nome}; corrigir posicao antes do render'})
+                        elif rotulo == 'legenda' or rotulo.startswith('camada'):
                             prob.append({'t': t, 'regra': 'A-RECORTE-FEED', 'texto': f'{rotulo} cortado no feed do {nome} (aviso)', 'aviso': True})
                         continue
                     prob.append({'t': t, 'regra': 'R-PLATAFORMA', 'texto': f"{rotulo} sob a interface do {nome} ({mk['tipo']})"})

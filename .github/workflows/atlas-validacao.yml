@@ -45,4 +45,6 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           node --check ../src/render/v2/comp/mecanismos.js
+          node --check ../src/render/v2/nucleo.js
+          node ../tests/test_clareza_v2.js
           npx --no-install tsc -p remotion/tsconfig.json --noEmit

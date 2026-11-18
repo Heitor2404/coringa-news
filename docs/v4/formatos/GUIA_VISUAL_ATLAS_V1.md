@@ -58,7 +58,7 @@ Papel off-white, texto escuro, fio ou acento amarelo, sombra curta, borda discre
 
 ## 7. Legenda, créditos e áreas seguras
 **Master:** 1080×1920, 30 fps. **Plataformas:** TikTok, Reels e Shorts com união dos perfis ativos em `plataformas.json`. A banda de créditos comporta duas linhas de 22 px, preservando os slots dos cartões; o fiscal mede a ALTURA REAL do texto e BLOQUEIA qualquer atribuição que transborde (sem omitir créditos obrigatórios).
-- Legenda: branco com sombra, caixa normal, até 3 palavras por grupo e preferencialmente 1 linha, 56 px (mín. 44), sincronizada com pausas da voz; nunca ocupar o crédito.
+- Legenda: branco com sombra, caixa normal, até 3 palavras por grupo e preferencialmente 1 linha, 56 px (mín. 44), sincronizada com pausas da voz; nunca ocupar o crédito. **No máximo uma palavra-chave por grupo em amarelo #FFD21F**, escolhida por fato, número, lugar ou conceito central; a cor permanece fixa durante todo o grupo (sem karaokê). Se só houver palavras fracas, tudo branco. Sem alterar tamanho, tempo ou posição.
 - Fontes/créditos cartográficos: faixa própria **abaixo** da legenda, junto ao rodapé visível de todas as plataformas. Não esconder licença nem permitir overflow sobre a legenda.
 - Na configuração atual de segurança, limite inferior comum é y=1440, não y=1920. A referência original põe créditos mais baixos, mas esses pixels podem ficar encobertos pela interface. Segurança e legibilidade vencem deslocamento literal.
 - Marca fixa sobre o ATLAS desativada: foi cortada em 40/40 quadros e, ao ser movida, colidiu com o gancho. A marca aparece no CTA e nos canais/perfil; identidade nos componentes.

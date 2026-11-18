@@ -38,7 +38,7 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
     instrucao_saida = (\
         'Responda SÓ um JSON válido, sem texto extra. ATLAS: "camera":"roi"; NÃO escreva "palco" (o motor gera). '\
         'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "rasters" (nomes reais), '\
-        '"destaques", "rotas", "rotulos", "clipes" e "beats". '\
+        '"destaques", "rotas", "rotulos", "clipes", "explicacoes" e "beats". '\
         'Cada beat: "id", "composicao" da lista, "t" de início, "roi" numérico [oeste,sul,leste,norte], '\
         '"movimento" (aproxima/fixo/recua), "prova", "fatos", "camadas". '\
         'atlas.tecnica exige "funcao":"mecanismo" ou "estrutura". '\
@@ -47,6 +47,23 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
         if formato == 'atlas' else\
         'Responda SÓ o JSON válido do DOSSIÊ, com formato, canal, vídeo, título, duração, beats com composição e camadas.'\
     )
+    direcao_atlas = """DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
+- A abertura é mapa hero, pergunta ou prova real; não use animação técnica de mecanismo no gancho.
+- Primeiro classifique a necessidade visual de cada trecho: geografia, fato real, funcionamento,
+  comparação, revelação. Escolha mídia por pertinência e comprovação, sem cota de animações.
+- Animação técnica só quando mostra um processo que a mídia real não explica adequadamente.
+- Se a narração continua explicando o MESMO processo, preserve a demonstração durante todo o
+  intervalo, focando as peças e os fluxos citados. Não substitua o mecanismo por cards soltos.
+- Declare todo clipe técnico em "explicacoes": [{id, tipo:"mecanismo", t0, t1, recurso}],
+  onde recurso é o nome do componente aprovado, t0/t1 seguem as palavras da fala,
+  e o clipe cobre integralmente o intervalo. O validador reprova se faltarem contratos.
+- Destacamentos físicos são definidos no próprio recurso com alvos compatíveis;
+  não coloque coordenadas de câmera ou identidade visual no storyboard.
+- Dado final deve entrar na fala correspondente e encerrar sem repetir uma cena por decoração.
+- Não corte narração para reduzir duração. Na dúvida sobre a cobertura visual, reporte pendência.
+"""
+    if formato != 'atlas':
+        direcao_atlas = ''
     base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as
 primitivas e slots abaixo; posições são fixas. {F['descricao']}
 REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;
@@ -57,17 +74,7 @@ IDENTIDADE É DO MOTOR: não escreva tamanho, raio, largura, cor, ajuste, transi
 os tokens do canal. Mapa geográfico SEMPRE sobre base cartográfica da lista "rasters" que cubra o roi; diagrama técnico só em beat
 com "funcao": "mecanismo" ou "estrutura".
 SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (use os ids):\n""" + \
-        '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nDIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
-- Abra com mapa hero, prova real e/ou pergunta; NUNCA coloque animação técnica de mecanismo na abertura.
-- Para cada trecho, determine a necessidade visual: geografia, acontecimento real, funcionamento, comparação ou dado.
-  Prefira vídeo real que demonstra o fato; animação técnica só quando a explicação precisa de um mecanismo.
-- Quando a narração continua descrevendo o MESMO mecanismo ou seu fluxo, mantenha o desenho visível e destaque
-  suas peças na ordem da fala. NÃO substitua o mecanismo em curso por caixas com os nomes das peças.
-- Declare todo intervalo de demonstração técnica em "explicacoes" (lista de objetos com id, tipo="mecanismo",
-  t0, t1, recurso=componente do clipe aprovado); o clipe deve cobrir todo o intervalo. Ancore t0/t1 à fala.
-  O validador rejeita quebra de continuidade. Se não há mídia/componente que demonstre, sinalize pendência.
-- Mostre o dado final quando for narrado e encerre após a conclusão, sem repetir mapa por efeito decorativo.
-- NÃO aumente artificialmente a duração, não corte narração, não invente imagens e não imponha cotas de animação.
+        '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\n{direcao_atlas}
 
 NARRAÇÃO:\n{fala}\n
 {instrucao_saida}"""

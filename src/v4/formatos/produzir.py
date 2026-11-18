@@ -273,7 +273,8 @@ def params_clipe(c: dict, can: dict) -> dict:
     # ATLAS tem painel tecnico proprio, sem alterar a mesa/diagramas do DOSSIÊ.
     preset = p.get('tecnico_atlas') if can.get('canal') == 'coringa' else None
     tema = {k: v for k, v in (preset or p.get('tecnico') or {}).items() if not k.startswith('_')}
-    return {**c['params'], 'v4': True, **({'tema': tema} if tema else {})}
+    return {**c['params'], 'v4': True, **({'tema': tema} if tema else {}),
+            'direcao_visual': {k: v for k, v in (can.get('direcao_visual') or {}).items() if not k.startswith('_')}}
 
 
 def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path) -> None:

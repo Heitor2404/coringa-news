@@ -67,6 +67,10 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
 """
     if formato != 'atlas':
         direcao_atlas = ''
+    else:
+        catalogo = F.get('alvos_componentes') or {}
+        direcao_atlas += "\\nCATÁLOGO DE ALVOS FÍSICOS APROVADOS (não invente):\\n" + \\
+            '\\n'.join(f"- {nome}: {', '.join(alvos)}" for nome, alvos in catalogo.items())
     base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as
 primitivas e slots abaixo; posições são fixas. {F['descricao']}
 REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;

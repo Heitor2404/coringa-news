@@ -7,3 +7,5 @@ O workflow aborta se preflight/styleframes tiverem erros.
 Tentativa 2: corrigida instalacao do Chromium Playwright para preflight. Sem alteracoes visuais nem render longo.
 
 Amostra de cinco cortes: revisar subida da eclusa, legenda amarela e créditos no celular.
+
+Corrigir montagem CFR e verificar cada quadro do MP4 de envio contra os cortes e a base da eclusa.

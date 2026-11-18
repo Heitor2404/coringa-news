@@ -839,3 +839,26 @@ def test_atlas_legenda_sem_palavra_forte_continua_branca():
     pl = {'titulo': 'Teste', 'narracao': {'fatos': []}, 'beats': []}
     out = LS.destacar_atlas(pal, pl, maximo=3)
     assert not any(p['hl'] for p in out)
+
+
+def test_montagem_previa_confere_mp4_com_relogios_distintos(tmp_path):
+    from scripts.atlas_previa_curta import montar, conferir_montagem
+    def ffmpeg(*args):
+        subprocess.run(["ffmpeg", "-v", "error", "-y", *map(str, args)], check=True)
+
+    cartao = tmp_path / "cartao.mp4"
+    eclusa = tmp_path / "animacao.mp4"
+    voz = tmp_path / "voz.wav"
+    destino = tmp_path / "previa.mp4"
+    ffmpeg("-f", "lavfi", "-i", "color=blue:s=144x256:r=30", "-frames:v", 30,
+           "-c:v", "libx264", "-video_track_timescale", 90000, cartao)
+    ffmpeg("-f", "lavfi", "-i", "testsrc2=s=144x256:r=30", "-frames:v", 30,
+           "-c:v", "libx264", "-video_track_timescale", 15360, eclusa)
+    ffmpeg("-f", "lavfi", "-i", "sine=duration=2:sample_rate=48000", voz)
+    janelas = [{"nome": "cartao", "inicio_original_s": 0, "frames_renderizados": 30},
+               {"nome": "eclusa_subindo", "inicio_original_s": 1, "frames_renderizados": 30}]
+    montar([cartao, eclusa], voz, janelas, destino)
+    conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+    montar([cartao, cartao], voz, janelas, destino)
+    with pytest.raises(RuntimeError, match="diverge do corte eclusa"):
+        conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)

@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
+
+import numpy as np
 
 # Executavel por caminho: python scripts/atlas_previa_curta.py, sem depender de PYTHONPATH no runner.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -32,6 +35,60 @@ JANELAS = [
 
 def _ler(p: Path):
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+def montar(partes, voz, registro, destino):
+    # Remotion e a eclusa V2 podem ter time bases e parâmetros H.264 diferentes.
+    # Decodificar e montar uma única trilha CFR e uma única trilha AAC.
+    entradas = []
+    filtros = []
+    for i, (video, janela) in enumerate(zip(partes, registro, strict=True)):
+        entradas += ["-i", video]
+        n = janela["frames_renderizados"]
+        inicio = janela["inicio_original_s"]
+        filtros.append(f"[{i}:v]trim=end_frame={n},setsar=1,format=yuv420p,"
+                       f"settb=1/{FPS},setpts=N[v{i}]")
+        filtros.append(f"[{len(partes)}:a]atrim=start={inicio}:duration={n / FPS:.9f},"
+                       f"asetpts=PTS-STARTPTS,aresample=48000[a{i}]")
+    pares = "".join(f"[v{i}][a{i}]" for i in range(len(partes)))
+    filtros.append(f"{pares}concat=n={len(partes)}:v=1:a=1[v][a]")
+    rodar(["ffmpeg", "-v", "error", "-y", *entradas, "-i", voz,
+           "-filter_complex", ";".join(filtros), "-map", "[v]", "-map", "[a]",
+           "-c:v", "libx264", "-preset", "veryfast", "-crf", "17", "-r", str(FPS),
+           "-video_track_timescale", "90000", "-c:a", "aac", "-b:a", "160k",
+           "-movflags", "+faststart", destino], timeout=300)
+
+
+def quadros_reproduzidos(video):
+    # Decodificar no ritmo de reprodução também revela buracos nos timestamps.
+    raw = subprocess.check_output(["ffmpeg", "-v", "error", "-xerror", "-i", str(video),
+                                   "-an", "-vf", f"fps={FPS},scale=96:170", "-pix_fmt", "rgb24",
+                                   "-f", "rawvideo", "-"])
+    return np.frombuffer(raw, np.uint8).reshape(-1, 170, 96, 3).astype(np.int16)
+
+
+def conferir_montagem(mp4, partes, registro, base_eclusa, primeiro_quadro):
+    final = quadros_reproduzidos(mp4)
+    esperado = sum(j["frames_renderizados"] for j in registro)
+    if len(final) != esperado:
+        raise RuntimeError(f"MP4 final: {len(final)} quadros reproduzidos, esperados {esperado}")
+    pos = 0
+    for video, janela in zip(partes, registro, strict=True):
+        n = janela["frames_renderizados"]
+        origem = quadros_reproduzidos(video)
+        trecho = final[pos:pos + n]
+        if len(origem) != n or np.abs(trecho - origem).mean(axis=(1, 2, 3)).max() > 4:
+            raise RuntimeError(f"MP4 diverge do corte {janela['nome']}")
+        if janela["nome"] == "eclusa_subindo":
+            # Área do mecanismo, sem o selo e as legendas da camada global.
+            mecanismo = trecho[:, 50:104]
+            original = quadros_reproduzidos(base_eclusa)[primeiro_quadro:primeiro_quadro+n, 50:104]
+            if len(original) != n or np.abs(mecanismo - original).mean(axis=(1, 2, 3)).max() > 5:
+                raise RuntimeError("MP4 não reproduz a animação V2 da eclusa")
+            if np.abs(mecanismo[-1] - mecanismo[0]).mean() < 2:
+                raise RuntimeError("subida da eclusa congelada no MP4")
+        pos += n
+    print(f"ATLAS_MP4_CONFERIDO {len(final)} quadros; {len(partes)} cortes e movimento da eclusa", flush=True)
 
 
 def render(saida: Path) -> Path:
@@ -77,7 +134,6 @@ def render(saida: Path) -> Path:
         if n <= 0 or n > 90:
             raise RuntimeError(f"amostra fora do limite de 3s: {nome}")
         video = trab / f"{nome}_video.mp4"
-        mux = trab / f"{nome}.mp4"
         inicio_render = time.monotonic()
         if eclusa:
             # A base V2 é independente da voz e da legenda; o workflow restaura
@@ -90,28 +146,26 @@ def render(saida: Path) -> Path:
                 tmp.replace(base)
             alpha = trab / "eclusa_legenda.webm"
             js.remotion("Camada", camada, alpha, trab / "camada", alfa=True, quadros=(f0, f1))
-            offset = (f0 - round(clipe["t0"] * FPS)) / FPS
+            primeiro_quadro = f0 - round(clipe["t0"] * FPS)
+            offset = primeiro_quadro / FPS
             rodar(["ffmpeg", "-v", "error", "-y", "-ss", f"{offset:.6f}", "-i", base,
                    "-c:v", "libvpx", "-i", alpha, "-filter_complex",
                    "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p", "-frames:v", str(n),
                    "-an", "-c:v", "libx264", "-crf", "16", video])
         else:
             js.remotion("AtlasAmostra", props, video, trab / nome, quadros=(f0, f1))
-        rodar(["ffmpeg", "-v", "error", "-y", "-i", str(video),
-               "-ss", f"{inicio:.3f}", "-t", f"{n / FPS:.3f}", "-i", str(saida / "voz.wav"),
-               "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
-               "-af", "aresample=async=1:first_pts=0", "-shortest", "-movflags", "+faststart",
-               str(mux)], timeout=180, log=trab / f"{nome}_mux.log")
-        partes.append(mux)
+        partes.append(video)
         registro.append({"nome": nome, "inicio_original_s": inicio, "fim_original_s": fim,
                          "frames_renderizados": n, "tempo_execucao_s": round(time.monotonic() - inicio_render, 2)})
         print(f"ATLAS_AMOSTRA {nome}: {n} frames, {registro[-1]['tempo_execucao_s']}s", flush=True)
 
-    lista = trab / "partes.txt"
-    lista.write_text("".join("file '" + str(p.resolve()) + "'\n" for p in partes))
+    candidato = trab / "montagem.mp4"
+    montar(partes, saida / "voz.wav", registro, candidato)
+    from src.v3.previa_telegram import _caber
+    entrega = _caber(candidato)
+    conferir_montagem(entrega, partes, registro, base, primeiro_quadro)
     final = saida / "atlas_identidade_v1_amostra_curta.mp4"
-    rodar(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lista),
-           "-c", "copy", "-movflags", "+faststart", str(final)], timeout=180)
+    entrega.replace(final)
     registro_json = {
         "tipo": "MONTAGEM DE TESTE — cortes temporais; nao representa o episodio final nem a continuidade do roteiro",
         "referencia_visual": "docs/v4/formatos/GUIA_VISUAL_ATLAS_V1.md",
@@ -119,7 +173,7 @@ def render(saida: Path) -> Path:
         "duracao_aproximada_s": sum(r["frames_renderizados"] for r in registro) / FPS,
         "tempo_total_render_s": round(time.monotonic() - t0, 2),
         "componente_mecanismo_v2": "mecanismo.eclusa — subida com legenda e voz",
-        "publicado": False, "aprovacao_estetica": False
+        "quadros_finais_conferidos": True, "publicado": False, "aprovacao_estetica": False
     }
     (saida / "atlas_amostra_relatorio.json").write_text(json.dumps(registro_json, ensure_ascii=False, indent=2))
     print(json.dumps(registro_json, ensure_ascii=False), flush=True)
@@ -150,12 +204,14 @@ def enviar(saida: Path) -> None:
     if not relatorio.exists():
         raise RuntimeError("video sem relatorio de janelas; bloqueio de envio")
     r = _ler(relatorio)
+    if not r.get("quadros_finais_conferidos"):
+        raise RuntimeError("MP4 sem conferência dos quadros finais")
     titulo = ("ATLAS V1 — AMOSTRA PRIVADA (~13 s): gancho / cartao / eclusa / fundo tecnico / CTA. "
               "CORTES entre trechos distintos, voz correspondente a cada trecho. "
               "Nao e episodio completo. "
               "Aguardando aprovacao estetica; nada publicado.")
     previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
-                         ("video", previa_telegram._caber(mp4)))
+                         ("video", mp4))
     for path, descricao in [
         (saida / "quadros" / "styleframes.jpg", "ATLAS V1 — quadros visuais (privado)"),
         (saida / "quadros" / "celular.jpg", "ATLAS V1 — leitura em celular (privado)"),

@@ -12,8 +12,8 @@ import json
 from src.v4.formatos import plano as P
 
 ESQUEMA = {
-    'atlas.geoPin': "{tipo: 'local'|'foto', lonlat: [lon, lat] (DENTRO do roi do beat), rotulo, t_ativo?, lado?: 'direita'|'esquerda', asset?+meta (foto real com crédito), desloc?: [dx, dy], raio?} — slot 'geo': o pino segue a câmera",
-    'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula'|'dial' (partes: [{rotulo, fracao, cor}]), contagem: bool}",
+    'atlas.geoPin': "{tipo: 'local'|'foto', lonlat: [lon, lat] (DENTRO do roi do beat), rotulo, t_ativo?, lado?: 'direita'|'esquerda', asset?+meta (foto real com crédito), papel: 'protagonista'|'secundario' (posição, raio e deslocamento calculados pelo motor; NÃO escrever)} — slot 'geo': o pino segue a câmera",
+    'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula'|'dial'|'cedula'|'selo' (cedula: cabecalho, rubrica, rubrica_dir, linhas [{texto, t?, marca_t?, dir?}]; selo: valor; dial: partes [{rotulo, fracao, cor}]); contagem?: bool}",
     'editorial.peopleCard': '{asset (retrato da biblioteca), nome, papel}',
     'editorial.hierarchy': "{niveis: [{rotulo, valor?}], ativo: [{i, t0}], alturas?: [0–1] (perfil), legenda_base?, legenda_t?}",
     'editorial.timeline': "{marcos: [{data, texto ≤ 22, t}]}",
@@ -22,7 +22,7 @@ ESQUEMA = {
     'editorial.comparison': '{itens: [{rotulo, valor, t?}], unidade}',
     'editorial.flowConnections': '{nos: [{rotulo ≤ 16, sub?, t, seta?}], fluxo: bool}',
     'editorial.cta': "inserido pelo MOTOR no último beat quando cabe (não use)",
-    'editorial.titleOrPayoff': "{linhas: [{texto ≤ 16, t, destaque?, tamanho?}]} (≤ 3 linhas; nunca slide longo)",
+    'editorial.titleOrPayoff': "{linhas: [{texto ≤ 16, t, destaque?}]} (≤ 3 linhas; nunca slide longo)",
 }
 
 
@@ -35,10 +35,22 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
                        for k, v in comp.items())) if comp else '\n'.join(f'- {k}: x={v[0]} y={v[1]} w={v[2]} h={v[3]}' for k, v in P.SLOTS.items())
     comps = '\n'.join(f'- {c}: {ESQUEMA[c]}' for c in F['componentes'])
     fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto", 60–90 s, só com os fatos)')
+    instrucao_saida = (\
+        'Responda SÓ um JSON válido, sem texto extra. ATLAS: "camera":"roi"; NÃO escreva "palco" (o motor gera). '\
+        'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "rasters" (nomes reais), '\
+        '"destaques", "rotas", "rotulos", "clipes" e "beats". '\
+        'Cada beat: "id", "composicao" da lista, "t" de início, "roi" numérico [oeste,sul,leste,norte], '\
+        '"movimento" (aproxima/fixo/recua), "prova", "fatos", "camadas". '\
+        'atlas.tecnica exige "funcao":"mecanismo" ou "estrutura". '\
+        'Cada camada: "id", "componente", "slot", "t0", "t1", "p". '\
+        'Se falta mídia real do inventário, NÃO substitua por algo diferente: reporte a ausência.'\
+        if formato == 'atlas' else\
+        'Responda SÓ o JSON válido do DOSSIÊ, com formato, canal, vídeo, título, duração, beats com composição e camadas.'\
+    )
     base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as
 primitivas e slots abaixo; posições são fixas. {F['descricao']}
 REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;
-nada de duas camadas no mesmo slot ao mesmo tempo; mídia SÓ da lista comprovada (nunca invente registro); número com unidade;
+nada de duas camadas no mesmo slot ao mesmo tempo; mídia SÓ da lista comprovada (nunca invente registro); fotos licenciadas de pessoas reais, inclusive figuras públicas, SÃO PERMITIDAS quando a história exige uma pessoa; se o inventário não contiver a pessoa necessária, sinalize BLOQUEIO DE MÍDIA (não a substitua por um prédio); número com unidade;
 no máximo {F['max_componentes_distintos']} primitivas distintas; tempos ancorados na fala ("@palavra", "@2:palavra+0.3", "@fim").
 PALCOS: {', '.join(F['palcos'])} (troca de palco só quando a explicação muda de nível). CLIPES APROVADOS: {', '.join(F['clipes']) or 'nenhum'}.
 IDENTIDADE É DO MOTOR: não escreva tamanho, raio, largura, cor, ajuste, transição, zoom_max nem deslocamento manual — o motor aplica
@@ -46,8 +58,7 @@ os tokens do canal. Mapa geográfico SEMPRE sobre base cartográfica da lista "r
 com "funcao": "mecanismo" ou "estrutura".
 SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (use os ids):\n""" + \
         '\n'.join(f"- {f['id']}: {f['texto']}" for f in fatos) + f"""\nNARRAÇÃO:\n{fala}\n
-Responda SÓ o JSON do plano: {{"formato","canal","video_id","titulo","duracao":"@fim","palco":[...],"destaques":[...],"rotas":[...],
-"rotulos":[...],"clipes":[...],"beats":[{{"id","fatos":[...],"prova","camadas":[{{"id","componente","slot","t0","t1","p":{{...}}}}]}}]}}"""
+{instrucao_saida}"""
     if correcoes:
         base += '\n\nSEU PLANO VIOLOU REGRAS VERIFICADAS EM CÓDIGO; corrija só isto e devolva o JSON inteiro:\n' + \
                 '\n'.join(f"- [{v['regra']}] {v['onde']}: {v['texto']}" for v in correcoes) + '\nANTERIOR:\n' + anterior[:20000]

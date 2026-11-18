@@ -754,7 +754,7 @@ def test_faixas_atlas_creditos_abaixo_de_legenda_e_dentro_da_area_segura():
     assert leg[0] >= 60 and cred[0] >= 60
 
 
-def test_atlas_v1_primeiro_quadro_deve_ser_mapa_e_cta_nao_some():
+def test_atlas_v1_primeiro_quadro_deve_ser_mapa_e_cta_nao_some(monkeypatch):
     """Regressão: clipe técnico inicial e CTA pedido mas omitido bloqueiam antes do render."""
     pl = copy.deepcopy(ATLAS)
     assert 'F-GANCHO-MAPA-PRIMEIRO' not in _regras(pl)
@@ -764,6 +764,8 @@ def test_atlas_v1_primeiro_quadro_deve_ser_mapa_e_cta_nao_some():
     pl['clipes'].append({'t0': 0, 't1': 2.1, 'componente': 'mecanismo.eclusa',
                          'params': {'tempos': []}})
     assert 'F-GANCHO-MAPA-PRIMEIRO' in _regras(pl)
+    # Mantém a composição e remove APENAS seu slot opcional de CTA: não pode sumir silenciosamente.
+    slots = P.COMP['atlas.manchete']['slots']
+    monkeypatch.setitem(P.COMP['atlas.manchete'], 'slots', {k: v for k, v in slots.items() if k != 'cta'})
     pl = copy.deepcopy(ATLAS)
-    pl['beats'][-1]['composicao'] = 'atlas.protagonista'  # sem slot CTA
     assert 'F-CTA-FINAL-AUSENTE' in _regras(pl)

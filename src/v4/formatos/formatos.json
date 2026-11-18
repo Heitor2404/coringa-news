@@ -238,12 +238,17 @@
     880,
     600
    ],
-   "veu": "topo",
+   "veu": "nenhum",
    "movimento": "aproxima",
    "slots": {
     "pergunta": {
-     "y": 350,
-     "h": 250
+     "y": 286,
+     "h": 264
+    },
+    "selo": {
+     "y": 612,
+     "h": 72,
+     "w_max": 300
     }
    },
    "max_camadas": 3,
@@ -392,7 +397,13 @@
  "zonas_por_formato": {
   "atlas": {
    "_nota": "legenda e créditos do ATLAS vêm de layout.faixa_inferior() (plataformas.json)",
-   "dinamico": true
+   "dinamico": true,
+   "marca": [
+    72,
+    222,
+    420,
+    48
+   ]
   }
  }
 }

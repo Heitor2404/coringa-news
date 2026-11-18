@@ -331,7 +331,7 @@ def render(saida: Path) -> dict:
     trab = (saida / '_trabalho').resolve()
     trab.mkdir(parents=True, exist_ok=True)
     can = P.canal(pl.get('canal', 'coringa'))
-    tokens = {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta') if k in can}
+    tokens = P.tokens_canal(can)
     geo = _ler(RAIZ / pl['geo']) if pl.get('geo') else None
     base = trab / 'formato.mp4'
     js.remotion('Formato', P.props(pl, tokens, geo, imgs), base, trab / 'formato')

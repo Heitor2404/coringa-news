@@ -111,7 +111,9 @@ def checar_plataformas(m: dict, pl: dict, t: float, perfis: list[str] | None = N
     """informação essencial (camadas, rótulos, créditos, legenda, marca, cartões) contra as MÁSCARAS de interface simulada
     de cada plataforma ativa (plataformas.json); recorte do feed do Reels = aviso, não erro"""
     prob = []
-    elems = [(f"camada {c['id']}", c['caixa']) for c in m['camadas']] + [(f"rótulo {r['txt']!r}", r['caixa']) for r in m['rotulos']]
+    # partes de pino: recuo de 6 px (anel/sombra), a mesma tolerância do posicionamento no plano
+    elems = [(f"camada {c['id']}", ({'x': x['x'] + 6, 'y': x['y'] + 6, 'w': x['w'] - 12, 'h': x['h'] - 12} if c.get('partes') else x))
+             for c in m['camadas'] for x in (c.get('partes') or [c['caixa']])] + [(f"rótulo {r['txt']!r}", r['caixa']) for r in m['rotulos']]
     elems += [(f"{x['tipo']}", x['caixa']) for x in m.get('metas') or []]
     cm = m.get('camada') or {}
     for k in ('legenda', 'marca'):
@@ -144,9 +146,9 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
             if alvo.get(a) == b or alvo.get(b) == a or (a in alvo and b in alvo and alvo[a] == alvo[b]):
                 continue
             pa, pb = cam[a].get('partes'), cam[b].get('partes')
-            if pa and pb:      # dois pinos: confere parte × parte (a caixa-união inclui espaço vazio entre ponto e rótulo)
-                if any(_cruza(x, y) for x in pa for y in pb):
-                    add('R-COLISAO', f'{a} × {b}: partes dos pinos se sobrepõem')
+            if pa or pb:       # pino: confere PARTE × caixa (a caixa-união inclui espaço vazio entre foto, rótulo e ponto)
+                if any(_cruza(x, y) for x in (pa or [cam[a]['caixa']]) for y in (pb or [cam[b]['caixa']])):
+                    add('R-COLISAO', f'{a} × {b}: partes se sobrepõem')
             elif _cruza(cam[a]['caixa'], cam[b]['caixa']):
                 add('R-COLISAO', f'{a} × {b} se sobrepõem no quadro renderizado')
     pinos = {L['id'] for L in decl.values() if L['componente'] == 'atlas.geoPin'}
@@ -248,7 +250,7 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     can = P.canal(pl.get('canal', 'coringa'))
     geo = json.loads((RAIZ / pl['geo']).read_text()) if pl.get('geo') else None
     pf = out / 'props_formato.json'
-    pf.write_text(json.dumps(P.props(pl, {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta') if k in can}, geo, imgs), ensure_ascii=False))
+    pf.write_text(json.dumps(P.props(pl, P.tokens_canal(can), geo, imgs), ensure_ascii=False))
     pc = out / 'props_camada.json'
     cam = P.props_camada(pl, meta)
     pc.write_text(json.dumps(cam, ensure_ascii=False))

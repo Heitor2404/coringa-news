@@ -296,12 +296,12 @@
       "meta": "FOTO: ADAM JONES · CC BY-SA 2.0",
       "papel": "protagonista",
       "desloc": [
-       -263,
-       0
+       119,
+       -174
       ],
-      "raio": 193,
+      "raio": 119,
       "desloc_auto": true,
-      "escala_auto": 0.92
+      "escala_auto": 1.0
      }
     },
     {
@@ -738,10 +738,10 @@
       "meta": "FOTO: ADAM JONES · CC BY-SA 2.0",
       "papel": "secundario",
       "desloc": [
-       0,
-       -188
+       96,
+       -151
       ],
-      "raio": 118,
+      "raio": 96,
       "desloc_auto": true,
       "escala_auto": 1.0
      }

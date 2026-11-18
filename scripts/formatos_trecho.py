@@ -24,7 +24,7 @@ FPS = 30
 def trecho(S: Path, nome: str, a: float, b: float, ref: tuple | None = None) -> dict:
     pl, meta, imgs = Z._ler(S / 'plano_resolvido.json'), Z._ler(S / 'narracao.json'), Z._ler(S / 'ativos.json')
     can = P.canal(pl.get('canal', 'coringa'))
-    tokens = {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta') if k in can}
+    tokens = P.tokens_canal(can)
     geo = Z._ler(RAIZ / pl['geo']) if pl.get('geo') else None
     trab = (S / 'trechos' / nome).resolve()
     trab.mkdir(parents=True, exist_ok=True)

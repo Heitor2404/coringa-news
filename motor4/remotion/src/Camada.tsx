@@ -12,6 +12,7 @@ export type CamadaProps = {
   combinar_ms?: number;
   legenda_topo?: number;            // por formato (ATLAS: mais baixa, perto da referência, dentro da área segura)
   legenda_caixa?: [number, number, number, number];   // faixa PRÓPRIA da legenda (layout.faixa_inferior): ancorada pela BASE
+  marca_y?: number;                 // posição da marca por formato (ATLAS: topo, como o alto livre da referência)
   medir?: boolean;                  // registra a caixa real da legenda e da marca (validação nos quadros)
   estilo?: { max_palavras?: number; tamanho?: number; tamanho_min?: number; peso?: number; caixa?: string; linhas_max?: number; cor_ativa?: string; cor_futura?: string; destaque_palavra?: boolean };
 };
@@ -80,7 +81,7 @@ export const Camada: React.FC<CamadaProps> = (P) => {
   return (
     <AbsoluteFill style={{ backgroundColor: 'transparent' }}>
       <Fontes />
-      <div data-marca="1" style={{ position: 'absolute', left: IDT.marca.x, top: IDT.marca.y, display: 'flex', alignItems: 'center', gap: 12, fontFamily: FD,
+      <div data-marca="1" style={{ position: 'absolute', left: IDT.marca.x, top: P.marca_y ?? IDT.marca.y, display: 'flex', alignItems: 'center', gap: 12, fontFamily: FD,
         fontWeight: 700, fontSize: IDT.marca.tamanho, letterSpacing: 4, color: IDT.marca.cor, textShadow: '0 1px 8px rgba(0,0,0,.8)' }}>
         <i style={{ width: 14, height: 14, background: C.amarelo, transform: 'rotate(45deg)', display: 'inline-block' }} />{IDT.marca.texto}</div>
       {cena && cena.selo && <div style={{ position: 'absolute', left: 72, top: IDT.selo.y, opacity: sv, fontFamily: FD, fontWeight: 700, fontSize: IDT.selo.tamanho,

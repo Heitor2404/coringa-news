@@ -18,8 +18,9 @@
   "dado": "JBM, monospace"
  },
  "tempo": {
-  "entra": 0.45,
-  "sai": 0.3
+  "entra": 0.18,
+  "sai": 0.3,
+  "_nota": "entrada medida na referência A: retrato 0,2 s, cédula 0,2 s, rótulo 0,16 s — fade curto (era 0,45 s)"
  },
  "palco": {
   "mapa": {
@@ -30,7 +31,10 @@
    "destaque": "#FFD21F",
    "destaque2": "#3FD0E0",
    "rota_px": 9,
-   "conexao_px": 7
+   "conexao_px": 7,
+   "foco": "#A8392B",
+   "pais_opacidade": 0.9,
+   "fronteira_opacidade": 0.0
   },
   "tecnico": {
    "_nota": "TEMPLATE TÉCNICO do Coringa — usado pelo palco técnico dos formatos E pelos clipes de mecanismo (params.tema). Fundo grafite-azulado, grade fina + grade maior (170 px ≈ referência), estrutura em ardósia hachurada, água no azul do canal, MOVIMENTO sempre em amarelo, rótulos em papel (mesmo padrão dos cartões).",
@@ -74,7 +78,63 @@
    "sat_terra": 0.95,
    "luz_terra": 0.84,
    "nota": "grade aplicada aos rasters de relevo (scripts/formatos_ne2.py) e ao satélite (scripts/formatos_raster.py)",
-   "contraste_terra": 1.12
+   "contraste_terra": 1.12,
+   "grade_satelite": {
+    "modelo": "polinomio2_rgb",
+    "coef": [
+     [
+      -0.505555,
+      -1.108073,
+      0.480086
+     ],
+     [
+      2.487604,
+      2.09454,
+      -1.203847
+     ],
+     [
+      -0.626924,
+      -0.213853,
+      1.186193
+     ],
+     [
+      5.415711,
+      3.889631,
+      5.874726
+     ],
+     [
+      -3.892242,
+      -4.540164,
+      7.138693
+     ],
+     [
+      -2.739348,
+      -1.879531,
+      -1.006449
+     ],
+     [
+      -3.035023,
+      0.685694,
+      -9.521598
+     ],
+     [
+      -4.931975,
+      -5.992997,
+      -4.060003
+     ],
+     [
+      8.110606,
+      7.231447,
+      1.007129
+     ],
+     [
+      0.011698,
+      0.146294,
+      0.164897
+     ]
+    ],
+    "origem": "calibrada por registro geográfico contra a referência A (0–8 s): só a transformação de cor imagem→imagem; nenhum pixel da referência é guardado"
+   }
   }
  },
  "legenda": {
@@ -149,17 +209,24 @@
   "sombra": "0 18px 50px rgba(0,0,0,.5)"
  },
  "pino": {
-  "_nota": "escala por papel narrativo",
+  "_nota": "gramática da referência A (medida quadro a quadro): foto circular com anel quente acima do lugar, rótulo em serifa sobre o ponto, anel de pulso no lugar; foto cresce de 40 % → 100 % em 0,2 s, rótulo desdobra na horizontal 0,2 s depois",
+  "estilo": "referencia",
+  "cor_anel": "#D8A64A",
+  "rotulo_fonte": "serifa",
   "protagonista": {
-   "raio": 210,
-   "rotulo_px": 40,
-   "anel": 8
+   "raio": 119,
+   "rotulo_px": 34,
+   "anel": 4
   },
   "secundario": {
-   "raio": 118,
+   "raio": 96,
    "rotulo_px": 30,
-   "anel": 6
-  }
+   "anel": 4
+  },
+  "entrada_s": 0.22,
+  "rotulo_atraso_s": 0.2,
+  "rotulo_entrada_s": 0.16,
+  "pulso_s": 0.7
  },
  "cta": {
   "texto": "SIGA",
@@ -188,5 +255,23 @@
   "transicao_por_zoom": 0.22,
   "transicao_min": 0.8,
   "transicao_max": 1.8
+ },
+ "papel": {
+  "_nota": "papéis/documentos sobre o mapa (cédula): inclinação e entrada da referência A — desdobra na vertical em 0,2 s",
+  "inclina": -2.2,
+  "entrada_s": 0.2,
+  "fundo": "#F3EEE3",
+  "tinta": "#1D1A16",
+  "vermelho": "#B4262B",
+  "fio": "rgba(29,26,22,.55)",
+  "sombra": "0 14px 34px rgba(0,0,0,.45)",
+  "largura": 600
+ },
+ "selo": {
+  "_nota": "selo de estado (ELEITO…): retângulo arredondado verde, letras espaçadas",
+  "fundo": "#2E8A73",
+  "texto": "#F4F1EA",
+  "px": 30,
+  "entrada_s": 0.3
  }
 }

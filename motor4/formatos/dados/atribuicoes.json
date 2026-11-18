@@ -68,6 +68,15 @@
    ],
    "aparece": "rota visível",
    "obrigatoria": true
+  },
+  "bmng": {
+   "nome": "NASA Blue Marble (relevo sombreado + batimetria), via NASA GIBS",
+   "licenca": "Domínio público (NASA)",
+   "uso_comercial": true,
+   "url_origem": "https://gibs.earthdata.nasa.gov (BlueMarble_ShadedRelief_Bathymetry)",
+   "termos": "https://earthdata.nasa.gov/learn/use-data/data-use-policy",
+   "atribuicao_exigida": "Imagem: NASA Blue Marble",
+   "obrigatoria": false
   }
  },
  "proibidos": {

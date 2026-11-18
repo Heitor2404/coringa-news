@@ -1,0 +1,152 @@
+{
+ "formato": "atlas",
+ "canal": "coringa",
+ "video_id": "calibracao-ref-a-8s",
+ "titulo": "Calibração: 8 s iniciais da referência A com material próprio",
+ "tipo_producao": "REPRODUÇÃO CONTROLADA (pedido do Heitor 17/11 21:32): mesmo enquadramento geográfico medido, câmera, destaque, marcador, cédula e ritmo da referência A, com materiais licenciados e texto próprio. Sem narração (tempos das legendas = trocas medidas na referência).",
+ "geo": "motor4/formatos/dados/mundo.topo.json",
+ "camera": "roi",
+ "styleframes": 6,
+ "narracao": {
+  "texto": "Quem manda na China. Nunca teve adversário na votação. Ainda assim, venceu, com folga.",
+  "sintetica": true,
+  "grupos_medidos_na_referencia": [
+   [
+    0.5,
+    1.95
+   ],
+   [
+    2.0,
+    2.95
+   ],
+   [
+    3.0,
+    4.25
+   ],
+   [
+    4.3,
+    4.95
+   ],
+   [
+    5.0,
+    5.95
+   ],
+   [
+    6.0,
+    7.25
+   ],
+   [
+    7.3,
+    7.85
+   ],
+   [
+    7.9,
+    8.6
+   ]
+  ],
+  "fatos": [
+   {
+    "id": "f-2023",
+    "texto": "Em março de 2023, Xi Jinping foi reeleito presidente pela Assembleia Popular Nacional, candidato único, com 2.952 votos a favor e nenhum contra.",
+    "fontes": [
+     "https://www.reuters.com/world/china/chinas-parliament-confirms-xi-jinping-third-term-president-2023-03-10/"
+    ]
+   }
+  ]
+ },
+ "duracao": 8.0,
+ "destaques": [
+  {
+   "fonte": "paises",
+   "nome": "China",
+   "cor": "foco",
+   "t0": -0.5
+  }
+ ],
+ "rotas": [],
+ "rotulos": [],
+ "clipes": [],
+ "rasters": [
+  {
+   "nome": "bmng_asia_continente"
+  }
+ ],
+ "beats": [
+  {
+   "id": "b1",
+   "composicao": "atlas.abertura",
+   "t": 0.0,
+   "roi": [
+    82.905,
+    30.468,
+    124.855,
+    44.046
+   ],
+   "movimento": "aproxima",
+   "prova": "o país em foco no mapa e o lugar do poder, com a cédula de candidato único",
+   "camadas": [
+    {
+     "id": "poder",
+     "componente": "atlas.geoPin",
+     "slot": "geo",
+     "t0": 0.5,
+     "t1": 8.0,
+     "p": {
+      "tipo": "foto",
+      "papel": "protagonista",
+      "desloc": "auto",
+      "lonlat": [
+       116.38,
+       39.91
+      ],
+      "rotulo": "Zhongnanhai",
+      "asset": "commons:Xinhuamen_Beijing.jpg",
+      "foco": [
+       0.5,
+       0.42
+      ],
+      "meta": "FOTO: PRCMISE · CC BY-SA 4.0"
+     }
+    },
+    {
+     "id": "cedula",
+     "componente": "editorial.statCard",
+     "slot": "pergunta",
+     "t0": 2.43,
+     "t1": 8.0,
+     "p": {
+      "estilo": "cedula",
+      "cabecalho": "选票",
+      "rubrica": "CÉDULA · PRESIDENTE",
+      "rubrica_dir": "2023",
+      "fato": "f-2023",
+      "linhas": [
+       {
+        "texto": "Xi Jinping",
+        "marca_t": 7.2
+       },
+       {
+        "texto": "(nenhum outro nome)",
+        "italico": true,
+        "pontilhado": true,
+        "t": 4.43
+       }
+      ]
+     }
+    },
+    {
+     "id": "eleito",
+     "componente": "editorial.statCard",
+     "slot": "selo",
+     "t0": 7.25,
+     "t1": 8.0,
+     "p": {
+      "estilo": "selo",
+      "valor": "ELEITO",
+      "fato": "f-2023"
+     }
+    }
+   ]
+  }
+ ]
+}

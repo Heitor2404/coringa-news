@@ -1,0 +1,53 @@
+{
+ "nome": "bmng_asia_continente",
+ "tipo": "satelite",
+ "cantos": [
+  [
+   50.625,
+   76.84081641443098
+  ],
+  [
+   168.75,
+   76.84081641443098
+  ],
+  [
+   168.75,
+   -27.059125784374054
+  ],
+  [
+   50.625,
+   -27.059125784374054
+  ]
+ ],
+ "px": [
+  5376,
+  6912
+ ],
+ "px_por_grau_fonte": 45.511,
+ "arquivo": "bmng_asia_continente.jpg",
+ "dataset": "bmng",
+ "atribuicao": "Imagem: NASA Blue Marble",
+ "fonte": {
+  "coleta": "asia_continente",
+  "fontes": {
+   "fisico": [
+    "Relevo: Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)"
+   ],
+   "satelite": [
+    "Imagem: NASA Blue Marble (relevo sombreado + batimetria), via GIBS (domínio público)",
+    "Relevo: Terrain Tiles (AWS Open Data/Mapzen; SRTM, GMTED2010, ETOPO1)"
+   ]
+  },
+  "sha256_bruto": {
+   "asia_continente_fisico.jpg": "24d766d344fe079a081282503ddd76118ba4f746f7b22ad52ee678377b180b3b",
+   "asia_continente_satelite.jpg": "63dfb23ad3a951fdcc9d864a3605f6b88556365d2080e2c9f43565e59873704b"
+  },
+  "licenca": "Domínio público (NASA)"
+ },
+ "grade": {
+  "modelo": "polinomio2_rgb",
+  "origem": "calibrada por registro geográfico contra a referência A (0–8 s): só a transformação de cor imagem→imagem; nenhum pixel da referência é guardado"
+ },
+ "sha256": "a5e7b1a4df16d9d94e6d429b4c59b728dbe547c6bc00a163b61ff7728fa47c80",
+ "gerado": "2026-11-17"
+}

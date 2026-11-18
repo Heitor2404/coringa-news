@@ -44,7 +44,7 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
     anc = [lerp(cb.ancora[0], ca.ancora[0], e), lerp(cb.ancora[1], ca.ancora[1], e)];
   } else {
     fx = mercX(ca.foco[0]); fy = mercY(ca.foco[1]); anc = ca.ancora;
-    let dt = Math.max(0, t - a.t - Math.max(0, d));
+    let dt = Math.max(0, t - a.t - (i > 0 ? Math.max(0, d) : 0));          // = plano.camera_em (1º beat deriva desde o quadro 0)
     const Td = (a as any).dur_deriva;
     if (Td) dt = Td * (1 - Math.cos(Math.PI * Math.min(1, dt / Td))) / 2;          // = plano.camera_em (recuo suavizado)
     z = ca.zoom + (a.deriva ?? 0) * dt;
@@ -65,7 +65,8 @@ const rampa = (z: number, de?: number | null, ate?: number | null) => (de == nul
 
 // véu da composição (legibilidade sem cobrir o território): interpolado na troca de beat
 const VEUS: Record<string, string> = {
-  nenhum: 'linear-gradient(180deg, rgba(3,6,12,.55) 0%, rgba(3,6,12,0) 16%, rgba(3,6,12,0) 60%, rgba(3,6,12,.72) 100%)',
+  // referência A: o mapa aparece SEM vinheta (legenda e créditos legíveis só pela sombra do texto)
+  nenhum: 'transparent',
   topo: 'linear-gradient(180deg, rgba(3,6,12,.82) 0%, rgba(3,6,12,.55) 26%, rgba(3,6,12,0) 40%, rgba(3,6,12,0) 60%, rgba(3,6,12,.72) 100%)',
   base: 'linear-gradient(180deg, rgba(3,6,12,.5) 0%, rgba(3,6,12,0) 14%, rgba(3,6,12,0) 36%, rgba(3,6,12,.86) 46%, rgba(3,6,12,.9) 100%)',
   direita: 'linear-gradient(90deg, rgba(3,6,12,0) 0%, rgba(3,6,12,0) 50%, rgba(3,6,12,.86) 56%, rgba(3,6,12,.9) 100%), linear-gradient(180deg, rgba(3,6,12,0) 60%, rgba(3,6,12,.7) 100%)',
@@ -127,7 +128,9 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     if (r.arco) { const l = arcoContinuo(r.arco[0], r.arco[1]); return { l, km: turf.length(l, { units: 'kilometers' }) }; }
     return { l: rota, km };
   }), [P.rotas, rota, km]);
-  const cor = (c?: string) => (c === 'agua' ? T.agua : c === 'destaque2' ? T.destaque2 : T.destaque);
+  const cor = (c?: string) => (c === 'agua' ? T.agua : c === 'destaque2' ? T.destaque2 : c === 'foco' ? ((T as any).foco || '#A8392B') : T.destaque);
+  // 'foco' = território em foco da referência A: preenchimento OPACO, contorno fino escuro, sem brilho
+  const foco = (d: any) => d.cor === 'foco';
   const rasters = P.rasters || [];
 
   useEffect(() => {
@@ -155,11 +158,12 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       { id: 'grat', type: 'line', source: 'grat', paint: { 'line-color': '#DCE8FF', 'line-width': 1, 'line-opacity': 0 } },
       ...(P.destaques || []).map((d, i) => ({ id: `dest_${i}`, type: 'fill', source: d.fonte, filter: ['==', ['get', 'name'], d.nome],
         paint: { 'fill-color': cor(d.cor), 'fill-opacity': 0 } })),
-      { id: 'borda', type: 'line', source: 'paises', paint: { 'line-color': temRaster ? '#F4F1EA' : T.borda, 'line-width': 1.6, 'line-opacity': temRaster ? .42 : .8, 'line-dasharray': temRaster ? [3, 2] : [1, 0] } },
+      { id: 'borda', type: 'line', source: 'paises', paint: { 'line-color': temRaster ? '#F4F1EA' : T.borda, 'line-width': 1.6, 'line-opacity': temRaster ? ((T as any).fronteira_opacidade ?? .42) : .8, 'line-dasharray': temRaster ? [3, 2] : [1, 0] } },
       ...(temRaster ? [] : [{ id: 'lagos', type: 'fill', source: 'lagos', paint: { 'fill-color': T.agua, 'fill-opacity': .9 } }]),
       ...(P.destaques || []).flatMap((d, i) => [
         { id: `destg_${i}`, type: 'line', source: d.fonte, filter: ['==', ['get', 'name'], d.nome], paint: { 'line-color': cor(d.cor), 'line-width': 16, 'line-blur': 12, 'line-opacity': 0 } },
-        { id: `destl_${i}`, type: 'line', source: d.fonte, filter: ['==', ['get', 'name'], d.nome], layout: { 'line-join': 'round' }, paint: { 'line-color': cor(d.cor), 'line-width': 4.5, 'line-opacity': 0 } }]),
+        { id: `destl_${i}`, type: 'line', source: d.fonte, filter: ['==', ['get', 'name'], d.nome], layout: { 'line-join': 'round' },
+          paint: { 'line-color': foco(d) ? 'rgba(70,16,10,.85)' : cor(d.cor), 'line-width': foco(d) ? 1.6 : 4.5, 'line-opacity': 0 } }]),
       ...(P.rotas || []).flatMap((r, i) => [
         { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': 24, 'line-opacity': .5, 'line-blur': 8 } },
         { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': 15 } },
@@ -192,8 +196,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     map.setPaintProperty('grat', 'line-opacity', .09 * clamp((7.6 - c.zoom) / 1.2));
     (P.destaques || []).forEach((d, i) => {
       const v = vis(t, d.t0, d.t1, .6, .5);
-      map.setPaintProperty(`dest_${i}`, 'fill-opacity', (d.fonte === 'lagos' ? .38 : .26) * v);
-      map.setPaintProperty(`destg_${i}`, 'line-opacity', .55 * v);
+      map.setPaintProperty(`dest_${i}`, 'fill-opacity', (foco(d) ? ((T as any).pais_opacidade ?? .9) : d.fonte === 'lagos' ? .38 : .26) * v);
+      map.setPaintProperty(`destg_${i}`, 'line-opacity', foco(d) ? 0 : .55 * v);
       map.setPaintProperty(`destl_${i}`, 'line-opacity', v);
     });
     (P.rotas || []).forEach((r, i) => {
@@ -246,6 +250,9 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const obrig = new Set<string>((P.creditos as any)?.obrigatorias || []);
   let atrib = Object.keys(CR).length ? [...new Set([...vis_ds].filter(d => CR[d] && obrig.has(d)).map(d => CR[d]))]
     : [...new Set([...rasters.filter(r => rampa(c.zoom, r.de, r.ate) > .02).map(r => r.atribuicao), ...(P.geo?.meta?.atribuicao || [])])];
+  // créditos de FOTO de pinos visíveis (estilo da referência: tudo na faixa de créditos) — obrigatórios (CC BY-SA)
+  const extras = (((P.creditos as any)?.extras || []) as any[]).filter(e => t >= e.t0 && t <= e.t1 + .3).map(e => e.txt);
+  atrib = [...new Set([...extras, ...atrib])];
   for (const d of [...vis_ds].filter(d => CR[d] && !obrig.has(d))) { const tent = [CR[d], ...atrib.filter(x => x !== CR[d])]; if (!atrib.includes(CR[d]) && cabe(tent)) atrib = tent; }
   return (
     <div style={{ position: 'absolute', inset: 0, opacity: opac }}>

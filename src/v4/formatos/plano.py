@@ -32,6 +32,9 @@ def _resolver_layout():
         if v.get('formato') != 'atlas':
             continue
         v['slots'] = {n: layout.slot(s) for n, s in v['slots'].items()}
+        if v.get('quadro'):
+            q0 = v['quadro']
+            v['centro_intencao'] = [q0[0] + q0[2] / 2, q0[1] + q0[3] / 2]   # a câmera mira o centro DESENHADO, não o recortado
         v['quadro'] = layout.quadro(v.get('quadro'))
 
 
@@ -186,11 +189,14 @@ def merc(lon: float, lat: float) -> tuple[float, float]:
     return (lon + 180) / 360, .5 - math.log((1 + s_) / (1 - s_)) / (4 * math.pi)
 
 
-def camera_roi(roi, quadro, zmax: float | None = None, folga: float = .86) -> dict:
+def camera_roi(roi, quadro, zmax: float | None = None, folga: float = .86, centro=None) -> dict:
     """enquadra o território (roi = oeste, sul, leste, norte) DENTRO do quadro livre da composição"""
     o, s_, l, n = roi
     (x0, y0), (x1, y1) = merc(o, n), merc(l, s_)
     qx, qy, qw, qh = quadro
+    if centro:                     # centro desenhado ≠ centro do recorte: cabe na MENOR metade em volta dele
+        qw = 2 * min(centro[0] - qx, qx + qw - centro[0])
+        qh = 2 * min(centro[1] - qy, qy + qh - centro[1])
     z = math.log2(min(qw * folga / ((x1 - x0) * 512), qh * folga / ((y1 - y0) * 512)))
     if zmax is not None:
         z = min(z, zmax)
@@ -198,7 +204,7 @@ def camera_roi(roi, quadro, zmax: float | None = None, folga: float = .86) -> di
     fx, fy = (x0 + x1) / 2, (y0 + y1) / 2
     lon = fx * 360 - 180
     lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * fy))))
-    return {'foco': [round(lon, 6), round(lat, 6)], 'ancora': [qx + qw / 2, qy + qh / 2], 'zoom': round(z, 3)}
+    return {'foco': [round(lon, 6), round(lat, 6)], 'ancora': list(centro) if centro else [qx + qw / 2, qy + qh / 2], 'zoom': round(z, 3)}
 
 
 Z_MIN = math.log2(1920 / 512)          # abaixo disso o mundo é mais baixo que a tela e o MapLibre trava/desloca a câmera
@@ -245,7 +251,7 @@ def camera_em(palco: list[dict], t: float) -> dict | None:
         anc = [cb['ancora'][0] + (ca['ancora'][0] - cb['ancora'][0]) * e, cb['ancora'][1] + (ca['ancora'][1] - cb['ancora'][1]) * e]
         return _restringir({'fx': fx, 'fy': fy, 'ancora': anc, 'zoom': z})
     fx, fy = merc(*ca['foco'])
-    dt = max(0., t - a['t'] - max(0, d))
+    dt = max(0., t - a['t'] - (max(0, d) if i > 0 else 0))     # 1º beat: sem voo de chegada, a deriva começa no quadro 0
     if a.get('dur_deriva'):                # recuo: mesma variação total, com aceleração e assentamento (seno)
         T_ = a['dur_deriva']
         dt = T_ * (1 - math.cos(math.pi * min(1., dt / T_))) / 2
@@ -262,6 +268,11 @@ def roi_tela(cam: dict, roi) -> dict:
     px = lambda x: cam['ancora'][0] + (x - cam['fx']) * ws
     py = lambda y: cam['ancora'][1] + (y - cam['fy']) * ws
     return {'x': px(x0), 'y': py(y0), 'w': px(x1) - px(x0), 'h': py(y1) - py(y0)}
+
+
+def tokens_canal(can: dict) -> dict:
+    """tokens do canal que o palco/primitivas usam — UMA lista (antes, três cópias esqueciam 'papel' e 'selo')"""
+    return {k: can[k] for k in ('cores', 'fontes', 'tempo', 'palco', 'cartao', 'pino', 'cta', 'papel', 'selo', 'titulo') if k in can}
 
 
 def estilo_legenda(pl: dict) -> dict:
@@ -283,6 +294,7 @@ def props_camada(pl: dict, meta: dict) -> dict:
     out = {'duracao': pl['duracao'], 'palavras': pal, 'cenas': cenas, 'estilo': {k: v for k, v in est.items() if not k.startswith('_')}}
     if pl['formato'] == 'atlas':
         out['legenda_caixa'] = zonas('atlas')['legenda']
+        out['marca_y'] = layout.faixa_inferior().get('marca_y')
     return out
 
 
@@ -296,12 +308,16 @@ def seguro(formato: str | None) -> dict | None:
 
 
 def _creditos(plano: dict) -> dict | None:
-    """créditos cartográficos (manifesto) e a faixa onde aparecem — separados das fontes factuais do roteiro"""
+    """créditos cartográficos (manifesto) e a faixa onde aparecem — separados das fontes factuais do roteiro.
+    Estilo da referência: o crédito da FOTO de um pino também vai para esta faixa, enquanto o pino está na tela."""
     if plano.get('formato') != 'atlas':
         return None
     from src.v4.formatos import atlas_ref
     z = zonas('atlas').get('creditos', [72, 1174, 936, 46])
-    return {'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')},
+    ref = (canal().get('pino') or {}).get('estilo') == 'referencia'
+    extras = [{'t0': L['t0'], 't1': L['t1'], 'txt': L['p']['meta']} for L in camadas(plano)
+              if ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto' and L['p'].get('meta')]
+    return {'extras': extras,'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')},
             'obrigatorias': [k for k, v in atlas_ref.datasets().items() if v.get('obrigatoria')], 'caixa': z, 'px': 18, 'linha': 22}
 
 
@@ -366,12 +382,20 @@ def palco_dos_beats(p: dict) -> list[dict]:
             if b.get('roi'):
                 # teto de zoom = nitidez da MELHOR base licenciada que cobre o território (nunca amplia imagem além dela)
                 teto = teto_zoom(p, b['roi'])
-                k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], teto)
+                # aproximação: o território começa com folga para CRESCER o beat inteiro e terminar ~96 % do quadro
+                # (referência A: +23 % em 8 s sem sair do enquadramento); fixo/recua: folga padrão
+                folga = .86
+                if mov == 'aproxima':
+                    folga = max(.7, min(.86, .96 / 2 ** (atlas_ref.deriva(mov) * max(0, fim - t))))
+                k['camera'] = camera_roi(b['roi'], c.get('quadro') or [0, 0, 1080, 1920], teto, folga, c.get('centro_intencao'))
                 k['dur_camera'] = duracao_transicao(ultima, k['camera'])
                 # a deriva de aproximação PARA na nitidez da base e quando o território encosta no quadro livre
                 if c.get('quadro'):
                     (x0, y0), (x1, y1) = merc(b['roi'][0], b['roi'][3]), merc(b['roi'][2], b['roi'][1])
                     qx_, qy_, qw_, qh_ = c['quadro']
+                    if c.get('centro_intencao'):
+                        cx_, cy_ = c['centro_intencao']
+                        qw_, qh_ = 2 * min(cx_ - qx_, qx_ + qw_ - cx_), 2 * min(cy_ - qy_, qy_ + qh_ - cy_)
                     z_fit = math.log2(min(qw_ / ((x1 - x0) * 512), qh_ / ((y1 - y0) * 512)))
                     teto = z_fit if teto is None else min(teto, z_fit)
                 if teto is not None:
@@ -380,7 +404,7 @@ def palco_dos_beats(p: dict) -> list[dict]:
                     # câmera começa um pouco mais aberta (até 0,6 de zoom) para o movimento durar o beat todo
                     if k['deriva'] > 0:
                         t_ini = 0.0 if i == 0 else t          # o 1º beat começa no quadro 0 (o clipe do gancho fica por cima)
-                        falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t_ini - k['dur_camera']) - teto
+                        falta = k['camera']['zoom'] + k['deriva'] * max(0, fim - t_ini - (k['dur_camera'] if i else 0)) - teto
                         if falta > 0:
                             k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - min(.6, falta), 3)}
                 if mov == 'recua':
@@ -407,6 +431,8 @@ def zonas(formato: str) -> dict:
         from src.v4.formatos import layout
         fi = layout.faixa_inferior()
         z.update(legenda=fi['legenda'], creditos=fi['creditos'])
+        if zf.get('marca'):
+            z['marca'] = zf['marca']
     else:
         z.update({k: v for k, v in zf.items() if not k.startswith('_')})
     return z
@@ -425,6 +451,15 @@ def papel_pino(q: dict) -> dict:
 
 def caixa_pino(q: dict, ax: float, ay: float, desloc=None) -> dict:
     """caixa ocupada por um pino ancorado em (ax, ay) — MESMA geometria de Primitivas.GeoPin"""
+    if q.get('tipo') == 'foto' and (canal().get('pino') or {}).get('estilo') == 'referencia':
+        PP = papel_pino(q)
+        r = q.get('raio') or PP['raio']
+        dx, dy = desloc or (q['desloc'] if isinstance(q.get('desloc'), list) else [r, -(r + 55)])
+        cx = ax + dx
+        hl = PP['rotulo_px'] + 32
+        lw = max(2 * r + 2 * PP['anel'], _largura(q.get('rotulo', ''), PP['rotulo_px'], .6) + 44)
+        topo = ay + dy - r - PP['anel']
+        return {'x': cx - lw / 2, 'y': topo, 'w': lw, 'h': (ay + hl / 2) - topo}
     if q.get('tipo') == 'foto':
         PP = papel_pino(q)
         r = q.get('raio') or PP['raio']
@@ -442,6 +477,20 @@ def caixa_pino(q: dict, ax: float, ay: float, desloc=None) -> dict:
     if lado in ('acima', 'abaixo'):
         return {'x': ax - lw / 2, 'y': ay - 84 if lado == 'acima' else ay + 28, 'w': lw, 'h': 56}
     return {'x': ax + 26 if lado == 'direita' else ax - 26 - lw, 'y': ay - 28, 'w': lw, 'h': 56}
+
+
+def partes_pino(q: dict, ax: float, ay: float, desloc=None) -> list[dict]:
+    """foto e rótulo do pino no estilo da referência, como caixas separadas (mesma geometria de PinoReferencia)"""
+    PP = papel_pino(q)
+    r = q.get('raio') or PP['raio']
+    dx, dy = desloc or (q['desloc'] if isinstance(q.get('desloc'), list) else [r, -(r + 55)])
+    a = PP['anel']
+    hl = PP['rotulo_px'] + 32
+    lw = _largura(q.get('rotulo', ''), PP['rotulo_px'], .62) + 44
+    # rótulo centrado sob a foto, mas recuado para dentro da área segura se a coluna de ícones o alcançaria (= Primitivas)
+    lx = min(ax + dx, layout.limite_direito(ay - hl / 2 + 8, ay + hl / 2 - 8) - lw / 2 - 4)
+    return [{'x': ax + dx - r - a, 'y': ay + dy - r - a, 'w': 2 * (r + a), 'h': 2 * (r + a)},
+            {'x': lx - lw / 2, 'y': ay - hl / 2, 'w': lw, 'h': hl}]      # crédito da foto vai para a faixa de créditos
 
 
 def posicionar_pinos(plano: dict) -> None:
@@ -463,10 +512,13 @@ def posicionar_pinos(plano: dict) -> None:
             ax, ay = projetar(cam, *q['lonlat'])
             bx = caixa_pino(q, ax, ay, [dx, dy])
             xd = layout.limite_direito(bx['y'], bx['y'] + bx['h'])
-            fora = max(0, xe - bx['x']) + max(0, bx['x'] + bx['w'] - xd) + max(0, 340 - bx['y']) + max(0, bx['y'] + bx['h'] - fi['conteudo_base'])
+            # estilo da referência: a foto e o rótulo são caixas SEPARADAS (a união cobriria a coluna de ícones sem tocar nela)
+            caixas = partes_pino(q, ax, ay, [dx, dy]) if (canal().get('pino') or {}).get('estilo') == 'referencia' and q.get('tipo') == 'foto' else [bx]
+            fora = sum(max(0, xe - b_['x']) + max(0, b_['x'] + b_['w'] - layout.limite_direito(b_['y'] + 8, b_['y'] + b_['h'] - 8)) +
+                       max(0, fi['conteudo_topo'] - b_['y']) + max(0, b_['y'] + b_['h'] - fi['conteudo_base']) for b_ in caixas)
             custo += fora * 10
             for M in estat:
-                if M['t0'] <= t <= M['t1'] + SAI and _cruza(bx, M['caixa']):
+                if M['t0'] <= t <= M['t1'] + SAI and any(_cruza({'x': c_['x'] + 6, 'y': c_['y'] + 6, 'w': c_['w'] - 12, 'h': c_['h'] - 12}, M['caixa']) for c_ in caixas):
                     custo += 5000
         return custo
 
@@ -476,7 +528,7 @@ def posicionar_pinos(plano: dict) -> None:
     for L in textos:
         q = L['p']
         pref = q.get('lado', 'direita')
-        ts = [L['t0'] + .3 + i * (max(.1, L['t1'] - L['t0'] - .3) / 4) for i in range(5)]
+        ts = list(_passos(L['t0'], L['t1'] + SAI, .25))     # MESMA amostragem do validador
         melhor, pior = pref, 1e9
         for lado in [pref] + [x for x in ('direita', 'esquerda', 'acima', 'abaixo') if x != pref]:
             q['lado_auto'] = lado
@@ -495,14 +547,14 @@ def posicionar_pinos(plano: dict) -> None:
         q = L['p']
         PP = papel_pino(q)
         r0 = q.get('raio') or PP['raio']
-        ts = [L['t0'] + .3 + i * (max(.1, L['t1'] - L['t0'] - .3) / 4) for i in range(5)]
+        ts = list(_passos(L['t0'], L['t1'] + SAI, .25))     # MESMA amostragem do validador
         melhor, pior, raio = None, 1e9, r0
         # escala do papel primeiro; se nenhuma direção couber na área segura, a foto encolhe (até 75 % do papel)
         for f in (1.0, .92, .84, .75):
             r = round(r0 * f)
             q['raio'] = r
             d = r + 70
-            cands = [(0, -d), (d * .8, -d * .8), (-d * .8, -d * .8), (d, 0), (-d, 0), (d * .8, d * .8), (-d * .8, d * .8), (0, d),
+            cands = ([(r, -(r + 55)), (-r, -(r + 55))] if (canal().get('pino') or {}).get('estilo') == 'referencia' else []) + [(0, -d), (d * .8, -d * .8), (-d * .8, -d * .8), (d, 0), (-d, 0), (d * .8, d * .8), (-d * .8, d * .8), (0, d),
                      (d * .5, -d * .87), (-d * .5, -d * .87), (d * .87, -d * .5), (-d * .87, -d * .5), (d * .87, d * .5), (-d * .87, d * .5)]
             for dx, dy in cands:
                 custo = custo_de(q, dx, dy, ts)
@@ -587,8 +639,11 @@ def _cabe(L: dict) -> list[str]:
             for x in p.get('partes') or []:
                 if _largura(x['rotulo'], 26, .62) + 24 > col:
                     out.append(f"legenda {x['rotulo']!r} não cabe ao lado do mostrador")
-        elif p.get('estilo') in ('calendario', 'ficha'):
+        elif p.get('estilo') in ('calendario', 'ficha', 'cedula'):
             pass
+        elif p.get('estilo') == 'selo':
+            if _largura(str(p.get('valor', '')), 30, .9) + 52 > b['w']:
+                out.append(f"selo {p.get('valor')!r} não cabe em {b['w']} px")
         elif p.get('estilo') == 'pilula':
             tot = _largura(txt, 40, .62) + _largura(f" {p.get('unidade', '')}" if p.get('unidade') else '', 40) + _largura(f" · {p.get('rotulo', '')}" if p.get('rotulo') else '', 40, .66)
             if tot * 30 / 40 + 60 > b['w']:               # corpo encolhe até 30 px (Primitivas.StatCard pílula)
@@ -804,13 +859,17 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                 if qd and not (qd[0] - 40 <= ax <= qd[0] + qd[2] + 40 and qd[1] - 40 <= ay <= qd[1] + qd[3] + 40) and (pid, 'fora') not in vistos:
                     vistos.add((pid, 'fora'))
                     v('erro', 'F-PINO-FORA', pid, f'âncora fora do território enquadrado em {t:.2f}s ({ax:.0f},{ay:.0f})')
-                xd = layout.limite_direito(bx['y'], bx['y'] + bx['h'])
-                if (bx['x'] < layout.uniao()['esquerda'] - 2 or bx['x'] + bx['w'] > xd + 2 or bx['y'] < 336
-                        or bx['y'] + bx['h'] > layout.faixa_inferior()['conteudo_base'] + 2) and (pid, 'tela') not in vistos:
-                    vistos.add((pid, 'tela'))
-                    v('erro', 'F-PINO-FORA', pid, f'pino sai da área segura das plataformas em {t:.2f}s')
+                # pino da referência: foto e rótulo são caixas separadas (mesmas tolerâncias de posicionar_pinos)
+                Lp = next((M for M in Ls if M['id'] == pid), None)
+                partes = partes_pino(Lp['p'], ax, ay) if Lp and (canal().get('pino') or {}).get('estilo') == 'referencia' and Lp['p'].get('tipo') == 'foto' else None
+                for b_ in partes or [bx]:
+                    xd = layout.limite_direito(b_['y'] + (8 if partes else 0), b_['y'] + b_['h'] - (8 if partes else 0))
+                    if (b_['x'] < layout.uniao()['esquerda'] - 2 or b_['x'] + b_['w'] > xd + 2 or b_['y'] < layout.faixa_inferior()['conteudo_topo'] - 4
+                            or b_['y'] + b_['h'] > layout.faixa_inferior()['conteudo_base'] + 2) and (pid, 'tela') not in vistos:
+                        vistos.add((pid, 'tela'))
+                        v('erro', 'F-PINO-FORA', pid, f'pino sai da área segura das plataformas em {t:.2f}s')
                 for L in ativos:
-                    if _cruza(bx, L['caixa']) and (pid, L['id']) not in vistos:
+                    if any(_cruza({'x': c_['x'] + 6, 'y': c_['y'] + 6, 'w': c_['w'] - 12, 'h': c_['h'] - 12} if partes else c_, L['caixa']) for c_ in (partes or [bx])) and (pid, L['id']) not in vistos:
                         vistos.add((pid, L['id']))
                         v('erro', 'F-COLISAO', f"{pid}×{L['id']}", f'pino sob/sobre camada em {t:.2f}s')
                 for nome, (x, y, w, h) in ZN.items():

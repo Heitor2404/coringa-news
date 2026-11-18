@@ -123,7 +123,7 @@ def nomes_do_plano(pl: dict) -> tuple[set[str], set[str]]:
     título (rótulos de pílula são caixa-alta de desenho, não contam)"""
     import re
     fatos = [pl.get('titulo') or ''] + [f.get('texto', '') for f in (pl.get('narracao') or {}).get('fatos', []) if isinstance(f, dict)]
-    mapa = [r.get('nome', '') for r in pl.get('rotulos') or []]
+    mapa = [r.get('nome', '') for r in pl.get('rotulos') or []] + [d.get('nome_pt') or d.get('nome', '') for d in pl.get('destaques') or []]
     for b in pl.get('beats') or []:
         for L in b.get('camadas') or []:
             q = L.get('p') or {}

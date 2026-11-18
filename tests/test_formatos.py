@@ -180,7 +180,7 @@ def test_componentes_registrados_no_remotion():
 def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     """17/11 (ensaio DOSSIÊ): datas da linha do tempo encostavam na marca 'CORINGA EXPLICA' (y 292)"""
     pl = copy.deepcopy(ATLAS)
-    _camada(pl, 'km')['caixa'] = [72, 300, 936, 80]
+    _camada(pl, 'km')['caixa'] = [72, 236, 936, 80]          # zona da marca do ATLAS (y 222–270, alto livre como na referência)
     _camada(pl, 'zero')['caixa'] = [72, 1250, 936, 80]
     r = P.validar(P.resolver_tempos(pl, []))
     assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 2
@@ -345,7 +345,7 @@ def test_camera_aproxima_fica_parada_no_dado_e_recua_no_fecho():
     assert fecho['movimento'] == 'recua'
     fim = P.camera_em(pl['palco'], pl['duracao'] - .05)
     roi = next(b for b in pl['beats'] if b['id'] == 'b9-payoff')['roi']
-    alvo = P.camera_roi(roi, P.COMP['atlas.manchete']['quadro'], P.teto_zoom(pl, roi))
+    alvo = P.camera_roi(roi, P.COMP['atlas.manchete']['quadro'], P.teto_zoom(pl, roi), .86, P.COMP['atlas.manchete'].get('centro_intencao'))
     assert math.isclose(fim['zoom'], alvo['zoom'], abs_tol=.02)       # termina no enquadramento do território inteiro
 
 

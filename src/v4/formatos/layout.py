@@ -43,7 +43,7 @@ def faixa_inferior(nomes: list[str] | None = None) -> dict:
     meia_leg = min(540 - xe, xd - 540)
     return {'creditos': [xe, cy, xd - xe, F['creditos_altura']],
             'legenda': [round(540 - meia_leg), ly, round(2 * meia_leg), F['legenda_altura']],
-            'conteudo_base': ly - F['folga'], 'conteudo_topo': 340, 'base_visivel': base}
+            'conteudo_base': ly - F['folga'], 'conteudo_topo': F.get('conteudo_topo', 340), 'marca_y': F.get('marca_y'), 'base_visivel': base}
 
 
 def slot(spec, nomes: list[str] | None = None) -> list[int]:

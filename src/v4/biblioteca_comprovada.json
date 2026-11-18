@@ -277,6 +277,43 @@
     "demonstra": "sim",
     "confirmacao_humana": null
    }
+  },
+  {
+   "id": "commons:Xinhuamen_Beijing.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Xinhuamen_Beijing.jpg/1920px-Xinhuamen_Beijing.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "titulo": "Xinhuamen Beijing",
+   "credito": "\"Xinhuamen Beijing\" — Prcmise (CC BY-SA 4.0), via Wikimedia Commons",
+   "licenca": "CC BY-SA 4.0",
+   "wh": [
+    1920,
+    1280
+   ],
+   "roi": [
+    0.05,
+    0.0,
+    0.95,
+    0.95
+   ],
+   "lugar": [
+    "china",
+    "pequim",
+    "zhongnanhai"
+   ],
+   "natureza": "foto",
+   "mostra": "portão Xinhuamen (entrada de Zhongnanhai, sede do poder em Pequim) com a placa 新華門 e guardas",
+   "termos": [
+    "zhongnanhai",
+    "xinhuamen",
+    "pequim",
+    "beijing",
+    "poder"
+   ],
+   "sha256_origem": "2b08b188469345305aaf12473f4da7a96ec34b53aba8f807eaca7abd6c7628eb",
+   "prova": {
+    "metodo": "conferência visual (Claude, 17/11) do arquivo coletado na execução 44209827711",
+    "midia_corresponde": true,
+    "demonstra": "lugar do poder em Pequim"
+   }
   }
  ],
  "reprovados": [

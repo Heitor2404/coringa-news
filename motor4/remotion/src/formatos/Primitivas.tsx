@@ -3,7 +3,7 @@
 // primitiva revela uma informação (número, nível, data, documento, relação, comparação).
 import React from 'react';
 import { Img, staticFile } from 'remotion';
-import { clamp, lerp } from '../ident';
+import { FS, clamp, lerp } from '../ident';
 import type { Camada, FormatoProps } from './tipos';
 import { cameraEm, mercX, mercY } from './Palco';
 
@@ -110,6 +110,8 @@ export const StatCard: React.FC<{ c: Ctx }> = ({ c }) => {
   if (p.estilo === 'calendario') return <Calendario c={c} />;
   if (p.estilo === 'ficha') return <Ficha c={c} />;
   if (p.estilo === 'dial') return <Dial c={c} />;
+  if (p.estilo === 'cedula') return <Cedula c={c} />;
+  if (p.estilo === 'selo') return <Selo c={c} />;
   const conta = p.contagem && typeof p.valor === 'number' ? p.valor * easeOut((c.t - c.L.t0) / (p.dur_contagem || 1.2)) : p.valor;
   const txt = typeof conta === 'number' ? num(conta, p.casas || 0) : String(p.valor);
   if (p.estilo === 'pilula') return (
@@ -465,6 +467,8 @@ export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
   }
   // papel narrativo → escala (tokens canal.pino): protagonista domina o quadro; secundário acompanha
   const PP = ((c.P.tokens as any).pino || {})[p.papel || 'secundario'] || { raio: 118, rotulo_px: 30, anel: 6 };
+  const TK = ((c.P.tokens as any).pino || {});
+  if (TK.estilo === 'referencia') return <PinoReferencia c={c} ax={ax} ay={ay} PP={PP} TK={TK} />;
   const im = c.P.imagens?.[p.asset], r = p.raio ?? PP.raio, [dx, dy] = Array.isArray(p.desloc) ? p.desloc : [0, -(r + 80)];
   const cx = ax + dx, cy = ay + dy, d = Math.hypot(dx, dy) || 1;
   const ex = cx - dx / d * (r + 6), ey = cy - dy / d * (r + 6);
@@ -483,6 +487,96 @@ export const GeoPin: React.FC<{ c: Ctx }> = ({ c }) => {
       {p.meta && <div data-meta="credito" style={{ marginTop: 4, fontFamily: FD(c), fontSize: 18, lineHeight: '22px', color: 'rgba(255,255,255,.88)', textShadow: '0 1px 4px #000', whiteSpace: 'nowrap' }}>{p.meta}</div>}
     </div>
   </>;
+};
+
+// pino de foto na gramática da REFERÊNCIA A (medida quadro a quadro): anel de pulso no lugar; a foto circular com anel
+// quente nasce pequena sobre o lugar e cresce (40 % → 100 %, 0,2 s) para cima; o rótulo em serifa desdobra na horizontal
+// logo abaixo da foto. Geometria = plano.caixa_pino (estilo 'referencia').
+const rotuloX = (c: Ctx, cx: number, ay: number, rpx: number, txt: string) => {
+  const S = (c.P as any).seguro; if (!S) return cx;
+  const hl = rpx + 32, y0 = ay - hl / 2 + 8, y1 = ay + hl / 2 - 8, lw = txt.length * rpx * .62 + 44;
+  const xd = Math.min(S.dir_max, ...S.direita.filter((d: any) => y1 > d.de_y && y0 < d.ate_y).map((d: any) => d.x));
+  return Math.min(cx, xd - lw / 2 - 4);
+};
+const PinoReferencia: React.FC<{ c: Ctx; ax: number; ay: number; PP: any; TK: any }> = ({ c, ax, ay, PP, TK }) => {
+  const p = c.L.p, im = c.P.imagens?.[p.asset], r = p.raio ?? PP.raio;
+  // medido na referência A (1,0 s): foto com a borda esquerda sobre o lugar e a base ~55 px acima dele; rótulo centrado
+  // sob a foto, com o MEIO na altura do lugar; anel de pulso no lugar (até ~47 px)
+  const [dx, dy] = Array.isArray(p.desloc) ? p.desloc : [r, -(r + 55)];
+  const te = c.t - c.L.t0, sai = clamp((c.L.t1 + .3 - c.t) / .3);
+  const kf = easeOut(clamp(te / (TK.entrada_s ?? .22)));
+  const kr = easeOut(clamp((te - (TK.rotulo_atraso_s ?? .2)) / (TK.rotulo_entrada_s ?? .16)));
+  const kp = clamp(te / (TK.pulso_s ?? .7));
+  const cx = ax + dx * (.25 + .75 * kf), cy = ay + dy * (.25 + .75 * kf);
+  const anel = PP.anel ?? 6, corAnel = TK.cor_anel || '#D8A64A';
+  const rpx = PP.rotulo_px ?? 30;
+  return <div style={{ opacity: sai }}>
+    {kp < 1 && <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 14 - 33 * kp, top: ay - 14 - 33 * kp, width: 28 + 66 * kp, height: 28 + 66 * kp,
+      borderRadius: '50%', border: '2.5px solid rgba(255,240,235,.85)', opacity: 1 - kp * .7 }} />}
+    {kp < 1 && <div style={{ position: 'absolute', left: ax - 8, top: ay - 8, width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,240,235,.8)', opacity: 1 - kp }} />}
+    {kp >= 1 && <div data-ancora-geo={JSON.stringify(p.lonlat)} style={{ position: 'absolute', left: ax - 1, top: ay - 1, width: 2, height: 2, opacity: 0 }} />}
+    <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: 2 * r, height: 2 * r, borderRadius: r, overflow: 'hidden', background: '#222',
+      boxShadow: `0 0 0 ${anel}px ${corAnel}, 0 10px 26px rgba(0,0,0,.55)`, transform: `scale(${.4 + .6 * kf})`, opacity: Math.min(1, kf * 1.6) }}>
+      {im && <Img src={staticFile(im.src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${(p.foco || [.5, .5])[0] * 100}% ${(p.foco || [.5, .5])[1] * 100}%` }} />}
+    </div>
+    {/* rótulo centrado sob a foto; recua para dentro da área segura (coluna de ícones) — MESMA conta de plano.partes_pino */}
+    <div style={{ position: 'absolute', left: rotuloX(c, ax + dx, ay, rpx, String(p.rotulo || '')) - 300, width: 600, top: ay - (rpx + 32) / 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ height: rpx + 32, padding: '0 22px', display: 'flex', alignItems: 'center', background: '#F4F0E8', color: '#1D1A16', fontFamily: FS, fontWeight: 700, fontSize: rpx,
+        borderRadius: 5, boxShadow: '0 6px 16px rgba(0,0,0,.4)', transform: `scaleX(${kr})`, opacity: kr > 0 ? 1 : 0, whiteSpace: 'nowrap' }}>{p.rotulo}</div>
+    </div>
+  </div>;
+};
+
+// statCard estilo 'cedula' — papel de votação/lista sobre o mapa (referência A): papel com borda picotada, inclinação e
+// entrada que DESDOBRA na vertical (0,2 s); cabeçalho vermelho em serifa, linha de rubrica espaçada, linhas com caixa de
+// marcar (marcada no instante da fala) e coluna à direita. Tokens: canal.papel.
+export const Cedula: React.FC<{ c: Ctx }> = ({ c }) => {
+  const p = c.L.p, b0 = c.L.caixa, K0 = (c.P.tokens as any).papel || {};
+  const wc = Math.min(b0.w, K0.largura || b0.w), b = { ...b0, x: b0.x + (b0.w - wc) / 2, w: wc };     // largura da referência, centrada no slot
+  const K = { inclina: -2.2, entrada_s: .2, fundo: '#F3EEE3', tinta: '#1D1A16', vermelho: '#B4262B', fio: 'rgba(29,26,22,.55)', sombra: '0 14px 34px rgba(0,0,0,.45)', ...((c.P.tokens as any).papel || {}) };
+  const ke = easeOut(clamp((c.t - c.L.t0) / K.entrada_s));
+  const linhas = p.linhas || [], hL = Math.min(78, (b.h - 120) / Math.max(1, linhas.length));
+  const col = b.w * .7;
+  return (
+    <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, transform: `rotate(${K.inclina}deg) scaleY(${Math.max(.02, ke)})`, transformOrigin: '50% 50%',
+      filter: 'drop-shadow(0 12px 18px rgba(0,0,0,.45))' }}>
+      {/* borda picotada: papel com furos em grade (máscara) + miolo liso recuado 7 px → só a borda fica picotada */}
+      <div style={{ position: 'absolute', inset: 0, background: K.fundo, WebkitMaskImage: 'radial-gradient(circle 4px, transparent 97%, #000 100%)',
+        WebkitMaskSize: '12px 12px', WebkitMaskPosition: '-6px -6px' }} />
+      <div style={{ position: 'absolute', inset: 7, background: K.fundo }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, width: col, height: 106, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: FS, fontWeight: 700, fontSize: 40, color: K.vermelho, letterSpacing: 6, lineHeight: 1 }}>{p.cabecalho}</div>
+        <div data-meta="rubrica" style={{ fontFamily: FT(c), fontWeight: 700, fontSize: 18, color: K.fio, letterSpacing: 5, marginTop: 8, textTransform: 'uppercase' }}>{p.rubrica}</div>
+      </div>
+      <div data-meta="rubrica" style={{ position: 'absolute', left: col, top: 0, width: b.w - col, height: 106, display: 'flex', alignItems: 'flex-end', paddingLeft: 14, paddingBottom: 22,
+        fontFamily: FT(c), fontWeight: 700, fontSize: 18, color: K.fio, letterSpacing: 4 }}>{p.rubrica_dir || ''}</div>
+      <div style={{ position: 'absolute', left: 18, right: 18, top: 106, height: 2, background: K.fio }} />
+      <div style={{ position: 'absolute', left: col, top: 18, bottom: 18, width: 2, background: K.fio }} />
+      {linhas.map((l: any, i: number) => {
+        const v = l.t != null ? clamp((c.t - l.t) / .35) : 1, mk = l.marca_t != null ? easeOut(clamp((c.t - l.marca_t) / .25)) : 0;
+        const y = 122 + i * hL;
+        return <React.Fragment key={i}>
+          <div style={{ position: 'absolute', left: 30, top: y + hL / 2 - 14, width: 28, height: 28, border: `3px solid ${K.tinta}`, borderRadius: 3, background: '#fff', opacity: .85 }} />
+          {mk > 0 && <svg style={{ position: 'absolute', left: 28, top: y + hL / 2 - 22, overflow: 'visible' }} width={40} height={40}>
+            <path d="M6 20 L15 30 L34 4" fill="none" stroke="#2E8A73" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round"
+              strokeDasharray={60} strokeDashoffset={60 * (1 - mk)} /></svg>}
+          <div style={{ position: 'absolute', left: 76, top: y, height: hL, width: col - 96, display: 'flex', alignItems: 'center', fontFamily: FS,
+            fontWeight: l.italico ? 600 : 700, fontStyle: l.italico ? 'italic' : 'normal', fontSize: l.italico ? 30 : 38, color: l.italico ? 'rgba(29,26,22,.7)' : K.tinta,
+            opacity: v, whiteSpace: 'nowrap', borderBottom: l.pontilhado ? `2px dashed ${K.fio}` : 'none' }}>{l.texto}</div>
+          {l.dir && <div style={{ position: 'absolute', left: col + 20, top: y, height: hL, display: 'flex', alignItems: 'center', fontFamily: FS, fontSize: 26, color: K.fio, opacity: v }}>{l.dir}</div>}
+        </React.Fragment>;
+      })}
+    </div>);
+};
+
+// statCard estilo 'selo' — estado (ELEITO…): retângulo arredondado verde, letras espaçadas, entra em 0,3 s (canal.selo)
+export const Selo: React.FC<{ c: Ctx }> = ({ c }) => {
+  const p = c.L.p, b = c.L.caixa, K = { fundo: '#2E8A73', texto: '#F4F1EA', px: 30, entrada_s: .3, ...((c.P.tokens as any).selo || {}) };
+  const k = easeOut(clamp((c.t - c.L.t0) / K.entrada_s));
+  return <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', alignItems: 'center', justifyContent: p.alinha === 'esquerda' ? 'flex-start' : 'center' }}>
+    <div data-cartao={JSON.stringify([b.x + b.w / 2, b.y + b.h / 2])} style={{ padding: '10px 26px', background: K.fundo, color: K.texto, fontFamily: FT(c), fontWeight: 800, fontSize: K.px,
+      letterSpacing: 5, borderRadius: 8, boxShadow: '0 8px 20px rgba(0,0,0,.4)', transform: `scale(${.6 + .4 * k})`, opacity: k, textTransform: 'uppercase' }}>{p.valor}</div>
+  </div>;
 };
 
 // editorial.statCard estilo 'dial' — número com CONTEXTO proporcional: meio-círculo de pontos dividido pelas partes

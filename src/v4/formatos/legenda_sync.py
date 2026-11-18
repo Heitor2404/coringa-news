@@ -95,6 +95,71 @@ def realinhar(palavras: list[dict], wav: Path) -> list[dict]:
     return out
 
 
+def destacar_atlas(palavras: list[dict], plano: dict, maximo: int = 3) -> list[dict]:
+    """No máximo UMA palavra-chave amarela por grupo ATLAS, fixa durante todo o grupo.
+
+    Não muda texto, tempos, número de palavras ou layout. A escolha é determinística,
+    baseada no assunto (fatos/título/nomes) e em números. NÃO é karaokê.
+    O agrupamento é o mesmo do componente Remotion, inclusive fusões de grupos breves.
+    """
+    import re
+    import unicodedata
+
+    def norm(txt: str) -> str:
+        txt = unicodedata.normalize('NFKD', str(txt).lower())
+        return ''.join(c for c in txt if unicodedata.category(c) != 'Mn').strip('.,!?;:"()[]')
+
+    # Vocábulos funcionais e verbos comuns NUNCA são destacados.
+    fracas = set("""
+        a as o os um uma uns umas de da do das dos e em no na nos nas por para com sem
+        ao aos aonde onde que quem qual quais quando como porque pois mas ou se so ja
+        ele ela eles elas isso isto esse essa esses essas aquele aquela meu minha seus suas
+        seu sua nosso nossa sobre entre ate depois antes durante desde pelo pela pelos pelas
+        mais menos muito muita muitos muitas pouco pouca outro outra outros outras todo
+        todos todas cada mesmo mesma ambos ambas alguns algumas tambem ainda aqui ali la
+        ha foi foram ser estar esta estao esteve era eram tem tinha tinham tera terao
+        faz fazem feito pode podem consegue conseguem precisa precisam vai vao vamos
+        ha ha existe existem ter e eh sao nao sim aos enquanto assim entao agora
+        quase apenas cerca aproximadamente aproximadamente grande pequeno grandes pequenas
+        """.split())
+    nomes, siglas = nomes_do_plano(plano)
+    nomes_norm = {norm(x) for x in nomes}
+    siglas_norm = {norm(x) for x in siglas}
+    titulo = {norm(x) for x in re.findall(r'[\wÀ-ÿ]+', plano.get('titulo') or '')}
+    fatos = ' '.join(str(f.get('texto') or '') for f in (plano.get('narracao') or {}).get('fatos', [])
+                     if isinstance(f, dict))
+    termos_fato = {norm(x) for x in re.findall(r'[\wÀ-ÿ]+', fatos)}
+
+    def pontuar(p: dict) -> int:
+        w = norm(p['w'])
+        if len(w) < 3 or w in fracas:
+            return -1
+        if any(c.isdigit() for c in w):
+            return 110
+        if w in siglas_norm:
+            return 95
+        if w in nomes_norm:
+            return 85
+        if w in titulo:
+            return 75
+        if len(w) >= 4 and w in termos_fato:
+            return 60
+        # Palavras específicas, não gramaticais; quando o bloco não tem termo relevante,
+        # conserva todo o texto branco.
+        if len(w) >= 7:
+            return 25
+        return -1
+
+    pal = [{**p, 'hl': False} for p in palavras]
+    for g in grupos(pal, maximo):
+        inicio, fim = g['i0'], g['i0'] + g['n']
+        candidatos = [(pontuar(pal[i]), i) for i in range(inicio, fim)]
+        melhores = [(nota, i) for nota, i in candidatos if nota >= 25]
+        if melhores:
+            pal[max(melhores)[1]]['hl'] = True
+    return pal
+
+
 def caixa_frase(palavras: list[dict], nomes: set[str], siglas: set[str], pausa_frase: float = .35) -> list[dict]:
     """palavras do TTS (MAIÚSCULAS, sem pontuação) → caixa de FRASE: maiúscula no início de frase (pausa real ≥ 0,35 s) e
     em nomes próprios/siglas que aparecem assim no próprio plano (fatos, rótulos, pinos, título)"""

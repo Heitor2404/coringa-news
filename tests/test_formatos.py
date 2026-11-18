@@ -1138,7 +1138,12 @@ def test_atlas_substituicao_de_cards_nao_conta_como_todos_simultaneos():
     quatro_juntas = copy.deepcopy(pl)
     b = next(b for b in quatro_juntas["beats"] if b["id"] == "b2-tsmc")
     pct = next(x for x in b["camadas"] if x["id"] == "pct")
-    for id_ in ("planeta", "receita-wafer", "quota-nao-global"):
-        L = next(x for x in b["camadas"] if x["id"] == id_)
-        L["t0"], L["t1"] = pct["t0"] + .15, pct["t0"] + 1.5
+    # A regra é genérica: o teste NÃO depende dos IDs editoriais do piloto,
+    # que podem ser removidos ou mover de beat quando a história evolui.
+    for k in range(3):
+        adicional = copy.deepcopy(pct)
+        adicional["id"] = f"card-simultaneo-sintetico-{k}"
+        adicional["t0"], adicional["t1"] = pct["t0"] + .15, pct["t0"] + 1.5
+        b["camadas"].append(adicional)
+    pct["t1"] = max(pct["t1"], pct["t0"] + 1.5)
     assert any(x["regra"] == "F-COMPOSICAO" for x in P.validar(quatro_juntas))

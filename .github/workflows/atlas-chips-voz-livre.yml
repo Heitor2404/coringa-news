@@ -1,0 +1,55 @@
+name: ATLAS Chips - amostra voz Piper CC0 (sem API paga)
+# Não executa geração de vídeo, não publica, não altera a voz oficial.
+on:
+  push:
+    branches: [atlas-piloto-chips-20261118]
+    paths:
+      - ".github/workflows/atlas-chips-voz-livre.yml"
+      - "scripts/atlas_voz_livre_amostra.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-voz-livre
+  cancel-in-progress: true
+
+jobs:
+  testar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Piper local versionado, sem serviços de voz comerciais
+        timeout-minutes: 8
+        run: python -m pip install --disable-pip-version-check --no-input "piper-tts==1.8.0"
+      - name: Baixar modelo e card fixados em commit com base CC0
+        timeout-minutes: 8
+        shell: bash
+        env:
+          PIN: cf910fb59f1d79ab3b625a63993a108751c6c25d
+        run: |
+          mkdir -p modelo_cadu
+          BASE="https://huggingface.co/rhasspy/piper-voices/resolve/$PIN/pt/pt_BR/cadu/medium"
+          for nome in MODEL_CARD pt_BR-cadu-medium.onnx pt_BR-cadu-medium.onnx.json; do
+            curl -fLsS --retry 2 --retry-delay 3 --max-time 240 "$BASE/$nome" -o "modelo_cadu/$nome"
+          done
+          grep -F "License: CC0" modelo_cadu/MODEL_CARD
+          grep -F "Finetuned from the rdh base model" modelo_cadu/MODEL_CARD
+          test "$(stat -c%s modelo_cadu/pt_BR-cadu-medium.onnx)" -gt 20000000
+          sha256sum modelo_cadu/pt_BR-cadu-medium.onnx modelo_cadu/pt_BR-cadu-medium.onnx.json
+      - name: Renderizar só uma amostra de áudio de baixo custo
+        timeout-minutes: 3
+        run: python scripts/atlas_voz_livre_amostra.py modelo_cadu saida_voz_livre
+      - name: Guardar áudio, checksum e licença para comparar — NUNCA publicar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-chips-amostra-piper-cadu
+          path: saida_voz_livre/
+          if-no-files-found: warn
+          retention-days: 7

@@ -21,3 +21,5 @@ Revisão privada: créditos cartográficos ATLAS a 160 px da base.
 18/11: tentativa 3 — prévia privativa 31–50, FFmpeg por release sem apt, caches salvaguardados ANTES do Telegram, fallback 500 para documento; sem Claude, sem publicação.
 
 18/11: prévia privada de CLAREZA VISUAL geral — aplicar rótulos legíveis, densidade máxima e câmera semântica ao mesmo Panamá; 84 testes Python, JS e TS verdes; sem IA e sem publicação.
+
+18/11: prévia privada para confirmar saída completa do navio e zoom com protagonista — a regra de conclusão é global no ATLAS (F-ACAO-FINAL-TRUNCADA), piloto validado 86 testes Python e JS/TS. Sem IA e sem publicação.

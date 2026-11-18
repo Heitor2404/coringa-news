@@ -74,6 +74,9 @@
       "clipes": [
         "mecanismo.eclusa"
       ],
+      "alvos_componentes": {
+        "mecanismo.eclusa": ["lago", "aqueduto", "paredes", "piso"]
+      },
       "max_componentes_distintos": 7
     },
     "dossie": {

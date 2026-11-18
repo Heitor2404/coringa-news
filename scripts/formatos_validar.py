@@ -179,10 +179,13 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
         for c in m['camadas']:
             if _cruza(x['caixa'], c['caixa'], 2):
                 add('R-COLISAO', f"{x['tipo']} sob {c['id']}")
-        if x['tipo'] == 'atribuicao':   # a faixa de créditos É a zona 'creditos': tem de caber INTEIRA nela
+        if x['tipo'] == 'atribuicao':   # checar moldura E texto efetivamente desenhado, incluindo quebra de linha
             zc = P.zonas(pl['formato']).get('creditos')
             if zc and (x['caixa']['y'] + x['caixa']['h'] > zc[1] + zc[3] + 2 or x['caixa']['y'] < zc[1] - 2):
                 add('R-CREDITOS-TRANSBORDA', f"créditos cartográficos saem da faixa própria ({x['caixa']['h']:.0f} px de altura)")
+            texto = x.get('texto_caixa')
+            if zc and texto and (texto['y'] < zc[1] - 2 or texto['y'] + texto['h'] > zc[1] + zc[3] + 2):
+                add('R-CREDITOS-TEXTO-TRANSBORDA', 'texto real dos créditos ultrapassa a faixa e pode sobrepor a legenda')
             continue
         for nome, (zx, zy, zw, zh) in P.zonas(pl['formato']).items():
             if _cruza(x['caixa'], {'x': zx, 'y': zy, 'w': zw, 'h': zh}, 2):
@@ -222,8 +225,8 @@ def checar(m: dict, pl: dict, t: float) -> list[dict]:
         if lg['y'] < zy - 2 or lg['y'] + lg['h'] > zy + zh + 2 or lg['x'] < zx - 2 or lg['x'] + lg['w'] > zx + zw + 2:
             add('R-LEGENDA-FORA', f"legenda sai da faixa própria ({lg['x']:.0f},{lg['y']:.0f},{lg['w']:.0f}×{lg['h']:.0f})")
         for x in m.get('metas') or []:
-            if _cruza(lg, x['caixa'], 1):
-                add('R-LEGENDA-CREDITO', f"legenda sobre {x['tipo']}")
+            if _cruza(lg, x.get('texto_caixa') or x['caixa'], 1):
+                add('R-LEGENDA-CREDITO', f"legenda sobre texto real de {x['tipo']}")
         for c in m['camadas']:
             if _cruza(lg, c['caixa'], 2):
                 add('R-LEGENDA-COLISAO', f"legenda sobre {c['id']}")

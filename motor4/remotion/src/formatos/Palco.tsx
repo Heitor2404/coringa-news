@@ -49,6 +49,11 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
     if (Td) dt = Td * (1 - Math.cos(Math.PI * Math.min(1, dt / Td))) / 2;          // = plano.camera_em (recuo suavizado)
     z = ca.zoom + (a.deriva ?? 0) * dt;
     if ((a as any).zoom_teto != null && (a.deriva ?? 0) > 0) z = Math.min(z, Math.max(ca.zoom, (a as any).zoom_teto));   // = plano.camera_em
+    const S = (a as any).ponto_fixo;
+    if (S && z !== ca.zoom) {          // = plano.camera_em: a deriva converge para o protagonista
+      const w0 = 512 * 2 ** ca.zoom, w1 = 512 * 2 ** z, gx = fx + (S[0] - anc[0]) / w0, gy = fy + (S[1] - anc[1]) / w0;
+      fx = gx - (S[0] - anc[0]) / w1; fy = gy - (S[1] - anc[1]) / w1;
+    }
   }
   // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(H/512) e centro vertical dentro do mundo
   z = Math.max(z, Math.log2(H / 512));

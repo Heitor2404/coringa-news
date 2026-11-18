@@ -100,7 +100,9 @@ def caixa_frase(palavras: list[dict], nomes: set[str], siglas: set[str], pausa_f
     em nomes próprios/siglas que aparecem assim no próprio plano (fatos, rótulos, pinos, título)"""
     import unicodedata
     n = lambda w: unicodedata.normalize('NFKD', w).encode('ascii', 'ignore').decode().upper()
-    proprios = {n(x): x for x in nomes}
+    proprios = {}
+    for x in sorted(nomes, key=lambda w: sum(ord(ch) > 127 for ch in w)):   # a grafia COM acento vence (Panamá > Panama)
+        proprios[n(x)] = x
     sig = {n(x): x for x in siglas}
     out = []
     for i, w in enumerate(palavras):

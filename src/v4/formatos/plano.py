@@ -258,6 +258,12 @@ def camera_em(palco: list[dict], t: float) -> dict | None:
     z = ca['zoom'] + a.get('deriva', 0) * dt
     if a.get('zoom_teto') is not None and a.get('deriva', 0) > 0:
         z = min(z, max(ca['zoom'], a['zoom_teto']))
+    if a.get('ponto_fixo') and z != ca['zoom']:
+        # a deriva converge para o protagonista (referência A: ponto fixo entre o centro do quadro e o retrato):
+        # o ponto geográfico sob 'ponto_fixo' fica parado na tela enquanto o zoom muda
+        S, anc, w0, w1 = a['ponto_fixo'], ca['ancora'], 512 * 2 ** ca['zoom'], 512 * 2 ** z
+        gx, gy = fx + (S[0] - anc[0]) / w0, fy + (S[1] - anc[1]) / w0
+        fx, fy = gx - (S[0] - anc[0]) / w1, gy - (S[1] - anc[1]) / w1
     return _restringir({'fx': fx, 'fy': fy, 'ancora': ca['ancora'], 'zoom': z})
 
 
@@ -413,6 +419,12 @@ def palco_dos_beats(p: dict) -> list[dict]:
                     k['camera'] = {**k['camera'], 'zoom': round(k['camera']['zoom'] - k['deriva'] * max(0, fim - t - k['dur_camera']), 3)}
                 if c.get('quadro'):
                     k['roi'] = b['roi']
+                prot = next((L for L in b.get('camadas') or [] if L.get('componente') == 'atlas.geoPin'
+                             and (L.get('p') or {}).get('papel') == 'protagonista'), None)
+                if mov == 'aproxima' and prot:
+                    cam0 = _cam(k['camera'])
+                    px, py = projetar({'fx': merc(*cam0['foco'])[0], 'fy': merc(*cam0['foco'])[1], 'ancora': cam0['ancora'], 'zoom': cam0['zoom']}, *prot['p']['lonlat'])
+                    k['ponto_fixo'] = [round((cam0['ancora'][0] + px) / 2, 1), round((cam0['ancora'][1] + py) / 2, 1)]
             elif ultima:
                 k['camera'] = ultima
             k.setdefault('dur_camera', duracao_transicao(ultima, k.get('camera')))

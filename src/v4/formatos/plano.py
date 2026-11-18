@@ -866,10 +866,19 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         if comp['palco'] == 'mapa' and comp.get('quadro') and not b.get('roi'):
             v('erro', 'F-COMPOSICAO', b['id'], f"{b['composicao']} enquadra um território: falta roi (oeste, sul, leste, norte)")
         Lb = [L for L in Ls if L['beat'] == b['id'] and L['componente'] not in ('dossie.evidenceHighlight', 'atlas.geoPin')]
-        for L in Lb:
-            junto = sum(1 for M in Lb if M['t0'] < L['t1'] and L['t0'] < M['t1'])
-            if junto > comp.get('max_camadas', 9):
-                v('erro', 'F-COMPOSICAO', f"{b['id']}/{L['id']}", f"{junto} camadas ao mesmo tempo (máx. {comp['max_camadas']} em {b['composicao']}): vira slide")
+        # Intervalos que se cruzam EM MOMENTOS DIFERENTES não são simultâneos.
+        # Ex.: um cartão longo, seguido por três notas CURTAS e sucessivas,
+        # nunca mostra quatro cartões juntos; a contagem antiga somava todos
+        # que tocavam no cartão longo e bloqueava cenas corretas. Conferir
+        # os intervalos reais em vez de contar cruzamentos por camada.
+        limites = sorted({t for L in Lb for t in (L['t0'], L['t1'])})
+        for ta, tb in zip(limites, limites[1:]):
+            meio = (ta + tb) / 2
+            visiveis = [L for L in Lb if L['t0'] <= meio < L['t1']]
+            if len(visiveis) > comp.get('max_camadas', 9):
+                v('erro', 'F-COMPOSICAO', f"{b['id']}/{visiveis[0]['id']}",
+                  f"{len(visiveis)} camadas simultâneas em {ta:.2f}–{tb:.2f}s "
+                  f"(máx. {comp['max_camadas']} em {b['composicao']}): vira slide")
                 break
     for L in Ls:
         q = L.get('p') or {}

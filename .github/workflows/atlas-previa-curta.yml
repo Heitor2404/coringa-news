@@ -38,18 +38,14 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: motor4/package-lock.json
-      - name: FFmpeg, Chrome e fontes do canal
-        timeout-minutes: 8
+      - name: FFmpeg sem depender de espelho apt do Ubuntu
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+      - name: Chrome e fontes versionadas do canal (sem apt)
+        timeout-minutes: 3
         run: |
-          apt_opts=(-o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
-          # Estes pacotes vêm do Ubuntu. Evita aguardar índices de repositórios de terceiros.
-          if [[ -s /etc/apt/sources.list.d/ubuntu.sources ]]; then
-            apt_opts+=(-o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=-)
-          fi
-          if ! command -v ffmpeg >/dev/null || ! fc-match -f '%{family}' 'Noto Color Emoji' | grep -q 'Noto Color Emoji'; then
-            sudo timeout 150 apt-get "${apt_opts[@]}" update -qq
-            sudo timeout 240 apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg fonts-noto-color-emoji
-          fi
+          ffmpeg -version | head -1
           ffprobe -version | head -1
           google-chrome --version
           mkdir -p ~/.fonts
@@ -128,6 +124,18 @@ jobs:
           CHECKPOINT_KEY: ${{ secrets.CHECKPOINT_KEY }}
           COFRE_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: python -m scripts.atlas_cache salvar saida_formatos/atlas
+      - name: Persistir cache cifrado ANTES do Telegram (mesmo se envio falhar)
+        if: steps.visual.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: saida_formatos/atlas/intermediarios.enc
+          key: ${{ env.ATLAS_VISUAL_KEY }}
+      - name: Persistir clipe V2 ANTES do Telegram
+        if: steps.base.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: saida_formatos/atlas/_amostra/eclusa_v2_${{ env.ATLAS_ECLUSA_KEY }}.mp4
+          key: ${{ env.ATLAS_ECLUSA_KEY }}
       - name: Enviar resultado para Telegram PRIVADO (ou explicar bloqueio)
         if: always() && !cancelled() && !contains(github.event.head_commit.message, '[verificar-cache]')
         env:

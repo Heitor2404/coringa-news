@@ -180,7 +180,7 @@ def test_componentes_registrados_no_remotion():
 def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     """17/11 (ensaio DOSSIÊ): datas da linha do tempo encostavam na marca 'CORINGA EXPLICA' (y 292)"""
     pl = copy.deepcopy(ATLAS)
-    _camada(pl, 'km')['caixa'] = [72, 236, 936, 80]          # zona da marca do ATLAS (y 222–270, alto livre como na referência)
+    _camada(pl, 'km')['caixa'] = [72, 300, 936, 28]          # zona da marca ATLAS: y 294–338, dentro do feed Reels
     _camada(pl, 'zero')['caixa'] = [72, 1250, 936, 80]
     r = P.validar(P.resolver_tempos(pl, []))
     assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 2
@@ -691,3 +691,19 @@ def test_raster_fora_do_zoom_nao_conta_como_base_visivel():
     for r in pl['rasters']:
         r['de'] = 20.0
     assert 'F-MAPA-BASE-INVISIVEL' in _regras(pl)
+
+
+def test_marca_atlas_dentro_do_feed_e_recorte_e_bloqueador():
+    """Regressao 44221167260: 40/40 quadros com marca fora do feed nao podem passar no fiscal."""
+    import scripts.formatos_validar as V
+    from src.v4.formatos import layout
+    marco = layout.CFG['faixa_inferior']['marca_y']
+    assert marco >= layout.CFG['perfis']['instagram_reels']['recorte_feed']['topo'] + 6
+    z = P.zonas('atlas')['marca']
+    assert z[1] <= marco <= z[1] + z[3]
+    pl = {'formato': 'atlas', 'beats': [], 'duracao': 10}
+    m = _medida(camada={'marca': {'x': 72, 'y': 232, 'w': 350, 'h': 35}})
+    erros = V.checar_plataformas(m, pl, 1.0)
+    assert any(e['regra'] == 'R-MARCA-RECORTE-FEED' and not e.get('aviso') for e in erros)
+    m['camada']['marca']['y'] = marco
+    assert not any(e['regra'] == 'R-MARCA-RECORTE-FEED' for e in V.checar_plataformas(m, pl, 1.0))

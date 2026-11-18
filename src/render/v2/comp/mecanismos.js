@@ -19,10 +19,11 @@
     params: { sentido: "'subir' | 'descer'", desnivel_m: 'desnível em metros (dos fatos)', lago: 'nome do nível alto ≤ 18', mar: 'nome do nível baixo ≤ 18',
       etapas: '3 textos ≤ 40 (entra/fecha · enche/esvazia · iguala/sai)', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala',
       planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26',
+      destaques_fluxo: 'opcional, tempos locais: [{t, alvo:lago|aqueduto|paredes|piso, rotulo}]; destaca peças enquanto mecanismo segue em movimento',
       degraus: 'nº de câmaras REAIS em sequência que somam o desnível (ex.: 3 em Gatún). > 1 = aviso explícito + escada com o navio subindo todos os degraus' },
     fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho 340–440 (etapa atual, 3 marcadores); corte esquemático 450–1210 em tela cheia; rótulos de estado (comportas, válvula, níveis) em HTML de tamanho fixo que acompanham a câmera',
     paleta: 'água ciano; concreto azul-acinzentado com textura; comportas amarelas; navio branco/vermelho; GRAVIDADE e Δh em amarelo', animacao: 'navio desloca → comporta fecha (plano B) → válvula abre, fluxo no túnel (plano C) → água e navio sobem juntos (plano D) → níveis iguais, comporta abre (plano E) → navio sai (plano F)',
-    duracao: [5, 9, 16], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
+    duracao: [5, 9, 21], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
     area_segura: 'cabeçalho e rótulos dentro de x 72–930; desenho em tela cheia (pode encostar nas bordas)', legibilidade: 'etapa 52 px 900; rótulos de estado 30 px; nível 40 px mono',
     rejeicao: ['desnível que não está nos fatos', 'sentido (subir/descer) que contradiz a fala (fiscal_v2 S3)', 'cena de mecanismo trocada por foto parada (fiscal_v2 B2)'],
     problemas_conhecidos: ['corte lateral simplificado: as comportas aparecem como de levantar (no Panamá são de duas folhas que giram) e o túnel aparece sob a câmara (no Panamá corre dentro das paredes) — rotulado como ESQUEMA ILUSTRATIVO'],
@@ -76,6 +77,7 @@
         ${PORTAS.map(x => `<rect x="${x - 16}" y="${FUNDO - 4}" width="32" height="${TUN - FUNDO + 4}" fill="${TM.tunel}"/>`).join('')}
         <path class="fl fl-enche" d="${TUN_ENCHE}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
         <path class="fl fl-esvazia" d="${TUN_ESVAZIA}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <circle class="foco-fluxo" cx="0" cy="0" r="64" fill="none" stroke="#FFD21F" stroke-width="10" stroke-dasharray="18 9" opacity="0"/>
         <!-- águas -->
         <rect x="-300" y="${YL}" width="${C0 - PAR + 300}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
         <rect x="${C1 + PAR}" y="${YH}" width="${MW + 300 - C1 - PAR}" height="${SOLEIRA - YH}" fill="url(#ag${ctx.i})"/>
@@ -104,6 +106,7 @@
         <div class="abs re r-cpE" data-g="r-cpE"></div><div class="abs re r-cpD" data-g="r-cpD"></div>
         <div class="abs re r-val" data-g="r-val">VÁLVULA ABERTA</div>
         <div class="abs re r-grav" data-g="r-grav" style="background:#FFD21F;color:#0b0f17">${subir ? 'DESCE DO LAGO POR GRAVIDADE' : 'ESCOA PARA O MAR POR GRAVIDADE'}</div>
+        <div class="abs re r-foco-fluxo" data-g="r-foco-fluxo" style="background:#FFD21F;color:#0b0f17;opacity:0"></div>
         <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
         <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
       </div>
@@ -191,7 +194,27 @@
         const seq = p.planos === false ? [['A', 0]] : [['A', 0], ['B', fecha[0] - .5], ['C', valv - .1], ['D', enche[0] + (enche[1] - enche[0]) * .3], ['E', enche[1] - .3], ['F', abre[1] + .2]];
         let r = plano(seq[0][0], est);
         for (let q = 1; q < seq.length; q++) { if (tl < seq[q][1]) break; const kq = eio((tl - seq[q][1]) / .8); const r1 = plano(seq[q][0], est); r = [lerp(r[0], r1[0], kq), lerp(r[1], r1[1], kq), lerp(r[2], r1[2], kq)]; }
+        // Direção da explicação contínua: preserva o corte da câmara,
+        // sem trocar por cards, e destaca a peça citada na narração.
+        const marcas = p.destaques_fluxo || [], alvos = {
+          lago: [1280, 420], aqueduto: [920, TUN], paredes: [C1, 730], piso: [720, FUNDO]
+        };
+        const primeira = marcas.length ? Number(marcas[0].t) : Infinity;
+        if (tl >= primeira) {
+          const kf = eio(clamp((tl - primeira) / .65));
+          const geral = rect(810, 690, 1380);
+          r = [lerp(r[0], geral[0], kf), lerp(r[1], geral[1], kf), lerp(r[2], geral[2], kf)];
+        }
         const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
+        let marca = null;
+        for (const m of marcas) if (tl >= Number(m.t) && alvos[m.alvo]) marca = m;
+        const foco = el.querySelector('.foco-fluxo');
+        const alvo = marca ? alvos[marca.alvo] : null;
+        if (alvo) {
+          foco.setAttribute('cx', alvo[0]); foco.setAttribute('cy', alvo[1]);
+          foco.setAttribute('r', String(62 + 5 * Math.sin(tl * 4)));
+          foco.setAttribute('opacity', '.94');
+        } else foco.setAttribute('opacity', '0');
         const P = (x, y) => [(x - r[0]) / r[2] * SW, SY + (y - r[1]) / (r[2] / ASP) * SH];
         const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => { const e = el.querySelector(sel); if (txt !== undefined) e.textContent = txt;
           const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight; const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, 926 - w), Tt = py + (ay < 0 ? -h - 10 : 10);
@@ -205,9 +228,10 @@
         const m = D * (YL - nivel) / (YL - YH);
         poe('.r-nivel', C0 + 80, nivel, `${fmt(m, 0)} m`, tl > entra[1] - .3, 1, -1);
         poe('.r-delta', C1 - 80, (nivel + sai_) / 2, delta > .3 ? `FALTAM ${fmt(delta, 0)} m` : 'NÍVEIS IGUAIS ✓', tl > fecha[0] && tl < abre[1] + .4, -1, 1);
+        poe('.r-foco-fluxo', alvo ? alvo[0] : 0, alvo ? alvo[1] : 0, marca ? marca.rotulo : '', !!marca, 0, -1);
         // rótulos não se cobrem: na ordem de prioridade, o que bater num já posto desce uma linha; se ainda bater, some
         const postos = [];
-        for (const sel of ['.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
+        for (const sel of ['.r-foco-fluxo', '.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
           const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
           const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
           const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);

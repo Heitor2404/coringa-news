@@ -33,3 +33,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: ultima validação — detector local só ATLAS, DOSSIÊ com algoritmo antigo; + teste de isolamento.
 
 18/11: validar fallback sendVideo 500 -> sendDocument para o mesmo MP4 e chat privado; sem render, sem IA.
+
+18/11: contrato visual obrigatório por mecanismo, metadado genérico e prompt ATLAS isolado do DOSSIÊ; CI sem IA e sem render.

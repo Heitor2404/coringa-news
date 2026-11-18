@@ -817,8 +817,25 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
                   f'{len(ativos)} informações editoriais simultâneas (máx. {max_editoriais}): {", ".join(ativos[:8])}')
                 break
         catalogo = F.get('alvos_componentes') or {}
+        ciclos = F.get('contratos_movimento') or {}
         for c in plano.get('clipes') or []:
-            marcacoes = (c.get('params') or {}).get('focos') or (c.get('params') or {}).get('destaques_fluxo') or []
+            params = c.get('params') or {}
+            ciclo = ciclos.get(c.get('componente'))
+            if ciclo:
+                tempos_c = params.get('tempos') or []
+                indice = int(ciclo['marco_acao_final'])
+                duracao_c = c['t1'] - c['t0']
+                janela_min = float(ciclo['janela_final_min_s'])
+                if len(tempos_c) <= indice or not isinstance(tempos_c[indice], (int, float)):
+                    v('erro', 'F-ACAO-FINAL-SEM-MARCO', c['componente'],
+                      f'marco final ausente; precisa demonstrar {ciclo["acao_final"]}')
+                elif duracao_c - tempos_c[indice] < janela_min - .01:
+                    v('erro', 'F-ACAO-FINAL-TRUNCADA', c['componente'],
+                      f'mecanismo termina antes de demonstrar {ciclo["acao_final"]}: '
+                      f'restam {duracao_c-tempos_c[indice]:.2f}s depois do marco final, '
+                      f'mínimo {janela_min:.2f}s; replanejar a etapa ou reservar mais tempo, '
+                      'sem acelerar artificialmente ou cortar a narração')
+            marcacoes = params.get('focos') or params.get('destaques_fluxo') or []
             if not marcacoes:
                 continue
             alvos = catalogo.get(c.get('componente'))

@@ -319,6 +319,7 @@ def sfx_do_plano(pl: dict) -> list[dict]:
 
 
 def render(saida: Path) -> dict:
+    import time
     from src.v4 import compositor, portoes, som
     from src.v4.backends import js, legado
     pf = _ler(saida / 'preflight.json')
@@ -334,7 +335,9 @@ def render(saida: Path) -> dict:
     tokens = P.tokens_canal(can)
     geo = _ler(RAIZ / pl['geo']) if pl.get('geo') else None
     base = trab / 'formato.mp4'
+    t_render = time.monotonic()
     js.remotion('Formato', P.props(pl, tokens, geo, imgs), base, trab / 'formato')
+    print(f"ATLAS_PERF formato_base_s={time.monotonic() - t_render:.2f}", flush=True)
     # clipes aprovados (palco V2) encaixados nos furos — corte limpo
     partes, t = [], 0.0
     for k, c in enumerate(sorted(pl.get('clipes') or [], key=lambda c: c['t0'])):
@@ -350,14 +353,19 @@ def render(saida: Path) -> dict:
     # camada global: marca + legendas (estilo da legenda = canal por formato; P.props_camada é a fonte única)
     camada = trab / 'camada.webm'
     pcam = P.props_camada(pl, meta)
+    t_camada = time.monotonic()
     js.remotion('Camada', pcam, camada, trab / 'camada', alfa=True)
+    print(f"ATLAS_PERF legendas_marca_alpha_s={time.monotonic() - t_camada:.2f}", flush=True)
     musicas = sorted((RAIZ / 'assets' / 'musica' / 'explica').glob('*.mp3'))
     musica = musicas[sum(map(ord, pl['video_id'])) % len(musicas)] if musicas else None
     master = trab / 'master.wav'
     reg_som = som.mixar(saida / 'voz.wav', pl['duracao'], sfx_do_plano(pl), musica, trab / 'som', master, preset=can.get('som'))
     mp4 = saida / f"{pl['video_id']}.mp4"
+    t_final = time.monotonic()
     info = compositor.final(video, camada, master, mp4, trab)
+    print(f"ATLAS_PERF mix_montagem_final_s={time.monotonic() - t_final:.2f}", flush=True)
     # portões no MP4 FINAL: nada preto, nada congelado por janela de 4 s (zona de conteúdo, sem a faixa de legenda)
+    t_portoes = time.monotonic()
     janelas = []
     a = 0.0
     while a < pl['duracao'] - .5:
@@ -367,6 +375,7 @@ def render(saida: Path) -> dict:
         q = portoes.avaliar_quadros(portoes.amostras(seg, n=5), exige_movimento=True)
         janelas.append({'de': round(a, 1), 'ate': round(b, 1), 'problemas': q})
         a = b
+    print(f"ATLAS_PERF checagem_20_janelas_mp4_s={time.monotonic() - t_portoes:.2f}", flush=True)
     from src.fiscal import medir_audio
     from src.v4.formatos import ritmo
     au = medir_audio(mp4)
@@ -450,7 +459,7 @@ def evolucao(saida: Path, pl: dict) -> Path:
               f"({(rit.get('sem_camera') or {}).get('segundos_parados')} s parados; antes {(a.get('sem_camera') or {}).get('maior_trecho_parado_s', '?')} s / {(a.get('sem_camera') or {}).get('segundos_parados', '?')} s)",
               f"- legenda × áudio real: {r.get('legenda_sync')}",
               f"- segundos parados: {rit.get('segundos_parados')}/{rit.get('segundos')} (antes {a.get('segundos_parados', '?')}/{a.get('segundos', '?')})",
-              f"- quadros renderizados conferidos: {len(q.get('quadros', []))}, problemas: {len(q.get('problemas', []))}",
+              f"- quadros renderizados conferidos: {len(q.get('quadros', []))}, erros bloqueadores: {len(q.get('problemas', [])) - len(q.get('avisos', []))}, avisos: {len(q.get('avisos', []))}",
               f"- mídias: {sum(1 for k in ims if not k.startswith('raster:'))} com sha256 da origem "
               f"({sum(1 for k, v in ims.items() if not k.startswith('raster:') and v.get('origem_conferida'))} conferidas contra a biblioteca); "
               f"rasters: {sum(1 for k in ims if k.startswith('raster:'))} com .json de procedência",

@@ -220,3 +220,16 @@ O renderizador `motor4/remotion/src/formatos/Primitivas.tsx` foi alterado **some
 Workflow prévia completa **`.github/workflows/atlas-chips-previa-privada.yml`** está preparado: dispara apenas ao registrar `.github/atlas/chips_previa.txt` no ramo experimental; usa Edge TTS (não Gemini/Claude pago), mídia aprovada por SHA, preflight, quadros, render completo, fiscal e Telegram privado. **NÃO foi disparado nesta atualização**, pois a prova de quadros ainda estava sob revisão. Essa prévia NÃO publica em redes; usa Edge como voz provisória, ainda exigindo aprovação de voz e termos antes de postagem.
 
 **Próximo passo:** conferir resultado de `44383964727`, corrigir se falhar. Se ficar verde, baixar a folha de quadros e inspecionar de verdade — principalmente foto TSMC, wafer, cartões retos, não sobreposição, créditos. Só então disparar a prévia privada completa, inspecionar MP4, marcar limites factuais e atualizar aqui.
+
+
+## 12. Recuperação da interrupção e correção genérica do slot de foto (18/11, 19h55 UTC)
+
+Após aviso do usuário de **transmissão interrompida**, o assistente retomou a leitura ao vivo do GitHub sem pedir que o usuário repita o histórico. O branch do segundo piloto **`atlas-piloto-chips-20261118`** já havia recebido uma sequência de correções de foto/cartão até `0c7c30a3`. A validação `44385191234` falhou somente no teste novo que tratava `P.COMP["atlas.painel"]["slots"]["foto"]` como objeto, quando o motor converte para `[x,y,w,h]`. Corrigido no commit **`139107ac`**.
+
+A execução seguinte **`44385594668`** chegou aos testes: **86 passaram, 1 foi deselecionado, 1 falhou** com **F-COLISAO entre fotografia do wafer e duas notas** — o slot de foto anterior sobrepunha a faixa de notas. O commit **`60c39276`** corrigiu `atlas.painel.slots.foto` de modo genérico (novo `y=510, h=565` com nota iniciando em `y=1130`, intervalos separados) na configuração ATLAS, sem mexer no estilo DOSSIÊ.
+
+O commit **`63f47fbc`** ampliou os paths de trigger de `.github/workflows/atlas-chips-reuso.yml` para revalidar automaticamente alterações em `formatos.json`, `plano.py`, `Primitivas.tsx` e `tests/test_formatos.py`, além do plano e scripts. Isso evita que mudanças estruturais escapem da execução de teste. A execução disparada é **`44386176261`**, ainda **em andamento quando este registro foi escrito**; nunca apresentar resultado verde sem consultar logs.
+
+A prova anterior **`44379818856`** foi SUCCESS para 34 quadros **sem fotos** (cartografia+cards), não confundir com prova do novo plano **com duas fotos reais**, ainda dependente de validação. O artefato de fotos do piloto tem problemas de texto/crédito detectados em `44383964727`, motivando ajustes. **Não foi disparado** o workflow de MP4 `atlas-chips-previa-privada.yml`, nem publicação/merge, pois as fotos precisam passar na inspeção real primeiro.
+
+**Próximas tarefas:** conferir `44386176261`; se houver falhas, corrigir sem flexibilizar o fiscal. Se verde, **baixar e inspecionar folhas de quadros com as duas fotos** antes de disparar episódio privado com Edge TTS, entregue apenas no Telegram. Depois verificar créditos de imagens CC BY 4.0 e possibilidade de sobreposição de interface de plataformas. Preservar todos os demais motores.

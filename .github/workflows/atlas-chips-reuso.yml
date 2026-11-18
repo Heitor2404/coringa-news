@@ -8,6 +8,7 @@ on:
       - "src/v4/formatos/planos/reuso/atlas_chips.json"
       - "src/v4/formatos/planos/reuso/atlas_chips_factual_2026.json"
       - "src/v4/biblioteca_comprovada.json"
+      - "tests/test_formatos.py"
       - "scripts/formatos_reuso.py"
   workflow_dispatch:
 permissions:

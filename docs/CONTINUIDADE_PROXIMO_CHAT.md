@@ -244,3 +244,20 @@ A prova CI **`44386176261`** não foi aprovada: **87 testes Python passaram** (1
 Commits relevantes: **`c6ebdc35`** (catálogo), **`545cd5df`** (plano do wafer) e **`83827ffc`** (teste para foto legível, slots separados, proteção do território e motor DOSSIÊ intacto). Workflow reativado no run **`44387091456`**, ainda não havia conclusão na última consulta. **NÃO afirmar aprovação visual/CI até abrir resultado.** Antes de prévia MP4, inspecionar styleframes e checar pequenos créditos/título das fotografias, que tiveram problemas de truncamento em execução anterior.
 
 Esse último ajuste é geral ao ATLAS, não adapta o motor ao assunto dos chips. O plano da produção não foi mesclado com branches estáveis; não houve postagem.
+
+## 14. 18/11 — correção da máscara de Shorts, CI verde e prévia privada acionada
+
+O usuário disse **"Continua"** e o assistente retomou a inspeção do GitHub, na branch experimental `atlas-piloto-chips-20261118`, sem alterar produção, DOSSIÊ ou NTC.
+
+A execução `44387091456` **FALHOU** após 87 testes Python verdes, preflight de 32 itens e 34 quadros por **um bloqueador**: `R-PLATAFORMA` da `fotografia-wafer` em 20,88 segundos sob a coluna de ícones do YouTube Shorts. Causa identificada no renderizador `motor4/remotion/src/formatos/Formato.tsx`: a função `respira` aplicava um `scale` progressivo de até **1,5%** a `dossie.documentCard`, também quando usado como foto ATLAS, ultrapassando a área segura já calculada em `layout.slot`.
+
+**Correções pontuais na branch de chips:**
+- Commit `9a0e256f`: impede o `respira` externo de TODAS as camadas ATLAS; preserva movimento de mapa/entrada e comportamento DOSSIÊ.
+- Commit `11ef2961`: regressão `test_atlas_fotografia_nao_respira_sobre_icones_de_plataforma` em `tests/test_formatos.py`; verifica geometria da composição em relação às máscaras e a guarda contra `scale` externo.
+- Commit `1828f297`: inclui `Formato.tsx` nos gatilhos do workflow `atlas-chips-reuso.yml` (arquivo antes omitido) e remove duplicata de gatilho de testes.
+- **CI `44403285791` SUCESSO**: 32 itens de preflight, 34 quadros, **zero bloqueadores** e duas fotos verificadas (SHA e licença). Foram inspecionados `styleframes.jpg` e métricas do artifact `atlas-chips-reuso-sintetico`, mas **isso não equivale a MP4 homologado**.
+- **Persistem 102 avisos `A-CREDITO-RODAPE`** (34 quadros × 3 redes). Respeitar a decisão visual do usuário de manter créditos baixos; não elevá-los globalmente nem publicar enquanto condições de atribuição e interface não estiverem resolvidas.
+- Commit `da68c4d6`: criou `.github/atlas/chips_previa.txt` na branch de chips para disparar **apenas** `atlas-chips-previa-privada.yml`. Workflow `44404242103` estava **QUEUED** na última consulta (21:42 UTC): obter status real antes de afirmar MP4 gerado ou entregue. Workflow usa Edge TTS de teste, fontes licenciadas por SHA, fiscal, render e entrega somente ao Telegram privado autorizado se passar; **não publica nas redes**.
+
+**Próxima ação:** consultar `44404242103` pelo GitHub (steps e logs); se falhar, corrigir causa na branch experimental sem relaxar o fiscal. Se concluir, assistir ao MP4 REAL recebido no Telegram, verificar voz, ritmo, geografia, visual da foto wafer, autoria de mídias e créditos. Só depois cogitar homologação. Não fazer merge nem afetar produção/NTC/DOSSIÊ.
+

@@ -35,3 +35,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: validar fallback sendVideo 500 -> sendDocument para o mesmo MP4 e chat privado; sem render, sem IA.
 
 18/11: contrato visual obrigatório por mecanismo, metadado genérico e prompt ATLAS isolado do DOSSIÊ; CI sem IA e sem render.
+
+18/11: versão genérica de clareza: câmera por alvo semântico, rótulos com limite/colisões e densidade ATLAS. Testar Python, JS puro e TS sem render.

@@ -400,7 +400,7 @@ def render(saida: Path) -> dict:
     from src.v4.formatos import ritmo
     au = medir_audio(mp4)
     # duas métricas: bruta (comparável às referências) e SEM CÂMERA (zoom/pan não é progresso — decide o portão)
-    rit = ritmo.medir_completo(mp4)
+    rit = ritmo.medir_completo(mp4, usar_local=(pl['formato'] == 'atlas'))
     from src.v4.formatos import legenda_sync
     ls = legenda_sync.conferir(saida / 'narracao.json', saida / 'voz.wav', P.estilo_legenda(pl).get('max_palavras', 4))
     res = {'video_id': pl['video_id'], 'formato': pl['formato'], 'mp4': str(mp4), 'duracao': pl['duracao'], 'info': info, 'som': reg_som,

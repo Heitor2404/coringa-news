@@ -935,7 +935,8 @@ def test_atlas_continuidade_mecanismo_panama_31_50s():
 
 def test_atlas_resolucao_de_tempos_do_fluxo_no_clipe():
     from src.v4.formatos import plano
-    orig = copy.deepcopy(ATLAS)  # tempos das demais cenas já resolvidos
+    orig = copy.deepcopy(ATLAS)  # forçar resolução das âncoras brutas neste teste
+    orig.pop('_resolvido', None)
     orig['clipes'][0]['params']['tempos'] = [31.6, 36.8, 49.2]
     orig['clipes'][0]['params']['destaques_fluxo'] = copy.deepcopy(ATLAS_BRUTO['clipes'][0]['params']['destaques_fluxo'])
     pl = plano.resolver_tempos(orig, [])
@@ -1072,3 +1073,27 @@ def test_atlas_clareza_vem_do_canal_nao_do_panama():
     assert cfg['fonte_rotulo_px'] >= 32
     assert 'direcao_visual' not in c['params']
     assert 'alvos_componentes' in P.CFG['formatos']['atlas']
+
+
+def test_focos_e_tempos_do_mecanismo_idempotentes_em_plano_resolvido():
+    clip0 = ATLAS['clipes'][0]['params']
+    clip1 = P.resolver_tempos(copy.deepcopy(ATLAS), [])['clipes'][0]['params']
+    assert clip1['tempos'] == clip0['tempos']
+    assert clip1['destaques_fluxo'] == clip0['destaques_fluxo']
+
+    pl = copy.deepcopy(ATLAS)
+    pl['clipes'][0]['params']['focos'] = [
+        {'t': 12.0, 'alvo': 'lago', 'rotulo': 'ÁGUA DO LAGO'}
+    ]
+    assert P.resolver_tempos(pl, [])['clipes'][0]['params']['focos'][0]['t'] == 12
+
+    bruto = copy.deepcopy(ATLAS)
+    bruto.pop('_resolvido', None)
+    bruto['clipes'][0]['params']['tempos'] = [31.6, 36.8, 49.2]
+    bruto['clipes'][0]['params']['destaques_fluxo'] = []
+    bruto['clipes'][0]['params']['focos'] = [
+        {'t': 43.49, 'alvo': 'lago', 'rotulo': 'ÁGUA DO LAGO'}
+    ]
+    novo = P.resolver_tempos(bruto, [])['clipes'][0]['params']
+    assert novo['focos'][0]['t'] == 12.0
+    assert novo['tempos'] == [.11, 5.31, 17.71]

@@ -487,6 +487,10 @@ def test_gancho_exige_prova_visual_forte_no_inicio():
     pl['clipes'] = [c for c in pl['clipes'] if c.get('papel') != 'gancho']
     _camada(pl, 'pino-mira')['p']['papel'] = 'secundario'
     _camada(pl, 'pino-mira')['t0'] = 4.0
+    perg = _camada(pl, 'pergunta')
+    perg['t0'] = 4.0
+    for i, linha in enumerate(perg['p']['linhas']):
+        linha['t'] = 4.1 + i * .4
     assert 'F-GANCHO' in _regras(pl)
 
 
@@ -748,3 +752,18 @@ def test_faixas_atlas_creditos_abaixo_de_legenda_e_dentro_da_area_segura():
     assert leg[1] + leg[3] < cred[1]
     assert cred[1] + cred[3] <= fi['base_visivel']
     assert leg[0] >= 60 and cred[0] >= 60
+
+
+def test_atlas_v1_primeiro_quadro_deve_ser_mapa_e_cta_nao_some():
+    """Regressão: clipe técnico inicial e CTA pedido mas omitido bloqueiam antes do render."""
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-GANCHO-MAPA-PRIMEIRO' not in _regras(pl)
+    pl['beats'][0]['t'] = 2.4
+    assert 'F-GANCHO-MAPA-PRIMEIRO' in _regras(pl)
+    pl = copy.deepcopy(ATLAS)
+    pl['clipes'].append({'t0': 0, 't1': 2.1, 'componente': 'mecanismo.eclusa',
+                         'params': {'tempos': []}})
+    assert 'F-GANCHO-MAPA-PRIMEIRO' in _regras(pl)
+    pl = copy.deepcopy(ATLAS)
+    pl['beats'][-1]['composicao'] = 'atlas.protagonista'  # sem slot CTA
+    assert 'F-CTA-FINAL-AUSENTE' in _regras(pl)

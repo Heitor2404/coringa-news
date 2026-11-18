@@ -29,6 +29,18 @@ O fluxo **não pode** declarar automaticamente que algo foi compreendido apenas 
 
 **Por episódio:** fatos verificados, texto, referência de mídia, intervalos de fala, componente escolhido, alvos narrados, sequência e localização dos elementos. Nenhuma destas escolhas deve ser promovida a valor fixo do motor.
 
+## Clareza visual — parâmetros do MOTOR, não do episódio
+
+Os tokens estão em `src/v4/formatos/canais/coringa.json → direcao_visual` e são aplicados aos mecanismos pelo renderizador. Um episódio não escolhe fonte, quantidade de etiquetas ou pixels de câmera.
+
+- **Legibilidade**: rótulos com tipografia de pelo menos 34 px no quadro 1080×1920, limite de 22 caracteres por destaque semântico, caixa adaptativa e proteção contra cortes nas áreas seguras.
+- **Hierarquia e densidade**: no máximo duas camadas editoriais independentes simultâneas; durante foco de mecanismo, até dois rótulos físicos, com prioridade para a peça narrada e depois a informação de estado.
+- **Câmera didática**: o recurso declara alvos **semânticos** (`focos`, com t/alvo/rotulo); o componente fornece as posições físicas. A câmera acompanha o alvo sem perder todo o contexto e interpola suavemente entre peças. Não há coordenadas de câmera por episódio.
+- **Fiscal genérico**: `F-POLUICAO-VISUAL`, `F-FOCO-SEM-ALVO`, `F-ROTULO-ILEGIVEL`, `F-FOCO-RAPIDO` e `F-FOCO-TEMPO` reprovam planos com excesso ou com foco inconsistente. O catálogo de alvos por componente fica em `src/v4/formatos/formatos.json`.
+- **Testes independentes de assunto**: `tests/test_clareza_v2.js` exercita câmera, contexto, densidade e limites com alvos sintéticos. `tests/test_formatos.py` cobre integração, conversão da linha do tempo e isolamento do DOSSIÊ.
+
+As utilidades de foco e rótulos ficam no núcleo V2 para reaproveitamento por novos componentes. **Hoje a aplicação renderizada está integrada ao componente eclusa, o único mecanismo técnico atualmente aprovado no ATLAS; outros mecanismos exigem integrar o mesmo contrato.** Testes verdes não comprovam compreensão visual: a prévia ainda exige revisão no celular.
+
 ## Critérios de avanço
 
 - Testes Python e tipagem JS/TS verdes, sem regressão em DOSSIÊ/NTC.

@@ -15,9 +15,9 @@ vm.runInNewContext(
   'const lerp=(a,b,k)=>a+(b-a)*k;' +
   'const eo=x=>1-Math.pow(1-clamp(x),3);' +
   source.slice(ini, fim) +
-  'this.exports={cameraDidatica,planejarRotulos};',
+  'this.exports={cameraDidatica,planejarRotulos,limitarZoom};',
   sandbox, {filename: 'clareza_nucleo.js'});
-const {cameraDidatica, planejarRotulos} = sandbox.exports;
+const {cameraDidatica, planejarRotulos, limitarZoom} = sandbox.exports;
 assert.equal(typeof cameraDidatica, 'function');
 assert.equal(typeof planejarRotulos, 'function');
 
@@ -47,6 +47,13 @@ assert(enquadrado[2]>=1240, 'câmera excedeu aproximação permitida');
 // Movimentação muda o protagonista, e a câmera recalcula sem coordenadas de episódio.
 const moved = cameraDidatica(base, [720, 860], [720,700], aspecto, 1, 1240, [1330,340]);
 assert(dentro(1330+215,340-160,moved), 'câmera cortou o navio no fim da travessia');
+
+// Limite de aproximação é do motor e funciona independentemente do desenho.
+const original = [200, 340, 800], protegido = limitarZoom(original, aspecto, 1250);
+assert.equal(protegido[2], 1250, 'zoom permaneceu excessivo');
+assert(Math.abs(protegido[0] + protegido[2] / 2 - (original[0] + original[2] / 2)) < .01,
+       'mudou o centro do enquadramento');
+assert.equal(limitarZoom(base, aspecto, 1250), base, 'quadro já aberto não deve sofrer alteração');
 
 const zona = {esq: 76, dir: 930, topo: 550, base: 1160};
 const r = planejarRotulos([

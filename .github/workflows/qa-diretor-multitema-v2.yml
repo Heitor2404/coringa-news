@@ -1,4 +1,4 @@
-name: QA — diretor multitema: mapas, tempo natural e progresso global
+name: "QA — diretor multitema: mapas, tempo natural e progresso global"
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

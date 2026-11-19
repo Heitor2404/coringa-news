@@ -81,16 +81,11 @@ def extrair(plano: dict) -> list[dict]:
         for s in plano.get('shots') or []:
             tipo = s.get('type')
             verbo = {'comparison': 'COMPARAR', 'mechanism': 'DEMONSTRAR',
-                     'photo': 'MOSTRAR', 'video': 'MOSTRAR',
-                     'map': ('CONECTAR' if (s.get('map') or {}).get('kind')=='route'
-                             else 'LOCALIZAR')}.get(tipo, '')
+                     'photo': 'MOSTRAR', 'video': 'MOSTRAR'}.get(tipo, '')
             evid = []
             if tipo == 'mechanism':
                 if s.get('mechanism') and s.get('evidence') == 'explainer':
                     evid.append('mecanismo.ilustrativo')
-            elif tipo == 'map':
-                if s.get('map') and s.get('evidence') == 'explainer':
-                    evid.append('mapa.vetorial')
             else:
                 for field in ('asset', 'assetB'):
                     if s.get(field) in (plano.get('media') or {}):
@@ -103,14 +98,13 @@ def extrair(plano: dict) -> list[dict]:
                 'referente': s.get('subject') or '',
                 'aprendizado': s.get('headline') or '',
                 'provas_declaradas': ([s.get('mechanism')] if tipo == 'mechanism'
-                                     else ['mapa.vetorial'] if tipo == 'map'
                                      else [s.get(k) for k in ('asset', 'assetB') if s.get(k)]),
                 'provas_resolvidas': len(evid),
                 'suportes': evid,
                 'acoes_programadas': acoes,
                 'acoes_esperadas': s.get('estados_esperados') or [],
                 'substituicao': s.get('substituicao'),
-                'mapa': tipo == 'map',
+                'mapa': False,
                 'natureza_evidencia': s.get('evidence'),
             })
     else:

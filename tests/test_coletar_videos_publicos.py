@@ -106,3 +106,54 @@ def test_duas_fontes_mesmos_bytes_nao_contam_como_provas_independentes(tmp_path)
     assert r["baixados"]==2 and r["aprovados_editorialmente"]==0
     assert len({x["id_v3"] for x in r["fontes"]})==1  # V3 deduplicou SHA
     assert not any(x["acao_fisica_comprovada"] for x in r["fontes"])
+
+
+def nist():
+    p=ROOT/"docs/v4/formatos/CANDIDATOS_VIDEO_NIST_NANOFAB_20261119.json"
+    return json.loads(p.read_text(encoding="utf8"))["itens"][0]
+
+
+def test_nist_kaltura_usa_mesma_biblioteca_e_nao_aprova(tmp_path):
+    fonte=nist()
+    C.validar_fonte(fonte)
+    def baixar(f,d):
+        assert f["entry_id"]=="0_emhevqw5"
+        d.write_bytes(b"VÍDEO TESTE NÃO REAL".decode("utf8").encode("utf8")*7000)
+    def metadados(p):
+        return {"largura":1280,"altura":720,"duracao_s":145.0}
+    def frames(p,d,dur):
+        d.write_bytes(b"folha")
+        return {"amostras":12,"tempos_s":[10,20]}
+    r=C.executar({"versao":1,"itens":[fonte]},tmp_path/"candidatos",
+                 tmp_path/"bib.sqlite3",tmp_path/"armazem",
+                 baixar=baixar,inspecionar=metadados,quadros=frames)
+    assert r["baixados"]==1 and r["aprovados_editorialmente"]==0
+    assert r["fontes"][0]["uso_comercial"]=="indefinido"
+    assert r["fontes"][0]["acao_fisica_comprovada"] is False
+
+
+@pytest.mark.parametrize("campo,valor",[
+    ("entry_id","../malicioso"),("partner_id","123456"),
+    ("pagina","https://www.nist.gov.evil.example/video/a"),
+    ("pagina","https://www.nist.gov/arquivo/nao-video"),
+    ("situacao_direitos","LIBERADO"),
+    ("autorizar_publicacao",True),
+])
+def test_nist_recusa_fonte_nao_oficial(campo,valor):
+    f=nist()
+    f[campo]=valor
+    with pytest.raises(ValueError):
+        C.validar_fonte(f)
+
+
+def test_nist_url_kaltura_é_derivada_do_id_oficial(tmp_path,monkeypatch):
+    f=nist()
+    comandos=[]
+    def executar(cmd,**kwargs):
+        comandos.append(cmd)
+        (tmp_path/"arquivo.mp4").write_bytes(b"mp4")
+        return None
+    monkeypatch.setattr(C.subprocess,"run",executar)
+    C.baixar_nist(f,tmp_path/"arquivo.mp4")
+    assert comandos and comandos[0][-1]=="kaltura:684682:0_emhevqw5"
+    assert "60M" in comandos[0]

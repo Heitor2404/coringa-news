@@ -17,7 +17,7 @@
     {
       "id": "01-portoes-reais",
       "start": 0,
-      "end": 2,
+      "end": 1.65,
       "type": "video",
       "asset": "eclusa-hero-hd",
       "source_in_seconds": 4.8,
@@ -43,7 +43,7 @@
     },
     {
       "id": "02-interior-causal",
-      "start": 2,
+      "start": 1.65,
       "end": 7.8,
       "type": "mechanism",
       "mechanism": "lock_causal",
@@ -79,8 +79,8 @@
         }
       ],
       "reference_asset": "eclusa-hero-hd",
-      "reference_from_seconds": 6.8
+      "reference_from_seconds": 6.45
     }
   ],
-  "observacao": "Não representa elevação realmente comprovada na filmagem de 2018; filmagem é contexto visual, esquema ilustra princípio físico. Sem foto histórica, sem Gemini/Claude, sem TTS, não publicar."
+  "observacao": "Não representa elevação realmente comprovada na filmagem de 2018; filmagem é contexto visual, esquema ilustra princípio físico. Sem foto histórica, sem Gemini/Claude, sem TTS, não publicar. V3: vídeo de origem encerra ANTES do corte interno do fornecedor; a ponte usa o último quadro real congelado no mesmo master, sem salto."
 }

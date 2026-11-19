@@ -1,0 +1,43 @@
+{
+  "versao": 1,
+  "proposito": "Receitas de reidratação V3; não equivalem a licença, curadoria ou autorização de publicação",
+  "politica": {
+    "publicar": false,
+    "nao_promover_automaticamente": true,
+    "validar_sha256": true
+  },
+  "itens": [
+    {
+      "id": "nist_deposicao_2023",
+      "provider": "kaltura",
+      "partner_id": "684682",
+      "entry_id": "1_k2iydnt5",
+      "formato": "best[ext=mp4]/best",
+      "pagina": "https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science",
+      "titulo": "Inside an instrument at the NIST Center for Nanoscale Science",
+      "descricao": "Interior de câmara de deposição; amostras não comprovam depósito de metal acontecendo",
+      "mostra": "Abertura de equipamento e partes internas em laboratório do NIST",
+      "credito": "Vídeo — NIST (política geral; revisar direitos específicos)",
+      "sha256": "9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854",
+      "local": "NIST, Estados Unidos",
+      "tema": "semicondutores",
+      "aprovado_publicacao": false
+    },
+    {
+      "id": "nist_ebeam_2017",
+      "provider": "kaltura",
+      "partner_id": "684682",
+      "entry_id": "0_hhh6rc8o",
+      "formato": "best[height<=720][ext=mp4]/worst[ext=mp4]/worst",
+      "pagina": "https://www.nist.gov/video/visit-e-beam-machine",
+      "titulo": "A Visit to the E-Beam Machine",
+      "descricao": "Manuseio de wafer por técnico no laboratório de litografia e-beam; não é EUV",
+      "mostra": "Laboratório de e-beam, técnico abrindo câmara e manejando suportes/wafers",
+      "credito": "Vídeo — Jennifer Lauren Lee/NIST (animação Sean Kelley/NIST)",
+      "sha256": "738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a",
+      "local": "NIST Boulder, Estados Unidos",
+      "tema": "semicondutores",
+      "aprovado_publicacao": false
+    }
+  ]
+}

@@ -5,3 +5,5 @@
 # R2: instalacao ffmpeg ausente no runner corrigida.
 
 # R3: forcar formato menor de e-beam mantendo limite 95MB, primeira fonte ja validada bytes.
+
+# R4: rehydrate NIST into original V3 DB with manifest and SHA; no publication.

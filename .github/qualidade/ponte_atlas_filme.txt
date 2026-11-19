@@ -1,0 +1,3 @@
+# Testar integração ATLAS original PalcoMapa -> FilmEditorial.
+# Não renderizar vídeo neste portão, nem Gemini/Edge/Claude, nem Telegram.
+# Exigir SHA de raster real + identidade do compositor + prova SHA do clipe.

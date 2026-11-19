@@ -465,3 +465,10 @@ Mudanças **somente experimentais**:
 - Testes de regressão em `tests/test_atlas_previa_chips_v2.py` foram ampliados. **Não afirmar que o vídeo final foi criado, nem que a suíte completa passou**, até verificar o término da run 44452013618.
 
 Próximos passos: conferir status/log completo de **44452013618**; se verde, disparar **prévia privada sem publicação** via atualização de `.github/atlas/chips_v2_preview.txt`, verificar quadros, MP4, fiscal e mensagens Telegram. Não alterar `main`, `motor-integral-v4`, NTC ou DOSSIÊ; não baixar limiares de ritmo, imagem real nem segurança de território.
+
+
+### Complemento verificado após interrupção — 19/11
+
+- Execução GitHub Actions **44452013618** terminou **SUCCESS**: `ritmo_real` verde e `validar` verde; log do job `validar`: **135 testes Python passaram**, tipagem Remotion/TypeScript sem erro.
+- A nova prévia privada, acionada após esses testes pela atualização de `.github/atlas/chips_v2_preview.txt`, é a execução **44452281285** (em andamento na última leitura). Link: https://github.com/Heitor2404/coringa-news/actions/runs/44452281285 .
+- **Não há MP4 novo aprovado, enviado ou publicado confirmado nesta atualização.** Conferir logs das etapas preflight, quadros, render e Telegram antes de relatar progresso. Preservar diagnóstico mesmo se bloqueado; não alterar limites do fiscal.

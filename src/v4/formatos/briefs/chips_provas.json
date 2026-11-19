@@ -1,0 +1,37 @@
+{
+  "titulo": "Pesquisa audiovisual de semicondutores — privativa, sem publicação",
+  "briefs": [
+    {
+      "id": "chip-macro",
+      "consultas_en": [
+        "silicon die microprocessor closeup",
+        "microprocessor silicon die photograph"
+      ],
+      "deve_mostrar": "macro de um chip integrado REAL com circuitos e ligações reconhecíveis; não pode ser uma renderização de IA, ícone ou infográfico"
+    },
+    {
+      "id": "wafer-visivel",
+      "consultas_en": [
+        "silicon wafer integrated circuits",
+        "microprocessor wafer silicon photo"
+      ],
+      "deve_mostrar": "wafer REAL contendo vários circuitos integrados visíveis, fotografia nítida sem barras pretas e com objeto principal grande"
+    },
+    {
+      "id": "maquina-fabricacao",
+      "consultas_en": [
+        "extreme ultraviolet lithography machine",
+        "semiconductor photolithography equipment cleanroom"
+      ],
+      "deve_mostrar": "fotografia REAL de um equipamento físico de fabricação de semicondutores ou litografia; não mostrar apenas prédio, logo, slide ou ilustração"
+    },
+    {
+      "id": "fabrica-semiconductor",
+      "consultas_en": [
+        "Taiwan TSMC semiconductor fab factory",
+        "TSMC Fab Taiwan manufacturing plant"
+      ],
+      "deve_mostrar": "fotografia REAL e legível de fábrica da TSMC em Taiwan, identificada nos metadados; não confundir com outro país nem usar prédio genérico"
+    }
+  ]
+}

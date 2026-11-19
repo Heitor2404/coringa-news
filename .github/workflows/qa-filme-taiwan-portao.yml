@@ -22,7 +22,7 @@ jobs:
       - name: Testar portão multiassunto, contrato ATLAS e evidências
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml cryptography
-          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py
+          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py tests/test_duracao_editorial.py
       - name: Recuperar mapa ATLAS ORIGINAL do workflow anterior, sem renderizar
         uses: actions/download-artifact@v4
         continue-on-error: true

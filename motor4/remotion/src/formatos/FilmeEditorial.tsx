@@ -14,6 +14,7 @@ export type FilmShot = {
   type: 'photo' | 'video' | 'comparison' | 'mechanism';
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
+  source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
   sourceB?: string;
@@ -106,7 +107,7 @@ const Body: React.FC<{shot: FilmShot;p:number}> = ({shot,p}) => {
     return <AbsoluteFill><Sequence from={Math.round(shot.start * 30)}
       durationInFrames={Math.ceil((shot.end - shot.start) * 30)}>
       <OffthreadVideo src={staticFile(shot.asset || '')} muted
-        startFrom={Math.max(0, Math.round(((shot as any).source_in_seconds || 0) * 30))}
+        startFrom={Math.max(0, Math.round((shot.source_in_seconds || 0) * 30))}
         style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',
           objectPosition:`${(shot.focus||[.5,.5])[0]*100}% ${(shot.focus||[.5,.5])[1]*100}%`,
           filter:'brightness(.90) saturate(1.02)'}}/>

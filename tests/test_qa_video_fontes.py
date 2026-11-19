@@ -119,3 +119,71 @@ def test_contexto_de_outro_evento_aceito_somente_com_rotulo_nunca_prova():
     assert r['estrutura_declarada_ok']
     assert r['prova_visual']=='NAO_INSPECIONADA'
     assert r['aprovacao_humana']=='PENDENTE'
+
+
+def _processo(*, narrado="deposicao_metalica_em_wafer",
+             filmado="deposicao_metalica_em_wafer", atribuicao=False,
+             compatibilidade=True, origem="Laboratorio NIST"):
+    return Q.decidir_uso(
+        acontecimento="Fabricacao industrial em Taiwan",
+        evento_da_midia="Laboratorio NIST", uso="demonstracao",
+        cena_especifica=True, rotulo="",
+        origem_verificada=True, licenca_verificada=True,
+        representacao={
+            "tipo":"processo_equivalente",
+            "processo_narrado":narrado,
+            "processo_midia":filmado,
+            "compatibilidade_tecnica_verificada":compatibilidade,
+            "evidencia_inspecao":"frames verificam deposicao no wafer",
+            "fala_atribui_registro":atribuicao,
+            "origem_no_credito":origem,
+        })
+
+
+def test_demonstracao_equivalente_de_laboratorio_fora_do_pais_pode_ilustrar():
+    d=_processo()
+    assert d["permitido"] and d["categoria"]=="ILUSTRACAO_TECNICA"
+    assert d["prova_do_fato"] is False
+    assert d["aprovacao_humana"]=="PENDENTE"
+
+
+def test_demonstracao_nao_converte_e_beam_em_euv():
+    d=_processo(narrado="litografia_euv",filmado="litografia_e_beam")
+    assert not d["permitido"] and d["codigo"]=="M-PROCESSO-NAO-EQUIVALENTE"
+
+
+def test_demonstracao_nao_pode_ser_narrada_como_filmagem_da_entidade():
+    d=_processo(atribuicao=True)
+    assert not d["permitido"] and d["codigo"]=="M-REGISTRO-NAO-REPRESENTAVEL"
+
+
+def test_demonstracao_sem_inspecao_tecnica_ou_credito_real_nao_e_aprovada():
+    assert not _processo(compatibilidade=False)["permitido"]
+    assert _processo(origem="Banco de imagens")["codigo"]=="M-ORIGEM-NAO-IDENTIFICADA"
+
+
+def test_contrato_compartilhado_permite_equivalente_sem_confundir_registro():
+    from src.v4.formatos import contrato_visual_comum as C
+    filme=json.loads((ROOT/'docs/v4/formatos/filme_taiwan_prova.json').read_text())
+    rep = {
+        "tipo":"processo_equivalente",
+        "processo_narrado":"deposicao_metalica_em_wafer",
+        "processo_midia":"deposicao_metalica_em_wafer",
+        "compatibilidade_tecnica_verificada":True,
+        "evidencia_inspecao":"quadros inspecionados mostram processo de deposicao",
+        "fala_atribui_registro":False,
+        "origem_no_credito":"Laboratorio NIST · tecnica de deposicao",
+    }
+    filme['shots'][0]['substituicao']={
+        'acontecimento':'Processo industrial em Taiwan',
+        'evento_da_midia':'Laboratorio NIST',
+        'uso':'demonstracao','cena_especifica':True,
+        'origem_verificada':True,'licenca_verificada':True,
+        'representacao':rep,
+    }
+    r=C.auditar(filme)
+    assert r['estrutura_declarada_ok']
+    assert r['aprovacao_humana']=='PENDENTE'
+    filme['shots'][0]['substituicao']['representacao']['processo_midia']='litografia_euv'
+    r=C.auditar(filme)
+    assert 'M-PROCESSO-NAO-EQUIVALENTE' in {x['codigo'] for x in r['falhas']}

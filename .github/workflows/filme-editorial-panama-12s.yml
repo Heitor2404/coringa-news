@@ -70,7 +70,7 @@ jobs:
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
             ../saida_filme_panama/prova_panama_12s.mp4 \
             --props=../saida_filme_panama/props.json \
-            --codec=h264 --crf=22 --concurrency=2 --scale=0.5 --log=error
+            --codec=h264 --crf=22 --concurrency=2 --scale=0.5 --public-dir=remotion/public --log=error
       - name: Inspecionar 6 momentos e métricas básicas
         if: success()
         run: |

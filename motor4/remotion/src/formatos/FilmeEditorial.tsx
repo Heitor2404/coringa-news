@@ -6,6 +6,7 @@
 import React from 'react';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
+import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
@@ -22,6 +23,7 @@ export type FilmShot = {
   // Posições normais CSS object-position, não pixels falsamente interpolados.
   framing_positions?: {at:number; position:[number,number]}[];
   graphic_original?: boolean; // Infografia autoral com dados embutidos, sem título duplicado
+  motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
   sourceB?: string;
@@ -175,6 +177,9 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
       <div style={{position:'absolute',top:470,left:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:OFF_WHITE}}>{shot.compareLabels?.[0] || 'ANTES'}</div>
       {right>.6 && <div style={{position:'absolute',top:470,right:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:GOLD}}>{shot.compareLabels?.[1] || 'DEPOIS'}</div>}
     </AbsoluteFill>;
+  }
+  if (shot.type === 'photo' && shot.graphic_original && shot.motion_graphic) {
+    return <MotionEditorial data={shot.motion_graphic} p={p}/>;
   }
   if (shot.type === 'photo' && shot.graphic_original) {
     // Infográfico com seus próprios títulos, rótulos e dados. NÃO zoom

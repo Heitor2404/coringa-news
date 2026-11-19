@@ -54,6 +54,7 @@ def catalogo() -> dict:
     try:
         itens = list(base.get("itens") or [])
         ids = {it["id"] for it in itens}
+        hashes = {it.get("sha256_origem") for it in itens if it.get("sha256_origem")}
         reprovados = {r.get("id") for r in base.get("reprovados") or []}
         for ap in provas:
             if not isinstance(ap, dict):
@@ -64,11 +65,15 @@ def catalogo() -> dict:
             if not isinstance(mid, str) or not mid.startswith("cm-") or not isinstance(sha, str) or not _SHA.fullmatch(sha):
                 raise RuntimeError("ATLAS: aprovação V3 precisa de id cm-* e sha256 válido")
             if not isinstance(prova, dict) or not (prova.get("midia_corresponde") is True
-                    and prova.get("revisor") and prova.get("evidencia") and prova.get("acontecimento")):
+                    and prova.get("revisor") and prova.get("evidencia")
+                    and prova.get("acontecimento") and prova.get("licenca_evidencia")):
                 raise RuntimeError(f"ATLAS: {mid} sem revisão editorial explícita do conteúdo")
             reg = bib.obter(mid)
             if not reg or reg.get("sha256") != sha or reg.get("uso_comercial") != "sim" or reg.get("ia"):
                 raise RuntimeError(f"ATLAS: {mid} não existe, mudou, é IA ou não tem uso comercial confirmado")
+            if sha in hashes:
+                raise RuntimeError(f"ATLAS: {mid} já consta no acervo comprovado pelo SHA; reuse o ID existente")
+            hashes.add(sha)
             ext = (reg.get("ext") or "").lower()
             if ext not in _EXT or (reg.get("tipo") == "video") != (ext in _VIDEO):
                 raise RuntimeError(f"ATLAS: {mid} tipo de arquivo incompatível com o registro")

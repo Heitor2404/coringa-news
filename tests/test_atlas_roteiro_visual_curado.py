@@ -24,3 +24,13 @@ def test_storyboard_nao_segue_sem_imagens_reais():
     import pytest
     with pytest.raises(ValueError,match='SEM_PROVA'):
         montar({'relatorio':[]})
+
+
+def test_storyboard_sem_colisao_e_sem_trecho_vazio_usando_fala_provisoria():
+    from src.v4.formatos import plano as P
+    from src.v4.formatos.animatic import palavras_provisorias
+    p=montar(_cat())
+    m=palavras_provisorias(p['narracao']['texto'])
+    resolved=P.resolver_tempos(p,m['palavras'],duracao_audio=m['duracao'])
+    graves=[x for x in P.validar(resolved) if x['gravidade']=='erro']
+    assert not graves, graves

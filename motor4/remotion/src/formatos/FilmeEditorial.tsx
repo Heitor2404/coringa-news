@@ -4,7 +4,7 @@
  * Todos os títulos vêm do roteiro; o compositor não inventa fatos.
  */
 import React from 'react';
-import {AbsoluteFill, Img, OffthreadVideo, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number};
 export type FilmShot = {
@@ -56,11 +56,14 @@ const photograph = (asset: string, p: number, focus: [number,number], travel: nu
 };
 const Body: React.FC<{shot: FilmShot;p:number}> = ({shot,p}) => {
   if(shot.type === 'video') {
-    return <AbsoluteFill><OffthreadVideo src={staticFile(shot.asset)} muted
-      startFrom={Math.max(0, Math.round((shot as any).source_in_seconds * 30) || 0)}
-      style={{width:'100%',height:'100%',objectFit:'cover',
-        objectPosition:`${(shot.focus||[.5,.5])[0]*100}% ${(shot.focus||[.5,.5])[1]*100}%`,
-        filter:'brightness(.90) saturate(1.02)'}}/></AbsoluteFill>;
+    return <AbsoluteFill><Sequence from={Math.round(shot.start * 30)}
+      durationInFrames={Math.ceil((shot.end - shot.start) * 30)}>
+      <OffthreadVideo src={staticFile(shot.asset)} muted
+        startFrom={Math.max(0, Math.round(((shot as any).source_in_seconds || 0) * 30))}
+        style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',
+          objectPosition:`${(shot.focus||[.5,.5])[0]*100}% ${(shot.focus||[.5,.5])[1]*100}%`,
+          filter:'brightness(.90) saturate(1.02)'}}/>
+    </Sequence></AbsoluteFill>;
   }
   if(shot.type === 'comparison' && shot.assetB) {
     const right = clamp((p-.13)/.44);

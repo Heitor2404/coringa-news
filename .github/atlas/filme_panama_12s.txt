@@ -5,3 +5,4 @@
 # Fixed Remotion --public-dir matching the licensed assets directory.
 # 2026-11-19 V2: replace decorative map with accurate water rise and ship rise demonstration; private.
 # 2026-11-19 05:5x UTC: remove demonstrated label overlaps and duplicate title; final private visual QA rerun.
+# 2026-11-19: FIRST ACTUAL DVIDS MASTER V4: pinned 1080p clip + real lock mechanism + optional BR voice, private proof.

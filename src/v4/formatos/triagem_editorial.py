@@ -114,8 +114,16 @@ def avaliar(plano: dict, catalogo: dict | None = None) -> dict:
             falha('E-COMPARACAO-SEM-OBJETO', bid, 'comparação precisa de composição com objetos/dados contrapostos')
         if verbo == 'REVELAR' and all(x == 'mapa' for x in validas):
             falha('E-REVELACAO-DECORATIVA', bid, 'revelação precisa mostrar consequência, não fundo geográfico')
+    from src.v4.formatos import contrato_visual_comum
+    comum = contrato_visual_comum.auditar(plano)
+    # O contrato comum NÃO concede aprovação e não substitui as regras especializadas.
+    # Falhas estruturais comuns reforçam o portão ATLAS, sem enfraquecer bloqueios antigos.
+    for erro in comum['falhas']:
+        if erro['codigo'].startswith('U-') and erro['codigo'] != 'U-INSPECAO-VISUAL':
+            falha(erro['codigo'], erro['id'], erro['motivo'])
     return {'pronto': not erros, 'bloqueios': erros,
             'beats': len(beats), 'regra': 'contrato_semantico_antes_de_voz_v1',
+            'contrato_comum': comum,
             'revisao_multimodal': 'OBRIGATORIA_EM_ETAPA_SEPARADA'}
 
 

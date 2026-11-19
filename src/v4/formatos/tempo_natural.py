@@ -8,6 +8,64 @@ import copy
 import math
 
 
+def validar_progressao_video(cena: dict, duracao: float, fonte: dict | None = None) -> list[str]:
+    """Comprovação ESTRUTURAL de ação observada na fonte, não aprovação estética.
+
+    Mais tempo só é justificável quando o mesmo acontecimento se desenvolve:
+    anotações com instantes do vídeo original, mudança observável e referência
+    de inspeção. Zoom, panorâmica e cartão não contam como ação.
+    Sem teto arbitrário de duração: exigir novo evento a cada até 4 segundos.
+    O contrato final continua exigindo bytes, SHA, direitos e inspeção humana.
+    """
+    if duracao<=3.8:
+        return []
+    problemas=[]
+    if cena.get('type')!='video':
+        return ['somente vídeo real com ação observável pode ultrapassar 3,8 s']
+    p=cena.get('progressao_visual')
+    if not isinstance(p,dict) or p.get('tipo')!='acao_observada':
+        return ['falta progressão por ações reais observadas na fonte']
+    sha=p.get('sha256_origem')
+    if not isinstance(sha,str) or len(sha)!=64 or any(ch not in '0123456789abcdef' for ch in sha):
+        problemas.append('progressão exige SHA-256 do original')
+    if fonte is not None and fonte.get('expected_sha256') != sha:
+        problemas.append('progressão não corresponde ao SHA da mídia da cena')
+    if (not isinstance(p.get('inspecao'),str) or
+            len(p['inspecao'].strip())<20):
+        problemas.append('inspeção de quadros originais precisa ser descrita')
+    ini=cena.get('source_in_seconds')
+    if not isinstance(ini,(int,float)) or isinstance(ini,bool) or not math.isfinite(ini) or ini<0:
+        problemas.append('instante inicial do original ausente')
+        ini=None
+    eventos=p.get('eventos')
+    if not isinstance(eventos,list) or len(eventos)<2:
+        return problemas+['ao menos duas ações distintas precisam estar descritas']
+    tempos=[]
+    for i,e in enumerate(eventos):
+        if not isinstance(e,dict):
+            problemas.append(f'evento {i+1} inválido')
+            continue
+        t,orig=e.get('at'),e.get('fonte_s')
+        if (not isinstance(t,(int,float)) or isinstance(t,bool) or not math.isfinite(t)
+                or not 0<=t<duracao):
+            problemas.append(f'evento {i+1} fora da janela de narração')
+            continue
+        tempos.append(float(t))
+        if ini is not None and (not isinstance(orig,(int,float)) or
+                isinstance(orig,bool) or not math.isfinite(orig) or
+                abs(orig-(ini+t))>.15):
+            problemas.append(f'evento {i+1} não corresponde ao instante do original')
+        if not isinstance(e.get('acao_visivel'),str) or len(e['acao_visivel'].strip())<12:
+            problemas.append(f'evento {i+1} sem mudança física observável')
+    if len(tempos)!=len(eventos) or tempos!=sorted(tempos) or len(set(tempos))!=len(tempos):
+        problemas.append('eventos precisam ser cronológicos e distintos')
+    elif any(b-a>4.0 for a,b in zip([0.0,*tempos],[*tempos,duracao])):
+        problemas.append('mais de 4s sem acontecimento visível novo no mesmo clipe')
+    if len({str(e.get('acao_visivel') or '').strip().casefold() for e in eventos if isinstance(e,dict)})<2:
+        problemas.append('repetição da mesma ação não prova progressão')
+    return problemas
+
+
 def retemporizar(plano: dict, duracoes: list[float], pausa: float = .24) -> dict:
     shots=plano.get('shots') or []
     if not shots or len(shots)!=len(duracoes):
@@ -27,8 +85,15 @@ def retemporizar(plano: dict, duracoes: list[float], pausa: float = .24) -> dict
         # Nunca esticar uma foto/legenda além do limite que o fiscal detecta.
         # A solução para voz longa é fragmentar a fala e acrescentar mídia útil.
         if target>3.8:
-            raise ValueError(f"{s.get('id')}: voz natural de {d:.2f}s exige {target:.2f}s;"
-                             " dividir a fala em mais ações/mídias, NÃO aplicar atempo")
+            # Vídeos com ação REAL podem respirar no ritmo do acontecimento.
+            # Fotos e vídeos sem mudanças observadas continuam curtos.
+            problemas=validar_progressao_video(
+                s,target,(out.get('media') or {}).get(s.get('asset'))
+            )
+            if problemas:
+                raise ValueError(f"{s.get('id')}: voz natural de {d:.2f}s exige {target:.2f}s; "
+                                 + "; ".join(problemas) +
+                                 "; não acelerar narração ou prolongar imagem parada")
         prev=float(s['end'])-float(s['start'])
         if any(not (0<=float(c['at'])<target) for c in s.get('cues') or []):
             raise ValueError(f"{s.get('id')}: cue fora da duração natural; reescrever storyboard")

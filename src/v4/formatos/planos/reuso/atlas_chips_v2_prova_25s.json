@@ -145,6 +145,7 @@
           "id": "pergunta-geografica",
           "componente": "editorial.titleOrPayoff",
           "slot": "pergunta",
+          "entrada_apos_voo": true,
           "t0": "@max(2.5,@por)",
           "t1": "@observe-0.12",
           "p": {

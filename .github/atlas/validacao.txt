@@ -99,3 +99,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 diagnostico run 44437665279: resolver fim pela duracao real WAV, CTA, ritmo e notificar Telegram em falha
 
 # 2026-11-19 retry regression no-card gancho title timing and true wav duration
+
+# 2026-11-19 regressão com timestamps reais de TTS Run 44447705090; 2º rótulo factual na foto no momento da fala Taiwan, sem mudar limite de 3s

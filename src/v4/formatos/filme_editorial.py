@@ -46,6 +46,17 @@ def avaliar(plano: dict) -> dict:
         max_span = (6.2 if eh_causal else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
         if eh_causal:
+            # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
+            # sem saltar para outro clipe ou afirmar subida que a filmagem não mostra.
+            anterior = cenas[n-1] if n else {}
+            continuidade = (anterior.get('type') == 'video' and
+                           cena.get('reference_asset') == anterior.get('asset') and
+                           cena.get('reference_asset') in plano.get('media', {}) and
+                           isinstance(cena.get('reference_from_seconds'), (int, float)) and
+                           abs(cena['reference_from_seconds'] -
+                               (anterior.get('source_in_seconds', 0) + anterior['end'] - anterior['start'])) < .1)
+            if not continuidade:
+                falha('F-PONTE-REAL', cid, 'o início do diagrama deve continuar do trecho real sem salto de origem')
             eventos = cena.get('cues') or []
             esperado = ('closed', 'water_enter', 'rise', 'equalize', 'release')
             acoes = tuple(e.get('action') for e in eventos)
@@ -210,6 +221,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             x['source']=medias[c['asset']]['credit']
         else:
             x['source']='Esquema original · princípio hidráulico de uma eclusa'
+            if c.get('reference_asset'):
+                x['reference_asset'] = medias[c['reference_asset']]['asset']
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

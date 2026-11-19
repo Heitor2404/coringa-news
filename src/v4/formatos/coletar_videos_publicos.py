@@ -58,6 +58,9 @@ def validar_fonte(fonte: dict) -> None:
             not str(fonte.get("credito") or "").strip() or
             not str(fonte.get("titulo") or "").strip()):
         raise ValueError("fonte não é candidata privada com direitos pendentes")
+    esperado=fonte.get("sha256_esperado")
+    if esperado is not None and not re.fullmatch(r"[0-9a-f]{64}",str(esperado)):
+        raise ValueError("SHA-256 fixado da fonte inválido")
 
 
 def sha256_arquivo(p: Path) -> str:
@@ -195,6 +198,9 @@ def coletar(fonte:dict, pasta:Path, bib, baixar=None,
             raise ValueError("arquivo de vídeo incompleto ou excessivo")
         dados=(inspecionar or provar_video)(p)
         hash_original=sha256_arquivo(p)
+        esperado=fonte.get("sha256_esperado")
+        if esperado is not None and hash_original!=esperado:
+            raise ValueError("SHA-256 do vídeo diverge da receita; fonte alterada, não usar")
         contato=(pasta/(fonte["id"]+"_contato.jpg"))
         amostragem=(quadros or folha_contato)(p,contato,dados["duracao_s"])
         # Campos de direitos deliberadamente NÃO trazem uma licença automática;

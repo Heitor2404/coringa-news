@@ -335,6 +335,21 @@ def avaliar(plano: dict) -> dict:
                     and cena.get('evidence')=='literal'):
                 falha('F-GRAFICO-COMO-REGISTRO',cid,
                       'infografia original representa dados, nunca fotografia literal do acontecimento')
+            motion=cena.get('motion_graphic')
+            if motion is not None:
+                if (tipo!='photo' or asset.get('original_graphic') is not True or
+                        cena.get('evidence')=='literal' or not isinstance(motion,dict) or
+                        motion.get('kind') not in ('stat_reveal','causal_flow')):
+                    falha('F-MOTION-SEM-CONTRATO',cid,
+                          'animação explicativa precisa ser gráfico original não literal')
+                elif motion['kind']=='stat_reveal':
+                    if any(not isinstance(motion.get(k),str) or not motion[k].strip()
+                           for k in ('eyebrow','value','line1','line2')):
+                        falha('F-MOTION-SEM-DADOS',cid,'número exige contexto e unidade documentados')
+                elif (not isinstance(motion.get('stages'),list) or
+                      len(motion['stages'])!=3 or
+                      any(not isinstance(x,str) or not x.strip() for x in motion['stages'])):
+                    falha('F-MOTION-SEM-DADOS',cid,'sequência exige três etapas legíveis')
             url = asset.get('url') or ''
             source = asset.get('local_source')
             if source:

@@ -164,7 +164,7 @@ def avaliar(plano: dict) -> dict:
     # Gate compartilhado cobre declarações; o fiscal específico continua
     # responsável por curadoria, licença e tempos próprios do FILME.
     for erro in comum['falhas']:
-        if erro['codigo'].startswith('U-') and erro['codigo'] != 'U-INSPECAO-VISUAL':
+        if erro['codigo'] != 'U-INSPECAO-VISUAL':
             falha(erro['codigo'], erro['id'], erro['motivo'])
     return {'pronto': not falhas, 'bloqueios': falhas, 'cenas': len(cenas),
             'medias_unicas': len(visual), 'momentos_visuais':len(momentos),

@@ -14,3 +14,4 @@ CI aprovado: https://github.com/Heitor2404/coringa-news/actions/runs/44448821495
 Smoke com as 61 palavras da voz real 44447705090 aprovado no job ritmo_real da validação 44449070038.
 Continua prévia privada sem publicacao; erros devem ser avisados por mensagem no Telegram mesmo sem MP4.
 # 2026-11-19 nova prévia privada apos rotulos provaVisual legiveis a 30 px e diagnostico Telegram completo dos quadros (CI 44450404274 success)
+# 2026-11-19 retry TTS variable: 2.5 s minimum real photo; duration and map transition synced to utterance; CI 44452013618 green. Private only, never publish.

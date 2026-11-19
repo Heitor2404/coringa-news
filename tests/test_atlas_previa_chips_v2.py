@@ -110,3 +110,22 @@ def test_telegram_recebe_bloqueio_sem_video(monkeypatch, tmp_path):
     workflow = (RAIZ / ".github/workflows/atlas-chips-v2-privado.yml").read_text(encoding="utf-8")
     bloco = workflow.split("Entregar APENAS no Telegram privado como DIAGNÓSTICO", 1)[1]
     assert '[ -s "$SAIDA/resultado.json" ]' not in bloco.split("Portão editorial", 1)[0]
+
+
+def test_gancho_com_tempo_real_gemini_nao_congela_tres_segundos():
+    """Reproduz o bloqueio 44447705090 usando tempos reais capturados do TTS,
+    não uma média artificial de 2,55 palavras por segundo. Mantém portão 3s.
+    """
+    fixture = json.loads((RAIZ / "tests/dados/atlas_chips_v2_tts_real_run_44447705090.json").read_text(encoding="utf-8"))
+    pl = json.loads(ARQ.read_text(encoding="utf-8"))
+    resolvido = P.resolver_tempos(pl, fixture["palavras"], duracao_audio=fixture["duracao_audio"])
+    foto = next(L for beat in resolvido["beats"] for L in beat["camadas"] if L["id"] == "fab18-real-dominante")
+    assert foto["p"]["rotulo_t"] == .63
+    assert foto["p"]["rotulo2_t"] == 2.65
+    assert foto["p"]["rotulo2"] == "FAB 18 · TAIWAN"
+    assert foto["t1"] > foto["p"]["rotulo2_t"]
+    erros = [v for v in P.validar(resolvido) if v["gravidade"] == "erro"]
+    assert not any(v["regra"] == "F-SEM-PROGRESSAO" for v in erros), erros
+    assert not any(v["regra"] == "F-TEMPO" for v in erros), erros
+    # Evitar a falsa correção "subir limite" (em vez de introduzir prova factual).
+    assert P.REGRAS["progressao_max_s"] == 3

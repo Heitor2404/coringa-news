@@ -116,3 +116,4 @@ ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e dia
 # ATLAS QA 2026-11-19 — proof cinematic, auto-reedit and Commons sourcing tests.
 # 2026-11-19 visual-source + no-TTS animatic + revised gallery tests, isolated, no full MP4.
 # 2026-11-19 validate shot-first storyboard and animatic fixes.
+# 2026-11-19 storyboard revised after previsual real portoes: no pin overlaps, causal chain earlier.

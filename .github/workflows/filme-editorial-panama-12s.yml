@@ -109,7 +109,8 @@ jobs:
               d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries',
                   'format=duration','-of','default=noprint_wrappers=1:nokey=1',str(som)],text=True).strip())
               meta['duracao_audio_original_s']=round(d,2)
-              fator=max(.80,min(1.25,d/11.3))
+              # Ritmo natural: deixar margem final curta, sem 1.4s de silêncio.
+              fator=max(.85,min(1.20,d/11.85))
               meta['fator_tempo_audio']=round(fator,3)
               inp=pasta/'prova_panama_12s.mp4';out=pasta/'prova_com_voz_12s.mp4'
               subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(inp),'-i',str(som),

@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "modo": "PROVAS_NARRADAS_PRIVADAS_SEM_PUBLICACAO",
+  "voz_teste": "Edge TTS pt-BR-AntonioNeural (+10%), sem custo Gemini/Claude; se indisponível, bloqueia áudio",
+  "duracao_cena": 3.7,
+  "episodios": [
+    {
+      "id": "taiwan_chips",
+      "titulo": "Taiwan e os chips — produção em imagens reais",
+      "dominio": "industria",
+      "cenas": [
+        {
+          "id": "chip",
+          "commons": "Freescale MPC8245 integrated processor die shot - 38190302045.jpg",
+          "licenca": "CC0",
+          "autor": "Martijn Boer",
+          "original": false,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg",
+          "titulo": "UM CHIP NÃO NASCE SOZINHO",
+          "destaque": "CHIP",
+          "voz": "Um chip parece pequeno. Mas sua fabricação exige estruturas industriais enormes.",
+          "prova": "Fotografia de die Freescale, exemplo de chip, não prova de fabricação TSMC."
+        },
+        {
+          "id": "tsmc",
+          "commons": "TSMC Fab 18 May 2025.jpg",
+          "licenca": "CC BY 4.0",
+          "autor": "4300streetcar",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg",
+          "titulo": "FÁBRICA DA TSMC EM TAIWAN",
+          "destaque": "TSMC",
+          "voz": "Em Taiwan, a TSMC opera instalações reais, como a Fab dezoito.",
+          "prova": "Fotografia literal da fábrica TSMC Fab 18 em Taiwan."
+        },
+        {
+          "id": "fotolitografia",
+          "commons": "Cleanroom - photolithography lab (9150592110).jpg",
+          "licenca": "CC BY 2.0",
+          "autor": "UCL MAPS / O. Usher",
+          "original": false,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Cleanroom_-_photolithography_lab_(9150592110).jpg",
+          "titulo": "FOTOLITOGRAFIA É UMA ETAPA",
+          "destaque": "FOTOLITOGRAFIA",
+          "voz": "A fotolitografia ajuda a criar padrões minúsculos nos circuitos.",
+          "prova": "Laboratório UCL, ilustração da técnica, não a própria fábrica TSMC."
+        },
+        {
+          "id": "cleanroom",
+          "commons": "Clean room.jpg",
+          "licenca": "NASA PD",
+          "autor": "NASA Glenn Research Center",
+          "original": false,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Clean_room.jpg",
+          "titulo": "SALA LIMPA PROTEGE O PROCESSO",
+          "destaque": "SALA LIMPA",
+          "voz": "Salas limpas evitam contaminação. Estas imagens mostram locais diferentes.",
+          "prova": "Imagem NASA de sala limpa, contexto genérico; não é registro de Taiwan."
+        }
+      ]
+    },
+    {
+      "id": "hubble_nasa",
+      "titulo": "Hubble — imagens do espaço e quem trabalha nele",
+      "dominio": "ciencia",
+      "cenas": [
+        {
+          "id": "equipe",
+          "local_video": "tests/midia/video_vertical_nasa.mp4",
+          "licenca": "Public domain",
+          "autor": "NASA Scientific Visualization Studio",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Hubble_Women_Making_History-_Beverly_Johnson_(SVS14324_BEV_VERTICAL_MP4).webm",
+          "titulo": "EXISTEM PESSOAS POR TRÁS DO HUBBLE",
+          "destaque": "PESSOAS",
+          "voz": "Por trás das descobertas do Hubble existe trabalho humano.",
+          "prova": "Gravação NASA Beverly Johnson sobre seu trabalho no Hubble."
+        },
+        {
+          "id": "telescopio",
+          "commons": "Hubble 4x61.jpg",
+          "licenca": "Public domain",
+          "autor": "NASA",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Hubble_4x61.jpg",
+          "titulo": "O TELESCÓPIO EM ÓRBITA",
+          "destaque": "ÓRBITA",
+          "voz": "Esse é o telescópio espacial, fotografado fora da Terra.",
+          "prova": "Fotografia NASA real do Hubble em órbita."
+        },
+        {
+          "id": "galaxias",
+          "commons": "HUDF.jpg",
+          "licenca": "Public domain",
+          "autor": "NASA, ESA, S. Beckwith e HUDF Team",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:HUDF.jpg",
+          "titulo": "GALÁXIAS MUITO DISTANTES",
+          "destaque": "GALÁXIAS",
+          "voz": "O Campo Ultraprofundo revela galáxias muito distantes.",
+          "prova": "Imagem de observação do Hubble, não fotografia de uma galáxia isolada."
+        },
+        {
+          "id": "nebulosa",
+          "commons": "Nebulae Hubble NASA.jpg",
+          "licenca": "Public domain",
+          "autor": "NASA, ESA, Hubble SM4 ERO Team",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Nebulae_Hubble_NASA.jpg",
+          "titulo": "NEBULOSAS REGISTRADAS PELO HUBBLE",
+          "destaque": "NEBULOSAS",
+          "voz": "Outras observações mostram nebulosas. São imagens, não filmagens em tempo real.",
+          "prova": "Imagem de nebulosa obtida pelo Hubble e processada para apresentação."
+        }
+      ]
+    },
+    {
+      "id": "hindenburg_1937",
+      "titulo": "Hindenburg — imagens do dia do desastre",
+      "dominio": "historia",
+      "cenas": [
+        {
+          "id": "novayork",
+          "commons": "Hindenburg over New York 1937.jpg",
+          "licenca": "Public domain",
+          "autor": "Associated Press",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Hindenburg_over_New_York_1937.jpg",
+          "titulo": "6 DE MAIO DE 1937",
+          "destaque": "1937",
+          "voz": "Em seis de maio, o Hindenburg sobrevoou Nova York.",
+          "prova": "Imagem de 6 maio 1937 anterior à chegada a Lakehurst."
+        },
+        {
+          "id": "aterrissagem",
+          "commons": "Hindenburg landing May 6 1937.jpg",
+          "licenca": "Public domain",
+          "autor": "Fotógrafo histórico, publicado em 1937",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Hindenburg_landing_May_6_1937.jpg",
+          "titulo": "APROXIMAÇÃO EM LAKEHURST",
+          "destaque": "LAKEHURST",
+          "voz": "Horas depois, o dirigível se aproximou da base de Lakehurst.",
+          "prova": "Fotografia histórica do dirigível aproximando-se antes da queda."
+        },
+        {
+          "id": "incendio",
+          "commons": "Hindenburg burning, 1937.jpg",
+          "licenca": "Public domain",
+          "autor": "Fotógrafo histórico, arquivo público",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Hindenburg_burning,_1937.jpg",
+          "titulo": "O DIRIGÍVEL PEGA FOGO",
+          "destaque": "PEGA FOGO",
+          "voz": "Durante a manobra, o Hindenburg pegou fogo.",
+          "prova": "Registro fotográfico do início da explosão em Lakehurst."
+        },
+        {
+          "id": "destrocos",
+          "commons": "Burning Hindenburg wreckage 1937.jpg",
+          "licenca": "Public domain",
+          "autor": "Arquivo histórico publicado em 1937",
+          "original": true,
+          "fonte": "https://commons.wikimedia.org/wiki/File:Burning_Hindenburg_wreckage_1937.jpg",
+          "titulo": "OS DESTROÇOS APÓS O FOGO",
+          "destaque": "DESTROÇOS",
+          "voz": "As fotos mostram os destroços, não a causa do incêndio.",
+          "prova": "Fotografia histórica de destroços queimando, após a queda."
+        }
+      ]
+    }
+  ]
+}

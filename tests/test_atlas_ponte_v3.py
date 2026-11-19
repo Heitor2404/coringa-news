@@ -25,7 +25,7 @@ def _arquivo_e_banco(monkeypatch, tmp_path):
     bib = Biblioteca(db=banco, armazem=armazem)
     reg = bib.ingerir(imagem, {
         "titulo": "Foto gerada para teste de importação",
-        "credito": "Autor Teste — CC BY 4.0",
+        "credito": "Obra original — Autor Teste (CC BY 4.0)",
         "licenca": "CC BY 4.0",
         "licenca_prova": "https://exemplo.invalid/licenca",
         "pagina": "https://exemplo.invalid/foto",

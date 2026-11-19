@@ -81,7 +81,11 @@ def revisar(saida: Path, chamar_visao=None) -> dict:
                 rec['veredito'] = resultado
                 exigidas = ['referente_visivel', 'aprendizado_demonstrado',
                             'enquadramento_adequado', 'imagem_celular_legivel']
-                if beat.get('composicao') != 'atlas.prova':
+                # O crítico não pode reprovar um gráfico técnico por "mapa ausente".
+                # Só composições cujo palco É mapa exigem mapa informativo.
+                from src.v4.formatos import plano as plano_atlas
+                comp = plano_atlas.COMP.get(beat.get('composicao') or '') or {}
+                if comp.get('palco') == 'mapa':
                     exigidas.append('mapa_informativo')
                 if verbo in ('DEMONSTRAR', 'CONECTAR', 'COMPARAR', 'REVELAR'):
                     exigidas.append('acao_ou_relacao_visivel')

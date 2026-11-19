@@ -105,8 +105,10 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         for L in b['camadas']:
             L['t0'], L['t1'] = a(L['t0']), a(L['t1'])
             q = L.get('p') or {}
-            if L.get('componente') == 'atlas.provaVisual' and q.get('rotulo_t') is not None:
-                q['rotulo_t'] = a(q['rotulo_t'])
+            if L.get('componente') == 'atlas.provaVisual':
+                for nome in ('rotulo_t', 'rotulo2_t'):
+                    if q.get(nome) is not None:
+                        q[nome] = a(q[nome])
             for lista in ('marcos', 'nos', 'niveis', 'linhas', 'itens'):
                 for x in q.get(lista) or []:
                     if isinstance(x, dict) and x.get('t') is not None:
@@ -759,8 +761,10 @@ def eventos(plano: dict) -> list[float]:
             ev.append(q['zoom']['t0'])
         if q.get('legenda_base') and q.get('legenda_t') is not None:
             ev.append(q['legenda_t'])
-        if L['componente'] == 'atlas.provaVisual' and isinstance(q.get('rotulo_t'), (int, float)):
-            ev.append(q['rotulo_t'])
+        if L['componente'] == 'atlas.provaVisual':
+            for nome in ('rotulo_t', 'rotulo2_t'):
+                if isinstance(q.get(nome), (int, float)) and q.get('rotulo' if nome == 'rotulo_t' else 'rotulo2'):
+                    ev.append(q[nome])
         if q.get('contagem'):
             ev.append(L['t0'] + (q.get('dur_contagem') or 1.2))
         ev += [q[k] for k in ('t_marca', 't_total', 't_carimbo', 't_abre') if isinstance(q.get(k), (int, float))]

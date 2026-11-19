@@ -119,7 +119,7 @@ def avaliar(plano: dict, catalogo: dict | None = None) -> dict:
     # O contrato comum NÃO concede aprovação e não substitui as regras especializadas.
     # Falhas estruturais comuns reforçam o portão ATLAS, sem enfraquecer bloqueios antigos.
     for erro in comum['falhas']:
-        if erro['codigo'].startswith('U-') and erro['codigo'] != 'U-INSPECAO-VISUAL':
+        if erro['codigo'] != 'U-INSPECAO-VISUAL':
             falha(erro['codigo'], erro['id'], erro['motivo'])
     return {'pronto': not erros, 'bloqueios': erros,
             'beats': len(beats), 'regra': 'contrato_semantico_antes_de_voz_v1',

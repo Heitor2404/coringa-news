@@ -20,6 +20,10 @@ env:
   CORINGA_CHROME: /usr/bin/google-chrome
   REMOTION_CHROME: /usr/bin/google-chrome
   CORINGA_MODO_PREVIA_PRIVADA: "1"
+  # APENAS NO ANIMATIC: cache de JPG derivado de original verificado no garimpo.
+  # NÃO é comprovante de SHA do original e NÃO pode chegar ao MP4/publicação.
+  CORINGA_DEV: "1"
+  CORINGA_MIDIA_LOCAL: saida_garimpo_visual/cache_derivado_so_quadros
   CORINGA_ATLAS_CURADORIA_PRIVADA: saida_garimpo_visual/catalogo.json
   PLANO: plano_chips_objetos.json
   SAIDA: saida_chips_animatic
@@ -63,6 +67,27 @@ jobs:
           python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
           (cd motor4 && npm ci --no-audit --no-fund)
           (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Preparar cópias derivadas da curadoria para ANIMATIC (não para MP4)
+        run: |
+          python - <<'PY'
+          import json, hashlib, os, shutil
+          from pathlib import Path
+          from PIL import Image
+          from src.v4.formatos.produzir import nome_publico
+          d=json.loads(Path(os.environ['CORINGA_ATLAS_CURADORIA_PRIVADA']).read_text())
+          assert d.get('uso') == 'PREVIA_PRIVADA_APENAS'
+          cache=Path(os.environ['CORINGA_MIDIA_LOCAL'])
+          cache.mkdir(parents=True, exist_ok=True)
+          for it in d['itens']:
+              assert it['uso_provisorio_previa'] is True and len(it['sha256_origem'])==64
+              src=Path('saida_garimpo_visual/imagens')/(it['id'].replace(':','_')+'.jpg')
+              assert src.is_file(),it['id']
+              with Image.open(src) as im: im.verify()
+              dst=cache/(nome_publico(it['id'])+'.jpg')
+              shutil.copyfile(src,dst)
+              print('ATLAS_DERIVADO_APENAS_ANIMATIC',it['id'],'sha_derivado='+hashlib.sha256(dst.read_bytes()).hexdigest()[:16],
+                    'sha_original_decl='+it['sha256_origem'][:16])
+          PY
       - name: Construir novo storyboard por objetos e provas REAIS
         run: python -m src.v4.formatos.roteiro_visual_curado "$CORINGA_ATLAS_CURADORIA_PRIVADA" "$PLANO"
       - name: Renderizar somente quadros REAIS sem voz e sem MP4

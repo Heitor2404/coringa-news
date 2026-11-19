@@ -40,3 +40,11 @@ def test_mechanism_has_events_during_actual_water_rise():
     assert len(mech['cues'])>=2
     assert mech['cues'][1]['at']>mech['cues'][0]['at']
     assert not mech.get('asset')
+
+
+def test_recorta_fora_os_flashes_ja_presentes_no_arquivo_da_fonte():
+    p=_p()
+    assert p['shots'][0]['source_in_seconds'] >= 4.8
+    assert p['shots'][0]['source_in_seconds'] + (p['shots'][0]['end'] - p['shots'][0]['start']) <= 8
+    assert p['shots'][2]['source_in_seconds'] >= 8.2
+    assert p['shots'][2]['source_in_seconds'] + (p['shots'][2]['end'] - p['shots'][2]['start']) <= 11

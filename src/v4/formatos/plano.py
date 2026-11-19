@@ -350,7 +350,7 @@ def _creditos(plano: dict) -> dict | None:
     z = zonas('atlas').get('creditos', [72, 1174, 936, 46])
     ref = (canal().get('pino') or {}).get('estilo') == 'referencia'
     extras = [{'t0': L['t0'], 't1': L['t1'], 'txt': L['p']['meta']} for L in camadas(plano)
-              if L['p'].get('meta') and
+              if (L.get('p') or {}).get('meta') and
               (L['componente'] == 'atlas.provaVisual' or
                (ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto'))]
     return {'extras': extras,'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')},

@@ -89,7 +89,7 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
             return False, "bytes reais diferem do SHA-256 curado"
         return True, ""
 
-    media_movel=set();fotos_s=0.;mapas=0;prev=0.;visto=set()
+    media_movel=set();video_contextual=set();fotos_s=0.;mapas=0;prev=0.;visto=set()
     for c in cenas:
         cid=c.get("id") or "?"
         start,end=c.get("inicio"),c.get("fim")
@@ -186,8 +186,16 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
                 if it.get("uso_comercial") not in ("sim",True):
                     falha("E-VIDEO-SEM-USO-COMERCIAL",cid,"uso comercial do original não confirmado")
                 if prova.get("acao_ou_relacao_visivel") is not True:
-                    falha("E-VIDEO-SEM-ACAO-COMPROVADA",cid,
-                          "vídeo precisa de revisão de quadros que MOSTRE o processo narrado")
+                    if c.get("acao") == "MOSTRAR":
+                        # Uma tomada real do laboratório contextualiza o fato,
+                        # mas NÃO é prova de fabricação, desastre ou mecanismo.
+                        # Precisa passar em licença, correspondência e SHA;
+                        # nunca entra no contador de vídeos demonstrativos.
+                        if bytes_ok:
+                            video_contextual.add(sha)
+                    else:
+                        falha("E-VIDEO-SEM-ACAO-COMPROVADA",cid,
+                              "cena promete demonstrar, conectar ou revelar ação sem quadros que a comprovem")
                 elif bytes_ok:
                     media_movel.add(sha)
         elif tipo=="atlas_map":
@@ -269,6 +277,7 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
         "modo_duracao":modo_duracao,
         "diagnostico_plataformas":diagnostico_duracao,
         "total_cenas":len(cenas),"videos_independentes_conferidos":len(media_movel),
+        "videos_contextuais_sem_prova_de_acao":len(video_contextual),
         "mapas_atlas_comprovados":mapas,"fotos_s":round(fotos_s,3),
         "inspecao_humana":"PENDENTE","publicado":False,
         "bloqueios":erros,

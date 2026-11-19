@@ -279,10 +279,14 @@ def main(argv=None):
     p=argparse.ArgumentParser()
     p.add_argument("manifesto",type=Path)
     p.add_argument("saida",type=Path)
+    p.add_argument("--catalogo",type=Path,default=None,
+                   help="overlay efêmero do catálogo com arquivos locais já atestados")
     a=p.parse_args(argv)
     from src.v4.formatos.ponte_biblioteca import catalogo
     data=json.loads(a.manifesto.read_text(encoding="utf-8"))
-    r=avaliar(data,catalogo())
+    curado=(json.loads(a.catalogo.read_text(encoding="utf8"))
+            if a.catalogo is not None else catalogo())
+    r=avaliar(data,curado)
     a.saida.parent.mkdir(parents=True,exist_ok=True)
     a.saida.write_text(json.dumps(r,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps({"status":r["status"],"bloqueios":len(r["bloqueios"]),

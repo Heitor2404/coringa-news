@@ -138,3 +138,49 @@ def test_workflow_tem_gate_depois_da_previa_privada():
     assert src.index('Portao editorial final') < src.index('Cifrar e publicar no ramo de resultado')
     assert 'python -m src.v4.formatos gate "$PLANO_ATLAS"' in src
     assert 'if: always()' in src
+
+
+def _contexto_v3_mecanismo():
+    """Caso mínimo do contrato existente V3: a ação exige esquema, ainda indisponível no ATLAS."""
+    ac = {'id': 'e-euv', 'tipo': 'mecanismo', 'sujeito': 'wafer de silício',
+          'estado_inicial': 'sem padrão', 'acao': 'expor um padrão', 'estado_final': 'padrão transferido'}
+    return {
+        'roteiro': {'cenas': [{'fala': 'Uma máquina transfere padrões ao wafer.',
+                              'acontecimento': ac, 'sb': {'avanca': 'fabricação exige litografia'}}]},
+        'acervo': {},
+        'fatos': [('f1', 'litografia transfere um padrão ao wafer')],
+        'eventos': [{'id': ac['id'], 'tipo': ac['tipo'], 'critico': True, 'trechos': [0],
+                     'viaveis': ['mecanismo.estados'], 'ac': ac}],
+    }
+
+
+def test_ponte_atlas_reutiliza_fichas_reais_da_v3():
+    from src.v4.formatos import diretor
+
+    ctx = _contexto_v3_mecanismo()
+    fichas = diretor.fichas_do_v3(ctx)
+    assert fichas[0]['evento_id'] == 'e-euv'
+    assert fichas[0]['representacao_necessaria'].startswith('sujeito, estado inicial')
+    assert fichas[0]['forma_visual'] == 'esquema'
+    pr = diretor.prompt([{'id': 'f1', 'texto': 'litografia fabrica chips'}], 'atlas',
+                       None, 'não há mídia EUV comprovada', contexto_v3=ctx)
+    assert 'FICHAS AUDIOVISUAIS DA V3' in pr
+    assert 'e-euv' in pr
+    assert 'evento_id' in pr
+
+
+def test_ponte_bloqueia_mecanismo_v3_nao_homologado_em_atlas():
+    from src.v4.formatos import diretor
+
+    base = Path(__file__).resolve().parents[1]
+    plano = json.loads((base / 'tests/dados/formatos_atlas_resolvido.json').read_text())
+    ctx = _contexto_v3_mecanismo()
+    viol = diretor._violacoes(plano, None, contexto_v3=ctx)
+    codigos = {v['regra'] for v in viol}
+    assert 'F-EVENTO-SEM-BEAT' in codigos
+    assert 'F-MECANISMO-FORA-ATLAS' in codigos
+    # Se o modelo associar o evento ao beat, a capacidade continua indisponível.
+    plano['beats'][0]['evento_id'] = 'e-euv'
+    codigos = {v['regra'] for v in diretor._violacoes(plano, None, contexto_v3=ctx)}
+    assert 'F-EVENTO-SEM-BEAT' not in codigos
+    assert 'F-MECANISMO-FORA-ATLAS' in codigos

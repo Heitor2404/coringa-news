@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: qa-tres-episodios-editados-narrados
   cancel-in-progress: true
@@ -50,6 +51,24 @@ jobs:
             tests/test_contrato_visual_multitema.py \
             tests/test_filme_editorial.py \
             tests/test_atlas_triagem_editorial.py
+      - name: Recuperar dois objetos de chip JÁ CURADOS no acervo anterior
+        uses: actions/download-artifact@v4
+        with:
+          name: atlas-garimpo-visual-provisorio
+          run-id: 44459570262
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: acervo_ja_curado
+      - name: Validar SHA dos bytes anteriores e reutilizar sem download
+        run: |
+          mkdir -p tests/midia/qa_multitema/taiwan_chips
+          cp acervo_ja_curado/imagens/scout_c86131360447b872.jpg tests/midia/qa_multitema/taiwan_chips/chip_curado.jpg
+          cp acervo_ja_curado/imagens/scout_14f9a026e9ee5599.jpg tests/midia/qa_multitema/taiwan_chips/wafer_curado.jpg
+          printf '%s  %s\n' \
+            c86131360447b8729a6d8013d26273fbbca1f708bc4fc80d7d07277dcc71d78f \
+            tests/midia/qa_multitema/taiwan_chips/chip_curado.jpg \
+            14f9a026e9ee5599042a9380da57aa59e272854e76f615e5c3590e0b4c10c632 \
+            tests/midia/qa_multitema/taiwan_chips/wafer_curado.jpg \
+            | sha256sum -c -
       - name: Curar e preservar SHA de 12 fontes SEM inventar substituições
         timeout-minutes: 18
         run: |
@@ -65,7 +84,7 @@ jobs:
         timeout-minutes: 42
         run: |
           set -euo pipefail
-          for tema in taiwan_chips hubble_nasa hindenburg_1937; do
+          for tema in taiwan_chips venezuela_paisagens ever_given_suez; do
             echo "=== EPISÓDIO $tema ==="
             python -m src.v4.formatos.filme_editorial \
               "$OUT/$tema/plano.json" "$OUT/$tema" motor4/remotion/public
@@ -88,7 +107,7 @@ jobs:
           import json,os
           from pathlib import Path
           p=Path(os.environ['OUT'])
-          temas=['taiwan_chips','hubble_nasa','hindenburg_1937']
+          temas=['taiwan_chips','venezuela_paisagens','ever_given_suez']
           qa=[json.loads((p/x/'qa_montagem.json').read_text()) for x in temas]
           assert all(x['status_tecnico']=='PRONTO_PARA_REVISAO' for x in qa)
           assert all(x['tem_audio'] and not x['publicavel'] for x in qa)

@@ -8,8 +8,8 @@ assunto; o tipo semântico nunca contém nomes de países/guerras.
 from __future__ import annotations
 
 INTENCOES={
-    'localizar':(),
-    'trajeto':(),
+    'localizar':('atlas_map',),
+    'trajeto':('atlas_map',),
     'mostrar_registro':('photo','video'),
     'demonstrar_acao':('video','mechanism'),
     'comparar':('comparison',),
@@ -43,8 +43,13 @@ def verificar(cenas: list[dict]) -> list[dict]:
             falhas.append({'codigo':'D-RECURSO-INCOMPATIVEL','cena':cid,
                            'motivo':f"{intencao} não pode ser demonstrado por {c.get('type')}"})
         if intencao in ('localizar','trajeto'):
-            falhas.append({'codigo':'D-EXIGE-CARTOGRAFIA-ATLAS','cena':cid,
-                           'motivo':'mapa exige PalcoMapa MapLibre com raster licenciado; recuso render alternativo simplificado'})
+            if c.get('type')!='atlas_map':
+                falhas.append({'codigo':'D-EXIGE-CARTOGRAFIA-ATLAS','cena':cid,
+                               'motivo':'localização/trajeto só usam clipe autenticado do PalcoMapa MapLibre'})
+            mapa=(c.get('atlas_direcao') or {})
+            if not isinstance(mapa,dict) or mapa.get('intencao')!=intencao or not mapa.get('roi'):
+                falhas.append({'codigo':'D-MAPA-SEM-OBJETIVO','cena':cid,
+                               'motivo':'a intenção e a região do mapa ATLAS devem ser explícitas no roteiro'})
         if intencao=='mostrar_registro' and c.get('evidence')!='literal':
             falhas.append({'codigo':'D-REGISTRO-SEM-PROVA','cena':cid,
                            'motivo':'imagem genérica não pode comprovar evento específico'})

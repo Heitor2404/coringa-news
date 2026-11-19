@@ -109,7 +109,9 @@ def avaliar(plano: dict) -> dict:
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
         eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_cycle'
-        max_span = (8.0 if cena.get('type') == 'atlas_map' else 18.0 if eh_ciclo else 6.2 if eh_causal else
+        max_span = (float('inf') if cena.get('type') == 'video' else
+                    8.0 if cena.get('type') == 'atlas_map' else
+                    18.0 if eh_ciclo else 6.2 if eh_causal else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
         if eh_causal or eh_ciclo:
             # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
@@ -151,6 +153,15 @@ def avaliar(plano: dict) -> dict:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')
+        if tipo == 'video' and span > 3.8:
+            # Usa o MESMO contrato temporal do áudio natural; não forçar
+            # corte a cada 3,8s quando uma ação genuína continua.
+            # Declarações são apenas pré-direção: revisão dos quadros reais
+            # e direitos seguem obrigatórios no portão editorial.
+            from src.v4.formatos.tempo_natural import validar_progressao_video
+            fonte = (plano.get('media') or {}).get(cena.get('asset'))
+            for problema in validar_progressao_video(cena, span, fonte):
+                falha('F-VIDEO-SEM-PROGRESSAO-COMPROVADA', cid, problema)
         if tipo == 'mechanism':
             if eh_causal or eh_ciclo:
                 for e in cena.get('cues') or []:

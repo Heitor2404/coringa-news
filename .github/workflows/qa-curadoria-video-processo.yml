@@ -20,7 +20,7 @@ jobs:
           python-version: "3.13"
       - name: Utilitarios de aquisicao sem IA
         run: |
-          python -m pip install -q yt-dlp pillow
+          python -m pip install -q yt-dlp pillow requests numpy pyyaml
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
             sudo apt-get update -qq
             sudo apt-get install -y -qq --no-install-recommends ffmpeg
@@ -102,6 +102,29 @@ jobs:
           (raiz/"resultado.json").write_text(json.dumps(resumo,ensure_ascii=False,indent=2))
           print(json.dumps(resumo,ensure_ascii=False))
           PY
+      - name: Reidratar e indexar na biblioteca V3 existente, SEM aprovar licencas
+        run: |
+          if [ -s prova_nist/nist_deposicao.mp4 ] && [ -s prova_nist/nist_ebeam.mp4 ]; then
+            mkdir -p prova_nist/biblioteca_v3
+            python -m src.v4.formatos.rehidratar_fontes \
+              docs/v4/formatos/FONTES_RECUPERAVEIS_NIST_20261119.json \
+              prova_nist \
+              prova_nist/biblioteca_v3/coringa.sqlite3 \
+              prova_nist/biblioteca_v3/arquivos \
+              prova_nist/biblioteca_v3/manifesto_v3.jsonl \
+              > prova_nist/biblioteca_v3/recibo.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("prova_nist/biblioteca_v3/recibo.json").read_text())
+          assert len(r["itens"])==2
+          assert all(x["uso_comercial"]!="sim" for x in r["itens"])
+          assert not r["publicado"] and not r["aprovado"]
+          print("V3_CANDIDATA_COM_SHA",[(x["id_v3"],x["uso_comercial"]) for x in r["itens"]])
+          PY
+          else
+            echo "REIDRATACAO_PENDENTE: falta alguma fonte, nao inventar sucesso" > prova_nist/biblioteca_v3_pendente.txt
+          fi
       - name: Guardar provas privadas, nao publica e nao envia Telegram
         if: always()
         uses: actions/upload-artifact@v4

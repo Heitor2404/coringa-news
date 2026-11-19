@@ -172,3 +172,13 @@ def test_inventario_nao_oferece_fabrica_generica_com_uma_palavra_em_comum(monkey
     ])
     assert "foto:fabrica-generica" not in s
     assert "nenhum registro comprovado pertinente" in s
+
+
+def test_nao_confunde_cc_by_com_cc_by_sa(monkeypatch, tmp_path):
+    reg, _ = _arquivo_e_banco(monkeypatch, tmp_path)
+    manifesto = _aprovar(monkeypatch, tmp_path, reg)
+    dados = json.loads(manifesto.read_text())
+    dados["aprovacoes"][0]["prova"]["licenca_exata"] = "CC BY-SA 4.0"
+    manifesto.write_text(json.dumps(dados))
+    with pytest.raises(RuntimeError, match="licença exata não corresponde"):
+        ponte_biblioteca.catalogo()

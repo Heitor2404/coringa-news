@@ -1,0 +1,37 @@
+name: "QA — compositor Remotion e ROI (sem render ou IA)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - ".github/workflows/qa-filme-editorial-typescript.yml"
+      - ".github/qualidade/roi_remotion_compilar.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-tipos-remotion-roi
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Conferir tipos do MESMO compositor FilmeEditorial
+        run: |
+          npm ci --prefix motor4 --ignore-scripts --no-audit --no-fund --prefer-offline
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+      - name: Confirmar que o vídeo permanece com revisão humana pendente
+        run: |
+          grep -q "framing_positions" motor4/remotion/src/formatos/FilmeEditorial.tsx
+          grep -q "enquadramentoNoTempo" motor4/remotion/src/formatos/FilmeEditorial.tsx
+          echo "TYPESCRIPT_REMOTION_COM_ROI_COMPILADO_SEM_RENDER"

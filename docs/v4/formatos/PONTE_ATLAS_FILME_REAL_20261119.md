@@ -40,3 +40,11 @@ python -m src.v4.formatos.ponte_mapa_atlas prepare atlas_resolvido.json stage_at
 python -m src.v4.formatos.ponte_mapa_atlas confirm stage_atlas/clip stage_atlas/clip/mapa.mp4
 python -m src.v4.formatos.ponte_mapa_atlas attach filme.json shot_id stage_atlas/clip/mapa.mp4 stage_atlas/clip/comprovante_atlas.json stage_atlas/clip/filme_com_mapa.json --intent localizar
 \`\`\`
+
+
+## Validação definitiva após corrigir o início da cena
+
+- **Run 44588617776 — SUCCESS**, arquivo \`qa-taiwan-mapa-atlas-original-integrado-filme\`, artifact ID **14564100281**. Exportou agora a janela **3,05–5,65 s** do ATLAS real em vez de começar na virada de palco 2,50 s. MP4 de 2,6s, 1080×1920, sem áudio, com raster \`ne2_asia_leste\` e SHA do clip comprovado; importou no storyboard de Taiwan via \`attach\` e \`filme_editorial.avaliar\` passou. Sem outros assets alterados.
+- Arquivo do artifact foi recuperado e analisado **nos instantes 0,05, 0,20, 0,65, 1,25 e 2,25 s**. O problema anterior do quadro preto no início **foi eliminado**: desde 0,05s o relevo Natural Earth está visível, Taiwan está destacado com contorno amarelo e a pergunta “POR QUE TAIWAN?” surge progressivamente. Sem usar novo renderizador, mapa chato ou corte escuro. **Isso ainda é amostra de um clipe, não avaliação estética do vídeo documental completo.**
+- **Run 44588952401 — SUCCESS: 137 testes e compilação TypeScript**, incluindo regressões novas de entrada escura \`F-ATLAS-ENTRADA-ESCURA\` e corte atravessando outro beat \`F-ATLAS-ATRAVESSA-BEAT\`. Novo comprovante de preparação com raster original ativo. Este é o gate reprodutível depois da correção.
+- A voz Charon não foi gerada de novo; apenas os tempos históricos do Gemini foram usados para posicionar a amostra. O MP4 de 2,6s é **silencioso de propósito** e a prévia não foi publicada.

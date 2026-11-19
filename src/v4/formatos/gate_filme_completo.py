@@ -64,6 +64,9 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
             falha("E-MAPA-NAO-ATLAS",cid,"mapas devem sair do ATLAS original")
         if m.get("identidade") not in ("literal","representativa","explicativa"):
             falha("E-IDENTIDADE",cid,"identidade real ou ilustrativa obrigatória")
+        if c.get("acao")=="REVELAR" and not m.get("resultado_verificavel"):
+            falha("E-PAYOFF-SEM-CONSEQUENCIA",cid,
+                  "payoff precisa consequência verificada, não apenas slogan")
         if tipo in ("foto","video"):
             asset=m.get("asset_id")
             it=conhecidos.get(asset)
@@ -125,9 +128,6 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
             if not m.get("fonte_factual") or not m.get("relacao_visualmente_verificada"):
                 falha("E-RELACAO-NAO-DEMONSTRADA",cid,
                       "múltiplas imagens e títulos não provam relação causal, exige fonte e inspeção visual")
-        if c.get("acao")=="REVELAR" and not m.get("resultado_verificavel"):
-            falha("E-PAYOFF-SEM-CONSEQUENCIA",cid,
-                  "payoff precisa consequência verificada, não apenas slogan")
     if isinstance(dur,(int,float)) and abs(prev-dur)>.06:
         falha("E-DURACAO-CENAS","-",f"última cena termina em {prev}, duração prometida {dur}")
     if isinstance(dur,(int,float)) and dur>0 and regras.get("max_fracao_fotos_estaticas") is not None:

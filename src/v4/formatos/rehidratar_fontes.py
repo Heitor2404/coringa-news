@@ -66,6 +66,24 @@ def baixar_kaltura(it: dict, pasta: Path) -> Path:
     return candidatos[0]
 
 
+
+def provar_video(p: Path) -> dict:
+    "Confere que os bytes são vídeo decodificável, não um arquivo renomeado."
+    saida=subprocess.check_output([
+        "ffprobe", "-v", "error", "-select_streams", "v:0",
+        "-show_entries", "stream=codec_name,width,height:format=duration",
+        "-of", "json", str(p)
+    ], text=True, timeout=35)
+    d=json.loads(saida)
+    stream=(d.get("streams") or [{}])[0]
+    formato=d.get("format") or {}
+    largura, altura=stream.get("width",0),stream.get("height",0)
+    dur=float(formato.get("duration") or 0)
+    if min(largura,altura)<360 or dur<4:
+        raise ValueError("clipe não atende qualidade técnica mínima")
+    return {"dimensoes":[largura,altura], "duracao_s":round(dur,3)}
+
+
 def reidratar(it: dict, pasta: Path, bib, baixar=None) -> dict:
     """Reconcilia arquivo SHA e V3. baixar é substituível apenas em testes."""
     validar_item(it)
@@ -75,6 +93,8 @@ def reidratar(it: dict, pasta: Path, bib, baixar=None) -> dict:
     if len(existentes)>1:
         raise ValueError("fontes duplicadas com mesma identidade")
     p=existentes[0] if existentes else (baixar or baixar_kaltura)(it,pasta)
+    if not p.resolve().is_relative_to(pasta.resolve()):
+        raise ValueError("fonte fora do workspace de ingestão")
     if not p.is_file() or p.suffix.lower() not in _EXT:
         raise ValueError("arquivo fonte não é vídeo")
     sha=sha256_arquivo(p)
@@ -82,6 +102,7 @@ def reidratar(it: dict, pasta: Path, bib, baixar=None) -> dict:
         raise ValueError(f"{it['id']}: SHA divergente, fonte mudou; revalidar antes de usar")
     if p.stat().st_size>100_000_000 or p.stat().st_size<50_000:
         raise ValueError("arquivo inválido ou grande demais")
+    metadados_video=provar_video(p)
     # Importante: nenhuma licença é atribuída por inferência automática.
     # Sem confirmação específica, o acervo V3 deve deixar uso comercial indefinido.
     meta={"titulo":it["titulo"],"desc":it.get("descricao") or "",
@@ -95,6 +116,7 @@ def reidratar(it: dict, pasta: Path, bib, baixar=None) -> dict:
         raise ValueError("candidato não pode se tornar autorizado automaticamente")
     return {"fonte_id":it["id"],"id_v3":registro["id"],"sha256":sha,
             "reuso":registro["reuso"],"uso_comercial":d.get("uso_comercial"),
+            "video":metadados_video,
             "status":"INGESTAO_V3_CANDIDATA_SEM_APROVACAO"}
 
 

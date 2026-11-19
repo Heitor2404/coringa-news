@@ -40,8 +40,11 @@ def avaliar(plano: dict) -> dict:
         if abs(start - prev_end) > .05:
             falha('F-LACUNA', cid, f'intervalo vazio ou sobreposição: {prev_end}→{start}')
         span = end - start
-        if span < 1.4 or span > 3.8:
-            falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: plano muito curto ou estático demais')
+        # Mecanismo com acontecimentos reais pode durar mais do que fotografia
+        # parada. O corte é dirigido pela ação, não por uma duração fixa.
+        max_span = 4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8
+        if span < 1.4 or span > max_span:
+            falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')
         if tipo == 'mechanism':

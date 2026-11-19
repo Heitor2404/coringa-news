@@ -4,3 +4,7 @@ Escopo: SOMENTE GitHub Actions experimental, Gemini/Charon conforme preset, foto
 NÃO publicar vídeo em redes, NÃO fazer merge, NÃO alterar NTC/DOSSIÊ/main.
 CI estrutural aprovado: 44437330601 (127 testes Python + TypeScript).
 FALHAR FECHADO se chave da voz ausente, mídia sem hash ou portão vermelho. Nada de fallback Edge.
+
+REEXECUCAO: 2026-11-19 — corrigido @fim/CTA pelo WAV real e progressao no gancho; Telegram avisa BLOQUEADO sem MP4.
+CI anterior a este disparo: https://github.com/Heitor2404/coringa-news/actions/runs/44447485283 — 130 testes Python e TypeScript verdes.
+MP4 somente Telegram privado e aprovação humana; nenhuma publicação automática.

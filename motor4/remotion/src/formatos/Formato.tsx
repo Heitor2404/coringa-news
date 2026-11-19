@@ -135,6 +135,10 @@ export const Formato: React.FC<FormatoProps> = (P) => {
     <AbsoluteFill style={{ background: P.tokens.palco.mesa.fundo }}>
       <Fontes />
       {temMapa && <PalcoMapa P={P} opac={op('mapa')} />}
+      {op('prova') > 0 && <AbsoluteFill style={{
+        opacity: op('prova'),
+        background: 'radial-gradient(ellipse at 50% 38%, #111F31 0%, #0B1525 48%, #05080F 100%)',
+      }} />}
       {op('tecnico') > 0 && <PalcoTecnico P={P} opac={op('tecnico')} />}
       {op('mesa') > 0 && <PalcoMesa P={P} opac={op('mesa')} />}
       {P.camadas.map(L => {

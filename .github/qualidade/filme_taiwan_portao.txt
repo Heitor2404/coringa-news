@@ -9,3 +9,5 @@
 # R4: reexecução após correção do escopo de hashlib detectada em CI.
 
 # R5: nova politica de processo equivalente (laboratorio NIST) sem falsa atribuicao de registro.
+
+# R6: aceitar demonstracao equivalente corrigida e validar regressao multitema.

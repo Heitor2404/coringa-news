@@ -1,0 +1,65 @@
+name: "QA — piloto completo Taiwan: prova editorial antes de Gemini e render"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/filme_taiwan_portao.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-piloto-taiwan-preflight
+  cancel-in-progress: true
+jobs:
+  conferir_provas:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Testar portão multiassunto, contrato ATLAS e evidências
+        run: |
+          python -m pip install -q pytest pillow requests numpy pyyaml cryptography
+          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py
+      - name: Inspecionar acervo COMPROVADO, sem download/IA/voz/render
+        run: |
+          mkdir -p saida_preflight_taiwan
+          set +e
+          python -m src.v4.formatos.gate_filme_completo \
+            docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json \
+            saida_preflight_taiwan/relatorio.json
+          rc=$?
+          set -e
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('saida_preflight_taiwan/relatorio.json')
+          assert p.exists(),"gate não escreveu relatório"
+          q=json.loads(p.read_text(encoding='utf8'))
+          # A falta de mídia não é falha de código: é bloqueio editorial esperado,
+          # que impede novas chamadas Gemini e render sem evidência suficiente.
+          assert q['status']=='BLOQUEADO_EDITORIAL_SEM_PROVA',q
+          assert not q['pronto_para_tts'] and not q['pronto_para_render']
+          assert q['publicado'] is False
+          print('BLOQUEIO_EDITORIAL_CORRETO',json.dumps({
+              'cenas':q['total_cenas'],'bloqueios':len(q['bloqueios']),
+              'videos_com_acao':q['videos_independentes_conferidos'],
+              'mapas_comprovados_neste_runner':q['mapas_atlas_comprovados'],
+              'somente_preproducao':True
+          },ensure_ascii=False))
+          for b in q['bloqueios']:
+              print(b['codigo'],b['cena'],b['motivo'])
+          PY
+          if [ "$rc" -ne 1 ]; then
+            echo "::error::portão deveria bloquear falta de mídia, exit foi $rc"
+            exit 1
+          fi
+      - name: Guardar relatório de falhas sem publicar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-taiwan-acervo-antes-de-narracao
+          path: saida_preflight_taiwan/relatorio.json
+          retention-days: 7
+          if-no-files-found: warn

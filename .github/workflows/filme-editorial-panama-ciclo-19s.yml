@@ -99,12 +99,14 @@ jobs:
           def diff(a,b,box):
             i=ImageChops.difference(frames[a].crop(box),frames[b].crop(box)).convert('L')
             return ImageStat.Stat(i).mean[0]
-          box=(72,205,195,335)
-          # Verificar movimento no próprio objeto, não só etiquetas/cabeçalho.
+          box_low=(72,205,195,335)
+          box_upper=(75,165,250,245)
+          # O navio sobe de cota; ao sair, o casco está na área SUPERIOR.
+          # Nunca medir saída na região vazia da água inferior.
           movement={
-            'entrada_navio':diff(1.9,3.55,box),
-            'agua_elevando':diff(8.35,13.3,box),
-            'saida_navio':diff(17.3,18.8,box),
+            'entrada_navio':diff(1.9,3.55,box_low),
+            'agua_elevando':diff(8.35,13.3,box_low),
+            'saida_navio':diff(17.3,18.8,box_upper),
           }
           assert min(movement.values())>2.3, f'Sem ação na cena: {movement}'
           # Controle de flash entre foto filmada e corte ilustrado.

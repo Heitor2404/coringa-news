@@ -57,3 +57,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-18 ATLAS P0: revalidar ponte de fichas V3 + gate de capacidade ATLAS (sem IA, sem render)
 
 # 2026-11-19 ATLAS P1: foto protagonista + registro.video FFmpeg existente, proveniencia e creditos (somente testes offline)
+
+# 2026-11-19 ATLAS P1 reteste: fixtures de camera resolvida + ffmpeg teste 0.8s

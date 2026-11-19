@@ -99,6 +99,8 @@ def catalogo() -> dict:
                 "pagina": reg["url_pagina"],
                 "credito": cred, "licenca": lic, "uso_comercial": "sim",
                 "autor": reg["autor"], "ext": ext,
+                "duracao": reg.get("duracao"),
+                "wh": [reg.get("largura"), reg.get("altura")],
                 "sha256_origem": sha, "lugar": [reg.get("local") or ""],
                 "mostra": reg.get("mostra") or reg.get("descricao") or "",
                 "prova": dict(prova), "origem_biblioteca_v3": mid,

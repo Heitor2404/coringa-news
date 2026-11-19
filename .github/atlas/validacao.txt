@@ -81,3 +81,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 chips V2: separar primeiro SE verbal do payoff e incluir raster ne2_pacifico validado
 
 # 2026-11-19 reteste sceneamento Chips V2: raster Pacifico + diagnósticos completos
+
+# 2026-11-19 chips V2: normalizar layout por destaques geograficos em area segura

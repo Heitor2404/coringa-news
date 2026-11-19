@@ -24,7 +24,9 @@ def test_mapa_prototipo_nao_existe_mais_em_codigo_ou_fluxos():
     assert not (ROOT/'.github/workflows/qa-mapas-r2-telegram.yml').exists()
     fonte=(ROOT/'motor4/remotion/src/formatos/FilmeEditorial.tsx').read_text(encoding='utf-8')
     assert 'NarrativeMapStage' not in fonte
-    assert "type: 'photo' | 'video' | 'comparison' | 'mechanism';" in fonte
+    assert "type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map';" in fonte
+    assert "type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'map'" not in fonte
+    assert 'ATLAS/Formato/PalcoMapa' in (ROOT/'src/v4/formatos/ponte_mapa_atlas.py').read_text(encoding='utf-8')
     assert 'data-testid="filme-progresso-global"' in fonte
 
 

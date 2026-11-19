@@ -12,7 +12,7 @@ import json
 from src.v4.formatos import plano as P
 
 ESQUEMA = {
-    'atlas.provaVisual': "{asset (FOTO REAL comprovada), meta: 'AUTOR · LICENÇA' (crédito obrigatório), enquadramento?: 'conter'|'cobrir', rotulo? (curto), rotulo_t? (tempo da fala em que identifica a prova)} — usar composição atlas.prova, slot prova; imagem PRINCIPAL, não pino/card",
+    'atlas.provaVisual': "{asset (FOTO REAL comprovada), meta: 'AUTOR · LICENÇA' (crédito obrigatório), enquadramento?: 'conter'|'cobrir', rotulo? (curto), rotulo_t? (tempo da fala em que identifica a prova), rotulo2? (SEGUNDO fato verificado, sem novos cards), rotulo2_t? (momento do segundo fato na narração)} — usar composição atlas.prova, slot prova; imagem PRINCIPAL, não pino/card",
     'atlas.geoPin': "{tipo: 'local'|'foto', lonlat: [lon, lat] (DENTRO do roi do beat), rotulo, t_ativo?, lado?: 'direita'|'esquerda', asset?+meta (foto real com crédito), papel: 'protagonista'|'secundario' (posição, raio e deslocamento calculados pelo motor; NÃO escrever)} — slot 'geo': o pino segue a câmera",
     'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula'|'dial'|'cedula'|'selo' (cedula: cabecalho, rubrica, rubrica_dir, linhas [{texto, t?, marca_t?, dir?}]; selo: valor; dial: partes [{rotulo, fracao, cor}]); contagem?: bool}",
     'editorial.peopleCard': '{asset (retrato da biblioteca), nome, papel}',

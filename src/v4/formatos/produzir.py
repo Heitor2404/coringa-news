@@ -47,10 +47,27 @@ def narrar(plano: dict, saida: Path) -> dict:
         flac = saida / 'voz.flac'
         flac.write_bytes(base64.b64decode(pac['flac_b64']))
         rodar(['ffmpeg', '-v', 'error', '-y', '-i', flac, '-ar', '48000', saida / 'voz.wav'])
-        meta = {'palavras': pac['palavras'], 'duracao': pac['duracao'], 'origem': pac.get('origem')}
+        meta = {'palavras': pac['palavras'], 'duracao': pac['duracao'], 'origem': pac.get('origem'),
+                'narrador': {'modo': 'arquivo_cifrado_preservado', 'origem_declarada': pac.get('origem'),
+                             'aprovacao_timbre': 'pendente_humano'}}
     else:
         from src import voz
-        wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts')
+        if plano.get('formato') == 'atlas':
+            preset = P.canal(plano.get('canal', 'coringa')).get('narrador') or {}
+            if preset.get('motor') != 'gemini' or not preset.get('voz') or preset.get('fallback') != 'bloquear':
+                raise RuntimeError('ATLAS: preset de narrador ausente/inválido; recuso fallback silencioso')
+            config_voz = {'voz_motor': 'gemini', 'voz_gemini': preset['voz'],
+                          'velocidade_gemini': preset.get('velocidade', 1),
+                          'estilo_gemini': preset.get('estilo', voz.ESTILO_PADRAO),
+                          '_estilo_separado': True}
+            wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts',
+                                                 cfg=config_voz, exigir_gemini=True)
+            narrador = {'modo': 'tts_travado', 'motor': 'gemini', 'voz': preset['voz'],
+                        'velocidade': config_voz['velocidade_gemini'], 'fallback': 'proibido',
+                        'aprovacao_timbre': 'pendente_humano'}
+        else:
+            wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts')
+            narrador = {'modo': 'tts_legado', 'motor': 'nao_verificado'}
         shutil.copy(wav, saida / 'voz.wav')
         pal = []
         for bl in caps:
@@ -58,7 +75,8 @@ def narrar(plano: dict, saida: Path) -> dict:
             for k, w in enumerate(ws):
                 fim = ws[k + 1]['s'] if k + 1 < len(ws) else bl['end']
                 pal.append({'w': w['w'], 's': w['s'], 'e': round(fim, 3), 'hl': bool(w.get('hl'))})
-        meta = {'palavras': pal, 'duracao': round(dur, 3), 'origem': 'TTS desta execução (uma chamada)'}
+        meta = {'palavras': pal, 'duracao': round(dur, 3), 'origem': 'TTS desta execução', 'narrador': narrador}
+    meta['sha256_voz'] = _sha(saida / 'voz.wav')
     # marcas de tempo corrigidas pela VOZ (pausas reais como âncoras; sem IA) — legenda e âncoras do plano no tempo certo
     from src.v4.formatos import legenda_sync
     meta['palavras_originais'] = meta['palavras']

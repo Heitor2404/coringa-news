@@ -28,6 +28,9 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
         falha("E-PUBLICACAO","-","somente preparo privado, nunca licença de publicar")
     dur=manifesto.get("duracao_planejada_s")
     politica_duracao=manifesto.get("politica_duracao") or {}
+    if not isinstance(politica_duracao,dict):
+        falha("E-POLITICA-DURACAO","-","política de duração precisa ser um objeto")
+        politica_duracao={}
     modo_duracao=politica_duracao.get("modo","janela_legada")
     dur_valida=(isinstance(dur,(int,float)) and not isinstance(dur,bool)
                 and math.isfinite(dur) and dur>0)

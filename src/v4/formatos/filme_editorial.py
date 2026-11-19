@@ -535,6 +535,10 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']
+        if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:
+            # Gráfico autoral já comunica dados/etapas dentro dos pixels.
+            # Não duplicar título e CTA por cima dele no compositor.
+            x['graphic_original']=True
         shots.append(x)
     pendentes=[mid for mid,item in plano['media'].items()
               if item.get('license')=='REVIEW_PENDING']

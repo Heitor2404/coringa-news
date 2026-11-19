@@ -1117,3 +1117,28 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 5. Discutir CTA só depois de decidir o payoff da história; preferir conclusão que provoque reflexão/loop a placa genérica de follow.
 
 **Ações nesta mensagem:** revisão de screenshots e MP4 + documento de continuidade; **nenhum código alterado, nenhum novo render, sem gasto IA, Telegram ou publicação.** Manter `main`/NTC/DOSSIÊ intactos. A solicitação do usuário foi **opinião independente**, não ordem para já redesenhar tudo.
+
+
+## 64. 19/11 — Início dos motion graphics explicativos reutilizáveis (não cards estáticos)
+
+**Decisão do usuário após a crítica visual da seção 63:** "Concordo com tudo que você falou". Entendido como alinhamento de prioridades, não aprovação da prévia Taiwan errada nem autorização de publicação. A ação desta rodada inicia a evolução concreta da **capacidade do motor** de contar acontecimentos, não outra correção ad hoc do filme.
+
+**Problema:** a prévia real de 68,6s usava gráficos Pillow prerenderizados estáticos e de tela quase inteira, com números enormes e fluxogramas de três caixas, pouca progressão visual e dupla hierarquia de linha amarela no topo. Isso comunica rótulos, não explica causalidade ao longo do tempo.
+
+**Mudanças no MESMO FilmeEditorial:**
+- Novo componente visual **`motor4/remotion/src/formatos/MotionEditorial.tsx`**, *apenas um componente* do compositor existente, NÃO um novo motor: `stat_reveal` para revelar dado, unidade/contexto e, somente quando o dado for fração de um total, barra de proporção; `causal_flow` para revelar três etapas documentadas em sequência, com conectores surgindo ao longo do tempo. Identidade grafite, branco, amarelo #FFD21F; sem card gigante, moldura dupla ou barra amarela adicional dentro do gráfico; a barra de marca global e créditos seguem no FilmeEditorial.
+- `motor4/remotion/src/formatos/FilmeEditorial.tsx` importa `MotionEditorial` e exibe `shot.motion_graphic` quando existe para imagem original; mantém gráficos estáticos anteriores se a opção não for usada, sem quebrar receitas.
+- `src/v4/formatos/montagem_privada_real.py::motion_graphic_dados` converte o **mesmo dicionário `dados` existente** de um gráfico original em plano animado somente com `assets[id].animar=true`. Confere conteúdo e comprimentos dos rótulos, etapas distintas, contexto/unidade do número e limites de fração; não gera nenhuma estatística ou relação factual nova, nem interpola números como se fossem medições. O adapter acrescenta `shot.motion_graphic` aos props do MESMO `FILME.preparar`.
+- `src/v4/formatos/filme_editorial.py` verifica que o motion só aparece sobre `graphic_original=True`, com evidência representativa/explicativa, jamais alegação de fotografia literal, e com contrato mínimo dos dados.
+- Quatro temas independentes em `tests/test_montagem_privada_real.py` (engenharia, história, economia, geopolítica), incluindo compatibilidade com gráficos estáticos, rejeição de número sem contexto, etapas iguais e tentativa de apresentar infográfico como registro fotográfico.
+- **CI Python 44640009283 SUCCESS:** 188 testes gerais +11 positivos = **199 testes**; **CI TypeScript 44640033263 SUCCESS**, inclusive compilação do novo módulo `MotionEditorial.tsx`. Nenhuma chamada IA, mudança em `main`, NTC ou DOSSIÊ.
+- Criada receita de prova visual multicontexto `docs/v4/formatos/DEMO_MOTION_MULTITEMA_20261119.json`: três cenas de ~3,7s — sequência técnica EUV (ASML), dado documentado TSMC/SEC (80% de ferramentas recuperadas no evento de 2024) e relação tecnológica ASML–TSMC. São **exemplos de componente**, NÃO um novo piloto do tema Guerra dos Chips nem narrativa completa. Cada gráfico é original do canal e tem URL de fonte; nenhum vídeo NIST não liberado incluído.
+- Workflow privado `.github/workflows/qa-motion-editorial-visual.yml` renderiza prova de **11,1s, 540×960**, sem voz, Charon, Telegram, publicação ou downloads do Commons. Emite MP4 e contato de 9 quadros + checksums e armazena artifact temporário. Run **44640334433** iniciado; **conferir status antes de afirmar render ou avaliar estética**. A execução anterior 44640312376 foi cancelada pela concorrência ao criar o gatilho do workflow.
+
+**Observações ainda pendentes/sugestões:**
+1. Inspecionar a **prova renderizada de verdade**: o aparecimento de etapas deve ser legível, não apenas fade decorativo; comparar os pontos da cena e a marca superior sem linha dupla. Ajustar `MotionEditorial.tsx` somente se houver problema realmente visto. Não tratar TypeScript verde como qualidade profissional.
+2. Depois, tratar **transições semanticamente motivadas de filmagem→gráfico** dentro do compositor, não aplicar efeitos aleatórios a todo corte; auditar quando mapa ATLAS exige tempo para localização e zoom, sem forçar 2,6s.
+3. Manter **Guerra dos Chips: EUA × China** como pergunta central do próximo episódio; Taiwan/TSMC são contexto estratégico, e a história do terremoto **não** é o tema aprovado. Não retornar ao mesmo vídeo legado apenas para comparar métricas.
+4. CTA só depois de payoff editorial forte. Não criar fiscal adicional de monetização por decisão explícita anterior. Motion graphics devem agregar explicação causal, não maquiagem de um slideshow.
+
+**Situação:** nenhum Charon, nenhuma postagem ou prévia enviada ao Telegram, nenhum vídeo final aprovado. A execução de QA de 11,1s é teste de capacidade, não autorização de um episódio.

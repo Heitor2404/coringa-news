@@ -42,13 +42,32 @@ def avaliar(plano: dict) -> dict:
         span = end - start
         # Mecanismo com acontecimentos reais pode durar mais do que fotografia
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
-        max_span = 4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8
+        eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
+        max_span = (6.2 if eh_causal else
+                    4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
+        if eh_causal:
+            eventos = cena.get('cues') or []
+            esperado = ('closed', 'water_enter', 'rise', 'equalize', 'release')
+            acoes = tuple(e.get('action') for e in eventos)
+            tempos = [e.get('at') for e in eventos]
+            if (acoes != esperado or not all(isinstance(t, (int, float)) for t in tempos)
+                    or tempos != sorted(tempos) or len(set(tempos)) != len(tempos)
+                    or tempos[0] < 0 or tempos[-1] > span - .4
+                    or tempos[2] - tempos[1] < .4 or tempos[3] - tempos[1] < 1.5
+                    or tempos[4] < tempos[3]):
+                falha('F-MECANISMO-CAUSAL', cid,
+                      'exigir etapas distintas: fechar → entrar água → subir → igualar nível → liberar, com tempos coerentes')
         if span < 1.4 or span > max_span:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')
         if tipo == 'mechanism':
-            momentos.add(('mecanismo', cid))
+            if eh_causal:
+                for e in cena.get('cues') or []:
+                    if e.get('action') in ('water_enter', 'rise', 'equalize', 'release'):
+                        momentos.add(('mecanismo', cid, e['action']))
+            else:
+                momentos.add(('mecanismo', cid))
         elif tipo == 'video' and cena.get('asset'):
             # Cortes de instantes DISTINTOS do mesmo clipe são acontecimentos
             # diferentes apenas se realmente distantes no tempo de origem.
@@ -68,7 +87,7 @@ def avaliar(plano: dict) -> dict:
         if cena.get('evidence') not in ('literal', 'representative', 'explainer'):
             falha('F-SEM-PROVENIENCIA', cid, 'classifique literal, representativa ou explicativa')
         if tipo == 'mechanism':
-            if (cena.get('mechanism') != 'lock_filling' or
+            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal') or
                 cena.get('evidence') != 'explainer' or cena.get('literal_identity')):
                 falha('F-MECANISMO-NÃO-IDENTIFICADO', cid,
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')

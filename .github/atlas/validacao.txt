@@ -79,3 +79,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 reteste piloto V2: mapear EUA/Taiwan e Holanda/Taiwan com ROI provado, 6 beats
 
 # 2026-11-19 chips V2: separar primeiro SE verbal do payoff e incluir raster ne2_pacifico validado
+
+# 2026-11-19 reteste sceneamento Chips V2: raster Pacifico + diagnósticos completos

@@ -53,6 +53,12 @@ def fotografo(url):
 def test_privado_verifica_bytes_e_marca_direitos_pendentes(tmp_path,monkeypatch):
     p,src=plano(tmp_path,monkeypatch)
     assert F.avaliar(p)["pronto"]
+    # O teste unitário confere o transporte dos BYTES; a duração/formato
+    # reais são conferidos por ffprobe no workflow de renderização.
+    from types import SimpleNamespace
+    monkeypatch.setattr(F.subprocess,"run",lambda cmd,**kwargs: SimpleNamespace(
+        stdout=json.dumps({"streams":[{"width":1280,"height":720}],
+                           "format":{"duration":"6.006"}})))
     r=F.preparar(p,Path("saida"),Path("public"),downloader=fotografo)
     assert r["pronto"]
     props=json.loads(Path("saida/props.json").read_text())

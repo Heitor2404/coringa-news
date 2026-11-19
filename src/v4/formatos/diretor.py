@@ -130,6 +130,23 @@ NARRAÇÃO:\n{fala}\n
                  + plano_av.texto_prompt(fichas)
                  + '\nPara cada acontecimento crítico, escreva o id na chave evento_id do beat que o demonstra. '
                  'Sem mídia/componente ATLAS viável, sinalize bloqueio; nunca use card/mapa como substituto da ação.')
+    if formato == 'atlas':
+        from src.v3 import memoria
+        # Reuso da memória V3: não é treinamento de IA nem autoaprovação.
+        # Reprovações humanas entram como CASOS A EVITAR; só regras
+        # formalmente aprovadas podem aparecer como padrões editoriais.
+        aprovadas = memoria.regras_para_producao({'atlas', '*'})
+        alertas = [f for f in memoria.feedbacks()
+                   if str(f.get('video', '')).startswith('atlas-')
+                   and f.get('gravidade') == 'bloqueio'
+                   and f.get('estado') == 'aberto'][-8:]
+        if aprovadas:
+            base += '\n\nREGRAS EDITORIAIS TESTADAS E APROVADAS:\n' + '\n'.join(
+                '- ' + r['id'] + ': ' + r['texto'] for r in aprovadas)
+        if alertas:
+            base += ('\n\nREPROVAÇÕES HUMANAS DOCUMENTADAS (contraexemplos, '
+                     'NÃO são regras novas automaticamente aprovadas):\n' + '\n'.join(
+                         '- ' + f['id'] + ': ' + f['texto'] for f in alertas))
     if correcoes:
         base += '\n\nSEU PLANO VIOLOU REGRAS VERIFICADAS EM CÓDIGO; corrija só isto e devolva o JSON inteiro:\n' + \
                 '\n'.join(f"- [{v['regra']}] {v['onde']}: {v['texto']}" for v in correcoes) + '\nANTERIOR:\n' + anterior[:20000]

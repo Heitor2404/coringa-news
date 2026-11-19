@@ -14,11 +14,13 @@ from urllib.parse import unquote
 from PIL import Image, ImageDraw
 
 CANDIDATOS = [
-    {"id":"pexels-cargueiro-eclusa","url":"https://www.pexels.com/video/cargo-ship-passing-through-panama-canal-32210910/","licenca":"Pexels License","fonte":"Concep Arroyo / Pexels"},
-    {"id":"pexels-miraflores","url":"https://www.pexels.com/video/a-shot-of-miraflores-locks-operation-4085112/","licenca":"Pexels License","fonte":"Pexels"},
-    {"id":"dvids-gatun","url":"https://www.dvidshub.net/video/543462/uscgc-tampa-panama-canal-time-lapse-video","licenca":"Public domain, verify DVIDS entry","fonte":"U.S. Coast Guard / DVIDS"},
-    {"id":"dvids-miraflores","url":"https://www.dvidshub.net/video/968998/usns-comfort-crosses-miraflores-locks","licenca":"Public domain, verify DVIDS entry","fonte":"U.S. Navy / DVIDS"},
+    {"id":"gatun-2017-fechamento","url":"https://www.dvidshub.net/video/543462/uscgc-tampa-panama-canal-time-lapse-video","licenca":"Public domain / DVIDS video 543462","fonte":"US Coast Guard / Lisa Ferdinando","offset_s":21},
+    {"id":"comfort-2018-inicio","url":"https://www.dvidshub.net/video/634226/usns-comfort-transits-panama-canal","licenca":"Public domain / DVIDS video 634226","fonte":"US Navy / Keith Wilson","offset_s":0},
+    {"id":"comfort-2018-meio","url":"https://www.dvidshub.net/video/634226/usns-comfort-transits-panama-canal","licenca":"Public domain / DVIDS video 634226","fonte":"US Navy / Keith Wilson","offset_s":27},
+    {"id":"monsoor-2018-meio","url":"https://www.dvidshub.net/video/653679/panama-canal-time-lapse","licenca":"Public domain / DVIDS video 653679","fonte":"US Navy / Robert Reinheimer","offset_s":50},
+    {"id":"monsoor-2018-final","url":"https://www.dvidshub.net/video/648046/uss-michael-monsoor-transits-panama-canal","licenca":"Public domain / DVIDS video 648046","fonte":"US Navy / Robert Reinheimer","offset_s":116},
 ]
+
 MAX_BYTES=135_000_000
 
 def escolher_format(info):
@@ -46,7 +48,7 @@ def capturar(entrada,destino):
         sel=escolher_format(info)
         if not sel:
             raise ValueError('sem formato de vídeo utilizável')
-        estado.update({'captura':'yt-dlp','resolucao_fonte':[sel.get('width'),sel.get('height')],
+        estado.update({'offset_s':entrada.get('offset_s',0),'captura':'yt-dlp','resolucao_fonte':[sel.get('width'),sel.get('height')],
                        'duracao_fonte':info.get('duration'),
                        'titulo':info.get('title'), 'fmt':sel.get('format_id')})
         url=sel['url']
@@ -69,7 +71,7 @@ def capturar(entrada,destino):
     raw=dest/(entrada['id']+'.mp4')
     try:
         proc=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y',
-            '-ss','0','-i',url,'-t','20','-an','-vf','fps=30,scale=960:-2',
+            '-ss',str(entrada.get('offset_s',0)),'-i',url,'-t','20','-an','-vf','fps=30,scale=960:-2',
             '-c:v','libx264','-preset','veryfast','-crf','24','-movflags','+faststart',
             str(raw)],capture_output=True,text=True,timeout=160)
         if proc.returncode or not raw.is_file() or raw.stat().st_size<30000:

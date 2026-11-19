@@ -154,6 +154,7 @@ def auditar(plano: dict, julgamentos: dict | None = None) -> dict:
                 rotulo=str(subst.get('rotulo') or ''),
                 origem_verificada=subst.get('origem_verificada') is True,
                 licenca_verificada=subst.get('licenca_verificada') is True,
+                representacao=subst.get('representacao'),
             )
             if not checagem['permitido']:
                 falhas.append({'id': ident, 'codigo': checagem['codigo'],

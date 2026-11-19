@@ -7,6 +7,7 @@ Valida qualquer storyboard desta estrutura; Taiwan é somente um caso de regress
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -16,7 +17,7 @@ ACAO = {"MOSTRAR", "DEMONSTRAR", "LOCALIZAR", "CONECTAR", "REVELAR", "COMPARAR"}
 PROIBIDAS = {"BLOQUEADO", "REPROVADO", "PENDENTE_REVISAO", "LICENSE_REVIEW_NEEDED"}
 
 
-def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
+def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True) -> dict:
     erros:list[dict]=[]
     def falha(codigo:str, cena:str, motivo:str)->None:
         erros.append({"codigo":codigo,"cena":cena,"motivo":motivo})
@@ -41,6 +42,30 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
     if not cenas:
         falha("E-CENAS","-","sem plano de cena")
     conhecidos={x.get("id"):x for x in (catalogo or {}).get("itens") or []}
+
+    def verificar_bytes(item: dict) -> tuple[bool, str]:
+        """Verificação obrigatória nos fluxos reais, contra SHA declarado no catálogo."""
+        rel=item.get("arquivo_local") or item.get("local_source")
+        sha=item.get("sha256_origem")
+        if not isinstance(rel,str) or not rel:
+            return False, "arquivo original ainda não foi recuperado no runner"
+        p=Path(rel)
+        if p.is_absolute() or ".." in p.parts:
+            return False, "caminho da mídia deve ser relativo ao diretório de trabalho"
+        raiz=Path.cwd().resolve()
+        arquivo=(raiz/p).resolve()
+        if not arquivo.is_relative_to(raiz) or not arquivo.is_file():
+            return False, "arquivo original não existe ou saiu do workspace"
+        if not isinstance(sha,str) or len(sha)!=64:
+            return False, "hash SHA-256 do catálogo inválido"
+        h=hashlib.sha256()
+        with arquivo.open("rb") as fd:
+            for bloco in iter(lambda:fd.read(1024*1024), b""):
+                h.update(bloco)
+        if h.hexdigest()!=sha:
+            return False, "bytes reais diferem do SHA-256 curado"
+        return True, ""
+
     media_movel=set();fotos_s=0.;mapas=0;prev=0.;visto=set()
     for c in cenas:
         cid=c.get("id") or "?"
@@ -77,6 +102,9 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
             if asset in visto:
                 falha("E-FONTE-REPETIDA",cid,"mesma mídia não vira prova nova por zoom ou recorte")
             visto.add(asset)
+            bytes_ok, causa = verificar_bytes(it) if conferir_bytes else (True, "")
+            if not bytes_ok:
+                falha("E-BYTES-NAO-COMPROVADOS",cid,causa)
             prova=it.get("prova") or {}
             sha=it.get("sha256_origem")
             if not (isinstance(sha,str) and len(sha)==64 and
@@ -103,7 +131,7 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
                 if prova.get("acao_ou_relacao_visivel") is not True:
                     falha("E-VIDEO-SEM-ACAO-COMPROVADA",cid,
                           "vídeo precisa de revisão de quadros que MOSTRE o processo narrado")
-                else:
+                elif bytes_ok:
                     media_movel.add(sha)
         elif tipo=="atlas_map":
             if m.get("identidade")!="explicativa":

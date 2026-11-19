@@ -97,3 +97,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 contratempo: rótulo semântico wafer testado sem frase literal no script
 
 # 2026-11-19 diagnostico run 44437665279: resolver fim pela duracao real WAV, CTA, ritmo e notificar Telegram em falha
+
+# 2026-11-19 retry regression no-card gancho title timing and true wav duration

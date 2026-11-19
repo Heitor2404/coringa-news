@@ -52,9 +52,10 @@
         "identidade": "explicativa",
         "clipe": "stage_atlas/taiwan/mapa.mp4",
         "prova": "stage_atlas/taiwan/comprovante_atlas.json",
-        "rotulo": "Taiwan · mapa ATLAS"
+        "rotulo": "Taiwan · mapa ATLAS",
+        "sha256": "c0c6e8895f1d0305b791a8d66581be5695abb2026b9ca91c752a6b5eb5b9c794"
       },
-      "estado": "ARTEFATO_NO_RUN_44588617776_NAO_COPIADO_PARA_RUN_ATUAL"
+      "estado": "ARTEFATO_ATLAS_AUTENTICADO_SOMENTE_QUANDO_MP4_E_SIDECAR_NO_RUNNER"
     },
     {
       "id": "03_chip_fisico",

@@ -61,3 +61,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 ATLAS P1 reteste: fixtures de camera resolvida + ffmpeg teste 0.8s
 
 # 2026-11-19 ATLAS P1 comprovacao FFmpeg real 1080x1920 em teste sintetico local Actions
+
+# 2026-11-19 P1 reteste: FFmpeg preinstalado no runner apos falha instalador externo

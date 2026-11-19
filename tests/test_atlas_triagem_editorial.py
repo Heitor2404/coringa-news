@@ -89,3 +89,25 @@ def test_diretor_atlas_reusa_reprovacao_humana_sem_promover_regra():
     assert 'FB-0009' in prompt
     # A memoria editorial ainda nao tem regras aprovadas. Nao criar aprovacao falsa.
     assert 'REGRAS EDITORIAIS TESTADAS E APROVADAS' not in prompt
+
+
+def test_telegram_mostra_triagem_sem_preflight_fake(monkeypatch, tmp_path):
+    from src.v4.formatos import produzir
+    from src.v3 import previa_telegram
+
+    (tmp_path / 'triagem_editorial.json').write_text(json.dumps({
+        'pronto': False,
+        'bloqueios': [{'codigo': 'E-SEM-CONTRATO-VISUAL',
+                       'beat': 'g-01', 'motivo': 'sem objeto e prova'}]
+    }), encoding='utf-8')
+    enviados = []
+    monkeypatch.setattr(previa_telegram, 'chat_autorizado',
+                        lambda: ('123', {'tipo': 'private', 'membros': 2}))
+    monkeypatch.setattr(previa_telegram, '_api',
+                        lambda nome, data: enviados.append((nome, data)))
+    resposta = produzir.telegram(tmp_path, 'Chips')
+    assert resposta == {'enviado': True, 'sem_mp4': True}
+    msg = enviados[0][1]['text']
+    assert 'etapa: triagem editorial ANTES DA VOZ' in msg
+    assert 'E-SEM-CONTRATO-VISUAL' in msg
+    assert 'preflight: 0/0' not in msg

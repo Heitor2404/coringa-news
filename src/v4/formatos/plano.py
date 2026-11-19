@@ -70,10 +70,21 @@ def ancora(valor, palavras: list[dict], depois: float = 0.0) -> float:
     return round(achados[n - 1] + desl, 3)
 
 
-def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
+def resolver_tempos(plano: dict, palavras: list[dict], duracao_audio: float | None = None) -> dict:
+    """Resolve falas no relogio real. Com duracao_audio, @fim e o FIM REAL do WAV.
+
+    O modo sem duracao_audio preserva o comportamento legado (ultimo fonema+0,6).
+    Preflight deve conhecer o audio antes de colocar CTA ou fechar as camadas.
+    """
     p = copy.deepcopy(plano)
     p['_estilo_no_episodio'] = estilo_no_episodio(plano)
-    a = lambda v: ancora(v, palavras)
+
+    def a(v):
+        if duracao_audio is not None and isinstance(v, str):
+            m = re.fullmatch(r'@fim([+\-]\d+(?:\.\d+)?)?', v.strip())
+            if m:
+                return round(float(duracao_audio) + float(m.group(1) or 0), 3)
+        return ancora(v, palavras)
     for k in p.get('palco') or []:
         k['t'] = a(k['t'])
     for lst in ('destaques', 'rotulos'):
@@ -132,6 +143,10 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
                         x['t'] = a(x['t'])
     if isinstance(p.get('duracao'), str):
         p['duracao'] = a(p['duracao'])
+    if duracao_audio is not None and (isinstance(plano.get('duracao'), str) or not plano.get('duracao')):
+        # Faz o CTA e as camadas finais caberem na narracao VERDADEIRA,
+        # nao em uma estimativa de pausa apos a ultima palavra.
+        p['duracao'] = round(float(duracao_audio), 3)
     aplicar_tokens(p)
     if p.get('camera') == 'roi':
         p['palco'] = palco_dos_beats(p)

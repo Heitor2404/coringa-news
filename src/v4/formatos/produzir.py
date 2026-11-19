@@ -648,7 +648,7 @@ def telegram(saida: Path, titulo: str) -> dict:
         if falhas_preflight:
             linhas.append('etapa: preflight')
             linhas += [f"- NÃO {i['item']}: {i['detalhe']}" for i in falhas_preflight[:15]]
-        else:
+        elif not (triagem and triagem.get('bloqueios')):
             linhas.append(f"preflight: {sum(i.get('ok', False) for i in pf.get('itens', []))}/{len(pf.get('itens', []))} itens OK")
             caminho_quadros = saida / 'quadros' / 'relatorio.json'
             if caminho_quadros.exists():

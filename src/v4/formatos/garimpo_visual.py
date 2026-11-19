@@ -92,6 +92,9 @@ def coletar(briefs: list[dict], destino: Path, procurar_candidatos=None, escolhe
             baixar=None) -> dict:
     destino = Path(destino)
     (destino / 'imagens').mkdir(parents=True, exist_ok=True)
+    # Somente JPEG de prévia nunca substitui o original: preserve exatamente
+    # os bytes verificados pela visão/SHA para o runner seguinte.
+    (destino / 'originais').mkdir(parents=True, exist_ok=True)
     usados, itens, rel, thumbs = set(), [], [], []
     for brief in briefs:
         o, status = procurar(brief, usados, procurar_candidatos, escolher, baixar)
@@ -99,6 +102,14 @@ def coletar(briefs: list[dict], destino: Path, procurar_candidatos=None, escolhe
         if o is None:
             continue
         it, dados = o
+        sha = hashlib.sha256(dados).hexdigest()
+        if sha != it['sha256_origem']:
+            raise RuntimeError('A mídia mudou após aprovação visual: recusar')
+        with Image.open(io.BytesIO(dados)) as src:
+            ext = 'png' if src.format == 'PNG' else 'jpg'
+        original = destino / 'originais' / f'{sha}.{ext}'
+        original.write_bytes(dados)
+        it['arquivo_original'] = str(original.relative_to(destino))
         itens.append(it)
         arq = destino / 'imagens' / (it['id'].replace(':', '_') + '.jpg')
         with Image.open(io.BytesIO(dados)) as img:

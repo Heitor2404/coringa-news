@@ -109,7 +109,9 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if(shot.type==='mechanism' && shot.mechanism==='lock_cycle')
     return <LockCausalCycle t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
-    return <LockCausal t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
+    return <LockCausal t={t} events={(shot.cues || []).map(c => ({
+      at:c.at,label:c.label,action: c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
+    }))} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
   if(shot.type === 'video') {

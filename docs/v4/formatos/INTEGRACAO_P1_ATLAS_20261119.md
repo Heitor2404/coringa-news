@@ -55,7 +55,7 @@ Para fotografia real, uma camada dentro do beat com `composicao: "atlas.prova"` 
 - `.github/workflows/atlas-validacao.yml` roda V1, P0 e P1, mais JS/TypeScript; é um teste técnico isolado, não uma prévia de qualidade.
 - Execução `44429572086`: **sucesso, 108 testes Python + TS/JS** (antes da adição do smoke real FFmpeg).
 - Teste FFmpeg real: `test_ativos_reutiliza_hash_origem_e_probe_v4`, que gera original de 0,8 s e usa **de fato** `src.v4.backends.legado.render_video` para recortar e normalizar segmento de 0,45 s em 1080×1920, verificando duração e ausência de áudio original. É **verificação de segmento**, não comprovação de direção audiovisual final.
-- Execução **`44430232954`**: **success, 108 testes Python passaram**, verificação JS e compilação TypeScript verdes; FFmpeg do runner (instalação pelo apt apenas como fallback). 
+- Execução **`44430232954`**: **success, 108 testes Python passaram**, incluindo recorte real FFmpeg sintético, verificações JS/TypeScript verdes. Execução final após suporte ao Pexels manual **`44430724950`**: **success, 108 testes Python passaram**, incluindo importação manual com cache SHA e o mesmo smoke FFmpeg; TypeScript/JS também verdes. 
 - Execução `44429900573`: falhou **ANTES dos testes**, na action externa `FedericoCarboni/setup-ffmpeg@v3` com erro `Failed to read version from readme`. A dependência da action foi removida **só** da validação ATLAS; reexecução `44430232954` comprovou o código P1 verde.
 
 ## Lacunas e próximos passos sem falsa aprovação

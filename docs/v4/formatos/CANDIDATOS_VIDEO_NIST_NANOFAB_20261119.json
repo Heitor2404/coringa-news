@@ -1,0 +1,20 @@
+{
+  "versao": 1,
+  "politica": "PROSPECCAO_PRIVADA_NAO_HOMOLOGADA",
+  "itens": [
+    {
+      "id": "nist_nanofab_users_2017",
+      "provedor": "nist_kaltura",
+      "partner_id": "684682",
+      "entry_id": "0_emhevqw5",
+      "pagina": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes",
+      "titulo": "The CNST NanoFab: Through the Users' Eyes",
+      "credito": "NIST · depoimentos de usuários do NanoFab (verificar imagem, áudio e direitos de terceiros)",
+      "local": "NIST NanoFab, Gaithersburg, Maryland, Estados Unidos",
+      "tema": "microfabricacao",
+      "situacao_direitos": "REVISAR_DIREITOS_DO_ITEM_E_TERCEIROS",
+      "autorizar_publicacao": false,
+      "nota_editorial": "Videodocumentário institucional do laboratório, provavelmente contém entrevistas e operações; verificar quadro a quadro. Não é fábrica da TSMC. Trilha/áudio original não deve ser reutilizado sem inspeção."
+    }
+  ]
+}

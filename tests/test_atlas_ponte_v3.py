@@ -152,3 +152,22 @@ def test_mesmo_sha_da_biblioteca_v4_nao_gera_duplicata(monkeypatch, tmp_path):
     })
     with pytest.raises(RuntimeError, match="reuse o ID existente"):
         ponte_biblioteca.catalogo()
+
+
+def test_inventario_nao_oferece_fabrica_generica_com_uma_palavra_em_comum(monkeypatch):
+    from src.v4 import viabilidade
+
+    monkeypatch.delenv("CORINGA_ATLAS_APROVACOES_V3", raising=False)
+    monkeypatch.setattr(viabilidade, "carregar", lambda: {
+        "itens": [{"id": "foto:fabrica-generica", "natureza": "foto",
+                   "titulo": "fábrica genérica",
+                   "mostra": "uma fábrica não identificada",
+                   "licenca": "CC BY 4.0", "credito": "Autor · CC BY 4.0",
+                   "prova": {"midia_corresponde": True}}],
+        "reprovados": []
+    })
+    s = ponte_biblioteca.inventario_para_diretor([
+        {"id": "f1", "texto": "A fábrica da TSMC em Taiwan utiliza equipamentos de litografia."}
+    ])
+    assert "foto:fabrica-generica" not in s
+    assert "nenhum registro comprovado pertinente" in s

@@ -4,9 +4,10 @@
  * Todos os títulos vêm do roteiro; o compositor não inventa fatos.
  */
 import React from 'react';
+import {LockCausal} from './LockCausal';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
-export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number};
+export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release'};
 export type FilmShot = {
   id: string;
   start: number;
@@ -20,7 +21,7 @@ export type FilmShot = {
   source: string;
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
-  mechanism?: 'lock_filling';
+  mechanism?: 'lock_filling' | 'lock_causal';
   subject: string;
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
@@ -101,7 +102,9 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
   </AbsoluteFill>;
 };
 
-const Body: React.FC<{shot: FilmShot;p:number}> = ({shot,p}) => {
+const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
+  if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
+    return <LockCausal t={t} events={shot.cues || []}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
   if(shot.type === 'video') {
@@ -145,7 +148,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   const cue=shot.cues?.filter(c=>now >= shot.start+c.at).slice(-1)[0];
   const cueAge=cue?now-shot.start-cue.at:0;
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
-    <Body shot={shot} p={p}/>
+    <Body shot={shot} p={p} t={now-shot.start}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}
     <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>
     <div style={{position:'absolute',top:248,left:62,right:62,display:'flex',justifyContent:'space-between',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
@@ -160,11 +163,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       padding:'13px 17px',borderLeft:`6px solid ${GOLD}`,
       background:'rgba(6,12,22,.78)',color:OFF_WHITE,letterSpacing:.5,
     }}>{cue.label}</div>}
-    <div style={{position:'absolute',left:60,right:60,top:1275,
+    {shot.mechanism!=='lock_causal' && <div style={{position:'absolute',left:60,right:60,top:1275,
       opacity:ease((now-shot.start-.12)/.32),transform:`translateY(${(1-ease((now-shot.start-.12)/.32))*36}px)`,
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
-    </div>
+    </div>}
     <div style={{position:'absolute',bottom:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}
     </div>

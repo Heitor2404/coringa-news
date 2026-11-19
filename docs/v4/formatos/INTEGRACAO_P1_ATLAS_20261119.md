@@ -59,9 +59,43 @@ Para fotografia real, uma camada dentro do beat com `composicao: "atlas.prova"` 
 - Execução `44429900573`: falhou **ANTES dos testes**, na action externa `FedericoCarboni/setup-ffmpeg@v3` com erro `Failed to read version from readme`. A dependência da action foi removida **só** da validação ATLAS; reexecução `44430232954` comprovou o código P1 verde.
 
 ## Lacunas e próximos passos sem falsa aprovação
-1. **Bibliotecas não fundidas:** há um caminho novo para consumir itens comprovados de vídeo; ainda falta integrar dinamicamente o banco global V3 ao catálogo comprovado ATLAS sem relaxar `prova/licenca`. Não criar novo banco.
+1. **Biblioteca V3 integrada em modo opt-in:** implementada a ponte `ponte_biblioteca.py` abaixo; exige manifesto explícito de aprovações, DB e arquivos V3 acessíveis. Ainda falta provisionar/persistir essa mídia no runner da produção e habilitar o manifesto de curadoria real. Não criar novo banco.
 2. **Mídia do tema:** ainda NÃO foi cadastrado vídeo EUV/TSMC realmente identificado e licenciado. Não gerar preview Guerra dos Chips com vídeo genérico fingindo ser uma instalação específica.
 3. **Preflight e performance:** fotos protagonistas e crédito de vídeo ganharam contratos; precisam ser testados em render REAL visual com licença. O Remotion ainda renderiza o palco base durante intervalos substituídos por vídeo — **otimização potencial** antes de YouTube longo.
 4. **Direção automática:** a ponte V3→ATLAS P0 é opcional e não está ligada a um orquestrador completo; a seleção automática dos componentes recém adicionados precisa ser exercitada com roteiro diferente, não hardcode de chips.
 5. **Experimento decisivo:** curta vertical 20–30s com narrador Gemini/Charon confirmado e mídia pertinente; comparar vídeo contra roteiro pelo olho humano. Só depois começar perfil horizontal 1920×1080 de 90–120s com lógica de capítulos.
 6. **Risco de créditos:** renderizar e conferir a fonte em celular, sobreposições reais das três plataformas e licença específica do clipe; dados técnicos verdes não significam permissão legal nem resultado editorial.
+
+
+## Ponte V3→ATLAS sem banco paralelo (implementada após os testes P1 iniciais)
+
+Código experimental: \`src/v4/formatos/ponte_biblioteca.py\`. Não executa pesquisa online nem grava uma segunda base de mídia. **Fonte dos binários e IDs:** \`src/v3/biblioteca.py::Biblioteca\` (SQLite, cache local e arquivos por SHA256), existente antes do P1.
+
+**Como ativar só quando houver curadoria e arquivo acessível ao runner:**
+- \`BIBLIOTECA_DB\` → caminho do banco global V3, com \`BIBLIOTECA_ARMAZEM\` → diretório de bytes originais endereçados por SHA256. Ausente/alterado ⇒ **BLOQUEADO**.
+- \`CORINGA_ATLAS_APROVACOES_V3\` → manifesto JSON **privado/versionado para os autorizados**, apontando para IDs estáveis \`cm-...\` e hash completo. Sem essa variável, o ATLAS continua lendo **só** \`src/v4/biblioteca_comprovada.json\`, sem regressão dos pilotos.
+- Formato do manifesto (valores ilustrativos, NUNCA substituem verificação factual/real de direitos):
+\`\`\`json
+{
+  "versao": 1,
+  "aprovacoes": [{
+    "midia_id": "<ID REAL cm-... do banco V3>",
+    "sha256": "<SHA256 ORIGINAL VALIDADO>",
+    "prova": {
+      "midia_corresponde": true,
+      "revisor": "<identificação da revisão efetuada>",
+      "evidencia": "<observação/registro da correspondência imagem/acontecimento>",
+      "acontecimento": "<ação específica demonstrada>",
+      "licenca_evidencia": "<link/registro dos direitos conferidos>"
+    }
+  }]
+}
+\`\`\`
+- A biblioteca V3 também precisa ter \`uso_comercial=sim\`, ausência de indicação de IA, **autor, licença e comprovação, página de origem**, arquivo original presente e identidade binária intacta. Mesmo hash já cadastrado no catálogo V4 não gera duplicata. Item rejeitado falha explicitamente, sem procurar substituto genérico.
+- \`produzir.ativos\` e \`produzir.preflight\` agora chamam **esse catálogo opt-in**, e \`produzir._origem\` lê bytes V3 **locais por SHA**, sem fazer requisição a páginas HTML do Pexels. \`diretor.prompt(..., inventario=None)\` recebe apenas mídias aprovadas com pertinência textual mínima \`SCORE_MIN\` da V4. Conteúdo com só 1 palavra genérica em comum não é indicado.
+- **Importante:** pesquisa de texto não comprova identidade de uma fábrica. Curadoria/validação por acontecimento continua obrigatória; o teste de relevância é **filtro conservador**, não reconhecimento factual. O motor não pode apresentar mídia genérica como se fosse de instalação nomeada.
+- \`tests/test_atlas_ponte_v3.py\` prova ingestão V3 com arquivo sintético, manifesto aprovado, ligação ao catálogo, uso dos bytes corretos, expiração/alteração de SHA, banco ausente, falta de prova de licença, ausência de duplicata e filtro factual. CI foi incluído em \`.github/workflows/atlas-validacao.yml\`.
+- **Atenção infraestrutura:** GitHub Actions é efêmero. Sem banco V3 e bytes armazenados de forma durável e disponibilizados **com autorização**, o modo V3 ficará desligado. Não colocar vídeos baixados de terceiros brutos em repositório público nem presumir permissão de sublicenciamento.
+- Nesta entrega **não** foi gerada nova narração/episódio e **não** há anúncio de que novas mídias já foram curadas para chips.
+
+**Próxima prova:** curar 2–3 ativos específicos (com direitos e ação registrada), produzir uma mini-sequência vertical privada de 20–30 s com voz Gemini/Charon, mostrar em dispositivos e fiscalizar ritmo, correspondência imagem/fala, créditos e interesse humano. Vídeo horizontal longo continua fase posterior, sujeito a 16:9 e direção por capítulo.

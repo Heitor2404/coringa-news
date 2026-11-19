@@ -185,7 +185,10 @@ def test_gancho_real_nao_encurta_quando_gemini_fala_rapido():
     assert foto["t1"] == 2.5, foto
     assert mapa["t"] == foto["t1"]
     assert pergunta["t0"] >= mapa["t"]
-    assert pergunta["p"]["linhas"][0]["t"] >= mapa["t"]
+    assert pergunta["p"]["linhas"][0]["t"] >= pergunta["t0"]
+    cam = next(k for k in r["palco"] if k["composicao"] == mapa["composicao"]
+               and abs(k["t"] - mapa["t"]) < .002)
+    assert pergunta["t0"] + .35 >= cam["t"] + cam["dur_camera"]
     assert P.REGRAS["progressao_max_s"] == 3
     erros = [v for v in P.validar(r) if v["gravidade"] == "erro"]
     assert not erros, json.dumps(erros, ensure_ascii=False)

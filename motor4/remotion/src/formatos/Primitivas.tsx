@@ -640,7 +640,9 @@ export const ProvaVisual: React.FC<{ c: Ctx }> = ({ c }) => {
         objectPosition: p.foco || '50% 50%' }} />}
       {p.rotulo && <div style={{ position: 'absolute', left: 22, bottom: 20, maxWidth: b.w - 44,
         fontFamily: FD(c), fontSize: 24, fontWeight: 700, color: '#F2EDE3', lineHeight: 1.2,
-        textShadow: '0 2px 10px #000', background: 'rgba(5,8,15,.78)', padding: '8px 14px' }}>{p.rotulo}</div>}
+        textShadow: '0 2px 10px #000', background: 'rgba(5,8,15,.78)', padding: '8px 14px',
+        opacity: aparece(c, p.rotulo_t ?? c.L.t0, .28),
+        transform: `translateY(${(1 - aparece(c, p.rotulo_t ?? c.L.t0, .28)) * 9}px)` }}>{p.rotulo}</div>}
     </div>
   );
 };

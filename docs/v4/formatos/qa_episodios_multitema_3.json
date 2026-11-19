@@ -156,16 +156,16 @@
           "prova": "Ever Given em Roterdã, registro em local diferente, NÃO ocorrência de Suez."
         },
         {
-          "id": "satelite",
-          "local_photo": "tests/piloto_ever_given/img/a22-g.jpg",
+          "id": "encalhe_segundo_recorte",
+          "local_photo": "tests/piloto_ever_given/img/a11-g.jpg",
           "licenca": "CC BY 2.0",
           "autor": "Registro satelital / Wikimedia Commons",
           "original": true,
-          "fonte": "https://commons.wikimedia.org/wiki/File:Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal,_Egypt_-_March_24th,_2021_(51070311183).jpg",
-          "titulo": "O CANAL FICOU OBSTRUÍDO",
-          "destaque": "OBSTRUÍDO",
-          "voz": "A visão de cima revela o tamanho do bloqueio na passagem.",
-          "prova": "Imagem de satélite real do Ever Given obstruindo o Suez em 2021."
+          "fonte": "https://commons.wikimedia.org/wiki/File:Container_Ship_%27Ever_Given%27_stuck_in_the_Suez_Canal,_Egypt_-_March_24th,_2021_cropped.jpg",
+          "titulo": "MESMO ENCALHE, OUTRO RECORTE",
+          "destaque": "MESMO ENCALHE",
+          "voz": "Este é outro recorte do mesmo encalhe, não uma nova etapa.",
+          "prova": "Segundo reenquadramento da MESMA imagem orbital Ever Given em Suez; repetição declarada."
         }
       ]
     }

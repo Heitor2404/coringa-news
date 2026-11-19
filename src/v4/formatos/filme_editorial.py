@@ -40,7 +40,7 @@ def validar_mapa(m: dict) -> list[str]:
     if not _geo_ok(m.get('center')):
         erros.append('centro lon/lat inválido')
     if not (isinstance(m.get('scale'),(int,float)) and
-            not isinstance(m['scale'],bool) and 170 <= m['scale'] <= 9000):
+            not isinstance(m['scale'],bool) and 170 <= m['scale'] <= 30000):
         erros.append('escala projetada ausente')
     pontos=m.get('points')
     if not isinstance(pontos,list) or not (1<=len(pontos)<=7):

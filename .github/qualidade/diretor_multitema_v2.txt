@@ -1,3 +1,5 @@
 # Prova de direção visual transversal (sem publicar)
 # Taiwan: país em destaque; Venezuela: país+pins; Suez: rota e encalhe
 # Barra global, voz Edge em tempo natural; auditoria humana pendente.
+
+# R2 — sintaxe YAML corrigida, disparar fluxo de validação.

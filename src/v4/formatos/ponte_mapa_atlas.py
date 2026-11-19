@@ -48,6 +48,9 @@ def verificar_plano(atlas: dict, start: float, dur: float) -> dict:
     if not isinstance(start,(int,float)) or not isinstance(dur,(int,float)) or not (
         math.isfinite(start) and math.isfinite(dur) and start>=0 and 1.4<=dur<=8 and start+dur<=atlas["duracao"]+.001):
         raise ValueError("intervalo do clipe inválido")
+    # O fixture versionado guarda beats numéricos mas não necessariamente
+    # o palco derivado; aplicar o MESMO resolver do ATLAS é obrigatório.
+    atlas=ATLAS.resolver_tempos(atlas,[]) if not atlas.get("palco") else atlas
     viol=[v for v in ATLAS.validar(atlas) if v["gravidade"]=="erro"]
     if viol:
         raise ValueError("reprovação no fiscal ATLAS original: "+str([(v["regra"],v["onde"]) for v in viol[:5]]))
@@ -89,6 +92,7 @@ def verificar_plano(atlas: dict, start: float, dur: float) -> dict:
 
 
 def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path) -> dict:
+    atlas=ATLAS.resolver_tempos(atlas,[]) if not atlas.get("palco") else atlas
     proof=verificar_plano(atlas,start,dur)
     pasta=Path(pasta);pasta.mkdir(parents=True,exist_ok=True)
     public=Path(public);public.mkdir(parents=True,exist_ok=True)

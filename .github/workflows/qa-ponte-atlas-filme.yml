@@ -25,7 +25,11 @@ jobs:
           cache-dependency-path: motor4/package-lock.json
       - name: Testes ATLAS nativos, integração de clips e regressão multiassunto
         run: |
-          python -m pip install -q pytest pillow requests
+          python -m pip install -q pytest pillow requests numpy cryptography pyyaml
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
           python -m pytest -q \
             tests/test_ponte_mapa_atlas_filme.py \
             tests/test_formatos.py \

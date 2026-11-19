@@ -111,14 +111,19 @@ def avaliar(plano: dict, catalogo: dict | None = None) -> dict:
 
 def main(argv=None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
-    if len(argv) != 1:
-        print('Uso: python -m src.v4.formatos.triagem_editorial <plano.json>', file=sys.stderr)
+    if len(argv) not in (1, 2):
+        print('Uso: python -m src.v4.formatos.triagem_editorial <plano.json> [saida]', file=sys.stderr)
         return 2
     plano = json.loads(Path(argv[0]).read_text(encoding='utf-8'))
     # Catálogo de formatos fica em src/v4/biblioteca_comprovada.json.
     bib = Path(__file__).resolve().parents[1] / 'biblioteca_comprovada.json'
     catalogo = json.loads(bib.read_text(encoding='utf-8')) if bib.exists() else None
     res = avaliar(plano, catalogo)
+    if len(argv) == 2:
+        destino = Path(argv[1])
+        destino.mkdir(parents=True, exist_ok=True)
+        (destino / 'triagem_editorial.json').write_text(
+            json.dumps(res, ensure_ascii=False, indent=2), encoding='utf-8')
     print(json.dumps(res, ensure_ascii=False, indent=2))
     return 0 if res['pronto'] else 1
 

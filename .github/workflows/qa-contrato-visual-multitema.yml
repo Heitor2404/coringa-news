@@ -21,7 +21,7 @@ jobs:
       - name: Dependências leves sem IA e sem render
         run: |
           python -m pip install -q pytest pillow requests
-      - name: Regressões: regras ATLAS + FILME + revisão semântica
+      - name: "Regressões: regras ATLAS + FILME + revisão semântica"
         run: |
           python -m pytest -q \
             tests/test_contrato_visual_multitema.py \

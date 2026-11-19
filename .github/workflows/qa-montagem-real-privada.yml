@@ -74,6 +74,14 @@ jobs:
           github-token: ${{ github.token }}
           path: stage_nanofab
 
+      - name: Reutilizar fotos Commons já conferidas no acervo (sem download novo)
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-taiwan-acervo-antes-de-narracao
+          run-id: 44631771426
+          github-token: ${{ github.token }}
+          path: stage_fotos_artifact
+
       - name: Normalizar caminhos das fontes da biblioteca, sempre por SHA
         run: |
           python - <<'PY'
@@ -105,34 +113,37 @@ jobs:
               shutil.copyfile(origens[0],destino)
           PY
 
-      - name: Recuperar as duas fotografias do acervo comprovado (SHA)
+      - name: Reidratar duas fotos aprovadas somente dos bytes do artifact e SHA
         run: |
           mkdir -p saida_rough_cut
-          set +e
-          python -m src.v4.formatos.estagiar_fotos \
-            docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json \
-            saida_rough_cut/catalogo_fotos.json \
-            saida_rough_cut/recibo_fotos.json \
-            --pasta stage_acervo/fotos
-          rc=$?
-          set -e
           python - <<'PY'
-          import json,hashlib
+          import hashlib,json,shutil
           from pathlib import Path
-          dados=json.loads(Path("saida_rough_cut/recibo_fotos.json").read_text())
-          for h in ("3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
-                    "f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1"):
-              p=Path(f"stage_acervo/fotos/{h}.jpg")
-              assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==h
-          print("FOTOS_ORIGINAIS_CONFERIDAS",dados["recuperadas"],"de",dados["solicitadas"],
-                "terceira foto legada pode permanecer ausente")
+          raiz=Path("stage_fotos_artifact")
+          comprovados={
+             "fab18":"3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
+             "wafer":"f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1"
+          }
+          origem={}
+          for nome,h in comprovados.items():
+              candidatos=list(raiz.rglob(h+".jpg"))
+              bons=[p for p in candidatos if hashlib.sha256(p.read_bytes()).hexdigest()==h]
+              if len(bons)!=1:raise ValueError(f"{nome}: original já curado não disponível")
+              destino=Path("stage_acervo/fotos")/(h+".jpg")
+              destino.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copyfile(bons[0],destino)
+              assert hashlib.sha256(destino.read_bytes()).hexdigest()==h
+              origem[nome]={"sha256":h,"bytes":destino.stat().st_size,
+                            "estado":"ORIGINAL_DO_CATALOGO_CONFERIDO_SEM_DOWNLOAD"}
+              print("FOTO_REUTILIZADA_SEM_REDE",nome,h)
+          Path("saida_rough_cut/recibo_fotos.json").write_text(json.dumps(origem,indent=2))
           PY
 
       - name: Montar storyboard real no mesmo FilmeEditorial (sem voz nem publicacao)
         timeout-minutes: 12
         run: |
           python -m src.v4.formatos.montagem_privada_real \
-            docs/v4/formatos/MONTAGEM_PRIVADA_REAL_TAIWAN_20261119.json \
+            docs/v4/formatos/MONTAGEM_PRIVADA_ACERVO_VALIDADO_20261119.json \
             saida_rough_cut motor4/remotion/public
 
       - name: Instalar e compilar MESMO compositor Remotion

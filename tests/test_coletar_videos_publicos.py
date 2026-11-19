@@ -118,7 +118,7 @@ def test_nist_kaltura_usa_mesma_biblioteca_e_nao_aprova(tmp_path):
     C.validar_fonte(fonte)
     def baixar(f,d):
         assert f["entry_id"]=="0_emhevqw5"
-        d.write_bytes(b"VÍDEO TESTE NÃO REAL".decode("utf8").encode("utf8")*7000)
+        d.write_bytes(b"VIDEO TESTE NAO REAL"*7000)
     def metadados(p):
         return {"largura":1280,"altura":720,"duracao_s":145.0}
     def frames(p,d,dur):

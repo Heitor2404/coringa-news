@@ -1,0 +1,137 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "titulo": "Panamá: prova de edição com cenas reais e arquivos locais",
+  "duracao": 12,
+  "media": {
+    "passagem-navio": {
+      "local_source": "tests/midia/video_horizontal_navio.mp4",
+      "media_type": "video",
+      "page": "https://commons.wikimedia.org/wiki/File:Continuing_Promise_transits_the_Panama_Canal-ZLIWzvfdisQ-248%2B251.webm",
+      "credit": "U.S. Navy · filmagem real do Canal do Panamá",
+      "license": "Public domain"
+    },
+    "mapa-satelite": {
+      "local_source": "motor4/formatos/dados/raster/s2_panama_canal.webp",
+      "page": "https://cloudless.eox.at/",
+      "credit": "EOX IT Services / Copernicus Sentinel 2016",
+      "license": "CC BY 4.0"
+    },
+    "passagem-timelapse": {
+      "local_source": "tests/midia/video_horizontal_timelapse.mp4",
+      "media_type": "video",
+      "page": "https://commons.wikimedia.org/wiki/File:Panama_Canal_Timelapse-_Caribbean_to_Pacific.webm",
+      "credit": "Morrison Mast · filmagem real do Canal do Panamá",
+      "license": "CC BY 3.0"
+    },
+    "eclusas-historicas": {
+      "local_source": "tests/midia/foto_panoramica_1913.jpg",
+      "page": "https://www.loc.gov/pictures/item/2007663276",
+      "credit": "Library of Congress · Eclusas de Gatún, 1913",
+      "license": "Public domain"
+    }
+  },
+  "shots": [
+    {
+      "id": "01-navio-movimento",
+      "start": 0,
+      "end": 3,
+      "type": "video",
+      "asset": "passagem-navio",
+      "lead": "01 · UMA TRAVESSIA",
+      "headline": "UM NAVIO CRUZA\nO PANAMÁ",
+      "highlight": "PANAMÁ",
+      "evidence": "literal",
+      "literal_identity": "U.S. Navy, Continuing Promise transita pelo Canal do Panamá",
+      "subject": "Registro real da passagem de navio pelo canal",
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "cues": [
+        {
+          "at": 0.75,
+          "label": "TRAVESSIA REAL",
+          "x": 0.52,
+          "y": 0.45
+        }
+      ]
+    },
+    {
+      "id": "02-mapa-causal",
+      "start": 3,
+      "end": 5.7,
+      "type": "photo",
+      "asset": "mapa-satelite",
+      "lead": "02 · O TRAJETO",
+      "headline": "UM CORREDOR\nENTRE DOIS OCEANOS",
+      "highlight": "DOIS OCEANOS",
+      "evidence": "literal",
+      "literal_identity": "Imagem de satélite real da área do Canal do Panamá",
+      "subject": "Imagem de satélite da região do Canal do Panamá",
+      "focus": [
+        0.53,
+        0.52
+      ],
+      "cues": [
+        {
+          "at": 0.35,
+          "label": "ISTMO DO PANAMÁ",
+          "x": 0.5,
+          "y": 0.45
+        }
+      ]
+    },
+    {
+      "id": "03-trafego-tempo",
+      "start": 5.7,
+      "end": 9,
+      "type": "video",
+      "asset": "passagem-timelapse",
+      "lead": "03 · O MOVIMENTO",
+      "headline": "O TRÁFEGO SEGUE\nPELO CANAL",
+      "highlight": "CANAL",
+      "evidence": "literal",
+      "literal_identity": "Timelapse real Caribbean to Pacific via Canal do Panamá",
+      "subject": "Timelapse real do Canal do Panamá",
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "cues": [
+        {
+          "at": 0.75,
+          "label": "TRÂNSITO EM MOVIMENTO",
+          "x": 0.5,
+          "y": 0.42
+        }
+      ]
+    },
+    {
+      "id": "04-eclusas",
+      "start": 9,
+      "end": 12,
+      "type": "photo",
+      "asset": "eclusas-historicas",
+      "lead": "04 · AS ECLUSAS",
+      "headline": "AS ECLUSAS JÁ ERAM\nUM DESAFIO EM 1913",
+      "highlight": "1913",
+      "evidence": "literal",
+      "literal_identity": "Fotografia do sistema de eclusas de Gatún do Canal do Panamá em março de 1913, Library of Congress",
+      "subject": "Fotografia histórica de Gatún, março de 1913",
+      "focus": [
+        0.47,
+        0.5
+      ],
+      "cues": [
+        {
+          "at": 0.8,
+          "label": "ECLUSAS DE GATÚN · 1913",
+          "x": 0.5,
+          "y": 0.45
+        }
+      ]
+    }
+  ],
+  "observacao": "Apenas teste de linguagem: vídeo original, mapa geográfico, timelapse, registro histórico. Sem narração ou publicação."
+}

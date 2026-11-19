@@ -1,0 +1,117 @@
+name: FILME — eclusa causal 7.8s (prova privada)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/filme_panama_8s.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: filme-editorial-panama-8s
+  cancel-in-progress: true
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  prova:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recuperar master já curado (imutável)
+        uses: actions/download-artifact@v4
+        with:
+          name: filme-panama-eclusa-real-1080p-master
+          run-id: 44519739030
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: stage_hero
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Testar contrato antigo e novo, sem voz/IA
+        run: |
+          python -m pip install -q pillow requests pytest
+          python -m pytest -q tests/test_filme_editorial.py tests/test_filme_panama_mechanism.py tests/test_filme_panama_causal.py
+      - name: Conferir tipagem do compositor
+        timeout-minutes: 12
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Garantir FFmpeg/FFprobe
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
+      - name: Validar SHA de footage e preparar propriedades
+        run: |
+          python -m src.v4.formatos.filme_editorial \
+            docs/v4/formatos/filme_panama_8s_causal.json \
+            saida_filme_panama_8s motor4/remotion/public
+      - name: Renderizar 8s SILENCIOSOS de teste editorial (não produção)
+        timeout-minutes: 14
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../saida_filme_panama_8s/prova_causal_8s.mp4 \
+            --props=../saida_filme_panama_8s/props.json \
+            --codec=h264 --crf=22 --concurrency=2 --scale=0.5 \
+            --public-dir=remotion/public --log=error
+      - name: Auditoria de quadros e contato
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          import subprocess, json, io, hashlib
+          out=Path('saida_filme_panama_8s')
+          video=out/'prova_causal_8s.mp4'
+          probe=json.loads(subprocess.check_output(
+            ['ffprobe','-v','error','-show_entries','format=duration,size','-of','json',str(video)],text=True))
+          assert abs(float(probe['format']['duration'])-7.8)<.08,probe
+          assert video.stat().st_size>100000
+          times=[.2,1.45,2.2,3.3,4.75,6.35,7.55]
+          grid=Image.new('RGB',(1080,3*(640+44)),(17,24,35))
+          framehashes={}
+          for i,t in enumerate(times):
+            png=subprocess.check_output(['ffmpeg','-hide_banner','-loglevel','error','-ss',str(t),
+              '-i',str(video),'-frames:v','1','-vf','scale=360:640','-f','image2pipe','-vcodec','png','pipe:1'])
+            im=Image.open(io.BytesIO(png)).convert('RGB')
+            framehashes[str(t)]=hashlib.sha256(png).hexdigest()
+            x=(i%3)*360;y=(i//3)*(640+44)
+            grid.paste(im,(x,y+44))
+            ImageDraw.Draw(grid).text((x+12,y+13),f't={t:.2f}s',fill=(248,241,217))
+            im.save(out/f'frame_{i:02d}.png')
+          assert len(set(framehashes.values()))==len(times),'Paralisia visual detectada'
+          grid.save(out/'contato_causal_8s.jpg',quality=92)
+          (out/'qa_causal.json').write_text(json.dumps({
+            'status':'AGUARDANDO_REVISAO_HUMANA','duracao':probe['format']['duration'],
+            'sem_tts':True,'nao_publicado':True,'frames_sha256':framehashes},indent=2),encoding='utf-8')
+          print('PROVA_PRIVADA_RENDERIZADA',probe)
+          PY
+      - name: Guardar evidência sem publicação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filme-panama-8s-causal-privado
+          path: |
+            saida_filme_panama_8s/props.json
+            saida_filme_panama_8s/contrato.json
+            saida_filme_panama_8s/midias.json
+            saida_filme_panama_8s/qa_causal.json
+            saida_filme_panama_8s/frame_*.png
+            saida_filme_panama_8s/contato_causal_8s.jpg
+            saida_filme_panama_8s/prova_causal_8s.mp4
+          retention-days: 7
+          if-no-files-found: warn

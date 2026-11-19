@@ -350,9 +350,18 @@ def avaliar(plano: dict) -> dict:
                     and path.parts[:1]==('stage_documental',)
                     and isinstance(asset.get('expected_sha256'),str)
                     and len(asset['expected_sha256'])==64
-                    and (urlsplit(str(asset.get('page') or '')).hostname in (
-                        'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov'
-                    ))
+                    and (
+                        urlsplit(str(asset.get('page') or '')).hostname in (
+                            'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov'
+                        ) or (
+                            asset.get('original_graphic') is True
+                            and asset.get('license')=='CC0'
+                            and asset.get('media_type')=='photo'
+                            and urlsplit(str(asset.get('page') or '')).hostname in (
+                                'www.sec.gov','pr.tsmc.com'
+                            )
+                        )
+                    )
                     and asset.get('media_type') in ('video','photo')
                 )
                 permitido = atlas_bridge or stage_privado or (

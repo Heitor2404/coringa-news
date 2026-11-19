@@ -1,0 +1,6 @@
+PREVIA PRIVADA — ATLAS V2 Guerra dos Chips — 2026-11-19
+Autorização do usuário nesta conversa: "Vamos continuar".
+Escopo: SOMENTE GitHub Actions experimental, Gemini/Charon conforme preset, fotos Commons comprovadas e relatório; envio Telegram privado quando disponível.
+NÃO publicar vídeo em redes, NÃO fazer merge, NÃO alterar NTC/DOSSIÊ/main.
+CI estrutural aprovado: 44437330601 (127 testes Python + TypeScript).
+FALHAR FECHADO se chave da voz ausente, mídia sem hash ou portão vermelho. Nada de fallback Edge.

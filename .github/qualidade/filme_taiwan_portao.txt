@@ -5,3 +5,5 @@
 # R2: manter bloqueio do payoff mesmo sem ativo externo no catálogo.
 
 # R3: fluxo real obrigatoriamente valida contrato, cenas, fonte e SHA de bytes; testes sintéticos separados.
+
+# R4: reexecução após correção do escopo de hashlib detectada em CI.

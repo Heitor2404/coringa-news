@@ -555,7 +555,8 @@ def fiscal_camadas(saida: Path, pl: dict) -> Path:
 # ---------------------------------------------------------------- prévia privada
 def telegram(saida: Path, titulo: str) -> dict:
     """MP4 + estado + preflight + portões + áudio, só ao chat privado autorizado. NÃO é publicação."""
-    from src.v3 import estado_final, previa_telegram
+    from src.v3 import previa_telegram
+    from src.v4.formatos import estado as gate
     r = _ler(saida / 'resultado.json') if (saida / 'resultado.json').exists() else None
     pf = _ler(saida / 'preflight.json') if (saida / 'preflight.json').exists() else {'pronto': False, 'itens': []}
     linhas = [f'FORMATO — PRÉVIA PRIVADA, NÃO PUBLICADO · {titulo}']
@@ -565,14 +566,13 @@ def telegram(saida: Path, titulo: str) -> dict:
         previa_telegram._api('sendMessage', {'chat_id': chat, 'text': '\n'.join(linhas)[:3900]})
         return {'enviado': True, 'sem_mp4': True}
     au = r.get('audio') or {}
-    linhas += [f"STATUS: {r['estado']} (aprovação estética só do Heitor)", f"duração {r['duracao']:.1f} s · formato {r['formato']}",
+    est = gate.avaliar(r)
+    linhas += [f"STATUS EDITORIAL: {est['estado']} (aprovação estética só do responsável humano)", f"duração {r['duracao']:.1f} s · formato {r['formato']}",
                f"preflight: {sum(i['ok'] for i in pf['itens'])}/{len(pf['itens'])} itens OK",
                f"áudio no MP4: {au.get('lufs')} LUFS · pico {au.get('pico')} dBTP",
                f"janelas de 4 s pretas/congeladas: {len(r['portoes']['preto_ou_congelado'])}"]
     linhas += [f"- {j['de']}–{j['ate']}s: {'; '.join(j['problemas'])}" for j in r['portoes']['preto_ou_congelado']][:8]
-    linhas += [f"BLOQUEIO: {m}" for m in r.get('motivos_bloqueio') or []][:8]
-    est = {'estado': estado_final.AGUARDANDO if r['estado'] == estado_final.AGUARDANDO else estado_final.BLOQUEADO,
-           'motivos': [] if r['estado'] == estado_final.AGUARDANDO else (r.get('motivos_bloqueio') or ['portões do MP4 final'])}
+    linhas += [f"BLOQUEIO: {m}" for m in est.get('motivos') or []][:8]
     rit = r.get('ritmo') or {}
     linhas += [f"ritmo (zona de conteúdo, 4 q/s): bruto {rit.get('maior_trecho_parado_s')} s · sem câmera {(rit.get('sem_camera') or {}).get('maior_trecho_parado_s')} s "
                f"(portão ≤ 3 s; ref. A: 2 s)", f"legenda × áudio real: {'OK' if r['portoes'].get('legenda_ok') else 'FALHA'} {r.get('legenda_sync', {}).get('atraso_s')} s"]

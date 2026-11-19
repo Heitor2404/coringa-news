@@ -15,3 +15,4 @@ Smoke com as 61 palavras da voz real 44447705090 aprovado no job ritmo_real da v
 Continua prévia privada sem publicacao; erros devem ser avisados por mensagem no Telegram mesmo sem MP4.
 # 2026-11-19 nova prévia privada apos rotulos provaVisual legiveis a 30 px e diagnostico Telegram completo dos quadros (CI 44450404274 success)
 # 2026-11-19 retry TTS variable: 2.5 s minimum real photo; duration and map transition synced to utterance; CI 44452013618 green. Private only, never publish.
+# 2026-11-19 nova prévia privada Chips V2: 135 testes + TypeScript verdes CI 44452013618; gancho prova >=2.5 e titulo espera camera; nao publicar

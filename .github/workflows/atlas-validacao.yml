@@ -44,8 +44,27 @@ jobs:
           assert not erros, erros
           print("ATLAS_V2_TTS_REAL_OK 61 palavras; sem F-SEM-PROGRESSAO/F-TEMPO")
           PY
+      - name: Validar piso de 2.5s com fala rápida REAL e fala lenta anterior
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P
+          raiz=Path("tests/dados")
+          plano=json.loads(Path("src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json").read_text())
+          for run in (44450584008,44447705090):
+              voz=json.loads((raiz/f"atlas_chips_v2_tts_real_run_{run}.json").read_text())
+              p=P.resolver_tempos(plano,voz["palavras"],duracao_audio=voz["duracao_audio"])
+              foto=p["beats"][0]["camadas"][0]
+              assert foto["t1"] >= 2.5 and foto["t1"] == p["beats"][1]["t"],(run,foto["t1"],p["beats"][1]["t"])
+              erros=[v for v in P.validar(p) if v["gravidade"]=="erro"]
+              assert not erros,(run,erros)
+              print(f"ATLAS_PROVA_REAL_OK {run} final_foto={foto['t1']}s")
+          PY
   validar:
-    runs-on: ubuntu-latest
+    # Runner estável: ubuntu-latest virou 26.04 e apt-get update expirou (run 44451262176).
+    # Mesmo ambiente 22.04 do workflow da prévia privada; não depende de setup-ffmpeg externo.
+    runs-on: ubuntu-22.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4

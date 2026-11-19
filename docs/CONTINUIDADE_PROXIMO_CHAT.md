@@ -450,3 +450,18 @@ Correções **somente em `atlas-direcao-visual-20261118`**:
 - Nova prévia privada disparada em **44450584008**; status `in_progress` na última conferência. **Não declarar MP4 entregue/aprovado antes de consultar esse run, logs e Telegram.** `A-CREDITO-RODAPE` permanece como aviso editorial conhecido; não subir os créditos cegamente, pois a posição baixa segue identidade visual aprovada e requer revisão da UI das plataformas.
 
 Próxima ação: verificar conclusão da execução **44450584008**, inspecionar preflight, quadros, render/portões e Telegram. Se MP4 surgir, avaliar quadro a quadro antes de qualquer integração ou publicação. Main/produção/NTC/DOSSIÊ intactos.
+
+
+## 27. 19/11 — Gancho real de Chips com piso temporal e câmera segura
+
+O segundo run privado **44450584008** confirmou o Telegram diagnóstico corrigido: Gemini/Charon gerou **27,445s**, mídia verificada, porém `F-GANCHO-PROVA-REAL` bloqueou preflight. A palavra **POR** aconteceu em **2,418s**; o final da foto do primeiro beat `@por-0.12` ocorreu aos **2,298s**, abaixo do mínimo 2,5s. Sem MP4, Telegram enviou bloqueio corretamente; nenhuma publicação.
+
+Mudanças **somente experimentais**:
+- `src/v4/formatos/plano.py::resolver_tempos` recebeu expressão genérica `@max(piso_segundos,@palavra+offset)`, para impedir corte cedo quando voz TTS varia. Mantida regra de `F-GANCHO-PROVA-REAL` 2,5s.
+- Plano `atlas_chips_v2_prova_25s.json` segura foto até pelo menos 2,5s e sincroniza transição do mapa com fim da foto; pergunta não antecede o mapa.
+- Primeiro teste novo com os 61 tempos reais `tests/dados/atlas_chips_v2_tts_real_run_44450584008.json` apontou um SEGUNDO erro `F-COBRE-TERRITORIO`: a entrada do título ocorreu durante chegada de câmera. O motor ganhou `entrada_apos_voo` opcional para camadas cartográficas, que espera dinamicamente a câmera atingir posição segura, adiando também a primeira linha da revelação. O plano usa esse contrato sem alterar qualquer limite do fiscal.
+- Dois testes Python e um smoke direto com cronologias reais da voz rápida **44450584008** e lenta **44447705090**. **O job `ritmo_real` de 44452013618 finalizou SUCCESS** nos dois cenários e sem bloqueios de pré-voo; a regressão integral estava em andamento na última consulta.
+- Run anterior **44451262176** não exercitou os testes: o Ubuntu 26.04 do runner `ubuntu-latest` expirou o `apt-get update` para FFmpeg (exit 124). CI `.github/workflows/atlas-validacao.yml` pinou `validar` em `ubuntu-22.04` (mesmo alvo do workflow privado), e `ritmo_real` agora testa diretamente as duas vozes antes de instalar dependências.
+- Testes de regressão em `tests/test_atlas_previa_chips_v2.py` foram ampliados. **Não afirmar que o vídeo final foi criado, nem que a suíte completa passou**, até verificar o término da run 44452013618.
+
+Próximos passos: conferir status/log completo de **44452013618**; se verde, disparar **prévia privada sem publicação** via atualização de `.github/atlas/chips_v2_preview.txt`, verificar quadros, MP4, fiscal e mensagens Telegram. Não alterar `main`, `motor-integral-v4`, NTC ou DOSSIÊ; não baixar limiares de ritmo, imagem real nem segurança de território.

@@ -18,7 +18,8 @@ DOMINIOS = ("engenharia", "ciencia", "historia")
 
 def decidir_uso(*, acontecimento: str, evento_da_midia: str, uso: str,
                 cena_especifica: bool, rotulo: str = "",
-                origem_verificada: bool, licenca_verificada: bool) -> dict:
+                origem_verificada: bool, licenca_verificada: bool,
+                representacao: dict | None = None) -> dict:
     """Nunca permitir que material de OUTRO evento prove a cena narrada.
 
     Um b-roll de outro conflito só pode ilustrar uma frase genérica, e
@@ -37,6 +38,33 @@ def decidir_uso(*, acontecimento: str, evento_da_midia: str, uso: str,
                 if mesmo else
                 {"permitido":False,"codigo":"M-OUTRO-EVENTO-NAO-E-PROVA",
                  "categoria":"BLOQUEADO","prova_do_fato":False})
+    # Ilustração de um PROCESSO tecnicamente equivalente não é substituição
+    # do registro de um evento. NIST pode mostrar deposição real para explicar
+    # deposição em wafers; e-beam não pode virar EUV, nem conflito A conflito B.
+    # A fala não deve alegar que vemos a entidade/lugar/evento específico.
+    if uso in ("ilustracao", "demonstracao") and isinstance(representacao, dict) and not mesmo:
+        rep = representacao
+        processo = str(rep.get("processo_narrado") or "").strip().casefold()
+        registrado = str(rep.get("processo_midia") or "").strip().casefold()
+        origem_credito = str(rep.get("origem_no_credito") or "").strip().casefold()
+        if (rep.get("fala_atribui_registro") is True or
+                rep.get("tipo") != "processo_equivalente"):
+            return {"permitido":False,"codigo":"M-REGISTRO-NAO-REPRESENTAVEL",
+                    "categoria":"BLOQUEADO","prova_do_fato":False}
+        if not (processo and registrado and len(processo)>=8 and
+                processo == registrado and
+                rep.get("compatibilidade_tecnica_verificada") is True and
+                isinstance(rep.get("evidencia_inspecao"), str) and
+                len(rep["evidencia_inspecao"].strip()) >= 12):
+            return {"permitido":False,"codigo":"M-PROCESSO-NAO-EQUIVALENTE",
+                    "categoria":"BLOQUEADO","prova_do_fato":False}
+        if not origem_credito or evento_da_midia.strip().casefold() not in origem_credito:
+            return {"permitido":False,"codigo":"M-ORIGEM-NAO-IDENTIFICADA",
+                    "categoria":"BLOQUEADO","prova_do_fato":False}
+        return {"permitido":True,"codigo":"M-PROCESSO-EQUIVALENTE-COM-ORIGEM",
+                "categoria":"ILUSTRACAO_TECNICA","prova_do_fato":False,
+                "aprovacao_humana":"PENDENTE"}
+
     # Quando a fala narra o evento específico, inserir imagens de outro
     # desastre/guerra mesmo com etiqueta troca visualmente a identidade.
     if not mesmo and cena_especifica:

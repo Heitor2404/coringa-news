@@ -21,3 +21,5 @@
 # R10: historia define duracao sem max editorial, 65s somente meta de TikTok, Shorts ate 180s.
 
 # R11: policy duration narrative free and malformed policy regression; Taiwan story event-based.
+
+# R12: politica generica default narrativa e cobertura por cena + regressao Suez/Venezuela/conflito/chips.

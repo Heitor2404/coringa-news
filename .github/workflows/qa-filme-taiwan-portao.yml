@@ -19,6 +19,7 @@ on:
       - "tests/test_pacing_content_aware.py"
       - "tests/test_video_framing_multitema.py"
       - "tests/test_montagem_documental_privada.py"
+      - "tests/test_montagem_privada_real.py"
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "tests/test_contrato_visual_multitema.py"
   workflow_dispatch:
@@ -40,7 +41,7 @@ jobs:
       - name: Testar portão multiassunto, contrato ATLAS e evidências
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml cryptography
-          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py tests/test_duracao_editorial.py tests/test_pacing_content_aware.py tests/test_video_framing_multitema.py tests/test_gate_multitema_cobertura.py tests/test_estagiar_fotos.py tests/test_coletar_videos_publicos.py tests/test_montagem_documental_privada.py
+          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py tests/test_duracao_editorial.py tests/test_pacing_content_aware.py tests/test_video_framing_multitema.py tests/test_gate_multitema_cobertura.py tests/test_estagiar_fotos.py tests/test_coletar_videos_publicos.py tests/test_montagem_documental_privada.py tests/test_montagem_privada_real.py
       - name: Validar portão POSITIVO multitema com arquivos reais de fixture
         run: |
           python -m pytest -q tests/test_gate_flexivel_multitema.py

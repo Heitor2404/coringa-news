@@ -56,7 +56,10 @@ jobs:
           # O primeiro palco cartográfico do roteiro real de Chips é Taiwan.
           index=next(i for i,k in enumerate(p['palco']) if k['tipo']=='mapa')
           k=p['palco'][index]
-          start=float(k['t'])
+          anterior=p['palco'][index-1] if index else None
+          # O compositor ATLAS usa fade de 0,5s entre palco de prova e mapa.
+          # Exportar APÓS a transição: não incluir primeiro quadro escuro no filme.
+          start=float(k['t'])+(.55 if anterior and anterior['tipo']!='mapa' else 0.)
           length=2.6
           nextstart=p['palco'][index+1]['t'] if index+1<len(p['palco']) else p['duracao']
           assert start+length<=nextstart+.01,('janela de mapa insuficiente',start,nextstart)

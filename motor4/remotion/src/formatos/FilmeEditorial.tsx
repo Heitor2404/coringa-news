@@ -180,7 +180,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot}/>}
     {preview&&<div style={{position:'absolute',bottom:40,left:0,right:0,textAlign:'center',
       fontFamily:'Inter,Arial',color:'#CFD6E0',opacity:.7,fontSize:20,letterSpacing:1.1}}>
-      AMOSTRA VISUAL — SEM NARRAÇÃO · NÃO PUBLICADO
+      PRÉVIA PRIVADA · NÃO PUBLICADO
     </div>}
   </AbsoluteFill>;
 };

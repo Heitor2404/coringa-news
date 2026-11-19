@@ -1,0 +1,3 @@
+# Coleta privada de candidatos oficiais DVIDS, status nao-homologado.
+# Nao publica, nao gera TTS, nao autoriza licencas, nao assume acao fisica.
+# Arquivos originais, se acessiveis, vao a artifact temporario e V3 candidato.

@@ -133,3 +133,22 @@ def test_breve_video_continua_funcionando_sem_burocracia():
     s=p["shots"][0]
     s["type"]="video"
     assert tempo_natural.validar_progressao_video(s,2.6)==[]
+
+
+
+def test_recorte_de_video_nunca_excede_duracao_real_da_fonte():
+    p=montar()
+    p['media']['acao-motor']['duration_s']=21.0
+    r=avaliar(p)
+    assert 'F-VIDEO-FONTE-INSUFICIENTE' in codigos(r)
+    assert not r['pronto']
+    p['media']['acao-motor']['duration_s']=24.0
+    assert 'F-VIDEO-FONTE-INSUFICIENTE' not in codigos(avaliar(p))
+
+
+def test_janela_de_video_rejeita_originais_truncados_ou_tempo_negativo():
+    cena={'type':'video','start':5,'end':15,'source_in_seconds':12}
+    assert tempo_natural.validar_janela_origem(cena,21.0)
+    assert tempo_natural.validar_janela_origem(cena,22.0) is None
+    assert tempo_natural.validar_janela_origem({**cena,'source_in_seconds':-1},22.0)
+    assert tempo_natural.validar_janela_origem(cena,float('nan'))

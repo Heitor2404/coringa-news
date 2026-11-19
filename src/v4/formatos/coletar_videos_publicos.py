@@ -25,23 +25,38 @@ _MAX_BYTES = 66_000_000
 
 
 def validar_fonte(fonte: dict) -> None:
-    if not isinstance(fonte, dict) or fonte.get("provedor") != "dvids":
-        raise ValueError("provedor não permitido nesta receita")
+    if not isinstance(fonte, dict):
+        raise ValueError("fonte inválida")
     if not _ID.fullmatch(str(fonte.get("id") or "")):
         raise ValueError("id de acervo inválido")
-    video_id = str(fonte.get("video_id") or "")
-    download_id = str(fonte.get("download_id") or "")
-    if not _VIDEO_ID.fullmatch(video_id) or not _VIDEO_ID.fullmatch(download_id):
-        raise ValueError("identificadores DVIDS inválidos")
-    pagina = urlsplit(str(fonte.get("pagina") or ""))
-    if (pagina.scheme != "https" or pagina.hostname != "www.dvidshub.net"
-            or not pagina.path.startswith("/video/" + video_id + "/")
-            or pagina.username or pagina.password or pagina.query or pagina.fragment):
-        raise ValueError("página de origem não corresponde ao vídeo oficial")
-    if (fonte.get("situacao_direitos") != "REVISAR_TERCEIROS_E_NAO_ENDOSSO"
-            or fonte.get("autorizar_publicacao") is not False
-            or not str(fonte.get("credito") or "").strip()
-            or not str(fonte.get("titulo") or "").strip()):
+    provedor=fonte.get("provedor")
+    pagina=urlsplit(str(fonte.get("pagina") or ""))
+    if (pagina.scheme != "https" or pagina.username or pagina.password
+            or pagina.port not in (None, 443) or pagina.query or pagina.fragment):
+        raise ValueError("página institucional inválida")
+    if provedor=="dvids":
+        video_id=str(fonte.get("video_id") or "")
+        download_id=str(fonte.get("download_id") or "")
+        if not _VIDEO_ID.fullmatch(video_id) or not _VIDEO_ID.fullmatch(download_id):
+            raise ValueError("identificadores DVIDS inválidos")
+        if (pagina.hostname!="www.dvidshub.net" or
+                not pagina.path.startswith("/video/"+video_id+"/")):
+            raise ValueError("página de origem não corresponde ao DVIDS")
+        situacao="REVISAR_TERCEIROS_E_NAO_ENDOSSO"
+    elif provedor=="nist_kaltura":
+        if (pagina.hostname!="www.nist.gov" or
+                not pagina.path.startswith("/video/") or
+                not re.fullmatch(r"[a-z0-9-]+", pagina.path[len("/video/"):]) or
+                str(fonte.get("partner_id") or "")!="684682" or
+                not re.fullmatch(r"[0-9]_[a-z0-9]{8}",str(fonte.get("entry_id") or ""))):
+            raise ValueError("NIST Kaltura exige origem institucional e entry_id comprovado")
+        situacao="REVISAR_DIREITOS_DO_ITEM_E_TERCEIROS"
+    else:
+        raise ValueError("provedor institucional não permitido")
+    if (fonte.get("situacao_direitos") != situacao or
+            fonte.get("autorizar_publicacao") is not False or
+            not str(fonte.get("credito") or "").strip() or
+            not str(fonte.get("titulo") or "").strip()):
         raise ValueError("fonte não é candidata privada com direitos pendentes")
 
 
@@ -92,6 +107,33 @@ def baixar_dvids(fonte:dict, destino:Path) -> None:
     except Exception:
         destino.unlink(missing_ok=True)
         raise
+
+
+def baixar_nist(fonte:dict, destino:Path) -> None:
+    """Usa Kaltura NIST já suportado pelo yt-dlp, sem acessar rede fora da fonte."""
+    if fonte.get("provedor")!="nist_kaltura":
+        raise ValueError("provedor não é NIST")
+    try:
+        subprocess.run([
+            "yt-dlp","--no-playlist","--no-progress","--no-warnings",
+            "--socket-timeout","20","--retries","1","--fragment-retries","1",
+            "--max-filesize","60M",
+            "-f","best[height<=720][ext=mp4]/worst[ext=mp4]/worst",
+            "--merge-output-format","mp4","-o",str(destino),
+            f"kaltura:{fonte['partner_id']}:{fonte['entry_id']}"
+        ], check=True, timeout=220)
+        if not destino.is_file():
+            raise ValueError("Kaltura não devolveu MP4 de acesso público")
+    except Exception:
+        destino.unlink(missing_ok=True)
+        raise
+
+
+def baixar_fonte(fonte:dict, destino:Path) -> None:
+    if fonte["provedor"]=="nist_kaltura":
+        baixar_nist(fonte,destino)
+    else:
+        baixar_dvids(fonte,destino)
 
 
 def provar_video(p:Path) -> dict:
@@ -148,7 +190,7 @@ def coletar(fonte:dict, pasta:Path, bib, baixar=None,
     p=pasta/(fonte["id"]+".mp4")
     try:
         if not p.is_file():
-            (baixar or baixar_dvids)(fonte,p)
+            (baixar or baixar_fonte)(fonte,p)
         if not p.is_file() or p.stat().st_size<50_000 or p.stat().st_size>_MAX_BYTES:
             raise ValueError("arquivo de vídeo incompleto ou excessivo")
         dados=(inspecionar or provar_video)(p)
@@ -164,7 +206,11 @@ def coletar(fonte:dict, pasta:Path, bib, baixar=None,
             "pagina":fonte["pagina"],
             "url":fonte["pagina"],
             "credito":fonte["credito"],
-            "licenca_prova":"Página DVIDS marca PUBLIC DOMAIN; verificar terceiros, marcas, pessoas e não-endosso",
+            "licenca_prova":(
+                "DVIDS marca PUBLIC DOMAIN; verificar terceiros, marcas, pessoas e não-endosso"
+                if fonte["provedor"]=="dvids" else
+                "Política geral NIST não substitui conferência de direitos deste vídeo e de terceiros"
+            ),
             "video":{"url":fonte["pagina"],"dur":dados["duracao_s"]},
             "lugar":fonte.get("local") or "Estados Unidos",
         }

@@ -460,9 +460,9 @@ Mudanças **somente experimentais**:
 - `src/v4/formatos/plano.py::resolver_tempos` recebeu expressão genérica `@max(piso_segundos,@palavra+offset)`, para impedir corte cedo quando voz TTS varia. Mantida regra de `F-GANCHO-PROVA-REAL` 2,5s.
 - Plano `atlas_chips_v2_prova_25s.json` segura foto até pelo menos 2,5s e sincroniza transição do mapa com fim da foto; pergunta não antecede o mapa.
 - Primeiro teste novo com os 61 tempos reais `tests/dados/atlas_chips_v2_tts_real_run_44450584008.json` apontou um SEGUNDO erro `F-COBRE-TERRITORIO`: a entrada do título ocorreu durante chegada de câmera. O motor ganhou `entrada_apos_voo` opcional para camadas cartográficas, que espera dinamicamente a câmera atingir posição segura, adiando também a primeira linha da revelação. O plano usa esse contrato sem alterar qualquer limite do fiscal.
-- Dois testes Python e um smoke direto com cronologias reais da voz rápida **44450584008** e lenta **44447705090**. **O job `ritmo_real` de 44452013618 finalizou SUCCESS** nos dois cenários e sem bloqueios de pré-voo; a regressão integral estava em andamento na última consulta.
+- Dois testes Python e um smoke direto com cronologias reais da voz rápida **44450584008** e lenta **44447705090**. **GitHub Actions 44452013618 finalizou SUCCESS: 135 testes Python e TypeScript verdes**, incluindo os dois cenários de voz real (rápida/lenta), sem relaxar os fiscais.
 - Run anterior **44451262176** não exercitou os testes: o Ubuntu 26.04 do runner `ubuntu-latest` expirou o `apt-get update` para FFmpeg (exit 124). CI `.github/workflows/atlas-validacao.yml` pinou `validar` em `ubuntu-22.04` (mesmo alvo do workflow privado), e `ritmo_real` agora testa diretamente as duas vozes antes de instalar dependências.
-- Testes de regressão em `tests/test_atlas_previa_chips_v2.py` foram ampliados. **Não afirmar que o vídeo final foi criado, nem que a suíte completa passou**, até verificar o término da run 44452013618.
+- Testes de regressão em `tests/test_atlas_previa_chips_v2.py` foram ampliados. A suíte completa está comprovada verde. A **prévia audiovisual não está aprovada** até render/inspeção do MP4.
 
 Próximos passos: conferir status/log completo de **44452013618**; se verde, disparar **prévia privada sem publicação** via atualização de `.github/atlas/chips_v2_preview.txt`, verificar quadros, MP4, fiscal e mensagens Telegram. Não alterar `main`, `motor-integral-v4`, NTC ou DOSSIÊ; não baixar limiares de ritmo, imagem real nem segurança de território.
 
@@ -472,3 +472,9 @@ Próximos passos: conferir status/log completo de **44452013618**; se verde, dis
 - Execução GitHub Actions **44452013618** terminou **SUCCESS**: `ritmo_real` verde e `validar` verde; log do job `validar`: **135 testes Python passaram**, tipagem Remotion/TypeScript sem erro.
 - A nova prévia privada, acionada após esses testes pela atualização de `.github/atlas/chips_v2_preview.txt`, é a execução **44452281285** (em andamento na última leitura). Link: https://github.com/Heitor2404/coringa-news/actions/runs/44452281285 .
 - **Não há MP4 novo aprovado, enviado ou publicado confirmado nesta atualização.** Conferir logs das etapas preflight, quadros, render e Telegram antes de relatar progresso. Preservar diagnóstico mesmo se bloqueado; não alterar limites do fiscal.
+
+
+### Reteste privado após CI verde (19/11, 03:33 UTC)
+
+- Duas execuções do mesmo workflow `atlas-chips-v2-privado.yml` apareceram em poucos segundos: `44452281285` (SHA `2b36e5c`) e `44452293201` (SHA `da4773d`). A primeira foi disparada por commit do repositório antes do commit deste atendimento; a segunda foi acionada neste atendimento após a CI verde. **Não disparar terceira execução**, evitar custos/filas.
+- A primeira estava `in_progress` e a segunda `pending` na última consulta; **não afirmar MP4, aprovação humana ou envio Telegram** sem consultar os resultados e os logs correspondentes.

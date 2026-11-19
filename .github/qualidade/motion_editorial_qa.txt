@@ -1,0 +1,3 @@
+# Prova visual privada: o mesmo FilmeEditorial deve animar dado e fluxo causal.
+# Três cenas multicontexto com fontes documentadas, sem Gemini, Charon ou Telegram.
+# Não é nova tentativa do filme Taiwan, nem aprovação de publicação.

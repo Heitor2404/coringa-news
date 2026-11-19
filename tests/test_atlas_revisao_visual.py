@@ -54,3 +54,14 @@ def test_falha_fechada_sem_modelo_ou_cota(tmp_path):
     r = revisao_visual.revisar(_dados(tmp_path), erro)
     assert not r['pronto']
     assert 'SEM-REVISAO' in str(r['bloqueios'])
+
+
+def test_diagrama_tecnico_nao_exige_mapa_no_critico(tmp_path):
+    pasta = _dados(tmp_path)
+    pl = json.loads((pasta / 'plano_resolvido.json').read_text())
+    pl['beats'][0]['composicao'] = 'atlas.tecnica'
+    pl['beats'][0]['direcao_visual']['verbo'] = 'DEMONSTRAR'
+    (pasta / 'plano_resolvido.json').write_text(json.dumps(pl))
+    def visao(p, imgs):
+        return {**_visao_boa(p, imgs), 'acao_ou_relacao_visivel': True}
+    assert revisao_visual.revisar(pasta, visao)['pronto']

@@ -50,6 +50,14 @@ jobs:
         run: |
           (cd motor4 && npm ci --no-audit --no-fund)
           (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Garantir FFmpeg/FFprobe para verificar os vídeos reais
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
       - name: Preparar mídias JÁ VERSIONADAS (sem chamadas de imagens externas)
         run: |
           python -m src.v4.formatos.filme_editorial \

@@ -1,0 +1,82 @@
+name: QA — reavaliar 3 vídeos narrados com fiscal de progressão (sem render)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/reavaliar_3_episodios.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: qa-reavaliar-narrados-v2
+  cancel-in-progress: true
+jobs:
+  comparacao:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependências e regressão transversal do fiscal
+        run: |
+          python -m pip install -q pytest pillow requests
+          python -m pytest -q \
+            tests/test_fiscal_progressao.py \
+            tests/test_qa_episodios_multitema.py \
+            tests/test_qa_video_fontes.py \
+            tests/test_contrato_visual_multitema.py \
+            tests/test_filme_editorial.py \
+            tests/test_filme_panama_ciclo_19s.py
+      - name: Recuperar OS MESMOS três vídeos e relatórios da execução original
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-3-episodios-narrados-sem-publicar
+          run-id: 44564855342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: anterior
+      - name: Comparar aprovações técnicas anteriores com BLOQUEIOS de informação
+        run: |
+          mkdir -p reavaliacao
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.filme_editorial import avaliar
+          raiz=Path('anterior/saida_qa_3')
+          report={}
+          for tema in ('taiwan_chips','venezuela_paisagens','ever_given_suez'):
+              base=raiz/tema
+              p=json.loads((base/'plano.json').read_text(encoding='utf8'))
+              old=json.loads((base/'qa_montagem.json').read_text(encoding='utf8'))
+              assert (base/'episodio_narrado.mp4').stat().st_size>100000
+              new=avaliar(p)
+              reasons=[x for x in new['bloqueios'] if x['codigo'] in (
+                'F-FONTE-VISUAL-REPETIDA','F-SEM-PROGRESSAO-INFORMACIONAL')]
+              assert old['status_tecnico']=='PRONTO_PARA_REVISAO'
+              assert old['tem_audio'] is True and old['publicavel'] is False
+              assert not new['pronto'] and reasons
+              report[tema]={
+                'id':tema,'audio_existente':True,'cenas':len(p['shots']),
+                'resultado_antigo':old['status_tecnico'],
+                'resultado_fiscal_novo':'BLOQUEADO_POR_QUALIDADE_VISUAL',
+                'motivos_genericos':reasons,
+                'aprovacao_humana':'PENDENTE',
+                'publicado':False,
+              }
+          assert sum(len(x['motivos_genericos']) for x in report.values())>=14
+          Path('reavaliacao/relatorio_antes_depois.json').write_text(
+            json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps({k:{'antes':v['resultado_antigo'],
+              'agora':v['resultado_fiscal_novo'],
+              'reprovacoes':len(v['motivos_genericos'])}
+              for k,v in report.items()},ensure_ascii=False))
+          PY
+      - name: Conservar apenas relatório do falso positivo encontrado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-comparativo-falsos-positivos-3-temas
+          path: reavaliacao/relatorio_antes_depois.json
+          if-no-files-found: warn
+          retention-days: 7

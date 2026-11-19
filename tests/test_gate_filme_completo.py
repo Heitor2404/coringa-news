@@ -99,6 +99,23 @@ def _completo(monkeypatch):
     p["cenas"][2]["midia"]["asset_id"]="chip_real_em_movimento"
     p["cenas"][4]["midia"]["asset_id"]="uc_davis_real"
     p["cenas"][5]["midia"]["asset_id"]="semiconductor_fab_real"
+    p["cenas"][5]["midia"]["substituicao"]={
+        "acontecimento":"Processo industrial de Taiwan",
+        "evento_da_midia":"Laboratorio externo",
+        "uso":"demonstracao",
+        "cena_especifica":True,"origem_verificada":True,
+        "licenca_verificada":True,
+        "representacao":{
+            "tipo":"processo_equivalente",
+            "processo_narrado":"deposicao_metalica_em_wafer",
+            "processo_midia":"deposicao_metalica_em_wafer",
+            "compatibilidade_tecnica_verificada":True,
+            "evidencia_inspecao":"inspecao humana dos quadros reais 1s a 3s",
+            "fala_atribui_registro":False,
+            "origem_no_credito":"Laboratorio externo · representacao",
+        }
+    }
+    novos[2]["prova"]["processo_verificado"]="deposicao_metalica_em_wafer"
     p["cenas"][6]["midia"]={
         "tipo":"comparison","identidade":"explicativa",
         "asset_ids":["commons:TSMC_Fab_18_May_2025.jpg",
@@ -172,3 +189,36 @@ def test_trama_sem_payoff_concreto_bloqueia_ultimo_plano(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["cenas"][7]["midia"].pop("resultado_verificavel")
     assert "E-PAYOFF-SEM-CONSEQUENCIA" in codes(_avaliar_sintetico(p,cat))
+
+
+def test_filme_integral_permite_demonstracao_tecnica_equivalente_curada(monkeypatch):
+    p,cat=_completo(monkeypatch)
+    r=_avaliar_sintetico(p,cat)
+    assert "E-REPRESENTACAO-NAO-EQUIVALENTE" not in codes(r)
+    assert "E-PROCESSO-SEM-INSPECAO-NO-ACERVO" not in codes(r)
+    assert r["pronto_para_tts"]
+    assert r["inspecao_humana"]=="PENDENTE"
+
+
+def test_filme_integral_reprova_e_beam_disfarçado_de_euv(monkeypatch):
+    p,cat=_completo(monkeypatch)
+    p["cenas"][5]["midia"]["substituicao"]["representacao"]["processo_narrado"]="litografia_euv"
+    r=_avaliar_sintetico(p,cat)
+    assert "E-REPRESENTACAO-NAO-EQUIVALENTE" in codes(r)
+    assert not r["pronto_para_tts"]
+
+
+def test_filme_integral_reprova_substituicao_inventada_so_no_roteiro(monkeypatch):
+    p,cat=_completo(monkeypatch)
+    cat["itens"][4]["prova"].pop("processo_verificado")
+    r=_avaliar_sintetico(p,cat)
+    assert "E-PROCESSO-SEM-INSPECAO-NO-ACERVO" in codes(r)
+    assert not r["pronto_para_tts"]
+
+
+def test_filme_integral_nao_aceita_mudar_identidade_para_literal(monkeypatch):
+    p,cat=_completo(monkeypatch)
+    p["cenas"][5]["midia"]["identidade"]="literal"
+    r=_avaliar_sintetico(p,cat)
+    assert "E-REGISTRO-CONTRADITORIO" in codes(r)
+    assert not r["pronto_para_tts"]

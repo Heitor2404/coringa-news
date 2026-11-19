@@ -80,6 +80,13 @@ def resolver_tempos(plano: dict, palavras: list[dict], duracao_audio: float | No
     p['_estilo_no_episodio'] = estilo_no_episodio(plano)
 
     def a(v):
+        # Piso temporal reutilizável: respeita a sincronização com a fala sem
+        # permitir que uma narração mais rápida encurte uma prova visual obrigatória.
+        # Ex.: @max(2.5,@por-0.12) = maior valor entre 2,5s e a âncora real.
+        if isinstance(v, str):
+            piso = re.fullmatch(r'@max\(\s*(\d+(?:\.\d+)?)\s*,\s*(@[^()]+?)\s*\)', v.strip())
+            if piso:
+                return round(max(float(piso.group(1)), a(piso.group(2).strip())), 3)
         if duracao_audio is not None and isinstance(v, str):
             m = re.fullmatch(r'@fim([+\-]\d+(?:\.\d+)?)?', v.strip())
             if m:

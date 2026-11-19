@@ -4,6 +4,7 @@ on:
     branches: [atlas-direcao-visual-20261118]
     paths:
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "motor4/remotion/src/formatos/MotionEditorial.tsx"
       - ".github/workflows/qa-filme-editorial-typescript.yml"
       - ".github/qualidade/roi_remotion_compilar.txt"
   workflow_dispatch:

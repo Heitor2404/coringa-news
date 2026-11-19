@@ -1,0 +1,169 @@
+{
+  "versao": 1,
+  "id": "taiwan_26s_documental_integrado",
+  "formato": "filme_editorial",
+  "tipo": "PRE_PRODUCAO_PRIVADA",
+  "titulo": "Por que Taiwan importa tanto para os chips?",
+  "janela_duracao_s": [
+    25,
+    30
+  ],
+  "duracao_planejada_s": 27.445,
+  "base_narracao": {
+    "motor": "gemini",
+    "voz": "Charon",
+    "fallback": "bloquear",
+    "referencia_temporal": "tests/dados/atlas_chips_v2_tts_real_run_44450584008.json",
+    "arquivo_wav": null,
+    "texto_fonte": "src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json",
+    "status": "SEM_AUDIO_REUTILIZAVEL_VERIFICADO",
+    "nota": "Tempos preservados permitem decupagem; não constituem arquivo de áudio nem autorizam afirmar reutilização da voz."
+  },
+  "rubrica_editorial": {
+    "min_videos_reais_independentes": 2,
+    "max_fracao_fotos_estaticas": 0.4,
+    "max_foto_individual_s": 3.8,
+    "mapa_evidencia_real_obrigatorio": true,
+    "nao_aceitar_lancamento_sem_inspecao_humana": true
+  },
+  "cenas": [
+    {
+      "id": "01_fab18",
+      "inicio": 0,
+      "fim": 2.5,
+      "acao": "MOSTRAR",
+      "promessa": "A fábrica Fab 18 existe em Taiwan",
+      "midia": {
+        "tipo": "foto",
+        "asset_id": "commons:TSMC_Fab_18_May_2025.jpg",
+        "identidade": "literal",
+        "rotulo": "TSMC Fab 18 · Taiwan"
+      },
+      "estado": "CATALOGO_VERIFICAR"
+    },
+    {
+      "id": "02_taiwan_mapa",
+      "inicio": 2.5,
+      "fim": 5.1,
+      "acao": "LOCALIZAR",
+      "promessa": "Situar a fábrica e Taiwan na Ásia",
+      "midia": {
+        "tipo": "atlas_map",
+        "identidade": "explicativa",
+        "clipe": "stage_atlas/taiwan/mapa.mp4",
+        "prova": "stage_atlas/taiwan/comprovante_atlas.json",
+        "rotulo": "Taiwan · mapa ATLAS"
+      },
+      "estado": "ARTEFATO_NO_RUN_44588617776_NAO_COPIADO_PARA_RUN_ATUAL"
+    },
+    {
+      "id": "03_chip_fisico",
+      "inicio": 5.1,
+      "fim": 7.8,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar o objeto físico real em movimento, sem fingir fabricação",
+      "midia": {
+        "tipo": "video",
+        "asset_id": "candidato:mixkit_microchip_1140",
+        "identidade": "representativa",
+        "rotulo": "Chip em placa · vídeo ilustrativo",
+        "pagina": "https://mixkit.co/free-stock-video/microchip-technology-close-up-1140/",
+        "licenca_anunciada": "Mixkit Stock Video Free License"
+      },
+      "estado": "CANDIDATO_NAO_INGESTADO"
+    },
+    {
+      "id": "04_wafer",
+      "inicio": 7.8,
+      "fim": 11,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar um wafer real e explicar que recebe circuitos",
+      "midia": {
+        "tipo": "foto",
+        "asset_id": "commons:Silicon_wafer_close_view.jpg",
+        "identidade": "representativa",
+        "rotulo": "Wafer real · exemplo sem origem TSMC"
+      },
+      "estado": "CATALOGO_VERIFICAR"
+    },
+    {
+      "id": "05_processamento",
+      "inicio": 11,
+      "fim": 14.8,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar equipamento de litografia real e sua função, sem alegar ser TSMC",
+      "midia": {
+        "tipo": "foto",
+        "asset_id": "candidato:uc_davis_cleanroom_45490137372",
+        "identidade": "representativa",
+        "rotulo": "Laboratório UC Davis · contexto",
+        "pagina": "https://commons.wikimedia.org/wiki/File:UC_Davis_Cleanroom_(45490137372).jpg",
+        "licenca_anunciada": "CC BY 2.0"
+      },
+      "estado": "LICENCA_REVISTA_MAS_SEM_SHA_NEM_CURADORIA_INTERNA"
+    },
+    {
+      "id": "06_fabricacao_real",
+      "inicio": 14.8,
+      "fim": 18.7,
+      "acao": "DEMONSTRAR",
+      "promessa": "Mostrar fabricação de semicondutores em operação (ou bloquear)",
+      "midia": {
+        "tipo": "video",
+        "asset_id": "candidato:st_micro_manufacturing",
+        "identidade": "representativa",
+        "rotulo": "STMicroelectronics · outra fabricante",
+        "pagina": "https://commons.wikimedia.org/wiki/File:How_ST_designs_and_manufactures_semiconductor_devices.webm",
+        "licenca_anunciada": "CC BY 3.0, revisão pendente no Commons"
+      },
+      "estado": "BLOQUEADO_LICENCA_SEM_REVISAO"
+    },
+    {
+      "id": "07_elo_equipamento",
+      "inicio": 18.7,
+      "fim": 22.3,
+      "acao": "CONECTAR",
+      "promessa": "Mostrar relação verificável entre equipamentos europeus e a produção em Taiwan",
+      "midia": {
+        "tipo": "comparison",
+        "asset_id": null,
+        "identidade": "explicativa",
+        "rotulo": "Equipamentos ≠ fábrica, relação documentada"
+      },
+      "estado": "SEM_COMPOSICAO_PROBATÓRIA"
+    },
+    {
+      "id": "08_consequencia",
+      "inicio": 22.3,
+      "fim": 27.445,
+      "acao": "REVELAR",
+      "promessa": "Mostrar consequência concreta da dependência internacional, não slogan vazio",
+      "midia": {
+        "tipo": "video",
+        "asset_id": null,
+        "identidade": "literal",
+        "rotulo": "Consequência documentada"
+      },
+      "estado": "SEM_ACONTECIMENTO_E_MIDIA"
+    }
+  ],
+  "candidatos_nao_autorizados_automaticamente": [
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:How_ST_designs_and_manufactures_semiconductor_devices.webm",
+      "problema": "License review needed (video). Não incorporar sem documentação de licença e inspeção."
+    },
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:How_EUV_lithography_works.webm",
+      "problema": "License review needed (video). Bloqueado."
+    },
+    {
+      "url": "https://mixkit.co/free-stock-video/microchip-technology-close-up-1140/",
+      "problema": "Free License indicada, mas sem ingestão de bytes, SHA e avaliação visual."
+    }
+  ],
+  "politica": {
+    "publicar": false,
+    "telegram": "NAO_ENVIAR_SE_BLOQUEADO",
+    "autorizar_tts_apos_portao_visual": true
+  }
+}

@@ -22,6 +22,8 @@ export type FilmShot = {
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
   mechanism?: 'lock_filling' | 'lock_causal';
+  reference_asset?: string;
+  reference_from_seconds?: number;
   subject: string;
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
@@ -104,7 +106,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
-    return <LockCausal t={t} events={shot.cues || []}/>;
+    return <LockCausal t={t} events={shot.cues || []} referenceAsset={shot.reference_asset} referenceFrom={shot.reference_from_seconds ?? 0}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
   if(shot.type === 'video') {
@@ -150,7 +152,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <Body shot={shot} p={p} t={now-shot.start}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}
-    <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>
+    {shot.mechanism!=='lock_causal' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
     <div style={{position:'absolute',top:248,left:62,right:62,display:'flex',justifyContent:'space-between',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
       <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
       <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>

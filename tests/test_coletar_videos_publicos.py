@@ -116,6 +116,7 @@ def nist():
 def test_nist_kaltura_usa_mesma_biblioteca_e_nao_aprova(tmp_path):
     fonte=nist()
     C.validar_fonte(fonte)
+    fonte.pop("sha256_esperado",None)  # fixture sintético não é o MP4 original
     def baixar(f,d):
         assert f["entry_id"]=="0_emhevqw5"
         d.write_bytes(b"VIDEO TESTE NAO REAL"*7000)
@@ -157,3 +158,25 @@ def test_nist_url_kaltura_é_derivada_do_id_oficial(tmp_path,monkeypatch):
     C.baixar_nist(f,tmp_path/"arquivo.mp4")
     assert comandos and comandos[0][-1]=="kaltura:684682:0_emhevqw5"
     assert "60M" in comandos[0]
+
+
+def test_video_institucional_fixa_sha_de_proveniencia_e_recusa_mudanca(tmp_path):
+    f=nist()
+    f["sha256_esperado"]="a"*64
+    def baixar(src,dest):dest.write_bytes(b"conteudo alterado"*6000)
+    def metadados(p):return {"largura":1360,"altura":720,"duracao_s":105}
+    def nunca_quadros(*args):
+        raise AssertionError("não pode criar quadros após SHA divergir")
+    r=C.executar({"versao":1,"itens":[f]},tmp_path/"p",
+                 tmp_path/"db.sqlite3",tmp_path/"armazem",
+                 baixar=baixar,inspecionar=metadados,quadros=nunca_quadros)
+    assert r["baixados"]==0
+    assert "SHA-256" in r["fontes"][0]["motivo"]
+    assert not (tmp_path/"p"/(f["id"]+".mp4")).exists()
+
+
+def test_sha_esperado_precisa_ser_digest_valido():
+    fonte=nist()
+    fonte["sha256_esperado"]="hash_de_fachada"
+    with pytest.raises(ValueError,match="SHA-256"):
+        C.validar_fonte(fonte)

@@ -160,3 +160,28 @@ def test_nao_inventa_timbre_gemini_ou_publicacao(tmp_path,monkeypatch):
     assert "narrador" not in r or (r["narrador"].get("motor") != "edge")
     r["tipo"]="PRODUCAO"
     assert "F-VOZ-TESTE-EM-PRODUCAO" in {x["codigo"] for x in FILM.avaliar(r)["bloqueios"]}
+
+
+def test_nao_exporta_quadro_escuro_na_virada_do_palco():
+    original=json.loads((ROOT/"src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json").read_text())
+    voz=json.loads((ROOT/"tests/dados/atlas_chips_v2_tts_real_run_44450584008.json").read_text())
+    p=ATLAS.resolver_tempos(original,voz["palavras"],duracao_audio=voz["duracao_audio"])
+    idx=next(i for i,k in enumerate(p["palco"]) if k["tipo"]=="mapa")
+    assert idx>0 and p["palco"][idx-1]["tipo"]!="mapa"
+    inicio=p["palco"][idx]["t"]
+    with pytest.raises(ValueError,match="F-ATLAS-ENTRADA-ESCURA"):
+        BR.verificar_plano(p,inicio,2.6)
+    pronto=BR.verificar_plano(p,inicio+.55,2.6)
+    assert pronto["palco"]=="PalcoMapa/MapLibre"
+    assert pronto["rasters_ativos"]
+
+
+def test_nao_aceita_trecho_que_cruza_mapa_para_outro_palco():
+    p=_atlas()
+    ks=p["palco"]
+    ix=next(i for i,k in enumerate(ks[:-1]) if k["tipo"]=="mapa"
+            and ks[i+1]["t"]-k["t"]>1.5)
+    t0=float(ks[ix]["t"])
+    end=float(ks[ix+1]["t"])
+    with pytest.raises(ValueError,match="F-ATLAS-ATRAVESSA-BEAT"):
+        BR.verificar_plano(p,t0,end-t0+0.2)

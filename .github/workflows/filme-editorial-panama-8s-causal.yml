@@ -73,7 +73,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          from PIL import Image, ImageDraw
+          from PIL import Image, ImageDraw, ImageStat
           import subprocess, json, io, hashlib
           out=Path('saida_filme_panama_8s')
           video=out/'prova_causal_8s.mp4'
@@ -94,6 +94,15 @@ jobs:
             ImageDraw.Draw(grid).text((x+12,y+13),f't={t:.2f}s',fill=(248,241,217))
             im.save(out/f'frame_{i:02d}.png')
           assert len(set(framehashes.values()))==len(times),'Paralisia visual detectada'
+          # Detectar salto de exposição no corte real -> diagrama (1.65s),
+          # que os hashes distintos e o teste de quadros pretos não capturam.
+          def brilho_ceu(t):
+            png=subprocess.check_output(['ffmpeg','-hide_banner','-loglevel','error','-ss',str(t),
+              '-i',str(video),'-frames:v','1','-vf','scale=360:640','-f','image2pipe','-vcodec','png','pipe:1'])
+            im=Image.open(io.BytesIO(png)).convert('L')
+            return ImageStat.Stat(im.crop((20,8,340,128))).mean[0]
+          salto=abs(brilho_ceu(1.60)-brilho_ceu(1.70))
+          assert salto<32, f'Corte com flash de luminância: {salto:.1f}'
           grid.save(out/'contato_causal_8s.jpg',quality=92)
           (out/'qa_causal.json').write_text(json.dumps({
             'status':'AGUARDANDO_REVISAO_HUMANA','duracao':probe['format']['duration'],

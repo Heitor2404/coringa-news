@@ -10,12 +10,13 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 from PIL import Image
 
-LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC0', 'NASA PD'}
+LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 TIPOS = {'photo', 'video', 'comparison'}
 
@@ -68,7 +69,17 @@ def avaliar(plano: dict) -> dict:
                 continue
             asset = plano['media'][mid]
             url = asset.get('url') or ''
-            if urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
+            source = asset.get('local_source')
+            if source:
+                # Somente fixtures reais já versionadas; prova privada, nunca produção automática.
+                path = Path(source)
+                permitido = plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and (
+                    str(path).startswith('tests/midia/') or
+                    str(path).startswith('tests/piloto_ever_given/img/') or
+                    str(path).startswith('motor4/formatos/dados/raster/'))
+                if not permitido or path.is_absolute() or '..' in path.parts:
+                    falha('F-FIXTURE-NAO-AUTORIZADA', cid, 'arquivo local só na amostra privada e caminhos permitidos')
+            elif urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
                 falha('F-ORIGEM-INSEGURA', cid, 'usar acervo real com URL verificável e confiável')
             if asset.get('license') not in LICENCAS or not asset.get('page') or not asset.get('credit'):
                 falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos')
@@ -103,18 +114,41 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
     assets_dir.mkdir(parents=True,exist_ok=True)
     medias, relatorio={},[]
     for mid,item in plano['media'].items():
-        data=downloader(item['url'])
+        source = item.get('local_source')
+        if source:
+            # path traversal e symlinks são rejeitados na avaliação e no uso.
+            src = (Path.cwd() / source).resolve()
+            if not src.is_relative_to(Path.cwd().resolve()) or not src.is_file():
+                raise ValueError(f'{mid}: arquivo de fixture não encontrado')
+            data = src.read_bytes()
+        else:
+            data=downloader(item['url'])
         if not isinstance(data,bytes):
             raise ValueError(f'{mid}: sem bytes válidos')
         sha=hashlib.sha256(data).hexdigest()
         if item.get('expected_sha256') and item['expected_sha256']!=sha:
             raise ValueError(f'{mid}: hash da origem mudou — selecionar/curar novamente')
-        import io
-        with Image.open(io.BytesIO(data)) as img:
-            if img.format not in ('JPEG','PNG') or min(img.size)<700:
-                raise ValueError(f'{mid}: imagem inválida/pequena')
-            ext='.png' if img.format=='PNG' else '.jpg'
-            w,h=img.size
+        if item.get('media_type') == 'video':
+            if not source:
+                raise ValueError(f'{mid}: vídeos de rede exigem ingestão/recorte em etapa separada')
+            probe = subprocess.run(
+                ['ffprobe','-v','error','-show_entries','stream=width,height',
+                 '-select_streams','v:0','-of','json',str(src)],
+                capture_output=True,text=True,check=True)
+            streams=json.loads(probe.stdout).get('streams') or []
+            if not streams or min(streams[0].get('width',0),streams[0].get('height',0))<700:
+                raise ValueError(f'{mid}: vídeo sem qualidade mínima')
+            w,h=streams[0]['width'],streams[0]['height']
+            ext=src.suffix.lower()
+            if ext not in ('.mp4','.webm'):
+                raise ValueError(f'{mid}: container de vídeo inválido')
+        else:
+            import io
+            with Image.open(io.BytesIO(data)) as img:
+                if img.format not in ('JPEG','PNG') or min(img.size)<700:
+                    raise ValueError(f'{mid}: imagem inválida/pequena')
+                ext='.png' if img.format=='PNG' else '.jpg'
+                w,h=img.size
         out=assets_dir/f'{sha}{ext}'
         if not out.exists():
             out.write_bytes(data)  # preservar bytes idênticos, sem recomprimir

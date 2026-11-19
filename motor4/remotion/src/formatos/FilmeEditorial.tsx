@@ -44,6 +44,8 @@ export type FilmProps = {
   // Em prévia privada não há voz; o runtime pode acrescentar camada de narração
   // e legenda separadamente depois do plano aprovado.
   preview?: boolean;
+  private_review_only?: boolean;
+  direitos_pendentes?: string[];
 };
 
 const W = 1080, H = 1920;
@@ -224,7 +226,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
     </>}
   </AbsoluteFill>;
 };
-export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true}) => {
+export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,private_review_only=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
@@ -236,7 +238,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true}
     </div>
     {preview&&<div style={{position:'absolute',bottom:40,left:0,right:0,textAlign:'center',
       fontFamily:'Inter,Arial',color:'#CFD6E0',opacity:.7,fontSize:20,letterSpacing:1.1}}>
-      PRÉVIA PRIVADA · NÃO PUBLICADO
+      {private_review_only ? 'PRÉVIA TÉCNICA · DIREITOS PENDENTES · NÃO PUBLICAR' : 'PRÉVIA PRIVADA · NÃO PUBLICADO'}
     </div>}
   </AbsoluteFill>;
 };

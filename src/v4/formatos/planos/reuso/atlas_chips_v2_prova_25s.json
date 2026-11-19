@@ -55,7 +55,21 @@
       "nome": "Taiwan",
       "cor": "destaque",
       "t0": "@por",
-      "t1": "@observe-0.1"
+      "t1": "@observe-0.12"
+    },
+    {
+      "fonte": "paises",
+      "nome": "Taiwan",
+      "cor": "destaque",
+      "t0": "@internacional",
+      "t1": "@fornecedores-0.12"
+    },
+    {
+      "fonte": "paises",
+      "nome": "Netherlands",
+      "cor": "destaque",
+      "t0": "@europeus",
+      "t1": "@se-0.12"
     },
     {
       "fonte": "paises",
@@ -172,67 +186,128 @@
       ]
     },
     {
-      "id": "g-04-cadeia-global",
+      "id": "g-04-design-eua",
       "composicao": "atlas.protagonista",
       "t": "@mas-0.12",
       "roi": [
-        -131,
-        0,
-        129,
-        65
+        114,
+        12,
+        242,
+        52
       ],
       "movimento": "fixo",
-      "prova": "Mapa mundial mostra que projeto, equipamentos e fabricação estão geograficamente separados; pinos sinalizam funções, NÃO trajetos físicos.",
+      "prova": "Mapa liga a importância do lugar físico Taiwan aos projetos de chips por empresas nos Estados Unidos; não representa transporte.",
       "fatos": [
         "f-cadeia"
       ],
       "camadas": [
         {
-          "id": "g-us-design",
+          "id": "eua-design",
           "componente": "atlas.geoPin",
           "slot": "geo",
           "t0": "@americanas",
-          "t1": "@fim",
+          "t1": "@fornecedores-0.12",
           "p": {
             "tipo": "local",
             "lonlat": [
-              -113,
-              36
+              -121.96,
+              37.35
             ],
-            "rotulo": "PROJETO · EUA",
+            "rotulo": "PROJETOS · EUA",
+            "lado": "esquerda",
             "papel": "secundario"
           }
-        },
+        }
+      ]
+    },
+    {
+      "id": "g-05-equipamentos-fabricacao",
+      "composicao": "atlas.protagonista",
+      "t": "@fornecedores-0.12",
+      "roi": [
+        0,
+        16,
+        126,
+        56
+      ],
+      "movimento": "fixo",
+      "prova": "Mapa reúne Holanda (fornecedores de equipamento) e Taiwan (fábrica) com rótulos de função, sem desenhar fluxo de mercadorias fictício.",
+      "fatos": [
+        "f-cadeia"
+      ],
+      "camadas": [
         {
-          "id": "g-eu-equipment",
+          "id": "eu-maquinas",
           "componente": "atlas.geoPin",
           "slot": "geo",
           "t0": "@europeus",
-          "t1": "@fim",
+          "t1": "@se-0.12",
           "p": {
             "tipo": "local",
             "lonlat": [
-              5.5,
-              52
+              5.39,
+              51.42
             ],
-            "rotulo": "MÁQUINAS · EUROPA",
+            "rotulo": "EQUIPAMENTOS · HOLANDA",
+            "lado": "direita",
             "papel": "secundario"
           }
         },
         {
-          "id": "g-tw-foundry",
+          "id": "tw-fabricacao",
           "componente": "atlas.geoPin",
           "slot": "geo",
           "t0": "@2:taiwan",
-          "t1": "@fim",
+          "t1": "@se-0.12",
           "p": {
             "tipo": "local",
             "lonlat": [
-              120.9,
-              23.7
+              120.97,
+              24.78
             ],
             "rotulo": "FABRICAÇÃO · TAIWAN",
+            "lado": "esquerda",
             "papel": "secundario"
+          }
+        }
+      ]
+    },
+    {
+      "id": "g-06-consequencia",
+      "composicao": "atlas.manchete",
+      "t": "@se-0.12",
+      "roi": [
+        118,
+        18,
+        238,
+        48
+      ],
+      "movimento": "recua",
+      "prova": "Síntese causal: um elo industrial pode repercutir mundialmente, após ter mostrado os lugares do encadeamento.",
+      "fatos": [
+        "f-cadeia"
+      ],
+      "camadas": [
+        {
+          "id": "payoff-funcao",
+          "componente": "editorial.titleOrPayoff",
+          "slot": "titulo",
+          "t0": "@se",
+          "t1": "@fim",
+          "p": {
+            "linhas": [
+              {
+                "texto": "UM ELO",
+                "t": "@se",
+                "tamanho": 86
+              },
+              {
+                "texto": "AFETA TODOS",
+                "t": "@consequência",
+                "tamanho": 74,
+                "destaque": true
+              }
+            ]
           }
         }
       ]

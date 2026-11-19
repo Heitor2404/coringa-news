@@ -42,6 +42,16 @@ def avaliar(plano: dict, catalogo: dict | None = None) -> dict:
                           or (plano.get('rotas') or []))
     for beat in beats:
         bid = str(beat.get('id') or '?')
+        roi = beat.get('roi')
+        if roi and len(roi) == 4 and isinstance(roi[0], (float, int)) and isinstance(roi[2], (float, int)):
+            largura = (float(roi[2]) - float(roi[0])) % 360
+            # Um continente distante não serve de cenário para uma ação industrial.
+            # A ligação entre lugares deve ser apresentada como fluxo/inset quando
+            # não há uma mudança geográfica observável no próprio mapa.
+            if largura > 70 and beat.get('composicao') in ('atlas.protagonista', 'atlas.manchete', 'atlas.painel'):
+                if not (beat.get('evento_geografico') and beat.get('rotas_verificadas')):
+                    falha('E-MAPA-GLOBAL-DECORATIVO', bid,
+                          f'ROI cobre {largura:.1f} graus de longitude sem evento/rota geográfica verificável')
         direcao = beat.get('direcao_visual')
         if not isinstance(direcao, dict):
             falha('E-SEM-CONTRATO-VISUAL', bid,

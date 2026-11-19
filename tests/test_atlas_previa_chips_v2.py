@@ -171,3 +171,35 @@ def test_rotulo_prova_visual_atlas_atende_legibilidade_minima():
     assert "fontSize: 30" in prova
     assert "fontSize: 24" not in prova
     assert "maxWidth: b.w - 44" in prova
+
+
+def test_gancho_real_nao_encurta_quando_gemini_fala_rapido():
+    """Run 44450584008: POR aos 2.418s fazia a foto terminar aos 2.298s."""
+    fixture = json.loads((RAIZ / "tests/dados/atlas_chips_v2_tts_real_run_44450584008.json").read_text(encoding="utf-8"))
+    pl = json.loads(ARQ.read_text(encoding="utf-8"))
+    r = P.resolver_tempos(pl, fixture["palavras"], duracao_audio=fixture["duracao_audio"])
+    foto = next(L for L in r["beats"][0]["camadas"] if L["componente"] == "atlas.provaVisual")
+    mapa = r["beats"][1]
+    pergunta = mapa["camadas"][0]
+    assert foto["t0"] == 0
+    assert foto["t1"] == 2.5, foto
+    assert mapa["t"] == foto["t1"]
+    assert pergunta["t0"] >= mapa["t"]
+    assert pergunta["p"]["linhas"][0]["t"] >= mapa["t"]
+    assert P.REGRAS["progressao_max_s"] == 3
+    erros = [v for v in P.validar(r) if v["gravidade"] == "erro"]
+    assert not erros, json.dumps(erros, ensure_ascii=False)
+
+
+def test_piso_temporal_nao_atrasa_gancho_com_narracao_mais_lenta():
+    """Run 44447705090: POR depois de 3.5s; mapa segue palavra sem corte aos 2.5s."""
+    fixture = json.loads((RAIZ / "tests/dados/atlas_chips_v2_tts_real_run_44447705090.json").read_text(encoding="utf-8"))
+    pl = json.loads(ARQ.read_text(encoding="utf-8"))
+    r = P.resolver_tempos(pl, fixture["palavras"], duracao_audio=fixture["duracao_audio"])
+    foto = r["beats"][0]["camadas"][0]
+    mapa = r["beats"][1]
+    assert foto["t1"] > 3.0
+    assert foto["t1"] == mapa["t"]
+    assert P.REGRAS["progressao_max_s"] == 3
+    erros = [v for v in P.validar(r) if v["gravidade"] == "erro"]
+    assert not erros, json.dumps(erros, ensure_ascii=False)

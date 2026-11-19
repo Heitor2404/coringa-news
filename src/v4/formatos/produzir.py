@@ -113,6 +113,10 @@ def assets_do_plano(plano: dict) -> list[str]:
 
 def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
     """bytes DA ORIGEM da mídia (URL da biblioteca) — ou do cache local indexado por sha256 — e de onde vieram"""
+    if it.get('origem_biblioteca_v3'):
+        from src.v4.formatos import ponte_biblioteca
+        # Pexels manual: ler somente bytes V3 verificados, NUNCA raspar a página.
+        return ponte_biblioteca.bytes_originais(it)
     sha = it.get('sha256_origem')
     if cache and sha:
         for f in cache.glob(f'{sha}.*'):
@@ -142,9 +146,8 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
 
     from PIL import Image
 
-    from src.v4 import viabilidade
-    from src.v4.formatos import plano as P
-    por = {it['id']: it for it in viabilidade.carregar()['itens']}
+    from src.v4.formatos import plano as P, ponte_biblioteca
+    por = {it['id']: it for it in ponte_biblioteca.catalogo()['itens']}
     PUBLICO.mkdir(parents=True, exist_ok=True)
     (saida / 'ativos').mkdir(parents=True, exist_ok=True)
     cache = cache or (Path(os.environ['CORINGA_MIDIA_LOCAL']) if os.environ.get('CORINGA_MIDIA_LOCAL') else None)
@@ -163,7 +166,7 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
                 raise RuntimeError(f'{a}: vídeo precisa de licença comercial explícita e SHA256 da origem')
             from urllib.parse import urlsplit
             from src.v4.util import sondar
-            ext = Path(urlsplit(it['url']).path).suffix.lower()
+            ext = (it.get('ext') or Path(urlsplit(it['url']).path).suffix).lower()
             permitidos = ('.mp4', '.webm', '.mov')
             if ext not in permitidos:
                 # Importação MANUAL: página do Pexels/Commons + arquivo local de hash conferido.
@@ -233,7 +236,8 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         add(f"plano: {v['regra']} {v['onde']}", v['gravidade'] != 'erro', v['texto'])
     if not any(not i['ok'] and i['item'].startswith('plano:') for i in itens):
         add('plano (slots, colisões, texto, progressão, repetição, modalidades)', True, f'{len(P.camadas(pl))} camadas')
-    bib = {it['id']: it for it in viabilidade.carregar()['itens']}
+    from src.v4.formatos import ponte_biblioteca
+    bib = {it['id']: it for it in ponte_biblioteca.catalogo()['itens']}
     for a in assets_do_plano(pl):
         it = bib.get(a)
         ok = bool(it and it.get('licenca') and it.get('credito') and (it.get('prova') or {}).get('midia_corresponde') is True)

@@ -93,3 +93,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 validação final do rótulo BASE PARA CIRCUITOS e no quadro ganho semântico
 
 # 2026-11-19 validacao final contrato semantico rotulo2, CI 127 testes
+
+# 2026-11-19 contratempo: rótulo semântico wafer testado sem frase literal no script

@@ -29,6 +29,10 @@ jobs:
       - name: Dependências e 4 testes de privacidade e bloqueio
         run: |
           python -m pip install -q pytest requests
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
           python -m pytest -q tests/test_qa_mapas_r2_telegram.py
           test -s saida_mapas_r2/mapas_narrados_r2.mp4
           test -s saida_mapas_r2/qa_montagem.json

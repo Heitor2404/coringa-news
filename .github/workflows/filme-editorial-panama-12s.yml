@@ -130,10 +130,7 @@ jobs:
             -vf "fps=1/2,scale=360:640,tile=3x2" -frames:v 1 \
             saida_filme_panama/contato.jpg
           ffprobe -v error -show_entries format=duration,size -of json \
-            saida_filme_panama/prova_panama_12s.mp4
-            saida_filme_panama/prova_com_voz_12s.mp4
-            saida_filme_panama/voz.mp3
-            saida_filme_panama/som_status.json > saida_filme_panama/metadata.json
+            saida_filme_panama/prova_panama_12s.mp4 > saida_filme_panama/metadata.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -154,5 +151,8 @@ jobs:
             saida_filme_panama/metadata.json
             saida_filme_panama/contato.jpg
             saida_filme_panama/prova_panama_12s.mp4
+            saida_filme_panama/prova_com_voz_12s.mp4
+            saida_filme_panama/voz.mp3
+            saida_filme_panama/som_status.json
           retention-days: 7
           if-no-files-found: warn

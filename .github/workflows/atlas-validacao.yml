@@ -33,8 +33,8 @@ jobs:
           python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
       - name: Verificar sintaxe e testes ATLAS (sem API de IA)
         run: |
-          python -m py_compile src/voz.py src/v4/formatos/estado.py src/v4/formatos/__main__.py src/v4/formatos/diretor.py src/v4/formatos/plano.py src/v4/formatos/produzir.py scripts/atlas_previa_curta.py tests/test_formatos.py tests/test_atlas_integracao_p0.py
-          python -m pytest -q -ra tests/test_formatos.py tests/test_atlas_integracao_p0.py
+          python -m py_compile src/voz.py src/v4/formatos/estado.py src/v4/formatos/__main__.py src/v4/formatos/diretor.py src/v4/formatos/plano.py src/v4/formatos/produzir.py scripts/atlas_previa_curta.py tests/test_formatos.py tests/test_atlas_integracao_p0.py tests/test_atlas_integracao_p1.py
+          python -m pytest -q -ra tests/test_formatos.py tests/test_atlas_integracao_p0.py tests/test_atlas_integracao_p1.py
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

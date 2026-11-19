@@ -5,9 +5,9 @@
   "duracao": 16,
   "media": {
     "chip-macro": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/AMD%407nm%2812nmIO%29%40Zen2%40Matisse%40Ryzen_5_3600%40100-000000031_BF_1923SUT_9HM6935R90062_DSCx4%40IOD_Infrared.jpg/1920px-AMD%407nm%2812nmIO%29%40Zen2%40Matisse%40Ryzen_5_3600%40100-000000031_BF_1923SUT_9HM6935R90062_DSCx4%40IOD_Infrared.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "page": "https://commons.wikimedia.org/wiki/File:AMD@7nm(12nmIO)@Zen2@Matisse@Ryzen_5_3600@100-000000031_BF_1923SUT_9HM6935R90062_DSCx4@IOD_Infrared.jpg",
-      "credit": "Fritzchens Fritz · Wikimedia Commons",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg/1280px-Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg",
+      "credit": "Martijn Boer · Wikimedia Commons",
       "license": "CC0"
     },
     "fab-tsmc": {
@@ -50,7 +50,7 @@
       "asset": "chip-macro",
       "lead": "01 · A PERGUNTA",
       "headline": "POR QUE TAIWAN\nIMPORTA TANTO?",
-      "subject": "Microchip AMD Ryzen — imagem representativa",
+      "subject": "Die real de processador Freescale MPC8245 — representação",
       "evidence": "representative",
       "cues": [
         {

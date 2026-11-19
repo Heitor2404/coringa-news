@@ -27,7 +27,9 @@ O usuário rejeitou qualquer mapa elementar ou reimplementação da cartografia.
 
 - Contrato e pré-produção funcionando ≠ demonstração estética; somente quadros reais inspecionados permitem julgar o mapa.
 - Integração permite reutilização no **FilmeEditorial**, mas a escolha automática de qual trecho geográfico e qual momento usar ainda depende de direção/roteiro e validação factual. Não promete que já esteja conectada ao workflow diário de produção.
-- O novo workflow de Taiwan é **prova de cartografia real dentro da arquitetura**, não um novo episódio final nem um mapa simplificado; sem voz gerada. Seu status de render e inspeção deve ser acrescentado aqui após execução.
+- **Run de render nativo 44587183552 SUCCESS**: janela Taiwan do ATLAS (2,5–5,1 s), raster `ne2_asia_leste` verificado, MP4 real 1080×1920 de 2,6s, sem áudio, sidecar autenticado, importado e validado pelo storyboard `filme_taiwan_prova.json`. Artefato `14560809433` (`qa-taiwan-mapa-atlas-original-integrado-filme`). **Inspeção de cinco frames do MP4 local** constatou relevo físico real e Taiwan corretamente destacado, muito superior ao mapa elementar rejeitado. Porém o primeiro 0,1s da janela mostrou transição escura com resquícios da cena anterior — **não aprovar ainda essa versão visual**.
+- A ponte recebeu bloqueios genéricos `F-ATLAS-ENTRADA-ESCURA` (entrar somente após 0,55 s da troca de palco, evitando fade preto) e `F-ATLAS-ATRAVESSA-BEAT` (proíbe um clipe que atravesse outro beat). Foi ajustada a janela de Taiwan para iniciar após essa transição e acrescentados testes `tests/test_ponte_mapa_atlas_filme.py`. Nova execução de render `44588617776` em andamento ao registrar esta atualização. Não declarar essa versão aprovada até inspecionar seus quadros.
+- Este workflow é **prova de cartografia real dentro da arquitetura**, não um episódio final e não usa a voz de produção; a intenção continua ser entregar uma versão visualmente adequada só depois de inspeção real.
 - \`main\`, NTC, DOSSIÊ e produção diária continuam intactos; nenhum vídeo publicado.
 
 ## Referência de uso em CI (sem executar automaticamente em produção)

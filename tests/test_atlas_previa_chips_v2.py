@@ -75,16 +75,16 @@ def test_fim_e_cta_respeitam_duracao_real_da_narracao():
     assert all(v["regra"] != "F-TEMPO" for v in P.validar(resolvido) if v["gravidade"] == "erro")
 
 
-def test_gancho_importancia_global_avanca_sem_repetir_mapa():
+def test_gancho_pergunta_avanca_sem_card_cobrindo_o_mapa():
     pl = json.loads(ARQ.read_text(encoding="utf-8"))
     b = next(x for x in pl["beats"] if x["id"] == "g-02-contexto-taiwan")
-    info = next(L for L in b["camadas"] if L["id"] == "alcance-global")
-    assert info["componente"] == "editorial.statCard"
-    assert info["slot"] == "selo"
-    assert info["p"]["valor"] == "IMPACTO GLOBAL"
-    assert info["t0"] == "@importa"
+    assert len(b["camadas"]) == 1
+    linhas = b["camadas"][0]["p"]["linhas"]
+    assert next(l for l in linhas if l["texto"] == "TAIWAN?")["t"] == "@importa"
     tempo = P.resolver_tempos(pl, _palavras(pl["narracao"]["texto"]))
-    assert all(x["regra"] != "F-SEM-PROGRESSAO" for x in P.validar(tempo) if x["gravidade"] == "erro")
+    erros = [x["regra"] for x in P.validar(tempo) if x["gravidade"] == "erro"]
+    assert "F-SEM-PROGRESSAO" not in erros
+    assert "F-COBRE-TERRITORIO" not in erros
 
 
 def test_telegram_recebe_bloqueio_sem_video(monkeypatch, tmp_path):

@@ -13,7 +13,7 @@ export type FilmShot = {
   id: string;
   start: number;
   end: number;
-  type: 'photo' | 'video' | 'comparison' | 'mechanism';
+  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map';
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
@@ -114,6 +114,15 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
     }))} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
+  if(shot.type === 'atlas_map') {
+    // É um MP4 do Formato/PalcoMapa ORIGINAL, com seu próprio raster, créditos,
+    // destaques e câmera. Nunca redesenhar mapa, crop ou duplicar títulos.
+    return <AbsoluteFill><Sequence from={Math.round(shot.start*30)}
+      durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+      <OffthreadVideo src={staticFile(shot.asset || '')} muted
+        style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+    </Sequence></AbsoluteFill>;
+  }
   if(shot.type === 'video') {
     return <AbsoluteFill><Sequence from={Math.round(shot.start * 30)}
       durationInFrames={Math.ceil((shot.end - shot.start) * 30)}>
@@ -154,6 +163,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   // Corte seco: o filme não escurece os últimos e primeiros quadros de cada plano.
   const cue=shot.cues?.filter(c=>now >= shot.start+c.at).slice(-1)[0];
   const cueAge=cue?now-shot.start-cue.at:0;
+  if(shot.type==='atlas_map') return <AbsoluteFill style={{background:'#08101A'}}>
+    {/* Preserva os créditos, pins, rótulos e composição do mapa ATLAS; só a barra GLOBAL vem do Filme. */}
+    <Body shot={shot} p={p} t={now-shot.start}/>
+  </AbsoluteFill>;
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <Body shot={shot} p={p} t={now-shot.start}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}

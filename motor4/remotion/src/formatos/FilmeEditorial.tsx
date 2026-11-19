@@ -62,7 +62,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
   const progress=ease((p-.11)/.74), waterY=1095-275*progress;
   const surfWave=Math.sin(p*37)*3;
   return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 42%,#12273A,#06101D 75%)'}}>
-    <svg viewBox="0 0 1080 1920" width="100%" height="100%" aria-label="Esquema ilustrativo: a água entra, sobe e eleva o navio dentro da eclusa">
+    <svg viewBox="0 0 1080 1920" width="100%" height="100%" style={{fontFamily:'Inter, Arial, sans-serif'}} aria-label="Esquema ilustrativo: a água entra, sobe e eleva o navio dentro da eclusa">
       <defs>
         <linearGradient id="lock-water" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#55C8E4" stopOpacity=".88"/>

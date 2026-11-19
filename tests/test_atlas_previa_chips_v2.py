@@ -129,3 +129,45 @@ def test_gancho_com_tempo_real_gemini_nao_congela_tres_segundos():
     assert not any(v["regra"] == "F-TEMPO" for v in erros), erros
     # Evitar a falsa correção "subir limite" (em vez de introduzir prova factual).
     assert P.REGRAS["progressao_max_s"] == 3
+
+
+def test_telegram_exibe_erros_reais_dos_quadros(monkeypatch, tmp_path):
+    """Regressao run 44449171248: preflight verde, render bloqueado por texto a 24 px."""
+    from src.v4.formatos import produzir
+    from src.v3 import previa_telegram
+
+    pasta = tmp_path / "bloqueado_quadros"
+    (pasta / "quadros").mkdir(parents=True)
+    (pasta / "preflight.json").write_text(json.dumps({
+        "pronto": True, "itens": [{"item": "geometria", "ok": True, "detalhe": "OK"}]
+    }), encoding="utf-8")
+    (pasta / "quadros" / "relatorio.json").write_text(json.dumps({
+        "quadros": [{"t": 1.5}],
+        "problemas": [
+            {"t": 1.5, "regra": "R-TEXTO-PEQUENO",
+             "texto": "'FAB 18 · TSMC' a 24 px (mín. 26)", "aviso": False},
+            {"t": 1.5, "regra": "A-CREDITO-RODAPE",
+             "texto": "crédito na área de interface", "aviso": True}
+        ]
+    }), encoding="utf-8")
+    enviados = []
+    monkeypatch.setattr(previa_telegram, "chat_autorizado",
+                        lambda: ("123", {"tipo": "private", "membros": 2}))
+    monkeypatch.setattr(previa_telegram, "_api",
+                        lambda nome, data: enviados.append((nome, data)))
+    resultado = produzir.telegram(pasta, "Chips V2")
+    assert resultado == {"enviado": True, "sem_mp4": True}
+    mensagem = enviados[0][1]["text"]
+    assert "preflight: 1/1 itens OK" in mensagem
+    assert "etapa: quadros (1 analisados; 1 erros)" in mensagem
+    assert "R-TEXTO-PEQUENO" in mensagem and "FAB 18" in mensagem
+    assert "A-CREDITO-RODAPE" not in mensagem
+
+
+def test_rotulo_prova_visual_atlas_atende_legibilidade_minima():
+    """Regra do componente reutilizavel, nao hardcode do episodio Chips."""
+    src = (RAIZ / "motor4/remotion/src/formatos/Primitivas.tsx").read_text(encoding="utf-8")
+    prova = src.split("// atlas.provaVisual", 1)[1].split("// editorial.cta", 1)[0]
+    assert "fontSize: 30" in prova
+    assert "fontSize: 24" not in prova
+    assert "maxWidth: b.w - 44" in prova

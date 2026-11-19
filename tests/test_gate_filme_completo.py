@@ -32,8 +32,36 @@ def codes(r):
     return {i["codigo"] for i in r["bloqueios"]}
 
 
+def _avaliar_sintetico(manifesto, itens):
+    # Estes testes criam mídia fictícia, SEM arquivo original.
+    # O motor real e o CLI nunca dispensam a checagem byte a byte.
+    return G.avaliar(manifesto, itens, conferir_bytes=False)
+
+
+def test_fluxo_real_bloqueia_metadados_sem_arquivo():
+    resultado=G.avaliar(brief(), catalogo())
+    assert "E-BYTES-NAO-COMPROVADOS" in codes(resultado)
+    assert not resultado["pronto_para_tts"]
+
+
+def test_fluxo_real_rejeita_arquivo_com_hash_adulterado(tmp_path, monkeypatch):
+    import hashlib
+    cat=catalogo()
+    original=cat["itens"][0]
+    original["arquivo_local"]="fab18.jpg"
+    original["sha256_origem"]=hashlib.sha256(b"arquivo diferente").hexdigest()
+    (tmp_path/"fab18.jpg").write_bytes(b"arquivo corrompido")
+    monkeypatch.chdir(tmp_path)
+    resultado=G.avaliar(brief(), cat)
+    assert any(x["codigo"]=="E-BYTES-NAO-COMPROVADOS" and
+               x["cena"]=="01_fab18" and "SHA-256" in x["motivo"]
+               for x in resultado["bloqueios"])
+    assert not resultado["pronto_para_tts"]
+
+
+
 def test_taiwan_nao_finge_que_acervo_tem_video_suficiente():
-    r=G.avaliar(brief(),catalogo())
+    r=_avaliar_sintetico(brief(),catalogo())
     assert r["status"]=="BLOQUEADO_EDITORIAL_SEM_PROVA"
     assert not r["pronto_para_tts"] and not r["pronto_para_render"]
     assert r["publicado"] is False and r["inspecao_humana"]=="PENDENTE"
@@ -45,7 +73,7 @@ def test_taiwan_nao_finge_que_acervo_tem_video_suficiente():
 def test_pendencia_licenca_nao_se_resolve_por_string_do_roteiro():
     p=brief()
     p["cenas"][5]["estado"]="BLOQUEADO_LICENCA_SEM_REVISAO"
-    r=G.avaliar(p,catalogo())
+    r=_avaliar_sintetico(p,catalogo())
     assert not r["pronto_para_tts"]
 
 
@@ -56,7 +84,7 @@ def test_tempo_e_narracao_de_base_sao_os_do_roteiro_antigo_sem_fingir_wav():
     assert p["base_narracao"]["arquivo_wav"] is None
     assert p["base_narracao"]["status"]=="SEM_AUDIO_REUTILIZAVEL_VERIFICADO"
     assert len(p["cenas"])==8
-    assert G.avaliar(p,catalogo())["pronto_para_render"] is False
+    assert _avaliar_sintetico(p,catalogo())["pronto_para_render"] is False
 
 
 def _completo(monkeypatch):
@@ -91,7 +119,7 @@ def _completo(monkeypatch):
 
 def test_mesmo_motor_pode_aceitar_cenas_novas_quando_realmente_curadas(monkeypatch):
     p,cat=_completo(monkeypatch)
-    r=G.avaliar(p,cat)
+    r=_avaliar_sintetico(p,cat)
     assert r["pronto_para_tts"],r["bloqueios"]
     assert not r["pronto_para_render"]  # ainda não produziu áudio
     assert r["mapas_atlas_comprovados"]==1
@@ -102,7 +130,7 @@ def test_mesmo_motor_pode_aceitar_cenas_novas_quando_realmente_curadas(monkeypat
 def test_two_photos_cannot_be_called_two_new_videos(monkeypatch):
     p,cat=_completo(monkeypatch)
     cat["itens"][-1]["natureza"]="foto"
-    r=G.avaliar(p,cat)
+    r=_avaliar_sintetico(p,cat)
     assert not r["pronto_para_tts"]
     assert "E-VIDEO-FALSO" in codes(r)
 
@@ -110,14 +138,14 @@ def test_two_photos_cannot_be_called_two_new_videos(monkeypatch):
 def test_modelo_pode_exigir_mais_material_sem_mudar_engine(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["rubrica_editorial"]["min_videos_reais_independentes"]=5
-    r=G.avaliar(p,cat)
+    r=_avaliar_sintetico(p,cat)
     assert "E-VIDEO-INSUFICIENTE" in codes(r)
 
 
 def test_troca_por_fotos_paradas_reprova_slideshow(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["rubrica_editorial"]["max_fracao_fotos_estaticas"]=.22
-    r=G.avaliar(p,cat)
+    r=_avaliar_sintetico(p,cat)
     assert "E-SLIDESHOW" in codes(r)
 
 
@@ -125,22 +153,22 @@ def test_gemini_charon_sem_edge(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["base_narracao"]["motor"]="edge"
     p["base_narracao"]["voz"]="Antonio"
-    assert "E-VOZ-CONFIG" in codes(G.avaliar(p,cat))
+    assert "E-VOZ-CONFIG" in codes(_avaliar_sintetico(p,cat))
 
 
 def test_repeticao_de_foto_nao_e_nova_prova(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["cenas"][4]["midia"]["asset_id"]=p["cenas"][3]["midia"]["asset_id"]
-    assert "E-FONTE-REPETIDA" in codes(G.avaliar(p,cat))
+    assert "E-FONTE-REPETIDA" in codes(_avaliar_sintetico(p,cat))
 
 
 def test_relacao_sem_fonte_nao_vira_prova_por_ter_duas_imagens(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["cenas"][6]["midia"].pop("fonte_factual")
-    assert "E-RELACAO-NAO-DEMONSTRADA" in codes(G.avaliar(p,cat))
+    assert "E-RELACAO-NAO-DEMONSTRADA" in codes(_avaliar_sintetico(p,cat))
 
 
 def test_trama_sem_payoff_concreto_bloqueia_ultimo_plano(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["cenas"][7]["midia"].pop("resultado_verificavel")
-    assert "E-PAYOFF-SEM-CONSEQUENCIA" in codes(G.avaliar(p,cat))
+    assert "E-PAYOFF-SEM-CONSEQUENCIA" in codes(_avaliar_sintetico(p,cat))

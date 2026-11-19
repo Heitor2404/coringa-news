@@ -1,132 +1,129 @@
 {
   "formato": "filme_editorial",
   "tipo": "PROVA_VISUAL_PRIVADA",
-  "titulo": "Panamá: navio + mecanismo hidráulico real explicado + prova histórica, 12s",
+  "titulo": "PROVA 12s V4: passagem real nas eclusas + movimento hidráulico + Gatún 1913",
   "duracao": 12,
   "media": {
-    "passagem-navio": {
-      "local_source": "tests/midia/video_horizontal_navio.mp4",
+    "eclusa-hero-hd": {
+      "local_source": "stage_hero/comfort-2018-meio.mp4",
       "media_type": "video",
-      "page": "https://commons.wikimedia.org/wiki/File:Continuing_Promise_transits_the_Panama_Canal-ZLIWzvfdisQ-248%2B251.webm",
-      "credit": "U.S. Navy · filmagem real do Canal do Panamá",
+      "expected_sha256": "3d21204dc0ff2b45298b341b102f0175f32a8c4838dbed7de4efb24cece5b38d",
+      "page": "https://www.dvidshub.net/video/634226/usns-comfort-transits-panama-canal",
+      "credit": "U.S. Navy / J. Keith Wilson · DVIDS 634226 (2018)",
       "license": "Public domain"
-    },
-    "passagem-timelapse": {
-      "local_source": "tests/midia/video_horizontal_timelapse.mp4",
-      "media_type": "video",
-      "page": "https://commons.wikimedia.org/wiki/File:Panama_Canal_Timelapse-_Caribbean_to_Pacific.webm",
-      "credit": "Morrison Mast · filmagem real do Canal do Panamá",
-      "license": "CC BY 3.0"
     },
     "eclusas-historicas": {
       "local_source": "tests/midia/foto_panoramica_1913.jpg",
       "page": "https://www.loc.gov/pictures/item/2007663276",
-      "credit": "Library of Congress · Eclusas de Gatún, 1913",
+      "credit": "Library of Congress · Gatún, 1913",
       "license": "Public domain"
     }
   },
   "shots": [
     {
-      "id": "01-navio-movimento",
+      "id": "01-camara-real",
       "start": 0,
       "end": 3,
       "type": "video",
-      "asset": "passagem-navio",
-      "lead": "01 · UMA TRAVESSIA",
-      "headline": "POR QUE ESSE NAVIO\nPRECISA SUBIR?",
+      "asset": "eclusa-hero-hd",
+      "source_in_seconds": 0.8,
+      "lead": "01 · PORTÕES DA ECLUSA",
+      "headline": "COMO UM NAVIO\nCONSEGUE SUBIR?",
       "highlight": "SUBIR?",
       "evidence": "literal",
-      "literal_identity": "U.S. Navy, Continuing Promise transita pelo Canal do Panamá",
-      "subject": "Registro real da passagem de navio pelo canal",
+      "literal_identity": "USNS Comfort transitando pelo Canal do Panamá, 17 de outubro de 2018; US Navy",
+      "subject": "Passagem real dentro de uma eclusa do Canal do Panamá",
       "focus": [
         0.5,
         0.5
       ],
       "cues": [
         {
-          "at": 0.7,
-          "label": "PASSAGEM PELO CANAL",
-          "x": 0.52,
-          "y": 0.46
+          "at": 0.75,
+          "label": "PORTÕES DE VERDADE",
+          "x": 0.5,
+          "y": 0.4
         }
       ]
     },
     {
-      "id": "02-eclusa-sobe",
+      "id": "02-principio-hidraulico",
       "start": 3,
-      "end": 6.6,
+      "end": 6.9,
       "type": "mechanism",
       "mechanism": "lock_filling",
-      "lead": "02 · O MECANISMO",
+      "lead": "02 · ELEVAÇÃO HIDRÁULICA",
       "headline": "A ÁGUA ENTRA.\nO NAVIO SOBE.",
       "highlight": "SOBE.",
       "evidence": "explainer",
-      "subject": "Câmara de eclusa: demonstração ilustrativa do funcionamento",
+      "subject": "Esquema animado do princípio de funcionamento de uma eclusa",
       "cues": [
         {
-          "at": 0.35,
+          "at": 0.4,
           "label": "CÂMARA FECHADA",
-          "x": 0.52,
-          "y": 0.4
+          "x": 0.5,
+          "y": 0.42
         },
         {
-          "at": 2.1,
-          "label": "NAVIO SOBE COM A ÁGUA",
-          "x": 0.52,
-          "y": 0.41
+          "at": 2,
+          "label": "A ÁGUA ELEVA O CASCO",
+          "x": 0.5,
+          "y": 0.4
         }
       ]
     },
     {
-      "id": "03-eclusas-gatun",
-      "start": 6.6,
-      "end": 9.3,
-      "type": "photo",
-      "asset": "eclusas-historicas",
-      "lead": "04 · AS ECLUSAS",
-      "headline": "ISSO JÁ EXISTIA\nEM GATÚN EM 1913",
-      "highlight": "1913",
-      "evidence": "literal",
-      "literal_identity": "Fotografia do sistema de eclusas de Gatún do Canal do Panamá em março de 1913, Library of Congress",
-      "subject": "Fotografia histórica de Gatún, março de 1913",
-      "focus": [
-        0.47,
-        0.5
-      ],
-      "cues": [
-        {
-          "at": 0.65,
-          "label": "ECLUSAS DE GATÚN · 1913",
-          "x": 0.52,
-          "y": 0.42
-        }
-      ]
-    },
-    {
-      "id": "04-prossegue-travessia",
-      "start": 9.3,
-      "end": 12,
+      "id": "03-segue-passagem-real",
+      "start": 6.9,
+      "end": 9.4,
       "type": "video",
-      "asset": "passagem-timelapse",
-      "lead": "04 · A TRAVESSIA",
-      "headline": "O NAVIO SEGUE\nA VIAGEM",
-      "highlight": "SEGUE",
+      "asset": "eclusa-hero-hd",
+      "source_in_seconds": 6.5,
+      "lead": "03 · A TRAVESSIA",
+      "headline": "NO NOVO NÍVEL,\nELE PODE SEGUIR",
+      "highlight": "SEGUIR",
       "evidence": "literal",
-      "literal_identity": "Timelapse real Caribbean to Pacific via Canal do Panamá",
-      "subject": "Timelapse real do Canal do Panamá",
+      "literal_identity": "USNS Comfort transitando pelas eclusas do Canal do Panamá em 2018; outro momento do mesmo registro",
+      "subject": "Segundo momento da filmagem real do navio nas eclusas",
       "focus": [
         0.5,
         0.5
       ],
       "cues": [
         {
-          "at": 0.55,
-          "label": "TRÂNSITO REAL NO CANAL",
+          "at": 0.5,
+          "label": "PASSAGEM ENTRE CÂMARAS",
           "x": 0.5,
-          "y": 0.44
+          "y": 0.4
+        }
+      ]
+    },
+    {
+      "id": "04-gatun-historico",
+      "start": 9.4,
+      "end": 12,
+      "type": "photo",
+      "asset": "eclusas-historicas",
+      "lead": "04 · A HISTÓRIA",
+      "headline": "GATÚN EM\nCONSTRUÇÃO · 1913",
+      "highlight": "1913",
+      "evidence": "literal",
+      "literal_identity": "Fotografia histórica da construção das eclusas de Gatún em março de 1913, Library of Congress",
+      "subject": "Foto histórica das obras de Gatún, março de 1913",
+      "focus": [
+        0.52,
+        0.5
+      ],
+      "cues": [
+        {
+          "at": 0.6,
+          "label": "OBRAS DE GATÚN · 1913",
+          "x": 0.5,
+          "y": 0.45
         }
       ]
     }
   ],
-  "observacao": "Apenas teste de linguagem: vídeo original, mapa geográfico, timelapse, registro histórico. Sem narração ou publicação."
+  "observacao": "PROVA PRIVADA: 2 trechos DISTINTOS de 11s master filmagem DVIDS PD, 1 mecanismo animado original, 1 fotografia histórica domínio público. Não publicar.",
+  "narracao": "Como um navio desse tamanho consegue subir? A água entra na eclusa e leva o navio junto. Quando o nível se iguala, ele segue. Em Gatún, essa engenharia já era construída em 1913."
 }

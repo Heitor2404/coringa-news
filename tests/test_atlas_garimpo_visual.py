@@ -54,3 +54,8 @@ def test_coleta_provisoria_gera_manifesto_e_contato(tmp_path):
     assert len(r['itens']) == 1
     assert (tmp_path / 'contato.jpg').exists()
     assert (tmp_path / 'catalogo.json').exists()
+    import hashlib
+    item = r['itens'][0]
+    originais = list((tmp_path / 'originais').glob(item['sha256_origem'] + '.*'))
+    assert len(originais) == 1
+    assert hashlib.sha256(originais[0].read_bytes()).hexdigest() == item['sha256_origem']

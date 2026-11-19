@@ -145,6 +145,10 @@ def _substituir_arquivo(asset_id:str,item:dict,stage:Path)->tuple[Path,str]:
         esperado=item.get('sha256_esperado')
         if not isinstance(esperado,str) or len(esperado)!=64 or digest(src)!=esperado:
             raise ValueError(f'{asset_id}: SHA de artefato comprovado divergente')
+        if mode=='atlas_map':
+            # A ponte original exige que o mapa permaneça no staging ATLAS.
+            # Nunca copiar para outro diretório para burlar procedência.
+            return Path(item['origem']),esperado
         dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(src,dest)
     else:

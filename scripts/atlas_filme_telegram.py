@@ -14,11 +14,13 @@ from pathlib import Path
 from src.v3 import previa_telegram
 
 
-def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s") -> dict:
+def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s", *,
+            video: str = "prova_causal_8s.mp4", contato_nome: str = "contato_causal_8s.jpg",
+            qa_nome: str = "qa_causal.json", duracao: float = 7.8) -> dict:
     pasta = Path(saida)
-    filme = pasta / "prova_causal_8s.mp4"
-    contato = pasta / "contato_causal_8s.jpg"
-    qa_file = pasta / "qa_causal.json"
+    filme = pasta / video
+    contato = pasta / contato_nome
+    qa_file = pasta / qa_nome
 
     # Destino único, com verificação de privacidade já usada pelos outros canais.
     chat, info = previa_telegram.chat_autorizado()
@@ -34,8 +36,8 @@ def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s") -> di
         motivos.append("estado editorial não permite envio de prévia")
     if qa.get("nao_publicado") is not True or qa.get("sem_tts") is not True:
         motivos.append("escopo privado/silencioso não comprovado")
-    if abs(float(qa.get("duracao") or 0) - 7.8) > 0.1:
-        motivos.append("duração da prévia divergente de 7,8 s")
+    if abs(float(qa.get("duracao") or 0) - duracao) > 0.1:
+        motivos.append(f"duração da prévia divergente de {duracao:g} s")
     if not filme.is_file() or filme.stat().st_size < 50_000:
         motivos.append("MP4 ausente ou vazio")
     if motivos:
@@ -49,7 +51,7 @@ def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s") -> di
     caption = (
         "CORINGA EXPLICA · PRÉVIA PRIVADA\n"
         f"{titulo}\n"
-        "7,8 segundos · SEM NARRAÇÃO\n"
+        f"{duracao:g} segundos · SEM NARRAÇÃO\n"
         "STATUS: AGUARDANDO APROVAÇÃO HUMANA\n"
         "NÃO PUBLICADO — prova visual experimental."
     )
@@ -63,16 +65,16 @@ def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s") -> di
         previa_telegram._api(
             "sendPhoto",
             {"chat_id": chat,
-             "caption": "Panamá 7,8 s — folha de quadros da prova causal (privado)"},
+             "caption": f"Panamá {duracao:g} s — folha de quadros da prova causal (privado)"},
             ("photo", contato),
         )
         anexos += 1
     previa_telegram._api(
         "sendMessage",
         {"chat_id": chat, "text":
-         "ATLAS — PANAMÁ: prévia de 7,8 s entregue apenas para revisão visual.\n"
+         f"ATLAS — PANAMÁ: prévia de {duracao:g} s entregue apenas para revisão visual.\n"
          "É uma demonstração SILENCIOSA, não um episódio final. "
-         "Avalie se o portão real → esquema → água/navio subindo funciona visualmente. "
+         "Avalie se a cena realmente demonstra entrada, fecho, enchimento, equalização e saída. "
          "Mesmo com CI verde, estética continua pendente. Publicação proibida."},
     )
     return {
@@ -88,10 +90,15 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("saida", type=Path)
     p.add_argument("--titulo", default="Panamá — eclusa causal 7,8 s")
+    p.add_argument("--video", default="prova_causal_8s.mp4")
+    p.add_argument("--contato", default="contato_causal_8s.jpg")
+    p.add_argument("--qa", default="qa_causal.json")
+    p.add_argument("--duracao", type=float, default=7.8)
     args = p.parse_args(argv)
     if not os.getenv("TELEGRAM_BOT_TOKEN") or not os.getenv("TELEGRAM_CHAT_ID"):
         raise RuntimeError("Telegram privado não configurado; não enviar a outro destino")
-    resultado = entregar(args.saida, args.titulo)
+    resultado = entregar(args.saida, args.titulo, video=args.video,
+                        contato_nome=args.contato, qa_nome=args.qa, duracao=args.duracao)
     print(json.dumps(resultado, ensure_ascii=False))
     return 0
 

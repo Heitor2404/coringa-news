@@ -18,7 +18,8 @@ def test_two_real_clips_and_mechanism_action():
     assert sum(s['type']=='video' for s in p['shots'])==2
     assert sum(s['type']=='mechanism' for s in p['shots'])==1
     assert sum(s['type']=='photo' for s in p['shots'])==1
-    assert r['medias_unicas']==3
+    assert r['medias_unicas']==2
+    assert r['momentos_visuais'] >= 4  # Dois momentos DISTINTOS do mesmo registro têm ações diferentes
     assert p['shots'][1]['evidence']=='explainer'
     assert not any(s['type']=='comparison' for s in p['shots'])
 

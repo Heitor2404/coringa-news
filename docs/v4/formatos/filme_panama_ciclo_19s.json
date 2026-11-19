@@ -1,0 +1,100 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "titulo": "Panamá — ciclo completo de subida de uma eclusa, 19s",
+  "duracao": 19,
+  "media": {
+    "eclusa-hero-hd": {
+      "local_source": "stage_hero/comfort-2018-meio.mp4",
+      "media_type": "video",
+      "expected_sha256": "3d21204dc0ff2b45298b341b102f0175f32a8c4838dbed7de4efb24cece5b38d",
+      "page": "https://www.dvidshub.net/video/634226/usns-comfort-transits-panama-canal",
+      "credit": "U.S. Navy / J. Keith Wilson · DVIDS 634226 (2018)",
+      "license": "Public domain"
+    }
+  },
+  "shots": [
+    {
+      "id": "01-portoes-reais",
+      "start": 0,
+      "end": 1.6,
+      "type": "video",
+      "asset": "eclusa-hero-hd",
+      "source_in_seconds": 4.8,
+      "video_zoom": 1.1,
+      "focus": [
+        0.5,
+        0.48
+      ],
+      "evidence": "literal",
+      "literal_identity": "USNS Comfort diante de eclusa no Canal do Panamá, 2018, DVIDS 634226",
+      "subject": "Registro real USNS Comfort · 2018",
+      "lead": "01 · EVIDÊNCIA REAL",
+      "headline": "COMO ESSE NAVIO\nCONSEGUE SUBIR?",
+      "highlight": "SUBIR?",
+      "cues": [
+        {
+          "at": 0.35,
+          "label": "PORTÕES REAIS DA ECLUSA",
+          "x": 0.5,
+          "y": 0.38
+        }
+      ]
+    },
+    {
+      "id": "02-ciclo-da-eclusa",
+      "start": 1.6,
+      "end": 19,
+      "type": "mechanism",
+      "mechanism": "lock_cycle",
+      "evidence": "explainer",
+      "subject": "Corte longitudinal ilustrativo de uma eclusa; não representa geometria ou escala exatas",
+      "lead": "02 · CICLO COMPLETO",
+      "headline": "ENTRA → FECHA → ENCHE → SOBE → ABRE → SAI",
+      "cues": [
+        {
+          "at": 0,
+          "action": "enter",
+          "label": "O NAVIO ENTRA NA CÂMARA"
+        },
+        {
+          "at": 2.6,
+          "action": "seal",
+          "label": "O PORTÃO DE ENTRADA FECHA"
+        },
+        {
+          "at": 4.6,
+          "action": "valves",
+          "label": "AS VÁLVULAS LIBERAM A ÁGUA"
+        },
+        {
+          "at": 6.1,
+          "action": "rise",
+          "label": "A ÁGUA SOBE. O NAVIO TAMBÉM."
+        },
+        {
+          "at": 12.2,
+          "action": "equalize",
+          "label": "OS DOIS NÍVEIS FICAM IGUAIS"
+        },
+        {
+          "at": 14,
+          "action": "open",
+          "label": "PORTÃO DE SAÍDA SE ABRE"
+        },
+        {
+          "at": 15.6,
+          "action": "exit",
+          "label": "O NAVIO SEGUE NO NÍVEL ALTO"
+        }
+      ],
+      "reference_asset": "eclusa-hero-hd",
+      "reference_from_seconds": 6.4
+    }
+  ],
+  "observacao": "Exclusivamente uma ascensão em câmara genérica das eclusas originais do Panamá: a água entra por gravidade por condutos e aberturas na base; sem bombas. Portões e geometria em vista lateral são símbolos simplificados. Não confundir com demonstração de todos os três degraus nem alegar que filmagem mostra o navio subindo. 19 s, SILENCIOSO, análise humana necessária, sem publicação.",
+  "referencias_fatuais": [
+    "https://pancanal.com/en/design-of-the-locks/",
+    "https://pancanal.com/en/history-of-the-panama-canal/"
+  ]
+}

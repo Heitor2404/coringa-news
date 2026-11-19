@@ -30,7 +30,7 @@ def test_tempo_sintetico_e_contracto_chips_v2():
     erros = [v for v in P.validar(resolvido) if v["gravidade"] == "erro"]
     if erros:
         print("ATLAS_V2_VALIDATION_ERRORS=" + json.dumps(erros, ensure_ascii=False))
-    assert not erros, erros[:30]
+    assert not erros, json.dumps(erros, ensure_ascii=False)
 
 
 def test_fotos_chips_vem_do_catalogo_com_hash_real():

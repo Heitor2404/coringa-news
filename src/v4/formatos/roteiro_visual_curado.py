@@ -75,9 +75,10 @@ def montar(catalogo: dict, original: dict | None = None) -> dict:
     flow={'id':'cadeia-industrial','componente':'editorial.flowConnections','slot':'corpo',
           't0':'@mas-0.9','t1':'@2:se-0.12',
           'p':{'fluxo':True,'nos':[
-              {'rotulo':'PROJETOS','sub':'EMPRESAS AMERICANAS','t':'@mas-0.12'},
-              {'rotulo':'EQUIPAMENTOS','sub':'FORNECEDORES EUROPEUS','t':'@cadeia'},
-              {'rotulo':'FABRICAÇÃO','sub':'FÁBRICAS EM TAIWAN','t':'@europeus','destaque':True}]}}
+              {'rotulo':'CADEIA GLOBAL','sub':'ETAPAS INTERLIGADAS','t':'@mas-0.12'},
+              {'rotulo':'PROJETOS','sub':'EMPRESAS AMERICANAS','t':'@cadeia'},
+              {'rotulo':'EQUIPAMENTOS','sub':'FORNECEDORES EUROPEUS','t':'@europeus'},
+              {'rotulo':'FABRICAÇÃO','sub':'FÁBRICAS EM TAIWAN','t':'@2:taiwan','destaque':True}]}}
     b4=beat('nova-04-cadeia-causal','atlas.tecnica','@mas-0.9','CONECTAR',
             'Como diferentes etapas da indústria dependem umas das outras?',
             'Três etapas reais da cadeia: projeto, equipamento e fabricação',

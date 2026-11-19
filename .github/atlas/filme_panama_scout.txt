@@ -1,0 +1,2 @@
+# Fonte de vídeo REAL, Canal do Panamá: Pexels e DVIDS.
+# Gerar clipes de teste 20s + 5 fotogramas por fonte, sem publicação nem automação de MP4 final.

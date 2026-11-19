@@ -73,6 +73,7 @@ def extrair(plano: dict) -> list[dict]:
                 'suportes': suportes,
                 'acoes_programadas': [],
                 'acoes_esperadas': d.get('etapas_esperadas') or [],
+                'substituicao': d.get('substituicao'),
                 'mapa': (p_atlas.COMP.get(b.get('composicao') or '', {}).get('palco')
                          == 'mapa'),
             })
@@ -102,6 +103,7 @@ def extrair(plano: dict) -> list[dict]:
                 'suportes': evid,
                 'acoes_programadas': acoes,
                 'acoes_esperadas': s.get('estados_esperados') or [],
+                'substituicao': s.get('substituicao'),
                 'mapa': False,
                 'natureza_evidencia': s.get('evidence'),
             })
@@ -138,6 +140,23 @@ def auditar(plano: dict, julgamentos: dict | None = None) -> dict:
                 falhas.append({'id': ident, 'codigo': 'U-COBERTURA-ACAO',
                                'motivo': 'ações programadas não cobrem, em ordem, as ações esperadas'})
 
+        # Regras de fallback são uma camada do MESMO contrato, não exceções
+        # por guerra/país/tema. Sem marcação explícita, NÃO supor evento de origem.
+        subst = c.get('substituicao')
+        if isinstance(subst, dict):
+            from src.v4.formatos.qa_video_fontes import decidir_uso
+            checagem = decidir_uso(
+                acontecimento=str(subst.get('acontecimento') or ''),
+                evento_da_midia=str(subst.get('evento_da_midia') or ''),
+                uso=str(subst.get('uso') or ''),
+                cena_especifica=subst.get('cena_especifica') is not False,
+                rotulo=str(subst.get('rotulo') or ''),
+                origem_verificada=subst.get('origem_verificada') is True,
+                licenca_verificada=subst.get('licenca_verificada') is True,
+            )
+            if not checagem['permitido']:
+                falhas.append({'id': ident, 'codigo': checagem['codigo'],
+                               'motivo': 'substituição de mídia recusada pelo contrato comum'})
         if ident in julgamentos:
             inspecionados += 1
             erros_visao = julgar_inspecao(c['verbo'], c['mapa'], julgamentos[ident])

@@ -3,3 +3,4 @@
 # 2026-11-19 04:51 UTC: corrigidos conflitos pin/foto e cadência de revelação da cadeia industrial; tentativa isolada SEM TTS/MP4.
 # 2026-11-19 fourth attempt: factual causal stages before render; checked by synthetic P.validar regression.
 # 2026-11-19 04:57 UTC: quatro etapas de fluxo causal; sem gaps; rerun ANIMATIC SEM VOZ, SEM MP4.
+# 2026-11-19 render privado a partir de JPEG DERIVADO do garimpo, hash original preservado como auditoria, sem TTS/MP4.

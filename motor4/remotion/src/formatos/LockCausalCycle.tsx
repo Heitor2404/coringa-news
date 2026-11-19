@@ -76,10 +76,10 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
             <stop offset="1" stopColor="#647D8B"/>
           </linearGradient>
           <pattern id="cycleGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M60 0H0V60" stroke="#82A6B7" strokeOpacity=".12" strokeWidth="1.3"/>
+            <path d="M60 0H0V60" fill="none" stroke="#82A6B7" strokeOpacity=".12" strokeWidth="1.3"/>
           </pattern>
           <pattern id="cycleConcrete" width="35" height="32" patternUnits="userSpaceOnUse">
-            <path d="M0 30 L35 30 M34 0 L34 32" stroke="#273B46" strokeOpacity=".35" strokeWidth="1.6"/>
+            <path d="M0 30 L35 30 M34 0 L34 32" fill="none" stroke="#273B46" strokeOpacity=".35" strokeWidth="1.6"/>
           </pattern>
           <clipPath id="cycleChamberClip"><rect x={INLET_X+14} y="720" width={OUTLET_X-INLET_X-28} height={YFLOOR-720}/></clipPath>
           <clipPath id="cycleMapClip"><rect x="61" y="715" width="957" height="785"/></clipPath>
@@ -183,8 +183,11 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
         </text>
         {events.map((e,i)=><rect key={e.action || i} x={78+i*133} y="1636" height="8" width="117"
           fill={i<=step?GOLD:'#344F62'}/>)}
-        <text x="78" y="1683" fill="#96B4C0" fontSize="23">
-          ILUSTRAÇÃO DO PRINCÍPIO · PORTÕES E DISTÂNCIAS FORA DE ESCALA
+        <text x="78" y="1718" fill="#96B4C0" fontSize="23">
+          ILUSTRAÇÃO DO PRINCÍPIO · DISTÂNCIAS FORA DE ESCALA
+        </text>
+        <text x="78" y="1770" fill="#8CA8B8" fontSize="21">
+          FONTES: AUTORIDADE DO CANAL DO PANAMÁ · ESQUEMA PRÓPRIO
         </text>
       </svg>
     </AbsoluteFill>

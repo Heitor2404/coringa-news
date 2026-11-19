@@ -1,0 +1,241 @@
+{
+  "formato": "atlas",
+  "canal": "coringa",
+  "video_id": "atlas-chips-v2-prova-25s-privada",
+  "titulo": "Por que Taiwan importa tanto na indústria dos chips?",
+  "tipo_producao": "PREVIA PRIVADA experimental ATLAS V2 · 20–30 s · voz Gemini Charon sem fallback, mídias Commons com hash; NAO PUBLICAR",
+  "abertura_tipo": "prova_real",
+  "camera": "roi",
+  "geo": "motor4/formatos/dados/mundo.topo.json",
+  "styleframes": 10,
+  "narracao": {
+    "texto": "É a Fab dezoito, da TSMC, em Taiwan. Por que uma fábrica nessa ilha importa para tantos países? Observe este wafer de silício: é nele que se formam circuitos integrados. Mas fabricar chips exige uma cadeia internacional. Empresas americanas criam projetos. Fornecedores europeus fazem equipamentos. Fábricas em Taiwan produzem muitos desses chips. Se um elo falha, a consequência pode cruzar oceanos.",
+    "fatos": [
+      {
+        "id": "f-fab18",
+        "texto": "TSMC Fab 18 é fábrica da TSMC em Southern Taiwan Science Park, Taiwan. Imagem do exterior de 27 maio de 2025, de 4300streetcar.",
+        "fontes": [
+          "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg"
+        ]
+      },
+      {
+        "id": "f-wafer",
+        "texto": "Wafer de silício é substrato usado na fabricação de circuitos integrados; foto ilustrativa não identificada como origem TSMC.",
+        "fontes": [
+          "https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg"
+        ]
+      },
+      {
+        "id": "f-cadeia",
+        "texto": "Design de semicondutores, máquinas especializadas e fabricação industrial ocorrem em países/organizações diferentes; EUA, Europa e Taiwan são atores importantes.",
+        "fontes": [
+          "https://www.asml.com/investors/annual-report/2025",
+          "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+          "https://investor.tsmc.com/static/annualReports/2025/english/index.html"
+        ]
+      }
+    ]
+  },
+  "duracao": "@fim",
+  "rasters": [
+    {
+      "nome": "ne2_mundo"
+    },
+    {
+      "nome": "ne2_asia_leste",
+      "de": 4.5
+    }
+  ],
+  "clipes": [],
+  "rotas": [],
+  "rotulos": [],
+  "destaques": [
+    {
+      "fonte": "paises",
+      "nome": "Taiwan",
+      "cor": "destaque",
+      "t0": "@por",
+      "t1": "@observe-0.1"
+    },
+    {
+      "fonte": "paises",
+      "nome": "Taiwan",
+      "cor": "destaque",
+      "t0": "@2:taiwan",
+      "t1": "@fim"
+    }
+  ],
+  "beats": [
+    {
+      "id": "g-01-fabrica-real",
+      "composicao": "atlas.prova",
+      "t": 0,
+      "roi": [
+        118.5,
+        21,
+        124,
+        26
+      ],
+      "movimento": "fixo",
+      "prova": "Foto documental real e verificada da Fab 18, exterior; não ilustra o interior nem mecanismo EUV.",
+      "fatos": [
+        "f-fab18"
+      ],
+      "camadas": [
+        {
+          "id": "fab18-real-dominante",
+          "componente": "atlas.provaVisual",
+          "slot": "prova",
+          "t0": 0,
+          "t1": "@por-0.12",
+          "p": {
+            "asset": "commons:TSMC_Fab_18_May_2025.jpg",
+            "meta": "4300streetcar · CC BY 4.0 · Commons (recorte)",
+            "rotulo": "FAB 18 · TSMC",
+            "rotulo_t": "@fab",
+            "enquadramento": "cobrir",
+            "foco": "50% 50%"
+          }
+        }
+      ]
+    },
+    {
+      "id": "g-02-contexto-taiwan",
+      "composicao": "atlas.abertura",
+      "t": "@por-0.12",
+      "roi": [
+        117.5,
+        20,
+        125.5,
+        27
+      ],
+      "movimento": "aproxima",
+      "prova": "Mapa do lugar real citado e título sobre a pergunta geográfica, sem sugerir rota comercial exata.",
+      "fatos": [
+        "f-fab18"
+      ],
+      "camadas": [
+        {
+          "id": "pergunta-geografica",
+          "componente": "editorial.titleOrPayoff",
+          "slot": "pergunta",
+          "t0": "@por",
+          "t1": "@observe-0.12",
+          "p": {
+            "linhas": [
+              {
+                "texto": "POR QUE",
+                "t": "@por",
+                "tamanho": 90
+              },
+              {
+                "texto": "TAIWAN?",
+                "t": "@ilha",
+                "tamanho": 94,
+                "destaque": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g-03-wafer-real",
+      "composicao": "atlas.prova",
+      "t": "@observe-0.12",
+      "roi": [
+        117.5,
+        20,
+        125.5,
+        27
+      ],
+      "movimento": "fixo",
+      "prova": "Foto real de wafer, ilustrativa sem atribuição a fabricante; objeto físico como protagonista.",
+      "fatos": [
+        "f-wafer"
+      ],
+      "camadas": [
+        {
+          "id": "wafer-real",
+          "componente": "atlas.provaVisual",
+          "slot": "prova",
+          "t0": "@observe-0.12",
+          "t1": "@mas-0.12",
+          "p": {
+            "asset": "commons:Silicon_wafer_close_view.jpg",
+            "meta": "Le hollandais volant · CC BY 4.0 · Commons (recorte)",
+            "rotulo": "WAFER DE SILÍCIO · FOTO ILUSTRATIVA",
+            "rotulo_t": "@wafer",
+            "enquadramento": "conter"
+          }
+        }
+      ]
+    },
+    {
+      "id": "g-04-cadeia-global",
+      "composicao": "atlas.protagonista",
+      "t": "@mas-0.12",
+      "roi": [
+        -131,
+        0,
+        129,
+        65
+      ],
+      "movimento": "fixo",
+      "prova": "Mapa mundial mostra que projeto, equipamentos e fabricação estão geograficamente separados; pinos sinalizam funções, NÃO trajetos físicos.",
+      "fatos": [
+        "f-cadeia"
+      ],
+      "camadas": [
+        {
+          "id": "g-us-design",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@americanas",
+          "t1": "@fim",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              -113,
+              36
+            ],
+            "rotulo": "PROJETO · EUA",
+            "papel": "secundario"
+          }
+        },
+        {
+          "id": "g-eu-equipment",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@europeus",
+          "t1": "@fim",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              5.5,
+              52
+            ],
+            "rotulo": "MÁQUINAS · EUROPA",
+            "papel": "secundario"
+          }
+        },
+        {
+          "id": "g-tw-foundry",
+          "componente": "atlas.geoPin",
+          "slot": "geo",
+          "t0": "@2:taiwan",
+          "t1": "@fim",
+          "p": {
+            "tipo": "local",
+            "lonlat": [
+              120.9,
+              23.7
+            ],
+            "rotulo": "FABRICAÇÃO · TAIWAN",
+            "papel": "secundario"
+          }
+        }
+      ]
+    }
+  ]
+}

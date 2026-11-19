@@ -42,3 +42,5 @@ Critérios de aceite (sem substituir julgamento humano):
 - Aprovação humana **explícita** e autorização de publicar separada.
 
 **Proibição operacional:** nenhum workflow novo de produção completa sem este contrato; nunca enfraquecer fiscal técnico para buscar luz verde; não tocar `main`, `motor-integral-v4`, DOSSIÊ ou NTC. Este documento não promete resultado "definitivo" sem aprovação real de vídeo; registra o caminho verificável.
+
+**Verificação de código em 19/11 04:21 UTC:** CI [44457555371](https://github.com/Heitor2404/coringa-news/actions/runs/44457555371) sucesso, 147 testes Python + checagem TypeScript. Isso comprova os contratos com cenários simulados e regressão do piloto, **não comprova qualidade artística nem execução real da visão**.

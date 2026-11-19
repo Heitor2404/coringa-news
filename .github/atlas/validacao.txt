@@ -105,3 +105,4 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 reteste com proteção contra travamento do setup FFmpeg e 61 tempos originais Gemini Charon
 
 # 2026-11-19 smoke direto sem FFmpeg de 61 tempos Gemini, mais CI completo em separado
+ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e diagnostico Telegram de quadros - 19-11-2026.

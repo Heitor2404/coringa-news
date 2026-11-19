@@ -40,7 +40,7 @@ jobs:
       - name: Testar contrato antigo e novo, sem voz/IA
         run: |
           python -m pip install -q pillow requests pytest
-          python -m pytest -q tests/test_filme_editorial.py tests/test_filme_panama_mechanism.py tests/test_filme_panama_causal.py
+          python -m pytest -q tests/test_filme_editorial.py tests/test_filme_panama_mechanism.py tests/test_filme_panama_causal.py tests/test_atlas_filme_telegram.py
       - name: Conferir tipagem do compositor
         timeout-minutes: 12
         run: |
@@ -109,6 +109,19 @@ jobs:
             'sem_tts':True,'nao_publicado':True,'frames_sha256':framehashes},indent=2),encoding='utf-8')
           print('PROVA_PRIVADA_RENDERIZADA',probe)
           PY
+      - name: Enviar MP4 SILENCIOSO e folha de quadros ao Telegram privado
+        # Se o render/QA falhar, envia somente aviso BLOQUEADO; nunca a mídia inválida.
+        if: always()
+        timeout-minutes: 8
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Telegram privado sem segredos TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID"
+            exit 1
+          fi
+          python -m scripts.atlas_filme_telegram saida_filme_panama_8s
       - name: Guardar evidência sem publicação
         if: always()
         uses: actions/upload-artifact@v4

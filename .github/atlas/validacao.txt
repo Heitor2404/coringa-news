@@ -55,3 +55,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-18 ATLAS P0: testar voz Gemini/Charon sem fallback e gate editorial V3 (offline, sem render ou IA)
 
 # 2026-11-18 ATLAS P0: revalidar ponte de fichas V3 + gate de capacidade ATLAS (sem IA, sem render)
+
+# 2026-11-19 ATLAS P1: foto protagonista + registro.video FFmpeg existente, proveniencia e creditos (somente testes offline)

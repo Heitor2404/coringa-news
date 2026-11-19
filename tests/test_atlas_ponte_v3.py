@@ -44,6 +44,7 @@ def _aprovar(monkeypatch, tmp_path, reg, **alteracoes):
         "evidencia": "inspecao offline do arquivo gerado",
         "acontecimento": "teste do adaptador, não um evento histórico",
         "licenca_evidencia": "https://exemplo.invalid/licenca",
+        "licenca_exata": "CC BY 4.0",
     }
     ap = {"midia_id": reg["id"], "sha256": reg["sha256"], "prova": prova}
     ap.update(alteracoes)

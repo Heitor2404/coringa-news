@@ -30,6 +30,19 @@ def test_reprova_piloto_chips_que_passou_no_fiscal_tecnico():
     assert sum(e['codigo'] == 'E-SEM-CONTRATO-VISUAL' for e in res['bloqueios']) == 6
 
 
+def test_triagem_grava_artefato_de_diagnostico_antes_de_tts(tmp_path):
+    from src.v4.formatos.triagem_editorial import main
+    plano = json.loads((RAIZ / 'src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json')
+                       .read_text(encoding='utf-8'))
+    arq = tmp_path / 'plano.json'
+    arq.write_text(json.dumps(plano), encoding='utf-8')
+    destino = tmp_path / 'reprovado'
+    assert main([str(arq), str(destino)]) == 1
+    resultado = json.loads((destino / 'triagem_editorial.json').read_text())
+    assert not resultado['pronto']
+    assert resultado['bloqueios'][0]['codigo'] == 'E-SEM-CONTRATO-VISUAL'
+
+
 def test_prova_fisica_com_asset_comprovado_passa():
     beat = {'id': 'b1', 'fatos': ['f1'], 'direcao_visual': _dir('MOSTRAR', ['foto-real']),
             'camadas': [{'id': 'foto-real', 'componente': 'atlas.provaVisual',

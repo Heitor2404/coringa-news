@@ -83,9 +83,8 @@ def auditar(plano:dict,video:Path,saida:Path)->dict:
           "shot":shot["id"],"inicio":shot["start"],"fim":shot["end"],
           "rotulo":shot["headline"],"proveniencia":shot["evidence"],
           "prova_esperada":shot["subject"],
-          "media":(plano.get("media",{}).get(shot.get("asset")) or {}).get("page") or
-                  ("Natural Earth · mapa vetorial; coordenadas curadas no plano"
-                   if shot.get("type")=="map" else "NÃO INFORMADA"),
+          "media":(plano.get("media",{}).get(shot.get("asset")) or {}).get("page")
+                  or "NÃO INFORMADA",
           "assinatura_variacao_pixels":variation,
           "luminancia_central":luminosidade,
           "fracao_quase_preta":round(quase_preto,3),

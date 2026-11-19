@@ -631,6 +631,9 @@ export const Dial: React.FC<{ c: Ctx }> = ({ c }) => {
 // O mapa segue como contexto atrás; a imagem é o protagonista, sem cartão torto, colagem ou zoom decorativo.
 export const ProvaVisual: React.FC<{ c: Ctx }> = ({ c }) => {
   const p = c.L.p, b = c.L.caixa, im = c.P.imagens?.[p.asset];
+  const rotulo2Visivel = Boolean(p.rotulo2 && p.rotulo2_t != null && c.t >= p.rotulo2_t);
+  const rotuloAtual = rotulo2Visivel ? p.rotulo2 : p.rotulo;
+  const rotuloMomento = rotulo2Visivel ? p.rotulo2_t : (p.rotulo_t ?? c.L.t0);
   return (
     <div style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h,
       background: '#05080F', overflow: 'hidden', border: '2px solid rgba(242,237,227,.3)',
@@ -638,11 +641,11 @@ export const ProvaVisual: React.FC<{ c: Ctx }> = ({ c }) => {
       {im && <Img src={staticFile(im.src)} style={{ width: '100%', height: '100%', display: 'block',
         objectFit: p.enquadramento === 'conter' ? 'contain' : 'cover',
         objectPosition: p.foco || '50% 50%' }} />}
-      {p.rotulo && <div style={{ position: 'absolute', left: 22, bottom: 20, maxWidth: b.w - 44,
+      {rotuloAtual && <div style={{ position: 'absolute', left: 22, bottom: 20, maxWidth: b.w - 44,
         fontFamily: FD(c), fontSize: 24, fontWeight: 700, color: '#F2EDE3', lineHeight: 1.2,
         textShadow: '0 2px 10px #000', background: 'rgba(5,8,15,.78)', padding: '8px 14px',
-        opacity: aparece(c, p.rotulo_t ?? c.L.t0, .28),
-        transform: `translateY(${(1 - aparece(c, p.rotulo_t ?? c.L.t0, .28)) * 9}px)` }}>{p.rotulo}</div>}
+        opacity: aparece(c, rotuloMomento, .28),
+        transform: `translateY(${(1 - aparece(c, rotuloMomento, .28)) * 9}px)` }}>{rotuloAtual}</div>}
     </div>
   );
 };

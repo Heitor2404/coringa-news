@@ -69,13 +69,20 @@
         "dossie.documentCard",
         "dossie.evidenceHighlight",
         "editorial.timeline",
-        "editorial.cta"
+        "editorial.cta",
+        "atlas.provaVisual"
       ],
       "clipes": [
-        "mecanismo.eclusa"
+        "mecanismo.eclusa",
+        "registro.video"
       ],
       "alvos_componentes": {
-        "mecanismo.eclusa": ["lago", "aqueduto", "paredes", "piso"]
+        "mecanismo.eclusa": [
+          "lago",
+          "aqueduto",
+          "paredes",
+          "piso"
+        ]
       },
       "contratos_movimento": {
         "mecanismo.eclusa": {
@@ -403,7 +410,24 @@
       "uso": "fecho: síntese sobre o território inteiro",
       "_nota_cta": "Dois elementos não conflitantes: manchete no topo + CTA compacto na banda dedicada inferior; CTA não conta como segunda história"
     },
-    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
+    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones.",
+    "atlas.prova": {
+      "formato": "atlas",
+      "palco": "mapa",
+      "quadro": null,
+      "veu": "nenhum",
+      "movimento": "fixo",
+      "slots": {
+        "prova": {
+          "y": 340,
+          "h": 800,
+          "w_max": 970
+        }
+      },
+      "max_camadas": 1,
+      "pinos": false,
+      "uso": "foto documental real grande; mapa apenas como contexto, crédito no rodapé; não vira card nem pino"
+    }
   },
   "zonas_por_formato": {
     "atlas": {

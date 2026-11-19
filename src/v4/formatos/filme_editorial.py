@@ -16,7 +16,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from PIL import Image
 
-LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
+LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 TIPOS = {'photo', 'video', 'comparison', 'mechanism'}
 
@@ -150,9 +150,7 @@ def avaliar(plano: dict) -> dict:
                     falha('F-FIXTURE-NAO-AUTORIZADA', cid, 'arquivo local só na amostra privada e caminhos permitidos')
             elif urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
                 falha('F-ORIGEM-INSEGURA', cid, 'usar acervo real com URL verificável e confiável')
-            licenca_privada = (plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and
-                               asset.get('license') == 'CC BY-SA 4.0')
-            if (asset.get('license') not in LICENCAS and not licenca_privada) or not asset.get('page') or not asset.get('credit'):
+            if asset.get('license') not in LICENCAS or not asset.get('page') or not asset.get('credit'):
                 falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos')
             visual.add(mid)
     if cenas and abs(prev_end - plano.get('duracao', -1)) > .05:

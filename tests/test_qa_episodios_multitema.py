@@ -1,5 +1,6 @@
 """Regressão OFFLINE dos três projetos narrados, sem custos de mídia/API."""
 import json
+import hashlib
 from pathlib import Path
 
 from scripts import qa_episodios_multitema as E
@@ -20,7 +21,7 @@ def plano(ep,tempo=3.7):
             c.get("local_video") or c.get("local_photo") or
             f"tests/midia/qa_multitema/{ep['id']}/{c['id']}.jpg"
         ),"media_type":"video" if c.get("local_video") else "photo",
-         "expected_sha256":"a"*64,"license":c["licenca"],
+         "expected_sha256":hashlib.sha256((c.get("local_photo") or c.get("local_video") or c["id"]).encode()).hexdigest(),"license":c["licenca"],
          "credit":c["autor"],"page":c["fonte"]})
     return E.compilar_um(ep,fontes,tempo)
 
@@ -35,12 +36,15 @@ def test_tres_temas_reais_nao_sao_tres_cenas_do_panama():
     assert {ep["dominio"] for ep in m["episodios"]}=={"industria","geografia","historia"}
 
 
-def test_mesmo_contrato_passou_para_os_tres_roteiros_sem_excecoes():
+def test_tres_roteiros_que_renderizaram_sao_bloqueados_pela_mesma_regra_nova():
     m=get()
+    encontrados={}
     for ep in m["episodios"]:
         p=plano(ep,m["duracao_cena"])
         q=filme_editorial.avaliar(p)
-        assert q["pronto"],(ep["id"],q["bloqueios"])
+        encontrados[ep["id"]] = {x["codigo"] for x in q["bloqueios"]}
+        assert not q["pronto"], (ep["id"],q["bloqueios"])
+        assert "F-SEM-PROGRESSAO-INFORMACIONAL" in encontrados[ep["id"]]
         c=C.auditar(p)
         assert c["estrutura_declarada_ok"],(ep["id"],c["falhas"])
         assert c["prova_visual"]=="NAO_INSPECIONADA"
@@ -48,6 +52,9 @@ def test_mesmo_contrato_passou_para_os_tres_roteiros_sem_excecoes():
         assert p["tipo"]=="PROVA_VISUAL_PRIVADA"
         assert len(p["shots"])==4
         assert abs(p["duracao"]-14.8)<.01
+    assert "F-FONTE-VISUAL-REPETIDA" in encontrados["venezuela_paisagens"]
+    assert "F-FONTE-VISUAL-REPETIDA" in encontrados["ever_given_suez"]
+    assert "F-FONTE-VISUAL-REPETIDA" not in encontrados["taiwan_chips"]
 
 
 def test_nenhuma_midia_representativa_alega_ser_do_proprio_acontecimento():

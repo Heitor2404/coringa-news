@@ -137,3 +137,62 @@ def test_renderizadores_usan_o_diretorio_dos_assets_comprovados():
     ):
         texto=(root/name).read_text(encoding="utf8")
         assert "--public-dir=remotion/public" in texto, name
+
+
+
+@pytest.mark.parametrize("tema",["engenharia","historia","economia","geopolitica"])
+def test_motion_graphics_revelam_dados_existentes_sem_criar_fatos(tmp_path,monkeypatch,tema):
+    monkeypatch.chdir(tmp_path)
+    r=receita(tema)
+    r["assets"]["grafico_0"]["animar"]=True
+    r["assets"]["grafico_2"]["animar"]=True
+    r["assets"]["grafico_2"]["dados"]={
+        "design":"relacao","etiqueta":"ETAPAS DOCUMENTADAS",
+        "etapas":["ORIGEM","MECANISMO","CONSEQUÊNCIA"],
+        "rotulo_fonte":"Dados do fixture"
+    }
+    resultado=M.preparar_receita(r,Path("saida"),Path("public"))
+    assert resultado["pronto"]
+    p=json.loads(Path("saida/props.json").read_text())
+    primeiro,segundo,terceiro=p["shots"]
+    assert primeiro["graphic_original"] is True
+    assert primeiro["motion_graphic"]=={
+        "kind":"stat_reveal","eyebrow":f"CONTEXTO {tema} 0",
+        "value":"20%","line1":"RESULTADO FICTICIO",
+        "line2":"SOMENTE TESTE","fraction":.2,
+    }
+    # O modo antigo continua funcionando; não quebrar visual existente.
+    assert segundo["graphic_original"] is True and "motion_graphic" not in segundo
+    assert terceiro["motion_graphic"]["kind"]=="causal_flow"
+    assert terceiro["motion_graphic"]["stages"]==["ORIGEM","MECANISMO","CONSEQUÊNCIA"]
+    assert p["private_review_only"] is False
+
+
+def test_stat_sem_contexto_nao_gera_motion_engana_ou_numero_falso(tmp_path,monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    r=receita("dados")
+    r["assets"]["grafico_0"]["animar"]=True
+    r["assets"]["grafico_0"]["dados"]["linha1"]=""
+    with pytest.raises(ValueError,match="unidade/contexto"):
+        M.preparar_receita(r,Path("saida"),Path("public"))
+
+
+def test_sequencia_com_etapas_repetidas_nao_e_aprovada(tmp_path,monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    r=receita("processo")
+    r["assets"]["grafico_0"]["animar"]=True
+    r["assets"]["grafico_0"]["dados"]={
+        "design":"relacao","etiqueta":"PROCESSO FÍSICO",
+        "etapas":["ORIGEM","ORIGEM","RESULTADO"]
+    }
+    with pytest.raises(ValueError,match="etapas distintas"):
+        M.preparar_receita(r,Path("saida"),Path("public"))
+
+
+def test_motion_nao_atribui_registro_fotografico_real_a_grafico(tmp_path,monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    r=receita("reportagem")
+    r["assets"]["grafico_0"]["animar"]=True
+    r["cenas"][0]["evidence"]="literal"
+    with pytest.raises(ValueError,match="F-GRAFICO-COMO-REGISTRO"):
+        M.preparar_receita(r,Path("saida"),Path("public"))

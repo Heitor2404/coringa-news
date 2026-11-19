@@ -113,8 +113,8 @@ jobs:
               meta['fator_tempo_audio']=round(fator,3)
               inp=pasta/'prova_panama_12s.mp4';out=pasta/'prova_com_voz_12s.mp4'
               subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(inp),'-i',str(som),
-                  '-filter_complex',f'[1:a]aresample=48000,atempo={fator:.3f},loudnorm=I=-14:TP=-1.5:LRA=9,apad[a]',
-                  '-map','0:v','-map','[a]','-c:v','copy','-c:a','aac','-b:a','160k','-t','12',
+                  '-filter_complex',f'[1:a]aresample=48000,atempo={fator:.3f},loudnorm=I=-14:TP=-1.5:LRA=9,aresample=48000,apad[a]',
+                  '-map','0:v','-map','[a]','-c:v','copy','-c:a','aac','-ar','48000','-b:a','160k','-t','12',
                   '-movflags','+faststart',str(out)],check=True)
               meta['arquivo']=str(out)
           else:

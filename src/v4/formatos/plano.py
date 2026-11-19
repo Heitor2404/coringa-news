@@ -1077,6 +1077,20 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             if not validado or any(c['t0'] < 3.0 and c.get('componente') != 'registro.video' for c in clips):
                 v('erro', 'F-GANCHO-PROVA-REAL', '0–3s',
                   'abertura física exige foto principal por 2,5 s OU registro.video original cobrindo a abertura; mecanismo não é prova real')
+            if imagens is not None and validado:
+                # A triagem do storyboard não é prova de procedência. No preflight
+                # o arquivo da abertura deve ter origem binária conferida.
+                referencias = [((f.get('p') or {}).get('asset')) for f in fotos] if fotos else [
+                    ((f.get('params') or {}).get('asset')) for f in filmes
+                ]
+                for ref in referencias:
+                    registro = imagens.get(ref) or {}
+                    natureza = 'foto' if fotos else 'video'
+                    if (registro.get('tipo') != natureza or registro.get('origem_conferida') is not True
+                            or not registro.get('credito') or not registro.get('licenca')
+                            or not registro.get('sha256_origem')):
+                        v('erro', 'F-GANCHO-ORIGEM', '0–3s',
+                          'registro inicial exige mídia correta, hash de origem conferido, licença e crédito')
         else:
             v('erro', 'F-GANCHO-TIPO', '0–3s', 'abertura_tipo só aceita mapa (V1) ou prova_real (V2)')
         if plano.get('cta') is True and not any(L['componente'] == 'editorial.cta' for L in Ls):

@@ -6,7 +6,6 @@
 import React from 'react';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
-import {NarrativeMapStage,type NarrativeMap} from './NarrativeMapStage';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
@@ -14,7 +13,7 @@ export type FilmShot = {
   id: string;
   start: number;
   end: number;
-  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'map';
+  type: 'photo' | 'video' | 'comparison' | 'mechanism';
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
@@ -24,7 +23,6 @@ export type FilmShot = {
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
   mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle';
-  map?: NarrativeMap;
   reference_asset?: string;
   reference_from_seconds?: number;
   subject: string;
@@ -108,7 +106,6 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 };
 
 const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
-  if(shot.type==='map' && shot.map) return <NarrativeMapStage map={shot.map} t={t}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_cycle')
     return <LockCausalCycle t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
@@ -160,25 +157,25 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <Body shot={shot} p={p} t={now-shot.start}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}
-    {shot.type!=='map' && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
+    {shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
     <div style={{position:'absolute',top:248,left:62,right:62,display:'flex',justifyContent:'space-between',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
       <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
       <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
     </div>
     <div style={{position:'absolute',top:302,left:62,width:140,height:5,background:GOLD,transform:`scaleX(${ease(p)})`,transformOrigin:'left'}}/>
-    {cue && shot.type!=='mechanism' && shot.type!=='map' && <div style={{
+    {cue && shot.type!=='mechanism' && <div style={{
       position:'absolute',top:380+((cue.y||.38)-.38)*700,left:64+((cue.x||.5)-.5)*150,maxWidth:W-128,
       transform:`translateY(${(1-ease(cueAge/.25))*22}px)`,
       opacity:ease(cueAge/.25),fontFamily:'Inter,Arial',fontWeight:900,fontSize:37,
       padding:'13px 17px',borderLeft:`6px solid ${GOLD}`,
       background:'rgba(6,12,22,.78)',color:OFF_WHITE,letterSpacing:.5,
     }}>{cue.label}</div>}
-    {shot.type!=='map' && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <div style={{position:'absolute',left:60,right:60,top:1275,
+    {shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <div style={{position:'absolute',left:60,right:60,top:1275,
       opacity:ease((now-shot.start-.12)/.32),transform:`translateY(${(1-ease((now-shot.start-.12)/.32))*36}px)`,
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    {shot.mechanism!=='lock_cycle' && shot.type!=='map' && <>
+    {shot.mechanism!=='lock_cycle' && <>
     <div style={{position:'absolute',bottom:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}
     </div>

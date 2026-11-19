@@ -106,7 +106,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
-    return <LockCausal t={t} events={shot.cues || []} referenceAsset={shot.reference_asset} referenceFrom={shot.reference_from_seconds ?? 0}/>;
+    return <LockCausal t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
   if(shot.type === 'video') {

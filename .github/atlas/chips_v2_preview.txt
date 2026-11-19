@@ -13,3 +13,4 @@ RETRY 2026-11-19: corrigido F-SEM-PROGRESSAO 0.6-3.8s com segundo rotulo factual
 CI aprovado: https://github.com/Heitor2404/coringa-news/actions/runs/44448821495 — 131 testes e TypeScript verdes.
 Smoke com as 61 palavras da voz real 44447705090 aprovado no job ritmo_real da validação 44449070038.
 Continua prévia privada sem publicacao; erros devem ser avisados por mensagem no Telegram mesmo sem MP4.
+# 2026-11-19 nova prévia privada apos rotulos provaVisual legiveis a 30 px e diagnostico Telegram completo dos quadros (CI 44450404274 success)

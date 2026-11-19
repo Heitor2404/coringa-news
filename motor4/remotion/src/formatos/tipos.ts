@@ -10,7 +10,7 @@ export type Tokens = {
 };
 export type PalcoKey = {
   t: number;                         // a partir deste instante (s)
-  tipo: 'mapa' | 'tecnico' | 'mesa';
+  tipo: 'mapa' | 'tecnico' | 'mesa' | 'prova';
   camera?: { centro: [number, number]; zoom: number } | { foco: [number, number]; ancora: [number, number]; zoom: number };
   dur_camera?: number;               // tempo da mudança de escala (s); 0 = corte
   deriva?: number;                   // zoom/s durante o beat (movimento lento e contínuo)

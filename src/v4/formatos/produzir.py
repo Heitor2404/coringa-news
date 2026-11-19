@@ -631,7 +631,23 @@ def telegram(saida: Path, titulo: str) -> dict:
     pf = _ler(saida / 'preflight.json') if (saida / 'preflight.json').exists() else {'pronto': False, 'itens': []}
     linhas = [f'FORMATO — PRÉVIA PRIVADA, NÃO PUBLICADO · {titulo}']
     if not r:
-        linhas += ['STATUS: BLOQUEADO (não renderizado)', 'preflight:'] + [f"- NÃO {i['item']}: {i['detalhe']}" for i in pf['itens'] if not i['ok']][:15]
+        linhas.append('STATUS: BLOQUEADO (não renderizado)')
+        falhas_preflight = [i for i in pf.get('itens', []) if not i.get('ok')]
+        if falhas_preflight:
+            linhas.append('etapa: preflight')
+            linhas += [f"- NÃO {i['item']}: {i['detalhe']}" for i in falhas_preflight[:15]]
+        else:
+            linhas.append(f"preflight: {sum(i.get('ok', False) for i in pf.get('itens', []))}/{len(pf.get('itens', []))} itens OK")
+            caminho_quadros = saida / 'quadros' / 'relatorio.json'
+            if caminho_quadros.exists():
+                quadros = _ler(caminho_quadros)
+                erros_quadros = [p for p in quadros.get('problemas', []) if not p.get('aviso')]
+                linhas.append(f"etapa: quadros ({len(quadros.get('quadros', []))} analisados; {len(erros_quadros)} erros)")
+                linhas += [f"- {p.get('t', 0):.2f}s {p.get('regra', 'SEM-REGRA')}: {p.get('texto', '')}" for p in erros_quadros[:12]]
+                if not erros_quadros:
+                    linhas.append('sem erros registrados nos quadros; verificar logs da etapa de render')
+            else:
+                linhas.append('etapa interrompida antes do relatório de quadros; consultar logs do workflow')
         chat, _ = previa_telegram.chat_autorizado()
         previa_telegram._api('sendMessage', {'chat_id': chat, 'text': '\n'.join(linhas)[:3900]})
         return {'enviado': True, 'sem_mp4': True}

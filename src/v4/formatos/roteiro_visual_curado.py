@@ -75,9 +75,9 @@ def montar(catalogo: dict, original: dict | None = None) -> dict:
     flow={'id':'cadeia-industrial','componente':'editorial.flowConnections','slot':'corpo',
           't0':'@mas-0.9','t1':'@2:se-0.12',
           'p':{'fluxo':True,'nos':[
-              {'rotulo':'PROJETOS','sub':'EMPRESAS AMERICANAS','t':'@americanas'},
-              {'rotulo':'EQUIPAMENTOS','sub':'FORNECEDORES EUROPEUS','t':'@europeus'},
-              {'rotulo':'FABRICAÇÃO','sub':'FÁBRICAS EM TAIWAN','t':'@2:taiwan','destaque':True}]}}
+              {'rotulo':'PROJETOS','sub':'EMPRESAS AMERICANAS','t':'@mas-0.12'},
+              {'rotulo':'EQUIPAMENTOS','sub':'FORNECEDORES EUROPEUS','t':'@cadeia'},
+              {'rotulo':'FABRICAÇÃO','sub':'FÁBRICAS EM TAIWAN','t':'@europeus','destaque':True}]}}
     b4=beat('nova-04-cadeia-causal','atlas.tecnica','@mas-0.9','CONECTAR',
             'Como diferentes etapas da indústria dependem umas das outras?',
             'Três etapas reais da cadeia: projeto, equipamento e fabricação',
@@ -92,7 +92,7 @@ def montar(catalogo: dict, original: dict | None = None) -> dict:
            'titulo':'Por que Taiwan é importante para os chips? (reconstrução visual)',
            'beats':[b1,b2,b3,b4,b5]}
     new['destaques']=[{'fonte':'paises','nome':'Taiwan','cor':'destaque',
-                       't0':'@max(2.5,@por-0.12)','t1':'@observe-0.12'}]
+                       't0':'@max(3.5,@por+0.4)','t1':'@observe-0.62'}]
     new['rasters']=[{'nome':'ne2_asia_leste','de':0}]
     new['clipes']=[]
     new['rotas']=[]

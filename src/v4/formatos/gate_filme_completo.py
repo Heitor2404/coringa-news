@@ -89,6 +89,32 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
             falha("E-MAPA-NAO-ATLAS",cid,"mapas devem sair do ATLAS original")
         if m.get("identidade") not in ("literal","representativa","explicativa"):
             falha("E-IDENTIDADE",cid,"identidade real ou ilustrativa obrigatória")
+        # REGISTRO e REPRESENTACAO usam o mesmo acervo; nunca o mesmo valor de prova.
+        # Requer contrato explícito apenas quando uma ação é DEMONSTRADA
+        # por mídia de outro laboratório/local/evento.
+        substituicao = m.get("substituicao")
+        if c.get("acao") == "DEMONSTRAR" and m.get("identidade") == "representativa":
+            if not isinstance(substituicao,dict):
+                falha("E-REPRESENTACAO-SEM-CONTRATO",cid,
+                      "demonstração ilustrativa exige processo, origem, compatibilidade e inspeção")
+            else:
+                from src.v4.formatos.qa_video_fontes import decidir_uso
+                uso = decidir_uso(
+                    acontecimento=str(substituicao.get("acontecimento") or ""),
+                    evento_da_midia=str(substituicao.get("evento_da_midia") or ""),
+                    uso=str(substituicao.get("uso") or ""),
+                    cena_especifica=substituicao.get("cena_especifica") is not False,
+                    rotulo=str(substituicao.get("rotulo") or ""),
+                    origem_verificada=substituicao.get("origem_verificada") is True,
+                    licenca_verificada=substituicao.get("licenca_verificada") is True,
+                    representacao=substituicao.get("representacao"),
+                )
+                if not uso["permitido"] or uso.get("categoria")!="ILUSTRACAO_TECNICA":
+                    falha("E-REPRESENTACAO-NAO-EQUIVALENTE",cid,
+                          "processo ilustrativo não comprovado: "+uso["codigo"])
+        elif substituicao is not None and m.get("identidade") == "literal":
+            falha("E-REGISTRO-CONTRADITORIO",cid,
+                  "mídia literal não aceita substituição de outra origem")
         if c.get("acao")=="REVELAR" and not m.get("resultado_verificavel"):
             falha("E-PAYOFF-SEM-CONSEQUENCIA",cid,
                   "payoff precisa consequência verificada, não apenas slogan")
@@ -106,6 +132,14 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
             if not bytes_ok:
                 falha("E-BYTES-NAO-COMPROVADOS",cid,causa)
             prova=it.get("prova") or {}
+            if (c.get("acao")=="DEMONSTRAR" and m.get("identidade")=="representativa"
+                    and isinstance(substituicao,dict)):
+                rep = substituicao.get("representacao") or {}
+                processo = str(rep.get("processo_midia") or "").strip().casefold()
+                provado = str(prova.get("processo_verificado") or "").strip().casefold()
+                if not processo or not provado or provado != processo:
+                    falha("E-PROCESSO-SEM-INSPECAO-NO-ACERVO",cid,
+                          "declaração do roteiro não substitui inspeção do processo no catálogo curado")
             sha=it.get("sha256_origem")
             if not (isinstance(sha,str) and len(sha)==64 and
                     prova.get("midia_corresponde") is True and

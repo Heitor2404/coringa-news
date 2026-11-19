@@ -8,3 +8,8 @@ FALHAR FECHADO se chave da voz ausente, mídia sem hash ou portão vermelho. Nad
 REEXECUCAO: 2026-11-19 — corrigido @fim/CTA pelo WAV real e progressao no gancho; Telegram avisa BLOQUEADO sem MP4.
 CI anterior a este disparo: https://github.com/Heitor2404/coringa-news/actions/runs/44447485283 — 130 testes Python e TypeScript verdes.
 MP4 somente Telegram privado e aprovação humana; nenhuma publicação automática.
+
+RETRY 2026-11-19: corrigido F-SEM-PROGRESSAO 0.6-3.8s com segundo rotulo factual FAB18->TAIWAN em @taiwan, sem baixar portao 3s.
+CI aprovado: https://github.com/Heitor2404/coringa-news/actions/runs/44448821495 — 131 testes e TypeScript verdes.
+Smoke com as 61 palavras da voz real 44447705090 aprovado no job ritmo_real da validação 44449070038.
+Continua prévia privada sem publicacao; erros devem ser avisados por mensagem no Telegram mesmo sem MP4.

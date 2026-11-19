@@ -160,6 +160,55 @@ def confirmar(preparo:dict, mp4:Path, pasta:Path) -> dict:
     return rel
 
 
+def inserir_no_filme(plano_filme:dict, shot_id:str, clip:Path, comprovante:Path,
+                     intencao:str='localizar') -> dict:
+    """Substitui apenas uma cena DECLARADA pelo roteiro. Não escolhe assunto por conta própria.
+
+    Clipes ainda são prévias privadas até revisão humana. Não confundir o mapa
+    com registro filmado do evento, nem associar outro país por semelhança.
+    """
+    import copy
+    if intencao not in ('localizar','trajeto'):
+        raise ValueError("intenção deve ser localizar ou trajeto")
+    clip,comprovante=Path(clip),Path(comprovante)
+    rel=json.loads(comprovante.read_text(encoding="utf-8"))
+    media={"local_source":str(clip),"atlas_proof":str(comprovante),
+           "expected_sha256":rel["video_sha256"],"media_type":"video",
+           "page":"https://www.naturalearthdata.com/",
+           "license":"CC BY 4.0" if any("Sentinel" in r["atribuicao"]
+                      for r in rel["mapeamento"]["rasters_ativos"]) else "Natural Earth PD",
+           "credit":" · ".join(dict.fromkeys(r["atribuicao"] for r in rel["mapeamento"]["rasters_ativos"]))}
+    problemas=validar_comprovante(media)
+    if problemas:
+        raise ValueError("clipe atlas-map não validado: "+"; ".join(problemas))
+    p=copy.deepcopy(plano_filme)
+    if p.get("formato")!="filme_editorial" or p.get("tipo")!="PROVA_VISUAL_PRIVADA":
+        raise ValueError("inserção automática só em prova visual privada")
+    alvo=[s for s in p.get("shots") or [] if s.get("id")==shot_id]
+    if len(alvo)!=1:
+        raise ValueError("identificador de cena não é único")
+    shot=alvo[0]
+    span=float(shot["end"])-float(shot["start"])
+    if abs(span-float(rel["duracao_s"]))>.06:
+        raise ValueError("duração do mapa não corresponde à cena; retemporizar ANTES de renderizar")
+    if not isinstance(shot.get("headline"),str) or not shot["headline"]:
+        raise ValueError("roteiro sem informação")
+    ident="atlas_map_"+rel["video_sha256"][:14]
+    p.setdefault("media",{})[ident]=media
+    shot["type"]="atlas_map"
+    shot["asset"]=ident
+    for campo in ("assetB","mechanism","reference_asset","literal_identity","map"):
+        shot.pop(campo,None)
+    shot["evidence"]="explainer"
+    shot["source_in_seconds"]=0
+    shot["atlas_direcao"]={"intencao":intencao,"roi":rel["mapeamento"]["roi"],
+                          "palco":"ATLAS/Formato/PalcoMapa"}
+    shot["direcao_evento"]={"intencao":intencao,"fato_id":"mapa-"+shot_id,
+                           "aprendizado":shot["headline"]}
+    shot["subject"]="Cartografia ATLAS real com base raster, câmera e fontes conferidas"
+    return p
+
+
 def validar_comprovante(media:dict) -> list[str]:
     """Validar prova e SHA do clipe, SEM confiar em strings do storyboard."""
     errors=[]

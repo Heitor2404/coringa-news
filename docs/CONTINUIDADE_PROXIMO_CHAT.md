@@ -720,3 +720,12 @@ O usuário autorizou implementar a integração de cartografia ATLAS já existen
 - Relatório: \`docs/v4/formatos/PONTE_ATLAS_FILME_REAL_20261119.md\`. Princípio: **qualidade visual do MP4 deve ser inspecionada**; correr testes verdes jamais é autorização de publicar. Nenhum Telegram enviado desta prova, nenhuma mídia publicada, nenhuma cota de Gemini/Claude/Edge TTS usada. \`main\`, NTC, DOSSIÊ e produção diária preservados.
 
 **Pendente depois do sucesso técnico:** validar visualmente a variante recortada após entrada (vídeo 2.6s) e só então usar a ponte como recurso num vídeo completo com fotos/vídeos reais curados e narração Gemini Charon. Testes já são de arquitetura transversal, mas somente Taiwan foi renderizado como clipe ATLAS real nesta fase. Não chamar o resultado de 3 documentários completos.
+
+
+## 44. 19/11 — FECHAMENTO REAL da prova nativa Taiwan sem abertura escura
+
+- **44588617776 SUCCESS**: render definitivo silencioso de **2,6 s**, 1080×1920, ATLAS original MapLibre + raster `ne2_asia_leste`; janela nativa **3,05–5,65 s**, após a transição de 0,5s do palco (a versão anterior 2,50–5,10s gerava primeiros quadros escuros). MP4/atestado/storyboard Film de Taiwan guardados no artifact **14564100281** `qa-taiwan-mapa-atlas-original-integrado-filme`. Sem TTS/Claude/Gemini, sem Telegram, sem publicação.
+- Inspeção REAL do MP4 recuperado em quadros **0,05, 0,20, 0,65, 1,25, 2,25s** comprovou base Natural Earth com relevo, mar, Taiwan amarelo em destaque e título aparecendo; **quadro escuro inicial corrigido**. Visual de base documental consideravelmente superior ao protótipo elementar rejeitado; aprovação estética final ainda humana.
+- **44588952401 SUCCESS: 137 testes e TypeScript** incluindo o anti-frame-escuro `F-ATLAS-ENTRADA-ESCURA`, anti-cruzamento `F-ATLAS-ATRAVESSA-BEAT`, SHA e licença de raster, map-only compositing, bloqueio do mapa chapado e da voz Edge de produção. O código funciona em ambos caminhos de preflight. `main`, NTC, DOSSIÊ e produção preservados.
+- Esta prova demonstra **exportar map real do ATLAS e inserir seu vídeo comprovado como shot no storyboard `FilmeEditorial`**. Não existe ainda MP4 final documental completo com esse trecho e as outras fotos/filmagens/narração. Não vender como produção end-to-end ou generalização visual aprovada em três temas. O próximo gate é um vídeo editorial integral com recursos curados e Gemini Charon, seguido de revisão humana no Telegram.
+- Relatório principal atualizado: `docs/v4/formatos/PONTE_ATLAS_FILME_REAL_20261119.md`.

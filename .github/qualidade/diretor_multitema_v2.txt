@@ -7,3 +7,5 @@
 # R3 escala da projeção de rota local aceita até 30000, sem interpolar rota não curada.
 
 # R4: voz 0% rejeitou frase longa da Venezuela; frase curta sem atempo agora.
+
+# R5: terceira frase longa 4.94s foi dividida/encurtada sem acelerar voz.

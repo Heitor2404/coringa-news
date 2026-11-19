@@ -44,3 +44,56 @@ def retemporizar(plano: dict, duracoes: list[float], pausa: float = .24) -> dict
                          'pausa_s':pausa,
                          'estetica_aprovada':False}
     return out
+
+
+def avaliar_destinos(duracao: float, destinos: tuple[str,...] = (
+        'tiktok','youtube_shorts','instagram_reels'), config: dict | None = None) -> dict:
+    """Metas de FORMATO, não garantia de monetização nem aprovação para publicar.
+
+    Sem teto artístico: uma história de 220 s continua com 220 s no master.
+    A distribuição em Shorts é outra decisão, e nunca corta a narrativa
+    automaticamente. Os 65 s são meta comercial preferida, NÃO padding.
+    """
+    import json
+    from pathlib import Path
+
+    if (not isinstance(duracao,(int,float)) or isinstance(duracao,bool) or
+            not math.isfinite(duracao) or duracao<=0):
+        raise ValueError("duração narrativa precisa ser um número positivo")
+    if config is None:
+        arquivo=Path(__file__).with_name('plataformas.json')
+        config=json.loads(arquivo.read_text(encoding='utf8'))['duracao_editorial']
+    if not isinstance(destinos,(tuple,list)) or not destinos:
+        raise ValueError("informar plataformas de destino")
+    conhecidos={'tiktok','youtube_shorts','instagram_reels'}
+    if any(x not in conhecidos for x in destinos):
+        raise ValueError("plataforma de destino não cadastrada")
+    minimo=float(config['requisito_tiktok_creator_rewards_acima_de_s'])
+    meta=float(config['piso_preferencial_tiktok_creator_rewards_s'])
+    teto_shorts=float(config['youtube_shorts_limite_s'])
+    if not (0<minimo<meta<teto_shorts):
+        raise ValueError("configuração de duração editorial inválida")
+    saidas={}
+    for plataforma in dict.fromkeys(destinos):
+        if plataforma=='tiktok':
+            if duracao<=minimo:
+                estado='ABAIXO_MINIMO_CREATOR_REWARDS'
+            elif duracao<meta:
+                estado='ACIMA_DE_UM_MINUTO_MAS_SEM_MARGEM_PREFERIDA'
+            else:
+                estado='DURACAO_COMPATIVEL_CREATOR_REWARDS'
+            saidas[plataforma]={'estado':estado,'requisito_exclusivo_s':minimo,
+                                'meta_nao_obrigatoria_s':meta}
+        elif plataforma=='youtube_shorts':
+            saidas[plataforma]={
+                'estado':'SHORTS_COMPATIVEL' if duracao<=teto_shorts else 'EXIGE_OUTRO_FORMATO_OU_VERSAO',
+                'maximo_short_s':teto_shorts}
+        else:
+            saidas[plataforma]={'estado':'SEM_MINIMO_UNIVERSAL_DE_60S',
+                                'nota':'avaliar elegibilidade por recurso/conta, não por duração isolada'}
+    return {'duracao_master_s':round(float(duracao),3),
+            'duracao_maxima_editorial_s':None,
+            'metodo':'HISTORIA_DETERMINA_DURACAO_SEM_PADDING',
+            'nao_esticar_nem_cortar_automaticamente':True,
+            'destinos':saidas,
+            'garante_monetizacao':False}

@@ -54,6 +54,6 @@ def test_plano_existente_v5_continua_valido():
 def test_ponte_visual_exige_mesmo_arquivo_e_tempo_continuo():
     p = _plano()
     assert p["shots"][1]["reference_asset"] == p["shots"][0]["asset"]
-    assert abs(p["shots"][1]["reference_from_seconds"] - 6.8) < .001
+    assert abs(p["shots"][1]["reference_from_seconds"] - 6.45) < .001
     p["shots"][1]["reference_from_seconds"] = 2.0
     assert "F-PONTE-REAL" in {b["codigo"] for b in avaliar(p)["bloqueios"]}

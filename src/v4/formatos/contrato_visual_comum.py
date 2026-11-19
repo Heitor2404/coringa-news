@@ -81,7 +81,8 @@ def extrair(plano: dict) -> list[dict]:
         for s in plano.get('shots') or []:
             tipo = s.get('type')
             verbo = {'comparison': 'COMPARAR', 'mechanism': 'DEMONSTRAR',
-                     'photo': 'MOSTRAR', 'video': 'MOSTRAR'}.get(tipo, '')
+                     'photo': 'MOSTRAR', 'video': 'MOSTRAR',
+                     'atlas_map': 'LOCALIZAR'}.get(tipo, '')
             evid = []
             if tipo == 'mechanism':
                 if s.get('mechanism') and s.get('evidence') == 'explainer':
@@ -104,7 +105,7 @@ def extrair(plano: dict) -> list[dict]:
                 'acoes_programadas': acoes,
                 'acoes_esperadas': s.get('estados_esperados') or [],
                 'substituicao': s.get('substituicao'),
-                'mapa': False,
+                'mapa': tipo == 'atlas_map',
                 'natureza_evidencia': s.get('evidence'),
             })
     else:

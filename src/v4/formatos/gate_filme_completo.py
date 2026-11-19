@@ -183,20 +183,27 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
                 if span>regras.get("max_foto_individual_s",3.8)+.001:
                     falha("E-FOTO-PARADA",cid,f"foto por {span:.2f}s sem acontecimento")
             else:
-                if it.get("uso_comercial") not in ("sim",True):
+                direitos_ok=it.get("uso_comercial") in ("sim",True)
+                if not direitos_ok:
                     falha("E-VIDEO-SEM-USO-COMERCIAL",cid,"uso comercial do original não confirmado")
+                validado=(bytes_ok and direitos_ok
+                          and it.get("natureza")=="video"
+                          and prova.get("midia_corresponde") is True
+                          and bool(it.get("licenca") and it.get("credito"))
+                          and isinstance(sha,str) and len(sha)==64
+                          and not any(x in str(c.get("estado") or "").upper()
+                                      for x in PROIBIDAS))
                 if prova.get("acao_ou_relacao_visivel") is not True:
                     if c.get("acao") == "MOSTRAR":
                         # Uma tomada real do laboratório contextualiza o fato,
                         # mas NÃO é prova de fabricação, desastre ou mecanismo.
-                        # Precisa passar em licença, correspondência e SHA;
-                        # nunca entra no contador de vídeos demonstrativos.
-                        if bytes_ok:
+                        # Só conta como contexto se todos os gates passarem.
+                        if validado:
                             video_contextual.add(sha)
                     else:
                         falha("E-VIDEO-SEM-ACAO-COMPROVADA",cid,
                               "cena promete demonstrar, conectar ou revelar ação sem quadros que a comprovem")
-                elif bytes_ok:
+                elif validado:
                     media_movel.add(sha)
         elif tipo=="atlas_map":
             if m.get("identidade")!="explicativa":

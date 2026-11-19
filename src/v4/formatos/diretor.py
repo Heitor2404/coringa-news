@@ -57,7 +57,14 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
         'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "abertura_tipo", "rasters" (nomes reais), '\
         '"destaques", "rotas", "rotulos", "clipes", "explicacoes" e "beats". '\
         'Cada beat: "id", "composicao" da lista, "t" de início, "roi" numérico [oeste,sul,leste,norte], '\
-        '"movimento" (aproxima/fixo/recua), "prova", "fatos", "camadas". '\
+        '"movimento" (aproxima/fixo/recua), "prova", "fatos", "camadas", e "direcao_visual". '\
+        'direcao_visual obrigatório: {"verbo":"LOCALIZAR|MOSTRAR|DEMONSTRAR|CONECTAR|COMPARAR|REVELAR", '\
+        '"pergunta":"o que precisa ficar claro?", "referente":"objeto físico concreto", '\
+        '"aprendizado":"o que passa a ser entendido?", "provas":["IDs DE CAMADAS/CLIPES REAIS"]}. '\
+        'LOCALIZAR pode usar provas:["mapa"] somente com ROI+destaque real. '\
+        'MOSTRAR exige foto/vídeo real, DEMONSTRAR exige mecanismo/registro de ação, '\
+        'CONECTAR exige fluxo visível (editorial.flowConnections), não etiquetas de países. '\
+        'Sem mídia/componente adequado, reporte incapacidade, não substitua por título/cartão/mapa decorativo. '\
         'atlas.tecnica exige "funcao":"mecanismo" ou "estrutura". '\
         'Cada camada: "id", "componente", "slot", "t0", "t1", "p". '\
         'Se falta mídia real do inventário, NÃO substitua por algo diferente: reporte a ausência.'\

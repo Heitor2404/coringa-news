@@ -8,7 +8,7 @@
   },
   "itens": [
     {
-      "id": "nist_deposicao_2023",
+      "id": "nist_deposicao",
       "provider": "kaltura",
       "partner_id": "684682",
       "entry_id": "1_k2iydnt5",
@@ -24,7 +24,7 @@
       "aprovado_publicacao": false
     },
     {
-      "id": "nist_ebeam_2017",
+      "id": "nist_ebeam",
       "provider": "kaltura",
       "partner_id": "684682",
       "entry_id": "0_hhh6rc8o",

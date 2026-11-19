@@ -85,3 +85,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 chips V2: normalizar layout por destaques geograficos em area segura
 
 # 2026-11-19 chips V2 progressao wafer circuito e sem colisao card Holanda Taiwan
+
+# 2026-11-19 chips V2: teste progressão fotografia wafer e sequência de cartão sem sobreposição

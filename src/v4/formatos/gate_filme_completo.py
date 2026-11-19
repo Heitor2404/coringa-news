@@ -118,10 +118,13 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
             # Comparações e mecanismos precisam de origem, objetivo e evidência
             # conferida no mesmo catálogo; nunca aprovar card por si só.
             assets=m.get("asset_ids") or []
-            if (len(assets)<2 and tipo=="comparison") or not all(
+            if (len(set(assets))<2 and tipo=="comparison") or not all(
                   a in conhecidos for a in assets):
                 falha("E-FLUXO-SEM-PROVA",cid,
                       "relação/resultado visual não comprovado por duas fontes distintas")
+            if not m.get("fonte_factual") or not m.get("relacao_visualmente_verificada"):
+                falha("E-RELACAO-NAO-DEMONSTRADA",cid,
+                      "múltiplas imagens e títulos não provam relação causal, exige fonte e inspeção visual")
         if c.get("acao")=="REVELAR" and not m.get("resultado_verificavel"):
             falha("E-PAYOFF-SEM-CONSEQUENCIA",cid,
                   "payoff precisa consequência verificada, não apenas slogan")
@@ -143,10 +146,22 @@ def avaliar(manifesto:dict, catalogo:dict|None=None) -> dict:
         falha("E-VOZ-CONFIG","-","somente o preset Charon; Edge proibido")
     pronto_visual=not erros
     # A produção sonora é SEGUNDA FASE. Metadados de timestamps não são WAV.
+    # Um nome de arquivo não basta, exigir o WAV REAL e seu SHA declarado.
+    wav=voz.get("arquivo_wav")
+    audio_autenticado=False
+    if pronto_visual and isinstance(wav,str) and wav and not Path(wav).is_absolute() and ".." not in Path(wav).parts:
+        fonte=Path(wav)
+        if fonte.is_file() and isinstance(voz.get("sha256_wav"),str) and len(voz["sha256_wav"])==64:
+            import hashlib
+            h=hashlib.sha256()
+            with fonte.open("rb") as f:
+                for chunk in iter(lambda:f.read(65536),b""):
+                    h.update(chunk)
+            audio_autenticado=h.hexdigest()==voz["sha256_wav"] and bool(voz.get("texto_sha256"))
     return {
         "status":"PRONTO_PARA_TTS" if pronto_visual else "BLOQUEADO_EDITORIAL_SEM_PROVA",
         "pronto_para_tts":pronto_visual,
-        "pronto_para_render":pronto_visual and bool(voz.get("arquivo_wav")),
+        "pronto_para_render":pronto_visual and audio_autenticado,
         "previsao_s":dur,
         "total_cenas":len(cenas),"videos_independentes_conferidos":len(media_movel),
         "mapas_atlas_comprovados":mapas,"fotos_s":round(fotos_s,3),

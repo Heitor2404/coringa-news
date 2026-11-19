@@ -118,7 +118,9 @@
             "rotulo": "FAB 18 · TSMC",
             "rotulo_t": "@fab",
             "enquadramento": "cobrir",
-            "foco": "50% 50%"
+            "foco": "50% 50%",
+            "rotulo2": "FAB 18 · TAIWAN",
+            "rotulo2_t": "@taiwan"
           }
         }
       ]

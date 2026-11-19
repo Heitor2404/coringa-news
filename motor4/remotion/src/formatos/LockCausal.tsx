@@ -3,18 +3,18 @@
  * O enquadramento e as etapas não dependem de segundos fixos do episódio.
  */
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill,OffthreadVideo,staticFile} from 'remotion';
 
 export type EventoEclusa = {
   at: number;
   action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release';
   label: string;
 };
-type Props = { t: number; events: EventoEclusa[] };
+type Props = { t: number; events: EventoEclusa[]; referenceAsset?: string; referenceFrom?: number };
 const GOLD='#FFD21F';
 const ease=(v:number)=>{const x=Math.max(0,Math.min(1,v));return x*x*(3-2*x);};
 
-export const LockCausal: React.FC<Props> = ({t,events}) => {
+export const LockCausal: React.FC<Props> = ({t,events,referenceAsset,referenceFrom=0}) => {
   const at=(action:NonNullable<EventoEclusa['action']>,fallback:number)=>
     events.find(e=>e.action===action)?.at ?? fallback;
   const inlet=at('water_enter',1),
@@ -28,7 +28,13 @@ export const LockCausal: React.FC<Props> = ({t,events}) => {
   const isFlow=t>=inlet && t<equilibrium;
   const yHull=y-53;
   const rulerY=[1095,1031,968,904,841];
-  return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 47%,#1A3344 0%,#091625 69%,#050B15 100%)'}}>
+  return <AbsoluteFill style={{background:'#091625'}}>
+    {referenceAsset && t < .85 && <OffthreadVideo src={staticFile(referenceAsset)} muted
+      startFrom={Math.round(referenceFrom*30)}
+      style={{position:'absolute',width:'100%',height:'100%',objectFit:'cover',
+        objectPosition:'50% 48%',transform:'scale(1.1)',transformOrigin:'50% 30%'}}/>}
+    <AbsoluteFill style={{opacity:referenceAsset ? ease(t/.85) : 1,
+      background:'radial-gradient(ellipse at 50% 47%,#1A3344 0%,#091625 69%,#050B15 100%)'}}>
     <svg width="100%" height="100%" viewBox="0 0 1080 1920" role="img"
       aria-label="Corte didático: água entra pelo canal inferior, eleva o nível e o navio; após a equalização o portão pode abrir">
       <defs>
@@ -106,5 +112,6 @@ export const LockCausal: React.FC<Props> = ({t,events}) => {
       </g>
       
     </svg>
+    </AbsoluteFill>
   </AbsoluteFill>;
 };

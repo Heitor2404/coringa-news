@@ -91,18 +91,10 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
       <path d={`M 280 ${1095} H 790`} stroke="#C4D8E0" strokeWidth="3" strokeDasharray="15 12" opacity=".24"/>
       <path d={`M 780 1095 V ${waterY}`} stroke="#FFD21F" strokeWidth="8" strokeDasharray="14 9" opacity={progress>.04?1:.1}/>
       <path d={`M 780 ${waterY-12} l -19 31 h 38 Z`} fill="#FFD21F" opacity={progress>.04?1:.1}/>
-      <text x="760" y={Math.max(740,waterY-63)} fill="#FFD21F" fontSize="34" fontWeight="900" textAnchor="end">
-        {progress>.15?'NAVIO SOBE':'NÍVEL INICIAL'}
-      </text>
+      {progress>.15 && <text x="540" y="550" fill="#FFD21F" fontSize="36" fontWeight="900" textAnchor="middle">NAVIO SOBE COM A ÁGUA</text>}
       <path d="M 210 1140 H 340" stroke="#FFD21F" strokeWidth="13" opacity=".83"/>
       <path d="M 345 1140 l-32 -21 v42 Z" fill="#FFD21F"/>
-      <text x="255" y="1310" fill="#F4F1E9" fontSize="42" fontWeight="900">ÁGUA ENTRA</text>
-      <text x="260" y="1370" fill="#C2D1DA" fontSize="29">A CÂMARA ENCHE</text>
-      <rect x="210" y="1420" width="660" height="10" rx="5" fill="#314C5D"/>
-      <rect x="210" y="1420" width={660*progress} height="10" rx="5" fill="#FFD21F"/>
-      <text x="525" y="1510" textAnchor="middle" fill="#D8E5EB" fontSize="29">
-        ILUSTRAÇÃO DO PRINCÍPIO HIDRÁULICO
-      </text>
+
     </svg>
   </AbsoluteFill>;
 };
@@ -157,7 +149,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
     </div>
     <div style={{position:'absolute',top:302,left:62,width:140,height:5,background:GOLD,transform:`scaleX(${ease(p)})`,transformOrigin:'left'}}/>
-    {cue && <div style={{
+    {cue && shot.type!=='mechanism' && <div style={{
       position:'absolute',top:380+((cue.y||.38)-.38)*700,left:64+((cue.x||.5)-.5)*150,maxWidth:W-128,
       transform:`translateY(${(1-ease(cueAge/.25))*22}px)`,
       opacity:ease(cueAge/.25),fontFamily:'Inter,Arial',fontWeight:900,fontSize:37,

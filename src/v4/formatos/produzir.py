@@ -223,7 +223,7 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         return {'pronto': False, 'itens': itens}
     meta = _ler(narr)
     try:
-        pl = P.resolver_tempos(plano_bruto, meta['palavras'])
+        pl = P.resolver_tempos(plano_bruto, meta['palavras'], duracao_audio=meta['duracao'])
         add('âncoras na fala', True, f"{len(meta['palavras'])} palavras")
     except ValueError as e:
         add('âncoras na fala', False, str(e))

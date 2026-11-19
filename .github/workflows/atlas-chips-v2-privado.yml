@@ -107,10 +107,13 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          if [ -s "$SAIDA/resultado.json" ] && [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+          # O Telegram também recebe BLOQUEIOS de preflight sem MP4. Nunca deixar
+          # o dono sem diagnóstico só porque o vídeo não pôde ser renderizado.
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
             python -m src.v4.formatos telegram "$PLANO" "$SAIDA"
           else
-            echo "::notice::Sem MP4 de resultado ou Telegram configurado; não há entrega visual."
+            echo "::error::Telegram privado sem configuração; falha explícita, sem publicação"
+            exit 1
           fi
       - name: Portão editorial (job vermelho em BLOQUEADO)
         if: always()

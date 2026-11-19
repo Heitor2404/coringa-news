@@ -344,7 +344,18 @@ def avaliar(plano: dict) -> dict:
                         falha('F-ATLAS-COMPROVANTE',cid,problema)
                     if asset.get('media_type') != 'video' or not (asset.get('page') or '').startswith('https://'):
                         falha('F-ATLAS-COMPROVANTE',cid,'mapa deve ser MP4 sem áudio com fonte cartográfica')
-                permitido = atlas_bridge or (
+                stage_privado=(
+                    plano.get('tipo')=='PROVA_VISUAL_PRIVADA'
+                    and plano.get('publicar') is False
+                    and path.parts[:1]==('stage_documental',)
+                    and isinstance(asset.get('expected_sha256'),str)
+                    and len(asset['expected_sha256'])==64
+                    and (urlsplit(str(asset.get('page') or '')).hostname in (
+                        'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov'
+                    ))
+                    and asset.get('media_type') in ('video','photo')
+                )
+                permitido = atlas_bridge or stage_privado or (
                     plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and (
                     str(path).startswith('tests/midia/') or
                     str(path).startswith('tests/piloto_ever_given/img/') or
@@ -356,8 +367,20 @@ def avaliar(plano: dict) -> dict:
                     falha('F-FIXTURE-NAO-AUTORIZADA', cid, 'arquivo local só na amostra privada e caminhos permitidos')
             elif urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
                 falha('F-ORIGEM-INSEGURA', cid, 'usar acervo real com URL verificável e confiável')
-            if asset.get('license') not in LICENCAS or not asset.get('page') or not asset.get('credit'):
-                falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos')
+            direitos_pendentes=(
+                plano.get('tipo')=='PROVA_VISUAL_PRIVADA'
+                and plano.get('publicar') is False
+                and asset.get('license')=='REVIEW_PENDING'
+                and asset.get('rights_status')=='REVIEW_PENDING'
+                and bool(source) and str(source).startswith('stage_documental/')
+                and isinstance(asset.get('expected_sha256'),str)
+                and len(asset['expected_sha256'])==64
+                and urlsplit(str(asset.get('page') or '')).hostname=='www.nist.gov'
+            )
+            if (asset.get('license') not in LICENCAS and not direitos_pendentes
+                    or not asset.get('page') or not asset.get('credit')):
+                falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos; '
+                      'licença pendente apenas em montagem privada sem publicação')
             visual.add(mid)
     if cenas and abs(prev_end - plano.get('duracao', -1)) > .05:
         falha('F-DURACAO', '-', 'última cena não alcança a duração do roteiro')
@@ -499,7 +522,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']
         shots.append(x)
-    props={'duracao':plano['duracao'],'shots':shots,'preview':True}
+    pendentes=[mid for mid,item in plano['media'].items()
+              if item.get('license')=='REVIEW_PENDING']
+    props={'duracao':plano['duracao'],'shots':shots,'preview':True,
+           'private_review_only':bool(pendentes),
+           'direitos_pendentes':pendentes}
     (destino/'props.json').write_text(json.dumps(props,ensure_ascii=False,indent=2),encoding='utf-8')
     (destino/'midias.json').write_text(json.dumps(relatorio,ensure_ascii=False,indent=2),encoding='utf-8')
     return {'pronto':True,'shots':len(shots),'midias':len(medias),'props':str(destino/'props.json')}

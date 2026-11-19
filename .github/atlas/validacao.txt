@@ -103,3 +103,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 regressão com timestamps reais de TTS Run 44447705090; 2º rótulo factual na foto no momento da fala Taiwan, sem mudar limite de 3s
 
 # 2026-11-19 reteste com proteção contra travamento do setup FFmpeg e 61 tempos originais Gemini Charon
+
+# 2026-11-19 smoke direto sem FFmpeg de 61 tempos Gemini, mais CI completo em separado

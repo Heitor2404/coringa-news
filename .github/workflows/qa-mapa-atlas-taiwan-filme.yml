@@ -53,9 +53,8 @@ jobs:
           p=P.resolver_tempos(original,tim['palavras'],duracao_audio=tim['duracao_audio'])
           errs=[(x['regra'],x['onde']) for x in P.validar(p) if x['gravidade']=='erro']
           assert not errs,errs[:10]
-          index=next(i for i,k in enumerate(p['palco']) if k['tipo']=='mapa' and 'taiwan' in
-                     (k.get('composicao','')+str(k.get('roi',[]))).lower()) if False else next(
-                     i for i,k in enumerate(p['palco']) if k['tipo']=='mapa')
+          # O primeiro palco cartográfico do roteiro real de Chips é Taiwan.
+          index=next(i for i,k in enumerate(p['palco']) if k['tipo']=='mapa')
           k=p['palco'][index]
           start=float(k['t'])
           length=2.6

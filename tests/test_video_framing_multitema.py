@@ -172,3 +172,39 @@ def test_preparar_recusa_dimensoes_inventadas(tmp_path,monkeypatch):
     b=io.BytesIO();im.save(b,format="JPEG")
     with pytest.raises(ValueError,match="dimensões reais diferem"):
         F.preparar(p,tmp_path/"saida",tmp_path/"public",downloader=lambda _:b.getvalue())
+
+
+
+def test_video_longo_com_roi_dirigido_e_progressao_real():
+    """Duas decisões diferentes coexistem: ação mantém o plano; ROI mantém o sujeito."""
+    p=plano("engenharia_sem_cortes_artificiais")
+    shot=p["shots"][0]
+    delta=10.0-shot["end"]
+    shot["end"]=10.0
+    for s in p["shots"][1:]:
+        s["start"]=round(s["start"]+delta,3)
+        s["end"]=round(s["end"]+delta,3)
+    p["duracao"]=round(p["duracao"]+delta,3)
+    p["media"]["video-acervo"]["duration_s"]=12.0
+    sha=p["media"]["video-acervo"]["expected_sha256"]
+    shot["video_framing"]["pontos"]=[
+        {"at":0.0,"fonte_s":0.0,"area_essencial":[.45,.32,.68,.88]},
+        {"at":4.0,"fonte_s":4.0,"area_essencial":[.47,.32,.70,.88]},
+        {"at":8.0,"fonte_s":8.0,"area_essencial":[.46,.32,.69,.88]},
+    ]
+    shot["progressao_visual"]={
+        "tipo":"acao_observada", "sha256_origem":sha,
+        "inspecao":"Marcos anotados em quadros originais: ações distintas sob revisão humana",
+        "eventos":[
+            {"at":.8,"fonte_s":.8,"acao_visivel":"operador inicia interação com painel"},
+            {"at":3.2,"fonte_s":3.2,"acao_visivel":"braço posiciona suporte na máquina"},
+            {"at":6.4,"fonte_s":6.4,"acao_visivel":"porta de câmara se desloca visivelmente"},
+            {"at":9.0,"fonte_s":9.0,"acao_visivel":"equipamento muda de configuração"},
+        ]
+    }
+    r=F.avaliar(p)
+    assert r["pronto"],r["bloqueios"]
+    assert len(F.planejar_enquadramento_video(shot,p["media"]["video-acervo"],(1360,720)))==3
+    # Teste estrutural sintético: isso NÃO atesta que a filmagem real
+    # contém as ações escritas acima, nem libera uso comercial.
+    assert r["visual_approval"]=="NAO_FOI_AVALIADO"

@@ -72,6 +72,7 @@ def extrair(plano: dict) -> list[dict]:
                 'provas_resolvidas': len(suportes),
                 'suportes': suportes,
                 'acoes_programadas': [],
+                'acoes_esperadas': d.get('etapas_esperadas') or [],
                 'mapa': (p_atlas.COMP.get(b.get('composicao') or '', {}).get('palco')
                          == 'mapa'),
             })
@@ -100,6 +101,7 @@ def extrair(plano: dict) -> list[dict]:
                 'provas_resolvidas': len(evid),
                 'suportes': evid,
                 'acoes_programadas': acoes,
+                'acoes_esperadas': s.get('estados_esperados') or [],
                 'mapa': False,
                 'natureza_evidencia': s.get('evidence'),
             })
@@ -123,10 +125,19 @@ def auditar(plano: dict, julgamentos: dict | None = None) -> dict:
             falhas.append({'id': ident, 'codigo': 'U-SEM-REFERENTE', 'motivo': 'referente/aprendizado não definido'})
         if not c['provas_resolvidas']:
             falhas.append({'id': ident, 'codigo': 'U-SEM-PROVA', 'motivo': 'nenhum suporte declarado resolvido'})
-        if c['verbo'] == 'DEMONSTRAR' and 'mecanismo.ilustrativo' in c['suportes']:
-            if len(set(c['acoes_programadas'])) < 2:
-                falhas.append({'id': ident, 'codigo': 'U-ACAO-NAO-PROGRAMADA',
-                               'motivo': 'mecanismo sem dois estados distintos declarados'})
+        # Evento esperado tem de aparecer em ordem no PLANO; nenhuma ação
+        # visual é confirmada até a revisão dos frames reais. Sem lista
+        # esperada => cobertura NÃO MENSURADA (não criar meta retroativa).
+        esperado = c['acoes_esperadas']
+        observado = c['acoes_programadas']
+        if esperado:
+            valido = (isinstance(esperado, list) and all(isinstance(x, str) and x for x in esperado)
+                      and len(set(esperado)) == len(esperado)
+                      and observado == esperado)
+            if not valido:
+                falhas.append({'id': ident, 'codigo': 'U-COBERTURA-ACAO',
+                               'motivo': 'ações programadas não cobrem, em ordem, as ações esperadas'})
+
         if ident in julgamentos:
             inspecionados += 1
             erros_visao = julgar_inspecao(c['verbo'], c['mapa'], julgamentos[ident])
@@ -136,10 +147,16 @@ def auditar(plano: dict, julgamentos: dict | None = None) -> dict:
             else:
                 confirmados += 1
     total = len(contratos)
+    acoes_com_criterio = sum(bool(c['acoes_esperadas']) for c in contratos)
+    acoes_programadas = sum(bool(c['acoes_esperadas'])
+                           and c['acoes_esperadas'] == c['acoes_programadas'] for c in contratos)
     estruturais = [f for f in falhas if f['codigo'] != 'U-INSPECAO-VISUAL']
     return {
         'total_compromissos': total,
         'provas_resolvidas_no_plano': sum(bool(c['provas_resolvidas']) for c in contratos),
+        'acoes_com_expectativa_declarada': acoes_com_criterio,
+        'acoes_programadas_em_ordem': acoes_programadas,
+        'acoes_realmente_vistas': 'NAO_MENSURADO_SEM_FRAMES',
         'inspecoes_com_veredito': inspecionados,
         'inspecoes_sem_reprovacao': confirmados,
         'falhas': falhas,

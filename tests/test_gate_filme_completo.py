@@ -65,9 +65,10 @@ def test_taiwan_nao_finge_que_acervo_tem_video_suficiente():
     assert r["status"]=="BLOQUEADO_EDITORIAL_SEM_PROVA"
     assert not r["pronto_para_tts"] and not r["pronto_para_render"]
     assert r["publicado"] is False and r["inspecao_humana"]=="PENDENTE"
-    assert {"E-VIDEO-INSUFICIENTE","E-CARTOGRAFIA-NAO-INTEGRADA",
-            "E-MIDIA-SEM-CURADORIA","E-FLUXO-SEM-PROVA",
+    assert {"E-CARTOGRAFIA-NAO-INTEGRADA",
+            "E-MIDIA-SEM-CURADORIA","E-COMPARACAO-INCOMPLETA",
             "E-PAYOFF-SEM-CONSEQUENCIA"} <= codes(r)
+    assert "W-DIVERSIDADE-VIDEO" in {x["codigo"] for x in r["avisos_editoriais"]}
 
 
 def test_pendencia_licenca_nao_se_resolve_por_string_do_roteiro():
@@ -152,18 +153,22 @@ def test_two_photos_cannot_be_called_two_new_videos(monkeypatch):
     assert "E-VIDEO-FALSO" in codes(r)
 
 
-def test_modelo_pode_exigir_mais_material_sem_mudar_engine(monkeypatch):
+def test_meta_de_clipes_e_aviso_nao_bloqueio_global(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["rubrica_editorial"]["min_videos_reais_independentes"]=5
     r=_avaliar_sintetico(p,cat)
-    assert "E-VIDEO-INSUFICIENTE" in codes(r)
+    assert "W-DIVERSIDADE-VIDEO" in {x["codigo"] for x in r["avisos_editoriais"]}
+    assert r["pronto_para_tts"]
+    assert "E-VIDEO-INSUFICIENTE" not in codes(r)
 
 
-def test_troca_por_fotos_paradas_reprova_slideshow(monkeypatch):
+def test_percentual_de_fotos_gera_alerta_sem_cortar_factualmente(monkeypatch):
     p,cat=_completo(monkeypatch)
     p["rubrica_editorial"]["max_fracao_fotos_estaticas"]=.22
     r=_avaliar_sintetico(p,cat)
-    assert "E-SLIDESHOW" in codes(r)
+    assert "W-SLIDESHOW" in {x["codigo"] for x in r["avisos_editoriais"]}
+    assert r["pronto_para_tts"]
+    assert "E-SLIDESHOW" not in codes(r)
 
 
 def test_gemini_charon_sem_edge(monkeypatch):

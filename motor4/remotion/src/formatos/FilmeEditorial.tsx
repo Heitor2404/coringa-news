@@ -14,6 +14,7 @@ export type FilmShot = {
   type: 'photo' | 'video' | 'comparison';
   asset: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
+  compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
   sourceB?: string;
   evidence: 'literal' | 'representative';
@@ -69,8 +70,8 @@ const Body: React.FC<{shot: FilmShot;p:number}> = ({shot,p}) => {
         {photograph(shot.assetB,p,shot.focusB||[.5,.5],0)}
       </div>
       {right>.04 && <div style={{position:'absolute',left:`${right*100}%`,top:0,bottom:0,width:4,background:GOLD,boxShadow:`0 0 22px ${GOLD}`}}/>}
-      <div style={{position:'absolute',top:470,left:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:OFF_WHITE}}>EQUIPAMENTO</div>
-      {right>.6 && <div style={{position:'absolute',top:470,right:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:GOLD}}>FABRICAÇÃO</div>}
+      <div style={{position:'absolute',top:470,left:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:OFF_WHITE}}>{shot.compareLabels?.[0] || 'ANTES'}</div>
+      {right>.6 && <div style={{position:'absolute',top:470,right:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:GOLD}}>{shot.compareLabels?.[1] || 'DEPOIS'}</div>}
     </AbsoluteFill>;
   }
   return <AbsoluteFill>{photograph(shot.asset,p,shot.focus||[.5,.5],.01)}</AbsoluteFill>;

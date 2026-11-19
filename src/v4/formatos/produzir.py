@@ -656,6 +656,12 @@ def telegram(saida: Path, titulo: str) -> dict:
                 erros_quadros = [p for p in quadros.get('problemas', []) if not p.get('aviso')]
                 linhas.append(f"etapa: quadros ({len(quadros.get('quadros', []))} analisados; {len(erros_quadros)} erros)")
                 linhas += [f"- {p.get('t', 0):.2f}s {p.get('regra', 'SEM-REGRA')}: {p.get('texto', '')}" for p in erros_quadros[:12]]
+                ac_caminho = saida / 'autocorrecao.json'
+                if ac_caminho.exists():
+                    ac = _ler(ac_caminho)
+                    linhas.append(f"autocorreção: {ac.get('decisao')} · {ac.get('tentativas', 0)} tentativa(s)")
+                    if ac.get('motivo'):
+                        linhas.append('motivo: ' + str(ac['motivo'])[:350])
                 rv_caminho = saida / 'revisao_visual.json'
                 if rv_caminho.exists():
                     rv = _ler(rv_caminho)

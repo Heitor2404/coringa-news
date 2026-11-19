@@ -27,7 +27,7 @@ def _dados(tmp_path):
 
 def _visao_boa(prompt, imagens):
     assert 'nítida num celular' in prompt
-    assert len(imagens) == 1 and imagens[0][:3] == b'\\xff\\xd8\\xff'
+    assert len(imagens) == 1 and imagens[0][:3] == b'\xff\xd8\xff'
     return {'referente_visivel': True, 'aprendizado_demonstrado': True,
             'enquadramento_adequado': True, 'imagem_celular_legivel': True,
             'mapa_informativo': False, 'acao_ou_relacao_visivel': False,

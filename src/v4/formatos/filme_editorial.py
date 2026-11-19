@@ -28,6 +28,23 @@ def avaliar(plano: dict) -> dict:
     cenas = plano.get('shots') or []
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
+    if plano.get('tipo') != 'PROVA_VISUAL_PRIVADA':
+        # Nenhuma amostra Edge, mesmo "em tempo natural", entra na produção.
+        # Preset do canal é a fonte única; nunca fallback silencioso.
+        from src.v4.formatos import plano as plano_atlas
+        preset = (plano_atlas.canal('coringa').get('narrador') or {})
+        voz = plano.get('narrador') or {}
+        if (preset.get('motor') != 'gemini' or preset.get('fallback') != 'bloquear'
+                or voz.get('motor') != preset.get('motor')
+                or voz.get('voz') != preset.get('voz')
+                or voz.get('fallback') != 'bloquear'
+                or not isinstance(voz.get('sha256_voz'), str)
+                or len(voz.get('sha256_voz')) != 64):
+            falha('F-VOZ-TESTE-EM-PRODUCAO', '-',
+                  'FILME final exige voz Gemini do preset do canal com SHA e fallback bloqueado; Edge só é aceito em PROVA_VISUAL_PRIVADA')
+        if voz.get('aprovacao_humana') is not True:
+            falha('F-VOZ-SEM-APROVACAO', '-',
+                  'narração final precisa de conferência auditiva humana, nunca inferida pelos testes')
     visual = set()
     momentos = set()  # cenas demonstrativas contam como acontecimento, não foto decorativa
     prev_end = 0.0

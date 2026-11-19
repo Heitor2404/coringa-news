@@ -100,10 +100,15 @@ def grafico_original(config:dict,dest:Path)->None:
         d.text((110,1000),b[:42],fill=soft,font=_font(43))
         # Barra contextual como dado: só representa a fração declarada.
         frac=config.get('fracao')
-        if not isinstance(frac,(int,float)) or not .0<=frac<=1:
-            raise ValueError('fração documentada inválida')
-        d.rounded_rectangle((110,1260,960,1295),radius=12,fill=(49,70,83))
-        d.rounded_rectangle((110,1260,110+int(850*frac),1295),radius=12,fill=gold)
+        # Valores absolutos (ex.: magnitude 7,4) NÃO são porcentagens.
+        # Só mostrar barra quando a fonte descreve fração de um total.
+        if frac is not None:
+            if (not isinstance(frac,(int,float)) or isinstance(frac,bool)
+                    or not 0<=frac<=1):
+                raise ValueError('fração documentada inválida')
+            d.rounded_rectangle((110,1260,960,1295),radius=12,fill=(49,70,83))
+            if frac>0:
+                d.rounded_rectangle((110,1260,110+int(850*frac),1295),radius=12,fill=gold)
     else:
         nomes=config.get('etapas') or []
         if len(nomes)!=3 or any(not isinstance(n,str) or len(n)>24 for n in nomes):

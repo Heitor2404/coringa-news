@@ -410,19 +410,30 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
     raise RuntimeError(f'voz do Gemini reprovada 2 vezes ({motivo})')
 
 
-def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None = None):
-    """cfg: troca a voz/estilo/velocidade (ex.: o canal Ninguém Te Contou usa outra voz que o Coringa)."""
+def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None = None, exigir_gemini: bool = False):
+    """cfg configura o canal; exigir_gemini=True bloqueia troca silenciosa para Edge (uso ATLAS)."""
     pasta.mkdir(parents=True, exist_ok=True)
     coringa = cfg is None                          # Coringa (sem cfg): tom fora do texto falado; NTC (cfg próprio): como antes
     cfg = {**config(), **(cfg or {})}
     cfg.setdefault('_estilo_separado', coringa)
+    if exigir_gemini:
+        if teste:
+            raise ValueError('ATLAS: modo de teste não comprova a voz Gemini configurada')
+        if cfg.get('voz_motor', 'gemini') != 'gemini':
+            raise ValueError('ATLAS: o motor de voz configurado não é Gemini')
+        if not os.getenv('GEMINI_API_KEY'):
+            raise RuntimeError('ATLAS: chave Gemini ausente; voz Edge não autorizada como fallback')
     if not teste and cfg.get('voz_motor', 'gemini') == 'gemini' and os.getenv('GEMINI_API_KEY'):
         try:
             r = _narrar_gemini(cenas, pasta, cfg)
             print(f"  [voz] Gemini ({cfg.get('voz_gemini', 'Charon')})")
             return r
         except Exception as e:
+            if exigir_gemini:
+                raise RuntimeError('ATLAS: Gemini TTS indisponível; não substituo a voz pelo Edge sem aprovação') from e
             print(f'  [voz] Gemini indisponível ({str(e)[:120]}); usando a voz do Edge')
+    if exigir_gemini:
+        raise RuntimeError('ATLAS: narração Gemini não foi gerada; fallback Edge bloqueado')
     return _narrar_edge(cenas, pasta, teste)
 
 

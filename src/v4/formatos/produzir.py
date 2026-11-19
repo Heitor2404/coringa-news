@@ -438,6 +438,9 @@ def render(saida: Path) -> dict:
     if not rq.exists() or not _ler(rq).get('ok'):
         raise SystemExit('quadros renderizados com problema (ou não conferidos): não renderizo o vídeo')
     pl, meta, imgs = _ler(saida / 'plano_resolvido.json'), _ler(saida / 'narracao.json'), _ler(saida / 'ativos.json')
+    rv_arq = saida / 'revisao_visual.json'
+    if pl.get('formato') == 'atlas' and (not rv_arq.exists() or not _ler(rv_arq).get('pronto')):
+        raise SystemExit('revisão visual independente ausente/reprovada: não renderizo o MP4 ATLAS')
     trab = (saida / '_trabalho').resolve()
     trab.mkdir(parents=True, exist_ok=True)
     can = P.canal(pl.get('canal', 'coringa'))
@@ -496,6 +499,10 @@ def render(saida: Path) -> dict:
            'audio': au, 'janelas': janelas, 'nao_publicado': True, 'ritmo': {k: v for k, v in rit.items()},
            'portoes': {'preto_ou_congelado': [j for j in janelas if j['problemas']],
                        'audio_ok': au.get('lufs') is not None and abs(au['lufs'] - (can.get('som') or {}).get('lufs', -14)) <= (can.get('som') or {}).get('tolerancia_lufs', .5) and (au.get('pico') or 0) <= (can.get('som') or {}).get('true_peak', -1.0)}}
+    if pl['formato'] == 'atlas' and rv_arq.exists():
+        rv = _ler(rv_arq)
+        res['revisao_visual_pre_render'] = {'pronto': rv['pronto'], 'chamadas': rv['chamadas'],
+                                           'bloqueios': len(rv['bloqueios'])}
     res['portoes']['ritmo_ok'] = rit['sem_camera']['maior_trecho_parado_s'] <= 3
     res['portoes']['legenda_ok'] = ls['ok']
     res['legenda_sync'] = {k: ls[k] for k in ('atraso_s', 'n_palavras_sem_fala', 'fala_sem_legenda', 'trocas_bruscas', 'grupos') if k in ls}
@@ -644,8 +651,14 @@ def telegram(saida: Path, titulo: str) -> dict:
                 erros_quadros = [p for p in quadros.get('problemas', []) if not p.get('aviso')]
                 linhas.append(f"etapa: quadros ({len(quadros.get('quadros', []))} analisados; {len(erros_quadros)} erros)")
                 linhas += [f"- {p.get('t', 0):.2f}s {p.get('regra', 'SEM-REGRA')}: {p.get('texto', '')}" for p in erros_quadros[:12]]
-                if not erros_quadros:
-                    linhas.append('sem erros registrados nos quadros; verificar logs da etapa de render')
+                rv_caminho = saida / 'revisao_visual.json'
+                if rv_caminho.exists():
+                    rv = _ler(rv_caminho)
+                    linhas.append(f"etapa: revisão visual independente ({rv.get('chamadas', 0)} análises; {len(rv.get('bloqueios', []))} cenas reprovadas)")
+                    for beat in (rv.get('bloqueios') or [])[:5]:
+                        linhas.append(f"- CENA {beat.get('beat')}: " + '; '.join(beat.get('problemas') or [])[:350])
+                elif not erros_quadros:
+                    linhas.append('revisão visual ausente; verificar logs da etapa de render')
             else:
                 linhas.append('etapa interrompida antes do relatório de quadros; consultar logs do workflow')
         chat, _ = previa_telegram.chat_autorizado()

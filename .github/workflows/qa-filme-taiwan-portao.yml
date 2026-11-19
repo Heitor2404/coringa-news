@@ -10,6 +10,7 @@ on:
       - "src/v3/biblioteca.py"
       - "tests/test_gate_filme_completo.py"
       - "tests/test_gate_multitema_cobertura.py"
+      - "tests/test_estagiar_fotos.py"
       - "tests/test_filme_editorial.py"
       - "tests/test_qa_video_fontes.py"
       - "tests/test_duracao_editorial.py"
@@ -33,7 +34,7 @@ jobs:
       - name: Testar portão multiassunto, contrato ATLAS e evidências
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml cryptography
-          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py tests/test_duracao_editorial.py tests/test_gate_multitema_cobertura.py
+          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py tests/test_duracao_editorial.py tests/test_gate_multitema_cobertura.py tests/test_estagiar_fotos.py
       - name: Recuperar mapa ATLAS ORIGINAL do workflow anterior, sem renderizar
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -62,13 +63,38 @@ jobs:
               assert not erros,erros
               print("MAPA_ATLAS_REAL_RECUPERADO",q["video_sha256"],q["duracao_s"])
           PY
+      - name: Estagiar fotos JA CURADAS (Commons, SHA) — reuso multitema
+        run: |
+          mkdir -p saida_preflight_taiwan
+          set +e
+          python -m src.v4.formatos.estagiar_fotos \
+            docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json \
+            saida_preflight_taiwan/catalogo_bytes.json \
+            saida_preflight_taiwan/relatorio_fotos.json \
+            --pasta stage_acervo/fotos
+          rc=$?
+          set -e
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("saida_preflight_taiwan/relatorio_fotos.json")
+          assert p.exists(),"estagio falhou antes de emitir relatório"
+          rel=json.loads(p.read_text())
+          print("FOTOS_COM_SHA_VERIFICADO",rel["recuperadas"],"/",rel["solicitadas"],
+                "falhas",len(rel["falhas"]))
+          assert not rel["autorizacao_publicar"] and not rel["autorizacao_editorial"]
+          PY
+          if [ "$rc" -ne 0 ]; then
+            echo "::warning::Alguma foto curada não pôde ser recuperada; gate permanece bloqueado"
+          fi
       - name: Inspecionar acervo COMPROVADO, sem download/IA/voz/render
         run: |
           mkdir -p saida_preflight_taiwan
           set +e
           python -m src.v4.formatos.gate_filme_completo \
             docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json \
-            saida_preflight_taiwan/relatorio.json
+            saida_preflight_taiwan/relatorio.json \
+            --catalogo saida_preflight_taiwan/catalogo_bytes.json
           rc=$?
           set -e
           python - <<'PY'
@@ -100,6 +126,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qa-taiwan-acervo-antes-de-narracao
-          path: saida_preflight_taiwan/relatorio.json
+          path: |
+            saida_preflight_taiwan/
+            stage_acervo/fotos/
           retention-days: 7
           if-no-files-found: warn

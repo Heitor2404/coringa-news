@@ -1,3 +1,9 @@
+# REJEITADO — NÃO USAR ESTES MAPAS (decisão de 19/11/2026, 17h50)
+
+**Este relatório é histórico de uma execução experimental REPROVADA pelo usuário. O compositor `NarrativeMapStage.tsx` e seus workflows de geração/envio foram excluídos da branch experimental.** Não relançar, não reutilizar frames, não promover o visual nem reaproveitar como fallback. O erro foi ignorar a cartografia existente (`PalcoMapa` / `MapaRota` / V2), que já possui raster real e validação `F-MAPA-SEM-BASE`, `F-MAPA-BASE-INVISIVEL` e `F-MAPA-BAIXA-RESOLUCAO`. A voz Edge ouvida era teste; a produção ATLAS usa Gemini Charon com fallback proibido. As regras de progresso global e tempo natural podem ser reaproveitadas, mas NÃO o renderizador de mapa.
+
+---
+
 # Diretor multitema V2 — mapa, voz natural, progresso global (19/11/2026)
 
 **Branch experimental:** \`atlas-direcao-visual-20261118\`; NTC/DOSSIÊ/\`main\`/produção não modificados. Sem publicação, sem gastar Claude/Gemini. **Visual não homologado**; aprovado somente o preparo e render da amostra.

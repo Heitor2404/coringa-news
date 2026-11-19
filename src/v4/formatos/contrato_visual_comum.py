@@ -51,6 +51,7 @@ def extrair(plano: dict) -> list[dict]:
     formato = plano.get('formato')
     contratos = []
     if formato == 'atlas':
+        from src.v4.formatos import plano as p_atlas
         for b in plano.get('beats') or []:
             d = b.get('direcao_visual') or {}
             camadas = {c.get('id'): c for c in b.get('camadas') or [] if c.get('id')}
@@ -59,7 +60,7 @@ def extrair(plano: dict) -> list[dict]:
             declaradas = d.get('provas') if isinstance(d.get('provas'), list) else []
             suportes = [refs[e].get('componente') or 'registro.video'
                         for e in declaradas if isinstance(e, str) and e in refs]
-            if 'mapa' in declaradas and b.get('roi'):
+            if 'mapa' in declaradas and b.get('roi') and d.get('verbo') == 'LOCALIZAR':
                 suportes.append('mapa')
             contratos.append({
                 'id': b.get('id'), 'formato': formato,
@@ -71,9 +72,8 @@ def extrair(plano: dict) -> list[dict]:
                 'provas_resolvidas': len(suportes),
                 'suportes': suportes,
                 'acoes_programadas': [],
-                'mapa': bool(b.get('composicao', '').startswith('atlas.') and
-                             b.get('composicao') in ('atlas.abertura', 'atlas.protagonista',
-                                                    'atlas.manchete', 'atlas.painel')),
+                'mapa': (p_atlas.COMP.get(b.get('composicao') or '', {}).get('palco')
+                         == 'mapa'),
             })
     elif formato == 'filme_editorial':
         for s in plano.get('shots') or []:

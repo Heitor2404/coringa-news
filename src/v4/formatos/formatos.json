@@ -56,7 +56,8 @@
       "descricao": "Mapa cartográfico como palco de contexto e abertura; destaques territoriais, rota medida, cartões de números e hierarquias; diagrama técnico quando necessário para funcionamento ou estrutura; fecho com a última revelação sem retorno obrigatório ao mapa.",
       "palcos": [
         "mapa",
-        "tecnico"
+        "tecnico",
+        "prova"
       ],
       "componentes": [
         "atlas.geoPin",
@@ -413,20 +414,20 @@
     "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones.",
     "atlas.prova": {
       "formato": "atlas",
-      "palco": "mapa",
+      "palco": "prova",
       "quadro": null,
       "veu": "nenhum",
       "movimento": "fixo",
       "slots": {
         "prova": {
-          "y": 340,
-          "h": 800,
-          "w_max": 970
+          "y": 232,
+          "h": 990,
+          "w_max": 1020
         }
       },
       "max_camadas": 1,
       "pinos": false,
-      "uso": "foto documental real grande; mapa apenas como contexto, crédito no rodapé; não vira card nem pino"
+      "uso": "prova real protagonista, ocupação dominante no quadro, fundo editorial escuro próprio; mapa nunca é pano de fundo de fotografia"
     }
   },
   "zonas_por_formato": {

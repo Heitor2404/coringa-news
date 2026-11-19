@@ -1,0 +1,372 @@
+{
+  "origem": "GitHub Actions 44447705090; Gemini Charon 2026-11-19; palavras_originais do log; re-alinhamento final pode variar",
+  "duracao_audio": 27.922,
+  "palavras": [
+    {
+      "w": "É",
+      "s": 0.05,
+      "e": 0.34,
+      "hl": false
+    },
+    {
+      "w": "A",
+      "s": 0.34,
+      "e": 0.63,
+      "hl": false
+    },
+    {
+      "w": "FAB",
+      "s": 0.63,
+      "e": 0.882,
+      "hl": false
+    },
+    {
+      "w": "DEZOITO",
+      "s": 0.882,
+      "e": 1.45,
+      "hl": false
+    },
+    {
+      "w": "DA",
+      "s": 1.45,
+      "e": 1.75,
+      "hl": false
+    },
+    {
+      "w": "TSMC",
+      "s": 1.75,
+      "e": 2.35,
+      "hl": false
+    },
+    {
+      "w": "EM",
+      "s": 2.35,
+      "e": 2.65,
+      "hl": false
+    },
+    {
+      "w": "TAIWAN",
+      "s": 2.65,
+      "e": 3.6,
+      "hl": false
+    },
+    {
+      "w": "POR",
+      "s": 3.91,
+      "e": 3.99,
+      "hl": false
+    },
+    {
+      "w": "QUE",
+      "s": 3.99,
+      "e": 4.07,
+      "hl": false
+    },
+    {
+      "w": "UMA",
+      "s": 4.07,
+      "e": 4.327,
+      "hl": false
+    },
+    {
+      "w": "FÁBRICA",
+      "s": 4.327,
+      "e": 4.84,
+      "hl": false
+    },
+    {
+      "w": "NESSA",
+      "s": 4.84,
+      "e": 5.226,
+      "hl": false
+    },
+    {
+      "w": "ILHA",
+      "s": 5.226,
+      "e": 5.547,
+      "hl": false
+    },
+    {
+      "w": "IMPORTA",
+      "s": 5.547,
+      "e": 6.06,
+      "hl": false
+    },
+    {
+      "w": "PARA",
+      "s": 6.06,
+      "e": 6.381,
+      "hl": false
+    },
+    {
+      "w": "TANTOS",
+      "s": 6.381,
+      "e": 6.831,
+      "hl": false
+    },
+    {
+      "w": "PAÍSES?",
+      "s": 6.831,
+      "e": 7.345,
+      "hl": false
+    },
+    {
+      "w": "OBSERVE",
+      "s": 7.345,
+      "e": 7.858,
+      "hl": false
+    },
+    {
+      "w": "ESTE",
+      "s": 7.858,
+      "e": 8.179,
+      "hl": false
+    },
+    {
+      "w": "WAFER",
+      "s": 8.179,
+      "e": 8.564,
+      "hl": false
+    },
+    {
+      "w": "DE",
+      "s": 8.564,
+      "e": 8.757,
+      "hl": false
+    },
+    {
+      "w": "SILÍCIO",
+      "s": 8.757,
+      "e": 9.335,
+      "hl": false
+    },
+    {
+      "w": "É",
+      "s": 9.335,
+      "e": 9.463,
+      "hl": false
+    },
+    {
+      "w": "NELE",
+      "s": 9.463,
+      "e": 9.784,
+      "hl": false
+    },
+    {
+      "w": "QUE",
+      "s": 9.784,
+      "e": 10.041,
+      "hl": false
+    },
+    {
+      "w": "SE",
+      "s": 10.041,
+      "e": 10.234,
+      "hl": false
+    },
+    {
+      "w": "FORMAM",
+      "s": 10.234,
+      "e": 10.683,
+      "hl": false
+    },
+    {
+      "w": "CIRCUITOS",
+      "s": 10.683,
+      "e": 11.325,
+      "hl": false
+    },
+    {
+      "w": "INTEGRADOS",
+      "s": 11.325,
+      "e": 12.096,
+      "hl": false
+    },
+    {
+      "w": "MAS",
+      "s": 12.096,
+      "e": 12.353,
+      "hl": false
+    },
+    {
+      "w": "FABRICAR",
+      "s": 12.353,
+      "e": 12.931,
+      "hl": false
+    },
+    {
+      "w": "CHIPS",
+      "s": 12.931,
+      "e": 13.316,
+      "hl": false
+    },
+    {
+      "w": "EXIGE",
+      "s": 13.316,
+      "e": 13.701,
+      "hl": false
+    },
+    {
+      "w": "UMA",
+      "s": 13.701,
+      "e": 13.958,
+      "hl": false
+    },
+    {
+      "w": "CADEIA",
+      "s": 13.958,
+      "e": 14.407,
+      "hl": false
+    },
+    {
+      "w": "INTERNACIONAL",
+      "s": 14.407,
+      "e": 15.37,
+      "hl": false
+    },
+    {
+      "w": "EMPRESAS",
+      "s": 15.37,
+      "e": 15.948,
+      "hl": false
+    },
+    {
+      "w": "AMERICANAS",
+      "s": 15.948,
+      "e": 16.655,
+      "hl": false
+    },
+    {
+      "w": "CRIAM",
+      "s": 16.655,
+      "e": 17.04,
+      "hl": false
+    },
+    {
+      "w": "PROJETOS",
+      "s": 17.04,
+      "e": 17.682,
+      "hl": false
+    },
+    {
+      "w": "FORNECEDORES",
+      "s": 17.682,
+      "e": 18.517,
+      "hl": false
+    },
+    {
+      "w": "EUROPEUS",
+      "s": 18.517,
+      "e": 19.094,
+      "hl": false
+    },
+    {
+      "w": "FAZEM",
+      "s": 19.094,
+      "e": 19.48,
+      "hl": false
+    },
+    {
+      "w": "EQUIPAMENTOS",
+      "s": 19.48,
+      "e": 20.379,
+      "hl": false
+    },
+    {
+      "w": "FÁBRICAS",
+      "s": 20.379,
+      "e": 20.956,
+      "hl": false
+    },
+    {
+      "w": "EM",
+      "s": 20.956,
+      "e": 21.149,
+      "hl": false
+    },
+    {
+      "w": "TAIWAN",
+      "s": 21.149,
+      "e": 21.599,
+      "hl": false
+    },
+    {
+      "w": "PRODUZEM",
+      "s": 21.599,
+      "e": 22.176,
+      "hl": false
+    },
+    {
+      "w": "MUITOS",
+      "s": 22.176,
+      "e": 22.626,
+      "hl": false
+    },
+    {
+      "w": "DESSES",
+      "s": 22.626,
+      "e": 23.075,
+      "hl": false
+    },
+    {
+      "w": "CHIPS",
+      "s": 23.075,
+      "e": 23.525,
+      "hl": false
+    },
+    {
+      "w": "SE",
+      "s": 23.525,
+      "e": 23.717,
+      "hl": false
+    },
+    {
+      "w": "UM",
+      "s": 23.717,
+      "e": 23.91,
+      "hl": false
+    },
+    {
+      "w": "ELO",
+      "s": 23.91,
+      "e": 24.165,
+      "hl": false
+    },
+    {
+      "w": "FALHA",
+      "s": 24.165,
+      "e": 24.87,
+      "hl": false
+    },
+    {
+      "w": "A",
+      "s": 24.87,
+      "e": 24.972,
+      "hl": false
+    },
+    {
+      "w": "CONSEQUÊNCIA",
+      "s": 24.972,
+      "e": 25.637,
+      "hl": false
+    },
+    {
+      "w": "PODE",
+      "s": 25.637,
+      "e": 25.892,
+      "hl": false
+    },
+    {
+      "w": "CRUZAR",
+      "s": 25.892,
+      "e": 26.25,
+      "hl": false
+    },
+    {
+      "w": "OCEANOS",
+      "s": 26.25,
+      "e": 26.92,
+      "hl": false
+    }
+  ]
+}

@@ -67,3 +67,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 P1 regressao final de importacao local Pexels por SHA e FFmpeg real
 
 # 2026-11-19 P1 ponte biblioteca global V3 + provas de licenca/sha/bytes sem rede
+
+# 2026-11-19 P1 final: inventario factual V3+V4 sem midia generica, revisao SHA e provas

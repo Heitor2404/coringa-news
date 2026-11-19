@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       # Sem contrato visual, o episódio não deve sequer gastar cota/tempo com TTS.
       - name: Portão editorial pré-produção — prova antes da voz
-        run: python -m src.v4.formatos.triagem_editorial "$PLANO"
+        run: python -m src.v4.formatos.triagem_editorial "$PLANO" "$SAIDA"
       - uses: actions/setup-python@v5
         with: {python-version: "3.13", cache: pip}
       - uses: actions/setup-node@v4
@@ -134,6 +134,7 @@ jobs:
         with:
           name: atlas-v2-chips-relatorios-sem-mp4
           path: |
+            saida_chips_v2_privada/triagem_editorial.json
             saida_chips_v2_privada/preflight.json
             saida_chips_v2_privada/quadros/relatorio.json
             saida_chips_v2_privada/revisao_visual.json

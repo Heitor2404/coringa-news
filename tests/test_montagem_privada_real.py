@@ -122,3 +122,17 @@ def test_ponte_mapa_nao_copia_original_para_stage_documental(tmp_path,monkeypatc
     assert result==mapa
     assert h==sha
     assert not Path("stage_documental/mapa_de_teste.mp4").exists()
+
+
+
+def test_renderizadores_usan_o_diretorio_dos_assets_comprovados():
+    root=Path(__file__).resolve().parents[1]
+    for name in (
+        ".github/workflows/qa-montagem-real-privada.yml",
+        ".github/workflows/filme-editorial-prova-visual.yml",
+        ".github/workflows/filme-editorial-panama-12s.yml",
+        ".github/workflows/filme-editorial-panama-8s-causal.yml",
+        ".github/workflows/filme-editorial-panama-ciclo-19s.yml",
+    ):
+        texto=(root/name).read_text(encoding="utf8")
+        assert "--public-dir=remotion/public" in texto, name

@@ -34,7 +34,7 @@ def montar(catalogo: dict, original: dict | None = None) -> dict:
             'enquadramento': 'cobrir', 'foco': '50% 50%'}}
     wafer = {
         'id': 'wafer-real', 'componente': 'atlas.provaVisual', 'slot': 'prova',
-        't0': '@observe-0.12', 't1': '@mas-0.12',
+        't0': '@observe-0.12', 't1': '@mas-0.9',
         'p': {'asset': aprovados['wafer-visivel'],
               'meta': 'Wikimedia Commons · licença conforme catálogo privado',
               'rotulo': 'WAFER REAL · FOTO ILUSTRATIVA',
@@ -62,26 +62,23 @@ def montar(catalogo: dict, original: dict | None = None) -> dict:
         't0':'@max(2.5,@por)','t1':'@observe-0.12','entrada_apos_voo':True,
         'p':{'linhas':[{'texto':'POR QUE','t':'@max(2.5,@por)'},
                        {'texto':'TAIWAN?','t':'@importa','destaque':True}]}}
-    pin={'id':'taiwan-real','componente':'atlas.geoPin','slot':'geo',
-         't0':'@max(2.5,@por-0.12)','t1':'@observe-0.12',
-         'p':{'tipo':'local','lonlat':[121,23.8],'rotulo':'TAIWAN','papel':'protagonista'}}
     b2=beat('nova-02-local-taiwan','atlas.abertura','@max(2.5,@por-0.12)','LOCALIZAR',
             'Onde fica Taiwan em relação à região asiática?',
             'Ilha de Taiwan e sua posição geográfica na Ásia Oriental',
             'Taiwan está localizada com destaque geográfico regional legível',
-            ['mapa'],['f-fab18'],[title,pin],roi=[116.3,20.4,125.0,27.2],movimento='aproxima')
+            ['mapa'],['f-fab18'],[title],roi=[116.3,20.4,125.0,27.2],movimento='aproxima')
     b3=beat('nova-03-wafer-real','atlas.prova','@observe-0.12','MOSTRAR',
             'O que exatamente é o wafer real mencionado na narração?',
             'Wafer físico de silício com circuitos integrados observáveis',
             'Os circuitos são formados sobre wafers de silício reais',
             ['wafer-real'],['f-wafer'],[wafer])
     flow={'id':'cadeia-industrial','componente':'editorial.flowConnections','slot':'corpo',
-          't0':'@mas-0.12','t1':'@2:se-0.12',
+          't0':'@mas-0.9','t1':'@2:se-0.12',
           'p':{'fluxo':True,'nos':[
               {'rotulo':'PROJETOS','sub':'EMPRESAS AMERICANAS','t':'@americanas'},
               {'rotulo':'EQUIPAMENTOS','sub':'FORNECEDORES EUROPEUS','t':'@europeus'},
               {'rotulo':'FABRICAÇÃO','sub':'FÁBRICAS EM TAIWAN','t':'@2:taiwan','destaque':True}]}}
-    b4=beat('nova-04-cadeia-causal','atlas.tecnica','@mas-0.12','CONECTAR',
+    b4=beat('nova-04-cadeia-causal','atlas.tecnica','@mas-0.9','CONECTAR',
             'Como diferentes etapas da indústria dependem umas das outras?',
             'Três etapas reais da cadeia: projeto, equipamento e fabricação',
             'Fabricar chips integra projeto nos Estados Unidos, equipamentos europeus e fábricas em Taiwan',

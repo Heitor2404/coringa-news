@@ -101,3 +101,13 @@ Código experimental: `src/v4/formatos/ponte_biblioteca.py`. Não executa pesqui
 - Nesta entrega **não** foi gerada nova narração/episódio e **não** há anúncio de que novas mídias já foram curadas para chips.
 
 **Próxima prova:** curar 2–3 ativos específicos (com direitos e ação registrada), produzir uma mini-sequência vertical privada de 20–30 s com voz Gemini/Charon, mostrar em dispositivos e fiscalizar ritmo, correspondência imagem/fala, créditos e interesse humano. Vídeo horizontal longo continua fase posterior, sujeito a 16:9 e direção por capítulo.
+
+
+## Resultado da integração V3 após regressões (CI final)
+
+- Actions **44431917824**: `success`, 114 testes Python, JS/TypeScript aprovados; confirma a ponte de mídia V3 para ATLAS com manifesto, banco único e bytes por SHA.
+- Actions **44432458299**: 116 testes passaram e **1 teste falhou por uma expectativa incorreta** sobre a forma de representar a licença: a V3 resume `CC BY 4.0` como `CC BY`. O problema de fidelidade foi resolvido exigindo `prova.licenca_exata` no manifesto e conservando a licença/versão no catálogo e nos créditos.
+- Actions **44433077213**: **SUCCESS — 118 testes Python passaram**, com testes JS/TypeScript também verdes. Abrange vídeo sintético recortado com FFmpeg real, biblioteca V3, manifesto curado, SHA/proveniência, categoria × versão de licença, duplicidade e filtro de pertinência. Testes **offline**, sem Claude/Gemini nem render audiovisual de episódio.
+- Nenhuma mídia TSMC/EUV foi efetivamente cadastrada ou revista por humano. Não existe prévia nova da Guerra dos Chips homologada nesta rodada.
+
+<https://github.com/Heitor2404/coringa-news/actions/runs/44433077213>

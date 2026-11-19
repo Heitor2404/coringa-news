@@ -65,3 +65,14 @@ def test_fluxo_visual_real_pode_demonstrar_dependencia():
 def test_nao_afeta_outros_motores_e_modelos():
     assert avaliar({'formato': 'dossie'})['pronto'] is True
     assert avaliar({'formato': 'ntc'})['pronto'] is True
+
+
+def test_diretor_atlas_reusa_reprovacao_humana_sem_promover_regra():
+    from src.v4.formatos import diretor
+    prompt = diretor.prompt(
+        [{'id': 'f1', 'texto': 'Fato verificado de uma fábrica'}],
+        'atlas', palavras=[], inventario='biblioteca curada')
+    assert 'REPROVAÇÕES HUMANAS DOCUMENTADAS' in prompt
+    assert 'FB-0009' in prompt
+    # A memoria editorial ainda nao tem regras aprovadas. Nao criar aprovacao falsa.
+    assert 'REGRAS EDITORIAIS TESTADAS E APROVADAS' not in prompt

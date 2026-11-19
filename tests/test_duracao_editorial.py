@@ -81,3 +81,11 @@ def test_diretor_pede_historia_completa_sem_teto_60_90_segundos():
     assert 'Sem teto global narrativo' in txt
     assert 'NÃO imponha 60–90 s' in txt
     assert 'reporte a incompatibilidade' in txt
+
+
+def test_politica_nao_pode_ser_string_nem_crashar_o_gate():
+    p=brief()
+    p['politica_duracao']='narrativa'
+    r=G.avaliar(p,{'itens':[]},conferir_bytes=False)
+    assert 'E-POLITICA-DURACAO' in {x['codigo'] for x in r['bloqueios']}
+    assert not r['pronto_para_tts']

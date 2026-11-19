@@ -40,7 +40,7 @@ jobs:
           echo "deposicao_exit=$?" >> prova_nist/estado_transferencia.txt
           python -m yt_dlp --no-playlist --no-progress --no-warnings \
             --socket-timeout 22 --retries 1 --fragment-retries 1 \
-            --max-filesize 95M -f 'best[ext=mp4]/best' \
+            --max-filesize 95M -f 'best[height<=720][ext=mp4]/worst[ext=mp4]/worst' \
             --merge-output-format mp4 --output 'prova_nist/nist_ebeam.%(ext)s' \
             'kaltura:684682:0_hhh6rc8o' >prova_nist/ebeam_download.log 2>&1
           echo "ebeam_exit=$?" >> prova_nist/estado_transferencia.txt

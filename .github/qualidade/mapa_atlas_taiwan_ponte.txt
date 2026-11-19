@@ -2,3 +2,5 @@
 # Plano ATLAS v2 + timing já gravado de Gemini Charon.
 # Render só trecho MapLibre com raster, conferir SHA/licença e inserir em roteiro FILME privado.
 # Não mandar Telegram nem publicar antes de inspecionar quadros.
+
+# R2: eliminar 0,55s da transição de palco que mostrou quadro escuro na amostra anterior.

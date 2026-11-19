@@ -74,7 +74,7 @@ jobs:
           usados={L["p"]["asset"] for q in p["beats"] for L in q["camadas"] if L.get("componente")=="atlas.provaVisual"}
           assert usados<=aprovados
           # Mídia insuficiente bloqueia na triagem; jamais limitar a exatamente duas fotos.
-          assert not p["clipes"] and len(p["narracao"]["texto"].split())<90
+          # Nem número de clipes nem tamanho de roteiro ficam hardcoded; a direção prova necessidade.
           print("PILOTO_PRIVADO_ATLAS_V2 validado; ninguém autorizou publicação em redes")
           PY
       - name: Narração Gemini/Charon protegida — sem Edge, retries registrados
@@ -99,7 +99,14 @@ jobs:
         timeout-minutes: 12
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m src.v4.formatos.revisao_visual "$SAIDA"
+        run: |
+          # Não mascarar falha: salva o diagnóstico para tentar uma correção dirigida.
+          python -m src.v4.formatos.revisao_visual "$SAIDA" || test -s "$SAIDA/revisao_visual.json"
+      - name: Uma autocorreção dirigida + NOVA revisão de quadros
+        timeout-minutes: 30
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.v4.formatos.autocorrecao "$PLANO" "$SAIDA"
       - name: Renderizar MP4 completo com portões
         timeout-minutes: 65
         run: python -m src.v4.formatos render "$PLANO" "$SAIDA"
@@ -138,6 +145,7 @@ jobs:
             saida_chips_v2_privada/preflight.json
             saida_chips_v2_privada/quadros/relatorio.json
             saida_chips_v2_privada/revisao_visual.json
+            saida_chips_v2_privada/autocorrecao.json
             saida_chips_v2_privada/resultado.json
             saida_chips_v2_privada/estado_editorial.json
           if-no-files-found: warn

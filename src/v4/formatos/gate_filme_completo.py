@@ -31,7 +31,12 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
     if not isinstance(politica_duracao,dict):
         falha("E-POLITICA-DURACAO","-","política de duração precisa ser um objeto")
         politica_duracao={}
-    modo_duracao=politica_duracao.get("modo","janela_legada")
+    # Contratos novos usam o padrão narrativo global. A janela fixa só
+    # permanece em contratos antigos que DECLARAM janela_duracao_s, para
+    # preservar testes legados sem contaminar os próximos episódios.
+    modo_duracao=politica_duracao.get(
+        "modo", "janela_legada" if "janela_duracao_s" in manifesto else "narrativa"
+    )
     dur_valida=(isinstance(dur,(int,float)) and not isinstance(dur,bool)
                 and math.isfinite(dur) and dur>0)
     if modo_duracao=="narrativa":
@@ -237,7 +242,26 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
                 for chunk in iter(lambda:f.read(65536),b""):
                     h.update(chunk)
             audio_autenticado=h.hexdigest()==voz["sha256_wav"] and bool(voz.get("texto_sha256"))
+    # Mesmo contrato que bloqueia o filme vira livro-caixa de acontecimentos:
+    # uma linha por cena, sem gerar outra definição de storyboard ou inventar
+    # inspeção visual. Um quadro sem bloqueio técnico AINDA requer revisão.
+    bloqueios_por_cena={}
+    for erro in erros:
+        bloqueios_por_cena.setdefault(erro["cena"], []).append(erro["codigo"])
+    cobertura_acontecimentos=[
+        {"id":c.get("id") or "?", "acao":c.get("acao"),
+         "tipo_visual":(c.get("midia") or {}).get("tipo"),
+         "bloqueios":bloqueios_por_cena.get(c.get("id") or "?", []),
+         "status_tecnico":(
+             "BLOQUEADO" if bloqueios_por_cena.get(c.get("id") or "?") else
+             "SEM_BLOQUEIO_LOCAL_REVISAO_HUMANA_PENDENTE"
+         )}
+        for c in cenas
+    ]
     return {
+        "cobertura_acontecimentos":cobertura_acontecimentos,
+        "cenas_com_bloqueios_locais":sum(x["status_tecnico"]=="BLOQUEADO" for x in cobertura_acontecimentos),
+        "bloqueios_globais":bloqueios_por_cena.get("-", []),
         "status":"PRONTO_PARA_TTS" if pronto_visual else "BLOQUEADO_EDITORIAL_SEM_PROVA",
         "pronto_para_tts":pronto_visual,
         "pronto_para_render":pronto_visual and audio_autenticado,

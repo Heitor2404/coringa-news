@@ -25,3 +25,12 @@ Fontes verificadas publicamente:
 - Nenhuma alteração em `main`, NTC, DOSSIÊ. Nenhum custo Gemini, Charon, render final, Telegram ou publicação.
 
 **Próximo aceite:** um MP4 ORIGINAL recuperado (SHA real), folhas de contato legíveis e seleção manual de trechos que demonstrem movimento físico adequado; depois validação dos direitos específicos. Sem isso, os vídeos não entram no catálogo comprovado e o gate mantém o bloqueio.
+
+
+## Resultado posterior: NIST NanoFab obtido e inspecionado
+- **CI aquisição 44617739596 SUCCESS**, 26 testes do coletor, Kaltura `0_emhevqw5` recuperado sem custo IA: **28.734.934 bytes**, **105,05s**, **1360×720**, SHA-256 `582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474`.
+- Artifact `14575931753` (retenção 3 dias) contém MP4 original, folha de contato, manifesto/banco V3 de teste. ID V3 `cm-582ee5ea387f`. Direitos comerciais ainda `indefinido`, aprovação humana pendente.
+- Download do artefato foi recuperado e SHA verificado novamente. **42 quadros reais** examinados (12 gerais + 30 entre 40 e 90s). Mostra laboratório, pessoas, instrumentos e telas de software, mas não prova claramente processo de fabricação em ação nas amostras. É B-roll contextual candidato, não é filmagem da TSMC nem prova de deposição/EUV.
+- Detalhe visual e limitações: `docs/v4/formatos/INSPECAO_NIST_NANOFAB_USERS_20261119.md`.
+- Receita NIST fixou `sha256_esperado`; coletor agora bloqueia fonte futura com bytes diferentes antes de registrar/usar os quadros.
+- **CI do motor 44619068249 SUCCESS: 137 testes**, incluindo regressões que separam vídeo contextual de ação demonstrativa e evitam contar vídeo sem licença. Taiwan legado continua com 9 bloqueios, mapa 1 e fotos 2/3; **0 vídeos físicos demonstrativos aprovados**. Nenhum TTS, Telegram ou publicação.

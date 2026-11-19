@@ -684,3 +684,24 @@ Usuário rejeitou veementemente a prévia de mapas Taiwan/Venezuela/Suez de 10,4
 - Regressão `tests/test_bloqueio_mapa_elementar_voz_final.py` e workflow `.github/workflows/qa-bloqueio-mapas-voz.yml`: **run 44582797350 SUCCESS — 42 testes verdes, TypeScript passou, arquivo rejeitado ausente e os motores antigos presentes**. Não gerou vídeo, não enviou Telegram, não consumiu IA.
 
 **A próxima integração não foi feita ainda:** para inserir mapa em FILME DOCUMENTAL, produzir clipe pela cartografia ATLAS `PalcoMapa`/Remotion `Formato`, com seu preflight de raster/geometria e revisão visual, e consumir esse clipe como ativo em `FilmeEditorial`. **Nunca reconstruir outro mapa simplificado**. Voz final deve passar pelo pipeline TTS Charon existente; nenhum novo clipe foi produzido ou homologado nesta correção. `main`, NTC, DOSSIÊ e produção intactos.
+
+## 43. 19/11 18h21 — Ponte ATLAS → FilmeEditorial implementada em código; continuidade atualizada após interrupção
+
+**Pedido:** integrar os mapas CARTOGRÁFICOS REAIS já existentes ao motor documental, sem recriar desenhador de mapas, e respeitar voz oficial Gemini Charon. O usuário informou "transmissão interrompida" e pediu confirmar se estamos salvando continuidade no GitHub.
+
+**Branch de trabalho:** `atlas-direcao-visual-20261118`; não modificar `main`, NTC, DOSSIÊ, produção; zero publicação automática. As entradas históricas 40/41 foram supersedidas pelo bloqueio da seção 42 — **mapa elementar não pode existir nem como fallback**.
+
+**Código efetivamente presente no GitHub (commits até `ec8c327087ce`):**
+- `src/v4/formatos/ponte_mapa_atlas.py`: ponte reutilizável do **ATLAS original `Formato/PalcoMapa` com MapLibre** ao `FilmeEditorial`. `verificar_plano()` exige plano ATLAS resolvido, validado no fiscal nativo, intervalo com palco mapa e ROI, raster nítido na escala de câmera, arquivo raster existente e SHA-256 igual ao catálogo, licença/atribuição comercial permitida. Sem raster real: **BLOQUEAR, não fallback vetorial**.
+- `preparar()` copia rasters byte a byte para o public dir do Remotion `Formato` original e gera `props_atlas_formato.json` + `preparo_atlas.json`, **ainda sem vídeo**. `confirmar()` examina MP4 real com ffprobe/FFmpeg e 3 frames, guarda SHA, status `PRONTO_PARA_REVISAO_HUMANA`, inspeção semântica e estética **PENDENTES**.
+- `inserir_no_filme()` liga somente clipe cartográfico autêntico, cujo SHA corresponda ao comprovante, como `atlas_map` ilustrativo, **sem fingir registro filmado**; apenas storyboard `PROVA_VISUAL_PRIVADA` com cena explicitamente nomeada, duração correspondente e `direcao_evento` declarada. `validar_comprovante()` recusa arquivo adulterado, pasta fora de `stage_atlas/`, raster ausente, comprovante ausente.
+- `FilmeEditorial.tsx`, `filme_editorial.py`, `contrato_visual_comum.py`, `direcao_eventos.py` receberam suporte ao clipe autenticado `atlas_map`. **`type=map` e `NarrativeMapStage` simplificado continuam PROIBIDOS.** Barra de progresso global preservada.
+- CLI no mesmo `ponte_mapa_atlas.py`: `prepare`, `confirm`, `attach`. `attach` usa o preflight `FilmeEditorial.avaliar` antes de escrever storyboard resultante.
+- `tests/test_ponte_mapa_atlas_filme.py` exercita prova do raster real, uso do Formato original, SHA e bloqueios de adulteração, fallback elementar proibido, gate semântico e proibição de voz teste final.
+- Workflow `.github/workflows/qa-ponte-atlas-filme.yml` apenas testes/TypeScript e **preparo da ponte**, sem render de vídeo, sem Gemini/Edge/Claude e sem Telegram. **Run `44586313967` SUCCESS** na versão anterior ao último commit CLI: regressões e props originais aprovadas. Precisa executar novamente após o commit `ec8c327087ce` para validar estado atual.
+
+**ESTADO REAL QUANDO A TRANSMISSÃO CAIU:** integração de contratos e preparo existe em código. **Ainda não foi renderizado um mapa real nesta etapa, nem montado/inspecionado um MP4 documental com essa ponte; não afirmar que foi homologado.** CLI foi incorporada no último commit e precisa do seu próprio teste reexecutado.
+
+**Próximas ações:** (1) reexecutar QA no HEAD atual; (2) exercitar o CLI com arquivos genuínos; (3) renderizar uma ÚNICA prova cartográfica usando o Remotion `Formato` do ATLAS com raster real e inspecionar frames antes da montagem; (4) anexar clipe ao `FilmeEditorial` por SHA; (5) integrar voz **Gemini Charon**, sem Edge em apresentação final (ou prévia muda para inspeção visual sem áudio), e só então entregar ao Telegram privado; (6) testar reuso em três assuntos com rasters específicos válidos, sem forçar Panamá genérico. **Não gastar cota de voz nem publicar sem benefício.**
+
+**Regra de continuidade:** registrar a cada fase o último commit, execução, artefatos realmente validados, problemas pendentes e próximo passo. Se chat interromper, ler esta seção antes de operar.

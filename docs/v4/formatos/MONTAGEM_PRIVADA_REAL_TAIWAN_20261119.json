@@ -1,0 +1,429 @@
+{
+  "versao": 1,
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "O terremoto de Taiwan e a cadeia dos chips · corte documental de imagens reais",
+  "fase": "ROUGH_CUT_VISUAL_SEM_VOZ_NEM_PUBLICACAO",
+  "duracao_planejada_s": 67.6,
+  "descricao": "Prévia completa de direção com fatos fontes e imagens reais; tempo ainda será ajustado à narração Charon APÓS inspeção. NIST em revisão de direitos, não atribuir a TSMC.",
+  "assets": {
+    "resgate-hualien": {
+      "modo": "foto_commons",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/02/Rescue_workers_near_the_semi-collapsed_ten-story_Uranus_Building_on_Xuanyuan_Road_after_the_2024_Hualien_earthquake.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Rescue_workers_near_the_semi-collapsed_ten-story_Uranus_Building_on_Xuanyuan_Road_after_the_2024_Hualien_earthquake.jpg",
+      "licenca": "CC BY 2.0",
+      "credito": "Office of the President Taiwan / Shufu Liu; edição Basile Morin · CC BY 2.0"
+    },
+    "intensidade-usgs": {
+      "modo": "foto_commons",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d5/2024_Hualien_earthquake.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:2024_Hualien_earthquake.jpg",
+      "licenca": "Public domain",
+      "credito": "USGS · mapa de intensidade do terremoto · domínio público"
+    },
+    "mapa-taiwan": {
+      "modo": "atlas_map",
+      "origem": "stage_atlas/taiwan/mapa.mp4",
+      "comprovante": "stage_atlas/taiwan/comprovante_atlas.json",
+      "pagina": "https://www.naturalearthdata.com/about/terms-of-use/",
+      "url": "https://www.naturalearthdata.com/about/terms-of-use/",
+      "sha256_esperado": "c0c6e8895f1d0305b791a8d66581be5695abb2026b9ca91c752a6b5eb5b9c794",
+      "licenca": "Natural Earth PD",
+      "credito": "ATLAS MapLibre · Natural Earth · mapa cartográfico ilustrativo"
+    },
+    "fab18": {
+      "modo": "foto_existente",
+      "origem": "stage_acervo/fotos/3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0.jpg",
+      "sha256_esperado": "3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
+      "pagina": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg",
+      "licenca": "CC BY 4.0",
+      "credito": "4300streetcar · TSMC Fab 18, Tainan · CC BY 4.0"
+    },
+    "fab-hsinchu": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Tsmc_factory_hsinchu.JPG",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Tsmc_factory_hsinchu.JPG",
+      "licenca": "Public domain",
+      "credito": "Arusanov · fábrica TSMC Hsinchu, 2009 · domínio público"
+    },
+    "wafer-silicio": {
+      "modo": "foto_existente",
+      "origem": "stage_acervo/fotos/f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1.jpg",
+      "sha256_esperado": "f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg",
+      "licenca": "CC BY 4.0",
+      "credito": "Le hollandais volant · wafer de silício · CC BY 4.0"
+    },
+    "nist-nanofab": {
+      "modo": "video_institucional",
+      "origem": "stage_nanofab/nist_nanofab_users_2017.mp4",
+      "sha256_esperado": "582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474",
+      "pagina": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST CNST NanoFab · laboratório nos EUA · direitos individuais pendentes"
+    },
+    "rit-litografia": {
+      "modo": "foto_commons",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Rochester_Institute_of_Technology_28.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Rochester_Institute_of_Technology_28.jpg",
+      "licenca": "CC0",
+      "credito": "Tomwsulcer · equipamento no RIT · CC0"
+    },
+    "nist-camara": {
+      "modo": "video_institucional",
+      "origem": "stage_nist/prova_nist/nist_deposicao.mp4",
+      "sha256_esperado": "9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854",
+      "pagina": "https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST · interior de instrumento, sem afirmar deposição em andamento"
+    },
+    "nist-ebeam": {
+      "modo": "video_institucional",
+      "origem": "stage_nist/prova_nist/nist_ebeam.mp4",
+      "sha256_esperado": "738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a",
+      "pagina": "https://www.nist.gov/video/visit-e-beam-machine",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST Boulder · laboratório e-beam, não equipamento EUV"
+    },
+    "nasa-sala-limpa": {
+      "modo": "foto_commons",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Clean_room.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Clean_room.jpg",
+      "licenca": "NASA PD",
+      "credito": "NASA Glenn Research Center · sala limpa · domínio público"
+    },
+    "asml-sede": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/ASML_headquarters_Veldhoven.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:ASML_headquarters_Veldhoven.jpg",
+      "licenca": "Public domain",
+      "credito": "A ansems · sede ASML em Veldhoven · domínio público"
+    },
+    "ucl-fotolitografia": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Cleanroom_-_photolithography_lab_(9150592110).jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Cleanroom_-_photolithography_lab_(9150592110).jpg",
+      "licenca": "CC BY 2.0",
+      "credito": "UCL MAPS / O. Usher · laboratório fotolitografia · CC BY 2.0"
+    },
+    "grafico-parceria": {
+      "modo": "grafico",
+      "pagina": "https://pr.tsmc.com/english/news/3338",
+      "licenca": "CC0",
+      "credito": "Infografia original Coringa Explica · dados TSMC/ASML 2026",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "CONEXÃO DOCUMENTADA",
+        "etapas": [
+          "ASML · PAÍSES BAIXOS",
+          "LITOGRAFIA EUV",
+          "TSMC · TAIWAN"
+        ],
+        "rotulo_fonte": "Fonte: comunicado conjunto de 08/09/2026"
+      }
+    },
+    "fab-hsinchu-2000": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/TSMC_fabs_in_Hsinchu_01.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:TSMC_fabs_in_Hsinchu_01.jpg",
+      "licenca": "CC BY 2.0",
+      "credito": "曾成訓 · TSMC Hsinchu, foto histórica · CC BY 2.0"
+    },
+    "grafico-recuperacao": {
+      "modo": "grafico",
+      "pagina": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000036/a20240404.htm",
+      "licenca": "CC0",
+      "credito": "Infografia original Coringa Explica · nota TSMC 6-K/SEC, 04/04/2024",
+      "dados": {
+        "design": "numero",
+        "etiqueta": "RESPOSTA AO TERREMOTO",
+        "valor": ">80%",
+        "linha1": "EQUIPAMENTOS",
+        "linha2": "RECUPERADOS ATÉ 4 ABR",
+        "fracao": 0.8,
+        "rotulo_fonte": "Fonte: TSMC / SEC · 04/04/2024"
+      }
+    },
+    "fab-taichung": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/TSMC_factory_in_Taichung's_Central_Taiwan_Science_Park.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:TSMC_factory_in_Taichung%27s_Central_Taiwan_Science_Park.jpg",
+      "licenca": "CC BY-SA 4.0",
+      "credito": "Briáxis F. Mendes · TSMC Taichung · CC BY-SA 4.0"
+    },
+    "asml-lente": {
+      "modo": "foto_commons",
+      "url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Lens_from_ASML.jpg",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Lens_from_ASML.jpg",
+      "licenca": "CC BY-SA 2.0",
+      "credito": "The Next Web · lente antiga ASML · CC BY-SA 2.0"
+    }
+  },
+  "cenas": [
+    {
+      "id": "e01",
+      "asset": "resgate-hualien",
+      "segundos": 3.4,
+      "lead": "01 · O CHOQUE",
+      "headline": "A TERRA TREMEU EM TAIWAN",
+      "subject": "Hualien, 3 de abril de 2024 · registro real",
+      "cue": "03/04/2024",
+      "highlight": "TAIWAN",
+      "intencao": "mostrar_registro",
+      "aprendizado": "Resgate junto a prédio danificado no terremoto de abril de 2024",
+      "evidence": "literal"
+    },
+    {
+      "id": "e02",
+      "asset": "intensidade-usgs",
+      "segundos": 3.2,
+      "lead": "02 · A DIMENSÃO",
+      "headline": "UM TERREMOTO DE MAGNITUDE 7,4",
+      "subject": "USGS · mapa de intensidade e epicentro",
+      "cue": "7,4 · USGS",
+      "highlight": "7,4",
+      "intencao": "mostrar_registro",
+      "aprendizado": "USGS registrou magnitude 7,4 no leste de Taiwan",
+      "evidence": "literal"
+    },
+    {
+      "id": "e03",
+      "asset": "mapa-taiwan",
+      "segundos": 2.6,
+      "lead": "03 · O TERRITÓRIO",
+      "headline": "POR QUE O MUNDO OLHA PARA ESSA ILHA?",
+      "subject": "ATLAS · cartografia Natural Earth, não epicentro",
+      "cue": "ILHA · TAIWAN",
+      "highlight": "ILHA",
+      "intencao": "localizar",
+      "aprendizado": "Localizar Taiwan no mapa real, sem fingir mostrar o terremoto",
+      "evidence": "explainer"
+    },
+    {
+      "id": "e04",
+      "asset": "fab18",
+      "segundos": 3.4,
+      "lead": "04 · A INDÚSTRIA",
+      "headline": "AQUI EXISTEM FÁBRICAS DE CHIPS",
+      "subject": "TSMC Fab 18 em Tainan, fotografia de 2025",
+      "cue": "FAB 18 · TAINAN",
+      "highlight": "FÁBRICAS",
+      "intencao": "mostrar_registro",
+      "aprendizado": "TSMC Fab18 é uma instalação de fabricação em Tainan",
+      "evidence": "literal"
+    },
+    {
+      "id": "e05",
+      "asset": "fab-hsinchu",
+      "segundos": 3.3,
+      "lead": "05 · AS INSTALAÇÕES",
+      "headline": "A TSMC ATUA EM MAIS DE UMA CIDADE",
+      "subject": "Fábrica TSMC Hsinchu · foto histórica de 2009",
+      "cue": "TSMC · HSINCHU",
+      "highlight": "TSMC",
+      "intencao": "mostrar_registro",
+      "aprendizado": "Há uma instalação da TSMC em Hsinchu, Taiwan",
+      "evidence": "literal"
+    },
+    {
+      "id": "e06",
+      "asset": "wafer-silicio",
+      "segundos": 3.3,
+      "lead": "06 · A MATÉRIA",
+      "headline": "UM CHIP COMEÇA EM UM WAFER",
+      "subject": "Wafer real de silício, imagem de outra origem",
+      "cue": "WAFER DE SILÍCIO",
+      "highlight": "WAFER",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Wafer é a base física usada na fabricação de semicondutores",
+      "evidence": "representative"
+    },
+    {
+      "id": "e07",
+      "asset": "nist-nanofab",
+      "segundos": 3.2,
+      "lead": "07 · O AMBIENTE",
+      "headline": "POR DENTRO DE UM LABORATÓRIO",
+      "subject": "NIST NanoFab · imagens ilustrativas, não TSMC",
+      "cue": "NIST · SALA LIMPA",
+      "highlight": "LABORATÓRIO",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Laboratório do NIST mostra ambiente de microfabricação",
+      "evidence": "representative",
+      "fonte_s": 52
+    },
+    {
+      "id": "e08",
+      "asset": "rit-litografia",
+      "segundos": 3.4,
+      "lead": "08 · A TÉCNICA",
+      "headline": "PADRÕES SÃO DEFINIDOS POR LITOGRAFIA",
+      "subject": "RIT · equipamento universitário, não ASML",
+      "cue": "LITOGRAFIA",
+      "highlight": "PADRÕES",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Litografia permite formar padrões em wafers",
+      "evidence": "representative"
+    },
+    {
+      "id": "e09",
+      "asset": "nist-camara",
+      "segundos": 3.5,
+      "lead": "09 · OS EQUIPAMENTOS",
+      "headline": "CÂMARAS CONTROLAM O PROCESSAMENTO",
+      "subject": "NIST · câmara de instrumento; reação não demonstrada",
+      "cue": "NIST · CÂMARA",
+      "highlight": "CÂMARAS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Equipamento possui uma câmara de processamento observável",
+      "evidence": "representative",
+      "fonte_s": 5.2
+    },
+    {
+      "id": "e10",
+      "asset": "nist-ebeam",
+      "segundos": 3.5,
+      "lead": "10 · O MANUSEIO",
+      "headline": "OPERADORES PRECISAM MANUSEAR WAFERS",
+      "subject": "NIST Boulder · laboratório e-beam, não EUV",
+      "cue": "NIST · WAFER",
+      "highlight": "WAFERS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Funcionário movimenta wafer em laboratório NIST",
+      "evidence": "representative",
+      "fonte_s": 59.5
+    },
+    {
+      "id": "e11",
+      "asset": "nist-nanofab",
+      "segundos": 3.3,
+      "lead": "11 · A COMPLEXIDADE",
+      "headline": "NENHUMA ETAPA FUNCIONA SOZINHA",
+      "subject": "NIST NanoFab · equipamentos reais",
+      "cue": "PROCESSO · ETAPAS",
+      "highlight": "ETAPA",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Múltiplos tipos de instrumentos integram a fabricação",
+      "evidence": "representative",
+      "fonte_s": 74
+    },
+    {
+      "id": "e12",
+      "asset": "nasa-sala-limpa",
+      "segundos": 3.3,
+      "lead": "12 · A LIMPEZA",
+      "headline": "UMA SALA LIMPA EVITA CONTAMINAÇÃO",
+      "subject": "NASA Glenn · sala limpa de outra instalação",
+      "cue": "NASA · SALA LIMPA",
+      "highlight": "CONTAMINAÇÃO",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Salas limpas buscam controlar contaminantes",
+      "evidence": "representative"
+    },
+    {
+      "id": "e13",
+      "asset": "asml-sede",
+      "segundos": 3.4,
+      "lead": "13 · O FORNECEDOR",
+      "headline": "PARTE DA TECNOLOGIA VEM DA EUROPA",
+      "subject": "Sede ASML em Veldhoven, Países Baixos",
+      "cue": "ASML · PAÍSES BAIXOS",
+      "highlight": "EUROPA",
+      "intencao": "mostrar_registro",
+      "aprendizado": "ASML é uma empresa sediada em Veldhoven, Países Baixos",
+      "evidence": "literal"
+    },
+    {
+      "id": "e14",
+      "asset": "ucl-fotolitografia",
+      "segundos": 3.4,
+      "lead": "14 · A LITOGRAFIA",
+      "headline": "A EXPOSIÇÃO À LUZ É UMA DAS ETAPAS",
+      "subject": "UCL · fotolitografia em laboratório acadêmico",
+      "cue": "UCL · FOTOLITOGRAFIA",
+      "highlight": "LUZ",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Fotolitografia utiliza luz para gerar padrões em material",
+      "evidence": "representative"
+    },
+    {
+      "id": "e15",
+      "asset": "grafico-parceria",
+      "segundos": 3.6,
+      "lead": "15 · A RELAÇÃO",
+      "headline": "ASML E TSMC TÊM COLABORAÇÃO REAL",
+      "subject": "Infografia original · anúncio conjunto de 2026",
+      "cue": "ASML + TSMC",
+      "highlight": "COLABORAÇÃO",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Comunicado ASML/TSMC de 2026 relata colaboração em High NA EUV",
+      "evidence": "representative"
+    },
+    {
+      "id": "e16",
+      "asset": "fab-hsinchu-2000",
+      "segundos": 3.5,
+      "lead": "16 · O RISCO",
+      "headline": "SE UMA ETAPA PARA, ELA PRECISA VOLTAR",
+      "subject": "Fábricas TSMC Hsinchu · fotografia histórica, ilustrativa",
+      "cue": "PARADAS E AJUSTES",
+      "highlight": "PARA",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Uma interrupção de equipamentos requer retorno seguro",
+      "evidence": "representative"
+    },
+    {
+      "id": "e17",
+      "asset": "nist-ebeam",
+      "segundos": 3.5,
+      "lead": "17 · A RETOMADA",
+      "headline": "EQUIPAMENTOS EXIGEM CONTROLE FINO",
+      "subject": "NIST e-beam · ilustração de instrumentação, não recuperação TSMC",
+      "cue": "NIST · EQUIPAMENTO",
+      "highlight": "CONTROLE",
+      "intencao": "explicar_contexto",
+      "aprendizado": "A complexidade de equipamento exige operação precisa",
+      "evidence": "representative",
+      "fonte_s": 70
+    },
+    {
+      "id": "e18",
+      "asset": "grafico-recuperacao",
+      "segundos": 3.7,
+      "lead": "18 · O RESULTADO",
+      "headline": "MAIS DE 80% JÁ ESTAVAM RECUPERADOS",
+      "subject": "TSMC informou recuperação de ferramentas em 04/04/2024",
+      "cue": "TSMC · 04/04",
+      "highlight": "80%",
+      "intencao": "explicar_contexto",
+      "aprendizado": "TSMC declarou mais de 80% de ferramentas recuperadas em 4 de abril de 2024",
+      "evidence": "representative"
+    },
+    {
+      "id": "e19",
+      "asset": "fab-taichung",
+      "segundos": 3.5,
+      "lead": "19 · A REDE",
+      "headline": "A CONCENTRAÇÃO TORNA A CADEIA SENSÍVEL",
+      "subject": "Foto TSMC Taichung · imagem anterior ao terremoto",
+      "cue": "FABRICAÇÃO · TAIWAN",
+      "highlight": "CADEIA",
+      "intencao": "mostrar_registro",
+      "aprendizado": "Existem instalações industriais da TSMC em Taiwan",
+      "evidence": "literal"
+    },
+    {
+      "id": "e20",
+      "asset": "asml-lente",
+      "segundos": 3.6,
+      "lead": "20 · A RESPOSTA",
+      "headline": "O PROBLEMA É UMA CADEIA INTERDEPENDENTE",
+      "subject": "Lente ASML antiga · foto de 2006, não EUV moderna",
+      "cue": "EQUIPAMENTO + FABRICAÇÃO",
+      "highlight": "INTERDEPENDENTE",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Fabricar chips depende de diferentes tecnologias e fornecedores",
+      "evidence": "representative"
+    }
+  ]
+}

@@ -72,8 +72,11 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
         'Responda SÓ o JSON válido do DOSSIÊ, com formato, canal, vídeo, título, duração, beats com composição e camadas.'\
     )
     direcao_atlas = """DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
-- Padrão aprovado V1: abertura_tipo:"mapa", beat 0 atlas.abertura, mapa hero desde o 1º quadro;
-  nenhum clipe nos primeiros 3 segundos.
+- O palco acompanha a EVIDÊNCIA, não um mapa fixo. O mapa NÃO é abertura obrigatória.
+  Use abertura_tipo:"prova_real" quando existir foto/vídeo autêntico que mostre o objeto/acontecimento.
+  Caso o fato central seja territorial (fronteira, rota, localização), abertura_tipo:"mapa" com
+  atlas.abertura e ROI REGIONAL que faça o lugar aparecer grande; sem plano-múndi vazio.
+  A abertura mapa não recebe clipe decorativo nos primeiros 3s.
 - Opcional V2, só com prova autenticamente identificada: abertura_tipo:"prova_real". FOTO: beat 0
   atlas.prova, atlas.provaVisual desde 0 até ao menos 2,5s, com origem e crédito. VÍDEO: beat 0
   atlas.abertura, clipe registro.video desde 0 até ao menos 2,5s, com fonte e hash verificável.
@@ -81,7 +84,11 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
   não use animação técnica de mecanismo no gancho.
 - Primeiro classifique a necessidade visual de cada trecho: geografia, fato real, funcionamento,
   comparação, revelação. Escolha mídia por pertinência e comprovação, sem cota de animações.
-- Imagem real do objeto/fábrica/evento pode ocupar o plano principal com atlas.provaVisual em atlas.prova.
+- Imagem real do objeto/fábrica/evento deve ocupar o plano principal com atlas.provaVisual em atlas.prova.
+  Esse palco é FOTOGRÁFICO, SEM mapa ao fundo, grande e legível; escolha mídia melhor
+  antes de optar por foto obscura, miniatura, faixas pretas ou carta de texto.
+- Nunca use atlas.protagonista com ROI de um continente inteiro para ilustrar empresa ou máquina.
+  Cadeias de dependência exigem objetos reais + fluxo causal, NÃO três etiquetas em mapa-múndi.
 - Vídeo documental REAL comprovado usa clipes: [{t0,t1,componente:"registro.video",params:{asset:"ID DA BIBLIOTECA",inicio:0}}].
   O MP4 tem movimento próprio (sem câmera artificial), ocupa o intervalo todo e traz crédito do acervo;
   não atribua a ele uma ação que o arquivo não comprova, nem use vídeos genéricos como prova específica.

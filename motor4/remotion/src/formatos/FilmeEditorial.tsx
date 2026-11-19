@@ -175,6 +175,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
+    {shot.mechanism!=='lock_cycle' && <>
     <div style={{position:'absolute',bottom:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}
     </div>
@@ -184,6 +185,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
     <div style={{position:'absolute',bottom:198,left:64,right:64,height:3,background:'rgba(255,255,255,.25)'}}>
       <div style={{width:`${100*p}%`,height:'100%',background:GOLD}}/>
     </div>
+    </>}
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true}) => {

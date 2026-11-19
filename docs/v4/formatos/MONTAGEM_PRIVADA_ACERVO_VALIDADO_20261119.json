@@ -1,0 +1,439 @@
+{
+  "versao": 1,
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "Por que Taiwan importa para os chips? · rough cut com mídia já autenticada",
+  "fase": "ROUGH_CUT_VISUAL_SEM_DOWNLOAD_NOVO_NEM_VOZ",
+  "nota": "Composição de ensaio, sem mídia do terremoto, sem vídeo TSMC em operação. Filmagens NIST são laboratório ilustrativo com direitos pendentes; infografias são autorais. Duração sujeita a reedição após análise.",
+  "duracao_planejada_s": 68.6,
+  "assets": {
+    "grafico-terremoto": {
+      "modo": "grafico",
+      "pagina": "https://www.usgs.gov/news/featured-story/strong-quake-and-aftershocks-rattle-eastern-taiwan",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · USGS, terremoto de 03/04/2024",
+      "dados": {
+        "design": "numero",
+        "etiqueta": "3 DE ABRIL DE 2024",
+        "valor": "7,4",
+        "linha1": "MAGNITUDE USGS",
+        "linha2": "LESTE DE TAIWAN",
+        "rotulo_fonte": "Fonte: USGS · 2024"
+      }
+    },
+    "mapa-taiwan": {
+      "modo": "atlas_map",
+      "origem": "stage_atlas/taiwan/mapa.mp4",
+      "comprovante": "stage_atlas/taiwan/comprovante_atlas.json",
+      "pagina": "https://www.naturalearthdata.com/about/terms-of-use/",
+      "sha256_esperado": "c0c6e8895f1d0305b791a8d66581be5695abb2026b9ca91c752a6b5eb5b9c794",
+      "licenca": "Natural Earth PD",
+      "credito": "ATLAS MapLibre · Natural Earth · relevo Taiwan"
+    },
+    "fab18": {
+      "modo": "foto_existente",
+      "origem": "stage_acervo/fotos/3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0.jpg",
+      "sha256_esperado": "3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
+      "pagina": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg",
+      "licenca": "CC BY 4.0",
+      "credito": "4300streetcar · TSMC Fab 18 Tainan · CC BY 4.0"
+    },
+    "grafico-3nm": {
+      "modo": "grafico",
+      "pagina": "https://www.tsmc.com/english/dedicatedFoundry/technology/logic/l_3nm",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · dados TSMC 3nm",
+      "dados": {
+        "design": "numero",
+        "etiqueta": "FABRICAÇÃO AVANÇADA",
+        "valor": "3 nm",
+        "linha1": "PROCESSO DA TSMC",
+        "linha2": "TECNOLOGIA DE CHIP",
+        "rotulo_fonte": "Fonte: TSMC · tecnologia N3"
+      }
+    },
+    "wafer": {
+      "modo": "foto_existente",
+      "origem": "stage_acervo/fotos/f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1.jpg",
+      "sha256_esperado": "f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Silicon_wafer_close_view.jpg",
+      "licenca": "CC BY 4.0",
+      "credito": "Le hollandais volant · wafer de silício · CC BY 4.0"
+    },
+    "nist-nanofab": {
+      "modo": "video_institucional",
+      "origem": "stage_nanofab/nist_nanofab_users_2017.mp4",
+      "sha256_esperado": "582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474",
+      "pagina": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST NanoFab EUA · imagens ilustrativas, direitos específicos pendentes"
+    },
+    "nist-camara": {
+      "modo": "video_institucional",
+      "origem": "stage_nist/prova_nist/nist_deposicao.mp4",
+      "sha256_esperado": "9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854",
+      "pagina": "https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST CNST · instrumentos de pesquisa; não é TSMC"
+    },
+    "nist-ebeam": {
+      "modo": "video_institucional",
+      "origem": "stage_nist/prova_nist/nist_ebeam.mp4",
+      "sha256_esperado": "738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a",
+      "pagina": "https://www.nist.gov/video/visit-e-beam-machine",
+      "licenca": "REVIEW_PENDING",
+      "credito": "NIST Boulder · laboratório e-beam, não é litografia EUV"
+    },
+    "grafico-euv": {
+      "modo": "grafico",
+      "pagina": "https://www.asml.com/en/products/euv-lithography-systems",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · referência ASML EUV",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "LITOGRAFIA AVANÇADA",
+        "etapas": [
+          "FONTE DE LUZ",
+          "PADRÃO NO WAFER",
+          "CIRCUITOS"
+        ],
+        "rotulo_fonte": "Fonte: ASML · sistemas EUV"
+      }
+    },
+    "grafico-elo": {
+      "modo": "grafico",
+      "pagina": "https://pr.tsmc.com/english/news/3338",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · colaboração ASML/TSMC",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "CONEXÃO DOCUMENTADA",
+        "etapas": [
+          "ASML · EUROPA",
+          "TECNOLOGIA EUV",
+          "TSMC · TAIWAN"
+        ],
+        "rotulo_fonte": "Fonte: comunicado conjunto 2026"
+      }
+    },
+    "grafico-retomada": {
+      "modo": "grafico",
+      "pagina": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000036/a20240404.htm",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · TSMC/SEC 04/04/2024",
+      "dados": {
+        "design": "numero",
+        "etiqueta": "RECUPERAÇÃO APÓS O SISMO",
+        "valor": ">80%",
+        "linha1": "EQUIPAMENTOS",
+        "linha2": "RECUPERADOS",
+        "fracao": 0.8,
+        "rotulo_fonte": "Fonte: TSMC/SEC · 04/04/2024"
+      }
+    },
+    "grafico-volta": {
+      "modo": "grafico",
+      "pagina": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000038/a20240405.htm",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · atualização TSMC/SEC 05/04/2024",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "RETOMADA INDUSTRIAL",
+        "etapas": [
+          "ABALO",
+          "INSPEÇÃO",
+          "RETOMADA"
+        ],
+        "rotulo_fonte": "Fonte: TSMC/SEC · 05/04/2024"
+      }
+    },
+    "grafico-risco": {
+      "modo": "grafico",
+      "pagina": "https://investor.tsmc.com/static/annualReports/2024/english/ebook/files/basic-html/page138.html",
+      "licenca": "CC0",
+      "credito": "Infografia autoral Coringa Explica · relatório anual TSMC 2024",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "RISCOS DE UMA CADEIA",
+        "etapas": [
+          "FORNECEDORES",
+          "FABRICAÇÃO",
+          "MERCADO GLOBAL"
+        ],
+        "rotulo_fonte": "Fonte: TSMC · relatório 2024"
+      }
+    }
+  },
+  "cenas": [
+    {
+      "id": "01",
+      "asset": "grafico-terremoto",
+      "segundos": 3.6,
+      "lead": "O ABALO",
+      "headline": "UM TERREMOTO DE MAGNITUDE 7,4",
+      "subject": "Infografia USGS · não é filmagem do sismo",
+      "cue": "3 DE ABRIL",
+      "highlight": "7,4",
+      "intencao": "explicar_contexto",
+      "aprendizado": "USGS documentou magnitude 7,4 no leste de Taiwan",
+      "evidence": "representative"
+    },
+    {
+      "id": "02",
+      "asset": "mapa-taiwan",
+      "segundos": 2.6,
+      "lead": "ONDE FICA",
+      "headline": "A ILHA NO CENTRO DA HISTÓRIA",
+      "subject": "Cartografia ATLAS · Taiwan e relevo real",
+      "cue": "TAIWAN",
+      "highlight": "ILHA",
+      "intencao": "localizar",
+      "aprendizado": "Localizar a ilha de Taiwan no contexto regional",
+      "evidence": "explainer"
+    },
+    {
+      "id": "03",
+      "asset": "fab18",
+      "segundos": 3.4,
+      "lead": "A FÁBRICA",
+      "headline": "UMA FÁBRICA REAL DA TSMC",
+      "subject": "TSMC Fab 18 · Tainan, foto de 2025",
+      "cue": "FAB 18",
+      "highlight": "TSMC",
+      "intencao": "mostrar_registro",
+      "aprendizado": "Identificar a fábrica Fab18 da TSMC em Tainan",
+      "evidence": "literal"
+    },
+    {
+      "id": "04",
+      "asset": "grafico-3nm",
+      "segundos": 3.4,
+      "lead": "O PROCESSO",
+      "headline": "A TSMC FABRICA CHIPS DE 3 NM",
+      "subject": "Infografia tecnológica de referência TSMC",
+      "cue": "3 nm",
+      "highlight": "3 nm",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Compreender a fabricação de chips avançados na TSMC",
+      "evidence": "representative"
+    },
+    {
+      "id": "05",
+      "asset": "wafer",
+      "segundos": 3.4,
+      "lead": "O MATERIAL",
+      "headline": "É NO WAFER QUE TUDO COMEÇA",
+      "subject": "Wafer real · não foi fabricado na TSMC",
+      "cue": "WAFER",
+      "highlight": "WAFER",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Entender o wafer como base material para fabricação",
+      "evidence": "representative"
+    },
+    {
+      "id": "06",
+      "asset": "nist-nanofab",
+      "segundos": 3.4,
+      "lead": "O LABORATÓRIO",
+      "headline": "A MICROFABRICAÇÃO EXIGE CONTROLE",
+      "subject": "NIST NanoFab EUA · imagem ilustrativa, não TSMC",
+      "cue": "LABORATÓRIO",
+      "highlight": "CONTROLE",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar o ambiente de um laboratório real de microfabricação",
+      "evidence": "representative",
+      "fonte_s": 48.4
+    },
+    {
+      "id": "07",
+      "asset": "nist-camara",
+      "segundos": 3.4,
+      "lead": "AS CÂMARAS",
+      "headline": "O PROCESSO USA EQUIPAMENTOS COMPLEXOS",
+      "subject": "NIST · interior de equipamento, não operação de deposição",
+      "cue": "INSTRUMENTO",
+      "highlight": "EQUIPAMENTOS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar a estrutura de uma câmara em laboratório NIST",
+      "evidence": "representative",
+      "fonte_s": 5.2
+    },
+    {
+      "id": "08",
+      "asset": "nist-ebeam",
+      "segundos": 3.5,
+      "lead": "AS ETAPAS",
+      "headline": "A FABRICAÇÃO EXIGE MANIPULAÇÃO PRECISA",
+      "subject": "NIST Boulder · equipamento e-beam, não EUV",
+      "cue": "NIST · EQUIPAMENTO",
+      "highlight": "PRECISA",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Apresentar operação de equipamento de pesquisa em laboratório",
+      "evidence": "representative",
+      "fonte_s": 46.5
+    },
+    {
+      "id": "09",
+      "asset": "grafico-euv",
+      "segundos": 3.5,
+      "lead": "A TÉCNICA",
+      "headline": "A LUZ TRANSFERE PADRÕES",
+      "subject": "Esquema original sobre princípio de litografia EUV",
+      "cue": "ASML · EUV",
+      "highlight": "PADRÕES",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Descrever, por etapas, a finalidade da litografia EUV",
+      "evidence": "representative"
+    },
+    {
+      "id": "10",
+      "asset": "nist-nanofab",
+      "segundos": 3.5,
+      "lead": "OUTRA INSTALAÇÃO",
+      "headline": "PESSOAS OPERAM SISTEMAS DELICADOS",
+      "subject": "NIST NanoFab EUA · pesquisadores em ambiente técnico",
+      "cue": "PESQUISA",
+      "highlight": "OPERAM",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar operadores em laboratório de nanofabricação",
+      "evidence": "representative",
+      "fonte_s": 55.5
+    },
+    {
+      "id": "11",
+      "asset": "nist-ebeam",
+      "segundos": 3.4,
+      "lead": "MANUSEIO",
+      "headline": "WAFERS EXIGEM CUIDADO EM CADA ETAPA",
+      "subject": "NIST · wafer manuseado em laboratório; não é TSMC",
+      "cue": "NIST · WAFER",
+      "highlight": "WAFERS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar manuseio de wafer em outro laboratório real",
+      "evidence": "representative",
+      "fonte_s": 59.5
+    },
+    {
+      "id": "12",
+      "asset": "nist-nanofab",
+      "segundos": 3.4,
+      "lead": "PRECISÃO",
+      "headline": "A OPERAÇÃO DEPENDE DE MUITOS INSTRUMENTOS",
+      "subject": "NIST NanoFab · infraestrutura de pesquisa ilustrativa",
+      "cue": "VÁRIOS SISTEMAS",
+      "highlight": "INSTRUMENTOS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar infraestrutura técnica de microfabricação",
+      "evidence": "representative",
+      "fonte_s": 74
+    },
+    {
+      "id": "13",
+      "asset": "grafico-elo",
+      "segundos": 3.5,
+      "lead": "A CONEXÃO",
+      "headline": "ASML E TSMC TÊM COLABORAÇÃO DOCUMENTADA",
+      "subject": "Infografia original · anúncio empresarial de 2026",
+      "cue": "ASML + TSMC",
+      "highlight": "CONEXÃO",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Relacionar fornecedores tecnológicos e fábricas com fonte primária",
+      "evidence": "representative"
+    },
+    {
+      "id": "14",
+      "asset": "nist-ebeam",
+      "segundos": 3.5,
+      "lead": "O TRABALHO",
+      "headline": "OPERAR UMA MÁQUINA EXIGE PROCEDIMENTOS",
+      "subject": "Laboratório NIST Boulder · ilustração técnica, não TSMC",
+      "cue": "LABORATÓRIO",
+      "highlight": "PROCEDIMENTOS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar trabalho real com instrumentos de pesquisa",
+      "evidence": "representative",
+      "fonte_s": 70.2
+    },
+    {
+      "id": "15",
+      "asset": "nist-nanofab",
+      "segundos": 3.4,
+      "lead": "A DEPENDÊNCIA",
+      "headline": "UM PROCESSO TEM VÁRIAS ETAPAS",
+      "subject": "NIST NanoFab · laboratório de fabricação, contexto ilustrativo",
+      "cue": "ETAPAS",
+      "highlight": "PROCESSO",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Explicar que a fabricação reúne etapas de instrumentação",
+      "evidence": "representative",
+      "fonte_s": 78
+    },
+    {
+      "id": "16",
+      "asset": "grafico-retomada",
+      "segundos": 3.7,
+      "lead": "A CONSEQUÊNCIA",
+      "headline": "MAIS DE 80% JÁ TINHAM SIDO RECUPERADOS",
+      "subject": "TSMC informou em 4 de abril de 2024 · resultado factual",
+      "cue": "TSMC · SEC",
+      "highlight": "80%",
+      "intencao": "explicar_contexto",
+      "aprendizado": "TSMC informou recuperação de mais de 80 por cento das ferramentas",
+      "evidence": "representative"
+    },
+    {
+      "id": "17",
+      "asset": "nist-nanofab",
+      "segundos": 3.5,
+      "lead": "PARA ENTENDER",
+      "headline": "UMA FÁBRICA PRECISA DE EQUIPAMENTOS",
+      "subject": "NIST NanoFab · ilustração do ambiente técnico",
+      "cue": "LABORATÓRIO",
+      "highlight": "EQUIPAMENTOS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar máquinas reais de pesquisa, sem atribuir impacto do sismo",
+      "evidence": "representative",
+      "fonte_s": 83
+    },
+    {
+      "id": "18",
+      "asset": "grafico-volta",
+      "segundos": 3.4,
+      "lead": "NO DIA SEGUINTE",
+      "headline": "A RETOMADA DEPENDE DE INSPEÇÕES",
+      "subject": "Diagrama original baseado no acompanhamento TSMC/SEC",
+      "cue": "PROCESSO · RETOMADA",
+      "highlight": "INSPEÇÕES",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Explicar o processo de inspeção e retomada após um abalo",
+      "evidence": "representative"
+    },
+    {
+      "id": "19",
+      "asset": "nist-ebeam",
+      "segundos": 3.4,
+      "lead": "A ESTRUTURA",
+      "headline": "A PRODUÇÃO EXIGE CENTROS ESPECIALIZADOS",
+      "subject": "NIST Boulder · laboratório de pesquisa ilustrativo",
+      "cue": "INSTALAÇÕES REAIS",
+      "highlight": "ESPECIALIZADOS",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar equipamento físico em pesquisa de semicondutores",
+      "evidence": "representative",
+      "fonte_s": 73.8
+    },
+    {
+      "id": "20",
+      "asset": "grafico-risco",
+      "segundos": 3.7,
+      "lead": "O QUE IMPORTA",
+      "headline": "O RISCO ESTÁ EM TODA A CADEIA",
+      "subject": "Infografia original · risco industrial documentado TSMC",
+      "cue": "FABRICAÇÃO E CADEIA",
+      "highlight": "CADEIA",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Explicar por que equipamentos e fabricação são interdependentes",
+      "evidence": "representative"
+    }
+  ]
+}

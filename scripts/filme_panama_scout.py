@@ -4,6 +4,7 @@ Testa fontes em ordem e gera contatos/relatório para auditoria humana.
 """
 from __future__ import annotations
 import html
+import os
 import json
 import re
 import subprocess
@@ -69,10 +70,14 @@ def capturar(entrada,destino):
             estado.update({'resultado':'SEM_FONTE','motivo':str(exc)[:240]})
             return estado
     raw=dest/(entrada['id']+'.mp4')
+    hero = os.environ.get('SCOUT_HERO_HD') == '1'
     try:
         proc=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y',
-            '-ss',str(entrada.get('offset_s',0)),'-i',url,'-t','20','-an','-vf','fps=30,scale=960:-2',
-            '-c:v','libx264','-preset','veryfast','-crf','24','-movflags','+faststart',
+            '-ss',str(entrada.get('offset_s',0)),'-i',url,
+            '-t','11' if hero else '20','-an',
+            '-vf','fps=30,scale=1920:-2' if hero else 'fps=30,scale=960:-2',
+            '-c:v','libx264','-preset','medium' if hero else 'veryfast',
+            '-crf','20' if hero else '24','-movflags','+faststart',
             str(raw)],capture_output=True,text=True,timeout=160)
         if proc.returncode or not raw.is_file() or raw.stat().st_size<30000:
             raise RuntimeError((proc.stderr or '')[-350:] or 'sem saída válida')
@@ -110,7 +115,9 @@ def contatos(destino,casos):
 def main():
     dest=Path(sys.argv[1]);dest.mkdir(parents=True,exist_ok=True)
     casos=[]
-    for c in CANDIDATOS:
+    candidatos = ([x for x in CANDIDATOS if x['id']=='comfort-2018-meio']
+                  if os.environ.get('SCOUT_HERO_HD')=='1' else CANDIDATOS)
+    for c in candidatos:
         print('SCOUT',c['id'],flush=True)
         r=capturar(c,dest);casos.append(r)
         print('RESULTADO',json.dumps(r,ensure_ascii=False)[:600],flush=True)

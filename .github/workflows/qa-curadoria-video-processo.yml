@@ -1,0 +1,108 @@
+name: "QA — coleta privada de clipes de processos reais (NIST, sem TTS)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/coleta_video_processos.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-curadoria-processos-experimental
+  cancel-in-progress: true
+jobs:
+  coleta:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Utilitarios de aquisicao sem IA
+        run: |
+          python -m pip install -q yt-dlp pillow
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Tentar recuperar as duas fontes OFICIAIS Kaltura/NIST, sem promover ao catalogo
+        timeout-minutes: 12
+        run: |
+          mkdir -p prova_nist
+          set +e
+          python -m yt_dlp --no-playlist --no-progress --no-warnings \
+            --socket-timeout 22 --retries 1 --fragment-retries 1 \
+            --max-filesize 95M -f 'best[ext=mp4]/best' \
+            --merge-output-format mp4 --output 'prova_nist/nist_deposicao.%(ext)s' \
+            'kaltura:684682:1_k2iydnt5' >prova_nist/deposicao_download.log 2>&1
+          echo "deposicao_exit=$?" >> prova_nist/estado_transferencia.txt
+          python -m yt_dlp --no-playlist --no-progress --no-warnings \
+            --socket-timeout 22 --retries 1 --fragment-retries 1 \
+            --max-filesize 95M -f 'best[ext=mp4]/best' \
+            --merge-output-format mp4 --output 'prova_nist/nist_ebeam.%(ext)s' \
+            'kaltura:684682:0_hhh6rc8o' >prova_nist/ebeam_download.log 2>&1
+          echo "ebeam_exit=$?" >> prova_nist/estado_transferencia.txt
+          set -e
+      - name: Provar bytes e extrair quadros, sem dizer que acao foi inspecionada
+        run: |
+          python - <<'PY'
+          import hashlib, json, subprocess
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          raiz=Path("prova_nist")
+          origens=[
+            ("nist_deposicao","https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science"),
+            ("nist_ebeam","https://www.nist.gov/video/visit-e-beam-machine"),
+          ]
+          resumo={"aprovacao":"NAO_HOMOLOGADO", "origens":[],"publicado":False,
+                  "licenca_individual":"PENDENTE","revisao_visual":"PENDENTE",
+                  "usa_gemini":False,"usa_tts":False}
+          for stem,pagina in origens:
+            arquivos=[p for p in raiz.glob(stem+".*") if p.suffix.lower() in (".mp4",".webm",".mov",".mkv")]
+            x={"id":stem,"pagina_oficial":pagina,"estado":"SEM_VIDEO_VERIFICADO"}
+            if not arquivos:
+              x["motivo"]="download nao disponibilizou arquivo de video"
+              resumo["origens"].append(x);continue
+            p=arquivos[0];x["bytes"]=p.stat().st_size
+            if p.stat().st_size<30000 or p.stat().st_size>100_000_000:
+              x["motivo"]="arquivo vazio ou muito grande";resumo["origens"].append(x);continue
+            try:
+              meta=json.loads(subprocess.check_output(
+                ["ffprobe","-v","error","-show_entries","format=duration:stream=codec_type,width,height",
+                 "-of","json",str(p)],timeout=35,text=True))
+              info=next(i for i in meta["streams"] if i.get("codec_type")=="video")
+              dur=float(meta["format"]["duration"])
+              if dur<4 or min(info.get("width",0),info.get("height",0))<240:
+                raise ValueError("resolucao ou duracao insuficiente")
+              sha=hashlib.sha256()
+              with p.open("rb") as fd:
+                for bloco in iter(lambda:fd.read(1024*1024),b""):sha.update(bloco)
+              x.update(estado="BAIXADO_SEM_CURADORIA",sha256=sha.hexdigest(),
+                       arquivo=p.name,dimensoes=[info["width"],info["height"]],
+                       duracao=dur,quadro_amostragem="5 quadros, nao equivale a revisao da acao")
+              fotos=[]
+              for idx,fator in enumerate((.04,.23,.43,.66,.89)):
+                t=dur*fator; destino=raiz/f"{stem}_{idx}.jpg"
+                subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+                  "-ss",f"{t:.3f}","-i",str(p),"-frames:v","1","-vf","scale=320:-2",
+                  str(destino)],check=True,timeout=40)
+                with Image.open(destino) as im:
+                  fotos.append(im.convert("RGB").copy())
+              folha=Image.new("RGB",(320*len(fotos),260),(20,24,30))
+              for idx,im in enumerate(fotos):
+                im.thumbnail((320,225))
+                folha.paste(im,(idx*320,(225-im.height)//2))
+              ImageDraw.Draw(folha).text((12,235),stem+" | AMOSTRA SEM CURADORIA",(255,255,255))
+              folha.save(raiz/f"{stem}_contato.jpg",quality=85)
+            except Exception as exc:
+              x.update(estado="NAO_CONFERIDO",erro=str(exc)[:250])
+            resumo["origens"].append(x)
+          (raiz/"resultado.json").write_text(json.dumps(resumo,ensure_ascii=False,indent=2))
+          print(json.dumps(resumo,ensure_ascii=False))
+          PY
+      - name: Guardar provas privadas, nao publica e nao envia Telegram
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidatos-nist-video-nao-curados
+          path: prova_nist/
+          retention-days: 3
+          if-no-files-found: warn

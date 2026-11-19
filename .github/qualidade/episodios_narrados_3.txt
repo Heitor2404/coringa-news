@@ -3,3 +3,5 @@
 # Sem novos downloads Wikimedia; 12 cenas, 3 narrações, revisão humana pendente.
 
 # R3: CC BY-SA 4.0 aceito estritamente para QA privada; nenhuma licença de publicação concedida.
+
+# R4: JPEGs curados são derivados e têm SHA próprios; fonte original permanece documentada.

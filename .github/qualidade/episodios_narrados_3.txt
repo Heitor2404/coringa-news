@@ -1,3 +1,3 @@
-# Rodada experimental de 3 assuntos distintos: industria Taiwan chips, ciencia NASA Hubble, historia Hindenburg.
-# Vídeos de 14,8s cada com narração de teste, 4 cenas, Commons real.
-# NÃO PUBLICAR em redes, avaliar cada cena; Telegram privado.
+# R2: regressão de montagem com arquivo local original e acervo conservado em artefato.
+# Três domínios: indústria/chips, geografia/Venezuela, história/Ever Given.
+# Sem novos downloads Wikimedia; 12 cenas, 3 narrações, revisão humana pendente.

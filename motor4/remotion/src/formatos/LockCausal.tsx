@@ -3,18 +3,18 @@
  * O enquadramento e as etapas não dependem de segundos fixos do episódio.
  */
 import React from 'react';
-import {AbsoluteFill,OffthreadVideo,staticFile} from 'remotion';
+import {AbsoluteFill,Img,staticFile} from 'remotion';
 
 export type EventoEclusa = {
   at: number;
   action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release';
   label: string;
 };
-type Props = { t: number; events: EventoEclusa[]; referenceAsset?: string; referenceFrom?: number };
+type Props = { t: number; events: EventoEclusa[]; referenceAsset?: string };
 const GOLD='#FFD21F';
 const ease=(v:number)=>{const x=Math.max(0,Math.min(1,v));return x*x*(3-2*x);};
 
-export const LockCausal: React.FC<Props> = ({t,events,referenceAsset,referenceFrom=0}) => {
+export const LockCausal: React.FC<Props> = ({t,events,referenceAsset}) => {
   const at=(action:NonNullable<EventoEclusa['action']>,fallback:number)=>
     events.find(e=>e.action===action)?.at ?? fallback;
   const inlet=at('water_enter',1),
@@ -29,8 +29,7 @@ export const LockCausal: React.FC<Props> = ({t,events,referenceAsset,referenceFr
   const yHull=y-53;
   const rulerY=[1095,1031,968,904,841];
   return <AbsoluteFill style={{background:'#091625'}}>
-    {referenceAsset && t < .85 && <OffthreadVideo src={staticFile(referenceAsset)} muted
-      startFrom={Math.round(referenceFrom*30)}
+    {referenceAsset && t < .85 && <Img src={staticFile(referenceAsset)}
       style={{position:'absolute',width:'100%',height:'100%',objectFit:'cover',
         objectPosition:'50% 48%',transform:'scale(1.1)',transformOrigin:'50% 30%'}}/>}
     <AbsoluteFill style={{opacity:referenceAsset ? ease(t/.85) : 1,

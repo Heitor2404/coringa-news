@@ -1,2 +1,0 @@
-# R2 visual corrigido, áudio original recuperado sem reencode nem corte de pacote.
-# Proibir publicação, guardar teste técnico e folha de frames.

@@ -1,0 +1,52 @@
+{
+  "schema": "qa-fontes-visuais-v1",
+  "observacao": "Três clipes reais de assuntos distintos; teste de fontes/ação, NÃO episódios editados. Não publicar.",
+  "itens": [
+    {
+      "id": "panama_navio_v22",
+      "dominio": "engenharia",
+      "arquivo": "tests/midia/video_horizontal_navio.mp4",
+      "titulo": "Continuing Promise transits the Panama Canal",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Continuing_Promise_transits_the_Panama_Canal-ZLIWzvfdisQ-248%2B251.webm",
+      "licenca": "Public domain",
+      "autor": "U.S. Navy",
+      "acontecimento": "Continuing Promise transits Panama Canal",
+      "evento_da_midia": "Continuing Promise transits Panama Canal",
+      "uso": "registro",
+      "cena_especifica": true,
+      "rotulo": "REGISTRO U.S. NAVY · CANAL DO PANAMÁ",
+      "nota": "Este fixture de 6s não demonstra, sozinho, o mecanismo hidráulico da subida."
+    },
+    {
+      "id": "nasa_hubble_v22",
+      "dominio": "ciencia",
+      "arquivo": "tests/midia/video_vertical_nasa.mp4",
+      "titulo": "Hubble Women Making History — Beverly Johnson (NASA)",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Hubble_Women_Making_History-_Beverly_Johnson_(SVS14324_BEV_VERTICAL_MP4).webm",
+      "licenca": "Public domain",
+      "autor": "NASA Scientific Visualization Studio",
+      "acontecimento": "NASA Hubble Beverly Johnson",
+      "evento_da_midia": "NASA Hubble Beverly Johnson",
+      "uso": "registro",
+      "cena_especifica": true,
+      "rotulo": "NASA · HISTÓRIA DO HUBBLE",
+      "nota": "Vídeo sobre história/engenharia espacial; não mostra uma fábrica de chips e não serviria como prova de Taiwan."
+    },
+    {
+      "id": "hindenburg_1937_prelinger",
+      "dominio": "historia",
+      "arquivo": "qa_fontes/hindenburg_1937.webm",
+      "titulo": "Hindenburg Explodes (audio extracted), 1937",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Hindenburg_Explodes_(audio_extracted).webm",
+      "licenca": "Public domain dedication",
+      "autor": "Eugene W. Castle / Prelinger Archives",
+      "acontecimento": "Hindenburg disaster 1937",
+      "evento_da_midia": "Hindenburg disaster 1937",
+      "uso": "registro",
+      "cena_especifica": true,
+      "rotulo": "ARQUIVO ORIGINAL · HINDENBURG, 1937",
+      "sha1_esperado": "e7cc658e36f1d801d51a43cadfe4ae4f19e599e1",
+      "nota": "A fonte também contém cenas de dirigíveis em outras ocasiões: frame isolado não é automaticamente prova do incêndio."
+    }
+  ]
+}

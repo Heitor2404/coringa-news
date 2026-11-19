@@ -15,3 +15,5 @@
 # R7: tests of V3 rehydration, SHA and no automatic license approval.
 
 # R8: recuperar e atestar mapa ATLAS Taiwan autentico do artifact para o mesmo runner.
+
+# R9: contrato Taiwan agora contem SHA autenticado do MP4 ATLAS recuperado.

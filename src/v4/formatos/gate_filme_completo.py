@@ -26,12 +26,27 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
     if (manifesto.get("tipo")!="PRE_PRODUCAO_PRIVADA" or
             (manifesto.get("politica") or {}).get("publicar") is not False):
         falha("E-PUBLICACAO","-","somente preparo privado, nunca licença de publicar")
-    janela=manifesto.get("janela_duracao_s") or []
     dur=manifesto.get("duracao_planejada_s")
-    if not (len(janela)==2 and isinstance(dur,(int,float)) and
-            all(isinstance(n,(int,float)) for n in janela) and
-            janela[0]<=dur<=janela[1] and math.isfinite(dur)):
-        falha("E-TEMPO","-","duração fora da janela editorial")
+    politica_duracao=manifesto.get("politica_duracao") or {}
+    modo_duracao=politica_duracao.get("modo","janela_legada")
+    dur_valida=(isinstance(dur,(int,float)) and not isinstance(dur,bool)
+                and math.isfinite(dur) and dur>0)
+    if modo_duracao=="narrativa":
+        # Sem teto de duração global; cenas e narração real precisam cobrir
+        # a história inteira. Metas comerciais pertencem à distribuição.
+        if not dur_valida:
+            falha("E-TEMPO","-","duração narrativa inválida")
+    elif modo_duracao=="janela_legada":
+        # Compatibilidade dos pilotos antigos, não política dos filmes novos.
+        janela=manifesto.get("janela_duracao_s") or []
+        if not (dur_valida and len(janela)==2 and
+                all(isinstance(n,(int,float)) and not isinstance(n,bool) and math.isfinite(n)
+                    for n in janela) and janela[0]<=dur<=janela[1]):
+            falha("E-TEMPO","-","duração fora da janela editorial legada")
+    else:
+        falha("E-POLITICA-DURACAO","-","modo de duração desconhecido")
+    from src.v4.formatos.tempo_natural import avaliar_destinos
+    diagnostico_duracao=(avaliar_destinos(dur) if dur_valida else None)
     regras=manifesto.get("rubrica_editorial") or {}
     if not (isinstance(regras.get("min_videos_reais_independentes"),int) and
             isinstance(regras.get("max_fracao_fotos_estaticas"),(int,float)) and
@@ -224,6 +239,8 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
         "pronto_para_tts":pronto_visual,
         "pronto_para_render":pronto_visual and audio_autenticado,
         "previsao_s":dur,
+        "modo_duracao":modo_duracao,
+        "diagnostico_plataformas":diagnostico_duracao,
         "total_cenas":len(cenas),"videos_independentes_conferidos":len(media_movel),
         "mapas_atlas_comprovados":mapas,"fotos_s":round(fotos_s,3),
         "inspecao_humana":"PENDENTE","publicado":False,

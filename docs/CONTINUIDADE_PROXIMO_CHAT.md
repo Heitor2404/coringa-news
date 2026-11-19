@@ -914,3 +914,10 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 - Não houve nova voz Gemini/Charon, vídeo final, Telegram nem publicação. `main`, NTC e DOSSIÊ continuam intactos.
 
 **Próximo passo de maior impacto:** obter mídia (ou demonstração de mecanismo própria e tecnicamente documentada, quando apropriada) que realmente mostre uma ação física relevante. Usar fontes oficiais de acesso livre e inspecioná-las antes de ampliar o roteiro. Resolver direitos particulares do material NIST e teste de crop/ROI para vertical antes de liberá-lo como contexto. O mapa/duas fotos já não são o gargalo; **não voltar a produzir novos micro-pilotos Taiwan para inflar métricas**. O arco narrativo com terremoto de abril/2024 continua pesquisa, sem argumento completo homologado.
+
+
+## 55. 19/11 — Decisão: não criar fiscalização adicional de monetização
+
+**Decisão expressa do usuário:** após sugestão de acrescentar ao motor uma checagem adicional de originalidade/direitos/duração como pré-flight de monetização, respondeu **"Não precisa disso, geralmente não dá problema nenhum."** Portanto, **NÃO IMPLEMENTAR um novo fiscal ou score de monetização**, nem criar uma camada burocrática de risco comercial. Nenhum código foi alterado nessa sugestão; apenas discutida. Respeitar a política já existente de duração editorial guiada pelos fatos e os limites reais de distribuição quando aplicável, sem introduzir novos bloqueios proativos de monetização.
+
+**Prioridade preservada:** melhorias gerais do motor documental que resolvam o bloqueio real de qualidade audiovisual, ação mostrada, progressão, narrativa, acervo e montagem, testadas em múltiplos temas; Taiwan é caso de teste, não exceção. Manter verificação existente de procedência/licenças exigidas pelo fluxo de mídia, sem criar outro gate de monetização. Todas as sugestões e mudanças relevantes precisam seguir registradas neste documento de continuidade. `main`, NTC e DOSSIÊ não mexidos nesta decisão.

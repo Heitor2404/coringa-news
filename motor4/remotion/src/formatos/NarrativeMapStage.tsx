@@ -50,7 +50,7 @@ export const NarrativeMapStage:React.FC<{map:NarrativeMap;t:number}>=({map,t})=>
         {countries.map((f,i)=><path key={i} d={path(f)||''} fill="#405A5E"
           stroke="#718E92" strokeWidth={1.5} strokeOpacity=".45"/>)}
         {highlighted&&<path d={path(highlighted)||''} fill="#B89B4A"
-          stroke={GOLD} strokeWidth="5" strokeLinejoin="round"/>}
+          stroke={GOLD} strokeWidth="5" strokeLinejoin="round" opacity={fade(t,.08)}/>} 
         </g>
         <rect x="36" y="350" width="1008" height="1130" fill="url(#narrative-map-grid)" pointerEvents="none"/>
         {d&&<g>

@@ -31,7 +31,10 @@ export const LockCausal: React.FC<Props> = ({t,events,referenceAsset}) => {
   return <AbsoluteFill style={{background:'#091625'}}>
     {referenceAsset && t < .85 && <Img src={staticFile(referenceAsset)}
       style={{position:'absolute',width:'100%',height:'100%',objectFit:'cover',
-        objectPosition:'50% 48%',transform:'scale(1.1)',transformOrigin:'50% 30%'}}/>}
+        objectPosition:'50% 48%',transform:'scale(1.1)',transformOrigin:'50% 30%',
+        filter:'brightness(.98) saturate(1.04)'}}/>}
+    {referenceAsset && t < .85 && <AbsoluteFill style={{opacity:1-ease(t/.85),pointerEvents:'none',
+      background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
     <AbsoluteFill style={{opacity:referenceAsset ? ease(t/.85) : 1,
       background:'radial-gradient(ellipse at 50% 47%,#1A3344 0%,#091625 69%,#050B15 100%)'}}>
     <svg width="100%" height="100%" viewBox="0 0 1080 1920" role="img"

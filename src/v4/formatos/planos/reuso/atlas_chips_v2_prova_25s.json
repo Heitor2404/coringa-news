@@ -190,7 +190,9 @@
             "rotulo_t": "@wafer",
             "enquadramento": "conter",
             "detalhe": "NELE SE FORMAM CIRCUITOS",
-            "detalhe_t": "@formam"
+            "detalhe_t": "@formam",
+            "rotulo2": "BASE PARA CIRCUITOS",
+            "rotulo2_t": "@circuitos"
           }
         }
       ]
@@ -246,7 +248,7 @@
           "componente": "editorial.statCard",
           "slot": "etiqueta",
           "t0": "@europeus",
-          "t1": "@2:taiwan-0.50",
+          "t1": "@2:taiwan-0.55",
           "p": {
             "estilo": "pilula",
             "valor": "MÁQUINAS NA HOLANDA",

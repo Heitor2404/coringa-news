@@ -128,7 +128,9 @@ def inventario_para_diretor(fatos: list[dict], limite: int = 12) -> str:
             continue
         tags = viabilidade._tokens(it.get("titulo"), it.get("mostra"), " ".join(it.get("termos") or []))
         score = len(alvo & tags)
-        if score:
+        # Mesmo mínimo de correspondência do sistema de viabilidade V4:
+        # 1 termo ("fábrica") não torna uma instalação específica relevante.
+        if score >= viabilidade.SCORE_MIN:
             pontuados.append((score, it))
     pontuados.sort(key=lambda x: (-x[0], x[1]["id"]))
     if not pontuados:

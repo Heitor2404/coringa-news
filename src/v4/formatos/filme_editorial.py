@@ -18,7 +18,7 @@ from PIL import Image
 
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
-TIPOS = {'photo', 'video', 'comparison'}
+TIPOS = {'photo', 'video', 'comparison', 'mechanism'}
 
 
 def avaliar(plano: dict) -> dict:
@@ -52,13 +52,22 @@ def avaliar(plano: dict) -> dict:
             for x in cena.get('cues') or []
         ):
             falha('F-SEM-REVELACAO', cid, 'cena precisa acrescentar informação com objeto visível')
-        if cena.get('evidence') not in ('literal', 'representative'):
-            falha('F-SEM-PROVENIENCIA', cid, 'classifique literal ou representativa')
+        if cena.get('evidence') not in ('literal', 'representative', 'explainer'):
+            falha('F-SEM-PROVENIENCIA', cid, 'classifique literal, representativa ou explicativa')
+        if tipo == 'mechanism':
+            if (cena.get('mechanism') != 'lock_filling' or
+                cena.get('evidence') != 'explainer' or cena.get('literal_identity')):
+                falha('F-MECANISMO-NÃO-IDENTIFICADO', cid,
+                      'esquema com princípio verificado, sem fingir filmagem ou identidade')
+            if cena.get('asset'):
+                falha('F-MECANISMO-SEM-ACERVO', cid, 'mecanismo é ilustração própria, não fotografia')
+        elif cena.get('evidence') == 'explainer':
+            falha('F-EXPLICAÇÃO-SEM-MECANISMO', cid, 'explicativo precisa mecanismo real no compositor')
         if cena.get('evidence') == 'literal' and not cena.get('literal_identity'):
             falha('F-LITERAL-SEM-IDENTIDADE', cid, 'não alegar local/entidade exata sem identidade verificada')
         elif cena.get('evidence') == 'representative' and cena.get('literal_identity'):
             falha('F-REPRESENTATIVA-ROTULADA-LITERAL', cid, 'imagem genérica não pode alegar identidade exata')
-        ids = [cena.get('asset')]
+        ids = [] if tipo == 'mechanism' else [cena.get('asset')]
         if tipo == 'comparison':
             ids.append(cena.get('assetB'))
             if len(set(ids)) != 2:
@@ -160,8 +169,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
     shots=[]
     for c in plano['shots']:
         x={k:v for k,v in c.items() if k not in ('literal_identity','notes')}
-        x['asset']=medias[c['asset']]['asset']
-        x['source']=medias[c['asset']]['credit']
+        if c['type'] != 'mechanism':
+            x['asset']=medias[c['asset']]['asset']
+            x['source']=medias[c['asset']]['credit']
+        else:
+            x['source']='Esquema original · princípio hidráulico de uma eclusa'
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

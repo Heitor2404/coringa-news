@@ -40,7 +40,10 @@ def fichas_do_v3(contexto: dict | None) -> list[dict]:
                           contexto.get('fatos') or [], contexto['eventos'])
 
 
-def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, correcoes: list[dict] | None = None, anterior: str = '', contexto_v3: dict | None = None) -> str:
+def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str | None, correcoes: list[dict] | None = None, anterior: str = '', contexto_v3: dict | None = None) -> str:
+    if formato == 'atlas' and inventario is None:
+        from src.v4.formatos import ponte_biblioteca
+        inventario = ponte_biblioteca.inventario_para_diretor(fatos)
     F = P.CFG['formatos'][formato]
     comp = {k: v for k, v in P.COMP.items() if v.get('formato') == formato}
     slots = ('COMPOSIÇÕES (cada beat escolhe UMA em "composicao"; mapa exige "roi": [oeste, sul, leste, norte]; a câmera é calculada '
@@ -118,7 +121,7 @@ NARRAÇÃO:\n{fala}\n
     return base
 
 
-def pedir(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, chamar, contexto_v3: dict | None = None) -> tuple[dict, list[dict]]:
+def pedir(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str | None, chamar, contexto_v3: dict | None = None) -> tuple[dict, list[dict]]:
     """→ (plano, violações restantes). No máximo UMA correção dirigida (cota é recurso escasso)."""
     from src.gemini import extrair_json
     bruto = chamar(prompt(fatos, formato, palavras, inventario, contexto_v3=contexto_v3))

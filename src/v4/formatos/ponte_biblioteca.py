@@ -35,6 +35,40 @@ def _aprovacoes() -> tuple[list[dict], str]:
     return dados["aprovacoes"], str(p)
 
 
+def _curadoria_privada() -> list[dict]:
+    """Entrada opt-in de visual scouting; jamais se transforma em aprovação pública."""
+    from urllib.parse import urlsplit
+    arq = os.environ.get('CORINGA_ATLAS_CURADORIA_PRIVADA')
+    if not arq:
+        return []
+    if os.environ.get('CORINGA_MODO_PREVIA_PRIVADA') != '1':
+        raise RuntimeError('garimpo provisional só pode ser usado em PRÉVIA PRIVADA')
+    p = Path(arq)
+    if not p.is_file():
+        raise RuntimeError('manifesto privado de garimpo não existe')
+    obj = json.loads(p.read_text(encoding='utf-8'))
+    if obj.get('uso') != 'PREVIA_PRIVADA_APENAS' or obj.get('versao') != 1:
+        raise RuntimeError('manifesto privado inválido ou sem restrição de publicação')
+    ids, itens = set(), []
+    for it in obj.get('itens') or []:
+        sha, prova = it.get('sha256_origem'), it.get('prova') or {}
+        url = str(it.get('url') or '')
+        host = urlsplit(url).hostname
+        if not (isinstance(sha, str) and _SHA.fullmatch(sha)
+                and it.get('id') == f'scout:{sha[:16]}' and it['id'] not in ids
+                and it.get('uso_provisorio_previa') is True and it.get('natureza') == 'foto'
+                and it.get('licenca') in ('CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC0', 'PUBLIC DOMAIN')
+                and host in ('upload.wikimedia.org', 'thumb.wikimedia.org')
+                and prova.get('midia_corresponde') is True
+                and prova.get('objeto_confere') is True
+                and prova.get('local_confere') is True
+                and it.get('credito')):
+            raise RuntimeError('mídia provisória sem SHA/licença/visão/origem confiável')
+        ids.add(it['id'])
+        itens.append(it)
+    return itens
+
+
 def catalogo() -> dict:
     """Catálogo comprovado de formatos, eventualmente ampliado por itens APROVADOS da V3.
 
@@ -42,6 +76,15 @@ def catalogo() -> dict:
     Não faz fallback para outro vídeo de um assunto parecido.
     """
     base = viabilidade.carregar()
+    # Em modo privado, media licenciada e conferida por visao complementa
+    # a biblioteca existente; nao grava aprovacao permanente no Git.
+    curadas = _curadoria_privada()
+    if curadas:
+        presentes = {it['id'] for it in base.get('itens') or []}
+        for it in curadas:
+            if it['id'] in presentes:
+                raise RuntimeError('media curada duplicada do catalogo comprovado')
+        base = {**base, 'itens': list(base.get('itens') or []) + curadas}
     provas, _ = _aprovacoes()
     if not provas:
         return base

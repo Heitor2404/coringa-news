@@ -153,6 +153,13 @@ def avaliar(plano: dict) -> dict:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')
+        if tipo == 'video':
+            fonte=(plano.get('media') or {}).get(cena.get('asset')) or {}
+            if fonte.get('duration_s') is not None:
+                from src.v4.formatos.tempo_natural import validar_janela_origem
+                motivo=validar_janela_origem(cena, fonte['duration_s'])
+                if motivo:
+                    falha('F-VIDEO-FONTE-INSUFICIENTE',cid,motivo)
         if tipo == 'video' and span > 3.8:
             # Usa o MESMO contrato temporal do áudio natural; não forçar
             # corte a cada 3,8s quando uma ação genuína continua.
@@ -312,10 +319,13 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             if not source:
                 raise ValueError(f'{mid}: vídeos de rede exigem ingestão/recorte em etapa separada')
             probe = subprocess.run(
-                ['ffprobe','-v','error','-show_entries','stream=width,height',
+                ['ffprobe','-v','error','-show_entries',
+                 'stream=width,height:format=duration',
                  '-select_streams','v:0','-of','json',str(src)],
                 capture_output=True,text=True,check=True)
-            streams=json.loads(probe.stdout).get('streams') or []
+            informacao=json.loads(probe.stdout)
+            streams=informacao.get('streams') or []
+            duracao_origem=float((informacao.get('format') or {}).get('duration') or 0)
             if not streams or min(streams[0].get('width',0),streams[0].get('height',0))<700:
                 raise ValueError(f'{mid}: vídeo sem qualidade mínima')
             w,h=streams[0]['width'],streams[0]['height']
@@ -335,6 +345,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         medias[mid]={'asset':f'film_editorial/{sha}{ext}','sha256':sha,
                      'width':w,'height':h,'credit':item['credit'],
                      'license':item['license'],'page':item['page']}
+        if item.get('media_type')=='video':
+            medias[mid]['duration_s']=duracao_origem
         relatorio.append({'id':mid,'sha256':sha,'resolucao':[w,h],
                           'licenca':item['license'],'pagina':item['page']})
     shots=[]
@@ -364,6 +376,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                     if min(img.size) < 700:
                         raise ValueError('frame de ligação insuficiente')
                 x['reference_asset'] = 'film_editorial/' + frame.name
+        if c['type']=='video':
+            from src.v4.formatos.tempo_natural import validar_janela_origem
+            motivo=validar_janela_origem(c,medias[c['asset']]['duration_s'])
+            if motivo:
+                raise ValueError(c['id']+': '+motivo)
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

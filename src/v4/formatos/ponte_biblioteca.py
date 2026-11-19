@@ -108,6 +108,37 @@ def catalogo() -> dict:
         bib.fechar()
 
 
+def inventario_para_diretor(fatos: list[dict], limite: int = 12) -> str:
+    """Mídias aprovadas RELEVANTES ao roteiro. Reusa viabilidade._tokens;
+    não transforma pesquisa textual em verificação editorial.
+    """
+    if limite < 1:
+        return "(nenhuma mídia solicitada)"
+    base = catalogo()
+    rep = {it.get("id") for it in base.get("reprovados") or []}
+    alvo = viabilidade._tokens(*(str(f.get("texto") or "") for f in fatos))
+    pontuados = []
+    for it in base.get("itens") or []:
+        if it.get("id") in rep or not it.get("licenca") or not it.get("credito"):
+            continue
+        prova = it.get("prova") or {}
+        if prova.get("midia_corresponde") is not True:
+            continue
+        tags = viabilidade._tokens(it.get("titulo"), it.get("mostra"), " ".join(it.get("termos") or []))
+        score = len(alvo & tags)
+        if score:
+            pontuados.append((score, it))
+    pontuados.sort(key=lambda x: (-x[0], x[1]["id"]))
+    if not pontuados:
+        return "(nenhum registro comprovado pertinente: bloquear pedido de mídia específica)"
+    linhas = []
+    for score, it in pontuados[:limite]:
+        dur = f", duração original {it['duracao']} s" if it.get("duracao") else ""
+        lines = f"- {it['id']}: {it.get('natureza', 'foto')} comprovada, {it.get('mostra') or it.get('titulo') or 'sem descrição'}, licença {it['licenca']}{dur}; crédito {it['credito']}"
+        linhas.append(lines[:600])
+    return "\n".join(linhas)
+
+
 def BibliotecaDB() -> str:
     from src.v3.biblioteca import DB_PADRAO
     return str(DB_PADRAO)

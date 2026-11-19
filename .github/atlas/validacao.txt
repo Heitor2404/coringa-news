@@ -89,3 +89,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 chips V2: teste progressão fotografia wafer e sequência de cartão sem sobreposição
 
 # 2026-11-19 ultimo reteste storyboard Chips V2 apos confirmar segunda revelacao
+
+# 2026-11-19 validação final do rótulo BASE PARA CIRCUITOS e no quadro ganho semântico

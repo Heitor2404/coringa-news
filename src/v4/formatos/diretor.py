@@ -26,7 +26,20 @@ ESQUEMA = {
 }
 
 
-def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, correcoes: list[dict] | None = None, anterior: str = '') -> str:
+def fichas_do_v3(contexto: dict | None) -> list[dict]:
+    """Reusa a ficha V3 (acontecimento + forma + prova), sem criar outro classificador ATLAS.
+
+    O chamador que já produziu roteiro e eventos V3 passa {roteiro, acervo,
+    fatos, eventos}. Nenhum efeito se não houver contexto explicitamente fornecido.
+    """
+    if not contexto:
+        return []
+    from src.v3 import plano_av
+    return plano_av.fichas(contexto['roteiro'], contexto.get('acervo') or {},
+                          contexto.get('fatos') or [], contexto['eventos'])
+
+
+def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, correcoes: list[dict] | None = None, anterior: str = '', contexto_v3: dict | None = None) -> str:
     F = P.CFG['formatos'][formato]
     comp = {k: v for k, v in P.COMP.items() if v.get('formato') == formato}
     slots = ('COMPOSIÇÕES (cada beat escolhe UMA em "composicao"; mapa exige "roi": [oeste, sul, leste, norte]; a câmera é calculada '
@@ -85,30 +98,55 @@ SLOTS:\n{slots}\nPRIMITIVAS:\n{comps}\nMÍDIA COMPROVADA:\n{inventario}\nFATOS (
 
 NARRAÇÃO:\n{fala}\n
 {instrucao_saida}"""
+    if formato == 'atlas' and contexto_v3:
+        from src.v3 import plano_av
+        fichas = fichas_do_v3(contexto_v3)
+        base += ('\n\nFICHAS AUDIOVISUAIS DA V3 (contrato existente, não inferência livre):\n'
+                 + plano_av.texto_prompt(fichas)
+                 + '\nPara cada acontecimento crítico, escreva o id na chave evento_id do beat que o demonstra. '
+                 'Sem mídia/componente ATLAS viável, sinalize bloqueio; nunca use card/mapa como substituto da ação.')
     if correcoes:
         base += '\n\nSEU PLANO VIOLOU REGRAS VERIFICADAS EM CÓDIGO; corrija só isto e devolva o JSON inteiro:\n' + \
                 '\n'.join(f"- [{v['regra']}] {v['onde']}: {v['texto']}" for v in correcoes) + '\nANTERIOR:\n' + anterior[:20000]
     return base
 
 
-def pedir(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, chamar) -> tuple[dict, list[dict]]:
+def pedir(fatos: list[dict], formato: str, palavras: list[dict] | None, inventario: str, chamar, contexto_v3: dict | None = None) -> tuple[dict, list[dict]]:
     """→ (plano, violações restantes). No máximo UMA correção dirigida (cota é recurso escasso)."""
     from src.gemini import extrair_json
-    bruto = chamar(prompt(fatos, formato, palavras, inventario))
+    bruto = chamar(prompt(fatos, formato, palavras, inventario, contexto_v3=contexto_v3))
     pl = extrair_json(bruto)
-    viol = _violacoes(pl, palavras)
+    viol = _violacoes(pl, palavras, contexto_v3)
     if viol:
-        bruto = chamar(prompt(fatos, formato, palavras, inventario, viol, json.dumps(pl, ensure_ascii=False)))
+        bruto = chamar(prompt(fatos, formato, palavras, inventario, viol, json.dumps(pl, ensure_ascii=False),
+                              contexto_v3=contexto_v3))
         pl = extrair_json(bruto)
-        viol = _violacoes(pl, palavras)
+        viol = _violacoes(pl, palavras, contexto_v3)
     return pl, viol
 
 
-def _violacoes(pl: dict, palavras: list[dict] | None) -> list[dict]:
+def _violacoes(pl: dict, palavras: list[dict] | None, contexto_v3: dict | None = None) -> list[dict]:
     try:
         r = P.resolver_tempos(pl, palavras or [])
     except (ValueError, KeyError) as e:
         return [{'gravidade': 'erro', 'regra': 'F-ANCORA', 'onde': '-', 'texto': str(e)}]
     if isinstance(r.get('duracao'), str) or not r.get('duracao'):
         r['duracao'] = (palavras[-1]['e'] + .6) if palavras else 0
-    return [v for v in P.validar(r) if v['gravidade'] == 'erro']
+    violacoes = [v for v in P.validar(r) if v['gravidade'] == 'erro']
+    if r.get('formato') == 'atlas' and contexto_v3:
+        aprovadas = set(P.CFG['formatos']['atlas']['componentes'] + P.CFG['formatos']['atlas']['clipes'])
+        beats = r.get('beats') or []
+        for ficha in fichas_do_v3(contexto_v3):
+            if not ficha.get('critico'):
+                continue
+            fid = ficha['evento_id']
+            if not any(b.get('evento_id') == fid for b in beats):
+                violacoes.append({'gravidade': 'erro', 'regra': 'F-EVENTO-SEM-BEAT',
+                                  'onde': fid, 'texto': 'acontecimento crítico da V3 não possui beat correspondente'})
+            if ficha.get('status') == 'indisponivel':
+                violacoes.append({'gravidade': 'erro', 'regra': 'F-PROVA-INDISPONIVEL',
+                                  'onde': fid, 'texto': ficha['representacao_necessaria']})
+            if ficha.get('forma_visual') == 'esquema' and not (set(ficha.get('composicoes_viaveis') or []) & aprovadas):
+                violacoes.append({'gravidade': 'erro', 'regra': 'F-MECANISMO-FORA-ATLAS',
+                                  'onde': fid, 'texto': 'V3 prevê mecanismo, mas nenhum componente está homologado no ATLAS'})
+    return violacoes

@@ -639,6 +639,11 @@ def telegram(saida: Path, titulo: str) -> dict:
     linhas = [f'FORMATO — PRÉVIA PRIVADA, NÃO PUBLICADO · {titulo}']
     if not r:
         linhas.append('STATUS: BLOQUEADO (não renderizado)')
+        triagem_arq = saida / 'triagem_editorial.json'
+        triagem = _ler(triagem_arq) if triagem_arq.exists() else None
+        if triagem and triagem.get('bloqueios'):
+            linhas.append('etapa: triagem editorial ANTES DA VOZ')
+            linhas += [f"- {b['codigo']} [{b['beat']}]: {b['motivo']}" for b in triagem['bloqueios'][:12]]
         falhas_preflight = [i for i in pf.get('itens', []) if not i.get('ok')]
         if falhas_preflight:
             linhas.append('etapa: preflight')

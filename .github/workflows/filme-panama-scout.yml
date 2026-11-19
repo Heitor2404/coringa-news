@@ -1,0 +1,42 @@
+name: FILME — curadoria de vídeo real das eclusas (privado)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/filme_panama_scout.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: filme-panama-scout
+  cancel-in-progress: true
+jobs:
+  scout:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Verificar ambiente de investigação
+        timeout-minutes: 6
+        run: |
+          python -m pip install --disable-pip-version-check -q yt-dlp pillow requests
+          python -m py_compile scripts/filme_panama_scout.py
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version | head -1
+      - name: Encontrar os segundos em que navio e eclusa REALMENTE aparecem
+        timeout-minutes: 23
+        run: python scripts/filme_panama_scout.py saida_scout_panama
+      - name: Preservar CLIPES curtos, folhas de contato e fontes para curadoria visual
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filme-panama-scout-eclusas-reais
+          path: saida_scout_panama/
+          retention-days: 5
+          if-no-files-found: warn

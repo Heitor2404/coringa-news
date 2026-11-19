@@ -118,3 +118,37 @@ def test_manifesto_de_aprovacao_nao_vira_banco_separado(monkeypatch, tmp_path):
     reg, _ = _arquivo_e_banco(monkeypatch, tmp_path)
     arq = _aprovar(monkeypatch, tmp_path, reg)
     assert set(json.loads(arq.read_text())) == {"versao", "aprovacoes"}
+
+
+def test_diretor_recebe_so_midias_aprovadas_relevantes(monkeypatch, tmp_path):
+    from src.v4.formatos import diretor
+
+    reg, _ = _arquivo_e_banco(monkeypatch, tmp_path)
+    aprovacoes = _aprovar(monkeypatch, tmp_path, reg)
+    fatos = [{"id": "f1", "texto": "Uma foto gerada para teste ajuda a mostrar uma evidência."}]
+    inventario = ponte_biblioteca.inventario_para_diretor(fatos)
+    assert "v3:" + reg["id"] in inventario
+    assert "licença CC BY 4.0" in inventario
+    assert "prova" not in inventario.lower() or "comprovada" in inventario
+
+    # O diretor opt-in recebe o mesmo catálogo sem reconstruir um garimpo paralelo.
+    prompt = diretor.prompt(fatos, "atlas", None, None)
+    assert "v3:" + reg["id"] in prompt
+
+    # Material apenas encontrado na V3, sem aprovação explícita, não vai ao prompt.
+    monkeypatch.delenv("CORINGA_ATLAS_APROVACOES_V3", raising=False)
+    sem = ponte_biblioteca.inventario_para_diretor(fatos)
+    assert "v3:" + reg["id"] not in sem
+
+
+def test_mesmo_sha_da_biblioteca_v4_nao_gera_duplicata(monkeypatch, tmp_path):
+    from src.v4 import viabilidade
+
+    reg, _ = _arquivo_e_banco(monkeypatch, tmp_path)
+    _aprovar(monkeypatch, tmp_path, reg)
+    monkeypatch.setattr(viabilidade, "carregar", lambda: {
+        "itens": [{"id": "foto:ja-aprovada", "sha256_origem": reg["sha256"]}],
+        "reprovados": []
+    })
+    with pytest.raises(RuntimeError, match="reuse o ID existente"):
+        ponte_biblioteca.catalogo()

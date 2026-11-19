@@ -57,6 +57,7 @@ def test_montagem_reusa_filme_editorial_gerando_props_reais(tmp_path,monkeypatch
     p=json.loads(Path("saida/props.json").read_text())
     assert p["preview"] and not p["private_review_only"]
     assert len(p["shots"])==3
+    assert all(s["graphic_original"] is True for s in p["shots"])
     assert all(Path("public",s["asset"]).is_file() for s in p["shots"])
     prov=json.loads(Path("saida/proveniencia.json").read_text())
     assert prov["status"]=="PREVIA_PRIVADA_NAO_PUBLICAR"

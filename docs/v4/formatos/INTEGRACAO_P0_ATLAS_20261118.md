@@ -27,7 +27,7 @@ A auditoria de reuso mostrou que as capacidades de direção já existem no V2/V
 - `tests/test_atlas_integracao_p0.py`: testes novos offline para falta de chave, Gemini indisponível, compatibilidade de fallback legado, preset, hash, estado falso, janela/ritmo bloqueado, ausência de MP4, não-publicação e ponte V3/mecanismo fora do catálogo.
 - `.github/workflows/atlas-validacao.yml` compila os arquivos modificados e roda `tests/test_formatos.py` + `tests/test_atlas_integracao_p0.py`, além de Node/TypeScript. Disparo exclusivo pela trilha `.github/atlas/validacao.txt`; **sem execução do motor, render ou APIs de IA**.
 - Primeiro CI `44427175545` (voz/gate antes da ponte V3): **success; 96 testes Python passaram**, compilação TypeScript e checagens JS verdes.
-- Segundo CI `44427556402` (ponte V3 incluída): **aguarda resultado** na atualização inicial deste documento; conferir a execução antes de considerá-la homologada.
+- Segundo CI `44427556402` (ponte V3 incluída): **SUCCESS; 98 testes Python passaram**, verificações JavaScript e compilação TypeScript também concluídas. É validação offline do contrato, **não** avaliação de qualidade audiovisual nem ensaio fim-a-fim.
 - Não houve inspeção de execução final com Gemini real, Telegram real, documento real licenciado, nem Render 20–30s; esses itens requerem prévia privada futura.
 
 ## Próxima etapa executável (P1)

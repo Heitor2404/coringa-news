@@ -1,0 +1,192 @@
+name: "QA — rough cut documental REAL (privado, sem Charon)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/qualidade/montagem_real_privada.txt"
+      - ".github/workflows/qa-montagem-real-privada.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: qa-documental-real-privado
+  cancel-in-progress: true
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+
+jobs:
+  renderizar_privado:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 52
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+
+      - name: Conferir integracao de staging sem liberar direitos
+        run: |
+          python -m pip install -q pillow requests pytest pyyaml numpy cryptography
+          python -m pytest -q tests/test_montagem_documental_privada.py tests/test_filme_editorial.py
+          command -v ffmpeg
+          command -v ffprobe
+
+      - name: Recuperar mapa ATLAS autentico de runner anterior
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-taiwan-mapa-atlas-original-integrado-filme
+          run-id: 44588617776
+          github-token: ${{ github.token }}
+          path: stage_atlas/taiwan
+
+      - name: Recuperar filmagens NIST 1 e 2 sem as aprovar
+        uses: actions/download-artifact@v4
+        with:
+          name: candidatos-nist-video-nao-curados
+          run-id: 44609056854
+          github-token: ${{ github.token }}
+          path: stage_nist
+
+      - name: Recuperar filmagem NIST NanoFab sem a aprovar
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-candidatos-video-institucional-nao-curados
+          run-id: 44617739596
+          github-token: ${{ github.token }}
+          path: stage_nanofab
+
+      - name: Normalizar caminhos das fontes da biblioteca, sempre por SHA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,shutil
+          provas=[
+             ("stage_nist","nist_deposicao.mp4","9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854","stage_nist/prova_nist/nist_deposicao.mp4"),
+             ("stage_nist","nist_ebeam.mp4","738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a","stage_nist/prova_nist/nist_ebeam.mp4"),
+             ("stage_nanofab","nist_nanofab_users_2017.mp4","582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474","stage_nanofab/nist_nanofab_users_2017.mp4"),
+             ("stage_atlas/taiwan","mapa.mp4","c0c6e8895f1d0305b791a8d66581be5695abb2026b9ca91c752a6b5eb5b9c794","stage_atlas/taiwan/mapa.mp4"),
+          ]
+          for raiz,nome,sha,target in provas:
+              encontrados=list(Path(raiz).rglob(nome))
+              if not encontrados:
+                  raise FileNotFoundError(f"{nome} não consta do artefato real; nunca simular")
+              bons=[p for p in encontrados if hashlib.sha256(p.read_bytes()).hexdigest()==sha]
+              if len(bons)!=1:
+                  raise ValueError(f"{nome}: nenhum original único corresponde ao SHA")
+              destino=Path(target)
+              destino.parent.mkdir(parents=True,exist_ok=True)
+              if bons[0].resolve()!=destino.resolve():
+                  shutil.copyfile(bons[0],destino)
+              assert hashlib.sha256(destino.read_bytes()).hexdigest()==sha
+              print("VIDEO_OU_MAPA_REAL_POR_SHA",nome,destino.stat().st_size,sha)
+          origens=list(Path("stage_atlas/taiwan").rglob("comprovante_atlas.json"))
+          assert origens,"comprovante do mapa ATLAS não recuperado"
+          destino=Path("stage_atlas/taiwan/comprovante_atlas.json")
+          if origens[0].resolve()!=destino.resolve():
+              shutil.copyfile(origens[0],destino)
+          PY
+
+      - name: Recuperar as duas fotografias do acervo comprovado (SHA)
+        run: |
+          mkdir -p saida_rough_cut
+          set +e
+          python -m src.v4.formatos.estagiar_fotos \
+            docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json \
+            saida_rough_cut/catalogo_fotos.json \
+            saida_rough_cut/recibo_fotos.json \
+            --pasta stage_acervo/fotos
+          rc=$?
+          set -e
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          dados=json.loads(Path("saida_rough_cut/recibo_fotos.json").read_text())
+          for h in ("3cfbaf153fd3f4d1e3a26f16ba9058baa37f9c63d7fee0c42d7c18cd57330ca0",
+                    "f6514745cd41b4bce8a6a7c1be824f3391c92897e84d7982b2470050dd5adbe1"):
+              p=Path(f"stage_acervo/fotos/{h}.jpg")
+              assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==h
+          print("FOTOS_ORIGINAIS_CONFERIDAS",dados["recuperadas"],"de",dados["solicitadas"],
+                "terceira foto legada pode permanecer ausente")
+          PY
+
+      - name: Montar storyboard real no mesmo FilmeEditorial (sem voz nem publicacao)
+        timeout-minutes: 12
+        run: |
+          python -m src.v4.formatos.montagem_privada_real \
+            docs/v4/formatos/MONTAGEM_PRIVADA_REAL_TAIWAN_20261119.json \
+            saida_rough_cut motor4/remotion/public
+
+      - name: Instalar e compilar MESMO compositor Remotion
+        timeout-minutes: 13
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+
+      - name: Renderizar rough cut documental privado (sem TTS)
+        timeout-minutes: 24
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../saida_rough_cut/rough_cut_real.mp4 \
+            --props=../saida_rough_cut/props.json \
+            --codec=h264 --crf=24 --concurrency=2 --scale=0.5 --log=error
+
+      - name: Inspecionar arquivo MP4 real e extrair quadro de contato
+        timeout-minutes: 5
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height \
+            -of json saida_rough_cut/rough_cut_real.mp4 > saida_rough_cut/metadata.json
+          ffmpeg -hide_banner -loglevel error -y \
+            -i saida_rough_cut/rough_cut_real.mp4 \
+            -vf "fps=1/3.38,scale=270:480,tile=4x5" -frames:v 1 \
+            saida_rough_cut/contato_20_cenas.jpg
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          dir=Path("saida_rough_cut")
+          p=json.loads((dir/"props.json").read_text())
+          meta=json.loads((dir/"metadata.json").read_text())
+          video=dir/"rough_cut_real.mp4"
+          assert video.stat().st_size>100_000
+          assert p["private_review_only"] is True
+          assert len(p["direitos_pendentes"])>=3
+          assert p["preview"] is True
+          assert len(p["shots"])>=18
+          assert 59<float(meta["format"]["duration"])<120
+          vis=[x for x in meta["streams"] if x["codec_type"]=="video"]
+          assert vis and vis[0]["width"]*16==vis[0]["height"]*9
+          assert all(x["codec_type"]!="audio" for x in meta["streams"])
+          digest=hashlib.sha256(video.read_bytes()).hexdigest()
+          (dir/"resultado_final.json").write_text(json.dumps({
+            "status":"ROUGH_CUT_REAL_PRIVADO_SEM_VOZ",
+            "arquivo":video.name,"sha256":digest,"bytes":video.stat().st_size,
+            "duracao_s":meta["format"]["duration"],
+            "cenas":len(p["shots"]),"direitos_pendentes":p["direitos_pendentes"],
+            "chamada_gemini":False,"telegram":False,"publicado":False,
+            "inspecao_humana":"PENDENTE"
+          },ensure_ascii=False,indent=2))
+          print("ROUGH_CUT_REAL_VERIFICADO",digest,meta["format"]["duration"],
+                len(p["shots"]),"cenas, SEM VOZ E NAO PUBLICAR")
+          PY
+
+      - name: Guardar video privado, quadros e relatorio tecnico (nunca Telegram)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-rough-cut-documental-privado-real
+          path: |
+            saida_rough_cut/
+          retention-days: 7
+          if-no-files-found: warn

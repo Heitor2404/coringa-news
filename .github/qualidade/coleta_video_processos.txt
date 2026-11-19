@@ -1,0 +1,3 @@
+# Coleta técnica privada de vídeo NIST Kaltura.
+# Gera somente candidatos com SHA e contato, sem liberação/IA/Telegram.
+# As fontes são independentes do local do documentário; processo exige inspeção.

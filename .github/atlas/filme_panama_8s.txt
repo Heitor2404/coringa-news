@@ -3,3 +3,5 @@
 # Sem TTS/IA, sem Telegram/publicação; validar tipagem, contrato, contato, MP4.
 
 # V2: gradiente liberado para rótulos + match cut do mesmo master 6.8s→diagrama.
+
+# V3: source cut removed, freeze sourced from SHA-verified master at t6.45.

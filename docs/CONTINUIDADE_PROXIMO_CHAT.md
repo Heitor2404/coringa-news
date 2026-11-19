@@ -478,3 +478,16 @@ Próximos passos: conferir status/log completo de **44452013618**; se verde, dis
 
 - Duas execuções do mesmo workflow `atlas-chips-v2-privado.yml` apareceram em poucos segundos: `44452281285` (SHA `2b36e5c`) e `44452293201` (SHA `da4773d`). A primeira foi disparada por commit do repositório antes do commit deste atendimento; a segunda foi acionada neste atendimento após a CI verde. **Não disparar terceira execução**, evitar custos/filas.
 - A primeira estava `in_progress` e a segunda `pending` na última consulta; **não afirmar MP4, aprovação humana ou envio Telegram** sem consultar os resultados e os logs correspondentes.
+
+
+## 28. 19/11 — REPROVAÇÃO EDITORIAL P0 DO PILOTO CHIPS: PARAR RENDERS E REVER DIREÇÃO
+
+Usuário recebeu MP4 privado de 32,1 s `Por que Taiwan importa tanto na indústria dos chips?`: 30/30 preflight, 21 quadros sem bloqueadores, áudio −14,4 LUFS, legenda alinhada, zero janela preta, portões técnicos verdes, estado `AGUARDANDO_APROVACAO_HUMANA`. **Rejeição humana explícita e integral:** edição e estética consideradas péssimas; mapas distantes, imagens estranhas, excesso de mapas e nenhuma demonstração. O usuário apontou que entregou **dois vídeos originais de referência** e gastou horas em correções sem obter algo próximo da referência. Assistente reconheceu erro de prioridade/gestão: otimizou testes em vez de direção e qualidade.
+
+Inspecionados MP4 anexado (32,133 s, 512×910, 30fps), os três contatos visuais de 0–31s e código. 0–2,5 fachada pequena sobre mapa; 2,5–7 mapa de Taiwan com texto; 7–15 foto wafer muito escura/letterbox sobre mapa; 15–27 mapa-múndi global com etiquetas EUA/Holanda/Taiwan e Antártida dominante; 27–32 fecho abstrato no mapa. **Mapa onipresente ≠ mapa informativo**. Na engenharia reversa `docs/v4/formatos/ENGENHARIA_REVERSA_REFERENCIAS.md` as referências A/B quase não tinham cortes, porém acumulavam provas visuais concretas a cada 1–2 s. `MATRIZ_FIDELIDADE_ATLAS.md` já alertava mapamúndi 9:16 mostrando Antártida, e `ESTUDO_REFERENCIAS_E_DIRECAO_ATLAS_V2_20261118.md` já dizia que faltavam ASML/EUV/mecanismo e não se deve substituir máquinas por mapa/card. **O diagnóstico já existia mas não virou bloqueio.**
+
+Auditoria P0 formal salva em `docs/v4/formatos/INCIDENTE_QUALIDADE_CHIPS_20261119.md` (commit `1ae1bce3a8b142b796ec9fbb24baba25d97eb39c`).
+
+**Decisão: este vídeo REPROVADO. Não publicar, não continuar microcorreções, não disparar outro render.** Novo fluxo: inventário de provas com imagens de qualidade e licenças antes do roteiro final; storyboard visual (objeto/ação/relação/consequência); capa e cenas comparadas à função das referências; avaliação humana do animatic barato; só então voz final e vídeo completo; motor precisa de portão `F-PROVA-NARRATIVA-INSUFICIENTE` e regras reutilizáveis, não caso Taiwan. Evitar confundir `AGUARDANDO_APROVACAO_HUMANA` com estética aprovada.
+
+No momento da auditoria, Actions `44452281285` estava concluído com success, `44452293201` constava in_progress e é duplicado; **não abrir outro**. Não foi possível cancelar a execução através dos conectores GitHub disponíveis nesta sessão. Main/produção/NTC/DOSSIÊ intactos.

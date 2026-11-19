@@ -54,11 +54,23 @@ def verificar_plano(atlas: dict, start: float, dur: float) -> dict:
     viol=[v for v in ATLAS.validar(atlas) if v["gravidade"]=="erro"]
     if viol:
         raise ValueError("reprovação no fiscal ATLAS original: "+str([(v["regra"],v["onde"]) for v in viol[:5]]))
-    t=start+min(dur*.55,dur-.1)
-    palcos=[p for p in atlas["palco"] if float(p["t"])<=t]
-    if not palcos or palcos[-1]["tipo"]!="mapa":
+    # NÃO exportar transição escura entre palco documental e mapa.
+    # No Formato.tsx, op('mapa') entra em 0,5s; se o trecho começa antes,
+    # o começo do MP4 exibe a cena anterior/um quadro quase vazio.
+    palco=atlas["palco"]
+    indices=[i for i,p in enumerate(palco) if float(p["t"])<=start+.001]
+    if not indices:
+        raise ValueError("início antes do primeiro palco")
+    idx=indices[-1]
+    key=palco[idx]
+    if key["tipo"]!="mapa":
         raise ValueError("trecho selecionado não usa palco cartográfico ATLAS")
-    key=palcos[-1]
+    prev=palco[idx-1] if idx else None
+    if prev and prev["tipo"]!="mapa" and start<float(key["t"])+.55:
+        raise ValueError("F-ATLAS-ENTRADA-ESCURA: iniciar mapa após 0,55 s da troca de palco")
+    if idx+1<len(palco) and start+dur>float(palco[idx+1]["t"])+.001:
+        raise ValueError("F-ATLAS-ATRAVESSA-BEAT: este clipe deve preservar um único beat cartográfico")
+    t=start+min(dur*.55,dur-.1)
     beat=next((b for b in atlas["beats"] if b.get("composicao")==key.get("composicao")
               and abs(float(b.get("t",-999))-float(key["t"]))<.01),None)
     if not beat or not beat.get("roi"):

@@ -4,10 +4,6 @@
   "formato": "filme_editorial",
   "tipo": "PRE_PRODUCAO_PRIVADA",
   "titulo": "Por que Taiwan importa para os chips? — revisão visual candidata NIST",
-  "janela_duracao_s": [
-    25,
-    30
-  ],
   "duracao_planejada_s": 27.445,
   "base_narracao": {
     "motor": "gemini",
@@ -194,5 +190,40 @@
     "telegram": "NÃO_ENVIAR_SE_BLOQUEADO",
     "autorizar_tts_apos_portao_visual": true
   },
-  "nota_de_estado": "RASCUNHO DE PRÉ-PRODUÇÃO. NÃO AUTORIZA TTS, RENDER, TELEGRAM OU PUBLICAÇÃO. Faltam 2 clipes independentes aprovados, relação causal e consequência demonstrada."
+  "nota_de_estado": "RASCUNHO DE 27,445 s para revisar imagens, NAO E UM EPISODIO MONETIZAVEL para TikTok Creator Rewards. A futura versao sera reescrita conforme fatos, acontecimentos demonstrados e narração natural; 65s é preferência, não licença para enchimento. Faltam vídeos curados, relação factual e consequência. Não autoriza TTS, render, Telegram ou publicação.",
+  "politica_duracao": {
+    "modo": "narrativa",
+    "alvo_preferencial_tiktok_creator_rewards_s": 65,
+    "acima_de_60_para_creator_rewards": true,
+    "limite_short_youtube_s": 180,
+    "teto_editorial_s": null,
+    "nao_adicionar_enchimento": true
+  },
+  "compromissos_para_episodio_integral": [
+    {
+      "etapa": "gancho",
+      "pergunta": "Qual é a dependência concreta que o vídeo provará?",
+      "evidencia": "fato com fonte específica + imagem que torne a pergunta intrigante"
+    },
+    {
+      "etapa": "contexto",
+      "pergunta": "Qual papel Taiwan e a TSMC desempenham neste caso?",
+      "evidencia": "fontes verificadas, fab real identificada, mapa ATLAS original"
+    },
+    {
+      "etapa": "processo",
+      "pergunta": "Como o chip é fabricado, sem confundir deposição, e-beam e EUV?",
+      "evidencia": "laboratório NIST apenas como representação quando tecnicamente equivalente, com checagem do processo"
+    },
+    {
+      "etapa": "elo",
+      "pergunta": "Quais conexões internacionais são realmente demonstráveis?",
+      "evidencia": "fontes factuais + objetos e fluxo; não apenas etiquetas geográficas"
+    },
+    {
+      "etapa": "consequencia",
+      "pergunta": "O que acontece se uma etapa relevante da cadeia falha?",
+      "evidencia": "consequência documentada e filmagem ilustrativa compatível, nunca ocorrência inventada"
+    }
+  ]
 }

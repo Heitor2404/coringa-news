@@ -181,6 +181,8 @@ def preparar_receita(receita:dict,saida:Path,public_root:Path)->dict:
                'page':item.get('pagina'),'credit':item.get('credito'),
                'license':lic,
                'media_type':'video' if item.get('modo') in ('video_institucional','atlas_map') else 'photo'}
+        if item.get('modo')=='grafico':
+            media['original_graphic']=True
         if item.get('modo')=='video_institucional':
             if lic!='REVIEW_PENDING':
                 raise ValueError('esta receita não pode homologar vídeo institucional automaticamente')

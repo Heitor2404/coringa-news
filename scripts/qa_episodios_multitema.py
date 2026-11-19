@@ -133,7 +133,7 @@ def preparar(manifesto: dict, root: Path, saida: Path) -> dict:
     resumo={}
     for ep in eps:
         d=saida/ep["id"];d.mkdir(parents=True,exist_ok=True)
-        stage=root/"tests/midia/qa_multitema"/ep["id"]
+        stage=Path("tests/midia/qa_multitema")/ep["id"]
         stage.mkdir(parents=True,exist_ok=True)
         with ThreadPoolExecutor(max_workers=4) as pool:
             midias=list(pool.map(lambda c: _baixar(c,stage),ep["cenas"]))

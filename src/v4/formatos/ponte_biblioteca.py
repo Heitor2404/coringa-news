@@ -66,7 +66,8 @@ def catalogo() -> dict:
                 raise RuntimeError("ATLAS: aprovação V3 precisa de id cm-* e sha256 válido")
             if not isinstance(prova, dict) or not (prova.get("midia_corresponde") is True
                     and prova.get("revisor") and prova.get("evidencia")
-                    and prova.get("acontecimento") and prova.get("licenca_evidencia")):
+                    and prova.get("acontecimento") and prova.get("licenca_evidencia")
+                    and prova.get("licenca_exata")):
                 raise RuntimeError(f"ATLAS: {mid} sem revisão editorial explícita do conteúdo")
             reg = bib.obter(mid)
             if not reg or reg.get("sha256") != sha or reg.get("uso_comercial") != "sim" or reg.get("ia"):
@@ -79,6 +80,13 @@ def catalogo() -> dict:
                 raise RuntimeError(f"ATLAS: {mid} tipo de arquivo incompatível com o registro")
             if not reg.get("licenca") or not reg.get("licenca_prova") or not reg.get("url_pagina") or not reg.get("autor"):
                 raise RuntimeError(f"ATLAS: {mid} sem licença comprovada, página e autoria")
+            # V3 agrupa por categoria (ex.: "CC BY"), perdendo a versão
+            # (ex.: "CC BY 4.0"). O ATLAS deve preservar a licença *exata*
+            # conferida pelo curador, senão a atribuição pode ficar inexata.
+            lic_exata = str(prova["licenca_exata"]).strip()
+            lic_categoria = str(reg["licenca"]).strip()
+            if not lic_exata.lower().startswith(lic_categoria.lower()):
+                raise RuntimeError(f"ATLAS: {mid} licença exata não corresponde à categoria do arquivo")
             # Validar bytes locais; NÃO chamar Biblioteca.recuperar(), que poderia baixar
             # uma URL que é apenas a página de um vídeo manual do Pexels.
             original = bib.caminho(sha, ext)
@@ -88,7 +96,7 @@ def catalogo() -> dict:
             if asset in ids or asset in reprovados:
                 raise RuntimeError(f"ATLAS: ID {asset} duplicado ou reprovado")
             ids.add(asset)
-            lic = reg["licenca"]
+            lic = lic_exata
             cred = reg.get("atribuicao") or f'{reg["autor"]} · {lic}'
             if lic.lower() not in cred.lower():
                 cred += f" · {lic}"
@@ -97,7 +105,8 @@ def catalogo() -> dict:
                 "natureza": "video" if reg["tipo"] == "video" else "foto",
                 "url": reg.get("url_original") or reg["url_pagina"],
                 "pagina": reg["url_pagina"],
-                "credito": cred, "licenca": lic, "uso_comercial": "sim",
+                "credito": cred, "licenca": lic,
+                "licenca_classificacao_v3": lic_categoria, "uso_comercial": "sim",
                 "autor": reg["autor"], "ext": ext,
                 "duracao": reg.get("duracao"),
                 "wh": [reg.get("largura"), reg.get("altura")],

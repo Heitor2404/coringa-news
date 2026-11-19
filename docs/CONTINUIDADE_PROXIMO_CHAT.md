@@ -436,3 +436,17 @@ Teste novo `test_gancho_com_tempo_real_gemini_nao_congela_tres_segundos` usa cro
 A nova prévia privada foi acionada pela atualização de `.github/atlas/chips_v2_preview.txt`: **GitHub Actions 44449171248**, estava `in_progress` na última consulta na etapa de dependências. **NÃO afirmar envio, produção de MP4 ou sucesso sem conferir o resultado desse run**. Caso falhe no preflight, o Telegram deve avisar o bloqueio; se renderizar, checar quadro a quadro e fiscal antes de chamar aprovado. Nunca publicar redes automaticamente.
 
 Os dois ciclos fracassados foram originados por diferenças reais de timing TTS; não relaxar `progressao_max_s` para esconder pausas e não duplicar fotos/cards. Continuidade: só alterar a branch experimental `atlas-direcao-visual-20261118`.
+
+
+## 26. 19/11 — Correção de rótulos da prévia Chips V2 e Telegram
+
+Usuário encaminhou notificação Telegram `STATUS: BLOQUEADO (não renderizado); preflight:` sem detalhes. O run **44449171248** foi consultado diretamente: áudio Gemini/Charon criado (**27.013s**), mídias/hash válidos, preflight OK; **19 quadros** renderizados para diagnóstico, **5 bloqueios `R-TEXTO-PEQUENO`** em rótulos do componente `atlas.provaVisual` (font 24px contra mínimo 26), e **57 avisos `A-CREDITO-RODAPE`**. Etapa MP4 foi pulada; Telegram privado enviou apenas texto e nenhum vídeo; **não houve publicação**.
+
+Correções **somente em `atlas-direcao-visual-20261118`**:
+- `motor4/remotion/src/formatos/Primitivas.tsx`: fonte de rótulo fotográfico **30px** em `atlas.provaVisual` reutilizável; não alterar limiar do fiscal, nem rótulos de DOSSIÊ.
+- `src/v4/formatos/produzir.py::telegram`: se preflight estiver verde e não houver `resultado.json`, mostrar resumo dos quadros e erros reais do `quadros/relatorio.json` em vez de deixar `preflight:` vazio. Mantém aviso claro de erro preflight se houver.
+- `tests/test_atlas_previa_chips_v2.py`: dois novos testes de regressão, um para mensagem de falha em quadros, outro para legibilidade da composição foto.
+- GitHub Actions **44450404274 SUCCESS**, **133 testes Python + checagens TypeScript**. Run anterior **44449171248 FAILURE** preservado como evidência.
+- Nova prévia privada disparada em **44450584008**; status `in_progress` na última conferência. **Não declarar MP4 entregue/aprovado antes de consultar esse run, logs e Telegram.** `A-CREDITO-RODAPE` permanece como aviso editorial conhecido; não subir os créditos cegamente, pois a posição baixa segue identidade visual aprovada e requer revisão da UI das plataformas.
+
+Próxima ação: verificar conclusão da execução **44450584008**, inspecionar preflight, quadros, render/portões e Telegram. Se MP4 surgir, avaliar quadro a quadro antes de qualquer integração ou publicação. Main/produção/NTC/DOSSIÊ intactos.

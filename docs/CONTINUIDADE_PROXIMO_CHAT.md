@@ -661,3 +661,12 @@ Usuário avaliou frames de Taiwan/chips, Venezuela e Ever Given como primeiros c
 - Relatório: \`docs/v4/formatos/RESULTADO_DIRETOR_MULTITEMA_MAPA_VOZ_20261119.md\`.
 
 **Diagnóstico:** progresso real em componentes reusáveis, os 3 mapas agora informam melhor e a barra não reinicia; mas prova é UM curta de mapas, **não prova que três documentários inteiros tenham direção melhor**. O timbre da voz Edge ainda pode desagradar; testar vozes em A/B antes de trocar produção. Motor principal, \`main\`, NTC, DOSSIÊ não foram afetados; nada publicado. Próximo gate: conectar intenção/seleção de acervos e cartografia aos roteiros de 3 episódios reais, fiscal de progressão/semântica e edição sem repetição, após revisão visual humana da prova.
+
+## 41. 19/11 — Prévia multitema R2 efetivamente entregue ao Telegram (correção da etapa de envio)
+
+Usuário informou que não recebeu a prévia do mapa. Diagnóstico correto: o run 44577678092 havia apenas salvo artifact no GitHub e **NÃO enviou ao Telegram**. Não confundir artifact com mensagem do bot.
+- Novo `scripts/qa_mapas_r2_telegram.py`, testes `tests/test_qa_mapas_r2_telegram.py`, workflow de recuperação `.github/workflows/qa-mapas-r2-telegram.yml` e trigger `.github/qualidade/entrega_telegram_mapa_r2.txt`. Faz download do MP4 e QA já renderizados (artifact 14557786681) sem usar modelo/voz/remontagem; verifica status técnico, formato dos três mapas, voz natural, ffprobe audio/video/duração, private chat configurado em secrets e confirmação por `message_id` do Bot API. Entrega MP4, JPEG de quadros e texto separado. Nunca publica.
+- Run inicial 44579754285 falhou **antes do Telegram** por ffprobe ausente no runner (4 testes aprovados); instalado ffmpeg, reexecutado.
+- **Run final 44579931307 SUCCESS, quatro testes**, log real do Bot API: `{"enviado":true,"destino":"group privado autorizado","video_message_id":471,"photo_message_id":472,"context_message_id":473,"arquivo":"mapas_narrados_r2.mp4","publicado":false,"aprovacao_humana":"PENDENTE"}`. Usuário deve conferir o **grupo privado associado a TELEGRAM_CHAT_ID**, não necessariamente DM pessoal; Bot API confirmou aceite e IDs, não leitura no aparelho.
+- Corrigido também workflow principal `.github/workflows/qa-mapa-rotulos-r2.yml` para incluir envio automático via mesmo script apenas **após QA render aprovado** nas próximas execuções. Nenhuma repetição de vídeo/cota no commit de workflow.
+- Motor principal/`main`/NTC/DOSSIÊ preservados.

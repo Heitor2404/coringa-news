@@ -362,3 +362,17 @@ Usuário pediu **auditoria geral do motor, não só mídia, antes de implementar
 - Testes: 79 arquivos Python em `tests/` base V4 (NÃO contagem de testes executados), documentos anteriores de regressão V3 e CI chips; **não houve nova suíte nem render executados nesta auditoria**. Chip privado com job `success` mas fiscal `BLOQUEADO`, e voz provisória não aprovada; NTC e DOSSIÊ isolados.
 - Próximas etapas em ordem: **P0** estados/editorial e voz/preset aprovado + adapter ficha V3→beat ATLAS, **P1** usar vídeos reais aprovados no ATLAS e direção por prova, **P2** prova vertical 20–30s e piloto horizontal 90–120s, ambas com revisão humana. Plano editorial original ATLAS conservado sem mudanças.
 - Nenhuma alteração de código, workflow, produção estável, NTC ou DOSSIÊ; **somente docs no ramo experimental**.
+
+
+## 21. 18/11 — ATLAS V2 P0 implementado e CI 98 testes
+
+O usuário autorizou **prosseguir com integração ATLAS V2**, após auditoria anti-duplicação. Nesta rodada o assistente **alterou código** somente no ramo experimental `atlas-direcao-visual-20261118`, SEM render, sem IA, sem merge/publicação, sem mudanças `main`/estável/NTC/DOSSIÊ.
+
+**Implementação concluída:**
+- `src/voz.py::narrar(exigir_gemini=True)` parâmetro opcional, default False, recusa fallback Edge para ATLAS. `src/v4/formatos/canais/coringa.json → narrador` fixa Gemini `Charon`, velocidade 1, tom "narrador de documentário, voz grave e firme" (configuração original `config.json`). `src/v4/formatos/produzir.py::narrar` aplica somente quando gera voz **nova** ATLAS e registra provedor, voz, hash; arquivo cifrado já existente é preservado sem alegar aprovação auditiva. Os outros motores continuam com comportamento anterior.
+- `src/v4/formatos/estado.py` **reutiliza `src/v3/estado_final.py`**, exige MP4 íntegro, `nao_publicado`, portões de áudio/ritmo/legenda, zero congelamentos e zero bloqueios. `src/v4/formatos/__main__.py` ganhou `gate` com exit code 1 em BLOQUEADO; `src/v4/formatos/produzir.py::telegram` exibe estado conferido; `.github/workflows/formatos-piloto.yml` ganhou gate **após** Telegram privado, antes de arquivar evidência cifrada, impedindo conclusão verde se fiscal BLOQUEADO. Workflow piloto de chips antigo na branch separada NÃO foi modificado.
+- `src/v4/formatos/diretor.py` ganhou ponte **opcional** `contexto_v3={roteiro,acervo,fatos,eventos}` que **chama `src/v3/plano_av.fichas` e `texto_prompt`**, com validações `F-EVENTO-SEM-BEAT` e `F-MECANISMO-FORA-ATLAS` para evento crítico. **Ainda não foi conectada a um gerador totalmente automático de episódios**; não anunciar isso como concluído.
+
+**Testes reais no Actions:** `https://github.com/Heitor2404/coringa-news/actions/runs/44427175545` — success, 96 testes Python + JS/TS; `https://github.com/Heitor2404/coringa-news/actions/runs/44427556402` — **success, 98 testes Python + JS/TypeScript** com ponte V3. `tests/test_atlas_integracao_p0.py` e `.github/workflows/atlas-validacao.yml` foram atualizados. CI sem Gemini, Claude, vídeo ou Telegram.
+
+**Documentação P0:** `docs/v4/formatos/INTEGRACAO_P0_ATLAS_20261118.md`. Próxima prioridade **P1**: ligar `contexto_v3` a orquestrador real, reusar vídeo real `registro.video` + FFmpeg da V4 integral no ATLAS formats com licenças/proveniência e plano de prova real grande; só depois gerar prévia curta de chips com voz aprovada e validar a qualidade visual. Sem retorno automático ao mapa/card se cena exige ação.

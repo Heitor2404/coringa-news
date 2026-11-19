@@ -180,7 +180,6 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
     if pronto_visual and isinstance(wav,str) and wav and not Path(wav).is_absolute() and ".." not in Path(wav).parts:
         fonte=Path(wav)
         if fonte.is_file() and isinstance(voz.get("sha256_wav"),str) and len(voz["sha256_wav"])==64:
-            import hashlib
             h=hashlib.sha256()
             with fonte.open("rb") as f:
                 for chunk in iter(lambda:f.read(65536),b""):

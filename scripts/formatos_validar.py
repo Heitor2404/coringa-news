@@ -263,7 +263,7 @@ def main(S: Path, out: Path, tempos: str = 'auto', n: int = 6):
     pf = out / 'props_formato.json'
     pf.write_text(json.dumps(P.props(pl, P.tokens_canal(can), geo, imgs), ensure_ascii=False))
     pc = out / 'props_camada.json'
-    cam = P.props_camada(pl, meta)
+    cam = P.props_camada(pl, meta, imgs)
     pc.write_text(json.dumps(cam, ensure_ascii=False))
     if tempos == 'auto':
         amos = amostrar(pl)

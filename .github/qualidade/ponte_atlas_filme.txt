@@ -5,3 +5,5 @@
 # R2 instala NumPy/Cryptography/PyYAML/FFmpeg e atualiza teste de componente nativo.
 
 # R3 após commit ec8c327: rerodar regressão do HEAD e CLI prepare/confirm/attach (sem render e sem voz).
+
+# R3: testes de transição escura e de clipe atravessando beats cartográficos.

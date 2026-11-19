@@ -189,10 +189,8 @@
             "rotulo": "WAFER DE SILÍCIO · FOTO ILUSTRATIVA",
             "rotulo_t": "@wafer",
             "enquadramento": "conter",
-            "detalhe": "NELE SE FORMAM CIRCUITOS",
-            "detalhe_t": "@formam",
-            "rotulo2": "BASE PARA CIRCUITOS",
-            "rotulo2_t": "@circuitos"
+            "rotulo2": "CIRCUITOS NO WAFER",
+            "rotulo2_t": "@formam"
           }
         }
       ]

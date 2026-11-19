@@ -1,4 +1,4 @@
-name: FILME — Panamá 12s real-motion pilot (privado)
+name: FILME — Panamá 12s com eclusa animada (privado)
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -34,7 +34,7 @@ jobs:
       - name: Verificar contrato narrativo e procedência das mídias locais
         run: |
           python -m pip install -q pillow requests pytest
-          python -m pytest -q tests/test_filme_editorial.py
+          python -m pytest -q tests/test_filme_editorial.py tests/test_filme_panama_mechanism.py
           python - <<'PY'
           import json
           from pathlib import Path

@@ -1,0 +1,134 @@
+name: QA — três episódios narrados, três temas, privado (sem publicar)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/episodios_narrados_3.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-tres-episodios-editados-narrados
+  cancel-in-progress: true
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+  OUT: saida_qa_3
+jobs:
+  episodios:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Preparar ffmpeg, ambiente e narração de teste
+        timeout-minutes: 12
+        run: |
+          python -m pip install -q pillow requests pytest edge-tts
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
+          google-chrome --version
+      - name: Testes do contrato compartilhado, fontes e storyboard multiassunto
+        timeout-minutes: 5
+        run: |
+          python -m pytest -q \
+            tests/test_qa_episodios_multitema.py \
+            tests/test_qa_video_fontes.py \
+            tests/test_contrato_visual_multitema.py \
+            tests/test_filme_editorial.py \
+            tests/test_atlas_triagem_editorial.py
+      - name: Curar e preservar SHA de 12 fontes SEM inventar substituições
+        timeout-minutes: 18
+        run: |
+          python -m scripts.qa_episodios_multitema \
+            docs/v4/formatos/qa_episodios_multitema_3.json "$OUT"
+      - name: Reutilizar compositor já versionado e verificar TypeScript
+        timeout-minutes: 14
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Renderizar três sequências e acrescentar voz por cena
+        timeout-minutes: 42
+        run: |
+          set -euo pipefail
+          for tema in taiwan_chips hubble_nasa hindenburg_1937; do
+            echo "=== EPISÓDIO $tema ==="
+            python -m src.v4.formatos.filme_editorial \
+              "$OUT/$tema/plano.json" "$OUT/$tema" motor4/remotion/public
+            (
+              cd motor4
+              npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+                "../$OUT/$tema/visual.mp4" --props="../$OUT/$tema/props.json" \
+                --codec=h264 --crf=23 --concurrency=2 --scale=0.5 \
+                --public-dir=remotion/public --log=error
+            )
+            python -m scripts.qa_narracao_multitema \
+              "$OUT/$tema/plano.json" "$OUT/$tema/visual.mp4" "$OUT/$tema"
+            python -m scripts.qa_montagem_multitema \
+              "$OUT/$tema/plano.json" "$OUT/$tema/episodio_narrado.mp4" "$OUT/$tema"
+          done
+      - name: Exigir 12 cenas COM áudio, três temas e revisão ainda pendente
+        timeout-minutes: 3
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ['OUT'])
+          temas=['taiwan_chips','hubble_nasa','hindenburg_1937']
+          qa=[json.loads((p/x/'qa_montagem.json').read_text()) for x in temas]
+          assert all(x['status_tecnico']=='PRONTO_PARA_REVISAO' for x in qa)
+          assert all(x['tem_audio'] and not x['publicavel'] for x in qa)
+          assert all(len(x['amostras_editoriais'])==4 for x in qa)
+          assert all(x['inspecao_semantica']=='PENDENTE' for x in qa)
+          summary={'3_temas':temas,'cenas':sum(len(x['amostras_editoriais']) for x in qa),
+                   'audio_em_todos':True,'inspecao_humana':'PENDENTE',
+                   'metrica_evidencia':'NÃO FAZER PASSAR PIXELS COMO ACONTECIMENTO',
+                   'publicado':False}
+          (p/'resumo_final.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps(summary,ensure_ascii=False))
+          PY
+      - name: Enviar prévias com NARRAÇÃO DE TESTE e folhas ao Telegram PRIVADO
+        if: always()
+        timeout-minutes: 8
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Telegram privado indisponível; proibir envio para qualquer outro destino"
+            exit 1
+          fi
+          python -m scripts.qa_telegram_multitema "$OUT"
+      - name: Guardar filmes privados e QA por cena; nunca publicar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-3-episodios-narrados-sem-publicar
+          path: |
+            saida_qa_3/resumo_final.json
+            saida_qa_3/preparacao.json
+            saida_qa_3/*/episodio_narrado.mp4
+            saida_qa_3/*/visual.mp4
+            saida_qa_3/*/plano.json
+            saida_qa_3/*/preflight.json
+            saida_qa_3/*/fontes.json
+            saida_qa_3/*/props.json
+            saida_qa_3/*/qa_montagem.json
+            saida_qa_3/*/contato_editorial.jpg
+            saida_qa_3/*/narracao_qa.json
+          retention-days: 7
+          if-no-files-found: warn

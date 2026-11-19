@@ -214,7 +214,8 @@ def preparar_receita(receita:dict,saida:Path,public_root:Path)->dict:
             raise ValueError('mídia sem fonte e crédito')
         midias[mid]=media
         provas.append({
-            'id':mid,'sha256':sha,'hash_fixado_antes':bool(fixado),
+            'id':mid,'sha256':sha,
+            'hash_fixado_antes':bool(item.get('sha256_esperado')),
             'licenca_declarada':lic,'origem':str(origem),
             'dimensoes':[media['width'],media['height']],
             'direitos_pendentes':lic=='REVIEW_PENDING'})

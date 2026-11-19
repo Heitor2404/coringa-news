@@ -122,6 +122,15 @@ def test_ativos_reutiliza_hash_origem_e_probe_v4(monkeypatch, tmp_path):
     assert reg['sha256_origem'] == sha
     assert (tmp_path / 'public' / reg['src']).is_file()
     assert (tmp_path / 'saida' / 'ativos' / Path(reg['src']).name).is_file()
+    # Prova o render de um clipe REAL pelo backend FFmpeg existente, sem mock e sem rede.
+    from src.v4.util import sondar
+    trecho = _video(t0=3, t1=3.45, inicio=.1)
+    renderizado = tmp_path / 'corte_real.mp4'
+    prod._clipe(trecho, {'canal': 'coringa'}, tmp_path / 'render_ffmpeg', renderizado, data)
+    info = sondar(renderizado)
+    assert info['w'] == 1080 and info['h'] == 1920
+    assert 0.40 <= info['duracao'] <= 0.55
+    assert info['audio'] is False
 
 
 def test_sem_sha_ou_licenca_nao_importa_video(monkeypatch, tmp_path):

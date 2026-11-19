@@ -218,6 +218,9 @@ def avaliar(plano: dict) -> dict:
         falha('F-POUCO-ACERVO', '-', f'{len(momentos)} acontecimentos visuais diferentes para {len(cenas)} cenas; risco de repetição')
     if any(c.get('type') == 'comparison' for c in cenas) and len(visual) < 4:
         falha('F-COMPARACAO-REPETITIVA', '-', 'comparação deve trazer informação nova')
+    from src.v4.formatos import direcao_eventos
+    for item in direcao_eventos.verificar(cenas):
+        falha(item['codigo'], item['cena'], item['motivo'])
     from src.v4.formatos import fiscal_progressao
     for item in fiscal_progressao.verificar(cenas, plano.get('media') or {}):
         falha(item['codigo'], item['cena'], item['motivo'])

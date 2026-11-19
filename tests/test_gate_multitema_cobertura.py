@@ -119,3 +119,55 @@ def test_repeticao_de_prova_persiste_em_qualquer_tema():
     r=avaliar(p,[foto("foto_unica")])
     assert "E-FONTE-REPETIDA" in r["cobertura_acontecimentos"][1]["bloqueios"]
     assert not r["pronto_para_tts"]
+
+
+def video_curado(id="laboratorio_video",acao=False,uso="sim"):
+    return {
+        "id":id,"natureza":"video","sha256_origem":"b"*64,
+        "licenca":"CC BY 4.0","credito":"Fonte original verificada",
+        "uso_comercial":uso,
+        "prova":{"midia_corresponde":True,"acao_ou_relacao_visivel":acao}
+    }
+
+
+def test_broll_contextual_nao_se_faz_passar_por_prova():
+    p=filme("industria_laboratorio_contexto",[
+        cena("laboratorio",0,6,"MOSTRAR",
+             "Mostrar um laboratório real de semicondutores como contexto",
+             {"tipo":"video","identidade":"representativa","asset_id":"nist_laboratorio"})
+    ],videos=1)
+    r=avaliar(p,[video_curado("nist_laboratorio",acao=False)])
+    assert "E-VIDEO-SEM-ACAO-COMPROVADA" not in {e["codigo"] for e in r["bloqueios"]}
+    assert "E-VIDEO-INSUFICIENTE" in r["bloqueios_globais"]
+    assert r["videos_contextuais_sem_prova_de_acao"]==1
+    assert r["videos_independentes_conferidos"]==0
+    assert not r["pronto_para_tts"]
+
+
+def test_cena_que_promete_demonstracao_continua_bloqueada_sem_acao():
+    p=filme("engenharia_processo",[
+        cena("demonstrar",0,7,"DEMONSTRAR",
+             "Demonstrar como a máquina fabrica fisicamente o componente",
+             {"tipo":"video","identidade":"literal","asset_id":"nist_laboratorio"})
+    ],videos=1)
+    r=avaliar(p,[video_curado("nist_laboratorio",acao=False)])
+    assert "E-VIDEO-SEM-ACAO-COMPROVADA" in r["cobertura_acontecimentos"][0]["bloqueios"]
+    assert r["videos_contextuais_sem_prova_de_acao"]==0
+    assert not r["pronto_para_tts"]
+
+
+def test_nao_conta_video_sem_licenca_nem_foto_disfarcada():
+    p=filme("historia_tecnica",[
+        cena("acontecimento",0,5,"MOSTRAR",
+             "Documentar uma ação concreta com a origem verificada",
+             {"tipo":"video","identidade":"literal","asset_id":"video_1"}),
+    ],videos=1)
+    original=video_curado("video_1",acao=True,uso="indefinido")
+    r=avaliar(p,[original])
+    assert "E-VIDEO-SEM-USO-COMERCIAL" in r["cobertura_acontecimentos"][0]["bloqueios"]
+    assert r["videos_independentes_conferidos"]==0
+    disfarce=video_curado("video_1",acao=True)
+    disfarce["natureza"]="foto"
+    r=avaliar(p,[disfarce])
+    assert "E-VIDEO-FALSO" in r["cobertura_acontecimentos"][0]["bloqueios"]
+    assert r["videos_independentes_conferidos"]==0

@@ -58,17 +58,42 @@ jobs:
           run-id: 44459570262
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: acervo_ja_curado
-      - name: Validar SHA dos bytes anteriores e reutilizar sem download
+      - name: Validar catálogo e SHA ORIGINAL versus JPEG DERIVADO sem alegar bytes iguais
         run: |
           mkdir -p tests/midia/qa_multitema/taiwan_chips
           cp acervo_ja_curado/imagens/scout_c86131360447b872.jpg tests/midia/qa_multitema/taiwan_chips/chip_curado.jpg
           cp acervo_ja_curado/imagens/scout_14f9a026e9ee5599.jpg tests/midia/qa_multitema/taiwan_chips/wafer_curado.jpg
-          printf '%s  %s\n' \
-            c86131360447b8729a6d8013d26273fbbca1f708bc4fc80d7d07277dcc71d78f \
-            tests/midia/qa_multitema/taiwan_chips/chip_curado.jpg \
-            14f9a026e9ee5599042a9380da57aa59e272854e76f615e5c3590e0b4c10c632 \
-            tests/midia/qa_multitema/taiwan_chips/wafer_curado.jpg \
-            | sha256sum -c -
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from PIL import Image
+          cat=json.loads(Path('acervo_ja_curado/catalogo.json').read_text(encoding='utf-8'))
+          por_id={x['id']:x for x in cat['itens']}
+          itens=[
+            ('scout:c86131360447b872',
+             'tests/midia/qa_multitema/taiwan_chips/chip_curado.jpg',
+             'c86131360447b8729a6d8013d26273fbbca1f708bc4fc80d7d07277dcc71d78f'),
+            ('scout:14f9a026e9ee5599',
+             'tests/midia/qa_multitema/taiwan_chips/wafer_curado.jpg',
+             '14f9a026e9ee5599042a9380da57aa59e272854e76f615e5c3590e0b4c10c632'),
+          ]
+          rel=[]
+          for ident,path,origem in itens:
+            x=por_id[ident]
+            assert x['sha256_origem']==origem and x['uso_provisorio_previa'] is True
+            assert x['licenca'] in ('CC0','CC BY 2.0')
+            p=Path(path);a=p.read_bytes()
+            with Image.open(p) as img:
+              assert min(img.size)>=700
+            derivado=hashlib.sha256(a).hexdigest()
+            assert derivado!=origem,'JPEG da prévia é DERIVADO, não original'
+            rel.append({'id':ident,'sha256_original_catalogo':origem,
+                        'sha256_derivado_usado':derivado,'tamanho':len(a),
+                        'natureza':'JPEG de prévia curado, NÃO original sem alterações'})
+          Path('acervo_ja_curado/checagem_derivados.json').write_text(
+            json.dumps(rel,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(rel,ensure_ascii=False))
+          PY
       - name: Curar e preservar SHA de 12 fontes SEM inventar substituições
         timeout-minutes: 18
         run: |
@@ -140,6 +165,7 @@ jobs:
           path: |
             saida_qa_3/resumo_final.json
             saida_qa_3/preparacao.json
+            acervo_ja_curado/checagem_derivados.json
             saida_qa_3/*/episodio_narrado.mp4
             saida_qa_3/*/visual.mp4
             saida_qa_3/*/plano.json

@@ -97,6 +97,18 @@ jobs:
           print('QA_R2_OK',{ 'tempo':d['duracao'],'tres_cenas':len(d['amostras_editoriais']),
                 'audio_igual':True,'publicado':False})
           PY
+      - name: Testar protocolo de entrega e enviar prévia ao Telegram PRIVADO
+        timeout-minutes: 8
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m pytest -q tests/test_qa_mapas_r2_telegram.py
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Telegram privado não configurado; QA pronto mas envio bloqueado"
+            exit 1
+          fi
+          python -m scripts.qa_mapas_r2_telegram saida_mapas_r2
       - name: Artefato privado para revisão
         if: always()
         uses: actions/upload-artifact@v4

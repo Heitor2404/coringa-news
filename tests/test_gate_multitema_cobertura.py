@@ -138,10 +138,12 @@ def test_broll_contextual_nao_se_faz_passar_por_prova():
     ],videos=1)
     r=avaliar(p,[video_curado("nist_laboratorio",acao=False)])
     assert "E-VIDEO-SEM-ACAO-COMPROVADA" not in {e["codigo"] for e in r["bloqueios"]}
-    assert "E-VIDEO-INSUFICIENTE" in r["bloqueios_globais"]
+    assert "W-DIVERSIDADE-VIDEO" in {x["codigo"] for x in r["avisos_editoriais"]}
     assert r["videos_contextuais_sem_prova_de_acao"]==1
     assert r["videos_independentes_conferidos"]==0
-    assert not r["pronto_para_tts"]
+    # Contexto pode ser suficiente quando a cena NÃO promete uma ação física.
+    assert r["pronto_para_tts"]
+    assert not r["pronto_para_render"]
 
 
 def test_cena_que_promete_demonstracao_continua_bloqueada_sem_acao():

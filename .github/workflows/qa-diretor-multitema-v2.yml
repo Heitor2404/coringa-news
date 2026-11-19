@@ -1,0 +1,116 @@
+name: QA — diretor multitema: mapas, tempo natural e progresso global
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/diretor_multitema_v2.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-direcao-multitema-v2
+  cancel-in-progress: true
+env:
+  OUT: saida_diretor_v2
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+jobs:
+  prova:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 38
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Dependências e FFmpeg
+        run: |
+          python -m pip install -q pytest pillow requests edge-tts
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
+      - name: Regressão completa sem API de visão ou IA paga
+        run: |
+          python -m pytest -q \
+            tests/test_mapas_voz_direcao_multitema.py \
+            tests/test_qa_episodios_multitema.py \
+            tests/test_fiscal_progressao.py \
+            tests/test_filme_editorial.py \
+            tests/test_contrato_visual_multitema.py \
+            tests/test_filme_panama_ciclo_19s.py
+      - name: Compilar componente de mapa e cronômetro global
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Gerar fala NATURAL primeiro e derivar tempos das cenas
+        timeout-minutes: 5
+        run: |
+          python -m scripts.qa_voz_natural \
+            docs/v4/formatos/qa_mapas_eventos_tres_temas.json "$OUT"
+      - name: Pré-produzir mapa de três temas e renderizar prévia privada
+        timeout-minutes: 13
+        run: |
+          python -m src.v4.formatos.filme_editorial \
+            "$OUT/plano_sincronizado.json" "$OUT" motor4/remotion/public
+          (
+            cd motor4
+            npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+              "../$OUT/mapas_narrados_visual.mp4" \
+              --props="../$OUT/props.json" --codec=h264 --crf=22 \
+              --concurrency=2 --scale=0.5 \
+              --public-dir=remotion/public --log=error
+          )
+          python - <<'PY'
+          from pathlib import Path
+          from scripts.qa_narracao_multitema import unir
+          out=Path('saida_diretor_v2')
+          unir(out/'mapas_narrados_visual.mp4',out/'narracao.wav',out/'mapas_narrados.mp4')
+          PY
+      - name: Auditar frames narrados, áudio e ausência de falso positivo
+        timeout-minutes: 5
+        run: |
+          python -m scripts.qa_montagem_multitema \
+            "$OUT/plano_sincronizado.json" "$OUT/mapas_narrados.mp4" "$OUT"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          o=Path('saida_diretor_v2')
+          a=json.loads((o/'narracao_qa.json').read_text())
+          p=json.loads((o/'plano_sincronizado.json').read_text())
+          r=json.loads((o/'qa_montagem.json').read_text())
+          assert a['tempo_audio']==1. and a['sem_atempo']
+          assert a['duracao_total']==p['duracao']
+          assert len(r['amostras_editoriais'])==3
+          assert r['tem_audio'] and r['status_tecnico']=='PRONTO_PARA_REVISAO',r['problemas_tecnicos']
+          assert r['aprovacao_humana']=='PENDENTE' and r['publicavel'] is False
+          print('MAPA_MULTITEMA_PRONTO_PARA_INSPECAO',json.dumps({
+             'duracao':p['duracao'],
+             'planos':len(p['shots']),
+             'origem_tempo':'voz_real_sem_atempo',
+             'qa':r['status_tecnico'],
+             'publicado':False},ensure_ascii=False))
+          PY
+      - name: Arquivo privado para inspeção humana (SEM Telegram ou publicação)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-diretor-mapas-voz-natural-progresso-global
+          path: |
+            saida_diretor_v2/mapas_narrados.mp4
+            saida_diretor_v2/mapas_narrados_visual.mp4
+            saida_diretor_v2/contato_editorial.jpg
+            saida_diretor_v2/qa_montagem.json
+            saida_diretor_v2/narracao_qa.json
+            saida_diretor_v2/plano_sincronizado.json
+            saida_diretor_v2/preflight_voz_natural.json
+          retention-days: 7
+          if-no-files-found: warn

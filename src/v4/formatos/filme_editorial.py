@@ -362,7 +362,8 @@ def avaliar(plano: dict) -> dict:
                             and asset.get('license')=='CC0'
                             and asset.get('media_type')=='photo'
                             and urlsplit(str(asset.get('page') or '')).hostname in (
-                                'www.sec.gov','pr.tsmc.com'
+                                'www.sec.gov','pr.tsmc.com','www.usgs.gov',
+                            'www.tsmc.com','www.asml.com','investor.tsmc.com'
                             )
                         )
                     )

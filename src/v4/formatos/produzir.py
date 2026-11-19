@@ -164,8 +164,16 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
             from urllib.parse import urlsplit
             from src.v4.util import sondar
             ext = Path(urlsplit(it['url']).path).suffix.lower()
-            if ext not in ('.mp4', '.webm', '.mov'):
-                raise RuntimeError(f'{a}: formato de vídeo não autorizado ({ext or "sem extensão"})')
+            permitidos = ('.mp4', '.webm', '.mov')
+            if ext not in permitidos:
+                # Importação MANUAL: página do Pexels/Commons + arquivo local de hash conferido.
+                # Não faz scraping; só aceita cache previamente obtido e extensão declarada
+                # idêntica ao arquivo (ex.: CORINGA_MIDIA_LOCAL/<sha256>.mp4).
+                manual = str(it.get('arquivo_ext') or '').lower()
+                cache_nome = veio.removeprefix('cache:') if veio.startswith('cache:') else ''
+                if manual not in permitidos or Path(cache_nome).suffix.lower() != manual:
+                    raise RuntimeError(f'{a}: URL sem extensão de vídeo requer arquivo local legítimo identificado por SHA256')
+                ext = manual
             dest = PUBLICO / f'{nome}{ext}'
             dest.write_bytes(bruto)
             info = sondar(dest)

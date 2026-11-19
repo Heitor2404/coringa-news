@@ -21,7 +21,7 @@ jobs:
       - name: Testar portão multiassunto, contrato ATLAS e evidências
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml cryptography
-          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py
+          python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py
       - name: Inspecionar acervo COMPROVADO, sem download/IA/voz/render
         run: |
           mkdir -p saida_preflight_taiwan

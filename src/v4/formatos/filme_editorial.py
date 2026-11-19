@@ -45,6 +45,54 @@ def avaliar(plano: dict) -> dict:
         if voz.get('aprovacao_humana') is not True:
             falha('F-VOZ-SEM-APROVACAO', '-',
                   'narração final precisa de conferência auditiva humana, nunca inferida pelos testes')
+    # O contrato de pré-produção é opcional SOMENTE para provas técnicas privadas.
+    # Um filme documental de produção não pode passar só pelo fiscal de shots:
+    # é preciso provar que a mídia prevista para cada acontecimento existe.
+    if plano.get('tipo') != 'PROVA_VISUAL_PRIVADA':
+        contrato = plano.get('contrato_integral')
+        if not isinstance(contrato, dict):
+            falha('F-PORTAO-INTEGRAL-AUSENTE', '-',
+                  'filme final exige contrato integral com provas antes de render/TTS')
+        else:
+            from src.v4.formatos.gate_filme_completo import avaliar as avaliar_integral
+            from src.v4.formatos.ponte_biblioteca import catalogo as catalogo_curado
+            cenas_contrato = contrato.get('cenas') or []
+            tipos = {'foto':'photo', 'video':'video', 'atlas_map':'atlas_map',
+                     'comparison':'comparison', 'mechanism':'mechanism'}
+            if len(cenas_contrato) != len(cenas) or any(
+                c.get('id') != s.get('id') or
+                abs(float(c.get('inicio', -999)) - float(s.get('start', -998))) > .05 or
+                abs(float(c.get('fim', -999)) - float(s.get('end', -998))) > .05 or
+                tipos.get((c.get('midia') or {}).get('tipo')) != s.get('type')
+                for c, s in zip(cenas_contrato, cenas)
+            ):
+                falha('F-PORTAO-CONTRATO-DIVERGENTE', '-',
+                      'cenas, tempos e tipos do filme não correspondem ao contrato auditado')
+            else:
+                for c, s in zip(cenas_contrato, cenas):
+                    m = c.get('midia') or {}
+                    if s.get('type') in ('photo', 'video'):
+                        origem = (plano.get('media') or {}).get(s.get('asset')) or {}
+                        if origem.get('catalog_asset_id') != m.get('asset_id'):
+                            falha('F-PORTAO-FONTE-DIVERGENTE', str(s.get('id')),
+                                  'mídia montada não corresponde ao asset curado no contrato')
+                    elif s.get('type') == 'comparison':
+                        ids = [((plano.get('media') or {}).get(s.get(key)) or {}).get('catalog_asset_id')
+                               for key in ('asset','assetB')]
+                        if ids != m.get('asset_ids'):
+                            falha('F-PORTAO-FONTE-DIVERGENTE', str(s.get('id')),
+                                  'fontes da comparação divergem do contrato')
+                    elif s.get('type') == 'atlas_map':
+                        origem = (plano.get('media') or {}).get(s.get('asset')) or {}
+                        if (origem.get('local_source') != m.get('clipe') or
+                                origem.get('atlas_proof') != m.get('prova')):
+                            falha('F-PORTAO-MAPA-DIVERGENTE', str(s.get('id')),
+                                  'clipe e comprovante ATLAS divergentes do contrato')
+            resultado = avaliar_integral(contrato, catalogo_curado())
+            if not resultado['pronto_para_render']:
+                falha('F-PORTAO-INTEGRAL-BLOQUEADO', '-',
+                      'falta prova audiovisual ou WAV autenticado: ' +
+                      ', '.join(x['codigo'] for x in resultado['bloqueios'][:8]))
     visual = set()
     momentos = set()  # cenas demonstrativas contam como acontecimento, não foto decorativa
     prev_end = 0.0

@@ -1,3 +1,4 @@
-# Coleta privada de candidatos oficiais DVIDS, status nao-homologado.
-# Nao publica, nao gera TTS, nao autoriza licencas, nao assume acao fisica.
-# Arquivos originais, se acessiveis, vao a artifact temporario e V3 candidato.
+# Execucao privada de fonte institucional alternativa Kaltura/NIST.
+# DVIDS retornou 403 para duas fontes; nao repetir download bloqueado.
+# Nao publica, nao gera TTS, nao transforma amostras em prova de processo.
+fonte=nist_kaltura

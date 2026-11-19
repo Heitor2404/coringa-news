@@ -17,7 +17,7 @@ const ease=(v:number)=>{const x=Math.max(0,Math.min(1,v));return x*x*(3-2*x);};
 export const LockCausal: React.FC<Props> = ({t,events}) => {
   const at=(action:NonNullable<EventoEclusa['action']>,fallback:number)=>
     events.find(e=>e.action===action)?.at ?? fallback;
-  const closed=at('closed',0), inlet=at('water_enter',1),rise=at('rise',2),
+  const inlet=at('water_enter',1),
         equilibrium=at('equalize',3.6),release=at('release',4.7);
   const fill=ease((t-inlet)/Math.max(.5,equilibrium-inlet));
   const open=ease((t-release)/.55);
@@ -67,7 +67,7 @@ export const LockCausal: React.FC<Props> = ({t,events}) => {
       {/* Galeria hidráulica — entra água pela parte inferior, não pelos portões. */}
       <path d="M970 1224 H771 V1183 H655" fill="none" stroke="#4E6D81" strokeWidth="39" strokeLinecap="square"/>
       <path d="M970 1224 H771 V1183 H655" fill="none" stroke="#61D6E8" strokeWidth="13" strokeDasharray="23 28" strokeDashoffset={-t*66}
-        opacity={isFlow?.65+.28*pulse:.23}/>
+        opacity={isFlow ? .65+.28*pulse : .23}/>
       <path d="M662 1183 l24 -15 v30 Z" fill={isFlow?GOLD:'#53758A'}/>
       <text x="668" y="1335" fill={isFlow?GOLD:'#A0B1BD'} fontSize="28" fontWeight="700">DUTO DE ENCHIMENTO</text>
       <path d="M774 1207 H964" fill="none" stroke={isFlow?GOLD:'#617D90'} strokeWidth={isFlow?4:2} strokeDasharray="11 12"/>
@@ -94,17 +94,17 @@ export const LockCausal: React.FC<Props> = ({t,events}) => {
       {fill>.02 && <path d={'M188 '+(y+18)+' l19 -30 19 30Z'} fill={GOLD}/>}
 
       {/* Hierarquia das etapas: somente a informação pedida pela etapa aparece. */}
-      <rect x="80" y="1425" width="920" height="151" fill="rgba(6,13,22,.86)" stroke="#537487" strokeWidth="2"/>
-      <rect x="80" y="1425" width="8" height="151" fill={GOLD}/>
-      <text x="117" y="1475" fill="#A8C3CF" fontSize="25" letterSpacing="2.6" fontWeight="700">
+      <rect x="80" y="1344" width="920" height="151" fill="rgba(6,13,22,.86)" stroke="#537487" strokeWidth="2"/>
+      <rect x="80" y="1344" width="8" height="151" fill={GOLD}/>
+      <text x="117" y="1394" fill="#A8C3CF" fontSize="25" letterSpacing="2.6" fontWeight="700">
         {state==='closed'?'01 · ISOLAR':state==='water_enter'?'02 · ENCHER':state==='rise'?'03 · ELEVAR':state==='equalize'?'04 · IGUALAR':'05 · LIBERAR'}
       </text>
-      <text x="117" y="1534" fill="#FAF7EF" fontSize="42" fontWeight="850">{active?.label || 'CÂMARA FECHADA'}</text>
-      <g transform="translate(118,1626)">
+      <text x="117" y="1453" fill="#FAF7EF" fontSize="42" fontWeight="850">{active?.label || 'CÂMARA FECHADA'}</text>
+      <g transform="translate(118,1534)">
         {['closed','water_enter','rise','equalize','release'].map((a,i)=><rect key={a} x={i*185} width="169" height="7"
           fill={['closed','water_enter','rise','equalize','release'].indexOf(state)>=i?GOLD:'#355063'}/>)}
       </g>
-      <text x="83" y="1712" fill="#A7BFCC" fontSize="25">O MESMO PROCESSO, VISTO EM CORTE TÉCNICO</text>
+      
     </svg>
   </AbsoluteFill>;
 };

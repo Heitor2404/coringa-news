@@ -26,7 +26,8 @@ O motor global \`src/acervo.py\` já consulta **Wikipédia, Wikimedia Commons, N
   3. **História** — \`qa_fontes/hindenburg_1937.webm\`, baixado SOMENTE no runner do Commons, fonte Prelinger Archives/Eugene W. Castle \`Hindenburg Explodes (audio extracted)\`, arquivo **SHA-1 verificado** contra metadado de origem \`e7cc658e36f1d801d51a43cadfe4ae4f19e599e1\`. FFprobe vê **326,593s 352×480 codificado**, arquivo histórico de qualidade insuficiente para crop vertical amplo. O material tem letreiros, aviões/dirigível e destruição, não só a explosão em cada instante.
 - Run **44545548727 SUCCESS**, artifact id **14539414167** \`qa-3-videos-reais-fonte-e-contato\` (JPEG + JSON, sem republicar vídeos). Variação de pixels entre amostras positiva nas três fontes, mas ação narrada = \`NAO_INSPECIONADA\`; status humano = \`PENDENTE\`; \`publicado=false\`.
 - A folha \`contato_3_dominios.jpg\` foi recuperada e examinada: row1 ship/open water; row2 quadro vertical NASA com legendas embutidas; row3 Hindenburg com letreiros e cenas de fogo. Não usar esta amostragem como evidência de qualidade de episódio final.
-- Regressão adicional em **44546274486**, com política integrada ATLAS/FILME; conferir status final do run antes de declará-lo verde.
+- Regressão **44546274486 — FAILURE útil**: teste de foto de outro conflito como registro do Iraque foi corretamente reprovado em `contrato_visual_comum`, mas os dois gates especializados propagavam só bloqueios `U-` e ignoravam `M-`. A mudança foi dirigida ao bug comum: `filme_editorial.py` e `triagem_editorial.py` agora propagam todos os bloqueios (exceto inspeção visual feita em etapa própria).
+- **44546631174 — SUCCESS**: 37 testes passaram, incluindo teste da mesma recusa no ATLAS e no FILME; arquivo Hindenburg autenticado por SHA-1; três fontes inspecionadas; folha de quadros/JSON preservados no artifact `14539673107`. **Não houve nenhum vídeo novo nem publicação.**
 
 ## Próximas necessidades reais
 

@@ -15,6 +15,7 @@ export type FilmShot = {
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
+  video_zoom?: number; // enquadramento dirigido para o portão, não zoom decorativo
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
   sourceB?: string;
@@ -110,7 +111,9 @@ const Body: React.FC<{shot: FilmShot;p:number}> = ({shot,p}) => {
         startFrom={Math.max(0, Math.round((shot.source_in_seconds || 0) * 30))}
         style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',
           objectPosition:`${(shot.focus||[.5,.5])[0]*100}% ${(shot.focus||[.5,.5])[1]*100}%`,
-          filter:'brightness(.90) saturate(1.02)'}}/>
+          filter:'brightness(.98) saturate(1.04)',
+          transform:`scale(${shot.video_zoom || 1})`,
+          transformOrigin:'50% 30%'}}/>
     </Sequence></AbsoluteFill>;
   }
   if(shot.type === 'comparison' && shot.assetB) {
@@ -138,10 +141,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   const now=frame/fps;
   const duration=Math.max(.01, shot.end-shot.start);
   const p=clamp((now-shot.start)/duration);
-  const fadeIn=clamp((now-shot.start)/.16),fadeOut=clamp((shot.end-now)/.14);
+  // Corte seco: o filme não escurece os últimos e primeiros quadros de cada plano.
   const cue=shot.cues?.filter(c=>now >= shot.start+c.at).slice(-1)[0];
   const cueAge=cue?now-shot.start-cue.at:0;
-  return <AbsoluteFill style={{opacity:Math.min(fadeIn,fadeOut),background:'#08101A',overflow:'hidden'}}>
+  return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <Body shot={shot} p={p}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}
     <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>

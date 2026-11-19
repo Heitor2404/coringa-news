@@ -7,3 +7,5 @@
 # R3: fluxo real obrigatoriamente valida contrato, cenas, fonte e SHA de bytes; testes sintéticos separados.
 
 # R4: reexecução após correção do escopo de hashlib detectada em CI.
+
+# R5: nova politica de processo equivalente (laboratorio NIST) sem falsa atribuicao de registro.

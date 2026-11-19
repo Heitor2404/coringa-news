@@ -131,6 +131,15 @@ def test_ativos_reutiliza_hash_origem_e_probe_v4(monkeypatch, tmp_path):
     assert info['w'] == 1080 and info['h'] == 1920
     assert 0.40 <= info['duracao'] <= 0.55
     assert info['audio'] is False
+    # Pexels com download MANUAL: a página não tem URL .mp4, mas o arquivo já
+    # foi baixado legitimamente e está identificado por hash no cache local.
+    manual = {**item, 'url': 'https://www.pexels.com/video/123456/', 'pagina': 'https://www.pexels.com/video/123456/',
+              'arquivo_ext': '.mp4'}
+    monkeypatch.setattr(viabilidade, 'carregar', lambda: {'itens': [manual]})
+    monkeypatch.setattr(prod, '_origem', lambda it, cache: (bruto, f'cache:{sha}.mp4'))
+    novo = prod.ativos(pl, tmp_path / 'saida_manual')['video:licenciado']
+    assert novo['tipo'] == 'video' and novo['origem_conferida']
+    assert novo['url'] == manual['url']
 
 
 def test_sem_sha_ou_licenca_nao_importa_video(monkeypatch, tmp_path):

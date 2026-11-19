@@ -111,3 +111,29 @@ def test_telegram_mostra_triagem_sem_preflight_fake(monkeypatch, tmp_path):
     assert 'etapa: triagem editorial ANTES DA VOZ' in msg
     assert 'E-SEM-CONTRATO-VISUAL' in msg
     assert 'preflight: 0/0' not in msg
+
+
+def test_territorio_global_nao_serve_de_pano_de_fundo_ao_wafer():
+    beat = {'id': 'b1', 'composicao': 'atlas.protagonista', 'roi': [0, 16, 126, 56],
+            'fatos': ['f1'], 'direcao_visual': _dir('CONECTAR', ['cadeia']),
+            'camadas': [{'id': 'cadeia', 'componente': 'editorial.flowConnections',
+                         'p': {'nos': [{'rotulo': 'Holanda'}, {'rotulo': 'Taiwan'}]}}]}
+    erros = [e['codigo'] for e in avaliar(_plano(beat))['bloqueios']]
+    assert 'E-MAPA-GLOBAL-DECORATIVO' in erros
+
+
+def test_mapa_regional_com_prova_nao_e_bloqueado_por_distancia():
+    beat = {'id': 'b1', 'composicao': 'atlas.abertura', 'roi': [118, 21, 124, 26],
+            'fatos': ['f1'], 'direcao_visual': _dir('LOCALIZAR', ['mapa']),
+            'camadas': [{'id': 'pino', 'componente': 'atlas.geoPin',
+                         'p': {'tipo': 'local', 'lonlat': [121, 23]}}]}
+    assert avaliar(_plano(beat))['pronto'] is True
+
+
+def test_palco_de_foto_protagonista_e_independente_do_mapa():
+    import json
+    cfg = json.loads((RAIZ / 'src/v4/formatos/formatos.json').read_text())
+    prova = cfg['composicoes']['atlas.prova']
+    assert prova['palco'] == 'prova'
+    assert prova['slots']['prova']['h'] >= 900
+    assert 'prova' in cfg['formatos']['atlas']['palcos']

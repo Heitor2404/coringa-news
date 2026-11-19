@@ -1078,3 +1078,19 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 - O arquétipo `Taiwan` é prova de integração, mas a solução de infográfico/foco/tempo pertence ao motor e deve servir a engenharia, economia, geografia, história e outras pautas. **Não adicionar score/gate de monetização** por decisão do usuário.
 
 **Branches/segurança:** `main`, NTC e DOSSIÊ não modificados. Nenhuma chamada Gemini/Charon, Telegram, publicação ou concessão de direitos foi executada. **Próxima conversa: consultar esta seção + seção 60 antes de planejar novas melhorias** para evitar andar em círculos.
+
+
+## 62. 19/11 — Correção editorial obrigatória: pauta original Guerra dos Chips EUA × China
+
+**Correção do usuário, após assistir ao rough cut v2:** "Cara pelo oque eu me lembro era para ser guerra do chips: EUA x China e blz taiwan ta no meio, mas enfim ja foi."
+
+**Verificação no próprio documento de continuidade:** seções **4, 9, 10, 13 e seguintes** identificam repetidamente a pauta original como **GUERRA DOS CHIPS**, eixo **EUA × China**, com **Taiwan/TSMC** como ponto estratégico e **ASML/Holanda** no contexto do fornecimento internacional. Já existia até abertura editorial com cartela **"EUA × CHINA"** (seção 20+). Logo, **o usuário estava certo**. O assistente produziu as versões de 68,6 s da seção 61 centradas em **terremoto de abril de 2024 + recuperação fabril TSMC + laboratório de semicondutores**, que NÃO respondem suficientemente ao conflito EUA × China. Foi uma **mudança indevida de tese/tema pelo assistente**, não autorização do usuário para mudar o filme.
+
+**Classificação correta das duas renderizações:** `rough_cut_real_v1/v2` são apenas **ensaios técnicos multitema do motor FilmeEditorial/ATLAS**, com fontes reais e falhas visuais diagnosticadas. **Não são episódios aprovados da Guerra dos Chips** e não devem ser apresentados como conclusão ou evolução da pauta editorial escolhida. A capacidade técnica de renderizar 20 cenas é reutilizável e permanece válida; a direção narrativa produzida é inadequada para o tema contratado.
+
+**Regra permanente de produto/motor (sem novo fiscal burocrático):**
+- Antes de derivar roteiro e selecionar fontes, preservar **tema/tese editorial aprovada**, pergunta central e conflito que a história pretende explicar. No caso atual: **Guerra dos Chips: EUA × China, com Taiwan no centro estratégico**.
+- Abordagens como terremoto, fábrica ou laboratório podem ser *evidência contextual* se servirem à pergunta, mas não podem substituir silenciosamente a pauta escolhida.
+- Separar teste de engenharia de motor de aceite editorial. Um MP4 autêntico, testes verdes e documentação de proveniência não significam que o vídeo contou a história solicitada.
+- **Próximos passos, caso o usuário peça continuação:** recuperar o contrato/roteiro anterior da Guerra dos Chips nas branches `atlas-piloto-chips-20261118` e `atlas-direcao-visual-20261118` antes de planejar outro episódio, restaurar EUA × China como arco central, tratar Taiwan/TSMC e ASML como peças na disputa, e reaproveitar recursos gerais do motor sem criar lógica exclusiva para o tema. Não gerar novas tentativas repetitivas nem chamar Charon sem qualidade visual.
+- Não promover, publicar nem enviar ao Telegram os dois rough cuts desviados. `main`, NTC e DOSSIÊ seguem intocados. **Esta seção registra a correção do usuário, não implementa um novo episódio.**

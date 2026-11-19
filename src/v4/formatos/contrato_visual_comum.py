@@ -1,0 +1,153 @@
+"""Contratos visuais entre ATLAS e FILME: mesmos critérios, sem fingir que metadados são imagens.
+
+Este módulo NÃO julga a qualidade estética automaticamente. Separa:
+  1. prova declarada no plano;
+  2. evidência efetivamente inspecionada (quadro + veredito);
+  3. aprovação HUMANA, sempre externa.
+
+O revisor de ATLAS e o novo revisor de FILME devem usar a mesma rubrica.
+Nunca converter "pixels mudaram", labels ou hashes em "acontecimento demonstrado".
+"""
+from __future__ import annotations
+
+from collections.abc import Mapping
+
+VERBOS_COM_ACAO = frozenset(('DEMONSTRAR', 'CONECTAR', 'COMPARAR', 'REVELAR'))
+VERBOS = frozenset(('LOCALIZAR', 'MOSTRAR', 'DEMONSTRAR', 'CONECTAR', 'COMPARAR', 'REVELAR'))
+CRITERIOS_BASE = (
+    'referente_visivel', 'aprendizado_demonstrado',
+    'enquadramento_adequado', 'imagem_celular_legivel',
+)
+
+
+def criterios(verbo: str, mapa: bool = False) -> tuple[str, ...]:
+    """Usa requisitos por intenção, NÃO por nome do tema ou compositor."""
+    exigidos = list(CRITERIOS_BASE)
+    if mapa:
+        exigidos.append('mapa_informativo')
+    if verbo in VERBOS_COM_ACAO:
+        exigidos.append('acao_ou_relacao_visivel')
+    return tuple(exigidos)
+
+
+def julgar_inspecao(verbo: str, mapa: bool, resposta: object) -> list[str]:
+    """Retorna falhas iguais nos dois motores; só aceita booleano True explícito."""
+    if not isinstance(resposta, Mapping):
+        return ['SEM-REVISAO: resposta de visão não é um objeto']
+    problemas = [
+        f'V-{campo}: modelo não confirmou'
+        for campo in criterios(verbo, mapa)
+        if resposta.get(campo) is not True
+    ]
+    if problemas:
+        extras = resposta.get('problemas')
+        if isinstance(extras, list):
+            problemas += [str(p)[:250] for p in extras[:3]]
+    return problemas
+
+
+def extrair(plano: dict) -> list[dict]:
+    """Converte storyboard de cada motor em compromissos verificáveis, sem inventar provas."""
+    formato = plano.get('formato')
+    contratos = []
+    if formato == 'atlas':
+        for b in plano.get('beats') or []:
+            d = b.get('direcao_visual') or {}
+            camadas = {c.get('id'): c for c in b.get('camadas') or [] if c.get('id')}
+            clips = {c.get('id'): c for c in plano.get('clipes') or [] if c.get('id')}
+            refs = {**clips, **camadas}
+            declaradas = d.get('provas') if isinstance(d.get('provas'), list) else []
+            suportes = [refs[e].get('componente') or 'registro.video'
+                        for e in declaradas if isinstance(e, str) and e in refs]
+            if 'mapa' in declaradas and b.get('roi'):
+                suportes.append('mapa')
+            contratos.append({
+                'id': b.get('id'), 'formato': formato,
+                'verbo': str(d.get('verbo') or '').upper(),
+                'pergunta': d.get('pergunta') or '',
+                'referente': d.get('referente') or '',
+                'aprendizado': d.get('aprendizado') or '',
+                'provas_declaradas': declaradas,
+                'provas_resolvidas': len(suportes),
+                'suportes': suportes,
+                'acoes_programadas': [],
+                'mapa': bool(b.get('composicao', '').startswith('atlas.') and
+                             b.get('composicao') in ('atlas.abertura', 'atlas.protagonista',
+                                                    'atlas.manchete', 'atlas.painel')),
+            })
+    elif formato == 'filme_editorial':
+        for s in plano.get('shots') or []:
+            tipo = s.get('type')
+            verbo = {'comparison': 'COMPARAR', 'mechanism': 'DEMONSTRAR',
+                     'photo': 'MOSTRAR', 'video': 'MOSTRAR'}.get(tipo, '')
+            evid = []
+            if tipo == 'mechanism':
+                if s.get('mechanism') and s.get('evidence') == 'explainer':
+                    evid.append('mecanismo.ilustrativo')
+            else:
+                for field in ('asset', 'assetB'):
+                    if s.get(field) in (plano.get('media') or {}):
+                        evid.append(s[field])
+            acoes = [c.get('action') for c in s.get('cues') or [] if c.get('action')]
+            contratos.append({
+                'id': s.get('id'), 'formato': formato,
+                'verbo': (s.get('direcao_visual') or {}).get('verbo', verbo),
+                'pergunta': s.get('headline') or '',
+                'referente': s.get('subject') or '',
+                'aprendizado': s.get('headline') or '',
+                'provas_declaradas': [s.get('mechanism')] if tipo == 'mechanism'
+                                    else [s.get(k) for k in ('asset', 'assetB') if s.get(k)],
+                'provas_resolvidas': len(evid),
+                'suportes': evid,
+                'acoes_programadas': acoes,
+                'mapa': False,
+                'natureza_evidencia': s.get('evidence'),
+            })
+    else:
+        raise ValueError(f'formato visual não suportado: {formato}')
+    return contratos
+
+
+def auditar(plano: dict, julgamentos: dict | None = None) -> dict:
+    """Relatório de 3 camadas. Sem quadros + visão, nunca reportar resultado "aprovado"."""
+    contratos = extrair(plano)
+    julgamentos = julgamentos or {}
+    falhas = []
+    inspecionados = 0
+    confirmados = 0
+    for c in contratos:
+        ident = c.get('id') or '?'
+        if c['verbo'] not in VERBOS:
+            falhas.append({'id': ident, 'codigo': 'U-SEM-INTENCAO', 'motivo': 'intenção visual ausente'})
+        if not c['referente'] or not c['aprendizado']:
+            falhas.append({'id': ident, 'codigo': 'U-SEM-REFERENTE', 'motivo': 'referente/aprendizado não definido'})
+        if not c['provas_resolvidas']:
+            falhas.append({'id': ident, 'codigo': 'U-SEM-PROVA', 'motivo': 'nenhum suporte declarado resolvido'})
+        if c['verbo'] == 'DEMONSTRAR' and 'mecanismo.ilustrativo' in c['suportes']:
+            if len(set(c['acoes_programadas'])) < 2:
+                falhas.append({'id': ident, 'codigo': 'U-ACAO-NAO-PROGRAMADA',
+                               'motivo': 'mecanismo sem dois estados distintos declarados'})
+        if ident in julgamentos:
+            inspecionados += 1
+            erros_visao = julgar_inspecao(c['verbo'], c['mapa'], julgamentos[ident])
+            if erros_visao:
+                falhas += [{'id': ident, 'codigo': 'U-INSPECAO-VISUAL',
+                            'motivo': e} for e in erros_visao]
+            else:
+                confirmados += 1
+    total = len(contratos)
+    estruturais = [f for f in falhas if f['codigo'] != 'U-INSPECAO-VISUAL']
+    return {
+        'total_compromissos': total,
+        'provas_resolvidas_no_plano': sum(bool(c['provas_resolvidas']) for c in contratos),
+        'inspecoes_com_veredito': inspecionados,
+        'inspecoes_sem_reprovacao': confirmados,
+        'falhas': falhas,
+        'estrutura_declarada_ok': bool(total) and not estruturais,
+        'prova_visual': ('NAO_INSPECIONADA' if inspecionados == 0
+                         else 'PARCIAL' if inspecionados < total
+                         else 'INSPECIONADA_COM_FALHAS' if falhas
+                         else 'INSPECIONADA_POR_MODELO_NAO_HOMOLOGADA'),
+        'aprovacao_humana': 'PENDENTE',
+        'nota': 'Declarações e visão automatizada NÃO são aprovação estética; verificar material real.',
+    }

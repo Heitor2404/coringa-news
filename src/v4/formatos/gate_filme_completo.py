@@ -19,8 +19,11 @@ PROIBIDAS = {"BLOQUEADO", "REPROVADO", "PENDENTE_REVISAO", "LICENSE_REVIEW_NEEDE
 
 def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True) -> dict:
     erros:list[dict]=[]
+    avisos:list[dict]=[]
     def falha(codigo:str, cena:str, motivo:str)->None:
         erros.append({"codigo":codigo,"cena":cena,"motivo":motivo})
+    def aviso(codigo:str, cena:str, motivo:str)->None:
+        avisos.append({"codigo":codigo,"cena":cena,"motivo":motivo})
     if manifesto.get("versao")!=1 or manifesto.get("formato")!="filme_editorial":
         falha("E-FORMATO","-","exige manifesto documental versão 1")
     if (manifesto.get("tipo")!="PRE_PRODUCAO_PRIVADA" or
@@ -56,11 +59,26 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
     from src.v4.formatos.tempo_natural import avaliar_destinos
     diagnostico_duracao=(avaliar_destinos(dur) if dur_valida else None)
     regras=manifesto.get("rubrica_editorial") or {}
-    if not (isinstance(regras.get("min_videos_reais_independentes"),int) and
-            isinstance(regras.get("max_fracao_fotos_estaticas"),(int,float)) and
-            0<=regras["max_fracao_fotos_estaticas"]<=1 and
-            1<=regras.get("max_foto_individual_s",0)<=8):
-        falha("E-RUBRICA","-","requisitos visuais devem ser declarados em cada episódio")
+    if not isinstance(regras,dict):
+        regras={}
+        falha("E-RUBRICA","-","rubrica editorial deve ser um objeto")
+    # Metas quantitativas são ORIENTATIVAS. Não são prova de qualidade e
+    # não precisam existir num episódio novo; ação, fonte e progressão sim.
+    min_videos=regras.get("min_videos_reais_independentes")
+    fracao_fotos=regras.get("max_fracao_fotos_estaticas")
+    max_foto_s=regras.get("max_foto_individual_s")
+    if (not isinstance(regras,dict)
+            or (min_videos is not None and
+                (not isinstance(min_videos,int) or isinstance(min_videos,bool) or min_videos<0))
+            or (fracao_fotos is not None and
+                (not isinstance(fracao_fotos,(int,float)) or
+                 isinstance(fracao_fotos,bool) or not math.isfinite(fracao_fotos) or
+                 not 0<=fracao_fotos<=1))
+            or (max_foto_s is not None and
+                (not isinstance(max_foto_s,(int,float)) or
+                 isinstance(max_foto_s,bool) or not math.isfinite(max_foto_s) or
+                 not 1<=max_foto_s<=8))):
+        falha("E-RUBRICA","-","metas quantitativas, quando declaradas, precisam ser válidas")
     cenas=manifesto.get("cenas") or []
     if not cenas:
         falha("E-CENAS","-","sem plano de cena")
@@ -140,7 +158,13 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
                   "mídia literal não aceita substituição de outra origem")
         if c.get("acao")=="REVELAR" and not m.get("resultado_verificavel"):
             falha("E-PAYOFF-SEM-CONSEQUENCIA",cid,
-                  "payoff precisa consequência verificada, não apenas slogan")
+                  "payoff precisa consequência verificada, não apenas slogan; "
+                  "pode usar foto documental, infográfico comprovado, mapa ou vídeo")
+        if c.get("acao")=="CONECTAR" and not (
+                m.get("fonte_factual") and m.get("relacao_visualmente_verificada") is True):
+            falha("E-RELACAO-NAO-DEMONSTRADA",cid,
+                  "conexão exige fonte factual e relação visualmente demonstrada; "
+                  "não exige duas filmagens ou imagens por regra")
         if tipo in ("foto","video"):
             asset=m.get("asset_id")
             it=conhecidos.get(asset)
@@ -180,8 +204,10 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
                 pass
             if tipo=="foto":
                 fotos_s+=span
-                if span>regras.get("max_foto_individual_s",3.8)+.001:
-                    falha("E-FOTO-PARADA",cid,f"foto por {span:.2f}s sem acontecimento")
+                limite_foto=max_foto_s if isinstance(max_foto_s,(int,float)) else 3.8
+                if span>limite_foto+.001:
+                    aviso("W-FOTO-PARADA",cid,
+                          f"foto por {span:.2f}s; verificar progressão da cena no montador")
             else:
                 direitos_ok=it.get("uso_comercial") in ("sim",True)
                 if not direitos_ok:
@@ -221,23 +247,34 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
             # Comparações e mecanismos precisam de origem, objetivo e evidência
             # conferida no mesmo catálogo; nunca aprovar card por si só.
             assets=m.get("asset_ids") or []
-            if (len(set(assets))<2 and tipo=="comparison") or not all(
-                  a in conhecidos for a in assets):
+            if tipo=="comparison":
+                # A transição antes/depois de Remotion é UMA escolha visual
+                # que necessita dois assets. Uma relação causal pode, porém,
+                # ser apresentada como foto/documento ou mecanismo adequado.
+                if (not isinstance(assets,list) or len(assets)!=2 or
+                        assets[0]==assets[1] or any(a not in conhecidos for a in assets)):
+                    falha("E-COMPARACAO-INCOMPLETA",cid,
+                          "efeito comparativo precisa de dois assets distintos; "
+                          "para conexão factual use outro tipo de cena")
+            elif assets and any(a not in conhecidos for a in assets):
                 falha("E-FLUXO-SEM-PROVA",cid,
-                      "relação/resultado visual não comprovado por duas fontes distintas")
-            if not m.get("fonte_factual") or not m.get("relacao_visualmente_verificada"):
+                      "mecanismo usa asset inexistente no catálogo")
+            if c.get("acao")!="CONECTAR" and not (
+                    m.get("fonte_factual") and
+                    m.get("relacao_visualmente_verificada") is True):
                 falha("E-RELACAO-NAO-DEMONSTRADA",cid,
-                      "múltiplas imagens e títulos não provam relação causal, exige fonte e inspeção visual")
+                      "esquema/comparação exige fonte factual e inspeção visual")
     if isinstance(dur,(int,float)) and abs(prev-dur)>.06:
         falha("E-DURACAO-CENAS","-",f"última cena termina em {prev}, duração prometida {dur}")
-    if isinstance(dur,(int,float)) and dur>0 and regras.get("max_fracao_fotos_estaticas") is not None:
+    if isinstance(dur,(int,float)) and dur>0 and fracao_fotos is not None:
         ratio=fotos_s/dur
-        if ratio>regras["max_fracao_fotos_estaticas"]+.001:
-            falha("E-SLIDESHOW","-",f"{ratio:.1%} do filme em fotos estáticas; rever direção")
-    if len(media_movel)<regras.get("min_videos_reais_independentes",0):
-        falha("E-VIDEO-INSUFICIENTE","-",
-              f"{len(media_movel)} vídeos reais de ação conferida; mínimo deste episódio: "
-              f"{regras.get('min_videos_reais_independentes',0)}")
+        if ratio>fracao_fotos+.001:
+            aviso("W-SLIDESHOW","-",
+                  f"{ratio:.1%} da duração em fotos; revisar progressão visual, sem corte automático")
+    if min_videos is not None and len(media_movel)<min_videos:
+        aviso("W-DIVERSIDADE-VIDEO","-",
+              f"{len(media_movel)} vídeo(s) com ação comprovada; meta opcional {min_videos}. "
+              "Qualidade depende do acontecimento, não da quantidade de stock footage")
     if regras.get("mapa_evidencia_real_obrigatorio") and mapas<1:
         falha("E-CARTOGRAFIA-NAO-INTEGRADA","-","mapa ATLAS não está com MP4 e comprovante no mesmo runner")
     voz=manifesto.get("base_narracao") or {}
@@ -287,6 +324,7 @@ def avaliar(manifesto:dict, catalogo:dict|None=None, *, conferir_bytes:bool=True
         "videos_contextuais_sem_prova_de_acao":len(video_contextual),
         "mapas_atlas_comprovados":mapas,"fotos_s":round(fotos_s,3),
         "inspecao_humana":"PENDENTE","publicado":False,
+        "avisos_editoriais":avisos,
         "bloqueios":erros,
     }
 

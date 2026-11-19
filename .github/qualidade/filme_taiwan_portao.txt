@@ -1,3 +1,5 @@
 # Preflight do primeiro filme completo Taiwan: 27,445 s.
 # Exigir clips físicos reais, Fab18, wafer, mapa ATLAS autenticado e relação/prova por cena.
 # Sem Gemini TTS, sem remotion render nem Telegram enquanto evidência insuficiente.
+
+# R2: manter bloqueio do payoff mesmo sem ativo externo no catálogo.

@@ -28,7 +28,7 @@ def decidir_uso(*, acontecimento: str, evento_da_midia: str, uso: str,
     """
     if not origem_verificada or not licenca_verificada:
         return {"permitido":False,"codigo":"M-SEM-PROVENIENCIA","categoria":"BLOQUEADO"}
-    if uso not in ("registro", "contexto", "ilustracao"):
+    if uso not in ("registro", "contexto", "ilustracao", "demonstracao"):
         return {"permitido":False,"codigo":"M-USO-DESCONHECIDO","categoria":"BLOQUEADO"}
     mesmo = bool(acontecimento and evento_da_midia and
                  acontecimento.strip().casefold() == evento_da_midia.strip().casefold())

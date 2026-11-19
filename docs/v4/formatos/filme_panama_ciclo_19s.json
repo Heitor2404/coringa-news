@@ -89,7 +89,16 @@
         }
       ],
       "reference_asset": "eclusa-hero-hd",
-      "reference_from_seconds": 6.4
+      "reference_from_seconds": 6.4,
+      "estados_esperados": [
+        "enter",
+        "seal",
+        "valves",
+        "rise",
+        "equalize",
+        "open",
+        "exit"
+      ]
     }
   ],
   "observacao": "Exclusivamente uma ascensão em câmara genérica das eclusas originais do Panamá: a água entra por gravidade por condutos e aberturas na base; sem bombas. Portões e geometria em vista lateral são símbolos simplificados. Não confundir com demonstração de todos os três degraus nem alegar que filmagem mostra o navio subindo. 19 s, SILENCIOSO, análise humana necessária, sem publicação.",

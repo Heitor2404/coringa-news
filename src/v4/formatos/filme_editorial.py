@@ -331,6 +331,10 @@ def avaliar(plano: dict) -> dict:
                 falha('F-MIDIA-SEM-CATALOGO', cid, f'{mid} não consta na curadoria')
                 continue
             asset = plano['media'][mid]
+            if (tipo=='photo' and asset.get('original_graphic') is True
+                    and cena.get('evidence')=='literal'):
+                falha('F-GRAFICO-COMO-REGISTRO',cid,
+                      'infografia original representa dados, nunca fotografia literal do acontecimento')
             url = asset.get('url') or ''
             source = asset.get('local_source')
             if source:

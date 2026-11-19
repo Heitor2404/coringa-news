@@ -12,6 +12,7 @@ import json
 from src.v4.formatos import plano as P
 
 ESQUEMA = {
+    'atlas.provaVisual': "{asset (FOTO REAL comprovada), meta: 'AUTOR · LICENÇA' (crédito obrigatório), enquadramento?: 'conter'|'cobrir', rotulo? (curto)} — usar composição atlas.prova, slot prova; imagem PRINCIPAL, não pino/card",
     'atlas.geoPin': "{tipo: 'local'|'foto', lonlat: [lon, lat] (DENTRO do roi do beat), rotulo, t_ativo?, lado?: 'direita'|'esquerda', asset?+meta (foto real com crédito), papel: 'protagonista'|'secundario' (posição, raio e deslocamento calculados pelo motor; NÃO escrever)} — slot 'geo': o pino segue a câmera",
     'editorial.statCard': "{valor (número ou texto curto), unidade, prefixo ('≈ '), rotulo, titulo, estilo: 'cartao'|'pilula'|'dial'|'cedula'|'selo' (cedula: cabecalho, rubrica, rubrica_dir, linhas [{texto, t?, marca_t?, dir?}]; selo: valor; dial: partes [{rotulo, fracao, cor}]); contagem?: bool}",
     'editorial.peopleCard': '{asset (retrato da biblioteca), nome, papel}',
@@ -64,6 +65,12 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
 - A abertura é mapa hero, pergunta ou prova real; não use animação técnica de mecanismo no gancho.
 - Primeiro classifique a necessidade visual de cada trecho: geografia, fato real, funcionamento,
   comparação, revelação. Escolha mídia por pertinência e comprovação, sem cota de animações.
+- Imagem real do objeto/fábrica/evento pode ocupar o plano principal com atlas.provaVisual em atlas.prova.
+- Vídeo documental REAL comprovado usa clipes: [{t0,t1,componente:"registro.video",params:{asset:"ID DA BIBLIOTECA",inicio:0}}].
+  O MP4 tem movimento próprio (sem câmera artificial), ocupa o intervalo todo e traz crédito do acervo;
+  não atribua a ele uma ação que o arquivo não comprova, nem use vídeos genéricos como prova específica.
+  O vídeo só pode entrar após o gancho cartográfico ATLAS V1 (3 s); não sobreponha camadas ao seu intervalo.
+  Se não existir vídeo comprovado com duração/qualidade suficiente, reporte pendência, NÃO invente um arquivo.
 - Animação técnica só quando mostra um processo que a mídia real não explica adequadamente.
 - Se a narração continua explicando o MESMO processo, preserve a demonstração durante todo o
   intervalo, focando as peças e os fluxos citados. Não substitua o mecanismo por cards soltos.

@@ -304,7 +304,7 @@ def estilo_legenda(pl: dict) -> dict:
     return (canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl.get('formato')) or {}
 
 
-def props_camada(pl: dict, meta: dict) -> dict:
+def props_camada(pl: dict, meta: dict, imagens: dict | None = None) -> dict:
     """camada de legenda/marca — UMA fonte para render, quadros, trechos: estilo da legenda vem do CANAL por formato"""
     from src.v4.formatos import legenda_sync
     est = ((canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl['formato']) or {})
@@ -314,13 +314,19 @@ def props_camada(pl: dict, meta: dict) -> dict:
     if pl['formato'] == 'atlas' and est.get('destaque_estatico'):
         pal = legenda_sync.destacar_atlas(pal, pl, maximo=est.get('max_palavras', 3))
     marcas = sorted({0.0, pl['duracao']} | {x for c in pl.get('clipes') or [] for x in (c['t0'], c['t1'])})
+    imagens = imagens or {}
     cenas = []
     for a, b in zip(marcas, marcas[1:]):
-        dentro = any(abs(c['t0'] - a) < .01 for c in pl.get('clipes') or [])
-        cenas.append({'ini': a, 'fim': b, 'selo': 'ESQUEMA' if dentro else None, 'credito': None, 'legenda': True})
+        clip = next((c for c in pl.get('clipes') or [] if c['t0'] <= a + .001 and c['t1'] >= b - .001), None)
+        reg = imagens.get(((clip or {}).get('params') or {}).get('asset')) or {}
+        video_real = bool(clip and clip.get('componente') == 'registro.video')
+        cenas.append({'ini': a, 'fim': b,
+                      'selo': ('REGISTRO' if video_real else 'ESQUEMA' if clip else None),
+                      'credito': reg.get('credito') if video_real else None, 'legenda': True})
     out = {'duracao': pl['duracao'], 'palavras': pal, 'cenas': cenas, 'estilo': {k: v for k, v in est.items() if not k.startswith('_')}}
     if pl['formato'] == 'atlas':
         out['legenda_caixa'] = zonas('atlas')['legenda']
+        out['credito_caixa'] = zonas('atlas')['creditos']
         out['marca_y'] = layout.faixa_inferior().get('marca_y')
         out['marca_visivel'] = layout.CFG['faixa_inferior'].get('marca_atlas', True)
     return out
@@ -344,7 +350,9 @@ def _creditos(plano: dict) -> dict | None:
     z = zonas('atlas').get('creditos', [72, 1174, 936, 46])
     ref = (canal().get('pino') or {}).get('estilo') == 'referencia'
     extras = [{'t0': L['t0'], 't1': L['t1'], 'txt': L['p']['meta']} for L in camadas(plano)
-              if ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto' and L['p'].get('meta')]
+              if L['p'].get('meta') and
+              (L['componente'] == 'atlas.provaVisual' or
+               (ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto'))]
     return {'extras': extras,'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')},
             'obrigatorias': [k for k, v in atlas_ref.datasets().items() if v.get('obrigatoria')], 'caixa': z, 'px': 18, 'linha': 22}
 
@@ -737,7 +745,7 @@ def eventos(plano: dict) -> list[float]:
     for r in plano.get('rotas') or []:
         ev += [r['t0'], (r['t0'] + r['t1']) / 2, r['t1']]
     for c in plano.get('clipes') or []:
-        # clipe aprovado com animação contínua (o portão CONGELADO confere no render): progride o tempo todo
+        # clipe aprovado com ação/filme verificado (o portão CONGELADO confere no render): progride o tempo todo
         ev += [c['t0'] + x for x in c['params'].get('tempos') or []] + [c['t0']] + list(_passos(c['t0'], c['t1'], 1.0))
     for L in camadas(plano):
         ev.append(L['t0'])
@@ -798,9 +806,28 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         a = (L.get('p') or {}).get('asset')
         if a and imagens is not None and a not in imagens:
             v('erro', 'F-ASSET', onde, f'mídia {a!r} indisponível')
+        if L['componente'] == 'atlas.provaVisual':
+            if not a or not (L.get('p') or {}).get('meta'):
+                v('erro', 'F-PROVA-CREDITO', onde, 'fotografia principal exige asset e crédito visível')
+            if imagens is not None and a in imagens and imagens[a].get('tipo') == 'video':
+                v('erro', 'F-PROVA-TIPO', onde, 'vídeo deve usar registro.video, não componente fotográfico')
     for c in plano.get('clipes') or []:
         if c['componente'] not in F['clipes']:
             v('erro', 'F-CLIPE', f"{c['t0']}", f"clipe {c['componente']} não aprovado no formato")
+        if c.get('componente') == 'registro.video':
+            a = (c.get('params') or {}).get('asset')
+            inicio = (c.get('params') or {}).get('inicio', 0)
+            if not a or not isinstance(inicio, (int, float)) or isinstance(inicio, bool) or inicio < 0 or c.get('fonte'):
+                v('erro', 'F-VIDEO-PARAMS', str(c.get('t0')), 'vídeo exige asset verificado e início ≥0, sem campo fonte de mecanismo')
+            if imagens is not None and a not in imagens:
+                v('erro', 'F-ASSET', str(c.get('t0')), 'vídeo real ausente do acervo')
+            if imagens is not None and a in imagens and imagens[a].get('tipo') != 'video':
+                v('erro', 'F-VIDEO-TIPO', str(c.get('t0')), 'registro.video exige mídia de natureza vídeo')
+            if imagens is not None and a in imagens and isinstance(inicio, (int, float)) and c['t1'] - c['t0'] + inicio > imagens[a].get('duracao', 0) + .01:
+                v('erro', 'F-VIDEO-DURACAO', str(c.get('t0')), 'o trecho pedido excede a duração original; não congelar quadro')
+            for L in Ls:
+                if L['t0'] < c['t1'] and L['t1'] > c['t0']:
+                    v('erro', 'F-VIDEO-SOBREPOE-CAMADA', L['id'], 'clipe real substitui o palco: camada nesse intervalo ficaria invisível')
     if plano.get('formato') == 'atlas':
         # Contrato global de clareza: limites vêm do canal e dos recursos
         # aprovados, nunca das cenas ou números do episódio do Panamá.
@@ -1021,8 +1048,8 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             v('erro', 'F-TECNICO-SEM-MECANISMO', b.get('id', '-'), f"{b.get('composicao')} só com funcao {comp['exige_funcao']} (diagrama não substitui mapa)")
     if plano.get('formato') == 'atlas':
         for c in plano.get('clipes') or []:
-            if not str(c.get('componente', '')).startswith('mecanismo.'):
-                v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe no ATLAS só para demonstrar mecanismo')
+            if not (str(c.get('componente', '')).startswith('mecanismo.') or c.get('componente') == 'registro.video'):
+                v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe ATLAS só para mecanismo aprovado ou registro de vídeo real')
         # ATLAS V1: a primeira prova é cartográfica; mecanismo técnico só entra após o gancho.
         bs = plano.get('beats') or []
         primeiro = bs[0] if bs else {}

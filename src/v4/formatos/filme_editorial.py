@@ -43,9 +43,10 @@ def avaliar(plano: dict) -> dict:
         # Mecanismo com acontecimentos reais pode durar mais do que fotografia
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
-        max_span = (6.2 if eh_causal else
+        eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_cycle'
+        max_span = (18.0 if eh_ciclo else 6.2 if eh_causal else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
-        if eh_causal:
+        if eh_causal or eh_ciclo:
             # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
             # sem saltar para outro clipe ou afirmar subida que a filmagem não mostra.
             anterior = cenas[n-1] if n else {}
@@ -58,14 +59,27 @@ def avaliar(plano: dict) -> dict:
             if not continuidade:
                 falha('F-PONTE-REAL', cid, 'o início do diagrama deve continuar do trecho real sem salto de origem')
             eventos = cena.get('cues') or []
-            esperado = ('closed', 'water_enter', 'rise', 'equalize', 'release')
+            esperado = (('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit')
+                        if eh_ciclo else
+                        ('closed', 'water_enter', 'rise', 'equalize', 'release'))
             acoes = tuple(e.get('action') for e in eventos)
             tempos = [e.get('at') for e in eventos]
-            if (acoes != esperado or not all(isinstance(t, (int, float)) for t in tempos)
-                    or tempos != sorted(tempos) or len(set(tempos)) != len(tempos)
-                    or tempos[0] < 0 or tempos[-1] > span - .4
-                    or tempos[2] - tempos[1] < .4 or tempos[3] - tempos[1] < 1.5
-                    or tempos[4] < tempos[3]):
+            tempos_validos = (len(tempos) == len(esperado) and
+                             all(isinstance(t, (int, float)) for t in tempos))
+            if not tempos_validos:
+                falha('F-MECANISMO-CAUSAL', cid, 'ações/tempos ausentes ou inválidos')
+            elif acoes != esperado or tempos != sorted(tempos) or len(set(tempos)) != len(tempos):
+                falha('F-MECANISMO-CAUSAL', cid, 'ordem causal obrigatória')
+            elif eh_ciclo:
+                intervals = [b-a for a, b in zip(tempos, tempos[1:])]
+                minimum = [2.0, 1.0, 1.0, 4.0, 1.0, 1.0]
+                if (span < 15 or tempos[0] != 0 or tempos[-1] > span-1.1 or
+                        any(gap < minim for gap,minim in zip(intervals,minimum))):
+                    falha('F-CICLO-INCOMPLETO', cid,
+                          'mostrar entrada, fecho, válvulas, enchimento longo, igualdade, abertura e saída sem pular etapas')
+            elif (tempos[0] < 0 or tempos[-1] > span - .4 or
+                  tempos[2] - tempos[1] < .4 or tempos[3] - tempos[1] < 1.5 or
+                  tempos[4] < tempos[3]):
                 falha('F-MECANISMO-CAUSAL', cid,
                       'exigir etapas distintas: fechar → entrar água → subir → igualar nível → liberar, com tempos coerentes')
         if span < 1.4 or span > max_span:
@@ -73,9 +87,9 @@ def avaliar(plano: dict) -> dict:
         prev_end = end
         tipo = cena.get('type')
         if tipo == 'mechanism':
-            if eh_causal:
+            if eh_causal or eh_ciclo:
                 for e in cena.get('cues') or []:
-                    if e.get('action') in ('water_enter', 'rise', 'equalize', 'release'):
+                    if e.get('action') in ('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit', 'water_enter', 'release'):
                         momentos.add(('mecanismo', cid, e['action']))
             else:
                 momentos.add(('mecanismo', cid))
@@ -98,7 +112,7 @@ def avaliar(plano: dict) -> dict:
         if cena.get('evidence') not in ('literal', 'representative', 'explainer'):
             falha('F-SEM-PROVENIENCIA', cid, 'classifique literal, representativa ou explicativa')
         if tipo == 'mechanism':
-            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal') or
+            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal', 'lock_cycle') or
                 cena.get('evidence') != 'explainer' or cena.get('literal_identity')):
                 falha('F-MECANISMO-NÃO-IDENTIFICADO', cid,
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')

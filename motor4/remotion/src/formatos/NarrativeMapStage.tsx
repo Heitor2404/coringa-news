@@ -79,8 +79,8 @@ export const NarrativeMapStage:React.FC<{map:NarrativeMap;t:number}>=({map,t})=>
       <text x="82" y="1661" fill="#93AAB8" fontSize="23">
         {map.kind==='route'?'TRAJETO GEOGRÁFICO ESQUEMÁTICO · NÃO É RASTRO AIS':'BASE CARTOGRÁFICA · NATURAL EARTH / WORLD ATLAS'}
       </text>
-      <text x="85" y="1750" fill="#94B1BF" fontSize="24">CARTOGRAFIA VETORIAL · FONTE DE POSIÇÕES NO ROTEIRO</text>
-      {map.route?.label&&<text x="82" y="1799" fill={GOLD} fontSize="28" fontWeight="800">
+      <text x="85" y="1710" fill="#94B1BF" fontSize="24">CARTOGRAFIA VETORIAL · COORDENADAS CURADAS</text>
+      {map.route?.label&&<text x="82" y="1758" fill={GOLD} fontSize="27" fontWeight="800">
         {map.route.label.toUpperCase()}
       </text>}
     </svg>

@@ -1,0 +1,3 @@
+# Ajuste genérico de rótulos de pins colidindo no mapa da Venezuela.
+# Reusar MESMA voz natural e timestamps do run 44575540939.
+# Verificar que áudio ficou idêntico e que nada é publicado.

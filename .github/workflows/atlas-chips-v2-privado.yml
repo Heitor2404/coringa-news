@@ -30,6 +30,9 @@ jobs:
     timeout-minutes: 140
     steps:
       - uses: actions/checkout@v4
+      # Sem contrato visual, o episódio não deve sequer gastar cota/tempo com TTS.
+      - name: Portão editorial pré-produção — prova antes da voz
+        run: python -m src.v4.formatos.triagem_editorial "$PLANO"
       - uses: actions/setup-python@v5
         with: {python-version: "3.13", cache: pip}
       - uses: actions/setup-node@v4
@@ -63,12 +66,14 @@ jobs:
           c=json.loads(pathlib.Path("src/v4/formatos/canais/coringa.json").read_text())
           b=json.loads(pathlib.Path("src/v4/biblioteca_comprovada.json").read_text())
           assert p["formato"]=="atlas" and p["canal"]=="coringa"
-          assert p["abertura_tipo"]=="prova_real" and len(p["beats"])==6
+          assert p["abertura_tipo"]=="prova_real"
+          # Composição/quantidade de cenas sai da direção visual; não impor um piloto ruim como padrão.
           assert c["narrador"]["motor"]=="gemini" and c["narrador"]["voz"]=="Charon"
           assert c["narrador"]["fallback"]=="bloquear"
           aprovados={x["id"] for x in b["itens"] if x.get("sha256_origem") and (x.get("prova") or {}).get("midia_corresponde")}
           usados={L["p"]["asset"] for q in p["beats"] for L in q["camadas"] if L.get("componente")=="atlas.provaVisual"}
-          assert len(usados)==2 and usados<=aprovados
+          assert usados<=aprovados
+          # Mídia insuficiente bloqueia na triagem; jamais limitar a exatamente duas fotos.
           assert not p["clipes"] and len(p["narracao"]["texto"].split())<90
           print("PILOTO_PRIVADO_ATLAS_V2 validado; ninguém autorizou publicação em redes")
           PY

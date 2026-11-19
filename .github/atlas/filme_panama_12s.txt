@@ -9,3 +9,4 @@
 # Semantic fix: animated lock demonstrator with two events can run 3.9s; still reject static shots >3.8s.
 # 2026-11-19: final clean footage time-window and export voiced MP4 + source diagnostic, QA before human approval.
 # Preview footer now truthful with narrated version: 'PRÉVIA PRIVADA · NÃO PUBLICADO'.
+# FINAL V5 19Nov2026: true hard cuts, directed gate crop, speech ends near conclusion, black-frame QA.

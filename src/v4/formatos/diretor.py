@@ -70,7 +70,8 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
 - Opcional V2, só com prova autenticamente identificada: abertura_tipo:"prova_real". FOTO: beat 0
   atlas.prova, atlas.provaVisual desde 0 até ao menos 2,5s, com origem e crédito. VÍDEO: beat 0
   atlas.abertura, clipe registro.video desde 0 até ao menos 2,5s, com fonte e hash verificável.
-  Nunca fingir registro documental usando mecanismo técnico ou imagem genérica.
+  Nunca fingir registro documental usando mecanismo técnico ou imagem genérica;
+  não use animação técnica de mecanismo no gancho.
 - Primeiro classifique a necessidade visual de cada trecho: geografia, fato real, funcionamento,
   comparação, revelação. Escolha mídia por pertinência e comprovação, sem cota de animações.
 - Imagem real do objeto/fábrica/evento pode ocupar o plano principal com atlas.provaVisual em atlas.prova.

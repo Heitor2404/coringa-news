@@ -222,7 +222,24 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         else:
             x['source']='Esquema original · princípio hidráulico de uma eclusa'
             if c.get('reference_asset'):
-                x['reference_asset'] = medias[c['reference_asset']]['asset']
+                # Congelar um quadro do próprio master curado, antes de qualquer corte
+                # interno da fonte. Evita fingir continuidade de dois instantes distintos.
+                mid = c['reference_asset']
+                if plano['media'][mid].get('media_type') != 'video':
+                    raise ValueError('ponte causal exige vídeo real')
+                src_video = public_root / medias[mid]['asset']
+                pos = c['reference_from_seconds']
+                frame = assets_dir / (medias[mid]['sha256'][:16] + '-ref-' +
+                                      str(round(pos * 1000)) + '.png')
+                subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                                '-ss',str(pos),'-i',str(src_video),
+                                '-frames:v','1',str(frame)],check=True)
+                if not frame.exists() or frame.stat().st_size < 3000:
+                    raise ValueError('frame de ligação ausente')
+                with Image.open(frame) as img:
+                    if min(img.size) < 700:
+                        raise ValueError('frame de ligação insuficiente')
+                x['reference_asset'] = 'film_editorial/' + frame.name
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

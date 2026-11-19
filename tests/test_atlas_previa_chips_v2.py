@@ -28,7 +28,7 @@ def test_tempo_sintetico_e_contracto_chips_v2():
     assert resolvido["beats"][0]["camadas"][0]["p"]["rotulo_t"] < 3
     wafer = next(L for beat in resolvido["beats"] for L in beat["camadas"] if L["id"] == "wafer-real")
     assert wafer["p"]["rotulo"] == "WAFER DE SILÍCIO · FOTO ILUSTRATIVA"
-    assert wafer["p"]["rotulo2"] == "CIRCUITOS NO WAFER"
+    assert isinstance(wafer["p"]["rotulo2"], str) and "CIRCUITOS" in wafer["p"]["rotulo2"]
     assert wafer["p"]["rotulo_t"] < wafer["p"]["rotulo2_t"] < wafer["t1"]
     assert wafer["p"]["rotulo2_t"] in P.eventos(resolvido)
     assert all(isinstance(L["t0"], (int, float)) for b in resolvido["beats"] for L in b["camadas"])

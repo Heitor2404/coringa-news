@@ -53,7 +53,7 @@
   },
   "formatos": {
     "atlas": {
-      "descricao": "Mapa cartográfico como palco de contexto e abertura; destaques territoriais, rota medida, cartões de números e hierarquias; diagrama técnico quando necessário para funcionamento ou estrutura; fecho com a última revelação sem retorno obrigatório ao mapa.",
+      "descricao": "Documentário audiovisual geográfico: fotos/vídeos reais como evidência principal, mapas somente quando a geografia prova um acontecimento, diagramas técnicos e fluxos causais quando a fala explica processo ou dependência; nunca uma apresentação de etiquetas sobre mapa persistente.",
       "palcos": [
         "mapa",
         "tecnico",

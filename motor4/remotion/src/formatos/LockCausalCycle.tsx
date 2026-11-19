@@ -82,7 +82,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
             <path d="M0 30 L35 30 M34 0 L34 32" stroke="#273B46" strokeOpacity=".35" strokeWidth="1.6"/>
           </pattern>
           <clipPath id="cycleChamberClip"><rect x={INLET_X+14} y="720" width={OUTLET_X-INLET_X-28} height={YFLOOR-720}/></clipPath>
-          <clipPath id="cycleMapClip"><rect x="61" y="715" width="957" height="635"/></clipPath>
+          <clipPath id="cycleMapClip"><rect x="61" y="715" width="957" height="785"/></clipPath>
         </defs>
         <rect width="1080" height="1920" fill="url(#cycleGrid)"/>
 
@@ -148,8 +148,8 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
           {/* O navio flutua continuamente: subida Y tem MESMA curva da água. */}
           <g transform={'translate('+(shipX-480)+','+(waterY-YLOW)+')'}>
             <g filter="drop-shadow(0px 8px 6px rgba(3,9,15,.5))">
-              <path d="M353 1035 H608 L573 1103 H395Z" fill="url(#cycleHull)" stroke="#EDF5F5" strokeWidth="4"/>
-              <path d="M377 1081 H584" stroke="#356C84" strokeWidth="8"/>
+              <path d="M353 1035 H608 L573 1130 H395Z" fill="url(#cycleHull)" stroke="#EDF5F5" strokeWidth="4"/>
+              <path d="M377 1100 H584" stroke="#356C84" strokeWidth="8"/>
               <path d="M389 1023 H568" stroke="#90AFBC" strokeWidth="5"/>
               <rect x="404" y="980" width="131" height="52" fill="#F1F3EE" stroke="#728E9F" strokeWidth="3"/>
               <rect x="428" y="951" width="89" height="27" fill="#D5E4E7" stroke="#7F9AA7" strokeWidth="2"/>

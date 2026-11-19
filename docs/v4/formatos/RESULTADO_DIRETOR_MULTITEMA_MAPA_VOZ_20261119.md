@@ -37,3 +37,10 @@ O usuário aprovou a identidade visual dos três filmes narrados (Taiwan/chips, 
 ## Próximo passo
 
 Após feedback do vídeo curto, selecionar cenas reais usando intenção e evidência, incluir mapa somente quando a narrativa precisa localizar/percorrer, e testar a escolha automática nos três episódios completos. Manter uma barra global, direção visual variada e métricas semânticas. Avaliar alternativas de voz em amostra A/B antes de trocar voz de produção.
+
+
+## Validação final reproduzível (concluída)
+
+- **Run 44577678092 — SUCCESS** no workflow \`qa-mapa-rotulos-r2.yml\`, após corrigir a remuxagem \`-shortest\`. Passou nos 13 testes focados do mapa/diretor/tempo, compilou TypeScript, redesenhou sem nova voz, auditou MP4 10,467s com 3 cenas/áudio e verificou **MD5 PCM da narração idêntico ao primeiro arquivo aprovado**. \`status_tecnico=PRONTO_PARA_REVISAO\`, \`problemas=[]\`, \`publicado=false\`.
+- Artifact **14557786681**, nome \`qa-mapas-r2-labels-e-audio-identico\`, contém MP4 de 10,467s, folha e relatório. Este é o run técnico DEFINITIVO; a recuperação rápida por outro workflow foi dispensada por permissões.
+- Visualmente, o novo posicionador afasta os rótulos Salto Ángel / Roraima em duas linhas distintas sem mudar coordenadas de pins, e o canal de Suez continua com rota em amarelo e pontos destacados. O áudio preservado não foi gerado nem acelerado novamente. **Avaliação humana ainda pendente**.

@@ -115,7 +115,6 @@ def main(argv=None) -> int:
         print('Uso: python -m src.v4.formatos.triagem_editorial <plano.json>', file=sys.stderr)
         return 2
     plano = json.loads(Path(argv[0]).read_text(encoding='utf-8'))
-    bib = Path(__file__).resolve().parents[2] / 'biblioteca_comprovada.json'
     # Catálogo de formatos fica em src/v4/biblioteca_comprovada.json.
     bib = Path(__file__).resolve().parents[1] / 'biblioteca_comprovada.json'
     catalogo = json.loads(bib.read_text(encoding='utf-8')) if bib.exists() else None

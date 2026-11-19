@@ -51,7 +51,7 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
              '\n'.join(f"- {k}: {v.get('uso')} · movimento {v.get('movimento', '-')} · slots {', '.join(v['slots'])}" + (' · aceita pinos (slot geo)' if v.get('pinos') else '')
                        for k, v in comp.items())) if comp else '\n'.join(f'- {k}: x={v[0]} y={v[1]} w={v[2]} h={v[3]}' for k, v in P.SLOTS.items())
     comps = '\n'.join(f'- {c}: {ESQUEMA[c]}' for c in F['componentes'])
-    fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto", 60–90 s, só com os fatos)')
+    fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto" na duração que os fatos e acontecimentos exigirem; NÃO imponha 60–90 s nem acrescente enchimento para monetizar)')
     instrucao_saida = (\
         'Responda SÓ um JSON válido, sem texto extra. ATLAS: "camera":"roi"; NÃO escreva "palco" (o motor gera). '\
         'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "abertura_tipo", "rasters" (nomes reais), '\
@@ -118,7 +118,7 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
                          "\n".join(f"- {nome}: {', '.join(alvos)}" for nome, alvos in catalogo.items()))
     base = f"""Você preenche o formato {formato.upper()} do Coringa Explica. NÃO invente estilo, efeito nem animação: use SÓ as
 primitivas e slots abaixo; posições são fixas. {F['descricao']}
-REGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;
+DURAÇÃO EDITORIAL: decida com base nos acontecimentos verificáveis, progressão causal e duração natural da voz. Sem teto global narrativo, sem encurtar uma explicação por meta arbitrária, sem repetir imagens para atingir um minuto. TikTok Creator Rewards exige mais de 60 s (65 s é apenas preferência comercial); YouTube Shorts admite até 180 s. Se a história não sustenta esse tempo, reporte a incompatibilidade com a plataforma em vez de criar cenas vazias.\nREGRAS: cada beat prova visualmente a fala (diga a prova em "prova"); nova informação no conteúdo a cada ≤ {P.REGRAS['progressao_max_s']} s;
 nada de duas camadas no mesmo slot ao mesmo tempo; mídia SÓ da lista comprovada (nunca invente registro); fotos licenciadas de pessoas reais, inclusive figuras públicas, SÃO PERMITIDAS quando a história exige uma pessoa; se o inventário não contiver a pessoa necessária, sinalize BLOQUEIO DE MÍDIA (não a substitua por um prédio); número com unidade;
 no máximo {F['max_componentes_distintos']} primitivas distintas; tempos ancorados na fala ("@palavra", "@2:palavra+0.3", "@fim").
 PALCOS: {', '.join(F['palcos'])} (troca de palco só quando a explicação muda de nível). CLIPES APROVADOS: {', '.join(F['clipes']) or 'nenhum'}.

@@ -5,3 +5,5 @@
 # R2: corrigir recibo de proveniencia e auditar graficos explicativos como representacao.
 
 # R3: preservar origem do mapa no staging ATLAS, nunca invalidar o comprovante por copia.
+
+# R4: render de 68.6s com infografico original sem segundo titulo/cue nem zoom que corta dados.

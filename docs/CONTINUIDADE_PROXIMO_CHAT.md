@@ -421,3 +421,18 @@ Correções **somente branch experimental ATLAS**:
 - Após testes verdes, disparada **NOVA** prévia privada via `.github/atlas/chips_v2_preview.txt`: **GitHub Actions 44447705090**, estado **in_progress** na última consulta. **Não declarar MP4 pronto, Telegram enviado ou vídeo aprovado até inspecionar esse run e seu resultado/Telegram.** Se BLOQUEADO, deve mandar mensagem com motivo mesmo sem MP4; verificar logs do passo e status efetivos.
 
 Próximo passo: checar `https://github.com/Heitor2404/coringa-news/actions/runs/44447705090` para completar diagnóstico. Em caso de `quadros`/render/fiscal falho, não contornar bloqueios nem publicar. Se chegar Telegram e houver MP4, solicitar revisão visual humana da prévia antes de evoluir o motor. NTC, DOSSIÊ e main/produção intactos.
+
+
+## 25. 19/11 — Chips V2 segundo bloqueio: abertura 0,6–3,8 s sem progressão
+
+Após correção do `@fim` e do Telegram, run **44447705090** gerou com sucesso narração **Gemini/Charon de 27.922s**, identificou as mídias corretamente, mas foi bloqueado no preflight: `F-SEM-PROGRESSAO 0.6–3.8s (3.3s)`. O Telegram PRIVADO desta vez enviou corretamente uma **mensagem BLOQUEADO sem MP4**; portanto credenciais Telegram não eram o problema.
+
+Tempos da narração registrados em `tests/dados/atlas_chips_v2_tts_real_run_44447705090.json`, com 61 palavras do log (originais antes do realinhamento). Valores documentados: FAB em 0.63, TAIWAN em 2.65 e POR em 3.91. Foto inicial só revelava primeiro rótulo em 0.63 e mapa só entrava aos ~3.79, causando pausa visual longa. Correção editorial: segunda revelação "FAB 18 · TAIWAN" em `rotulo2_t:"@taiwan"`, já suportado pelo componente de fotografia e sem precisar de novos cards ou mídia genérica; limite de ritmo de 3s **inalterado**.
+
+Teste novo `test_gancho_com_tempo_real_gemini_nao_congela_tres_segundos` usa cronologia real da execução bloqueada, exige ambos rótulos nas palavras corretas e nenhum `F-SEM-PROGRESSAO`/`F-TEMPO`. CI `.github/workflows/atlas-validacao.yml` recebeu job **ritmo_real** independente de FFmpeg para avisar rápido, além de timeout explícito no instalador apt do job de regressão completa.
+
+**CI completo 44448821495: success, 131 Python + TypeScript aprovado.**
+**CI 44449070038: success, job `ritmo_real` verde e completo verde, 131 testes.**
+A nova prévia privada foi acionada pela atualização de `.github/atlas/chips_v2_preview.txt`: **GitHub Actions 44449171248**, estava `in_progress` na última consulta na etapa de dependências. **NÃO afirmar envio, produção de MP4 ou sucesso sem conferir o resultado desse run**. Caso falhe no preflight, o Telegram deve avisar o bloqueio; se renderizar, checar quadro a quadro e fiscal antes de chamar aprovado. Nunca publicar redes automaticamente.
+
+Os dois ciclos fracassados foram originados por diferenças reais de timing TTS; não relaxar `progressao_max_s` para esconder pausas e não duplicar fotos/cards. Continuidade: só alterar a branch experimental `atlas-direcao-visual-20261118`.

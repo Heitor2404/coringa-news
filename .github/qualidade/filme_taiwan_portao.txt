@@ -19,3 +19,5 @@
 # R9: contrato Taiwan agora contem SHA autenticado do MP4 ATLAS recuperado.
 
 # R10: historia define duracao sem max editorial, 65s somente meta de TikTok, Shorts ate 180s.
+
+# R11: policy duration narrative free and malformed policy regression; Taiwan story event-based.

@@ -158,6 +158,18 @@
               }
             ]
           }
+        },
+        {
+          "id": "alcance-global",
+          "componente": "editorial.statCard",
+          "slot": "selo",
+          "t0": "@importa",
+          "t1": "@observe-0.12",
+          "p": {
+            "estilo": "pilula",
+            "valor": "IMPACTO GLOBAL",
+            "fato": "f-cadeia"
+          }
         }
       ]
     },

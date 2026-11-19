@@ -107,3 +107,18 @@ def test_grafico_nao_e_foto_de_acontecimento(tmp_path,monkeypatch):
     r["cenas"][0]["identidade_literal"]="Fenômeno físico filmado em fábrica"
     with pytest.raises(ValueError,match="F-GRAFICO-COMO-REGISTRO"):
         M.preparar_receita(r,Path("saida"),Path("public"))
+
+
+
+def test_ponte_mapa_nao_copia_original_para_stage_documental(tmp_path,monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    mapa=Path("stage_atlas/taiwan/mapa.mp4")
+    mapa.parent.mkdir(parents=True,exist_ok=True)
+    mapa.write_bytes(b"MP4_ATLAS_FICTICIO_SOMENTE_TESTE")
+    sha=hashlib.sha256(mapa.read_bytes()).hexdigest()
+    result,h=M._substituir_arquivo("mapa_de_teste",{
+        "modo":"atlas_map","origem":str(mapa),"sha256_esperado":sha
+    },Path("stage_documental"))
+    assert result==mapa
+    assert h==sha
+    assert not Path("stage_documental/mapa_de_teste.mp4").exists()

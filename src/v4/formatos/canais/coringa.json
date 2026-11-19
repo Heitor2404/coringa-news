@@ -340,5 +340,13 @@
     "intervalo_min_foco_s": 0.8,
     "largura_minima": 1250,
     "transicao_saida_s": 0.65
+  },
+  "narrador": {
+    "motor": "gemini",
+    "voz": "Charon",
+    "velocidade": 1,
+    "estilo": "narrador de documentário, voz grave e firme",
+    "fallback": "bloquear",
+    "nota": "Preset ja presente em config.json. Manter ate aprovacao auditiva da previa privada; nunca trocar automaticamente para Edge."
   }
 }

@@ -157,6 +157,27 @@ def resolver_tempos(plano: dict, palavras: list[dict], duracao_audio: float | No
     aplicar_tokens(p)
     if p.get('camera') == 'roi':
         p['palco'] = palco_dos_beats(p)
+        # Cena cartográfica com texto em sobreposição: opcionalmente só revelar
+        # depois que o território chega ao quadro, sem burlar o fiscal de ROI.
+        # A mesma regra serve a qualquer tema, câmera e ritmo de narração.
+        for beat in p['beats']:
+            for layer in beat['camadas']:
+                if not layer.get('entrada_apos_voo'):
+                    continue
+                chave = next((k for k in p['palco'] if k.get('composicao') == beat.get('composicao')
+                              and abs(k['t'] - beat.get('t', -999)) < .002), None)
+                if chave is None or chave.get('tipo') != 'mapa':
+                    raise ValueError('entrada_apos_voo exige beat cartográfico com câmera resolvida')
+                # A fiscalização amostra a camada +0.35s. Ela não pode alcançar
+                # o território enquanto o movimento de chegada está ativo.
+                seguro = round(chave['t'] + max(0, chave.get('dur_camera', 0) - .34), 3)
+                if layer['t0'] < seguro:
+                    layer['t0'] = seguro
+                    for linha in (layer.get('p') or {}).get('linhas') or []:
+                        if isinstance(linha, dict) and isinstance(linha.get('t'), (int, float)) and linha['t'] < seguro:
+                            linha['t'] = seguro
+                if layer['t0'] >= layer['t1']:
+                    raise ValueError('entrada_apos_voo: câmera termina após a camada; revisar storyboard')
         posicionar_pinos(p)
     inserir_cta(p)
     p['_resolvido'] = True

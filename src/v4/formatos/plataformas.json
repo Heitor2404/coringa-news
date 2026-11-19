@@ -74,5 +74,18 @@
     "marca_atlas": false,
     "_nota_marca": "ATLAS sem marca fixa sobre os quadros; a marca cortada 40/40 e ao realocar colidiu com composicoes. Em DOSSIÊ, marca preservada. A identidade visual ATLAS vem dos tokens, nao de overlay fixo.",
     "_nota_creditos": "ATLAS V1: banda exclusiva de 2 linhas de 22px, mantendo slots de mapa, cards e legenda intocados. Medir altura REAL das atribuicoes; se texto nao couber, bloquear no fiscal e revisar atribuicao/diagrama, nunca sobrepor legenda nem cortar licenca."
+  },
+  "duracao_editorial": {
+    "modo_padrao_novos_episodios": "narrativa",
+    "duracao_maxima_editorial_s": null,
+    "piso_preferencial_tiktok_creator_rewards_s": 65,
+    "requisito_tiktok_creator_rewards_acima_de_s": 60,
+    "youtube_shorts_limite_s": 180,
+    "nota": "A historia define o master; nao esticar para bater 65 s e nao cortar para caber em Shorts. Acima de 180 s exige outra modalidade/versao no YouTube. Duracao isolada nunca garante monetizacao, que depende de conta, originalidade e regras de cada programa.",
+    "fontes": {
+      "tiktok": "https://support.tiktok.com/en/business-and-creator/creator-rewards-program/how-is-the-creator-rewards-program-different-from-the-tiktok-creator-fund",
+      "youtube": "https://support.google.com/youtube/answer/15424877",
+      "instagram": "https://about.fb.com/news/2023/11/giving-creators-more-ways-to-earn-money-on-facebook-and-instagram/"
+    }
   }
 }

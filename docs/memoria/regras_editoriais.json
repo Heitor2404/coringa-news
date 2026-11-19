@@ -1,4 +1,62 @@
 {
  "versao": 1,
- "regras": []
+ "regras": [
+  {
+   "id": "REG-001",
+   "texto": "Antes de narrar ou renderizar ATLAS, cada beat deve declarar referente concreto, pergunta visual, aprendizado e prova existente; título, card ou mapa decorativo não substituem acontecimento físico.",
+   "tags": [
+    "*",
+    "atlas",
+    "direcao",
+    "midia"
+   ],
+   "estado": "proposto",
+   "origem": "FB-0009",
+   "historico": [
+    {
+     "estado": "proposto",
+     "data": "2026-11-19",
+     "evidencia": "FB-0009: reprovação humana e auditoria visual; ainda sem teste de generalização e aprovação explícita de regra"
+    }
+   ]
+  },
+  {
+   "id": "REG-002",
+   "texto": "Para narrativas sobre cadeias de dependência, o mapa só é justificável quando revela relação geográfica/fluxo observável; etiquetar países sem objeto causal é insuficiente.",
+   "tags": [
+    "atlas",
+    "mapa",
+    "processo",
+    "cadeia"
+   ],
+   "estado": "proposto",
+   "origem": "FB-0012",
+   "historico": [
+    {
+     "estado": "proposto",
+     "data": "2026-11-19",
+     "evidencia": "FB-0012: reprovação humana e auditoria visual; ainda sem teste de generalização e aprovação explícita de regra"
+    }
+   ]
+  },
+  {
+   "id": "REG-003",
+   "texto": "Hash, licença e alinhamento de áudio são requisitos mínimos; imagem escura, miniatura, letterbox inadequado e falta de relevância precisam de revisão visual independente antes de MP4.",
+   "tags": [
+    "*",
+    "atlas",
+    "midia",
+    "enquadramento"
+   ],
+   "estado": "proposto",
+   "origem": "FB-0011",
+   "historico": [
+    {
+     "estado": "proposto",
+     "data": "2026-11-19",
+     "evidencia": "FB-0011: reprovação humana e auditoria visual; ainda sem teste de generalização e aprovação explícita de regra"
+    }
+   ]
+  }
+ ]
 }

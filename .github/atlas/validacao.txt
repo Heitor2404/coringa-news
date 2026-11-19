@@ -111,3 +111,4 @@ ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e dia
 # 2026-11-19 validacao nova correção opt-in entrada_apos_voo: titulo sobre mapa aguarda camera com tempo de fala 44450584008
 # 2026-11-19 P0 editorial: CI pré-voz contrato de prova, Gemini vision critic, telemetria semântica e bloqueio antes MP4.
 # 2026-11-19 P0 final regressao memoria V3 no diretor ATLAS + testes editoriais e multimodais, sem IA/MP4.
+# 2026-11-19 ultima regressao editor P0: diagnostico no Telegram antes de TTS + memoria do diretor, 100% sem render.

@@ -65,3 +65,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 P1 reteste: FFmpeg preinstalado no runner apos falha instalador externo
 
 # 2026-11-19 P1 regressao final de importacao local Pexels por SHA e FFmpeg real
+
+# 2026-11-19 P1 ponte biblioteca global V3 + provas de licenca/sha/bytes sem rede

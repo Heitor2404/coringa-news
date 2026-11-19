@@ -85,7 +85,8 @@ def catalogo() -> dict:
             # conferida pelo curador, senão a atribuição pode ficar inexata.
             lic_exata = str(prova["licenca_exata"]).strip()
             lic_categoria = str(reg["licenca"]).strip()
-            if not lic_exata.lower().startswith(lic_categoria.lower()):
+            lc, le = lic_categoria.lower(), lic_exata.lower()
+            if le != lc and not le.startswith(lc + " "):
                 raise RuntimeError(f"ATLAS: {mid} licença exata não corresponde à categoria do arquivo")
             # Validar bytes locais; NÃO chamar Biblioteca.recuperar(), que poderia baixar
             # uma URL que é apenas a página de um vídeo manual do Pexels.

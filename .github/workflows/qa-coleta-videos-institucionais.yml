@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Testar colector global sem rede e sem Gemini
+      - name: Testar coletor global sem rede e sem Gemini
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml yt-dlp
           python -m pytest -q tests/test_coletar_videos_publicos.py
@@ -30,10 +30,16 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -qq -y --no-install-recommends ffmpeg
           fi
-      - name: Coletar candidatos da origem oficial selecionada (falha fechada)
+      - name: Coletar candidatos da origem oficial selecionada
         timeout-minutes: 11
         run: |
-          if grep -q '^fonte=nist_kaltura
+          if grep -q '^fonte=nist_kaltura$' .github/qualidade/video_institucional_candidatos.txt; then
+            RECEITA=docs/v4/formatos/CANDIDATOS_VIDEO_NIST_NANOFAB_20261119.json
+          else
+            RECEITA=docs/v4/formatos/CANDIDATOS_VIDEO_INSTITUCIONAL_20261119.json
+          fi
+          echo "RECEITA_CANDIDATOS=$RECEITA"
+          python -m src.v4.formatos.coletar_videos_publicos "$RECEITA" saida_candidatos_publicos
       - name: Validar que NAO houve promocao nem publicacao
         run: |
           python - <<'PY'
@@ -57,40 +63,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qa-candidatos-video-institucional-nao-curados
-          path: saida_candidatos_publicos/
-          retention-days: 3
-          if-no-files-found: warn
- .github/qualidade/video_institucional_candidatos.txt; then
-            RECEITA=docs/v4/formatos/CANDIDATOS_VIDEO_NIST_NANOFAB_20261119.json
-          else
-            RECEITA=docs/v4/formatos/CANDIDATOS_VIDEO_INSTITUCIONAL_20261119.json
-          fi
-          echo "RECEITA_CANDIDATOS=$RECEITA"
-          python -m src.v4.formatos.coletar_videos_publicos \
-            "$RECEITA" saida_candidatos_publicos
-      - name: Validar que NAO houve promocao nem publicacao
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path("saida_candidatos_publicos/relatorio.json")
-          assert p.is_file(),"sem relatório de curadoria"
-          r=json.loads(p.read_text(encoding="utf8"))
-          assert r["aprovados_editorialmente"]==0
-          assert r["liberados_publicacao"]==0
-          assert r["gastos_ia_usd"]==0
-          assert r["inspecao_humana"]=="PENDENTE"
-          for x in r["fontes"]:
-              assert not x.get("publicado") and not x.get("acao_fisica_comprovada")
-              print("CANDIDATO",x["id"],x["status"],
-                    x.get("sha256","SEM_BYTES"),x.get("motivo","")[:110])
-          print("COLETA_TERMINADA_BAIXADOS",r["baixados"],"/",len(r["fontes"]))
-          PY
-      - name: Guardar evidencia privada temporaria, nunca publicar
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qa-candidatos-dvids-nao-curados
           path: saida_candidatos_publicos/
           retention-days: 3
           if-no-files-found: warn

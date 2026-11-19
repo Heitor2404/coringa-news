@@ -105,7 +105,5 @@ def test_grafico_nao_e_foto_de_acontecimento(tmp_path,monkeypatch):
     # registro literal do fenômeno representado.
     r["cenas"][0]["evidence"]="literal"
     r["cenas"][0]["identidade_literal"]="Fenômeno físico filmado em fábrica"
-    v=M.preparar_receita(r,Path("saida"),Path("public"))
-    assert v["pronto"]  # validador estrutural não inspeciona semântica
-    rel=json.loads(Path("saida/proveniencia.json").read_text())
-    assert rel["sem_aprovacao_visual"] is True
+    with pytest.raises(ValueError,match="F-GRAFICO-COMO-REGISTRO"):
+        M.preparar_receita(r,Path("saida"),Path("public"))

@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: qa-piloto-taiwan-preflight
   cancel-in-progress: true
@@ -22,6 +23,34 @@ jobs:
         run: |
           python -m pip install -q pytest pillow requests numpy pyyaml cryptography
           python -m pytest -q tests/test_gate_filme_completo.py tests/test_ponte_mapa_atlas_filme.py tests/test_qa_video_fontes.py tests/test_filme_editorial.py tests/test_contrato_visual_multitema.py tests/test_rehidratar_fontes.py
+      - name: Recuperar mapa ATLAS ORIGINAL do workflow anterior, sem renderizar
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: qa-taiwan-mapa-atlas-original-integrado-filme
+          run-id: 44588617776
+          github-token: ${{ github.token }}
+          path: stage_atlas/taiwan
+      - name: Autenticar o mapa recuperado ou deixar BLOQUEADO se artefato expirou
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.v4.formatos.ponte_mapa_atlas import validar_comprovante
+          p=Path("stage_atlas/taiwan/mapa.mp4")
+          side=Path("stage_atlas/taiwan/comprovante_atlas.json")
+          if not p.is_file() or not side.is_file():
+              print("MAPA_ATLAS_AUSENTE: artefato nao recuperado, gate continua bloqueado")
+          else:
+              import json
+              q=json.loads(side.read_text(encoding="utf8"))
+              erros=validar_comprovante({
+                  "local_source":str(p),
+                  "atlas_proof":str(side),
+                  "expected_sha256":q["video_sha256"],
+              })
+              assert not erros,erros
+              print("MAPA_ATLAS_REAL_RECUPERADO",q["video_sha256"],q["duracao_s"])
+          PY
       - name: Inspecionar acervo COMPROVADO, sem download/IA/voz/render
         run: |
           mkdir -p saida_preflight_taiwan

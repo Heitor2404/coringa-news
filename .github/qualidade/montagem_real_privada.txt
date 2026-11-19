@@ -3,3 +3,5 @@
 # Essa receita exercita o MESMO FilmeEditorial; Taiwan é caso de prova, não nova engine.
 
 # R2: corrigir recibo de proveniencia e auditar graficos explicativos como representacao.
+
+# R3: preservar origem do mapa no staging ATLAS, nunca invalidar o comprovante por copia.

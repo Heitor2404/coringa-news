@@ -3,3 +3,5 @@
 # As fontes são independentes do local do documentário; processo exige inspeção.
 
 # R2: instalacao ffmpeg ausente no runner corrigida.
+
+# R3: forcar formato menor de e-beam mantendo limite 95MB, primeira fonte ja validada bytes.

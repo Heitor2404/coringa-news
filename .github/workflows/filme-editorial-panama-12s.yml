@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: filme-editorial-panama-12s
   cancel-in-progress: true
@@ -22,6 +23,15 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      # Arquivo 1080p já curado, fonte/offset e SHA registrados. NÃO baixar nova
+      # mídia a cada render, nem aceitar URL aleatória no diretor.
+      - name: Recuperar master 1080p da eclusa com SHA conhecido
+        uses: actions/download-artifact@v4
+        with:
+          name: filme-panama-eclusa-real-1080p-master
+          run-id: 44519739030
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: stage_hero
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -71,6 +81,48 @@ jobs:
             ../saida_filme_panama/prova_panama_12s.mp4 \
             --props=../saida_filme_panama/props.json \
             --codec=h264 --crf=22 --concurrency=2 --scale=0.5 --public-dir=remotion/public --log=error
+      - name: Narração brasileira PRIVADA de ensaio (Edge TTS, sem Claude)
+        continue-on-error: true
+        timeout-minutes: 6
+        run: |
+          python -m pip install -q edge-tts
+          python - <<'PY'
+          import asyncio, json
+          from pathlib import Path
+          import edge_tts
+          roteiro=json.loads(Path('docs/v4/formatos/filme_panama_12s_prova.json').read_text())
+          destino=Path('saida_filme_panama/voz.mp3')
+          asyncio.run(edge_tts.Communicate(roteiro['narracao'],'pt-BR-AntonioNeural',rate='+12%').save(str(destino)))
+          assert destino.stat().st_size>3000
+          print('NARRACAO_PRIVADA_GERADA',destino.stat().st_size)
+          PY
+      - name: Finalizar com áudio se houver; falha explícita nunca vira aprovação
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          pasta=Path('saida_filme_panama')
+          som=pasta/'voz.mp3'
+          meta={'voz_gerada':som.exists() and som.stat().st_size>3000,
+                'status':'PENDENTE_APROVACAO_HUMANA'}
+          if meta['voz_gerada']:
+              d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries',
+                  'format=duration','-of','default=noprint_wrappers=1:nokey=1',str(som)],text=True).strip())
+              meta['duracao_audio_original_s']=round(d,2)
+              fator=max(.80,min(1.25,d/11.3))
+              meta['fator_tempo_audio']=round(fator,3)
+              inp=pasta/'prova_panama_12s.mp4';out=pasta/'prova_com_voz_12s.mp4'
+              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(inp),'-i',str(som),
+                  '-filter_complex',f'[1:a]aresample=48000,atempo={fator:.3f},loudnorm=I=-14:TP=-1.5:LRA=9,apad[a]',
+                  '-map','0:v','-map','[a]','-c:v','copy','-c:a','aac','-b:a','160k','-t','12',
+                  '-movflags','+faststart',str(out)],check=True)
+              meta['arquivo']=str(out)
+          else:
+              meta['alerta']='TTS não respondeu; prova visual SEM ÁUDIO, não é episódio final'
+              meta['arquivo']=str(pasta/'prova_panama_12s.mp4')
+          (pasta/'som_status.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding='utf-8')
+          print('NARRACAO_STATUS',meta)
+          PY
       - name: Inspecionar 6 momentos e métricas básicas
         if: success()
         run: |
@@ -78,7 +130,10 @@ jobs:
             -vf "fps=1/2,scale=360:640,tile=3x2" -frames:v 1 \
             saida_filme_panama/contato.jpg
           ffprobe -v error -show_entries format=duration,size -of json \
-            saida_filme_panama/prova_panama_12s.mp4 > saida_filme_panama/metadata.json
+            saida_filme_panama/prova_panama_12s.mp4
+            saida_filme_panama/prova_com_voz_12s.mp4
+            saida_filme_panama/voz.mp3
+            saida_filme_panama/som_status.json > saida_filme_panama/metadata.json
           python - <<'PY'
           import json
           from pathlib import Path

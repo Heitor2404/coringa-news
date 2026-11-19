@@ -44,5 +44,5 @@ def test_fotos_chips_vem_do_catalogo_com_hash_real():
         assert len(reg["sha256_origem"]) == 64
         assert reg["prova"]["midia_corresponde"] is True
         assert reg["prova"]["confirmacao_humana"] is None
-    assert "interior" in by_id[refs[0]]["mostra"]
+    assert "não mostra produção interna" in by_id[refs[0]]["mostra"]
     assert "sem identificação" in by_id[refs[1]]["mostra"]

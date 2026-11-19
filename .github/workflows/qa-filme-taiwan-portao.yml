@@ -1,8 +1,19 @@
-name: "QA — piloto completo Taiwan: prova editorial antes de Gemini e render"
+name: "QA — motor documental multitema + piloto Taiwan (sem Gemini)"
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: [".github/qualidade/filme_taiwan_portao.txt"]
+    paths:
+      - ".github/qualidade/filme_taiwan_portao.txt"
+      - ".github/workflows/qa-filme-taiwan-portao.yml"
+      - "src/v4/formatos/**/*.py"
+      - "src/v4/formatos/plataformas.json"
+      - "src/v3/biblioteca.py"
+      - "tests/test_gate_filme_completo.py"
+      - "tests/test_gate_multitema_cobertura.py"
+      - "tests/test_filme_editorial.py"
+      - "tests/test_qa_video_fontes.py"
+      - "tests/test_duracao_editorial.py"
+      - "tests/test_contrato_visual_multitema.py"
   workflow_dispatch:
 permissions:
   contents: read

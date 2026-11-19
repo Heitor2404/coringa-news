@@ -66,6 +66,26 @@ def validar_progressao_video(cena: dict, duracao: float, fonte: dict | None = No
     return problemas
 
 
+
+def validar_janela_origem(cena: dict, duracao_fonte: float) -> str | None:
+    """Verifica que um vídeo não terminará antes do fim da cena.
+
+    A duração vem de ffprobe sobre o original na preparação; valores de
+    metadados do roteiro são antecipação, jamais prova de bytes.
+    """
+    ini=cena.get('source_in_seconds',0)
+    fim=cena.get('end')
+    comeco=cena.get('start')
+    if any(not isinstance(x,(int,float)) or isinstance(x,bool) or
+           not math.isfinite(x) for x in (ini,comeco,fim,duracao_fonte)):
+        return 'instantes de vídeo ou duração do original inválidos'
+    span=fim-comeco
+    if ini<0 or span<=0 or duracao_fonte<=0 or ini+span>duracao_fonte+.04:
+        return (f'origem de {duracao_fonte:.2f}s não cobre recorte '
+                f'{ini:.2f}s–{ini+span:.2f}s; risco de imagem preta no final')
+    return None
+
+
 def retemporizar(plano: dict, duracoes: list[float], pausa: float = .24) -> dict:
     shots=plano.get('shots') or []
     if not shots or len(shots)!=len(duracoes):

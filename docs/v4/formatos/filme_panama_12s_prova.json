@@ -26,7 +26,7 @@
       "end": 3,
       "type": "video",
       "asset": "eclusa-hero-hd",
-      "source_in_seconds": 0.8,
+      "source_in_seconds": 4.8,
       "lead": "01 · PORTÕES DA ECLUSA",
       "headline": "COMO UM NAVIO\nCONSEGUE SUBIR?",
       "highlight": "SUBIR?",
@@ -78,7 +78,7 @@
       "end": 9.4,
       "type": "video",
       "asset": "eclusa-hero-hd",
-      "source_in_seconds": 6.5,
+      "source_in_seconds": 8.2,
       "lead": "03 · A TRAVESSIA",
       "headline": "NO NOVO NÍVEL,\nELE PODE SEGUIR",
       "highlight": "SEGUIR",
@@ -124,6 +124,6 @@
       ]
     }
   ],
-  "observacao": "12s COM NARRAÇÃO DE ENSAIO (Edge TTS) quando possível; APENAS PRIVADO. Filmagem real de 2018 da U.S. Navy em dois trechos não contíguos, DVIDS domínio público e hash SHA256 fixo, esquema original e foto histórica 1913. Sem publicação.",
+  "observacao": "12s COM NARRAÇÃO DE ENSAIO (Edge TTS) quando possível; APENAS PRIVADO. Filmagem real de 2018 da U.S. Navy em dois trechos não contíguos, DVIDS domínio público e hash SHA256 fixo, esquema original e foto histórica 1913. Sem publicação. Corte do master exclui efeito original de flashes/solarização em t=3.0–4.5s; cenas usam t=4.8–7.8s e t=8.2–10.7s.",
   "narracao": "Como esse navio consegue subir? A água entra na eclusa e ele sobe junto. Quando alcança o outro nível, pode seguir. Em 1913, estas eclusas ainda estavam em construção."
 }

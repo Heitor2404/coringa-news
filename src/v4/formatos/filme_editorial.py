@@ -145,9 +145,9 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         else:
             import io
             with Image.open(io.BytesIO(data)) as img:
-                if img.format not in ('JPEG','PNG') or min(img.size)<700:
+                if img.format not in ('JPEG','PNG','WEBP') or min(img.size)<600:
                     raise ValueError(f'{mid}: imagem inválida/pequena')
-                ext='.png' if img.format=='PNG' else '.jpg'
+                ext={ 'PNG': '.png', 'WEBP': '.webp', 'JPEG': '.jpg' }[img.format]
                 w,h=img.size
         out=assets_dir/f'{sha}{ext}'
         if not out.exists():

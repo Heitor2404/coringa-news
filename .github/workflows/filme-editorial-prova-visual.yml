@@ -55,7 +55,7 @@ jobs:
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
             ../saida_filme_editorial/prova_visual.mp4 \
             --props=../saida_filme_editorial/props.json \
-            --codec=h264 --crf=22 --concurrency=2 --log=error
+            --codec=h264 --crf=22 --concurrency=2 --public-dir=remotion/public --log=error
       - name: Extrair quadros para auditoria humana
         if: success()
         timeout-minutes: 4

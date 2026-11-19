@@ -35,6 +35,14 @@ jobs:
           cache: npm
           cache-dependency-path: motor4/package-lock.json
 
+      - name: Instalar FFmpeg para inspecionar arquivos originais reais
+        timeout-minutes: 6
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -n 1
       - name: Conferir integracao de staging sem liberar direitos
         run: |
           python -m pip install -q pillow requests pytest pyyaml numpy cryptography

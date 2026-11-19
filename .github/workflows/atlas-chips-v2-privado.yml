@@ -1,7 +1,7 @@
 name: ATLAS V2 — prova audiovisual Chips (Telegram privado, sem publicação)
 
 # Execução privada e supervisionada: 2 fotos Commons comprovadas + mapa semântico.
-# Zero Claude. No máximo uma chamada TTS Gemini, sem Edge fallback. Nenhum upload público do MP4.
+# Zero Claude. TTS Gemini pode tentar modelos e repetir em caso de falha de fala; SEM fallback Edge. Nenhum upload público do MP4.
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -72,7 +72,7 @@ jobs:
           assert not p["clipes"] and len(p["narracao"]["texto"].split())<90
           print("PILOTO_PRIVADO_ATLAS_V2 validado; ninguém autorizou publicação em redes")
           PY
-      - name: Narração Gemini/Charon protegida — 1 tentativa, sem Edge
+      - name: Narração Gemini/Charon protegida — sem Edge, retries registrados
         timeout-minutes: 12
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -78,6 +78,46 @@ def _font(t:int,bold:bool=False):
     except OSError:return ImageFont.load_default()
 
 
+def motion_graphic_dados(config:dict)->dict:
+    """Transcreve dados PREEXISTENTES em uma revelação progressiva.
+    
+    Não inventa magnitude, proporção, etapas, causa nem source claim.
+    Chamadas de renderização (Pillow/Remotion) recebem o MESMO conteúdo
+    editorial e usam a identidade já existente do FilmeEditorial.
+    """
+    if not isinstance(config,dict):
+        raise ValueError('dados de motion graphic inválidos')
+    eyebrow=str(config.get('etiqueta') or '').strip()
+    if not 4<=len(eyebrow)<=55:
+        raise ValueError('motion: etiqueta sem informação ou muito extensa')
+    if config.get('design')=='numero':
+        valor=str(config.get('valor') or '').strip()
+        l1=str(config.get('linha1') or '').strip()
+        l2=str(config.get('linha2') or '').strip()
+        if not 1<=len(valor)<=9 or not 3<=len(l1)<=40 or not 3<=len(l2)<=42:
+            raise ValueError('motion: número e sua unidade/contexto devem ser legíveis')
+        dados={'kind':'stat_reveal','eyebrow':eyebrow,
+               'value':valor,'line1':l1,'line2':l2}
+        frac=config.get('fracao')
+        if frac is not None:
+            if (not isinstance(frac,(int,float)) or isinstance(frac,bool) or
+                    not math.isfinite(frac) or not 0<=frac<=1):
+                raise ValueError('motion: fração documentada inválida')
+            dados['fraction']=frac
+        return dados
+    if config.get('design')=='relacao':
+        etapas=config.get('etapas')
+        if (not isinstance(etapas,list) or len(etapas)!=3 or
+                any(not isinstance(x,str) or not 3<=len(x.strip())<=26 for x in etapas)
+                or len(set(x.strip().casefold() for x in etapas))!=3):
+            raise ValueError('motion: três etapas distintas precisam ser documentadas')
+        return {'kind':'causal_flow','eyebrow':eyebrow,
+                'stages':[x.strip() for x in etapas]}
+    raise ValueError('motion: representação sem renderer de dados')
+
+
+
+
 def grafico_original(config:dict,dest:Path)->None:
     """Gráfico de fato primário, original do canal, NÃO foto de acontecimento."""
     if config.get('design') not in ('numero','relacao'):
@@ -251,6 +291,10 @@ def preparar_receita(receita:dict,saida:Path,public_root:Path)->dict:
             'direcao_evento':{'intencao':x['intencao'],
                              'fato_id':x['id'],'aprendizado':x['aprendizado']},
         }
+        if assets[asset]['modo']=='grafico' and assets[asset].get('animar') is True:
+            # A animação está no MESMO FilmeEditorial, não num segundo
+            # renderizador. Continua sendo representação, nunca registro literal.
+            shot['motion_graphic']=motion_graphic_dados(assets[asset]['dados'])
         if typ=='video':
             shot['source_in_seconds']=float(x.get('fonte_s') or 0)
         if typ=='atlas_map':

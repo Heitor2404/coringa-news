@@ -109,3 +109,4 @@ ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e dia
 # 2026-11-19 regressao real run 44450584008: @max(2.5,@por-0.12), sem encurtar prova fotografica; validar 61 tempos de Gemini
 # 2026-11-19 CI Ubuntu22.04 + fast smoke voz 44450584008 e 44447705090: piso foto 2.5s, sem relaxar fiscal
 # 2026-11-19 validacao nova correção opt-in entrada_apos_voo: titulo sobre mapa aguarda camera com tempo de fala 44450584008
+# 2026-11-19 P0 editorial: CI pré-voz contrato de prova, Gemini vision critic, telemetria semântica e bloqueio antes MP4.

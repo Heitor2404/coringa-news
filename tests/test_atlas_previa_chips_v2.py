@@ -28,6 +28,8 @@ def test_tempo_sintetico_e_contracto_chips_v2():
     assert resolvido["beats"][0]["camadas"][0]["p"]["rotulo_t"] < 3
     assert all(isinstance(L["t0"], (int, float)) for b in resolvido["beats"] for L in b["camadas"])
     erros = [v for v in P.validar(resolvido) if v["gravidade"] == "erro"]
+    if erros:
+        print("ATLAS_V2_VALIDATION_ERRORS=" + json.dumps(erros, ensure_ascii=False))
     assert not erros, erros[:30]
 
 

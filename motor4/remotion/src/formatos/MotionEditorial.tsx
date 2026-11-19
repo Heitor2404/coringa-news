@@ -15,7 +15,8 @@ const appear=(p:number,at:number,len:number)=>{const n=clamp((p-at)/len);return 
 
 export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({data,p})=>{
   const bodyStart=460;
-  const eyebrow=appear(p,.08,.17);
+  // Informação já aparece no primeiro frame; não abrir com tela vazia.
+  const eyebrow=appear(p,-.05,.10);
   return <AbsoluteFill style={{background:INK,overflow:'hidden',fontFamily:'Inter,Arial,sans-serif'}}>
     {/* Grade extremamente discreta, sem segunda moldura ou linha amarela. */}
     <AbsoluteFill style={{opacity:.12,backgroundImage:
@@ -27,9 +28,9 @@ export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({dat
       {data.eyebrow}
     </div>
     {data.kind==='stat_reveal'?(()=>{
-      const reveal=appear(p,.23,.23);
-      const detail=appear(p,.56,.18);
-      const proportion=appear(p,.71,.18);
+      const reveal=appear(p,.08,.20);
+      const detail=appear(p,.42,.18);
+      const proportion=appear(p,.68,.19);
       return <>
         <div style={{position:'absolute',left:80,right:80,top:610,
           color:GOLD,fontSize:data.value.length>5?160:225,fontWeight:900,
@@ -46,7 +47,9 @@ export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({dat
           position:'absolute',left:90,right:90,top:1224,opacity:proportion
         }}>
           <div style={{fontSize:22,color:MUTED,letterSpacing:1.5,marginBottom:21}}>
-            PARCELA DO TOTAL DOCUMENTADA
+            {data.value.startsWith('>') ? 'LIMITE INFERIOR DOCUMENTADO' :
+             data.value.startsWith('<') ? 'LIMITE SUPERIOR DOCUMENTADO' :
+             'PARCELA DO TOTAL DOCUMENTADA'}
           </div>
           <div style={{height:16,background:'#24394B',borderRadius:8,overflow:'hidden'}}>
             <div style={{height:'100%',width:`${100*data.fraction*proportion}%`,background:GOLD,borderRadius:8}}/>
@@ -58,8 +61,8 @@ export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({dat
       <div style={{position:'absolute',left:130,top:645,width:4,height:550,
         background:'#1C4054'}}/>
       {data.stages.map((name,i)=>{
-        const at=.18+i*.25;
-        const show=appear(p,at,.18);
+        const at=-.03+i*.30;
+        const show=appear(p,at,.13);
         const y=620+i*283;
         const link=i<2?appear(p,at+.15,.19):0;
         return <React.Fragment key={i}>

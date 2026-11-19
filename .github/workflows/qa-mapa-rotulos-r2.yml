@@ -73,7 +73,7 @@ jobs:
           )
           ffmpeg -hide_banner -loglevel error -y \
             -i saida_mapas_r2/visual.mp4 -i anterior/mapas_narrados.mp4 \
-            -map 0:v:0 -map 1:a:0 -c:v copy -c:a copy -shortest \
+            -map 0:v:0 -map 1:a:0 -c:v copy -c:a copy \
             -movflags +faststart saida_mapas_r2/mapas_narrados_r2.mp4
       - name: Auditar visual real, duração e voz idêntica
         run: |

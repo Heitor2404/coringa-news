@@ -13,3 +13,5 @@
 # R6: aceitar demonstracao equivalente corrigida e validar regressao multitema.
 
 # R7: tests of V3 rehydration, SHA and no automatic license approval.
+
+# R8: recuperar e atestar mapa ATLAS Taiwan autentico do artifact para o mesmo runner.

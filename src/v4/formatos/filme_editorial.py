@@ -159,8 +159,16 @@ def avaliar(plano: dict) -> dict:
         falha('F-POUCO-ACERVO', '-', f'{len(momentos)} acontecimentos visuais diferentes para {len(cenas)} cenas; risco de repetição')
     if any(c.get('type') == 'comparison' for c in cenas) and len(visual) < 4:
         falha('F-COMPARACAO-REPETITIVA', '-', 'comparação deve trazer informação nova')
+    from src.v4.formatos import contrato_visual_comum
+    comum = contrato_visual_comum.auditar(plano)
+    # Gate compartilhado cobre declarações; o fiscal específico continua
+    # responsável por curadoria, licença e tempos próprios do FILME.
+    for erro in comum['falhas']:
+        if erro['codigo'].startswith('U-') and erro['codigo'] != 'U-INSPECAO-VISUAL':
+            falha(erro['codigo'], erro['id'], erro['motivo'])
     return {'pronto': not falhas, 'bloqueios': falhas, 'cenas': len(cenas),
             'medias_unicas': len(visual), 'momentos_visuais':len(momentos),
+            'contrato_comum': comum,
             'visual_approval': 'NAO_FOI_AVALIADO'}
 
 

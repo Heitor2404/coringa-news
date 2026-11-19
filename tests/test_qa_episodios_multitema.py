@@ -17,7 +17,7 @@ def plano(ep,tempo=3.7):
     fontes=[]
     for c in ep["cenas"]:
         fontes.append({"id":c["id"],"local_source":(
-            c.get("local_video") or
+            c.get("local_video") or c.get("local_photo") or
             f"tests/midia/qa_multitema/{ep['id']}/{c['id']}.jpg"
         ),"media_type":"video" if c.get("local_video") else "photo",
          "expected_sha256":"a"*64,"license":c["licenca"],
@@ -32,7 +32,7 @@ def test_tres_temas_reais_nao_sao_tres_cenas_do_panama():
     assert len({ep["dominio"] for ep in m["episodios"]})==3
     assert len({ep["id"] for ep in m["episodios"]})==3
     assert all(len(ep["cenas"])==4 for ep in m["episodios"])
-    assert {ep["dominio"] for ep in m["episodios"]}=={"industria","ciencia","historia"}
+    assert {ep["dominio"] for ep in m["episodios"]}=={"industria","geografia","historia"}
 
 
 def test_mesmo_contrato_passou_para_os_tres_roteiros_sem_excecoes():
@@ -61,18 +61,16 @@ def test_nenhuma_midia_representativa_alega_ser_do_proprio_acontecimento():
             assert "Guerra do Iraque" not in c["voz"]
 
 
-def test_veiculo_nasa_e_a_unica_fonte_em_video_reusada():
+def test_fontes_locais_e_acervo_reutilizado_antes_de_download():
     m=get()
     for ep in m["episodios"]:
         for c in ep["cenas"]:
-            if c.get("local_video"):
-                assert c["local_video"]=="tests/midia/video_vertical_nasa.mp4"
-            else:
-                url=E.url_commons(c["commons"])
-                assert url.startswith("https://upload.wikimedia.org/wikipedia/commons/")
-                assert len(url)<500
-                assert c["fonte"].startswith("https://commons.wikimedia.org/wiki/File:")
-                assert c["licenca"] in E.LICENCAS
+            assert c.get("local_photo") or c.get("local_video")
+            assert c["licenca"] in E.LICENCAS
+            assert c["fonte"].startswith("https://")
+            assert c.get("prova") and c.get("voz")
+            assert c["local_photo"].startswith((
+                "tests/midia/", "tests/piloto_ever_given/img/", "motor4/formatos/dados/raster/"))
 
 
 def test_narracoes_nao_podem_ser_vendidas_como_aprovacao_final():

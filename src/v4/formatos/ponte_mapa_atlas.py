@@ -252,13 +252,33 @@ def main(argv=None):
     a.add_argument("--public",type=Path,default=ROOT/"motor4/remotion/public")
     b=sub.add_parser("confirm")
     b.add_argument("saida",type=Path);b.add_argument("mp4",type=Path)
+    c=sub.add_parser("attach")
+    c.add_argument("filme",type=Path)
+    c.add_argument("cena")
+    c.add_argument("mp4",type=Path)
+    c.add_argument("comprovante",type=Path)
+    c.add_argument("saida",type=Path)
+    c.add_argument("--intent",choices=("localizar","trajeto"),default="localizar")
     args=ap.parse_args(argv)
     if args.cmd=="prepare":
         p=json.loads(args.atlas.read_text(encoding="utf-8"))
         r=preparar(p,args.start,args.duration,args.saida,args.public)
-    else:
+    elif args.cmd=="confirm":
         p=json.loads((args.saida/"preparo_atlas.json").read_text(encoding="utf-8"))
         r=confirmar(p,args.mp4,args.saida)
+    else:
+        from src.v4.formatos.filme_editorial import avaliar
+        p=json.loads(args.filme.read_text(encoding="utf-8"))
+        patched=inserir_no_filme(p,args.cena,args.mp4,args.comprovante,args.intent)
+        q=avaliar(patched)
+        if not q["pronto"]:
+            raise ValueError("FilmeEditorial recusou a ponte: "+
+                             json.dumps(q["bloqueios"][:7],ensure_ascii=False))
+        jwrite(args.saida,patched)
+        print(json.dumps({"status":"PONTE_INSERIDA_EM_STORYBOARD_PRIVADO",
+                          "cena":args.cena,"arquivo":str(args.saida),
+                          "aprovacao_humana":"PENDENTE","publicado":False},ensure_ascii=False))
+        return
     print(json.dumps({k:r[k] for k in ("status","renderer","duracao_s","aprovacao_humana")},ensure_ascii=False))
 
 

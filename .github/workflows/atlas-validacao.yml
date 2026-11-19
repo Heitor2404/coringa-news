@@ -15,6 +15,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Smoke do BLOQUEIO real: roda sem FFmpeg, pacotes externos ou TTS,
+  # antes dos testes completos que dependem de apt/PyPI. Não substitui o full CI.
+  ritmo_real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Reproduzir o bloqueio de 0.6–3.8s com a voz Gemini registrada
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P
+          base=Path("src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json")
+          dados=Path("tests/dados/atlas_chips_v2_tts_real_run_44447705090.json")
+          pl=json.loads(base.read_text(encoding="utf-8"))
+          voz=json.loads(dados.read_text(encoding="utf-8"))
+          p=P.resolver_tempos(pl,voz["palavras"],duracao_audio=voz["duracao_audio"])
+          foto=next(l for b in p["beats"] for l in b["camadas"] if l["id"]=="fab18-real-dominante")
+          assert foto["p"]["rotulo_t"]==0.63 and foto["p"]["rotulo2_t"]==2.65
+          assert foto["p"]["rotulo2"]=="FAB 18 · TAIWAN"
+          assert P.REGRAS["progressao_max_s"]==3
+          erros=[v for v in P.validar(p) if v["gravidade"]=="erro" and v["regra"] in ("F-SEM-PROGRESSAO","F-TEMPO")]
+          assert not erros, erros
+          print("ATLAS_V2_TTS_REAL_OK 61 palavras; sem F-SEM-PROGRESSAO/F-TEMPO")
+          PY
   validar:
     runs-on: ubuntu-latest
     timeout-minutes: 35

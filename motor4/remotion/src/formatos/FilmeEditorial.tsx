@@ -18,6 +18,9 @@ export type FilmShot = {
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
   video_zoom?: number; // enquadramento dirigido para o portão, não zoom decorativo
+  // Calculado pelo preflight Python a partir de ROIs observadas no original.
+  // Posições normais CSS object-position, não pixels falsamente interpolados.
+  framing_positions?: {at:number; position:[number,number]}[];
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
   sourceB?: string;
@@ -47,6 +50,28 @@ const W = 1080, H = 1920;
 const OFF_WHITE = '#F5F2EB', GOLD = '#FFD21F';
 const clamp = (n: number, a=0, b=1) => Math.max(a, Math.min(b, n));
 const ease = (v: number) => 1 - Math.pow(1 - clamp(v), 3);
+
+const enquadramentoNoTempo = (
+  posicoes: {at:number;position:[number,number]}[] | undefined,
+  segundo: number,
+  padrao:[number,number],
+):[number,number] => {
+  if (!posicoes?.length) return padrao;
+  if (segundo<=posicoes[0].at) return posicoes[0].position;
+  for(let i=1;i<posicoes.length;i++){
+    const anterior=posicoes[i-1], atual=posicoes[i];
+    if (segundo<=atual.at){
+      // Movimento da câmera apenas acompanha a área curada; não é
+      // considerado progressão de conteúdo pelo fiscal.
+      const frac=clamp((segundo-anterior.at)/Math.max(.001,atual.at-anterior.at));
+      return [
+        anterior.position[0]+(atual.position[0]-anterior.position[0])*frac,
+        anterior.position[1]+(atual.position[1]-anterior.position[1])*frac
+      ];
+    }
+  }
+  return posicoes[posicoes.length-1].position;
+};
 
 const photograph = (asset: string, p: number, focus: [number,number], travel: number, side: 'full'|'left'|'right'='full') => {
   const zoom = 1.04 + ease(p)*0.13;
@@ -124,14 +149,15 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
     </Sequence></AbsoluteFill>;
   }
   if(shot.type === 'video') {
+    const position=enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
     return <AbsoluteFill><Sequence from={Math.round(shot.start * 30)}
       durationInFrames={Math.ceil((shot.end - shot.start) * 30)}>
       <OffthreadVideo src={staticFile(shot.asset || '')} muted
         startFrom={Math.max(0, Math.round((shot.source_in_seconds || 0) * 30))}
         style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',
-          objectPosition:`${(shot.focus||[.5,.5])[0]*100}% ${(shot.focus||[.5,.5])[1]*100}%`,
+          objectPosition:`${position[0]*100}% ${position[1]*100}%`,
           filter:'brightness(.98) saturate(1.04)',
-          transform:`scale(${shot.video_zoom || 1})`,
+          transform:shot.framing_positions?.length?'none':`scale(${shot.video_zoom || 1})`,
           transformOrigin:'50% 30%'}}/>
     </Sequence></AbsoluteFill>;
   }

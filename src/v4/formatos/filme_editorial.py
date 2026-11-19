@@ -21,6 +21,91 @@ ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
 
 
+def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,int]) -> list[dict]:
+    """Converte ROIs inspecionadas em posições CSS de object-fit:cover para 9:16.
+
+    Não detecta pessoas/objetos automaticamente. Confere matematicamente que a
+    região declarada cabe no recorte final (com margem), sem 'fundo desfocado'.
+    A inspeção dos quadros e a revisão do vídeo renderizado permanecem humanas.
+    """
+    import math
+    contrato=cena.get('video_framing')
+    if not isinstance(contrato,dict) or contrato.get('modo')!='roi_observada':
+        raise ValueError('F-ROI-CONTRATO: enquadramento exige modo roi_observada')
+    if cena.get('type')!='video':
+        raise ValueError('F-ROI-TIPO: enquadramento dirigido só aceita vídeo')
+    if abs(float(cena.get('video_zoom') or 1)-1)>1e-6:
+        raise ValueError('F-ROI-ZOOM: zoom adicional invalida a garantia de visibilidade')
+    sha=contrato.get('sha256_origem')
+    if not isinstance(sha,str) or len(sha)!=64 or any(x not in '0123456789abcdef' for x in sha):
+        raise ValueError('F-ROI-SHA: SHA original inválido')
+    if midia.get('expected_sha256')!=sha:
+        raise ValueError('F-ROI-SHA: enquadramento de outra fonte')
+    inspecao=contrato.get('inspecao')
+    if not isinstance(inspecao,str) or len(inspecao.strip())<24:
+        raise ValueError('F-ROI-INSPECAO: informar inspeção de quadros reais do original')
+    w,h=dimensoes
+    if (not isinstance(w,int) or not isinstance(h,int) or isinstance(w,bool)
+            or isinstance(h,bool) or min(w,h)<240):
+        raise ValueError('F-ROI-DIMENSOES: dimensões da fonte inválidas')
+    escala=max(1080/w,1920/h)
+    vw=min(1.0,1080/(escala*w))
+    vh=min(1.0,1920/(escala*h))
+    margem_x=vw*.03 if vw<.999999 else 0.0
+    margem_y=vh*.03 if vh<.999999 else 0.0
+    pontos=contrato.get('pontos')
+    if not isinstance(pontos,list) or not pontos:
+        raise ValueError('F-ROI-PONTOS: enquadramento sem referências visuais')
+    inicio=cena.get('source_in_seconds',0)
+    dur=float(cena.get('end',0))-float(cena.get('start',0))
+    if (not isinstance(inicio,(int,float)) or isinstance(inicio,bool) or
+            not math.isfinite(inicio) or inicio<0 or dur<=0 or not math.isfinite(dur)):
+        raise ValueError('F-ROI-TEMPO: corte de origem inválido')
+    resultado=[]
+    ultimo=-1.0
+    for indice,p in enumerate(pontos):
+        if not isinstance(p,dict):
+            raise ValueError(f'F-ROI-PONTO: posição {indice+1} inválida')
+        t,fonte_s=p.get('at'),p.get('fonte_s')
+        if (not isinstance(t,(int,float)) or isinstance(t,bool) or
+                not math.isfinite(t) or not 0<=t<dur or t<=ultimo):
+            raise ValueError(f'F-ROI-TEMPO: ponto {indice+1} fora de ordem')
+        ultimo=float(t)
+        if (not isinstance(fonte_s,(int,float)) or isinstance(fonte_s,bool) or
+                not math.isfinite(fonte_s) or abs(fonte_s-(inicio+t))>.12):
+            raise ValueError(f'F-ROI-FONTE: ponto {indice+1} não coincide com o original')
+        box=p.get('area_essencial')
+        if (not isinstance(box,list) or len(box)!=4 or
+                any(not isinstance(v,(int,float)) or isinstance(v,bool) or
+                    not math.isfinite(v) for v in box)):
+            raise ValueError(f'F-ROI-AREA: ponto {indice+1} sem bbox normalizada')
+        x0,y0,x1,y1=box
+        if not (0<=x0<x1<=1 and 0<=y0<y1<=1):
+            raise ValueError(f'F-ROI-AREA: ponto {indice+1} fora do original')
+        if x1-x0+2*margem_x>vw+1e-9 or y1-y0+2*margem_y>vh+1e-9:
+            raise ValueError(
+                f'F-ROI-NAO-CABE: área essencial de ponto {indice+1} não cabe em 9:16; '
+                'selecionar outra tomada ou composição em vez de cortar a ação'
+            )
+        def pos(a,b,vis,margem):
+            if vis>=.999999:
+                return .5
+            minimo=max(0.0,b+margem-vis)
+            maximo=min(1.0-vis,a-margem)
+            if minimo>maximo+1e-9:
+                raise ValueError('F-ROI-NAO-CABE: margem da área essencial inviável')
+            ideal=(a+b-vis)/2
+            esquerda=max(minimo,min(ideal,maximo))
+            return min(1.0,max(0.0,esquerda/(1-vis)))
+        px=pos(x0,x1,vw,margem_x)
+        py=pos(y0,y1,vh,margem_y)
+        resultado.append({'at':round(float(t),4),
+                          'position':[round(px,6),round(py,6)]})
+    if abs(resultado[0]['at'])>.001:
+        raise ValueError('F-ROI-PRIMEIRO: enquadramento deve cobrir o início da tomada')
+    return resultado
+
+
 def avaliar(plano: dict) -> dict:
     falhas = []
     def falha(cod: str, onde: str, porque: str):
@@ -160,6 +245,24 @@ def avaliar(plano: dict) -> dict:
                 motivo=validar_janela_origem(cena, fonte['duration_s'])
                 if motivo:
                     falha('F-VIDEO-FONTE-INSUFICIENTE',cid,motivo)
+        if tipo == 'video':
+            origem_enquadramento=(plano.get('media') or {}).get(cena.get('asset')) or {}
+            contrato_roi=cena.get('video_framing')
+            largura=origem_enquadramento.get('width')
+            altura=origem_enquadramento.get('height')
+            if contrato_roi is not None:
+                try:
+                    planejar_enquadramento_video(cena,origem_enquadramento,(largura,altura))
+                except (ValueError,TypeError) as exc:
+                    motivo=str(exc)
+                    codigo=motivo.split(':',1)[0] if motivo.startswith('F-ROI-') else 'F-ROI-INVALIDO'
+                    falha(codigo,cid,motivo)
+            elif plano.get('tipo')!='PROVA_VISUAL_PRIVADA':
+                if not isinstance(largura,int) or not isinstance(altura,int):
+                    falha('F-ROI-DIMENSOES',cid,'vídeo final exige dimensões verificadas da fonte')
+                elif largura>altura:
+                    falha('F-ROI-SEM-DIRECAO',cid,
+                          'vídeo horizontal final exige região essencial e inspeção do recorte vertical')
         if tipo == 'video' and span > 3.8:
             # Usa o MESMO contrato temporal do áudio natural; não forçar
             # corte a cada 3,8s quando uma ação genuína continua.
@@ -381,6 +484,17 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             motivo=validar_janela_origem(c,medias[c['asset']]['duration_s'])
             if motivo:
                 raise ValueError(c['id']+': '+motivo)
+            if c.get('video_framing') is not None:
+                dimensoes_reais=(medias[c['asset']]['width'],medias[c['asset']]['height'])
+                dimensoes_declaradas=(plano['media'][c['asset']].get('width'),
+                                      plano['media'][c['asset']].get('height'))
+                if dimensoes_reais!=dimensoes_declaradas:
+                    raise ValueError(c['id']+': dimensões reais diferem do enquadramento auditado')
+                x['framing_positions']=planejar_enquadramento_video(
+                    c,plano['media'][c['asset']],dimensoes_reais
+                )
+            elif plano.get('tipo')!='PROVA_VISUAL_PRIVADA' and medias[c['asset']]['width']>medias[c['asset']]['height']:
+                raise ValueError(c['id']+': vídeo horizontal final sem enquadramento dirigido')
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

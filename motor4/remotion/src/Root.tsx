@@ -5,6 +5,7 @@ import { Camara3D } from './Camara3D';
 import { Camada } from './Camada';
 import { TipoLottie } from './TipoLottie';
 import { Formato } from './formatos/Formato';
+import { FilmeEditorial } from './formatos/FilmeEditorial';
 
 // Amostra ATLAS: palco + legendas em UMA renderizacao, com o tempo GLOBAL do episodio.
 const AtlasAmostra: React.FC<{ visual: any; legenda: any; duracao: number }> = ({ visual, legenda }) => (
@@ -22,6 +23,7 @@ export const Root: React.FC = () => (
     <Composition id="Camara3D" component={Camara3D as any} {...base} defaultProps={{ duracao: 3, nivel_baixo_m: 0, nivel_alto_m: 9, encher: { de: .5, ate: 2.5 }, rotulos: [] } as any} />
     <Composition id="Camada" component={Camada as any} {...base} defaultProps={{ duracao: 3, palavras: [], cenas: [] } as any} />
     <Composition id="Formato" component={Formato as any} {...base} defaultProps={{ duracao: 3, formato: 'atlas', tokens: {} as any, palco: [{ t: 0, tipo: 'mesa' }], camadas: [] } as any} />
+    <Composition id="FilmeEditorial" component={FilmeEditorial as any} {...base} defaultProps={{ duracao: 3, shots: [], preview: true } as any} />
     <Composition id="AtlasAmostra" component={AtlasAmostra as any} {...base} defaultProps={{ duracao: 3, visual: {}, legenda: {} } as any} />
     <Composition id="TipoLottie" component={TipoLottie as any} {...base} defaultProps={{ duracao: 3, lottie: 'lottie/gota.json', linhas: [] } as any} />
   </>

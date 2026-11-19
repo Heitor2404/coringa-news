@@ -71,3 +71,5 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 # 2026-11-19 P1 final: inventario factual V3+V4 sem midia generica, revisao SHA e provas
 
 # 2026-11-19 P1 licencia exata CC BY/CC BY-SA na ponte V3, reteste 118 offline
+
+# 2026-11-19 V2 Abertura: prova real 0-3s somente com verificação binária, V1 cartografico intacto

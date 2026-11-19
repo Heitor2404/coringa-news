@@ -2,3 +2,5 @@
 # DVIDS retornou 403 para duas fontes; nao repetir download bloqueado.
 # Nao publica, nao gera TTS, nao transforma amostras em prova de processo.
 fonte=nist_kaltura
+
+# R2: YAML corrigido, executar NIST Kaltura e manter fontes em estado candidato.

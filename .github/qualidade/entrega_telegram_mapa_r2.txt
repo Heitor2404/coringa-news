@@ -1,5 +1,0 @@
-# Recuperar prévia 10,47 s com voz normal, barra global e 3 mapas.
-# Artifact validado do run 44577678092; ENVIAR APENAS TELEGRAM PRIVADO.
-# Sem publicar, sem nova renderização, sem Claude/Gemini/Edge TTS.
-
-# R2: ffprobe incluso no runner; reenviar apenas após validar A/V.

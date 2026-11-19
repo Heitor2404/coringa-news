@@ -106,6 +106,8 @@ def assets_do_plano(plano: dict) -> list[str]:
             if q.get('asset'):
                 out.add(q['asset'])
             out |= {m['asset'] for m in q.get('marcos') or [] if isinstance(m, dict) and m.get('asset')}
+    out |= {(c.get('params') or {})['asset'] for c in plano.get('clipes') or []
+            if c.get('componente') == 'registro.video' and (c.get('params') or {}).get('asset')}
     return sorted(out)
 
 
@@ -154,15 +156,38 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
         # cópia local de desenvolvimento (CORINGA_DEV, sem rede) não é a origem: não confere, e fica marcada como não conferida
         if it.get('sha256_origem') and sha_o != it['sha256_origem'] and veio != 'cache-local-sem-origem':
             raise RuntimeError(f'{a}: o arquivo da origem mudou (sha256 {sha_o[:12]} ≠ {it["sha256_origem"][:12]}) — não entra no vídeo')
-        im = Image.open(io.BytesIO(bruto)).convert('RGB')
-        if max(im.size) > 2000:
-            im.thumbnail((2000, 2000))
-        nome = nome_publico(a)              # nome PRÓPRIO por mídia: dois episódios na mesma pasta não se sobrescrevem (44084129999)
-        dest = PUBLICO / f'{nome}.jpg'
-        im.save(dest, 'JPEG', quality=92)
-        shutil.copy(dest, saida / 'ativos' / dest.name)
-        out[a] = {'src': f'_formato/{nome}.jpg', 'w': im.size[0], 'h': im.size[1], 'credito': it['credito'], 'licenca': it['licenca'],
-                  'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o, 'origem_conferida': bool(it.get('sha256_origem')) and sha_o == it['sha256_origem'], 'veio_de': veio}
+        nome = nome_publico(a)              # nome PRÓPRIO por mídia; não sobrescrever vídeos/fotos diferentes.
+        if it.get('natureza') == 'video':
+            # A origem é validada via sha256; dados reais são sondados pelo ffprobe do V4 (não por extensão inferida da página).
+            if it.get('uso_comercial') != 'sim' or not it.get('sha256_origem'):
+                raise RuntimeError(f'{a}: vídeo precisa de licença comercial explícita e SHA256 da origem')
+            from urllib.parse import urlsplit
+            from src.v4.util import sondar
+            ext = Path(urlsplit(it['url']).path).suffix.lower()
+            if ext not in ('.mp4', '.webm', '.mov'):
+                raise RuntimeError(f'{a}: formato de vídeo não autorizado ({ext or "sem extensão"})')
+            dest = PUBLICO / f'{nome}{ext}'
+            dest.write_bytes(bruto)
+            info = sondar(dest)
+            if not info['w'] or not info['h'] or info['duracao'] <= 0:
+                dest.unlink(missing_ok=True)
+                raise RuntimeError(f'{a}: vídeo original inválido ou sem duração')
+            shutil.copy(dest, saida / 'ativos' / dest.name)
+            out[a] = {'src': f'_formato/{dest.name}', 'tipo': 'video', 'w': info['w'], 'h': info['h'],
+                      'duracao': round(info['duracao'], 3), 'credito': it['credito'], 'licenca': it['licenca'],
+                      'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o,
+                      'origem_conferida': sha_o == it['sha256_origem'], 'veio_de': veio}
+        else:
+            im = Image.open(io.BytesIO(bruto)).convert('RGB')
+            if max(im.size) > 2000:
+                im.thumbnail((2000, 2000))
+            dest = PUBLICO / f'{nome}.jpg'
+            im.save(dest, 'JPEG', quality=92)
+            shutil.copy(dest, saida / 'ativos' / dest.name)
+            out[a] = {'src': f'_formato/{nome}.jpg', 'tipo': 'foto', 'w': im.size[0], 'h': im.size[1],
+                      'credito': it['credito'], 'licenca': it['licenca'],
+                      'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o,
+                      'origem_conferida': bool(it.get('sha256_origem')) and sha_o == it['sha256_origem'], 'veio_de': veio}
     rast = PUBLICO / 'raster'
     rast.mkdir(parents=True, exist_ok=True)
     for r in plano.get('rasters') or []:
@@ -204,20 +229,38 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
     for a in assets_do_plano(pl):
         it = bib.get(a)
         ok = bool(it and it.get('licenca') and it.get('credito') and (it.get('prova') or {}).get('midia_corresponde') is True)
+        if (it or {}).get('natureza') == 'video':
+            ok = bool(ok and it.get('uso_comercial') == 'sim' and it.get('sha256_origem'))
         add(f'mídia comprovada {a[:60]}', ok, (it or {}).get('licenca', 'fora da biblioteca'))
         f = PUBLICO.parent / imgs.get(a, {}).get('src', '_nada')
         reg = imgs.get(a) or {}
         add(f'arquivo de mídia {a[:50]}', f.exists() and reg.get('w'), str(f.name))
         # o arquivo que vai ao render É o baixado da origem DESTA mídia (impressão digital), não outro com o mesmo nome
+        ext = Path(reg.get('src') or '').suffix.lower()
+        certo = (f.name == nome_publico(a) + ext and
+                 (ext in ('.mp4', '.webm', '.mov') if reg.get('tipo') == 'video' else ext == '.jpg'))
         add(f'arquivo é a mídia certa {a[:44]}', f.exists() and reg.get('sha256') == _sha(f) and reg.get('url') == (it or {}).get('url')
-            and f.name == nome_publico(a) + '.jpg', reg.get('sha256', 'sem impressão digital')[:16])
+            and certo, reg.get('sha256', 'sem impressão digital')[:16])
         add(f'origem conferida (sha256 da URL) {a[:40]}', reg.get('origem_conferida') is True or not (it or {}).get('sha256_origem')
             or (bool(os.environ.get('CORINGA_DEV')) and reg.get('veio_de') == 'cache-local-sem-origem'),
             f"{reg.get('sha256_origem', '?')[:16]} via {str(reg.get('veio_de', '?'))[:40]}" + ('' if (it or {}).get('sha256_origem') else ' (1º registro)'))
         lic = (it or {}).get('licenca', '#')
-        cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
-                        for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else (L['p'].get('meta') or [])))
-        add(f'crédito visível {a[:50]}', any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
+        if reg.get('tipo') == 'video':
+            # Crédito vem da biblioteca comprovada e é inserido na Camada global, em faixa segura.
+            cred = reg.get('credito') or ''
+            clip_refs = [c for c in pl.get('clipes') or [] if (c.get('params') or {}).get('asset') == a]
+            add(f'clipe video registrado {a[:40]}', bool(clip_refs), f'{len(clip_refs)} usos')
+            for c in clip_refs:
+                inicio = (c.get('params') or {}).get('inicio', 0)
+                dur = c['t1'] - c['t0']
+                add(f'video duracao/resolucao {a[:35]}', isinstance(inicio, (float, int)) and
+                    inicio >= 0 and inicio + dur <= reg.get('duracao', 0) + .01 and
+                    reg.get('w', 0) >= 640 and reg.get('h', 0) >= 360,
+                    f"fonte {reg.get('w')}x{reg.get('h')} · {reg.get('duracao')}s · {inicio}+{dur:.2f}s")
+        else:
+            cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
+                            for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else (L['p'].get('meta') or [])))
+        add(f'crédito visível {a[:50]}', bool(cred) and any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
     if pl.get('formato') == 'atlas':
         # manifesto de atribuição cartográfica: toda camada exibível declarada, com uso comercial; nada de fonte proibida;
         # e atribuição de mapa ≠ fonte factual (não se misturam)
@@ -267,7 +310,8 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
                 f"{(topo.get('meta') or {}).get('rota_km')} km · {(topo.get('meta') or {}).get('rota_fonte')}")
     for c in pl.get('clipes') or []:
         dur_c = float((c.get('fonte') or {}).get('dur') or round(c['t1'] - c['t0'], 2))
-        geo = prerender.geometria_palco(c['componente'], params_clipe(c, P.canal(pl.get('canal', 'coringa'))), dur_c, False, saida / 'pre_clipe') if palco_real else []
+        geo = (prerender.geometria_palco(c['componente'], params_clipe(c, P.canal(pl.get('canal', 'coringa'))), dur_c, False, saida / 'pre_clipe')
+               if palco_real and c.get('componente') != 'registro.video' else [])
         add(f"clipe {c['componente']} {c['t0']:.1f}–{c['t1']:.1f}s sem colisão com a identidade", not geo, '; '.join(geo)[:200])
     root = (RAIZ / 'motor4' / 'remotion' / 'src' / 'Root.tsx').read_text()
     add('composição Remotion Formato registrada', 'id="Formato"' in root)
@@ -295,11 +339,25 @@ def params_clipe(c: dict, can: dict) -> dict:
             'direcao_visual': {k: v for k, v in (can.get('direcao_visual') or {}).items() if not k.startswith('_')}}
 
 
-def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path) -> None:
+def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path, imgs: dict | None = None) -> None:
     """renderiza o clipe; com c['fonte'] = {dur, ini} renderiza a animação inteira e usa só o trecho [ini, ini + furo]
     (ex.: gancho de 2,4 s mostrando a água subindo e o navio subindo junto, sem acelerar a física)"""
     from src.v4.backends import legado
     furo = round(c['t1'] - c['t0'], 3)
+    if c['componente'] == 'registro.video':
+        from src.v4.util import FalhaBackend
+        from src.v4.backends import legado
+        a = (c.get('params') or {}).get('asset')
+        reg = (imgs or {}).get(a) or {}
+        src = PUBLICO.parent / reg.get('src', '_ausente')
+        if not a or reg.get('tipo') != 'video' or not src.is_file():
+            raise FalhaBackend('registro.video sem arquivo comprovado: preflight precisa bloquear')
+        # Reusa o backend de vídeo REAL do V4 integral: corte estático, 9:16, sem esticar e sem áudio original.
+        registro = legado.render_video(src, [reg['w'], reg['h']], None,
+                                       float(c.get('params', {}).get('inicio', 0)), furo,
+                                       saida_mp4, trab)
+        print('ATLAS_VIDEO_REGISTRO ' + json.dumps({'asset': a, **registro}, ensure_ascii=False), flush=True)
+        return
     f = c.get('fonte')
     if not f:
         legado.render_v2(c['componente'], params_clipe(c, can), furo, trab, saida_mp4)
@@ -383,7 +441,7 @@ def render(saida: Path) -> dict:
         if c['t0'] > t:
             partes.append(trab / f'p{len(partes)}.mp4'); _trecho(base, t, c['t0'], partes[-1])
         clip = trab / f'clipe{k}.mp4'
-        _clipe(c, can, trab / f'clipe{k}', clip)
+        _clipe(c, can, trab / f'clipe{k}', clip, imgs)
         partes.append(clip)
         t = c['t1']
     if t < pl['duracao']:
@@ -391,7 +449,7 @@ def render(saida: Path) -> dict:
     video = compositor.concatenar([{'arq': p} for p in partes], trab, trab / 'video.mp4') if len(partes) > 1 else base
     # camada global: marca + legendas (estilo da legenda = canal por formato; P.props_camada é a fonte única)
     camada = trab / 'camada.webm'
-    pcam = P.props_camada(pl, meta)
+    pcam = P.props_camada(pl, meta, imgs)
     t_camada = time.monotonic()
     js.remotion('Camada', pcam, camada, trab / 'camada', alfa=True)
     print(f"ATLAS_PERF legendas_marca_alpha_s={time.monotonic() - t_camada:.2f}", flush=True)

@@ -160,7 +160,7 @@ jobs:
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
             ../saida_rough_cut/rough_cut_real.mp4 \
             --props=../saida_rough_cut/props.json \
-            --codec=h264 --crf=24 --concurrency=2 --scale=0.5 --log=error
+            --codec=h264 --crf=24 --concurrency=2 --scale=0.5 --public-dir=remotion/public --log=error
 
       - name: Inspecionar arquivo MP4 real e extrair quadro de contato
         timeout-minutes: 5

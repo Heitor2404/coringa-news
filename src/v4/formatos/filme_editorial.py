@@ -18,7 +18,7 @@ from PIL import Image
 
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
-TIPOS = {'photo', 'video', 'comparison', 'mechanism'}
+TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
 
 
 def avaliar(plano: dict) -> dict:
@@ -61,7 +61,7 @@ def avaliar(plano: dict) -> dict:
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
         eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_cycle'
-        max_span = (18.0 if eh_ciclo else 6.2 if eh_causal else
+        max_span = (8.0 if cena.get('type') == 'atlas_map' else 18.0 if eh_ciclo else 6.2 if eh_causal else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
         if eh_causal or eh_ciclo:
             # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
@@ -110,6 +110,8 @@ def avaliar(plano: dict) -> dict:
                         momentos.add(('mecanismo', cid, e['action']))
             else:
                 momentos.add(('mecanismo', cid))
+        elif tipo == 'atlas_map' and cena.get('asset'):
+            momentos.add(('ATLAS_MAPLIBRE', cid, cena['asset']))
         elif tipo == 'video' and cena.get('asset'):
             # Cortes de instantes DISTINTOS do mesmo clipe são acontecimentos
             # diferentes apenas se realmente distantes no tempo de origem.
@@ -138,6 +140,12 @@ def avaliar(plano: dict) -> dict:
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')
             if cena.get('asset'):
                 falha('F-MECANISMO-SEM-ACERVO', cid, 'mecanismo é ilustração própria, não fotografia')
+        elif tipo == 'atlas_map':
+            if cena.get('evidence') != 'explainer' or cena.get('literal_identity'):
+                falha('F-ATLAS-EVIDENCIA', cid,
+                      'mapa ATLAS é representação cartográfica, não filmagem literal do fato')
+            if cena.get('assetB') or cena.get('mechanism') or cena.get('map'):
+                falha('F-ATLAS-EVIDENCIA', cid, 'mapa ATLAS usa clipe autenticado, nunca mapa simplificado/camadas extras')
         elif cena.get('evidence') == 'explainer':
             falha('F-EXPLICAÇÃO-SEM-MECANISMO', cid, 'explicativo precisa mecanismo real no compositor')
         if cena.get('evidence') == 'literal' and not cena.get('literal_identity'):
@@ -157,15 +165,24 @@ def avaliar(plano: dict) -> dict:
             url = asset.get('url') or ''
             source = asset.get('local_source')
             if source:
-                # Somente fixtures reais já versionadas; prova privada, nunca produção automática.
+                # Novo caminho autenticado: clip real produzido por PalcoMapa/MapLibre.
+                # Sem atestado SHA de raster e inspeção técnica não há mídia.
                 path = Path(source)
-                permitido = plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and (
+                atlas_bridge=(tipo == 'atlas_map')
+                if atlas_bridge:
+                    from src.v4.formatos.ponte_mapa_atlas import validar_comprovante
+                    for problema in validar_comprovante(asset):
+                        falha('F-ATLAS-COMPROVANTE',cid,problema)
+                    if asset.get('media_type') != 'video' or not (asset.get('page') or '').startswith('https://'):
+                        falha('F-ATLAS-COMPROVANTE',cid,'mapa deve ser MP4 sem áudio com fonte cartográfica')
+                permitido = atlas_bridge or (
+                    plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and (
                     str(path).startswith('tests/midia/') or
                     str(path).startswith('tests/piloto_ever_given/img/') or
                     str(path).startswith('motor4/formatos/dados/raster/') or
                     (str(path).startswith('stage_hero/') and
                      len(asset.get('expected_sha256') or '')==64 and
-                     (asset.get('page') or '').startswith('https://www.dvidshub.net/video/')))
+                     (asset.get('page') or '').startswith('https://www.dvidshub.net/video/'))))
                 if not permitido or path.is_absolute() or '..' in path.parts:
                     falha('F-FIXTURE-NAO-AUTORIZADA', cid, 'arquivo local só na amostra privada e caminhos permitidos')
             elif urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:

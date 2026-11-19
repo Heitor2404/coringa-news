@@ -3,3 +3,5 @@
 # Barra global, voz Edge em tempo natural; auditoria humana pendente.
 
 # R2 — sintaxe YAML corrigida, disparar fluxo de validação.
+
+# R3 escala da projeção de rota local aceita até 30000, sem interpolar rota não curada.

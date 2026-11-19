@@ -54,7 +54,7 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
     fala = (' '.join(w['w'] for w in palavras) if palavras else '(escreva a narração em "narracao.texto", 60–90 s, só com os fatos)')
     instrucao_saida = (\
         'Responda SÓ um JSON válido, sem texto extra. ATLAS: "camera":"roi"; NÃO escreva "palco" (o motor gera). '\
-        'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "rasters" (nomes reais), '\
+        'Campos do plano: "formato", "canal", "video_id", "titulo", "duracao", "camera", "abertura_tipo", "rasters" (nomes reais), '\
         '"destaques", "rotas", "rotulos", "clipes", "explicacoes" e "beats". '\
         'Cada beat: "id", "composicao" da lista, "t" de início, "roi" numérico [oeste,sul,leste,norte], '\
         '"movimento" (aproxima/fixo/recua), "prova", "fatos", "camadas". '\
@@ -65,14 +65,21 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
         'Responda SÓ o JSON válido do DOSSIÊ, com formato, canal, vídeo, título, duração, beats com composição e camadas.'\
     )
     direcao_atlas = """DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
-- A abertura é mapa hero, pergunta ou prova real; não use animação técnica de mecanismo no gancho.
+- Padrão aprovado V1: abertura_tipo:"mapa", beat 0 atlas.abertura, mapa hero desde o 1º quadro;
+  nenhum clipe nos primeiros 3 segundos.
+- Opcional V2, só com prova autenticamente identificada: abertura_tipo:"prova_real". FOTO: beat 0
+  atlas.prova, atlas.provaVisual desde 0 até ao menos 2,5s, com origem e crédito. VÍDEO: beat 0
+  atlas.abertura, clipe registro.video desde 0 até ao menos 2,5s, com fonte e hash verificável.
+  Nunca fingir registro documental usando mecanismo técnico ou imagem genérica.
 - Primeiro classifique a necessidade visual de cada trecho: geografia, fato real, funcionamento,
   comparação, revelação. Escolha mídia por pertinência e comprovação, sem cota de animações.
 - Imagem real do objeto/fábrica/evento pode ocupar o plano principal com atlas.provaVisual em atlas.prova.
 - Vídeo documental REAL comprovado usa clipes: [{t0,t1,componente:"registro.video",params:{asset:"ID DA BIBLIOTECA",inicio:0}}].
   O MP4 tem movimento próprio (sem câmera artificial), ocupa o intervalo todo e traz crédito do acervo;
   não atribua a ele uma ação que o arquivo não comprova, nem use vídeos genéricos como prova específica.
-  O vídeo só pode entrar após o gancho cartográfico ATLAS V1 (3 s); não sobreponha camadas ao seu intervalo.
+  Em abertura_tipo:"mapa", vídeo entra apenas após 3s. Em abertura_tipo:"prova_real", o
+  vídeo autenticado pode iniciar em 0s; mapa aparece depois como consequência geográfica.
+  Não sobrepor camadas ao intervalo de vídeo, pois ficariam invisíveis.
   Se não existir vídeo comprovado com duração/qualidade suficiente, reporte pendência, NÃO invente um arquivo.
 - Animação técnica só quando mostra um processo que a mídia real não explica adequadamente.
 - Se a narração continua explicando o MESMO processo, preserve a demonstração durante todo o

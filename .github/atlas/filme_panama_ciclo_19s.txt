@@ -3,3 +3,5 @@
 # Entregar MP4 e folha de quadros ao Telegram privado somente após QA.
 
 # R2: corrigida tipagem entre evento legado e ciclo de 7 etapas; repetir prova privada.
+
+# R3: eliminar padrão triangular SVG e sobreposição, medir saída na cota elevada.

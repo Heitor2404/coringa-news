@@ -29,6 +29,7 @@ def avaliar(plano: dict) -> dict:
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
     visual = set()
+    momentos = set()  # cenas demonstrativas contam como acontecimento, não foto decorativa
     prev_end = 0.0
     for n, cena in enumerate(cenas):
         cid = str(cena.get('id') or f'cena-{n}')
@@ -43,6 +44,15 @@ def avaliar(plano: dict) -> dict:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: plano muito curto ou estático demais')
         prev_end = end
         tipo = cena.get('type')
+        if tipo == 'mechanism':
+            momentos.add(('mecanismo', cid))
+        elif tipo == 'video' and cena.get('asset'):
+            # Cortes de instantes DISTINTOS do mesmo clipe são acontecimentos
+            # diferentes apenas se realmente distantes no tempo de origem.
+            src_t = float(cena.get('source_in_seconds') or 0)
+            momentos.add((cena['asset'], 'video', int(src_t // 3)))
+        elif cena.get('asset'):
+            momentos.add((cena['asset'], 'still'))
         if tipo not in TIPOS:
             falha('F-TIPO', cid, 'tipo de cena não suportado')
         if not str(cena.get('headline') or '').strip():
@@ -85,7 +95,10 @@ def avaliar(plano: dict) -> dict:
                 permitido = plano.get('tipo') == 'PROVA_VISUAL_PRIVADA' and (
                     str(path).startswith('tests/midia/') or
                     str(path).startswith('tests/piloto_ever_given/img/') or
-                    str(path).startswith('motor4/formatos/dados/raster/'))
+                    str(path).startswith('motor4/formatos/dados/raster/') or
+                    (str(path).startswith('stage_hero/') and
+                     len(asset.get('expected_sha256') or '')==64 and
+                     (asset.get('page') or '').startswith('https://www.dvidshub.net/video/')))
                 if not permitido or path.is_absolute() or '..' in path.parts:
                     falha('F-FIXTURE-NAO-AUTORIZADA', cid, 'arquivo local só na amostra privada e caminhos permitidos')
             elif urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
@@ -95,12 +108,13 @@ def avaliar(plano: dict) -> dict:
             visual.add(mid)
     if cenas and abs(prev_end - plano.get('duracao', -1)) > .05:
         falha('F-DURACAO', '-', 'última cena não alcança a duração do roteiro')
-    if len(visual) < max(3, round(len(cenas)*.65)):
-        falha('F-POUCO-ACERVO', '-', f'{len(visual)} mídias para {len(cenas)} cenas; risco de repetição')
+    if len(momentos) < max(3, round(len(cenas)*.65)):
+        falha('F-POUCO-ACERVO', '-', f'{len(momentos)} acontecimentos visuais diferentes para {len(cenas)} cenas; risco de repetição')
     if any(c.get('type') == 'comparison' for c in cenas) and len(visual) < 4:
         falha('F-COMPARACAO-REPETITIVA', '-', 'comparação deve trazer informação nova')
     return {'pronto': not falhas, 'bloqueios': falhas, 'cenas': len(cenas),
-            'medias_unicas': len(visual), 'visual_approval': 'NAO_FOI_AVALIADO'}
+            'medias_unicas': len(visual), 'momentos_visuais':len(momentos),
+            'visual_approval': 'NAO_FOI_AVALIADO'}
 
 
 def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> dict:

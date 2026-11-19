@@ -8,8 +8,8 @@ import json
 from pathlib import Path
 from src.v3 import previa_telegram
 
-IDS=("taiwan_chips","hubble_nasa","hindenburg_1937")
-TITULOS=("Taiwan e chips","NASA e Hubble","Hindenburg 1937")
+IDS=("taiwan_chips","venezuela_paisagens","ever_given_suez")
+TITULOS=("Taiwan e chips — material de contexto","Venezuela — paisagens reais","Ever Given — Canal de Suez")
 
 def entregar(pasta:Path):
     chat,info=previa_telegram.chat_autorizado()
@@ -51,7 +51,7 @@ def entregar(pasta:Path):
                 "caption":f"QA por cena — {titulo}; quatro cenas, quatro capturas por cena."},
                 ("photo",contato))
     previa_telegram._api("sendMessage",{"chat_id":chat,"text":
-        "3 amostras narradas entregues: Taiwan/chips, Hubble/NASA e Hindenburg.\n"
+        "3 amostras narradas entregues: Taiwan/chips, Venezuela e Ever Given/Suez.\n"
         "Isto é um teste de generalização, NÃO uma autorização para publicar.\n"
         "Avaliar cena por cena: fonte correta, fala correspondente, ritmo, recorte, texto e progressão."})
     return {"enviados":len(paths),"destino":f"{info['tipo']} privado autorizado",

@@ -2,3 +2,4 @@
 # Filme editorial 12s - Canal do Panamá; 2 vídeos em movimento, mapa de satélite e fotografia histórica.
 # Nenhum Claude, nenhuma voz paga, nenhum vídeo publicado.
 # Runner now explicitly installs ffprobe to verify local video footage before private render.
+# Fixed Remotion --public-dir matching the licensed assets directory. 

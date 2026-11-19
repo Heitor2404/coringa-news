@@ -79,20 +79,12 @@ def revisar(saida: Path, chamar_visao=None) -> dict:
                 if not isinstance(resultado, dict):
                     raise ValueError('modelo não retornou objeto JSON')
                 rec['veredito'] = resultado
-                exigidas = ['referente_visivel', 'aprendizado_demonstrado',
-                            'enquadramento_adequado', 'imagem_celular_legivel']
-                # O crítico não pode reprovar um gráfico técnico por "mapa ausente".
-                # Só composições cujo palco É mapa exigem mapa informativo.
+                # A mesma rubrica é usada no FILME; sem regras diferentes por assunto.
                 from src.v4.formatos import plano as plano_atlas
+                from src.v4.formatos import contrato_visual_comum
                 comp = plano_atlas.COMP.get(beat.get('composicao') or '') or {}
-                if comp.get('palco') == 'mapa':
-                    exigidas.append('mapa_informativo')
-                if verbo in ('DEMONSTRAR', 'CONECTAR', 'COMPARAR', 'REVELAR'):
-                    exigidas.append('acao_ou_relacao_visivel')
-                rec['problemas'] += [f'V-{chave}: modelo não confirmou' for chave in exigidas
-                                    if resultado.get(chave) is not True]
-                if rec['problemas']:
-                    rec['problemas'] += [str(x) for x in (resultado.get('problemas') or [])[:3]]
+                rec['problemas'] += contrato_visual_comum.julgar_inspecao(
+                    verbo, comp.get('palco') == 'mapa', resultado)
             except Exception as ex:
                 rec['problemas'].append(f'SEM-REVISAO: {type(ex).__name__}: {str(ex)[:200]}')
         blocos.append(rec)

@@ -63,7 +63,7 @@ jobs:
           c=json.loads(pathlib.Path("src/v4/formatos/canais/coringa.json").read_text())
           b=json.loads(pathlib.Path("src/v4/biblioteca_comprovada.json").read_text())
           assert p["formato"]=="atlas" and p["canal"]=="coringa"
-          assert p["abertura_tipo"]=="prova_real" and len(p["beats"])==4
+          assert p["abertura_tipo"]=="prova_real" and len(p["beats"])==6
           assert c["narrador"]["motor"]=="gemini" and c["narrador"]["voz"]=="Charon"
           assert c["narrador"]["fallback"]=="bloquear"
           aprovados={x["id"] for x in b["itens"] if x.get("sha256_origem") and (x.get("prova") or {}).get("midia_corresponde")}

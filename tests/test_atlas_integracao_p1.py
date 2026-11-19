@@ -32,7 +32,9 @@ def _imgs(tipo='video', duracao=9.0):
 
 
 def _codigos(pl, imgs=None):
-    return {v['regra'] for v in P.validar(pl, imgs) if v['gravidade'] == 'erro'}
+    # Mesmo caminho do motor: a câmera/slots são reconstruídos dos beats.
+    resolvido = P.resolver_tempos(copy.deepcopy(pl), [])
+    return {v['regra'] for v in P.validar(resolvido, imgs) if v['gravidade'] == 'erro'}
 
 
 def test_catalogo_tem_prova_documental_sem_mudar_dossie():
@@ -101,7 +103,7 @@ def test_ativos_reutiliza_hash_origem_e_probe_v4(monkeypatch, tmp_path):
     original = tmp_path / 'original.mp4'
     # Video sintético produzido no teste; nenhum conteúdo de terceiros.
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi',
-                    '-i', 'testsrc2=size=640x1136:rate=12', '-t', '.8', '-an',
+                    '-i', 'testsrc2=size=640x1136:rate=12', '-t', '0.8', '-an',
                     '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', str(original)], check=True)
     bruto = original.read_bytes()
     sha = hashlib.sha256(bruto).hexdigest()

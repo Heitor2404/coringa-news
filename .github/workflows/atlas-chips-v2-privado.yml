@@ -95,6 +95,11 @@ jobs:
       - name: Quadros e legibilidade nas plataformas
         timeout-minutes: 25
         run: python -m src.v4.formatos quadros "$PLANO" "$SAIDA"
+      - name: Revisor visual INDEPENDENTE — prova, enquadramento e compreensão por beat
+        timeout-minutes: 12
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.v4.formatos.revisao_visual "$SAIDA"
       - name: Renderizar MP4 completo com portões
         timeout-minutes: 65
         run: python -m src.v4.formatos render "$PLANO" "$SAIDA"
@@ -131,6 +136,7 @@ jobs:
           path: |
             saida_chips_v2_privada/preflight.json
             saida_chips_v2_privada/quadros/relatorio.json
+            saida_chips_v2_privada/revisao_visual.json
             saida_chips_v2_privada/resultado.json
             saida_chips_v2_privada/estado_editorial.json
           if-no-files-found: warn

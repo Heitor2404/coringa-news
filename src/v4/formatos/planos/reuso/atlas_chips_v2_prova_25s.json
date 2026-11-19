@@ -188,7 +188,9 @@
             "meta": "Le hollandais volant · CC BY 4.0 · Commons (recorte)",
             "rotulo": "WAFER DE SILÍCIO · FOTO ILUSTRATIVA",
             "rotulo_t": "@wafer",
-            "enquadramento": "conter"
+            "enquadramento": "conter",
+            "detalhe": "NELE SE FORMAM CIRCUITOS",
+            "detalhe_t": "@formam"
           }
         }
       ]
@@ -244,7 +246,7 @@
           "componente": "editorial.statCard",
           "slot": "etiqueta",
           "t0": "@europeus",
-          "t1": "@2:taiwan-0.12",
+          "t1": "@2:taiwan-0.50",
           "p": {
             "estilo": "pilula",
             "valor": "MÁQUINAS NA HOLANDA",

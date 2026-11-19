@@ -234,7 +234,8 @@ def preparar_receita(receita:dict,saida:Path,public_root:Path)->dict:
             'subject':x['subject'],'evidence':x.get('evidence','representative'),
             'highlight':x.get('highlight'),
             'focus':x.get('focus',[.5,.5]),
-            'cues':[{'at':min(.55,span*.25),'label':x['cue']}],
+            'cues':[{'at':round(max(.45,span-2.35),3) if typ=='photo' else min(.55,span*.25),
+                     'label':x['cue']}],
             'direcao_evento':{'intencao':x['intencao'],
                              'fato_id':x['id'],'aprendizado':x['aprendizado']},
         }

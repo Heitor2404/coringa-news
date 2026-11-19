@@ -139,6 +139,22 @@ jobs:
           print('RENDER_PRIVATE',json.loads((p/'metadata.json').read_text()))
           assert (p/'prova_panama_12s.mp4').stat().st_size>50000
           assert (p/'contato.jpg').stat().st_size>10000
+          # Falha que o contato de 6 quadros não detectava: flashes pretos
+          # exatamente em 0s e nos 3 cortes.
+          import subprocess, io
+          from PIL import Image, ImageStat
+          instantes=(0,0.1,2.97,3.0,3.1,6.87,6.93,9.37,9.43)
+          lum={}
+          for pos in instantes:
+              raw=subprocess.check_output(['ffmpeg','-hide_banner','-loglevel','error',
+                  '-ss',str(pos),'-i',str(p/'prova_panama_12s.mp4'),
+                  '-frames:v','1','-vf','scale=120:214','-f','image2pipe',
+                  '-vcodec','png','pipe:1'])
+              img=Image.open(io.BytesIO(raw)).convert('L')
+              lum[str(pos)]=round(ImageStat.Stat(img).mean[0],1)
+          (p/'cortes_visuais.json').write_text(json.dumps(lum,indent=2))
+          print('CORTE_LUMINANCIA',lum)
+          assert min(lum.values())>17,'Há quadros pretos/escuros nos cortes'
           PY
       - name: Salvar vídeo, storyboard e evidências privados (sem publicar)
         if: always()
@@ -155,5 +171,6 @@ jobs:
             saida_filme_panama/prova_com_voz_12s.mp4
             saida_filme_panama/voz.mp3
             saida_filme_panama/som_status.json
+            saida_filme_panama/cortes_visuais.json
           retention-days: 7
           if-no-files-found: warn

@@ -20,7 +20,7 @@ Um curador/adaptador aprovado deve registrar uma entrada em `src/v4/biblioteca_c
 {
   "id": "arquivo:video-livre-especifico",
   "natureza": "video",
-  "url": "<URL DIRETA ORIGINAL DO MP4, WEBM OU MOV (não página Pexels)>",
+  "url": "<URL DIRETA DO VÍDEO; ou página da origem SOMENTE com cache por SHA256 e arquivo_ext>",
   "pagina": "<página onde se verifica a licença e o autor>",
   "titulo": "<assunto realmente filmado>",
   "credito": "Autor original · CC BY 4.0",
@@ -30,7 +30,7 @@ Um curador/adaptador aprovado deve registrar uma entrada em `src/v4/biblioteca_c
   "prova": {"midia_corresponde": true, "metodo": "<verificação registrada de identidade e correspondência>"}
 }
 ```
-**Não inventar** URL, hash, autor, licença, cena, correspondência ou interpretação de licença. Arquivos originais não são redistribuídos no repositório público. Para vídeo baixado **manualmente** do Pexels, a pasta `CORINGA_MIDIA_LOCAL` pode apontar para mídia armazenada com nome `<sha256>.mp4` ou equivalente; não se automatiza scraping nem se contorna a API suspensa. O uso comercial depende também das condições específicas de licença, direitos de terceiros, pessoas e marcas.
+**Não inventar** URL, hash, autor, licença, cena, correspondência ou interpretação de licença. Arquivos originais não são redistribuídos no repositório público. Para vídeo baixado **manualmente** do Pexels, a pasta `CORINGA_MIDIA_LOCAL` pode apontar para mídia armazenada com nome `<sha256>.mp4` ou equivalente; não se automatiza scraping nem se contorna a API suspensa. Se a URL registrada for a **página do vídeo no Pexels** (sem sufixo `.mp4`), registrar também `"arquivo_ext": ".mp4"` no manifesto. Esse modo **só funciona com o cache já existente** e SHA256 conferido; se o arquivo não tiver sido baixado legitimamente ou não estiver disponível localmente, a importação falha. Nenhuma página é raspada. O uso comercial depende também das condições específicas de licença, direitos de terceiros, pessoas e marcas.
 
 O storyboard cita:
 ```json

@@ -21,7 +21,8 @@ FILME_FIX=ROOT/"docs/v4/formatos/filme_taiwan_prova.json"
 
 
 def _atlas():
-    return json.loads(ATLAS_FIX.read_text(encoding="utf-8"))
+    p=json.loads(ATLAS_FIX.read_text(encoding="utf-8"))
+    return ATLAS.resolver_tempos(p,[])
 
 
 def _film():

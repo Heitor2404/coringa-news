@@ -77,3 +77,41 @@ def test_nao_assume_licenca_ou_host_publico_de_video():
     qa=avaliar(plano)
     errs={e['codigo'] for e in qa['bloqueios']}
     assert 'F-LICENCA' in errs and 'F-ORIGEM-INSEGURA' in errs
+
+
+def test_filme_final_exige_contrato_integral_mesmo_com_shots_tecnicamente_validos():
+    p=_plano()
+    p["tipo"]="FILME_FINAL"
+    q=avaliar(p)
+    codigos={x["codigo"] for x in q["bloqueios"]}
+    assert "F-PORTAO-INTEGRAL-AUSENTE" in codigos
+    assert not q["pronto"]
+
+
+def test_filme_final_nao_aceita_contrato_de_outro_storyboard():
+    p=_plano()
+    p["tipo"]="FILME_FINAL"
+    contrato=(ROOT/"docs/v4/formatos/CONTRATO_PILOTO_TAIWAN_INTEGRAL_20261119.json")
+    p["contrato_integral"]=json.loads(contrato.read_text(encoding="utf8"))
+    q=avaliar(p)
+    codigos={x["codigo"] for x in q["bloqueios"]}
+    assert "F-PORTAO-CONTRATO-DIVERGENTE" in codigos
+    assert "F-PORTAO-INTEGRAL-BLOQUEADO" in codigos
+    assert not q["pronto"]
+
+
+def test_filme_final_nao_aceita_contrato_com_fontes_trocadas():
+    p=_plano()
+    p["tipo"]="FILME_FINAL"
+    p["contrato_integral"]={
+        "versao":1,"formato":"filme_editorial","tipo":"PRE_PRODUCAO_PRIVADA",
+        "politica":{"publicar":False},
+        "cenas":[{
+            "id":s["id"],"inicio":s["start"],"fim":s["end"],
+            "midia":{"tipo":"comparison" if s["type"]=="comparison" else "foto",
+                     "asset_id":"fonte-externa"},
+        } for s in p["shots"]]
+    }
+    q=avaliar(p)
+    assert "F-PORTAO-FONTE-DIVERGENTE" in {x["codigo"] for x in q["bloqueios"]}
+    assert not q["pronto"]

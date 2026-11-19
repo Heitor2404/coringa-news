@@ -69,6 +69,13 @@
     },
     {
       "fonte": "paises",
+      "nome": "United States of America",
+      "cor": "destaque",
+      "t0": "@americanas",
+      "t1": "@fornecedores-0.12"
+    },
+    {
+      "fonte": "paises",
       "nome": "Netherlands",
       "cor": "destaque",
       "t0": "@europeus",
@@ -142,13 +149,11 @@
             "linhas": [
               {
                 "texto": "POR QUE",
-                "t": "@por",
-                "tamanho": 90
+                "t": "@por"
               },
               {
                 "texto": "TAIWAN?",
                 "t": "@ilha",
-                "tamanho": 94,
                 "destaque": true
               }
             ]
@@ -205,20 +210,15 @@
       ],
       "camadas": [
         {
-          "id": "eua-design",
-          "componente": "atlas.geoPin",
-          "slot": "geo",
+          "id": "design-eua-label",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
           "t0": "@americanas",
           "t1": "@fornecedores-0.12",
           "p": {
-            "tipo": "local",
-            "lonlat": [
-              -121.96,
-              37.35
-            ],
-            "rotulo": "PROJETOS · EUA",
-            "lado": "esquerda",
-            "papel": "secundario"
+            "estilo": "pilula",
+            "valor": "PROJETOS NOS EUA",
+            "fato": "f-cadeia"
           }
         }
       ]
@@ -240,37 +240,27 @@
       ],
       "camadas": [
         {
-          "id": "eu-maquinas",
-          "componente": "atlas.geoPin",
-          "slot": "geo",
+          "id": "maquinas-holanda",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
           "t0": "@europeus",
-          "t1": "@2:se-0.12",
+          "t1": "@2:taiwan-0.12",
           "p": {
-            "tipo": "local",
-            "lonlat": [
-              5.39,
-              51.42
-            ],
-            "rotulo": "EQUIPAMENTOS · HOLANDA",
-            "lado": "direita",
-            "papel": "secundario"
+            "estilo": "pilula",
+            "valor": "MÁQUINAS NA HOLANDA",
+            "fato": "f-cadeia"
           }
         },
         {
-          "id": "tw-fabricacao",
-          "componente": "atlas.geoPin",
-          "slot": "geo",
+          "id": "fabricacao-taiwan",
+          "componente": "editorial.statCard",
+          "slot": "etiqueta",
           "t0": "@2:taiwan",
           "t1": "@2:se-0.12",
           "p": {
-            "tipo": "local",
-            "lonlat": [
-              120.97,
-              24.78
-            ],
-            "rotulo": "FABRICAÇÃO · TAIWAN",
-            "lado": "esquerda",
-            "papel": "secundario"
+            "estilo": "pilula",
+            "valor": "FABRICAÇÃO EM TAIWAN",
+            "fato": "f-cadeia"
           }
         }
       ]
@@ -286,7 +276,7 @@
         48
       ],
       "movimento": "recua",
-      "prova": "Síntese causal: um elo industrial pode repercutir mundialmente, após ter mostrado os lugares do encadeamento.",
+      "prova": "Revelação do impacto de uma cadeia transnacional; países já destacados separadamente, sem rota física inventada.",
       "fatos": [
         "f-cadeia"
       ],
@@ -301,13 +291,11 @@
             "linhas": [
               {
                 "texto": "UM ELO",
-                "t": "@2:se",
-                "tamanho": 86
+                "t": "@2:se"
               },
               {
                 "texto": "AFETA TODOS",
                 "t": "@consequência",
-                "tamanho": 74,
                 "destaque": true
               }
             ]

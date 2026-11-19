@@ -21,7 +21,7 @@ import requests
 from PIL import Image
 
 IDENTIFICADOR = re.compile(r"^[a-z0-9_]{3,40}$")
-LICENCAS = {"CC BY 4.0", "CC BY 2.0", "CC0", "Public domain", "NASA PD"}
+LICENCAS = {"CC BY 4.0", "CC BY 3.0", "CC BY 2.0", "CC BY-SA 4.0", "CC BY-SA 3.0", "CC BY-SA 2.0", "CC0", "Public domain", "NASA PD", "Natural Earth PD"}
 HEADERS = {"User-Agent":"CoringaExplica/4.0 (curadoria de material com crédito verificável)"}
 
 
@@ -35,12 +35,23 @@ def url_commons(nome: str) -> str:
 
 
 def _baixar(c: dict, destino: Path) -> dict:
-    if c.get("local_video"):
-        origem=Path(c["local_video"])
-        if not str(origem).startswith("tests/midia/") or not origem.is_file():
-            raise RuntimeError(f"{c['id']}: fixture de vídeo ausente")
+    if c.get("local_video") or c.get("local_photo"):
+        origem=Path(c.get("local_video") or c["local_photo"])
+        permitido=(
+            str(origem).startswith("tests/midia/") or
+            str(origem).startswith("tests/piloto_ever_given/img/") or
+            str(origem).startswith("motor4/formatos/dados/raster/")
+        )
+        if not permitido or origem.is_absolute() or ".." in origem.parts or not origem.is_file():
+            raise RuntimeError(f"{c['id']}: asset local não comprovado")
         data=origem.read_bytes()
-        formato="video"
+        formato="video" if c.get("local_video") else "photo"
+        if formato=="photo":
+            with Image.open(origem) as im:
+                im.verify()
+            with Image.open(origem) as im:
+                if min(im.size)<600:
+                    raise RuntimeError(f"{c['id']}: fotografia fixture pequena {im.size}")
     else:
         url=url_commons(c["commons"])
         data=None
@@ -68,14 +79,14 @@ def _baixar(c: dict, destino: Path) -> dict:
         raise RuntimeError(f"{c['id']}: arquivo fora do limite de segurança {len(data)} bytes")
     if c["licenca"] not in LICENCAS or not c.get("autor"):
         raise RuntimeError(f"{c['id']}: licença/autor ausentes")
-    if urlsplit(c["fonte"]).netloc!="commons.wikimedia.org":
-        raise RuntimeError("somente páginas curadas do Commons")
+    if urlsplit(c["fonte"]).hostname not in ("commons.wikimedia.org", "www.naturalearthdata.com", "visibleearth.nasa.gov", "images.nasa.gov"):
+        raise RuntimeError("somente páginas curadas de Commons, NASA ou Natural Earth")
     return {
         "id":c["id"],"local_source":str(origem),"media_type":"video" if formato=="video" else "photo",
         "expected_sha256":hashlib.sha256(data).hexdigest(),
         "license":c["licenca"],"credit":c["autor"],"page":c["fonte"],
         "source_bytes":len(data),"source_media":formato,
-        "source_original":url_commons(c["commons"]) if formato=="photo" else c["fonte"]
+        "source_original":url_commons(c["commons"]) if c.get("commons") else c["fonte"]
     }
 
 

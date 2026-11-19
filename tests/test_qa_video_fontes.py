@@ -66,3 +66,56 @@ def test_nao_confunde_pixels_com_informacao_real():
                              'imagem_celular_legivel':True,
                              'aprendizado_demonstrado':False,
                              'acao_ou_relacao_visivel':False})
+
+
+def test_gates_compartilhados_reprovam_outro_conflito_como_iraque():
+    import copy
+    from src.v4.formatos import contrato_visual_comum as C
+    from src.v4.formatos import filme_editorial, triagem_editorial
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[1]
+    filme=json.loads((root/'docs/v4/formatos/filme_taiwan_prova.json').read_text())
+    filme['shots'][0]['substituicao']={
+        'acontecimento':'Guerra do Iraque','evento_da_midia':'Guerra da Síria',
+        'uso':'registro','cena_especifica':True,
+        'rotulo':'GUERRA NO IRAQUE', 'origem_verificada':True,
+        'licenca_verificada':True,
+    }
+    common=C.auditar(filme)
+    assert not common['estrutura_declarada_ok']
+    assert 'M-OUTRO-EVENTO-NAO-E-PROVA' in {x['codigo'] for x in common['falhas']}
+    assert not filme_editorial.avaliar(filme)['pronto']
+
+    atlas={
+        'formato':'atlas','narracao':{'fatos':[{'id':'f1','fontes':['fonte verificada']}]},
+        'beats':[{'id':'b1','composicao':'atlas.prova','fatos':['f1'],
+          'direcao_visual':{'verbo':'MOSTRAR','pergunta':'Qual guerra?',
+            'referente':'Filmagem documental do combate',
+            'aprendizado':'Onde o acontecimento ocorreu e o que aconteceu',
+            'provas':['foto'],
+            'substituicao':filme['shots'][0]['substituicao']},
+          'camadas':[{'id':'foto','componente':'atlas.provaVisual',
+                      'p':{'asset':'foto-contexto'}}]}]
+    }
+    cat={'itens':[{'id':'foto-contexto','sha256_origem':'a'*64,
+                   'licenca':'CC BY 4.0','prova':{'midia_corresponde':True}}]}
+    r=triagem_editorial.avaliar(atlas,cat)
+    assert not r['pronto']
+    assert 'M-OUTRO-EVENTO-NAO-E-PROVA' in {x['codigo'] for x in r['bloqueios']}
+
+
+def test_contexto_de_outro_evento_aceito_somente_com_rotulo_nunca_prova():
+    from src.v4.formatos import contrato_visual_comum as C
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[1]
+    filme=json.loads((root/'docs/v4/formatos/filme_taiwan_prova.json').read_text())
+    filme['shots'][0]['substituicao']={
+        'acontecimento':'Guerra do Iraque','evento_da_midia':'Guerra da Síria',
+        'uso':'contexto','cena_especifica':False,
+        'rotulo':'IMAGENS DA GUERRA DA SÍRIA · CONTEXTO',
+        'origem_verificada':True,'licenca_verificada':True,
+    }
+    r=C.auditar(filme)
+    assert r['estrutura_declarada_ok']
+    assert r['prova_visual']=='NAO_INSPECIONADA'
+    assert r['aprovacao_humana']=='PENDENTE'

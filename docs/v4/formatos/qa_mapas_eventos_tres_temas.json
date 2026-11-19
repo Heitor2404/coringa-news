@@ -189,9 +189,9 @@
   "auditoria_privada": {
     "dominio": "mapas_multitema",
     "roteiro_por_cena": [
-      "Taiwan está no leste da Ásia. Veja a ilha destacada.",
-      "Na Venezuela, localizamos o Roraima e o Salto Ángel.",
-      "O Canal de Suez liga dois mares. Aqui encalhou o Ever Given."
+      "Taiwan aparece no leste da Ásia.",
+      "Aqui estão Roraima e Salto Ángel, na Venezuela.",
+      "O Canal de Suez liga dois mares. O bloqueio foi aqui."
     ],
     "fontes": [
       "https://www.naturalearthdata.com/",

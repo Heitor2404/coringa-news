@@ -1,0 +1,154 @@
+"""Pré-produção do FILME EDITORIAL: mídia ocupa o plano, não slides/cartões ATLAS.
+
+Motor-piloto isolado. Recebe briefing com evidências e cortes editorialmente
+escolhidos, valida coerência e prepara props do Remotion FilmeEditorial.
+A aprovação estética depende de INSPECIONAR o vídeo, nunca da contagem de testes.
+Sem rede ao validar; baixar só em CLI dedicada, de fontes já licenciadas.
+"""
+from __future__ import annotations
+import argparse
+import hashlib
+import json
+import shutil
+import sys
+from pathlib import Path
+from urllib.parse import urlsplit
+from PIL import Image
+
+LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC0', 'NASA PD'}
+ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
+TIPOS = {'photo', 'video', 'comparison'}
+
+
+def avaliar(plano: dict) -> dict:
+    falhas = []
+    def falha(cod: str, onde: str, porque: str):
+        falhas.append({'codigo': cod, 'cena': onde, 'motivo': porque})
+    cenas = plano.get('shots') or []
+    if not cenas:
+        falha('F-SEM-HISTORIA', '-', 'não há cenas')
+    visual = set()
+    prev_end = 0.0
+    for n, cena in enumerate(cenas):
+        cid = str(cena.get('id') or f'cena-{n}')
+        start, end = cena.get('start'), cena.get('end')
+        if not isinstance(start, (int, float)) or not isinstance(end, (int, float)):
+            falha('F-SEM-TEMPO', cid, 'início/fim inválidos')
+            continue
+        if abs(start - prev_end) > .05:
+            falha('F-LACUNA', cid, f'intervalo vazio ou sobreposição: {prev_end}→{start}')
+        span = end - start
+        if span < 1.4 or span > 3.8:
+            falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: plano muito curto ou estático demais')
+        prev_end = end
+        tipo = cena.get('type')
+        if tipo not in TIPOS:
+            falha('F-TIPO', cid, 'tipo de cena não suportado')
+        if not str(cena.get('headline') or '').strip():
+            falha('F-SEM-INFORMACAO', cid, 'título deve ligar imagem ao acontecimento')
+        if not cena.get('cues') or any(
+            not (0 <= x.get('at', -1) < span and x.get('label'))
+            for x in cena.get('cues') or []
+        ):
+            falha('F-SEM-REVELACAO', cid, 'cena precisa acrescentar informação com objeto visível')
+        if cena.get('evidence') not in ('literal', 'representative'):
+            falha('F-SEM-PROVENIENCIA', cid, 'classifique literal ou representativa')
+        if cena.get('evidence') == 'literal' and not cena.get('literal_identity'):
+            falha('F-LITERAL-SEM-IDENTIDADE', cid, 'não alegar local/entidade exata sem identidade verificada')
+        elif cena.get('evidence') == 'representative' and cena.get('literal_identity'):
+            falha('F-REPRESENTATIVA-ROTULADA-LITERAL', cid, 'imagem genérica não pode alegar identidade exata')
+        ids = [cena.get('asset')]
+        if tipo == 'comparison':
+            ids.append(cena.get('assetB'))
+            if len(set(ids)) != 2:
+                falha('F-COMPARACAO-FAKE', cid, 'comparação precisa de dois referentes distintos')
+        for mid in ids:
+            if not mid or mid not in plano.get('media', {}):
+                falha('F-MIDIA-SEM-CATALOGO', cid, f'{mid} não consta na curadoria')
+                continue
+            asset = plano['media'][mid]
+            url = asset.get('url') or ''
+            if urlsplit(url).scheme != 'https' or urlsplit(url).hostname not in ORIGENS:
+                falha('F-ORIGEM-INSEGURA', cid, 'usar acervo real com URL verificável e confiável')
+            if asset.get('license') not in LICENCAS or not asset.get('page') or not asset.get('credit'):
+                falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos')
+            visual.add(mid)
+    if cenas and abs(prev_end - plano.get('duracao', -1)) > .05:
+        falha('F-DURACAO', '-', 'última cena não alcança a duração do roteiro')
+    if len(visual) < max(3, round(len(cenas)*.65)):
+        falha('F-POUCO-ACERVO', '-', f'{len(visual)} mídias para {len(cenas)} cenas; risco de repetição')
+    if any(c.get('type') == 'comparison' for c in cenas) and len(visual) < 4:
+        falha('F-COMPARACAO-REPETITIVA', '-', 'comparação deve trazer informação nova')
+    return {'pronto': not falhas, 'bloqueios': falhas, 'cenas': len(cenas),
+            'medias_unicas': len(visual), 'visual_approval': 'NAO_FOI_AVALIADO'}
+
+
+def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> dict:
+    import requests
+    check = avaliar(plano)
+    destino=Path(destino)
+    destino.mkdir(parents=True,exist_ok=True)
+    (destino/'contrato.json').write_text(json.dumps(check,ensure_ascii=False,indent=2),encoding='utf-8')
+    if not check['pronto']:
+        raise ValueError('pré-produção reprovada: '+json.dumps(check['bloqueios'],ensure_ascii=False))
+    if downloader is None:
+        def downloader(url: str) -> bytes:
+            r=requests.get(url,timeout=90,headers={'User-Agent':'CoringaExplica/1.0 (license verification; contact via GitHub)'})
+            r.raise_for_status()
+            if len(r.content)>26_000_000:
+                raise ValueError('arquivo excessivamente grande')
+            return r.content
+    public_root=Path(public_root)
+    assets_dir=public_root/'film_editorial'
+    assets_dir.mkdir(parents=True,exist_ok=True)
+    medias, relatorio={},[]
+    for mid,item in plano['media'].items():
+        data=downloader(item['url'])
+        if not isinstance(data,bytes):
+            raise ValueError(f'{mid}: sem bytes válidos')
+        sha=hashlib.sha256(data).hexdigest()
+        if item.get('expected_sha256') and item['expected_sha256']!=sha:
+            raise ValueError(f'{mid}: hash da origem mudou — selecionar/curar novamente')
+        import io
+        with Image.open(io.BytesIO(data)) as img:
+            if img.format not in ('JPEG','PNG') or min(img.size)<700:
+                raise ValueError(f'{mid}: imagem inválida/pequena')
+            ext='.png' if img.format=='PNG' else '.jpg'
+            w,h=img.size
+        out=assets_dir/f'{sha}{ext}'
+        if not out.exists():
+            out.write_bytes(data)  # preservar bytes idênticos, sem recomprimir
+        medias[mid]={'asset':f'film_editorial/{sha}{ext}','sha256':sha,
+                     'width':w,'height':h,'credit':item['credit'],
+                     'license':item['license'],'page':item['page']}
+        relatorio.append({'id':mid,'sha256':sha,'resolucao':[w,h],
+                          'licenca':item['license'],'pagina':item['page']})
+    shots=[]
+    for c in plano['shots']:
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes')}
+        x['asset']=medias[c['asset']]['asset']
+        x['source']=medias[c['asset']]['credit']
+        if c.get('assetB'):
+            x['assetB']=medias[c['assetB']]['asset']
+            x['sourceB']=medias[c['assetB']]['credit']
+        shots.append(x)
+    props={'duracao':plano['duracao'],'shots':shots,'preview':True}
+    (destino/'props.json').write_text(json.dumps(props,ensure_ascii=False,indent=2),encoding='utf-8')
+    (destino/'midias.json').write_text(json.dumps(relatorio,ensure_ascii=False,indent=2),encoding='utf-8')
+    return {'pronto':True,'shots':len(shots),'midias':len(medias),'props':str(destino/'props.json')}
+
+
+def main(argv=None):
+    p=argparse.ArgumentParser()
+    p.add_argument('plano')
+    p.add_argument('saida')
+    p.add_argument('public_root')
+    a=p.parse_args(argv)
+    plan=json.loads(Path(a.plano).read_text(encoding='utf-8'))
+    r=preparar(plan,Path(a.saida),Path(a.public_root))
+    print(json.dumps(r,ensure_ascii=False))
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

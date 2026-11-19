@@ -1050,13 +1050,35 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         for c in plano.get('clipes') or []:
             if not (str(c.get('componente', '')).startswith('mecanismo.') or c.get('componente') == 'registro.video'):
                 v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe ATLAS só para mecanismo aprovado ou registro de vídeo real')
-        # ATLAS V1: a primeira prova é cartográfica; mecanismo técnico só entra após o gancho.
+        # ATLAS V1 fica EXATAMENTE como era por padrão. A direção V2 pode optar
+        # EXPLICITAMENTE por prova fotográfica ou vídeo documental verificado.
+        # Nunca liberar um mecanismo ou mapa genérico como gancho "real".
         bs = plano.get('beats') or []
         primeiro = bs[0] if bs else {}
-        if (primeiro.get('composicao') != 'atlas.abertura' or (primeiro.get('t') or 0) > .05
-                or any(c['t0'] < 3.0 for c in plano.get('clipes') or [])):
-            v('erro', 'F-GANCHO-MAPA-PRIMEIRO', '0–3s',
-              'ATLAS V1: abrir com mapa hero e pergunta/prova forte, sem clipe de mecanismo nos primeiros 3 segundos')
+        modo = plano.get('abertura_tipo', 'mapa')
+        clips = plano.get('clipes') or []
+        comeco_ok = (primeiro.get('t') or 0) <= .05
+        if modo == 'mapa':
+            if (primeiro.get('composicao') != 'atlas.abertura' or not comeco_ok
+                    or any(c['t0'] < 3.0 for c in clips)):
+                v('erro', 'F-GANCHO-MAPA-PRIMEIRO', '0–3s',
+                  'ATLAS V1: abrir com mapa hero e pergunta/prova forte, sem clipe de mecanismo nos primeiros 3 segundos')
+        elif modo == 'prova_real':
+            fotos = [L for L in Ls if L['componente'] == 'atlas.provaVisual' and L['beat'] == primeiro.get('id')
+                     and L['t0'] <= .05 and L['t1'] >= 2.5
+                     and (L.get('p') or {}).get('asset') and (L.get('p') or {}).get('meta')]
+            filmes = [c for c in clips if c.get('componente') == 'registro.video'
+                      and isinstance(c.get('t0'), (int, float)) and c['t0'] <= .05
+                      and isinstance(c.get('t1'), (int, float)) and c['t1'] >= 2.5
+                      and (c.get('params') or {}).get('asset')]
+            validado = (comeco_ok and (
+                (primeiro.get('composicao') == 'atlas.prova' and bool(fotos) and not filmes)
+                or (primeiro.get('composicao') == 'atlas.abertura' and bool(filmes) and not fotos)))
+            if not validado or any(c['t0'] < 3.0 and c.get('componente') != 'registro.video' for c in clips):
+                v('erro', 'F-GANCHO-PROVA-REAL', '0–3s',
+                  'abertura física exige foto principal por 2,5 s OU registro.video original cobrindo a abertura; mecanismo não é prova real')
+        else:
+            v('erro', 'F-GANCHO-TIPO', '0–3s', 'abertura_tipo só aceita mapa (V1) ou prova_real (V2)')
         if plano.get('cta') is True and not any(L['componente'] == 'editorial.cta' for L in Ls):
             v('erro', 'F-CTA-FINAL-AUSENTE', 'fecho',
               'storyboard pediu CTA final, mas não reservou slot: corrigir antes do render')
@@ -1097,7 +1119,7 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     # gancho: nos primeiros segundos, algo VISUALMENTE relevante (não só mapa e legenda)
     g = REGRAS.get('gancho_s', 3.0)
     fortes = [c for c in plano.get('clipes') or [] if c['t0'] <= .5] + \
-             [L for L in Ls if L['t0'] <= g * .5 and (L['componente'] in ('dossie.documentCard', 'editorial.titleOrPayoff')
+             [L for L in Ls if L['t0'] <= g * .5 and (L['componente'] in ('dossie.documentCard', 'editorial.titleOrPayoff', 'atlas.provaVisual')
                                                    or (L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('papel') == 'protagonista'))]
     mudanca = [e for e in eventos(plano) if .2 < e < g]
     if plano.get('formato') == 'atlas' and (not fortes or not mudanca):

@@ -18,7 +18,53 @@ from PIL import Image
 
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
-TIPOS = {'photo', 'video', 'comparison', 'mechanism'}
+TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'map'}
+
+
+def _geo_ok(pt) -> bool:
+    return (isinstance(pt,(list,tuple)) and len(pt)==2 and
+            all(isinstance(x,(int,float)) and not isinstance(x,bool) for x in pt) and
+            -180 <= pt[0] <= 180 and -90 <= pt[1] <= 90)
+
+
+def validar_mapa(m: dict) -> list[str]:
+    """Contrato geográfico transversal: nem pin nem caminho podem ser inventados pelo renderer."""
+    erros=[]
+    if not isinstance(m,dict):
+        return ['mapa ausente']
+    if m.get('kind') not in ('country','route'):
+        erros.append('tipo de mapa inválido')
+    if not (isinstance(m.get('country_id'),str) and
+            len(m['country_id'])==3 and m['country_id'].isdigit()):
+        erros.append('ISO numérico do país ausente')
+    if not _geo_ok(m.get('center')):
+        erros.append('centro lon/lat inválido')
+    if not (isinstance(m.get('scale'),(int,float)) and
+            not isinstance(m['scale'],bool) and 170 <= m['scale'] <= 9000):
+        erros.append('escala projetada ausente')
+    pontos=m.get('points')
+    if not isinstance(pontos,list) or not (1<=len(pontos)<=7):
+        erros.append('pelo menos um pin geográfico obrigatório (até sete)')
+    else:
+        for p in pontos:
+            if not isinstance(p,dict) or not p.get('label') or not _geo_ok(p.get('lonlat')):
+                erros.append('pin sem posição/identidade')
+                break
+            if not isinstance(p.get('at',0),(int,float)) or p.get('at',0)<0:
+                erros.append('tempo de pin inválido')
+    if not isinstance(m.get('caption'),str) or not m['caption'].strip():
+        erros.append('mapa sem aprendizado descrito')
+    if m.get('kind')=='route':
+        route=m.get('route')
+        if (not isinstance(route,dict) or
+            not isinstance(route.get('coords'),list) or
+            len(route['coords'])<2 or len(route['coords'])>32 or
+            not all(_geo_ok(p) for p in route['coords']) or
+            not route.get('label')):
+            erros.append('rota sem geometria curada e legenda fiel')
+    elif m.get('route'):
+        erros.append('rota fornecida num mapa sem tipo route')
+    return erros
 
 
 def avaliar(plano: dict) -> dict:
@@ -86,6 +132,13 @@ def avaliar(plano: dict) -> dict:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')
+        if tipo == 'map':
+            mapa=cena.get('map')
+            errs=validar_mapa(mapa)
+            for err in errs:
+                falha('F-MAPA-NAO-COMPROVADO',cid,err)
+            if not errs:
+                momentos.add(('mapa',cid,mapa['country_id'],mapa['kind']))
         if tipo == 'mechanism':
             if eh_causal or eh_ciclo:
                 for e in cena.get('cues') or []:
@@ -118,13 +171,19 @@ def avaliar(plano: dict) -> dict:
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')
             if cena.get('asset'):
                 falha('F-MECANISMO-SEM-ACERVO', cid, 'mecanismo é ilustração própria, não fotografia')
+        elif tipo == 'map':
+            if cena.get('evidence') != 'explainer' or cena.get('literal_identity'):
+                falha('F-MAPA-EVIDENCIA',cid,
+                      'mapa esquemático não pode ser etiquetado como registro filmado do acontecimento')
+            if cena.get('asset') or cena.get('assetB'):
+                falha('F-MAPA-EVIDENCIA',cid,'mapa vetorial não usa fotografia como prova')
         elif cena.get('evidence') == 'explainer':
             falha('F-EXPLICAÇÃO-SEM-MECANISMO', cid, 'explicativo precisa mecanismo real no compositor')
         if cena.get('evidence') == 'literal' and not cena.get('literal_identity'):
             falha('F-LITERAL-SEM-IDENTIDADE', cid, 'não alegar local/entidade exata sem identidade verificada')
         elif cena.get('evidence') == 'representative' and cena.get('literal_identity'):
             falha('F-REPRESENTATIVA-ROTULADA-LITERAL', cid, 'imagem genérica não pode alegar identidade exata')
-        ids = [] if tipo == 'mechanism' else [cena.get('asset')]
+        ids = [] if tipo in ('mechanism','map') else [cena.get('asset')]
         if tipo == 'comparison':
             ids.append(cena.get('assetB'))
             if len(set(ids)) != 2:
@@ -241,9 +300,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
     shots=[]
     for c in plano['shots']:
         x={k:v for k,v in c.items() if k not in ('literal_identity','notes')}
-        if c['type'] != 'mechanism':
+        if c['type'] not in ('mechanism','map'):
             x['asset']=medias[c['asset']]['asset']
             x['source']=medias[c['asset']]['credit']
+        elif c['type']=='map':
+            x['source']='Natural Earth · world-atlas · coordenadas declaradas e verificáveis'
         else:
             x['source']='Esquema original · princípio hidráulico de uma eclusa'
             if c.get('reference_asset'):

@@ -1,0 +1,82 @@
+name: "QA — restaurar referencia visual dos mecanismos (NAO safe)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-referencia-visual-antes-vs-safe.yml"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-referencia-visual
+  cancel-in-progress: true
+jobs:
+  referencia_privada:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Instalar dependencias e verificar mecanismo original
+        run: |
+          python -m pip install -q pytest pillow requests numpy pyyaml cryptography
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Preparar a mesma timeline em modo de REFERENCIA nao SAFE
+        run: |
+          python -m src.v4.formatos.filme_editorial docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json qa_ref motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('qa_ref/props.json')
+          d=json.loads(p.read_text(encoding='utf8'))
+          d['preview']=True
+          d['private_review_only']=True
+          d['reference_style_preview']=True
+          d['safe_zone_debug']=False
+          assert len(d['shots'])==2
+          assert d['shots'][0]['mechanism']=='optical_projection'
+          assert d['shots'][0]['source_display']=='ASML · asml.com'
+          assert d['shots'][1]['mechanism']=='lock_explainer'
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
+      - name: Renderizar compositor original sem substituicao da fisica
+        timeout-minutes: 11
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_ref/referencia_original_NAO_SAFE.mp4 --props=../qa_ref/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Capturar comparativos e declarar bloqueio de publicacao
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -ss 2.2 -i qa_ref/referencia_original_NAO_SAFE.mp4 -frames:v 1 qa_ref/euv_referencia.png
+          ffmpeg -hide_banner -loglevel error -y -ss 10.0 -i qa_ref/referencia_original_NAO_SAFE.mp4 -frames:v 1 qa_ref/eclusa_referencia.png
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          d=Path('qa_ref')
+          p=d/'referencia_original_NAO_SAFE.mp4'
+          assert p.exists() and p.stat().st_size>30000
+          (d/'RELATORIO_NAO_PUBLICAR.json').write_text(
+            json.dumps({'visual':'REFERENCIA_ANTIGA_RESTAURADA',
+              'seguranca_multiplataforma':'NAO_APROVADA',
+              'evidencia_publicavel':False,
+              'publicar':False,'telegram':False,'voz':False,
+              'sha256':hashlib.sha256(p.read_bytes()).hexdigest()},
+              indent=2,ensure_ascii=False)+'\n')
+          PY
+      - name: Guardar referencia privada por 5 dias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-referencia-visual-antes-nao-safe
+          path: qa_ref/
+          retention-days: 5
+          if-no-files-found: warn

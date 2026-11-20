@@ -26,3 +26,17 @@ O teste positivo com óptica EUV e hidráulica demonstra que a seleção **não 
 
 ## Política de uso
 Branch experimental `atlas-direcao-visual-20261118`. Não tocar `main`, NTC, DOSSIÊ. Sem Claude/Gemini/voz/Telegram/publicação. O eixo editorial atual continua `Guerra dos Chips EUA × China`; estes são apenas mecanismos demonstrativos. A arquitetura não aprova automaticamente o roteiro, a licença de mídia nem o vídeo final.
+
+
+## Proteção de área segura para atores móveis — atualização de 20/11
+
+O feedback do usuário identificou um **corte do navio durante a subida**, sem interesse em trocar o desenho, pois é um teste não destinado a publicação. O defeito foi localizado na máscara **INTERNA** `cycleMapClip` do `LockCausalCycle.tsx`: ela começava em `y=715`, enquanto o topo do desenho subia até aproximadamente `y=625` no estágio alto. O recorte cortava o objeto antes que a lógica hidráulica terminasse.
+
+Em vez de trocar o ativo ou apenas mover a máscara arbitrariamente:
+- `motor4/remotion/src/formatos/AreaSeguraMovimento.ts` é um **utilitário transversal de cena** para objetos que se movem. Recebe caixa do ator (incluindo folga de sombra), pivô, clipping SVG, margens e posições-chave. Calcula o maior dimensionamento uniforme que mantém o objeto inteiro visível, restringe destino e **recusa render** se só couber encolhendo demais.
+- `areaInterna()` deriva margens do **mesmo retângulo** usado pelo `clipPath`, de modo que câmera e área segura não divergirão por duplicação.
+- `LockCausalCycle.tsx` agora usa esse utilitário para a sequência inteira. Limita o destino lateral **somente se** o objeto ainda completar a saída além do portão. O mesmo desenho do navio foi preservado; o ajuste é de **escala/enquadramento**, não de tipo de embarcação.
+- `motor4/tests/area-segura-movimento.test.mjs` usa o Node 22 para verificar 50 pontos entre entrada, subida e saída, além de um **balão hipotético** com outra geometria e o caso impossível em que a função deve bloquear em vez de cortar.
+- A QA `qa-diretor-capacidades.yml` agora compila, executa os testes geométricos e renderiza MP4 privado após mudanças no utilitário.
+
+**Limitação:** o utilitário está disponível para componentes novos, mas só está conectado automaticamente ao `LockCausalCycle` nesta rodada. Não dizer que cada animação existente passou a ter detecção automática de recorte: elas terão de declarar limites e trajetória para aproveitar a regra. Teste visual do MP4 ainda é obrigatório.

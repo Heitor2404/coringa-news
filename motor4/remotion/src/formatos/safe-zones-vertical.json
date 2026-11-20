@@ -81,10 +81,10 @@
   "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial.",
   "source_of_truth": "src/v4/formatos/plataformas.json",
   "mechanism_layout": {
-    "note": "Camera de mecanismo por componente e acao: todos os focos devem conter a geometria essencial do renderizador. Nao fechar enquadramento se navio, fonte, espelhos, valvula ou links causais sairem da tela; passos legiveis usam faixa editorial externa.",
+    "note": "Dois mecanismos homologados para reflow vertical 620x682 sem crop; outros permanecem na rota legado protegida. Cena possui titulo editorial numa faixa sem colisoes, etapa e fonte individuais. Perfis conservadores nao sao prova de UX em apps.",
     "visual": [
       150,
-      410,
+      479,
       770,
       1092
     ],
@@ -228,6 +228,20 @@
         "header_bottom": 650,
         "footer_top": 1500
       }
-    }
+    },
+    "native_portrait": [
+      "optical_projection",
+      "lock_explainer"
+    ],
+    "headline": [
+      160,
+      399,
+      760,
+      468
+    ],
+    "native_dimensions": [
+      620,
+      682
+    ]
   }
 }

@@ -182,8 +182,16 @@ def avaliar(plano: dict) -> dict:
     visual = set()
     momentos = set()  # cenas demonstrativas contam como acontecimento, não foto decorativa
     prev_end = 0.0
-    for n, cena in enumerate(cenas):
-        cid = str(cena.get('id') or f'cena-{n}')
+    from src.v4.formatos import catalogo_mecanismos
+    for n, original in enumerate(cenas):
+        # Seleção automática só entre renderers realmente implementados.
+        # Exigências de entrada/saída impedem usar card que só demonstra subida.
+        renderer, lacunas = catalogo_mecanismos.decidir(original)
+        cid = str(original.get('id') or f'cena-{n}')
+        for item in lacunas:
+            falha(item['codigo'], cid, item['motivo'])
+        cena = ({**original, 'mechanism': renderer}
+                if original.get('mechanism') == 'auto' and renderer else original)
         start, end = cena.get('start'), cena.get('end')
         if not isinstance(start, (int, float)) or not isinstance(end, (int, float)):
             falha('F-SEM-TEMPO', cid, 'início/fim inválidos')
@@ -194,7 +202,7 @@ def avaliar(plano: dict) -> dict:
         # Mecanismo com acontecimentos reais pode durar mais do que fotografia
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
-        eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_cycle'
+        eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') in ('lock_cycle', 'lock_cycle_standalone')
         eh_optico = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'optical_projection'
         eh_hidraulico = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_explainer'
         max_span = (float('inf') if cena.get('type') == 'video' else
@@ -212,8 +220,12 @@ def avaliar(plano: dict) -> dict:
                            isinstance(cena.get('reference_from_seconds'), (int, float)) and
                            abs(cena['reference_from_seconds'] -
                                (anterior.get('source_in_seconds', 0) + anterior['end'] - anterior['start'])) < .1)
-            if not continuidade:
+            if cena.get('mechanism') != 'lock_cycle_standalone' and not continuidade:
                 falha('F-PONTE-REAL', cid, 'o início do diagrama deve continuar do trecho real sem salto de origem')
+            if cena.get('mechanism') == 'lock_cycle_standalone' and (
+                    cena.get('reference_asset') or cena.get('reference_from_seconds') is not None):
+                falha('F-PONTE-SEM-PROVA', cid,
+                      'demonstração autônoma não pode fingir continuidade com filmagem')
             eventos = cena.get('cues') or []
             esperado = (('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit')
                         if eh_ciclo else
@@ -338,7 +350,7 @@ def avaliar(plano: dict) -> dict:
         if cena.get('evidence') not in ('literal', 'representative', 'explainer'):
             falha('F-SEM-PROVENIENCIA', cid, 'classifique literal, representativa ou explicativa')
         if tipo == 'mechanism':
-            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal', 'lock_cycle', 'lock_explainer', 'optical_projection') or
+            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal', 'lock_cycle', 'lock_cycle_standalone', 'lock_explainer', 'optical_projection', 'auto') or
                 cena.get('evidence') != 'explainer' or cena.get('literal_identity')):
                 falha('F-MECANISMO-NÃO-IDENTIFICADO', cid,
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')
@@ -540,8 +552,14 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         relatorio.append({'id':mid,'sha256':sha,'resolucao':[w,h],
                           'licenca':item['license'],'pagina':item['page']})
     shots=[]
+    from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
         x={k:v for k,v in c.items() if k not in ('literal_identity','notes')}
+        if c.get('mechanism') == 'auto':
+            resolved, issues = catalogo_mecanismos.decidir(c)
+            if issues or not resolved:
+                raise ValueError('mecanismo automático sem capacidade real: '+str(issues))
+            x['mechanism'] = resolved
         if c['type'] != 'mechanism':
             x['asset']=medias[c['asset']]['asset']
             x['source']=medias[c['asset']]['credit']
@@ -552,7 +570,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                 'ASML · https://www.asml.com/en/technology/lithography-principles'
                 if c.get('mechanism') == 'optical_projection' else
                 'ACP · https://pancanal.com/en/history-of-the-panama-canal/'
-                if c.get('mechanism') == 'lock_explainer' else
+                if x.get('mechanism') in ('lock_explainer', 'lock_cycle_standalone') else
                 'Esquema original · princípio hidráulico de uma eclusa'
             )
             if c.get('reference_asset'):

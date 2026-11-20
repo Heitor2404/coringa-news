@@ -334,13 +334,21 @@ def main(argv=None):
     parser.add_argument('public_root')
     parser.add_argument('--so-planejar',action='store_true',
                         help='sem rede; relatório de candidatos e preflight, não valida bytes')
+    parser.add_argument('--videos-curados',type=Path,
+                        help='arquivo separado do roteiro: janelas V3 com SHA/ROI originais já inspecionadas')
     args=parser.parse_args(argv)
     plano=json.loads(Path(args.roteiro_json).read_text('utf8'))
+    biblioteca=None
+    if args.videos_curados:
+        from src.v4.formatos import ponte_biblioteca, video_contextual_v3
+        videos=json.loads(args.videos_curados.read_text(encoding='utf8'))
+        biblioteca=video_contextual_v3.catalogo_com_video(
+            ponte_biblioteca.catalogo(),videos,requer_arquivo=True)
     pasta=Path(args.saida)
     pasta.mkdir(parents=True,exist_ok=True)
     try:
         if args.so_planejar:
-            plan=planejar(plano)
+            plan=planejar(plano,biblioteca=biblioteca)
             (pasta/'plano_hibrido.json').write_text(json.dumps(
                 plan['plano'],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
             (pasta/'triagem.json').write_text(json.dumps(
@@ -349,7 +357,7 @@ def main(argv=None):
                               'publicar':False,'duracao':plan['plano']['duracao']},
                              ensure_ascii=False))
             return 0
-        result=preparar(plano,pasta,Path(args.public_root))
+        result=preparar(plano,pasta,Path(args.public_root),biblioteca=biblioteca)
         print(json.dumps({'status':'PRIVADO_ORIGINAIS_SHA_VERIFICADOS',
                           'publicar':False,'pronto_qa':result['pronto']},
                          ensure_ascii=False))

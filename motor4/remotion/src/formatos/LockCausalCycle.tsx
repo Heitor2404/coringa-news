@@ -8,6 +8,7 @@
  */
 import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
+import {planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel} from './AreaSeguraMovimento';
 
 export type LockCycleAction =
   'enter' | 'seal' | 'valves' | 'rise' | 'equalize' | 'open' | 'exit';
@@ -20,6 +21,12 @@ type Props = {t: number; events: LockCycleCue[]; referenceAsset?: string; durati
 
 const YLOW=1110, YHIGH=817, YFLOOR=1335;
 const INLET_X=288, OUTLET_X=748;
+// Contornos + sombra do ator, não apenas centro e não o limite da água.
+// Geometria registrada do desenho atual; trocar o ativo exige atualizar bounds.
+// Compromisso narrativo: o navio INTEIRO fica visível ao entrar, subir e sair.
+const ACTOR_BOUNDS={left:344,top:904,right:621,bottom:1143};
+const ACTOR_PIVOT={x:480,y:YLOW};
+const AREA_VISIVEL={left:72,top:622,right:1002,bottom:1470};
 const GOLD='#FFD21F', WHITE='#F6F4EC', CYAN='#75DDEB';
 const clamp=(x:number)=>Math.max(0,Math.min(1,x));
 const ease=(x:number)=>{const y=clamp(x);return y*y*(3-2*y);};
@@ -38,8 +45,24 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
   const raise=ease((t-timeline.rise)/Math.max(1,timeline.equalize-timeline.rise-.1));
   const gateOpen=ease((t-timeline.open)/1.1);
   const travel=ease((t-timeline.exit)/Math.max(.8,(duration ?? 17.35)-timeline.exit));
-  const shipX=180+309*entry+442*travel;
+  // Decisão de enquadramento reutiliza o mesmo envelope para qualquer ator.
+  // Evita o defeito antigo: o mastro atravessava cycleMapClip (y=715).
+  const layout=planejarAreaSegura(ACTOR_BOUNDS,ACTOR_PIVOT,AREA_VISIVEL,[
+    {x:180,y:YLOW},{x:489,y:YLOW},{x:489,y:YHIGH},
+  ],{minScale:.72});
+  const vesselScale=layout.scale;
+  const destino=limitarDestinoSeguro(ACTOR_BOUNDS,ACTOR_PIVOT,AREA_VISIVEL,
+    vesselScale,{x:931,y:YHIGH});
+  const caudaNaSaida=destino.x+(ACTOR_BOUNDS.left-ACTOR_PIVOT.x)*vesselScale;
+  if(caudaNaSaida<=OUTLET_X+16){
+    throw new Error('AREA-SEGURA-NARRATIVA: objeto cabe, mas não completa a saída');
+  }
+  const shipX=180+309*entry+(destino.x-489)*travel;
   const waterY=YLOW-(YLOW-YHIGH)*raise;
+  if(!integralmenteVisivel(limitesDoAtor(
+    ACTOR_BOUNDS,ACTOR_PIVOT,{x:shipX,y:waterY},vesselScale),AREA_VISIVEL)){
+    throw new Error('AREA-SEGURA-QUADRO: ator parcialmente fora da área segura');
+  }
   const isFilling=flowOn>.01;
   const current=events.filter(e=>e.at<=t).slice(-1)[0] || events[0];
   const step=Math.max(0,events.indexOf(current));
@@ -82,7 +105,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
             <path d="M0 30 L35 30 M34 0 L34 32" fill="none" stroke="#273B46" strokeOpacity=".35" strokeWidth="1.6"/>
           </pattern>
           <clipPath id="cycleChamberClip"><rect x={INLET_X+14} y="720" width={OUTLET_X-INLET_X-28} height={YFLOOR-720}/></clipPath>
-          <clipPath id="cycleMapClip"><rect x="61" y="715" width="957" height="785"/></clipPath>
+          <clipPath id="cycleMapClip"><rect x="61" y="608" width="957" height="892"/></clipPath>
         </defs>
         <rect width="1080" height="1920" fill="url(#cycleGrid)"/>
 
@@ -90,9 +113,9 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
         <text x="75" y="448" fill="#9CC0CC" fontSize="26" fontWeight="800" letterSpacing="2.8">PRINCÍPIO FÍSICO · VISTA LATERAL SIMPLIFICADA</text>
         <text x="74" y="511" fill={WHITE} fontSize="55" fontWeight="900">COMO UM NAVIO SOBE?</text>
         <path d="M77 538 H1003" stroke="#54798B" strokeWidth="2"/>
-        <text x="98" y="662" fill="#ADC0CC" fontSize="25" fontWeight="800">CANAL INFERIOR</text>
-        <text x="375" y="662" fill="#F3F5F4" fontSize="25" fontWeight="800">CÂMARA</text>
-        <text x="808" y="662" fill={CYAN} fontSize="25" fontWeight="800">NÍVEL ALTO</text>
+        <text x="98" y="590" fill="#ADC0CC" fontSize="24" fontWeight="800">CANAL INFERIOR</text>
+        <text x="375" y="590" fill="#F3F5F4" fontSize="24" fontWeight="800">CÂMARA</text>
+        <text x="808" y="590" fill={CYAN} fontSize="24" fontWeight="800">NÍVEL ALTO</text>
 
         {/* Seção longitudinal completa: duas cotas diferentes e câmara entre portões. */}
         <g clipPath="url(#cycleMapClip)">
@@ -147,6 +170,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
 
           {/* O navio flutua continuamente: subida Y tem MESMA curva da água. */}
           <g transform={'translate('+(shipX-480)+','+(waterY-YLOW)+')'}>
+            <g transform={`translate(480 ${YLOW}) scale(${vesselScale}) translate(-480 -${YLOW})`}>
             <g filter="drop-shadow(0px 8px 6px rgba(3,9,15,.5))">
               <path d="M353 1035 H608 L573 1130 H395Z" fill="url(#cycleHull)" stroke="#EDF5F5" strokeWidth="4"/>
               <path d="M377 1100 H584" stroke="#356C84" strokeWidth="8"/>
@@ -158,6 +182,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
                 rx="2" fill="#235574"/>)}
               {Array.from({length:6},(_,i)=><rect key={i} x={399+i*27} y="1046" width="16" height="9"
                 rx="2" fill="#456E83"/>)}
+            </g>
             </g>
           </g>
 

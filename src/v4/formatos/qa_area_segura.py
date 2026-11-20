@@ -30,39 +30,34 @@ def validar_contrato()->dict:
     c=carregar()
     if c.get('version')!=1 or c.get('resolution')!=[1080,1920] or c.get('profile')!=PERFIL:
         raise ValueError('SAFE-CONTRATO: versão ou proporção divergente')
+    if c.get('source_of_truth')!='src/v4/formatos/plataformas.json':
+        raise ValueError('SAFE-PERFIL-FONTE: usar perfis ATLAS existentes')
     full=[0,0,1080,1920]
     uni=c['universal']
     if not _dentro(uni,full):
-        raise ValueError('SAFE-UNIVERSAL: fora de 9:16')
-    atlas=json.loads((ROOT/'src/v4/formatos/plataformas.json').read_text(encoding='utf8'))
-    # Não criar dois motores de margens divergentes. A fonte ATLAS/Camada
-    # precede o compositor editorial; a nova interseção deve ser um
-    # SUBCONJUNTO seguro das mesmas políticas.
-    aliases={'reels':'instagram_reels','tiktok':'tiktok','shorts':'youtube_shorts'}
-    if c.get('source_of_truth')!='src/v4/formatos/plataformas.json':
-        raise ValueError('SAFE-PERFIL-FONTE: usar o perfil existente, não duplicar medidas da interface')
+        raise ValueError('SAFE-UNIVERSAL: fora do 9:16')
+    # Camada/ATLAS já usam layout.py. O Filho FilmeEditorial não pode
+    # adotar um suposto safe zone que o ATLAS considera COBERTO.
     perfis=LAYOUT.perfis()
+    if set(perfis)!={'tiktok','instagram_reels','youtube_shorts'}:
+        raise ValueError('SAFE-PERFIS: motor não usa as três plataformas')
     for nome,p in perfis.items():
-        if (uni[0]<p['esquerda'] or uni[1]<p['topo'] or
-            uni[3]>1920-p['base'] or
-            uni[2]>LAYOUT.limite_direito(uni[1],uni[3],[nome])):
+        if (uni[0]<p['esquerda'] or uni[1]<p['topo']
+            or uni[3]>1920-p['base']
+            or uni[2]>LAYOUT.limite_direito(uni[1],uni[3],[nome])):
             raise ValueError('SAFE-PLATAFORMA: caixa comum não cabe em '+nome)
-        p=atlas['perfis'][aliases[platform]]
-        if (p['topo']<item['safe'][1]
-            or p['base']<1920-item['safe'][3]
-            or p['esquerda']<item['safe'][0]
-            or 1080-p['direita']['largura']>item['safe'][2]
-            or p['direita']['de_y']>840):
-            raise ValueError('SAFE-ATLAS-DIVERGENTE: perfis ATLAS/FilmeEditorial divergiram em '+platform)
     for name,rect in c['slots'].items():
         if not _dentro(rect,uni):
             raise ValueError('SAFE-SLOT: '+name+' fora da área de leitura')
-    # Ordem editorial sem colisão. Fundo e barra decorativa não entram.
-    y=c['slots']
-    order=['brand','section','visual','cue','headline','subject','source','subtitle']
-    for one,two in zip(order,order[1:]):
-        if y[one][3]>y[two][1]:
-            raise ValueError('SAFE-SLOTS-SOBREPOSTOS: '+one+'/'+two)
+    # Modos exclusivos! A legenda de voz substitui título/cue/subject;
+    # sem ela os títulos usam a mesma janela, nunca se sobrepõem.
+    for order in (
+        ('brand','section','visual','cue','headline','subject','source'),
+        ('brand','section','visual','subtitle','source')
+    ):
+        for a,b in zip(order,order[1:]):
+            if c['slots'][a][3]>c['slots'][b][1]:
+                raise ValueError('SAFE-SLOTS-SOBREPOSTOS: '+a+'/'+b)
     return {'area_universal':uni,'slots':c['slots'],
             'plataformas':list(perfis),'perfil':PERFIL}
 

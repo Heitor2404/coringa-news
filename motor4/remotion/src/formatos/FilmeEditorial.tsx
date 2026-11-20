@@ -237,7 +237,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
     </div>}
     {shot.mechanism!=='lock_cycle' && <>
     <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
-      {shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}
+      {['lock_explainer','optical_projection'].includes(shot.mechanism || '')
+        ? 'ESQUEMA ILUSTRATIVO · NÃO É FILMAGEM REAL'
+        : <>{shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}</>}
     </div>
     <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?163:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:23,color:'#ACBBC7',letterSpacing:.3}}>
       FONTE: {shot.source}

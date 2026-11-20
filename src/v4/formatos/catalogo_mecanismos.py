@@ -16,21 +16,41 @@ class Capacidade:
     acoes: tuple[str, ...]
     fases: frozenset[str]
     media_real_obrigatoria: bool = False
+    # Perfil temporal cadastrado no próprio renderer; nenhum tempo é
+    # descoberto pelo nome do assunto. Para diretor automático, a duração
+    # total continua sendo exigida dos eventos/voz, nunca inventada.
+    duracao_referencia: float = 0.0
+    tempos_referencia: tuple[float, ...] = ()
+    rotulos: tuple[str, ...] = ()
 
 
 CAPACIDADES: dict[str, Capacidade] = {
     'lock_cycle': Capacidade(
         'lock_cycle', ('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit'),
-        frozenset({'entrada', 'mecanismo', 'saida'}), True),
+        frozenset({'entrada', 'mecanismo', 'saida'}), True,
+        17.5, (0,2.6,4.6,6.1,12.2,14,15.6),
+        ('O NAVIO ENTRA', 'PORTÃO FECHA', 'VÁLVULA ABRE',
+         'NAVIO SOBE COM A ÁGUA', 'OS NÍVEIS SE IGUALAM',
+         'PORTÃO DE SAÍDA ABRE', 'O NAVIO SAI')),
     'lock_cycle_standalone': Capacidade(
         'lock_cycle_standalone', ('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit'),
-        frozenset({'entrada', 'mecanismo', 'saida'})),
+        frozenset({'entrada', 'mecanismo', 'saida'}), False,
+        17.5, (0,2.6,4.6,6.1,12.2,14,15.6),
+        ('O NAVIO ENTRA', 'PORTÃO FECHA', 'VÁLVULA ABRE',
+         'NAVIO SOBE COM A ÁGUA', 'OS NÍVEIS SE IGUALAM',
+         'PORTÃO DE SAÍDA ABRE', 'O NAVIO SAI')),
     'lock_explainer': Capacidade(
         'lock_explainer', ('closed', 'water_enter', 'rise', 'equalize', 'release'),
-        frozenset({'mecanismo'})),
+        frozenset({'mecanismo'}), False,
+        10.3, (0,1.2,3.0,7.1,8.8),
+        ('CÂMARA FECHADA', 'ÁGUA ENTRA', 'NAVIO SOBE',
+         'NÍVEIS IGUAIS', 'PASSAGEM LIBERADA')),
     'optical_projection': Capacidade(
         'optical_projection', ('source', 'reticle', 'projection', 'wafer'),
-        frozenset({'origem', 'transformacao', 'resultado'})),
+        frozenset({'origem', 'transformacao', 'resultado'}), False,
+        6.9, (0,1.1,2.65,4.65),
+        ('FONTE DE LUZ EUV', 'MÁSCARA REFLEXIVA',
+         'ESPELHOS PROJETAM PADRÃO', 'RESIST DO WAFER EXPOSTO')),
 }
 # Mecanismos anteriores permanecem em modo LEGADO, sem escolha automática:
 # lock_causal e lock_filling não prometem um ciclo completo.

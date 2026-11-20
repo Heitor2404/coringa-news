@@ -117,11 +117,11 @@ def _cena_video_contextual(cena:dict, row:dict, biblioteca:dict, inicio:float)->
                 'duração do roteiro deve coincidir com a janela curada; não acelerar a fonte')])
     points=win.get('roi') or []
     video_fr={
-        'modo':'roi_observada','sha256_origem':sha,
+        'modo':'relacao_observada','sha256_origem':sha,
         'inspecao':it['inspecao'],
         'pontos':[
             {'at':p['at'],'fonte_s':round(start+p['at'],4),
-             'area_essencial':p['area_essencial']} for p in points
+             'elementos':p['elementos']} for p in points
         ],
     }
     mid='v3-'+sha[:16]
@@ -138,9 +138,9 @@ def _cena_video_contextual(cena:dict, row:dict, biblioteca:dict, inicio:float)->
         'id':cid,'start':round(inicio,4),'end':round(inicio+dur,4),
         'type':'video','asset':mid,'source_in_seconds':start,
         'video_framing':video_fr,
-        'evidence':'representative','lead':'VÍDEO REAL · REGISTRO CONTEXTUAL',
-        'headline':ref.upper(),'subject':'Imagem institucional de origem identificada, sem prova de ação específica',
-        'cues':[{'at':min(.48,dur*.20),'label':'ACERVO INSTITUCIONAL · CONTEXTO'}],
+        'evidence':'representative','lead':'VÍDEO DE ARQUIVO',
+        'headline':ref.upper(),'subject':'Laboratório independente · registro contextual',
+        'cues':[{'at':min(.48,dur*.20),'label':'LABORATÓRIO · ARQUIVO'}],
         'direcao_evento':{
             'intencao':'explicar_contexto','fato_id':ac['id'],
             'aprendizado':'Local e equipamentos da fonte, sem atribuir o laboratório ao evento narrado',

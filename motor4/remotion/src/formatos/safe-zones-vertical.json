@@ -5,61 +5,61 @@
     1920
   ],
   "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
-  "notes": "Faixas EDITORIAIS do FilmeEditorial. Os perfis de interface e seus riscos pertencem EXCLUSIVAMENTE a src/v4/formatos/plataformas.json + layout.py. Heurística conservadora para UI orgânica, sujeita a inspeção humana real. Legendas reservadas, não renderizadas nesta QA.",
+  "notes": "Fonte da política de interface: src/v4/formatos/plataformas.json e layout.py. Os slots abaixo são geometria de DOIS modos MUTUAMENTE EXCLUSIVOS: sem narração (cue/headline/subject/source); com legendas (subtitle/source). Conteúdo geral do filme não é homologado somente pela posição destes slots.",
   "universal": [
-    120,
+    150,
     300,
-    820,
-    1380
+    770,
+    1240
   ],
   "slots": {
     "brand": [
-      132,
-      317,
-      720,
-      351
+      160,
+      312,
+      500,
+      350
     ],
     "section": [
-      132,
-      360,
-      806,
-      395
+      160,
+      363,
+      760,
+      396
     ],
     "visual": [
-      120,
-      411,
-      820,
-      947
+      150,
+      410,
+      770,
+      1010
     ],
     "cue": [
-      132,
-      960,
-      806,
-      1002
+      160,
+      1016,
+      760,
+      1056
     ],
     "headline": [
-      132,
-      1010,
-      806,
-      1093
+      160,
+      1062,
+      760,
+      1150
     ],
     "subject": [
-      132,
-      1101,
-      806,
-      1142
+      160,
+      1155,
+      760,
+      1187
     ],
     "source": [
-      132,
-      1151,
-      806,
-      1195
+      160,
+      1195,
+      760,
+      1235
     ],
     "subtitle": [
-      132,
-      1230,
-      806,
-      1360
+      160,
+      1030,
+      760,
+      1180
     ]
   },
   "nonessential": [

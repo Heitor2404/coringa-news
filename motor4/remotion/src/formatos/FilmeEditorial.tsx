@@ -252,9 +252,13 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if (shot.type==='mechanism' || (shot.graphic_original && shot.motion_graphic)) {
     // Exibir acontecimento maior sem levar a antiga tipografia decorativa
     // do topo/rodapé para fora da zona de leitura.
-    const scale=shot.mechanism==='optical_projection'?.64:
-      shot.mechanism==='lock_explainer'?.61:.565;
-    const sourceY=shot.motion_graphic?450:shot.mechanism==='optical_projection'?650:640;
+    // O palco é uma janela da AÇÃO, não uma miniatura do SVG inteiro.
+    // Mostra a ferramenta principal e seus rótulos; os títulos/footer
+    // internos ficam fora. A tipografia pública pertence aos slots SAFE.
+    const scale=shot.motion_graphic?.565:
+      shot.mechanism==='optical_projection'||shot.mechanism==='lock_explainer'?.64:.59;
+    const sourceY=shot.motion_graphic?450:
+      shot.mechanism==='optical_projection'||shot.mechanism==='lock_explainer'?720:675;
     const sourceX=(1080-(SAFE.visual[2]-SAFE.visual[0])/scale)/2;
     return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 59%,#173047,#0B1D2D 52%,#050F1C 100%)'}}>
       <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',

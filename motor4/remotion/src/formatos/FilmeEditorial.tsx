@@ -7,6 +7,7 @@ import React from 'react';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
+import {OpticalProjection} from './OpticalProjection';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
@@ -28,7 +29,7 @@ export type FilmShot = {
   source: string;
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
-  mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle';
+  mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle' | 'lock_explainer' | 'optical_projection';
   reference_asset?: string;
   reference_from_seconds?: number;
   subject: string;
@@ -136,6 +137,12 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 };
 
 const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
+  if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
+    return <OpticalProjection t={t} events={shot.cues || []}/>;
+  if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
+    return <LockCausal t={t} events={(shot.cues || []).map(c => ({
+      at:c.at,label:c.label,action:c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
+    }))}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_cycle')
     return <LockCausalCycle t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
@@ -210,7 +217,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <Body shot={shot} p={p} t={now-shot.start}/>
     {/* strong editorial gradient is NOT a black rectangle over the subject */}
-    {!shot.graphic_original && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
+    {!shot.graphic_original && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && shot.mechanism!=='lock_explainer' && shot.mechanism!=='optical_projection' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
     <div style={{position:'absolute',top:248,left:62,right:62,display:'flex',justifyContent:'space-between',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
       <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
       <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
@@ -223,7 +230,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       padding:'13px 17px',borderLeft:`6px solid ${GOLD}`,
       background:'rgba(6,12,22,.78)',color:OFF_WHITE,letterSpacing:.5,
     }}>{cue.label}</div>}
-    {!shot.graphic_original && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && <div style={{position:'absolute',left:60,right:60,top:1275,
+    {!shot.graphic_original && shot.mechanism!=='lock_causal' && shot.mechanism!=='lock_cycle' && shot.mechanism!=='lock_explainer' && shot.mechanism!=='optical_projection' && <div style={{position:'absolute',left:60,right:60,top:1275,
       opacity:ease((now-shot.start-.12)/.32),transform:`translateY(${(1-ease((now-shot.start-.12)/.32))*36}px)`,
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>

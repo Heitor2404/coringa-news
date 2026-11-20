@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel,
+  planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel,areaInterna,
 } from '../remotion/src/formatos/AreaSeguraMovimento.ts';
 
 const subject={left:344,top:904,right:621,bottom:1143};
@@ -63,4 +63,13 @@ test('Bloquear area impossivel e dados invalidos',()=>{
     {left:100,top:200,right:100,bottom:300},visible),/AREA-SEGURA-DADOS/);
   assert.throws(()=>planejarAreaSegura(subject,pivot,safe,[],{}),/AREA-SEGURA-DADOS/);
   assert.throws(()=>planejarAreaSegura(subject,pivot,safe,[{x:NaN,y:100}]),/AREA-SEGURA-DADOS/);
+});
+
+
+test('Area de atores deriva do MESMO recorte SVG, nao de numero independente',()=>{
+  const clip={left:61,top:608,right:1018,bottom:1500};
+  const derived=areaInterna(clip,{left:11,top:14,right:16,bottom:30});
+  assert.deepEqual(derived,safe);
+  assert.throws(()=>areaInterna(clip,{left:0,top:0,right:2000,bottom:0}),
+    /AREA-SEGURA-MARGEM/);
 });

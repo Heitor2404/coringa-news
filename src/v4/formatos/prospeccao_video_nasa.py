@@ -96,7 +96,25 @@ def inspecionar(master:Path,destino:Path)->dict:
         stamps.append(at)
     destino.parent.mkdir(parents=True,exist_ok=True)
     contato.save(destino,quality=91)
+    # Toda mídia com começo de ação conhecido recebe também quadro a quadro
+    # do PRIMEIRO intervalo, sem transformar mudança de pixels em prova.
+    foco_ate=min(10.0,info['duracao_s'])
+    foco=Image.new('RGB',(4*432,3*273),(10,20,30))
+    fd=ImageDraw.Draw(foco)
+    focot=[]
+    for j in range(12):
+        t=round(foco_ate*(j+.5)/12,3)
+        im=BASE.frame(master,t)
+        im.thumbnail((420,238))
+        col,row=j%4,j//4
+        foco.paste(im,(col*432+(432-im.width)//2,row*273))
+        fd.text((col*432+8,row*273+243),
+                f'ORIGINAL NASA {t:.2f}s | detalhe {j+1}/12',fill=(240,242,244))
+        focot.append(t)
+    focusname=destino.with_name(destino.stem+'_inicio.jpg')
+    foco.save(focusname,quality=91)
     return {'sonda':info,'contato':destino.name,'quadros':stamps,
+            'contato_inicio':focusname.name,'quadros_inicio_s':focot,
             'tipo_original':'SEQUENCIA_DAS_CAMERAS_DO_ROVER',
             'fato_corresponde_a_narrativa':'EXIGE_INSPECAO_DOS_QUADROS',
             'direitos_terceiros':'REVISAO_PENDENTE',

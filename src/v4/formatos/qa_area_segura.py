@@ -58,6 +58,40 @@ def validar_contrato()->dict:
         for a,b in zip(order,order[1:]):
             if c['slots'][a][3]>c['slots'][b][1]:
                 raise ValueError('SAFE-SLOTS-SOBREPOSTOS: '+a+'/'+b)
+    # A camera e a etapa editorial de mecanismo compartilham o mesmo
+    # retangulo da UI. A faixa de voz usa o palco original, nao a expansao.
+    mech=c.get('mechanism_layout') or {}
+    stage,step=mech.get('visual'),mech.get('step')
+    if not isinstance(stage,list) or not isinstance(step,list):
+        raise ValueError('SAFE-MECANISMO-LAYOUT: faltam palco e faixa de etapa')
+    if not (_dentro(stage,uni) and _dentro(step,uni)):
+        raise ValueError('SAFE-MECANISMO-LAYOUT: palco/etapa fora da intersecao')
+    for a,b in zip((c['slots']['section'],stage,step),
+                   (stage,step,c['slots']['source'])):
+        if a[3]>b[1]:
+            raise ValueError('SAFE-MECANISMO-COLISAO: palco/etapa/fonte sobrepostos')
+    if not (0.15<=mech.get('transition_seconds',0)<=0.8):
+        raise ValueError('SAFE-MECANISMO-CAMERA: transicao invalida')
+    def box_valida(box):
+        return isinstance(box,list) and len(box)==4 and all(
+            isinstance(n,(int,float)) and not isinstance(n,bool) for n in box
+        ) and _dentro(box,full)
+    if not box_valida(mech.get('default_bounds')):
+        raise ValueError('SAFE-MECANISMO-CAMERA: regiao principal invalida')
+    for tipo,estados in (mech.get('focus') or {}).items():
+        if not isinstance(estados,dict) or not estados or not tipo:
+            raise ValueError('SAFE-MECANISMO-CAMERA: catalogo invalido')
+        if 'default' not in estados:
+            raise ValueError('SAFE-MECANISMO-CAMERA: sem camera geral '+tipo)
+        for acao,box in estados.items():
+            if not box_valida(box):
+                raise ValueError('SAFE-MECANISMO-CAMERA: box invalido '+tipo+'/'+acao)
+            # Foco com tamanho absurdamente grande/minimo gera diagramas
+            # ilegíveis ou cortes excessivos. Não certificar conteúdo interno.
+            w,h=box[2]-box[0],box[3]-box[1]
+            escala=min((stage[2]-stage[0])/w,(stage[3]-stage[1])/h)
+            if escala<0.59 or escala>1.3:
+                raise ValueError('SAFE-MECANISMO-CAMERA: escala inadequada '+tipo+'/'+acao)
     return {'area_universal':uni,'slots':c['slots'],
             'plataformas':list(perfis),'perfil':PERFIL}
 
@@ -132,6 +166,20 @@ def auditar_plano(plano:dict, *, bloquear_nao_homologados=True)->dict:
             ):
                 add('SAFE-VIDEO-LAYOUT',cid,'layout de mídia desconhecido')
         if kind=='mechanism':
+            focus=(carregar().get('mechanism_layout') or {}).get('focus',{})
+            cameras=focus.get(s.get('mechanism')) or {}
+            detalhadas=any(key!='default' for key in cameras)
+            for e in s.get('cues') or []:
+                if not isinstance(e,dict):
+                    add('SAFE-MECANISMO-ETAPA',cid,'cue de mecanismo invalida')
+                    continue
+                label=str(e.get('label') or '')
+                if len(label)>58:
+                    add('SAFE-MECANISMO-ETAPA-LONGA',cid,
+                        'etapa excede a faixa editorial legivel; dividir texto')
+                if detalhadas and e.get('action') not in cameras:
+                    add('SAFE-MECANISMO-FOCO-AUSENTE',cid,
+                        'acao sem janela visual no componente: '+str(e.get('action')))
             add('SAFE-MECANISMO-PIXELS-PENDENTES',cid,
                 'palco físico reposicionado; atores e rótulos internos exigem inspeção no MP4 final',
                 False)

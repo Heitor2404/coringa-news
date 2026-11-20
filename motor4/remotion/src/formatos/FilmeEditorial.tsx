@@ -29,6 +29,7 @@ export type FilmShot = {
   motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
+  source_display?: string; // crédito curto em tela, URL integral nos props
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
   mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle' | 'lock_cycle_standalone' | 'lock_explainer' | 'optical_projection';
@@ -249,11 +250,17 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
  */
 const SafeBody: React.FC<{shot:FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if (shot.type==='mechanism' || (shot.graphic_original && shot.motion_graphic)) {
-    const scale=.565;
-    const originY=shot.type==='mechanism'?620:450;
-    return <AbsoluteFill style={{background:'#071523'}}>
+    // Exibir acontecimento maior sem levar a antiga tipografia decorativa
+    // do topo/rodapé para fora da zona de leitura.
+    const scale=shot.mechanism==='optical_projection'?.64:
+      shot.mechanism==='lock_explainer'?.61:.565;
+    const sourceY=shot.motion_graphic?450:shot.mechanism==='optical_projection'?650:640;
+    const sourceX=(1080-(SAFE.visual[2]-SAFE.visual[0])/scale)/2;
+    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 59%,#173047,#0B1D2D 52%,#050F1C 100%)'}}>
+      <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',
+        backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
       <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
-        <div style={{position:'absolute',left:5,top:-originY*scale,
+        <div style={{position:'absolute',left:-sourceX*scale,top:-sourceY*scale,
           width:1080,height:1920,transform:`scale(${scale})`,transformOrigin:'top left'}}>
           <Body shot={shot} p={p} t={t}/>
         </div>
@@ -314,7 +321,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.lead.toUpperCase()}
     </div>
-    {active&&!shot.graphic_original&&<div data-safe-role="cue"
+    {active&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
       style={{...safeSlot('cue'),fontFamily:'Inter,Arial,sans-serif',
         fontSize:active.label.length>32?24:28,fontWeight:900,color:GOLD,
         opacity:ease(age/.20),overflow:'hidden',lineHeight:1.15,
@@ -337,7 +344,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
-      FONTE: {shot.source}
+      FONTE: {shot.source_display || shot.source}
     </div>
   </AbsoluteFill>;
 };

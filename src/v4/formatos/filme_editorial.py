@@ -107,6 +107,91 @@ def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,i
     return resultado
 
 
+
+def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int])->dict:
+    """Determina apresentação de um clipe REAL com 1+ referentes observados.
+
+    Se todas as regiões essenciais cabem JUNTAS no 9:16, recorta com câmera
+    dirigida. Senão, preserva a filmagem inteira em faixa panorâmica.
+    Não esconder metade de uma relação (pessoa+máquina) em zoom 9:16.
+    A decisão é geométrica e ainda exige inspeção do MP4 renderizado.
+    """
+    import math
+    d=cena.get('video_framing') or {}
+    if d.get('modo')!='relacao_observada':
+        raise ValueError('F-RELACAO-CONTRATO: referências de objetos ausentes')
+    if d.get('sha256_origem')!=midia.get('expected_sha256'):
+        raise ValueError('F-RELACAO-SHA: anotação não pertence a este original')
+    if not isinstance(d.get('inspecao'),str) or len(d['inspecao'].strip())<35:
+        raise ValueError('F-RELACAO-INSPECAO: falta análise da sequência original')
+    w,h=dimensoes
+    if (not isinstance(w,int) or not isinstance(h,int)
+        or min(w,h)<700 or w<h):
+        raise ValueError('F-RELACAO-DIMENSOES: modo panorâmico exige origem real de boa resolução')
+    points=d.get('pontos')
+    if not isinstance(points,list) or len(points)<2:
+        raise ValueError('F-RELACAO-PONTOS: revisar vários quadros originais')
+    span=cena['end']-cena['start']
+    origin=cena.get('source_in_seconds')
+    if (not isinstance(origin,(int,float)) or not math.isfinite(origin) or
+        origin<0 or span<=0):
+        raise ValueError('F-RELACAO-TEMPO: janela de origem inválida')
+    union=[]
+    last=-1
+    for item in points:
+        if not isinstance(item,dict):
+            raise ValueError('F-RELACAO-ITEM: ponto inválido')
+        at=item.get('at')
+        fonte=item.get('fonte_s')
+        if (not isinstance(at,(int,float)) or not isinstance(fonte,(int,float))
+            or not math.isfinite(at) or not math.isfinite(fonte)
+            or at<=last or at<0 or at>=span or abs(fonte-(origin+at))>.12):
+            raise ValueError('F-RELACAO-TEMPO: anotação e original não correspondem')
+        last=at
+        elems=item.get('elementos')
+        if not isinstance(elems,list) or not elems:
+            raise ValueError('F-RELACAO-ELEMENTOS: referente ausente')
+        bbs=[]
+        nomes=set()
+        for e in elems:
+            if not isinstance(e,dict) or not isinstance(e.get('nome'),str):
+                raise ValueError('F-RELACAO-ELEMENTOS: rótulo obrigatório')
+            nome=e['nome'].strip()
+            box=e.get('bbox')
+            if (not nome or nome in nomes or not isinstance(box,list)
+                or len(box)!=4 or any(
+                    not isinstance(n,(int,float)) or not math.isfinite(n) for n in box)
+                or not 0<=box[0]<box[2]<=1 or not 0<=box[1]<box[3]<=1):
+                raise ValueError('F-RELACAO-ELEMENTOS: bbox/nome inválido')
+            nomes.add(nome)
+            bbs.append(box)
+        union.append({
+            'at':at,'fonte_s':fonte,
+            'area_essencial':[
+                min(b[0] for b in bbs),min(b[1] for b in bbs),
+                max(b[2] for b in bbs),max(b[3] for b in bbs),
+            ]})
+    roi={**cena,'video_framing':{
+        'modo':'roi_observada','sha256_origem':d['sha256_origem'],
+        'inspecao':d['inspecao'],'pontos':union,
+    }}
+    try:
+        positions=planejar_enquadramento_video(roi,midia,dimensoes)
+        return {'layout':'recorte_relacional_seguro',
+                'framing_positions':positions,
+                'elementos_protegidos':sorted({e['nome'] for x in points
+                                               for e in x['elementos']})}
+    except ValueError as exc:
+        if not str(exc).startswith('F-ROI-NAO-CABE'):
+            raise
+        return {'layout':'cena_integral',
+                'framing_positions':[],
+                'motivo':'referentes separados fisicamente; recorte 9:16 amputaria a relação',
+                'elementos_protegidos':sorted({e['nome'] for x in points
+                                               for e in x['elementos']})}
+
+
+
 def avaliar(plano: dict) -> dict:
     # Mesmo preflight para storyboard manual ou gerado do evento:
     # autor/editor não precisam nomear mecanismo nem inventar tempos dos cues.
@@ -318,7 +403,10 @@ def avaliar(plano: dict) -> dict:
             altura=origem_enquadramento.get('height')
             if contrato_roi is not None:
                 try:
-                    planejar_enquadramento_video(cena,origem_enquadramento,(largura,altura))
+                    if contrato_roi.get('modo')=='relacao_observada':
+                        resolver_relacao_video(cena,origem_enquadramento,(largura,altura))
+                    else:
+                        planejar_enquadramento_video(cena,origem_enquadramento,(largura,altura))
                 except (ValueError,TypeError) as exc:
                     motivo=str(exc)
                     codigo=motivo.split(':',1)[0] if motivo.startswith('F-ROI-') else 'F-ROI-INVALIDO'
@@ -626,9 +714,15 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                                       plano['media'][c['asset']].get('height'))
                 if dimensoes_reais!=dimensoes_declaradas:
                     raise ValueError(c['id']+': dimensões reais diferem do enquadramento auditado')
-                x['framing_positions']=planejar_enquadramento_video(
-                    c,plano['media'][c['asset']],dimensoes_reais
-                )
+                if c['video_framing'].get('modo')=='relacao_observada':
+                    strategy=resolver_relacao_video(
+                        c,plano['media'][c['asset']],dimensoes_reais)
+                    x['video_context_layout']=strategy['layout']
+                    x['framing_positions']=strategy['framing_positions']
+                else:
+                    x['framing_positions']=planejar_enquadramento_video(
+                        c,plano['media'][c['asset']],dimensoes_reais
+                    )
             elif plano.get('tipo')!='PROVA_VISUAL_PRIVADA' and medias[c['asset']]['width']>medias[c['asset']]['height']:
                 raise ValueError(c['id']+': vídeo horizontal final sem enquadramento dirigido')
         if c.get('assetB'):

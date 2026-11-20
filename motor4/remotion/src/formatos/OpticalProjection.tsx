@@ -37,7 +37,7 @@ export const OpticalProjection:React.FC<Props>=({t,events})=>{
       aria-label="Esquema ilustrativo: a luz ultravioleta extrema é refletida em uma máscara, guiada por espelhos e expõe o resist do wafer">
       <defs>
         <pattern id="opticalGrid" width="66" height="66" patternUnits="userSpaceOnUse">
-          <path d="M66 0H0V66" stroke="#7291A1" strokeOpacity=".12" strokeWidth="1"/>
+          <path d="M66 0H0V66" fill="none" stroke="#7291A1" strokeOpacity=".12" strokeWidth="1"/>
         </pattern>
         <linearGradient id="waferBody" x1="0" x2="0" y1="0" y2="1">
           <stop stopColor="#B6CDD5"/><stop offset="1" stopColor="#34556C"/>
@@ -86,10 +86,9 @@ export const OpticalProjection:React.FC<Props>=({t,events})=>{
       <text x="515" y="1474" textAnchor="middle" fill={MUTED} fontSize="27">
         {resist>.15?'PADRÃO EXPOSTO NA CAMADA FOTOSSENSÍVEL':'SUPERFÍCIE FOTOSSENSÍVEL'}
       </text>
-      <text x="76" y="1566" fill={GOLD} fontSize="30" fontWeight="900">
+      <text x="76" y="1535" fill={GOLD} fontSize="30" fontWeight="900">
         {event?.label || 'ESQUEMA EXPLICATIVO'}
       </text>
-      <text x="76" y="1603" fill={MUTED} fontSize="23">Etapas representadas, não equipamentos em escala</text>
     </svg>
   </AbsoluteFill>;
 };

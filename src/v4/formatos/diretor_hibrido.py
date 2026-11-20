@@ -150,20 +150,28 @@ def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
                 'credit':it['credito'],
                 'media_type':'photo',
             }
-            title=str(ac.get('mostrar') or '').strip()
-            if len(title)>100 or not title:
+            # "mostrar ..." é INSTRUÇÃO INTERNA de direção, não legenda.
+            # O texto público só vem da identidade factual do sujeito;
+            # nenhuma frase de roteiro é transformada em slogan por regex.
+            title=str(ac.get('sujeito') or '').strip()
+            if len(title)>70 or not title:
                 raise MontagemHibridaBloqueada([_erro(
-                    'H-LEGENDA',cid,'descrição da cena precisa ser curta e editorialmente útil'
+                    'H-LEGENDA',cid,'sujeito não é título público legível; revisar narrativa'
                 )],report)
+            ano=it.get('ano')
+            if not isinstance(ano,int) or not 1800<=ano<=2100:
+                ano=None
+            context='Foto de arquivo'+(f' · {ano}' if ano else '')
             shot={
                 'id':cid, 'start':round(start,4),'end':round(start+dur,4),
                 'type':'photo','asset':mid,
                 'evidence':'representative','lead':'REGISTRO CONTEXTUAL · ARQUIVO',
-                'headline':title,'subject':str(ac['sujeito'])[:100],
+                'headline':title.upper(),'subject':context,
                 'focus':it.get('roi') and [
                     (it['roi'][0]+it['roi'][2])/2,(it['roi'][1]+it['roi'][3])/2
                 ] or [.5,.5],
-                'cues':[{'at':min(.55,dur*.22),'label':str(ac['sujeito'])[:42]}],
+                'cues':[{'at':min(.55,dur*.22),
+                         'label':f'FOTOGRAFIA · {ano}' if ano else 'REGISTRO CONTEXTUAL'}],
                 'direcao_evento':{
                     'intencao':'explicar_contexto',
                     'fato_id':str(ac['id']),

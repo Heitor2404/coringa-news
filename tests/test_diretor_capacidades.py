@@ -43,6 +43,14 @@ def test_preparo_usa_mecanismo_resolvido_no_render_e_nao_auto(tmp_path):
         'optical_projection','lock_cycle_standalone']
     assert all(s['type']=='mechanism' and not s.get('reference_asset')
                for s in props['shots'])
+    # Bug real da imagem antiga: storyboard = auto, renderer resolvido = EUV.
+    # Crédito deve seguir a decisão final, jamais herdar eclusa.
+    assert props['shots'][0]['source_display']=='ASML · asml.com'
+    assert props['shots'][0]['source'].startswith('ASML · https://')
+    assert 'hidráulico' not in props['shots'][0]['source'].lower()
+    assert props['shots'][1]['source_display'].startswith('Autoridade do Canal do Panamá')
+    assert 'pancanal.com' in props['shots'][1]['source']
+
 
 
 def test_nome_de_assunto_nao_escolhe_mecanismo():

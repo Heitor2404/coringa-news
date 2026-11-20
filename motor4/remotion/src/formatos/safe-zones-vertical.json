@@ -5,102 +5,61 @@
     1920
   ],
   "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
-  "notes": "Interseção conservadora 9:16 de informações essenciais. Fonte de perfis já existente: src/v4/formatos/plataformas.json. Margens derivam de referências de ANÚNCIOS, utilizadas como aproximação para orgânico com UI variável, NÃO garantia de todos os aparelhos.",
-  "platforms": {
-    "reels": {
-      "safe": [
-        70,
-        270,
-        1008,
-        1248
-      ],
-      "origin": "Meta Reels ad guide; aproximação 14% topo / 35% base / 6% laterais",
-      "risk_right": [
-        780,
-        840,
-        1080,
-        1920
-      ]
-    },
-    "tiktok": {
-      "safe": [
-        120,
-        240,
-        780,
-        1260
-      ],
-      "origin": "TikTok In-Feed template aproximado; legenda e add-ons podem ampliar a área coberta",
-      "risk_right": [
-        780,
-        840,
-        1080,
-        1920
-      ]
-    },
-    "shorts": {
-      "safe": [
-        110,
-        280,
-        810,
-        1260
-      ],
-      "origin": "Google Ads vertical safe zones + margem conservadora para coluna de ações",
-      "risk_right": [
-        810,
-        800,
-        1080,
-        1920
-      ]
-    }
-  },
+  "notes": "Faixas EDITORIAIS do FilmeEditorial. Os perfis de interface e seus riscos pertencem EXCLUSIVAMENTE a src/v4/formatos/plataformas.json + layout.py. Heurística conservadora para UI orgânica, sujeita a inspeção humana real. Legendas reservadas, não renderizadas nesta QA.",
   "universal": [
-    150,
+    120,
     300,
-    770,
-    1240
+    820,
+    1380
   ],
   "slots": {
     "brand": [
-      160,
-      312,
-      500,
-      350
+      132,
+      317,
+      720,
+      351
     ],
     "section": [
-      160,
-      363,
-      760,
-      396
+      132,
+      360,
+      806,
+      395
     ],
     "visual": [
-      150,
-      410,
-      770,
-      1010
+      120,
+      411,
+      820,
+      947
     ],
     "cue": [
-      160,
-      1016,
-      760,
-      1056
+      132,
+      960,
+      806,
+      1002
     ],
     "headline": [
-      160,
-      1062,
-      760,
-      1150
+      132,
+      1010,
+      806,
+      1093
     ],
     "subject": [
-      160,
-      1155,
-      760,
-      1187
+      132,
+      1101,
+      806,
+      1142
     ],
     "source": [
-      160,
-      1195,
-      760,
-      1235
+      132,
+      1151,
+      806,
+      1195
+    ],
+    "subtitle": [
+      132,
+      1230,
+      806,
+      1360
     ]
   },
   "nonessential": [
@@ -117,7 +76,8 @@
   "unverified": [
     "atlas_map_embedded_credits",
     "original_graphic_with_unmapped_text",
-    "legacy_extra_overlay"
+    "comparison_with_embedded_labels"
   ],
-  "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial."
+  "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial.",
+  "source_of_truth": "src/v4/formatos/plataformas.json"
 }

@@ -194,9 +194,12 @@ def avaliar(plano: dict) -> dict:
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
         eh_ciclo = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_cycle'
+        eh_optico = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'optical_projection'
+        eh_hidraulico = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_explainer'
         max_span = (float('inf') if cena.get('type') == 'video' else
                     8.0 if cena.get('type') == 'atlas_map' else
-                    18.0 if eh_ciclo else 6.2 if eh_causal else
+                    18.0 if eh_ciclo else 7.8 if eh_optico else
+                    6.2 if eh_causal or eh_hidraulico else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
         if eh_causal or eh_ciclo:
             # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
@@ -234,6 +237,30 @@ def avaliar(plano: dict) -> dict:
                   tempos[4] < tempos[3]):
                 falha('F-MECANISMO-CAUSAL', cid,
                       'exigir etapas distintas: fechar → entrar água → subir → igualar nível → liberar, com tempos coerentes')
+        if eh_optico or eh_hidraulico:
+            # Duas demonstrações FÍSICAS independentes no mesmo compositor.
+            # O catálogo de ações é fechado: etiquetas não viram simulação
+            # de acontecimentos sem renderer e encadeamento definidos.
+            esperado = (('source', 'reticle', 'projection', 'wafer')
+                        if eh_optico else
+                        ('closed', 'water_enter', 'rise', 'equalize', 'release'))
+            eventos = cena.get('cues') or []
+            acoes = tuple(e.get('action') for e in eventos if isinstance(e, dict))
+            tempos = [e.get('at') for e in eventos if isinstance(e, dict)]
+            valido = (len(eventos) == len(esperado) == len(tempos)
+                      and acoes == esperado
+                      and all(isinstance(t, (float, int)) and
+                              not isinstance(t, bool) and math.isfinite(t)
+                              for t in tempos)
+                      and tempos[0] == 0
+                      and all(b-a >= .65 for a,b in zip(tempos,tempos[1:]))
+                      and tempos[-1] <= span-.6)
+            if not valido:
+                falha('F-MECANISMO-PROCESSO', cid,
+                      'cada etapa física requer ação, ordem e tempo distintos')
+            if cena.get('reference_asset') or cena.get('reference_from_seconds') is not None:
+                falha('F-PONTE-SEM-PROVA', cid,
+                      'demonstração autônoma não pode fingir continuidade com filmagem')
         if span < 1.4 or span > max_span:
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
@@ -273,9 +300,9 @@ def avaliar(plano: dict) -> dict:
             for problema in validar_progressao_video(cena, span, fonte):
                 falha('F-VIDEO-SEM-PROGRESSAO-COMPROVADA', cid, problema)
         if tipo == 'mechanism':
-            if eh_causal or eh_ciclo:
+            if eh_causal or eh_ciclo or eh_optico or eh_hidraulico:
                 for e in cena.get('cues') or []:
-                    if e.get('action') in ('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit', 'water_enter', 'release'):
+                    if e.get('action') in ('enter', 'seal', 'valves', 'rise', 'equalize', 'open', 'exit', 'water_enter', 'release', 'closed', 'source', 'reticle', 'projection', 'wafer'):
                         momentos.add(('mecanismo', cid, e['action']))
             else:
                 momentos.add(('mecanismo', cid))
@@ -303,7 +330,7 @@ def avaliar(plano: dict) -> dict:
         if cena.get('evidence') not in ('literal', 'representative', 'explainer'):
             falha('F-SEM-PROVENIENCIA', cid, 'classifique literal, representativa ou explicativa')
         if tipo == 'mechanism':
-            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal', 'lock_cycle') or
+            if (cena.get('mechanism') not in ('lock_filling', 'lock_causal', 'lock_cycle', 'lock_explainer', 'optical_projection') or
                 cena.get('evidence') != 'explainer' or cena.get('literal_identity')):
                 falha('F-MECANISMO-NÃO-IDENTIFICADO', cid,
                       'esquema com princípio verificado, sem fingir filmagem ou identidade')
@@ -511,7 +538,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             x['asset']=medias[c['asset']]['asset']
             x['source']=medias[c['asset']]['credit']
         else:
-            x['source']='Esquema original · princípio hidráulico de uma eclusa'
+            x['source'] = (
+                'ASML · https://www.asml.com/en/technology/lithography-principles'
+                if c.get('mechanism') == 'optical_projection' else
+                'Autoridade do Canal do Panamá · https://pancanal.com/en/history-of-the-panama-canal/'
+            )
             if c.get('reference_asset'):
                 # Congelar um quadro do próprio master curado, antes de qualquer corte
                 # interno da fonte. Evita fingir continuidade de dois instantes distintos.

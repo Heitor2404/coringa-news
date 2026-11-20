@@ -200,7 +200,7 @@ def avaliar(plano: dict) -> dict:
         max_span = (float('inf') if cena.get('type') == 'video' else
                     8.0 if cena.get('type') == 'atlas_map' else
                     18.0 if eh_ciclo else 7.8 if eh_optico else
-                    6.2 if eh_causal or eh_hidraulico else
+                    10.8 if eh_hidraulico else 6.2 if eh_causal else
                     4.8 if cena.get('type')=='mechanism' and len(cena.get('cues') or [])>=2 else 3.8)
         if eh_causal or eh_ciclo:
             # Contrato da ponte: o mesmo arquivo continua alguns frames no corte,
@@ -255,7 +255,14 @@ def avaliar(plano: dict) -> dict:
                               for t in tempos)
                       and tempos[0] == 0
                       and all(b-a >= .65 for a,b in zip(tempos,tempos[1:]))
-                      and tempos[-1] <= span-.6)
+                      and tempos[-1] <= span-.6
+                      # Explicação hidráulica precisa de tempo VISÍVEL para válvula,
+                      # enchimento, deslocamento do navio, equalização e liberação.
+                      and (not eh_hidraulico or (
+                          tempos[2]-tempos[1] >= 1.2 and
+                          tempos[3]-tempos[2] >= 2.8 and
+                          tempos[4]-tempos[3] >= 1.0 and
+                          span-tempos[4] >= .9)))
             if not valido:
                 falha('F-MECANISMO-PROCESSO', cid,
                       'cada etapa física requer ação, ordem e tempo distintos')

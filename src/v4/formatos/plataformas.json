@@ -1,5 +1,5 @@
 {
-  "_nota": "Perfil de segurança MULTIPLATAFORMA conservador em 1080×1920. Valores ORIENTATIVOS: regras de anúncios são apenas referência; UX orgânica muda por versão/idioma/tamanho de legenda. Fundo decorativo pode ocupar a tela, mas informações essenciais não podem depender das áreas de risco. Alterações são verificadas com safe-zones-vertical.json e testes de ROI/legenda.",
+  "_nota": "ATLAS de arquivo usa perfis históricos em 'ativos' (não retroativamente homologados), para reproduzir materiais legados. Filmes novos devem usar 'ativos_seguros' (tiktok/reels/shorts multiplaforma). Áreas aproximadas, dependentes de UI, descrição e versão. A produção com safe_area_profile exige perfis conservadores e aprovação de pixels. Não confundir testes antigos verdes com publicação segura.",
   "ativos": [
     "tiktok",
     "instagram_reels",
@@ -8,6 +8,58 @@
   "perfis": {
     "tiktok": {
       "nome": "TikTok",
+      "topo": 130,
+      "base": 480,
+      "esquerda": 60,
+      "direita": {
+        "largura": 150,
+        "de_y": 820,
+        "ate_y": 1680,
+        "icones": 5
+      },
+      "fontes": [
+        "https://moda.app/tools/story-safe-zone-checker",
+        "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
+      ]
+    },
+    "instagram_reels": {
+      "nome": "Instagram Reels",
+      "topo": 220,
+      "base": 420,
+      "esquerda": 50,
+      "direita": {
+        "largura": 120,
+        "de_y": 1050,
+        "ate_y": 1640,
+        "icones": 4
+      },
+      "recorte_feed": {
+        "topo": 285,
+        "base": 285,
+        "nota": "prévia 4:5 no feed/grade corta ~285 px em cima e embaixo"
+      },
+      "fontes": [
+        "https://www.admakeai.com/blog/vertical-video-dimensions-2026",
+        "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
+      ]
+    },
+    "youtube_shorts": {
+      "nome": "YouTube Shorts",
+      "topo": 154,
+      "base": 461,
+      "esquerda": 65,
+      "direita": {
+        "largura": 173,
+        "de_y": 900,
+        "ate_y": 1700,
+        "icones": 5
+      },
+      "fontes": [
+        "https://www.aicarousels.com/free-tools/youtube-safe-zone-checker"
+      ]
+    },
+    "tiktok_multiplataforma": {
+      "nome": "TikTok · perfil seguro v1",
       "topo": 240,
       "base": 660,
       "esquerda": 120,
@@ -22,8 +74,8 @@
         "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
       ]
     },
-    "instagram_reels": {
-      "nome": "Instagram Reels",
+    "instagram_reels_multiplataforma": {
+      "nome": "Instagram Reels · perfil seguro v1",
       "topo": 270,
       "base": 672,
       "esquerda": 70,
@@ -43,8 +95,8 @@
         "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
       ]
     },
-    "youtube_shorts": {
-      "nome": "YouTube Shorts",
+    "youtube_shorts_multiplataforma": {
+      "nome": "YouTube Shorts · perfil seguro v1",
       "topo": 280,
       "base": 660,
       "esquerda": 110,
@@ -87,5 +139,10 @@
       "youtube": "https://support.google.com/youtube/answer/15424877",
       "instagram": "https://about.fb.com/news/2023/11/giving-creators-more-ways-to-earn-money-on-facebook-and-instagram/"
     }
-  }
+  },
+  "ativos_seguros": [
+    "tiktok_multiplataforma",
+    "instagram_reels_multiplataforma",
+    "youtube_shorts_multiplataforma"
+  ]
 }

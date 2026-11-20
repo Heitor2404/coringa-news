@@ -283,6 +283,7 @@ def expandir_preview(plano: dict, biblioteca: dict | None = None) -> dict:
     technical = {
         **{k:v for k,v in plano.items() if k not in ('roteiro','shots')},
         'eventos_diretor':eventos,
+        'safe_area_profile':'MULTIPLATAFORMA_CONSERVADOR_V1',
         'media':{},
     }
     expanded=diretor_processos.expandir(technical)

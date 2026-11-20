@@ -282,9 +282,44 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
     // de uma arte feita para 1080x1920. Toda ação essencial fica na mesma
     // janela segura e a informação do roteiro não é repetida no SVG.
     const palco=subtitleMode?SAFE.visual:MECH.visual;
-    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 55%,#193950,#081B2B 57%,#050F1B 100%)'}}>
-      <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',
+    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 53%,#193950,#081B2B 57%,#050F1B 100%)'}}>
+      <AbsoluteFill style={{opacity:.11,backgroundSize:'94px 94px',
         backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
+      {/* Atmosfera FULL BLEED, sem textos nem atores essenciais:
+          aumenta a continuidade visual fora da zona de leitura do app.
+          A física, os rótulos e as causas permanecem dentro do palco protegido. */}
+      <svg viewBox="0 0 1080 1920" width="100%" height="100%"
+        aria-hidden="true" style={{position:'absolute',inset:0,opacity:.37,pointerEvents:'none'}}>
+        <defs>
+          <linearGradient id="atmospheric-water" x1="0" y1="0" x2="0" y2="1">
+            <stop stopColor="#327B95" stopOpacity=".28"/>
+            <stop offset="1" stopColor="#102B43" stopOpacity=".06"/>
+          </linearGradient>
+        </defs>
+        {shot.mechanism==='optical_projection'?<g>
+          <ellipse cx="530" cy="1560" rx="576" ry="171" fill="#0B3349"
+            stroke="#5891AB" strokeWidth="6" opacity=".38"/>
+          <ellipse cx="530" cy="1545" rx="535" ry="135" fill="none"
+            stroke="#68D8E4" strokeWidth="4" opacity=".28"/>
+          {Array.from({length:14},(_,i)=><path key={i}
+            d={`M${-60+i*91} 1440 L${-30+i*91} 1680`}
+            stroke="#6093AA" strokeWidth="3" opacity=".14"/>)}
+          <path d="M36 1684 H1044 M120 1736 H960 M188 1790 H890"
+            stroke="#69DDEC" fill="none" strokeWidth="3" opacity=".33"/>
+          <path d="M122 1200 V1460 H320 M968 1010 V1450 H850"
+            fill="none" stroke="#659AAE" strokeWidth="7" opacity=".30"/>
+        </g>:<g>
+          <rect x="0" y="1350" width="1080" height="410"
+            fill="url(#atmospheric-water)"/>
+          {[0,1,2,3,4,5].map(i=><path key={i}
+            d={`M-40 ${1390+i*63} Q205 ${1371+i*63} 510 ${1390+i*63} T1120 ${1390+i*63}`}
+            fill="none" stroke="#72BFD1" strokeWidth="5" opacity={.13+i*.024}/>)}
+          <path d="M35 1760 H1045 M120 1815 H960"
+            stroke="#4C829B" strokeWidth="8" opacity=".3"/>
+          <path d="M115 1330 V1710 H955 V1330"
+            fill="none" stroke="#487489" strokeWidth="10" opacity=".21"/>
+        </g>}
+      </svg>
       <div data-safe-role="visual" style={{...rectStyle(palco)}}>
         <Body shot={shot} p={p} t={t} portrait/>
       </div>

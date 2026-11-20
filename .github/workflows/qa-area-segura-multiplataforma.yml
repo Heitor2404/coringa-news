@@ -61,6 +61,19 @@ jobs:
           PY
           python -m src.v4.formatos.qa_area_segura             qa_safe/plano_zona_segura.json qa_safe/relatorio_areas_seguras.json
           python -m src.v4.formatos.filme_editorial             qa_safe/plano_zona_segura.json qa_safe motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('qa_safe/props.json')
+          d=json.loads(p.read_text('utf8'))
+          # O reflow novo AINDA NAO ganhou aprovacao visual. Esta flag
+          # so existe para a QA privada, nunca no fluxo normal do motor.
+          d['preview']=True
+          d['private_review_only']=True
+          d['portrait_experiment']=True
+          d['reference_style_preview']=False
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
       - name: Renderizar a prova dos dois mecanismos com o layout protegido
         timeout-minutes: 9
         run: |

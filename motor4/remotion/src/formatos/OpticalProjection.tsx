@@ -5,10 +5,11 @@
  */
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
+import {OpticalPortrait} from './MechanismsPortrait';
 
 export type OpticalAction='source'|'reticle'|'projection'|'wafer';
 export type OpticalCue={at:number;action?:OpticalAction|string;label:string};
-type Props={t:number;events:OpticalCue[]};
+type Props={t:number;events:OpticalCue[];portrait?:boolean};
 
 const GOLD='#FFD21F',WHITE='#F5F2EB',MUTED='#AAC0CE',CYAN='#74DBEE';
 const clamp=(x:number)=>Math.max(0,Math.min(1,x));
@@ -23,7 +24,7 @@ const Beam:React.FC<{d:string;p:number;color?:string;glow?:boolean}>=({d,p,color
       pathLength={1} strokeDasharray="1" strokeDashoffset={1-p}/>
   </g>;
 
-export const OpticalProjection:React.FC<Props>=({t,events})=>{
+export const OpticalProjection:React.FC<Props>=({t,events,portrait=false})=>{
   const at=(key:OpticalAction,fallback:number)=>events.find(x=>x.action===key)?.at??fallback;
   const source=ease((t-at('source',0))/.65);
   const mask=ease((t-at('reticle',1.05))/.8);
@@ -32,6 +33,7 @@ export const OpticalProjection:React.FC<Props>=({t,events})=>{
   const current=Math.max(0,events.filter(e=>e.at<=t).length-1);
   const active=events[current]?.label||'EXPOSIÇÃO EUV';
   const pattern=[0,1,2,3,4,5,6];
+  if(portrait) return <OpticalPortrait t={t} source={source} mask={mask} mirrors={mirrors} resist={resist}/>;
   return <AbsoluteFill style={{
     background:'radial-gradient(ellipse at 54% 47%,#172F42 0%,#081723 59%,#05111D 100%)',
     fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>

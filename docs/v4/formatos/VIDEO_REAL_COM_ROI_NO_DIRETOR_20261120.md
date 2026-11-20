@@ -48,3 +48,18 @@ A transição é **contextual**, não uma tentativa de fazer parecer que vemos a
 - Não modificar main/NTC/DOSSIÊ; nem chamar Claude/Gemini.
 
 **Próximo grande passo:** provar em múltiplos provedores/temas a classificação de cenas V2 + descoberta de clipes adequados + direitos + seleção de momento + ROI + continuidade editorial, sem falsa equivalência de eventos. Até lá, os candidatos com direitos pendentes permanecem restritos à prévia privada.
+
+## Pós-inspeção — recorte que cortou o contexto (não aprovação visual)
+
+A primeira QA de três mídias **`44787120643` SUCCESS técnico** gerou `prova_video_real.mp4` 12,5s, 540×960, com foto Fab18 → vídeo NIST 58,15–60,75s → esquema EUV. Artifact GitHub `14654916921` expira 25/11. A folha de 16 quadros foi REALMENTE inspecionada em `/mnt/data/qa_video_real_20261120/contato_16_quadros.jpg`, inclusive um frame NIST a 4,1s.
+
+**Problema visual observado:** a ROI previa só a cabeça/corpo do pesquisador e resultou em **costas gigantes em primeiro plano**, com monitor e estação cortados. O vídeo era real e o SHA correto, mas a edição era editorialmente ruim. A geometria de uma caixa *isolada* não comprova preservação da ação ou **relação entre objetos**.
+
+**Correção estrutural aplicada ao próprio motor (sem editar ativos nem fazer novo vídeo do Panamá):**
+- Manifesto de curadoria agora exige, em cada keyframe, bboxes e nomes de **todos os referentes essenciais**, para o NIST `pesquisador` e `estacao_com_monitor` no original.
+- `video_contextual_v3.validar_clip` recusa ausência de dois referentes/caixas inválidas nesta classe de plano.
+- `filme_editorial.resolver_relacao_video` calcula o **envelope unificado** de todos os referentes por frame e tenta o ROI 9:16 existente. Se couber com margens, exporta recorte relacional. Se não couber, opta por `video_context_layout='cena_integral'` para preservar o enquadramento horizontal original. Nenhum controle pode usar apenas a cabeça para declarar que a relação está visível; a escolha é geométrica, não semântica.
+- `FilmeEditorial.tsx` renderiza `cena_integral` em faixa panorâmica de contexto, **sem repetição desfocada de vídeo**, preservando imagem real e créditos. O espaço inferior continua reservado ao título/citação. Essa estratégia é reutilizável em qualquer vídeo horizontal; e a apresentação não finge uma tomada vertical que não existe.
+- `tests/test_video_contextual_v3.py` testa tanto o fallback panorâmico como o caso de dois referentes realmente próximos em que crop dirigido cabe, incluindo bboxes fora da fonte.
+
+Esta é uma decisão de qualidade **conservadora**: em certos vídeos o plano panorâmico fica menor, mas demonstração audiovisual cortada é pior. Ainda é necessária inspeção visual final de legibilidade em celular e a aprovação do conteúdo/direitos continua pendente.

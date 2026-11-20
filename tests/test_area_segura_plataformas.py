@@ -173,6 +173,22 @@ def test_camera_recusa_regiao_ilegal_e_faixa_sobreposta(monkeypatch):
         SAFE.validar_contrato()
 
 
+def test_close_nao_pode_amputar_ator_essencial_mesmo_dentro_da_safe(monkeypatch):
+    c=SAFE.carregar()
+    assert 'optical_projection' in c['mechanism_layout']['essential_bounds']
+    assert 'lock_explainer' in c['mechanism_layout']['essential_bounds']
+    # Esses focos reproduzem o bug visual da rodada anterior:
+    # fonte e/ou reservatorio ficavam parcialmente fora do palco.
+    c['mechanism_layout']['focus']['optical_projection']['reticle']=[205,690,930,1470]
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-MECANISMO-CORTE-ESSENCIAL'):
+        SAFE.validar_contrato()
+    c['mechanism_layout']['focus']['optical_projection']['reticle']=[70,670,1045,1510]
+    c['mechanism_layout']['focus']['lock_explainer']['release']=[185,695,1040,1480]
+    with pytest.raises(ValueError,match='SAFE-MECANISMO-CORTE-ESSENCIAL'):
+        SAFE.validar_contrato()
+
+
 def test_etapas_longas_ou_sem_foco_nunca_passam_despercebidas():
     demo=_load('DEMO_MECANISMOS_FISICOS_20261119.json')
     demo['safe_area_profile']=SAFE.PERFIL

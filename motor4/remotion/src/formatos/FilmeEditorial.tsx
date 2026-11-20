@@ -142,7 +142,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
     return <LockCausal t={t} events={(shot.cues || []).map(c => ({
       at:c.at,label:c.label,action:c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
-    }))}/>;
+    }))} visualMode="editorial"/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_cycle')
     return <LockCausalCycle t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
@@ -236,10 +236,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
     {shot.mechanism!=='lock_cycle' && <>
-    <div style={{position:'absolute',bottom:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
+    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}
     </div>
-    <div style={{position:'absolute',bottom:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:21,color:'#ACBBC7',letterSpacing:.6}}>
+    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?163:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:23,color:'#ACBBC7',letterSpacing:.3}}>
       FONTE: {shot.source}
     </div>
     </>}

@@ -386,9 +386,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     {!subtitleMode&&shot.type!=='mechanism'&&<div data-safe-role="subject" style={{...safeSlot('subject'),
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
-      {shot.type==='mechanism'?'ESQUEMA FÍSICO ILUSTRATIVO · NÃO É FILMAGEM REAL':
-        shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:
-        shot.subject}
+      {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:shot.subject}
     </div>}
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,

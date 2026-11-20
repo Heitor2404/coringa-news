@@ -199,7 +199,11 @@ def montar_cena(cena:dict,indice:dict,fonte:dict,inicio:float)->tuple[dict,str,d
         'lead':'REGISTRO DOCUMENTAL · NASA',
         'headline':fonte['sujeito'].upper(),
         'subject':'SEQUÊNCIA TEMPORAL CONDENSADA · NASA/JPL-CALTECH',
-        'cues':[{'at':e['at'],'label':e['acao_visivel'].split(' ')[0].upper()+' · '+e['acao_id'].replace('_',' ').upper()[:32]} for e in seq],
+        'cues':[{'at':e['at'],
+                 # Linguagem de tela deriva do identificador do evento visível,
+                 # sem palavras duplicadas e sem narrar "pedra solta".
+                 'label':e['acao_id'].replace('_',' ').upper()[:42]}
+                for e in seq],
         'video_framing':{
             'modo':'fonte_integral','sha256_origem':sha,
             'inspecao':fonte['observacao'],

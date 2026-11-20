@@ -67,8 +67,13 @@ def validar_contrato()->dict:
     title=mech.get('headline')
     if not isinstance(title,list) or len(title)!=4 or not _dentro(title,uni):
         raise ValueError('SAFE-PORTRAIT-TITULO: titulo externo ao comum')
-    if not (c['slots']['section'][3]<=title[1] and title[3]<=stage[1]):
-        raise ValueError('SAFE-PORTRAIT-COLISAO: marca/titulo/mecanismo')
+    mechanism_section=mech.get('mechanism_section')
+    if not isinstance(mechanism_section,list) or len(mechanism_section)!=4 or not _dentro(mechanism_section,uni):
+        raise ValueError('SAFE-PORTRAIT-SECAO: secoes fora da faixa segura')
+    if not (c['slots']['brand'][3]<=mechanism_section[1] and
+            mechanism_section[3]<=title[1] and
+            title[3]<=stage[1]):
+        raise ValueError('SAFE-PORTRAIT-COLISAO: marca/secao/titulo/mecanismo')
     native=mech.get('native_portrait') or []
     if not isinstance(native,list) or not native or len(native)!=len(set(native)):
         raise ValueError('SAFE-PORTRAIT-RENDERERS: lista invalida')

@@ -102,6 +102,19 @@ def validar_contrato()->dict:
         for acao,box in mech['focus'][tipo].items():
             if not _dentro(essencial,box):
                 raise ValueError('SAFE-MECANISMO-CORTE-ESSENCIAL: '+tipo+'/'+acao)
+    # Evita títulos e rodapés de SVG antigos aparecerem pela metade
+    # na folga de letterboxing, duplicando a camada editorial externa.
+    for tipo,limites in (mech.get('editorial_exclusion') or {}).items():
+        camera=(mech.get('focus') or {}).get(tipo)
+        if not camera or not isinstance(limites,dict):
+            raise ValueError('SAFE-MECANISMO-TEXTO-INTERNO: configuracao ausente')
+        topo,rodape=limites.get('header_bottom'),limites.get('footer_top')
+        if not (isinstance(topo,(int,float)) and isinstance(rodape,(int,float))
+                and 0<topo<rodape<1920):
+            raise ValueError('SAFE-MECANISMO-TEXTO-INTERNO: zonas ilegais')
+        for acao,box in camera.items():
+            if box[1]<topo or box[3]>rodape:
+                raise ValueError('SAFE-MECANISMO-TEXTO-INTERNO: '+tipo+'/'+acao)
     return {'area_universal':uni,'slots':c['slots'],
             'plataformas':list(perfis),'perfil':PERFIL}
 

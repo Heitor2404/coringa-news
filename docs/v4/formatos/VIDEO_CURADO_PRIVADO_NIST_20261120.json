@@ -14,7 +14,7 @@
       "width": 1360,
       "height": 720,
       "source_duration_s": 105.05,
-      "inspecao": "8 quadros reais de 58,31 a 60,81s mostram pesquisador em roupa de sala limpa diante de estação e monitor no NIST; não há comprovação da operação física do processo nem ligação com a TSMC.",
+      "inspecao": "8 quadros originais 58,31–60,81s: operador à direita e estação/monitor à esquerda são DOIS referentes necessários; juntos, não cabem no recorte central 9:16. Não mostra litografia EUV ou instalação TSMC.",
       "comprova_acao": false,
       "janela": {
         "inicio_s": 58.15,
@@ -22,29 +22,71 @@
         "roi": [
           {
             "at": 0,
-            "area_essencial": [
-              0.37,
-              0.06,
-              0.58,
-              0.94
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.35,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
             ]
           },
           {
             "at": 1.15,
-            "area_essencial": [
-              0.36,
-              0.06,
-              0.58,
-              0.94
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.35,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
             ]
           },
           {
             "at": 2.3,
-            "area_essencial": [
-              0.36,
-              0.06,
-              0.58,
-              0.94
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.34,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
             ]
           }
         ]

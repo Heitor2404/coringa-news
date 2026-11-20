@@ -241,6 +241,16 @@ def avaliar(plano: dict) -> dict:
         for pendencia in erro_roteiro.relatorio['bloqueios']:
             falha(pendencia['codigo'], pendencia['cena'], pendencia['motivo'])
     cenas = plano.get('shots') or []
+    area_segura=None
+    from src.v4.formatos import qa_area_segura
+    privado=plano.get('tipo')=='PROVA_VISUAL_PRIVADA'
+    if not privado and plano.get('safe_area_profile')!=qa_area_segura.PERFIL:
+        falha('F-SAFE-SEM-PERFIL','-',
+              'filme final deve declarar o perfil multiplaforma e passar na inspeção de zonas')
+    if plano.get('safe_area_profile') is not None:
+        area_segura=qa_area_segura.auditar_plano(plano)
+        for erro in area_segura['bloqueios']:
+            falha('F-'+erro['codigo'],erro['cena'],erro['motivo'])
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
     if plano.get('tipo') != 'PROVA_VISUAL_PRIVADA':
@@ -631,6 +641,7 @@ def avaliar(plano: dict) -> dict:
     return {'pronto': not falhas, 'bloqueios': falhas, 'cenas': len(cenas),
             'medias_unicas': len(visual), 'momentos_visuais':len(momentos),
             'contrato_comum': comum,
+            'area_segura':area_segura,
             'visual_approval': 'NAO_FOI_AVALIADO'}
 
 
@@ -783,8 +794,10 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         shots.append(x)
     pendentes=[mid for mid,item in plano['media'].items()
               if item.get('license')=='REVIEW_PENDING']
+    from src.v4.formatos import qa_area_segura
     props={'duracao':plano['duracao'],'shots':shots,'preview':True,
            'private_review_only':bool(pendentes),
+           'safe_area_profile':plano.get('safe_area_profile') or qa_area_segura.PERFIL,
            'direitos_pendentes':pendentes}
     (destino/'props.json').write_text(json.dumps(props,ensure_ascii=False,indent=2),encoding='utf-8')
     (destino/'midias.json').write_text(json.dumps(relatorio,ensure_ascii=False,indent=2),encoding='utf-8')

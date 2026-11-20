@@ -107,31 +107,31 @@
           65,
           655,
           1045,
-          1505
+          1475
         ],
         "source": [
           70,
           660,
           1040,
-          1500
+          1475
         ],
         "reticle": [
           70,
           670,
           1045,
-          1510
+          1475
         ],
         "projection": [
           65,
           675,
           1040,
-          1505
+          1475
         ],
         "wafer": [
           65,
           675,
           1040,
-          1510
+          1475
         ]
       },
       "lock_explainer": {
@@ -218,6 +218,16 @@
         1030,
         1455
       ]
+    },
+    "editorial_exclusion": {
+      "optical_projection": {
+        "header_bottom": 610,
+        "footer_top": 1480
+      },
+      "lock_explainer": {
+        "header_bottom": 650,
+        "footer_top": 1500
+      }
     }
   }
 }

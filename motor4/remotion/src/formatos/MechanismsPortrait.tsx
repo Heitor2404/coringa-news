@@ -177,7 +177,7 @@ export const OpticalPortrait:React.FC<OpticalPortraitProps & {phase?:string}>=
  */
 export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state})=>{
   const waterY=492-237*clamp(fill);
-  const hullY=waterY-35;
+  const hullY=waterY-11;
   const gate=clamp(open);
   const beam=isFlow?GOLD:'#6FA6BA';
   return <Base name="Eclusa vertical: reservatório alto alimenta por gravidade a câmara; navio flutua com o nível e portão abre na equalização">
@@ -189,9 +189,9 @@ export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state
     <rect x="471" y="230" width="122" height="343" fill="#132F40" stroke="#769AAA" strokeWidth="4"/>
     <rect x="479" y="254" width="106" height="319" fill="url(#portrait-water)" opacity=".9"/>
     <path d="M479 254 H585" stroke="#E0FFFF" strokeWidth="6"/>
-    <path d={`M33 ${waterY} H442`} stroke="#D7FFFF" strokeWidth="7"/>
     <rect x="34" y={waterY} width="406" height={573-waterY}
       fill="url(#portrait-water)" opacity=".93"/>
+    <path d={`M33 ${waterY} H442`} stroke="#D7FFFF" strokeWidth="7"/>
     {Array.from({length:7},(_,i)=><path key={i} d={`M${48+i*55} ${waterY+18+Math.sin(t*4+i)*2} h35`}
       stroke="#C9FAFF" opacity=".48" strokeWidth="3"/>)}
     {/* Navio sobe APENAS em resposta ao nível da água. */}

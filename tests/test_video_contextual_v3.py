@@ -93,12 +93,39 @@ def test_video_sem_roi_verificada_nao_entra_automaticamente():
         catalogo(v)
 
 
-def test_recorte_que_amputa_sujeito_e_rejeitado_pelo_preflight():
+def test_duas_pessoas_ou_pessoa_mais_maquina_nao_viram_apenas_um_rosto():
+    from src.v4.formatos import filme_editorial as FILME
+    p=H.planejar(plano(),catalogo())
+    clip=p['plano']['shots'][1]
+    metadata=p['plano']['media'][clip['asset']]
+    escolha=FILME.resolver_relacao_video(clip,metadata,(1360,720))
+    assert escolha['layout']=='cena_integral'
+    assert escolha['framing_positions']==[]
+    assert sorted(escolha['elementos_protegidos'])==[
+        'estacao_com_monitor','pesquisador']
+
+
+def test_rejeita_relacao_com_bbox_fora_do_original():
     v=ficha()
-    v['videos'][0]['janela']['roi'][0]['area_essencial']=[0.1,.05,.9,.95]
-    with pytest.raises(H.MontagemHibridaBloqueada) as e:
-        H.planejar(plano(),catalogo(v))
-    assert 'F-ROI-NAO-CABE' in codigo(e)
+    v['videos'][0]['janela']['roi'][0]['elementos'][1]['bbox']=[-.1,.2,.38,.84]
+    with pytest.raises(ValueError,match='ROI'):
+        catalogo(v)
+
+
+def test_relacao_proxima_e_recortavel_nao_precisa_gerar_letterbox():
+    from src.v4.formatos import filme_editorial as FILME
+    p=H.planejar(plano(),catalogo())
+    clip=p['plano']['shots'][1]
+    metadata=p['plano']['media'][clip['asset']]
+    d=clip['video_framing']
+    for frame in d['pontos']:
+        frame['elementos']=[
+            {'nome':'pessoa','bbox':[.46,.15,.56,.87]},
+            {'nome':'estacao','bbox':[.36,.18,.46,.84]},
+        ]
+    escolha=FILME.resolver_relacao_video(clip,metadata,(1360,720))
+    assert escolha['layout']=='recorte_relacional_seguro'
+    assert len(escolha['framing_positions'])==3
 
 
 def test_cena_com_mais_tempo_que_original_nao_deve_ser_estendida():

@@ -242,6 +242,19 @@
     "native_dimensions": [
       620,
       682
-    ]
+    ],
+    "wide_hero": [
+      120,
+      485,
+      960,
+      830
+    ],
+    "wide_support": [
+      150,
+      845,
+      770,
+      1092
+    ],
+    "wide_note": "Faixa superior 485..830 termina ANTES de de_y=840 dos botoes laterais conservadores. Verificar intersecao por intervalo contra src/v4/formatos/plataformas.json; nao ampliar bloco inferior ou textos."
   }
 }

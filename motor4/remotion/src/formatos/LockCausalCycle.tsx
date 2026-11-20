@@ -16,7 +16,7 @@ export type LockCycleCue = {
   action?: LockCycleAction | string;
   label: string;
 };
-type Props = {t: number; events: LockCycleCue[]; referenceAsset?: string};
+type Props = {t: number; events: LockCycleCue[]; referenceAsset?: string; duration?:number};
 
 const YLOW=1110, YHIGH=817, YFLOOR=1335;
 const INLET_X=288, OUTLET_X=748;
@@ -24,7 +24,7 @@ const GOLD='#FFD21F', WHITE='#F6F4EC', CYAN='#75DDEB';
 const clamp=(x:number)=>Math.max(0,Math.min(1,x));
 const ease=(x:number)=>{const y=clamp(x);return y*y*(3-2*y);};
 
-export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
+export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,duration}) => {
   const find=(action:LockCycleAction,fallback:number) =>
     events.find(e=>e.action===action)?.at ?? fallback;
   const timeline = {
@@ -37,7 +37,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset}) => {
   const flowOn=ease((t-timeline.valves)/.65)*(1-ease((t-timeline.equalize)/.65));
   const raise=ease((t-timeline.rise)/Math.max(1,timeline.equalize-timeline.rise-.1));
   const gateOpen=ease((t-timeline.open)/1.1);
-  const travel=ease((t-timeline.exit)/Math.max(.8,17.35-timeline.exit));
+  const travel=ease((t-timeline.exit)/Math.max(.8,(duration ?? 17.35)-timeline.exit));
   const shipX=180+309*entry+442*travel;
   const waterY=YLOW-(YLOW-YHIGH)*raise;
   const isFilling=flowOn>.01;

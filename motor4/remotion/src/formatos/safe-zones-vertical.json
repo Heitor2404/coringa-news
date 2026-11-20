@@ -79,5 +79,131 @@
     "comparison_with_embedded_labels"
   ],
   "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial.",
-  "source_of_truth": "src/v4/formatos/plataformas.json"
+  "source_of_truth": "src/v4/formatos/plataformas.json",
+  "mechanism_layout": {
+    "note": "Camera de mecanismos declarada por componente e acao, nunca por tema/episodio. O box limita o CONTEUDO FOCAL; verificacao dos atores reais ainda exige frames renderizados.",
+    "visual": [
+      150,
+      410,
+      770,
+      1092
+    ],
+    "step": [
+      160,
+      1102,
+      760,
+      1187
+    ],
+    "transition_seconds": 0.36,
+    "default_bounds": [
+      80,
+      650,
+      1030,
+      1510
+    ],
+    "focus": {
+      "optical_projection": {
+        "default": [
+          90,
+          700,
+          1030,
+          1540
+        ],
+        "source": [
+          65,
+          690,
+          830,
+          1460
+        ],
+        "reticle": [
+          205,
+          690,
+          930,
+          1470
+        ],
+        "projection": [
+          250,
+          720,
+          1040,
+          1490
+        ],
+        "wafer": [
+          175,
+          760,
+          920,
+          1540
+        ]
+      },
+      "lock_explainer": {
+        "default": [
+          90,
+          675,
+          1040,
+          1490
+        ],
+        "closed": [
+          105,
+          705,
+          825,
+          1460
+        ],
+        "water_enter": [
+          290,
+          695,
+          1040,
+          1490
+        ],
+        "rise": [
+          120,
+          695,
+          910,
+          1480
+        ],
+        "equalize": [
+          205,
+          690,
+          1040,
+          1490
+        ],
+        "release": [
+          185,
+          695,
+          1040,
+          1480
+        ]
+      },
+      "lock_filling": {
+        "default": [
+          100,
+          570,
+          980,
+          1260
+        ]
+      },
+      "lock_causal": {
+        "default": [
+          90,
+          675,
+          1040,
+          1510
+        ]
+      },
+      "lock_cycle": {
+        "default": [
+          70,
+          645,
+          1035,
+          1500
+        ]
+      },
+      "lock_cycle_standalone": {
+        "default": [
+          70,
+          645,
+          1035,
+          1500
+        ]
+      }
+    }
+  }
 }

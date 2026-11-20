@@ -99,13 +99,23 @@ def validar_clip(x:dict, *, requer_arquivo:bool=True)->dict:
     last=-1.
     for p in points:
         t=p.get('at') if isinstance(p,dict) else None
-        box=p.get('area_essencial') if isinstance(p,dict) else None
+        elems=p.get('elementos') if isinstance(p,dict) else None
         if (not isinstance(t,(float,int)) or not math.isfinite(t) or
             t<0 or t>=span or t<=last or
-            not isinstance(box,list) or len(box)!=4 or
-            any(not isinstance(v,(int,float)) or not math.isfinite(v) for v in box) or
-            not 0<=box[0]<box[2]<=1 or not 0<=box[1]<box[3]<=1):
-            _invalid('ROI: caixa/tempo original inválido')
+            not isinstance(elems,list) or len(elems)<2):
+            _invalid('ROI: ponto/tempo ou relação entre sujeitos ausente')
+        nomes=set()
+        for elem in elems:
+            if not isinstance(elem,dict) or not isinstance(elem.get('nome'),str):
+                _invalid('ROI: identidade de componente ausente')
+            name=elem['nome'].strip()
+            box=elem.get('bbox')
+            if (not name or name in nomes or not isinstance(box,list)
+                or len(box)!=4 or any(
+                    not isinstance(v,(int,float)) or not math.isfinite(v) for v in box)
+                or not 0<=box[0]<box[2]<=1 or not 0<=box[1]<box[3]<=1):
+                _invalid('ROI: caixa de componente inválida')
+            nomes.add(name)
         last=t
     if abs(points[0]['at'])>.001:
         _invalid('ROI: primeiro ponto precisa cobrir início')

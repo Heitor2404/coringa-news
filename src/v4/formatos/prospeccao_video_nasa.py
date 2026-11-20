@@ -26,7 +26,8 @@ def validar_origem(x):
     if not isinstance(x.get('id'),str) or not re.fullmatch(r'[a-z][a-z0-9_]{5,60}',x['id']):
         raise ValueError('N-ID: registro inválido')
     for k in ('processo_declarado','evento_real_declarado','credito','nota_direitos'):
-        if not isinstance(x.get(k),str) or len(x[k].strip())<20 if k in ('processo_declarado','evento_real_declarado','nota_direitos') else not isinstance(x.get(k),str) or len(x[k].strip())<7:
+        minimum = 20 if k in ('processo_declarado','evento_real_declarado','nota_direitos') else 7
+        if not isinstance(x.get(k),str) or len(x[k].strip())<minimum:
             raise ValueError('N-METADATA: falta '+k)
     site=urlsplit(str(x.get('pagina') or ''))
     dl=urlsplit(str(x.get('download') or ''))

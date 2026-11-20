@@ -29,7 +29,7 @@ export type FilmShot = {
   source: string;
   sourceB?: string;
   evidence: 'literal' | 'representative' | 'explainer';
-  mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle' | 'lock_explainer' | 'optical_projection';
+  mechanism?: 'lock_filling' | 'lock_causal' | 'lock_cycle' | 'lock_cycle_standalone' | 'lock_explainer' | 'optical_projection';
   reference_asset?: string;
   reference_from_seconds?: number;
   subject: string;
@@ -143,8 +143,10 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
     return <LockCausal t={t} events={(shot.cues || []).map(c => ({
       at:c.at,label:c.label,action:c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
     }))} visualMode="editorial"/>;
-  if(shot.type==='mechanism' && shot.mechanism==='lock_cycle')
-    return <LockCausalCycle t={t} events={shot.cues || []} referenceAsset={shot.reference_asset}/>;
+  if(shot.type==='mechanism' && ['lock_cycle','lock_cycle_standalone'].includes(shot.mechanism || ''))
+    return <LockCausalCycle t={t} events={shot.cues || []}
+      referenceAsset={shot.mechanism==='lock_cycle'?shot.reference_asset:undefined}
+      duration={shot.end-shot.start}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_causal')
     return <LockCausal t={t} events={(shot.cues || []).map(c => ({
       at:c.at,label:c.label,action: c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
@@ -235,7 +237,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    {shot.mechanism!=='lock_cycle' && <>
+    {!['lock_cycle','lock_cycle_standalone'].includes(shot.mechanism || '') && <>
     <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {['lock_explainer','optical_projection'].includes(shot.mechanism || '')
         ? 'ESQUEMA ILUSTRATIVO · NÃO É FILMAGEM REAL'

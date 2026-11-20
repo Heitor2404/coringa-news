@@ -52,6 +52,7 @@ export type FilmProps = {
   // e legenda separadamente depois do plano aprovado.
   preview?: boolean;
   private_review_only?: boolean;
+  reference_style_preview?: boolean; // SOMENTE QA privado: visual antigo para comparação; bloqueado para publicação
   safe_zone_debug?: boolean; // somente QA, nunca publicar o overlay vermelho
   subtitle_mode?: boolean; // quando a Camada de fala está presente, ela ocupa lane própria
   safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
@@ -351,13 +352,39 @@ const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted
   </div>;
 };
 
-const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean}> = ({shot,subtitleMode}) => {
+const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean;legacyVisualPreview:boolean}> = ({shot,subtitleMode,legacyVisualPreview}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps;
   const now=frame/fps;
   const duration=Math.max(.01,shot.end-shot.start);
   const p=clamp((now-shot.start)/duration);
   const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
   const age=active?now-shot.start-active.at:0;
+  if(legacyVisualPreview && shot.type==='mechanism') {
+    // Volta ao visual ORIGINAL 20/11 somente em prévia privada: SVG
+    // integral em tela, títulos do PRÓPRIO mecanismo e rótulos grandes.
+    // Esta referência é propositalmente FORA do contrato safe e não pode
+    // ser confundida com o caminho liberado para produção.
+    return <AbsoluteFill data-layout-review="REFERENCE_ONLY_NOT_SAFE"
+      style={{background:'#071522',overflow:'hidden'}}>
+      <Body shot={shot} p={p} t={now-shot.start}/>
+      <div style={{position:'absolute',top:248,left:62,right:62,
+        display:'flex',justifyContent:'space-between',alignItems:'center',
+        color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
+        <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
+        <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
+      </div>
+      <div style={{position:'absolute',top:302,left:62,width:140,height:5,
+        background:GOLD,transformOrigin:'left',transform:`scaleX(${ease(p)})`}}/>
+      <div style={{position:'absolute',left:64,right:64,bottom:206,
+        color:'#CFD6E0',fontFamily:'Inter,Arial',fontWeight:600,fontSize:25}}>
+        ESQUEMA ILUSTRATIVO · NÃO É FILMAGEM REAL
+      </div>
+      <div style={{position:'absolute',left:64,right:64,bottom:163,
+        fontFamily:'Inter,Arial',color:'#ACBBC7',fontSize:22}}>
+        FONTE: {shot.source_display||shot.source}
+      </div>
+    </AbsoluteFill>;
+  }
   if(shot.type==='atlas_map') {
     // O clip ATLAS antigo tem tipografia/attribution rasterizadas internamente.
     // Não fingir que o render está homologado pela área segura nova.
@@ -424,11 +451,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)}/>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>
       <div style={{position:'absolute',left:0,right:0,top:0,height:safety.universal[1],
@@ -451,6 +478,12 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       height:4,background:'rgba(255,255,255,.25)'}}>
       <div style={{width:`${100*clamp(t/Math.max(.01,duracao))}%`,height:'100%',background:GOLD}}/>
     </div>
+    {preview&&private_review_only&&reference_style_preview&&<div
+      style={{position:'absolute',bottom:152,left:0,right:0,
+        color:GOLD,textAlign:'center',fontSize:22,fontWeight:850,
+        fontFamily:'Inter,Arial'}}>
+      REFERÊNCIA VISUAL · FORA DA SAFE · NÃO PUBLICAR
+    </div>}
     {preview&&<div style={{position:'absolute',bottom:40,left:0,right:0,textAlign:'center',
       fontFamily:'Inter,Arial',color:'#CFD6E0',opacity:.7,fontSize:20,letterSpacing:1.1}}>
       {private_review_only ? 'PRÉVIA TÉCNICA · DIREITOS PENDENTES · NÃO PUBLICAR' : 'PRÉVIA PRIVADA · NÃO PUBLICADO'}

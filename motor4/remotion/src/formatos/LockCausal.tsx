@@ -21,107 +21,153 @@ const ease=(v:number)=>{const x=Math.max(0,Math.min(1,v));return x*x*(3-2*x);};
 const EditorialCutaway:React.FC<{
   t:number;fill:number;open:number;isFlow:boolean;active?:EventoEclusa
 }>=({t,fill,open,isFlow,active})=>{
-  const waterY=1256-282*fill;
-  const wave=Math.sin(t*4)*2.5;
+  // Dois níveis VISÍVEIS, conectados pelo mesmo tubo. A água é o elevador;
+  // nenhum motor ergue o casco. Somente a direção de enchimento é ilustrada.
+  const high=939,low=1252;
+  const waterY=low-(low-high)*fill;
+  const wave=Math.sin(t*3.2)*1.4;
   const level=waterY+wave;
-  const step=active?.action||'closed';
-  const actions=['closed','water_enter','rise','equalize','release'];
-  const index=Math.max(0,actions.indexOf(step));
-  const hullOffset=level-1074;
-  const GOLD='#FFD21F',WHITE='#F5F2EB',CYAN='#6DE1E9',MUTED='#AAC0CE';
+  const state=active?.action||'closed';
+  const steps=['closed','water_enter','rise','equalize','release'];
+  const index=Math.max(0,steps.indexOf(state));
+  const showGravity=isFlow && index>=1;
+  const GOLD='#FFD21F',WHITE='#F5F2EB',CYAN='#6DE1E9',MUTED='#ABC3D0';
+  const hullShift=level-1064;
+  const travel=ease((open-.25)/.75)*62;
+  const detail=state==='closed'?'DOIS LADOS COM NÍVEIS DIFERENTES':
+    state==='water_enter'?'A GRAVIDADE LEVA A ÁGUA AO FUNDO':
+    state==='rise'?'O NAVIO FLUTUA E SOBE COM A ÁGUA':
+    state==='equalize'?'O DESNÍVEL ENTRE OS LADOS DESAPARECE':
+    'O NAVIO PODE PASSAR PARA O LADO ALTO';
   return <AbsoluteFill style={{
-    background:'radial-gradient(ellipse at 54% 46%,#1C394C,#081725 61%,#05111D 100%)',
+    background:'radial-gradient(ellipse at 49% 46%,#1B394D 0%,#0B1C2C 58%,#05101B 100%)',
     fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>
     <svg width="100%" height="100%" viewBox="0 0 1080 1920"
-      role="img" aria-label="Corte ilustrativo de eclusa: a água entra por conduto, eleva o nível e o navio, até igualar o nível externo">
+      role="img"
+      aria-label="Corte ilustrativo: reservatório alto alimenta por gravidade um conduto inferior controlado por válvula; a água enche a câmara, eleva um navio flutuante e o portão só abre quando os níveis se igualam">
       <defs>
-        <pattern id="lock-edit-grid" width="70" height="70" patternUnits="userSpaceOnUse">
-          <path d="M70 0H0V70" fill="none" stroke="#6694A9" strokeOpacity=".12" strokeWidth="1.2"/>
+        <pattern id="lock-edit-grid" width="66" height="66" patternUnits="userSpaceOnUse">
+          <path d="M66 0H0V66" fill="none" stroke="#6B98AE" strokeOpacity=".12" strokeWidth="1.2"/>
         </pattern>
         <linearGradient id="lock-edit-water" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#82E4EF"/><stop offset=".19" stopColor="#48B7D2"/>
-          <stop offset=".6" stopColor="#227291"/><stop offset="1" stopColor="#0D3F5E"/>
+          <stop stopColor="#9AF1EF"/><stop offset=".10" stopColor="#56CCDB"/>
+          <stop offset=".58" stopColor="#21789A"/><stop offset="1" stopColor="#0A3957"/>
         </linearGradient>
         <linearGradient id="lock-edit-metal" x1="0" y1="0" x2="1" y2="0">
-          <stop stopColor="#284255"/><stop offset=".32" stopColor="#A3C7CF"/>
-          <stop offset=".66" stopColor="#5C7F8F"/><stop offset="1" stopColor="#20394B"/>
+          <stop stopColor="#243B4B"/><stop offset=".38" stopColor="#B7D5D8"/>
+          <stop offset=".77" stopColor="#6E96A7"/><stop offset="1" stopColor="#274051"/>
         </linearGradient>
         <linearGradient id="lock-edit-hull" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#FFFFFF"/><stop offset=".46" stopColor="#CBD9DB"/>
-          <stop offset="1" stopColor="#668795"/>
+          <stop stopColor="#FEFFFF"/><stop offset=".52" stopColor="#C6D7DC"/>
+          <stop offset="1" stopColor="#658B9C"/>
         </linearGradient>
-        <clipPath id="lock-edit-chamber"><rect x="141" y="686" width="635" height="714"/></clipPath>
+        <clipPath id="lock-edit-chamber"><rect x="136" y="723" width="596" height="693"/></clipPath>
       </defs>
       <rect width="1080" height="1920" fill="url(#lock-edit-grid)"/>
-      <circle cx="517" cy="1070" r="420" fill="#215F77" opacity=".09"/>
-      <text x="71" y="427" fill={MUTED} fontSize="29" fontWeight="850" letterSpacing="3">ENGENHARIA EXPLICADA</text>
-      <text x="71" y="506" fill={WHITE} fontSize="60" fontWeight="900">COMO A ÁGUA LEVANTA</text>
-      <text x="71" y="567" fill={WHITE} fontSize="60" fontWeight="900">UM NAVIO INTEIRO?</text>
-      <path d="M68 597 H1014" stroke="#48697C" strokeWidth="2" opacity=".7"/>
-      <text x="112" y="705" fill={MUTED} fontSize="26" fontWeight="800" letterSpacing="2">CÂMARA DA ECLUSA</text>
-      <text x="815" y="841" fill={CYAN} fontSize="26" fontWeight="850">NÍVEL ALTO</text>
+      <circle cx="540" cy="1060" r="450" fill="#235E77" opacity=".09"/>
 
-      {/* Profundidade do concreto e nível do reservatório externo. */}
-      <path d="M72 752 H141 V1404 H775 V933 H1018 V1432 H72Z"
-        fill="#162B3C" stroke="#567486" strokeWidth="3"/>
-      <rect x="145" y="752" width="628" height="645" fill="#061B2D"/>
-      <rect x="801" y="966" width="214" height="431" fill="url(#lock-edit-water)" opacity=".85"/>
-      <path d="M801 966 H1015" stroke="#B4FCFC" strokeWidth="7"/>
+      <text x="68" y="431" fill={MUTED} fontSize="28" fontWeight="850" letterSpacing="3">MECANISMO · CORTE TRANSVERSAL</text>
+      <text x="68" y="506" fill={WHITE} fontSize="60" fontWeight="900">DE ONDE VEM A ÁGUA</text>
+      <text x="68" y="569" fill={WHITE} fontSize="60" fontWeight="900">QUE LEVANTA O NAVIO?</text>
+      <path d="M66 600 H1014" stroke="#496E80" strokeWidth="2"/>
+
+      {/* Fato físico central: água elevada à direita, câmara mais baixa à esquerda. */}
+      <rect x="140" y="744" width="597" height="672" fill="#051727"/>
+      <path d="M736 904 H1023 V1435 H736Z" fill="#172C3C" stroke="#607F8F" strokeWidth="3"/>
+      <rect x="814" y={high} width="213" height={1416-high} fill="url(#lock-edit-water)"/>
+      <path d={'M814 '+high+' H1027'} stroke="#CAFFFA" strokeWidth="7"/>
+      <path d={'M141 '+low+' H732'} stroke="#9BC2D0" strokeWidth="3" strokeDasharray="16 15" opacity=".26"/>
+
+      {/* O indicador não é uma medida em metros, apenas comparação dos níveis. */}
+      <text x="833" y="842" fill={GOLD} fontSize="31" fontWeight="900">NÍVEL</text>
+      <text x="833" y="882" fill={GOLD} fontSize="31" fontWeight="900">MAIS ALTO</text>
+      <path d="M930 897 V925" stroke={GOLD} strokeWidth="5"/>
+      <path d="M916 913 L930 933 944 913 Z" fill={GOLD}/>
+      <text x="148" y="705" fill={MUTED} fontSize="27" fontWeight="850" letterSpacing="2.1">CÂMARA DA ECLUSA</text>
+
+      {/* Água da câmara: sobe SOMENTE depois de a válvula ser acionada. */}
       <g clipPath="url(#lock-edit-chamber)">
-        <rect x="141" y={level} width="635" height={1400-level} fill="url(#lock-edit-water)"/>
-        <path d={'M141 '+level+' H777'} stroke="#D3FBF8" strokeWidth="7"/>
+        <rect x="137" y={level} width="596" height={1416-level} fill="url(#lock-edit-water)"/>
+        <path d={'M137 '+level+' H733'} stroke="#D1FFFF" strokeWidth="7"/>
         {Array.from({length:10},(_,i)=><g key={i}>
-          <path d={'M'+(155+i*68)+' '+(level+23+Math.sin(t*5+i)*3)+' h38'}
-            stroke="#A4FFFF" strokeWidth="4" opacity=".27"/>
-          <path d={'M'+(165+i*61)+' '+(level+74+i%3*31)+' h19'}
-            stroke="#D8FCFA" strokeWidth="2" opacity=".10"/>
+          <path d={'M'+(150+i*60)+' '+(level+17+Math.sin(t*3+i)*3)+' h37'}
+            stroke="#BEF8FA" strokeWidth="3.5" opacity=".35"/>
+          <path d={'M'+(158+i*58)+' '+(level+53+i%3*25)+' h18'}
+            stroke="#D8FCFA" strokeWidth="2" opacity=".12"/>
         </g>)}
       </g>
-      {/* Conexão hidráulica real pelo fundo, NÃO entrada pelo portão. */}
-      <path d="M978 1362 H750 V1326 H643" stroke="#203B4D" strokeWidth="41" fill="none"/>
-      <path d="M978 1362 H750 V1326 H643" stroke="#547F91" strokeWidth="27" fill="none"/>
-      <path d="M978 1362 H750 V1326 H643" stroke={isFlow?CYAN:'#60798A'}
-        strokeWidth="13" fill="none" strokeDasharray="17 27"
-        strokeDashoffset={-t*85} opacity={isFlow?.96:.33}/>
-      <path d="M651 1326 l32 -18 v36 Z" fill={isFlow?GOLD:'#60798A'}/>
-      <path d="M78 1397 H1017" stroke="#728B9A" strokeWidth="21"/>
-      <rect x="110" y="739" width="34" height="680" fill="url(#lock-edit-metal)"/>
-      <rect x="774" y="740" width="35" height="679" fill="url(#lock-edit-metal)"
-        opacity={1-open*.79}/>
-      <path d="M791 951 V1398" stroke={open>0.15?GOLD:'#738E9F'} strokeWidth="5"
-        strokeDasharray="13 12" opacity={.35+.65*open}/>
-      <text x="832" y="1462" fill={isFlow?GOLD:MUTED} fontWeight="800" fontSize="27">DUTO INFERIOR</text>
 
-      {/* Casco com volume e detalhes: acompanha a superfície em todo instante. */}
-      <g transform={'translate(0,'+hullOffset+')'}>
-        <path d="M225 1015 L699 1015 658 1105 278 1105Z"
-          fill="#071723" opacity=".30" transform="translate(0 14)"/>
-        <path d="M215 1000 H714 L667 1092 H275Z"
-          fill="url(#lock-edit-hull)" stroke="#F9FCFD" strokeWidth="6"/>
-        <path d="M257 1072 H665" stroke="#6D929F" strokeWidth="8"/>
-        <path d="M343 948 H602 V1001 H343Z" fill="#F4F8F6" stroke="#90B2BB" strokeWidth="4"/>
-        <rect x="380" y="910" width="181" height="35" rx="4" fill="#E9F2F0"/>
-        <rect x="463" y="869" width="13" height="42" fill="#B7D5D8"/>
-        {Array.from({length:5},(_,i)=><rect key={i} x={361+i*46} y="966" width="31" height="19"
-          rx="3" fill="#2A5873"/>)}
-        <path d="M235 1020 H700" stroke={WHITE} strokeWidth="2" opacity=".6"/>
+      {/* Navio acompanha imediatamente a superfície: não é içado. */}
+      <g transform={'translate('+travel+' '+hullShift+')'}>
+        <path d="M221 1002 H674 L636 1092 H266Z"
+          fill="#112432" opacity=".35" transform="translate(0 14)"/>
+        <path d="M216 1000 H680 L641 1092 H263Z"
+          fill="url(#lock-edit-hull)" stroke="#F3FFFF" strokeWidth="5"/>
+        <path d="M247 1073 H644" stroke="#628B9C" strokeWidth="9"/>
+        <rect x="339" y="946" width="246" height="55" rx="3"
+          fill="#F1F7F4" stroke="#8DABB5" strokeWidth="3"/>
+        <rect x="381" y="907" width="158" height="37" rx="3" fill="#E0EAE9"/>
+        <rect x="451" y="867" width="13" height="41" fill="#B3D0D5"/>
+        {Array.from({length:5},(_,i)=><rect key={i} x={350+i*45} y="964"
+          width="26" height="19" rx="3" fill="#235573"/>)}
       </g>
+      {/* Primeiro vê-se o barco, depois o movimento vertical acompanhado. */}
+      {fill>.02 && <g>
+        <path d={'M191 '+(low-22)+' V'+(level+10)} stroke={GOLD} strokeWidth="7" strokeDasharray="15 12"/>
+        <path d={'M173 '+(level+24)+' L191 '+(level-10)+' L209 '+(level+24)+'Z'} fill={GOLD}/>
+        <text x="216" y={Math.max(967,level-53)} fill={GOLD} fontSize="25" fontWeight="850">SOBE</text>
+      </g>}
 
-      {/* Régua de referência e seta diretamente ligada ao deslocamento. */}
-      <path d="M182 1256 V974" stroke={GOLD} strokeWidth="6"
-        strokeDasharray="13 12" opacity={fill>.01?1:.16}/>
-      <path d={'M182 '+(level+12)+' l-18 30 h36Z'} fill={GOLD} opacity={fill>.01?1:.18}/>
-      <path d="M190 1256 H241 M190 974 H241" stroke="#BAD7E2" strokeWidth="4" opacity=".55"/>
-      <text x="223" y="1300" fill={MUTED} fontSize="24">NÍVEL INICIAL</text>
-      <path d="M801 968 H1005" stroke="#B5FFFA" strokeWidth="3"/>
-      <path d="M76 1501 H1007" stroke="#4B6D7C" strokeWidth="2"/>
+      {/* Barreira sólida: os portões permanecem fechados enquanto há desnível. */}
+      <rect x="101" y="741" width="38" height="695" fill="url(#lock-edit-metal)"/>
+      <g transform={'translate('+(open*40)+' 0)'} opacity={1-open*.92}>
+        <rect x="734" y="747" width="46" height="686" fill="url(#lock-edit-metal)"
+          stroke="#C2D9DB" strokeWidth="2"/>
+        <path d="M755 772 V1390" stroke="#2C4556" strokeWidth="4"/>
+      </g>
+      {open>.03 && <g opacity={open}>
+        <path d="M757 931 H838" stroke={GOLD} strokeWidth="7" strokeDasharray="11 10"/>
+        <path d="M824 914 L849 931 824 949 Z" fill={GOLD}/>
+      </g>}
+      <path d="M99 1426 H1032" stroke="#67889C" strokeWidth="20"/>
 
-      <text x="70" y="1573" fill={GOLD} fontSize="33" fontWeight="900">
-        {String(index+1).padStart(2,'0')+'  /  '+(active?.label||'CÂMARA FECHADA').replace(/^[0-9]+\s*·\s*/,'')}
+      {/* O tubo tem origem VISÍVEL no reservatório elevado e desemboca embaixo da câmara. */}
+      <path d="M944 1130 V1364 H632 V1331 H563" stroke="#182E3D"
+        fill="none" strokeWidth="55" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M944 1130 V1364 H632 V1331 H563" stroke="#618594"
+        fill="none" strokeWidth="37" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M944 1130 V1364 H632 V1331 H563" stroke={showGravity?CYAN:'#68899C'}
+        fill="none" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round"
+        strokeDasharray="26 29" strokeDashoffset={-t*117} opacity={showGravity?1:.28}/>
+      {isFlow&&<g>
+        <path d="M922 1303 L944 1332 L966 1303" stroke={GOLD} strokeWidth="5"
+          fill="none" strokeLinecap="round"/>
+        <path d="M842 1347 L813 1364 L842 1381" stroke={GOLD}
+          strokeWidth="5" fill="none" strokeLinecap="round"/>
+        <path d="M645 1321 L615 1338 L645 1355" stroke={GOLD}
+          strokeWidth="5" fill="none" strokeLinecap="round"/>
+      </g>}
+      {/* Animação do comando da VÁLVULA, imediatamente perceptível. */}
+      <circle cx="944" cy="1225" r="34" fill="#0B2635"
+        stroke={showGravity?GOLD:'#8FB3C0'} strokeWidth="6"/>
+      <path d={'M922 1203 L966 1247 M922 1247 L966 1203'} stroke={showGravity?GOLD:'#B8CFD5'}
+        strokeWidth="8" strokeLinecap="round" opacity={showGravity?0.25:1}/>
+      {showGravity&&<circle cx="944" cy="1225" r="46" stroke={GOLD}
+        strokeWidth="3" fill="none" opacity={.35+.22*Math.sin(t*6)}/>}
+      <text x="816" y="1282" fill={showGravity?GOLD:WHITE}
+        fontSize="27" fontWeight="900">VÁLVULA</text>
+      <text x="803" y="1489" fill={showGravity?GOLD:MUTED}
+        fontSize="25" fontWeight="850">ÁGUA POR GRAVIDADE</text>
+      <path d="M71 1516 H1010" stroke="#4D7284" strokeWidth="2"/>
+
+      {/* Texto só conclui o que já está sendo visto. */}
+      <text x="72" y="1583" fill={GOLD} fontSize="31" fontWeight="900">
+        {String(index+1).padStart(2,'0')+'  /  '+(active?.label||'PORTÕES FECHADOS').replace(/^[0-9]+\s*·\s*/,'')}
       </text>
-      <g transform="translate(74 1607)">
-        {actions.map((a,i)=><rect key={a} x={i*193} width="176" height="7"
-          fill={index>=i?GOLD:'#335668'} opacity={index>=i?1:.6}/>)}
+      <text x="72" y="1641" fill={WHITE} fontSize="26" fontWeight="700">{detail}</text>
+      <g transform="translate(75 1670)">
+        {steps.map((a,i)=><rect key={a} x={i*192} width="172" height="7"
+          fill={index>=i?GOLD:'#36576B'}/>)}
       </g>
     </svg>
   </AbsoluteFill>;

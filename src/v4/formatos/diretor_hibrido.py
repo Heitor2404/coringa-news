@@ -204,6 +204,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None,
         pre['triagem'],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
     (destino/'plano_hibrido.json').write_text(json.dumps(
         pre['plano'],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    if downloader is None:
+        # Não reimplementar downloader/HTTP: usar somente o de Commons
+        # do adaptador já existente, com host e redirects controlados.
+        from src.v4.formatos.montagem_privada_real import baixar_imagem
+        downloader=baixar_imagem
     result=FILME.preparar(pre['plano'],destino,public_root,downloader=downloader)
     public_assets=Path(public_root)/'film_editorial'
     checks={}
@@ -224,3 +229,46 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None,
     (destino/'proveniencia_hibrida.json').write_text(json.dumps(
         prov,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
     return {**result,'proveniencia_hibrida':prov}
+
+
+
+def main(argv=None):
+    import argparse
+    import sys
+    parser=argparse.ArgumentParser(description='Prova híbrida V2: foto original SHA + mecanismo físico sem falsear fatos')
+    parser.add_argument('roteiro_json')
+    parser.add_argument('saida')
+    parser.add_argument('public_root')
+    parser.add_argument('--so-planejar',action='store_true',
+                        help='sem rede; relatório de candidatos e preflight, não valida bytes')
+    args=parser.parse_args(argv)
+    plano=json.loads(Path(args.roteiro_json).read_text('utf8'))
+    pasta=Path(args.saida)
+    pasta.mkdir(parents=True,exist_ok=True)
+    try:
+        if args.so_planejar:
+            plan=planejar(plano)
+            (pasta/'plano_hibrido.json').write_text(json.dumps(
+                plan['plano'],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+            (pasta/'triagem.json').write_text(json.dumps(
+                plan['triagem'],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+            print(json.dumps({'status':'PLANEJADO_NAO_VERIFICADO',
+                              'publicar':False,'duracao':plan['plano']['duracao']},
+                             ensure_ascii=False))
+            return 0
+        result=preparar(plano,pasta,Path(args.public_root))
+        print(json.dumps({'status':'PRIVADO_ORIGINAIS_SHA_VERIFICADOS',
+                          'publicar':False,'pronto_qa':result['pronto']},
+                         ensure_ascii=False))
+        return 0
+    except MontagemHibridaBloqueada as exc:
+        (pasta/'bloqueios_hibridos.json').write_text(json.dumps({
+            'status':'BLOQUEADO','bloqueios':exc.bloqueios,
+            'triagem':exc.relatorio,'publicar':False,
+        },ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+        print(str(exc),file=sys.stderr)
+        return 2
+
+
+if __name__=='__main__':
+    raise SystemExit(main())

@@ -17,6 +17,25 @@ const finito=(v:number)=>Number.isFinite(v);
 const retanguloValido=(r:Retangulo)=>
   [r.left,r.top,r.right,r.bottom].every(finito)&&r.left<r.right&&r.top<r.bottom;
 
+/** Define a área de ação como um INSET do recorte real da cena.
+ * Um único retângulo fica responsável pelo clipPath e pelas margens; não
+ * deixar um "safe" fictício maior que a máscara SVG.
+ */
+export function areaInterna(
+  recorte:Retangulo,margens:{left:number;top:number;right:number;bottom:number},
+):Retangulo {
+  if(!retanguloValido(recorte) ||
+    Object.values(margens).some(v=>!finito(v)||v<0)){
+    throw new Error('AREA-SEGURA-MARGEM: recorte ou folga inválidos');
+  }
+  const out={
+    left:recorte.left+margens.left,top:recorte.top+margens.top,
+    right:recorte.right-margens.right,bottom:recorte.bottom-margens.bottom,
+  };
+  if(!retanguloValido(out))throw new Error('AREA-SEGURA-MARGEM: não sobra palco para o sujeito');
+  return out;
+}
+
 export function limitesDoAtor(
   conteudo:Retangulo, pivo:Ponto, posicao:Ponto, escala:number,
 ):Retangulo {

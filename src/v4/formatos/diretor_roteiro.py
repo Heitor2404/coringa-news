@@ -183,8 +183,23 @@ def analisar(plano: dict, biblioteca: dict | None = None) -> dict:
                     # Sem fonte factual aprovada e aprovação de MP4 isso é só
                     # contrato técnico, não licença de produção ou de publicar.
                 else:
-                    bloquear('R-SEM-MECANISMO',
-                             'nenhum mecanismo implementado representa as ações físicas e fases solicitadas')
+                    # Se não existe renderer vetorial, uma gravação real de
+                    # AÇÃO só pode substituí-lo quando cobre o MESMO evento,
+                    # as MESMAS etapas e a origem citada no roteiro V2.
+                    # No catálogo comum não há esse tipo: caminho opt-in
+                    # de QA com bytes originais e inspeção assistida.
+                    from src.v4.formatos import video_acao_real
+                    gravacoes=video_acao_real.candidatos(ac,biblioteca)
+                    if len(gravacoes)==1:
+                        row.update(
+                            estado='CAPACIDADE_VIDEO_REAL_PRIVADA',
+                            capacidade='video_acao_real',
+                            acoes=list(actions),fases=list(phases),
+                            candidatos=gravacoes
+                        )
+                    else:
+                        bloquear('R-SEM-MECANISMO',
+                                 'nem renderer físico nem gravação do mesmo evento com ações integralmente correspondentes')
         elif tipo in ('pessoa','lugar','ambiente','evento_historico','documento','citacao'):
             options=candidatos({**c,'acontecimento':ac},tipo,biblioteca)
             row['candidatos']=options

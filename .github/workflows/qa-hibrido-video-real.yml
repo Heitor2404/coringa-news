@@ -7,6 +7,7 @@ on:
       - "src/v4/formatos/video_contextual_v3.py"
       - "src/v4/formatos/diretor_hibrido.py"
       - "src/v4/formatos/filme_editorial.py"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "docs/v4/formatos/VIDEO_CURADO_PRIVADO_NIST_20261120.json"
       - "docs/v4/formatos/QA_ROTEIRO_V2_HIBRIDO_NIST_20261120.json"
       - "tests/test_video_contextual_v3.py"
@@ -71,7 +72,9 @@ jobs:
           assert [x['type'] for x in props['shots']]==['photo','video','mechanism']
           assert props['duracao']==12.5
           assert props['shots'][1]['source_in_seconds']==58.15
-          assert len(props['shots'][1]['framing_positions'])==3
+          assert props['shots'][1]['video_context_layout']=='cena_integral'
+          assert props['shots'][1]['framing_positions']==[]
+          assert props['shots'][1]['source_in_seconds']==58.15
           assert props['shots'][1]['evidence']=='representative'
           assert props['shots'][2]['mechanism']=='optical_projection'
           assert prov['estado']=='ORIGINAIS_SHA_VERIFICADOS'

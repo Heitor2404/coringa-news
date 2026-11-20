@@ -38,8 +38,8 @@ def validar_contrato()->dict:
         raise ValueError('SAFE-UNIVERSAL: fora do 9:16')
     # Camada/ATLAS já usam layout.py. O Filho FilmeEditorial não pode
     # adotar um suposto safe zone que o ATLAS considera COBERTO.
-    perfis=LAYOUT.perfis()
-    if set(perfis)!={'tiktok','instagram_reels','youtube_shorts'}:
+    perfis=LAYOUT.perfis(LAYOUT.CFG['ativos_seguros'])
+    if set(perfis)!={'tiktok_multiplataforma','instagram_reels_multiplataforma','youtube_shorts_multiplataforma'}:
         raise ValueError('SAFE-PERFIS: motor não usa as três plataformas')
     for nome,p in perfis.items():
         if (uni[0]<p['esquerda'] or uni[1]<p['topo']

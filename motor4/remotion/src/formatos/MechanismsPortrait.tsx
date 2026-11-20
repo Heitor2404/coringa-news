@@ -75,7 +75,7 @@ const Steps:React.FC<{active:number}>=({active})=><g>
 </g>;
 const Reticle:React.FC<{x:number;y:number;w:number;h:number;progress:number}>=({x,y,w,h,progress})=>
   <g>
-    <path d={\`M\${x+8} \${y-14} H\${x+w-14} L\${x+w} \${y+6} H\${x+18}Z\`}
+    <path d={`M${x+8} ${y-14} H${x+w-14} L${x+w} ${y+6} H${x+18}Z`}
       fill="#779DB0" opacity=".72"/>
     <rect x={x} y={y} width={w} height={h} rx="11" fill="#102C40"
       stroke={progress>.02?GOLD:'#779AAE'} strokeWidth="6"/>
@@ -95,7 +95,7 @@ const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})
       const a=i*Math.PI/6+t*.9;
       const x1=x+Math.cos(a)*r*.70,y1=y+Math.sin(a)*r*.70;
       const x2=x+Math.cos(a)*r*.95,y2=y+Math.sin(a)*r*.95;
-      return <path key={i} d={\`M\${x1} \${y1} L\${x2} \${y2}\`}
+      return <path key={i} d={`M${x1} ${y1} L${x2} ${y2}`}
         stroke={GOLD} strokeWidth="6" opacity={.5+.5*p}/>;
     })}
     <circle cx={x} cy={y} r={r*.19} fill={GOLD}/>
@@ -104,15 +104,15 @@ const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})
 const Mirror:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
   <g>
     <ellipse cx={x} cy={y} rx={rx} ry={rx*.22}
-      transform={\`rotate(-26 \${x} \${y})\`}
+      transform={`rotate(-26 ${x} ${y})`}
       fill="url(#portrait-mirror)" stroke="#D1FFFF" strokeWidth="6"/>
     <ellipse cx={x} cy={y} rx={rx*.77} ry={rx*.077}
-      transform={\`rotate(-26 \${x} \${y})\`}
+      transform={`rotate(-26 ${x} ${y})`}
       fill="#98EDF5" opacity={.15+.55*p}/>
   </g>;
 const Wafer:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
   <g>
-    <path d={\`M\${x-rx} \${y} Q\${x-rx+12} \${y+105} \${x} \${y+105} Q\${x+rx-12} \${y+105} \${x+rx} \${y} L\${x+rx} \${y+32} Q\${x+rx-28} \${y+125} \${x} \${y+125} Q\${x-rx+28} \${y+125} \${x-rx} \${y+32}Z\`}
+    <path d={`M${x-rx} ${y} Q${x-rx+12} ${y+105} ${x} ${y+105} Q${x+rx-12} ${y+105} ${x+rx} ${y} L${x+rx} ${y+32} Q${x+rx-28} ${y+125} ${x} ${y+125} Q${x-rx+28} ${y+125} ${x-rx} ${y+32}Z`}
       fill="url(#portrait-steel)" stroke="#C0F3F7" strokeWidth="5"/>
     <ellipse cx={x} cy={y} rx={rx} ry={rx*.3} fill="#123B50"
       stroke="#C3FFFF" strokeWidth="6"/>
@@ -189,13 +189,13 @@ export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state
     <rect x="471" y="230" width="122" height="343" fill="#132F40" stroke="#769AAA" strokeWidth="4"/>
     <rect x="479" y="254" width="106" height="319" fill="url(#portrait-water)" opacity=".9"/>
     <path d="M479 254 H585" stroke="#E0FFFF" strokeWidth="6"/>
-    <path d={\`M33 \${waterY} H442\`} stroke="#D7FFFF" strokeWidth="7"/>
+    <path d={`M33 ${waterY} H442`} stroke="#D7FFFF" strokeWidth="7"/>
     <rect x="34" y={waterY} width="406" height={573-waterY}
       fill="url(#portrait-water)" opacity=".93"/>
-    {Array.from({length:7},(_,i)=><path key={i} d={\`M\${48+i*55} \${waterY+18+Math.sin(t*4+i)*2} h35\`}
+    {Array.from({length:7},(_,i)=><path key={i} d={`M${48+i*55} ${waterY+18+Math.sin(t*4+i)*2} h35`}
       stroke="#C9FAFF" opacity=".48" strokeWidth="3"/>)}
     {/* Navio sobe APENAS em resposta ao nível da água. */}
-    <g transform={\`translate(\${gate*48} \${hullY-455})\`}>
+    <g transform={`translate(${gate*48} ${hullY-455})`}>
       <path d="M69 407 H391 L357 466 H105Z"
         fill="url(#portrait-steel)" stroke="#F2FFFF" strokeWidth="5"/>
       <path d="M105 452 H358" stroke="#60889A" strokeWidth="7"/>
@@ -207,7 +207,7 @@ export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state
         y="377" width="22" height="17" fill="#1C4B61"/>)}
     </g>
     <rect x="24" y="174" width="18" height="401" fill="#A9C4CD"/>
-    <g opacity={1-gate*.93} transform={\`translate(\${gate*37} 0)\`}>
+    <g opacity={1-gate*.93} transform={`translate(${gate*37} 0)`}>
       <rect x="443" y="176" width="19" height="396" fill="#9EBAC5" stroke="#DAF4F7" strokeWidth="2"/>
     </g>
     {gate>.02&&<path d="M462 315 H489" stroke={GOLD} strokeWidth="7" strokeDasharray="12 9" opacity={gate}/>}
@@ -224,8 +224,8 @@ export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state
     <path d="M516 438 L554 476 M516 476 L554 438"
       fill="none" stroke={isFlow?GOLD:'#D7E7ED'} strokeWidth="7" strokeLinecap="round"/>
     {state==='rise'&&<g opacity={.55+.3*Math.sin(t*5)}>
-      <path d={\`M80 \${waterY+10} V\${waterY-122}\`} stroke={GOLD} strokeWidth="9" strokeDasharray="13 10"/>
-      <path d={\`M61 \${waterY-97} L80 \${waterY-132} L99 \${waterY-97}Z\`} fill={GOLD}/>
+      <path d={`M80 ${waterY+10} V${waterY-122}`} stroke={GOLD} strokeWidth="9" strokeDasharray="13 10"/>
+      <path d={`M61 ${waterY-97} L80 ${waterY-132} L99 ${waterY-97}Z`} fill={GOLD}/>
     </g>}
     {state==='equalize'&&<path d="M43 254 H589" stroke={GOLD}
       strokeWidth="5" strokeDasharray="12 13" opacity=".62"/>}

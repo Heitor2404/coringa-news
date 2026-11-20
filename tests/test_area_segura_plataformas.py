@@ -138,6 +138,56 @@ def test_prova_de_overlay_com_imagem_real_9x16(tmp_path):
         assert im.size==(4*540,960)
 
 
+def test_camera_de_mecanismos_e_uma_capacidade_do_catalogo_nao_do_tema():
+    config=SAFE.carregar()
+    mecanica=config['mechanism_layout']
+    assert mecanica['visual'][0:3:2]==[150,770]
+    assert mecanica['visual'][3]>config['slots']['visual'][3]
+    assert mecanica['visual'][3]<mecanica['step'][1]
+    assert mecanica['step'][3]<config['slots']['source'][1]
+    assert 'optical_projection' in mecanica['focus']
+    assert 'lock_explainer' in mecanica['focus']
+    assert 'source' in mecanica['focus']['optical_projection']
+    assert 'water_enter' in mecanica['focus']['lock_explainer']
+    assert mecanica['focus']['optical_projection']['source'] != mecanica['focus']['optical_projection']['wafer']
+    s=_script()
+    assert 'mecanismoFoco(shot,t)' in s
+    assert 'MECH.step' in s
+    assert "shot.type==='mechanism'&&!subtitleMode" in s
+    assert "shot.type!=='mechanism'&&!shot.graphic_original" in s
+    # Nunca aplicar estes closes ao MotionEditorial ou aos vídeos reais.
+    assert "if (shot.graphic_original && shot.motion_graphic)" in s
+    assert "subtitleMode?SAFE.visual:MECH.visual" in s
+
+
+def test_camera_recusa_regiao_ilegal_e_faixa_sobreposta(monkeypatch):
+    c=SAFE.carregar()
+    c['mechanism_layout']['focus']['optical_projection']['wafer']=[800,700,1150,1600]
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-MECANISMO-CAMERA'):
+        SAFE.validar_contrato()
+    c=SAFE.carregar()
+    c['mechanism_layout']['focus']['optical_projection']['wafer']=[175,760,920,1540]
+    c['mechanism_layout']['visual'][3]=1110
+    with pytest.raises(ValueError,match='SAFE-MECANISMO-COLISAO'):
+        SAFE.validar_contrato()
+
+
+def test_etapas_longas_ou_sem_foco_nunca_passam_despercebidas():
+    demo=_load('DEMO_MECANISMOS_FISICOS_20261119.json')
+    demo['safe_area_profile']=SAFE.PERFIL
+    ok=SAFE.auditar_plano(demo)
+    assert not ok['bloqueios'],ok
+    sem_foco=copy.deepcopy(demo)
+    sem_foco['shots'][0]['cues'][0]['action']='foco_desconhecido'
+    assert 'SAFE-MECANISMO-FOCO-AUSENTE' in {
+        x['codigo'] for x in SAFE.auditar_plano(sem_foco)['bloqueios']}
+    longo=copy.deepcopy(demo)
+    longo['shots'][1]['cues'][1]['label']='ETAPA MUITO LONGA '+('EXPLICACAO '*10)
+    assert 'SAFE-MECANISMO-ETAPA-LONGA' in {
+        x['codigo'] for x in SAFE.auditar_plano(longo)['bloqueios']}
+
+
 def test_qa_overlay_nao_aparece_sem_permissao_explicitamente_informada():
     s=_script()
     assert 'safe_zone_debug=false' in s

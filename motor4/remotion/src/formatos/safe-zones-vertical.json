@@ -5,12 +5,12 @@
     1920
   ],
   "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
-  "notes": "Fonte da política de interface: src/v4/formatos/plataformas.json e layout.py. Os slots abaixo são geometria de DOIS modos MUTUAMENTE EXCLUSIVOS: sem narração (cue/headline/subject/source); com legendas (subtitle/source). Conteúdo geral do filme não é homologado somente pela posição destes slots.",
+  "notes": "Fonte: src/v4/formatos/plataformas.json. Dois modos EXCLUSIVOS: sem legenda cue/headline/subject/source; com legenda subtitle/source; faixa real da Camada em layout.py. UI orgânica é variável, QA visual obrigatório.",
   "universal": [
-    120,
+    150,
     300,
-    820,
-    1400
+    770,
+    1248
   ],
   "slots": {
     "brand": [
@@ -56,10 +56,10 @@
       1235
     ],
     "subtitle": [
-      132,
-      1230,
-      806,
-      1388
+      160,
+      1040,
+      760,
+      1190
     ]
   },
   "nonessential": [

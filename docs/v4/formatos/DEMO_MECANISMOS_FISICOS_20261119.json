@@ -3,7 +3,7 @@
   "tipo": "PROVA_VISUAL_PRIVADA",
   "publicar": false,
   "titulo": "Dois mecanismos físicos | QA multitema | não é episódio",
-  "duracao": 13.1,
+  "duracao": 17.2,
   "media": {},
   "shots": [
     {
@@ -53,7 +53,7 @@
     {
       "id": "eclusa_nivel",
       "start": 6.9,
-      "end": 13.1,
+      "end": 17.2,
       "type": "mechanism",
       "mechanism": "lock_explainer",
       "evidence": "explainer",
@@ -64,27 +64,27 @@
         {
           "at": 0,
           "action": "closed",
-          "label": "1 · PORTÕES FECHADOS"
+          "label": "1 · CÂMARA ISOLADA; ÁGUA ALTA À DIREITA"
         },
         {
-          "at": 0.9,
+          "at": 1.2,
           "action": "water_enter",
-          "label": "2 · ÁGUA ENTRA POR CONDUTOS"
+          "label": "2 · VÁLVULA ABERTA: ÁGUA DESCE PELO CONDUTO"
         },
         {
-          "at": 1.7,
+          "at": 3,
           "action": "rise",
-          "label": "3 · ÁGUA E NAVIO SOBEM JUNTOS"
+          "label": "3 · A ÁGUA ENCHE E FAZ O NAVIO SUBIR"
         },
         {
-          "at": 4.35,
+          "at": 7.1,
           "action": "equalize",
-          "label": "4 · NÍVEIS SE IGUALAM"
+          "label": "4 · MESMO NÍVEL DOS DOIS LADOS"
         },
         {
-          "at": 5.25,
+          "at": 8.8,
           "action": "release",
-          "label": "5 · SAÍDA LIBERADA APÓS IGUALAR"
+          "label": "5 · PORTÃO ABRE APÓS IGUALAR"
         }
       ],
       "estados_esperados": [
@@ -97,9 +97,9 @@
       "direcao_evento": {
         "intencao": "demonstrar_acao",
         "fato_id": "principio_eclusa",
-        "aprendizado": "Mostrar água entrando na câmara, navio subindo e portão liberando com níveis iguais"
+        "aprendizado": "Ligar visualmente reservatório mais alto ao conduto e à válvula, mostrar água por gravidade entrando na câmara e navio flutuando até igualar níveis; só então liberar o portão"
       }
     }
   ],
-  "observacao": "Amostra visual privada, sem voz, Telegram ou publicação. Engenharias diferentes, mesma infraestrutura FilmeEditorial. Estética não aprovada por CI."
+  "observacao": "QA privada, sem voz, Telegram ou publicação. O segundo mecanismo agora tem 10,3 s para mostrar causa e consequência; isso não autoriza outro tema ou episódio."
 }

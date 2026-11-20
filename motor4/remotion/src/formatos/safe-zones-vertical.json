@@ -81,7 +81,7 @@
   "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial.",
   "source_of_truth": "src/v4/formatos/plataformas.json",
   "mechanism_layout": {
-    "note": "Camera de mecanismos declarada por componente e acao, nunca por tema/episodio. O box limita o CONTEUDO FOCAL; verificacao dos atores reais ainda exige frames renderizados.",
+    "note": "Camera de mecanismo por componente e acao: todos os focos devem conter a geometria essencial do renderizador. Nao fechar enquadramento se navio, fonte, espelhos, valvula ou links causais sairem da tela; passos legiveis usam faixa editorial externa.",
     "visual": [
       150,
       410,
@@ -104,72 +104,72 @@
     "focus": {
       "optical_projection": {
         "default": [
-          90,
-          700,
-          1030,
-          1540
+          65,
+          655,
+          1045,
+          1505
         ],
         "source": [
-          65,
-          690,
-          830,
-          1460
+          70,
+          660,
+          1040,
+          1500
         ],
         "reticle": [
-          205,
-          690,
-          930,
-          1470
+          70,
+          670,
+          1045,
+          1510
         ],
         "projection": [
-          250,
-          720,
+          65,
+          675,
           1040,
-          1490
+          1505
         ],
         "wafer": [
-          175,
-          760,
-          920,
-          1540
+          65,
+          675,
+          1040,
+          1510
         ]
       },
       "lock_explainer": {
         "default": [
-          90,
+          70,
+          665,
+          1045,
+          1495
+        ],
+        "closed": [
+          75,
           675,
           1040,
           1490
         ],
-        "closed": [
-          105,
-          705,
-          825,
-          1460
-        ],
         "water_enter": [
-          290,
-          695,
+          70,
+          675,
           1040,
           1490
         ],
         "rise": [
-          120,
-          695,
-          910,
-          1480
+          75,
+          680,
+          1040,
+          1490
         ],
         "equalize": [
-          205,
-          690,
+          75,
+          680,
           1040,
           1490
         ],
         "release": [
-          185,
-          695,
+          70,
+          685,
           1040,
-          1480
+          1490
         ]
       },
       "lock_filling": {
@@ -204,6 +204,20 @@
           1500
         ]
       }
+    },
+    "essential_bounds": {
+      "optical_projection": [
+        95,
+        695,
+        1025,
+        1455
+      ],
+      "lock_explainer": [
+        100,
+        700,
+        1030,
+        1455
+      ]
     }
   }
 }

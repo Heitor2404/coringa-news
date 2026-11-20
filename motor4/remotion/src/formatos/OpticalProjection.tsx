@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
-import {OpticalPortrait} from './MechanismsPortrait';
+import {OpticalImmersive} from './MechanismsImmersive';
 
 export type OpticalAction='source'|'reticle'|'projection'|'wafer';
 export type OpticalCue={at:number;action?:OpticalAction|string;label:string};
@@ -33,7 +33,7 @@ export const OpticalProjection:React.FC<Props>=({t,events,portrait=false})=>{
   const current=Math.max(0,events.filter(e=>e.at<=t).length-1);
   const active=events[current]?.label||'EXPOSIÇÃO EUV';
   const pattern=[0,1,2,3,4,5,6];
-  if(portrait) return <OpticalPortrait t={t} source={source} mask={mask}
+  if(portrait) return <OpticalImmersive t={t} source={source} mask={mask}
     mirrors={mirrors} resist={resist}
     phase={events.filter(e=>e.at<=t).slice(-1)[0]?.action||'source'}/>;
   return <AbsoluteFill style={{

@@ -5,7 +5,7 @@
     1920
   ],
   "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
-  "notes": "Área editorial conservadora para vídeo 9:16 reaproveitado organicamente; bordas de overlays variam por aplicativo, descrição e versão. NÃO é garantia da interface final. Valores de anúncios são referência, não regra idêntica para vídeo orgânico.",
+  "notes": "Interseção conservadora 9:16 de informações essenciais. Fonte de perfis já existente: src/v4/formatos/plataformas.json. Margens derivam de referências de ANÚNCIOS, utilizadas como aproximação para orgânico com UI variável, NÃO garantia de todos os aparelhos.",
   "platforms": {
     "reels": {
       "safe": [
@@ -118,5 +118,6 @@
     "atlas_map_embedded_credits",
     "original_graphic_with_unmapped_text",
     "legacy_extra_overlay"
-  ]
+  ],
+  "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial."
 }

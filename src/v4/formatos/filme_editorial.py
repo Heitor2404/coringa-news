@@ -192,6 +192,31 @@ def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int])->dic
 
 
 
+
+def proteger_fonte_integral(cena:dict, midia:dict, dimensoes:tuple[int,int])->str:
+    """Quando a origem traz uma relação física, exibir a fonte INTEIRA
+    é mais honesto do que supor que o centro contém todas as etapas.
+    Especialmente câmeras quadradas de missões e processos industriais.
+    """
+    meta=cena.get('video_framing') or {}
+    if meta.get('modo')!='fonte_integral':
+        raise ValueError('F-ROI-CONTRATO: fonte integral exige declaração específica')
+    if meta.get('sha256_origem')!=midia.get('expected_sha256'):
+        raise ValueError('F-ROI-SHA: enquadramento de outra mídia')
+    if (not isinstance(meta.get('inspecao'),str) or len(meta['inspecao'])<35
+        or not isinstance(meta.get('motivo'),str) or len(meta['motivo'])<25):
+        raise ValueError('F-ROI-INSPECAO: fonte integral precisa de motivo factual')
+    if abs(float(cena.get('video_zoom') or 1)-1)>1e-6:
+        raise ValueError('F-ROI-ZOOM: preservar fonte sem zoom')
+    w,h=dimensoes
+    if (not isinstance(w,int) or isinstance(w,bool)
+        or not isinstance(h,int) or isinstance(h,bool)
+        or min(w,h)<500):
+        raise ValueError('F-ROI-DIMENSOES: dimensões da fonte insuficientes')
+    return 'quadro_integral' if .75<=w/h<=1.25 else 'cena_integral'
+
+
+
 def avaliar(plano: dict) -> dict:
     # Mesmo preflight para storyboard manual ou gerado do evento:
     # autor/editor não precisam nomear mecanismo nem inventar tempos dos cues.
@@ -405,6 +430,8 @@ def avaliar(plano: dict) -> dict:
                 try:
                     if contrato_roi.get('modo')=='relacao_observada':
                         resolver_relacao_video(cena,origem_enquadramento,(largura,altura))
+                    elif contrato_roi.get('modo')=='fonte_integral':
+                        proteger_fonte_integral(cena,origem_enquadramento,(largura,altura))
                     else:
                         planejar_enquadramento_video(cena,origem_enquadramento,(largura,altura))
                 except (ValueError,TypeError) as exc:
@@ -440,6 +467,21 @@ def avaliar(plano: dict) -> dict:
             # diferentes apenas se realmente distantes no tempo de origem.
             src_t = float(cena.get('source_in_seconds') or 0)
             momentos.add((cena['asset'], 'video', int(src_t // 3)))
+            # Movimento REAL pode apresentar mais de uma informação dentro
+            # da mesma tomada. Contar apenas etapas com fonte_s, SHA e
+            # descrição validadas; zoom/efeito de câmera não contam.
+            # Nunca confundir esse gate estrutural com aprovação dos pixels.
+            progress=cena.get('progressao_visual')
+            if isinstance(progress,dict):
+                from src.v4.formatos.tempo_natural import validar_progressao_video
+                fonte=(plano.get('media') or {}).get(cena['asset'])
+                if not validar_progressao_video(cena,span,fonte):
+                    for evento in progress.get('eventos') or []:
+                        momentos.add((
+                            cena['asset'],'acao_original',
+                            round(float(evento['fonte_s']),3),
+                            str(evento['acao_visivel']).strip().casefold()
+                        ))
         elif cena.get('asset'):
             momentos.add((cena['asset'], 'still'))
         if tipo == 'map' or cena.get('map') is not None:
@@ -525,7 +567,8 @@ def avaliar(plano: dict) -> dict:
                     and len(asset['expected_sha256'])==64
                     and (
                         urlsplit(str(asset.get('page') or '')).hostname in (
-                            'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov'
+                            'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov',
+                            'svs.gsfc.nasa.gov'
                         ) or (
                             asset.get('original_graphic') is True
                             and asset.get('license')=='CC0'
@@ -558,7 +601,8 @@ def avaliar(plano: dict) -> dict:
                 and bool(source) and str(source).startswith('stage_documental/')
                 and isinstance(asset.get('expected_sha256'),str)
                 and len(asset['expected_sha256'])==64
-                and urlsplit(str(asset.get('page') or '')).hostname=='www.nist.gov'
+                and urlsplit(str(asset.get('page') or '')).hostname in (
+                    'www.nist.gov','svs.gsfc.nasa.gov')
             )
             if (asset.get('license') not in LICENCAS and not direitos_pendentes
                     or not asset.get('page') or not asset.get('credit')):
@@ -719,6 +763,10 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                         c,plano['media'][c['asset']],dimensoes_reais)
                     x['video_context_layout']=strategy['layout']
                     x['framing_positions']=strategy['framing_positions']
+                elif c['video_framing'].get('modo')=='fonte_integral':
+                    x['video_context_layout']=proteger_fonte_integral(
+                        c,plano['media'][c['asset']],dimensoes_reais)
+                    x['framing_positions']=[]
                 else:
                     x['framing_positions']=planejar_enquadramento_video(
                         c,plano['media'][c['asset']],dimensoes_reais

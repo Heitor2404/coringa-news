@@ -53,6 +53,7 @@ export type FilmProps = {
   preview?: boolean;
   private_review_only?: boolean;
   reference_style_preview?: boolean; // SOMENTE QA privado: visual antigo para comparação; bloqueado para publicação
+  portrait_experiment?: boolean; // flag privada; não trocar o padrão sem homologação estética
   safe_zone_debug?: boolean; // somente QA, nunca publicar o overlay vermelho
   subtitle_mode?: boolean; // quando a Camada de fala está presente, ela ocupa lane própria
   safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
@@ -274,8 +275,8 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({s
  * como FUNDO cênico, sem afirmar que detalhes nas bordas são essenciais.
  * Mecanismos 2D são reenquadrados pelo tipo de renderizador, nunca pelo tema.
  */
-const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean}> = ({shot,p,t,subtitleMode}) => {
-  if (shot.type==='mechanism' &&
+const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;portraitExperiment:boolean}> = ({shot,p,t,subtitleMode,portraitExperiment}) => {
+  if (portraitExperiment && shot.type==='mechanism' &&
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')) {
     // Vertical-first: objetos novos em SVG 620x682; não existe zoom nem crop
     // de uma arte feita para 1080x1920. Toda ação essencial fica na mesma
@@ -352,7 +353,7 @@ const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted
   </div>;
 };
 
-const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean;legacyVisualPreview:boolean}> = ({shot,subtitleMode,legacyVisualPreview}) => {
+const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean;legacyVisualPreview:boolean;portraitExperiment:boolean}> = ({shot,subtitleMode,legacyVisualPreview,portraitExperiment}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps;
   const now=frame/fps;
   const duration=Math.max(.01,shot.end-shot.start);
@@ -394,7 +395,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     </AbsoluteFill>;
   }
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
-    <SafeBody shot={shot} p={p} t={now-shot.start} subtitleMode={subtitleMode}/>
+    <SafeBody shot={shot} p={p} t={now-shot.start} subtitleMode={subtitleMode} portraitExperiment={portraitExperiment}/>
     {!shot.graphic_original&&shot.type!=='mechanism'&&shot.type!=='video'&&
       <AbsoluteFill style={{pointerEvents:'none',background:
         'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
@@ -451,11 +452,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>
       <div style={{position:'absolute',left:0,right:0,top:0,height:safety.universal[1],
@@ -479,8 +480,8 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       <div style={{width:`${100*clamp(t/Math.max(.01,duracao))}%`,height:'100%',background:GOLD}}/>
     </div>
     {preview&&private_review_only&&reference_style_preview&&<div
-      style={{position:'absolute',bottom:152,left:0,right:0,
-        color:GOLD,textAlign:'center',fontSize:22,fontWeight:850,
+      style={{position:'absolute',top:105,left:0,right:0,
+        color:GOLD,textAlign:'center',fontSize:20,fontWeight:850,
         fontFamily:'Inter,Arial'}}>
       REFERÊNCIA VISUAL · FORA DA SAFE · NÃO PUBLICAR
     </div>}

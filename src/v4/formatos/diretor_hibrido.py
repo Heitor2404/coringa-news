@@ -173,7 +173,9 @@ def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
             'H-ROTEIRO','-','roteiro sem cenas V2 completas')],report)
     impedimentos=[]
     for row in rows:
-        if row['estado']=='CAPACIDADE_TECNICA_DISPONIVEL' and not row['bloqueios']:
+        if (row['estado'] in ('CAPACIDADE_TECNICA_DISPONIVEL',
+                               'CAPACIDADE_VIDEO_REAL_PRIVADA')
+            and not row['bloqueios']):
             continue
         if (row['estado']=='CANDIDATO_DOCUMENTAL_SEM_BYTES'
             and len(row['bloqueios'])==1
@@ -192,6 +194,31 @@ def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
         cid=row['cena']
         ac=contrato_v2.declarado(c)
         dur=c['duracao_s']
+        if row['estado']=='CAPACIDADE_VIDEO_REAL_PRIVADA':
+            from src.v4.formatos import video_acao_real
+            if len(row.get('candidatos') or []) != 1:
+                raise MontagemHibridaBloqueada([_erro(
+                    'H-ACAO-AMBIGUA',cid,'ação filmada não possui fonte única'
+                )],report)
+            registro=row['candidatos'][0]['asset_id']
+            encontrados=[it for it in biblioteca.get('itens') or []
+                        if it.get('id')==registro and
+                        it.get('natureza')=='video_acao_real']
+            if len(encontrados)!=1:
+                raise MontagemHibridaBloqueada([_erro(
+                    'H-ACAO-FONTE',cid,'fonte real não consta no acervo'
+                )],report)
+            shot,mid,metadados=video_acao_real.montar_cena(
+                c,row,encontrados[0],start)
+            if mid in used:
+                raise MontagemHibridaBloqueada([_erro(
+                    'H-ACAO-REPETIDA',cid,'mesmo master não prova novos eventos por reuso'
+                )],report)
+            used.add(mid)
+            media[mid]=metadados
+            generated.append(shot)
+            start=round(start+dur,4)
+            continue
         if row['estado']=='CAPACIDADE_TECNICA_DISPONIVEL':
             # Reusa mesmo contrato de eventos sem nomear o componente.
             single={**plano, 'roteiro':{'cenas':[c]}}
@@ -336,6 +363,8 @@ def main(argv=None):
                         help='sem rede; relatório de candidatos e preflight, não valida bytes')
     parser.add_argument('--videos-curados',type=Path,
                         help='arquivo separado do roteiro: janelas V3 com SHA/ROI originais já inspecionadas')
+    parser.add_argument('--videos-acao',type=Path,
+                        help='catálogo V4 de ações de vídeo, com SHA e observações reais')
     args=parser.parse_args(argv)
     plano=json.loads(Path(args.roteiro_json).read_text('utf8'))
     biblioteca=None
@@ -344,6 +373,12 @@ def main(argv=None):
         videos=json.loads(args.videos_curados.read_text(encoding='utf8'))
         biblioteca=video_contextual_v3.catalogo_com_video(
             ponte_biblioteca.catalogo(),videos,requer_arquivo=True)
+    if args.videos_acao:
+        from src.v4.formatos import ponte_biblioteca, video_acao_real
+        source=json.loads(args.videos_acao.read_text(encoding='utf8'))
+        biblioteca=video_acao_real.catalogo_com_acoes(
+            biblioteca if biblioteca is not None else ponte_biblioteca.catalogo(),
+            source,bytes_obrigatorios=True)
     pasta=Path(args.saida)
     pasta.mkdir(parents=True,exist_ok=True)
     try:

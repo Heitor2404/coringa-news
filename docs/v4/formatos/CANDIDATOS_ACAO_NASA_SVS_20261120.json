@@ -1,0 +1,21 @@
+{
+  "versao": 1,
+  "modo": "PROSPECCAO_PRIVADA",
+  "publicar": false,
+  "itens": [
+    {
+      "id": "nasa_curiosity_broca_pedra",
+      "provedor": "nasa_svs",
+      "processo_declarado": "Movimento do braço do rover Curiosity para desprender uma pedra presa na broca",
+      "evento_real_declarado": "Curiosity, Marte, pedra presa à broca",
+      "pagina": "https://svs.gsfc.nasa.gov/31397/",
+      "download": "https://svs.gsfc.nasa.gov/vis/a030000/a031300/a031397/PIA26723_figa_1024p2.mp4",
+      "credito": "NASA/JPL-Caltech",
+      "nota_direitos": "NASA imagery generally not copyrighted in US; check third-party, non-endorsement and identifiable people; no automatic publishing",
+      "media_tipo": "video/mp4",
+      "cap_bytes": 15000000,
+      "expected_sha256": null,
+      "aprovacao_editorial": false
+    }
+  ]
+}

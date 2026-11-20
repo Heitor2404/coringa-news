@@ -92,6 +92,16 @@ def validar_contrato()->dict:
             escala=min((stage[2]-stage[0])/w,(stage[3]-stage[1])/h)
             if escala<0.59 or escala>1.3:
                 raise ValueError('SAFE-MECANISMO-CAMERA: escala inadequada '+tipo+'/'+acao)
+    # A experiência anterior mostrou que foco mais estreito PODE cortar
+    # a fonte EUV e a agua da eclusa, mesmo com o retangulo SAFE verde.
+    # O renderer declara a caixa que engloba TODOS os atores causais
+    # imprescindíveis. Nenhum close pode cortar essa geometria.
+    for tipo,essencial in (mech.get('essential_bounds') or {}).items():
+        if not box_valida(essencial) or tipo not in (mech.get('focus') or {}):
+            raise ValueError('SAFE-MECANISMO-ESSENCIAL: geometria ausente '+tipo)
+        for acao,box in mech['focus'][tipo].items():
+            if not _dentro(essencial,box):
+                raise ValueError('SAFE-MECANISMO-CORTE-ESSENCIAL: '+tipo+'/'+acao)
     return {'area_universal':uni,'slots':c['slots'],
             'plataformas':list(perfis),'perfil':PERFIL}
 

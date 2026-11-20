@@ -7,6 +7,8 @@ on:
       - "src/v4/formatos/catalogo_mecanismos.py"
       - "src/v4/formatos/filme_editorial.py"
       - "motor4/remotion/src/formatos/LockCausalCycle.tsx"
+      - "motor4/remotion/src/formatos/AreaSeguraMovimento.ts"
+      - "motor4/tests/area-segura-movimento.test.mjs"
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "docs/v4/formatos/DEMO_DIRETOR_CAPACIDADES_20261120.json"
       - "tests/test_diretor_capacidades.py"
@@ -50,6 +52,7 @@ jobs:
           cd motor4
           npm ci --no-audit --no-fund
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
+          node --experimental-strip-types --test tests/area-segura-movimento.test.mjs
       - name: Renderizar duas causas físicas independentes com entrada e saída
         timeout-minutes: 15
         run: |

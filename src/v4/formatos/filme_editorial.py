@@ -732,22 +732,22 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         else:
             # Fonte descritiva, sem fingir que o desenho é filmagem.
             # Preserva a legenda das eclusas legadas (não mudar outros vídeos).
-            x['source'] = (
-                'ASML · https://www.asml.com/en/technology/lithography-principles'
-                if c.get('mechanism') == 'optical_projection' else
-                'ACP · https://pancanal.com/en/history-of-the-panama-canal/'
-                if x.get('mechanism') in ('lock_explainer', 'lock_cycle_standalone') else
-                'Esquema original · princípio hidráulico de uma eclusa'
-            )
-            # URL e crédito integral preservados em source/manifesto. A
-            # referência visual usa domínio+entidade para permanecer legível
-            # no smartphone, não cortar juridicamente a origem do acervo.
-            if x.get('mechanism')=='optical_projection':
-                x['source_display']='ASML · asml.com'
-            elif x.get('mechanism') in ('lock_explainer','lock_cycle_standalone'):
-                x['source_display']='Autoridade do Canal do Panamá · pancanal.com'
+            # Sempre usar o mecanismo RESOLVIDO, jamais o campo original
+            # "auto" do storyboard. O bug fazia cenas EUV herdarem
+            # o crédito de uma eclusa quando o diretor decidia o renderer.
+            # Atribuição explicitamente por família; sem default hidráulico.
+            resolved = x.get('mechanism')
+            if resolved == 'optical_projection':
+                x['source'] = 'ASML · https://www.asml.com/en/technology/lithography-principles'
+                x['source_display'] = 'ASML · asml.com'
+            elif resolved in (
+                'lock_explainer','lock_cycle_standalone','lock_cycle',
+                'lock_causal','lock_filling'
+            ):
+                x['source'] = 'ACP · https://pancanal.com/en/history-of-the-panama-canal/'
+                x['source_display'] = 'Autoridade do Canal do Panamá · pancanal.com'
             else:
-                x['source_display']='Princípio hidráulico · desenho original'
+                raise ValueError('F-MECANISMO-FONTE: crédito não definido para '+str(resolved))
             if c.get('reference_asset'):
                 # Congelar um quadro do próprio master curado, antes de qualquer corte
                 # interno da fonte. Evita fingir continuidade de dois instantes distintos.

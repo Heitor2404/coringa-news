@@ -8,6 +8,7 @@ import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
 import {OpticalProjection} from './OpticalProjection';
+import safety from './safe-zones-vertical.json';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
@@ -50,11 +51,20 @@ export type FilmProps = {
   // e legenda separadamente depois do plano aprovado.
   preview?: boolean;
   private_review_only?: boolean;
+  safe_zone_debug?: boolean; // somente QA, nunca publicar o overlay vermelho
+  safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
   direitos_pendentes?: string[];
 };
 
 const W = 1080, H = 1920;
 const OFF_WHITE = '#F5F2EB', GOLD = '#FFD21F';
+const SAFE = safety.slots;
+type SlotName = keyof typeof SAFE;
+const safeSlot=(part: SlotName): React.CSSProperties => {
+  const [left,top,right,bottom] = SAFE[part];
+  return {position:'absolute',left,top,width:right-left,height:bottom-top};
+};
+const squareStage = safeSlot('visual');
 const clamp = (n: number, a=0, b=1) => Math.max(a, Math.min(b, n));
 const ease = (v: number) => 1 - Math.pow(1 - clamp(v), 3);
 
@@ -169,9 +179,8 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
       // preservar o arquivo INTEIRO, sem aplicar object-fit:cover.
       // Nunca falsificar continuidade temporal do original.
       return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536 0%,#07121E 75%,#050A12 100%)'}}>
-        <div style={{position:'absolute',left:18,right:18,top:360,height:1060,
-          overflow:'hidden',borderTop:'2px solid #456273',
-          borderBottom:'2px solid #456273'}}>
+        <div data-safe-role="visual" style={{...squareStage,
+          overflow:'hidden',background:'#061320',border:'2px solid #456273'}}>
           <Sequence from={Math.round(shot.start*30)}
             durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset || '')} muted
@@ -186,9 +195,9 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
       // pesquisador E equipamento. Não duplique o clipe no fundo desfocado.
       // A horizontalidade é honesta; nunca cortar o conteúdo para preencher 9:16.
       return <AbsoluteFill style={{background:'linear-gradient(180deg,#12293D 0%,#07121E 55%,#050A12 100%)'}}>
-        <div style={{position:'absolute',left:0,right:0,top:548,height:635,
+        <div data-safe-role="visual" style={{...squareStage,
           overflow:'hidden',background:'#07131D',
-          borderTop:'3px solid #456273',borderBottom:'3px solid #456273'}}>
+          borderTop:'3px solid #456273',borderBottom:'3px solid #456273'}}> 
           <Sequence from={Math.round(shot.start*30)}
             durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset || '')} muted

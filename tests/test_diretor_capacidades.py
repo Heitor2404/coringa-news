@@ -100,3 +100,11 @@ def test_nao_publica_nem_finge_aprovacao():
     p=plano()
     p['tipo']='FILME_FINAL'
     assert not FILME.avaliar(p)['pronto']
+
+
+def test_compositor_nao_esconde_acontecimento_com_titulo_duplicado():
+    # Regra transversal: mecanismo possui sua própria hierarquia gráfica.
+    source=(ROOT/'motor4/remotion/src/formatos/FilmeEditorial.tsx').read_text('utf8')
+    assert source.count("!shot.graphic_original && shot.type!=='mechanism'")>=2
+    assert "['lock_cycle','lock_cycle_standalone'].includes" in source
+    assert "duration={shot.end-shot.start}" in source

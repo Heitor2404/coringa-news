@@ -1,0 +1,37 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "QA | ação real selecionada pelo roteiro V2 | Curiosity NASA",
+  "roteiro": {
+    "cenas": [
+      {
+        "id": "curiosity_acao",
+        "duracao_s": 4.8,
+        "fala": "As imagens do rover Curiosity registram sua ferramenta sobre a rocha e o braço robótico se afastando. Esta é uma sequência condensada, não uma filmagem em tempo real.",
+        "acontecimento": {
+          "id": "curiosity_broca_reposicionada",
+          "tipo": "mecanismo",
+          "sujeito": "Braço robótico do Curiosity",
+          "acao": "recua após se posicionar sobre rocha",
+          "estado_inicial": "ferramenta junto à superfície",
+          "estado_final": "braço afastado da rocha",
+          "mostrar": "mostrar as posições físicas observadas nas câmeras do rover, sem afirmar que vemos a pedra se soltar",
+          "fonte": "https://svs.gsfc.nasa.gov/31397/",
+          "dados": {
+            "acoes_necessarias": [
+              "ferramenta_sobre_rocha",
+              "braco_retrai",
+              "braco_afastado"
+            ],
+            "fases_necessarias": [
+              "origem",
+              "transformacao",
+              "resultado"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

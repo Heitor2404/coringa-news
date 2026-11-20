@@ -58,12 +58,27 @@ def validar_contrato()->dict:
         for a,b in zip(order,order[1:]):
             if c['slots'][a][3]>c['slots'][b][1]:
                 raise ValueError('SAFE-SLOTS-SOBREPOSTOS: '+a+'/'+b)
-    # A camera e a etapa editorial de mecanismo compartilham o mesmo
-    # retangulo da UI. A faixa de voz usa o palco original, nao a expansao.
+    # Diagrama nativo reflow: o TÍTULO não pode colidir com a ação,
+    # e ambos devem caber no perfil interseção de três plataformas.
     mech=c.get('mechanism_layout') or {}
     stage,step=mech.get('visual'),mech.get('step')
     if not isinstance(stage,list) or not isinstance(step,list):
         raise ValueError('SAFE-MECANISMO-LAYOUT: faltam palco e faixa de etapa')
+    title=mech.get('headline')
+    if not isinstance(title,list) or len(title)!=4 or not _dentro(title,uni):
+        raise ValueError('SAFE-PORTRAIT-TITULO: titulo externo ao comum')
+    if not (c['slots']['section'][3]<=title[1] and title[3]<=stage[1]):
+        raise ValueError('SAFE-PORTRAIT-COLISAO: marca/titulo/mecanismo')
+    native=mech.get('native_portrait') or []
+    if not isinstance(native,list) or not native or len(native)!=len(set(native)):
+        raise ValueError('SAFE-PORTRAIT-RENDERERS: lista invalida')
+    dimensions=mech.get('native_dimensions')
+    if dimensions!=[620,682]:
+        raise ValueError('SAFE-PORTRAIT-DIMENSOES: raster nativo divergente')
+    if set(native)-set((mech.get('focus') or {})):
+        raise ValueError('SAFE-PORTRAIT-RENDERERS: nao reconhecido pelo catalogo')
+    if 'optical_projection' not in native or 'lock_explainer' not in native:
+        raise ValueError('SAFE-PORTRAIT-PROVAS: faltam dois dominios visuais')
     if not (_dentro(stage,uni) and _dentro(step,uni)):
         raise ValueError('SAFE-MECANISMO-LAYOUT: palco/etapa fora da intersecao')
     for a,b in zip((c['slots']['section'],stage,step),
@@ -189,6 +204,10 @@ def auditar_plano(plano:dict, *, bloquear_nao_homologados=True)->dict:
             ):
                 add('SAFE-VIDEO-LAYOUT',cid,'layout de mídia desconhecido')
         if kind=='mechanism':
+            if s.get('mechanism') not in (carregar().get('mechanism_layout') or {}).get('native_portrait', []):
+                add('SAFE-PORTRAIT-SEM-REFLOW',cid,
+                    'mecanismo sem desenho vertical nativo: usa recorte conservador antigo; revisar qualidade',
+                    False)
             focus=(carregar().get('mechanism_layout') or {}).get('focus',{})
             cameras=focus.get(s.get('mechanism')) or {}
             detalhadas=any(key!='default' for key in cameras)

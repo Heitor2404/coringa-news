@@ -76,6 +76,27 @@ def test_em_modo_privado_nao_autoriza_publicacao():
                for x in res['bloqueios'])
 
 
+
+def test_eclusa_explicativa_tem_tempo_para_mostrar_origem_fluxo_e_consequencia():
+    p=plano()
+    c=p['shots'][1]
+    assert round(c['end']-c['start'],1)>=10.0
+    assert tuple(x['action'] for x in c['cues'])==(
+        'closed','water_enter','rise','equalize','release')
+    assert c['cues'][2]['at']-c['cues'][1]['at']>=1.2
+    assert c['cues'][3]['at']-c['cues'][2]['at']>=2.8
+    assert c['cues'][4]['at']-c['cues'][3]['at']>=1.0
+    assert FILME.avaliar(p)['pronto']
+
+
+def test_rejeita_eclusa_com_subida_rapida_demais():
+    p=plano()
+    p['shots'][1]['cues'][3]['at']=4.5
+    r=FILME.avaliar(p)
+    assert any(x['codigo']=='F-MECANISMO-PROCESSO' for x in r['bloqueios'])
+
+
+
 def test_nenhum_slide_pillow_novo_para_animacao_fisica():
     # A demonstração é um recurso de FILME, não card gerado de foto estática.
     p=plano()
@@ -88,3 +109,5 @@ def test_nenhum_slide_pillow_novo_para_animacao_fisica():
     hydraulic=(ROOT/'motor4/remotion/src/formatos/LockCausal.tsx').read_text()
     assert "visualMode==='editorial'" in hydraulic
     assert 'EditorialCutaway' in hydraulic and 'lock-edit-chamber' in hydraulic
+    assert 'ÁGUA POR GRAVIDADE' in hydraulic and 'VÁLVULA' in hydraulic
+    assert 'const high=939,low=1252' in hydraulic

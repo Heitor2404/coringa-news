@@ -157,8 +157,10 @@ def test_render_portrait_reflui_a_fisica_sem_crop_do_svg_antigo():
     assert 'viewBox="0 0 620 682"' in content
     assert 'export const OpticalPortrait' in content
     assert 'export const LockPortrait' in content
-    assert 'SOURCE' not in content  # nenhum crédito de tema embutido no renderer
-    assert all(x in content for x in ['BEAM','LUZ EUV','MÁSCARA','CÂMARA','VÁLVULA']) if False else True
+    assert 'LUZ EUV' in content and 'MÁSCARA' in content
+    assert 'CÂMARA' in content and 'VÁLVULA' in content
+    # Nenhum nome de canal/tema ou crédito é montado dentro da física.
+    assert 'pancanal.com' not in content and 'asml.com' not in content
 
 
 def test_reflow_bloqueia_titulo_fora_da_safe(monkeypatch):

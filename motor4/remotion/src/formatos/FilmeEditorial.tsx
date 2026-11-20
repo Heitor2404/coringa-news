@@ -20,6 +20,7 @@ export type FilmShot = {
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
   video_zoom?: number; // enquadramento dirigido para o portão, não zoom decorativo
+  video_context_layout?: 'cena_integral' | 'recorte_relacional_seguro'; // inferido pelo preflight das bboxes de TODOS os referentes
   // Calculado pelo preflight Python a partir de ROIs observadas no original.
   // Posições normais CSS object-position, não pixels falsamente interpolados.
   framing_positions?: {at:number; position:[number,number]}[];
@@ -163,6 +164,24 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
     </Sequence></AbsoluteFill>;
   }
   if(shot.type === 'video') {
+    if(shot.video_context_layout==='cena_integral') {
+      // Filme horizontal contextualmente importante: fonte completa preserva
+      // pesquisador E equipamento. Não duplique o clipe no fundo desfocado.
+      // A horizontalidade é honesta; nunca cortar o conteúdo para preencher 9:16.
+      return <AbsoluteFill style={{background:'linear-gradient(180deg,#12293D 0%,#07121E 55%,#050A12 100%)'}}>
+        <div style={{position:'absolute',left:0,right:0,top:548,height:635,
+          overflow:'hidden',background:'#07131D',
+          borderTop:'3px solid #456273',borderBottom:'3px solid #456273'}}>
+          <Sequence from={Math.round(shot.start*30)}
+            durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+            <OffthreadVideo src={staticFile(shot.asset || '')} muted
+              startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
+              style={{position:'absolute',width:'100%',height:'100%',
+                      objectFit:'contain'}}/>
+          </Sequence>
+        </div>
+      </AbsoluteFill>;
+    }
     const position=enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
     return <AbsoluteFill><Sequence from={Math.round(shot.start * 30)}
       durationInFrames={Math.ceil((shot.end - shot.start) * 30)}>

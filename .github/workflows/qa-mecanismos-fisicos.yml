@@ -1,0 +1,113 @@
+name: "QA visual — dois mecanismos físicos no mesmo FilmeEditorial"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-mecanismos-fisicos.yml"
+      - "motor4/remotion/src/formatos/OpticalProjection.tsx"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "src/v4/formatos/filme_editorial.py"
+      - "docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json"
+      - "tests/test_mecanismos_explicativos.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: qa-mecanismos-fisicos
+  cancel-in-progress: true
+
+jobs:
+  render_mecanismos:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+
+      - name: Testar contrato multitema e impedir fatos fictícios
+        run: |
+          python -m pip install -q pillow requests numpy pyyaml cryptography pytest
+          python -m pytest -q tests/test_mecanismos_explicativos.py
+
+      - name: Preparar mecanismos no FilmeEditorial sem mídia externa
+        run: |
+          python -m src.v4.formatos.filme_editorial \
+            docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json \
+            demo_mecanismos motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('demo_mecanismos/props.json').read_text())
+          assert [s['mechanism'] for s in p['shots']]==['optical_projection','lock_explainer']
+          assert len(p['shots'])==2 and p['preview']
+          assert not p['private_review_only']
+          assert all(s['evidence']=='explainer' and not s.get('asset') for s in p['shots'])
+          print('DOIS_MECANISMOS_COMPROVADOS_NO_CONTRATO')
+          PY
+
+      - name: Compilar compositor real
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+
+      - name: Render da prova visual privada
+        timeout-minutes: 15
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../demo_mecanismos/mecanismos_qa.mp4 \
+            --props=../demo_mecanismos/props.json --public-dir=remotion/public \
+            --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+
+      - name: Instalar FFmpeg para inspecionar MP4 efetivo
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+
+      - name: Inspecionar dois processos ao longo de 13 segundos
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height \
+            -of json demo_mecanismos/mecanismos_qa.mp4 > demo_mecanismos/metadados.json
+          ffmpeg -hide_banner -loglevel error -y -i demo_mecanismos/mecanismos_qa.mp4 \
+            -vf "fps=0.9,scale=270:480,tile=3x4" -frames:v 1 \
+            demo_mecanismos/contato_mecanismos.jpg
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          folder=Path('demo_mecanismos')
+          m=json.loads((folder/'metadados.json').read_text())
+          stream=[s for s in m['streams'] if s['codec_type']=='video']
+          assert len(stream)==1 and stream[0]['width']==540 and stream[0]['height']==960
+          assert not any(s['codec_type']=='audio' for s in m['streams'])
+          assert 12.9 < float(m['format']['duration']) < 13.4
+          p=folder/'mecanismos_qa.mp4'
+          assert p.exists() and (folder/'contato_mecanismos.jpg').exists()
+          result={'status':'RENDER_TECNICO_SEM_APROVACAO_VISUAL',
+                  'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+                  'bytes':p.stat().st_size,'duration_s':float(m['format']['duration']),
+                  'processos':['litografia_optica','eclusa_hidraulica'],
+                  'telegram':False,'voz':False,'publicacao':False,
+                  'revisao_humana':'PENDENTE'}
+          (folder/'resultado.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          print('QA_MECANISMOS_RENDER',json.dumps(result,ensure_ascii=False))
+          PY
+
+      - name: Guardar somente amostra temporária privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-dois-mecanismos-fisicos
+          path: demo_mecanismos/
+          retention-days: 5
+          if-no-files-found: warn

@@ -64,7 +64,10 @@ def test_montagem_sem_escolher_foto_ou_animacao_reusa_catalogos():
     assert [x['type'] for x in scene]==['photo','mechanism']
     assert scene[0]['evidence']=='representative'
     assert scene[0]['direcao_evento']['intencao']=='explicar_contexto'
-    assert 'TSMC' in scene[0]['subject']
+    assert scene[0]['headline']=='TSMC FAB 18'
+    assert not scene[0]['headline'].lower().startswith('mostrar ')
+    assert scene[0]['subject']=='Foto de arquivo · 2025'
+    assert scene[0]['cues'][0]['label']=='FOTOGRAFIA · 2025'
     assert scene[1]['mechanism']=='auto'
     assert [x['action'] for x in scene[1]['cues']]==['source','reticle','projection','wafer']
     assert result['plano']['duracao']==9.9

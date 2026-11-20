@@ -82,5 +82,9 @@ def test_nenhum_slide_pillow_novo_para_animacao_fisica():
     assert not p['media']
     assert all('motion_graphic' not in s for s in p['shots'])
     optical=(ROOT/'motor4/remotion/src/formatos/OpticalProjection.tsx').read_text()
-    assert 'DrawBeam' in optical and 'MÁSCARA REFLEXIVA' in optical
-    assert 'RESIST NO WAFER' in optical
+    assert '<Beam' in optical and 'REFLEXIVA' in optical
+    assert 'CAMADA FOTOSSENSÍVEL' in optical
+    # Variante nova reutiliza o mesmo motor de estados; o visual legado segue preservado.
+    hydraulic=(ROOT/'motor4/remotion/src/formatos/LockCausal.tsx').read_text()
+    assert "visualMode==='editorial'" in hydraulic
+    assert 'EditorialCutaway' in hydraulic and 'lock-edit-chamber' in hydraulic

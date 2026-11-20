@@ -300,7 +300,7 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean}>
     const scale=.565,sourceY=450;
     const dw=SAFE.visual[2]-SAFE.visual[0],dh=SAFE.visual[3]-SAFE.visual[1];
     const left=(dw-1080*scale)/2;
-    const top=(dh-1920*scale)/2-sourceY*scale;
+    const top=-sourceY*scale;
     return <AbsoluteFill style={{background:'#0B1D2D'}}>
       <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
         <div style={{position:'absolute',left,top,width:1080,height:1920,

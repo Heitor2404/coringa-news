@@ -96,7 +96,7 @@ def _cena_video_contextual(cena:dict, row:dict, biblioteca:dict, inicio:float)->
         raise MontagemHibridaBloqueada([_erro('H-VIDEO-REGISTRO-ESPECIFICO',cid,
                 'vídeo contextual não demonstra evento histórico, ação técnica ou processo')])
     if it.get('licenca')!='REVIEW_PENDING' or it.get('publicar') is not False or (
-        it.get('comprova_acao') is not False or it.get('comprova_fato_tsmc') is not False):
+        it.get('comprova_acao') is not False or it.get('comprova_outro_evento') is not False):
         raise MontagemHibridaBloqueada([_erro('H-VIDEO-DIREITOS',cid,
                 'somente vídeo com direitos pendentes e declarações de não comprovação')])
     win=it.get('janela') or {}

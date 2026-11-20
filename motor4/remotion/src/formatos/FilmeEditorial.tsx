@@ -281,15 +281,20 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean}>
     const [sx,sy,ex,ey]=mecanismoFoco(shot,t);
     const dw=palco[2]-palco[0],dh=palco[3]-palco[1];
     const scale=Math.min(dw/(ex-sx),dh/(ey-sy));
-    const left=(dw-(ex-sx)*scale)/2-sx*scale;
-    const top=(dh-(ey-sy)*scale)/2-sy*scale;
+    // Enforce both source ROI AND destination safe box. Otherwise headers
+    // outside the source bounds bleed into the padded stage and duplicate
+    // the public title, despite a green safe-area report.
+    const left=(dw-(ex-sx)*scale)/2;
+    const top=(dh-(ey-sy)*scale)/2;
     return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 54%,#173047,#0B1D2D 52%,#050F1C 100%)'}}>
       <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',
         backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
       <div data-safe-role="visual" style={{...rectStyle(palco),overflow:'hidden'}}>
-        <div style={{position:'absolute',left,top,width:1080,height:1920,
-          transform:`scale(${scale})`,transformOrigin:'top left'}}>
-          <Body shot={shot} p={p} t={t}/>
+        <div style={{position:'absolute',left,top,width:ex-sx,height:ey-sy,
+          overflow:'hidden',transform:`scale(${scale})`,transformOrigin:'top left'}}>
+          <div style={{position:'absolute',left:-sx,top:-sy,width:1080,height:1920}}>
+            <Body shot={shot} p={p} t={t}/>
+          </div>
         </div>
       </div>
     </AbsoluteFill>;

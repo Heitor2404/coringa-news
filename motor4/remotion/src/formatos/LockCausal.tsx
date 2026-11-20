@@ -115,7 +115,6 @@ const EditorialCutaway:React.FC<{
       {fill>.02 && <g>
         <path d={'M191 '+(low-22)+' V'+(level+10)} stroke={GOLD} strokeWidth="7" strokeDasharray="15 12"/>
         <path d={'M173 '+(level+24)+' L191 '+(level-10)+' L209 '+(level+24)+'Z'} fill={GOLD}/>
-        <text x="216" y={Math.max(967,level-53)} fill={GOLD} fontSize="25" fontWeight="850">SOBE</text>
       </g>}
 
       {/* Barreira sólida: os portões permanecem fechados enquanto há desnível. */}
@@ -156,16 +155,16 @@ const EditorialCutaway:React.FC<{
         strokeWidth="3" fill="none" opacity={.35+.22*Math.sin(t*6)}/>}
       <text x="816" y="1282" fill={showGravity?GOLD:WHITE}
         fontSize="27" fontWeight="900">VÁLVULA</text>
-      <text x="803" y="1489" fill={showGravity?GOLD:MUTED}
-        fontSize="25" fontWeight="850">ÁGUA POR GRAVIDADE</text>
-      <path d="M71 1516 H1010" stroke="#4D7284" strokeWidth="2"/>
+      <text x="1010" y="1446" textAnchor="end" fill={showGravity?GOLD:MUTED}
+        fontSize="24" fontWeight="850">ÁGUA POR GRAVIDADE</text>
+      <path d="M71 1496 H1010" stroke="#4D7284" strokeWidth="2"/>
 
       {/* Texto só conclui o que já está sendo visto. */}
-      <text x="72" y="1583" fill={GOLD} fontSize="31" fontWeight="900">
+      <text x="72" y="1554" fill={GOLD} fontSize="31" fontWeight="900">
         {String(index+1).padStart(2,'0')+'  /  '+(active?.label||'PORTÕES FECHADOS').replace(/^[0-9]+\s*·\s*/,'')}
       </text>
-      <text x="72" y="1641" fill={WHITE} fontSize="26" fontWeight="700">{detail}</text>
-      <g transform="translate(75 1670)">
+      <text x="72" y="1609" fill={WHITE} fontSize="26" fontWeight="700">{detail}</text>
+      <g transform="translate(75 1641)">
         {steps.map((a,i)=><rect key={a} x={i*192} width="172" height="7"
           fill={index>=i?GOLD:'#36576B'}/>)}
       </g>

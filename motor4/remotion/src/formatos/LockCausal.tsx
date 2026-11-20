@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import {AbsoluteFill,Img,staticFile} from 'remotion';
-import {LockPortrait} from './MechanismsPortrait';
+import {LockImmersive} from './MechanismsImmersive';
 
 export type EventoEclusa = {
   at: number;
@@ -187,7 +187,7 @@ export const LockCausal: React.FC<Props> = ({t,events,referenceAsset,visualMode=
   const isFlow=t>=inlet && t<equilibrium;
   const yHull=y-53;
   const rulerY=[1095,1031,968,904,841];
-  if(visualMode==='portrait') return <LockPortrait t={t} fill={fill} open={open} isFlow={isFlow} state={state}/>;
+  if(visualMode==='portrait') return <LockImmersive t={t} fill={fill} open={open} isFlow={isFlow} state={state}/>;
   if(visualMode==='editorial') return <EditorialCutaway t={t} fill={fill} open={open} isFlow={isFlow} active={active}/>;
   return <AbsoluteFill style={{background:'#091625'}}>
     {referenceAsset && t < .85 && <Img src={staticFile(referenceAsset)}

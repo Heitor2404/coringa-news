@@ -36,18 +36,25 @@ def _curiosity():
 
 def test_fonte_unica_todos_slots_dentro_das_tres_plataformas():
     result=SAFE.validar_contrato()
-    assert result['area_universal']==[150,300,770,1240]
-    assert set(result['plataformas'])=={'reels','tiktok','shorts'}
+    assert result['area_universal']==[120,300,820,1380]
+    assert set(result['plataformas'])=={'instagram_reels','tiktok','youtube_shorts'}
     assert set(result['slots'])=={
-        'brand','section','visual','cue','headline','subject','source'}
+        'brand','section','visual','cue','headline','subject','source','subtitle'}
     assert 'safe-zones-vertical.json' in _script()
+    assert SAFE.carregar()['source_of_truth']=='src/v4/formatos/plataformas.json'
+    # O editor de legendas já usa essas mesmas máscaras, não há perfis duplicados.
+    from src.v4.formatos import layout
+    assert layout.uniao()['base']==480
+    assert layout.faixa_inferior()['legenda'][1]>=1230
+    assert layout.faixa_inferior()['legenda'][1]<SAFE.carregar()['slots']['subtitle'][3]
+
     assert 'safeSlot(' in _script()
     assert 'data-safe-role="source"' in _script()
 
 
 def test_validador_recusa_slot_fora_do_perimetro(monkeypatch):
     c=SAFE.carregar()
-    c['slots']['headline']=[145,1062,800,1150]
+    c['slots']['headline']=[112,1010,806,1093]
     monkeypatch.setattr(SAFE,'carregar',lambda:c)
     with pytest.raises(ValueError,match='SAFE-SLOT'):
         SAFE.validar_contrato()
@@ -55,7 +62,7 @@ def test_validador_recusa_slot_fora_do_perimetro(monkeypatch):
 
 def test_validador_recusa_colisao_titulo_e_credito(monkeypatch):
     c=SAFE.carregar()
-    c['slots']['headline']=[160,1062,760,1197]
+    c['slots']['headline']=[132,1010,806,1130]
     monkeypatch.setattr(SAFE,'carregar',lambda:c)
     with pytest.raises(ValueError,match='SAFE-SLOTS-SOBREPOSTOS'):
         SAFE.validar_contrato()

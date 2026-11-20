@@ -739,6 +739,15 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                 if x.get('mechanism') in ('lock_explainer', 'lock_cycle_standalone') else
                 'Esquema original · princípio hidráulico de uma eclusa'
             )
+            # URL e crédito integral preservados em source/manifesto. A
+            # referência visual usa domínio+entidade para permanecer legível
+            # no smartphone, não cortar juridicamente a origem do acervo.
+            if x.get('mechanism')=='optical_projection':
+                x['source_display']='ASML · asml.com'
+            elif x.get('mechanism') in ('lock_explainer','lock_cycle_standalone'):
+                x['source_display']='Autoridade do Canal do Panamá · pancanal.com'
+            else:
+                x['source_display']='Princípio hidráulico · desenho original'
             if c.get('reference_asset'):
                 # Congelar um quadro do próprio master curado, antes de qualquer corte
                 # interno da fonte. Evita fingir continuidade de dois instantes distintos.

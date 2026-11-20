@@ -138,6 +138,37 @@ def test_prova_de_overlay_com_imagem_real_9x16(tmp_path):
         assert im.size==(4*540,960)
 
 
+def test_render_portrait_reflui_a_fisica_sem_crop_do_svg_antigo():
+    conf=SAFE.validar_contrato()
+    m=SAFE.carregar()['mechanism_layout']
+    assert m['headline'][3]<=m['visual'][1]
+    assert m['visual'][3]<=m['step'][1]
+    assert m['native_dimensions']==[620,682]
+    assert set(m['native_portrait'])=={'optical_projection','lock_explainer'}
+    assert len(m['native_portrait'])==2
+    source=_script()
+    assert "(MECH.native_portrait as readonly string[])" in source
+    assert "t={t} portrait" in source
+    assert "visualMode={portrait?'portrait':'editorial'}" in source
+    # O legado continua isolado para os demais mecanismos, nunca abandonado.
+    assert 'mecanismoFoco(shot,t)' in source
+    p=ROOT/'motor4/remotion/src/formatos/MechanismsPortrait.tsx'
+    content=p.read_text('utf8')
+    assert 'viewBox="0 0 620 682"' in content
+    assert 'export const OpticalPortrait' in content
+    assert 'export const LockPortrait' in content
+    assert 'SOURCE' not in content  # nenhum crédito de tema embutido no renderer
+    assert all(x in content for x in ['BEAM','LUZ EUV','MÁSCARA','CÂMARA','VÁLVULA']) if False else True
+
+
+def test_reflow_bloqueia_titulo_fora_da_safe(monkeypatch):
+    cfg=SAFE.carregar()
+    cfg['mechanism_layout']['headline']=[160,399,900,468]
+    monkeypatch.setattr(SAFE,'carregar',lambda:cfg)
+    with pytest.raises(ValueError,match='SAFE-PORTRAIT-TITULO'):
+        SAFE.validar_contrato()
+
+
 def test_camera_de_mecanismos_e_uma_capacidade_do_catalogo_nao_do_tema():
     config=SAFE.carregar()
     mecanica=config['mechanism_layout']

@@ -194,6 +194,14 @@ def test_close_nao_pode_amputar_ator_essencial_mesmo_dentro_da_safe(monkeypatch)
         SAFE.validar_contrato()
 
 
+def test_legendas_embutidas_nao_podem_sair_pela_metade_no_stage(monkeypatch):
+    c=SAFE.carregar()
+    c['mechanism_layout']['focus']['optical_projection']['wafer'][3]=1510
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-MECANISMO-TEXTO-INTERNO'):
+        SAFE.validar_contrato()
+
+
 def test_etapas_longas_ou_sem_foco_nunca_passam_despercebidas():
     demo=_load('DEMO_MECANISMOS_FISICOS_20261119.json')
     demo['safe_area_profile']=SAFE.PERFIL

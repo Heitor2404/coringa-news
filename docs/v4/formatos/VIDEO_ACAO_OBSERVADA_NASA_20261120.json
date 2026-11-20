@@ -1,0 +1,56 @@
+{
+  "versao": 1,
+  "modo": "CURADORIA_ASSISTIDA_PRIVADA",
+  "publicar": false,
+  "videos": [
+    {
+      "id": "curiosity_braco_e_rocha_nasa_2026",
+      "provedor": "nasa_svs",
+      "fonte_id": "nasa_curiosity_broca_pedra",
+      "evento_origem_id": "curiosity_broca_reposicionada",
+      "sujeito": "Braço robótico do Curiosity",
+      "pagina": "https://svs.gsfc.nasa.gov/31397/",
+      "arquivo": "stage_documental/nasa_curiosity_broca_pedra.mp4",
+      "sha256_origem": "ec6f31a988fff2a54f69ee9e04efbc77557138a63590a338c6cf4e16d9ca8d40",
+      "width": 1024,
+      "height": 1024,
+      "duration_s": 24.5,
+      "credit": "NASA/JPL-Caltech",
+      "licenca": "REVIEW_PENDING",
+      "direitos_revisados": false,
+      "publicar": false,
+      "observacao": "Os quadros originais 4,58 s, 6,25 s e 7,92 s mostram ferramenta junto à rocha e o braço se deslocando para longe dela. Não é prova visual inequívoca do instante em que a pedra se desprendeu.",
+      "inspecao_status": "QUADROS_AMOSTRADOS_ASSISTENTE_REVISOR_HUMANO_PENDENTE",
+      "temporalidade": "SEQUENCIA_ACELERADA_DE_IMAGENS",
+      "janela": {
+        "inicio_s": 4.5,
+        "duracao_s": 4.8,
+        "acoes_necessarias": [
+          "ferramenta_sobre_rocha",
+          "braco_retrai",
+          "braco_afastado"
+        ],
+        "eventos": [
+          {
+            "at": 0.3,
+            "fonte_s": 4.8,
+            "acao_id": "ferramenta_sobre_rocha",
+            "acao_visivel": "Ferramenta do braço posicionada na região da rocha"
+          },
+          {
+            "at": 1.75,
+            "fonte_s": 6.25,
+            "acao_id": "braco_retrai",
+            "acao_visivel": "Braço robótico muda de posição e se afasta da rocha"
+          },
+          {
+            "at": 3.4,
+            "fonte_s": 7.9,
+            "acao_id": "braco_afastado",
+            "acao_visivel": "Ferramenta está mais afastada acima do terreno marciano"
+          }
+        ]
+      }
+    }
+  ]
+}

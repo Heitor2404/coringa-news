@@ -41,7 +41,7 @@ const Base:React.FC<{children:React.ReactNode;name:string}>=({children,name})=>
     </svg>
   </AbsoluteFill>;
 
-const Beam:React.FC<{d:string;progress:number;color?:string}>=({d,progress,color=AQUA})=>
+export const Beam:React.FC<{d:string;progress:number;color?:string}>=({d,progress,color=AQUA})=>
   <g opacity={clamp(progress)}>
     <path d={d} stroke={color} strokeWidth="20" opacity=".18"
       fill="none" strokeLinecap="round" pathLength={1}
@@ -73,7 +73,7 @@ const Steps:React.FC<{active:number}>=({active})=><g>
     </g>;
   })}
 </g>;
-const Reticle:React.FC<{x:number;y:number;w:number;h:number;progress:number}>=({x,y,w,h,progress})=>
+export const Reticle:React.FC<{x:number;y:number;w:number;h:number;progress:number}>=({x,y,w,h,progress})=>
   <g>
     <path d={`M${x+8} ${y-14} H${x+w-14} L${x+w} ${y+6} H${x+18}Z`}
       fill="#779DB0" opacity=".72"/>
@@ -86,7 +86,7 @@ const Reticle:React.FC<{x:number;y:number;w:number;h:number;progress:number}>=({
       width={(w-65)/11} height={h-60} rx="2"
       fill={i%3===1?'#376C81':GOLD} opacity={.22+.78*progress}/>)}
   </g>;
-const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})=>
+export const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})=>
   <g>
     <circle cx={x} cy={y} r={r*1.5} fill={GOLD} opacity={.05+.07*p}/>
     <circle cx={x} cy={y} r={r} fill="#0F3246"
@@ -101,7 +101,7 @@ const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})
     <circle cx={x} cy={y} r={r*.19} fill={GOLD}/>
     <circle cx={x-4} cy={y-3} r={r*.07} fill={OFF}/>
   </g>;
-const Mirror:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
+export const Mirror:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
   <g>
     <ellipse cx={x} cy={y} rx={rx} ry={rx*.22}
       transform={`rotate(-26 ${x} ${y})`}
@@ -110,7 +110,7 @@ const Mirror:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
       transform={`rotate(-26 ${x} ${y})`}
       fill="#98EDF5" opacity={.15+.55*p}/>
   </g>;
-const Wafer:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
+export const Wafer:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
   <g>
     <path d={`M${x-rx} ${y} Q${x-rx+12} ${y+105} ${x} ${y+105} Q${x+rx-12} ${y+105} ${x+rx} ${y} L${x+rx} ${y+32} Q${x+rx-28} ${y+125} ${x} ${y+125} Q${x-rx+28} ${y+125} ${x-rx} ${y+32}Z`}
       fill="url(#portrait-steel)" stroke="#C0F3F7" strokeWidth="5"/>

@@ -108,9 +108,20 @@ def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,i
 
 
 def avaliar(plano: dict) -> dict:
+    # Mesmo preflight para storyboard manual ou gerado do evento:
+    # autor/editor não precisam nomear mecanismo nem inventar tempos dos cues.
+    from src.v4.formatos import diretor_processos
+    erro_diretor = None
+    try:
+        plano = diretor_processos.expandir(plano)
+    except diretor_processos.FalhaDiretor as exc:
+        erro_diretor = exc
+        plano = {**plano, 'shots': []}
     falhas = []
     def falha(cod: str, onde: str, porque: str):
         falhas.append({'codigo': cod, 'cena': onde, 'motivo': porque})
+    if erro_diretor is not None:
+        falha(erro_diretor.codigo, erro_diretor.cena, erro_diretor.motivo)
     cenas = plano.get('shots') or []
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
@@ -491,6 +502,10 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
     (destino/'contrato.json').write_text(json.dumps(check,ensure_ascii=False,indent=2),encoding='utf-8')
     if not check['pronto']:
         raise ValueError('pré-produção reprovada: '+json.dumps(check['bloqueios'],ensure_ascii=False))
+    # Gerar props com as MESMAS cenas que passaram na validação.
+    # Não inserir este passo antes de criar o contrato bloqueador.
+    from src.v4.formatos import diretor_processos
+    plano = diretor_processos.expandir(plano)
     if downloader is None:
         def downloader(url: str) -> bytes:
             r=requests.get(url,timeout=90,headers={'User-Agent':'CoringaExplica/1.0 (license verification; contact via GitHub)'})

@@ -243,69 +243,127 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   }
   return <AbsoluteFill>{photograph(shot.asset || '',p,shot.focus||[.5,.5],.01)}</AbsoluteFill>;
 };
+/** Conteúdo visual real ocupa uma janela protegida; o resto continua
+ * como FUNDO cênico, sem afirmar que detalhes nas bordas são essenciais.
+ * Mecanismos 2D são reenquadrados pelo tipo de renderizador, nunca pelo tema.
+ */
+const SafeBody: React.FC<{shot:FilmShot;p:number;t:number}> = ({shot,p,t}) => {
+  if (shot.type==='mechanism' || (shot.graphic_original && shot.motion_graphic)) {
+    const scale=.565;
+    const originY=shot.type==='mechanism'?620:450;
+    return <AbsoluteFill style={{background:'#071523'}}>
+      <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
+        <div style={{position:'absolute',left:5,top:-originY*scale,
+          width:1080,height:1920,transform:`scale(${scale})`,transformOrigin:'top left'}}>
+          <Body shot={shot} p={p} t={t}/>
+        </div>
+      </div>
+    </AbsoluteFill>;
+  }
+  if (shot.type==='comparison' || (shot.type==='photo' && shot.graphic_original)) {
+    return <AbsoluteFill style={{background:'#071523'}}>
+      <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
+        <Body shot={shot} p={p} t={t}/>
+      </div>
+    </AbsoluteFill>;
+  }
+  return <Body shot={shot} p={p} t={t}/>;
+};
+
 const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted}) => {
-  const parts = highlighted ? text.split(highlighted) : [text];
-  return <div style={{fontFamily:'Inter, Arial, sans-serif',fontSize:63,lineHeight:1.09,fontWeight:900,textTransform:'uppercase',letterSpacing:-1.5,whiteSpace:'pre-line'}}>
-    {parts.map((part,i)=><React.Fragment key={i}>{part}{highlighted && i<parts.length-1 && <span style={{color:GOLD}}>{highlighted}</span>}</React.Fragment>)}
+  const total=text.replace(/\n/g,' ').length;
+  const size=total>53?31:total>40?35:total>26?39:43;
+  const parts=highlighted?text.split(highlighted):[text];
+  return <div style={{fontFamily:'Inter,Arial,sans-serif',fontSize:size,
+    lineHeight:1.07,fontWeight:900,textTransform:'uppercase',
+    letterSpacing:-.8,whiteSpace:'pre-line',overflowWrap:'break-word'}}>
+    {parts.map((part,i)=><React.Fragment key={i}>{part}{highlighted&&i<parts.length-1&&
+      <span style={{color:GOLD}}>{highlighted}</span>}</React.Fragment>)}
   </div>;
 };
-const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot,total,index}) => {
+
+const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps;
   const now=frame/fps;
-  const duration=Math.max(.01, shot.end-shot.start);
+  const duration=Math.max(.01,shot.end-shot.start);
   const p=clamp((now-shot.start)/duration);
-  // Corte seco: o filme não escurece os últimos e primeiros quadros de cada plano.
-  const cue=shot.cues?.filter(c=>now >= shot.start+c.at).slice(-1)[0];
-  const cueAge=cue?now-shot.start-cue.at:0;
-  if(shot.type==='atlas_map') return <AbsoluteFill style={{background:'#08101A'}}>
-    {/* Preserva os créditos, pins, rótulos e composição do mapa ATLAS; só a barra GLOBAL vem do Filme. */}
-    <Body shot={shot} p={p} t={now-shot.start}/>
-  </AbsoluteFill>;
+  const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
+  const age=active?now-shot.start-active.at:0;
+  if(shot.type==='atlas_map') {
+    // O clip ATLAS antigo tem tipografia/attribution rasterizadas internamente.
+    // Não fingir que o render está homologado pela área segura nova.
+    // Gate Python bloqueia safe_area_profile em atlas_map até recertificação.
+    return <AbsoluteFill style={{background:'#08101A'}}>
+      <Body shot={shot} p={p} t={now-shot.start}/>
+    </AbsoluteFill>;
+  }
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
-    <Body shot={shot} p={p} t={now-shot.start}/>
-    {/* strong editorial gradient is NOT a black rectangle over the subject */}
-    {!shot.graphic_original && shot.type!=='mechanism' && <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55) 0%,rgba(3,8,16,.08) 21%,rgba(3,8,16,.03) 48%,rgba(3,8,16,.58) 72%,#050A12 100%)'}}/>}
-    <div style={{position:'absolute',top:248,left:62,right:62,display:'flex',justifyContent:'space-between',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
-      <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
-      <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
+    <SafeBody shot={shot} p={p} t={now-shot.start}/>
+    {!shot.graphic_original&&shot.type!=='mechanism'&&shot.type!=='video'&&
+      <AbsoluteFill style={{pointerEvents:'none',background:
+        'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
+    {/* Camada editorial universal. Não repetir logo+linha no topo de cada card. */}
+    <div data-safe-role="brand" style={{...safeSlot('brand'),
+      fontFamily:'Inter,Arial,sans-serif',fontSize:26,fontWeight:900,
+      color:OFF_WHITE,letterSpacing:.8,whiteSpace:'nowrap'}}>
+      CORINGA <span style={{color:GOLD}}>EXPLICA</span>
     </div>
-    <div style={{position:'absolute',top:302,left:62,width:140,height:5,background:GOLD,transform:`scaleX(${ease(p)})`,transformOrigin:'left'}}/>
-    {cue && !shot.graphic_original && shot.type!=='mechanism' && <div style={{
-      // Para originais de câmera quadrada com tempo/telemetria embutidos,
-      // NÃO cobrir o timestamp com o rótulo editorial. A faixa de eventos
-      // fica abaixo da imagem, com área própria.
-      position:'absolute',top:shot.video_context_layout==='quadro_integral'?1430:
-        380+((cue.y||.38)-.38)*700,
-      left:64+((cue.x||.5)-.5)*150,maxWidth:W-128,
-      transform:`translateY(${(1-ease(cueAge/.25))*22}px)`,
-      opacity:ease(cueAge/.25),fontFamily:'Inter,Arial',fontWeight:900,fontSize:37,
-      padding:'13px 17px',borderLeft:`6px solid ${GOLD}`,
-      background:'rgba(6,12,22,.78)',color:OFF_WHITE,letterSpacing:.5,
-    }}>{cue.label}</div>}
-    {!shot.graphic_original && shot.type!=='mechanism' && <div style={{position:'absolute',left:60,right:60,top:shot.video_context_layout==='quadro_integral'?1510:1275,
-      opacity:ease((now-shot.start-.12)/.32),transform:`translateY(${(1-ease((now-shot.start-.12)/.32))*36}px)`,
-      color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
+    <div data-safe-role="section" style={{...safeSlot('section'),
+      fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:22,
+      color:'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
+      textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+      {shot.lead.toUpperCase()}
+    </div>
+    {active&&!shot.graphic_original&&<div data-safe-role="cue"
+      style={{...safeSlot('cue'),fontFamily:'Inter,Arial,sans-serif',
+        fontSize:active.label.length>32?24:28,fontWeight:900,color:GOLD,
+        opacity:ease(age/.20),overflow:'hidden',lineHeight:1.15,
+        transform:`translateY(${(1-ease(age/.20))*8}px)`}}>
+      {active.label}
+    </div>}
+    {!shot.graphic_original&&<div data-safe-role="headline"
+      style={{...safeSlot('headline'),color:OFF_WHITE,
+        textShadow:'0 2px 14px rgba(0,0,0,.78)',
+        overflow:'hidden',opacity:ease((now-shot.start-.08)/.25)}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    {!['lock_cycle','lock_cycle_standalone'].includes(shot.mechanism || '') && <>
-    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:
-        shot.video_context_layout==='quadro_integral'?218:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
-      {['lock_explainer','optical_projection'].includes(shot.mechanism || '')
-        ? 'ESQUEMA ILUSTRATIVO · NÃO É FILMAGEM REAL'
-        : <>{shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}</>}
+    <div data-safe-role="subject" style={{...safeSlot('subject'),
+      color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
+      fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
+      {shot.type==='mechanism'?'ESQUEMA FÍSICO ILUSTRATIVO · NÃO É FILMAGEM REAL':
+        shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:
+        shot.subject}
     </div>
-    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?163:
-        shot.video_context_layout==='quadro_integral'?166:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:23,color:'#ACBBC7',letterSpacing:.3}}>
+    <div data-safe-role="source" style={{...safeSlot('source'),
+      color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
+      lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
       FONTE: {shot.source}
     </div>
-    </>}
   </AbsoluteFill>;
 };
-export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,private_review_only=false}) => {
+export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
+  private_review_only=false,safe_zone_debug=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot}/>}
+    {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
+    {safe_zone_debug&&<>
+      <div style={{position:'absolute',left:0,right:0,top:0,height:safety.universal[1],
+        background:'rgba(210,28,47,.21)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',left:0,right:0,top:safety.universal[3],
+        bottom:0,background:'rgba(210,28,47,.23)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',left:0,top:safety.universal[1],
+        bottom:H-safety.universal[3],width:safety.universal[0],
+        background:'rgba(210,28,47,.18)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',left:safety.universal[2],top:safety.universal[1],
+        bottom:H-safety.universal[3],right:0,background:'rgba(210,28,47,.20)',
+        pointerEvents:'none'}}/>
+      <div style={{position:'absolute',left:safety.universal[0],top:safety.universal[1],
+        width:safety.universal[2]-safety.universal[0],
+        height:safety.universal[3]-safety.universal[1],
+        border:'4px dashed #66EDC4',pointerEvents:'none'}}/>
+    </>}
     {/* Barra editorial única: baseada no tempo GLOBAL da composição, não no plano. */}
     <div data-testid="filme-progresso-global" style={{position:'absolute',bottom:110,left:60,right:60,
       height:4,background:'rgba(255,255,255,.25)'}}>

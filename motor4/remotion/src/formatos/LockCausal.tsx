@@ -27,7 +27,7 @@ const EditorialCutaway:React.FC<{
   const step=active?.action||'closed';
   const actions=['closed','water_enter','rise','equalize','release'];
   const index=Math.max(0,actions.indexOf(step));
-  const hullY=level-106;
+  const hullOffset=level-1074;
   const GOLD='#FFD21F',WHITE='#F5F2EB',CYAN='#6DE1E9',MUTED='#AAC0CE';
   return <AbsoluteFill style={{
     background:'radial-gradient(ellipse at 54% 46%,#1C394C,#081725 61%,#05111D 100%)',
@@ -93,7 +93,7 @@ const EditorialCutaway:React.FC<{
       <text x="832" y="1462" fill={isFlow?GOLD:MUTED} fontWeight="800" fontSize="27">DUTO INFERIOR</text>
 
       {/* Casco com volume e detalhes: acompanha a superfície em todo instante. */}
-      <g transform={'translate(0,'+(hullY-1025)+')'}>
+      <g transform={'translate(0,'+hullOffset+')'}>
         <path d="M225 1015 L699 1015 658 1105 278 1105Z"
           fill="#071723" opacity=".30" transform="translate(0 14)"/>
         <path d="M215 1000 H714 L667 1092 H275Z"

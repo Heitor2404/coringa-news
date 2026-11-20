@@ -16,7 +16,6 @@
       "source_duration_s": 105.05,
       "inspecao": "8 quadros reais de 58,31 a 60,81s mostram pesquisador em roupa de sala limpa diante de estação e monitor no NIST; não há comprovação da operação física do processo nem ligação com a TSMC.",
       "comprova_acao": false,
-      "comprova_fato_tsmc": false,
       "janela": {
         "inicio_s": 58.15,
         "duracao_s": 2.6,
@@ -49,7 +48,9 @@
             ]
           }
         ]
-      }
+      },
+      "provedor": "nist_kaltura",
+      "comprova_outro_evento": false
     }
   ]
 }

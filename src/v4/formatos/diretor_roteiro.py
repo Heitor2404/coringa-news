@@ -253,7 +253,9 @@ def expandir_preview(plano: dict, biblioteca: dict | None = None) -> dict:
             'id':str(cena['id']),
             'duracao_s':float(cena['duracao_s']),
             'lead':'MECANISMO · ILUSTRAÇÃO TÉCNICA',
-            'headline':str(ac.get('mostrar') or ac['acao']).strip()[:100],
+            # mostrar é instrução de direção; nunca transformar em legenda
+            # editorial pública, mesmo quando o renderer oculta o headline.
+            'headline':str(ac.get('sujeito') or ac.get('acao') or '').strip().upper()[:100],
             'subject':str(ac['sujeito']).strip(),
             'direcao_evento':{
                 'intencao':'demonstrar_acao',

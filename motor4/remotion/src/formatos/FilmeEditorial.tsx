@@ -173,13 +173,13 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
   </AbsoluteFill>;
 };
 
-const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
+const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({shot,p,t,portrait=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
-    return <OpticalProjection t={t} events={shot.cues || []}/>;
+    return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
     return <LockCausal t={t} events={(shot.cues || []).map(c => ({
       at:c.at,label:c.label,action:c.action as 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | undefined
-    }))} visualMode="editorial"/>;
+    }))} visualMode={portrait?'portrait':'editorial'}/>;
   if(shot.type==='mechanism' && ['lock_cycle','lock_cycle_standalone'].includes(shot.mechanism || ''))
     return <LockCausalCycle t={t} events={shot.cues || []}
       referenceAsset={shot.mechanism==='lock_cycle'?shot.reference_asset:undefined}
@@ -274,8 +274,23 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
  * Mecanismos 2D são reenquadrados pelo tipo de renderizador, nunca pelo tema.
  */
 const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean}> = ({shot,p,t,subtitleMode}) => {
+  if (shot.type==='mechanism' &&
+      (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')) {
+    // Vertical-first: objetos novos em SVG 620x682; não existe zoom nem crop
+    // de uma arte feita para 1080x1920. Toda ação essencial fica na mesma
+    // janela segura e a informação do roteiro não é repetida no SVG.
+    const palco=subtitleMode?SAFE.visual:MECH.visual;
+    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 55%,#193950,#081B2B 57%,#050F1B 100%)'}}>
+      <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',
+        backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
+      <div data-safe-role="visual" style={{...rectStyle(palco)}}>
+        <Body shot={shot} p={p} t={t} portrait/>
+      </div>
+    </AbsoluteFill>;
+  }
   if (shot.type==='mechanism') {
-    // Close editorial de uma ETAPA, não redução de todo o SVG original.
+    // Fallback conservador para mecanismos que AINDA não possuem reflow
+    // vertical nativo; não declarar estes tipos homologados sem inspeção.
     // Bounding boxes vêm do catálogo do componente, nunca do nome do tema.
     const palco=subtitleMode?SAFE.visual:MECH.visual;
     const [sx,sy,ex,ey]=mecanismoFoco(shot,t);
@@ -368,6 +383,14 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.lead.toUpperCase()}
     </div>
+    {shot.type==='mechanism'&&!subtitleMode&&
+      (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')&&
+      <div data-safe-role="mechanism_headline"
+        style={{...rectStyle(MECH.headline),color:OFF_WHITE,
+          fontFamily:'Inter,Arial,sans-serif',fontWeight:900,
+          lineHeight:1.06,letterSpacing:-.6,fontSize:shot.headline.length>36?29:33}}>
+        {shot.headline}
+      </div>}
     {shot.type==='mechanism'&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(MECH.step),display:'flex',alignItems:'center',
         fontFamily:'Inter,Arial,sans-serif',fontSize:(active?.label||shot.headline).length>46?28:34,

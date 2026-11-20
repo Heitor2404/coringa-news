@@ -220,6 +220,66 @@ def analisar(plano: dict, biblioteca: dict | None = None) -> dict:
             'publicar':False,'telegram':False,'chamadas_ia':0}
 
 
+
+class RoteiroBloqueado(ValueError):
+    """O relatório explica TODAS as cenas, sem transformar candidato em render."""
+    def __init__(self, relatorio: dict):
+        self.relatorio=relatorio
+        super().__init__('roteiro V2 sem todas as provas/capacidades para render privado')
+
+
+def expandir_preview(plano: dict, biblioteca: dict | None = None) -> dict:
+    """Opt-in V2 para o mesmo caminho do diretor de processos — SOMENTE
+    quando todos os acontecimentos são mecanismos de fato implementados.
+
+    Histórias com foto, vídeo, documento, mapa, comparação ou mecanismo sem
+    capacidade são triadas, mas NÃO recebem filme falso nem mídia de estoque.
+    """
+    if 'roteiro' not in plano:
+        return plano
+    if not isinstance(plano.get('roteiro'),dict):
+        raise RoteiroBloqueado(analisar(plano,biblioteca))
+    report=analisar(plano,biblioteca)
+    if report['bloqueios'] or not report['decisoes'] or any(
+        d['estado']!='CAPACIDADE_TECNICA_DISPONIVEL' for d in report['decisoes']
+    ):
+        raise RoteiroBloqueado(report)
+    from src.v4.formatos import diretor_processos
+    eventos=[]
+    for cena,dec in zip(plano['roteiro']['cenas'],report['decisoes']):
+        ac=contrato_v2.declarado(cena)
+        data=ac.get('dados') or {}
+        eventos.append({
+            'id':str(cena['id']),
+            'duracao_s':float(cena['duracao_s']),
+            'lead':'MECANISMO · ILUSTRAÇÃO TÉCNICA',
+            'headline':str(ac.get('mostrar') or ac['acao']).strip()[:100],
+            'subject':str(ac['sujeito']).strip(),
+            'direcao_evento':{
+                'intencao':'demonstrar_acao',
+                'fato_id':str(ac['id']),
+                'aprendizado':str(ac.get('mostrar') or ac['acao']).strip(),
+                'acoes_necessarias':list(data['acoes_necessarias']),
+                'fases_necessarias':list(data['fases_necessarias']),
+            },
+        })
+    technical = {
+        **{k:v for k,v in plano.items() if k not in ('roteiro','shots')},
+        'eventos_diretor':eventos,
+        'media':{},
+    }
+    expanded=diretor_processos.expandir(technical)
+    expanded['diretor_origem_roteiro']={
+        'contrato':'V2_DECLARADO',
+        'forma':'V3_LINGUAGEM',
+        'capacidade':'V4_CATALOGO',
+        'autonomia':'ROTEIRO_ESTRUTURADO_SEM_KEYFRAMES_MANUAIS',
+        'fonte_factual_confirmada':False,
+        'revisao_mp4':'PENDENTE',
+    }
+    return expanded
+
+
 def main(argv=None) -> int:
     cli=argparse.ArgumentParser(description='Diagnóstico privado do roteiro até escolha da forma visual')
     cli.add_argument('roteiro_json')

@@ -67,6 +67,30 @@ const safeSlot=(part: SlotName): React.CSSProperties => {
   return {position:'absolute',left,top,width:right-left,height:bottom-top};
 };
 const squareStage = safeSlot('visual');
+/** O componente declara o enquadramento e as ações; o episódio só fornece cues.
+ * Não confundir zoom editorial com validação pixel-a-pixel de personagens móveis.
+ */
+const MECH = safety.mechanism_layout;
+const rectStyle = (r: readonly number[]):React.CSSProperties=>({
+  position:'absolute',left:r[0],top:r[1],width:r[2]-r[0],height:r[3]-r[1],
+});
+const lerpRect=(a:readonly number[],b:readonly number[],p:number):number[] =>
+  a.map((v,i)=>v+(b[i]-v)*p);
+const mecanismoFoco=(shot:FilmShot,segundo:number):number[]=>{
+  const catalog=MECH.focus as Record<string,Record<string,number[]>>;
+  const camera=catalog[shot.mechanism||''] || {};
+  const padrao=camera.default||MECH.default_bounds;
+  const stages=(shot.cues||[]).filter(c=>c.action && camera[c.action])
+    .slice().sort((a,b)=>a.at-b.at);
+  const atual=stages.filter(c=>c.at<=segundo).slice(-1)[0];
+  if(!atual?.action) return padrao;
+  const idx=stages.indexOf(atual);
+  const antes=idx>0 && stages[idx-1].action ? camera[stages[idx-1].action!] : camera[atual.action];
+  const alvo=camera[atual.action];
+  const trans=idx>0?ease((segundo-atual.at)/MECH.transition_seconds):1;
+  return lerpRect(antes||padrao,alvo,trans);
+};
+
 const clamp = (n: number, a=0, b=1) => Math.max(a, Math.min(b, n));
 const ease = (v: number) => 1 - Math.pow(1 - clamp(v), 3);
 
@@ -249,24 +273,38 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number}> = ({shot,p,t}) => {
  * como FUNDO cênico, sem afirmar que detalhes nas bordas são essenciais.
  * Mecanismos 2D são reenquadrados pelo tipo de renderizador, nunca pelo tema.
  */
-const SafeBody: React.FC<{shot:FilmShot;p:number;t:number}> = ({shot,p,t}) => {
-  if (shot.type==='mechanism' || (shot.graphic_original && shot.motion_graphic)) {
-    // Exibir acontecimento maior sem levar a antiga tipografia decorativa
-    // do topo/rodapé para fora da zona de leitura.
-    // O palco é uma janela da AÇÃO, não uma miniatura do SVG inteiro.
-    // Mostra a ferramenta principal e seus rótulos; os títulos/footer
-    // internos ficam fora. A tipografia pública pertence aos slots SAFE.
-    const scale=shot.motion_graphic?.565:
-      shot.mechanism==='optical_projection'||shot.mechanism==='lock_explainer'?.64:.59;
-    const sourceY=shot.motion_graphic?450:
-      shot.mechanism==='optical_projection'||shot.mechanism==='lock_explainer'?720:675;
-    const sourceX=(1080-(SAFE.visual[2]-SAFE.visual[0])/scale)/2;
-    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 59%,#173047,#0B1D2D 52%,#050F1C 100%)'}}>
+const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean}> = ({shot,p,t,subtitleMode}) => {
+  if (shot.type==='mechanism') {
+    // Close editorial de uma ETAPA, não redução de todo o SVG original.
+    // Bounding boxes vêm do catálogo do componente, nunca do nome do tema.
+    const palco=subtitleMode?SAFE.visual:MECH.visual;
+    const [sx,sy,ex,ey]=mecanismoFoco(shot,t);
+    const dw=palco[2]-palco[0],dh=palco[3]-palco[1];
+    const scale=Math.min(dw/(ex-sx),dh/(ey-sy));
+    const left=(dw-(ex-sx)*scale)/2-sx*scale;
+    const top=(dh-(ey-sy)*scale)/2-sy*scale;
+    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 54%,#173047,#0B1D2D 52%,#050F1C 100%)'}}>
       <AbsoluteFill style={{opacity:.10,backgroundSize:'94px 94px',
         backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
+      <div data-safe-role="visual" style={{...rectStyle(palco),overflow:'hidden'}}>
+        <div style={{position:'absolute',left,top,width:1080,height:1920,
+          transform:`scale(${scale})`,transformOrigin:'top left'}}>
+          <Body shot={shot} p={p} t={t}/>
+        </div>
+      </div>
+    </AbsoluteFill>;
+  }
+  if (shot.graphic_original && shot.motion_graphic) {
+    // Gráficos autorais conservam o enquadramento anterior até serem
+    // certificados separadamente. Não aplicar câmera de mecanismo a dados.
+    const scale=.565,sourceY=450;
+    const dw=SAFE.visual[2]-SAFE.visual[0],dh=SAFE.visual[3]-SAFE.visual[1];
+    const left=(dw-1080*scale)/2;
+    const top=(dh-1920*scale)/2-sourceY*scale;
+    return <AbsoluteFill style={{background:'#0B1D2D'}}>
       <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
-        <div style={{position:'absolute',left:-sourceX*scale,top:-sourceY*scale,
-          width:1080,height:1920,transform:`scale(${scale})`,transformOrigin:'top left'}}>
+        <div style={{position:'absolute',left,top,width:1080,height:1920,
+          transform:`scale(${scale})`,transformOrigin:'top left'}}>
           <Body shot={shot} p={p} t={t}/>
         </div>
       </div>
@@ -281,7 +319,6 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number}> = ({shot,p,t}) => {
   }
   return <Body shot={shot} p={p} t={t}/>;
 };
-
 const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted}) => {
   const total=text.replace(/\n/g,' ').length;
   const size=total>53?31:total>40?35:total>26?39:43;
@@ -310,7 +347,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     </AbsoluteFill>;
   }
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
-    <SafeBody shot={shot} p={p} t={now-shot.start}/>
+    <SafeBody shot={shot} p={p} t={now-shot.start} subtitleMode={subtitleMode}/>
     {!shot.graphic_original&&shot.type!=='mechanism'&&shot.type!=='video'&&
       <AbsoluteFill style={{pointerEvents:'none',background:
         'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
@@ -326,6 +363,13 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.lead.toUpperCase()}
     </div>
+    {shot.type==='mechanism'&&!subtitleMode&&<div data-safe-role="mechanism_step"
+      style={{...rectStyle(MECH.step),display:'flex',alignItems:'center',
+        fontFamily:'Inter,Arial,sans-serif',fontSize:(active?.label||shot.headline).length>46?28:34,
+        fontWeight:900,lineHeight:1.07,color:OFF_WHITE,letterSpacing:-.45,
+        textShadow:'0 2px 12px rgba(0,0,0,.8)'}}>
+      <span style={{color:GOLD,marginRight:8}}>●</span>{active?.label||shot.headline}
+    </div>}
     {!subtitleMode&&active&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
       style={{...safeSlot('cue'),fontFamily:'Inter,Arial,sans-serif',
         fontSize:active.label.length>32?24:28,fontWeight:900,color:GOLD,
@@ -333,13 +377,13 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         transform:`translateY(${(1-ease(age/.20))*8}px)`}}>
       {active.label}
     </div>}
-    {!subtitleMode&&!shot.graphic_original&&<div data-safe-role="headline"
+    {!subtitleMode&&shot.type!=='mechanism'&&!shot.graphic_original&&<div data-safe-role="headline"
       style={{...safeSlot('headline'),color:OFF_WHITE,
         textShadow:'0 2px 14px rgba(0,0,0,.78)',
         overflow:'hidden',opacity:ease((now-shot.start-.08)/.25)}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    {!subtitleMode&&<div data-safe-role="subject" style={{...safeSlot('subject'),
+    {!subtitleMode&&shot.type!=='mechanism'&&<div data-safe-role="subject" style={{...safeSlot('subject'),
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.type==='mechanism'?'ESQUEMA FÍSICO ILUSTRATIVO · NÃO É FILMAGEM REAL':
@@ -349,7 +393,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
-      FONTE: {shot.source_display || shot.source}
+      {shot.type==='mechanism'?'ESQUEMA ILUSTRATIVO · ':''}FONTE: {shot.source_display || shot.source}
     </div>
   </AbsoluteFill>;
 };

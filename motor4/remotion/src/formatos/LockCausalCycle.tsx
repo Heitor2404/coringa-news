@@ -8,7 +8,7 @@
  */
 import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
-import {planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel} from './AreaSeguraMovimento';
+import {areaInterna,planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel} from './AreaSeguraMovimento';
 
 export type LockCycleAction =
   'enter' | 'seal' | 'valves' | 'rise' | 'equalize' | 'open' | 'exit';
@@ -26,7 +26,8 @@ const INLET_X=288, OUTLET_X=748;
 // Compromisso narrativo: o navio INTEIRO fica visível ao entrar, subir e sair.
 const ACTOR_BOUNDS={left:344,top:904,right:621,bottom:1143};
 const ACTOR_PIVOT={x:480,y:YLOW};
-const AREA_VISIVEL={left:72,top:622,right:1002,bottom:1470};
+const CLIP_PROCESSO={left:61,top:608,right:1018,bottom:1500};
+const AREA_VISIVEL=areaInterna(CLIP_PROCESSO,{left:11,top:14,right:16,bottom:30});
 const GOLD='#FFD21F', WHITE='#F6F4EC', CYAN='#75DDEB';
 const clamp=(x:number)=>Math.max(0,Math.min(1,x));
 const ease=(x:number)=>{const y=clamp(x);return y*y*(3-2*y);};
@@ -105,7 +106,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
             <path d="M0 30 L35 30 M34 0 L34 32" fill="none" stroke="#273B46" strokeOpacity=".35" strokeWidth="1.6"/>
           </pattern>
           <clipPath id="cycleChamberClip"><rect x={INLET_X+14} y="720" width={OUTLET_X-INLET_X-28} height={YFLOOR-720}/></clipPath>
-          <clipPath id="cycleMapClip"><rect x="61" y="608" width="957" height="892"/></clipPath>
+          <clipPath id="cycleMapClip"><rect x={CLIP_PROCESSO.left} y={CLIP_PROCESSO.top} width={CLIP_PROCESSO.right-CLIP_PROCESSO.left} height={CLIP_PROCESSO.bottom-CLIP_PROCESSO.top}/></clipPath>
         </defs>
         <rect width="1080" height="1920" fill="url(#cycleGrid)"/>
 

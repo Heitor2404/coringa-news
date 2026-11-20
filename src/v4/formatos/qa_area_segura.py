@@ -11,6 +11,7 @@ import argparse
 import json
 from pathlib import Path
 from PIL import Image, ImageDraw
+from src.v4.formatos import layout as LAYOUT
 
 ROOT=Path(__file__).resolve().parents[3]
 CONFIG=ROOT/'motor4/remotion/src/formatos/safe-zones-vertical.json'
@@ -38,9 +39,14 @@ def validar_contrato()->dict:
     # precede o compositor editorial; a nova interseção deve ser um
     # SUBCONJUNTO seguro das mesmas políticas.
     aliases={'reels':'instagram_reels','tiktok':'tiktok','shorts':'youtube_shorts'}
-    for platform,item in c['platforms'].items():
-        if not _dentro(uni,item['safe']):
-            raise ValueError('SAFE-PLATAFORMA: caixa comum não cabe em '+platform)
+    if c.get('source_of_truth')!='src/v4/formatos/plataformas.json':
+        raise ValueError('SAFE-PERFIL-FONTE: usar o perfil existente, não duplicar medidas da interface')
+    perfis=LAYOUT.perfis()
+    for nome,p in perfis.items():
+        if (uni[0]<p['esquerda'] or uni[1]<p['topo'] or
+            uni[3]>1920-p['base'] or
+            uni[2]>LAYOUT.limite_direito(uni[1],uni[3],[nome])):
+            raise ValueError('SAFE-PLATAFORMA: caixa comum não cabe em '+nome)
         p=atlas['perfis'][aliases[platform]]
         if (p['topo']<item['safe'][1]
             or p['base']<1920-item['safe'][3]
@@ -53,12 +59,12 @@ def validar_contrato()->dict:
             raise ValueError('SAFE-SLOT: '+name+' fora da área de leitura')
     # Ordem editorial sem colisão. Fundo e barra decorativa não entram.
     y=c['slots']
-    order=['brand','section','visual','cue','headline','subject','source']
+    order=['brand','section','visual','cue','headline','subject','source','subtitle']
     for one,two in zip(order,order[1:]):
         if y[one][3]>y[two][1]:
             raise ValueError('SAFE-SLOTS-SOBREPOSTOS: '+one+'/'+two)
     return {'area_universal':uni,'slots':c['slots'],
-            'plataformas':list(c['platforms']),'perfil':PERFIL}
+            'plataformas':list(perfis),'perfil':PERFIL}
 
 
 def auditar_plano(plano:dict, *, bloquear_nao_homologados=True)->dict:
@@ -87,6 +93,10 @@ def auditar_plano(plano:dict, *, bloquear_nao_homologados=True)->dict:
             continue
         cid=str(s.get('id') or '?')
         kind=s.get('type')
+        if kind=='comparison':
+            add('SAFE-COMPARACAO-LEGADA',cid,
+                'cena de comparação contém rótulos internos sem reflow seguro',
+                bloquear_nao_homologados)
         if kind=='atlas_map':
             add('SAFE-MAPA-SEM-CERTIFICACAO',cid,
                 'o raster ATLAS possui rótulos/créditos embutidos e não teve o interior revisado para 3 UIs',
@@ -137,31 +147,46 @@ def auditar_plano(plano:dict, *, bloquear_nao_homologados=True)->dict:
 
 
 def overlay(frame:Path,saida:Path)->None:
-    """Quatro visões complementares para QA, nunca inserir em entrega final."""
+    """Visualização QA por plataforma. A fonte dos limites é layout.py,
+    compartilhada com o motor ATLAS, e não um segundo cadastro de pixels.
+    """
     z=carregar()
     with Image.open(frame) as orig:
         img=orig.convert('RGB')
     if img.width*16!=img.height*9:
         raise ValueError('SAFE-FRAME: análise requer 9:16 real')
     panels=[]
-    entries=[('REELS',z['platforms']['reels']['safe']),
-             ('TIKTOK',z['platforms']['tiktok']['safe']),
-             ('SHORTS',z['platforms']['shorts']['safe']),
-             ('UNIVERSAL',z['universal'])]
-    for label,rect in entries:
+    entries=[('REELS','instagram_reels'),
+             ('TIKTOK','tiktok'),
+             ('SHORTS','youtube_shorts'),
+             ('UNIVERSAL',None)]
+    for label,key in entries:
         rgba=img.convert('RGBA')
         tint=Image.new('RGBA',img.size,(0,0,0,0))
         draw=ImageDraw.Draw(tint)
         scale=img.width/1080
-        x1,y1,x2,y2=[round(n*scale) for n in rect]
-        draw.rectangle((0,0,img.width,y1),fill=(210,27,42,77))
-        draw.rectangle((0,y2,img.width,img.height),fill=(210,27,42,87))
-        draw.rectangle((0,y1,x1,y2),fill=(210,27,42,77))
-        draw.rectangle((x2,y1,img.width,y2),fill=(210,27,42,87))
-        draw.rectangle((x1,y1,x2,y2),outline=(66,235,177,255),width=max(2,round(4*scale)))
+        univ=z['universal']
+        x1,y1,x2,y2=[round(n*scale) for n in univ]
+        if key is None:
+            draw.rectangle((0,0,img.width,y1),fill=(210,27,42,75))
+            draw.rectangle((0,y2,img.width,img.height),fill=(210,27,42,85))
+            draw.rectangle((0,y1,x1,y2),fill=(210,27,42,70))
+            draw.rectangle((x2,y1,img.width,y2),fill=(210,27,42,82))
+        else:
+            for mask in LAYOUT.mascaras(key):
+                x,y,w,h=mask['caixa']
+                color=(221,110,21,62) if mask.get('aviso') else (210,27,42,87)
+                draw.rectangle((
+                    round(x*scale),round(y*scale),
+                    round((x+w)*scale),round((y+h)*scale)),
+                    fill=color)
+        draw.rectangle((x1,y1,x2,y2),outline=(66,235,177,255),
+                       width=max(2,round(4*scale)))
         panel=Image.alpha_composite(rgba,tint).convert('RGB')
-        ImageDraw.Draw(panel).text((max(5,int(10*scale)),max(5,int(10*scale))),
-                                   label+'  |  VERMELHO = RISCO DE UI',fill=(255,255,255))
+        ImageDraw.Draw(panel).text(
+            (max(5,int(10*scale)),max(5,int(10*scale))),
+            label+' | VERMELHO = UI | VERDE = ÁREA COMUM',
+            fill=(255,255,255))
         panels.append(panel)
     canvas=Image.new('RGB',(img.width*4,img.height),(10,14,21))
     for n,part in enumerate(panels):

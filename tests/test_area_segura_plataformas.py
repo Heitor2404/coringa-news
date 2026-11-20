@@ -138,6 +138,17 @@ def test_prova_de_overlay_com_imagem_real_9x16(tmp_path):
         assert im.size==(4*540,960)
 
 
+def test_regressao_visual_nativa_esta_bloqueada_fora_da_previa_privada():
+    s=_script()
+    assert 'portrait_experiment?: boolean' in s
+    assert 'reference_style_preview?: boolean' in s
+    assert 'Boolean(preview&&private_review_only&&portrait_experiment)' in s
+    assert 'Boolean(preview&&private_review_only&&reference_style_preview)' in s
+    assert 'REFERENCE_ONLY_NOT_SAFE' in s
+    # Um SVG não aprovado jamais substitui silenciosamente o modo padrão.
+    assert 'if (portraitExperiment &&' in s
+
+
 def test_render_portrait_reflui_a_fisica_sem_crop_do_svg_antigo():
     conf=SAFE.validar_contrato()
     m=SAFE.carregar()['mechanism_layout']

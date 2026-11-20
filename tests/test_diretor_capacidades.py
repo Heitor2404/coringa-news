@@ -107,7 +107,12 @@ def test_compositor_nao_esconde_acontecimento_com_titulo_duplicado():
     source=(ROOT/'motor4/remotion/src/formatos/FilmeEditorial.tsx').read_text('utf8')
     assert source.count('data-safe-role="headline"')==1
     assert "safeSlot('visual')" in source
-    assert "sourceY=shot.motion_graphic?450" in source
+    # O componente MotionEditorial mantém seu recorte legado, mas mecanismos
+    # agora usam camera por etapas da biblioteca, sem depender de assunto.
+    assert "if (shot.graphic_original && shot.motion_graphic)" in source
+    assert "sourceY=450" in source
+    assert "mecanismoFoco(shot,t)" in source
+    assert "shot.type!=='mechanism'&&!shot.graphic_original" in source
     # Cabeçalhos internos dos SVG não devem reaparecer sobre o título público.
     assert "const SafeBody:" in source
     assert "['lock_cycle','lock_cycle_standalone'].includes" in source

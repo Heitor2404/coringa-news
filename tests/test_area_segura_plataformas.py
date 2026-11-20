@@ -182,6 +182,30 @@ def test_reflow_bloqueia_titulo_fora_da_safe(monkeypatch):
         SAFE.validar_contrato()
 
 
+def test_portrait_focal_nao_pode_reduzir_todos_atores_a_miniaturas():
+    # Contrato estrutural por família: ator em destaque e trilho das causas.
+    p=(ROOT/'motor4/remotion/src/formatos/MechanismsPortrait.tsx').read_text('utf8')
+    optical=(ROOT/'motor4/remotion/src/formatos/OpticalProjection.tsx').read_text('utf8')
+    assert "phase={events.filter(e=>e.at<=t)" in optical
+    for stage in ("source","reticle","projection","wafer"):
+        assert "stage==='"+stage+"'" in p
+    assert "Sun x={209} y={269} r={113}" in p
+    assert "Reticle x={191} y={124} w={377} h={316}" in p
+    assert "Mirror x={391} y={326} rx={174}" in p
+    assert "Wafer x={301} y={334} rx={253}" in p
+    assert "<Steps active={index}/>" in p
+    # Eclusa ainda demonstra origem da água + tubulação + barco flutuando.
+    assert "const waterY=492-237*clamp(fill)" in p
+    assert "const hullY=waterY-11" in p
+    assert "M535 365 V608 H332 V570" in p
+    assert "translate(${gate*48} ${hullY-455})" in p
+    # Arte além da SAFE é decorativa: não carrega texto de mecanismo.
+    compositor=_script()
+    assert "Atmosfera FULL BLEED, sem textos nem atores essenciais" in compositor
+    assert 'aria-hidden="true"' in compositor
+    assert "Boolean(preview&&private_review_only&&portrait_experiment)" in compositor
+
+
 def test_camera_de_mecanismos_e_uma_capacidade_do_catalogo_nao_do_tema():
     config=SAFE.carregar()
     mecanica=config['mechanism_layout']

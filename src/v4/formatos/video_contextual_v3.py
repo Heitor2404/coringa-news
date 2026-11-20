@@ -59,8 +59,12 @@ def validar_clip(x:dict, *, requer_arquivo:bool=True)->dict:
         _invalid('CAMINHO: fonte obrigatória')
     path=Path(orig)
     page=urlsplit(str(x.get('pagina') or ''))
-    if page.scheme!='https' or page.hostname!='www.nist.gov' or not page.path.startswith('/video/'):
-        _invalid('ORIGEM: versão inicial exige vídeo institucional NIST identificado')
+    allowed={'nist_kaltura':('www.nist.gov','/video/'),
+             'dvids':('www.dvidshub.net','/video/')}
+    origin=allowed.get(x.get('provedor'))
+    if (not origin or page.scheme!='https' or page.hostname!=origin[0]
+        or not page.path.startswith(origin[1])):
+        _invalid('ORIGEM: provedor institucional não homologado para aquisição')
     if x.get('licenca')!='REVIEW_PENDING' or x.get('publicar') is not False:
         _invalid('DIREITOS: pendente deve permanecer pendente')
     if not isinstance(x.get('fonte_id'),str) or not x['fonte_id'] or (
@@ -70,7 +74,7 @@ def validar_clip(x:dict, *, requer_arquivo:bool=True)->dict:
         _invalid('CREDITO: origem sem crédito')
     if not isinstance(x.get('inspecao'),str) or len(x['inspecao'].strip())<35:
         _invalid('QUADROS: requer revisão explícita da janela na origem')
-    if x.get('comprova_acao') is not False or x.get('comprova_fato_tsmc') is not False:
+    if x.get('comprova_acao') is not False or x.get('comprova_outro_evento') is not False:
         _invalid('FATO: vídeo contextual não prova outra operação')
     if requer_arquivo:
         actual=_original(path,sha)
@@ -139,7 +143,7 @@ def catalogo_com_video(acervo:dict, manifest:dict, *, requer_arquivo=True)->dict
             'width':actual['width'],'height':actual['height'],
             'duration_s':actual['duration_s'],
             'janela':entry['janela'],'inspecao':entry['inspecao'],
-            'publicar':False,'comprova_acao':False,'comprova_fato_tsmc':False,
+            'publicar':False,'comprova_acao':False,'comprova_outro_evento':False,
             'fonte_id':entry['fonte_id'],
         }
         out.setdefault('itens',[]).append(it)

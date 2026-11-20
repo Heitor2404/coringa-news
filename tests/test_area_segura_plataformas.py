@@ -234,6 +234,9 @@ def test_mechanism_wide_usa_faixa_mais_larga_ANTES_dos_botoes_das_redes():
 def test_wide_hero_que_invade_coluna_lateral_e_bloqueado(monkeypatch):
     c=SAFE.carregar()
     c['mechanism_layout']['wide_hero']=[120,485,960,880]
+    # Manter as faixas separadas para isolar invasao da coluna de icones,
+    # sem antecipar o bloqueio de sobreposicao no validador.
+    c['mechanism_layout']['wide_support']=[150,900,770,1092]
     monkeypatch.setattr(SAFE,'carregar',lambda:c)
     with pytest.raises(ValueError,match='SAFE-WIDE-PLATAFORMA|SAFE-WIDE-ICONES'):
         SAFE.validar_contrato()

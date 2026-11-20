@@ -36,7 +36,7 @@ def _curiosity():
 
 def test_fonte_unica_todos_slots_dentro_das_tres_plataformas():
     result=SAFE.validar_contrato()
-    assert result['area_universal']==[120,300,820,1380]
+    assert result['area_universal']==[150,300,770,1240]
     assert set(result['plataformas'])=={'instagram_reels','tiktok','youtube_shorts'}
     assert set(result['slots'])=={
         'brand','section','visual','cue','headline','subject','source','subtitle'}
@@ -44,9 +44,10 @@ def test_fonte_unica_todos_slots_dentro_das_tres_plataformas():
     assert SAFE.carregar()['source_of_truth']=='src/v4/formatos/plataformas.json'
     # O editor de legendas já usa essas mesmas máscaras, não há perfis duplicados.
     from src.v4.formatos import layout
-    assert layout.uniao()['base']==480
-    assert layout.faixa_inferior()['legenda'][1]>=1230
-    assert layout.faixa_inferior()['legenda'][1]<SAFE.carregar()['slots']['subtitle'][3]
+    assert layout.uniao()['base']==672
+    assert 1030<=layout.faixa_inferior()['legenda'][1]<=1060
+    assert layout.faixa_inferior()['creditos'][1]>=SAFE.carregar()['slots']['subtitle'][3]
+    # Legendas do Camada usam a faixa distinta de créditos, sem conflito.
 
     assert 'safeSlot(' in _script()
     assert 'data-safe-role="source"' in _script()
@@ -54,7 +55,7 @@ def test_fonte_unica_todos_slots_dentro_das_tres_plataformas():
 
 def test_validador_recusa_slot_fora_do_perimetro(monkeypatch):
     c=SAFE.carregar()
-    c['slots']['headline']=[112,1010,806,1093]
+    c['slots']['headline']=[112,1062,760,1150]
     monkeypatch.setattr(SAFE,'carregar',lambda:c)
     with pytest.raises(ValueError,match='SAFE-SLOT'):
         SAFE.validar_contrato()
@@ -62,7 +63,7 @@ def test_validador_recusa_slot_fora_do_perimetro(monkeypatch):
 
 def test_validador_recusa_colisao_titulo_e_credito(monkeypatch):
     c=SAFE.carregar()
-    c['slots']['headline']=[132,1010,806,1130]
+    c['slots']['headline']=[160,1062,760,1172]
     monkeypatch.setattr(SAFE,'carregar',lambda:c)
     with pytest.raises(ValueError,match='SAFE-SLOTS-SOBREPOSTOS'):
         SAFE.validar_contrato()

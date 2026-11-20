@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/qa-mecanismos-fisicos.yml"
       - "motor4/remotion/src/formatos/OpticalProjection.tsx"
+      - "motor4/remotion/src/formatos/LockCausal.tsx"
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "src/v4/formatos/filme_editorial.py"
       - "docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json"
@@ -75,12 +76,18 @@ jobs:
             sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
           fi
 
-      - name: Inspecionar dois processos ao longo de 13 segundos
+      - name: Inspecionar dois processos por toda a duração dinâmica
         run: |
           ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height \
             -of json demo_mecanismos/mecanismos_qa.mp4 > demo_mecanismos/metadados.json
+          RATE=$(python - <<'PY'
+          import json
+          meta=json.load(open('demo_mecanismos/metadados.json'))
+          print(16/float(meta['format']['duration']))
+          PY
+          )
           ffmpeg -hide_banner -loglevel error -y -i demo_mecanismos/mecanismos_qa.mp4 \
-            -vf "fps=0.9,scale=270:480,tile=3x4" -frames:v 1 \
+            -vf "fps=${RATE},scale=270:480,tile=4x4" -frames:v 1 \
             demo_mecanismos/contato_mecanismos.jpg
           python - <<'PY'
           import hashlib,json
@@ -90,7 +97,9 @@ jobs:
           stream=[s for s in m['streams'] if s['codec_type']=='video']
           assert len(stream)==1 and stream[0]['width']==540 and stream[0]['height']==960
           assert not any(s['codec_type']=='audio' for s in m['streams'])
-          assert 12.9 < float(m['format']['duration']) < 13.4
+          props=json.loads((folder/'props.json').read_text())
+          target=float(props['duracao'])
+          assert abs(float(m['format']['duration'])-target)<.08,(target,m['format']['duration'])
           p=folder/'mecanismos_qa.mp4'
           assert p.exists() and (folder/'contato_mecanismos.jpg').exists()
           result={'status':'RENDER_TECNICO_SEM_APROVACAO_VISUAL',

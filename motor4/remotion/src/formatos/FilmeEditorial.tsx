@@ -53,6 +53,7 @@ export type FilmProps = {
   preview?: boolean;
   private_review_only?: boolean;
   safe_zone_debug?: boolean; // somente QA, nunca publicar o overlay vermelho
+  subtitle_mode?: boolean; // quando a Camada de fala está presente, ela ocupa lane própria
   safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
   direitos_pendentes?: string[];
 };
@@ -293,7 +294,7 @@ const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted
   </div>;
 };
 
-const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot}) => {
+const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean}> = ({shot,subtitleMode}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps;
   const now=frame/fps;
   const duration=Math.max(.01,shot.end-shot.start);
@@ -325,26 +326,26 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.lead.toUpperCase()}
     </div>
-    {active&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
+    {!subtitleMode&&active&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
       style={{...safeSlot('cue'),fontFamily:'Inter,Arial,sans-serif',
         fontSize:active.label.length>32?24:28,fontWeight:900,color:GOLD,
         opacity:ease(age/.20),overflow:'hidden',lineHeight:1.15,
         transform:`translateY(${(1-ease(age/.20))*8}px)`}}>
       {active.label}
     </div>}
-    {!shot.graphic_original&&<div data-safe-role="headline"
+    {!subtitleMode&&!shot.graphic_original&&<div data-safe-role="headline"
       style={{...safeSlot('headline'),color:OFF_WHITE,
         textShadow:'0 2px 14px rgba(0,0,0,.78)',
         overflow:'hidden',opacity:ease((now-shot.start-.08)/.25)}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    <div data-safe-role="subject" style={{...safeSlot('subject'),
+    {!subtitleMode&&<div data-safe-role="subject" style={{...safeSlot('subject'),
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.type==='mechanism'?'ESQUEMA FÍSICO ILUSTRATIVO · NÃO É FILMAGEM REAL':
         shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:
         shot.subject}
-    </div>
+    </div>}
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
@@ -353,11 +354,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode}/>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>
       <div style={{position:'absolute',left:0,right:0,top:0,height:safety.universal[1],

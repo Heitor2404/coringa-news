@@ -75,6 +75,81 @@ def _prova_candidata_foto(row: dict, biblioteca: dict) -> dict:
     return it
 
 
+
+def _cena_video_contextual(cena:dict, row:dict, biblioteca:dict, inicio:float)->tuple[dict,str,dict]:
+    """Clipes são contextuais, sem afirmar que apresentam ação específica.
+    Exige janela e ROI anexadas ao ORIGINAL. Não inventa ponto de câmera.
+    """
+    cid=row['cena']
+    options=row['candidatos']
+    if len(options)!=1 or options[0].get('natureza')!='video':
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-AMBIGUO',cid,
+                                           'seleção exige 1 única origem em vídeo contextual')])
+    matches=[x for x in biblioteca.get('itens') or []
+             if x.get('id')==options[0]['asset_id'] and x.get('natureza')=='video']
+    if len(matches)!=1:
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-SEM-FONTE',cid,
+                                           'vídeo não está na biblioteca V3 curada')])
+    it=matches[0]
+    ac=contrato_v2.declarado(cena)
+    if ac.get('tipo') not in ('lugar','ambiente','pessoa'):
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-REGISTRO-ESPECIFICO',cid,
+                'vídeo contextual não demonstra evento histórico, ação técnica ou processo')])
+    if it.get('licenca')!='REVIEW_PENDING' or it.get('publicar') is not False or (
+        it.get('comprova_acao') is not False or it.get('comprova_fato_tsmc') is not False):
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-DIREITOS',cid,
+                'somente vídeo com direitos pendentes e declarações de não comprovação')])
+    win=it.get('janela') or {}
+    source=it.get('stage_source')
+    sha=it.get('sha256_origem')
+    if (not isinstance(source,str) or not source.startswith('stage_documental/') or
+        not isinstance(sha,str) or len(sha)!=64 or
+        not isinstance(it.get('inspecao'),str) or len(it['inspecao'])<35):
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-PROVA',cid,
+                'origem, SHA, inspeção e região de vídeo ausentes')])
+    start=win.get('inicio_s')
+    source_dur=win.get('duracao_s')
+    dur=cena['duracao_s']
+    if (not isinstance(start,(int,float)) or not isinstance(source_dur,(int,float))
+        or not math.isfinite(start) or not math.isfinite(source_dur)
+        or abs(source_dur-dur)>.05):
+        raise MontagemHibridaBloqueada([_erro('H-VIDEO-JANELA',cid,
+                'duração do roteiro deve coincidir com a janela curada; não acelerar a fonte')])
+    points=win.get('roi') or []
+    video_fr={
+        'modo':'roi_observada','sha256_origem':sha,
+        'inspecao':it['inspecao'],
+        'pontos':[
+            {'at':p['at'],'fonte_s':round(start+p['at'],4),
+             'area_essencial':p['area_essencial']} for p in points
+        ],
+    }
+    mid='v3-'+sha[:16]
+    media={
+        'local_source':source,'expected_sha256':sha,
+        'url':it['pagina'],'page':it['pagina'],
+        'license':'REVIEW_PENDING','rights_status':'REVIEW_PENDING',
+        'credit':it['credito'],'media_type':'video',
+        'width':it['width'],'height':it['height'],
+        'duration_s':it['duration_s'],
+    }
+    ref=str(ac.get('sujeito') or '').strip()
+    shot={
+        'id':cid,'start':round(inicio,4),'end':round(inicio+dur,4),
+        'type':'video','asset':mid,'source_in_seconds':start,
+        'video_framing':video_fr,
+        'evidence':'representative','lead':'VÍDEO REAL · REGISTRO CONTEXTUAL',
+        'headline':ref.upper(),'subject':'Imagem institucional de origem identificada, sem prova de ação específica',
+        'cues':[{'at':min(.48,dur*.20),'label':'ACERVO INSTITUCIONAL · CONTEXTO'}],
+        'direcao_evento':{
+            'intencao':'explicar_contexto','fato_id':ac['id'],
+            'aprendizado':'Local e equipamentos da fonte, sem atribuir o laboratório ao evento narrado',
+        },
+    }
+    return shot,mid,media
+
+
+
 def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
     """Resolver roteiro híbrido somente com fotos contextuais e mecanismos
     já executáveis. Não inventa cena para satisfazer duração.
@@ -128,6 +203,16 @@ def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
             shot['start']=round(start,4)
             shot['end']=round(start+dur,4)
         else:
+            if len(row.get('candidatos') or [])==1 and row['candidatos'][0]['natureza']=='video':
+                shot,mid,metadados=_cena_video_contextual(c,row,biblioteca,start)
+                if mid in used:
+                    raise MontagemHibridaBloqueada([_erro('H-VIDEO-REPETIDO',cid,
+                            'não reutilizar mesmo vídeo como novo acontecimento')],report)
+                used.add(mid)
+                media[mid]=metadados
+                generated.append(shot)
+                start=round(start+dur,4)
+                continue
             # Contrato de REGISTRO ainda é uma proposta; sem revisão humana de
             # identidade nesta rodada, só exibimos a foto como CONTEXTO.
             if ac.get('tipo') not in ('lugar','ambiente','pessoa'):

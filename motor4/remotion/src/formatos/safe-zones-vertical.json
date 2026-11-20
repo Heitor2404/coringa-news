@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "resolution": [
+    1080,
+    1920
+  ],
+  "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
+  "notes": "Área editorial conservadora para vídeo 9:16 reaproveitado organicamente; bordas de overlays variam por aplicativo, descrição e versão. NÃO é garantia da interface final. Valores de anúncios são referência, não regra idêntica para vídeo orgânico.",
+  "platforms": {
+    "reels": {
+      "safe": [
+        70,
+        270,
+        1008,
+        1248
+      ],
+      "origin": "Meta Reels ad guide; aproximação 14% topo / 35% base / 6% laterais",
+      "risk_right": [
+        780,
+        840,
+        1080,
+        1920
+      ]
+    },
+    "tiktok": {
+      "safe": [
+        120,
+        240,
+        780,
+        1260
+      ],
+      "origin": "TikTok In-Feed template aproximado; legenda e add-ons podem ampliar a área coberta",
+      "risk_right": [
+        780,
+        840,
+        1080,
+        1920
+      ]
+    },
+    "shorts": {
+      "safe": [
+        110,
+        280,
+        810,
+        1260
+      ],
+      "origin": "Google Ads vertical safe zones + margem conservadora para coluna de ações",
+      "risk_right": [
+        810,
+        800,
+        1080,
+        1920
+      ]
+    }
+  },
+  "universal": [
+    150,
+    300,
+    770,
+    1240
+  ],
+  "slots": {
+    "brand": [
+      160,
+      312,
+      500,
+      350
+    ],
+    "section": [
+      160,
+      363,
+      760,
+      396
+    ],
+    "visual": [
+      150,
+      410,
+      770,
+      1010
+    ],
+    "cue": [
+      160,
+      1016,
+      760,
+      1056
+    ],
+    "headline": [
+      160,
+      1062,
+      760,
+      1150
+    ],
+    "subject": [
+      160,
+      1155,
+      760,
+      1187
+    ],
+    "source": [
+      160,
+      1195,
+      760,
+      1235
+    ]
+  },
+  "nonessential": [
+    "background",
+    "decorative_progress",
+    "private_qa_watermark"
+  ],
+  "source_safe_modes": [
+    "photo",
+    "video",
+    "mechanism",
+    "motion_graphic"
+  ],
+  "unverified": [
+    "atlas_map_embedded_credits",
+    "original_graphic_with_unmapped_text",
+    "legacy_extra_overlay"
+  ]
+}

@@ -12,6 +12,9 @@ on:
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "docs/v4/formatos/DEMO_DIRETOR_CAPACIDADES_20261120.json"
       - "tests/test_diretor_capacidades.py"
+      - "tests/test_diretor_processos.py"
+      - "src/v4/formatos/diretor_processos.py"
+      - "docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json"
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,16 +38,18 @@ jobs:
       - name: Verificar seleção por ações em diferentes domínios e regressões
         run: |
           python -m pip install -q pillow requests numpy pyyaml cryptography pytest
-          python -m pytest -q tests/test_diretor_capacidades.py tests/test_mecanismos_explicativos.py tests/test_filme_panama_ciclo_19s.py
+          python -m pytest -q tests/test_diretor_processos.py tests/test_diretor_capacidades.py tests/test_mecanismos_explicativos.py tests/test_filme_panama_ciclo_19s.py
       - name: Preparar composição sem forçar nome de renderer no storyboard
         run: |
-          python -m src.v4.formatos.filme_editorial docs/v4/formatos/DEMO_DIRETOR_CAPACIDADES_20261120.json prova_diretor motor4/remotion/public
+          python -m src.v4.formatos.filme_editorial docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json prova_diretor motor4/remotion/public
           python - <<'PY'
           import json
           from pathlib import Path
           p=json.loads(Path('prova_diretor/props.json').read_text())
           assert [x['mechanism'] for x in p['shots']]==['optical_projection','lock_cycle_standalone']
           assert all(x['evidence']=='explainer' and not x.get('reference_asset') for x in p['shots'])
+          assert all(len(x['cues'])>=4 for x in p['shots'])
+          assert p['duracao']==24.4
           print('CATALOGO_RESOLVEU_DUAS_CAPACIDADES_COM_ACOES')
           PY
       - name: Compilar compositor compartilhado

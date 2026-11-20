@@ -206,6 +206,51 @@ def test_portrait_focal_nao_pode_reduzir_todos_atores_a_miniaturas():
     assert "Boolean(preview&&private_review_only&&portrait_experiment)" in compositor
 
 
+def test_mechanism_wide_usa_faixa_mais_larga_ANTES_dos_botoes_das_redes():
+    c=SAFE.carregar()['mechanism_layout']
+    assert c['wide_hero']==[120,485,960,830]
+    assert c['wide_support']==[150,845,770,1092]
+    assert c['wide_hero'][2]-c['wide_hero'][0] >= 840
+    assert SAFE.validar_contrato()['perfil']==SAFE.PERFIL
+    compositor=_script()
+    assert "if (portraitExperiment && !subtitleMode" in compositor
+    assert "<Body shot={shot} p={p} t={t} portrait/>" in compositor
+    src=(ROOT/'motor4/remotion/src/formatos/MechanismsImmersive.tsx').read_text('utf8')
+    assert 'viewBox="0 0 840 345"' in src
+    assert 'viewBox="0 0 620 247"' in src
+    assert "data-safe-role=\"wide_mechanism_hero\"" in src
+    assert "data-safe-role=\"wide_mechanism_support\"" in src
+    assert 'Reticle x={263} y={33} w={523} h={278}' in src
+    assert 'Wafer x={577} y={209} rx={231}' in src
+    assert 'M535 70 L575 110' in src
+    assert 'const level=299-127*clamp(fill)' in src
+    assert 'const hullShift=level-299' in src
+    optical=(ROOT/'motor4/remotion/src/formatos/OpticalProjection.tsx').read_text('utf8')
+    lock=(ROOT/'motor4/remotion/src/formatos/LockCausal.tsx').read_text('utf8')
+    assert "from './MechanismsImmersive'" in optical
+    assert "from './MechanismsImmersive'" in lock
+
+
+def test_wide_hero_que_invade_coluna_lateral_e_bloqueado(monkeypatch):
+    c=SAFE.carregar()
+    c['mechanism_layout']['wide_hero']=[120,485,960,880]
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-WIDE-PLATAFORMA|SAFE-WIDE-ICONES'):
+        SAFE.validar_contrato()
+
+
+def test_wide_hero_nao_pode_cortar_topo_ou_ocupar_creditos(monkeypatch):
+    c=SAFE.carregar()
+    c['mechanism_layout']['wide_hero']=[120,450,960,830]
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-WIDE-SOBREPOSICAO'):
+        SAFE.validar_contrato()
+    c['mechanism_layout']['wide_hero']=[120,485,960,830]
+    c['mechanism_layout']['wide_support']=[150,845,770,1200]
+    with pytest.raises(ValueError,match='SAFE-WIDE-SOBREPOSICAO'):
+        SAFE.validar_contrato()
+
+
 def test_camera_de_mecanismos_e_uma_capacidade_do_catalogo_nao_do_tema():
     config=SAFE.carregar()
     mecanica=config['mechanism_layout']

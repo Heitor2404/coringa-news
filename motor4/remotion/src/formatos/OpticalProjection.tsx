@@ -103,8 +103,8 @@ export const OpticalProjection:React.FC<Props>=({t,events})=>{
         fill="url(#opt-mirror)" stroke="#B4F5F6" strokeWidth="6"/>
       <ellipse cx="824" cy="1105" rx="112" ry="12" transform="rotate(-27 824 1105)"
         fill="#87D7E3" opacity={.20+.45*mirrors}/>
-      <text x="929" y="1158" fill={WHITE} fontSize="31" fontWeight="850">ESPELHOS</text>
-      <text x="929" y="1195" fill={MUTED} fontSize="24">ÓPTICOS</text>
+      <text x="1010" textAnchor="end" y="1158" fill={WHITE} fontSize="31" fontWeight="850">ESPELHOS</text>
+      <text x="1010" textAnchor="end" y="1195" fill={MUTED} fontSize="24">ÓPTICOS</text>
       <Beam d="M785 1137 L559 1266" p={mirrors} color={CYAN}/>
 
       {/* Wafer suficientemente grande para mostrar a alteração do resist. */}

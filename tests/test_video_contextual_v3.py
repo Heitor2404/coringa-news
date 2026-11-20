@@ -50,6 +50,8 @@ def test_roteiro_tres_formatos_sem_nomear_asset_ou_renderer():
     assert len(b['video_framing']['pontos'])==3
     assert b['video_framing']['pontos'][1]['fonte_s']==59.3
     assert c['mechanism']=='auto'
+    assert c['headline']=='PROJEÇÃO ÓPTICA EUV'
+    assert 'ilustrar ' not in c['headline'].lower()
     assert z['plano']['media'][b['asset']]['license']=='REVIEW_PENDING'
     assert z['plano']['media'][b['asset']]['rights_status']=='REVIEW_PENDING'
     assert z['plano']['publicar'] is False

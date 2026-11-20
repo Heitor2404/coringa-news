@@ -44,7 +44,7 @@ def test_roteiro_tres_formatos_sem_nomear_asset_ou_renderer():
     assert [a['start'],a['end'],b['start'],b['end'],c['start'],c['end']]==[
         0,3.0,3.0,5.6,5.6,12.5]
     assert b['evidence']=='representative'
-    assert b['lead']=='VÍDEO REAL · REGISTRO CONTEXTUAL'
+    assert b['lead']=='VÍDEO DE ARQUIVO'
     assert b['headline']=='NIST NANOFAB'
     assert b['source_in_seconds']==58.15
     assert len(b['video_framing']['pontos'])==3

@@ -231,6 +231,24 @@ def test_mechanism_wide_usa_faixa_mais_larga_ANTES_dos_botoes_das_redes():
     assert "from './MechanismsImmersive'" in lock
 
 
+def test_titulo_de_mecanismo_recupera_presenca_sem_colidir_com_palco(monkeypatch):
+    c=SAFE.carregar()
+    m=c['mechanism_layout']
+    assert m['mechanism_section']==[160,355,760,380]
+    assert m['headline']==[160,385,760,478]
+    assert m['headline'][3]<m['wide_hero'][1]
+    assert SAFE.validar_contrato()['perfil']==SAFE.PERFIL
+    code=_script()
+    assert 'rectStyle(MECH.mechanism_section)' in code
+    assert 'shot.headline.length>27?42:46' in code
+    # A seção global das fotos/vídeos segue o slot antigo, não uma revisão total.
+    assert "safeSlot('section'))" in code
+    c['mechanism_layout']['mechanism_section']=[160,370,760,405]
+    monkeypatch.setattr(SAFE,'carregar',lambda:c)
+    with pytest.raises(ValueError,match='SAFE-PORTRAIT-COLISAO'):
+        SAFE.validar_contrato()
+
+
 def test_wide_hero_que_invade_coluna_lateral_e_bloqueado(monkeypatch):
     c=SAFE.carregar()
     c['mechanism_layout']['wide_hero']=[120,485,960,880]

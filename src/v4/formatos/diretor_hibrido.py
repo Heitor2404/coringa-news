@@ -294,7 +294,9 @@ def planejar(plano: dict, biblioteca: dict | None = None) -> dict:
         start=round(start+dur,4)
     composed={
         'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA',
-        'publicar':False,'titulo':plano.get('titulo') or 'Prova editorial',
+        'publicar':False,
+        'safe_area_profile':'MULTIPLATAFORMA_CONSERVADOR_V1',
+        'titulo':plano.get('titulo') or 'Prova editorial',
         'duracao':start,'media':media,'shots':generated,
         'observacao':'QA PRIVADA: fotografia contextual com SHA verificado no preparar; '
                      'nenhum registro de ação ou aprovação humana implícitos.',

@@ -262,24 +262,31 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number}> = ({shot
     </div>
     <div style={{position:'absolute',top:302,left:62,width:140,height:5,background:GOLD,transform:`scaleX(${ease(p)})`,transformOrigin:'left'}}/>
     {cue && !shot.graphic_original && shot.type!=='mechanism' && <div style={{
-      position:'absolute',top:380+((cue.y||.38)-.38)*700,left:64+((cue.x||.5)-.5)*150,maxWidth:W-128,
+      // Para originais de câmera quadrada com tempo/telemetria embutidos,
+      // NÃO cobrir o timestamp com o rótulo editorial. A faixa de eventos
+      // fica abaixo da imagem, com área própria.
+      position:'absolute',top:shot.video_context_layout==='quadro_integral'?1430:
+        380+((cue.y||.38)-.38)*700,
+      left:64+((cue.x||.5)-.5)*150,maxWidth:W-128,
       transform:`translateY(${(1-ease(cueAge/.25))*22}px)`,
       opacity:ease(cueAge/.25),fontFamily:'Inter,Arial',fontWeight:900,fontSize:37,
       padding:'13px 17px',borderLeft:`6px solid ${GOLD}`,
       background:'rgba(6,12,22,.78)',color:OFF_WHITE,letterSpacing:.5,
     }}>{cue.label}</div>}
-    {!shot.graphic_original && shot.type!=='mechanism' && <div style={{position:'absolute',left:60,right:60,top:1275,
+    {!shot.graphic_original && shot.type!=='mechanism' && <div style={{position:'absolute',left:60,right:60,top:shot.video_context_layout==='quadro_integral'?1510:1275,
       opacity:ease((now-shot.start-.12)/.32),transform:`translateY(${(1-ease((now-shot.start-.12)/.32))*36}px)`,
       color:OFF_WHITE,textShadow:'0 3px 18px rgba(0,0,0,.65)'}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
     {!['lock_cycle','lock_cycle_standalone'].includes(shot.mechanism || '') && <>
-    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
+    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?206:
+        shot.video_context_layout==='quadro_integral'?218:288,left:64,right:64,fontFamily:'Inter,Arial',fontSize:26,color:'#CFD6E0',fontWeight:600}}>
       {['lock_explainer','optical_projection'].includes(shot.mechanism || '')
         ? 'ESQUEMA ILUSTRATIVO · NÃO É FILMAGEM REAL'
         : <>{shot.evidence==='representative'?'IMAGEM ILUSTRATIVA · ':shot.evidence==='explainer'?'ESQUEMA EXPLICATIVO · ':''}{shot.subject}</>}
     </div>
-    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?163:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:23,color:'#ACBBC7',letterSpacing:.3}}>
+    <div style={{position:'absolute',bottom:['lock_explainer','optical_projection'].includes(shot.mechanism || '')?163:
+        shot.video_context_layout==='quadro_integral'?166:240,left:64,right:64,fontFamily:'Inter,Arial',fontSize:23,color:'#ACBBC7',letterSpacing:.3}}>
       FONTE: {shot.source}
     </div>
     </>}

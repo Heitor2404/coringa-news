@@ -37,16 +37,17 @@ def _curiosity():
 def test_fonte_unica_todos_slots_dentro_das_tres_plataformas():
     result=SAFE.validar_contrato()
     assert result['area_universal']==[150,300,770,1240]
-    assert set(result['plataformas'])=={'instagram_reels','tiktok','youtube_shorts'}
+    assert set(result['plataformas'])=={'instagram_reels_multiplataforma','tiktok_multiplataforma','youtube_shorts_multiplataforma'}
     assert set(result['slots'])=={
         'brand','section','visual','cue','headline','subject','source','subtitle'}
     assert 'safe-zones-vertical.json' in _script()
     assert SAFE.carregar()['source_of_truth']=='src/v4/formatos/plataformas.json'
     # O editor de legendas já usa essas mesmas máscaras, não há perfis duplicados.
     from src.v4.formatos import layout
-    assert layout.uniao()['base']==672
-    assert 1030<=layout.faixa_inferior()['legenda'][1]<=1060
-    assert layout.faixa_inferior()['creditos'][1]>=SAFE.carregar()['slots']['subtitle'][3]
+    assert layout.uniao()['base']==480  # arquivo legado
+    assert layout.uniao(layout.CFG['ativos_seguros'])['base']==672  # novas produções
+    assert 1030<=layout.faixa_inferior(layout.CFG['ativos_seguros'])['legenda'][1]<=1060
+    assert layout.faixa_inferior(layout.CFG['ativos_seguros'])['creditos'][1]>=SAFE.carregar()['slots']['subtitle'][3]
     # Legendas do Camada usam a faixa distinta de créditos, sem conflito.
 
     assert 'safeSlot(' in _script()

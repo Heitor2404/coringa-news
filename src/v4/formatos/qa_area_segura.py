@@ -33,9 +33,21 @@ def validar_contrato()->dict:
     uni=c['universal']
     if not _dentro(uni,full):
         raise ValueError('SAFE-UNIVERSAL: fora de 9:16')
+    atlas=json.loads((ROOT/'src/v4/formatos/plataformas.json').read_text(encoding='utf8'))
+    # Não criar dois motores de margens divergentes. A fonte ATLAS/Camada
+    # precede o compositor editorial; a nova interseção deve ser um
+    # SUBCONJUNTO seguro das mesmas políticas.
+    aliases={'reels':'instagram_reels','tiktok':'tiktok','shorts':'youtube_shorts'}
     for platform,item in c['platforms'].items():
         if not _dentro(uni,item['safe']):
             raise ValueError('SAFE-PLATAFORMA: caixa comum não cabe em '+platform)
+        p=atlas['perfis'][aliases[platform]]
+        if (p['topo']<item['safe'][1]
+            or p['base']<1920-item['safe'][3]
+            or p['esquerda']<item['safe'][0]
+            or 1080-p['direita']['largura']>item['safe'][2]
+            or p['direita']['de_y']>840):
+            raise ValueError('SAFE-ATLAS-DIVERGENTE: perfis ATLAS/FilmeEditorial divergiram em '+platform)
     for name,rect in c['slots'].items():
         if not _dentro(rect,uni):
             raise ValueError('SAFE-SLOT: '+name+' fora da área de leitura')

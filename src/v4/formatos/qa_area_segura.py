@@ -151,9 +151,9 @@ def overlay(frame:Path,saida:Path)->None:
     if img.width*16!=img.height*9:
         raise ValueError('SAFE-FRAME: análise requer 9:16 real')
     panels=[]
-    entries=[('REELS','instagram_reels'),
-             ('TIKTOK','tiktok'),
-             ('SHORTS','youtube_shorts'),
+    entries=[('REELS','instagram_reels_multiplataforma'),
+             ('TIKTOK','tiktok_multiplataforma'),
+             ('SHORTS','youtube_shorts_multiplataforma'),
              ('UNIVERSAL',None)]
     for label,key in entries:
         rgba=img.convert('RGBA')

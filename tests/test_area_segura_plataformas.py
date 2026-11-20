@@ -152,6 +152,11 @@ def test_camera_de_mecanismos_e_uma_capacidade_do_catalogo_nao_do_tema():
     assert mecanica['focus']['optical_projection']['source'] != mecanica['focus']['optical_projection']['wafer']
     s=_script()
     assert 'mecanismoFoco(shot,t)' in s
+    # Duplo clip: stage de destino E janela de origem do SVG.
+    # Sem isso, sobras acima/abaixo exibem títulos internos repetidos.
+    assert "width:ex-sx,height:ey-sy" in s
+    assert "left:-sx,top:-sy,width:1080,height:1920" in s
+
     assert 'MECH.step' in s
     assert "shot.type==='mechanism'&&!subtitleMode" in s
     assert "shot.type!=='mechanism'&&!shot.graphic_original" in s

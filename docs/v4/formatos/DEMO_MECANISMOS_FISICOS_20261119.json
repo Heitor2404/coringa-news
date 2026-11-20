@@ -64,27 +64,27 @@
         {
           "at": 0,
           "action": "closed",
-          "label": "1 · CÂMARA ISOLADA; ÁGUA ALTA À DIREITA"
+          "label": "1 · PORTÕES FECHADOS"
         },
         {
           "at": 1.2,
           "action": "water_enter",
-          "label": "2 · VÁLVULA ABERTA: ÁGUA DESCE PELO CONDUTO"
+          "label": "2 · ÁGUA ENTRA PELO CONDUTO"
         },
         {
           "at": 3,
           "action": "rise",
-          "label": "3 · A ÁGUA ENCHE E FAZ O NAVIO SUBIR"
+          "label": "3 · NAVIO FLUTUA E SOBE"
         },
         {
           "at": 7.1,
           "action": "equalize",
-          "label": "4 · MESMO NÍVEL DOS DOIS LADOS"
+          "label": "4 · NÍVEIS SE IGUALAM"
         },
         {
           "at": 8.8,
           "action": "release",
-          "label": "5 · PORTÃO ABRE APÓS IGUALAR"
+          "label": "5 · SAÍDA LIBERADA"
         }
       ],
       "estados_esperados": [

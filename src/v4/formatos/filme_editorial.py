@@ -110,10 +110,15 @@ def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,i
 def avaliar(plano: dict) -> dict:
     # Mesmo preflight para storyboard manual ou gerado do evento:
     # autor/editor não precisam nomear mecanismo nem inventar tempos dos cues.
-    from src.v4.formatos import diretor_processos
+    from src.v4.formatos import diretor_processos, diretor_roteiro
+    erro_roteiro = None
     erro_diretor = None
     try:
+        plano = diretor_roteiro.expandir_preview(plano)
         plano = diretor_processos.expandir(plano)
+    except diretor_roteiro.RoteiroBloqueado as exc:
+        erro_roteiro = exc
+        plano = {**plano, 'shots': []}
     except diretor_processos.FalhaDiretor as exc:
         erro_diretor = exc
         plano = {**plano, 'shots': []}
@@ -122,6 +127,9 @@ def avaliar(plano: dict) -> dict:
         falhas.append({'codigo': cod, 'cena': onde, 'motivo': porque})
     if erro_diretor is not None:
         falha(erro_diretor.codigo, erro_diretor.cena, erro_diretor.motivo)
+    if erro_roteiro is not None:
+        for pendencia in erro_roteiro.relatorio['bloqueios']:
+            falha(pendencia['codigo'], pendencia['cena'], pendencia['motivo'])
     cenas = plano.get('shots') or []
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
@@ -504,8 +512,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
         raise ValueError('pré-produção reprovada: '+json.dumps(check['bloqueios'],ensure_ascii=False))
     # Gerar props com as MESMAS cenas que passaram na validação.
     # Não inserir este passo antes de criar o contrato bloqueador.
-    from src.v4.formatos import diretor_processos
-    plano = diretor_processos.expandir(plano)
+    from src.v4.formatos import diretor_processos, diretor_roteiro
+    plano = diretor_processos.expandir(diretor_roteiro.expandir_preview(plano))
     if downloader is None:
         def downloader(url: str) -> bytes:
             r=requests.get(url,timeout=90,headers={'User-Agent':'CoringaExplica/1.0 (license verification; contact via GitHub)'})

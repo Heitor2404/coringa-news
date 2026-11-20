@@ -79,6 +79,29 @@ def validar_contrato()->dict:
         raise ValueError('SAFE-PORTRAIT-RENDERERS: nao reconhecido pelo catalogo')
     if 'optical_projection' not in native or 'lock_explainer' not in native:
         raise ValueError('SAFE-PORTRAIT-PROVAS: faltam dois dominios visuais')
+    # Duas faixas fisicas. De y=485..830 a UI lateral ainda NAO
+    # entrou; a partir de y=840 usa-se a regiao central estreita.
+    # A geometria e verificada contra CADA perfil, nao so na uniao
+    # conservadora (que usa a pior largura de todo o video).
+    hero,support=mech.get('wide_hero'),mech.get('wide_support')
+    if not (isinstance(hero,list) and isinstance(support,list) and
+            len(hero)==len(support)==4 and _dentro(hero,full)
+            and _dentro(support,full)):
+        raise ValueError('SAFE-WIDE-CAIXA: faixas invalidas')
+    if (c['slots']['section'][3]>hero[1] or
+        title[3]>hero[1] or hero[3]>support[1]
+        or support[3]>step[1]):
+        raise ValueError('SAFE-WIDE-SOBREPOSICAO: titulo/fisica/etapa colidem')
+    for nome,p in perfis.items():
+        for label,box in [('hero',hero),('support',support)]:
+            if (box[0]<p['esquerda'] or box[1]<p['topo']
+                or box[3]>1920-p['base']
+                or box[2]>LAYOUT.limite_direito(box[1],box[3],[nome])):
+                raise ValueError('SAFE-WIDE-PLATAFORMA: '+nome+'/'+label)
+    if hero[2]-hero[0]<800 or support[2]-support[0]<600:
+        raise ValueError('SAFE-WIDE-IMPACTO: palco voltou a miniaturizar')
+    if hero[3]>=840:
+        raise ValueError('SAFE-WIDE-ICONES: faixa larga cruza coluna lateral')
     if not (_dentro(stage,uni) and _dentro(step,uni)):
         raise ValueError('SAFE-MECANISMO-LAYOUT: palco/etapa fora da intersecao')
     for a,b in zip((c['slots']['section'],stage,step),

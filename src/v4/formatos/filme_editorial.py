@@ -539,10 +539,14 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
             x['asset']=medias[c['asset']]['asset']
             x['source']=medias[c['asset']]['credit']
         else:
+            # Fonte descritiva, sem fingir que o desenho é filmagem.
+            # Preserva a legenda das eclusas legadas (não mudar outros vídeos).
             x['source'] = (
                 'ASML · https://www.asml.com/en/technology/lithography-principles'
                 if c.get('mechanism') == 'optical_projection' else
-                'Autoridade do Canal do Panamá · https://pancanal.com/en/history-of-the-panama-canal/'
+                'ACP · https://pancanal.com/en/history-of-the-panama-canal/'
+                if c.get('mechanism') == 'lock_explainer' else
+                'Esquema original · princípio hidráulico de uma eclusa'
             )
             if c.get('reference_asset'):
                 # Congelar um quadro do próprio master curado, antes de qualquer corte

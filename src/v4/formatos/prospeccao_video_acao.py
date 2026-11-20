@@ -84,7 +84,11 @@ def baixar_original(info:dict,destino:Path,reader=None)->dict:
             with requests.get(url,timeout=(12,45),stream=True,allow_redirects=False,
                               headers={"User-Agent":"CoringaExplica/QA-Privada/1.0"}) as response:
                 if response.status_code!=200:
-                    raise ValueError("A-HTTP-ORIGINAL: arquivo não acessível diretamente")
+                    redirect=response.headers.get("Location","")
+                    dest=urlsplit(redirect).hostname if redirect else None
+                    raise ValueError(
+                        f"A-HTTP-ORIGINAL: status {response.status_code}; "
+                        f"redirect_host={dest or 'nenhum'}; sem tentar contornar acesso")
                 content_type=response.headers.get("Content-Type","").lower()
                 if not any(c in content_type for c in ("video/","application/octet-stream")):
                     raise ValueError("A-HTTP-TIPO: resposta não é vídeo")

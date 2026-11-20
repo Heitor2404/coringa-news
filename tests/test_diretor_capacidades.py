@@ -105,6 +105,10 @@ def test_nao_publica_nem_finge_aprovacao():
 def test_compositor_nao_esconde_acontecimento_com_titulo_duplicado():
     # Regra transversal: mecanismo possui sua própria hierarquia gráfica.
     source=(ROOT/'motor4/remotion/src/formatos/FilmeEditorial.tsx').read_text('utf8')
-    assert source.count("!shot.graphic_original && shot.type!=='mechanism'")>=2
+    assert source.count('data-safe-role="headline"')==1
+    assert "safeSlot('visual')" in source
+    assert "sourceY=shot.motion_graphic?450" in source
+    # Cabeçalhos internos dos SVG não devem reaparecer sobre o título público.
+    assert "const SafeBody:" in source
     assert "['lock_cycle','lock_cycle_standalone'].includes" in source
     assert "duration={shot.end-shot.start}" in source

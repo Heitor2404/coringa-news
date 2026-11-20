@@ -9,6 +9,9 @@ on:
       - "src/v4/formatos/diretor_hibrido.py"
       - "src/v4/formatos/filme_editorial.py"
       - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "motor4/remotion/src/formatos/safe-zones-vertical.json"
+      - "src/v4/formatos/qa_area_segura.py"
+      - "src/v4/formatos/plataformas.json"
       - "docs/v4/formatos/VIDEO_ACAO_OBSERVADA_NASA_20261120.json"
       - "docs/v4/formatos/QA_ROTEIRO_V2_ACAO_CURIOSITY_20261120.json"
       - "tests/test_video_acao_real.py"
@@ -73,10 +76,12 @@ jobs:
           assert p['shots'][0]['source_in_seconds']==4.5
           assert p['shots'][0]['video_context_layout']=='quadro_integral'
           assert p['shots'][0]['evidence']=='literal'
+          assert p['safe_area_profile']=='MULTIPLATAFORMA_CONSERVADOR_V1'
           assert p['shots'][0]['subject'].startswith('SEQUÊNCIA TEMPORAL CONDENSADA')
           assert len(p['shots'][0]['progressao_visual']['eventos'])==3
           assert z['estado']=='ORIGINAIS_SHA_VERIFICADOS'
           assert z['aprovacao_editorial'] is False
+          assert p['shots'][0]['video_context_layout']=='quadro_integral'
           print('AÇÕES REAIS POR REFERENTE E TEMPO, NÃO POR PALAVRA-CHAVE')
           PY
       - name: Compilar o compositor existente

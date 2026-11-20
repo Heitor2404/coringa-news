@@ -54,108 +54,184 @@ const Beam:React.FC<{d:string;progress:number;color?:string}>=({d,progress,color
       strokeDasharray="1" strokeDashoffset={1-clamp(progress)}/>
   </g>;
 
-export const OpticalPortrait:React.FC<OpticalPortraitProps>=({t,source,mask,mirrors,resist})=>
-  <Base name="Mecanismo vertical nativo: fonte EUV, máscara refletora, espelhos e wafer em sequência causal">
-    {/* A composição nativa não depende de recortar títulos de um SVG maior. */}
-    <circle cx="120" cy="125" r="92" fill={GOLD} opacity=".045"/>
-    <circle cx="112" cy="126" r={44+source*5} fill="#12374D" stroke="#84BED0" strokeWidth="3"/>
+
+/** Direção responsiva por CAPACIDADE: em vez de miniaturizar quatro
+ * objetos simultâneos, cada fase destaca fisicamente o objeto ativo.
+ * A relação causal permanece visível no trilho da sequência.
+ * Nenhum tema/episódio entra na geometria.
+ */
+type Phase='source'|'reticle'|'projection'|'wafer';
+const Steps:React.FC<{active:number}>=({active})=><g>
+  <path d="M112 622 H509" fill="none" stroke="#52778B" strokeWidth="4"/>
+  {['LUZ','MÁSCARA','ESPELHOS','WAFER'].map((s,i)=>{
+    const x=112+i*132;
+    return <g key={s}>
+      <circle cx={x} cy="622" r={i===active?16:11}
+        fill={i<=active?GOLD:'#284A5F'} stroke="#C2E0E8" strokeWidth={i===active?3:1.5}/>
+      <text x={x} y="659" fill={i===active?OFF:MUTED} fontSize="17"
+        textAnchor="middle" fontWeight={i===active?900:650}>{s}</text>
+    </g>;
+  })}
+</g>;
+const Reticle:React.FC<{x:number;y:number;w:number;h:number;progress:number}>=({x,y,w,h,progress})=>
+  <g>
+    <path d={\`M\${x+8} \${y-14} H\${x+w-14} L\${x+w} \${y+6} H\${x+18}Z\`}
+      fill="#779DB0" opacity=".72"/>
+    <rect x={x} y={y} width={w} height={h} rx="11" fill="#102C40"
+      stroke={progress>.02?GOLD:'#779AAE'} strokeWidth="6"/>
+    <rect x={x+17} y={y+15} width={w-34} height={h-30} rx="6" fill="#051C2C"
+      stroke="#5F8A9C" strokeWidth="2"/>
+    {Array.from({length:7},(_,i)=><rect key={i}
+      x={x+27+i*(w-65)/7} y={y+30}
+      width={(w-65)/11} height={h-60} rx="2"
+      fill={i%3===1?'#376C81':GOLD} opacity={.22+.78*progress}/>)}
+  </g>;
+const Sun:React.FC<{x:number;y:number;r:number;t:number;p:number}>=({x,y,r,t,p})=>
+  <g>
+    <circle cx={x} cy={y} r={r*1.5} fill={GOLD} opacity={.05+.07*p}/>
+    <circle cx={x} cy={y} r={r} fill="#0F3246"
+      stroke="#8ABDD0" strokeWidth="5"/>
     {Array.from({length:12},(_,i)=>{
-      const a=i*Math.PI/6+t*.85;
-      return <path key={i}
-        d={'M'+(112+Math.cos(a)*34)+' '+(126+Math.sin(a)*34)+' L'+
-          (112+Math.cos(a)*(43+source*7))+' '+(126+Math.sin(a)*(43+source*7))}
-        stroke={GOLD} strokeWidth="4" opacity={.45+.5*source}/>;
+      const a=i*Math.PI/6+t*.9;
+      const x1=x+Math.cos(a)*r*.70,y1=y+Math.sin(a)*r*.70;
+      const x2=x+Math.cos(a)*r*.95,y2=y+Math.sin(a)*r*.95;
+      return <path key={i} d={\`M\${x1} \${y1} L\${x2} \${y2}\`}
+        stroke={GOLD} strokeWidth="6" opacity={.5+.5*p}/>;
     })}
-    <circle cx="112" cy="126" r={9+source*3} fill={GOLD}/>
-    <text x="112" y="200" fill={OFF} textAnchor="middle" fontSize="24" fontWeight="850">LUZ EUV</text>
-    <text x="112" y="229" fill={MUTED} textAnchor="middle" fontSize="18">FONTE</text>
-    <Beam d="M166 126 H320" color={GOLD} progress={source}/>
+    <circle cx={x} cy={y} r={r*.19} fill={GOLD}/>
+    <circle cx={x-4} cy={y-3} r={r*.07} fill={OFF}/>
+  </g>;
+const Mirror:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
+  <g>
+    <ellipse cx={x} cy={y} rx={rx} ry={rx*.22}
+      transform={\`rotate(-26 \${x} \${y})\`}
+      fill="url(#portrait-mirror)" stroke="#D1FFFF" strokeWidth="6"/>
+    <ellipse cx={x} cy={y} rx={rx*.77} ry={rx*.077}
+      transform={\`rotate(-26 \${x} \${y})\`}
+      fill="#98EDF5" opacity={.15+.55*p}/>
+  </g>;
+const Wafer:React.FC<{x:number;y:number;rx:number;p:number}>=({x,y,rx,p})=>
+  <g>
+    <path d={\`M\${x-rx} \${y} Q\${x-rx+12} \${y+105} \${x} \${y+105} Q\${x+rx-12} \${y+105} \${x+rx} \${y} L\${x+rx} \${y+32} Q\${x+rx-28} \${y+125} \${x} \${y+125} Q\${x-rx+28} \${y+125} \${x-rx} \${y+32}Z\`}
+      fill="url(#portrait-steel)" stroke="#C0F3F7" strokeWidth="5"/>
+    <ellipse cx={x} cy={y} rx={rx} ry={rx*.3} fill="#123B50"
+      stroke="#C3FFFF" strokeWidth="6"/>
+    <ellipse cx={x} cy={y} rx={rx*.88} ry={rx*.23}
+      fill="none" stroke="#65B1C3" strokeWidth="3"/>
+    {Array.from({length:7},(_,i)=><rect key={i}
+      x={x-rx*.65+i*rx*.21} y={y-rx*.065+(i%2)*7}
+      width={rx*.16} height={rx*.16} rx="3"
+      fill={GOLD} opacity={p*.9}/>)}
+  </g>;
 
-    {/* Máscara grande e legível, com padrões que a luz transporta. */}
-    <path d="M322 73 H559 L568 91 H332Z" fill="#668EA5" opacity=".7"/>
-    <rect x="328" y="89" width="230" height="150" rx="10" fill="#102C40"
-      stroke={mask>.05?GOLD:'#5B8298'} strokeWidth="5"/>
-    <rect x="344" y="104" width="199" height="120" rx="4" fill="#061924" stroke="#61899D" strokeWidth="2"/>
-    {Array.from({length:7},(_,i)=><rect key={i} x={355+i*26} y="118"
-      width={i%3===1?13:17} height="90" rx="2"
-      fill={i%3===1?'#3E7587':GOLD} opacity={.22+.78*mask}/>)}
-    <text x="443" y="272" textAnchor="middle" fontWeight="850" fontSize="25" fill={OFF}>MÁSCARA</text>
-    <text x="443" y="299" textAnchor="middle" fontSize="18" fill={MUTED}>REFLEXIVA</text>
-    <Beam d="M450 241 L490 365" progress={mask}/>
-
-    {/* Feixe segue caminho demonstrativo; não reivindica escala óptica real. */}
-    <ellipse cx="489" cy="388" rx="99" ry="24" transform="rotate(-25 489 388)"
-      fill="url(#portrait-mirror)" stroke="#C1F6F5" strokeWidth="4"/>
-    <ellipse cx="489" cy="388" rx="69" ry="10" transform="rotate(-25 489 388)"
-      fill="#7CD5DF" opacity={.2+.4*mirrors}/>
-    <text x="489" y="463" textAnchor="middle" fontWeight="850" fontSize="24" fill={OFF}>ESPELHOS</text>
-    <text x="489" y="490" textAnchor="middle" fontSize="18" fill={MUTED}>ÓPTICOS</text>
-    <Beam d="M454 414 L293 542" progress={mirrors}/>
-
-    {/* Wafer ocupa a largura principal; a exposição realmente muda o padrão. */}
-    <ellipse cx="281" cy="567" rx="202" ry="66" fill="#06131D" opacity=".68"/>
-    <path d="M80 564 Q87 640 281 640 Q477 640 482 564 L482 588 Q460 649 281 649 Q104 649 80 588Z"
-      fill="url(#portrait-steel)" stroke="#B3E4EB" strokeWidth="3"/>
-    <ellipse cx="281" cy="551" rx="201" ry="56" fill="#143B52" stroke="#CCF6F7" strokeWidth="4"/>
-    <ellipse cx="281" cy="551" rx="180" ry="45" fill="none" stroke="#5FAFC2" strokeWidth="2" opacity=".67"/>
-    {Array.from({length:7},(_,i)=><rect key={i} x={140+i*39}
-      y={540+(i%2)*6} width="23" height="24" rx="2" fill={GOLD} opacity={resist*.85}/>)}
-    <text x="281" y="678" textAnchor="middle" fontWeight="850" fontSize="22" fill={OFF}>CAMADA FOTOSSENSÍVEL</text>
+export const OpticalPortrait:React.FC<OpticalPortraitProps & {phase?:string}>=
+({t,source,mask,mirrors,resist,phase='source'})=>{
+  const stage:Phase = (['source','reticle','projection','wafer'].includes(phase)?phase:'source') as Phase;
+  const index=(['source','reticle','projection','wafer'] as Phase[]).indexOf(stage);
+  return <Base name="EUV em close por ação: fonte, máscara reflexiva, espelhos e wafer com trilho causal">
+    {/* Fundo cinemático. A ação ativa é grande e aparece integralmente na SAFE. */}
+    <circle cx="315" cy="298" r="265" fill="#2A6077" opacity=".13"/>
+    <circle cx="315" cy="298" r="207" fill="none" stroke="#42677F" strokeWidth="2" opacity=".28"/>
+    {stage==='source'&&<g>
+      <Sun x={209} y={269} r={113} t={t} p={source}/>
+      <Beam d="M324 269 H398" color={GOLD} progress={source}/>
+      <Reticle x={405} y={174} w={175} h={190} progress={mask}/>
+      <text x="209" y="456" textAnchor="middle" fontSize="31" fontWeight="900" fill={OFF}>LUZ EUV</text>
+      <text x="209" y="492" textAnchor="middle" fontSize="21" fill={MUTED}>FONTE LUMINOSA</text>
+      <text x="493" y="401" textAnchor="middle" fontSize="23" fontWeight="800" fill={OFF}>MÁSCARA</text>
+    </g>}
+    {stage==='reticle'&&<g>
+      <Sun x={90} y={266} r={46} t={t} p={source}/>
+      <Beam d="M143 266 H186" color={GOLD} progress={source}/>
+      <Reticle x={191} y={124} w={377} h={316} progress={mask}/>
+      <text x="383" y="489" textAnchor="middle" fontSize="31" fontWeight="900" fill={OFF}>MÁSCARA REFLEXIVA</text>
+      <text x="383" y="530" textAnchor="middle" fontSize="22" fill={MUTED}>O PADRÃO É REFLETIDO</text>
+    </g>}
+    {stage==='projection'&&<g>
+      <Reticle x={43} y={82} w={252} h={153} progress={mask}/>
+      <Beam d="M281 198 L351 315" progress={mask}/>
+      <Mirror x={391} y={326} rx={174} p={mirrors}/>
+      <Beam d="M339 364 L266 465" progress={mirrors}/>
+      <ellipse cx="246" cy="510" rx="179" ry="48" fill="#0C2637" stroke="#9ADCE5" strokeWidth="5"/>
+      <text x="395" y="449" fontSize="31" textAnchor="middle" fontWeight="900" fill={OFF}>ESPELHOS</text>
+      <text x="395" y="485" fontSize="21" textAnchor="middle" fill={MUTED}>PROJETAM A LUZ</text>
+    </g>}
+    {stage==='wafer'&&<g>
+      <Mirror x={470} y={157} rx={105} p={mirrors}/>
+      <Beam d="M442 205 L349 281" progress={mirrors}/>
+      <Wafer x={301} y={334} rx={253} p={resist}/>
+      <text x="306" y="528" fontSize="29" fontWeight="900"
+        textAnchor="middle" fill={OFF}>CAMADA FOTOSSENSÍVEL</text>
+      <text x="306" y="563" fontSize="21" textAnchor="middle"
+        fill={resist>.1?GOLD:MUTED}>
+        {resist>.1?'PADRÃO SENDO EXPOSTO':'ANTES DA EXPOSIÇÃO'}
+      </text>
+    </g>}
+    <Steps active={index}/>
   </Base>;
+};
 
+/** O renderer de eclusa preserva a geometria causal INTEGRAL em cada estado:
+ * lado alto, conduto inferior, portão e casco que flutua. A atenção muda
+ * pela cor/movimento sem cortar nenhum desses atores.
+ */
 export const LockPortrait:React.FC<LockPortraitProps>=({t,fill,open,isFlow,state})=>{
-  const waterY=460-210*clamp(fill);
-  const boatY=waterY-13;
-  const bright=isFlow?GOLD:AQUA;
-  const showGate=clamp(open);
-  return <Base name="Mecanismo vertical nativo de eclusa: reservatório elevado, válvula, galeria inferior, água da câmara e navio flutuante">
-    <text x="24" y="45" fill={MUTED} fontSize="19" fontWeight="750">CÂMARA</text>
-    <text x="435" y="45" fill={GOLD} fontSize="19" fontWeight="850">LADO ALTO</text>
-    <path d="M25 58 H598" stroke="#48697B" strokeWidth="2"/>
-    {/* Níveis separados, tubulação visível, portão fechado até equalizar. */}
-    <rect x="30" y="154" width="357" height="375" fill="#071A28" stroke="#526F80" strokeWidth="3"/>
-    <rect x="438" y="211" width="143" height="318" fill="#0D2738" stroke="#668A9C" strokeWidth="3"/>
-    <rect x="447" y="249" width="124" height="280" fill="url(#portrait-water)" opacity=".87"/>
-    <path d="M447 249 H571" stroke="#D8FFFF" strokeWidth="5"/>
-    <g>
-      <rect x="34" y={waterY} width="349" height={529-waterY} fill="url(#portrait-water)" opacity=".97"/>
-      <path d={'M34 '+waterY+' H383'} stroke="#D3FFFF" strokeWidth="5"/>
-      {Array.from({length:6},(_,i)=><path key={i}
-        d={'M'+(47+i*54)+' '+(waterY+18+Math.sin(t*3+i)*2)+' h36'}
-        stroke="#DDFBFA" opacity=".48" strokeWidth="3"/>)}
+  const waterY=492-237*clamp(fill);
+  const hullY=waterY-35;
+  const gate=clamp(open);
+  const beam=isFlow?GOLD:'#6FA6BA';
+  return <Base name="Eclusa vertical: reservatório alto alimenta por gravidade a câmara; navio flutua com o nível e portão abre na equalização">
+    <circle cx="280" cy="330" r="286" fill="#205B70" opacity=".16"/>
+    <path d="M20 92 H600" stroke="#476D80" strokeWidth="3" opacity=".8"/>
+    <text x="39" y="72" fontSize="22" fontWeight="900" fill={OFF}>CÂMARA</text>
+    <text x="462" y="72" fontSize="22" fontWeight="900" fill={GOLD}>LADO ALTO</text>
+    <rect x="30" y="176" width="414" height="397" rx="2" fill="#061A29" stroke="#7199A9" strokeWidth="4"/>
+    <rect x="471" y="230" width="122" height="343" fill="#132F40" stroke="#769AAA" strokeWidth="4"/>
+    <rect x="479" y="254" width="106" height="319" fill="url(#portrait-water)" opacity=".9"/>
+    <path d="M479 254 H585" stroke="#E0FFFF" strokeWidth="6"/>
+    <path d={\`M33 \${waterY} H442\`} stroke="#D7FFFF" strokeWidth="7"/>
+    <rect x="34" y={waterY} width="406" height={573-waterY}
+      fill="url(#portrait-water)" opacity=".93"/>
+    {Array.from({length:7},(_,i)=><path key={i} d={\`M\${48+i*55} \${waterY+18+Math.sin(t*4+i)*2} h35\`}
+      stroke="#C9FAFF" opacity=".48" strokeWidth="3"/>)}
+    {/* Navio sobe APENAS em resposta ao nível da água. */}
+    <g transform={\`translate(\${gate*48} \${hullY-455})\`}>
+      <path d="M69 407 H391 L357 466 H105Z"
+        fill="url(#portrait-steel)" stroke="#F2FFFF" strokeWidth="5"/>
+      <path d="M105 452 H358" stroke="#60889A" strokeWidth="7"/>
+      <rect x="134" y="364" width="200" height="41" rx="3"
+        fill="#E8F4F5" stroke="#9DC4D0" strokeWidth="2"/>
+      <rect x="161" y="328" width="145" height="34" rx="2" fill="#ECF7F8"/>
+      <rect x="220" y="294" width="11" height="33" fill="#BFE5ED"/>
+      {Array.from({length:6},(_,i)=><rect key={i} x={144+i*30}
+        y="377" width="22" height="17" fill="#1C4B61"/>)}
     </g>
-    <path d="M30 530 H592" stroke="#8AA4B1" strokeWidth="10"/>
-    {/* Navio acompanha estritamente a superfície da água. */}
-    <g transform={'translate(0 '+(boatY-442)+')'}>
-      <path d="M76 410 H341 L314 460 H109Z" fill="url(#portrait-steel)" stroke="#F1FCFF" strokeWidth="4"/>
-      <path d="M97 450 H322" stroke="#638BA1" strokeWidth="5"/>
-      <rect x="122" y="373" width="170" height="36" rx="2" fill="#DCECF0" stroke="#A0C6D2" strokeWidth="2"/>
-      <rect x="147" y="340" width="115" height="31" fill="#E8F5F4"/>
-      <rect x="176" y="314" width="11" height="26" fill="#B8DDE3"/>
-      {Array.from({length:5},(_,i)=><rect key={i} x={130+31*i} y="386" width="24" height="15"
-        fill="#26576A" stroke="#567E91" strokeWidth="1"/>)}
+    <rect x="24" y="174" width="18" height="401" fill="#A9C4CD"/>
+    <g opacity={1-gate*.93} transform={\`translate(\${gate*37} 0)\`}>
+      <rect x="443" y="176" width="19" height="396" fill="#9EBAC5" stroke="#DAF4F7" strokeWidth="2"/>
     </g>
-    <rect x="27" y="150" width="17" height="387" fill="#94AFBB"/>
-    <g opacity={1-showGate*.9} transform={'translate('+(showGate*24)+' 0)'}>
-      <rect x="385" y="154" width="20" height="380" fill="#A2BBC4" stroke="#E3F3F5" strokeWidth="2"/>
-    </g>
-    {open>.03&&<path d="M403 295 H443" stroke={GOLD} strokeWidth="7"
-      strokeDasharray="11 9" opacity={open}/>}
-    {/* Água passa POR BAIXO: trajeto a partir do reservatório elevado. */}
-    <path d="M525 375 V574 H289 V527" fill="none" stroke="#182F40"
-      strokeWidth="38" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M525 375 V574 H289 V527" fill="none" stroke="#7C9FAF"
-      strokeWidth="25" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M525 375 V574 H289 V527" fill="none" stroke={bright}
-      strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"
-      strokeDasharray="23 23" strokeDashoffset={-t*81} opacity={isFlow?1:.28}/>
-    <circle cx="525" cy="460" r="28" fill="#123044" stroke={isFlow?GOLD:'#B8D5DA'} strokeWidth="5"/>
-    <path d="M510 445 L540 475 M510 475 L540 445" fill="none"
-      stroke={isFlow?GOLD:'#CFDFE3'} strokeWidth="6" strokeLinecap="round"/>
-    <text x="525" y="633" textAnchor="middle" fill={GOLD} fontSize="22" fontWeight="850">VÁLVULA</text>
-    <text x="282" y="627" textAnchor="middle" fill={MUTED} fontSize="20">ENTRADA PELO FUNDO</text>
-    <text x="24" y="672" fill={OFF} fontSize="17" fontWeight="720">
-      {state==='release'?'SAÍDA APÓS EQUALIZAÇÃO':'O NAVIO SOBE COM A ÁGUA'}
-    </text>
+    {gate>.02&&<path d="M462 315 H489" stroke={GOLD} strokeWidth="7" strokeDasharray="12 9" opacity={gate}/>}
+    {/* Duto sai do nível alto e termina no fundo da câmara, controlado por válvula. */}
+    <path d="M535 365 V608 H332 V570" fill="none"
+      stroke="#152D40" strokeWidth="45" strokeLinejoin="round" strokeLinecap="round"/>
+    <path d="M535 365 V608 H332 V570" fill="none"
+      stroke="#7899A9" strokeWidth="30" strokeLinejoin="round" strokeLinecap="round"/>
+    <path d="M535 365 V608 H332 V570" fill="none"
+      stroke={beam} strokeWidth="14" strokeDasharray="22 24"
+      strokeDashoffset={-t*86} opacity={isFlow?1:.22}/>
+    <circle cx="535" cy="458" r={state==='water_enter'?43:32}
+      fill="#0A2939" stroke={isFlow?GOLD:'#B7D4DC'} strokeWidth="6"/>
+    <path d="M516 438 L554 476 M516 476 L554 438"
+      fill="none" stroke={isFlow?GOLD:'#D7E7ED'} strokeWidth="7" strokeLinecap="round"/>
+    {state==='rise'&&<g opacity={.55+.3*Math.sin(t*5)}>
+      <path d={\`M80 \${waterY+10} V\${waterY-122}\`} stroke={GOLD} strokeWidth="9" strokeDasharray="13 10"/>
+      <path d={\`M61 \${waterY-97} L80 \${waterY-132} L99 \${waterY-97}Z\`} fill={GOLD}/>
+    </g>}
+    {state==='equalize'&&<path d="M43 254 H589" stroke={GOLD}
+      strokeWidth="5" strokeDasharray="12 13" opacity=".62"/>}
+    <text x="531" y="664" textAnchor="middle" fontSize="22" fontWeight="850"
+      fill={isFlow?GOLD:OFF}>VÁLVULA</text>
+    <text x="260" y="662" textAnchor="middle" fontSize="20"
+      fill={MUTED}>CONDUTO INFERIOR</text>
   </Base>;
 };

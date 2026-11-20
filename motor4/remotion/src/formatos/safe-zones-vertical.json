@@ -235,9 +235,9 @@
     ],
     "headline": [
       160,
-      399,
+      385,
       760,
-      468
+      478
     ],
     "native_dimensions": [
       620,
@@ -255,6 +255,12 @@
       770,
       1092
     ],
-    "wide_note": "Faixa superior 485..830 termina ANTES de de_y=840 dos botoes laterais conservadores. Verificar intersecao por intervalo contra src/v4/formatos/plataformas.json; nao ampliar bloco inferior ou textos."
+    "wide_note": "Faixa superior 485..830 termina ANTES de de_y=840 dos botoes laterais conservadores. Verificar intersecao por intervalo contra src/v4/formatos/plataformas.json; nao ampliar bloco inferior ou textos.",
+    "mechanism_section": [
+      160,
+      355,
+      760,
+      380
+    ]
   }
 }

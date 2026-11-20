@@ -1,0 +1,123 @@
+name: "QA — diretor escolhe ação filmada por fato e timestamps"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-diretor-video-acao-real.yml"
+      - "src/v4/formatos/video_acao_real.py"
+      - "src/v4/formatos/diretor_roteiro.py"
+      - "src/v4/formatos/diretor_hibrido.py"
+      - "src/v4/formatos/filme_editorial.py"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "docs/v4/formatos/VIDEO_ACAO_OBSERVADA_NASA_20261120.json"
+      - "docs/v4/formatos/QA_ROTEIRO_V2_ACAO_CURIOSITY_20261120.json"
+      - "tests/test_video_acao_real.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-diretor-video-acao-real
+  cancel-in-progress: true
+jobs:
+  video_acao_privada:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Dependências de inspeção, autenticação e edição
+        run: |
+          python -m pip install -q pillow requests pytest numpy cryptography pyyaml
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testes de falha fechada, seleção por fato e integridade dos tempos
+        run: |
+          python -m pytest -q tests/test_video_acao_real.py tests/test_diretor_roteiro_v2.py tests/test_video_framing_multitema.py
+      - name: Recuperar original oficial NASA com SHA256 previamente fixado
+        timeout-minutes: 8
+        run: |
+          mkdir -p stage_documental
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.prospeccao_video_nasa import baixar
+          x=json.loads(Path('docs/v4/formatos/CANDIDATOS_ACAO_NASA_SVS_20261120.json').read_text())['itens'][0]
+          catalogo=json.loads(Path('docs/v4/formatos/VIDEO_ACAO_OBSERVADA_NASA_20261120.json').read_text())['videos'][0]
+          assert x['expected_sha256']==catalogo['sha256_origem']
+          dst=Path(catalogo['arquivo'])
+          result=baixar(x,dst)
+          assert result['sha256']==catalogo['sha256_origem']
+          assert result['integridade']=='BAIXADO_SHA256_TRAVADO'
+          print('FONTE ORIGINAL NASA CONFIRMADA SHA256',result['sha256'])
+          PY
+      - name: Diretor V2 escolhe a única gravação com ação correspondente
+        run: |
+          mkdir -p qa_acao_roteiro
+          python -m src.v4.formatos.diretor_hibrido             docs/v4/formatos/QA_ROTEIRO_V2_ACAO_CURIOSITY_20261120.json             qa_acao_roteiro motor4/remotion/public             --videos-acao docs/v4/formatos/VIDEO_ACAO_OBSERVADA_NASA_20261120.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path('qa_acao_roteiro')
+          p=json.loads((r/'props.json').read_text('utf8'))
+          z=json.loads((r/'proveniencia_hibrida.json').read_text('utf8'))
+          assert len(p['shots'])==1 and p['shots'][0]['type']=='video'
+          assert p['shots'][0]['source_in_seconds']==4.5
+          assert p['shots'][0]['video_context_layout']=='quadro_integral'
+          assert p['shots'][0]['evidence']=='literal'
+          assert p['shots'][0]['subject'].startswith('SEQUÊNCIA TEMPORAL CONDENSADA')
+          assert len(p['shots'][0]['progressao_visual']['eventos'])==3
+          assert z['estado']=='ORIGINAIS_SHA_VERIFICADOS'
+          assert z['aprovacao_editorial'] is False
+          print('AÇÕES REAIS POR REFERENTE E TEMPO, NÃO POR PALAVRA-CHAVE')
+          PY
+      - name: Compilar o compositor existente
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Renderizar prova da janela REAL sem áudio nem publicação
+        timeout-minutes: 10
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_acao_roteiro/prova_acao_curiosity.mp4 --props=../qa_acao_roteiro/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Conferir pixels e parâmetros da prévia
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height -of json qa_acao_roteiro/prova_acao_curiosity.mp4 > qa_acao_roteiro/metadata.json
+          ffmpeg -hide_banner -loglevel error -y -i qa_acao_roteiro/prova_acao_curiosity.mp4 -vf "fps=2.2,scale=270:480,tile=4x3" -frames:v 1 qa_acao_roteiro/contato_12_quadros.jpg
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          root=Path('qa_acao_roteiro')
+          m=json.loads((root/'metadata.json').read_text())
+          v=[x for x in m['streams'] if x['codec_type']=='video']
+          assert len(v)==1 and v[0]['width']==540 and v[0]['height']==960
+          assert abs(float(m['format']['duration'])-4.8)<.08
+          assert not any(x['codec_type']=='audio' for x in m['streams'])
+          raw=root/'prova_acao_curiosity.mp4'
+          result={'status':'PROVA_PRIVADA_ORIGINAL_NASA_SEM_HOMOLOGACAO_DE_PUBLICACAO',
+              'sha256_render':hashlib.sha256(raw.read_bytes()).hexdigest(),
+              'duracao_s':float(m['format']['duration']),
+              'revisao_visual':'PENDENTE',
+              'direitos':'REVISAO_PENDENTE',
+              'temporalidade':'SEQUENCIA_ACELERADA_DE_IMAGENS',
+              'pedra_solta_visualmente':'NAO_AFIRMADO','publicar':False,'telegram':False}
+          (root/'resultado.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          print(json.dumps(result,ensure_ascii=False))
+          PY
+      - name: Guardar vídeo privado e relatórios (não master NASA)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-diretor-acao-curiosity-privado
+          path: qa_acao_roteiro/
+          retention-days: 5
+          if-no-files-found: warn

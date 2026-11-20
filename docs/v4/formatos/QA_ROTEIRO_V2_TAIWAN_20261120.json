@@ -1,0 +1,64 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "Teste do diretor a partir do contrato V2 — cadeia dos chips (não é episódio final)",
+  "roteiro": {
+    "cenas": [
+      {
+        "id": "fabrica",
+        "duracao_s": 3,
+        "fala": "A Fab 18 da TSMC fica em Taiwan e produz chips avançados.",
+        "acontecimento": {
+          "id": "fab18_esta_em_taiwan",
+          "tipo": "lugar",
+          "sujeito": "TSMC Fab 18",
+          "acao": "existe em Taiwan",
+          "mostrar": "mostrar exterior identificado da fábrica",
+          "fonte": "https://www.tsmc.com/english/dedicatedFoundry/technology/logic/l_3nm"
+        }
+      },
+      {
+        "id": "euv",
+        "duracao_s": 6.9,
+        "fala": "Na litografia EUV, a luz segue pela máscara e espelhos até projetar o padrão sobre a camada fotossensível do wafer.",
+        "acontecimento": {
+          "id": "euv_projeta_padrao",
+          "tipo": "mecanismo",
+          "sujeito": "sistema óptico EUV",
+          "acao": "projeta padrão no wafer",
+          "estado_inicial": "resist não exposto",
+          "estado_final": "resist exposto",
+          "mostrar": "mostrar a luz, a máscara, os espelhos e o resist",
+          "fonte": "https://www.asml.com/en/technology/lithography-principles",
+          "dados": {
+            "acoes_necessarias": [
+              "source",
+              "reticle",
+              "projection",
+              "wafer"
+            ],
+            "fases_necessarias": [
+              "origem",
+              "transformacao",
+              "resultado"
+            ]
+          }
+        }
+      },
+      {
+        "id": "risco",
+        "duracao_s": 3.5,
+        "fala": "Um terremoto real atingiu Taiwan em abril de 2024; é preciso apresentar um registro autêntico, não filmagens de outro país.",
+        "acontecimento": {
+          "id": "terremoto_de_2024",
+          "tipo": "evento_historico",
+          "sujeito": "terremoto de Taiwan em 2024",
+          "acao": "atingiu a região",
+          "mostrar": "registro do terremoto de 2024 especificamente em Taiwan",
+          "fonte": "https://www.usgs.gov/news/featured-story/strong-quake-and-aftershocks-rattle-eastern-taiwan"
+        }
+      }
+    ]
+  }
+}

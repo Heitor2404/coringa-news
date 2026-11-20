@@ -276,12 +276,14 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({s
  * Mecanismos 2D são reenquadrados pelo tipo de renderizador, nunca pelo tema.
  */
 const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;portraitExperiment:boolean}> = ({shot,p,t,subtitleMode,portraitExperiment}) => {
-  if (portraitExperiment && shot.type==='mechanism' &&
+  if (portraitExperiment && !subtitleMode && shot.type==='mechanism' &&
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')) {
     // Vertical-first: objetos novos em SVG 620x682; não existe zoom nem crop
     // de uma arte feita para 1080x1920. Toda ação essencial fica na mesma
     // janela segura e a informação do roteiro não é repetida no SVG.
-    const palco=subtitleMode?SAFE.visual:MECH.visual;
+    // O renderer imersivo dispõe de DUAS faixas independentes autorizadas
+    // pelos perfis de UI: largo acima de y840; estreito abaixo.
+    // Não aplicar a voz: subtitle_mode preserva exclusivamente sua faixa.
     return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 53%,#193950,#081B2B 57%,#050F1B 100%)'}}>
       <AbsoluteFill style={{opacity:.11,backgroundSize:'94px 94px',
         backgroundImage:'linear-gradient(to right,#7A9FB4 1px,transparent 1px),linear-gradient(to bottom,#7A9FB4 1px,transparent 1px)'}}/>
@@ -320,9 +322,7 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
             fill="none" stroke="#487489" strokeWidth="10" opacity=".21"/>
         </g>}
       </svg>
-      <div data-safe-role="visual" style={{...rectStyle(palco)}}>
-        <Body shot={shot} p={p} t={t} portrait/>
-      </div>
+      <Body shot={shot} p={p} t={t} portrait/>
     </AbsoluteFill>;
   }
   if (shot.type==='mechanism') {

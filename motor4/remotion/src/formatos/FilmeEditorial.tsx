@@ -440,7 +440,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       color:OFF_WHITE,letterSpacing:.8,whiteSpace:'nowrap'}}>
       CORINGA <span style={{color:GOLD}}>EXPLICA</span>
     </div>
-    <div data-safe-role="section" style={{...safeSlot('section'),
+    <div data-safe-role="section" style={{...(portraitExperiment&&shot.type==='mechanism'&&
+      (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')?
+      rectStyle(MECH.mechanism_section):safeSlot('section')),
       fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:22,
       color:'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
@@ -451,7 +453,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <div data-safe-role="mechanism_headline"
         style={{...rectStyle(MECH.headline),color:OFF_WHITE,
           fontFamily:'Inter,Arial,sans-serif',fontWeight:900,
-          lineHeight:1.06,letterSpacing:-.6,fontSize:shot.headline.length>36?29:33}}>
+          lineHeight:1.06,letterSpacing:-.6,
+          overflow:'hidden',overflowWrap:'break-word',
+          fontSize:shot.headline.length>50?31:shot.headline.length>38?36:
+            shot.headline.length>27?42:46}}>
         {shot.headline}
       </div>}
     {shot.type==='mechanism'&&!subtitleMode&&<div data-safe-role="mechanism_step"

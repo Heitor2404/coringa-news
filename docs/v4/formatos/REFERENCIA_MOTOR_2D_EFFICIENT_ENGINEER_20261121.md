@@ -84,3 +84,37 @@ Essa estrutura não gera qualquer mecanismo do zero por magia. **É biblioteca c
 
 ## 6. Parecer
 O melhor trecho para emular como **SISTEMA** é a alavanca em **01:35–04:30**. O vídeo não ganha clareza por exibir vários cards, fazer uma câmera frenética ou encher o rodapé com decoração: ganha porque o espectador consegue acompanhar **o mesmo objeto mudando de estado**. Nosso padrão 2D deve priorizar essa gramática e ser um mecanismo autêntico sem copiar a estética autoral do canal de referência.
+
+
+## 7. Comparação posterior — segundo vídeo enviado (colisões e π)
+
+**Fonte estudada:** upload do usuário `videoplayback 4.mp4` de 21/11/2026, 26min07s, 640×360, 30fps, com áudio. Registro do vídeo explica contagem de colisões de dois blocos, relações 3, 31, 314, 3.141… conforme razão de massas; depois deriva energia/momento, plano de estados e geometria circular. A análise inspecionou quadros regulares de 30 em 30 segundos ao longo de todo o arquivo e amostra adicional de 10 em 10 segundos nos primeiros seis minutos. NÃO se trata de validação física rigorosa da derivação, nem de transcrição completa da locução.
+
+**Observações concretas sobre o vídeo:**
+- ~00:50–03:40: começa com apenas parede, dois blocos, plano de apoio e contador de colisões; varia massa e mostra 3/31/314/3.141… colisões. Posição dos atores e contador derivam de um estado único da simulação, sem remontar a cena a cada evento.
+- ~03:40–04:30: insere registro de experimento físico e princípios de resolução de problemas, abrindo um novo raciocínio.
+- ~04:40–06:15: acrescenta fórmulas de energia e momento com valores e setas ligados às colisões; o dado muda quando o estado físico muda.
+- ~06:20–13:30: introduz plano de estados, curva e restrições geométricas. Mantém blocos na mesma tela, pequenos na base, para associar movimento observado e abstração matemática. A curva/diagrama recebe camadas sem fragmentar completamente o contexto.
+- ~13:30–22:45: explora geometria circular, reflexões, arcos, ângulos e limites; grande parte da narrativa é predominantemente matemática abstrata. Elementos e textos finos pequenos em tela 16:9.
+- ~23:00–26:07: retoma a contagem e apresenta conclusões/encerramento. Há trechos de slides muito simples e muito espaço preto.
+- **Não é 2D puro em todos os frames:** os blocos e a parede têm sombras, perspectiva e aparência de volume simples, enquanto gráficos e fórmulas são vetoriais 2D. Essa aparência 2.5D é viável no Remotion/SVG.
+
+### O que aproveitar (engenharia de animação)
+1. **Estado canônico único:** `simulationState(t)` determina posição, velocidade, contador, restrições e destaque. Nada muda arbitrariamente porque mudou o card.
+2. **Camadas sincronizadas:** o mesmo evento altera o objeto físico e também a seta, medição, número ou gráfico correspondente. A física é a fonte de dados da UI editorial.
+3. **Transformações estáveis:** novas fórmulas e diagramas entram como explicação do estado que já existia, em vez de apagar tudo e recomeçar o desenho.
+4. **Depuração visual:** seria útil permitir que os objetos declarem pontos de ligação, área segura, estado e transições verificáveis em testes.
+
+### O que NÃO escolher como estética principal do Coringa
+- Fundo predominantemente preto sem material ou ambiente: serve ao formalismo matemático, não demonstra sozinho bom acabamento documental.
+- Letras/fórmulas muito finas e pequenas, insuficientes na tela de celular 9:16.
+- Longos períodos com objetos pequenos no rodapé e gráfico distante; nossa UI orgânica agravaria essa limitação.
+- Fórmulas, contadores e matemática abstrata aplicadas a todo tema, mesmo quando não esclarecem um fato.
+
+### Decisão objetiva para o MOTOR
+- **The Efficient Engineer = referência principal de composição, narrativa causal e hierarquia visual.** Não copiar imagens, texturas, fundo, modelos nem cenas.
+- **Segundo vídeo das colisões e π = referência principal de engenharia de estados e ligação física↔dados.** Não copiar a estética preta, a tipografia matemática ou o ritmo de vídeo longo.
+- **Não buscar uma terceira referência genérica agora.** Já há variedade suficiente para escrever um contrato e provar em uma alavanca simples, EUV e eclusa. Se a futura prova falhar por questão estética específica, pesquisar então uma referência de animação técnica vetorial 2D estritamente nesse aspecto.
+- **Sem mudar ferramentas nem criar outro motor:** Remotion + React/SVG já são adequados. Manim é uma inspiração de abordagem, não migração.
+- **Prova de generalização obrigatória:** biblioteca de objetos e relações + estados determinísticos (sem hardcode do tema). Se falta primitiva, bloquear e registrar capacidade faltante; não esconder ausência de animação com setas aleatórias.
+- Essa decisão de referência NÃO autoriza publicar nem aprova o experimento `MechanismsImmersive`, reprovado pelo usuário.

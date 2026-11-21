@@ -304,9 +304,9 @@ export const CinematicCutaway3D:React.FC<Props>=({
     {/* Mecanismo domina o canvas. A parte baixa é arte, não legenda. */}
     <ThreeCanvas width={1080} height={1460} orthographic={false}
       style={{position:'absolute',left:0,top:685,width:1080,height:1460}}
-      camera={{position:[4.8,2.3,14.2],fov:26.5,near:.1,far:100}}
+      camera={{position:[4.8,2.3,14.2],fov:29.5,near:.1,far:100}}
       onCreated={({camera})=>{
-        camera.lookAt(0,-1.0,0);
+        camera.lookAt(0,-.40,0);
         camera.updateProjectionMatrix();
       }}>
       <group rotation={[0,Math.sin(t*.64)*.042,0]}>

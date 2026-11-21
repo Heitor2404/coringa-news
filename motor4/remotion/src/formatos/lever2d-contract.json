@@ -1,46 +1,46 @@
 {
   "version": 1,
   "status": "PRIVATE_VISUAL_PROBE_NOT_PRODUCTION",
-  "duration": 11.5,
+  "duration": 8.8,
   "geometry": {
     "pivot": [
-      409,
-      720
+      440,
+      710
     ],
-    "beamStartX": 147,
-    "beamEndX": 849,
-    "beamThickness": 33,
-    "loadX": 195,
-    "loadWidth": 116,
-    "loadHeight": 98,
-    "effortX": 849,
+    "beamStartX": 140,
+    "beamEndX": 936,
+    "beamThickness": 40,
+    "loadX": 220,
+    "loadWidth": 147,
+    "loadHeight": 122,
+    "effortX": 915,
     "maxTiltDeg": 11
   },
   "cues": [
     {
       "at": 0,
       "action": "introduce",
-      "label": "UMA BARRA E UM PONTO DE APOIO"
+      "label": "UMA BARRA. UM PONTO DE APOIO."
     },
     {
-      "at": 1.6,
+      "at": 0.9,
       "action": "load",
-      "label": "A CARGA FICA NO BRAÇO MAIS CURTO"
+      "label": "O PESO FICA PERTO DO APOIO"
     },
     {
-      "at": 3.5,
+      "at": 2.15,
       "action": "effort",
-      "label": "APLICAMOS FORÇA MAIS LONGE DO APOIO"
+      "label": "A FORÇA ATUA MAIS LONGE"
     },
     {
-      "at": 5.3,
+      "at": 3.55,
       "action": "actuate",
-      "label": "A FORÇA DESCE. A CARGA SOBE."
+      "label": "UM LADO DESCE. O OUTRO SOBE."
     },
     {
-      "at": 8.7,
+      "at": 6.35,
       "action": "explain",
-      "label": "BRAÇO MAIOR = MENOS FORÇA NECESSÁRIA"
+      "label": "BRAÇO LONGO, MENOS FORÇA NECESSÁRIA"
     }
   ],
   "qa": {
@@ -57,6 +57,16 @@
     "rightIconsStartY": 840,
     "minimumClearanceBeforeIcons": 14,
     "copyright": "ORIGINAL_VECTOR_NO_COPIED_ASSETS",
-    "publication": "BLOCKED"
+    "publication": "BLOCKED",
+    "actorStage": {
+      "scaleX": 1.06,
+      "scaleY": 1.045,
+      "origin": [
+        520,
+        760
+      ]
+    },
+    "criticalMinimumLeftX": 120,
+    "criticalMaximumRightX": 960
   }
 }

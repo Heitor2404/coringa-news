@@ -24,6 +24,83 @@ REF_ID = re.compile(r"^[a-zA-Z0-9_.:-]{2,100}$")
 MODES = {"video", "modelo_3d"}
 METHODS = {"inspecao_humana_quadros", "inspecao_ia_quadros"}
 MAX_ITEMS = 6
+_GENERIC_SEARCH = {"animation", "animated", "3d", "2d", "mechanism",
+                   "cutaway", "educational", "how", "works", "operation",
+                   "four", "stroke", "engine", "blood", "flow", "model",
+                   "working", "diagram", "science"}
+
+
+def termos_essenciais(consultas: list[str]) -> list[str]:
+    """Termos curtos de objeto: candidatos por metadata; nao prova visual."""
+    out = []
+    for c in consultas:
+        words = re.findall(r"[a-zA-Z]{4,}", c.lower())
+        selected = [w for w in words if w not in _GENERIC_SEARCH]
+        if not selected:
+            selected = words
+        for word in selected[:2]:
+            if word not in out:
+                out.append(word)
+    return out[:3]
+
+
+def buscar_commons_animacoes(consultas: list[str], get=None) -> tuple[list[dict],list[str]]:
+    """Pesquisa Wikimedia por imagens animadas e video, sem restringir a HD.
+
+    O acervo de footage historico V4 rejeita tecnicos pequenos por tamanho.
+    Aqui somente entram como REFERENCIA de estudo, nunca como prova publicavel.
+    """
+    import html
+    get = get or requests.get
+    found, errors = [], []
+    for term in termos_essenciais(consultas)[:2]:
+        try:
+            r = get("https://commons.wikimedia.org/w/api.php",
+                    params={"action": "query", "generator": "search",
+                            "gsrsearch": term, "gsrnamespace": 6,
+                            "gsrlimit": 25, "prop": "imageinfo",
+                            "iiprop": "url|mime|extmetadata|size",
+                            "format": "json", "formatversion": 2},
+                    headers=UA, timeout=18)
+            r.raise_for_status()
+            pages = (r.json().get("query") or {}).get("pages") or []
+            for page in pages:
+                if not isinstance(page, dict):
+                    continue
+                inf = (page.get("imageinfo") or [{}])[0]
+                mime = str(inf.get("mime") or "")
+                if mime not in ("image/gif", "video/webm", "video/ogg",
+                                "video/mp4", "application/ogg"):
+                    continue
+                url = inf.get("url")
+                if not _https(url, {"upload.wikimedia.org"}):
+                    continue
+                title = str(page.get("title") or "")[:180]
+                if not title:
+                    continue
+                page_url = inf.get("descriptionurl")
+                if not _https(page_url, {"commons.wikimedia.org"}):
+                    # A pagina de descricao e a origem editorial da imagem.
+                    from urllib.parse import quote
+                    page_url = "https://commons.wikimedia.org/wiki/" + quote(
+                        title.replace(" ", "_"), safe=":_")
+                md = inf.get("extmetadata") or {}
+                license_name = html.unescape(str((md.get("LicenseShortName") or {}).get("value") or ""))[:100]
+                creator = re.sub("<[^>]+>", " ", str((md.get("Artist") or {}).get("value") or ""))
+                found.append({
+                    "id": "commons-" + hashlib.sha256(url.encode()).hexdigest()[:16],
+                    "midia": "animacao_gif" if mime=="image/gif" else "video",
+                    "provedor": "Wikimedia Commons",
+                    "titulo": title, "pagina": page_url, "origem_media": url,
+                    "consulta": term, "licenca_declarada": license_name,
+                    "credito_declarado": html.unescape(creator).strip()[:250],
+                    "licenca_verificada": False,
+                    "movimento_observado": False,
+                    "status": "CANDIDATO_SEM_INSPECAO",
+                })
+        except Exception as exc:
+            errors.append("commons:"+type(exc).__name__+":"+str(exc)[:120])
+    return found[:MAX_ITEMS], errors
 
 
 def _https(url: object, domains: set[str] | None = None) -> bool:
@@ -67,7 +144,7 @@ def buscar_modelos_3d(consultas: list[str], get=None) -> tuple[list[dict], list[
     """
     get = get or requests.get
     encontrados, erros = [], []
-    for termo in consultas[:2]:
+    for termo in termos_essenciais(consultas)[:2]:
         try:
             resp = get("https://api.sketchfab.com/v3/search",
                        params={"type": "models", "q": termo,
@@ -147,15 +224,18 @@ def descobrir(brief: dict, buscar=None, get=None) -> dict:
     validar_brief(brief)
     queries = _words(brief["consultas_en"], limit=4)
     v, ve = buscar_videos(queries, buscar=buscar)
+    # Stubs offline podem isolar o provedor existente para testes.
+    commons, ce = (buscar_commons_animacoes(queries)
+                   if buscar is None else ([], []))
     m, me = buscar_modelos_3d(queries, get=get)
     unique: dict[str, dict] = {}
-    for item in v + m:
+    for item in v + commons + m:
         unique.setdefault(item["id"], item)
     return {
         "versao": 1, "brief_id": brief["id"],
         "estado": "CANDIDATOS_NAO_INSPECIONADOS" if unique else "SEM_REFERENCIAS",
         "candidatos": list(unique.values()),
-        "erros": ve + me,
+        "erros": ve + ce + me,
         "publicar": False,
         "observacao_visual": "NAO_EXECUTADA",
         "renderer_aprovado": None,

@@ -131,3 +131,34 @@ def test_recurso_3d_nao_e_pretendido_renderizado():
     assert d["candidatos"][0]["modelo_editavel"] == "NAO_VERIFICADO"
     assert d["candidatos"][0]["download_autorizado"] == "NAO_VERIFICADO"
     assert R.planejar(b,d,[])["renderer"] is None
+
+class CommonsResponse:
+    def raise_for_status(self):
+        pass
+    def json(self):
+        return {"query":{"pages":[
+            {"title":"File:Piston motion.gif","imageinfo":[{
+                "url":"https://upload.wikimedia.org/wikipedia/commons/p/p1/Piston_motion.gif",
+                "mime":"image/gif",
+                "descriptionurl":"https://commons.wikimedia.org/wiki/File:Piston_motion.gif",
+                "extmetadata":{"LicenseShortName":{"value":"CC BY-SA 4.0"}}
+            }]},
+            {"title":"File:Static diagram.png","imageinfo":[{
+                "url":"https://upload.wikimedia.org/wikipedia/commons/static.png",
+                "mime":"image/png"}]}
+        ]}}
+
+def test_descoberta_commons_inclui_gif_mas_nao_afirma_movimento_inspecionado():
+    def fake_commons(url, **kwargs):
+        assert "commons.wikimedia.org" in url
+        assert kwargs["params"]["gsrnamespace"] == 6
+        return CommonsResponse()
+    found, errors=R.buscar_commons_animacoes(
+        ["four stroke piston engine cutaway animation"],get=fake_commons)
+    assert not errors
+    assert len(found)==1
+    assert found[0]["midia"]=="animacao_gif"
+    assert found[0]["titulo"].endswith("Piston motion.gif")
+    assert found[0]["licenca_verificada"] is False
+    assert found[0]["movimento_observado"] is False
+    assert R.termos_essenciais(["four stroke piston engine cutaway animation"])[0]=="piston"

@@ -7,7 +7,8 @@ FilmeEditorial, NTC, DOSSIÊ ou main.
 
 - Python: src/v4/formatos/referencias_mecanismos.py.
 - Recupera candidatos de **video** a partir de src/v4/acervo_v4.py (nao duplica
-  Commons/Archive/Pixabay) e de **modelos 3D** via pesquisa publica de metadados
+  Commons/Archive/Pixabay) de GIFs/vídeos animados no Wikimedia Commons (inclusive baixas resoluções
+  para estudo) e de **modelos 3D** via pesquisa publica de metadados
   Sketchfab (nao baixa modelos). Sem cota Claude.
 - Gera referencia id, titulo, pagina, meio, declaracao de fonte e marca
   CANDIDATO_SEM_INSPECAO.
@@ -49,3 +50,13 @@ Fontes de pesquisa: Commons/Archive ja existentes no acervo V4.
 Sketchfab Data API /v3/search (metadados); downloads exigem autorizacao/
 autenticacao quando aplicavel. NASA 3D Resources e Smithsonian Open Access
 sao alternativas de catalogo 3D a integrar apos prova de busca.
+
+## Revisão após primeiro teste de rede
+
+No primeiro run live, a pesquisa original retornou 0 candidatos para pistão
+ e 1 vídeo histórico para circulação cardíaca, 0 modelos 3D. Isso mostrou que o
+acervo V4 prioriza footage documentário e perde animações técnicas curtas.
+A revisão adiciona MediaWiki Commons (GIF/WebM/Ogg/MP4) sem filtro de resolução
+para USO COMO REFERÊNCIA e encurta termos Sketchfab por ator relevante.
+A busca real precisa ser reexecutada; nem GIF nem modelo localizado significa
+reconstrução validada.

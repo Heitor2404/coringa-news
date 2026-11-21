@@ -61,6 +61,64 @@ def quadros_gif(origem: Path, reference_id: str) -> tuple[list[bytes], list[dict
     return images, inspected, sha
 
 
+
+def quadros_video(origem: Path, reference_id: str) -> tuple[list[bytes], list[dict], str]:
+    """Usa extrair_quadros EXISTENTE; confirma SHA do video e de cada frame.
+
+    Sem video local disponivel, NAO finge que os 5 jpgs sao prova de origem.
+    """
+    folder = Path(origem)
+    meta = json.loads((folder / "frames_meta.json").read_text(encoding="utf8"))
+    if meta.get("referencia_id") != reference_id:
+        raise ValueError("F-REFERENCIA-ID: manifesto de outro video")
+    sha = meta.get("arquivo_sha256")
+    location = meta.get("arquivo_origem")
+    if not isinstance(sha,str) or not SHA.fullmatch(sha) or not isinstance(location,str):
+        raise ValueError("F-REFERENCIA-SHA: falta origem do video")
+    video = Path(location)
+    if not video.is_file() or video.suffix.lower() not in (".mp4",".webm",".mov"):
+        raise ValueError("F-REFERENCIA-VIDEO-INACESSIVEL")
+    hasher = hashlib.sha256()
+    with video.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024*1024),b""):
+            hasher.update(chunk)
+    if hasher.hexdigest()!=sha:
+        raise ValueError("F-REFERENCIA-SHA: video original alterado")
+    items = meta.get("quadros") or []
+    if not isinstance(items,list) or not 3<=len(items)<=8:
+        raise ValueError("F-QUADROS-AMOSTRA")
+    images, sampled = [], []
+    previous = -1.0
+    for ordinal,frame in enumerate(items):
+        if not isinstance(frame,dict):
+            raise ValueError("F-QUADROS-META")
+        filename = frame.get("arquivo")
+        second = frame.get("segundo")
+        declared = frame.get("sha256")
+        if (not isinstance(filename,str)
+                or not re.fullmatch(r"ref_[0-9]{2}\.jpg",filename)
+                or not isinstance(second,(float,int)) or isinstance(second,bool)
+                or not previous < second
+                or not isinstance(declared,str) or not SHA.fullmatch(declared)):
+            raise ValueError("F-QUADROS-META")
+        previous = float(second)
+        p = folder / filename
+        if not p.is_file() or p.stat().st_size>5_000_000:
+            raise ValueError("F-QUADROS-AUSENTES")
+        data = p.read_bytes()
+        if _hash(data)!=declared:
+            raise ValueError("F-QUADROS-SHA: jpg diferente do extraido")
+        try:
+            with Image.open(io.BytesIO(data)) as im:
+                if im.format!="JPEG" or min(im.size)<64:
+                    raise ValueError("F-QUADROS-ILEGIVEIS")
+                im.verify()
+        except OSError as e:
+            raise ValueError("F-QUADROS-CORROMPIDOS") from e
+        images.append(data)
+        sampled.append({"ordinal":ordinal, "indice":second, "sha256":declared})
+    return images,sampled,sha
+
 def prompt(brief: dict, n: int) -> str:
     pedido = json.dumps({
         "pergunta": brief.get("pergunta"),
@@ -94,7 +152,12 @@ def inspecionar(brief: dict, candidato: dict, pasta: Path, chamar_visao=None) ->
               "estado": "BLOQUEADO", "revisao_humana": "PENDENTE",
               "bloqueios": [], "observacao": None}
     try:
-        images, frames, sha = quadros_gif(pasta, rid)
+        if candidato.get("midia") == "animacao_gif":
+            images, frames, sha = quadros_gif(pasta, rid)
+        elif candidato.get("midia") == "video":
+            images, frames, sha = quadros_video(pasta, rid)
+        else:
+            raise ValueError("F-REFERENCIA-MIDIA: nao suporta modelo 3D sem animacao")
         report["origem_sha256"] = sha
         report["quadros"] = frames
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
@@ -173,7 +236,10 @@ def inspecionar(brief: dict, candidato: dict, pasta: Path, chamar_visao=None) ->
 
 def executar(brief: dict, descoberta: dict, pasta: Path, destino: Path,
              chamar_visao=None) -> dict:
-    meta = json.loads((Path(pasta) / "inspecao.json").read_text(encoding="utf8"))
+    folder = Path(pasta)
+    source_meta = folder / ("inspecao.json" if (folder/"inspecao.json").is_file()
+                            else "frames_meta.json")
+    meta = json.loads(source_meta.read_text(encoding="utf8"))
     reference_id = meta.get("referencia_id")
     candidate = next((x for x in descoberta.get("candidatos") or []
                       if x.get("id") == reference_id), None)

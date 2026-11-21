@@ -156,3 +156,41 @@ def test_grava_inspecao_e_planejamento_sem_modificar_producao(tmp_path):
     assert plan["planejamento"]["renderer"]=="optical_projection"
     assert (output/"inspecao_semantica.json").exists()
     assert (output/"planejamento_inspecionado.json").exists()
+
+
+def test_video_local_com_sha_frames_usa_mesmo_planejador(tmp_path):
+    import json,hashlib
+    c={"id":"ref-1","midia":"video","pagina":"https://example.org/movie"}
+    media=tmp_path/"original.mp4"
+    media.write_bytes(b"\x00\x00\x00\x20synthetic-video-not-for-render" * 30)
+    manifest={"referencia_id":c["id"],"arquivo_origem":str(media.resolve()),
+              "arquivo_sha256":hashlib.sha256(media.read_bytes()).hexdigest(),
+              "quadros":[]}
+    for i in range(5):
+        f=tmp_path/f"ref_{i:02d}.jpg"
+        Image.new("RGB",(120,120),color=(i*35,70,140)).save(f,"JPEG")
+        manifest["quadros"].append({
+            "arquivo":f.name,"segundo":float(i+1),
+            "sha256":hashlib.sha256(f.read_bytes()).hexdigest()
+        })
+    (tmp_path/"frames_meta.json").write_text(json.dumps(manifest))
+    imgs,frames,sha=I.quadros_video(tmp_path,c["id"])
+    assert len(imgs)==5 and len(frames)==5
+    assert len(sha)==64
+    result=I.inspecionar(brief(),c,tmp_path,visual)
+    assert result["estado"]=="EVENTOS_VISUAIS_PROVISORIOS"
+    plan=R.planejar(brief(),{"candidatos":[c]},[result["observacao"]])
+    assert plan["renderer"]=="optical_projection"
+    assert not plan["publicar"]
+    media.write_bytes(media.read_bytes()+b"bad")
+    blocked=I.inspecionar(brief(),c,tmp_path,visual)
+    assert blocked["observacao"] is None
+    assert "F-REFERENCIA-SHA" in blocked["bloqueios"][0]
+
+
+def test_nao_interpreta_thumbnail_3d_como_movimento(tmp_path):
+    c=setup(tmp_path)
+    c["midia"]="modelo_3d"
+    r=I.inspecionar(brief(),c,tmp_path,visual)
+    assert r["observacao"] is None
+    assert "F-REFERENCIA-MIDIA" in r["bloqueios"][0]

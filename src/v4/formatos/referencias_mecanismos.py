@@ -242,7 +242,7 @@ def descobrir(brief: dict, buscar=None, get=None) -> dict:
     }
 
 
-def extrair_quadros(caminho: Path, saida: Path, run=None) -> dict:
+def extrair_quadros(caminho: Path, saida: Path, run=None, referencia_id=None) -> dict:
     """Extrai frames de um arquivo LOCAL; nao afirma o que aparece nos frames."""
     run = run or subprocess.run
     caminho = Path(caminho)
@@ -272,9 +272,12 @@ def extrair_quadros(caminho: Path, saida: Path, run=None) -> dict:
             capture_output=True, timeout=40, check=True)
         if not fn.is_file() or fn.stat().st_size == 0:
             raise ValueError("F-FRAME-VAZIO")
-        arquivos.append({"segundo": sec, "arquivo": fn.name})
+        arquivos.append({"segundo": sec, "arquivo": fn.name,
+                         "sha256": hashlib.sha256(fn.read_bytes()).hexdigest()})
     manifesto = {
         "arquivo_sha256": hashlib.sha256(caminho.read_bytes()).hexdigest(),
+        "arquivo_origem": str(caminho.resolve()),
+        "referencia_id": referencia_id,
         "duracao_s": round(dur, 3),
         "w": video.get("width"), "h": video.get("height"),
         "quadros": arquivos,

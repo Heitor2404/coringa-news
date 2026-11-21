@@ -39,6 +39,24 @@ jobs:
               assert not j['publicar'] and j['renderer'] is None
               assert j['estado']=='SEM_REFERENCIAS'
           PY
+      - name: Amostrar um video REAL do acervo local, offline
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          from src.v4.formatos.referencias_mecanismos import extrair_quadros
+          from src.v4.formatos.inspecionar_referencia import quadros_video
+          caminho=Path('tests/midia/video_horizontal_navio.mp4')
+          destino=Path('saida_ref/video_local')
+          m=extrair_quadros(caminho,destino,referencia_id='regressao-navio')
+          images,frames,sha=quadros_video(destino,'regressao-navio')
+          assert len(images)==5 and len(frames)==5
+          assert sha==m['arquivo_sha256']
+          print('AMOSTRAGEM_REAL_OK',len(images),'quadros, hash',sha[:16])
+          PY
       - name: Garimpo publico REAL — pistao e coracao, sem Gemini
         if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 5

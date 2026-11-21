@@ -76,7 +76,7 @@ def test_agua_e_navio_nunca_se_separam_ao_subir():
     s=SCENE.read_text('utf8')
     assert 'const boatShift=waterY-959;' in s
     assert 'const flow=t>=inlet&&t<release;' in s
-    assert 'M166 878 V1011 H355 V993' in s
+    assert 'M166 878 V1440 H355 V993' in s
     assert 'strokeDashoffset={-t*106}' in s
     assert "gateShift:open*57" in s
     assert 'const s=lockState(t,events)' in s
@@ -135,6 +135,9 @@ def test_arte_2_5d_original_sem_assets_terceiros():
     a=SCENE.read_text('utf8')
     b=SHELL.read_text('utf8')
     assert 'a-lock-sky' in b and 'a-euv-backdrop' in b
+    assert 'Physical machine housing below the optics' in b
+    assert 'Q220 1181' in a  # corte inferior com estratigrafia
+    assert 'scale(1.28 1.05)' in a  # cargueiro agora ocupa mais largura
     assert 'a-ship' in a and 'a-euv-steel' in a
     assert 'Array.from({length:3}' in a   # containers montados em camadas
     assert 'clipPath="url(#a-chamber)"' in a

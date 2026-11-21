@@ -102,6 +102,7 @@ def test_nao_esconde_pecas_essenciais_na_ui_antes_dos_icones():
     assert 'PROVA VISUAL PRIVADA · NÃO PUBLICAR' in scene
     assert 'M195 540 V519 H409 V540 M409 540 V519 H849 V540' in scene
     assert 'M190 885' not in scene  # Medição não cruza mais o suporte.
+    assert '<Label x={915} y={545}' in scene  # Força fora da régua de medição.
     assert 'y={1008}' in scene and '>APOIO</Label>' in scene
 
 

@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "status": "LAB_PRIVADO_NAO_PUBLICAR",
+  "direction": "A_2_5D_VOLUMETRICO",
+  "duration": 7.8,
+  "resolution": [
+    1080,
+    1920
+  ],
+  "roles": {
+    "critical_text_zone": [
+      140,
+      300,
+      770,
+      1240
+    ],
+    "main_stage": [
+      100,
+      510,
+      910,
+      1110
+    ],
+    "side_ui_from_y": 840,
+    "note": "Corpo grande pode chegar a x910 no alto; na parte inferior a silhueta essencial deve continuar em x<=770; cenário é full-bleed"
+  },
+  "subjects": {
+    "lock": {
+      "title": [
+        "COMO A ÁGUA FAZ",
+        "UM NAVIO SUBIR?"
+      ],
+      "category": "ENGENHARIA · ECLUSA",
+      "source": "ESQUEMA ILUSTRATIVO · PRINCÍPIO HIDRÁULICO",
+      "events": [
+        {
+          "at": 0,
+          "action": "hook",
+          "label": "UM NAVIO SUBINDO NA ÁGUA"
+        },
+        {
+          "at": 1.25,
+          "action": "context",
+          "label": "DOIS NÍVEIS DE ÁGUA"
+        },
+        {
+          "at": 2.35,
+          "action": "inlet",
+          "label": "A ÁGUA ENTRA PELO FUNDO"
+        },
+        {
+          "at": 3.7,
+          "action": "rise",
+          "label": "O NAVIO FLUTUA E SOBE"
+        },
+        {
+          "at": 5.65,
+          "action": "release",
+          "label": "OS NÍVEIS SE IGUALAM"
+        }
+      ]
+    },
+    "euv": {
+      "title": [
+        "COMO A LUZ DESENHA",
+        "PADRÕES NO WAFER?"
+      ],
+      "category": "TECNOLOGIA · LITOGRAFIA EUV",
+      "source": "ESQUEMA ILUSTRATIVO · PRINCÍPIO EUV / ASML",
+      "events": [
+        {
+          "at": 0,
+          "action": "hook",
+          "label": "UM PADRÃO NASCE NO WAFER"
+        },
+        {
+          "at": 1.15,
+          "action": "source",
+          "label": "UMA FONTE PRODUZ LUZ EUV"
+        },
+        {
+          "at": 2.45,
+          "action": "reticle",
+          "label": "A MÁSCARA REFLETE O PADRÃO"
+        },
+        {
+          "at": 3.65,
+          "action": "mirrors",
+          "label": "ESPELHOS DIRIGEM A PROJEÇÃO"
+        },
+        {
+          "at": 5.1,
+          "action": "wafer",
+          "label": "A RESINA RECEBE A EXPOSIÇÃO"
+        }
+      ]
+    }
+  },
+  "qa": {
+    "publish": false,
+    "telegram": false,
+    "narration": false,
+    "deviceUI": "NOT_VERIFIED",
+    "figureAssets": "SVG_ORIGINAL",
+    "referencePolicy": "style principles, not copying still frames"
+  }
+}

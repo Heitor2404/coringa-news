@@ -36,9 +36,9 @@ const scene=(cfg:RigGeometry,t:number,duration:number)=>{
   const s=rigState(theta,cfg);
   const k=0.0096;
   const cr=new Vector3((s.crankPin.x-cfg.centerX)*k,
-                       -(s.crankPin.y-cfg.centerY)*k-1.35,0.26);
+                       -(s.crankPin.y-cfg.centerY)*k-1.35,0.84);
   const pi=new Vector3(0,
-                       -(s.pistonPin.y-cfg.centerY)*k-1.35,0.26);
+                       -(s.pistonPin.y-cfg.centerY)*k-1.35,0.84);
   return {theta,cr,pi,displacement:s.displacement*k,
     wheelRadius:cfg.radius*k,rodLength:cfg.rodLength*k};
 };
@@ -286,6 +286,8 @@ export const CinematicCutaway3D:React.FC<Props>=({
   const event=model.steps[stage];
   const changed=t-event.at;
   const appear=ease(changed/.28);
+  const opening=1-ease((t-.42)/.52);
+  const narrative=ease((t-.68)/.26)*ease((t-event.at)/.28);
   const lead=ease((t-.15)/.85);
   return <AbsoluteFill style={{
      background:'#092B5B',color:'#FFFFFF',
@@ -301,20 +303,22 @@ export const CinematicCutaway3D:React.FC<Props>=({
       boxShadow:'0 0 100px 20px rgba(40,211,244,.14)'}}/>
     {/* Mecanismo domina o canvas. A parte baixa é arte, não legenda. */}
     <ThreeCanvas width={1080} height={1460} orthographic={false}
-      style={{position:'absolute',left:0,top:310,width:1080,height:1460}}
-      camera={{position:[4.8,2.3,14.2],fov:32,near:.1,far:100}}
+      style={{position:'absolute',left:0,top:685,width:1080,height:1460}}
+      camera={{position:[4.8,2.3,14.2],fov:26.5,near:.1,far:100}}
       onCreated={({camera})=>{
         camera.lookAt(0,-1.0,0);
         camera.updateProjectionMatrix();
       }}>
-      <Mechanics model={model} focus={event.focus} t={t}
-        duration={configs.duration}/>
+      <group rotation={[0,Math.sin(t*.64)*.042,0]}>
+        <Mechanics model={model} focus={event.focus} t={t}
+          duration={configs.duration}/>
+      </group>
     </ThreeCanvas>
 
     {/* Texto permanece claro na faixa de texto útil.
         Ícones de Reels/TikTok/Shorts NÃO restringem a arte 3D. */}
     <div style={{position:'absolute',top:0,left:0,right:0,height:740,
-      background:'linear-gradient(180deg,rgba(5,25,57,.88) 1%,rgba(8,35,69,.84) 43%,rgba(7,36,74,.0) 100%)',
+      background:'linear-gradient(180deg,rgba(5,25,57,.93) 1%,rgba(8,35,69,.86) 58%,rgba(7,36,74,.0) 100%)',
       pointerEvents:'none'}}/>
     <div style={{position:'absolute',left:102,top:302,
       display:'flex',alignItems:'center',gap:12,fontWeight:920,
@@ -325,33 +329,34 @@ export const CinematicCutaway3D:React.FC<Props>=({
     </div>
     <div style={{position:'absolute',left:102,top:372,
       fontWeight:940,fontSize:66,lineHeight:1.04,letterSpacing:-1.7,
-      maxWidth:780,opacity:1}}>
+      maxWidth:825,opacity:opening}}>
       {model.title[0]}
       <div style={{color:P.gold}}>{model.title[1]}</div>
     </div>
     <div style={{position:'absolute',left:107,top:544,
       fontWeight:760,fontSize:28,color:'#C3F9F6',
-      opacity:lead,maxWidth:760}}>
+      opacity:opening*lead,maxWidth:760}}>
       {model.subtitle.toUpperCase()}
     </div>
 
-    {/* Narração futura substitui ou acompanha esta legenda curta,
-        sempre antes do limite de caption ad (y=1248). */}
-    <div style={{position:'absolute',left:96,top:958,
-      opacity:appear,transform:'translateY('+(1-appear)*23+'px)',
-      maxWidth:687,zIndex:5}}>
-      <div style={{fontSize:22,fontWeight:900,color:P.gold,
-        letterSpacing:2.0,marginBottom:10}}>
+    {/* Faixa de TEXTO protegida no topo. NUNCA cobrir o volante.
+        O corpo da maquina usa o restante do quadro 9:16. */}
+    <div style={{position:'absolute',left:102,top:385,
+      opacity:narrative,
+      transform:'translateY('+(1-narrative)*18+'px)',
+      zIndex:5,maxWidth:840}}>
+      <div style={{fontSize:22,fontWeight:920,color:P.gold,
+        letterSpacing:2.0,marginBottom:15}}>
         {String(stage+1).padStart(2,'0')} / {String(model.steps.length).padStart(2,'0')}
       </div>
-      <div style={{fontWeight:950,fontSize:46,lineHeight:1.03,
-        letterSpacing:-.6,color:'#FFFFFF',
-        textShadow:'0 3px 14px #032C60,0 2px 7px #03204F'}}>
+      <div style={{fontWeight:960,fontSize:59,lineHeight:1.01,
+        maxWidth:820,letterSpacing:-1.1,color:'#FFFFFF',
+        textShadow:'0 3px 16px rgba(2,29,65,.9)'}}>
         {event.label}
       </div>
-      <div style={{marginTop:13,fontWeight:720,fontSize:29,
-        lineHeight:1.12,maxWidth:630,color:'#E5FFFE',
-        textShadow:'0 2px 12px #052243'}}>
+      <div style={{marginTop:15,fontWeight:720,fontSize:29,
+        lineHeight:1.12,maxWidth:810,color:'#DDFFFF',
+        textShadow:'0 2px 13px rgba(2,26,53,.9)'}}>
         {event.detail}
       </div>
     </div>

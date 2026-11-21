@@ -7,6 +7,8 @@ on:
       - "tests/test_referencias_mecanismos.py"
       - "src/v4/formatos/amostrar_referencia.py"
       - "tests/test_amostrar_referencia.py"
+      - "src/v4/formatos/inspecionar_referencia.py"
+      - "tests/test_inspecionar_referencia.py"
       - ".github/workflows/qa-referencias-animadas.yml"
   workflow_dispatch:
 
@@ -25,7 +27,7 @@ jobs:
       - name: Dependencias minimas
         run: python -m pip install -q pytest requests pillow
       - name: Testar roteamento multitema offline sem IA
-        run: python -m pytest -q tests/test_referencias_mecanismos.py tests/test_amostrar_referencia.py
+        run: python -m pytest -q tests/test_referencias_mecanismos.py tests/test_amostrar_referencia.py tests/test_inspecionar_referencia.py
       - name: Demonstrar pesquisa desligada com bloqueio honesto
         run: |
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/motor_pistao.json saida_ref/pistao --sem-rede

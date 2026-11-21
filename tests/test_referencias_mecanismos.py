@@ -45,12 +45,22 @@ def searchvideo(args):
 
 
 def observed(ref):
+    actions=["source","reticle","projection","wafer"]
+    hashes=[format(i+1, "064x") for i in range(5)]
     return [{
         "referencia_id": ref,
         "metodo": "inspecao_ia_quadros",
-        "quadros": [0.5, 1.4, 3.1],
+        "estado":"EVENTOS_VISUAIS_PROVISORIOS",
+        "categoria":"RELEVANTE",
+        "origem_sha256":"f"*64,
+        "quadros": [0.5, 1.4, 3.1, 4.0, 5.0],
+        "quadros_sha256":hashes,
         "atores_visiveis": ["source","reticle","optics","wafer"],
-        "acoes_visiveis": ["source","reticle","projection","wafer"],
+        "acoes_visiveis": actions,
+        "evidencias":[{"acao":a,"antes":i,"depois":i+1,
+                      "hash_antes":hashes[i],"hash_depois":hashes[i+1],
+                      "evidencia":"O elemento se desloca entre os dois quadros de forma observavel."}
+                     for i,a in enumerate(actions)],
         "fases_visiveis": ["origem","transformacao","resultado"],
     }]
 
@@ -165,3 +175,18 @@ def test_descoberta_commons_inclui_gif_mas_nao_afirma_movimento_inspecionado():
     assert found[0]["licenca_verificada"] is False
     assert found[0]["movimento_observado"] is False
     assert R.termos_essenciais(["four stroke piston engine cutaway animation"])[0]=="piston"
+
+def test_nao_confunde_lista_de_acoes_com_acontecimento_observado():
+    b=brief()
+    d=R.descobrir(b,buscar=searchvideo,get=search3d)
+    o=observed(d["candidatos"][0]["id"])
+    o[0].pop("evidencias")
+    assert R.planejar(b,d,o)["renderer"] is None
+
+
+def test_hash_de_frame_divergente_bloqueia_a_selecao():
+    b=brief()
+    d=R.descobrir(b,buscar=searchvideo,get=search3d)
+    o=observed(d["candidatos"][0]["id"])
+    o[0]["evidencias"][0]["hash_depois"]="a"*64
+    assert R.planejar(b,d,o)["renderer"] is None

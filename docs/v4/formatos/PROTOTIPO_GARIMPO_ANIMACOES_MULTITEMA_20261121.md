@@ -90,3 +90,20 @@ pertinencia antes de qualquer recreacao.
 **Numero de testes automatizados offline:** 12 (9 no modulo de pesquisa,
 3 no amostrador de GIF). Nenhum teste comprova qualidade 2D/3D, licenca,
 semantica observada ou video renderizado do pistao/coracao.
+
+
+## 21/11 — Inspeção multimodal de quadros antes/depois (F1)
+
+Implementado src/v4/formatos/inspecionar_referencia.py. Abre original.gif
+amostrado no artefato, valida identidade e SHA-256 do original, gera JPEGs
+dos cinco estados para análise no src.gemini.json_visao (já existente).
+O revisor deve justificar ação por dois índices de quadro e evidência visual.
+A saída é provisória e contém hashes dos quadros; sem visão ou sem arquivo
+original a análise BLOQUEIA. O planejador recusa listas de ações sem hashes e
+eventos detalhados, mesmo se forem compatíveis com o catálogo físico.
+
+Essa etapa NÃO adiciona renderizadores de pistão/coração, nem afirma que
+encontramos referências adequadas. A inspeção real depende de arquivo
+acessível (o último Commons respondeu 429) e serviço multimodal disponível.
+O QA offline utiliza imagens de teste sintéticas e respostas de visão injetadas;
+isso valida o código, não a precisão da visão na internet.

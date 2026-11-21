@@ -307,16 +307,44 @@ def planejar(brief: dict, descoberta: dict, observacoes: list[dict]) -> dict:
             continue
         if x.get("metodo") not in METHODS:
             continue
+        # Sem prova antes/depois associada a SHA, nao escolher renderer por
+        # uma lista que um modelo poderia apenas copiar do briefing.
+        if x.get("estado") not in ("EVENTOS_VISUAIS_PROVISORIOS", "OBSERVACAO_PARCIAL"):
+            continue
+        if x.get("categoria") not in ("RELEVANTE", "PARCIAL"):
+            continue
+        hash_origem = x.get("origem_sha256")
         quadros = x.get("quadros") or []
-        if (not isinstance(quadros, list) or len(quadros) < 2
-                or any(not isinstance(q, (int,float)) or q < 0 for q in quadros)):
+        hashes = x.get("quadros_sha256") or []
+        evidencias = x.get("evidencias") or []
+        if (not isinstance(hash_origem, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", hash_origem)
+                or not isinstance(quadros, list) or not 3 <= len(quadros) <= 8
+                or not isinstance(hashes, list) or len(hashes) != len(quadros)
+                or not all(isinstance(h, str) and re.fullmatch(r"[0-9a-f]{64}",h) for h in hashes)
+                or any(not isinstance(v,(float,int)) or isinstance(v,bool) or v<0 for v in quadros)
+                or any(quadros[i] >= quadros[i+1] for i in range(len(quadros)-1))
+                or not isinstance(evidencias,list)):
             continue
         ações = _words(x.get("acoes_visiveis"))
         fases = _words(x.get("fases_visiveis"))
         atores = _words(x.get("atores_visiveis"))
-        if not ações or not fases or not atores:
+        if not ações or not fases or not atores or len(ações)!=len(evidencias):
             continue
-        validos.append((x, ações, fases, atores))
+        ok = True
+        for action,e in zip(ações,evidencias):
+            if not isinstance(e,dict) or e.get("acao") != action:
+                ok=False;break
+            before,after=e.get("antes"),e.get("depois")
+            if (not isinstance(before,int) or isinstance(before,bool)
+                    or not isinstance(after,int) or isinstance(after,bool)
+                    or not 0 <= before < after < len(quadros)
+                    or e.get("hash_antes") != hashes[before]
+                    or e.get("hash_depois") != hashes[after]
+                    or len(str(e.get("evidencia") or "").strip()) < 24):
+                ok=False;break
+        if ok:
+            validos.append((x, ações, fases, atores))
     if not validos:
         rel["bloqueios"] = ["F-REFERENCIA-NAO-INSPECIONADA"]
         return rel

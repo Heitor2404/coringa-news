@@ -229,20 +229,20 @@ const Photon:React.FC<{d:string;p:number;col?:string}>=({
 })=>{
  const q=Math.max(0,Math.min(1,p));
  return <g opacity={q}>
-   <path d={d} fill="none" stroke={col} strokeWidth="31"
-     strokeLinecap="round" opacity=".16"
+   <path d={d} fill="none" stroke={col} strokeWidth="53"
+     strokeLinecap="round" opacity=".23"
      pathLength={1} strokeDasharray="1" strokeDashoffset={1-q}/>
-   <path d={d} fill="none" stroke={col} strokeWidth="11"
+   <path d={d} fill="none" stroke={col} strokeWidth="16"
      strokeLinecap="round" pathLength={1} strokeDasharray="1"
      strokeDashoffset={1-q}/>
-   <path d={d} fill="none" stroke="#FFFFFF" strokeWidth="2.5"
+   <path d={d} fill="none" stroke="#FFFFFF" strokeWidth="4.5"
      opacity=".83" strokeLinecap="round" pathLength={1}
      strokeDasharray="1" strokeDashoffset={1-q}/>
  </g>;
 };
 export const euvState=(t:number,events:readonly Event[])=>{
  const a=(name:string)=>actionTime(events,name);
- const source=progress(t,a('hook'),1.0);
+ const source=progress(t,a('hook'),1.65);
  const reflection=progress(t,a('reticle'),.75);
  const mirrors=progress(t,a('mirrors'),.85);
  const resist=progress(t,a('wafer'),.90);
@@ -268,6 +268,13 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
      tone="steel" rx={5}/>
    <ARivet x={208} y={1101} r={7}/>
    <ARivet x={862} y={1101} r={7}/>
+   {/* Fonte entra em atividade com variação VISÍVEL, não apenas uma linha fina.
+       Todo o brilho é convenção didática: EUV real é invisível. */}
+   <circle cx="213" cy="737" r={116+s.source*22}
+     fill="#FFE3A4" opacity={s.source*.22}/>
+   <circle cx="213" cy="737" r={73+s.source*11}
+     fill="none" stroke="#FFE4A1" strokeWidth={8+s.source*7}
+     opacity={s.source*.73}/>
    <circle cx="213" cy="737" r={106+Math.sin(t*2)*5}
      fill="url(#a-euv-glow)" opacity={s.source}/>
    <AJoint x={212} y={740} r={69} active={s.source>.15} accent="#FFCC60"/>
@@ -282,6 +289,8 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
    <circle cx="212" cy="740" r="19" fill={gold} opacity={.45+.55*s.source}/>
    <circle cx="212" cy="740" r="8" fill="#FFFCE0"/>
    {/* Illuminate from source to reflective patterned reticle. */}
+   <path d="M261 704 L534 617 L548 655 L267 763Z"
+     fill="#FFE5A8" opacity={s.source*.23}/>
    <Photon d="M270 725 L535 635" p={s.source} col="#FFF1B8"/>
    {/* Reticle slants to visually deflect the incident ray. Light reflects
        at x513 y664, not through the mask into the optics. */}

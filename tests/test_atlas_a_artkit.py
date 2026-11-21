@@ -47,7 +47,8 @@ def test_gancho_agora_tem_evento_visual_correspondente():
     assert d['subjects']['lock']['events'][0]['action']=='hook'
     assert d['subjects']['euv']['events'][0]['action']=='hook'
     assert "const fill=clamp01((t-hook)/4.9);" in a
-    assert "const source=progress(t,a('hook'),1.0);" in a
+    assert "const source=progress(t,a('hook'),1.65);" in a
+    assert 'opacity={s.source*.23}' in a
     assert 'A ÁGUA JÁ MOVE O NAVIO' in d['subjects']['lock']['events'][0]['label']
     assert 'A LUZ COMEÇA O PERCURSO' in d['subjects']['euv']['events'][0]['label']
     assert 'M270 725 L535 635' in a

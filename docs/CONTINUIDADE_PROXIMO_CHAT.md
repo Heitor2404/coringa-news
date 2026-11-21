@@ -1733,3 +1733,21 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 **Bug encontrado e corrigido:** TypeScript não inferiu tupla de título no JSON. Commit intermediário fez falhar 3 workflows antigos que dependem do mesmo tsc; corrigido por cast explícito e o QA final passou. Documentação detalhada: `docs/v4/formatos/PROVA_CAUSAL_SLIDER_CRANK_2_TEMAS_20261121.md`.
 
 **Próximo passo sensato:** avaliar os dois MP4s com o usuário; corrigir apenas problemas **sistêmicos** de legibilidade/enquadramento e direção de câmera que valem para toda família. Depois demonstrar uma segunda família física e desenvolver compositor de entidades/ações reutilizável. Evitar retornar à eclusa/EUV como único benchmark.
+
+## 93. 21/11 ~20h35 — Câmera semântica 2D reutilizável, prévias atualizadas (slider-crank)
+
+**Pedido:** usuário disse "Prossiga" depois de duas prévias pistão/compressor, com ressalva de que tinham pouco preenchimento visual e a intenção de seguir com enquadramento/direção SISTÊMICOS — sem remendo por tema e sem prejudicar área segura.
+
+**Implementação somente na branch `atlas-direcao-visual-20261118`:**
+- Novo `motor4/remotion/src/formatos/MechanismCamera2D.ts`: função pura `semanticCamera2D` com bbox crítico, intro/detail viewports, alvo físico atual/anterior, mudança por evento e clamps; zoom máximo 1,16 subordinado aos limites. Reutilizável em princípio além do slider-crank, mas AINDA NÃO integrado a outra família.
+- `motor4/remotion/src/formatos/SliderCrankProof.tsx`: física imutável `rigState`, a câmera só enquadra o `Cutaway`; título de abertura dissolve antes do detalhe; realce de cada ator (`piston/rod/crank/intake/outlet`) acompanha estado real da máquina. Sem TSX por tema.
+- `motor4/remotion/src/formatos/slider-crank-proofs.json`: `camera` compartilhada, `compressor.steps[3].at` passou a 7,02s para ficar alinhado com etapa desenhada de saída.
+- Após abrir frame REAL do compressor em 7,35s foi identificado overlap "04/04SAÍDA PRESSURIZADA"; corrigido no layout compartilhado, com contador calculado por quantidade de steps.
+- `tests/test_mechanism_camera_2d.py`: 4 testes, inclusive 252 quadros x 2 sujeitos (além dos 5 testes físicos existentes). `.github/workflows/qa-slider-crank-multitema.yml` usa ambos.
+- Documentação técnica `docs/v4/formatos/CAMERA_SEMANTICA_REUTILIZAVEL_20261121.md` commit `c7f519ca38ebbb785f4dcf8523668cfc34729338`.
+
+**Execução FINAL verificada:** [Actions 44946937219](https://github.com/Heitor2404/coringa-news/actions/runs/44946937219) **SUCCESS** com tsc, 9 testes e 2 renderizações MP4, 8,4s/30fps/540x960/silenciosas. Artifact `14724082789` expira 26/11 20h35 UTC. Arquivos foram baixados/examinados em `/mnt/data/qa_camera_final/` em 21/11: `pistao_A_PRIVADO.mp4`, `compressor_A_PRIVADO.mp4`, `contato_pistao_compressor_10quadros.jpg`, `areas_seguras_3redes.jpg`, `resultado.json`. Links sandbox somente se arquivos forem revalidados no próximo turno. UI plataforma é SIMULADA.
+
+**Auditoria visual:** a máquina ficou perceptivelmente maior quando título sai, a câmera acompanha atores; os clips NÃO perdem pistão, biela ou crank e captions estão dentro da área segura. Verificou-se visualmente frame 7.35s com contador separado de "SAÍDA PRESSURIZADA". Ainda esquemático, sem voz, grande área inferior de fundo (deliberadamente UI segura), qualidade estética humana NÃO aprovada, física termodinâmica/portas simplificada. **Não inventar que o motor recriou vídeo da internet**; a cinemática ainda deriva de um rig físico programado, não de referência multimodal externa. Falta provar segunda família e gerador causal de cenas.
+
+**Próximo passo recomendado:** aplicar diretor de câmera/eventos a família não-slider (polia, alavanca ou hidráulica) usando dados; avaliar vídeo final; atacar biblioteca de atores/relations para mecanismo escolhido a partir de observações de referência, sem ajustes manuais por episódio. Não publicar, não Telegram, preservar produção/NTC/DOSSIÊ/main.

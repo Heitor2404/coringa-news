@@ -58,3 +58,12 @@ Resultados visuais: no quadro C “NAVIO SOBE”, **a marca no topo fica parcial
 5. Não publicar até teste completo com áudio, fact-check, licenças e visual em apps.
 
 **Conclusão:** esta etapa efetivamente produziu uma alternativa estética nova e comparativos inspecionáveis. **Não produziu uma animação nova** nem demonstrou um compositor universal.
+
+
+## Decisão posterior explícita do usuário — C REJEITADA (21/11, 13:42)
+
+Após ver o storyboard C e enviar captura de um Reels para ilustrar o uso do espaço, o usuário declarou expressamente: **“Nao gostei da direção C”**. Qualquer interpretação anterior de “Gostei” como aprovação da C estava ERRADA: a captura era uma observação sobre a UI ocupar pouco espaço impeditivo na prática, e **não endossava C**.
+
+**Decisão válida:** A continua como referência estética principal (preferência previamente expressa), embora A NÃO esteja aprovada para produção ou com física/safe homologadas. A versão C é **REPROVADA ESTETICAMENTE**, não deve ser promovida, recomendada como padrão ou confundida com preferência do usuário. Preservar somente como artefato de estudo e comparativo.
+
+**Próximo passo:** desenvolver a linguagem A em 9:16 nativo, com mecanismo maior, ambiente visual impactante, textos e conectores causais essenciais protegidos por zonas de UI dependentes da altura. A imagem do Reels enviada é evidência de que não se deve encolher tudo; não representa medida oficial universal de máscaras. Não adicionar mais um estilo D nem repetir A/B de renders quase iguais. Primeiro uma prova curta e fiel à A em duas famílias, com checagem técnica EUV reflexiva e eclusa por gravidade. Nenhuma alteração da produção autorizada pela preferência estética.

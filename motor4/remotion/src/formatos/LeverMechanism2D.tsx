@@ -207,7 +207,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         <circle cx={pivot.x} cy={pivot.y} r="8" fill={p.metal}/>
         <path d={`M${pivot.x-19} 988 H${pivot.x+19}`}
           stroke={p.metal} strokeWidth="4" opacity=".45"/>
-        <Label x={pivot.x} y={1076} size={24} color={p.muted}>PONTO DE APOIO</Label>
+        <Label x={pivot.x} y={1008} size={24} color={p.metal}>APOIO</Label>
       </g>
 
       {/* Um esforço longo à direita causa subida do lado curto.
@@ -221,19 +221,18 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         <VerticalArrow x={297} from={loadPoint.y+78}
           to={loadPoint.y-62} up color={p.tealShade} opacity={1}/>
       </g>
-      {/* Comparação de distâncias: não inventar torque de uma massa.
-          A razão resulta das dimensões do próprio mecanismo. */}
+      {/* Duas medidas acima da barra, conectadas às extremidades e ao pivô.
+          Nunca cruzar o suporte ou ocupar a faixa das legendas. */}
       <g opacity={explained}>
-        <path d="M190 885 V913 H404 V885 M414 885 V913 H754 V885"
-          fill="none" stroke={p.muted} strokeWidth="5"
-          strokeLinejoin="round" opacity=".65"/>
-        <circle cx="404" cy="913" r="6" fill={p.effort}/>
-        <Label x={296} y={947} color={p.muted} size={21}>BRAÇO CURTO</Label>
-        <Label x={583} y={947} color={p.effort} size={21}>BRAÇO LONGO</Label>
-        <text x="581" y="1005" fill={p.ink} fontFamily={font}
-          fontSize="21" fontWeight="700" textAnchor="middle">
+        <path d="M195 540 V519 H409 V540 M409 540 V519 H849 V540"
+          fill="none" stroke={p.muted} strokeWidth="4"
+          strokeLinejoin="round" opacity=".82"/>
+        <circle cx="409" cy="519" r="6" fill={p.effort}/>
+        <Label x={341} y={595} color={p.muted} size={20}>BRAÇO CURTO</Label>
+        <Label x={633} y={595} color={p.effort} size={21}>BRAÇO LONGO</Label>
+        <Label x={633} y={636} color={p.ink} size={23}>
           {s.advantage.toFixed(1).replace('.',',')}× MAIOR · IDEAL
-        </text>
+        </Label>
       </g>
     </svg>
 
@@ -253,7 +252,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
       COMO UMA BARRA
       <div>LEVANTA UMA CARGA?</div>
     </div>
-    <div style={{position:'absolute',left:156,top:1097,width:600,
+    <div style={{position:'absolute',left:156,top:1071,width:600,
       borderTop:`2px solid ${p.subtle}`,paddingTop:12}}>
       <div style={{color:p.effort,fontSize:20,fontWeight:850,letterSpacing:1.4,
         marginBottom:8}}>
@@ -265,7 +264,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         {s.active.label}
       </div>
     </div>
-    <div style={{position:'absolute',left:156,top:1215,width:603,
+    <div style={{position:'absolute',left:156,top:1220,width:603,
       fontSize:17.5,fontWeight:650,color:p.muted,lineHeight:1.1}}>
       ESQUEMA AUTORAL · ALAVANCA IDEALIZADA, SEM ATRITO
     </div>

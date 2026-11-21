@@ -44,8 +44,8 @@ def test_compartilha_direcao_mas_nao_simula_universalidade():
         assert all(len(q['label'])<=45 for q in cues)
         assert subject['source'].startswith('ESQUEMA ILUSTRATIVO')
     root=R.read_text('utf8')
-    assert 'id="ProvaA_Eclusa"' in root
-    assert 'id="ProvaA_EUV"' in root
+    assert 'id="ProvaA-Eclusa"' in root
+    assert 'id="ProvaA-EUV"' in root
     assert "private_review_only:true" in root
     assert "AtlasAProof" in root
     assert "FilmeEditorial" in root

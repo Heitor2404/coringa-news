@@ -100,7 +100,7 @@
           "focus": "piston"
         },
         {
-          "at": 6.6,
+          "at": 7.02,
           "label": "SAÍDA PRESSURIZADA",
           "detail": "A válvula de saída libera o ar.",
           "focus": "outlet"
@@ -108,5 +108,28 @@
       ],
       "footer": "Modelo didático · válvulas simplificadas"
     }
+  },
+  "camera": {
+    "machineBounds": {
+      "left": 245,
+      "top": 520,
+      "right": 755,
+      "bottom": 1165
+    },
+    "introViewport": {
+      "left": 105,
+      "top": 500,
+      "right": 784,
+      "bottom": 1168
+    },
+    "detailViewport": {
+      "left": 105,
+      "top": 358,
+      "right": 784,
+      "bottom": 1168
+    },
+    "maxScale": 1.16,
+    "zoomStart": 1.08,
+    "zoomSeconds": 1.02
   }
 }

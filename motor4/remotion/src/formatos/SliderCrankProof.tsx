@@ -6,7 +6,8 @@
 import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import specs from './slider-crank-proofs.json';
-import {angleAt,rigState,type RigGeometry} from './SliderCrankRig';
+import {angleAt,rigState,type RigGeometry,type RigState} from './SliderCrankRig';
+import {semanticCamera2D,ease} from './MechanismCamera2D';
 
 type Focus='piston'|'rod'|'crank'|'intake'|'outlet';
 type Driver='pressure'|'shaft';
@@ -24,6 +25,16 @@ const C={
  orange:'#FFAC4F',bronze:'#BB7137'
 };
 const smooth=(v:number)=>{const x=Math.max(0,Math.min(1,v));return x*x*(3-2*x);};
+const focusAnchor=(focus:Focus,s:RigState,g:RigGeometry):{x:number;y:number}=>{
+  if(focus==='piston')return {x:g.centerX,y:s.pistonPin.y-44};
+  if(focus==='rod')return {
+    x:(s.pistonPin.x+s.crankPin.x)/2,
+    y:(s.pistonPin.y+s.crankPin.y)/2
+  };
+  if(focus==='crank')return {x:g.centerX,y:g.centerY};
+  if(focus==='intake')return {x:406,y:580};
+  return {x:590,y:580};
+};
 const colors=(mode:Driver)=>mode==='pressure'?
  {main:'#FFBC5C',glow:'#FFE18F',cold:'#78F4F5'}:
  {main:'#60E9D9',glow:'#B3FEED',cold:'#60E9D9'};
@@ -289,6 +300,23 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
       <path d="M593 1094 L628 1130 L594 1157" fill="none"
         stroke="#FFD66C" strokeWidth="12" strokeLinecap="round"/>
     </g>}
+    {/* Semantic attention is tied to the ACTOR, not a floating glow card. */}
+    <g fill="none" stroke={accent} strokeLinecap="round"
+      opacity={.42+.13*Math.sin(t*5)}>
+      {activePiston&&<rect x={cx-g.pistonWidth/2-12}
+        y={ptop-11} width={g.pistonWidth+24}
+        height={g.pistonHeight+22} rx="26" strokeWidth="10"/>}
+      {activeRod&&<line x1={s.pistonPin.x} y1={s.pistonPin.y}
+        x2={s.crankPin.x} y2={s.crankPin.y} strokeWidth="59"
+        opacity=".4"/>}
+      {activeCrank&&<circle cx={cx} cy={cy} r="153"
+        strokeWidth="9" strokeDasharray="30 23"
+        strokeDashoffset={-t*92}/>}
+      {focus==='intake'&&<circle cx="411" cy="589" r="31"
+        strokeWidth="10"/>}
+      {focus==='outlet'&&<circle cx="585" cy="589" r="31"
+        strokeWidth="10"/>}
+    </g>
     {/* Labels are anchored to components; large readable phone typography. */}
     <g opacity={.96}>
       <path d={'M 620 '+(ptop+49)+' H648'} stroke="#E1FFEF"
@@ -327,6 +355,19 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
  const beat=fixture.steps[stage];
  const palette=colors(fixture.driver);
  const state=rigState(angleAt(t,duration-.38),fixture.geometry);
+ const previousStep=fixture.steps[Math.max(0,stage-1)];
+ const currentFocus=focusAnchor(beat.focus,state,fixture.geometry);
+ const previousFocus=focusAnchor(previousStep.focus,state,fixture.geometry);
+ const camera=semanticCamera2D({
+   t,focus:currentFocus,previousFocus,changeAt:beat.at,
+   machine:specs.camera.machineBounds,
+   startViewport:specs.camera.introViewport,
+   detailViewport:specs.camera.detailViewport,
+   maxScale:specs.camera.maxScale,
+   zoomStart:specs.camera.zoomStart,
+   zoomSeconds:specs.camera.zoomSeconds,
+ });
+ const titleOpacity=1-ease((t-.58)/.52);
  const out=(Math.round(state.displacement/fixture.geometry.radius));
  return <svg width="100%" height="100%" viewBox="0 0 1080 1920"
    preserveAspectRatio="xMidYMid meet" role="img"
@@ -346,20 +387,25 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
     </SVGText>
     <rect x="301" y="307" width="150" height="34" rx="6" fill={C.yellow}/>
     <SVGText x={316} y={331} size={23} color={C.ink} weight={950}>EXPLICA</SVGText>
-    <SVGText x={138} y={390} size={57} color={C.white} weight={950} spacing={-1.5}>
-      {fixture.title[0]}
-    </SVGText>
-    <SVGText x={138} y={448} size={57} color={C.white} weight={950} spacing={-1.5}>
-      {fixture.title[1]}
-    </SVGText>
-    <rect x="140" y="470" width="85" height="9" rx="4" fill={fixture.accent}/>
-    <SVGText x={238} y={495} size={27} color="#C7EFF2" weight={740}>
-      {fixture.subtitle}
-    </SVGText>
-    {/* Machine with real causal movement */}
-    <Cutaway t={t} g={fixture.geometry} mode={fixture.driver}
-      focus={beat.focus} ports={fixture.ports}
-      accent={fixture.accent} duration={duration}/>
+    <g opacity={titleOpacity}>
+      <SVGText x={138} y={390} size={57} color={C.white} weight={950} spacing={-1.5}>
+        {fixture.title[0]}
+      </SVGText>
+      <SVGText x={138} y={448} size={57} color={C.white} weight={950} spacing={-1.5}>
+        {fixture.title[1]}
+      </SVGText>
+      <rect x="140" y="470" width="85" height="9" rx="4" fill={fixture.accent}/>
+      <SVGText x={238} y={495} size={27} color="#C7EFF2" weight={740}>
+        {fixture.subtitle}
+      </SVGText>
+    </g>
+    {/* CÂMERA SEMÂNTICA COMPARTILHADA: palco se aproxima sem cortar a
+        máquina e acompanha suavemente o alvo físico de cada acontecimento. */}
+    <g transform={`matrix(${camera.scale} 0 0 ${camera.scale} ${camera.tx} ${camera.ty})`}>
+      <Cutaway t={t} g={fixture.geometry} mode={fixture.driver}
+        focus={beat.focus} ports={fixture.ports}
+        accent={fixture.accent} duration={duration}/>
+    </g>
     {/* Narrative caption: always about the ACTUAL causal change. */}
     <rect x="129" y="1174" width="804" height="80" rx="22"
       fill="#082A44" stroke="#2C92AF" strokeWidth="4"/>

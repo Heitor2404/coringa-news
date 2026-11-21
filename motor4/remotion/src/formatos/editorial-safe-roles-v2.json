@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-21-editorial-not-ad-box",
+  "version": "2026-11-21-layout-v3-cad-cutaway",
   "scope": "LAB_3D_ONLY",
   "resolution": [
     1080,
@@ -82,5 +82,14 @@
     "core_motion_visible_required": true,
     "scenery_can_be_occluded": true,
     "human_visual_signoff_required": true
+  },
+  "layout": {
+    "mechanismTop": 505,
+    "brandTop": 292,
+    "headlineTop": 350,
+    "subtitleTop": 515,
+    "eventTop": 330,
+    "mechanismHeight": 1460,
+    "modelBoundsReview": "Target: head y≈550 and crank y≈1450 (1080×1920). Confirm via real MP4; not same as safe-zone text limits."
   }
 }

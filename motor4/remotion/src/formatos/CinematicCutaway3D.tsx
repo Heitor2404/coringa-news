@@ -11,6 +11,7 @@ import {AbsoluteFill,useCurrentFrame,useVideoConfig} from 'remotion';
 import {ThreeCanvas} from '@remotion/three';
 import {Vector3,Quaternion} from 'three';
 import configs from './slider-crank-proofs.json';
+import safeRoles from './editorial-safe-roles-v2.json';
 import {angleAt,rigState,type RigGeometry} from './SliderCrankRig';
 
 type Focus='piston'|'rod'|'crank'|'intake'|'outlet';
@@ -114,40 +115,39 @@ const Mechanics:React.FC<{model:Model;focus:Focus;t:number;duration:number}>=
      <meshStandardMaterial color="#0D294C" metalness={.58} roughness={.44}/>
    </mesh>
    <mesh position={[0,-3.2,-.45]}>
-     <boxGeometry args={[5.6,.28,1.65]}/>
-     <meshStandardMaterial color="#173F63" metalness={.78} roughness={.30}/>
+     <boxGeometry args={[4.55,.22,1.34]}/>
+     <meshStandardMaterial color="#3D586F" metalness={.75} roughness={.32}/>
    </mesh>
    {[-1,1].map(side=><group key={side}>
      <mesh position={[side*1.65,-1.58,.32]}>
        <boxGeometry args={[.22,2.8,.28]}/>
-       <meshStandardMaterial color="#2C7095" metalness={.76} roughness={.24}/>
+       <meshStandardMaterial color="#5C6E80" metalness={.76} roughness={.27}/>
      </mesh>
      <mesh position={[side*1.55,1.2,-.28]}>
        <boxGeometry args={[.32,3.2,.34]}/>
-       <meshStandardMaterial color="#346F8A" metalness={.75} roughness={.22}/>
+       <meshStandardMaterial color="#657D8F" metalness={.72} roughness={.28}/>
      </mesh>
-     {[-2.8,-1.35,.15,1.70].map(y=><mesh key={y} position={[side*2.02,y,.06]}>
-       <boxGeometry args={[.45,.20,.34]}/>
-       <meshStandardMaterial color="#4F91A5" metalness={.72} roughness={.25}/>
+     {[-2.55,-1.35,.12,1.70].map(y=><mesh key={y} position={[side*1.77,y,.34]}>
+       <boxGeometry args={[.14,.11,.15]}/>
+       <meshStandardMaterial color="#7E9EAE" metalness={.72} roughness={.28}/>
      </mesh>)}
    </group>)}
    {/* Disco + aro 3D, geometria articulada pelo mesmo ângulo θ. */}
    <group position={[0,-1.35,.42]} rotation={[0,0,-theta]}>
      <mesh rotation={[Math.PI/2,0,0]}>
        <cylinderGeometry args={[1.23,1.23,.25,64]}/>
-       <meshStandardMaterial color="#173A68" metalness={.76} roughness={.34}/>
+       <meshStandardMaterial color="#46586B" metalness={.76} roughness={.27}/>
      </mesh>
      <mesh position={[0,0,.15]}>
-       <torusGeometry args={[1.26,.16,14,72]}/>
-       <meshStandardMaterial color="#66F2E9" metalness={.58} roughness={.21}
-          emissive="#1E999E" emissiveIntensity={.25}/>
+       <torusGeometry args={[1.20,.085,14,72]}/>
+       <meshStandardMaterial color="#BAC9D3" metalness={.78} roughness={.27}/>
      </mesh>
-     {[0,1,2,3,4,5,6,7].map(i=>{
-       const a=i*Math.PI/4;
+     {[0,1,2,3,4].map(i=>{
+       const a=i*2*Math.PI/5;
        return <group key={i} rotation={[0,0,a]}>
-         <mesh position={[0,.71,.24]}>
-           <boxGeometry args={[.18,1.12,.16]}/>
-           <meshStandardMaterial color="#B1F2EF" metalness={.83} roughness={.20}/>
+         <mesh position={[0,.64,.24]}>
+           <boxGeometry args={[.24,.91,.17]}/>
+           <meshStandardMaterial color="#8CA5B6" metalness={.74} roughness={.28}/>
          </mesh>
        </group>;
      })}
@@ -176,25 +176,22 @@ const Mechanics:React.FC<{model:Model;focus:Focus;t:number;duration:number}>=
    {[-1,1].map(i=><group key={i}>
      <mesh position={[i*1.07,1.06,.28]}>
        <boxGeometry args={[.21,3.65,.23]}/>
-       <meshStandardMaterial color="#D5F7FF" metalness={.79} roughness={.20}/>
+       <meshStandardMaterial color="#A7BDC9" metalness={.79} roughness={.28}/>
      </mesh>
      {[-.6,1.85,2.63].map(y=><mesh key={y} position={[i*1.13,y,.44]}>
        <sphereGeometry args={[.10,16,12]}/>
        <meshStandardMaterial color="#FFFEF3" metalness={.87} roughness={.20}/>
      </mesh>)}
    </group>)}
-   {[2.64,-.56].map(y=><mesh key={y} position={[0,y,0]} rotation={[Math.PI/2,0,0]}>
-     <torusGeometry args={[1.17,.11,12,60]}/>
-     <meshStandardMaterial color="#E8FFFE" metalness={.79} roughness={.19}/>
-   </mesh>)}
+   {/* Sem argolas soltas ao redor do pistao: bordas sao do bloco. */}
    {/* Cabeçote bem destacado (sem atrapalhar a zona segura do título). */}
    <mesh position={[0,2.77,-.10]}>
      <boxGeometry args={[2.92,.45,1.82]}/>
-     <meshStandardMaterial color="#1B4771" metalness={.77} roughness={.29}/>
+     <meshStandardMaterial color="#536E86" metalness={.77} roughness={.31}/>
    </mesh>
    <mesh position={[0,3.08,-.10]}>
      <boxGeometry args={[2.65,.22,1.55]}/>
-     <meshStandardMaterial color="#8ED5E3" metalness={.79} roughness={.19}/>
+     <meshStandardMaterial color="#C3CFD8" metalness={.78} roughness={.24}/>
    </mesh>
    {[-1.05,1.05].map(x=><Bolt key={x} x={x} y={3.24} z={.42}/>)}
 
@@ -228,7 +225,7 @@ const Mechanics:React.FC<{model:Model;focus:Focus;t:number;duration:number}>=
    </group>
    {/* Biela e articulações: cálculo da mesma origem, sem keyframes soltos. */}
    <Rod a={pi} b={cr} radius={isRod?.22:.17}
-     main={isRod?'#FFF1A0':'#FFC04D'} emphasis={isRod}/>
+     main={isRod?'#FFD27B':'#CA853F'} emphasis={isRod}/>
    {[pi,cr].map((point,i)=><group key={i}
        position={[point.x,point.y,point.z+.11]}>
      <mesh rotation={[Math.PI/2,0,0]}>
@@ -289,6 +286,7 @@ export const CinematicCutaway3D:React.FC<Props>=({
   const opening=1-ease((t-.42)/.52);
   const narrative=ease((t-.68)/.26)*ease((t-event.at)/.28);
   const lead=ease((t-.15)/.85);
+  const screen=safeRoles.layout;
   return <AbsoluteFill style={{
      background:'#1765BB',color:'#062341',
      fontFamily:'Inter,Arial,sans-serif',overflow:'hidden',
@@ -303,16 +301,15 @@ export const CinematicCutaway3D:React.FC<Props>=({
       boxShadow:'0 0 120px 20px rgba(235,255,248,.19)'}}/>
     {/* Mecanismo domina o canvas. A parte baixa é arte, não legenda. */}
     <ThreeCanvas width={1080} height={1460} orthographic={false}
-      style={{position:'absolute',left:0,top:685,width:1080,height:1460}}
+      style={{position:'absolute',left:0,top:screen.mechanismTop,
+        width:1080,height:1460}}
       camera={{position:[4.8,2.3,14.2],fov:29.5,near:.1,far:100}}
       onCreated={({camera})=>{
         camera.lookAt(0,-.40,0);
         camera.updateProjectionMatrix();
       }}>
-      <group rotation={[0,Math.sin(t*.64)*.042,0]}>
-        <Mechanics model={model} focus={event.focus} t={t}
-          duration={configs.duration}/>
-      </group>
+      <Mechanics model={model} focus={event.focus} t={t}
+        duration={configs.duration}/>
     </ThreeCanvas>
 
     {/* Texto permanece claro na faixa de texto útil.
@@ -320,20 +317,20 @@ export const CinematicCutaway3D:React.FC<Props>=({
     <div style={{position:'absolute',top:0,left:0,right:0,height:740,
       background:'linear-gradient(180deg,rgba(242,253,255,.97) 1%,rgba(222,251,254,.90) 58%,rgba(221,249,253,.0) 100%)',
       pointerEvents:'none'}}/>
-    <div style={{position:'absolute',left:102,top:302,
+    <div style={{position:'absolute',left:102,top:screen.brandTop,
       display:'flex',alignItems:'center',gap:12,fontWeight:920,
       fontSize:26,letterSpacing:1.0,opacity:.96,color:'#082945'}}> 
       <span>CORINGA</span>
       <span style={{padding:'5px 9px 3px',color:'#092344',borderRadius:4,
         background:P.gold}}>EXPLICA</span>
     </div>
-    <div style={{position:'absolute',left:102,top:372,
+    <div style={{position:'absolute',left:102,top:screen.headlineTop,
       fontWeight:940,fontSize:66,lineHeight:1.04,letterSpacing:-1.7,
       color:'#082945',maxWidth:825,opacity:opening}}>
       {model.title[0]}
       <div style={{color:'#AE6B02'}}>{model.title[1]}</div>
     </div>
-    <div style={{position:'absolute',left:107,top:544,
+    <div style={{position:'absolute',left:107,top:screen.subtitleTop,
       fontWeight:760,fontSize:28,color:'#236783',
       opacity:opening*lead,maxWidth:760}}>
       {model.subtitle.toUpperCase()}
@@ -341,7 +338,7 @@ export const CinematicCutaway3D:React.FC<Props>=({
 
     {/* Faixa de TEXTO protegida no topo. NUNCA cobrir o volante.
         O corpo da maquina usa o restante do quadro 9:16. */}
-    <div style={{position:'absolute',left:102,top:385,
+    <div style={{position:'absolute',left:102,top:screen.eventTop,
       opacity:narrative,
       transform:'translateY('+(1-narrative)*18+'px)',
       zIndex:5,maxWidth:840}}>

@@ -5,6 +5,8 @@ on:
     paths:
       - "src/v4/formatos/referencias_mecanismos.py"
       - "tests/test_referencias_mecanismos.py"
+      - "src/v4/formatos/amostrar_referencia.py"
+      - "tests/test_amostrar_referencia.py"
       - ".github/workflows/qa-referencias-animadas.yml"
   workflow_dispatch:
 
@@ -21,9 +23,9 @@ jobs:
         with:
           python-version: "3.13"
       - name: Dependencias minimas
-        run: python -m pip install -q pytest requests
+        run: python -m pip install -q pytest requests pillow
       - name: Testar roteamento multitema offline sem IA
-        run: python -m pytest -q tests/test_referencias_mecanismos.py
+        run: python -m pytest -q tests/test_referencias_mecanismos.py tests/test_amostrar_referencia.py
       - name: Demonstrar pesquisa desligada com bloqueio honesto
         run: |
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/motor_pistao.json saida_ref/pistao --sem-rede
@@ -41,6 +43,30 @@ jobs:
         run: |
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/motor_pistao.json saida_ref/live_pistao
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/circulacao_cardiaca.json saida_ref/live_coracao
+      - name: Amostrar os primeiros GIFs encontrados por tema
+        timeout-minutes: 2
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.amostrar_referencia import amostrar_gif
+          for nome in ("live_pistao","live_coracao"):
+              arq=Path("saida_ref")/nome/"referencias.json"
+              if not arq.exists():
+                  continue
+              doc=json.loads(arq.read_text(encoding="utf-8"))
+              itens=[it for it in doc.get("candidatos",[])
+                     if it.get("midia")=="animacao_gif"]
+              if not itens:
+                  print(nome, "SEM GIF")
+                  continue
+              try:
+                  r=amostrar_gif(itens[0],Path("saida_ref")/nome/"quadros")
+                  print(nome, "QUADROS",r["numero_quadros"],r["sha256"][:14])
+              except Exception as exc:
+                  print(nome,"BLOQUEADO",type(exc).__name__,str(exc)[:160])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

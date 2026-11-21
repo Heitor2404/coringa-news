@@ -10,6 +10,8 @@ import { LeverMechanism2D } from './formatos/LeverMechanism2D';
 import leverContract from './formatos/lever2d-contract.json';
 import { Mechanism2DOtherModels } from './formatos/Mechanism2DOtherModels';
 import probes2d from './formatos/mechanisms2d-probes.json';
+import { AtlasAProof } from './formatos/AtlasAProof';
+import atlasAProof from './formatos/atlas-a-proof.json';
 
 // Amostra ATLAS: palco + legendas em UMA renderizacao, com o tempo GLOBAL do episodio.
 const AtlasAmostra: React.FC<{ visual: any; legenda: any; duracao: number }> = ({ visual, legenda }) => (
@@ -42,6 +44,14 @@ export const Root: React.FC = () => (
     <Composition id="ProvaEngrenagens2D" component={Mechanism2DOtherModels as any}
       {...base} defaultProps={{duracao:probes2d.demo.gears.duration,
         kind:'gears',private_review_only:true} as any}/>
+    {/* A — arte ilustrada 2.5D autoral, amplitude de tela.
+        Provas eclusa/EUV PRIVADAS, nunca no pipeline de episódios. */}
+    <Composition id="ProvaA_Eclusa" component={AtlasAProof as any}
+      {...base} defaultProps={{kind:'lock',duracao:atlasAProof.duration,
+        private_review_only:true} as any}/>
+    <Composition id="ProvaA_EUV" component={AtlasAProof as any}
+      {...base} defaultProps={{kind:'euv',duracao:atlasAProof.duration,
+        private_review_only:true} as any}/>
     <Composition id="AtlasAmostra" component={AtlasAmostra as any} {...base} defaultProps={{ duracao: 3, visual: {}, legenda: {} } as any} />
     <Composition id="TipoLottie" component={TipoLottie as any} {...base} defaultProps={{ duracao: 3, lottie: 'lottie/gota.json', linhas: [] } as any} />
   </>

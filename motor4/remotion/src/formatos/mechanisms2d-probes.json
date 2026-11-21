@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "status": "PRIVATE_QA_NOT_PRODUCTION",
+  "palette": "paper",
+  "demo": {
+    "pulley": {
+      "duration": 8.4,
+      "headline": [
+        "UMA POLIA FAZ",
+        "MENOS FORÇA?"
+      ],
+      "section": "POLIAS · MECÂNICA",
+      "geometry": {
+        "center": [
+          510,
+          679
+        ],
+        "radius": 105,
+        "freeX": 405,
+        "loadX": 615,
+        "freeEndInitialY": 820,
+        "loadTopInitialY": 925,
+        "loadWidth": 142,
+        "loadHeight": 128,
+        "maxTravel": 170
+      },
+      "cues": [
+        {
+          "at": 0,
+          "action": "assembly",
+          "label": "UMA RODA, UMA CORDA E UM PESO"
+        },
+        {
+          "at": 1.1,
+          "action": "load",
+          "label": "O PESO FICA SUSPENSO NA CORDA"
+        },
+        {
+          "at": 2.2,
+          "action": "pull",
+          "label": "PUXAMOS A PONTA PARA BAIXO"
+        },
+        {
+          "at": 4,
+          "action": "lift",
+          "label": "O PESO SOBE A MESMA DISTÂNCIA"
+        },
+        {
+          "at": 6.25,
+          "action": "result",
+          "label": "POLIA FIXA MUDA A DIREÇÃO DA FORÇA"
+        }
+      ]
+    },
+    "gears": {
+      "duration": 8.4,
+      "headline": [
+        "POR QUE A ENGRENAGEM",
+        "GRANDE GIRA DEVAGAR?"
+      ],
+      "section": "ENGRENAGENS · MECÂNICA",
+      "geometry": {
+        "driverCenter": [
+          333,
+          700
+        ],
+        "drivenCenter": [
+          615,
+          700
+        ],
+        "driverRadius": 106,
+        "drivenRadius": 176,
+        "driverTeeth": 12,
+        "drivenTeeth": 20,
+        "driverTurnDegrees": 410
+      },
+      "cues": [
+        {
+          "at": 0,
+          "action": "assembly",
+          "label": "DUAS ENGRENAGENS CONECTADAS"
+        },
+        {
+          "at": 1.1,
+          "action": "teeth",
+          "label": "OS DENTES TRANSMITEM O MOVIMENTO"
+        },
+        {
+          "at": 2.3,
+          "action": "drive",
+          "label": "A PEQUENA COMEÇA A GIRAR"
+        },
+        {
+          "at": 4.05,
+          "action": "ratio",
+          "label": "A GRANDE GIRA NO SENTIDO OPOSTO"
+        },
+        {
+          "at": 6.25,
+          "action": "result",
+          "label": "MAIS TORQUE, MENOS VELOCIDADE"
+        }
+      ]
+    }
+  },
+  "qa": {
+    "publicar": false,
+    "telegram": false,
+    "semVoz": true,
+    "criticalSafe": [
+      150,
+      300,
+      770,
+      1240
+    ],
+    "sideIconsBeginY": 840,
+    "reference": "The Efficient Engineer narrative physics + 3Blue1Brown state-driven motions; original vectors only"
+  }
+}

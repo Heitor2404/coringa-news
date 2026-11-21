@@ -1,0 +1,119 @@
+name: "QA — modelos 2D claros: polia e engrenagens"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-modelo2d-multifamilia.yml"
+      - "motor4/remotion/src/Root.tsx"
+      - "motor4/remotion/src/formatos/Mechanism2DCore.ts"
+      - "motor4/remotion/src/formatos/Mechanism2DPaperStudio.tsx"
+      - "motor4/remotion/src/formatos/Mechanism2DOtherModels.tsx"
+      - "motor4/remotion/src/formatos/mechanisms2d-probes.json"
+      - "tests/test_mechanism_2d_multifamily.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-modelo2d-multifamilia
+  cancel-in-progress: true
+jobs:
+  dois_mecanismos:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Dependências e compilação do motor
+        run: |
+          python -m pip install -q pytest pillow
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Provas de relações físicas e isolamento da produção
+        run: |
+          python -m pytest -q tests/test_mechanism_2d_multifamily.py tests/test_mecanismo_2d_alavanca.py
+      - name: Gerar props com a MESMA identidade e movimento causal distinto
+        run: |
+          mkdir -p qa_multi2d/frames
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('motor4/remotion/src/formatos/mechanisms2d-probes.json').read_text('utf8'))
+          assert p['status']=='PRIVATE_QA_NOT_PRODUCTION' and p['qa']['publicar'] is False
+          for kind,v in p['demo'].items():
+              data={'duracao':v['duration'],'kind':kind,'private_review_only':True}
+              Path('qa_multi2d/props-'+kind+'.json').write_text(
+                  json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
+      - name: Renderizar polia 2D clara original
+        timeout-minutes: 7
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaPolia2D ../qa_multi2d/polia_clara_PRIVADA.mp4 --props=../qa_multi2d/props-pulley.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Renderizar engrenagens 2D claras originais
+        timeout-minutes: 7
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaEngrenagens2D ../qa_multi2d/engrenagens_claras_PRIVADA.mp4 --props=../qa_multi2d/props-gears.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Inspecionar 8 quadros, metadata e status não publicável
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,subprocess,hashlib
+          from PIL import Image,ImageDraw
+          d=Path('qa_multi2d')
+          source=json.loads(Path('motor4/remotion/src/formatos/mechanisms2d-probes.json').read_text('utf8'))
+          files={'pulley':'polia_clara_PRIVADA.mp4','gears':'engrenagens_claras_PRIVADA.mp4'}
+          montage=Image.new('RGB',(4*290,2*552),(244,239,230))
+          draw=ImageDraw.Draw(montage)
+          for row,(kind,filename) in enumerate(files.items()):
+              video=d/filename
+              assert video.exists() and video.stat().st_size>25000
+              m=json.loads(subprocess.check_output([
+                  'ffprobe','-v','error','-show_entries',
+                  'format=duration:stream=codec_type,width,height','-of','json',str(video)]))
+              vs=[s for s in m['streams'] if s['codec_type']=='video']
+              assert len(vs)==1 and vs[0]['width']==540 and vs[0]['height']==960
+              assert not any(s['codec_type']=='audio' for s in m['streams'])
+              assert abs(float(m['format']['duration'])-source['demo'][kind]['duration'])<.04
+              for col,ts in enumerate((.9,3.1,5.3,7.3)):
+                  dest=d/'frames'/f'{kind}_{col}.png'
+                  subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                      '-y','-ss',str(ts),'-i',str(video),'-frames:v','1',str(dest)])
+                  im=Image.open(dest).convert('RGB')
+                  im.thumbnail((266,480))
+                  x=col*290+10
+                  y=row*552+48
+                  montage.paste(im,(x,y))
+                  draw.text((x,y-29),f'{kind}  {ts:.1f}s',fill=(24,37,46))
+          montage.save(d/'contato_2d_multiassunto.jpg',quality=92)
+          (d/'resultado.json').write_text(json.dumps({
+              'status':'QA_ESTRUTURAL_OK_ESTETICA_HUMANA_PENDENTE',
+              'branch':'atlas-direcao-visual-20261118',
+              'models':['pulley','gears'],'tema':'2D claro compartilhado',
+              'pontes':'mesma identidade visual; diferentes relações físicas',
+              'narração':False,'telegram':False,'publicar':False,
+              'safety_app_real':'NÃO HOMOLOGADO',
+              'pulley_sha256':hashlib.sha256((d/files['pulley']).read_bytes()).hexdigest(),
+              'gears_sha256':hashlib.sha256((d/files['gears']).read_bytes()).hexdigest(),
+          },ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
+      - name: Guardar vídeos privados e contato por 5 dias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-modelos2d-polia-engrenagens-privadas
+          path: qa_multi2d/
+          retention-days: 5
+          if-no-files-found: warn

@@ -23,3 +23,98 @@ Validacao final de regressao: marca ATLAS desligada, casos negativos, relatorio 
 18/11: ATLAS amarelo semantico, uma palavra por grupo, sem karaoke; validar testes Python + TypeScript, nenhum render.
 
 18/11: rerun destaque amarelo: numeros curtos (26) antes de stopwords, sem karaoke. Zero render.
+
+18/11: direção visual inteligente ATLAS — continuidade eclusa 31–50, testes de fiscais e portões, validação isolada sem IA/render; branch experimental.
+
+18/11: reteste da área de legenda com marca fixa desligada; continuar sem render ou IA.
+
+18/11: detector de mudança localizada do gráfico 197 milhões, descontando movimento de câmera; teste negativo estático.
+
+18/11: ultima validação — detector local só ATLAS, DOSSIÊ com algoritmo antigo; + teste de isolamento.
+
+18/11: validar fallback sendVideo 500 -> sendDocument para o mesmo MP4 e chat privado; sem render, sem IA.
+
+18/11: contrato visual obrigatório por mecanismo, metadado genérico e prompt ATLAS isolado do DOSSIÊ; CI sem IA e sem render.
+
+18/11: versão genérica de clareza: câmera por alvo semântico, rótulos com limite/colisões e densidade ATLAS. Testar Python, JS puro e TS sem render.
+
+18/11: reteste idempotente de etapas/focos + utilitários JS puros de câmera e rótulos + contrato de poluição visual; Python+JS+TS.
+
+18/11: rerun clareza geral e idempotência com FFmpeg do runner; sem apt se presente. Python+JS+TS sem render.
+
+18/11: validação FINAL clareza global com setup FFmpeg testado na prévia. Python, Node, TypeScript, sem IA.
+
+18/11: fechamento teste JS em runner /motor4: caminhos estáveis, contrato de alvos e sem instalação apt.
+
+18/11: corrigida posição secundária quando etiquetas disputam o mesmo lugar, agora existe folga real; teste JS + Python + TS.
+
+18/11: testes Python 84/84 verdes na anterior; teste JS agora isolado das APIs DOM; última validação para render privado.
+
+18/11: ciclo físico obrigatório até saída; proibição de corte truncado e zoom didático com protagonista; testes de frame e contexto, sem IA/render.
+
+# 2026-11-18 ATLAS P0: testar voz Gemini/Charon sem fallback e gate editorial V3 (offline, sem render ou IA)
+
+# 2026-11-18 ATLAS P0: revalidar ponte de fichas V3 + gate de capacidade ATLAS (sem IA, sem render)
+
+# 2026-11-19 ATLAS P1: foto protagonista + registro.video FFmpeg existente, proveniencia e creditos (somente testes offline)
+
+# 2026-11-19 ATLAS P1 reteste: fixtures de camera resolvida + ffmpeg teste 0.8s
+
+# 2026-11-19 ATLAS P1 comprovacao FFmpeg real 1080x1920 em teste sintetico local Actions
+
+# 2026-11-19 P1 reteste: FFmpeg preinstalado no runner apos falha instalador externo
+
+# 2026-11-19 P1 regressao final de importacao local Pexels por SHA e FFmpeg real
+
+# 2026-11-19 P1 ponte biblioteca global V3 + provas de licenca/sha/bytes sem rede
+
+# 2026-11-19 P1 final: inventario factual V3+V4 sem midia generica, revisao SHA e provas
+
+# 2026-11-19 P1 licencia exata CC BY/CC BY-SA na ponte V3, reteste 118 offline
+
+# 2026-11-19 V2 Abertura: prova real 0-3s somente com verificação binária, V1 cartografico intacto
+
+# 2026-11-19 ATLAS V2 chips 25s storyboard factual assets from previous branch, test word anchors + no external APIs
+
+# 2026-11-19 reteste piloto V2: mapear EUA/Taiwan e Holanda/Taiwan com ROI provado, 6 beats
+
+# 2026-11-19 chips V2: separar primeiro SE verbal do payoff e incluir raster ne2_pacifico validado
+
+# 2026-11-19 reteste sceneamento Chips V2: raster Pacifico + diagnósticos completos
+
+# 2026-11-19 chips V2: normalizar layout por destaques geograficos em area segura
+
+# 2026-11-19 chips V2 progressao wafer circuito e sem colisao card Holanda Taiwan
+
+# 2026-11-19 chips V2: teste progressão fotografia wafer e sequência de cartão sem sobreposição
+
+# 2026-11-19 ultimo reteste storyboard Chips V2 apos confirmar segunda revelacao
+
+# 2026-11-19 validação final do rótulo BASE PARA CIRCUITOS e no quadro ganho semântico
+
+# 2026-11-19 validacao final contrato semantico rotulo2, CI 127 testes
+
+# 2026-11-19 contratempo: rótulo semântico wafer testado sem frase literal no script
+
+# 2026-11-19 diagnostico run 44437665279: resolver fim pela duracao real WAV, CTA, ritmo e notificar Telegram em falha
+
+# 2026-11-19 retry regression no-card gancho title timing and true wav duration
+
+# 2026-11-19 regressão com timestamps reais de TTS Run 44447705090; 2º rótulo factual na foto no momento da fala Taiwan, sem mudar limite de 3s
+
+# 2026-11-19 reteste com proteção contra travamento do setup FFmpeg e 61 tempos originais Gemini Charon
+
+# 2026-11-19 smoke direto sem FFmpeg de 61 tempos Gemini, mais CI completo em separado
+ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e diagnostico Telegram de quadros - 19-11-2026.
+# 2026-11-19 regressao real run 44450584008: @max(2.5,@por-0.12), sem encurtar prova fotografica; validar 61 tempos de Gemini
+# 2026-11-19 CI Ubuntu22.04 + fast smoke voz 44450584008 e 44447705090: piso foto 2.5s, sem relaxar fiscal
+# 2026-11-19 validacao nova correção opt-in entrada_apos_voo: titulo sobre mapa aguarda camera com tempo de fala 44450584008
+# 2026-11-19 P0 editorial: CI pré-voz contrato de prova, Gemini vision critic, telemetria semântica e bloqueio antes MP4.
+# 2026-11-19 P0 final regressao memoria V3 no diretor ATLAS + testes editoriais e multimodais, sem IA/MP4.
+# 2026-11-19 ultima regressao editor P0: diagnostico no Telegram antes de TTS + memoria do diretor, 100% sem render.
+# 2026-11-19T04:26Z cinematic proof stage + one directed auto revision + global ROI rejection; code verification.
+# ATLAS QA 2026-11-19 — proof cinematic, auto-reedit and Commons sourcing tests.
+# 2026-11-19 visual-source + no-TTS animatic + revised gallery tests, isolated, no full MP4.
+# 2026-11-19 validate shot-first storyboard and animatic fixes.
+# 2026-11-19 storyboard revised after previsual real portoes: no pin overlaps, causal chain earlier.
+# 2026-11-19 ~05:00: flow 4-stage visual proof, verified provisional narration with no collisions or >3s gaps.

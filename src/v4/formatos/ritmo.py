@@ -42,7 +42,22 @@ def medir(mp4: Path) -> dict:
     return resumo(por_segundo(quadros(Path(mp4))))
 
 
-def por_segundo_sem_camera(qs, fps: float = 4) -> list[float]:
+def mudanca_local_alinhada(delta: np.ndarray) -> float:
+    """Mudança depois de alinhar a câmera. Um gráfico pequeno que revela dados
+    pode progredir sem alterar a média da tela inteira. Uma foto sem alteração
+    continua parada; zoom/pan permanecem excluídos pelo alinhamento anterior.
+    """
+    pixel = delta.mean(axis=2) if delta.ndim == 3 else delta
+    global_ = float(pixel.mean())
+    blocos = [float(b.mean()) for faixa in np.array_split(pixel, 5, axis=0)
+              for b in np.array_split(faixa, 5, axis=1) if b.size]
+    local = float(np.percentile(blocos, 90)) if blocos else 0.0
+    # Só contar variação LOCALIZADA: resíduo distribuído igualmente pela tela
+    # costuma ser artefato do reenquadramento/compressão.
+    return max(global_, local * .6) if local > global_ * 1.5 else global_
+
+
+def por_segundo_sem_camera(qs, fps: float = 4, usar_local: bool = False) -> list[float]:
     """mudança por segundo DESCONTANDO o movimento de câmera: estima a transformação global (ORB + RANSAC, afim parcial)
     entre quadros vizinhos, alinha o anterior ao atual e mede só o resíduo — zoom/pan decorativo não conta como progresso"""
     import cv2
@@ -66,7 +81,8 @@ def por_segundo_sem_camera(qs, fps: float = 4) -> list[float]:
         if M is None:
             M = np.float32([[1, 0, 0], [0, 1, 0]])
         al = cv2.warpAffine(qs[i - 1], M, (qs.shape[2], H), borderMode=cv2.BORDER_REPLICATE)
-        res.append(float(np.abs(al[zc].astype(np.int16) - qs[i][zc].astype(np.int16)).mean()))
+        delta = np.abs(al[zc].astype(np.int16) - qs[i][zc].astype(np.int16))
+        res.append(mudanca_local_alinhada(delta) if usar_local else float(delta.mean()))
     out = []
     for s in range(len(qs) // int(fps)):
         bloco = res[s * int(fps):(s + 1) * int(fps) - 1] or [0.0]
@@ -74,9 +90,9 @@ def por_segundo_sem_camera(qs, fps: float = 4) -> list[float]:
     return out
 
 
-def medir_completo(mp4: Path) -> dict:
+def medir_completo(mp4: Path, usar_local: bool = False) -> dict:
     """métrica bruta (comparável às referências) + métrica sem câmera (a que decide o portão de progresso)"""
     qs = quadros(Path(mp4))
     bruto = resumo(por_segundo(qs))
-    sem = resumo(por_segundo_sem_camera(qs))
+    sem = resumo(por_segundo_sem_camera(qs, usar_local=usar_local))
     return {**bruto, 'sem_camera': sem}

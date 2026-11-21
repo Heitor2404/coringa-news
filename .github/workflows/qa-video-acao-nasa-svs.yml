@@ -1,0 +1,59 @@
+name: "QA — ação real Curiosity NASA SVS: original e quadros"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-video-acao-nasa-svs.yml"
+      - "src/v4/formatos/prospeccao_video_nasa.py"
+      - "src/v4/formatos/prospeccao_video_acao.py"
+      - "docs/v4/formatos/CANDIDATOS_ACAO_NASA_SVS_20261120.json"
+      - "tests/test_prospeccao_video_nasa.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-prospeccao-nasa-svs
+  cancel-in-progress: true
+jobs:
+  acao_video_nasa:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar ferramentas de mídia
+        run: |
+          python -m pip install -q pillow requests pytest
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Contratos de fonte e SHA, sem chamadas remotas
+        run: |
+          python -m pytest -q tests/test_prospeccao_video_nasa.py tests/test_prospeccao_video_acao.py
+      - name: Recuperar fonte NASA SVS e extrair 12 quadros com tempos originais
+        timeout-minutes: 8
+        run: |
+          python -m src.v4.formatos.prospeccao_video_nasa             docs/v4/formatos/CANDIDATOS_ACAO_NASA_SVS_20261120.json             stage_documental/nasa_svs qa_acao_nasa
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('qa_acao_nasa/relatorio_nasa.json').read_text('utf8'))
+          assert x['originais_verificados']==1 and x['acoes_confirmadas']==0
+          it=x['fontes'][0]
+          assert it['sha256'] and len(it['sha256'])==64
+          assert len(it['inspecao']['quadros'])==12
+          assert it['revisao_humana']=='PENDENTE'
+          assert not x['publicar'] and not x['telegram']
+          print('ORIGINAL NASA DISPONÍVEL, AÇÕES EM INSPEÇÃO, NÃO PUBLICADO')
+          PY
+      - name: Guardar contato e hash — sem master original ou publicação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-nasa-svs-acao-real-nao-aprovada
+          path: qa_acao_nasa/
+          retention-days: 5
+          if-no-files-found: warn

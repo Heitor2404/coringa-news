@@ -1,0 +1,9 @@
+# Execução REAL privada da montagem documental, com materiais originais conferidos por SHA.
+# SEM Gemini/Charon, SEM Telegram, SEM publicação e SEM promoção de direitos NIST.
+# Essa receita exercita o MESMO FilmeEditorial; Taiwan é caso de prova, não nova engine.
+
+# R2: corrigir recibo de proveniencia e auditar graficos explicativos como representacao.
+
+# R3: preservar origem do mapa no staging ATLAS, nunca invalidar o comprovante por copia.
+
+# R4: render de 68.6s com infografico original sem segundo titulo/cue nem zoom que corta dados.

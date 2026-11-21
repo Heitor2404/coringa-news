@@ -1,0 +1,102 @@
+name: "QA — diretor por capacidades e ciclo de três fases"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-diretor-capacidades.yml"
+      - "src/v4/formatos/catalogo_mecanismos.py"
+      - "src/v4/formatos/filme_editorial.py"
+      - "motor4/remotion/src/formatos/LockCausalCycle.tsx"
+      - "motor4/remotion/src/formatos/AreaSeguraMovimento.ts"
+      - "motor4/tests/area-segura-movimento.test.mjs"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "docs/v4/formatos/DEMO_DIRETOR_CAPACIDADES_20261120.json"
+      - "tests/test_diretor_capacidades.py"
+      - "tests/test_diretor_processos.py"
+      - "src/v4/formatos/diretor_processos.py"
+      - "docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-diretor-capacidades
+  cancel-in-progress: true
+jobs:
+  contrato_e_prova_visual:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Verificar seleção por ações em diferentes domínios e regressões
+        run: |
+          python -m pip install -q pillow requests numpy pyyaml cryptography pytest
+          python -m pytest -q tests/test_diretor_processos.py tests/test_diretor_capacidades.py tests/test_mecanismos_explicativos.py tests/test_filme_panama_ciclo_19s.py
+      - name: Preparar composição sem forçar nome de renderer no storyboard
+        run: |
+          python -m src.v4.formatos.filme_editorial docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json prova_diretor motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('prova_diretor/props.json').read_text())
+          assert [x['mechanism'] for x in p['shots']]==['optical_projection','lock_cycle_standalone']
+          assert all(x['evidence']=='explainer' and not x.get('reference_asset') for x in p['shots'])
+          assert all(len(x['cues'])>=4 for x in p['shots'])
+          assert p['duracao']==24.4
+          print('CATALOGO_RESOLVEU_DUAS_CAPACIDADES_COM_ACOES')
+          PY
+      - name: Compilar compositor compartilhado
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+          node --experimental-strip-types --test tests/area-segura-movimento.test.mjs
+      - name: Renderizar duas causas físicas independentes com entrada e saída
+        timeout-minutes: 15
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../prova_diretor/diretor_qa.mp4 --props=../prova_diretor/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Gerar evidência inspecionável do vídeo completo
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height -of json prova_diretor/diretor_qa.mp4 > prova_diretor/metadata.json
+          FREQ=$(python - <<'PY'
+          import json
+          x=json.load(open('prova_diretor/metadata.json'))
+          print(16/float(x['format']['duration']))
+          PY
+          )
+          ffmpeg -hide_banner -loglevel error -y -i prova_diretor/diretor_qa.mp4 -vf "fps=${FREQ},scale=270:480,tile=4x4" -frames:v 1 prova_diretor/contato_16_quadros.jpg
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          folder=Path('prova_diretor')
+          p=json.loads((folder/'props.json').read_text())
+          m=json.loads((folder/'metadata.json').read_text())
+          assert abs(float(m['format']['duration'])-p['duracao'])<.08
+          v=[x for x in m['streams'] if x['codec_type']=='video']
+          assert len(v)==1 and v[0]['width']==540 and v[0]['height']==960
+          assert not any(x['codec_type']=='audio' for x in m['streams'])
+          media=folder/'diretor_qa.mp4'
+          report={'status':'QA_TECNICO_SEM_APROVACAO_HUMANA','sha256':hashlib.sha256(media.read_bytes()).hexdigest(),'duration_s':float(m['format']['duration']),'renderers':[x['mechanism'] for x in p['shots']],'revisao_visual':'PENDENTE','publicar':False,'telegram':False}
+          (folder/'resultado.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Guardar prova temporária privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-diretor-por-capacidades
+          path: prova_diretor/
+          retention-days: 5
+          if-no-files-found: warn

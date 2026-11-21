@@ -1,0 +1,5 @@
+# Qualidade multiplataforma, sem render e sem gasto de API
+# Run de regressão semântica em Panamá, Taiwan filme/atlas e Hindenburg sintético.
+# Testes de gate não equivalem a aprovação visual; instrução para NÃO publicar.
+
+# R2 workflow YAML corrigido, executar regressões entre temas.

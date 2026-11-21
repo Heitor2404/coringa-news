@@ -1,0 +1,59 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "QA | eventos dirigidos sem storyboard manual | EUV + ciclo de eclusa",
+  "media": {},
+  "observacao": "Apenas demonstração de capacidades. Fatos exigem curadoria e inspeção separadas. Não publicar e não enviar ao Telegram.",
+  "eventos_diretor": [
+    {
+      "id": "euv_evento",
+      "duracao_s": 6.9,
+      "lead": "ENGENHARIA · SEMICONDUTORES",
+      "headline": "COMO A LUZ TRANSFERE UM PADRÃO?",
+      "subject": "Princípio ilustrativo de exposição EUV no wafer, não máquina real ou escala",
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "principio_otico_euv",
+        "aprendizado": "A luz atravessa uma cadeia óptica para expor o resist do wafer",
+        "acoes_necessarias": [
+          "source",
+          "reticle",
+          "projection",
+          "wafer"
+        ],
+        "fases_necessarias": [
+          "origem",
+          "transformacao",
+          "resultado"
+        ]
+      }
+    },
+    {
+      "id": "ciclo_evento",
+      "duracao_s": 17.5,
+      "lead": "ENGENHARIA · HIDRÁULICA",
+      "headline": "COMO UM NAVIO ATRAVESSA A ECLUSA?",
+      "subject": "Ciclo hidráulico ilustrativo de uma eclusa; mecanismos e distâncias fora de escala",
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "ciclo_hidraulico_eclusa",
+        "aprendizado": "Entrada, fechamento, água por gravidade, subida, equalização e saída",
+        "acoes_necessarias": [
+          "enter",
+          "seal",
+          "valves",
+          "rise",
+          "equalize",
+          "open",
+          "exit"
+        ],
+        "fases_necessarias": [
+          "entrada",
+          "mecanismo",
+          "saida"
+        ]
+      }
+    }
+  ]
+}

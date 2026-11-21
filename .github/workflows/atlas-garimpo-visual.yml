@@ -1,0 +1,73 @@
+name: ATLAS — garimpo visual privado (Commons + Gemini)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/garimpo_visual.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-garimpo-visual-privado
+  cancel-in-progress: false
+
+env:
+  CORINGA_CHROME: /usr/bin/google-chrome
+  DO_NOT_TRACK: "1"
+  SAIDA: saida_garimpo_visual
+
+jobs:
+  buscar:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Dependências de acervo + visão existentes
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Curar evidências REAIS antes de editar o vídeo
+        timeout-minutes: 18
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.v4.formatos.garimpo_visual src/v4/formatos/briefs/chips_provas.json "$SAIDA"
+      - name: Telegram PRIVADO — contato visual e relatório de mídia
+        if: always()
+        timeout-minutes: 6
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from src.v3 import previa_telegram as t
+          p=Path(os.environ['SAIDA'])
+          chat,_=t.chat_autorizado()
+          manifesto=p/'catalogo.json'
+          if not manifesto.exists():
+              t._api('sendMessage',{'chat_id':chat,'text':'ATLAS GARIMPO — BLOQUEADO: nenhum manifesto gerado. Não houve render nem publicação.'})
+              raise SystemExit(1)
+          d=json.loads(manifesto.read_text())
+          itens=d.get('itens') or []
+          if (p/'contato.jpg').exists():
+              t._api('sendPhoto',{'chat_id':chat,'caption':'ATLAS — seleção de PROVAS REAIS para novo storyboard, não um vídeo. Privado, não publicado.'},('photo',p/'contato.jpg'))
+          linhas=['GARIMPO ATLAS — CANDIDATOS, NÃO APROVAÇÃO HUMANA',
+                  f'Provas verificadas por licença/visão: {len(itens)}/{len(d.get("relatorio") or [])}']
+          for x in d.get('relatorio') or []:
+              linhas.append(f"- {x['id']}: {x['estado']}" + (f" | {str(x['motivo'])[:160]}" if x.get('motivo') else ''))
+          linhas.append('Não há autorização de publicação. Seleção provisória, guardada apenas no artefato privado.')
+          t._api('sendMessage',{'chat_id':chat,'text':'\n'.join(linhas)[:3900]})
+          PY
+      - name: Guardar fontes/manifesto privados com SHA e licença
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-garimpo-visual-provisorio
+          path: saida_garimpo_visual/
+          retention-days: 7
+          if-no-files-found: warn

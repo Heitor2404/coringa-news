@@ -28,7 +28,7 @@ JANELAS = [
     ("gancho_mapa", 0.0, 2.40),
     ("cartao_26m", 18.80, 21.40),
     ("eclusa_subindo", 36.70, 39.50),
-    ("palco_tecnico", 41.20, 43.80),
+    ("eclusa_fluxo", 41.20, 43.80),
     ("cta_final", 76.30, 78.95),
 ]
 
@@ -42,7 +42,14 @@ def janelas(pl, meta):
               if b["s"] - a["e"] >= .15]
     ini = max((t for t in pausas if c["t0"]-6 <= t <= c["t0"]-1), default=max(0, c["t0"]-3))
     fim = min((t for t in pausas if c["t1"]+1 <= t <= c["t1"]+6), default=min(pl["duracao"], c["t1"]+3))
-    return [("entrada", ini, c["t0"]), ("eclusa_subindo", c["t0"], c["t1"]), ("saida", c["t1"], fim)]
+    # A explicação contínua pode ultrapassar o limite seguro de 12 s por corte.
+    # Dividir só na montagem da PRÉVIA, nunca no storyboard ou no mecanismo.
+    meio = min(c["t1"], c["t0"] + 9.4)
+    partes = [("entrada", ini, c["t0"]), ("eclusa_subindo", c["t0"], meio)]
+    if meio < c["t1"] - .01:
+        partes.append(("eclusa_fluxo", meio, c["t1"]))
+    partes.append(("saida", c["t1"], fim))
+    return partes
 
 
 def _ler(p: Path):
@@ -99,22 +106,24 @@ def quadros_reproduzidos(video):
     return np.frombuffer(raw, np.uint8).reshape(-1, 170, 96, 3).astype(np.int16)
 
 
-def conferir_montagem(mp4, partes, registro, base_eclusa, primeiro_quadro):
+def conferir_montagem(mp4, partes, registro, base_eclusa, clipe_inicio):
     final = quadros_reproduzidos(mp4)
     esperado = sum(j["frames_renderizados"] for j in registro)
     if len(final) != esperado:
         raise RuntimeError(f"MP4 final: {len(final)} quadros reproduzidos, esperados {esperado}")
     pos = 0
+    base_quadros = quadros_reproduzidos(base_eclusa)
     for video, janela in zip(partes, registro, strict=True):
         n = janela["frames_renderizados"]
         origem = quadros_reproduzidos(video)
         trecho = final[pos:pos + n]
         if len(origem) != n or np.abs(trecho - origem).mean(axis=(1, 2, 3)).max() > 4:
             raise RuntimeError(f"MP4 diverge do corte {janela['nome']}")
-        if janela["nome"] == "eclusa_subindo":
+        if janela["nome"].startswith("eclusa_"):
             # Área do mecanismo, sem o selo e as legendas da camada global.
             mecanismo = trecho[:, 50:104]
-            original = quadros_reproduzidos(base_eclusa)[primeiro_quadro:primeiro_quadro+n, 50:104]
+            primeiro_quadro = round((janela["inicio_original_s"] - clipe_inicio) * FPS)
+            original = base_quadros[primeiro_quadro:primeiro_quadro+n, 50:104]
             if len(original) != n or np.abs(mecanismo - original).mean(axis=(1, 2, 3)).max() > 5:
                 raise RuntimeError("MP4 não reproduz a animação V2 da eclusa")
             if np.abs(mecanismo[-1] - mecanismo[0]).mean() < 2:
@@ -152,7 +161,7 @@ def render(saida: Path) -> Path:
         if not (0 <= inicio < fim <= pl["duracao"]):
             raise RuntimeError(f"janela invalida {nome}: {inicio}-{fim}")
         clipes = [c for c in pl.get("clipes", []) if inicio < c["t1"] and c["t0"] < fim]
-        eclusa = nome == "eclusa_subindo"
+        eclusa = nome.startswith("eclusa_")
         if eclusa:
             if len(clipes) != 1 or clipes[0]["componente"] != "mecanismo.eclusa":
                 raise RuntimeError("janela sem a eclusa do plano")
@@ -200,7 +209,7 @@ def render(saida: Path) -> Path:
     montar(partes, saida / "voz.wav", registro, candidato)
     from src.v3.previa_telegram import _caber
     entrega = _caber(candidato)
-    conferir_montagem(entrega, partes, registro, base, primeiro_quadro)
+    conferir_montagem(entrega, partes, registro, base, next(c["t0"] for c in pl["clipes"] if c["componente"] == "mecanismo.eclusa"))
     if os.environ.get("ATLAS_MODO") == "continuo":
         conferir_voz_continua(entrega, saida / "voz.wav", registro[0]["inicio_original_s"],
                               sum(j["frames_renderizados"] for j in registro))
@@ -253,8 +262,20 @@ def enviar(saida: Path) -> None:
     if r["tipo"] == "trecho contínuo":
         a, b = r["janelas"][0]["inicio_original_s"], r["janelas"][-1]["fim_original_s"]
         titulo = f"ATLAS · Canal do Panamá | Eclusa em sequência ({a:.1f}–{b:.1f} s do episódio). Prévia privada."
-    previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
-                         ("video", mp4))
+    try:
+        previa_telegram._api("sendVideo", {"chat_id": chat, "caption": titulo, "supports_streaming": "true"},
+                             ("video", mp4))
+    except previa_telegram.EnvioRecusado as exc:
+        # Falha real 44324275229: a API do Telegram retornou HTTP 500 três vezes
+        # depois de 748 quadros, áudio e MP4 terem passado. Não perder a entrega
+        # por erro do método sendVideo: enviar o MESMO arquivo já conferido como
+        # documento, exclusivamente ao mesmo chat privado autorizado.
+        if "sendVideo: 500" not in str(exc):
+            raise
+        print("ATLAS_TELEGRAM_FALLBACK_DOCUMENT 500 sendVideo; MP4 inalterado", flush=True)
+        previa_telegram._api("sendDocument",
+                             {"chat_id": chat, "caption": titulo + " (MP4 anexado como arquivo)"},
+                             ("document", mp4))
     for path, descricao in [
         (saida / "quadros" / "styleframes.jpg", "ATLAS V1 — quadros visuais (privado)"),
         (saida / "quadros" / "celular.jpg", "ATLAS V1 — leitura em celular (privado)"),

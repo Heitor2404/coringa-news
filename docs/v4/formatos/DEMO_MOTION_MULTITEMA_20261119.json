@@ -1,0 +1,100 @@
+{
+  "versao": 1,
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "QA de movimento editorial — três temas explicativos, sem voz",
+  "objetivo": "Verificar na imagem duas famílias de motion graphics no MESMO FilmeEditorial. Não é episódio Guerra dos Chips nem versão aprovada.",
+  "assets": {
+    "ciencia_euv": {
+      "modo": "grafico",
+      "animar": true,
+      "pagina": "https://www.asml.com/en/products/euv-lithography-systems",
+      "licenca": "CC0",
+      "credito": "Animação explicativa original Coringa · descrição técnica ASML",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "COMO A LITOGRAFIA CRIA PADRÕES",
+        "etapas": [
+          "FONTE DE LUZ",
+          "PADRÃO NO WAFER",
+          "CIRCUITOS"
+        ],
+        "rotulo_fonte": "Fonte: ASML · sistemas EUV"
+      }
+    },
+    "indicador_tsmc": {
+      "modo": "grafico",
+      "animar": true,
+      "pagina": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000036/a20240404.htm",
+      "licenca": "CC0",
+      "credito": "Animação explicativa Coringa · TSMC/SEC 4 de abril de 2024",
+      "dados": {
+        "design": "numero",
+        "etiqueta": "RECUPERAÇÃO APÓS SISMO",
+        "valor": ">80%",
+        "linha1": "EQUIPAMENTOS",
+        "linha2": "RECUPERADOS PELA TSMC",
+        "fracao": 0.8,
+        "rotulo_fonte": "Fonte: TSMC/SEC"
+      }
+    },
+    "elo_global": {
+      "modo": "grafico",
+      "animar": true,
+      "pagina": "https://pr.tsmc.com/english/news/3338",
+      "licenca": "CC0",
+      "credito": "Animação explicativa Coringa · anúncio ASML/TSMC",
+      "dados": {
+        "design": "relacao",
+        "etiqueta": "CADEIA DE EQUIPAMENTOS",
+        "etapas": [
+          "ASML · EUROPA",
+          "TECNOLOGIA EUV",
+          "TSMC · TAIWAN"
+        ],
+        "rotulo_fonte": "Fonte: comunicado ASML/TSMC"
+      }
+    }
+  },
+  "cenas": [
+    {
+      "id": "m01",
+      "asset": "ciencia_euv",
+      "segundos": 3.7,
+      "lead": "CIÊNCIA · PROCESSO",
+      "headline": "COMO SE FORMAM PADRÕES",
+      "subject": "Princípio geral de litografia EUV · esquema, não filmagem real",
+      "cue": "DADO VERIFICADO",
+      "highlight": "",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar informação em movimento, sem card gigante estático",
+      "evidence": "representative"
+    },
+    {
+      "id": "m02",
+      "asset": "indicador_tsmc",
+      "segundos": 3.7,
+      "lead": "INDÚSTRIA · DADO",
+      "headline": "UMA RETOMADA DOCUMENTADA",
+      "subject": "TSMC SEC · percentual declarado em 4 de abril de 2024",
+      "cue": "DADO VERIFICADO",
+      "highlight": "",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar informação em movimento, sem card gigante estático",
+      "evidence": "representative"
+    },
+    {
+      "id": "m03",
+      "asset": "elo_global",
+      "segundos": 3.7,
+      "lead": "GEOPOLÍTICA · RELAÇÃO",
+      "headline": "EQUIPAMENTOS CONECTAM PAÍSES",
+      "subject": "ASML e TSMC · relação tecnológica ilustrativa, não operação filmada",
+      "cue": "DADO VERIFICADO",
+      "highlight": "",
+      "intencao": "explicar_contexto",
+      "aprendizado": "Mostrar informação em movimento, sem card gigante estático",
+      "evidence": "representative"
+    }
+  ]
+}

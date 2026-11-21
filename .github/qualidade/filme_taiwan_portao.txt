@@ -1,0 +1,25 @@
+# Preflight do primeiro filme completo Taiwan: 27,445 s.
+# Exigir clips físicos reais, Fab18, wafer, mapa ATLAS autenticado e relação/prova por cena.
+# Sem Gemini TTS, sem remotion render nem Telegram enquanto evidência insuficiente.
+
+# R2: manter bloqueio do payoff mesmo sem ativo externo no catálogo.
+
+# R3: fluxo real obrigatoriamente valida contrato, cenas, fonte e SHA de bytes; testes sintéticos separados.
+
+# R4: reexecução após correção do escopo de hashlib detectada em CI.
+
+# R5: nova politica de processo equivalente (laboratorio NIST) sem falsa atribuicao de registro.
+
+# R6: aceitar demonstracao equivalente corrigida e validar regressao multitema.
+
+# R7: tests of V3 rehydration, SHA and no automatic license approval.
+
+# R8: recuperar e atestar mapa ATLAS Taiwan autentico do artifact para o mesmo runner.
+
+# R9: contrato Taiwan agora contem SHA autenticado do MP4 ATLAS recuperado.
+
+# R10: historia define duracao sem max editorial, 65s somente meta de TikTok, Shorts ate 180s.
+
+# R11: policy duration narrative free and malformed policy regression; Taiwan story event-based.
+
+# R12: politica generica default narrativa e cobertura por cena + regressao Suez/Venezuela/conflito/chips.

@@ -1,0 +1,128 @@
+name: "QA — mapa Taiwan com ATLAS verdadeiro integrado ao filme (sem TTS)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/mapa_atlas_taiwan_ponte.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-mapa-nativo-taiwan-ponte
+  cancel-in-progress: true
+env:
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DO_NOT_TRACK: "1"
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  ponte_real:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Pré-requisitos de render, sem API e sem download de mídia
+        timeout-minutes: 10
+        run: |
+          python -m pip install -q pillow requests pytest numpy pyyaml cryptography
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Preparar mapa real Taiwan desde plano ATLAS e tempos Gemini já existentes
+        run: |
+          mkdir -p stage_atlas/taiwan
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P,ponte_mapa_atlas as B
+          original=json.loads(Path('src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json').read_text())
+          tim=json.loads(Path('tests/dados/atlas_chips_v2_tts_real_run_44450584008.json').read_text())
+          p=P.resolver_tempos(original,tim['palavras'],duracao_audio=tim['duracao_audio'])
+          errs=[(x['regra'],x['onde']) for x in P.validar(p) if x['gravidade']=='erro']
+          assert not errs,errs[:10]
+          # O primeiro palco cartográfico do roteiro real de Chips é Taiwan.
+          index=next(i for i,k in enumerate(p['palco']) if k['tipo']=='mapa')
+          k=p['palco'][index]
+          anterior=p['palco'][index-1] if index else None
+          # O compositor ATLAS usa fade de 0,5s entre palco de prova e mapa.
+          # Exportar APÓS a transição: não incluir primeiro quadro escuro no filme.
+          start=float(k['t'])+(.55 if anterior and anterior['tipo']!='mapa' else 0.)
+          length=2.6
+          nextstart=p['palco'][index+1]['t'] if index+1<len(p['palco']) else p['duracao']
+          assert start+length<=nextstart+.01,('janela de mapa insuficiente',start,nextstart)
+          prep=B.preparar(p,start,length,Path('stage_atlas/taiwan'),Path('motor4/remotion/public'))
+          assert prep['mapeamento']['rasters_ativos']
+          assert prep['mapeamento']['roi'][0]>100, 'seleção não é Taiwan'
+          print(json.dumps({'inicio':start,'duracao':length,
+            'frame_inicio':prep['frame_inicio'],'frame_fim':prep['frame_fim_inclusivo'],
+            'rasters':[x['nome'] for x in prep['mapeamento']['rasters_ativos']]},ensure_ascii=False))
+          PY
+      - name: Renderizar SOMENTE o trecho cartográfico existente no Remotion Formato
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          RANGE=$(python - <<'PY'
+          import json
+          d=json.loads(open('stage_atlas/taiwan/preparo_atlas.json').read())
+          print(f"{d['frame_inicio']}-{d['frame_fim_inclusivo']}")
+          PY
+          )
+          (
+            cd motor4
+            npx --no-install remotion render remotion/src/index.ts Formato \
+              ../stage_atlas/taiwan/mapa.mp4 \
+              --props=../stage_atlas/taiwan/props_atlas_formato.json \
+              --frames="$RANGE" \
+              --codec=h264 --crf=20 --concurrency=1 \
+              --public-dir=remotion/public --log=error
+          )
+      - name: Validar MP4 original e inserir no storyboard FilmeEditorial sem redesenhar
+        timeout-minutes: 7
+        run: |
+          python -m src.v4.formatos.ponte_mapa_atlas confirm \
+            stage_atlas/taiwan stage_atlas/taiwan/mapa.mp4
+          python -m src.v4.formatos.ponte_mapa_atlas attach \
+            docs/v4/formatos/filme_taiwan_prova.json \
+            s01-objeto \
+            stage_atlas/taiwan/mapa.mp4 \
+            stage_atlas/taiwan/comprovante_atlas.json \
+            stage_atlas/taiwan/filme_com_mapa_atlas.json \
+            --intent localizar
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.filme_editorial import avaliar
+          f=Path('stage_atlas/taiwan/filme_com_mapa_atlas.json')
+          p=json.loads(f.read_text(encoding='utf8'))
+          r=avaliar(p)
+          assert r['pronto'],r['bloqueios']
+          assert p['shots'][0]['type']=='atlas_map'
+          assert all(x['type']!='map' for x in p['shots'])
+          assert not r['contrato_comum']['inspecoes_com_veredito']
+          print('PONTE_REAL_FUNCIONA · MAPLIBRE_REAL, FILM, SEM VOZ NOVA, NÃO PUBLICADO')
+          PY
+      - name: Guardar apenas prévia interna de mapa ORIGINAL e rastros
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-taiwan-mapa-atlas-original-integrado-filme
+          path: |
+            stage_atlas/taiwan/preparo_atlas.json
+            stage_atlas/taiwan/comprovante_atlas.json
+            stage_atlas/taiwan/filme_com_mapa_atlas.json
+            stage_atlas/taiwan/mapa.mp4
+          retention-days: 7
+          if-no-files-found: warn

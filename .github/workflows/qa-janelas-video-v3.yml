@@ -1,0 +1,78 @@
+name: "QA — vídeo real: inspeção de janelas e recorte 9x16"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-janelas-video-v3.yml"
+      - "src/v4/formatos/inspecionar_janelas_video.py"
+      - "docs/v4/formatos/QA_JANELAS_NIST_20261120.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-janelas-video
+  cancel-in-progress: true
+jobs:
+  inspecao_real:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar ferramentas mínimas e validar fonte
+        run: |
+          python -m pip install -q pillow yt-dlp
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.coletar_videos_publicos import validar_fonte
+          d=json.loads(Path('docs/v4/formatos/CANDIDATOS_VIDEO_NIST_NANOFAB_20261119.json').read_text())
+          x=d['itens'][0]
+          validar_fonte(x)
+          plan=json.loads(Path('docs/v4/formatos/QA_JANELAS_NIST_20261120.json').read_text())
+          assert x['sha256_esperado']==plan['sha256_esperado']
+          assert x['autorizar_publicacao'] is False
+          print('FONTE ORIGINAL CADASTRADA SEM LICENCA COMERCIAL')
+          PY
+      - name: Recuperar original NIST pelo coletor JÁ existente
+        timeout-minutes: 9
+        run: |
+          mkdir -p stage_documental
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.coletar_videos_publicos import baixar_fonte,sha256_arquivo
+          d=json.loads(Path('docs/v4/formatos/CANDIDATOS_VIDEO_NIST_NANOFAB_20261119.json').read_text())['itens'][0]
+          target=Path('stage_documental/nist_nanofab_users_2017.mp4')
+          baixar_fonte(d,target)
+          assert sha256_arquivo(target)==d['sha256_esperado'],'original alterado; BLOQUEAR'
+          print('NIST ORIGINAL VERIFIED',target.stat().st_size)
+          PY
+      - name: Extrair quadros REAIS e prévias verticais de duas janelas
+        timeout-minutes: 7
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.inspecionar_janelas_video import inspecionar
+          p=json.loads(Path('docs/v4/formatos/QA_JANELAS_NIST_20261120.json').read_text())
+          r=inspecionar(p,Path('stage_documental/nist_nanofab_users_2017.mp4'),Path('qa_janelas_video'))
+          assert r['original']['sha256']==p['sha256_esperado']
+          assert len(r['janelas'])==2
+          assert all(not x['acao_fisica_comprovada'] for x in r['janelas'])
+          print('INSPECAO NIST POR JANELA SEM AUTORIZACAO',r['janelas'])
+          PY
+      - name: Guardar só contatos e relatório, não mídia original sem direitos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-janelas-video-nist-sem-aprovacao
+          path: qa_janelas_video/
+          retention-days: 5
+          if-no-files-found: warn

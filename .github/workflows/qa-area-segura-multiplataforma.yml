@@ -1,0 +1,116 @@
+name: "QA — áreas seguras Reels TikTok Shorts no compositor"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-area-segura-multiplataforma.yml"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "motor4/remotion/src/formatos/safe-zones-vertical.json"
+      - "src/v4/formatos/qa_area_segura.py"
+      - "src/v4/formatos/filme_editorial.py"
+      - "src/v4/formatos/diretor_hibrido.py"
+      - "src/v4/formatos/diretor_roteiro.py"
+      - "tests/test_area_segura_plataformas.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-area-segura-multiplataforma
+  cancel-in-progress: true
+jobs:
+  safe_layout:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Dependências QA e Remotion
+        run: |
+          python -m pip install -q pytest pillow requests numpy pyyaml cryptography
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          cd motor4
+          npm ci --no-audit --no-fund
+      - name: Testar safe zones e regressões em 3 domínios
+        run: |
+          python -m pytest -q             tests/test_area_segura_plataformas.py             tests/test_video_acao_real.py             tests/test_diretor_roteiro_v2.py             tests/test_mecanismos_explicativos.py
+          cd motor4
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Exigir área segura em duas animações sem modificar o storyboard original
+        run: |
+          mkdir -p qa_safe
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import qa_area_segura as S
+          source=Path('docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json')
+          p=json.loads(source.read_text('utf8'))
+          p['safe_area_profile']=S.PERFIL
+          (Path('qa_safe')/'plano_zona_segura.json').write_text(
+              json.dumps(p,ensure_ascii=False,indent=2),encoding='utf8')
+          print('MOTOR SAFE SOURCE',source,len(p.get('shots') or []))
+          PY
+          python -m src.v4.formatos.qa_area_segura             qa_safe/plano_zona_segura.json qa_safe/relatorio_areas_seguras.json
+          python -m src.v4.formatos.filme_editorial             qa_safe/plano_zona_segura.json qa_safe motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('qa_safe/props.json')
+          d=json.loads(p.read_text('utf8'))
+          # O reflow novo AINDA NAO ganhou aprovacao visual. Esta flag
+          # so existe para a QA privada, nunca no fluxo normal do motor.
+          d['preview']=True
+          d['private_review_only']=True
+          d['portrait_experiment']=True
+          d['reference_style_preview']=False
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
+      - name: Renderizar a prova dos dois mecanismos com o layout protegido
+        timeout-minutes: 9
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial             ../qa_safe/prova_safe_multitema.mp4             --props=../qa_safe/props.json             --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5             --concurrency=2 --log=error
+      - name: Capturar frames e sobrepor as 3 plataformas + interseção conservadora
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height             -of json qa_safe/prova_safe_multitema.mp4 > qa_safe/metadata.json
+          ffmpeg -hide_banner -loglevel error -y -ss 2.2             -i qa_safe/prova_safe_multitema.mp4 -frames:v 1 qa_safe/euv.png
+          ffmpeg -hide_banner -loglevel error -y -ss 10.0             -i qa_safe/prova_safe_multitema.mp4 -frames:v 1 qa_safe/eclusa.png
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          from src.v4.formatos import qa_area_segura as S
+          d=Path('qa_safe')
+          for label in ('euv','eclusa'):
+            S.overlay(d/(label+'.png'),d/(label+'_plataformas.jpg'))
+          m=json.loads((d/'metadata.json').read_text('utf8'))
+          v=[s for s in m['streams'] if s['codec_type']=='video']
+          assert len(v)==1 and v[0]['width']==540 and v[0]['height']==960
+          assert not any(s['codec_type']=='audio' for s in m['streams'])
+          p=json.loads((d/'props.json').read_text('utf8'))
+          assert p['safe_area_profile']==S.PERFIL
+          assert len(p['shots'])==2
+          result={'status':'QA_SAFE_ESTRUTURAL_PASSOU_VISUAL_HUMANO_PENDENTE',
+                  'perfil':S.PERFIL,
+                  'medias':len(p['shots']),
+                  'sha256_render':hashlib.sha256((d/'prova_safe_multitema.mp4').read_bytes()).hexdigest(),
+                  'revisao_visual_final':'PENDENTE','publicar':False,'telegram':False}
+          (d/'resultado.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          print(json.dumps(result,ensure_ascii=False))
+          PY
+      - name: Guardar MP4, perfis e overlays só no artifact privado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-safe-zones-mecanismos-multiplataforma
+          path: qa_safe/
+          retention-days: 5
+          if-no-files-found: warn

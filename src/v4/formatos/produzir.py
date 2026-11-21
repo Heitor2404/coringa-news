@@ -47,10 +47,27 @@ def narrar(plano: dict, saida: Path) -> dict:
         flac = saida / 'voz.flac'
         flac.write_bytes(base64.b64decode(pac['flac_b64']))
         rodar(['ffmpeg', '-v', 'error', '-y', '-i', flac, '-ar', '48000', saida / 'voz.wav'])
-        meta = {'palavras': pac['palavras'], 'duracao': pac['duracao'], 'origem': pac.get('origem')}
+        meta = {'palavras': pac['palavras'], 'duracao': pac['duracao'], 'origem': pac.get('origem'),
+                'narrador': {'modo': 'arquivo_cifrado_preservado', 'origem_declarada': pac.get('origem'),
+                             'aprovacao_timbre': 'pendente_humano'}}
     else:
         from src import voz
-        wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts')
+        if plano.get('formato') == 'atlas':
+            preset = P.canal(plano.get('canal', 'coringa')).get('narrador') or {}
+            if preset.get('motor') != 'gemini' or not preset.get('voz') or preset.get('fallback') != 'bloquear':
+                raise RuntimeError('ATLAS: preset de narrador ausente/inválido; recuso fallback silencioso')
+            config_voz = {'voz_motor': 'gemini', 'voz_gemini': preset['voz'],
+                          'velocidade_gemini': preset.get('velocidade', 1),
+                          'estilo_gemini': preset.get('estilo', voz.ESTILO_PADRAO),
+                          '_estilo_separado': True}
+            wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts',
+                                                 cfg=config_voz, exigir_gemini=True)
+            narrador = {'modo': 'tts_travado', 'motor': 'gemini', 'voz': preset['voz'],
+                        'velocidade': config_voz['velocidade_gemini'], 'fallback': 'proibido',
+                        'aprovacao_timbre': 'pendente_humano'}
+        else:
+            wav, _tempos, caps, dur = voz.narrar([{'fala': n['texto']}], saida / 'tts')
+            narrador = {'modo': 'tts_legado', 'motor': 'nao_verificado'}
         shutil.copy(wav, saida / 'voz.wav')
         pal = []
         for bl in caps:
@@ -58,7 +75,8 @@ def narrar(plano: dict, saida: Path) -> dict:
             for k, w in enumerate(ws):
                 fim = ws[k + 1]['s'] if k + 1 < len(ws) else bl['end']
                 pal.append({'w': w['w'], 's': w['s'], 'e': round(fim, 3), 'hl': bool(w.get('hl'))})
-        meta = {'palavras': pal, 'duracao': round(dur, 3), 'origem': 'TTS desta execução (uma chamada)'}
+        meta = {'palavras': pal, 'duracao': round(dur, 3), 'origem': 'TTS desta execução', 'narrador': narrador}
+    meta['sha256_voz'] = _sha(saida / 'voz.wav')
     # marcas de tempo corrigidas pela VOZ (pausas reais como âncoras; sem IA) — legenda e âncoras do plano no tempo certo
     from src.v4.formatos import legenda_sync
     meta['palavras_originais'] = meta['palavras']
@@ -88,11 +106,17 @@ def assets_do_plano(plano: dict) -> list[str]:
             if q.get('asset'):
                 out.add(q['asset'])
             out |= {m['asset'] for m in q.get('marcos') or [] if isinstance(m, dict) and m.get('asset')}
+    out |= {(c.get('params') or {})['asset'] for c in plano.get('clipes') or []
+            if c.get('componente') == 'registro.video' and (c.get('params') or {}).get('asset')}
     return sorted(out)
 
 
 def _origem(it: dict, cache: Path | None) -> tuple[bytes, str]:
     """bytes DA ORIGEM da mídia (URL da biblioteca) — ou do cache local indexado por sha256 — e de onde vieram"""
+    if it.get('origem_biblioteca_v3'):
+        from src.v4.formatos import ponte_biblioteca
+        # Pexels manual: ler somente bytes V3 verificados, NUNCA raspar a página.
+        return ponte_biblioteca.bytes_originais(it)
     sha = it.get('sha256_origem')
     if cache and sha:
         for f in cache.glob(f'{sha}.*'):
@@ -122,9 +146,8 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
 
     from PIL import Image
 
-    from src.v4 import viabilidade
-    from src.v4.formatos import plano as P
-    por = {it['id']: it for it in viabilidade.carregar()['itens']}
+    from src.v4.formatos import plano as P, ponte_biblioteca
+    por = {it['id']: it for it in ponte_biblioteca.catalogo()['itens']}
     PUBLICO.mkdir(parents=True, exist_ok=True)
     (saida / 'ativos').mkdir(parents=True, exist_ok=True)
     cache = cache or (Path(os.environ['CORINGA_MIDIA_LOCAL']) if os.environ.get('CORINGA_MIDIA_LOCAL') else None)
@@ -136,15 +159,46 @@ def ativos(plano: dict, saida: Path, cache: Path | None = None) -> dict:
         # cópia local de desenvolvimento (CORINGA_DEV, sem rede) não é a origem: não confere, e fica marcada como não conferida
         if it.get('sha256_origem') and sha_o != it['sha256_origem'] and veio != 'cache-local-sem-origem':
             raise RuntimeError(f'{a}: o arquivo da origem mudou (sha256 {sha_o[:12]} ≠ {it["sha256_origem"][:12]}) — não entra no vídeo')
-        im = Image.open(io.BytesIO(bruto)).convert('RGB')
-        if max(im.size) > 2000:
-            im.thumbnail((2000, 2000))
-        nome = nome_publico(a)              # nome PRÓPRIO por mídia: dois episódios na mesma pasta não se sobrescrevem (44084129999)
-        dest = PUBLICO / f'{nome}.jpg'
-        im.save(dest, 'JPEG', quality=92)
-        shutil.copy(dest, saida / 'ativos' / dest.name)
-        out[a] = {'src': f'_formato/{nome}.jpg', 'w': im.size[0], 'h': im.size[1], 'credito': it['credito'], 'licenca': it['licenca'],
-                  'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o, 'origem_conferida': bool(it.get('sha256_origem')) and sha_o == it['sha256_origem'], 'veio_de': veio}
+        nome = nome_publico(a)              # nome PRÓPRIO por mídia; não sobrescrever vídeos/fotos diferentes.
+        if it.get('natureza') == 'video':
+            # A origem é validada via sha256; dados reais são sondados pelo ffprobe do V4 (não por extensão inferida da página).
+            if it.get('uso_comercial') != 'sim' or not it.get('sha256_origem'):
+                raise RuntimeError(f'{a}: vídeo precisa de licença comercial explícita e SHA256 da origem')
+            from urllib.parse import urlsplit
+            from src.v4.util import sondar
+            ext = (it.get('ext') or Path(urlsplit(it['url']).path).suffix).lower()
+            permitidos = ('.mp4', '.webm', '.mov')
+            if ext not in permitidos:
+                # Importação MANUAL: página do Pexels/Commons + arquivo local de hash conferido.
+                # Não faz scraping; só aceita cache previamente obtido e extensão declarada
+                # idêntica ao arquivo (ex.: CORINGA_MIDIA_LOCAL/<sha256>.mp4).
+                manual = str(it.get('arquivo_ext') or '').lower()
+                cache_nome = veio.removeprefix('cache:') if veio.startswith('cache:') else ''
+                if manual not in permitidos or Path(cache_nome).suffix.lower() != manual:
+                    raise RuntimeError(f'{a}: URL sem extensão de vídeo requer arquivo local legítimo identificado por SHA256')
+                ext = manual
+            dest = PUBLICO / f'{nome}{ext}'
+            dest.write_bytes(bruto)
+            info = sondar(dest)
+            if not info['w'] or not info['h'] or info['duracao'] <= 0:
+                dest.unlink(missing_ok=True)
+                raise RuntimeError(f'{a}: vídeo original inválido ou sem duração')
+            shutil.copy(dest, saida / 'ativos' / dest.name)
+            out[a] = {'src': f'_formato/{dest.name}', 'tipo': 'video', 'w': info['w'], 'h': info['h'],
+                      'duracao': round(info['duracao'], 3), 'credito': it['credito'], 'licenca': it['licenca'],
+                      'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o,
+                      'origem_conferida': sha_o == it['sha256_origem'], 'veio_de': veio}
+        else:
+            im = Image.open(io.BytesIO(bruto)).convert('RGB')
+            if max(im.size) > 2000:
+                im.thumbnail((2000, 2000))
+            dest = PUBLICO / f'{nome}.jpg'
+            im.save(dest, 'JPEG', quality=92)
+            shutil.copy(dest, saida / 'ativos' / dest.name)
+            out[a] = {'src': f'_formato/{nome}.jpg', 'tipo': 'foto', 'w': im.size[0], 'h': im.size[1],
+                      'credito': it['credito'], 'licenca': it['licenca'],
+                      'url': it['url'], 'sha256': _sha(dest), 'sha256_origem': sha_o,
+                      'origem_conferida': bool(it.get('sha256_origem')) and sha_o == it['sha256_origem'], 'veio_de': veio}
     rast = PUBLICO / 'raster'
     rast.mkdir(parents=True, exist_ok=True)
     for r in plano.get('rasters') or []:
@@ -169,7 +223,7 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         return {'pronto': False, 'itens': itens}
     meta = _ler(narr)
     try:
-        pl = P.resolver_tempos(plano_bruto, meta['palavras'])
+        pl = P.resolver_tempos(plano_bruto, meta['palavras'], duracao_audio=meta['duracao'])
         add('âncoras na fala', True, f"{len(meta['palavras'])} palavras")
     except ValueError as e:
         add('âncoras na fala', False, str(e))
@@ -182,24 +236,43 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
         add(f"plano: {v['regra']} {v['onde']}", v['gravidade'] != 'erro', v['texto'])
     if not any(not i['ok'] and i['item'].startswith('plano:') for i in itens):
         add('plano (slots, colisões, texto, progressão, repetição, modalidades)', True, f'{len(P.camadas(pl))} camadas')
-    bib = {it['id']: it for it in viabilidade.carregar()['itens']}
+    from src.v4.formatos import ponte_biblioteca
+    bib = {it['id']: it for it in ponte_biblioteca.catalogo()['itens']}
     for a in assets_do_plano(pl):
         it = bib.get(a)
         ok = bool(it and it.get('licenca') and it.get('credito') and (it.get('prova') or {}).get('midia_corresponde') is True)
+        if (it or {}).get('natureza') == 'video':
+            ok = bool(ok and it.get('uso_comercial') == 'sim' and it.get('sha256_origem'))
         add(f'mídia comprovada {a[:60]}', ok, (it or {}).get('licenca', 'fora da biblioteca'))
         f = PUBLICO.parent / imgs.get(a, {}).get('src', '_nada')
         reg = imgs.get(a) or {}
         add(f'arquivo de mídia {a[:50]}', f.exists() and reg.get('w'), str(f.name))
         # o arquivo que vai ao render É o baixado da origem DESTA mídia (impressão digital), não outro com o mesmo nome
+        ext = Path(reg.get('src') or '').suffix.lower()
+        certo = (f.name == nome_publico(a) + ext and
+                 (ext in ('.mp4', '.webm', '.mov') if reg.get('tipo') == 'video' else ext == '.jpg'))
         add(f'arquivo é a mídia certa {a[:44]}', f.exists() and reg.get('sha256') == _sha(f) and reg.get('url') == (it or {}).get('url')
-            and f.name == nome_publico(a) + '.jpg', reg.get('sha256', 'sem impressão digital')[:16])
+            and certo, reg.get('sha256', 'sem impressão digital')[:16])
         add(f'origem conferida (sha256 da URL) {a[:40]}', reg.get('origem_conferida') is True or not (it or {}).get('sha256_origem')
             or (bool(os.environ.get('CORINGA_DEV')) and reg.get('veio_de') == 'cache-local-sem-origem'),
             f"{reg.get('sha256_origem', '?')[:16]} via {str(reg.get('veio_de', '?'))[:40]}" + ('' if (it or {}).get('sha256_origem') else ' (1º registro)'))
         lic = (it or {}).get('licenca', '#')
-        cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
-                        for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else (L['p'].get('meta') or [])))
-        add(f'crédito visível {a[:50]}', any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
+        if reg.get('tipo') == 'video':
+            # Crédito vem da biblioteca comprovada e é inserido na Camada global, em faixa segura.
+            cred = reg.get('credito') or ''
+            clip_refs = [c for c in pl.get('clipes') or [] if (c.get('params') or {}).get('asset') == a]
+            add(f'clipe video registrado {a[:40]}', bool(clip_refs), f'{len(clip_refs)} usos')
+            for c in clip_refs:
+                inicio = (c.get('params') or {}).get('inicio', 0)
+                dur = c['t1'] - c['t0']
+                add(f'video duracao/resolucao {a[:35]}', isinstance(inicio, (float, int)) and
+                    inicio >= 0 and inicio + dur <= reg.get('duracao', 0) + .01 and
+                    reg.get('w', 0) >= 640 and reg.get('h', 0) >= 360,
+                    f"fonte {reg.get('w')}x{reg.get('h')} · {reg.get('duracao')}s · {inicio}+{dur:.2f}s")
+        else:
+            cred = ' '.join(m for b in pl['beats'] for L in b['camadas'] if (L.get('p') or {}).get('asset') == a
+                            for m in ([L['p']['meta']] if isinstance(L['p'].get('meta'), str) else (L['p'].get('meta') or [])))
+        add(f'crédito visível {a[:50]}', bool(cred) and any(x.lower() in cred.lower() for x in (lic, 'domínio público', 'cc by')), cred[:90])
     if pl.get('formato') == 'atlas':
         # manifesto de atribuição cartográfica: toda camada exibível declarada, com uso comercial; nada de fonte proibida;
         # e atribuição de mapa ≠ fonte factual (não se misturam)
@@ -249,7 +322,8 @@ def preflight(plano_bruto: dict, saida: Path, palco_real: bool = True) -> dict:
                 f"{(topo.get('meta') or {}).get('rota_km')} km · {(topo.get('meta') or {}).get('rota_fonte')}")
     for c in pl.get('clipes') or []:
         dur_c = float((c.get('fonte') or {}).get('dur') or round(c['t1'] - c['t0'], 2))
-        geo = prerender.geometria_palco(c['componente'], params_clipe(c, P.canal(pl.get('canal', 'coringa'))), dur_c, False, saida / 'pre_clipe') if palco_real else []
+        geo = (prerender.geometria_palco(c['componente'], params_clipe(c, P.canal(pl.get('canal', 'coringa'))), dur_c, False, saida / 'pre_clipe')
+               if palco_real and c.get('componente') != 'registro.video' else [])
         add(f"clipe {c['componente']} {c['t0']:.1f}–{c['t1']:.1f}s sem colisão com a identidade", not geo, '; '.join(geo)[:200])
     root = (RAIZ / 'motor4' / 'remotion' / 'src' / 'Root.tsx').read_text()
     add('composição Remotion Formato registrada', 'id="Formato"' in root)
@@ -273,14 +347,29 @@ def params_clipe(c: dict, can: dict) -> dict:
     # ATLAS tem painel tecnico proprio, sem alterar a mesa/diagramas do DOSSIÊ.
     preset = p.get('tecnico_atlas') if can.get('canal') == 'coringa' else None
     tema = {k: v for k, v in (preset or p.get('tecnico') or {}).items() if not k.startswith('_')}
-    return {**c['params'], 'v4': True, **({'tema': tema} if tema else {})}
+    return {**c['params'], 'v4': True, **({'tema': tema} if tema else {}),
+            'direcao_visual': {k: v for k, v in (can.get('direcao_visual') or {}).items() if not k.startswith('_')}}
 
 
-def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path) -> None:
+def _clipe(c: dict, can: dict, trab: Path, saida_mp4: Path, imgs: dict | None = None) -> None:
     """renderiza o clipe; com c['fonte'] = {dur, ini} renderiza a animação inteira e usa só o trecho [ini, ini + furo]
     (ex.: gancho de 2,4 s mostrando a água subindo e o navio subindo junto, sem acelerar a física)"""
     from src.v4.backends import legado
     furo = round(c['t1'] - c['t0'], 3)
+    if c['componente'] == 'registro.video':
+        from src.v4.util import FalhaBackend
+        from src.v4.backends import legado
+        a = (c.get('params') or {}).get('asset')
+        reg = (imgs or {}).get(a) or {}
+        src = PUBLICO.parent / reg.get('src', '_ausente')
+        if not a or reg.get('tipo') != 'video' or not src.is_file():
+            raise FalhaBackend('registro.video sem arquivo comprovado: preflight precisa bloquear')
+        # Reusa o backend de vídeo REAL do V4 integral: corte estático, 9:16, sem esticar e sem áudio original.
+        registro = legado.render_video(src, [reg['w'], reg['h']], None,
+                                       float(c.get('params', {}).get('inicio', 0)), furo,
+                                       saida_mp4, trab)
+        print('ATLAS_VIDEO_REGISTRO ' + json.dumps({'asset': a, **registro}, ensure_ascii=False), flush=True)
+        return
     f = c.get('fonte')
     if not f:
         legado.render_v2(c['componente'], params_clipe(c, can), furo, trab, saida_mp4)
@@ -321,6 +410,23 @@ def sfx_do_plano(pl: dict) -> list[dict]:
     return out
 
 
+def motivos_bloqueio(portoes: dict, ritmo: dict, legenda_sync: dict | None = None, audio: dict | None = None) -> list[str]:
+    """Expõe os portões exatos que impedem a publicação; sem resumo genérico."""
+    motivos = []
+    for j in portoes.get('preto_ou_congelado') or []:
+        motivos.append(f"G-MP4-JANELA {j['de']}–{j['ate']}s: " + '; '.join(j.get('problemas') or []))
+    if not portoes.get('audio_ok'):
+        a = audio or {}
+        motivos.append(f"G-AUDIO: LUFS={a.get('lufs')} pico={a.get('pico')} — fora do preset do canal")
+    if not portoes.get('ritmo_ok'):
+        sem = (ritmo or {}).get('sem_camera') or {}
+        motivos.append(f"G-RITMO: {sem.get('maior_trecho_parado_s')} s sem informação visual, limite 3 s (câmera desconsiderada)")
+    if not portoes.get('legenda_ok'):
+        l = legenda_sync or {}
+        motivos.append(f"G-LEGENDA: atraso={l.get('atraso_s')} s; palavras sem fala={l.get('n_palavras_sem_fala')}; trocas bruscas={l.get('trocas_bruscas')}")
+    return motivos
+
+
 def render(saida: Path) -> dict:
     import time
     from src.v4 import compositor, portoes, som
@@ -332,6 +438,9 @@ def render(saida: Path) -> dict:
     if not rq.exists() or not _ler(rq).get('ok'):
         raise SystemExit('quadros renderizados com problema (ou não conferidos): não renderizo o vídeo')
     pl, meta, imgs = _ler(saida / 'plano_resolvido.json'), _ler(saida / 'narracao.json'), _ler(saida / 'ativos.json')
+    rv_arq = saida / 'revisao_visual.json'
+    if pl.get('formato') == 'atlas' and (not rv_arq.exists() or not _ler(rv_arq).get('pronto')):
+        raise SystemExit('revisão visual independente ausente/reprovada: não renderizo o MP4 ATLAS')
     trab = (saida / '_trabalho').resolve()
     trab.mkdir(parents=True, exist_ok=True)
     can = P.canal(pl.get('canal', 'coringa'))
@@ -347,7 +456,7 @@ def render(saida: Path) -> dict:
         if c['t0'] > t:
             partes.append(trab / f'p{len(partes)}.mp4'); _trecho(base, t, c['t0'], partes[-1])
         clip = trab / f'clipe{k}.mp4'
-        _clipe(c, can, trab / f'clipe{k}', clip)
+        _clipe(c, can, trab / f'clipe{k}', clip, imgs)
         partes.append(clip)
         t = c['t1']
     if t < pl['duracao']:
@@ -355,7 +464,7 @@ def render(saida: Path) -> dict:
     video = compositor.concatenar([{'arq': p} for p in partes], trab, trab / 'video.mp4') if len(partes) > 1 else base
     # camada global: marca + legendas (estilo da legenda = canal por formato; P.props_camada é a fonte única)
     camada = trab / 'camada.webm'
-    pcam = P.props_camada(pl, meta)
+    pcam = P.props_camada(pl, meta, imgs)
     t_camada = time.monotonic()
     js.remotion('Camada', pcam, camada, trab / 'camada', alfa=True)
     print(f"ATLAS_PERF legendas_marca_alpha_s={time.monotonic() - t_camada:.2f}", flush=True)
@@ -383,17 +492,23 @@ def render(saida: Path) -> dict:
     from src.v4.formatos import ritmo
     au = medir_audio(mp4)
     # duas métricas: bruta (comparável às referências) e SEM CÂMERA (zoom/pan não é progresso — decide o portão)
-    rit = ritmo.medir_completo(mp4)
+    rit = ritmo.medir_completo(mp4, usar_local=(pl['formato'] == 'atlas'))
     from src.v4.formatos import legenda_sync
     ls = legenda_sync.conferir(saida / 'narracao.json', saida / 'voz.wav', P.estilo_legenda(pl).get('max_palavras', 4))
     res = {'video_id': pl['video_id'], 'formato': pl['formato'], 'mp4': str(mp4), 'duracao': pl['duracao'], 'info': info, 'som': reg_som,
            'audio': au, 'janelas': janelas, 'nao_publicado': True, 'ritmo': {k: v for k, v in rit.items()},
            'portoes': {'preto_ou_congelado': [j for j in janelas if j['problemas']],
                        'audio_ok': au.get('lufs') is not None and abs(au['lufs'] - (can.get('som') or {}).get('lufs', -14)) <= (can.get('som') or {}).get('tolerancia_lufs', .5) and (au.get('pico') or 0) <= (can.get('som') or {}).get('true_peak', -1.0)}}
+    if pl['formato'] == 'atlas' and rv_arq.exists():
+        rv = _ler(rv_arq)
+        res['revisao_visual_pre_render'] = {'pronto': rv['pronto'], 'chamadas': rv['chamadas'],
+                                           'bloqueios': len(rv['bloqueios'])}
     res['portoes']['ritmo_ok'] = rit['sem_camera']['maior_trecho_parado_s'] <= 3
     res['portoes']['legenda_ok'] = ls['ok']
     res['legenda_sync'] = {k: ls[k] for k in ('atraso_s', 'n_palavras_sem_fala', 'fala_sem_legenda', 'trocas_bruscas', 'grupos') if k in ls}
-    res['estado'] = 'AGUARDANDO_APROVACAO_HUMANA' if not res['portoes']['preto_ou_congelado'] and all(res['portoes'][k] for k in ('audio_ok', 'ritmo_ok', 'legenda_ok')) else 'BLOQUEADO'
+    res['motivos_bloqueio'] = motivos_bloqueio(res['portoes'], rit, ls, au)
+    res['estado'] = 'BLOQUEADO' if res['motivos_bloqueio'] else 'AGUARDANDO_APROVACAO_HUMANA'
+    print('ATLAS_FISCAL ' + json.dumps({'estado': res['estado'], 'motivos_bloqueio': res['motivos_bloqueio']}, ensure_ascii=False), flush=True)
     _gravar(saida / 'resultado.json', res)
     return res
 
@@ -490,6 +605,8 @@ def fiscal_camadas(saida: Path, pl: dict) -> Path:
          f"- janelas pretas/congeladas: {len(port.get('preto_ou_congelado') or [])} · áudio {ok(port.get('audio_ok'))} ({(r.get('audio') or {}).get('lufs')} LUFS, {(r.get('audio') or {}).get('pico')} dBTP)",
          f"- ritmo sem câmera {ok(port.get('ritmo_ok'))}: maior trecho {(rit.get('sem_camera') or {}).get('maior_trecho_parado_s')} s · legenda × áudio {ok(port.get('legenda_ok'))}",
          '', '## 2. Correção factual (automática — rastreio, não verificação de verdade)']
+    L += [f"- estado: {r.get('estado', 'sem MP4')}"]
+    L += [f"- BLOQUEIO: {m}" for m in r.get('motivos_bloqueio') or []]
     fatos = {f['id']: f for f in (pl.get('narracao') or {}).get('fatos', []) if isinstance(f, dict)}
     for L_ in P.camadas(pl):
         p = L_.get('p') or {}
@@ -515,23 +632,57 @@ def fiscal_camadas(saida: Path, pl: dict) -> Path:
 # ---------------------------------------------------------------- prévia privada
 def telegram(saida: Path, titulo: str) -> dict:
     """MP4 + estado + preflight + portões + áudio, só ao chat privado autorizado. NÃO é publicação."""
-    from src.v3 import estado_final, previa_telegram
+    from src.v3 import previa_telegram
+    from src.v4.formatos import estado as gate
     r = _ler(saida / 'resultado.json') if (saida / 'resultado.json').exists() else None
     pf = _ler(saida / 'preflight.json') if (saida / 'preflight.json').exists() else {'pronto': False, 'itens': []}
     linhas = [f'FORMATO — PRÉVIA PRIVADA, NÃO PUBLICADO · {titulo}']
     if not r:
-        linhas += ['STATUS: BLOQUEADO (não renderizado)', 'preflight:'] + [f"- NÃO {i['item']}: {i['detalhe']}" for i in pf['itens'] if not i['ok']][:15]
+        linhas.append('STATUS: BLOQUEADO (não renderizado)')
+        triagem_arq = saida / 'triagem_editorial.json'
+        triagem = _ler(triagem_arq) if triagem_arq.exists() else None
+        if triagem and triagem.get('bloqueios'):
+            linhas.append('etapa: triagem editorial ANTES DA VOZ')
+            linhas += [f"- {b['codigo']} [{b['beat']}]: {b['motivo']}" for b in triagem['bloqueios'][:12]]
+        falhas_preflight = [i for i in pf.get('itens', []) if not i.get('ok')]
+        if falhas_preflight:
+            linhas.append('etapa: preflight')
+            linhas += [f"- NÃO {i['item']}: {i['detalhe']}" for i in falhas_preflight[:15]]
+        elif not (triagem and triagem.get('bloqueios')):
+            linhas.append(f"preflight: {sum(i.get('ok', False) for i in pf.get('itens', []))}/{len(pf.get('itens', []))} itens OK")
+            caminho_quadros = saida / 'quadros' / 'relatorio.json'
+            if caminho_quadros.exists():
+                quadros = _ler(caminho_quadros)
+                erros_quadros = [p for p in quadros.get('problemas', []) if not p.get('aviso')]
+                linhas.append(f"etapa: quadros ({len(quadros.get('quadros', []))} analisados; {len(erros_quadros)} erros)")
+                linhas += [f"- {p.get('t', 0):.2f}s {p.get('regra', 'SEM-REGRA')}: {p.get('texto', '')}" for p in erros_quadros[:12]]
+                ac_caminho = saida / 'autocorrecao.json'
+                if ac_caminho.exists():
+                    ac = _ler(ac_caminho)
+                    linhas.append(f"autocorreção: {ac.get('decisao')} · {ac.get('tentativas', 0)} tentativa(s)")
+                    if ac.get('motivo'):
+                        linhas.append('motivo: ' + str(ac['motivo'])[:350])
+                rv_caminho = saida / 'revisao_visual.json'
+                if rv_caminho.exists():
+                    rv = _ler(rv_caminho)
+                    linhas.append(f"etapa: revisão visual independente ({rv.get('chamadas', 0)} análises; {len(rv.get('bloqueios', []))} cenas reprovadas)")
+                    for beat in (rv.get('bloqueios') or [])[:5]:
+                        linhas.append(f"- CENA {beat.get('beat')}: " + '; '.join(beat.get('problemas') or [])[:350])
+                elif not erros_quadros:
+                    linhas.append('revisão visual ausente; verificar logs da etapa de render')
+            else:
+                linhas.append('etapa interrompida antes do relatório de quadros; consultar logs do workflow')
         chat, _ = previa_telegram.chat_autorizado()
         previa_telegram._api('sendMessage', {'chat_id': chat, 'text': '\n'.join(linhas)[:3900]})
         return {'enviado': True, 'sem_mp4': True}
     au = r.get('audio') or {}
-    linhas += [f"STATUS: {r['estado']} (aprovação estética só do Heitor)", f"duração {r['duracao']:.1f} s · formato {r['formato']}",
+    est = gate.avaliar(r)
+    linhas += [f"STATUS EDITORIAL: {est['estado']} (aprovação estética só do responsável humano)", f"duração {r['duracao']:.1f} s · formato {r['formato']}",
                f"preflight: {sum(i['ok'] for i in pf['itens'])}/{len(pf['itens'])} itens OK",
                f"áudio no MP4: {au.get('lufs')} LUFS · pico {au.get('pico')} dBTP",
                f"janelas de 4 s pretas/congeladas: {len(r['portoes']['preto_ou_congelado'])}"]
     linhas += [f"- {j['de']}–{j['ate']}s: {'; '.join(j['problemas'])}" for j in r['portoes']['preto_ou_congelado']][:8]
-    est = {'estado': estado_final.AGUARDANDO if r['estado'] == estado_final.AGUARDANDO else estado_final.BLOQUEADO,
-           'motivos': [] if r['estado'] == estado_final.AGUARDANDO else ['portões do MP4 final']}
+    linhas += [f"BLOQUEIO: {m}" for m in est.get('motivos') or []][:8]
     rit = r.get('ritmo') or {}
     linhas += [f"ritmo (zona de conteúdo, 4 q/s): bruto {rit.get('maior_trecho_parado_s')} s · sem câmera {(rit.get('sem_camera') or {}).get('maior_trecho_parado_s')} s "
                f"(portão ≤ 3 s; ref. A: 2 s)", f"legenda × áudio real: {'OK' if r['portoes'].get('legenda_ok') else 'FALHA'} {r.get('legenda_sync', {}).get('atraso_s')} s"]

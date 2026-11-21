@@ -1,0 +1,42 @@
+name: "QA — proibir mapa elementar e voz de teste em produção"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/bloqueio_mapas_voz.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-nao-mapa-elementar
+  cancel-in-progress: true
+jobs:
+  fiscal:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Testes de regressão, cartografia legítima, voz e legados
+        run: |
+          python -m pip install -q pytest pillow requests
+          python -m pytest -q             tests/test_bloqueio_mapa_elementar_voz_final.py             tests/test_filme_editorial.py             tests/test_filme_panama_ciclo_19s.py             tests/test_fiscal_progressao.py             tests/test_contrato_visual_multitema.py             tests/test_qa_episodios_multitema.py
+      - name: Compilação real do compositor sem mapa rejeitado
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Garantir ausência de workflow que envia mapa vetorial rejeitado
+        run: |
+          test ! -f motor4/remotion/src/formatos/NarrativeMapStage.tsx
+          test ! -f .github/workflows/qa-mapa-rotulos-r2.yml
+          test ! -f .github/workflows/qa-mapas-r2-telegram.yml
+          test -f motor4/remotion/src/formatos/Palco.tsx
+          test -f motor4/remotion/src/MapaRota.tsx
+          echo "CARTOGRAFIA_REAL_PRESERVADA · MAPA_SIMPLIFICADO_ELIMINADO · VOZ_FINAL_GEMINI_CHARON"

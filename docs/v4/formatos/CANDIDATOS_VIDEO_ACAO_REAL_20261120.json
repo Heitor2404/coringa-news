@@ -1,0 +1,41 @@
+{
+  "versao": 1,
+  "modo": "PROSPECCAO_ORIGINAIS_SEM_APROVACAO",
+  "publicar": false,
+  "video_fontes": [
+    {
+      "id": "cnc_torneamento",
+      "dominio": "usinagem",
+      "sujeito": "Torno CNC",
+      "processo_declarado": "usinagem de peça em torno CNC",
+      "uri": "https://upload.wikimedia.org/wikipedia/commons/8/86/CNC_lathe.webm",
+      "pagina": "https://commons.wikimedia.org/wiki/File:CNC_lathe.webm",
+      "original_licenca": "CC BY 3.0",
+      "autor": "Vandurit inserti",
+      "status_licenca": "REVISAO_HUMANA_DERIVADOS_PENDENTE",
+      "expected_sha1": "5b0bb7cc41a62c2baed1784abe255fb1a7ccb8db",
+      "expected_bytes": 2040891,
+      "janela_candidata": {
+        "inicio_s": 0.8,
+        "duracao_s": 4
+      }
+    },
+    {
+      "id": "encadernacao_cola",
+      "dominio": "encadernacao",
+      "sujeito": "Máquina de encadernação com cola quente",
+      "processo_declarado": "encadernação de livro usando cola quente",
+      "uri": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Hot_Glue_Binding_Machine.webm",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Hot_Glue_Binding_Machine.webm",
+      "original_licenca": "CC BY-SA 4.0",
+      "autor": "Balogic",
+      "status_licenca": "CONFIRMAR_SHARE_ALIKE_E_DERIVADOS",
+      "expected_sha1": "b660e867117c76eef96de7639016e496cde29602",
+      "expected_bytes": 3334956,
+      "janela_candidata": {
+        "inicio_s": 4,
+        "duracao_s": 4
+      }
+    }
+  ]
+}

@@ -327,5 +327,26 @@
     "largura_min": 520,
     "entra_px": 18,
     "sombra": "0 16px 38px rgba(0,0,0,.45)"
+  },
+  "direcao_visual": {
+    "_nota": "Parâmetros de clareza para QUALQUER mecanismo ATLAS. Abertura e identidade permanecem as aprovadas. Não sobrescrever por episódio.",
+    "rotulos_em_foco": 2,
+    "rotulos_sem_foco": 3,
+    "fonte_rotulo_px": 34,
+    "largura_contextual": 1450,
+    "transicao_foco_s": 0.7,
+    "max_camadas_editoriais": 2,
+    "max_caracteres_rotulo": 22,
+    "intervalo_min_foco_s": 0.8,
+    "largura_minima": 1250,
+    "transicao_saida_s": 0.65
+  },
+  "narrador": {
+    "motor": "gemini",
+    "voz": "Charon",
+    "velocidade": 1,
+    "estilo": "narrador de documentário, voz grave e firme",
+    "fallback": "bloquear",
+    "nota": "Preset ja presente em config.json. Manter ate aprovacao auditiva da previa privada; nunca trocar automaticamente para Edge."
   }
 }

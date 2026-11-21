@@ -70,10 +70,28 @@ def ancora(valor, palavras: list[dict], depois: float = 0.0) -> float:
     return round(achados[n - 1] + desl, 3)
 
 
-def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
+def resolver_tempos(plano: dict, palavras: list[dict], duracao_audio: float | None = None) -> dict:
+    """Resolve falas no relogio real. Com duracao_audio, @fim e o FIM REAL do WAV.
+
+    O modo sem duracao_audio preserva o comportamento legado (ultimo fonema+0,6).
+    Preflight deve conhecer o audio antes de colocar CTA ou fechar as camadas.
+    """
     p = copy.deepcopy(plano)
     p['_estilo_no_episodio'] = estilo_no_episodio(plano)
-    a = lambda v: ancora(v, palavras)
+
+    def a(v):
+        # Piso temporal reutilizável: respeita a sincronização com a fala sem
+        # permitir que uma narração mais rápida encurte uma prova visual obrigatória.
+        # Ex.: @max(2.5,@por-0.12) = maior valor entre 2,5s e a âncora real.
+        if isinstance(v, str):
+            piso = re.fullmatch(r'@max\(\s*(\d+(?:\.\d+)?)\s*,\s*(@[^()]+?)\s*\)', v.strip())
+            if piso:
+                return round(max(float(piso.group(1)), a(piso.group(2).strip())), 3)
+        if duracao_audio is not None and isinstance(v, str):
+            m = re.fullmatch(r'@fim([+\-]\d+(?:\.\d+)?)?', v.strip())
+            if m:
+                return round(float(duracao_audio) + float(m.group(1) or 0), 3)
+        return ancora(v, palavras)
     for k in p.get('palco') or []:
         k['t'] = a(k['t'])
     for lst in ('destaques', 'rotulos'):
@@ -85,15 +103,30 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
         r['t0'], r['t1'] = a(r['t0']), a(r['t1'])
         if r.get('some') is not None:
             r['some'] = a(r['some'])
+    for e in p.get('explicacoes') or []:
+        e['t0'], e['t1'] = a(e['t0']), a(e['t1'])
     for c in p.get('clipes') or []:
         c['t0'], c['t1'] = a(c['t0']), a(c['t1'])
-        c['params']['tempos'] = [round(a(x) - c['t0'], 2) for x in c['params'].get('tempos') or []]
+        c['params']['tempos'] = [round(a(x) - (0 if plano.get('_resolvido') else c['t0']), 2)
+                                 for x in c['params'].get('tempos') or []]
+        # Os destaques de peças são ancorados na fala em tempo absoluto no JSON
+        # e convertidos em tempo LOCAL do clipe para o renderizador V2.
+        for lista in ('focos', 'destaques_fluxo'):
+            for marca in c['params'].get(lista) or []:
+                # Plano bruto: âncoras da narração são ABSOLUTAS.
+                # Fixture/segundo passe de plano resolvido: focos já estão no
+                # relógio LOCAL do clipe — nunca subtrair c['t0'] novamente.
+                marca['t'] = round(a(marca['t']) - (0 if plano.get('_resolvido') else c['t0']), 2)
     for b in p['beats']:
         if b.get('t') is not None:
             b['t'] = a(b['t'])
         for L in b['camadas']:
             L['t0'], L['t1'] = a(L['t0']), a(L['t1'])
             q = L.get('p') or {}
+            if L.get('componente') == 'atlas.provaVisual':
+                for nome in ('rotulo_t', 'rotulo2_t'):
+                    if q.get(nome) is not None:
+                        q[nome] = a(q[nome])
             for lista in ('marcos', 'nos', 'niveis', 'linhas', 'itens'):
                 for x in q.get(lista) or []:
                     if isinstance(x, dict) and x.get('t') is not None:
@@ -117,9 +150,34 @@ def resolver_tempos(plano: dict, palavras: list[dict]) -> dict:
                         x['t'] = a(x['t'])
     if isinstance(p.get('duracao'), str):
         p['duracao'] = a(p['duracao'])
+    if duracao_audio is not None and (isinstance(plano.get('duracao'), str) or not plano.get('duracao')):
+        # Faz o CTA e as camadas finais caberem na narracao VERDADEIRA,
+        # nao em uma estimativa de pausa apos a ultima palavra.
+        p['duracao'] = round(float(duracao_audio), 3)
     aplicar_tokens(p)
     if p.get('camera') == 'roi':
         p['palco'] = palco_dos_beats(p)
+        # Cena cartográfica com texto em sobreposição: opcionalmente só revelar
+        # depois que o território chega ao quadro, sem burlar o fiscal de ROI.
+        # A mesma regra serve a qualquer tema, câmera e ritmo de narração.
+        for beat in p['beats']:
+            for layer in beat['camadas']:
+                if not layer.get('entrada_apos_voo'):
+                    continue
+                chave = next((k for k in p['palco'] if k.get('composicao') == beat.get('composicao')
+                              and abs(k['t'] - beat.get('t', -999)) < .002), None)
+                if chave is None or chave.get('tipo') != 'mapa':
+                    raise ValueError('entrada_apos_voo exige beat cartográfico com câmera resolvida')
+                # A fiscalização amostra a camada +0.35s. Ela não pode alcançar
+                # o território enquanto o movimento de chegada está ativo.
+                seguro = round(chave['t'] + max(0, chave.get('dur_camera', 0) - .34), 3)
+                if layer['t0'] < seguro:
+                    layer['t0'] = seguro
+                    for linha in (layer.get('p') or {}).get('linhas') or []:
+                        if isinstance(linha, dict) and isinstance(linha.get('t'), (int, float)) and linha['t'] < seguro:
+                            linha['t'] = seguro
+                if layer['t0'] >= layer['t1']:
+                    raise ValueError('entrada_apos_voo: câmera termina após a camada; revisar storyboard')
         posicionar_pinos(p)
     inserir_cta(p)
     p['_resolvido'] = True
@@ -293,7 +351,7 @@ def estilo_legenda(pl: dict) -> dict:
     return (canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl.get('formato')) or {}
 
 
-def props_camada(pl: dict, meta: dict) -> dict:
+def props_camada(pl: dict, meta: dict, imagens: dict | None = None) -> dict:
     """camada de legenda/marca — UMA fonte para render, quadros, trechos: estilo da legenda vem do CANAL por formato"""
     from src.v4.formatos import legenda_sync
     est = ((canal(pl.get('canal', 'coringa')).get('legenda') or {}).get(pl['formato']) or {})
@@ -303,13 +361,19 @@ def props_camada(pl: dict, meta: dict) -> dict:
     if pl['formato'] == 'atlas' and est.get('destaque_estatico'):
         pal = legenda_sync.destacar_atlas(pal, pl, maximo=est.get('max_palavras', 3))
     marcas = sorted({0.0, pl['duracao']} | {x for c in pl.get('clipes') or [] for x in (c['t0'], c['t1'])})
+    imagens = imagens or {}
     cenas = []
     for a, b in zip(marcas, marcas[1:]):
-        dentro = any(abs(c['t0'] - a) < .01 for c in pl.get('clipes') or [])
-        cenas.append({'ini': a, 'fim': b, 'selo': 'ESQUEMA' if dentro else None, 'credito': None, 'legenda': True})
+        clip = next((c for c in pl.get('clipes') or [] if c['t0'] <= a + .001 and c['t1'] >= b - .001), None)
+        reg = imagens.get(((clip or {}).get('params') or {}).get('asset')) or {}
+        video_real = bool(clip and clip.get('componente') == 'registro.video')
+        cenas.append({'ini': a, 'fim': b,
+                      'selo': ('REGISTRO' if video_real else 'ESQUEMA' if clip else None),
+                      'credito': reg.get('credito') if video_real else None, 'legenda': True})
     out = {'duracao': pl['duracao'], 'palavras': pal, 'cenas': cenas, 'estilo': {k: v for k, v in est.items() if not k.startswith('_')}}
     if pl['formato'] == 'atlas':
         out['legenda_caixa'] = zonas('atlas')['legenda']
+        out['credito_caixa'] = zonas('atlas')['creditos']
         out['marca_y'] = layout.faixa_inferior().get('marca_y')
         out['marca_visivel'] = layout.CFG['faixa_inferior'].get('marca_atlas', True)
     return out
@@ -333,7 +397,9 @@ def _creditos(plano: dict) -> dict | None:
     z = zonas('atlas').get('creditos', [72, 1174, 936, 46])
     ref = (canal().get('pino') or {}).get('estilo') == 'referencia'
     extras = [{'t0': L['t0'], 't1': L['t1'], 'txt': L['p']['meta']} for L in camadas(plano)
-              if ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto' and L['p'].get('meta')]
+              if (L.get('p') or {}).get('meta') and
+              (L['componente'] == 'atlas.provaVisual' or
+               (ref and L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('tipo') == 'foto'))]
     return {'extras': extras,'datasets': {k: v['atribuicao_exigida'] for k, v in atlas_ref.datasets().items() if v.get('atribuicao_exigida')},
             'obrigatorias': [k for k, v in atlas_ref.datasets().items() if v.get('obrigatoria')], 'caixa': z, 'px': 18, 'linha': 22}
 
@@ -726,7 +792,7 @@ def eventos(plano: dict) -> list[float]:
     for r in plano.get('rotas') or []:
         ev += [r['t0'], (r['t0'] + r['t1']) / 2, r['t1']]
     for c in plano.get('clipes') or []:
-        # clipe aprovado com animação contínua (o portão CONGELADO confere no render): progride o tempo todo
+        # clipe aprovado com ação/filme verificado (o portão CONGELADO confere no render): progride o tempo todo
         ev += [c['t0'] + x for x in c['params'].get('tempos') or []] + [c['t0']] + list(_passos(c['t0'], c['t1'], 1.0))
     for L in camadas(plano):
         ev.append(L['t0'])
@@ -738,6 +804,10 @@ def eventos(plano: dict) -> list[float]:
             ev.append(q['zoom']['t0'])
         if q.get('legenda_base') and q.get('legenda_t') is not None:
             ev.append(q['legenda_t'])
+        if L['componente'] == 'atlas.provaVisual':
+            for nome in ('rotulo_t', 'rotulo2_t'):
+                if isinstance(q.get(nome), (int, float)) and q.get('rotulo' if nome == 'rotulo_t' else 'rotulo2'):
+                    ev.append(q[nome])
         if q.get('contagem'):
             ev.append(L['t0'] + (q.get('dur_contagem') or 1.2))
         ev += [q[k] for k in ('t_marca', 't_total', 't_carimbo', 't_abre') if isinstance(q.get(k), (int, float))]
@@ -787,9 +857,81 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
         a = (L.get('p') or {}).get('asset')
         if a and imagens is not None and a not in imagens:
             v('erro', 'F-ASSET', onde, f'mídia {a!r} indisponível')
+        if L['componente'] == 'atlas.provaVisual':
+            if not a or not (L.get('p') or {}).get('meta'):
+                v('erro', 'F-PROVA-CREDITO', onde, 'fotografia principal exige asset e crédito visível')
+            if imagens is not None and a in imagens and imagens[a].get('tipo') == 'video':
+                v('erro', 'F-PROVA-TIPO', onde, 'vídeo deve usar registro.video, não componente fotográfico')
     for c in plano.get('clipes') or []:
         if c['componente'] not in F['clipes']:
             v('erro', 'F-CLIPE', f"{c['t0']}", f"clipe {c['componente']} não aprovado no formato")
+        if c.get('componente') == 'registro.video':
+            a = (c.get('params') or {}).get('asset')
+            inicio = (c.get('params') or {}).get('inicio', 0)
+            if not a or not isinstance(inicio, (int, float)) or isinstance(inicio, bool) or inicio < 0 or c.get('fonte'):
+                v('erro', 'F-VIDEO-PARAMS', str(c.get('t0')), 'vídeo exige asset verificado e início ≥0, sem campo fonte de mecanismo')
+            if imagens is not None and a not in imagens:
+                v('erro', 'F-ASSET', str(c.get('t0')), 'vídeo real ausente do acervo')
+            if imagens is not None and a in imagens and imagens[a].get('tipo') != 'video':
+                v('erro', 'F-VIDEO-TIPO', str(c.get('t0')), 'registro.video exige mídia de natureza vídeo')
+            if imagens is not None and a in imagens and isinstance(inicio, (int, float)) and c['t1'] - c['t0'] + inicio > imagens[a].get('duracao', 0) + .01:
+                v('erro', 'F-VIDEO-DURACAO', str(c.get('t0')), 'o trecho pedido excede a duração original; não congelar quadro')
+            for L in Ls:
+                if L['t0'] < c['t1'] and L['t1'] > c['t0']:
+                    v('erro', 'F-VIDEO-SOBREPOE-CAMADA', L['id'], 'clipe real substitui o palco: camada nesse intervalo ficaria invisível')
+    if plano.get('formato') == 'atlas':
+        # Contrato global de clareza: limites vêm do canal e dos recursos
+        # aprovados, nunca das cenas ou números do episódio do Panamá.
+        direcao = canal(plano.get('canal', 'coringa')).get('direcao_visual') or {}
+        max_editoriais = int(direcao.get('max_camadas_editoriais', 2))
+        editoriais = [L for L in Ls if L['componente'] not in (
+            'atlas.geoPin', 'dossie.evidenceHighlight', 'editorial.cta')]
+        limites = sorted({x for L in editoriais for x in (L['t0'], L['t1'])})
+        for a, b in zip(limites, limites[1:]):
+            meio = (a + b) / 2
+            ativos = [L['id'] for L in editoriais if L['t0'] <= meio < L['t1']]
+            if len(ativos) > max_editoriais:
+                v('erro', 'F-POLUICAO-VISUAL', f'{a:.2f}–{b:.2f}s',
+                  f'{len(ativos)} informações editoriais simultâneas (máx. {max_editoriais}): {", ".join(ativos[:8])}')
+                break
+        catalogo = F.get('alvos_componentes') or {}
+        ciclos = F.get('contratos_movimento') or {}
+        for c in plano.get('clipes') or []:
+            params = c.get('params') or {}
+            ciclo = ciclos.get(c.get('componente'))
+            if ciclo:
+                tempos_c = params.get('tempos') or []
+                indice = int(ciclo['marco_acao_final'])
+                duracao_c = c['t1'] - c['t0']
+                janela_min = float(ciclo['janela_final_min_s'])
+                if len(tempos_c) <= indice or not isinstance(tempos_c[indice], (int, float)):
+                    v('erro', 'F-ACAO-FINAL-SEM-MARCO', c['componente'],
+                      f'marco final ausente; precisa demonstrar {ciclo["acao_final"]}')
+                elif duracao_c - tempos_c[indice] < janela_min - .01:
+                    v('erro', 'F-ACAO-FINAL-TRUNCADA', c['componente'],
+                      f'mecanismo termina antes de demonstrar {ciclo["acao_final"]}: '
+                      f'restam {duracao_c-tempos_c[indice]:.2f}s depois do marco final, '
+                      f'mínimo {janela_min:.2f}s; replanejar a etapa ou reservar mais tempo, '
+                      'sem acelerar artificialmente ou cortar a narração')
+            marcacoes = params.get('focos') or params.get('destaques_fluxo') or []
+            if not marcacoes:
+                continue
+            alvos = catalogo.get(c.get('componente'))
+            dur_clipe = c['t1'] - c['t0']
+            anterior = None
+            for idx, marco in enumerate(marcacoes):
+                onde = f"{c['componente']}/foco-{idx}"
+                t, alvo, rotulo = marco.get('t'), marco.get('alvo'), str(marco.get('rotulo') or '')
+                if alvos is None or alvo not in alvos:
+                    v('erro', 'F-FOCO-SEM-ALVO', onde, f'alvo {alvo!r} não consta no catálogo do mecanismo')
+                if not isinstance(t, (int, float)) or not (0 <= t <= dur_clipe + .01):
+                    v('erro', 'F-FOCO-TEMPO', onde, 'foco deve ocorrer dentro do clipe, em tempo local da fala')
+                    continue
+                if not rotulo.strip() or len(rotulo.strip()) > direcao.get('max_caracteres_rotulo', 22):
+                    v('erro', 'F-ROTULO-ILEGIVEL', onde, f'rótulo precisa ter 1–{direcao.get("max_caracteres_rotulo", 22)} caracteres')
+                if anterior is not None and t - anterior < direcao.get('intervalo_min_foco_s', .8):
+                    v('erro', 'F-FOCO-RAPIDO', onde, 'foco troca antes do intervalo mínimo de compreensão visual')
+                anterior = t
     # composições: formato, palco, máximo de camadas simultâneas, reconstrução identificada
     for b in plano['beats']:
         comp = COMP.get(b.get('composicao') or '')
@@ -957,24 +1099,92 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
             v('erro', 'F-TECNICO-SEM-MECANISMO', b.get('id', '-'), f"{b.get('composicao')} só com funcao {comp['exige_funcao']} (diagrama não substitui mapa)")
     if plano.get('formato') == 'atlas':
         for c in plano.get('clipes') or []:
-            if not str(c.get('componente', '')).startswith('mecanismo.'):
-                v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe no ATLAS só para demonstrar mecanismo')
-        # ATLAS V1: a primeira prova é cartográfica; mecanismo técnico só entra após o gancho.
+            if not (str(c.get('componente', '')).startswith('mecanismo.') or c.get('componente') == 'registro.video'):
+                v('erro', 'F-TECNICO-SEM-MECANISMO', c.get('componente', '-'), 'clipe ATLAS só para mecanismo aprovado ou registro de vídeo real')
+        # ATLAS V1 fica EXATAMENTE como era por padrão. A direção V2 pode optar
+        # EXPLICITAMENTE por prova fotográfica ou vídeo documental verificado.
+        # Nunca liberar um mecanismo ou mapa genérico como gancho "real".
         bs = plano.get('beats') or []
         primeiro = bs[0] if bs else {}
-        if (primeiro.get('composicao') != 'atlas.abertura' or (primeiro.get('t') or 0) > .05
-                or any(c['t0'] < 3.0 for c in plano.get('clipes') or [])):
-            v('erro', 'F-GANCHO-MAPA-PRIMEIRO', '0–3s',
-              'ATLAS V1: abrir com mapa hero e pergunta/prova forte, sem clipe de mecanismo nos primeiros 3 segundos')
+        modo = plano.get('abertura_tipo', 'mapa')
+        clips = plano.get('clipes') or []
+        comeco_ok = (primeiro.get('t') or 0) <= .05
+        if modo == 'mapa':
+            if (primeiro.get('composicao') != 'atlas.abertura' or not comeco_ok
+                    or any(c['t0'] < 3.0 for c in clips)):
+                v('erro', 'F-GANCHO-MAPA-PRIMEIRO', '0–3s',
+                  'ATLAS V1: abrir com mapa hero e pergunta/prova forte, sem clipe de mecanismo nos primeiros 3 segundos')
+        elif modo == 'prova_real':
+            fotos = [L for L in Ls if L['componente'] == 'atlas.provaVisual' and L['beat'] == primeiro.get('id')
+                     and L['t0'] <= .05 and L['t1'] >= 2.5
+                     and (L.get('p') or {}).get('asset') and (L.get('p') or {}).get('meta')]
+            filmes = [c for c in clips if c.get('componente') == 'registro.video'
+                      and isinstance(c.get('t0'), (int, float)) and c['t0'] <= .05
+                      and isinstance(c.get('t1'), (int, float)) and c['t1'] >= 2.5
+                      and (c.get('params') or {}).get('asset')]
+            validado = (comeco_ok and (
+                (primeiro.get('composicao') == 'atlas.prova' and bool(fotos) and not filmes)
+                or (primeiro.get('composicao') == 'atlas.abertura' and bool(filmes) and not fotos)))
+            if not validado or any(c['t0'] < 3.0 and c.get('componente') != 'registro.video' for c in clips):
+                v('erro', 'F-GANCHO-PROVA-REAL', '0–3s',
+                  'abertura física exige foto principal por 2,5 s OU registro.video original cobrindo a abertura; mecanismo não é prova real')
+            if imagens is not None and validado:
+                # A triagem do storyboard não é prova de procedência. No preflight
+                # o arquivo da abertura deve ter origem binária conferida.
+                referencias = [((f.get('p') or {}).get('asset')) for f in fotos] if fotos else [
+                    ((f.get('params') or {}).get('asset')) for f in filmes
+                ]
+                for ref in referencias:
+                    registro = imagens.get(ref) or {}
+                    natureza = 'foto' if fotos else 'video'
+                    if (registro.get('tipo') != natureza or registro.get('origem_conferida') is not True
+                            or not registro.get('credito') or not registro.get('licenca')
+                            or not registro.get('sha256_origem')):
+                        v('erro', 'F-GANCHO-ORIGEM', '0–3s',
+                          'registro inicial exige mídia correta, hash de origem conferido, licença e crédito')
+        else:
+            v('erro', 'F-GANCHO-TIPO', '0–3s', 'abertura_tipo só aceita mapa (V1) ou prova_real (V2)')
         if plano.get('cta') is True and not any(L['componente'] == 'editorial.cta' for L in Ls):
             v('erro', 'F-CTA-FINAL-AUSENTE', 'fecho',
               'storyboard pediu CTA final, mas não reservou slot: corrigir antes do render')
+    if plano.get('formato') == 'atlas':
+        # Toda demonstração técnica precisa de contrato explícito. Sem esse
+        # metadado o teste de continuidade passaria silenciosamente; esta
+        # obrigação vale para QUALQUER mecanismo ATLAS, nunca para DOSSIÊ/NTC.
+        tecnicos = [c for c in plano.get('clipes') or []
+                    if str(c.get('componente', '')).startswith('mecanismo.')]
+        contratos = [e for e in plano.get('explicacoes') or []
+                     if e.get('tipo') == 'mecanismo']
+        for c in tecnicos:
+            if not any(e.get('recurso') == c['componente']
+                       and isinstance(e.get('t0'), (float, int))
+                       and isinstance(e.get('t1'), (float, int))
+                       and c['t0'] - .05 <= e['t0'] < e['t1'] <= c['t1'] + .05
+                       for e in contratos):
+                v('erro', 'F-EXPLICACAO-SEM-CONTRATO', c['componente'],
+                  'demonstração técnica sem contrato explicativo com tempo e recurso compatíveis')
+        # A narração ainda explica o MESMO mecanismo: não trocar o desenho por
+        # caixas enquanto a peça ou o fluxo continua sendo descrito.
+        # O diretor declara o intervalo; a checagem é determinística e reutilizável.
+        for e in plano.get('explicacoes') or []:
+            if e.get('tipo') != 'mecanismo':
+                continue
+            a, b, recurso = e.get('t0'), e.get('t1'), e.get('recurso')
+            onde = e.get('id', 'explicacao')
+            if not isinstance(a, (int, float)) or not isinstance(b, (int, float)) or not (0 <= a < b <= dur):
+                v('erro', 'F-EXPLICACAO-TEMPO', onde, 'intervalo do mecanismo deve estar dentro do vídeo')
+                continue
+            if not recurso or not any(c.get('componente') == recurso and c['t0'] <= a + .05
+                                      and c['t1'] >= b - .05 for c in plano.get('clipes') or []):
+                v('erro', 'F-MECANISMO-SEM-CONTINUIDADE', onde,
+                  f'a narração explica {recurso or "mecanismo desconhecido"} em {a:.2f}–{b:.2f}s; '
+                  'o mesmo mecanismo precisa permanecer demonstrável até o fim (não substituir por cards)')
     for x in plano.get('_estilo_no_episodio') or []:
         v('erro', 'F-ESTILO-NO-EPISODIO', x, 'identidade visual é do canal (tokens/presets), não do episódio')
     # gancho: nos primeiros segundos, algo VISUALMENTE relevante (não só mapa e legenda)
     g = REGRAS.get('gancho_s', 3.0)
     fortes = [c for c in plano.get('clipes') or [] if c['t0'] <= .5] + \
-             [L for L in Ls if L['t0'] <= g * .5 and (L['componente'] in ('dossie.documentCard', 'editorial.titleOrPayoff')
+             [L for L in Ls if L['t0'] <= g * .5 and (L['componente'] in ('dossie.documentCard', 'editorial.titleOrPayoff', 'atlas.provaVisual')
                                                    or (L['componente'] == 'atlas.geoPin' and (L.get('p') or {}).get('papel') == 'protagonista'))]
     mudanca = [e for e in eventos(plano) if .2 < e < g]
     if plano.get('formato') == 'atlas' and (not fortes or not mudanca):

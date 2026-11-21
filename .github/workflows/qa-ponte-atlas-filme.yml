@@ -1,0 +1,77 @@
+name: "QA — ponte real ATLAS MapLibre para filme documental (sem nova narração)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/ponte_atlas_filme.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-ponte-atlas-para-filme
+  cancel-in-progress: true
+jobs:
+  ponte:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Testes ATLAS nativos, integração de clips e regressão multiassunto
+        run: |
+          python -m pip install -q pytest pillow requests numpy cryptography pyyaml
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pytest -q \
+            tests/test_ponte_mapa_atlas_filme.py \
+            tests/test_formatos.py \
+            tests/test_filme_editorial.py \
+            tests/test_bloqueio_mapa_elementar_voz_final.py \
+            tests/test_qa_episodios_multitema.py \
+            tests/test_atlas_triagem_editorial.py \
+            tests/test_fiscal_progressao.py
+      - name: Verificar TypeScript do Formato original e FilmeEditorial
+        timeout-minutes: 12
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Preparar propriedades ATLAS originais com raster íntegro, sem render
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import ponte_mapa_atlas as B
+          from src.v4.formatos import plano as P
+          original=json.loads(Path('tests/dados/formatos_atlas_resolvido.json').read_text())
+          p=P.resolver_tempos(original,[])
+          # Verificação técnica de uma janela com mapa existente — não gerar
+          # mais um vídeo do Panamá nem mudar o episódio de produção.
+          key=next(k for k in p['palco'] if k['tipo']=='mapa')
+          d=2.0
+          r=B.preparar(p,key['t'],d,Path('saida_ponte'),Path('motor4/remotion/public'))
+          assert r['mapeamento']['rasters_ativos']
+          assert r['status']=='PREPARADO_NAO_RENDERIZADO'
+          assert 'PalcoMapa' in r['renderer']
+          print(json.dumps({'status':r['status'],'renderer':r['renderer'],
+                 'rasters_autenticados':len(r['mapeamento']['rasters_ativos']),
+                 'aprovacao_humana':r['aprovacao_humana']},ensure_ascii=False))
+          PY
+      - name: Guardar certificado de pré-produção, sem vídeo e sem Telegram
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-ponte-atlas-filme-preparo-comprovado
+          path: |
+            saida_ponte/preparo_atlas.json
+            saida_ponte/props_atlas_formato.json
+          retention-days: 7
+          if-no-files-found: warn

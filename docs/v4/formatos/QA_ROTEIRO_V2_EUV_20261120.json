@@ -1,0 +1,38 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "QA do roteirista V2 para diretor automático sem escolher animação",
+  "roteiro": {
+    "cenas": [
+      {
+        "id": "euv_roteiro",
+        "duracao_s": 6.9,
+        "fala": "A luz EUV alcança a máscara reflexiva e segue por espelhos, expondo o resist sobre o wafer.",
+        "acontecimento": {
+          "id": "principio_otico_euv_v2",
+          "tipo": "mecanismo",
+          "sujeito": "exposição óptica EUV",
+          "acao": "expõe camada fotossensível",
+          "estado_inicial": "máscara iluminada",
+          "estado_final": "resist exposto",
+          "mostrar": "mostrar o caminho óptico até o wafer",
+          "fonte": "https://www.asml.com/en/technology/lithography-principles",
+          "dados": {
+            "acoes_necessarias": [
+              "source",
+              "reticle",
+              "projection",
+              "wafer"
+            ],
+            "fases_necessarias": [
+              "origem",
+              "transformacao",
+              "resultado"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

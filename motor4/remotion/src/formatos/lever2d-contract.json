@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "status": "PRIVATE_VISUAL_PROBE_NOT_PRODUCTION",
+  "duration": 8.8,
+  "geometry": {
+    "pivot": [
+      440,
+      704
+    ],
+    "beamStartX": 140,
+    "beamEndX": 936,
+    "beamThickness": 40,
+    "loadX": 226,
+    "loadWidth": 147,
+    "loadHeight": 122,
+    "effortX": 915,
+    "maxTiltDeg": 11
+  },
+  "cues": [
+    {
+      "at": 0,
+      "action": "introduce",
+      "label": "UMA BARRA. UM PONTO DE APOIO."
+    },
+    {
+      "at": 0.9,
+      "action": "load",
+      "label": "O PESO FICA PERTO DO APOIO"
+    },
+    {
+      "at": 2.15,
+      "action": "effort",
+      "label": "A FORÇA ATUA MAIS LONGE"
+    },
+    {
+      "at": 3.55,
+      "action": "actuate",
+      "label": "UM LADO DESCE. O OUTRO SOBE."
+    },
+    {
+      "at": 6.35,
+      "action": "explain",
+      "label": "BRAÇO LONGO, MENOS FORÇA NECESSÁRIA"
+    }
+  ],
+  "qa": {
+    "master": [
+      1080,
+      1920
+    ],
+    "criticalSafe": [
+      150,
+      300,
+      770,
+      1240
+    ],
+    "rightIconsStartY": 840,
+    "minimumClearanceBeforeIcons": 14,
+    "copyright": "ORIGINAL_VECTOR_NO_COPIED_ASSETS",
+    "publication": "BLOCKED",
+    "actorStage": {
+      "scaleX": 1.06,
+      "scaleY": 1.045,
+      "origin": [
+        520,
+        760
+      ]
+    },
+    "criticalMinimumLeftX": 120,
+    "criticalMaximumRightX": 960
+  }
+}

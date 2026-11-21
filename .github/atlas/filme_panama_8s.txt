@@ -1,0 +1,9 @@
+# PROVA CAUSAL PANAMÁ · 2026-11-19
+# 7.8s com vídeo de origem curado e mecanismo SVG animado, apenas privado.
+# Sem TTS/IA, sem Telegram/publicação; validar tipagem, contrato, contato, MP4.
+
+# V2: gradiente liberado para rótulos + match cut do mesmo master 6.8s→diagrama.
+
+# V3: source cut removed, freeze sourced from SHA-verified master at t6.45.
+
+# V4: preserve exposure while dissolve; QA rejects luminance jump at t1.65s.

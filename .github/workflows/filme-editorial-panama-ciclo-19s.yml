@@ -1,0 +1,150 @@
+name: FILME — ciclo completo da eclusa 19s (privado)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/filme_panama_ciclo_19s.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: filme-panama-ciclo-19s
+  cancel-in-progress: true
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  prova:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recuperar master já curado (imutável)
+        uses: actions/download-artifact@v4
+        with:
+          name: filme-panama-eclusa-real-1080p-master
+          run-id: 44519739030
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: stage_hero
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Testar contrato antigo e novo, sem voz/IA
+        run: |
+          python -m pip install -q pillow requests pytest
+          python -m pytest -q tests/test_filme_editorial.py tests/test_filme_panama_mechanism.py tests/test_filme_panama_causal.py tests/test_filme_panama_ciclo_19s.py tests/test_atlas_filme_telegram.py
+      - name: Conferir tipagem do compositor
+        timeout-minutes: 12
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Garantir FFmpeg/FFprobe
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
+      - name: Validar SHA de footage e preparar propriedades
+        run: |
+          python -m src.v4.formatos.filme_editorial \
+            docs/v4/formatos/filme_panama_ciclo_19s.json \
+            saida_filme_panama_ciclo motor4/remotion/public
+      - name: Renderizar 19s SILENCIOSOS de ciclo completo (não produção)
+        timeout-minutes: 14
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../saida_filme_panama_ciclo/prova_ciclo_19s.mp4 \
+            --props=../saida_filme_panama_ciclo/props.json \
+            --codec=h264 --crf=22 --concurrency=2 --scale=0.5 \
+            --public-dir=remotion/public --log=error
+      - name: Verificar ciclo completo e compor contato visual
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageStat, ImageChops
+          import subprocess, json, io, hashlib
+          out=Path('saida_filme_panama_ciclo')
+          video=out/'prova_ciclo_19s.mp4'
+          p=json.loads(subprocess.check_output(
+            ['ffprobe','-v','error','-show_entries','format=duration,size','-of','json',str(video)],text=True))
+          duration=float(p['format']['duration'])
+          assert abs(duration-19.0)<.10,p
+          assert video.stat().st_size>130000,'render inexistente ou truncado'
+          moments=[.6,1.5,1.9,3.55,5.25,6.85,8.35,10.6,13.3,15.9,17.3,18.8]
+          def pic(t):
+            png=subprocess.check_output(['ffmpeg','-hide_banner','-loglevel','error','-ss',str(t),
+              '-i',str(video),'-frames:v','1','-vf','scale=270:480',
+              '-f','image2pipe','-vcodec','png','pipe:1'])
+            return Image.open(io.BytesIO(png)).convert('RGB')
+          grid=Image.new('RGB',(4*270,3*(480+38)),(14,23,32))
+          frames={}
+          for i,t in enumerate(moments):
+            im=pic(t);frames[t]=im
+            x=(i%4)*270;y=(i//4)*(480+38)
+            grid.paste(im,(x,y+38))
+            ImageDraw.Draw(grid).text((x+10,y+10),f't={t:.2f}s',fill=(242,235,207))
+          grid.save(out/'contato_ciclo_19s.jpg',quality=92)
+          def diff(a,b,box):
+            i=ImageChops.difference(frames[a].crop(box),frames[b].crop(box)).convert('L')
+            return ImageStat.Stat(i).mean[0]
+          box_low=(72,205,195,335)
+          box_upper=(75,165,250,245)
+          # O navio sobe de cota; ao sair, o casco está na área SUPERIOR.
+          # Nunca medir saída na região vazia da água inferior.
+          movement={
+            'entrada_navio':diff(1.9,3.55,box_low),
+            'agua_elevando':diff(8.35,13.3,box_low),
+            'saida_navio':diff(17.3,18.8,box_upper),
+          }
+          assert min(movement.values())>2.3, f'Sem ação na cena: {movement}'
+          # Controle de flash entre foto filmada e corte ilustrado.
+          def sky(t):
+            im=pic(t).convert('L')
+            return ImageStat.Stat(im.crop((12,6,260,65))).mean[0]
+          flash=abs(sky(1.5)-sky(1.7))
+          assert flash<35, f'Flash na transição: {flash:.1f}'
+          qa={'status':'AGUARDANDO_REVISAO_HUMANA','nao_publicado':True,
+              'sem_tts':True,'duracao':duration,'movimento_por_etapa':movement,
+              'flash_exposicao':flash,'filme':'ciclo de subida ilustrativo; escala simplificada'}
+          (out/'qa_ciclo.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2),encoding='utf-8')
+          print('PROVA_CICLO_19S_TECNICAMENTE_VALIDADA',json.dumps(qa,ensure_ascii=False))
+          PY
+      - name: Enviar MP4 SILENCIOSO e folha de quadros ao Telegram privado
+        # Se o render/QA falhar, envia somente aviso BLOQUEADO; nunca a mídia inválida.
+        if: always()
+        timeout-minutes: 8
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Telegram privado sem segredos TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID"
+            exit 1
+          fi
+          python -m scripts.atlas_filme_telegram saida_filme_panama_ciclo             --video prova_ciclo_19s.mp4 --contato contato_ciclo_19s.jpg             --qa qa_ciclo.json --duracao 19.0             --titulo "Panamá — eclusa: ciclo completo de subida (19s)"
+      - name: Guardar evidência sem publicação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filme-panama-19s-ciclo-privado
+          path: |
+            saida_filme_panama_ciclo/props.json
+            saida_filme_panama_ciclo/contrato.json
+            saida_filme_panama_ciclo/midias.json
+            saida_filme_panama_ciclo/qa_ciclo.json
+            saida_filme_panama_ciclo/contato_ciclo_19s.jpg
+            saida_filme_panama_ciclo/prova_ciclo_19s.mp4
+          retention-days: 7
+          if-no-files-found: warn

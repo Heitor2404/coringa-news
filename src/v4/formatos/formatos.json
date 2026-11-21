@@ -53,10 +53,11 @@
   },
   "formatos": {
     "atlas": {
-      "descricao": "Mapa como palco persistente; destaques territoriais, rota medida, cartões de números, hierarquias; mapa técnico escuro para estrutura abstrata; retorno ao mapa inicial no fecho.",
+      "descricao": "Documentário audiovisual geográfico: fotos/vídeos reais como evidência principal, mapas somente quando a geografia prova um acontecimento, diagramas técnicos e fluxos causais quando a fala explica processo ou dependência; nunca uma apresentação de etiquetas sobre mapa persistente.",
       "palcos": [
         "mapa",
-        "tecnico"
+        "tecnico",
+        "prova"
       ],
       "componentes": [
         "atlas.geoPin",
@@ -69,11 +70,28 @@
         "dossie.documentCard",
         "dossie.evidenceHighlight",
         "editorial.timeline",
-        "editorial.cta"
+        "editorial.cta",
+        "atlas.provaVisual"
       ],
       "clipes": [
-        "mecanismo.eclusa"
+        "mecanismo.eclusa",
+        "registro.video"
       ],
+      "alvos_componentes": {
+        "mecanismo.eclusa": [
+          "lago",
+          "aqueduto",
+          "paredes",
+          "piso"
+        ]
+      },
+      "contratos_movimento": {
+        "mecanismo.eclusa": {
+          "marco_acao_final": 2,
+          "janela_final_min_s": 2.8,
+          "acao_final": "nivelar, abrir a comporta e mostrar a saída do navio"
+        }
+      },
       "max_componentes_distintos": 7
     },
     "dossie": {
@@ -393,7 +411,24 @@
       "uso": "fecho: síntese sobre o território inteiro",
       "_nota_cta": "Dois elementos não conflitantes: manchete no topo + CTA compacto na banda dedicada inferior; CTA não conta como segunda história"
     },
-    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones."
+    "_nota_layout": "ATLAS: slots são INTENÇÕES ({y, h, w_max}); layout.slot() centraliza na faixa livre das plataformas ativas (plataformas.json) e respeita o limite de conteúdo acima da legenda; quadros do território recortam a coluna de ícones.",
+    "atlas.prova": {
+      "formato": "atlas",
+      "palco": "prova",
+      "quadro": null,
+      "veu": "nenhum",
+      "movimento": "fixo",
+      "slots": {
+        "prova": {
+          "y": 232,
+          "h": 990,
+          "w_max": 1020
+        }
+      },
+      "max_camadas": 1,
+      "pinos": false,
+      "uso": "prova real protagonista, ocupação dominante no quadro, fundo editorial escuro próprio; mapa nunca é pano de fundo de fotografia"
+    }
   },
   "zonas_por_formato": {
     "atlas": {

@@ -109,6 +109,15 @@ jobs:
             python -m src.v4.formatos telegram "$PLANO_DOSSIE" saida_formatos/dossie || rc=1
           fi
           exit "$rc"
+      - name: Portao editorial final (BLOQUEADO = job vermelho; previa privada continua diagnostica)
+        if: always()
+        run: |
+          rc=0
+          python -m src.v4.formatos gate "$PLANO_ATLAS" saida_formatos/atlas || rc=1
+          if ! grep -q "^so-atlas" .github/formatos/disparo.txt; then
+            python -m src.v4.formatos gate "$PLANO_DOSSIE" saida_formatos/dossie || rc=1
+          fi
+          exit "$rc"
       - name: Cifrar e publicar no ramo de resultado
         if: always()
         run: |

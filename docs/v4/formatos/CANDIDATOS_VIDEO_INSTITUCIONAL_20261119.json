@@ -1,0 +1,36 @@
+{
+  "versao": 1,
+  "politica": "PROSPECCAO_PRIVADA_NAO_HOMOLOGADA",
+  "itens": [
+    {
+      "id": "dvids_microelectronics_1029228",
+      "provedor": "dvids",
+      "video_id": "1029228",
+      "download_id": "10494611",
+      "pagina": "https://www.dvidshub.net/video/1029228/microelectronics",
+      "titulo": "Microelectronics — Tobyhanna Army Depot",
+      "credito": "Ryan Beilman / Tobyhanna Army Depot / DVIDS",
+      "local": "Tobyhanna, Pennsylvania, Estados Unidos",
+      "tema": "microeletronica",
+      "situacao_direitos": "REVISAR_TERCEIROS_E_NAO_ENDOSSO",
+      "autorizar_publicacao": false,
+      "resolucao_alvo": "1280x720",
+      "nota_editorial": "Material oficial militar americano. Conteúdo exato não inspecionado; não é fábrica Taiwan/TSMC."
+    },
+    {
+      "id": "dvids_ngmm_995636",
+      "provedor": "dvids",
+      "video_id": "995636",
+      "download_id": "10069508",
+      "pagina": "https://www.dvidshub.net/video/995636/ngmm-next-generation-microelectronics-manufacturing",
+      "titulo": "NGMM — Next Generation Microelectronics Manufacturing",
+      "credito": "Tom Shortridge / DARPA / DVIDS",
+      "local": "Estados Unidos",
+      "tema": "microeletronica",
+      "situacao_direitos": "REVISAR_TERCEIROS_E_NAO_ENDOSSO",
+      "autorizar_publicacao": false,
+      "resolucao_alvo": "1280x720",
+      "nota_editorial": "Contexto de encapsulamento e integração 3DHI, NÃO litografia TSMC e nem prova de ação física sem revisão."
+    }
+  ]
+}

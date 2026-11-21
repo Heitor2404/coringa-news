@@ -1,0 +1,146 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "Prova do diretor por capacidade: dois processos físicos, duas seleções automáticas",
+  "duracao": 24.4,
+  "media": {},
+  "shots": [
+    {
+      "id": "processo_fotolitografia",
+      "start": 0,
+      "end": 6.9,
+      "type": "mechanism",
+      "mechanism": "auto",
+      "evidence": "explainer",
+      "lead": "ENGENHARIA · SEMICONDUTORES",
+      "headline": "DA FONTE AO WAFER",
+      "subject": "Projeção EUV ilustrativa, sem escala ou filmagem de fábrica",
+      "cues": [
+        {
+          "at": 0,
+          "action": "source",
+          "label": "1 · LUZ EUV"
+        },
+        {
+          "at": 1.1,
+          "action": "reticle",
+          "label": "2 · MÁSCARA REFLEXIVA"
+        },
+        {
+          "at": 2.65,
+          "action": "projection",
+          "label": "3 · ESPELHOS PROJETAM"
+        },
+        {
+          "at": 4.65,
+          "action": "wafer",
+          "label": "4 · RESIST EXPOSTO"
+        }
+      ],
+      "processo_visual": {
+        "acoes_necessarias": [
+          "source",
+          "reticle",
+          "projection",
+          "wafer"
+        ],
+        "fases_necessarias": [
+          "origem",
+          "transformacao",
+          "resultado"
+        ]
+      },
+      "estados_esperados": [
+        "source",
+        "reticle",
+        "projection",
+        "wafer"
+      ],
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "fotolitografia_euv",
+        "aprendizado": "Mostrar a luz chegando à máscara, aos espelhos e à camada fotossensível"
+      }
+    },
+    {
+      "id": "processo_ciclo_navegacao",
+      "start": 6.9,
+      "end": 24.4,
+      "type": "mechanism",
+      "mechanism": "auto",
+      "evidence": "explainer",
+      "lead": "ENGENHARIA · NAVEGAÇÃO",
+      "headline": "ENTRAR, SUBIR E SAIR",
+      "subject": "Ciclo hidráulico didático, sem escala ou geometria real do Canal do Panamá",
+      "cues": [
+        {
+          "at": 0,
+          "action": "enter",
+          "label": "NAVIO ENTRA"
+        },
+        {
+          "at": 2.6,
+          "action": "seal",
+          "label": "PORTÃO DE ENTRADA FECHA"
+        },
+        {
+          "at": 4.6,
+          "action": "valves",
+          "label": "VÁLVULAS ABREM"
+        },
+        {
+          "at": 6.1,
+          "action": "rise",
+          "label": "ÁGUA E NAVIO SOBEM"
+        },
+        {
+          "at": 12.2,
+          "action": "equalize",
+          "label": "NÍVEIS SE IGUALAM"
+        },
+        {
+          "at": 14,
+          "action": "open",
+          "label": "PORTÃO DE SAÍDA ABRE"
+        },
+        {
+          "at": 15.6,
+          "action": "exit",
+          "label": "NAVIO DEIXA A CÂMARA"
+        }
+      ],
+      "processo_visual": {
+        "acoes_necessarias": [
+          "enter",
+          "seal",
+          "valves",
+          "rise",
+          "equalize",
+          "open",
+          "exit"
+        ],
+        "fases_necessarias": [
+          "entrada",
+          "mecanismo",
+          "saida"
+        ]
+      },
+      "estados_esperados": [
+        "enter",
+        "seal",
+        "valves",
+        "rise",
+        "equalize",
+        "open",
+        "exit"
+      ],
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "ciclo_navegacao_eclusa",
+        "aprendizado": "Mostra entrada, comporta fechada, água por gravidade, subida, abertura e saída"
+      }
+    }
+  ],
+  "observacao": "Demonstração técnica privada, não episódio. A seleção do mecanismo é por ações/fases, não por assunto. Arte 2D ainda depende de aprovação visual humana."
+}

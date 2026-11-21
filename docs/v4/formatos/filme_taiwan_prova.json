@@ -1,0 +1,189 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "titulo": "Por que Taiwan importa na indústria dos chips? — prova de linguagem",
+  "duracao": 16,
+  "media": {
+    "chip-macro": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg/1280px-Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Freescale_MPC8245_integrated_processor_die_shot_-_38190302045.jpg",
+      "credit": "Martijn Boer · Wikimedia Commons",
+      "license": "CC0"
+    },
+    "fab-tsmc": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/TSMC_Fab_18_May_2025.jpg/1280px-TSMC_Fab_18_May_2025.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg",
+      "credit": "4300streetcar · Wikimedia Commons",
+      "license": "CC BY 4.0"
+    },
+    "lithography-lab": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Rochester_Institute_of_Technology_28.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Rochester_Institute_of_Technology_28.jpg",
+      "credit": "Tomwsulcer · Wikimedia Commons",
+      "license": "CC0"
+    },
+    "wafer": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/A_Wafer_of_the_Latest_D-Wave_Quantum_Computers_%2839188583425%29.jpg/1920px-A_Wafer_of_the_Latest_D-Wave_Quantum_Computers_%2839188583425%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "page": "https://commons.wikimedia.org/wiki/File:A_Wafer_of_the_Latest_D-Wave_Quantum_Computers_(39188583425).jpg",
+      "credit": "Steve Jurvetson · Wikimedia Commons",
+      "license": "CC BY 2.0"
+    },
+    "cleanroom-nasa": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Clean_room.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Clean_room.jpg",
+      "credit": "NASA Glenn Research Center · Wikimedia Commons",
+      "license": "NASA PD"
+    },
+    "photolithography-ucl": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Cleanroom_-_photolithography_lab_%289150592110%29.jpg/1280px-Cleanroom_-_photolithography_lab_%289150592110%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Cleanroom_-_photolithography_lab_(9150592110).jpg",
+      "credit": "UCL MAPS / O. Usher · Wikimedia Commons",
+      "license": "CC BY 2.0"
+    }
+  },
+  "shots": [
+    {
+      "id": "s01-objeto",
+      "start": 0,
+      "end": 2.6,
+      "type": "photo",
+      "asset": "chip-macro",
+      "lead": "01 · A PERGUNTA",
+      "headline": "POR QUE TAIWAN\nIMPORTA TANTO?",
+      "subject": "Die real de processador Freescale MPC8245 — representação",
+      "evidence": "representative",
+      "cues": [
+        {
+          "at": 0.3,
+          "label": "CHIP REAL"
+        }
+      ],
+      "highlight": "TAIWAN",
+      "focus": [
+        0.46,
+        0.5
+      ]
+    },
+    {
+      "id": "s02-lugar",
+      "start": 2.6,
+      "end": 5.2,
+      "type": "photo",
+      "asset": "fab-tsmc",
+      "lead": "02 · TAIWAN",
+      "headline": "EXISTE UMA FÁBRICA\nPOR TRÁS DELE",
+      "subject": "TSMC Fab 18 · Tainan, Taiwan",
+      "evidence": "literal",
+      "cues": [
+        {
+          "at": 0.5,
+          "label": "FAB 18 · TAIWAN",
+          "x": 0.51,
+          "y": 0.46
+        }
+      ],
+      "highlight": "FÁBRICA",
+      "literal_identity": "Fotografia da TSMC Fab 18 em Tainan, Taiwan",
+      "focus": [
+        0.48,
+        0.53
+      ]
+    },
+    {
+      "id": "s03-equipamento",
+      "start": 5.2,
+      "end": 7.8,
+      "type": "photo",
+      "asset": "lithography-lab",
+      "lead": "03 · O PROCESSO",
+      "headline": "MÁQUINAS TRANSFEREM\nPADRÕES PARA O WAFER",
+      "subject": "Sala de fotolitografia — representação",
+      "evidence": "representative",
+      "cues": [
+        {
+          "at": 0.6,
+          "label": "FOTOLITOGRAFIA"
+        }
+      ],
+      "highlight": "PADRÕES",
+      "focus": [
+        0.59,
+        0.5
+      ]
+    },
+    {
+      "id": "s04-wafer",
+      "start": 7.8,
+      "end": 10.4,
+      "type": "photo",
+      "asset": "wafer",
+      "lead": "04 · A BASE",
+      "headline": "OS CIRCUITOS\nSE FORMAM NO WAFER",
+      "subject": "Wafer de processadores quânticos D-Wave — representação",
+      "evidence": "representative",
+      "cues": [
+        {
+          "at": 0.6,
+          "label": "WAFER DE SILÍCIO"
+        }
+      ],
+      "highlight": "WAFER",
+      "focus": [
+        0.52,
+        0.51
+      ]
+    },
+    {
+      "id": "s05-fabrica",
+      "start": 10.4,
+      "end": 13,
+      "type": "photo",
+      "asset": "cleanroom-nasa",
+      "lead": "05 · FABRICAÇÃO",
+      "headline": "PRECISÃO EXIGE\nSALAS LIMPAS",
+      "subject": "Sala limpa de microfabricação da NASA — representação",
+      "evidence": "representative",
+      "cues": [
+        {
+          "at": 0.7,
+          "label": "AMBIENTE CONTROLADO"
+        }
+      ],
+      "highlight": "SALAS LIMPAS",
+      "focus": [
+        0.6,
+        0.47
+      ]
+    },
+    {
+      "id": "s06-relacao",
+      "start": 13,
+      "end": 16,
+      "type": "comparison",
+      "asset": "photolithography-ucl",
+      "lead": "06 · DEPENDÊNCIA",
+      "headline": "EQUIPAMENTOS\nENCONTRAM FÁBRICAS",
+      "subject": "Litografia e fábrica: exemplo visual de etapas distintas",
+      "evidence": "representative",
+      "cues": [
+        {
+          "at": 0.35,
+          "label": "ETAPAS INTERLIGADAS",
+          "x": 0.45,
+          "y": 0.4
+        }
+      ],
+      "highlight": "FÁBRICAS",
+      "assetB": "fab-tsmc",
+      "focus": [
+        0.5,
+        0.52
+      ],
+      "focusB": [
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "observacao": "Cenas ilustrativas rotuladas; não é a montagem final nem narração sincronizada. NENHUM destino público."
+}

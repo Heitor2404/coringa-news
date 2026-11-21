@@ -5,12 +5,12 @@
   "geometry": {
     "pivot": [
       440,
-      710
+      704
     ],
     "beamStartX": 140,
     "beamEndX": 936,
     "beamThickness": 40,
-    "loadX": 220,
+    "loadX": 226,
     "loadWidth": 147,
     "loadHeight": 122,
     "effortX": 915,

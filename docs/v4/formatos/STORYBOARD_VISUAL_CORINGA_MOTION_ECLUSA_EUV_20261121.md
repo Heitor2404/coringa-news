@@ -72,3 +72,14 @@ A composição B é visualmente mais chamativa que o modo claro, **mas falha no 
 - [ ] Main, NTC, DOSSIÊ e Telegram permanecem intocados.
 
 **Nunca interpretar as imagens geradas como render do motor ou como aprovação de Física/SAFE/PUBLICAÇÃO.**
+
+
+## Feedback posterior do usuário — A preferida, A/B não são estilos distintos
+
+**Feedback explícito 21/11/2026:** “Eu preferi a opção A, mas tbm achei elas praticamente o mesmo estilo”. **Esta declaração substitui a recomendação anterior do auditor de seguir B como referência de preferência.** A é a opção preferida pelo usuário entre os conceitos que viu, MAS NÃO foi homologada como identidade estética final nem está tecnicamente pronta.
+
+**Diagnóstico do erro de comparação:** A e B repetem a mesma família de cores (azul intenso, amarelo), 2.5D/3D ilustrado, contraste saturado, tipografia e navio/óptica semelhantes. A diferença está basicamente na quantidade de informação e no foco de apresentação: A tem mais cortes, tubulação e rótulos; B amplia o personagem físico e coloca a câmera na ação. Isso NÃO é um teste válido entre duas direções de arte; é um A/B de **composição editorial** com a mesma arte. O usuário percebeu corretamente a falta de variedade.
+
+**Decisão revisada:** usar A como referência de **clareza e demonstração do mecanismo**, priorizando cutaways e visualização da causa física; não copiar automaticamente os rótulos, estatísticas e erros da imagem. Para uma comparação estilística válida, produzir, no mesmo storyboard/temas e com as mesmas ações, uma segunda direção realmente distinta: **vetor 2D gráfico contemporâneo**, silhuetas recortadas, blocos de cor limitados, contraste forte, transições expressivas, quase sem renderização 3D nem néon. O design deve ser ilustrado originalmente e factualmente plausível; não copiar identidade de Kurzgesagt/Vox. Evitar uma terceira variação de azul/amarelo sem diferença de material/desenho. Fazer comparação de quadros específicos, não novos posters de estilos aparentemente iguais.
+
+**Portões ainda abertos:** checar o físico de eclusa/EUV e os overlays por plataforma; produzir ao menos alguns quadros nativos 1080×1920 com mesma composição entre temas; confirmação visual do usuário antes de implementar animação. **Nenhum renderizador alterado ou publicado por este feedback.**

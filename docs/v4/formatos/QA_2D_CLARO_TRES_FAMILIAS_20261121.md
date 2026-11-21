@@ -27,3 +27,11 @@
 
 ## Resultado e decisão
 O resultado de CI confirma compilação/estado físico, **não qualidade estética**. Depois do render, registrar ID, estado, artefato, parecer visual e avaliação do usuário antes de promover o padrão de produção.
+
+
+## Resultado verificado — render final 21/11
+
+- **GitHub Actions `44903955242` SUCCESS** (SHA de código/testes `d6f49c6c6fa79a7a0ef28c970adb4809fb7bf8b6`). Artifact privado `14707720229`, expira 26/11/2026. Dois MP4s 540×960 H.264 com 8,4s, sem áudio, sem Telegram, sem publicação.
+- Vídeo 1 `qa_modelos2d_claro_final/polia_clara_PRIVADA.mp4`; vídeo 2 `qa_modelos2d_claro_final/engrenagens_claras_PRIVADA.mp4`; oito frames `contato_2d_multiassunto.jpg`; comparação com alavanca em `/mnt/data/comparativo_3_mecanismos_2d_claro_20261121.jpg`. Todos os caminhos sandbox devem ser confirmados no contêiner antes de compartilhar.
+- A primeira prova `44903309651` passou mas a revisão humana flagrou rótulos encostando e o peso aproximando-se demais da polia. Corrigidos `mechanisms2d-probes.json`/render e estendido o fiscal `tests/test_mechanism_2d_multifamily.py` para impedir interseção peso×roldana ao longo de 101 posições. Os movimentos continuam derivados de estado físico, não keyframes específicos do episódio.
+- **Parecer após inspecionar quadros finais:** o papel claro se sustenta nas três famílias; o mecanismo da polia é mais naturalmente vertical e a engrenagem apresenta peças simultâneas sem trocar de cena. Ainda há uma área inferior extensa pouco aproveitada, rótulos pequenos no celular e ausência de narração/legendas. A alavanca ainda usa layout editorial separado do novo `PaperLayout`; não afirmar padronização completa. Nenhum selo `VISUAL_OK` ou `PUBLICAVEL` antes da opinião do usuário e validação nas redes.

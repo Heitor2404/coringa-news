@@ -144,7 +144,8 @@ def test_arte_2_5d_original_sem_assets_terceiros():
     a=SCENE.read_text('utf8')
     b=SHELL.read_text('utf8')
     assert 'a-lock-sky' in b and 'a-euv-backdrop' in b
-    assert 'Physical machine housing below the optics' in b
+    assert 'IndustrialBackdrop' in b and 'ABeveledPanel' in b
+    assert 'tone="steel"' in b and 'tone="cobalt"' in b
     assert 'Q220 1181' in a  # corte inferior com estratigrafia
     assert 'ABeveledPanel' in a and 'AJoint' in a
     assert 'ABeveledPanel' in b and 'ARivet' in b

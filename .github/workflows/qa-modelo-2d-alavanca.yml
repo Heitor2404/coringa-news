@@ -72,11 +72,11 @@ jobs:
       - name: Inspecao de frames, metadata e contato de 6 acontecimentos
         run: |
           ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height -of json qa_modelo2d/alavanca_clara_PRIVADA.mp4 > qa_modelo2d/metadata.json
-          for stamp in 0.9 2.6 4.5 6.0 7.8 10.1; do
+          for stamp in 0.5 1.65 2.95 4.4 5.75 7.75; do
             name=${stamp/./_}
             ffmpeg -hide_banner -loglevel error -y -ss "$stamp" -i qa_modelo2d/alavanca_clara_PRIVADA.mp4 -frames:v 1 "qa_modelo2d/frames/etapa_${name}.png"
           done
-          ffmpeg -hide_banner -loglevel error -y -ss 6.6 -i qa_modelo2d/alavanca_grafite_PRIVADA.mp4 -frames:v 1 qa_modelo2d/frames/variante_grafite.png
+          ffmpeg -hide_banner -loglevel error -y -ss 5.3 -i qa_modelo2d/alavanca_grafite_PRIVADA.mp4 -frames:v 1 qa_modelo2d/frames/variante_grafite.png
           python - <<'PY'
           from pathlib import Path
           from PIL import Image,ImageDraw,ImageFont
@@ -86,8 +86,8 @@ jobs:
           vids=[s for s in meta['streams'] if s['codec_type']=='video']
           assert len(vids)==1 and vids[0]['width']==540 and vids[0]['height']==960
           assert not any(s['codec_type']=='audio' for s in meta['streams'])
-          assert float(meta['format']['duration'])>=11
-          names=['0_9','2_6','4_5','6_0','7_8','10_1']
+          assert 8.5<=float(meta['format']['duration'])<=9.5
+          names=['0_5','1_65','2_95','4_4','5_75','7_75']
           canvas=Image.new('RGB',(3*290,2*550),(242,238,230))
           draw=ImageDraw.Draw(canvas)
           for k,n in enumerate(names):
@@ -106,6 +106,7 @@ jobs:
               'status':'PROVA_TECNICA_2D_VISUAL_AINDA_NAO_APROVADO',
               'renderers':'LAB_2D_ALAVANCA', 'espaco':'branch experimental',
               'fisica':'uma rotacao governa ambos extremos da alavanca',
+              'direcao':'MAIOR PRESENCA E ACAO COM MARGENS SEQUENCIAIS',
               'voz':False,'telegram':False,'publicar':False,
               'direitos':'arte vetorial original, nao copiar videos de referencia',
               'sha256_paper':hashlib.sha256(ra.read_bytes()).hexdigest(),

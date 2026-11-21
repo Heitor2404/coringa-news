@@ -1,0 +1,111 @@
+name: "LAB — Cutaway 3D multitema: dois videos reais"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-cinematic-3d-videos.yml"
+      - "motor4/remotion/src/formatos/CinematicCutaway3D.tsx"
+      - "motor4/remotion/src/formatos/editorial-safe-roles-v2.json"
+      - "motor4/remotion/src/formatos/SliderCrankRig.ts"
+      - "motor4/remotion/src/formatos/slider-crank-proofs.json"
+      - "tests/test_atlas_3d_editorial_safe.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atlas-cutaway-3d-videos
+  cancel-in-progress: true
+jobs:
+  dois_renderers_mesma_fisica_e_sem_publicacao:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar e validar estrutura
+        run: |
+          python -m pip install -q pytest pillow
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pytest -q tests/test_atlas_3d_editorial_safe.py tests/test_slider_crank_multitema.py
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Renderizar motor 3D em corte (privado)
+        timeout-minutes: 9
+        run: |
+          mkdir -p qa_3d_motion/frames
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts Prova3D-Pistao ../qa_3d_motion/MOTOR_3D_PRIVADO.mp4 --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=1 --gl=swangle --log=error
+      - name: Renderizar compressor 3D com mesmo componente
+        timeout-minutes: 9
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts Prova3D-Compressor ../qa_3d_motion/COMPRESSOR_3D_PRIVADO.mp4 --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=1 --gl=swangle --log=error
+      - name: Provar video em movimento e gerar contato completo
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageChops,ImageStat,ImageDraw
+          root=Path('qa_3d_motion')
+          f=root/'frames'
+          cfg=json.loads(Path('motor4/remotion/src/formatos/slider-crank-proofs.json').read_text('utf8'))
+          board=Image.new('RGB',(5*260,2*480),'#E6F2F6')
+          drawer=ImageDraw.Draw(board)
+          summary={}
+          for row,(kind,filename) in enumerate((('motor','MOTOR_3D_PRIVADO.mp4'),
+                                                 ('compressor','COMPRESSOR_3D_PRIVADO.mp4'))):
+              path=root/filename
+              assert path.is_file() and path.stat().st_size>45_000,(filename,'MP4 ausente ou pequeno')
+              meta=json.loads(subprocess.check_output(['ffprobe','-v','error',
+                  '-show_entries','format=duration:stream=codec_type,width,height',
+                  '-of','json',str(path)]))
+              vid=next(x for x in meta['streams'] if x['codec_type']=='video')
+              assert (vid['width'],vid['height'])==(540,960)
+              assert abs(float(meta['format']['duration'])-cfg['duration'])<.06
+              assert all(x['codec_type']!='audio' for x in meta['streams'])
+              frames=[]
+              for col,t in enumerate((.55,1.8,3.8,5.55,7.55)):
+                  p=f/f'{kind}_{str(t).replace(".","_")}.jpg'
+                  subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                      '-y','-ss',str(t),'-i',str(path),'-frames:v','1',str(p)])
+                  im=Image.open(p).convert('RGB')
+                  frames.append(im)
+                  small=im.copy();small.thumbnail((245,425))
+                  x=col*260+7;y=row*480+40
+                  board.paste(small,(x,y))
+                  drawer.text((x,y-25),f'{kind} {t:.2f} s',fill='#133957')
+              dif=ImageChops.difference(frames[1].crop((50,325,500,940)),
+                                         frames[3].crop((50,325,500,940)))
+              delta=sum(ImageStat.Stat(dif).mean)/3
+              assert delta>4.5,(kind,'sem mudanca mecânica visivel',delta)
+              summary[kind]={
+                'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                'delta_rgb':round(delta,2),'duration':cfg['duration'],
+                'resolution':[540,960],'audio':False
+              }
+          board.save(root/'contato_3d_10quadros.jpg',quality=91)
+          (root/'resultado.json').write_text(json.dumps({
+              'estado':'VIDEO_REAL_RENDERIZADO_VISUAL_HUMANO_PENDENTE',
+              'modelos':['motor','compressor'],'fisica':'SliderCrankRig',
+              'renderer':'CinematicCutaway3D','publicar':False,'telegram':False,
+              'metricas':summary
+          },ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas-cinematic-3d-2videos-privados
+          path: qa_3d_motion/
+          retention-days: 5
+          if-no-files-found: warn

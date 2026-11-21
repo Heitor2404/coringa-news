@@ -72,6 +72,26 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
       <clipPath id="a-reservoir"><rect x="75" y="723" width="169" height="413"/></clipPath>
     </defs>
     <Clouds t={t}/><HillTrees/>
+    {/* Estratigrafia exposta. Não é decoração: permite enxergar a galeria
+        hidráulica passando SOB a câmara em 9:16. Sem rótulos essenciais
+        na faixa inferior ocupável pelas redes. */}
+    <path d="M0 1207 Q220 1181 467 1212 T1080 1200 V1920 H0Z"
+      fill="#746F60" stroke="#D1B99B" strokeWidth="12"/>
+    <path d="M0 1332 Q195 1287 414 1328 T1080 1310 V1438
+      Q760 1473 493 1436 T0 1457Z" fill="#9A826E" opacity=".87"/>
+    <path d="M0 1509 Q255 1470 533 1524 T1080 1487 V1623
+      Q807 1660 567 1631 T0 1660Z" fill="#54635F" opacity=".9"/>
+    <path d="M0 1710 Q321 1690 539 1730 T1080 1695 V1920 H0Z"
+      fill="#294F55" opacity=".93"/>
+    {Array.from({length:13},(_,i)=>{
+      const x=(i*179)%1120,y=1310+(i%4)*155;
+      return <g key={i} opacity=".24">
+        <path d={'M'+x+' '+y+' l45 12 -20 25 -32 -6Z'}
+          fill={i%2?'#D9C6A3':'#213F4B'}/>
+        <path d={'M'+(x+60)+' '+(y+23)+' l29 -10 15 21'}
+          fill="none" stroke="#E7CDB2" strokeWidth="5"/>
+      </g>;
+    })}
     {/* Terreno e estrutura: concretos com perspectiva simples 2.5D,
         nunca uma imagem estática ocupando todo o quadro. */}
     <path d="M0 809 Q165 749 262 810 L264 1150 H0Z"
@@ -114,13 +134,13 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
     </g>
     {/* Gated bottom channel is drawn as ONE connected pipe. The origin
         is in the raised reservoir, destination under the chamber water. */}
-    <path d="M166 878 V1011 H355 V993"
+    <path d="M166 878 V1440 H355 V993"
       fill="none" stroke="#3B4B59" strokeWidth="53"
       strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M166 878 V1011 H355 V993"
+    <path d="M166 878 V1440 H355 V993"
       fill="none" stroke="#80AAB7" strokeWidth="34"
       strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M166 878 V1011 H355 V993"
+    <path d="M166 878 V1440 H355 V993"
       fill="none" stroke={s.flow?'#28EBFF':'#376F94'}
       strokeWidth="18" strokeDasharray="22 28"
       strokeDashoffset={-t*106} strokeLinecap="round"
@@ -143,7 +163,7 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
     </g>
     {/* Ship bow remains IN ONE CHAMBER. Hull follows water by buoyancy,
         not by an independent keyframe translation. */}
-    <g transform={'translate('+(-30+s.boatTravel)+' '+s.boatShift+')'}>
+    <g transform={'translate('+(-40+s.boatTravel)+' '+s.boatShift+') translate(560 959) scale(1.28 1.05) translate(-560 -959)'}>
       <ellipse cx="565" cy="977" rx="218" ry="27" fill="#031B34" opacity=".37"/>
       {/* stacks: three layers of actual colorful shipping containers */}
       {Array.from({length:3},(_,row)=>
@@ -173,7 +193,7 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
         fill="#E8F7F5"/>
       <rect x="623" y="646" width="11" height="26"
         fill="#EAF7F2"/>
-      <path d="M634 640 V612" stroke="#FFF9E5" strokeWidth="4"/>
+      <path d="M634 640 V650" stroke="#FFF9E5" strokeWidth="4"/>
       {[0,1,2,3].map(i=><rect key={i} x={579+i*27} y="722"
         width="19" height="17" fill="#0B5B87" rx="2"/>)}
       <path d="M367 907 Q558 964 772 907" stroke="#D4ECF2"

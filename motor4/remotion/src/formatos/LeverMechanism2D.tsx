@@ -232,7 +232,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         <Label x={583} y={947} color={p.effort} size={21}>BRAÇO LONGO</Label>
         <text x="581" y="1005" fill={p.ink} fontFamily={font}
           fontSize="21" fontWeight="700" textAnchor="middle">
-          {s.advantage.toFixed(1).replace('.',',)}× MAIOR · IDEAL
+          {s.advantage.toFixed(1).replace('.',',')}× MAIOR · IDEAL
         </text>
       </g>
     </svg>

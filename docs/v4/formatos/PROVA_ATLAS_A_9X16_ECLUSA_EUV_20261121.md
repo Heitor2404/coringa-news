@@ -29,3 +29,14 @@ Referência visual da conversa: `Coringa_Storyboard_A_20261121.png`. Trata-se de
 
 ## Gate real
 QA do CI + 10 quadros em 5 fases + mock das três redes + opinião estética do usuário **ANTES** de promover um modo visual à produção. Nenhuma entrega posterior é assíncrona. Não substituir a engine ATLAS existente em `main` ou tirar outras provas do repositório.
+
+
+## Resultado final verificado desta rodada — QA executado
+
+**Run final:** `44911687311`, GitHub Actions **SUCCESS**, commit de código/teste `1277530d7306a39ac014b43f79decb847b69b9d1`. Artifact privado `14709649130`, retenção até 26/11/2026. Saída: `eclusa_A_PRIVADA.mp4` e `euv_A_PRIVADA.mp4`, ambos **7,8s, 540×960, sem áudio**, um contrato compartilhado, 5 eventos por família. Relatório `resultado.json` mantém `publicar:false`, `telegram:false`, `narracao:false`, `device_interface:SIMULADA`, `QA_ESTRUTURAL_PASSA_SE_CI_VERDE_VISUAL_HUMANO_PENDENTE`.
+
+**Artefatos inspecionados no contêiner nesta conversa:** `/mnt/data/atlas_a_v2_final/eclusa_A_PRIVADA.mp4`, `/mnt/data/atlas_a_v2_final/euv_A_PRIVADA.mp4`, `/mnt/data/atlas_a_v2_final/contato_10_quadros_A.jpg`, `/mnt/data/atlas_a_v2_final/interfaces_3_redes_A.jpg`, `/mnt/data/atlas_a_comparacao_v1_v2_20261121.jpg`. A comparação mostra que a eclusa V2 ampliou o cargueiro mantendo casco visível, e a obra inferior virou corte de terreno com galeria conectada. EUV substituiu o piso em grid por carcaça de estágio, mas **continua visualmente esquemático e abaixo do acabamento da A concept art**.
+
+**Resultado de segurança observado:** os títulos, a etapa e o crédito permanecem dentro do corredor central sob a **máscara simulada** das três redes. Algumas bordas do navio e a estrutura/óptica lateral podem tocar a coluna de ícones; isso está documentado como tolerável, desde que não esconda a relação física principal. O overlay do aparelho é apenas aproximado e os arquivos estão sem narração/legendas finais. NÃO afirmar app SAFE validado.
+
+**Parecer:** avanço de arquitetura e composição A em dois assuntos, **ainda NÃO uma animação profissional equiparável aos painéis A gerados por imagem**. O EUV ainda tem apresentação “técnica” e a eclusa usa simplificações de ilustração; ambos são diagramas físicos de capacidade conhecida. Não confundir `SUCCESS` com `VISUAL_OK`, nem promover ao catálogo produtivo. Próximo passo depende da opinião do usuário ao assistir os dois MP4s, e depois deve atacar **ilustração/asset quality** e ritmo narrativo com áudio, em vez de apenas zoom/crop.

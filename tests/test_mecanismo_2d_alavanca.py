@@ -96,10 +96,14 @@ def test_nao_esconde_pecas_essenciais_na_ui_antes_dos_icones():
         assert ex<=960
         assert ey+g['beamThickness']/2+c['qa']['minimumClearanceBeforeIcons']<=840
     scene=SCENE.read_text(encoding='utf8')
-    assert 'left:156,top:1097,width:600' in scene
-    assert 'left:156,top:1215,width:603' in scene
+    assert 'left:156,top:1071,width:600' in scene
+    assert 'left:156,top:1220,width:603' in scene
     assert 'left:156,top:402,width:670' in scene
     assert 'PROVA VISUAL PRIVADA · NÃO PUBLICAR' in scene
+    assert 'M195 540 V519 H409 V540 M409 540 V519 H849 V540' in scene
+    assert 'M190 885' not in scene  # Medição não cruza mais o suporte.
+    assert 'y={1008}' in scene and '>APOIO</Label>' in scene
+
 
 
 def test_estetica_da_prova_e_limpa_e_original_sem_importar_assets_da_referencia():

@@ -27,9 +27,9 @@
       "accent": "#F9AC45",
       "geometry": {
         "centerX": 498,
-        "centerY": 1058,
-        "radius": 92,
-        "rodLength": 270,
+        "centerY": 1002,
+        "radius": 88,
+        "rodLength": 222,
         "pistonWidth": 214,
         "pistonHeight": 114
       },
@@ -74,9 +74,9 @@
       "accent": "#5DE2DE",
       "geometry": {
         "centerX": 498,
-        "centerY": 1058,
-        "radius": 81,
-        "rodLength": 285,
+        "centerY": 1002,
+        "radius": 80,
+        "rodLength": 230,
         "pistonWidth": 214,
         "pistonHeight": 114
       },

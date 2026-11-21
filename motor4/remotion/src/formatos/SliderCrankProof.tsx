@@ -123,10 +123,10 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
   return <g role="img" aria-label="Pistão unido por pino à biela, que se conecta ao virabrequim em rotação. Toda geometria depende do mesmo ângulo.">
     {/* Grounded, full-size machine silhouette; no isolated generic cards. */}
     <path d="M252 582 Q252 529 305 522 H704 Q751 531 753 593
-             V1096 Q743 1193 643 1212 H351 Q256 1198 245 1101 Z"
+             V1052 Q743 1146 643 1163 H351 Q256 1147 245 1055 Z"
       fill="#04243E" stroke="#6DD6DE" strokeWidth="16" opacity=".75"/>
     <path d="M266 590 Q263 540 311 537 H690 Q737 538 739 594
-             V1090 Q731 1176 635 1192 H350 Q273 1179 266 1087 Z"
+             V1050 Q731 1132 635 1150 H350 Q273 1135 266 1049 Z"
       fill="url(#sc-frame)" stroke="#063450" strokeWidth="8"/>
     {/* Mechanical housing with real structural ribs and castings. */}
     {[0,1,2,3].map(i=><g key={i}>
@@ -135,7 +135,7 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
       <rect x={666} y={686+i*108} width="66" height="24"
         rx="9" fill="#082E4E" opacity=".62"/>
     </g>)}
-    <rect x="301" y="933" width="397" height="235" rx="94"
+    <rect x="301" y="857" width="397" height="281" rx="94"
       fill="#042B4C" stroke="#A4EEF0" strokeOpacity=".39"
       strokeWidth="12"/>
     {/* Flywheel: its spokes and eccentric crank pin rotate as a single body. */}
@@ -306,12 +306,12 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
       </SVGText>
     </g>
     {/* Permanent foundation and material details, not functional objects. */}
-    <path d="M355 1202 H645" stroke="#04263B" strokeWidth="43"
+    <path d="M355 1151 H645" stroke="#04263B" strokeWidth="43"
       strokeLinecap="round"/>
-    <path d="M372 1202 H629" stroke="#90DDE3" strokeWidth="13"
+    <path d="M372 1151 H629" stroke="#90DDE3" strokeWidth="13"
       strokeLinecap="round"/>
     {Array.from({length:7},(_,i)=><circle key={i}
-      cx={296+i*69} cy="1204" r="8" fill="#B7EDE9"
+      cx={296+i*69} cy="1151" r="8" fill="#B7EDE9"
       stroke="#0C4660" strokeWidth="4"/>)}
   </g>;
 };
@@ -360,32 +360,18 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
       focus={beat.focus} ports={fixture.ports}
       accent={fixture.accent} duration={duration}/>
     {/* Narrative caption: always about the ACTUAL causal change. */}
-    <rect x="129" y="1238" width="804" height="180" rx="29"
+    <rect x="129" y="1174" width="804" height="80" rx="22"
       fill="#082A44" stroke="#2C92AF" strokeWidth="4"/>
-    <rect x="156" y="1261" width="12" height="50" rx="5"
+    <rect x="149" y="1192" width="10" height="38" rx="5"
       fill={fixture.accent}/>
-    <SVGText x={193} y={1302} size={41} color={C.white} weight={950}>
+    <SVGText x={234} y={1208} size={33} color={C.white} weight={950}>
       {beat.label}
     </SVGText>
-    <SVGText x={159} y={1367} size={29} color="#CBF3F4" weight={650}>
+    <SVGText x={153} y={1238} size={23} color="#CBF3F4" weight={650}>
       {beat.detail}
     </SVGText>
-    {fixture.steps.map((step,i)=>{
-      const active=i===stage;
-      return <g key={i}>
-        <rect x={150+i*197} y="1455" width="168" height="12" rx="6"
-          fill={active?fixture.accent:'#3D7894'} opacity={active?1:.4}/>
-        <SVGText x={150+i*197} y={1503} color={active?C.white:'#85C9D7'}
-          size={20} weight={active?900:680}>
-          {String(i+1).padStart(2,'0')}
-        </SVGText>
-      </g>;
-    })}
-    <SVGText x={144} y={1573} size={24} color="#B0DEEA" weight={650}>
-      {fixture.section}
-    </SVGText>
-    <SVGText x={144} y={1615} size={21} color="#97CBD6" weight={630}>
-      {fixture.footer}
+    <SVGText x={174} y={1208} size={19} color={fixture.accent} weight={950}>
+      {String(stage+1).padStart(2,'0')+' / 04'}
     </SVGText>
     {private_review_only&&
       <SVGText x={540} y={1847} size={23} color="#8CB2CA"

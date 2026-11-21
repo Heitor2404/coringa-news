@@ -71,3 +71,22 @@ reconstrução validada.
 - A busca foi ampliada com Commons GIF/WebM/Ogg/MP4 e palavras-chave 3D curtas. Isso **melhorou descoberta, nao a qualidade nem a capacidade de render**.
 
 **Proximo portao real:** salvar quadros amostrados dos GIFs/clipes, analisar as imagens/etapas com revisao visual e classificar `RELEVANTE_COMPROVADO`, `PARCIAL`, `IRRELEVANTE` por acoes observadas; nunca selecionar modelo so pela palavra heart/piston. Depois testar reconstrucao via operador reusavel/asset validado. Nao publicar; nenhuma animacao nova do motor foi produzida nesta etapa.
+
+## Resultado da coleta efetiva de quadros (run 44940529528)
+
+Compilacao/12 testes e buscas publicas concluidos. Dois GIFs Commons foram
+escolhidos para amostragem (um do pistao, um do coracao). A requisicao do
+**arquivo original** no GitHub Actions retornou **HTTP 429 Too Many Requests**
+para ambos. Nenhuma folha de quadros reais ou observacao multimodal foi
+produzida; nao transformar `SUCCESS` do job em `MEDIA_VERIFICADA`.
+
+A partir desta rodada, busca externa e download de referencias ocorrem
+**somente no workflow_dispatch** (manual). Alteracoes de codigo acionam
+apenas QA offline; evita repeticao de downloads apos erro de limite.
+O proximo portao devera usar arquivo original acessivel com backoff/caching
+responsavel, checar hash e quadros e passar por revisao de movimento e
+pertinencia antes de qualquer recreacao.
+
+**Numero de testes automatizados offline:** 12 (9 no modulo de pesquisa,
+3 no amostrador de GIF). Nenhum teste comprova qualidade 2D/3D, licenca,
+semantica observada ou video renderizado do pistao/coracao.

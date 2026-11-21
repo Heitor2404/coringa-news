@@ -38,12 +38,14 @@ jobs:
               assert j['estado']=='SEM_REFERENCIAS'
           PY
       - name: Garimpo publico REAL — pistao e coracao, sem Gemini
+        if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 5
         continue-on-error: true
         run: |
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/motor_pistao.json saida_ref/live_pistao
           python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/circulacao_cardiaca.json saida_ref/live_coracao
       - name: Amostrar os primeiros GIFs encontrados por tema
+        if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 2
         continue-on-error: true
         run: |

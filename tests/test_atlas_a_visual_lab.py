@@ -146,5 +146,5 @@ def test_arte_2_5d_original_sem_assets_terceiros():
         assert 'Kurzgesagt' not in code and 'Vox' not in code
         assert 'https://' not in code
     # Mecanismo persistente dentro de um mesmo quadro visual.
-    assert 'kind===\\'lock\\'' in a
+    assert "kind==='lock'" in a
     assert 'AtlasAStudio' in a

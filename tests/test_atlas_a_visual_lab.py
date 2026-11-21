@@ -80,9 +80,14 @@ def test_agua_e_navio_nunca_se_separam_ao_subir():
     assert 'strokeDashoffset={-t*106}' in s
     assert "gateShift:open*57" in s
     assert 'const s=lockState(t,events)' in s
-    # O casco tem largura grande e não chega ao x780 na altura da UI.
-    assert "(-30+s.boatTravel)" in s
-    assert (791-30+20)<=781
+    # A ação principal fica visível mesmo com margem TOLERÁVEL de ícones.
+    # O casco usa 1.28x na largura; só a ponta periférica pode entrar
+    # na coluna de botões, e a causa física não pode estar ali.
+    assert "scale(1.28 1.05)" in s
+    assert "(-40+s.boatTravel)" in s
+    xleft=560+(344-560)*1.28-40
+    xright=560+(791-560)*1.28-40+20
+    assert (xright-780)/(xright-xleft)<.12
 
 
 def test_euv_reflexivo_conectado_nao_transmissivo_nem_chip_pronto():

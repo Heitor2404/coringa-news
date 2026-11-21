@@ -6,6 +6,7 @@ on:
       - ".github/workflows/qa-slider-crank-multitema.yml"
       - "motor4/remotion/src/Root.tsx"
       - "motor4/remotion/src/formatos/SliderCrankRig.ts"
+      - "motor4/remotion/src/formatos/MechanismCamera2D.ts"
       - "motor4/remotion/src/formatos/SliderCrankProof.tsx"
       - "motor4/remotion/src/formatos/slider-crank-proofs.json"
       - "tests/test_slider_crank_multitema.py"

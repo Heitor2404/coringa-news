@@ -367,7 +367,7 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
    zoomStart:specs.camera.zoomStart,
    zoomSeconds:specs.camera.zoomSeconds,
  });
- const titleOpacity=1-ease((t-.58)/.52);
+ const titleOpacity=1-ease((t-1.02)/.65);
  const out=(Math.round(state.displacement/fixture.geometry.radius));
  return <svg width="100%" height="100%" viewBox="0 0 1080 1920"
    preserveAspectRatio="xMidYMid meet" role="img"

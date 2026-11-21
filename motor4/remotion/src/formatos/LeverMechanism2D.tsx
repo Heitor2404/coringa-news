@@ -207,7 +207,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         <circle cx={pivot.x} cy={pivot.y} r="8" fill={p.metal}/>
         <path d={`M${pivot.x-19} 988 H${pivot.x+19}`}
           stroke={p.metal} strokeWidth="4" opacity=".45"/>
-        <Label x={pivot.x} y={1101} size={24} color={p.muted}>PONTO DE APOIO</Label>
+        <Label x={pivot.x} y={1076} size={24} color={p.muted}>PONTO DE APOIO</Label>
       </g>
 
       {/* Um esforço longo à direita causa subida do lado curto.
@@ -253,7 +253,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
       COMO UMA BARRA
       <div>LEVANTA UMA CARGA?</div>
     </div>
-    <div style={{position:'absolute',left:156,top:1113,width:600,
+    <div style={{position:'absolute',left:156,top:1097,width:600,
       borderTop:`2px solid ${p.subtle}`,paddingTop:12}}>
       <div style={{color:p.effort,fontSize:20,fontWeight:850,letterSpacing:1.4,
         marginBottom:8}}>
@@ -265,7 +265,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
         {s.active.label}
       </div>
     </div>
-    <div style={{position:'absolute',left:156,top:1223,width:603,
+    <div style={{position:'absolute',left:156,top:1215,width:603,
       fontSize:17.5,fontWeight:650,color:p.muted,lineHeight:1.1}}>
       ESQUEMA AUTORAL · ALAVANCA IDEALIZADA, SEM ATRITO
     </div>

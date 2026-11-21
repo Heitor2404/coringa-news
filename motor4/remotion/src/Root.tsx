@@ -46,10 +46,10 @@ export const Root: React.FC = () => (
         kind:'gears',private_review_only:true} as any}/>
     {/* A — arte ilustrada 2.5D autoral, amplitude de tela.
         Provas eclusa/EUV PRIVADAS, nunca no pipeline de episódios. */}
-    <Composition id="ProvaA_Eclusa" component={AtlasAProof as any}
+    <Composition id="ProvaA-Eclusa" component={AtlasAProof as any}
       {...base} defaultProps={{kind:'lock',duracao:atlasAProof.duration,
         private_review_only:true} as any}/>
-    <Composition id="ProvaA_EUV" component={AtlasAProof as any}
+    <Composition id="ProvaA-EUV" component={AtlasAProof as any}
       {...base} defaultProps={{kind:'euv',duracao:atlasAProof.duration,
         private_review_only:true} as any}/>
     <Composition id="AtlasAmostra" component={AtlasAmostra as any} {...base} defaultProps={{ duracao: 3, visual: {}, legenda: {} } as any} />

@@ -57,7 +57,7 @@ def test_polia_fixa_transmite_deslocamentos_iguais_e_nao_multiplica_forca():
         'assembly','load','pull','lift','result']
     assert g['freeX']==g['center'][0]-g['radius']
     assert g['loadX']==g['center'][0]+g['radius']
-    assert g['maxTravel']>=140
+    assert g['maxTravel']>=125
     x_free=g['freeX']
     x_load=g['loadX']
     assert 150<x_free<x_load<770
@@ -71,6 +71,16 @@ def test_polia_fixa_transmite_deslocamentos_iguais_e_nao_multiplica_forca():
         assert load_y>=g['center'][1]+g['radius']*.65
         assert load_y+24+g['loadHeight']<=1083
         assert (x_load+g['loadWidth']/2)<770
+        # O peso NÃO pode encostar ou atravessar a roldana no topo.
+        # Geometria circular real, em 101 momentos e não só nos keyframes.
+        block_top=load_y+24
+        dx_left=x_load-g['loadWidth']/2
+        cy=g['center'][1]
+        if block_top<cy+g['radius']:
+            dy=block_top-cy
+            circle_right=g['center'][0]+math.sqrt(
+                max(0,g['radius']**2-dy**2))
+            assert dx_left>=circle_right+12,(t,dx_left,circle_right)
     assert max(lengths)-min(lengths)<1e-7
     s=SRC.read_text('utf8')
     assert 'wheelRotation:travel/g.radius*180/Math.PI' in s

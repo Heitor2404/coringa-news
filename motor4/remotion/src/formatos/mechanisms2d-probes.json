@@ -13,16 +13,16 @@
       "geometry": {
         "center": [
           510,
-          679
+          675
         ],
-        "radius": 105,
-        "freeX": 405,
-        "loadX": 615,
-        "freeEndInitialY": 820,
-        "loadTopInitialY": 925,
-        "loadWidth": 142,
-        "loadHeight": 128,
-        "maxTravel": 170
+        "radius": 123,
+        "freeX": 387,
+        "loadX": 633,
+        "freeEndInitialY": 810,
+        "loadTopInitialY": 909,
+        "loadWidth": 170,
+        "loadHeight": 145,
+        "maxTravel": 150
       },
       "cues": [
         {
@@ -61,15 +61,15 @@
       "section": "ENGRENAGENS · MECÂNICA",
       "geometry": {
         "driverCenter": [
-          333,
-          700
+          319,
+          690
         ],
         "drivenCenter": [
-          615,
-          700
+          618,
+          690
         ],
-        "driverRadius": 106,
-        "drivenRadius": 176,
+        "driverRadius": 112,
+        "drivenRadius": 187,
         "driverTeeth": 12,
         "drivenTeeth": 20,
         "driverTurnDegrees": 410

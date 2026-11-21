@@ -223,10 +223,10 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
         color="#8FFFF2" scale={.7}/>
       <Arrow x={756} y={510} direction="right" opacity={exhaust?1:.16}
         color="#FFD57D" scale={.7}/>
-      <SVGText x={182} y={477} size={24} weight={950} color={intake?'#B1FFF0':'#D1E6E6'}>
+      <SVGText x={179} y={573} size={24} weight={950} color={intake?'#B1FFF0':'#D1E6E6'}>
         ENTRADA
       </SVGText>
-      <SVGText x={694} y={476} size={24} weight={950} color={exhaust?'#FFE49E':'#D1E6E6'}>
+      <SVGText x={716} y={573} size={24} weight={950} color={exhaust?'#FFE49E':'#D1E6E6'}>
         SAÍDA
       </SVGText>
     </g>}
@@ -291,10 +291,10 @@ const Cutaway:React.FC<{t:number;g:RigGeometry;mode:Driver;
     </g>}
     {/* Labels are anchored to components; large readable phone typography. */}
     <g opacity={.96}>
-      <path d={'M 620 '+(ptop+49)+' H710'} stroke="#E1FFEF"
+      <path d={'M 620 '+(ptop+49)+' H648'} stroke="#E1FFEF"
         strokeWidth="4" fill="none"/>
       <circle cx="619" cy={ptop+49} r="7" fill={activePiston?C.yellow:C.teal}/>
-      <SVGText x={716} y={ptop+57} size={26} weight={950}
+      <SVGText x={654} y={ptop+57} size={26} weight={950}
         color={activePiston?C.yellow:C.white}>PISTÃO</SVGText>
       <path d={'M 416 '+(s.pistonPin.y+145)+' L304 '+(s.pistonPin.y+160)}
         stroke="#D8F9F6" strokeWidth="4" fill="none" opacity=".81"/>

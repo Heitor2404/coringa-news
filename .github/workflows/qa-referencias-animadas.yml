@@ -89,6 +89,42 @@ jobs:
               except Exception as exc:
                   print(nome,"BLOQUEADO",type(exc).__name__,str(exc)[:160])
           PY
+      - name: Analisar quadros de GIF via Gemini existente (execucao manual)
+        if: github.event_name == 'workflow_dispatch'
+        timeout-minutes: 4
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ] && [ -z "$GEMINI_API_KEY_2" ]; then
+            echo "SEM-VISAO: chaves Gemini indisponiveis; nenhuma revisao afirmada"
+            exit 0
+          fi
+          python -m pip install -q google-genai
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.inspecionar_referencia import executar
+          for nome,brief_file in [
+              ('live_pistao','motor_pistao.json'),
+              ('live_coracao','circulacao_cardiaca.json'),
+          ]:
+              root=Path('saida_ref')/nome
+              frames=root/'quadros'
+              if not (frames/'original.gif').exists():
+                  print(nome,'F-REFERENCIA-INACESSIVEL: sem arquivo GIF original')
+                  continue
+              brief=json.loads((Path('docs/v4/formatos/briefs_referencia')/brief_file).read_text('utf8'))
+              candidates=json.loads((root/'referencias.json').read_text('utf8'))
+              try:
+                  outcome=executar(brief,candidates,frames,root/'revisao')
+                  print(nome,'visao',outcome['inspecao']['estado'],
+                        'planejador',outcome['planejamento']['estado'],
+                        'bloqueios',outcome['inspecao']['bloqueios'])
+              except Exception as exc:
+                  print(nome,'F-VISAO-BLOQUEADA',type(exc).__name__,str(exc)[:160])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

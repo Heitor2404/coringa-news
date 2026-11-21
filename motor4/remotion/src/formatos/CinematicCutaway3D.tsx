@@ -290,17 +290,17 @@ export const CinematicCutaway3D:React.FC<Props>=({
   const narrative=ease((t-.68)/.26)*ease((t-event.at)/.28);
   const lead=ease((t-.15)/.85);
   return <AbsoluteFill style={{
-     background:'#092B5B',color:'#FFFFFF',
+     background:'#1765BB',color:'#062341',
      fontFamily:'Inter,Arial,sans-serif',overflow:'hidden',
   }}>
     {/* Fundo full-bleed, não a caixa minuscula de safe zone. */}
     <div style={{position:'absolute',inset:0,
-      background:'radial-gradient(ellipse 820px 850px at 49% 53%, #2A94C8 0%, #1456AB 51%, #071B42 100%)'}}/>
+      background:'radial-gradient(ellipse 890px 960px at 50% 52%, #A4F1F2 0%, #42BBD6 32%, #1E84BF 62%, #093D77 100%)'}}/>
     <div style={{position:'absolute',inset:0,opacity:.29,
-      background:'repeating-linear-gradient(115deg,transparent 0px,transparent 94px,#79D5ED 95px,transparent 97px)'}}/>
+      background:'repeating-linear-gradient(115deg,transparent 0px,transparent 94px,#EEFFFF 95px,transparent 97px)'}}/>
     <div style={{position:'absolute',left:-215,top:490,width:1500,height:1180,
-      borderRadius:'50%',border:'4px solid rgba(195,251,255,.16)',
-      boxShadow:'0 0 100px 20px rgba(40,211,244,.14)'}}/>
+      borderRadius:'50%',border:'4px solid rgba(232,255,249,.29)',
+      boxShadow:'0 0 120px 20px rgba(235,255,248,.19)'}}/>
     {/* Mecanismo domina o canvas. A parte baixa é arte, não legenda. */}
     <ThreeCanvas width={1080} height={1460} orthographic={false}
       style={{position:'absolute',left:0,top:685,width:1080,height:1460}}
@@ -318,23 +318,23 @@ export const CinematicCutaway3D:React.FC<Props>=({
     {/* Texto permanece claro na faixa de texto útil.
         Ícones de Reels/TikTok/Shorts NÃO restringem a arte 3D. */}
     <div style={{position:'absolute',top:0,left:0,right:0,height:740,
-      background:'linear-gradient(180deg,rgba(5,25,57,.93) 1%,rgba(8,35,69,.86) 58%,rgba(7,36,74,.0) 100%)',
+      background:'linear-gradient(180deg,rgba(242,253,255,.97) 1%,rgba(222,251,254,.90) 58%,rgba(221,249,253,.0) 100%)',
       pointerEvents:'none'}}/>
     <div style={{position:'absolute',left:102,top:302,
       display:'flex',alignItems:'center',gap:12,fontWeight:920,
-      fontSize:26,letterSpacing:1.0,opacity:.96}}>
+      fontSize:26,letterSpacing:1.0,opacity:.96,color:'#082945'}}> 
       <span>CORINGA</span>
       <span style={{padding:'5px 9px 3px',color:'#092344',borderRadius:4,
         background:P.gold}}>EXPLICA</span>
     </div>
     <div style={{position:'absolute',left:102,top:372,
       fontWeight:940,fontSize:66,lineHeight:1.04,letterSpacing:-1.7,
-      maxWidth:825,opacity:opening}}>
+      color:'#082945',maxWidth:825,opacity:opening}}>
       {model.title[0]}
-      <div style={{color:P.gold}}>{model.title[1]}</div>
+      <div style={{color:'#AE6B02'}}>{model.title[1]}</div>
     </div>
     <div style={{position:'absolute',left:107,top:544,
-      fontWeight:760,fontSize:28,color:'#C3F9F6',
+      fontWeight:760,fontSize:28,color:'#236783',
       opacity:opening*lead,maxWidth:760}}>
       {model.subtitle.toUpperCase()}
     </div>
@@ -345,27 +345,27 @@ export const CinematicCutaway3D:React.FC<Props>=({
       opacity:narrative,
       transform:'translateY('+(1-narrative)*18+'px)',
       zIndex:5,maxWidth:840}}>
-      <div style={{fontSize:22,fontWeight:920,color:P.gold,
+      <div style={{fontSize:22,fontWeight:920,color:'#A26703',
         letterSpacing:2.0,marginBottom:15}}>
         {String(stage+1).padStart(2,'0')} / {String(model.steps.length).padStart(2,'0')}
       </div>
       <div style={{fontWeight:960,fontSize:59,lineHeight:1.01,
-        maxWidth:820,letterSpacing:-1.1,color:'#FFFFFF',
-        textShadow:'0 3px 16px rgba(2,29,65,.9)'}}>
+        maxWidth:820,letterSpacing:-1.1,color:'#092F4E',
+        textShadow:'0 2px 10px rgba(249,255,255,.36)'}}>
         {event.label}
       </div>
       <div style={{marginTop:15,fontWeight:720,fontSize:29,
-        lineHeight:1.12,maxWidth:810,color:'#DDFFFF',
-        textShadow:'0 2px 13px rgba(2,26,53,.9)'}}>
+        lineHeight:1.12,maxWidth:810,color:'#225671',
+        textShadow:'0 2px 13px rgba(249,255,255,.3)'}}>
         {event.detail}
       </div>
     </div>
 
     {/* Borda inferior ambiente/movimento: não desperdiçar metade da tela. */}
     <div style={{position:'absolute',left:0,right:0,bottom:0,height:440,
-      background:'linear-gradient(0deg,#061B3F 0%,rgba(6,27,63,.56) 40%,transparent 100%)',
+      background:'linear-gradient(0deg,#052D56 0%,rgba(5,55,96,.36) 40%,transparent 100%)',
       pointerEvents:'none'}}/>
-    <div style={{position:'absolute',left:100,right:130,bottom:380,height:9,
+    <div style={{position:'absolute',left:100,right:130,bottom:133,height:9,
       background:'rgba(179,242,255,.14)',borderRadius:9}}>
       <div style={{height:'100%',background:P.gold,
         width:(100*clamp(t/configs.duration))+'%',borderRadius:9}}/>

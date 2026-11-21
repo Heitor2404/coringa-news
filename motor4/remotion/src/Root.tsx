@@ -12,6 +12,7 @@ import { Mechanism2DOtherModels } from './formatos/Mechanism2DOtherModels';
 import probes2d from './formatos/mechanisms2d-probes.json';
 import { AtlasAProof } from './formatos/AtlasAProof';
 import { SliderCrankProof } from './formatos/SliderCrankProof';
+import { CinematicCutaway3D } from './formatos/CinematicCutaway3D';
 import atlasAProof from './formatos/atlas-a-proof.json';
 import sliderProof from './formatos/slider-crank-proofs.json';
 
@@ -59,6 +60,14 @@ export const Root: React.FC = () => (
       {...base} defaultProps={{kind:'motor',duracao:sliderProof.duration,
         private_review_only:true} as any}/>
     <Composition id="ProvaA-Compressor" component={SliderCrankProof as any}
+      {...base} defaultProps={{kind:'compressor',duracao:sliderProof.duration,
+        private_review_only:true} as any}/>
+    {/* Alternativa visual: cutaway 3D full-bleed. Mesma geometria slider-crank,
+        dois dados, nao usar no filme editorial sem revisao. */}
+    <Composition id="Prova3D-Pistao" component={CinematicCutaway3D as any}
+      {...base} defaultProps={{kind:'motor',duracao:sliderProof.duration,
+        private_review_only:true} as any}/>
+    <Composition id="Prova3D-Compressor" component={CinematicCutaway3D as any}
       {...base} defaultProps={{kind:'compressor',duracao:sliderProof.duration,
         private_review_only:true} as any}/>
     <Composition id="AtlasAmostra" component={AtlasAmostra as any} {...base} defaultProps={{ duracao: 3, visual: {}, legenda: {} } as any} />

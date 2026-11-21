@@ -35,7 +35,7 @@ def test_prova_tem_cinco_fases_fisicas_sem_montagem_por_assunto():
     cues=d['cues']
     assert d['status']=='PRIVATE_VISUAL_PROBE_NOT_PRODUCTION'
     assert d['qa']['publication']=='BLOCKED'
-    assert d['duration']>=10
+    assert 8.5<=d['duration']<=9.5
     assert [e['action'] for e in cues]==[
         'introduce','load','effort','actuate','explain']
     assert [e['at'] for e in cues]==sorted(set(e['at'] for e in cues))
@@ -96,15 +96,49 @@ def test_nao_esconde_pecas_essenciais_na_ui_antes_dos_icones():
         assert ex<=960
         assert ey+g['beamThickness']/2+c['qa']['minimumClearanceBeforeIcons']<=840
     scene=SCENE.read_text(encoding='utf8')
-    assert 'left:156,top:1071,width:600' in scene
+    assert 'left:156,top:1095,width:600' in scene
     assert 'left:156,top:1220,width:603' in scene
-    assert 'left:156,top:402,width:670' in scene
+    assert 'left:156,top:378,width:670' in scene
     assert 'PROVA VISUAL PRIVADA · NÃO PUBLICAR' in scene
-    assert 'M195 540 V519 H409 V540 M409 540 V519 H849 V540' in scene
+    assert 'data-safe-role="mechanism-actors"' in scene
     assert 'M190 885' not in scene  # Medição não cruza mais o suporte.
-    assert '<Label x={915} y={545}' in scene  # Força fora da régua de medição.
+    assert '<Label x={878} y={539}' in scene  # A força acompanha a ponta longa.
     assert 'y={1008}' in scene and '>APOIO</Label>' in scene
+    assert "const loadTopIn=crateY-(1-loaded)*35" in scene
+    assert "stageTransform=" not in scene  # Stage declarativo, sem transform hardcoded no JSX.
+    assert 'transform={stageTransform}' in scene
+    assert 'strokeDasharray="12 16"' in scene  # Posição inicial da barra permanece rastreável.
+    assert "stroke={p.teal} strokeWidth=\"8\"" in scene
+    assert "stroke={p.effort} strokeWidth=\"8\"" in scene
 
+
+
+
+
+def test_ampliacao_de_atores_sem_amputacao_em_todas_as_fases():
+    g=contract()['geometry']
+    stage=contract()['qa']['actorStage']
+    assert stage['scaleX']>1 and stage['scaleY']>1
+    assert g['loadWidth']>=140 and g['loadHeight']>=120
+    assert g['beamEndX']-g['beamStartX']>=790
+    cx,cy=stage['origin']
+    transform_x=lambda x:cx+(x-cx)*stage['scaleX']
+    transform_y=lambda y:cy+(y-cy)*stage['scaleY']
+    # Toda a progressão, incluindo peso no alto e ponta longa embaixo.
+    for i in range(121):
+        angle=g['maxTiltDeg']*i/120
+        x,y=_rotate(g['pivot'],(g['loadX'],g['pivot'][1]),angle)
+        rx,ry=_rotate(g['pivot'],(g['effortX'],g['pivot'][1]),angle)
+        left=transform_x(x-g['loadWidth']/2)
+        top=transform_y(y-g['beamThickness']/2-g['loadHeight'])
+        bottom=transform_y(ry+g['beamThickness']/2+contract()['qa']['minimumClearanceBeforeIcons'])
+        assert left>=120,(i,left)
+        assert top>=490,(i,top)
+        assert transform_x(rx)<=960,(i,transform_x(rx))
+        assert bottom<840,(i,bottom)
+    # A área ocupada por atores essenciais cresceu em vez de encolher.
+    w=(g['beamEndX']-g['beamStartX'])*stage['scaleX']
+    assert w>830
 
 
 def test_estetica_da_prova_e_limpa_e_original_sem_importar_assets_da_referencia():

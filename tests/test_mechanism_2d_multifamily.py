@@ -76,7 +76,7 @@ def test_polia_fixa_transmite_deslocamentos_iguais_e_nao_multiplica_forca():
     assert 'wheelRotation:travel/g.radius*180/Math.PI' in s
     assert 'freeEndY:g.freeEndInitialY+travel' in s
     assert 'loadTopY:g.loadTopInitialY-travel' in s
-    assert 'A '+ 'r' in s  # arco fixo, contínuo
+    assert "' A '+r+" in s  # arco da corda montado dinamicamente no mesmo path
     assert 'POLIA FIXA MUDA A DIREÇÃO DA FORÇA' in json.dumps(p,ensure_ascii=False)
 
 

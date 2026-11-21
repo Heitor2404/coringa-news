@@ -55,12 +55,12 @@ jobs:
         timeout-minutes: 8
         run: |
           cd motor4
-          npx --no-install remotion render remotion/src/index.ts ProvaA_Eclusa ../qa_a/eclusa_A_PRIVADA.mp4 --props=../qa_a/props-lock.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
+          npx --no-install remotion render remotion/src/index.ts ProvaA-Eclusa ../qa_a/eclusa_A_PRIVADA.mp4 --props=../qa_a/props-lock.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
       - name: Renderizar EUV ilustrado A
         timeout-minutes: 8
         run: |
           cd motor4
-          npx --no-install remotion render remotion/src/index.ts ProvaA_EUV ../qa_a/euv_A_PRIVADA.mp4 --props=../qa_a/props-euv.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
+          npx --no-install remotion render remotion/src/index.ts ProvaA-EUV ../qa_a/euv_A_PRIVADA.mp4 --props=../qa_a/props-euv.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
       - name: Folha de estados A e sobreposicoes visuais de tres plataformas
         run: |
           python - <<'PY'

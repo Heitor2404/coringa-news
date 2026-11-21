@@ -11,7 +11,9 @@ import leverContract from './formatos/lever2d-contract.json';
 import { Mechanism2DOtherModels } from './formatos/Mechanism2DOtherModels';
 import probes2d from './formatos/mechanisms2d-probes.json';
 import { AtlasAProof } from './formatos/AtlasAProof';
+import { SliderCrankProof } from './formatos/SliderCrankProof';
 import atlasAProof from './formatos/atlas-a-proof.json';
+import sliderProof from './formatos/slider-crank-proofs.json';
 
 // Amostra ATLAS: palco + legendas em UMA renderizacao, com o tempo GLOBAL do episodio.
 const AtlasAmostra: React.FC<{ visual: any; legenda: any; duracao: number }> = ({ visual, legenda }) => (
@@ -51,6 +53,13 @@ export const Root: React.FC = () => (
         private_review_only:true} as any}/>
     <Composition id="ProvaA-EUV" component={AtlasAProof as any}
       {...base} defaultProps={{kind:'euv',duracao:atlasAProof.duration,
+        private_review_only:true} as any}/>
+    {/* Prova privada: MESMO rig slider-crank em dois temas, sem renderer por episodio. */}
+    <Composition id="ProvaA-Pistao" component={SliderCrankProof as any}
+      {...base} defaultProps={{kind:'motor',duracao:sliderProof.duration,
+        private_review_only:true} as any}/>
+    <Composition id="ProvaA-Compressor" component={SliderCrankProof as any}
+      {...base} defaultProps={{kind:'compressor',duracao:sliderProof.duration,
         private_review_only:true} as any}/>
     <Composition id="AtlasAmostra" component={AtlasAmostra as any} {...base} defaultProps={{ duracao: 3, visual: {}, legenda: {} } as any} />
     <Composition id="TipoLottie" component={TipoLottie as any} {...base} defaultProps={{ duracao: 3, lottie: 'lottie/gota.json', linhas: [] } as any} />

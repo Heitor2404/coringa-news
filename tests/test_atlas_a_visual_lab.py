@@ -97,7 +97,7 @@ def test_euv_reflexivo_conectado_nao_transmissivo_nem_chip_pronto():
     assert 'M561 896 L524 951' in scene     # segue ao wafer
     assert 'MÁSCARA REFLEXIVA' in scene
     assert 'RESINA FOTOSSENSÍVEL' in scene
-    assert 'finished chip' not in scene.lower()
+    assert '>CHIP PRONTO<' not in scene.upper()  # Testar rótulo exibido, não comentário técnico.
     assert 'lente transmissiva' not in scene.lower()
     assert 'Photon d=' in scene
     # Referência documental evita fonte hidráulica no EUV.

@@ -1629,3 +1629,14 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 **Novo documento autoritativo:** `docs/v4/formatos/COMPARATIVO_DIRECAO_A_VS_C_20261121.md` criado no commit `d2fdf9c1319069a8941e9168151af28a903f30f6`. Contém matriz de estilos, limitações, mock de segurança e portões. **Somente documentação mudou no GitHub; não editaram `FilmeEditorial`, remotion, NTC, DOSSIÊ ou main. Nenhum vídeo renderizado ou publicado nesta rodada.**
 
 **Próximo gate:** usuário deve avaliar a C versus A, em especial dizer se o estilo 2D flat C parece animado/impactante ou infantil/simplório. Não escolher C apenas por custo menor. Se C: alinhar qualidade EUV ao nível visual C eclusa. Se A: aplicar 2D com volumes leves. Em ambas: corrigir safety em storyboard **nativo 1080×1920 e com camadas semânticas**, só depois clipe Remotion.
+
+
+## 87. 21/11 — Rejeição explícita da C; A é direção visual a desenvolver
+
+**Feedback determinante, literalmente:** “Nao gostei da direção C”. Na fala imediatamente anterior o usuário mostrou a interface real de Reels com poucos elementos tapando o vídeo e comentou “Gostei, mas realmente precisa ver certinho sobre a area ... praticamente nao atrapalha”. **Aprovação de área segura menos excessivamente conservadora NÃO foi aprovação estética da C**. O assistente corrigiu a interpretação e reconheceu o erro.
+
+**Decisão de produto:** a direção C (2D flat coral/turquesa/roxo, eclusa e EUV) está **REPROVADA COMO ESTÉTICA**; não promovê-la nem apresentar novos ajustes dela. Direção A, que o usuário havia preferido explicitamente, volta a ser única referência estética de trabalho. Ainda é conceito imperfeito: fatos/feixes EUV, números inventados, detalhes da eclusa e UI não estão validados; não publicar seus storyboards. Os recursos existentes de laboratório 2D continuam servindo à física, não ao padrão visual.
+
+**Regra de ocupação:** não colocar o mecanismo completo em safe universal minúscula. Proteger texto, trajetória ou conexão causal essencial e ator principal de overlays; permitir cenário/elementos secundários na área tolerável. O screenshot do usuário mostra uma UI concreta mas não comprova limites oficiais de todos os aparelhos/apps. Validar posições e fluxo em 9:16 nativo e overlay de cada plataforma antes de publicação.
+
+**Próximo trabalho:** prova visual próxima à A e maior, com mudança real em atores/ilustração e não card ou zoom destrutivo, usando a mesma linguagem em pelo menos eclusa e EUV; física oficial e causas conectadas. Sem gastar tempo buscando terceira/quarta estética. Nenhum renderizador, NTC, DOSSIÊ ou main alterado nesta mensagem; atualização SOMENTE de documentação em branch experimental.

@@ -1,0 +1,123 @@
+name: "QA — novo modelo 2D original: alavanca em cena persistente"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-modelo-2d-alavanca.yml"
+      - "motor4/remotion/src/Root.tsx"
+      - "motor4/remotion/src/formatos/LeverMechanism2D.tsx"
+      - "motor4/remotion/src/formatos/Mechanism2DCore.ts"
+      - "motor4/remotion/src/formatos/lever2d-contract.json"
+      - "tests/test_mecanismo_2d_alavanca.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-modelo2d-alavanca
+  cancel-in-progress: true
+jobs:
+  prova_2d:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Instalar e validar motor existente
+        run: |
+          python -m pip install -q pytest pillow
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Portao de causalidade da alavanca e direitos
+        run: |
+          python -m pytest -q tests/test_mecanismo_2d_alavanca.py
+      - name: Escrever props de duas direcoes visuais com fisica IDENTICA
+        run: |
+          mkdir -p qa_modelo2d/frames
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          cfg=json.loads(Path('motor4/remotion/src/formatos/lever2d-contract.json').read_text('utf8'))
+          for variant in ('paper','graphite'):
+              props={
+                  'duracao':cfg['duration'],
+                  'variant':variant,'private_review_only':True,
+                  'cues':cfg['cues'],'geometry':cfg['geometry']}
+              Path(f'qa_modelo2d/props-{variant}.json').write_text(
+                  json.dumps(props,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          assert cfg['qa']['publication']=='BLOCKED'
+          print('2D LAB, não publicar, sem Telegram, sem voz')
+          PY
+      - name: Renderizar A — fundo editorial claro
+        timeout-minutes: 10
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaMecanismo2D ../qa_modelo2d/alavanca_clara_PRIVADA.mp4 --props=../qa_modelo2d/props-paper.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Renderizar B — fundo grafite no MESMO mecanismo
+        timeout-minutes: 10
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaMecanismo2D ../qa_modelo2d/alavanca_grafite_PRIVADA.mp4 --props=../qa_modelo2d/props-graphite.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+      - name: Inspecao de frames, metadata e contato de 6 acontecimentos
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height -of json qa_modelo2d/alavanca_clara_PRIVADA.mp4 > qa_modelo2d/metadata.json
+          for stamp in 0.9 2.6 4.5 6.0 7.8 10.1; do
+            name=${stamp/./_}
+            ffmpeg -hide_banner -loglevel error -y -ss "$stamp" -i qa_modelo2d/alavanca_clara_PRIVADA.mp4 -frames:v 1 "qa_modelo2d/frames/etapa_${name}.png"
+          done
+          ffmpeg -hide_banner -loglevel error -y -ss 6.6 -i qa_modelo2d/alavanca_grafite_PRIVADA.mp4 -frames:v 1 qa_modelo2d/frames/variante_grafite.png
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image,ImageDraw,ImageFont
+          import json,hashlib
+          root=Path('qa_modelo2d')
+          meta=json.loads((root/'metadata.json').read_text())
+          vids=[s for s in meta['streams'] if s['codec_type']=='video']
+          assert len(vids)==1 and vids[0]['width']==540 and vids[0]['height']==960
+          assert not any(s['codec_type']=='audio' for s in meta['streams'])
+          assert float(meta['format']['duration'])>=11
+          names=['0_9','2_6','4_5','6_0','7_8','10_1']
+          canvas=Image.new('RGB',(3*290,2*550),(242,238,230))
+          draw=ImageDraw.Draw(canvas)
+          for k,n in enumerate(names):
+              im=Image.open(root/f'frames/etapa_{n}.png').convert('RGB')
+              im.thumbnail((270,480))
+              x=(k%3)*290+10
+              y=(k//3)*550+50
+              canvas.paste(im,(x,y))
+              draw.text((x,y-31),f'{n.replace("_",".")}s - etapa {k+1}',
+                        fill=(25,37,47))
+          canvas.save(root/'contato_seis_momentos.jpg',quality=91)
+          ra=root/'alavanca_clara_PRIVADA.mp4'
+          rb=root/'alavanca_grafite_PRIVADA.mp4'
+          assert ra.stat().st_size>25000 and rb.stat().st_size>25000
+          (root/'resultado.json').write_text(json.dumps({
+              'status':'PROVA_TECNICA_2D_VISUAL_AINDA_NAO_APROVADO',
+              'renderers':'LAB_2D_ALAVANCA', 'espaco':'branch experimental',
+              'fisica':'uma rotacao governa ambos extremos da alavanca',
+              'voz':False,'telegram':False,'publicar':False,
+              'direitos':'arte vetorial original, nao copiar videos de referencia',
+              'sha256_paper':hashlib.sha256(ra.read_bytes()).hexdigest(),
+              'sha256_graphite':hashlib.sha256(rb.read_bytes()).hexdigest(),
+              'revisao_humana':'PENDENTE',
+          },ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          PY
+      - name: Guardar somente previsualizacoes privadas por 5 dias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-modelo2d-alavanca-privada
+          path: qa_modelo2d/
+          if-no-files-found: warn
+          retention-days: 5

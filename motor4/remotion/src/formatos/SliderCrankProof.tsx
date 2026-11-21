@@ -338,21 +338,21 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
     <path d="M0 1635 Q260 1575 530 1645 T1080 1613 V1920 H0Z"
       fill="#03243F" opacity=".75"/>
     {/* Branded editorial opening, not a giant card with a number. */}
-    <rect x="135" y="226" width="328" height="55" rx="10"
+    <rect x="135" y="295" width="328" height="55" rx="10"
       fill="#031D33" stroke="#1CBFCA" strokeWidth="3"/>
-    <SVGText x={153} y={263} size={28} color={C.white} weight={950}>
+    <SVGText x={153} y={332} size={28} color={C.white} weight={950}>
       CORINGA
     </SVGText>
-    <rect x="301" y="238" width="150" height="34" rx="6" fill={C.yellow}/>
-    <SVGText x={316} y={263} size={23} color={C.ink} weight={950}>EXPLICA</SVGText>
-    <SVGText x={138} y={348} size={57} color={C.white} weight={950} spacing={-1.5}>
+    <rect x="301" y="307" width="150" height="34" rx="6" fill={C.yellow}/>
+    <SVGText x={316} y={331} size={23} color={C.ink} weight={950}>EXPLICA</SVGText>
+    <SVGText x={138} y={390} size={57} color={C.white} weight={950} spacing={-1.5}>
       {fixture.title[0]}
     </SVGText>
-    <SVGText x={138} y={415} size={57} color={C.white} weight={950} spacing={-1.5}>
+    <SVGText x={138} y={448} size={57} color={C.white} weight={950} spacing={-1.5}>
       {fixture.title[1]}
     </SVGText>
-    <rect x="140" y="438" width="85" height="9" rx="4" fill={fixture.accent}/>
-    <SVGText x={238} y={454} size={27} color="#C7EFF2" weight={740}>
+    <rect x="140" y="470" width="85" height="9" rx="4" fill={fixture.accent}/>
+    <SVGText x={238} y={495} size={27} color="#C7EFF2" weight={740}>
       {fixture.subtitle}
     </SVGText>
     {/* Machine with real causal movement */}

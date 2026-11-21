@@ -132,12 +132,9 @@ const PulleyDrawing:React.FC<{t:number}>=({t})=>{
        strokeLinecap="round"/>
      <path d="M 725 859 L 744 821 L 763 859" fill="none"
        stroke={PAPER.teal} strokeWidth="10" strokeLinejoin="round"/>
-     <Text x={721} y={1005} color={PAPER.teal}>SUBIR</Text>
+     {/* A direção vem da seta e do deslocamento físico, sem rótulo sobre o peso. */}
    </g>
-   <g opacity={st.result}>
-     <Text x={531} y={1029} size={25} color={PAPER.ink}>DESLOCAMENTO IGUAL</Text>
-     <Text x={536} y={1061} size={22} color={PAPER.muted}>FORÇA IDEAL NÃO DIMINUI</Text>
-   </g>
+   {/* A conclusão causal fica no caption seguro, não em cima da caixa. */}
  </g>;
 };
 
@@ -198,10 +195,10 @@ const GearDrawing:React.FC<{t:number}>=({t})=>{
  const d=g.driverCenter,e=g.drivenCenter;
  return <g role="img" aria-label="Dois dentes de engrenagens transmitem rotacao em sentidos opostos e com velocidade inversa ao numero de dentes">
    {/* Mancais e dois eixos: montagem contínua, sem cartão de etapas. */}
-   <path d="M 223 965 H 777" stroke="#B2A495" strokeWidth="17" strokeLinecap="round"/>
-   <path d={['M',d[0],d[1],'V',965].join(' ')}
+   <path d="M 222 918 H 789" stroke="#B2A495" strokeWidth="15" strokeLinecap="round"/>
+   <path d={['M',d[0],d[1],'V',916].join(' ')}
      stroke="#5B7A7E" strokeWidth="28" opacity=".28"/>
-   <path d={['M',e[0],e[1],'V',965].join(' ')}
+   <path d={['M',e[0],e[1],'V',916].join(' ')}
      stroke="#5B7A7E" strokeWidth="34" opacity=".25"/>
    <Gear x={d[0]} y={d[1]} r={g.driverRadius} teeth={g.driverTeeth}
      angle={st.rotation} fill="url(#paper-gold-metal)" highlight="#AD763E"
@@ -212,16 +209,16 @@ const GearDrawing:React.FC<{t:number}>=({t})=>{
    <g opacity={st.showTeeth}>
      <circle cx={d[0]+g.driverRadius} cy={d[1]} r="11"
        fill={PAPER.gold} stroke={PAPER.white} strokeWidth="3"/>
-     <Text x={520} y={995} size={24} color={PAPER.muted}>CONTATO DOS DENTES</Text>
+     <Text x={520} y={1022} size={22} color={PAPER.muted}>CONTATO DOS DENTES</Text>
    </g>
    <ArcArrow cx={d[0]} cy={d[1]} r={g.driverRadius+34}
      stroke={PAPER.gold} opacity={st.showRatio}/>
    <ArcArrow cx={e[0]} cy={e[1]} r={g.drivenRadius+33} reverse
      stroke={PAPER.teal} opacity={st.showRatio}/>
-   <Text x={d[0]} y={925} color={PAPER.gold} size={25}>MOTORA · {g.driverTeeth} DENTES</Text>
-   <Text x={e[0]} y={944} color={PAPER.teal} size={26}>MOVIDA · {g.drivenTeeth} DENTES</Text>
+   <Text x={d[0]} y={967} color={PAPER.gold} size={24}>ENTRADA · {g.driverTeeth} DENTES</Text>
+   <Text x={e[0]} y={967} color={PAPER.teal} size={24}>SAÍDA · {g.drivenTeeth} DENTES</Text>
    <g opacity={st.showResult}>
-     <Text x={521} y={1063} color={PAPER.ink} size={27}>{st.ratio.toFixed(1).replace('.',',')}× TORQUE IDEAL</Text>
+     <Text x={521} y={1058} color={PAPER.ink} size={26}>{st.ratio.toFixed(1).replace('.',',')}× TORQUE IDEAL</Text>
    </g>
  </g>;
 };

@@ -99,6 +99,9 @@ def test_mecanismo_desconhecido_e_bloqueado_sem_remendo_por_tema():
     d=R.descobrir(b,buscar=searchvideo,get=search3d)
     obs=observed(d["candidatos"][0]["id"])
     obs[0]["acoes_visiveis"]=b["acoes_necessarias"]
+    obs[0]["evidencias"]=obs[0]["evidencias"][:3]
+    for evidencia, acao in zip(obs[0]["evidencias"],b["acoes_necessarias"]):
+        evidencia["acao"]=acao
     obs[0]["fases_visiveis"]=b["fases_necessarias"]
     obs[0]["atores_visiveis"]=["piston","crank"]
     p=R.planejar(b,d,obs)

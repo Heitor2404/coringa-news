@@ -320,7 +320,8 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
  const {fps}=useVideoConfig();
  const frame=useCurrentFrame();
  const t=frame/fps;
- const fixture:Model=(specs.models as Record<string,Model>)[kind]??specs.models.motor as Model;
+ const fixture:Model=(specs.models as unknown as Record<string,Model>)[kind]
+   ??(specs.models.motor as unknown as Model);
  const duration=specs.duration;
  const stage=Math.max(0,fixture.steps.reduce((idx,s,i)=>t>=s.at?i:idx,0));
  const beat=fixture.steps[stage];

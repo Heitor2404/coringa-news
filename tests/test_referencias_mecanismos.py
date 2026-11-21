@@ -112,7 +112,10 @@ def test_erro_em_fornecedor_nao_inventa_candidatos():
         raise ConnectionError("offline")
     d=R.descobrir(brief(),buscar=broken,get=broken)
     assert d["candidatos"] == []
-    assert len(d["erros"]) == 2
+    # Pode haver mais de uma consulta por provedor; contabilizar falhas,
+    # nao assumir numero fixo de pedidos de rede.
+    assert len(d["erros"]) >= 2
+    assert all("ConnectionError" in e for e in d["erros"])
     assert R.planejar(brief(),d,[])["estado"] == "SEM_REFERENCIAS"
 
 

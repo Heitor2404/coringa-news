@@ -213,7 +213,7 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
       {/* Um esforço longo à direita causa subida do lado curto.
           A seta segue a ponta deslocada, não outra timeline. */}
       <g opacity={effort}>
-        <Label x={846} y={545} size={26} color={p.effort}>FORÇA</Label>
+        <Label x={915} y={545} size={26} color={p.effort}>FORÇA</Label>
         <VerticalArrow x={846} from={559} to={rightY-41}
           color={p.effort} opacity={1}/>
       </g>

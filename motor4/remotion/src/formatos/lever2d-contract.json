@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "status": "PRIVATE_VISUAL_PROBE_NOT_PRODUCTION",
+  "duration": 11.5,
+  "geometry": {
+    "pivot": [
+      409,
+      720
+    ],
+    "beamStartX": 147,
+    "beamEndX": 849,
+    "beamThickness": 33,
+    "loadX": 195,
+    "loadWidth": 116,
+    "loadHeight": 98,
+    "effortX": 849,
+    "maxTiltDeg": 12
+  },
+  "cues": [
+    {
+      "at": 0,
+      "action": "introduce",
+      "label": "UMA BARRA E UM PONTO DE APOIO"
+    },
+    {
+      "at": 1.6,
+      "action": "load",
+      "label": "A CARGA FICA NO BRAÇO MAIS CURTO"
+    },
+    {
+      "at": 3.5,
+      "action": "effort",
+      "label": "APLICAMOS FORÇA MAIS LONGE DO APOIO"
+    },
+    {
+      "at": 5.3,
+      "action": "actuate",
+      "label": "A FORÇA DESCE. A CARGA SOBE."
+    },
+    {
+      "at": 8.7,
+      "action": "explain",
+      "label": "BRAÇO MAIOR = MENOS FORÇA NECESSÁRIA"
+    }
+  ],
+  "qa": {
+    "master": [
+      1080,
+      1920
+    ],
+    "criticalSafe": [
+      150,
+      300,
+      770,
+      1240
+    ],
+    "rightIconsStartY": 840,
+    "minimumClearanceBeforeIcons": 14,
+    "copyright": "ORIGINAL_VECTOR_NO_COPIED_ASSETS",
+    "publication": "BLOCKED"
+  }
+}

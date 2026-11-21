@@ -90,11 +90,11 @@ export const leverVisualState=(
   const fallback=cues[0]||{at:0,action:'introduce' as LeverPhase,label:'ALAVANCA'};
   const active=eventAt(t,cues,fallback);
   const cue=(a:LeverPhase)=>eventTime(cues,a)??Number.POSITIVE_INFINITY;
-  const assembled=smooth((t-cue('introduce'))/.8);
-  const loaded=smooth((t-cue('load'))/.65);
-  const effort=smooth((t-cue('effort'))/.75);
-  const move=smooth((t-cue('actuate'))/2.5);
-  const explained=smooth((t-cue('explain'))/.55);
+  const assembled=smooth((t-cue('introduce'))/.58);
+  const loaded=smooth((t-cue('load'))/.46);
+  const effort=smooth((t-cue('effort'))/.54);
+  const move=smooth((t-cue('actuate'))/1.96);
+  const explained=smooth((t-cue('explain'))/.45);
   const tilt=cfg.maxTiltDeg*move;
   const pivot:Point2D={x:cfg.pivot[0],y:cfg.pivot[1]};
   const loadPoint=rotateAbout(pivot,{x:cfg.loadX,y:pivot.y},tilt);
@@ -119,7 +119,9 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
   const stepIndex=Math.max(0,currentIndex)+1;
   const crateY=loadPoint.y-cfg.beamThickness/2-cfg.loadHeight;
   const rightY=effortPoint.y;
-  const colorTop=variant==='paper'?'#E7D5C2':'#4C6069';
+  const stage=contract.qa.actorStage;
+  const stageTransform=`translate(${stage.origin[0]*(1-stage.scaleX)} ${stage.origin[1]*(1-stage.scaleY)}) scale(${stage.scaleX} ${stage.scaleY})`;
+  const loadTopIn=crateY-(1-loaded)*35;
   return <AbsoluteFill style={{
     background:p.backgroundTop,fontFamily:font,overflow:'hidden',color:p.ink
   }}>
@@ -152,9 +154,10 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
       {/* Ambiente é o próprio plano de apoio da alavanca, não uma
           camada de hologramas, grades ou objetos decorativos sem função. */}
       <rect x="0" y="0" width="1080" height="1920" fill="url(#lever-backdrop)"/>
-      <rect x="0" y="1066" width="1080" height="854" fill="url(#lever-floor)"/>
-      <path d="M95 1056 H983" stroke={p.subtle} strokeWidth="4" opacity=".65"/>
-      <ellipse cx={pivot.x+3} cy="1060" rx="187" ry="16"
+      <rect x="0" y="1074" width="1080" height="846" fill="url(#lever-floor)"/>
+      <path d="M95 1073 H983" stroke={p.subtle} strokeWidth="4" opacity=".65"/>
+      <g data-safe-role="mechanism-actors" transform={stageTransform}>
+      <ellipse cx={pivot.x+3} cy="1072" rx="187" ry="16"
         fill={p.ink} opacity=".12"/>
 
       {/* A estrutura NÃO troca de lugar em cada cue. */}
@@ -169,6 +172,11 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
           fill={p.teal} opacity=".75"/>
       </g>
 
+      {/* A linha fantasma marca a posição inicial, permitindo que a subida
+          seja compreendida sem segundo diagrama ou card. */}
+      <path d={`M${cfg.beamStartX} ${pivot.y} H${cfg.beamEndX}`}
+        fill="none" stroke={p.muted} strokeWidth="4"
+        strokeDasharray="12 16" opacity={s.move*.26}/>
       {/* A barra gira rígida em volta da mesma âncora que governa a carga
           e a ponta do esforço: geometria física única, sem animações fake. */}
       <g opacity={assembled} transform={`rotate(${tilt} ${pivot.x} ${pivot.y})`}>
@@ -181,25 +189,33 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
           stroke={p.beamBottom} strokeWidth="3"/>
         <path d={`M${cfg.beamStartX+22} ${pivot.y-7} H${cfg.beamEndX-26}`}
           stroke="#FFF0D3" strokeWidth="4" opacity=".51" strokeLinecap="round"/>
+        {/* A própria barra revela os braços curtos e longos no resultado. */}
+        <path d={`M${cfg.loadX} ${pivot.y+4} H${pivot.x}`}
+          stroke={p.teal} strokeWidth="8" strokeLinecap="round" opacity={explained*.9}/>
+        <path d={`M${pivot.x} ${pivot.y+4} H${cfg.effortX}`}
+          stroke={p.effort} strokeWidth="8" strokeLinecap="round" opacity={explained*.92}/>
         {[cfg.beamStartX+26,cfg.beamEndX-28].map(x=>
           <circle key={x} cx={x} cy={pivot.y} r="6" fill={p.beamBottom} opacity=".48"/>)}
       </g>
 
       {/* Carga mantém orientação vertical e repousa sobre a barra. */}
       <g opacity={loaded}>
-        <rect x={loadPoint.x-cfg.loadWidth/2+6} y={crateY+8}
+        <rect x={loadPoint.x-cfg.loadWidth/2+6} y={loadTopIn+8}
           width={cfg.loadWidth} height={cfg.loadHeight} rx="7"
           fill={p.ink} opacity=".16"/>
-        <rect x={loadPoint.x-cfg.loadWidth/2} y={crateY}
+        <rect x={loadPoint.x-cfg.loadWidth/2} y={loadTopIn}
           width={cfg.loadWidth} height={cfg.loadHeight}
           rx="7" fill="url(#lever-crate)"
           stroke={p.metal} strokeWidth="4"/>
-        <path d={`M${loadPoint.x-cfg.loadWidth/2+12} ${crateY+15} H${loadPoint.x+cfg.loadWidth/2-13}`}
+        <path d={`M${loadPoint.x-cfg.loadWidth/2+12} ${loadTopIn+15} H${loadPoint.x+cfg.loadWidth/2-13}`}
           stroke="#C9DDE5" strokeWidth="4" opacity=".32" strokeLinecap="round"/>
-        {[[-40,17],[40,17],[-40,80],[40,80]].map(([dx,dy],i)=>
-          <circle key={i} cx={loadPoint.x+dx} cy={crateY+dy}
+        {/* Reforços visuais fazem da carga um corpo físico, não um cartão. */}
+        <path d={`M${loadPoint.x-cfg.loadWidth/2+18} ${loadTopIn+35} L${loadPoint.x+cfg.loadWidth/2-18} ${loadTopIn+94}`}
+          fill="none" stroke={p.metal} strokeWidth="4" opacity=".19"/>
+        {[[-47,21],[47,21],[-47,92],[47,92]].map(([dx,dy],i)=>
+          <circle key={i} cx={loadPoint.x+dx} cy={loadTopIn+dy}
             r="3.5" fill="#C9E0E7" opacity=".62"/>)}
-        <Label x={loadPoint.x} y={crateY+56} size={25} color={p.label}>CARGA</Label>
+        <Label x={loadPoint.x} y={loadTopIn+70} size={29} color={p.label}>CARGA</Label>
       </g>
       <g opacity={assembled}>
         <circle cx={pivot.x} cy={pivot.y} r="21" fill={p.tealShade}
@@ -213,46 +229,47 @@ export const LeverMechanism2D:React.FC<LeverProps>=({
       {/* Um esforço longo à direita causa subida do lado curto.
           A seta segue a ponta deslocada, não outra timeline. */}
       <g opacity={effort}>
-        <Label x={915} y={545} size={26} color={p.effort}>FORÇA</Label>
-        <VerticalArrow x={846} from={559} to={rightY-41}
+        <Label x={878} y={539} size={29} color={p.effort}>FORÇA</Label>
+        <VerticalArrow x={effortPoint.x} from={559}
+          to={559+(rightY-42-559)*effort}
           color={p.effort} opacity={1}/>
       </g>
       <g opacity={s.move*.92}>
-        <VerticalArrow x={297} from={loadPoint.y+78}
-          to={loadPoint.y-62} up color={p.tealShade} opacity={1}/>
+        <VerticalArrow x={loadPoint.x+cfg.loadWidth/2+43} from={loadPoint.y+92}
+          to={loadPoint.y-66} up color={p.tealShade} opacity={1}/>
       </g>
+      {/* Medidas só aparecem quando a rotação acabou; são derivadas dos
+          mesmos braços geométricos, sem fórmula ou cartão inventado.
+          O traço de destaque na barra conserva a continuidade causal. */}
       {/* Duas medidas acima da barra, conectadas às extremidades e ao pivô.
           Nunca cruzar o suporte ou ocupar a faixa das legendas. */}
       <g opacity={explained}>
-        <path d="M195 540 V519 H409 V540 M409 540 V519 H849 V540"
-          fill="none" stroke={p.muted} strokeWidth="4"
-          strokeLinejoin="round" opacity=".82"/>
-        <circle cx="409" cy="519" r="6" fill={p.effort}/>
-        <Label x={341} y={595} color={p.muted} size={20}>BRAÇO CURTO</Label>
-        <Label x={633} y={595} color={p.effort} size={21}>BRAÇO LONGO</Label>
-        <Label x={633} y={636} color={p.ink} size={23}>
-          {s.advantage.toFixed(1).replace('.',',')}× MAIOR · IDEAL
+        <Label x={pivot.x-97} y={618} color={p.tealShade} size={21}>BRAÇO CURTO</Label>
+        <Label x={pivot.x+224} y={615} color={p.effort} size={23}>BRAÇO LONGO</Label>
+        <Label x={pivot.x+224} y={652} color={p.ink} size={22}>
+          {s.advantage.toFixed(1).replace('.',',')}× O BRAÇO CURTO
         </Label>
+      </g>
       </g>
     </svg>
 
     {/* Hierarquia editorial fora do SVG físico. Sem ticker/card,
         e nenhum texto essencial nas zonas orgânicas de ícones. */}
-    <div style={{position:'absolute',left:157,top:310,width:610,
+    <div style={{position:'absolute',left:157,top:300,width:610,
       display:'flex',alignItems:'center',gap:7,
       fontSize:25,fontWeight:900,letterSpacing:.5}}>
       CORINGA <span style={{color:p.brand}}>EXPLICA</span>
     </div>
-    <div style={{position:'absolute',left:159,top:363,width:610,
+    <div style={{position:'absolute',left:159,top:347,width:610,
       color:p.muted,fontSize:22,fontWeight:780,letterSpacing:1.9}}>
       MECÂNICA · 2D
     </div>
-    <div style={{position:'absolute',left:156,top:402,width:670,
-      fontSize:52,lineHeight:1.04,fontWeight:900,letterSpacing:-1.3}}>
+    <div style={{position:'absolute',left:156,top:378,width:670,
+      fontSize:50,lineHeight:1.04,fontWeight:900,letterSpacing:-1.3}}>
       COMO UMA BARRA
       <div>LEVANTA UMA CARGA?</div>
     </div>
-    <div style={{position:'absolute',left:156,top:1071,width:600,
+    <div style={{position:'absolute',left:156,top:1095,width:600,
       borderTop:`2px solid ${p.subtle}`,paddingTop:12}}>
       <div style={{color:p.effort,fontSize:20,fontWeight:850,letterSpacing:1.4,
         marginBottom:8}}>

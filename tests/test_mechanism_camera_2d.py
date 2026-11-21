@@ -107,6 +107,8 @@ def test_plano_nao_depende_do_assunto_ou_de_corte_por_video():
     assert "currentFocus=focusAnchor" in scene
     assert "camera.scale" in scene
     assert "titleOpacity" in scene
+    assert '<SVGText x={285} y={1208}' in scene
+    assert "String(fixture.steps.length).padStart(2,\'0\')" in scene
     assert "focus==='intake'" in scene and "focus==='outlet'" in scene
     assert "if(kind==='motor')" not in scene
     assert "if(kind==='compressor')" not in scene

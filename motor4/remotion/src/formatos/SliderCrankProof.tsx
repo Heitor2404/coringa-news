@@ -411,14 +411,14 @@ export const SliderCrankProof:React.FC<Props>=({kind,private_review_only=true})=
       fill="#082A44" stroke="#2C92AF" strokeWidth="4"/>
     <rect x="149" y="1192" width="10" height="38" rx="5"
       fill={fixture.accent}/>
-    <SVGText x={234} y={1208} size={33} color={C.white} weight={950}>
+    <SVGText x={285} y={1208} size={33} color={C.white} weight={950}>
       {beat.label}
     </SVGText>
     <SVGText x={153} y={1238} size={23} color="#CBF3F4" weight={650}>
       {beat.detail}
     </SVGText>
     <SVGText x={174} y={1208} size={19} color={fixture.accent} weight={950}>
-      {String(stage+1).padStart(2,'0')+' / 04'}
+      {String(stage+1).padStart(2,'0')+' / '+String(fixture.steps.length).padStart(2,'0')}
     </SVGText>
     {private_review_only&&
       <SVGText x={540} y={1847} size={23} color="#8CB2CA"

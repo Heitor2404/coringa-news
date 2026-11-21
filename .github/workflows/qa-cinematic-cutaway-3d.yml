@@ -1,0 +1,101 @@
+name: "LAB — Cinematic Cutaway 3D full-bleed (still QA)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-cinematic-cutaway-3d.yml"
+      - "motor4/remotion/src/formatos/CinematicCutaway3D.tsx"
+      - "motor4/remotion/src/formatos/editorial-safe-roles-v2.json"
+      - "tests/test_atlas_3d_editorial_safe.py"
+      - "motor4/remotion/src/Root.tsx"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-cinematic-cutaway-3d
+  cancel-in-progress: true
+jobs:
+  aprovar_stills_antes_de_gastar_em_render_completo:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Codigo e geometria - sem videos finais
+        run: |
+          python -m pip install -q pillow pytest
+          python -m pytest -q tests/test_atlas_3d_editorial_safe.py tests/test_slider_crank_multitema.py
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Renderizar quatro estados 3D reais com WebGL por CPU
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_cutaway_3d
+          cd motor4
+          npx --no-install remotion still remotion/src/index.ts Prova3D-Pistao ../qa_cutaway_3d/motor_inicio.png --frame=9 --scale=0.5 --gl=swangle --log=error
+          npx --no-install remotion still remotion/src/index.ts Prova3D-Pistao ../qa_cutaway_3d/motor_transmissao.png --frame=104 --scale=0.5 --gl=swangle --log=error
+          npx --no-install remotion still remotion/src/index.ts Prova3D-Compressor ../qa_cutaway_3d/compressor_admissao.png --frame=77 --scale=0.5 --gl=swangle --log=error
+          npx --no-install remotion still remotion/src/index.ts Prova3D-Compressor ../qa_cutaway_3d/compressor_pressao.png --frame=167 --scale=0.5 --gl=swangle --log=error
+      - name: Contato, ocupacao visual e zonas de interface
+        run: |
+          python - <<'PY'
+          import json
+          from PIL import Image,ImageDraw,ImageChops,ImageStat
+          from pathlib import Path
+          p=Path('qa_cutaway_3d')
+          fns=['motor_inicio','motor_transmissao','compressor_admissao','compressor_pressao']
+          imgs=[Image.open(p/(fn+'.png')).convert('RGB') for fn in fns]
+          assert all(im.size==(540,960) for im in imgs)
+          sheet=Image.new('RGB',(540*4,960),(239,244,246))
+          for i,(fn,im) in enumerate(zip(fns,imgs)):
+              sheet.paste(im,(i*540,0))
+          sheet.save(p/'contato_cinematic_3d.jpg',quality=91)
+          data=json.loads(Path('motor4/remotion/src/formatos/editorial-safe-roles-v2.json').read_text('utf8'))
+          limits=data['provider_overlay_approx_px_1080x1920']
+          overlay=Image.new('RGB',(540*3,960*2),(242,245,246))
+          draw=ImageDraw.Draw(overlay)
+          for ri,im in enumerate((imgs[1],imgs[3])):
+              for ci,(name,zone) in enumerate(limits.items()):
+                  rgba=im.convert('RGBA')
+                  mask=Image.new('RGBA',rgba.size,(0,0,0,0))
+                  d=ImageDraw.Draw(mask)
+                  scale=.5
+                  if 'top' in zone: d.rectangle((0,0,540,zone['top']*scale),fill=(255,30,65,73))
+                  if 'bottom' in zone: d.rectangle((0,(1920-zone['bottom'])*scale,540,960),fill=(255,30,65,89))
+                  if 'right_controls_from_x' in zone:
+                      d.rectangle((zone['right_controls_from_x']*scale,zone['right_controls_from_y']*scale,540,960),fill=(255,30,65,92))
+                  elif 'right' in zone:
+                      d.rectangle(((1080-zone['right'])*scale,0,540,960),fill=(255,30,65,52))
+                  out=Image.alpha_composite(rgba,mask).convert('RGB')
+                  overlay.paste(out,(ci*540,ri*960))
+          overlay.save(p/'interfaces_simuladas_3plataformas.jpg',quality=89)
+          # Guardar métricas sem passar por aprovação estética automática.
+          diff=ImageChops.difference(imgs[0],imgs[1])
+          mean=sum(ImageStat.Stat(diff).mean)/3
+          (p/'resultado.json').write_text(json.dumps({
+              'status':'STILLS_RENDERIZADOS_VISUAL_PENDENTE',
+              'visual_family':'cutaway_3d_full_bleed',
+              'frame_size':[540,960],
+              'capturas':fns,
+              'diferenca_visual_grosseira':round(mean,2),
+              'publicar':False,'telegram':False,'audio':False,
+              'camera':'intencionalmente ocupa mais que margem ad',
+              'mask':'UI SIMULADA por aproximacao; texto e ator com papeis distintos'
+          },ensure_ascii=False,indent=2))
+          assert mean>1.5,'3D sem mudanca: bloqueado'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas-3d-stills-privados
+          path: qa_cutaway_3d/
+          retention-days: 4
+          if-no-files-found: warn

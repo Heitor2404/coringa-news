@@ -105,7 +105,7 @@ def test_nao_esconde_pecas_essenciais_na_ui_antes_dos_icones():
     assert '<Label x={878} y={539}' in scene  # A força acompanha a ponta longa.
     assert 'y={1008}' in scene and '>APOIO</Label>' in scene
     assert "const loadTopIn=crateY-(1-loaded)*35" in scene
-    assert "stageTransform=" not in scene  # Stage declarativo, sem transform hardcoded no JSX.
+    assert "const stage=contract.qa.actorStage" in scene  # Escala contratual, não crop.
     assert 'transform={stageTransform}' in scene
     assert 'strokeDasharray="12 16"' in scene  # Posição inicial da barra permanece rastreável.
     assert "stroke={p.teal} strokeWidth=\"8\"" in scene

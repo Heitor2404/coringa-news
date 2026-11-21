@@ -60,7 +60,7 @@ export const lockState=(t:number,events:readonly Event[])=>{
   const open=progress(t,release,.68);
   const flow=t>=inlet&&t<release;
   return {fill,waterY,boatShift,open,flow,
-    gateShift:open*57,boatTravel:open*31};
+    gateShift:open*57,boatTravel:open*20};
 };
 
 const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
@@ -143,7 +143,7 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
     </g>
     {/* Ship bow remains IN ONE CHAMBER. Hull follows water by buoyancy,
         not by an independent keyframe translation. */}
-    <g transform={'translate('+s.boatTravel+' '+s.boatShift+')'}>
+    <g transform={'translate('+(-30+s.boatTravel)+' '+s.boatShift+')'}>
       <ellipse cx="565" cy="977" rx="218" ry="27" fill="#031B34" opacity=".37"/>
       {/* stacks: three layers of actual colorful shipping containers */}
       {Array.from({length:3},(_,row)=>

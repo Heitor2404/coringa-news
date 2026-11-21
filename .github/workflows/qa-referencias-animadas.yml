@@ -1,0 +1,44 @@
+name: "QA — Pesquisa de referências animadas (2D + 3D)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - "src/v4/formatos/referencias_mecanismos.py"
+      - "tests/test_referencias_mecanismos.py"
+      - ".github/workflows/qa-referencias-animadas.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  referencias_sem_publicacao:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias minimas
+        run: python -m pip install -q pytest requests
+      - name: Testar roteamento multitema offline sem IA
+        run: python -m pytest -q tests/test_referencias_mecanismos.py
+      - name: Demonstrar pesquisa desligada com bloqueio honesto
+        run: |
+          python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/motor_pistao.json saida_ref/pistao --sem-rede
+          python -m src.v4.formatos.referencias_mecanismos docs/v4/formatos/briefs_referencia/circulacao_cardiaca.json saida_ref/coracao --sem-rede
+          python - <<'PY'
+          import json
+          for tema in ('pistao','coracao'):
+              j=json.load(open('saida_ref/'+tema+'/planejamento.json'))
+              assert not j['publicar'] and j['renderer'] is None
+              assert j['estado']=='SEM_REFERENCIAS'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pesquisa-multitema-diagnostico-sem-rede
+          path: saida_ref/
+          retention-days: 3
+          if-no-files-found: warn

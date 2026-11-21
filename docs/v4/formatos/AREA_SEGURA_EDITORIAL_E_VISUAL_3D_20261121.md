@@ -29,3 +29,14 @@ Arquivo: `motor4/remotion/src/formatos/editorial-safe-roles-v2.json`.
 ## Limites
 
 Não há reconstrução automática do vídeo da internet; o sistema 3D é uma nova expressão original da física parametrizada, não conversão automática de modelo externo. É apenas uma família mecânica. Termodinâmica de gás e válvulas são ilustração didática. A revisão estética humana permanece pendente. Sem Claude, Telegram, publicação, main, NTC ou DOSSIÊ.
+
+## Resultado de vídeo 3D integral (confirmado 21/11/2026)
+
+- [GitHub Actions 44948783359](https://github.com/Heitor2404/coringa-news/actions/runs/44948783359): SUCCESS. Passaram compilação TypeScript, testes de configuração e as duas renderizações reais em WebGL/Three.js por CPU.
+- Artifact privado 14725310354 (atlas-cinematic-3d-2videos-privados), expira em 26/11/2026 20:59:30 UTC. Dois filmes 8,4 segundos, 30 fps, 540×960, MP4/H.264, sem voz, sem Telegram e sem publicação.
+- MOTOR_3D_PRIVADO.mp4 SHA-256 55aefcff3bb9fd71ce6981b981f52596f8d1151c8d4862804ad04e358140f979; delta RGB de movimento 19,08.
+- COMPRESSOR_3D_PRIVADO.mp4 SHA-256 b272bd9eb21cea32a7b89ebcfbc8fc0a9e82ffe666b598ad883a9c94044ae056; delta RGB de movimento 17,26.
+- Contato de 10 tempos reais contato_3d_10quadros.jpg, cinco por tema. Inspecionado visualmente: pistão e biela articulados, grande escala do conjunto, legenda no topo e válvulas/portas simplificadas. O movimento físico aparece, não cinco imagens estáticas.
+- Valor do delta RGB é medição mecânica grosseira, não prova de retenção, qualidade editorial ou interpretação factual perfeita.
+- Comparativo real entre frame do antigo desenho e frame do novo 3D em /mnt/data/comparativo_real_antes_depois_3d_20261121.jpg produzido no turno, verificar path em futuras conversas.
+- Pendente avaliação ESTÉTICA do usuário: a arte ainda se parece com um protótipo didático 3D, não afirmar vídeo publicável. O modelo NÃO recria animações da internet automaticamente.

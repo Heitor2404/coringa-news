@@ -221,7 +221,7 @@ const GearDrawing:React.FC<{t:number}>=({t})=>{
    <Text x={d[0]} y={925} color={PAPER.gold} size={25}>MOTORA · {g.driverTeeth} DENTES</Text>
    <Text x={e[0]} y={944} color={PAPER.teal} size={26}>MOVIDA · {g.drivenTeeth} DENTES</Text>
    <g opacity={st.showResult}>
-     <Text x={521} y={1063} color={PAPER.ink} size={27}>1,7× TORQUE IDEAL</Text>
+     <Text x={521} y={1063} color={PAPER.ink} size={27}>{st.ratio.toFixed(1).replace('.',',')}× TORQUE IDEAL</Text>
    </g>
  </g>;
 };

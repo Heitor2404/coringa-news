@@ -60,3 +60,14 @@ A revisão adiciona MediaWiki Commons (GIF/WebM/Ogg/MP4) sem filtro de resoluç�
 para USO COMO REFERÊNCIA e encurta termos Sketchfab por ator relevante.
 A busca real precisa ser reexecutada; nem GIF nem modelo localizado significa
 reconstrução validada.
+
+## Resultado do segundo experimento com rede (21/11, run 44940270620)
+
+**CI SUCCESS**, 9 testes sem rede mais pesquisas reais sem Claude/Gemini. Artifact privado
+`14721114225`, expiracao `2026-11-24T19:19:25Z`.
+
+- **Pistão:** 8 candidatos: 2 GIFs de Wikimedia Commons (Denis Papin piston anim.gif e Cshaft.gif) e 6 modelos Sketchfab. O primeiro e piston historico a vapor, **nao comprova ciclo de quatro tempos**; modelos como Sticky Piston Minecraft são resultado irrelevante. **Nenhum item validado semanticamente.**
+- **Coração:** 8 candidatos: 1 video historico do Internet Archive (Heart and Circulation), 1 GIF Commons (Real Human Heart Turntable.gif) e 6 modelos Sketchfab. O GIF e uma rotacao de modelo anatômico, **nao prova movimento do sangue pelas valvulas**; varios itens 3D com palavra heart no titulo nao sao anatômicos. **Nenhum item validado semanticamente.**
+- A busca foi ampliada com Commons GIF/WebM/Ogg/MP4 e palavras-chave 3D curtas. Isso **melhorou descoberta, nao a qualidade nem a capacidade de render**.
+
+**Proximo portao real:** salvar quadros amostrados dos GIFs/clipes, analisar as imagens/etapas com revisao visual e classificar `RELEVANTE_COMPROVADO`, `PARCIAL`, `IRRELEVANTE` por acoes observadas; nunca selecionar modelo so pela palavra heart/piston. Depois testar reconstrucao via operador reusavel/asset validado. Nao publicar; nenhuma animacao nova do motor foi produzida nesta etapa.

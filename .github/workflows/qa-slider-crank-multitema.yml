@@ -10,6 +10,7 @@ on:
       - "motor4/remotion/src/formatos/SliderCrankProof.tsx"
       - "motor4/remotion/src/formatos/slider-crank-proofs.json"
       - "tests/test_slider_crank_multitema.py"
+      - "tests/test_mechanism_camera_2d.py"
   workflow_dispatch:
 
 permissions:
@@ -43,7 +44,7 @@ jobs:
           npm ci --no-audit --no-fund
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
       - name: Garantir mesmo mecanismo em dois contextos fisicos
-        run: python -m pytest -q tests/test_slider_crank_multitema.py
+        run: python -m pytest -q tests/test_slider_crank_multitema.py tests/test_mechanism_camera_2d.py
       - name: Gerar props declarativas dos dois temas
         run: |
           mkdir -p qa_slider/frames

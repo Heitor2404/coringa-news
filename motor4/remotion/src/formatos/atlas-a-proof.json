@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "LAB_PRIVADO_NAO_PUBLICAR",
   "direction": "A_2_5D_VOLUMETRICO",
   "duration": 7.8,
@@ -21,7 +21,7 @@
       1110
     ],
     "side_ui_from_y": 840,
-    "note": "Corpo grande pode chegar a x910 no alto; na parte inferior a silhueta essencial deve continuar em x<=770; cenário é full-bleed"
+    "note": "Cue compacto acima da cena física, ambiente/estrutura full-bleed; fonte central separada; objetos sem colisão em laboratório"
   },
   "subjects": {
     "lock": {
@@ -35,7 +35,7 @@
         {
           "at": 0,
           "action": "hook",
-          "label": "UM NAVIO SUBINDO NA ÁGUA"
+          "label": "A ÁGUA JÁ MOVE O NAVIO"
         },
         {
           "at": 1.25,
@@ -45,12 +45,12 @@
         {
           "at": 2.35,
           "action": "inlet",
-          "label": "A ÁGUA ENTRA PELO FUNDO"
+          "label": "O FLUXO VEM DO FUNDO"
         },
         {
           "at": 3.7,
           "action": "rise",
-          "label": "O NAVIO FLUTUA E SOBE"
+          "label": "ÁGUA E NAVIO SOBEM JUNTOS"
         },
         {
           "at": 5.65,
@@ -70,12 +70,12 @@
         {
           "at": 0,
           "action": "hook",
-          "label": "UM PADRÃO NASCE NO WAFER"
+          "label": "A LUZ COMEÇA O PERCURSO"
         },
         {
           "at": 1.15,
           "action": "source",
-          "label": "UMA FONTE PRODUZ LUZ EUV"
+          "label": "A FONTE PRODUZ LUZ EUV"
         },
         {
           "at": 2.45,
@@ -102,5 +102,50 @@
     "deviceUI": "NOT_VERIFIED",
     "figureAssets": "SVG_ORIGINAL",
     "referencePolicy": "style principles, not copying still frames"
+  },
+  "visual_layout": {
+    "title": [
+      145,
+      386,
+      770,
+      108
+    ],
+    "cue": [
+      145,
+      505,
+      710,
+      57
+    ],
+    "source": [
+      148,
+      1210,
+      600,
+      28
+    ],
+    "labels": {
+      "lock": [
+        [
+          85,
+          737,
+          148,
+          40
+        ]
+      ],
+      "euv": [
+        [
+          310,
+          1145,
+          410,
+          41
+        ]
+      ]
+    },
+    "optics_bbox": [
+      170,
+      578,
+      907,
+      1140
+    ],
+    "note": "Caixas semânticas estimadas em unidades 1080x1920. Testar render e overlays; não substituem aferição de pixels/app."
   }
 }

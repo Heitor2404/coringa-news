@@ -4,6 +4,8 @@
  */
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
+import cfg from './atlas-a-proof.json';
+import {ABeveledPanel,ARivet} from './AtlasAArtKit';
 
 export const COLORS={
   navy:'#062B48',deep:'#061C34',ink:'#071C2B',
@@ -50,43 +52,41 @@ const SkyBackdrop:React.FC<{t:number}>=({t})=><g>
 
 const IndustrialBackdrop:React.FC<{t:number}>=({t})=><g>
   <rect width="1080" height="1920" fill="url(#a-euv-backdrop)"/>
-  <path d="M0 622 H1080" stroke="#6C7BB9" strokeWidth="12" opacity=".18"/>
-  <rect x="0" y="493" width="127" height="1184" fill="#27305F" opacity=".45"/>
-  <rect x="953" y="493" width="127" height="1184" fill="#283260" opacity=".47"/>
-  {[78,995].map((x,i)=><g key={i} opacity=".42">
-    <rect x={x-24} y="580" width="32" height="975" rx="11"
-      fill="#7188B5"/>
-    <path d={'M'+(x-24)+' 637 h32 M'+(x-24)+' 1099 h32'}
-      stroke="#A6ACCB" strokeWidth="9"/>
+  {/* Cor, contraste e volume seguem a família editorial A da eclusa.
+      Ambiente industrial próprio, não o antigo quadro técnico roxo. */}
+  <circle cx="819" cy="368" r="247" fill="#F7CE7D" opacity=".21"/>
+  <path d="M0 688 Q204 539 445 649 T1080 580 V1008 H0Z"
+    fill="#0B5B88" opacity=".56"/>
+  <path d="M0 1082 L184 997 H905 L1080 1082 V1920 H0Z"
+    fill="#153B64"/>
+  <path d="M0 1198 L190 1155 H890 L1080 1198 V1920 H0Z"
+    fill="#0B3458"/>
+  {[-40,960].map((x,i)=><g key={i}>
+    <ABeveledPanel x={x} y={528} width={158} height={1190}
+      tone="cobalt" rx={22}/>
+    {Array.from({length:7},(_,j)=><ARivet key={j}
+      x={x+77} y={670+j*142} r={9}/>)}
   </g>)}
-  <circle cx="526" cy="871" r="530" fill="#8B58DC" opacity=".10"/>
-  <ellipse cx="545" cy="1380" rx="470" ry="155" fill="#4A3198" opacity=".22"/>
-  <rect x="0" y="1220" width="1080" height="700" fill="url(#a-euv-floor)"/>
-  {/* Physical machine housing below the optics replaces the generic grid.
-      The center body is the wafer stage / vacuum-tool envelope, not a UI card. */}
-  <path d="M118 1219 H958 V1832 H118Z" fill="#1B2052"
-    stroke="#5C639B" strokeWidth="21" opacity=".96"/>
-  <path d="M146 1260 H931 V1794 H146Z" fill="#222663"
-    stroke="#474E88" strokeWidth="6"/>
-  <path d="M159 1322 H920" stroke="#7B84B0" strokeWidth="18"
-    opacity=".45"/>
-  <path d="M159 1666 H920" stroke="#7B84B0" strokeWidth="18"
-    opacity=".34"/>
-  <rect x="212" y="1353" width="624" height="279" rx="31"
-    fill="#121B50" stroke="#505E9A" strokeWidth="11"/>
-  <path d="M257 1397 H788 M257 1597 H788" stroke="#8E9AC7"
-    strokeWidth="12" opacity=".48"/>
-  {Array.from({length:7},(_,i)=><g key={i} opacity=".60">
-    <circle cx={266+i*86} cy="1501" r="23" fill="#172855"
-      stroke="#7785BE" strokeWidth="7"/>
-    <circle cx={266+i*86} cy="1501" r="8" fill="#9BB9E0"/>
+  {/* Máquina física e etapa do wafer no mesmo plano de profundidade. */}
+  <ABeveledPanel x={112} y={1241} width={858} height={488}
+    tone="steel" rx={29}/>
+  <ABeveledPanel x={188} y={1335} width={709} height={280}
+    tone="cobalt" rx={25}/>
+  <path d="M225 1432 H853" stroke="#85EDDD" strokeWidth="10"
+    opacity=".78"/>
+  <path d="M225 1534 H853" stroke="#F1BD72" strokeWidth="9"
+    opacity=".74"/>
+  {Array.from({length:6},(_,i)=><g key={i}>
+    <ARivet x={257+i*111} y={1388} r={14}/>
+    <path d={`M${257+i*111} 1475 v37`}
+      stroke="#8CE5E6" strokeWidth="10" opacity=".35"/>
   </g>)}
-  <path d="M0 1852 H1080" stroke="#5F63A3" strokeWidth="23" opacity=".6"/>
-  {/* walls/cables belong to factory environment, no fake optical rays */}
-  <path d="M115 550 V1130 Q120 1172 169 1170 H225"
-    fill="none" stroke="#54699D" strokeWidth="24" opacity=".4"/>
-  <path d="M965 555 V1110 Q949 1133 930 1148"
-    fill="none" stroke="#7E6EAC" strokeWidth="17" opacity=".35"/>
+  <ABeveledPanel x={147} y={1727} width={778} height={64}
+    tone="sand" rx={9}/>
+  <path d="M110 1814 Q550 1763 967 1814" stroke="#3EA9C0"
+    strokeWidth="17" fill="none" opacity=".37"/>
+  <path d="M160 1170 H921" stroke="#FED68B" strokeWidth="8"
+    opacity=".4"/>
 </g>;
 
 export const AtlasAStudio:React.FC<Props>=({
@@ -96,7 +96,7 @@ export const AtlasAStudio:React.FC<Props>=({
   const euv=kind==='euv';
   const GOLD=COLORS.yellow;
   return <AbsoluteFill style={{fontFamily:'Inter,Arial,sans-serif',
-    overflow:'hidden',background:euv?'#110C31':'#12679A'}}>
+    overflow:'hidden',background:euv?'#0B436F':'#12679A'}}>
     <svg viewBox="0 0 1080 1920" width="100%" height="100%"
       role="img" aria-label={'Prévia editorial ilustrada do mecanismo: '+kind}>
       <defs>
@@ -124,16 +124,16 @@ export const AtlasAStudio:React.FC<Props>=({
           <stop offset="1" stopColor="#051B35"/>
         </linearGradient>
         <linearGradient id="a-euv-backdrop" x1="0" x2=".4" y1="0" y2="1">
-          <stop stopColor="#110C37"/><stop offset=".48" stopColor="#2B1A6B"/>
-          <stop offset=".8" stopColor="#10133A"/>
-          <stop offset="1" stopColor="#0C1135"/>
+          <stop stopColor="#10658E"/><stop offset=".48" stopColor="#227EAF"/>
+          <stop offset=".8" stopColor="#17436B"/>
+          <stop offset="1" stopColor="#082947"/>
         </linearGradient>
         <linearGradient id="a-euv-floor" x1="0" x2=".4" y1="0" y2="1">
           <stop stopColor="#3A286E"/><stop offset="1" stopColor="#100D32"/>
         </linearGradient>
         <linearGradient id="a-euv-steel" x1="0" x2="1" y1="0" y2="1">
-          <stop stopColor="#B5C8EC"/><stop offset=".25" stopColor="#6679B7"/>
-          <stop offset=".55" stopColor="#3E408B"/><stop offset="1" stopColor="#181C53"/>
+          <stop stopColor="#E5F7E7"/><stop offset=".25" stopColor="#80B3CE"/>
+          <stop offset=".55" stopColor="#2D749B"/><stop offset="1" stopColor="#173C70"/>
         </linearGradient>
         <linearGradient id="a-euv-wafer" x1="0" x2="1" y1="0" y2="1">
           <stop stopColor="#5A40D8"/><stop offset=".46" stopColor="#252976"/>
@@ -170,19 +170,21 @@ export const AtlasAStudio:React.FC<Props>=({
       fontWeight:950,color:'#fff',textShadow:'0 3px 12px rgba(0,18,40,.96)'}}>
       <div>{title[0]}</div><div>{title[1]}</div>
     </div>
-    <div style={{position:'absolute',top:1090,left:146,width:604,
-      borderRadius:9,padding:'11px 16px 14px',
-      background:euv?'rgba(8,10,42,.90)':'rgba(2,30,53,.87)',
-      boxShadow:'0 5px 21px rgba(3,15,28,.22)',
-      borderLeft:'8px solid '+GOLD}}>
-      <div style={{fontSize:19,letterSpacing:1.5,fontWeight:900,
-        color:GOLD,marginBottom:6}}>
-        {String(step).padStart(2,'0')} / {String(total).padStart(2,'0')}
-      </div>
-      <div style={{fontSize:label.length>40?27:32,lineHeight:1.09,
-        fontWeight:950,color:'#FFFFFF'}}>
+    {/* Um cue compacto entre título e máquina: não tapa o fenômeno. */}
+    <div style={{position:'absolute',top:cfg.visual_layout.cue[1],
+      left:cfg.visual_layout.cue[0],width:cfg.visual_layout.cue[2],
+      minHeight:cfg.visual_layout.cue[3],
+      display:'flex',alignItems:'center',gap:12,
+      borderRadius:9,padding:'5px 12px',
+      background:euv?'rgba(6,42,70,.93)':'rgba(2,44,73,.88)',
+      borderLeft:'7px solid '+GOLD,
+      boxShadow:'0 4px 12px rgba(4,20,35,.24)'}}>
+      <span style={{fontSize:16,fontWeight:900,color:GOLD,
+        whiteSpace:'nowrap'}}>{String(step).padStart(2,'0')}</span>
+      <span style={{fontSize:label.length>34?23:26,
+        lineHeight:1.07,fontWeight:950,color:'#FFFFFF'}}>
         {label}
-      </div>
+      </span>
     </div>
     <div style={{position:'absolute',top:1210,left:148,width:600,
       fontSize:17.5,fontWeight:700,

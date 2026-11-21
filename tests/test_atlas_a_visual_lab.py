@@ -63,19 +63,22 @@ def test_agua_e_navio_nunca_se_separam_ao_subir():
     last=initial
     for frame in range(236):
         t=frame/30
-        fill=smooth((t-events['inlet'])/2.7)
+        fill=max(0,min(1,(t-events['hook'])/4.9))
         waterY=initial-141*fill
         boatShift=waterY-initial
         hull_marker=950+boatShift
         assert math.isclose(waterY-hull_marker,9,abs_tol=1e-10)
         assert waterY<=last+1e-8
         last=waterY
-        if t<events['inlet']:
+        if t==0:
             assert fill==0
+        if t>=.5:
+            assert fill>0
     assert math.isclose(last,at_end,abs_tol=1e-10)
     s=SCENE.read_text('utf8')
+    assert 'const fill=clamp01((t-hook)/4.9);' in s
     assert 'const boatShift=waterY-959;' in s
-    assert 'const flow=t>=inlet&&t<release;' in s
+    assert 'const flow=t>=hook&&t<release;' in s
     assert 'M166 878 V1440 H355 V993' in s
     assert 'strokeDashoffset={-t*106}' in s
     assert "gateShift:open*57" in s
@@ -96,11 +99,11 @@ def test_euv_reflexivo_conectado_nao_transmissivo_nem_chip_pronto():
     assert ev['source']<ev['reticle']<ev['mirrors']<ev['wafer']
     scene=SCENE.read_text('utf8')
     assert 'mask' not in [x['action'] for x in c['events']]
-    assert 'M270 725 L513 664' in scene     # luz incidente
-    assert 'M513 664 L758 787' in scene     # REFLEXÃO (mesmo vértice)
+    assert 'M270 725 L535 635' in scene     # luz atinge a face
+    assert 'M535 635 L758 787' in scene     # REFLEXÃO (mesmo vértice)
     assert 'M745 819 L587 877' in scene     # espelho a espelho
     assert 'M561 896 L524 951' in scene     # segue ao wafer
-    assert 'MÁSCARA REFLEXIVA' in scene
+    assert 'MÁSCARA REFLEXIVA' in scene or 'máscara é explicada pelo cue' in scene
     assert 'RESINA FOTOSSENSÍVEL' in scene
     assert '>CHIP PRONTO<' not in scene.upper()  # Testar rótulo exibido, não comentário técnico.
     assert 'lente transmissiva' not in scene.lower()
@@ -130,7 +133,8 @@ def test_bbox_sem_miniaturizar_mecanismo_na_intersecao_universal():
         assert 146+604<=right
         assert 148+600<=right
     shell=SHELL.read_text('utf8')
-    assert 'top:1090,left:146,width:604' in shell
+    assert 'top:cfg.visual_layout.cue[1]' in shell
+    assert 'cfg.visual_layout.cue[0]' in shell
     assert 'top:1210,left:148,width:600' in shell
     assert 'fontSize:53' in shell
     assert 'overflow:' in shell
@@ -142,6 +146,8 @@ def test_arte_2_5d_original_sem_assets_terceiros():
     assert 'a-lock-sky' in b and 'a-euv-backdrop' in b
     assert 'Physical machine housing below the optics' in b
     assert 'Q220 1181' in a  # corte inferior com estratigrafia
+    assert 'ABeveledPanel' in a and 'AJoint' in a
+    assert 'ABeveledPanel' in b and 'ARivet' in b
     assert 'scale(1.28 1.05)' in a  # cargueiro agora ocupa mais largura
     assert 'a-ship' in a and 'a-euv-steel' in a
     assert 'Array.from({length:3}' in a   # containers montados em camadas

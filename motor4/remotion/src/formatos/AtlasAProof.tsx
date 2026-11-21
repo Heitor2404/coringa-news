@@ -6,7 +6,8 @@ import React from 'react';
 import {useCurrentFrame,useVideoConfig} from 'remotion';
 import cfg from './atlas-a-proof.json';
 import {AtlasAStudio,COLORS} from './AtlasAStudio';
-import {smooth,eventAt,eventTime,type MechanismEvent} from './Mechanism2DCore';
+import {smooth,clamp01,eventAt,eventTime,type MechanismEvent} from './Mechanism2DCore';
+import {ABeveledPanel,AJoint,ARivet} from './AtlasAArtKit';
 
 export type AtlasAMechanism='lock'|'euv';
 type Event=MechanismEvent<string>;
@@ -52,13 +53,14 @@ const HillTrees:React.FC=()=> <g>
 </g>;
 
 export const lockState=(t:number,events:readonly Event[])=>{
-  const inlet=actionTime(events,'inlet');
+  const hook=actionTime(events,'hook');
   const release=actionTime(events,'release');
-  const fill=progress(t,inlet,2.7);
+  // Consequência começa no gancho; mesmo estado alimenta água e casco.
+  const fill=clamp01((t-hook)/4.9);
   const waterY=959-141*fill;
   const boatShift=waterY-959;
   const open=progress(t,release,.68);
-  const flow=t>=inlet&&t<release;
+  const flow=t>=hook&&t<release;
   return {fill,waterY,boatShift,open,flow,
     gateShift:open*57,boatTravel:open*20};
 };
@@ -145,6 +147,7 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
       strokeWidth="18" strokeDasharray="22 28"
       strokeDashoffset={-t*106} strokeLinecap="round"
       strokeLinejoin="round" opacity={s.flow?1:.35}/>
+    <AJoint x={166} y={944} r={44} active={s.flow}/>
     <circle cx="166" cy="944" r="36" fill="#124366"
       stroke={s.flow?amber:'#C7DEDE'} strokeWidth="8"/>
     <path d="M145 923 L188 965 M188 923 L145 965" stroke="#E8F7F8"
@@ -212,9 +215,10 @@ const LockActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
       <path d="M888 856 L909 874 L888 892Z" fill={amber}/>
     </g>}
     {/* Technical side highlighting stays tied to the hydraulic circuit. */}
-    <path d="M82 1148 H1006" stroke="#CFB694" strokeWidth="15"
-      strokeLinecap="square"/>
-    <path d="M82 1164 H1006" stroke="#244C65" strokeWidth="15"/>
+    <ABeveledPanel x={80} y={1143} width={925} height={34}
+      tone="sand" rx={5}/>
+    <ARivet x={132} y={1160} r={8}/>
+    <ARivet x={956} y={1160} r={8}/>
     <path d="M90 1282 Q245 1231 393 1286 T702 1271 T1090 1260"
       stroke="#91F5F6" strokeWidth="4" opacity=".14" fill="none"/>
   </g>;
@@ -238,7 +242,7 @@ const Photon:React.FC<{d:string;p:number;col?:string}>=({
 };
 export const euvState=(t:number,events:readonly Event[])=>{
  const a=(name:string)=>actionTime(events,name);
- const source=progress(t,a('source'),.60);
+ const source=progress(t,a('hook'),1.0);
  const reflection=progress(t,a('reticle'),.75);
  const mirrors=progress(t,a('mirrors'),.85);
  const resist=progress(t,a('wafer'),.90);
@@ -254,16 +258,21 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
    {/* Housing and column are physical equipment parts, not abstract
        grids or presentation cards. Shapes retain consistent locations. */}
    <path d="M160 578 H904 V1118 H178 Q147 1088 160 578Z"
-     fill="#1A1D58" stroke="#5A70AF" strokeWidth="17"/>
+     fill="#104B77" stroke="#80D8E7" strokeWidth="17"/>
    <path d="M164 587 H899 V1096 H164Z"
-     fill="#241E64" opacity=".5"/>
-   <path d="M201 612 V1084 M858 612 V1084" stroke="#6F80AE"
-     strokeWidth="17" opacity=".65"/>
-   <path d="M198 624 H868" stroke="#7775A7" strokeWidth="7" opacity=".48"/>
+     fill="#1C527F" opacity=".55"/>
+   <path d="M201 612 V1084 M858 612 V1084" stroke="#D6B46C"
+     strokeWidth="17" opacity=".8"/>
+   <path d="M198 624 H868" stroke="#BCEFF2" strokeWidth="7" opacity=".60"/>
+   <ABeveledPanel x={182} y={1088} width={710} height={28}
+     tone="steel" rx={5}/>
+   <ARivet x={208} y={1101} r={7}/>
+   <ARivet x={862} y={1101} r={7}/>
    <circle cx="213" cy="737" r={106+Math.sin(t*2)*5}
      fill="url(#a-euv-glow)" opacity={s.source}/>
-   <circle cx="212" cy="740" r="57" fill="#5033A3"
-     stroke="#C9B4F2" strokeWidth="8"/>
+   <AJoint x={212} y={740} r={69} active={s.source>.15} accent="#FFCC60"/>
+   <circle cx="212" cy="740" r="57" fill="#D47B56"
+     stroke="#FFE8A5" strokeWidth="8"/>
    {Array.from({length:12},(_,i)=>{
      const a=i*Math.PI/6+t*.55;
      return <path key={i} d={'M'+(212+Math.cos(a)*38)+' '+(740+Math.sin(a)*38)+
@@ -273,7 +282,7 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
    <circle cx="212" cy="740" r="19" fill={gold} opacity={.45+.55*s.source}/>
    <circle cx="212" cy="740" r="8" fill="#FFFCE0"/>
    {/* Illuminate from source to reflective patterned reticle. */}
-   <Photon d="M270 725 L513 664" p={s.source} col="#F0ACFF"/>
+   <Photon d="M270 725 L535 635" p={s.source} col="#FFF1B8"/>
    {/* Reticle slants to visually deflect the incident ray. Light reflects
        at x513 y664, not through the mask into the optics. */}
    <g>
@@ -286,19 +295,22 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
        d={'M'+(403+i*32)+' '+(616+i*8)+' l-6 29'}
        stroke={i%3===0?'#F9C35C':'#E4BAFF'} strokeWidth="13"
        opacity={.25+.65*s.reflection}/>)}
-     <path d="M393 600 L683 675" stroke={gold} strokeWidth="5"
+     <path d="M393 600 L683 675" stroke="#FDEAB3" strokeWidth="5"
        opacity={.25+.75*s.reflection}/>
-     <Txt x={518} y={567} size={23} text="MÁSCARA REFLEXIVA"
-       color="#FFF6D9"/>
+     {/* A função da máscara é explicada pelo cue; um segundo letreiro aqui
+         encobriria a superfície refletiva após a compactação editorial. */}
    </g>
    {/* All rays share the SAME paths over all beats. Only disclosure changes. */}
-   <Photon d="M513 664 L758 787" p={s.reflection} col="#F2A2FF"/>
+   <circle cx="535" cy="635" r="10" fill="#FFDF6D" opacity={s.reflection}/>
+   <Photon d="M535 635 L758 787" p={s.reflection} col="#E2F8FF"/>
+   <AJoint x={759} y={792} r={37} active={s.mirrors>.1}/>
    <ellipse cx="759" cy="792" rx="102" ry="23"
      transform="rotate(-25 759 792)" fill="url(#a-euv-steel)"
      stroke="#D6F3FF" strokeWidth="6"/>
    <ellipse cx="759" cy="792" rx="79" ry="8"
      transform="rotate(-25 759 792)" fill="#80DBFF" opacity={.2+.46*s.mirrors}/>
    <Photon d="M745 819 L587 877" p={s.mirrors} col="#8FCAFF"/>
+   <AJoint x={580} y={879} r={33} active={s.mirrors>.1}/>
    <ellipse cx="580" cy="879" rx="94" ry="20"
      transform="rotate(26 580 879)" fill="url(#a-euv-steel)"
      stroke="#A5E7F6" strokeWidth="6"/>
@@ -306,6 +318,12 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
      transform="rotate(26 580 879)" fill="#9BCDF8"
      opacity={.16+.4*s.mirrors}/>
    <Photon d="M561 896 L524 951" p={s.mirrors} col="#D787FF"/>
+   {/* Mesa mecânica contínua: conectada ao estágio, não disco flutuante. */}
+   <path d="M390 1035 L405 1312 H638 L654 1035" fill="#15466C"
+     stroke="#86D7E9" strokeWidth="22" strokeLinejoin="round"/>
+   <ABeveledPanel x={426} y={1091} width={164} height={239}
+     tone="cobalt" rx={12}/>
+   <ARivet x={455} y={1264}/><ARivet x={562} y={1264}/>
    {/* Wafer and exposing photoresist, not a complete finished chip. */}
    <ellipse cx="509" cy="1039" rx="296" ry="67"
      fill="#0A0F3A" opacity=".6"/>
@@ -336,7 +354,7 @@ const EuvActors:React.FC<{t:number;events:Event[]}>=({t,events})=>{
      fill="#B679FF" opacity={s.resist*.07}/>}
    {/* Deliberately spare labels: editorial cue explains each action. */}
    <Txt x={206} y={840} size={24} text="FONTE EUV" color="#FFFFFF"/>
-   <Txt x={510} y={1181} size={26} text="WAFER · RESINA FOTOSSENSÍVEL"
+   <Txt x={510} y={1180} size={25} text="WAFER · RESINA FOTOSSENSÍVEL"
      color="#F9EEFF"/>
   </g>;
 };

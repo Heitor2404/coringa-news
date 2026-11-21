@@ -7,8 +7,10 @@ on:
       - "motor4/remotion/src/Root.tsx"
       - "motor4/remotion/src/formatos/AtlasAStudio.tsx"
       - "motor4/remotion/src/formatos/AtlasAProof.tsx"
+      - "motor4/remotion/src/formatos/AtlasAArtKit.tsx"
       - "motor4/remotion/src/formatos/atlas-a-proof.json"
       - "tests/test_atlas_a_visual_lab.py"
+      - "tests/test_atlas_a_artkit.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -41,7 +43,7 @@ jobs:
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
       - name: Estados, fisica, direitos e area segura
         run: |
-          python -m pytest -q tests/test_atlas_a_visual_lab.py
+          python -m pytest -q tests/test_atlas_a_visual_lab.py tests/test_atlas_a_artkit.py
       - name: Gerar duas props isoladas
         run: |
           mkdir -p qa_a/frames
@@ -121,6 +123,19 @@ jobs:
                   x=col*283+5;y=row*590+42
                   overlay.paste(im,(x,y))
                   od.text((x,y-26),kind+' / '+p['nome'][:23],fill=(15,27,39))
+          # Mudança no próprio palco físico: um gancho estático deve falhar.
+          # Não confundir esse portão grosseiro com aprovação estética.
+          from PIL import ImageChops,ImageStat
+          motion={}
+          crops={'lock':(75,300,480,560),'euv':(65,300,470,560)}
+          for kind in videos:
+              a=Image.open(frame_dir/f'{kind}_0_4.png').convert('RGB')
+              b=Image.open(frame_dir/f'{kind}_1_6.png').convert('RGB')
+              crop=crops[kind]
+              diff=ImageChops.difference(a.crop(crop),b.crop(crop))
+              mean=sum(ImageStat.Stat(diff).mean)/3
+              motion[kind]=round(mean,2)
+              assert mean>2.1,(kind,'gancho visual estatico',mean)
           sheet.save(d/'contato_10_quadros_A.jpg',quality=90)
           overlay.save(d/'interfaces_3_redes_A.jpg',quality=90)
           (d/'resultado.json').write_text(json.dumps({
@@ -131,7 +146,7 @@ jobs:
               'publicar':False,'telegram':False,'narracao':False,
               'device_interface':'SIMULADA','direcao':'A autorizada como referencia estetica',
               'frames':'10 estados; Reels/TikTok/Shorts em 4.7s',
-              'sha256':sha
+              'motion_delta_first_second':motion,'sha256':sha
           },indent=2,ensure_ascii=False)+'\n',encoding='utf8')
           PY
       - uses: actions/upload-artifact@v4

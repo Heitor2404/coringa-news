@@ -42,7 +42,7 @@ def test_duas_maquinas_mesmo_rig_uma_unica_composicao():
     assert d['models']['compressor']['ports'] is True
     assert d['models']['motor']['geometry']!=d['models']['compressor']['geometry']
     txt=DRAW.read_text('utf8')
-    assert '(specs.models as Record<string,Model>)[kind]' in txt
+    assert '(specs.models as unknown as Record<string,Model>)[kind]' in txt
     assert 'rigState(theta,g)' in txt
     assert 'const stage=Math.max' in txt
     assert "if(kind==='motor')" not in txt

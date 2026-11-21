@@ -62,12 +62,26 @@ const IndustrialBackdrop:React.FC<{t:number}>=({t})=><g>
   <circle cx="526" cy="871" r="530" fill="#8B58DC" opacity=".10"/>
   <ellipse cx="545" cy="1380" rx="470" ry="155" fill="#4A3198" opacity=".22"/>
   <rect x="0" y="1220" width="1080" height="700" fill="url(#a-euv-floor)"/>
-  {Array.from({length:7},(_,i)=><g key={i} opacity=".19">
-    <path d={'M'+(-180+i*200)+' 1280 L'+(-310+i*330)+' 1920'}
-      fill="none" stroke="#8B83D6" strokeWidth="11"/>
-    <path d={'M0 '+(1320+i*85)+' H1080'}
-      stroke="#7770B9" strokeWidth="7"/>
+  {/* Physical machine housing below the optics replaces the generic grid.
+      The center body is the wafer stage / vacuum-tool envelope, not a UI card. */}
+  <path d="M118 1219 H958 V1832 H118Z" fill="#1B2052"
+    stroke="#5C639B" strokeWidth="21" opacity=".96"/>
+  <path d="M146 1260 H931 V1794 H146Z" fill="#222663"
+    stroke="#474E88" strokeWidth="6"/>
+  <path d="M159 1322 H920" stroke="#7B84B0" strokeWidth="18"
+    opacity=".45"/>
+  <path d="M159 1666 H920" stroke="#7B84B0" strokeWidth="18"
+    opacity=".34"/>
+  <rect x="212" y="1353" width="624" height="279" rx="31"
+    fill="#121B50" stroke="#505E9A" strokeWidth="11"/>
+  <path d="M257 1397 H788 M257 1597 H788" stroke="#8E9AC7"
+    strokeWidth="12" opacity=".48"/>
+  {Array.from({length:7},(_,i)=><g key={i} opacity=".60">
+    <circle cx={266+i*86} cy="1501" r="23" fill="#172855"
+      stroke="#7785BE" strokeWidth="7"/>
+    <circle cx={266+i*86} cy="1501" r="8" fill="#9BB9E0"/>
   </g>)}
+  <path d="M0 1852 H1080" stroke="#5F63A3" strokeWidth="23" opacity=".6"/>
   {/* walls/cables belong to factory environment, no fake optical rays */}
   <path d="M115 550 V1130 Q120 1172 169 1170 H225"
     fill="none" stroke="#54699D" strokeWidth="24" opacity=".4"/>

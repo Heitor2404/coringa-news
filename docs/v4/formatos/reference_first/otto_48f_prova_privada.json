@@ -1,0 +1,36 @@
+{
+  "schema": "licensed-reference-private-v1",
+  "publicar": false,
+  "origem_sha256": "ec9238971e2b213b240ca1a707430bf3690a23c1153088cdc22debbe5e672d69",
+  "pagina": "https://commons.wikimedia.org/wiki/File:4-Stroke-Engine-with-airflows.gif",
+  "autores": "UtzOnBike (3D original); Cuddlyable3 e Jahobr (adaptações)",
+  "licenca": "CC BY-SA 3.0",
+  "licenca_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "licenca_verificada_manual": true,
+  "titulo": "MOTOR DE 4 TEMPOS",
+  "subtitulo": "ANIMAÇÃO TÉCNICA EM CORTE",
+  "etapas": [
+    {
+      "frame": 0,
+      "titulo": "ADMISSÃO",
+      "detalhe": "Mistura entra enquanto o pistão desce."
+    },
+    {
+      "frame": 12,
+      "titulo": "COMPRESSÃO",
+      "detalhe": "As válvulas fecham, o pistão sobe."
+    },
+    {
+      "frame": 24,
+      "titulo": "IGNIÇÃO E EXPANSÃO",
+      "detalhe": "A ignição empurra o pistão e gira o eixo."
+    },
+    {
+      "frame": 36,
+      "titulo": "ESCAPE",
+      "detalhe": "Os gases saem pela válvula de escape."
+    }
+  ],
+  "revisao_visual": "PROVA_HUMANA_DE_FRAMES_12_DE_48",
+  "derivacao": "Preview privado; escalar, desacelerar, adicionar cartelas e créditos."
+}

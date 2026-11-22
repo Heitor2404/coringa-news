@@ -34,7 +34,8 @@ def validar(arquivo: Path, plano: dict) -> tuple[int,float]:
     if hashlib.sha256(raw).hexdigest()!=plano.get("origem_sha256"):
         raise ValueError("F-SHA-DIVERGENTE")
     license_name=str(plano.get("licenca") or "")
-    if (not license_name or license_name.lower()=="unknown"
+    if (plano.get("licenca_verificada_manual") is not True
+         or not license_name or license_name.lower()=="unknown"
          or RESTRICTED.search(license_name)):
         raise ValueError("F-LICENCA-NAO-PERMITE-USO-AQUI")
     if not all(isinstance(plano.get(field),str) and len(plano[field].strip())>3

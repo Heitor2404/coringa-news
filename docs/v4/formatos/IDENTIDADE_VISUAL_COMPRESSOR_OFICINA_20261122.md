@@ -64,3 +64,9 @@ Pedido: “a área em azul escuro tá sendo mal aproveitada”, “subir mais a 
 - Testes extras de transformação integral, invariância do cabeçalho, alterações reais de pixels e limite de subida em `tests/test_compressor_conjunto_2d.py`.
 - [GitHub Actions 45073742153](https://github.com/Heitor2404/coringa-news/actions/runs/45073742153) **SUCCESS**: 24 testes, render MP4 8s/24fps/540×960, QA de oito quadros; artifact **14774311938** expira **27/11/2026 21:45 UTC**. Mídias verificadas nesta sessão: `/mnt/data/compressor_completo_subiu_40px/COMPRESSOR_CONJUNTO_2D_PRIVADO.mp4`, `CONTATO_8_FASES_COMPRESSOR_COMPLETO.jpg`, comparação com versão anterior `/mnt/data/comparativo_compressor_conjunto_40px_nov22.jpg` (verificar paths no próximo chat).
 - Auditoria visual dos 8 quadros: bomba completa ficou mais central, filtro e seu rótulo ainda abaixo da faixa de categoria, tanque totalmente dentro do frame; cabeçalho/legenda essencial intocados. Ainda é um protótipo SVG didático; aprovação estética e identificação automática de máquinas pendentes. `publicar=false`.
+ 
+## Segunda reorganização — cabeçalho compacto e montagem 100px acima
+
+Em 22/11, após reclamação de área azul-escura desperdiçada, `EditorialHeader` compartilha as posições compactadas em `render_compressor_conjunto_2d.py`. O topo do fundo azul cai de 266 para 202px, linha de categoria termina em 235px; `AssemblyLayout.mechanism_lift_px=100` mantém FILTRO separado da faixa (folga mínima programada 7px), tanque e rodapé sem recorte. Qualquer subida maior é BLOQUEADA pelo cálculo `max_mechanism_lift_px`.
+
+[Actions 45074956737](https://github.com/Heitor2404/coringa-news/actions/runs/45074956737): 25 testes passando, MP4 real privado 8s, 8 quadros de amostra e QA dos ROIs relativo à subida; artifact 14775086810. **Qualidade artística ainda não homologada; não publicar.**

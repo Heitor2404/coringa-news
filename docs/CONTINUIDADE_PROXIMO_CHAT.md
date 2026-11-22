@@ -1892,3 +1892,19 @@ Após “a área em azul escuro tá sendo mal aproveitada” e “Prossiga”, e
 **Prova:** [Actions run 45073742153](https://github.com/Heitor2404/coringa-news/actions/runs/45073742153) SUCCESS, **24 testes**, vídeo 8s/24fps/540x960 sem áudio, 8 frames auditados; artifact **14774311938** expira 27/11/26 21:45 UTC. Caminho local conferido durante o turno `/mnt/data/compressor_completo_subiu_40px/COMPRESSOR_CONJUNTO_2D_PRIVADO.mp4`; contato `/mnt/data/compressor_completo_subiu_40px/CONTATO_8_FASES_COMPRESSOR_COMPLETO.jpg`; comparação anterior `/mnt/data/comparativo_compressor_conjunto_40px_nov22.jpg`. Revalidar links em outro turno. No comparativo, cabeçote/filtro avançam 40 px, tanque sobe 40, nada corta, título e rodapé ficam. Nova física ainda P–V simplificada, nada de source-first visual universal. Não publicar.
 
 Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEditorial, Telegram intocados. Continua laboratório, NÃO estética final aprovada.
+
+
+## 103. 22/11 ~21h58 — Cabeçalho azul refeito e conjunto 100 px acima, sem Claude
+
+**Pedido:** área azul-escura do cabeçalho subutilizada; usuário pediu subir mais animação e executar diretamente, pois sem tokens Claude.
+
+**Implementação real** em `atlas-direcao-visual-20261118`, commit `ad38981cd76f85845948fa52c74c247d41c0c56d`:
+- `src/v4/formatos/render_compressor_conjunto_2d.py`: novo `EditorialHeader` para a família no laboratório; cabeçalho cai de 266px para **202px**, título y108, fase y148, explicação y180, barra y190. Categoria passa para y205..235, mantendo legibilidade e sem cobrir etiqueta FILTRO. A montagem inteira (`machine-assembly`) passa de 40px para **100px acima** no canvas 540×960; sem escala ou mudanças nas relações P-V.
+- Novo limite geométrico `max_mechanism_lift_px`: 100px derivados da faixa editorial, baseline da etiqueta e margem 7px. Não burlar limite apenas aumentando `translateY`.
+- `tests/test_compressor_conjunto_2d.py`: ROIs e assertions ajustados de forma relativa à translação, regressões de cabeçalho compacto, marca fixa, rodapé e peça completa.
+- `.github/workflows/qa-compressor-conjunto-2d.yml`: QA de frames agora desloca ROIs pela translação efetiva registrada no relatório e verifica altura de cabeçalho no MP4.
+
+**Prova real:** [Actions 45074956737](https://github.com/Heitor2404/coringa-news/actions/runs/45074956737) **SUCCESS**, **25 testes**, vídeo MP4 privado 8s/24fps/540×960 sem voz, oito frames reais e validação de movimento; artifact **14775086810**, expira em 27/11/2026 21:58 UTC. Valores QA diferença RGB: pistão **46,837**, pressão **39,214**, fluxo **1,567** nas regiões auditadas. Imagem do frame final inspecionada: cabeçalho superior está bem mais compacto, filtro, dutos, tanque e cabeçote continuam visíveis e sem corte. Novo SHA vídeo `eb3b78f7e1da7178358695ccdb5a75638f8810d0ae1f2c9f2dd6a6cfaec12466`.
+
+**Limites:** o novo layout não valida estética ou fidelidade por classificador; não houve refilmagem, referência nova nem motor genérico totalmente automático. Ainda pode existir espaço inferior vazio antes do rodapé; não aumentar mais `translateY` sem novo layout/QA. Resultado exige avaliação visual do usuário. `main`, NTC, DOSSIÊ, `motor-integral-v4`, `FilmeEditorial`, Telegram e publicação intocados.
+

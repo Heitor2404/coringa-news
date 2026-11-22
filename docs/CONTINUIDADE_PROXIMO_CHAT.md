@@ -1978,3 +1978,20 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Distinção rigorosa:** 39 tests PASS = grafo/contrato/compilação/arquivo. **Não** significa video compreensível, estética satisfatória nem animação multiassunto automática. Novo ciclo técnico deve priorizar o gargalo visual, não acrescentar mais nomes e metadados.
 
+## 108. 22/11 ~22h50 — USUÁRIO REPROVA retorno do visual LEGADO; bloquear nova prévia nesse caminho
+
+**Reação explícita a `contato_16_quadros.jpg` do vídeo EUV+eclusa 24,4s:** "Que bosta eh essa? A gente ja nao tinha descartado completamente todo esse modelo?" A resposta é **SIM: ESTÉTICA DESCARTADA** — desenhos pequenos, dependurados no alto, fundo azul escuro quase vazio, cara de esquema técnico antigo; o vídeo NÃO é o estilo aprovado nem uma etapa visual de progresso. O assistente errou ao oferecê-lo como prévia. O motor F1 novo criou `plano_causal`, mas a montagem do teste continuava usando os **renderers legados `OpticalProjection.tsx` e `LockCausalCycle.tsx`** de `FilmeEditorial`. Contrato técnico novo NÃO equivale a render novo.
+
+**Correções concretas, SOMENTE branch `atlas-direcao-visual-20261118`**:
+- `src/v4/formatos/diretor_processos.py`: qualquer PLANO AUTOMÁTICO novo `eventos_diretor` sem `perfil_visual="LEGADO_REJEITADO_SOMENTE_QA"` passa a bloquear com **`F-VISUAL-LEGADO-DESCARTADO`**. Isso mantém testes de compatibilidade permitidos apenas por opt-in explícito e impede tratar por acidente os velhos desenhos como nova arte.
+- `src/v4/formatos/filme_editorial.py`: retorno `visual_approval="REPROVADO_ESTILO_LEGADO"` nos testes marcados; `pronto` **continua apenas técnico**, nunca aprovação artística. `diretor_automatico` recebe o mesmo status e `aprovacao_estetica=false`.
+- Manifestos de laboratório `DEMO_DIRETOR_EVENTOS_20261120.json`, `QA_ROTEIRO_V2_EUV_20261120.json`, `QA_ROTEIRO_V2_TAIWAN_20261120.json`, `QA_ROTEIRO_V2_HIBRIDO_NIST_20261120.json` ganharam marcador explícito de legado. Não se trata de direção artística disponível.
+- `.github/workflows/qa-diretor-capacidades.yml` mudou para QA **de contrato sem render**: mantém validação Python/TS, produz somente relatório técnico; **REMOVIDAS** etapas de renderização MP4 e 16 thumbnails do visual rejeitado. Não divulgar filmes passados como sugestões de publicação.
+- Regressões novas em `tests/test_diretor_processos.py`, `tests/test_diretor_roteiro_v2.py`, `tests/test_grafo_causal.py` exercitam bloqueio de novas prévias não autorizadas e rejeição estética mesmo com contrato técnico consistente. Compatibilidade das fontes e direitos não foi sacrificada; só as fixtures explicitam o caráter legado.
+
+**Teste do bloqueio:** GitHub [run 45079639123](https://github.com/Heitor2404/coringa-news/actions/runs/45079639123) sucesso na suite SceneGraph. Outros workflows com integrações maiores dispararam devido ao arquivo compartilhado `filme_editorial.py`; checar runs posteriores `45079710705` (CI contrato sem MP4), `45079682662` (híbrido), `45079682651` (roteiro) e `45079740028` (NIST) antes de declarar todos verdes. Uma primeira execução do workflow de contrato `45079581884` falhou pela tentativa do script de encontrar `perfil_visual` em `props`, que não o exporta: teste corrigido para consultar a fixture fonte, sem mexer no compositor.
+
+**IMPORTANTE:** O código **não foi fisicamente deletado** pois testes históricos e cenas manuais ainda dependem dele. O que foi vetado é seu retorno automático como **direção visual atual**. Isso NÃO implementa ainda câmera/projeção do novo SceneGraph e NÃO resolve qualidade estética por si só. A próxima implementação válida deve ligar `plano_causal.eventos[].camera` ao palco/câmera do novo renderer (com bbox+atores+relações, UI safe, ações reais), e gerar prova visual REAL diferente, não reembalar o modelo descartado.
+
+`main`, NTC, DOSSIÊ e publicação intocados. NÃO apresentar nova prova desses renders legados como avanço estético.
+

@@ -112,6 +112,16 @@ def decidir(cena: dict) -> tuple[str | None, list[dict]]:
     if real != cap.acoes:
         return None, [{'codigo':'F-CAPACIDADE-ORDEM',
                        'motivo':'ações do storyboard divergem da máquina de estados implementada'}]
+    # O grafo do diretor é opcional para pilotos MANUAIS legados; obrigatório
+    # se a ficha declarar essa nova etapa. Nunca confiar em JSON adulterado.
+    if requisitos.get('grafo_causal_requerido') is True or 'plano_causal' in cena:
+        from src.v4.formatos import grafo_causal
+        try:
+            grafo_causal.verificar_serializado(
+                cena.get('plano_causal'),requested,cap.acoes,
+                tuple(x.get('at') for x in cues if isinstance(x,dict)))
+        except grafo_causal.GrafoInvalido as exc:
+            return None, [{'codigo':exc.codigo,'motivo':exc.motivo}]
     return requested, []
 
 

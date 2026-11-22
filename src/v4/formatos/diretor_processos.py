@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 
-from src.v4.formatos import catalogo_mecanismos
+from src.v4.formatos import catalogo_mecanismos, grafo_causal
 
 
 class FalhaDiretor(ValueError):
@@ -113,6 +113,14 @@ def expandir(plano: dict) -> dict:
             {'at': pos, 'action': action, 'label': label}
             for action, pos, label in zip(c.acoes, momentos, c.rotulos)
         ]
+        try:
+            causal = grafo_causal.montar(
+                c.id, c.acoes, momentos=tuple(momentos),
+                atores_essenciais=d.get('atores_essenciais'),
+                relacoes_essenciais=d.get('relacoes_essenciais'),
+            )
+        except grafo_causal.GrafoInvalido as exc:
+            _erro(exc.codigo, eid, exc.motivo)
         cena = {
             'id': eid,
             'start': round(tempo, 4),
@@ -125,7 +133,9 @@ def expandir(plano: dict) -> dict:
             'subject': evento['subject'].strip(),
             'cues': cues,
             'estados_esperados': list(c.acoes),
+            'plano_causal': causal,
             'processo_visual': {
+                'grafo_causal_requerido': True,
                 'acoes_necessarias': list(acoes),
                 'fases_necessarias': list(fases),
             },
@@ -156,5 +166,6 @@ def expandir(plano: dict) -> dict:
             'autonomia': 'MONTAGEM_DE_CAPACIDADES_JA_EXISTENTES',
             'fatos_verificados_externamente': False,
             'revisao_visual': 'PENDENTE',
+            'planejamento_causal': 'ATORES_RELACOES_EVENTOS_VALIDOS_SEM_PROVA_POR_PIXELS',
         },
     }

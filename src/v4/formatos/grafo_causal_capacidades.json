@@ -1,0 +1,583 @@
+{
+  "optical_projection": {
+    "atores": [
+      {
+        "id": "light_source",
+        "tipo": "emissor",
+        "asset_family": "optics"
+      },
+      {
+        "id": "reticle",
+        "tipo": "mascara_reflexiva",
+        "asset_family": "optics"
+      },
+      {
+        "id": "projection_optics",
+        "tipo": "sistema_espelhos",
+        "asset_family": "optics"
+      },
+      {
+        "id": "wafer",
+        "tipo": "substrato",
+        "asset_family": "semiconductor"
+      },
+      {
+        "id": "resist",
+        "tipo": "camada_fotossensivel",
+        "asset_family": "semiconductor"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "light_source",
+        "type": "illuminates",
+        "to": "reticle"
+      },
+      {
+        "from": "reticle",
+        "type": "reflects_to",
+        "to": "projection_optics"
+      },
+      {
+        "from": "projection_optics",
+        "type": "projects_to",
+        "to": "resist"
+      },
+      {
+        "from": "resist",
+        "type": "rests_on",
+        "to": "wafer"
+      }
+    ],
+    "estado_inicial": {
+      "light_source.emitting": "off",
+      "reticle.illuminated": "no",
+      "projection_optics.pattern": "inactive",
+      "resist.exposure": "unexposed"
+    },
+    "eventos": [
+      {
+        "acao": "source",
+        "operador": "emit",
+        "atores": [
+          "light_source"
+        ],
+        "foco": [
+          "light_source",
+          "reticle"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "light_source.emitting": "off"
+        },
+        "altera": {
+          "light_source.emitting": "on"
+        }
+      },
+      {
+        "acao": "reticle",
+        "operador": "reflect",
+        "atores": [
+          "reticle"
+        ],
+        "foco": [
+          "light_source",
+          "reticle",
+          "projection_optics"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "light_source.emitting": "on",
+          "reticle.illuminated": "no"
+        },
+        "altera": {
+          "reticle.illuminated": "yes"
+        }
+      },
+      {
+        "acao": "projection",
+        "operador": "project",
+        "atores": [
+          "projection_optics"
+        ],
+        "foco": [
+          "reticle",
+          "projection_optics",
+          "resist"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "reticle.illuminated": "yes",
+          "projection_optics.pattern": "inactive"
+        },
+        "altera": {
+          "projection_optics.pattern": "active"
+        }
+      },
+      {
+        "acao": "wafer",
+        "operador": "expose",
+        "atores": [
+          "resist",
+          "wafer"
+        ],
+        "foco": [
+          "projection_optics",
+          "resist",
+          "wafer"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "projection_optics.pattern": "active",
+          "resist.exposure": "unexposed"
+        },
+        "altera": {
+          "resist.exposure": "exposed"
+        }
+      }
+    ],
+    "fontes_visuais": "componentes_cadastrados_sem_inspecao_por_pixels",
+    "renderer": "OpticalProjection.tsx"
+  },
+  "lock_cycle_standalone": {
+    "atores": [
+      {
+        "id": "lower_channel",
+        "tipo": "canal",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "upper_channel",
+        "tipo": "canal",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "chamber",
+        "tipo": "camara",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "inlet_gate",
+        "tipo": "portao",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "outlet_gate",
+        "tipo": "portao",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "valve",
+        "tipo": "valvula",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "conduit",
+        "tipo": "conduto",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "water",
+        "tipo": "fluido",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "ship",
+        "tipo": "embarcacao",
+        "asset_family": "vessel"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "ship",
+        "type": "floats_on",
+        "to": "water"
+      },
+      {
+        "from": "water",
+        "type": "inside",
+        "to": "chamber"
+      },
+      {
+        "from": "lower_channel",
+        "type": "connected_to",
+        "to": "chamber"
+      },
+      {
+        "from": "chamber",
+        "type": "connected_to",
+        "to": "upper_channel"
+      },
+      {
+        "from": "inlet_gate",
+        "type": "controls",
+        "to": "lower_channel"
+      },
+      {
+        "from": "outlet_gate",
+        "type": "controls",
+        "to": "upper_channel"
+      },
+      {
+        "from": "valve",
+        "type": "controls",
+        "to": "conduit"
+      },
+      {
+        "from": "upper_channel",
+        "type": "feeds",
+        "to": "conduit"
+      },
+      {
+        "from": "conduit",
+        "type": "feeds",
+        "to": "chamber"
+      }
+    ],
+    "estado_inicial": {
+      "ship.location": "lower_channel",
+      "inlet_gate.closed": "false",
+      "outlet_gate.closed": "true",
+      "valve.open": "false",
+      "water.level": "low",
+      "chamber.equalized": "false"
+    },
+    "eventos": [
+      {
+        "acao": "enter",
+        "operador": "translate",
+        "atores": [
+          "ship"
+        ],
+        "foco": [
+          "ship",
+          "lower_channel",
+          "chamber"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "ship.location": "lower_channel",
+          "inlet_gate.closed": "false"
+        },
+        "altera": {
+          "ship.location": "chamber"
+        }
+      },
+      {
+        "acao": "seal",
+        "operador": "close",
+        "atores": [
+          "inlet_gate"
+        ],
+        "foco": [
+          "inlet_gate",
+          "ship",
+          "chamber"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "ship.location": "chamber",
+          "inlet_gate.closed": "false"
+        },
+        "altera": {
+          "inlet_gate.closed": "true"
+        }
+      },
+      {
+        "acao": "valves",
+        "operador": "open",
+        "atores": [
+          "valve",
+          "conduit"
+        ],
+        "foco": [
+          "valve",
+          "conduit",
+          "chamber"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "inlet_gate.closed": "true",
+          "valve.open": "false"
+        },
+        "altera": {
+          "valve.open": "true"
+        }
+      },
+      {
+        "acao": "rise",
+        "operador": "fill",
+        "atores": [
+          "water",
+          "ship"
+        ],
+        "foco": [
+          "water",
+          "ship",
+          "chamber",
+          "conduit"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "valve.open": "true",
+          "water.level": "low",
+          "ship.location": "chamber"
+        },
+        "altera": {
+          "water.level": "rising"
+        }
+      },
+      {
+        "acao": "equalize",
+        "operador": "equalize",
+        "atores": [
+          "water",
+          "upper_channel"
+        ],
+        "foco": [
+          "water",
+          "upper_channel",
+          "chamber",
+          "ship"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "water.level": "rising",
+          "outlet_gate.closed": "true"
+        },
+        "altera": {
+          "water.level": "high",
+          "chamber.equalized": "true"
+        }
+      },
+      {
+        "acao": "open",
+        "operador": "open",
+        "atores": [
+          "outlet_gate"
+        ],
+        "foco": [
+          "outlet_gate",
+          "ship",
+          "upper_channel"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "chamber.equalized": "true",
+          "outlet_gate.closed": "true"
+        },
+        "altera": {
+          "outlet_gate.closed": "false"
+        }
+      },
+      {
+        "acao": "exit",
+        "operador": "translate",
+        "atores": [
+          "ship"
+        ],
+        "foco": [
+          "ship",
+          "upper_channel",
+          "outlet_gate"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "outlet_gate.closed": "false",
+          "ship.location": "chamber"
+        },
+        "altera": {
+          "ship.location": "upper_channel"
+        }
+      }
+    ],
+    "fontes_visuais": "componentes_cadastrados_sem_inspecao_por_pixels",
+    "renderer": "LockCausalCycle.tsx"
+  },
+  "lock_explainer": {
+    "atores": [
+      {
+        "id": "upper_channel",
+        "tipo": "canal",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "chamber",
+        "tipo": "camara",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "valve",
+        "tipo": "valvula",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "conduit",
+        "tipo": "conduto",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "water",
+        "tipo": "fluido",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "ship",
+        "tipo": "embarcacao",
+        "asset_family": "vessel"
+      },
+      {
+        "id": "outlet_gate",
+        "tipo": "portao",
+        "asset_family": "hydraulic"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "ship",
+        "type": "floats_on",
+        "to": "water"
+      },
+      {
+        "from": "water",
+        "type": "inside",
+        "to": "chamber"
+      },
+      {
+        "from": "upper_channel",
+        "type": "feeds",
+        "to": "conduit"
+      },
+      {
+        "from": "valve",
+        "type": "controls",
+        "to": "conduit"
+      },
+      {
+        "from": "conduit",
+        "type": "feeds",
+        "to": "chamber"
+      },
+      {
+        "from": "outlet_gate",
+        "type": "controls",
+        "to": "upper_channel"
+      }
+    ],
+    "estado_inicial": {
+      "chamber.closed": "false",
+      "valve.open": "false",
+      "water.level": "low",
+      "chamber.equalized": "false",
+      "outlet_gate.open": "false"
+    },
+    "eventos": [
+      {
+        "acao": "closed",
+        "operador": "close",
+        "atores": [
+          "chamber"
+        ],
+        "foco": [
+          "chamber",
+          "water",
+          "ship"
+        ],
+        "camera": "show_context",
+        "requer": {
+          "chamber.closed": "false"
+        },
+        "altera": {
+          "chamber.closed": "true"
+        }
+      },
+      {
+        "acao": "water_enter",
+        "operador": "flow",
+        "atores": [
+          "valve",
+          "conduit",
+          "water"
+        ],
+        "foco": [
+          "upper_channel",
+          "conduit",
+          "valve",
+          "water",
+          "chamber"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "chamber.closed": "true",
+          "valve.open": "false"
+        },
+        "altera": {
+          "valve.open": "true"
+        }
+      },
+      {
+        "acao": "rise",
+        "operador": "fill",
+        "atores": [
+          "water",
+          "ship"
+        ],
+        "foco": [
+          "water",
+          "ship",
+          "chamber"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "valve.open": "true",
+          "water.level": "low"
+        },
+        "altera": {
+          "water.level": "rising"
+        }
+      },
+      {
+        "acao": "equalize",
+        "operador": "equalize",
+        "atores": [
+          "water"
+        ],
+        "foco": [
+          "water",
+          "upper_channel",
+          "chamber",
+          "ship"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "water.level": "rising"
+        },
+        "altera": {
+          "water.level": "high",
+          "chamber.equalized": "true"
+        }
+      },
+      {
+        "acao": "release",
+        "operador": "open",
+        "atores": [
+          "outlet_gate"
+        ],
+        "foco": [
+          "outlet_gate",
+          "ship",
+          "upper_channel"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "chamber.equalized": "true"
+        },
+        "altera": {
+          "outlet_gate.open": "true"
+        }
+      }
+    ],
+    "fontes_visuais": "componentes_cadastrados_sem_inspecao_por_pixels",
+    "renderer": "LockCausal.tsx"
+  }
+}

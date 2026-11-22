@@ -67,6 +67,9 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     elif s.descarga_aberta:
         positions=[(330,389-j*23-travel*18) for j in range(2)]
         positions += [(370+i*22+travel*20,341) for i in range(6)]
+        # Duto até o tanque: a descarga não termina arbitrariamente na borda.
+        positions += [(498,383+j*41+travel*21) for j in range(6)]
+        positions += [(489-travel*20,625)]
         arrow_dots="".join(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{5+i%3}" fill="#D97936" opacity=".87"/>'
             for i,(x,y) in enumerate(positions))
@@ -145,6 +148,15 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     <text x="44" y="171" font-family="DejaVu Sans" font-size="15"
       fill="#D8E7EB">{escape(description)}</text>
     {stage_bars}
+    <!-- Continuidade hidráulica da saída ao reservatório; o fluxo
+         NÃO termina na borda do quadro. A arte periférica pode passar
+         sob UI da rede, mas conexão mecânica deve continuar coerente. -->
+    <path d="M 499 338 V 625 H 467 V 656" fill="none"
+      stroke="#516C80" stroke-width="38" stroke-linejoin="round"
+      stroke-linecap="round"/>
+    <path d="M 499 338 V 625 H 467 V 656" fill="none"
+      stroke="#EADDC9" stroke-width="22" stroke-linejoin="round"
+      stroke-linecap="round"/>
     <!-- Tubulação lateral: válvula de entrada e de saída distintas -->
     <path d="M 36 337 H 184 Q 203 337 205 356" fill="none"
       stroke="#3F6479" stroke-width="38" stroke-linecap="round"/>
@@ -242,13 +254,13 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
       fill="#3E7189" stroke="#24465C" stroke-width="8"/>
     <rect x="429" y="665" width="72" height="176" rx="34"
       fill="#C9DDE1" stroke="#6D96A8" stroke-width="5"/>
-    <path d="M 449 659 V 624 H 492"
-      stroke="#547D91" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M 467 656 V 680" stroke="#486F81"
+      stroke-width="12" fill="none"/>
     <circle cx="450" cy="655" r="13" fill="{tank_valve}" stroke="#365366" stroke-width="5"/>
-    <text x="432" y="747" font-family="DejaVu Sans" font-size="11"
-      font-weight="900" fill="#36556A">RESER-</text>
-    <text x="432" y="764" font-family="DejaVu Sans" font-size="11"
-      font-weight="900" fill="#36556A">VATÓRIO</text>
+    <text x="439" y="739" font-family="DejaVu Sans" font-size="11"
+      font-weight="900" fill="#36556A">TANQUE</text>
+    <text x="457" y="763" font-family="DejaVu Sans" font-size="11"
+      font-weight="900" fill="#36556A">AR</text>
     <text x="43" y="920" fill="#466A7E" font-family="DejaVu Sans"
       font-size="13" font-weight="800">FÍSICA P–V · SIMULAÇÃO DIDÁTICA PRIVADA</text>
     <text x="480" y="920" fill="#3B7189" font-family="DejaVu Sans"

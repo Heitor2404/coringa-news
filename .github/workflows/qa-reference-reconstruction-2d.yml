@@ -1,0 +1,135 @@
+name: "LAB — Reference-First 2D ORIGINAL medido em 48 quadros Otto"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-reference-reconstruction-2d.yml"
+      - "src/v4/formatos/rastrear_movimento_referencia.py"
+      - "src/v4/formatos/render_reconstrucao_causal_2d.py"
+      - "docs/v4/formatos/reference_first/otto_48f_tracker_config.json"
+      - "docs/v4/formatos/reference_first/otto_48f_measured_motion.json"
+      - "docs/v4/formatos/reference_first/otto_48f_causal_reviewed_scene.json"
+      - "tests/test_reference_reconstruction_2d.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-reference-reconstruction-2d
+  cancel-in-progress: true
+jobs:
+  um_grafo_dois_giros_quatro_tempos:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias da reconstrucao original 2D
+        run: |
+          python -m pip install -q pytest pillow numpy scipy opencv-python-headless cairosvg
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+      - name: Verificar origem medida, quatro eventos e seguranca de processo
+        run: |
+          python -m pytest -q tests/test_reference_reconstruction_2d.py
+      - name: Renderizar NOVA animacao vetorial a partir de medicao de referencia
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_recon_2d/quadros
+          python -m src.v4.formatos.render_reconstrucao_causal_2d \
+            docs/v4/formatos/reference_first/otto_48f_measured_motion.json \
+            docs/v4/formatos/reference_first/otto_48f_causal_reviewed_scene.json \
+            qa_recon_2d/MOTOR_OTTO_2D_RECONSTRUCAO_PRIVADA.mp4
+      - name: Confere video de 8s, quatro fases, originalidade e contato
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageDraw,ImageChops,ImageStat
+          from src.v4.formatos.render_reconstrucao_causal_2d import pose
+          out=Path('qa_recon_2d')
+          video=out/'MOTOR_OTTO_2D_RECONSTRUCAO_PRIVADA.mp4'
+          meta=json.loads(subprocess.check_output(['ffprobe','-v','error',
+              '-show_entries','format=duration:stream=codec_type,width,height,r_frame_rate',
+              '-of','json',str(video)]))
+          stream=next(x for x in meta['streams'] if x['codec_type']=='video')
+          assert (stream['width'],stream['height'])==(540,960)
+          assert stream['r_frame_rate']=='24/1'
+          assert not any(x['codec_type']=='audio' for x in meta['streams'])
+          assert abs(float(meta['format']['duration'])-8.0)<.06
+          measured=json.loads(Path('docs/v4/formatos/reference_first/otto_48f_measured_motion.json').read_text('utf8'))
+          refs=['ADMISSÃO','COMPRESSÃO','IGNIÇÃO E EXPANSÃO','ESCAPE']
+          times=[.35,1.20,2.30,3.40,4.50,5.50,6.60,7.45]
+          board=Image.new('RGB',(4*270,2*490),'#EAF3F4')
+          draw=ImageDraw.Draw(board)
+          frames=[]
+          for i,t in enumerate(times):
+              dest=out/'quadros'/f'frame_{i:02d}.png'
+              subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                       '-y','-ss',str(t),'-i',str(video),'-frames:v','1',str(dest)])
+              im=Image.open(dest).convert('RGB')
+              frames.append(im)
+              thumb=im.resize((270,480))
+              xx=(i%4)*270
+              yy=(i//4)*490+10
+              board.paste(thumb,(xx,yy))
+          assert all(sum(ImageStat.Stat(ImageChops.difference(frames[0],im)).mean)/3>2 for im in (frames[2],frames[4],frames[6]))
+          board.save(out/'contato_8_eventos_2d.jpg',quality=90)
+          values={
+              'estado':'VETOR_2D_RECONSTRUIDO_DE_TRAJETORIA_REAL_SEM_COPIA_DE_PIXELS',
+              'fonte_sha256':measured['origem_sha256'],
+              'mp4_sha256':hashlib.sha256(video.read_bytes()).hexdigest(),
+              'frame_count':192,'duracao_s':8.0,'resolucao':[540,960],
+              'revolucoes_mecanicas':2,'etapas':refs,
+              'evento_visualmente_supervisionado':True,
+              'valvulas_extraidas_automaticamente':False,
+              'revisao_estetica':'PENDENTE','publicar':False
+          }
+          (out/'qa_semantico.json').write_text(json.dumps(values,ensure_ascii=False,indent=2))
+          print(json.dumps(values,ensure_ascii=False))
+          PY
+      - name: Referencia GIF real - verificacao opcional por execucao manual
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          python - <<'PY'
+          import json, requests, hashlib
+          from pathlib import Path
+          from src.v4.formatos.rastrear_movimento_referencia import extrair
+          config=json.loads(Path('docs/v4/formatos/reference_first/otto_48f_tracker_config.json').read_text('utf8'))
+          url='https://upload.wikimedia.org/wikipedia/commons/d/d7/4-Stroke-Engine-with-airflows.gif'
+          proof={'fonte':url,'publicar':False,'estado':'SEM_DOWNLOAD'}
+          try:
+              response=requests.get(url,timeout=23,headers={
+                  'User-Agent':'CoringaExplicaReferenceQA/1.0 github.com/Heitor2404/coringa-news'})
+              response.raise_for_status()
+              assert len(response.content)<5_000_000 and response.content[:3]==b'GIF'
+              src=Path('qa_recon_2d/referencia_original_NAO_REPUBLICAR.gif')
+              src.write_bytes(response.content)
+              motion=extrair(src,config)
+              baseline=json.loads(Path('docs/v4/formatos/reference_first/otto_48f_measured_motion.json').read_text('utf8'))
+              assert motion['origem_sha256']==baseline['origem_sha256']
+              assert max(abs(x-y) for x,y in zip(motion['posicoes_y_px'],baseline['posicoes_y_px']))<.01
+              proof.update({'estado':'MEDICAO_REAL_REPETIDA_OK',
+                  'quadros':motion['quadros'],'erro_medio_px':motion['ajuste_geometrico']['erro_medio_px']})
+          except Exception as e:
+              proof.update({'estado':'BLOQUEADO_REFERENCIA_INACESSIVEL_OU_DIFERENTE',
+                  'erro':type(e).__name__+':'+str(e)[:200]})
+          Path('qa_recon_2d/revalidacao_fonte.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2))
+          print(json.dumps(proof,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-otto-48f-reconstrucao-original-2d-privada
+          path: |
+            qa_recon_2d/*.mp4
+            qa_recon_2d/*.json
+            qa_recon_2d/*.jpg
+            qa_recon_2d/quadros/*.png
+          retention-days: 5
+          if-no-files-found: warn

@@ -28,7 +28,7 @@ SIZE = (540,960)
 # Layout comum para qualquer ciclo P–V da família. Não alterar por episódio.
 # O cabeçalho cedeu espaço vazio à máquina; a física permanece intocada.
 MECHANISM_SHIFT_Y = -40
-HEADER_BOTTOM_Y = 225
+HEADER_BOTTOM_Y = 265
 STATE_STYLE = {
     "REEXPANSAO_RESIDUAL": ("01","AR RESIDUAL EXPANDE",
         "A pressão cai antes da admissão.", "#70B8C8"),
@@ -96,7 +96,7 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     current_index=sequence_keys.index(s.estado)
     progress=round(454*t)
     stage_bars="".join(
-        f'<rect x="{43+i*115}" y="214" width="103" height="7" rx="3" '
+        f'<rect x="{43+i*115}" y="252" width="103" height="7" rx="3" '
         f'fill="{accent if i==current_index else "#527086"}"/>'
         for i in range(4))
     # P-V plot: texto/valores na esquerda baixa, não no overlay de rede.
@@ -145,11 +145,11 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     <rect x="44" y="18" width="177" height="26" rx="6" fill="#F3C45C"/>
     <text x="55" y="36" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#1E3242">CORINGA EXPLICA</text>
-    <text x="44" y="118" font-family="DejaVu Sans" font-size="30"
+    <text x="44" y="155" font-family="DejaVu Sans" font-size="30"
       font-weight="900" fill="#FFFFFF">COMPRESSOR DE AR</text>
-    <text x="44" y="159" font-family="DejaVu Sans" font-size="22"
+    <text x="44" y="197" font-family="DejaVu Sans" font-size="22"
       font-weight="900" fill="{accent}">{escape(label)}</text>
-    <text x="44" y="195" font-family="DejaVu Sans" font-size="15"
+    <text x="44" y="233" font-family="DejaVu Sans" font-size="15"
       fill="#D8E7EB">{escape(description)}</text>
     {stage_bars}
     <!-- Uma única transformação desloca todas as peças, indicadores e fluxos.
@@ -173,9 +173,9 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
       stroke="#516C80" stroke-width="38" stroke-linecap="round"/>
     <path d="M 328 358 Q 333 337 359 337 H 502" fill="none"
       stroke="#EADDC9" stroke-width="22" stroke-linecap="round"/>
-    <text x="43" y="298" font-family="DejaVu Sans" font-size="16"
+    <text x="43" y="315" font-family="DejaVu Sans" font-size="12"
       fill="#1E7990" font-weight="900">ENTRADA</text>
-    <text x="407" y="296" font-family="DejaVu Sans" font-size="16"
+    <text x="407" y="315" font-family="DejaVu Sans" font-size="12"
       fill="#9B633D" font-weight="900">SAÍDA</text>
     <!-- Carcaça e bloco do compressor, cortados pelo centro -->
     <path d="M 158 349 H 372 L 392 381 V 630 L 418 662
@@ -200,13 +200,13 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     <rect x="170" y="327" width="196" height="47" rx="11"
       fill="url(#steel)" stroke="#284D60" stroke-width="7"/>
     <path d="M 181 341 H 355" stroke="#E7F6F4" stroke-width="7"/>
-    <path d="M 209 302 V 372" stroke="#4F7A8D" stroke-width="10"/>
+    <path d="M 209 306 V 372" stroke="#4F7A8D" stroke-width="10"/>
     <path d="M 208 {372+intake_y} l -17 10 l 34 0 Z"
       fill="#2D98AB" stroke="#20586C" stroke-width="4"/>
-    <path d="M 330 302 V 371" stroke="#637F8D" stroke-width="10"/>
+    <path d="M 330 306 V 371" stroke="#637F8D" stroke-width="10"/>
     <path d="M 329 {372+discharge_y} l -17 10 l 34 0 Z"
       fill="#CF9369" stroke="#6D5B50" stroke-width="4"/>
-    <rect x="256" y="283" width="21" height="49" rx="8"
+    <rect x="256" y="305" width="21" height="27" rx="8"
       fill="#819DAF" stroke="#33556A" stroke-width="5"/>
     <path d="M 258 299 H 274" stroke="#F9FFFF" stroke-width="4"/>
     <!-- Pistão com geometria deslizante derivada da biela -->

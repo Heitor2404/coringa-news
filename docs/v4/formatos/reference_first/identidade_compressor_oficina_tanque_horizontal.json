@@ -1,0 +1,214 @@
+{
+  "schema": "machine-visual-identity-v1",
+  "configuracao": "compressor_ar_eletrico_tanque_horizontal_correia",
+  "processo": "compressor_alternativo",
+  "descricao": "Conjunto elétrico de oficina, com bomba alternativa e tanque horizontal, motor elétrico por correia. Desenho autoral didático 2D, NÃO asset/rig extraído automaticamente.",
+  "fonte_modelagem": "Referências de configuração e funcionamento: Atlas Copco, KAESER, Industrial Air. Componente gráfico prototipado manualmente; sem copiar pixels de manuais.",
+  "fontes": [
+    "https://www.atlascopco.com/en-us/compressors/wiki/compressed-air-articles/piston-compressors",
+    "https://www.kaeser.com/in-en/products/reciprocating-compressors/stationary-reciprocating-compressors/oil-lubricated-workshop-compressors",
+    "https://www.industrialairusa.com/pdfs/200-2735.pdf"
+  ],
+  "pecas": [
+    {
+      "id": "receiver_horizontal",
+      "papel": "receiver_horizontal",
+      "bbox": [
+        0.109,
+        0.801,
+        0.796,
+        0.117
+      ]
+    },
+    {
+      "id": "electric_motor",
+      "papel": "electric_motor",
+      "bbox": [
+        0.135,
+        0.63,
+        0.218,
+        0.125
+      ]
+    },
+    {
+      "id": "compressor_head",
+      "papel": "compressor_head",
+      "bbox": [
+        0.407,
+        0.413,
+        0.267,
+        0.051
+      ]
+    },
+    {
+      "id": "finned_cylinder",
+      "papel": "finned_cylinder",
+      "bbox": [
+        0.402,
+        0.448,
+        0.272,
+        0.205
+      ]
+    },
+    {
+      "id": "crankcase",
+      "papel": "crankcase",
+      "bbox": [
+        0.378,
+        0.621,
+        0.334,
+        0.136
+      ]
+    },
+    {
+      "id": "intake_filter",
+      "papel": "intake_filter",
+      "bbox": [
+        0.283,
+        0.386,
+        0.1,
+        0.053
+      ]
+    },
+    {
+      "id": "pump_flywheel",
+      "papel": "pump_flywheel",
+      "bbox": [
+        0.454,
+        0.66,
+        0.18,
+        0.102
+      ]
+    },
+    {
+      "id": "motor_pulley",
+      "papel": "motor_pulley",
+      "bbox": [
+        0.222,
+        0.687,
+        0.1,
+        0.056
+      ]
+    },
+    {
+      "id": "drive_belt",
+      "papel": "drive_belt",
+      "bbox": [
+        0.222,
+        0.66,
+        0.369,
+        0.106
+      ]
+    },
+    {
+      "id": "discharge_pipe",
+      "papel": "discharge_pipe",
+      "bbox": [
+        0.62,
+        0.436,
+        0.202,
+        0.36
+      ]
+    },
+    {
+      "id": "suction_valve",
+      "papel": "suction_valve",
+      "bbox": [
+        0.48,
+        0.452,
+        0.05,
+        0.018
+      ]
+    },
+    {
+      "id": "discharge_valve",
+      "papel": "discharge_valve",
+      "bbox": [
+        0.58,
+        0.45,
+        0.05,
+        0.02
+      ]
+    },
+    {
+      "id": "piston_cutaway",
+      "papel": "piston_cutaway",
+      "bbox": [
+        0.48,
+        0.48,
+        0.13,
+        0.15
+      ]
+    },
+    {
+      "id": "receiver_gauge",
+      "papel": "receiver_gauge",
+      "bbox": [
+        0.812,
+        0.7,
+        0.094,
+        0.05
+      ]
+    },
+    {
+      "id": "check_valve",
+      "papel": "check_valve",
+      "bbox": [
+        0.815,
+        0.752,
+        0.026,
+        0.03
+      ]
+    }
+  ],
+  "ligacoes": [
+    {
+      "a": "electric_motor",
+      "b": "drive_belt",
+      "tipo": "drives"
+    },
+    {
+      "a": "drive_belt",
+      "b": "pump_flywheel",
+      "tipo": "drives"
+    },
+    {
+      "a": "intake_filter",
+      "b": "compressor_head",
+      "tipo": "feeds"
+    },
+    {
+      "a": "compressor_head",
+      "b": "discharge_pipe",
+      "tipo": "exits"
+    },
+    {
+      "a": "discharge_pipe",
+      "b": "receiver_horizontal",
+      "tipo": "feeds"
+    },
+    {
+      "a": "crankcase",
+      "b": "receiver_horizontal",
+      "tipo": "mounted_on"
+    },
+    {
+      "a": "electric_motor",
+      "b": "receiver_horizontal",
+      "tipo": "mounted_on"
+    },
+    {
+      "a": "compressor_head",
+      "b": "finned_cylinder",
+      "tipo": "mounted_on"
+    },
+    {
+      "a": "finned_cylinder",
+      "b": "crankcase",
+      "tipo": "mounted_on"
+    }
+  ],
+  "validacao_visao": "PENDENTE",
+  "midia_de_referencia_licenciada": "NAO_COPIADA",
+  "publicar": false
+}

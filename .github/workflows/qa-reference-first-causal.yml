@@ -9,6 +9,8 @@ on:
       - "tests/test_reference_first.py"
       - "src/v4/formatos/garimpo_reference_first.py"
       - "tests/test_garimpo_reference_first.py"
+      - "src/v4/formatos/render_referencia_licenciada.py"
+      - "tests/test_render_referencia_licenciada.py"
       - "docs/v4/formatos/referencias_reference_first_20261122.json"
   workflow_dispatch:
 permissions:
@@ -28,9 +30,15 @@ jobs:
           python-version: "3.13"
       - name: Dependencias offline
         run: python -m pip install -q pytest pillow requests
+      - name: FFmpeg local para a prova de preview de midia licenciada
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
       - name: Provar algoritmo, origem de frames e BLOQUEIOS semanticamente diferentes
         run: |
-          python -m pytest -q tests/test_reference_first.py tests/test_garimpo_reference_first.py
+          python -m pytest -q tests/test_reference_first.py tests/test_garimpo_reference_first.py tests/test_render_referencia_licenciada.py
           python -m pytest -q tests/test_referencias_mecanismos.py tests/test_inspecionar_referencia.py
       - name: Relatorio sobre os renders antigos NAO aprovados
         run: |

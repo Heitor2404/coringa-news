@@ -148,7 +148,8 @@ def test_planejador_nao_finge_inspecao_de_pixels_ou_producao():
     assert all(not s['plano_causal']['publicar'] for s in p['shots'])
     assert all(s['plano_causal']['revisao_visual']=='PENDENTE' for s in p['shots'])
     assert p['diretor_automatico']['fatos_verificados_externamente'] is False
-    assert p['diretor_automatico']['revisao_visual']=='PENDENTE'
+    assert p['diretor_automatico']['revisao_visual']=='REPROVADO_ESTILO_LEGADO'
+    assert F.avaliar(plan())['visual_approval']=='REPROVADO_ESTILO_LEGADO'
     legacy=json.loads((ROOT/'docs/v4/formatos/filme_panama_ciclo_19s.json').read_text('utf8'))
     assert D.expandir(legacy) is legacy
     assert F.avaliar(legacy)['pronto']

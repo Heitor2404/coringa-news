@@ -71,8 +71,8 @@ jobs:
           assert not report["publicar"]
           print("FRAME_SOURCE_OK",m["arquivo_sha256"],"ANALISE_SEM_VISAO_BLOQUEADA")
           PY
-      - name: Amostrar GIF Commons de dominio publico UMA VEZ (pode retornar 429)
-        if: github.event_name == 'push' && contains(github.event.head_commit.message, 'REF_FIRST_LIVE_ONCE')
+      - name: Amostrar GIF de motor Otto 4T licenciado UMA VEZ
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, 'REF_FIRST_OTTO_LIVE_ONCE')
         continue-on-error: true
         timeout-minutes: 2
         run: |
@@ -81,7 +81,7 @@ jobs:
           from pathlib import Path
           from src.v4.formatos.referencia_temporal import amostrar
           docs=json.loads(Path('docs/v4/formatos/referencias_reference_first_20261122.json').read_text('utf8'))
-          c=docs['candidates'][0]
+          c=docs['candidates'][1]
           output=Path('qa_reference_first')
           outcome={"reference_id":c['id'],"status":"REFERENCIA_NAO_INSPECIONADA",
                    "publicar":False,"fonte":c["page"]}
@@ -92,9 +92,9 @@ jobs:
               r.raise_for_status()
               if len(r.content)>2_000_000 or not r.content.startswith((b"GIF89a",b"GIF87a")):
                   raise ValueError("F-REFERENCIA-FORMATO_OU_TAMANHO")
-              raw=output/'reference_public_domain.gif'
+              raw=output/'reference_otto_by_sa.gif'
               raw.write_bytes(r.content)
-              sampled=amostrar(raw,output/"frames_public_domain",c["id"],
+              sampled=amostrar(raw,output/"frames_otto",c["id"],
                    pagina=c["page"],licenca_declarada=c["declared_license"])
               outcome.update({"status":"QUADROS_REAIS_EXTRAIDOS_NAO_INSPECIONADOS",
                               "frames":len(sampled["amostras"]),
@@ -102,8 +102,34 @@ jobs:
           except Exception as e:
               outcome.update({"status":"BLOQUEADO_ACESSO_OU_AMOSTRAGEM",
                               "erro":type(e).__name__+":"+str(e)[:220]})
-          (output/'comprovacao_fonte_real.json').write_text(json.dumps(outcome,ensure_ascii=False,indent=2))
+          (output/'comprovacao_motor_otto_real.json').write_text(json.dumps(outcome,ensure_ascii=False,indent=2))
           print(json.dumps(outcome,ensure_ascii=False))
+          PY
+      - name: Inspecao Gemini dos frames Otto se chave/cota permitir (sem Claude)
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, 'REF_FIRST_OTTO_LIVE_ONCE')
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        run: |
+          if [ ! -f qa_reference_first/frames_otto/manifesto_temporal.json ]; then
+            echo "F-ARQUIVO-EXTERNO-INDISPONIVEL; SEM INSPECAO"
+            exit 0
+          fi
+          if [ -z "$GEMINI_API_KEY" ] && [ -z "$GEMINI_API_KEY_2" ]; then
+            echo "F-SEM-CHAVE-GEMINI; BLOQUEIO, sem afirmar inspeção"
+            exit 0
+          fi
+          python -m pip install -q google-genai
+          python - <<'PY'
+          from pathlib import Path
+          from src.v4.formatos.reference_first import executar
+          result=executar(Path("qa_reference_first/frames_otto"),
+                          "motor_otto_4t",Path("qa_reference_first/analise_otto"))
+          assert result["renderer"] is None
+          assert result["publicar"] is False
+          print(result["estado"],result["bloqueios"])
           PY
       - uses: actions/upload-artifact@v4
         if: always()

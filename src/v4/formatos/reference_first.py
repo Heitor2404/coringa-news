@@ -76,7 +76,7 @@ def verificar_renderizador(processo: str, renderer: str, *,
                      else known["capacidades"])
     required = set(PROCESSOS[processo]["capacidades_visuais"])
     missing = sorted(required - advertised)
-    return {"aprovado": not missing and known is None,
+    return {"aprovado": False,
             "faltantes": missing,
             "bloqueios": (["F-RENDERER-NAO-DEMONSTRA-PROCESSO"] if missing
                           else ["F-RENDERER-EXPERIMENTAL_NAO_APROVADO"] if known

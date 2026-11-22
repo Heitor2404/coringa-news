@@ -217,3 +217,11 @@ def test_meta_vazia_e_resposta_inventada_nao_se_tornam_prova():
     m={"referencia_id":"ref","amostras":[]}
     r=RF.analisar(m,answer("compressor_alternativo"),"compressor_alternativo")
     assert "F-REFERENCIA-TEMPORAL-NAO-VERIFICADA" in r["bloqueios"]
+
+def test_nem_override_externo_habilita_renderer_sem_auditoria():
+    feats=RF.PROCESSOS["compressor_alternativo"]["capacidades_visuais"]
+    result=RF.verificar_renderizador(
+        "compressor_alternativo","PluginNaoAuditado",
+        capacidades_override=list(feats))
+    assert not result["aprovado"]
+    assert "F-RENDERER-NAO-AUDITADO" in result["bloqueios"]

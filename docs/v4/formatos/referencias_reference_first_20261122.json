@@ -25,7 +25,7 @@
       "id": "commons-by-sa-otto",
       "requested_process": "motor_otto_4t",
       "page": "https://commons.wikimedia.org/wiki/File:4-Stroke-Engine-with-airflows.gif",
-      "original_media": null,
+      "original_media": "https://upload.wikimedia.org/wikipedia/commons/d/d7/4-Stroke-Engine-with-airflows.gif",
       "declared_license": "CC BY-SA 3.0 / GFDL (derivative contributions)",
       "licensor": "UtzOnBike, Cuddlyable3, Jahobr and others as Commons page",
       "file_type": "gif",
@@ -36,7 +36,9 @@
       "frames_verified": false,
       "visually_inspected": false,
       "usable_for_publication": false,
-      "license_obligation": "requires checking exact attributions and share-alike before reusing pixels"
+      "license_obligation": "requires checking exact attributions and share-alike before reusing pixels",
+      "declared_frames": 48,
+      "declared_bytes": 874000
     },
     {
       "id": "commons-by-sa-diesel-negative",

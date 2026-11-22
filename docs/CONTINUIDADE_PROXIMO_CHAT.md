@@ -1945,3 +1945,24 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 `main`, NTC, DOSSIÊ, motor integral, pipeline `FilmeEditorial`, Telegram e publicação intocados.
 
+## 106. 22/11 ~22h35 — F1 SceneGraph causal conectado ao diretor automático existente; sem Claude
+
+**Pedido do usuário:** “Prossiga” após provar palco multimecanismo com eclusa. Meta: fazer o motor **decidir atores/relações/transformações por etapa**, em vez de apenas escolher um renderer pelo nome do assunto, sem cair em mais uma implementação decorativa separada por vídeo.
+
+**Inventário prévio obrigatório:** `src/v4/formatos/catalogo_mecanismos.py` e `diretor_processos.py` **já** selecionam `lock_cycle_standalone`, `lock_explainer` e `optical_projection` com base em ações explícitas. Não duplicar esse diretor. O que faltava era contrato de **atores, conexões, pré-condições, mudanças de estado e foco de câmera** que pudesse ser auditado e bloqueado.
+
+**Implementado, branch** `atlas-direcao-visual-20261118`:
+- NOVO `src/v4/formatos/grafo_causal_capacidades.json`: fichas curadas por família/capacidade de três processos: **EUV**, **eclusa completa** e **eclusa hidráulica curta**. Declaradas peças necessárias, relações `floats_on`, `feeds`, `reflects_to` etc., estados iniciais e transições por evento com pré-condições, estados alterados e alvos de câmera. Não é geometria desenhada automaticamente.
+- NOVO `src/v4/formatos/grafo_causal.py`: validador/compilador **genérico** do grafo. Valida nomes de atores e relacionamentos, sintaxe de operadores/câmera, sequência e pré-condições, que cada evento altere estado observável e que o foco não omita a relação que precisa explicar. Aceita `atores_essenciais` e `relacoes_essenciais` explicitados na direção do roteiro, bloqueando ausências em vez de inventar recurso. Recompila ficheiro curado para recusar um grafo adulterado. O estado `'prova_por_frames': 'PENDENTE'` é deliberado.
+- `diretor_processos.py`: no caminho **opt-in de eventos estruturados** já existente, cria `plano_causal` a partir da capacidade selecionada e da duração/cues, repassa-o nos shots. Registra `processo_visual.grafo_causal_requerido=true`. Continuidade com roteiros e produções manuais legados.
+- `catalogo_mecanismos.py`: verifica a integridade do grafo quando solicitado ou apresentado; rejeita plano ausente/divergente por `F-GRAFO-...`; nenhuma seleção apenas por título do tema.
+- `tests/test_grafo_causal.py`: provas de três processos, incompatibilidades de atores/relacionamentos, impossibilidades de precedência, texto temático irrelevante, alterações maliciosas, ausência de identidade/capacidade e publicação bloqueada.
+- `tests/test_diretor_processos.py` recebeu checagens explícitas de que `plano_causal` e seus eventos/relacionamentos sobrevivem à preparação e chegam aos **props do Remotion**.
+- Novo workflow `.github/workflows/qa-scenegraph-causal.yml` sem IA nem render de MP4: faz testes e guarda `PLANO_CAUSAL_2_CENAS.json`, `QA_GRAFO_CAUSAL_3_FAMILIAS.json`.
+
+**QA estrutural:** primeiro run 45078468505 reprovou legitimamente: foco do fechamento do portão da eclusa não continha o canal conectado, portanto nenhuma aresta causal podia ser vista. Corrigiu-se a ficha para incluir `lower_channel` na câmera. [Run 45078527193](https://github.com/Heitor2404/coringa-news/actions/runs/45078527193) **SUCCESS, 39 testes**, artifact **14776311278**. Três grafo-ciclos: EUV 5 atores, 4 relações, 4 eventos; eclusa completa 9 atores, 9 relações, 7 eventos; eclusa curta 7 atores, 6 relações, 5 eventos. Mecanismo impossível `turbina_sem_capacidade` **bloqueado** por `F-GRAFO-SEM-FICHA`. O pipeline `filme_editorial.avaliar` valida os planos estruturados. Teste completo do compositor [run 45078614477](https://github.com/Heitor2404/coringa-news/actions/runs/45078614477) foi acionado após conferir propagação para props; verificar conclusão e artefato antes de afirmar render aprovado.
+
+**Limites críticos:** NÃO existe aqui extrator automático de peças de fotos, pesquisa de referência, reconhecimento VLM nem gerador de geometria 2D/3D de qualquer assunto. O motor só compila fichas curadas de capacidades **já implementadas**. Embora `plano_causal` chegue aos `props`, o Remotion ainda NÃO o consome como controlador real de câmera e estados; cada renderer continua fazendo sua própria física. A inspeção de MP4/legibilidade no celular, fontes, fatos e aprovação humana permanecem obrigatórias. `main` / produção / NTC / DOSSIÊ / Telegram / publicação intocados.
+
+**Próximo salto técnico, não mais cards:** integrar do `plano_causal.eventos[].camera` para o sistema de câmera `MechanismCamera2D.ts` / Remotion, com bbox e foco por ator derivados de renderer, por duas famílias físicas. Só depois construir ingestão de referência visual e seleção de assets, com bloqueio quando identidade visual não for demonstrável.
+

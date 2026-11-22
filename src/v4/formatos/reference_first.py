@@ -83,12 +83,39 @@ def verificar_renderizador(processo: str, renderer: str, *,
                           else ["F-RENDERER-NAO-AUDITADO"])}
 
 
+def prancha_temporal(imagens: list[bytes]) -> bytes:
+    """Compacta 10-20 frames visuais em UMA imagem numerada para VLM.
+
+    O modelo recebe a sequência inteira mas somente uma chamada de mídia;
+    se perder sinais de válvula, o contrato de processo BLOQUEIA.
+    """
+    import io
+    from PIL import Image, ImageDraw
+    if not 10 <= len(imagens) <= 20:
+        raise ValueError("F-PRANCHA-FRAMES")
+    cols = 3
+    rows = (len(imagens) + cols - 1) // cols
+    tw, th = 310, 422
+    out = Image.new("RGB", (cols * tw, rows * th), "#EEF6FA")
+    draw = ImageDraw.Draw(out)
+    for i, raw in enumerate(imagens):
+        with Image.open(io.BytesIO(raw)) as src:
+            img = src.convert("RGB")
+            img.thumbnail((tw - 16, th - 42), Image.Resampling.LANCZOS)
+        x, y = (i % cols) * tw + 8, (i // cols) * th + 34
+        out.paste(img, (x + (tw - 16 - img.width) // 2, y))
+        draw.text((x + 9, y - 25), f"QUADRO {i:02d}", fill="#103950")
+    b = io.BytesIO()
+    out.save(b, "JPEG", quality=90)
+    return b.getvalue()
+
+
 def prompt_visao(processo: str, frames: int) -> str:
     if processo not in PROCESSOS:
         raise ValueError("F-PROCESSO-DESCONHECIDO")
     spec = PROCESSOS[processo]
     return (
-        f"Voce recebe {frames} quadros CRONOLOGICOS JPEG de uma REFERENCIA. "
+        f"Voce recebe UMA PRANCHA com {frames} quadros CRONOLOGICOS numerados QUADRO 00.. em linhas de 3. "
         f"Objetivo: verificar SE ela mostra '{processo}'. "
         "Nao infira processos pelo titulo, texto, wikipedia ou conhecimento previo. "
         "Compressor RECIPROCANTE nao é motor de combustao: compressor tem "
@@ -229,7 +256,7 @@ def analisar(manifest: dict, resposta_visao: object, processo: str) -> dict:
 
 
 def executar(pasta_quadros: Path, processo: str, destino: Path,
-             *, chamar_visao=None) -> dict:
+             *, chamar_visao=None, usar_gemini: bool = False) -> dict:
     try:
         manifest, images = F.carregar(pasta_quadros)
     except Exception as exc:
@@ -237,19 +264,26 @@ def executar(pasta_quadros: Path, processo: str, destino: Path,
                   "renderer": None, "publicar": False,
                   "bloqueios": ["F-ARQUIVO-SEM-QUADROS-REAIS: " + str(exc)[:150]]}
     else:
-        if chamar_visao is None:
+        # Default e OFF, mesmo quando secrets estiverem presentes.
+        # Sem autorizacao de uso, Gemini NAO sera chamado.
+        if chamar_visao is None and usar_gemini:
             if not (os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY_2")):
                 answer = None
             else:
                 from src.gemini import json_visao
                 try:
-                    answer = json_visao(prompt_visao(processo, len(images)),
-                                        images, leve=False)
+                    compacta = prancha_temporal(images)
+                    answer = json_visao(
+                        prompt_visao(processo, len(images)),
+                        [compacta], leve=True)
                 except Exception:
                     answer = None
+        elif chamar_visao is None:
+            answer = None
         else:
             try:
-                answer = chamar_visao(prompt_visao(processo, len(images)), images)
+                answer = chamar_visao(prompt_visao(processo, len(images)),
+                                     [prancha_temporal(images)])
             except Exception:
                 answer = None
         output = analisar(manifest, answer, processo)
@@ -281,11 +315,8 @@ def main(argv=None) -> int:
         print(json.dumps({"estado": result["estado"], "frames": len(result["amostras"]),
                           "movimento": result["intervalos_em_movimento"]}))
         return 0
-    if a.usar_gemini:
-        result = executar(Path(a.quadros_dir), a.processo, Path(a.saida))
-    else:
-        result = executar(Path(a.quadros_dir), a.processo, Path(a.saida),
-                          chamar_visao=lambda *_: None)
+    result = executar(Path(a.quadros_dir), a.processo, Path(a.saida),
+                      usar_gemini=a.usar_gemini)
     print(json.dumps({"estado": result["estado"],
                       "bloqueios": result["bloqueios"]}, ensure_ascii=False))
     return 1  # NENHUM renderer novo / publicacao sera autorizado por esta CLI.

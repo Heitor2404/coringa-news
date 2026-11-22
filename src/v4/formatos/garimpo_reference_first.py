@@ -31,7 +31,7 @@ REGRAS = {
         ],
         "termos_principais": ("engine", "four stroke", "otto", "combustion"),
         "termos_adicionais": ("valve", "spark", "piston", "cutaway", "crankshaft", "animation"),
-        "contra_exemplos": ("minecraft", "diesel", "game engine", "electric motor", "decorative", "heart"),
+        "contra_exemplos": ("minecraft", "diesel", "game engine", "electric", "decorative", "heart"),
     },
 }
 LICENCA_RESTRITA = re.compile(r"non.commercial|(^|[^a-z])nc([^a-z]|$)|no.derivatives|(^|[^a-z])nd([^a-z]|$)", re.I)

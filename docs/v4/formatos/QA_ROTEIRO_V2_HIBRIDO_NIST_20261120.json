@@ -60,5 +60,7 @@
         }
       }
     ]
-  }
+  },
+  "perfil_visual": "LEGADO_REJEITADO_SOMENTE_QA",
+  "observacao": "TESTE TÉCNICO DO PIPELINE, ESTÉTICA LEGADA REJEITADA, NÃO É DIREÇÃO DE ARTE."
 }

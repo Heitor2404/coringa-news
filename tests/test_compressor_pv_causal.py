@@ -71,7 +71,7 @@ def test_compressor_nao_tem_ignicao_ou_valvulas_com_came_de_otto():
         assert "COMPRESSOR DE AR" in frame
         assert "IGNIÇÃO" not in frame
         assert "RECONSTRUÇÃO VETORIAL" not in frame
-        assert "P–V" in frame and "RESER-" in frame
+        assert "P–V" in frame and "TANQUE" in frame
         assert "pistao" not in frame.lower()  # geometria, nao título de motor
     assert "O AR ENTRA" in draw_svg(.25)
     assert "O VOLUME DIMINUI" in draw_svg(.7)
@@ -128,3 +128,13 @@ def test_video_fisico_real_sem_voz_e_sem_publicacao(tmp_path):
     assert (stream["width"],stream["height"])==(540,960)
     assert not any(x["codec_type"]=="audio" for x in meta["streams"])
     assert abs(float(meta["format"]["duration"])-6)<.1
+
+def test_duto_continuo_ate_tanque_e_legenda_em_area_util():
+    frame=draw_svg(.93)
+    assert 'M 499 338 V 625 H 467 V 656' in frame
+    assert 'M 467 656 V 680' in frame
+    assert 'cx="498.0"' in frame
+    # Marca pode estar no topo; texto explicativo fica abaixo da interface.
+    assert 'x="44" y="155"' in frame
+    assert 'x="44" y="197"' in frame
+    assert 'x="44" y="233"' in frame

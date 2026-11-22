@@ -92,7 +92,7 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     current_index=sequence_keys.index(s.estado)
     progress=round(454*t)
     stage_bars="".join(
-        f'<rect x="{43+i*115}" y="202" width="103" height="7" rx="3" '
+        f'<rect x="{43+i*115}" y="252" width="103" height="7" rx="3" '
         f'fill="{accent if i==current_index else "#527086"}"/>'
         for i in range(4))
     # P-V plot: texto/valores na esquerda baixa, não no overlay de rede.
@@ -137,15 +137,15 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     </defs>
     <rect width="540" height="960" fill="url(#back)"/>
     <rect x="0" y="218" width="540" height="702" fill="url(#grid)"/>
-    <rect width="540" height="221" fill="#112C41"/>
+    <rect width="540" height="265" fill="#112C41"/>
     <rect x="44" y="18" width="177" height="26" rx="6" fill="#F3C45C"/>
     <text x="55" y="36" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#1E3242">CORINGA EXPLICA</text>
-    <text x="44" y="93" font-family="DejaVu Sans" font-size="30"
+    <text x="44" y="155" font-family="DejaVu Sans" font-size="30"
       font-weight="900" fill="#FFFFFF">COMPRESSOR DE AR</text>
-    <text x="44" y="137" font-family="DejaVu Sans" font-size="22"
+    <text x="44" y="197" font-family="DejaVu Sans" font-size="22"
       font-weight="900" fill="{accent}">{escape(label)}</text>
-    <text x="44" y="171" font-family="DejaVu Sans" font-size="15"
+    <text x="44" y="233" font-family="DejaVu Sans" font-size="15"
       fill="#D8E7EB">{escape(description)}</text>
     {stage_bars}
     <!-- Continuidade hidráulica da saída ao reservatório; o fluxo

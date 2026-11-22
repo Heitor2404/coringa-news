@@ -107,7 +107,8 @@ jobs:
           metrics={
             'entrada_navio':delta(.9,2.4,(90,390,390,720)),
             'agua_subindo':delta(7.5,12.9,(140,365,420,690)),
-            'saida_navio':delta(16,17.35,(120,330,490,610)),
+            # Na saída no nível alto, o navio fica ACIMA da linha da água.
+            'saida_navio':delta(16,17.35,(130,220,490,360)),
           }
           assert min(metrics.values())>2.0,metrics
           old=Image.open(out/'FRAME_ANTERIOR_9S.png').convert('RGB')

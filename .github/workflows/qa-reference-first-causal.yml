@@ -1,0 +1,114 @@
+name: "QA — Reference First causal (motor versus compressor)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-reference-first-causal.yml"
+      - "src/v4/formatos/reference_first.py"
+      - "src/v4/formatos/referencia_temporal.py"
+      - "tests/test_reference_first.py"
+      - "docs/v4/formatos/referencias_reference_first_20261122.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-reference-first-causal
+  cancel-in-progress: true
+
+jobs:
+  separar_motor_de_compressor:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias offline
+        run: python -m pip install -q pytest pillow requests
+      - name: Provar algoritmo, origem de frames e BLOQUEIOS semanticamente diferentes
+        run: |
+          python -m pytest -q tests/test_reference_first.py
+          python -m pytest -q tests/test_referencias_mecanismos.py tests/test_inspecionar_referencia.py
+      - name: Relatorio sobre os renders antigos NAO aprovados
+        run: |
+          mkdir -p qa_reference_first
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.reference_first import verificar_renderizador, PROCESSOS
+          r={p:verificar_renderizador(p,"CinematicCutaway3D") for p in PROCESSOS}
+          assert all(not v["aprovado"] for v in r.values())
+          assert all(v["faltantes"] for v in r.values())
+          (Path("qa_reference_first")/"gate_renderers_antigos.json").write_text(json.dumps({
+              "descricao":"Os demos anteriores NAO demonstram processos completos",
+              "publicar":False,"resultados":r},ensure_ascii=False,indent=2))
+          print("RENDERERS_LAB_BLOQUEADOS",json.dumps(r,ensure_ascii=False))
+          PY
+      - name: Prova local da sequencia com estados injetados — NAO modelo visual real
+        run: |
+          python - <<'PY'
+          import json, tempfile
+          from pathlib import Path
+          from PIL import Image,ImageDraw
+          from src.v4.formatos.referencia_temporal import amostrar
+          from src.v4.formatos.reference_first import executar
+          root=Path("qa_reference_first")
+          gif=root/"gif_de_teste_SINTETICO.gif"
+          frames=[]
+          for i in range(16):
+              im=Image.new("RGB",(200,200),"white")
+              d=ImageDraw.Draw(im)
+              y=28+i*8 if i<=8 else 28+(16-i)*8
+              d.rectangle((60,y,140,y+48),fill=(30,116,161))
+              frames.append(im)
+          frames[0].save(gif,format="GIF",save_all=True,append_images=frames[1:],duration=120,loop=0,optimize=False)
+          m=amostrar(gif,root/"frames", "REF_SINTETICA_INSUFICIENTE")
+          report=executar(root/"frames","compressor_alternativo",root/"relatorio",
+                          chamar_visao=lambda prompt,imgs:None)
+          assert len(m["amostras"])==12
+          assert report["estado"]=="BLOQUEADO" and report["renderer"] is None
+          assert not report["publicar"]
+          print("FRAME_SOURCE_OK",m["arquivo_sha256"],"ANALISE_SEM_VISAO_BLOQUEADA")
+          PY
+      - name: Amostrar GIF Commons de dominio publico UMA VEZ (pode retornar 429)
+        if: github.event_name == 'push' && github.event.head_commit.message == 'test(ref-first): tentar referencia Commons PD uma vez'
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          python - <<'PY'
+          import json,requests
+          from pathlib import Path
+          from src.v4.formatos.referencia_temporal import amostrar
+          docs=json.loads(Path('docs/v4/formatos/referencias_reference_first_20261122.json').read_text('utf8'))
+          c=docs['candidates'][0]
+          output=Path('qa_reference_first')
+          outcome={"reference_id":c['id'],"status":"REFERENCIA_NAO_INSPECIONADA",
+                   "publicar":False,"fonte":c["page"]}
+          try:
+              r=requests.get(c["original_media"],
+                 headers={"User-Agent":"CoringaExplicaResearchLab/1.0 (https://github.com/Heitor2404/coringa-news)"},
+                 timeout=22)
+              r.raise_for_status()
+              if len(r.content)>2_000_000 or not r.content.startswith((b"GIF89a",b"GIF87a")):
+                  raise ValueError("F-REFERENCIA-FORMATO_OU_TAMANHO")
+              raw=output/'reference_public_domain.gif'
+              raw.write_bytes(r.content)
+              sampled=amostrar(raw,output/"frames_public_domain",c["id"],
+                   pagina=c["page"],licenca_declarada=c["declared_license"])
+              outcome.update({"status":"QUADROS_REAIS_EXTRAIDOS_NAO_INSPECIONADOS",
+                              "frames":len(sampled["amostras"]),
+                              "sha256":sampled["arquivo_sha256"]})
+          except Exception as e:
+              outcome.update({"status":"BLOQUEADO_ACESSO_OU_AMOSTRAGEM",
+                              "erro":type(e).__name__+":"+str(e)[:220]})
+          (output/'comprovacao_fonte_real.json').write_text(json.dumps(outcome,ensure_ascii=False,indent=2))
+          print(json.dumps(outcome,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-reference-first-causal-privado
+          path: qa_reference_first/
+          retention-days: 5
+          if-no-files-found: warn

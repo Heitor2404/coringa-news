@@ -1966,3 +1966,15 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Próximo salto técnico, não mais cards:** integrar do `plano_causal.eventos[].camera` para o sistema de câmera `MechanismCamera2D.ts` / Remotion, com bbox e foco por ator derivados de renderer, por duas famílias físicas. Só depois construir ingestão de referência visual e seleção de assets, com bloqueio quando identidade visual não for demonstrável.
 
+## 107. 22/11 ~22h38 — End-to-end real de SceneGraph + REGRESSÃO VISUAL NÃO APROVADA
+
+**Depois da F1:** nova checagem em `tests/test_diretor_processos.py` garante que `plano_causal` com `atores/relacoes/eventos/camera` **chega aos props efetivos** do Remotion, não se perde durante `filme_editorial.preparar()`. Commit `efd7fd007aeb7521bed99be87f79db34075de095`.
+
+**Prova concreta:** [run 45078614477](https://github.com/Heitor2404/coringa-news/actions/runs/45078614477) **SUCCESS**, **39 testes**, compilação TypeScript e **render completo de 24,4s** com `optical_projection` e `lock_cycle_standalone` 540×960, mudo; SHA256 `582fafdf5356a57d1a9b99f4e50ad256427d8e25c6950395668adb1b8ce9713e`. Artifact **14776475979** `qa-diretor-por-capacidades` até 27/11/2026 22:37 UTC; `contato_16_quadros.jpg` e `props.json` disponíveis. Não houve Telegram/publicação.
+
+**ALERTA VISUAL CRÍTICO — INSPEÇÃO DOS 16 QUADROS:** embora o CI esteja verde e a sequência causal das etapas exista, **ambos mecanismos aparecem pequenos/altos na tela**, com grande área azul-escura inutilizada no restante do quadro vertical, principalmente na metade inferior. Exatamente o problema de direção de arte apontado repetidas vezes pelo usuário. Esta regressão comprova apenas que adicionar `plano_causal` NÃO quebrou os renderizadores antigos; **NÃO melhorou o enquadramento** porque o Remotion ainda NÃO consome o campo `camera` do novo grafo. Marcar **VISUAL_NAO_APROVADO** e nunca sugerir publicação.
+
+**Próximo passo F2 IMPRESCINDÍVEL:** fazer o Remotion usar `plano_causal.eventos[].camera` em `FilmeEditorial` / mecanismos `OpticalProjection` e `LockCausalCycle`, ou um adaptador genérico de câmera com bboxes anotados por atores, sob flag privada. Validar foco da eclusa na água+navio+portões, óptica na cadeia fonte→máscara→espelhos→wafer; maximizar palco sem cortar objetos e sem mascarar qualquer etapa. Testar ocupação útil do quadro ao longo de fases, interfaces Reels/Shorts/TikTok e legibilidade. Isso é o elo que faltava e deve ser provado em MP4s novos, não só scripts.
+
+**Distinção rigorosa:** 39 tests PASS = grafo/contrato/compilação/arquivo. **Não** significa video compreensível, estética satisfatória nem animação multiassunto automática. Novo ciclo técnico deve priorizar o gargalo visual, não acrescentar mais nomes e metadados.
+

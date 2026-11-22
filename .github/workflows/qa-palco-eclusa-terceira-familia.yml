@@ -59,6 +59,14 @@ jobs:
           npx --no-install remotion still remotion/src/index.ts ProvaPalcoEclusaHidraulica \
             ../qa_eclusa_palco/FRAME_ANTERIOR_9S.png --frame=216 \
             --props=../qa_eclusa_palco/props_anterior.json --scale=0.5 --log=error
+      - name: Garantir ferramentas de inspeção audiovisual
+        timeout-minutes: 3
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
       - name: Verificar MP4 e progressao fisica por quadros reais
         run: |
           python - <<'PY'

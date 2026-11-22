@@ -72,7 +72,7 @@ jobs:
           print("FRAME_SOURCE_OK",m["arquivo_sha256"],"ANALISE_SEM_VISAO_BLOQUEADA")
           PY
       - name: Amostrar GIF Commons de dominio publico UMA VEZ (pode retornar 429)
-        if: github.event_name == 'push' && github.event.head_commit.message == 'test(ref-first): tentar referencia Commons PD uma vez'
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, 'REF_FIRST_LIVE_ONCE')
         continue-on-error: true
         timeout-minutes: 2
         run: |

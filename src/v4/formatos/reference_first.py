@@ -59,6 +59,19 @@ RENDERERS_LAB_NAO_APROVADOS = {
                                  "volante_giratorio", "dutos_simplificados")),
         "estado": "EXPERIMENTAL_NAO_RECONSTRUCAO_POR_REFERENCIA",
     },
+    "CompressorPV2D": {
+        # A física P-V agora representa as válvulas, o volume, entrada e saída
+        # VISUALMENTE, mas NÃO foi reconstruída a partir de referência
+        # animada de compressor. Continua BLOQUEADA para uso automático.
+        "capacidades": frozenset((
+            "cilindro_com_volume_variavel",
+            "valvulas_entrada_e_saida_visiveis",
+            "fluxo_admissao_visivel",
+            "fluxo_descarga_visivel",
+            "ciclo_sincronizado_com_pistao",
+        )),
+        "estado": "PROVA_FISICA_NAO_RECONSTRUCAO_POR_REFERENCIA",
+    },
 }
 
 

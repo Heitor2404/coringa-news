@@ -59,8 +59,7 @@ def test_biela_conservada_ao_longo_de_ciclo_192_frames():
     # Dois giros, quatro tempos. Em cada volta, há um ciclo sobe/desce.
     for offset in (0, 96):
         assert poses[offset+24]["piston_y"] > poses[offset]["piston_y"]+60
-        assert poses[offset+48]["piston_y"] > poses[offset+24]["piston_y"]+40 or (
-            poses[offset+48]["piston_y"] < poses[offset+24]["piston_y"]-30)
+        assert poses[offset+48]["piston_y"] > poses[offset+24]["piston_y"]+30
         assert poses[offset+72]["piston_y"] < poses[offset+48]["piston_y"]-40
 
 

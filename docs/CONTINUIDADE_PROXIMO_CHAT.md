@@ -1926,3 +1926,22 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 `main`, `motor-integral-v4`, NTC, DOSSIÊ, `FilmeEditorial`, Telegram e postagem **intocados**.
 
+## 105. 22/11 ~22h22 — 3ª família real, ECLUSA hidráulica, usa o mesmo solver vertical, com vídeo real validado
+
+**Gatilho:** usuário disse “Prossiga” após prova de palco compartilhado entre compressor e Otto. Objetivo: **terceiro mecanismo fisicamente diferente, sem criar novo renderizador por episódio, sem Claude**; também resolver área azul escura vazia no alto.
+
+**Implementação em `atlas-direcao-visual-20261118`**:
+- `motor4/remotion/src/formatos/LockCausalCycle.tsx`: preserva grafo físico **existente** de eclusa de sete etapas `enter,seal,valves,rise,equalize,open,exit`, a escala e o planejamento antirrecorte do navio em `AreaSeguraMovimento.ts`. Adiciona `privateStageLayout` **false por padrão** e, só para esse experimento, agrupa a etapa mecânica em `<g id="lock-physical-stage" ...>`. O cabeçalho e o rodapé são reorganizados fora da transformação física. `FilmeEditorial.tsx` NÃO recebe flag — filmes existentes intactos.
+- NOVO manifesto `motor4/remotion/src/formatos/palco-eclusa-hidraulica-lab.json` fornece caixa conservadora 1080×1920 x61..1018, y608..1500, `editorial_termina_y=435`, `rodape_comeca_y=1394`, folgas 18/30. O mesmo `src/v4/formatos/palco_vertical.py` (Python) resolve **subida 155 px** sem alterar escala/física; header privado com título y331, labels y410 e rodapé subido 120px para evitar buraco excessivo. As caixas são **anotadas**, não obtidas de visão automática.
+- `motor4/remotion/src/Root.tsx`: composição **privada** `ProvaPalcoEclusaHidraulica` usa o `LockCausalCycle` que já existia, eventos/duração no manifesto, modo `compacto` vs `anterior`; nenhum renderer de eclusa duplicado.
+- Novo `tests/test_palco_vertical_eclusa.py` cobre integridade de contrato, mesma matemática entre 3 famílias, sete ações e o modo privado. Novo workflow `.github/workflows/qa-palco-eclusa-terceira-familia.yml` compila o Remotion, testa, renderiza vídeo e cria contato com 10 momentos + comparação real no mesmo instante. Não envia Telegram nem publica.
+- Correções do QA: primeiro run 45076530393 falhou apenas por ausência de `ffprobe` no runner; instalamos ffmpeg. Após redesign do header, run 45076915848 falhou porque a ROI de saída media **água ABAIXO** do casco já elevado: `saida_navio=1,285` enquanto o casco se deslocava na faixa superior. Corrigido para ROI `(130,220,490,360)`, sem afrouxar threshold, verificado em quadros reais `30,068`.
+
+**Prova final REAL:** [Actions 45077175142](https://github.com/Heitor2404/coringa-news/actions/runs/45077175142) **SUCCESS**, **13 testes**; `ECLUSA_CICLO_PALCO_COMUM_17S5.mp4` 17,5s, 24 fps, 540×960, sem áudio, SHA256 `aaf25f4c096906bf186511a989c721ff99f91847ab4a56ce54cd9e521c8272fa` — MESMO arquivo já examinado localmente. Variação RGB sobre **regiões físicas**, sem confundir texto: entrada 15,114; subida 30,610; saída 30,068. Diferença velho/novo mesmo momento 9s, ROI físico: 46,286. Artifact **14775911819** `lab-terceira-familia-eclusa-palco-vertical`, expira **27/11/2026 22:22 UTC**, com MP4, 10 PNGs, contato, comparativo, JSON QA. A própria folha de contato e comparação foram inspecionadas. Qualidade artística **não homologada**; modelo ainda esquemático e navio estilizado, apesar da narrativa de sete etapas.
+
+**Limites fundamentais:** reutilização comprovada é de **enquadramento/contrato geométrico** em compressor, Otto e eclusa. NÃO significa motor que pesquisa qualquer mecanismo e reconstrói automaticamente em 2D/3D. A geometria é curada por componente, as partes hidráulicas já existiam e não foram descobertas por IA. O contrato interno de palco NÃO substitui `plataformas.json`, máscaras UI Reels/TikTok/Shorts, teste de legendas sincronizadas, licença, verificação de fatos, aprovação artística e humana. Manter bloqueio de publicação.
+
+**Próximo salto útil:** implementar catálogo/planejador causal multi-família que selecione eventos e peças a mostrar, bloqueando lacunas de renderer; criar proof reference-first de terceiro tipo não pistão sem codificar fatos como animação genérica; inspecionar sobreposições UI reais e permitir escalas que aproveitam a tela **sem recortes**. Não ficar polindo só a eclusa.
+
+`main`, NTC, DOSSIÊ, motor integral, pipeline `FilmeEditorial`, Telegram e publicação intocados.
+

@@ -51,6 +51,17 @@ def test_preparar_clona_exatamente_a_versao_validada(tmp_path):
     assert [s['mechanism'] for s in props['shots']]==[
         'optical_projection','lock_cycle_standalone']
     assert all(not s.get('reference_asset') for s in props['shots'])
+    # A gramática causal deve chegar nos props consumidos pelo Remotion,
+    # não ficar apenas no relatório abstrato da fase de planejamento.
+    assert all(s['processo_visual']['grafo_causal_requerido'] for s in props['shots'])
+    assert [s['plano_causal']['capacidade'] for s in props['shots']]==[
+        'optical_projection','lock_cycle_standalone']
+    assert [len(s['plano_causal']['eventos']) for s in props['shots']]==[4,7]
+    assert all(e['camera']['alvos'] and e['relacoes_em_foco']
+               for scene in props['shots']
+               for e in scene['plano_causal']['eventos'])
+    assert all(scene['plano_causal']['revisao_visual']=='PENDENTE'
+               for scene in props['shots'])
     assert props['duracao']==24.4
     assert not props.get('publicar',False)
     assert p.get('shots') is None

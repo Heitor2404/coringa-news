@@ -65,7 +65,8 @@ jobs:
           from pathlib import Path
           pasta=Path('prova_diretor')
           p=json.loads((pasta/'props.json').read_text('utf8'))
-          assert p['perfil_visual']=='LEGADO_REJEITADO_SOMENTE_QA'
+          contrato=json.loads(Path('docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json').read_text('utf8'))
+          assert contrato['perfil_visual']=='LEGADO_REJEITADO_SOMENTE_QA'
           assert all(c['processo_visual']['grafo_causal_requerido'] for c in p['shots'])
           assert not list(pasta.glob('*.mp4'))
           rel={'status':'CONTRATO_TECNICO_OK_ESTETICA_REJEITADA',

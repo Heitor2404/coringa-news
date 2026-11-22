@@ -48,3 +48,13 @@ O pistão, a biela e o pino do virabrequim partilham a mesma cinemática. Posiç
 4. A próxima etapa difícil continua sendo obter mídia de compressor animado com licença/reuso claros, identificar atores e tempos com confiabilidade, calibrar posições/pressões com evidência, e comparar automaticamente uma reconstrução vetorial com a referência. Se não houver mídia, manter classificação de **simulação**, não de reconstrução.
 
 **Nenhum vídeo publicado, nenhuma mudança em `main`, NTC, DOSSIÊ, `FilmeEditorial` nem uso do Claude.**
+
+## Revisão de composição 22/11/2026 — deslocamento vertical de 40 px
+
+A pedido do usuário, o **conjunto mecânico completo** foi transladado de forma uniforme **40 px acima** na resolução experimental de 540×960: carcaça, pistão, biela, volante, cabeçote, válvulas, dutos, partículas, card de pressão e reservatório. O zoom/escala, forma das peças, dinâmica P–V e duração NÃO mudaram.
+
+Implementação única: `MECHANISM_SHIFT_Y = -40` em `src/v4/formatos/render_compressor_pv_2d.py` e grupo SVG `<g id="mechanical-stage" transform="translate(0 -40)">` delimitando todas as peças e fluxos. O cabeçalho (fundo até y265, título y155, etapa y197, explicação y233) e rodapé (y920) mantêm posições originais, evitando jogar texto essencial para cima da área segura. Rótulos pequenos das tubulações foram reorganizados imediatamente abaixo do cabeçalho; topo do suporte central ajustado para não invadir a barra de etapas.
+
+**Validação:** [GitHub Actions 45067091884](https://github.com/Heitor2404/coringa-news/actions/runs/45067091884) **SUCCESS**: 13 testes e renderização MP4 8,00s, 24fps, 540×960, sem áudio. Artifact `14771956148` nome `compressor-2d-pressao-valvulas-privado`, validade até 27/11/2026 20:34 UTC. Quadros extraídos da renderização e inspecionados manualmente: máquina mais próxima do centro vertical, sem cabeçote nem tanque cortados; título e rodapé permanecem legíveis. Arquivos locais foram verificados na pasta `/mnt/data/compressor_pv_subiu_40px/` durante o turno; arquivo de comparação de quadros antigos e novos `/mnt/data/compressor_antes_depois_subiu_40px_20261122.jpg`. Revalidar paths em outro chat.
+
+**Atenção:** é um ajuste de layout no laboratório, não a reconstrução automática por referência de compressor; estética/publicação permanecem pendentes.

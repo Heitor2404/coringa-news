@@ -129,14 +129,14 @@ jobs:
           palco=PalcoVertical(1080,1920,CaixaVisivel(b['left'],b['top'],b['right'],b['bottom']),
                contract['editorial_termina_y'],contract['rodape_comeca_y'],
                contract['folga_superior'],contract['folga_inferior'])
-          assert palco.deslocar()==35
+          assert palco.deslocar()==155
           report={
             'status':'QA_GEOMETRICO_E_MOVIMENTO_OK_VISUAL_HUMANA_PENDENTE',
             'publicar':False, 'claude':False, 'midia_externa':False,
             'familia':'eclusa_hidraulica', 'sequencia': [x['action'] for x in contract['eventos']],
             'duracao_s':float(meta['format']['duration']),
             'dimensoes':[540,960], 'fps':24,
-            'subida_palco_px_1080x1920':35,
+            'subida_palco_px_1080x1920':155,
             'movimento_escala_rgb':{k:round(v,3) for k,v in metrics.items()},
             'comparacao_posicoes_rgb':round(movement,3),
             'video_sha256':hashlib.sha256(video.read_bytes()).hexdigest(),

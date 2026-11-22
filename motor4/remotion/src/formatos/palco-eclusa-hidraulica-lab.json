@@ -11,14 +11,17 @@
     "right": 1018,
     "bottom": 1500
   },
-  "editorial_termina_y": 563,
-  "rodape_comeca_y": 1514,
-  "folga_superior": 10,
-  "folga_inferior": 14,
-  "subida_px": 35,
+  "editorial_termina_y": 435,
+  "rodape_comeca_y": 1394,
+  "folga_superior": 18,
+  "folga_inferior": 30,
+  "subida_px": 155,
   "tipografia": {
-    "linha_separadora_y": 526,
-    "rotulos_cotas_y": 558
+    "kicker_y": 254,
+    "title_y": 331,
+    "linha_separadora_y": 362,
+    "rotulos_cotas_y": 410,
+    "rodape_subida_px": 120
   },
   "duracao_s": 17.5,
   "eventos": [

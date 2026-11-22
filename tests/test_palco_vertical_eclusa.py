@@ -43,10 +43,12 @@ def test_terceira_familia_eclusa_usa_exatamente_o_mesmo_solver():
     assert m['schema']=='palco-vertical-lab-v1'
     assert m['familia']=='eclusa_hidraulica_ciclo'
     assert m['canvas']=={'width':1080,'height':1920}
-    assert solver(m).deslocar()==m['subida_px']==35
-    assert solver(m).faixa_resultante()==(573,1465)
+    assert solver(m).deslocar()==m['subida_px']==155
+    assert solver(m).faixa_resultante()==(453,1345)
     assert m['publicar'] is False
-    assert m['tipografia']['rotulos_cotas_y'] < solver(m).faixa_resultante()[0]-9
+    assert m['tipografia']['rotulos_cotas_y'] < solver(m).faixa_resultante()[0]-20
+    assert m['tipografia']['title_y'] < m['tipografia']['rotulos_cotas_y']-50
+    assert m['tipografia']['rodape_subida_px'] == 120
     assert solver(m).faixa_resultante()[1] < m['rodape_comeca_y']-m['folga_inferior']
 
 
@@ -54,7 +56,7 @@ def test_eclusa_nao_reusa_nenhuma_equacao_ou_peca_de_pistao():
     from src.v4.formatos.render_compressor_conjunto_2d import EditorialHeader
     from src.v4.formatos.render_reconstrucao_causal_2d import PALCO_OTTO
     m=load()
-    assert (EditorialHeader().palco().deslocar(),PALCO_OTTO.deslocar(),solver(m).deslocar())==(100,28,35)
+    assert (EditorialHeader().palco().deslocar(),PALCO_OTTO.deslocar(),solver(m).deslocar())==(100,28,155)
     assert m['familia'] not in ('compressor_alternativo','motor_otto_4t')
     assert len(m['eventos'])==7
     assert not any('piston' in e['action'] or 'crank' in e['action'] for e in m['eventos'])
@@ -79,13 +81,13 @@ def test_outra_familia_pede_manifesta_o_e_palco_adequados():
     m=load()
     high=solver(m)
     with pytest.raises(ValueError,match="SUBIDA-FORA-DA-AREA"):
-        high.deslocar(36)
+        high.deslocar(156)
     with pytest.raises(ValueError,match="SUBIDA-FORA-DA-AREA"):
         high.deslocar(-1)
     with pytest.raises(ValueError,match="SUBIDA-FORA-DA-AREA"):
         high.deslocar(float('nan'))
     bigger=copy.deepcopy(m)
-    bigger['caixa_conservadora']['top']=550
+    bigger['caixa_conservadora']['top']=440
     with pytest.raises(ValueError,match="SEMPRE-INVADIRIA"):
         solver(bigger).deslocar()
 
@@ -96,6 +98,7 @@ def test_ts_move_cena_inteira_e_so_no_modo_privado():
     assert "privateStageLayout=false" in code
     assert "privateStageLayout?palcoLaboratorio.subida_px:0" in code
     assert 'id="lock-physical-stage"' in code
+    assert 'id="lock-editorial-footer"' in code
     assert 'clipPath="url(#cycleMapClip)"' in code
     assert code.index('id="lock-physical-stage"')<code.index('clipPath="url(#cycleMapClip)"')
     assert code.index('id="lock-physical-stage"')<code.index('AS VÁLVULAS',0) if 'AS VÁLVULAS' in code else True

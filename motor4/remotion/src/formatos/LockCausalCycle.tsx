@@ -40,6 +40,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
     throw new Error('F-LAB-ECLUSA-MANIFESTO-INVALIDO');
   }
   const layoutShift=privateStageLayout?palcoLaboratorio.subida_px:0;
+  const footerShift=privateStageLayout?palcoLaboratorio.tipografia.rodape_subida_px:0;
   const find=(action:LockCycleAction,fallback:number) =>
     events.find(e=>e.action===action)?.at ?? fallback;
   const timeline = {
@@ -118,8 +119,8 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
         <rect width="1080" height="1920" fill="url(#cycleGrid)"/>
 
         {/* Tipografia é secundária: a câmara ocupa o centro da tela. */}
-        <text x="75" y="448" fill="#9CC0CC" fontSize="26" fontWeight="800" letterSpacing="2.8">PRINCÍPIO FÍSICO · VISTA LATERAL SIMPLIFICADA</text>
-        <text x="74" y="511" fill={WHITE} fontSize="55" fontWeight="900">COMO UM NAVIO SOBE?</text>
+        <text x="75" y={privateStageLayout?palcoLaboratorio.tipografia.kicker_y:448} fill="#9CC0CC" fontSize="26" fontWeight="800" letterSpacing="2.8">PRINCÍPIO FÍSICO · VISTA LATERAL SIMPLIFICADA</text>
+        <text x="74" y={privateStageLayout?palcoLaboratorio.tipografia.title_y:511} fill={WHITE} fontSize="55" fontWeight="900">COMO UM NAVIO SOBE?</text>
         <path d={`M77 ${privateStageLayout?palcoLaboratorio.tipografia.linha_separadora_y:538} H1003`} stroke="#54798B" strokeWidth="2"/>
         <text x="98" y={privateStageLayout?palcoLaboratorio.tipografia.rotulos_cotas_y:590} fill="#ADC0CC" fontSize="24" fontWeight="800">CANAL INFERIOR</text>
         <text x="375" y={privateStageLayout?palcoLaboratorio.tipografia.rotulos_cotas_y:590} fill="#F3F5F4" fontSize="24" fontWeight="800">CÂMARA</text>
@@ -209,6 +210,8 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
         <path d={'M770 '+YHIGH+' H997'} stroke="#C3F2F5" strokeWidth="4" strokeDasharray="10 8" opacity=".85"/>
         </g>
 
+        {/* Estado e atribuições no mesmo compositor; só laboratório os eleva. */}
+        <g id="lock-editorial-footer" transform={`translate(0 -${footerShift})`}>
         {/* Status: ações da animação, não cartões decorativos gigantes. */}
         <path d="M75 1536 H1005" stroke="#557384" strokeWidth="2"/>
         <text x="79" y="1514" fill="#AAC2CD" fontSize="27" letterSpacing="2.3" fontWeight="800">
@@ -225,6 +228,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
         <text x="78" y="1770" fill="#8CA8B8" fontSize="21">
           FONTES: AUTORIDADE DO CANAL DO PANAMÁ · ESQUEMA PRÓPRIO
         </text>
+        </g>
       </svg>
     </AbsoluteFill>
   </AbsoluteFill>;

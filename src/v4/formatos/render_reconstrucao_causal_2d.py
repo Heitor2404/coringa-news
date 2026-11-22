@@ -19,7 +19,17 @@ from xml.sax.saxutils import escape
 import cairosvg
 from PIL import Image
 
+from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
+
 WIDTH, HEIGHT = 540, 960
+# Cutaway com admissão/escape e válvulas: caixa conservadora do desenho.
+# São coordenadas da família, não do tema/roteiro. Nenhuma detecção automática.
+PALCO_OTTO = PalcoVertical(
+    largura=WIDTH, altura=HEIGHT,
+    caixa=CaixaVisivel(16, 273, 524, 888),
+    editorial_termina_y=233, rodape_comeca_y=919,
+    folga_superior=12, folga_inferior=8,
+)
 CX, CY = 267., 790.
 
 SEQUENCIAS = {
@@ -108,7 +118,9 @@ def pose(t: float, mov: dict) -> dict:
     }
 
 
-def svg_frame(mov: dict, scene: dict, t: float) -> str:
+def svg_frame(mov: dict, scene: dict, t: float, *,
+              subida_palco_px: float | None = None) -> str:
+    deslocamento = PALCO_OTTO.deslocar(subida_palco_px)
     s = pose(t, mov)
     position = t * mov["quadros"]
     stage = max(i for i, x in enumerate(scene["ciclo"])
@@ -221,6 +233,8 @@ def svg_frame(mov: dict, scene: dict, t: float) -> str:
       font-family="DejaVu Sans">{explanation}</text>
     <rect x="42" y="227" width="457" height="6" rx="3" fill="#D2DDE0"/>
     <rect x="42" y="227" width="{int(457*t)}" height="6" rx="3" fill="#0B8198"/>
+    <!-- Deslocamento determinado pelo limite editorial, não pelo roteiro. -->
+    <g id="mechanical-stage" transform="translate(0 -{deslocamento:.1f})">
     <!-- Cutaway: caixa, cabeçote e dutos em geometria INDEPENDENTE do GIF -->
     <g filter="url(#shadow)">
       <path d="M 163 345 L 378 345 L 401 374 L 407 688
@@ -328,6 +342,7 @@ def svg_frame(mov: dict, scene: dict, t: float) -> str:
     <path d="M 164 406 V 657 M 373 406 V 657"
       fill="none" stroke="#B8D1D5" stroke-width="8"/>
     {flow}
+    </g>
     <rect x="0" y="919" width="540" height="41" fill="#0F2636"/>
     <text x="26" y="943" fill="#D1DEE2" font-size="12"
       font-family="DejaVu Sans">PROVA 2D PRIVADA · RECONSTRUÇÃO VETORIAL</text>
@@ -379,6 +394,13 @@ def renderizar(mov: dict, scene: dict, saida: Path,
         "fps": fps,
         "dimensoes": [WIDTH, HEIGHT],
         "revisao_estetica": "PENDENTE",
+        "enquadramento_compartilhado": {
+            "palco": "palco_vertical_v1",
+            "subida_px": PALCO_OTTO.deslocar(),
+            "faixa_resultante": list(PALCO_OTTO.faixa_resultante()),
+            "escala": 1.0,
+            "aprovacao_humana": "PENDENTE",
+        },
     }
     saida.with_suffix(".json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding="utf8")

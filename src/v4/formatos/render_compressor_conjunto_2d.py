@@ -26,6 +26,7 @@ from src.v4.formatos.compressor_pv_core import (
     CompressorSpec, estado, limites_fases,
 )
 from src.v4.formatos.identidade_visual_maquina import verificar as verificar_identidade
+from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
 
 WIDTH, HEIGHT = 540, 960
 CONFIG_ID = "compressor_ar_eletrico_tanque_horizontal_correia"
@@ -58,9 +59,18 @@ class EditorialHeader:
     category_height: int = 30
     category_label_y: int = 225
 
+    def palco(self) -> PalcoVertical:
+        # Caixa conservadora curada do desenho: inclui texto FILTRO,
+        # manômetro, pés e reservatório. Não é segmentação automática.
+        return PalcoVertical(
+            largura=WIDTH, altura=HEIGHT,
+            caixa=CaixaVisivel(51, 342, 492, 900),
+            editorial_termina_y=self.category_y + self.category_height,
+            rodape_comeca_y=905, folga_superior=7,
+        )
+
     def max_mechanism_lift_px(self) -> float:
-        # FILTRO: baseline 354, fonte 12; manter 7px de folga da categoria.
-        return 354.0 - 12.0 - (self.category_y + self.category_height) - 7.0
+        return self.palco().deslocar()
 
 
 @dataclass(frozen=True)
@@ -131,9 +141,10 @@ def frame_svg(progress: float, manifest: dict, *,
               physics: CompressorSpec | None = None,
               editorial: EditorialHeader = EditorialHeader()) -> str:
     validar_plano(manifest)
-    if (not math.isfinite(layout.mechanism_lift_px) or
-            not 0 <= layout.mechanism_lift_px <= editorial.max_mechanism_lift_px()):
-        raise ValueError("F-LAYOUT-LIFT-AREA-SEGURA")
+    try:
+        editorial.palco().deslocar(layout.mechanism_lift_px)
+    except ValueError as exc:
+        raise ValueError("F-LAYOUT-LIFT-AREA-SEGURA") from exc
     s = estado(progress, layout.spec(physics))
     phase, detail, accent = FASES[s.estado]
     chamber_top = 416.0

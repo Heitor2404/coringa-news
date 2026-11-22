@@ -55,3 +55,12 @@ A fonte Python do render anterior estava descrita em documentação, mas **não 
 - `main`, `FilmeEditorial`, NTC, DOSSIÊ, Telegram e o Claude continuam intocados. Não publicar. O próprio relatório JSON registra `identidade_por_pixels_aprovada:false` e `revisao_estetica:PENDENTE`.
 
 **Avaliação independente:** fisicamente e estruturalmente muito melhor que o vídeo de pistão genérico, mas ainda tem aparência de motion gráfico didático e o produto ainda não reproduz automaticamente outras máquinas por pesquisa visual. A prova não deve ser apresentada como domínio de CAD, extração automática de atores ou identidade visual certificada. Aguardar aprovação da direção antes de integrar o template ao pipeline do Coringa.
+
+## Revisão de composição — 22/11/2026, mecanismo 40 px acima
+
+Pedido: “a área em azul escuro tá sendo mal aproveitada”, “subir mais a animação”. Feito na branch experimental, sem Claude nem alterações em produção.
+
+- Em `src/v4/formatos/render_compressor_conjunto_2d.py`, campo reutilizável `AssemblyLayout.mechanism_lift_px = 40.0` e agrupamento SVG único `<g id="machine-assembly" transform="translate(0 -40.0)">`. Move **todas** as peças, filtro, correia, bomba, válvulas, tanque, partículas e card de pressão; cabeçalho y0–266, faixa de categoria y268–300 e rodapé y905+ preservados. O tamanho físico das peças e as equações P–V não mudaram. O limite é 44px, pois maior subida faria rótulos/peças invadirem a faixa editorial; para ocupar mais do topo azul precisaria redesenhar cabeçalho respeitando overlays de Reels/Shorts.
+- Testes extras de transformação integral, invariância do cabeçalho, alterações reais de pixels e limite de subida em `tests/test_compressor_conjunto_2d.py`.
+- [GitHub Actions 45073742153](https://github.com/Heitor2404/coringa-news/actions/runs/45073742153) **SUCCESS**: 24 testes, render MP4 8s/24fps/540×960, QA de oito quadros; artifact **14774311938** expira **27/11/2026 21:45 UTC**. Mídias verificadas nesta sessão: `/mnt/data/compressor_completo_subiu_40px/COMPRESSOR_CONJUNTO_2D_PRIVADO.mp4`, `CONTATO_8_FASES_COMPRESSOR_COMPLETO.jpg`, comparação com versão anterior `/mnt/data/comparativo_compressor_conjunto_40px_nov22.jpg` (verificar paths no próximo chat).
+- Auditoria visual dos 8 quadros: bomba completa ficou mais central, filtro e seu rótulo ainda abaixo da faixa de categoria, tanque totalmente dentro do frame; cabeçalho/legenda essencial intocados. Ainda é um protótipo SVG didático; aprovação estética e identificação automática de máquinas pendentes. `publicar=false`.

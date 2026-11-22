@@ -14,6 +14,10 @@ import math
 
 from src.v4.formatos import catalogo_mecanismos, grafo_causal
 
+# Renderers abaixo NÃO representam mais a direção visual de novos vídeos.
+# Só se permite gerar props legados para regressão técnica explícita.
+PERFIL_REGRESSAO_LEGADA = "LEGADO_REJEITADO_SOMENTE_QA"
+
 
 class FalhaDiretor(ValueError):
     def __init__(self, codigo: str, cena: str, motivo: str):
@@ -74,6 +78,11 @@ def expandir(plano: dict) -> dict:
         _erro('F-DIRETOR-SEM-GATE', '-', 'automação de prova ainda limitada a QA privada')
     if plano.get('media') not in ({}, None):
         _erro('F-DIRETOR-MIDIA', '-', 'não inventar mídia, créditos ou filme real no diretor físico')
+    if plano.get('perfil_visual') != PERFIL_REGRESSAO_LEGADA:
+        _erro('F-VISUAL-LEGADO-DESCARTADO', '-',
+              'o diretor automático ainda chama renderizadores cujo visual foi rejeitado; '
+              'não gerar prévia artística. Somente QA técnico explícito via '
+              'perfil_visual=LEGADO_REJEITADO_SOMENTE_QA')
     cenas, tempo, ids, fatos = [], 0., set(), set()
     for i, evento in enumerate(eventos):
         eid = str(evento.get('id') or f'evento-{i+1}') if isinstance(evento, dict) else f'evento-{i+1}'
@@ -165,7 +174,9 @@ def expandir(plano: dict) -> dict:
             'origem': 'EVENTOS_ESTRUTURADOS',
             'autonomia': 'MONTAGEM_DE_CAPACIDADES_JA_EXISTENTES',
             'fatos_verificados_externamente': False,
-            'revisao_visual': 'PENDENTE',
+            'revisao_visual': 'REPROVADO_ESTILO_LEGADO',
+            'perfil_visual': PERFIL_REGRESSAO_LEGADA,
+            'aprovacao_estetica': False,
             'planejamento_causal': 'ATORES_RELACOES_EVENTOS_VALIDOS_SEM_PROVA_POR_PIXELS',
         },
     }

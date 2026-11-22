@@ -121,3 +121,12 @@ def test_original_legado_sem_chave_roteiro_continua_igual():
     p=load('DEMO_DIRETOR_EVENTOS_20261120.json')
     assert R.expandir_preview(p) is p
     assert F.avaliar(p)['pronto']
+
+
+
+def test_roteiro_novo_nao_herda_renderer_estetico_rejeitado():
+    p=load('QA_ROTEIRO_V2_EUV_20261120.json')
+    del p['perfil_visual']
+    assert 'F-VISUAL-LEGADO-DESCARTADO' in codes(p)
+    p['perfil_visual']='LEGADO_REJEITADO_SOMENTE_QA'
+    assert F.avaliar(p)['visual_approval']=='REPROVADO_ESTILO_LEGADO'

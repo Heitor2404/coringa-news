@@ -34,5 +34,7 @@
         }
       }
     ]
-  }
+  },
+  "perfil_visual": "LEGADO_REJEITADO_SOMENTE_QA",
+  "observacao": "REGRESSAO TÉCNICA EXCLUSIVA: VISUAL LEGADO REJEITADO PELO USUÁRIO. NÃO MOSTRAR COMO NOVA PRÉVIA NEM PUBLICAR."
 }

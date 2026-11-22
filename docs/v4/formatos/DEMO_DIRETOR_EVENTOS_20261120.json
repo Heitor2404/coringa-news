@@ -4,7 +4,7 @@
   "publicar": false,
   "titulo": "QA | eventos dirigidos sem storyboard manual | EUV + ciclo de eclusa",
   "media": {},
-  "observacao": "Apenas demonstração de capacidades. Fatos exigem curadoria e inspeção separadas. Não publicar e não enviar ao Telegram.",
+  "observacao": "Apenas demonstração de capacidades. Fatos exigem curadoria e inspeção separadas. Não publicar e não enviar ao Telegram. REGRESSAO TÉCNICA EXCLUSIVA: VISUAL LEGADO REJEITADO PELO USUÁRIO. NÃO MOSTRAR COMO NOVA PRÉVIA NEM PUBLICAR.",
   "eventos_diretor": [
     {
       "id": "euv_evento",
@@ -55,5 +55,6 @@
         ]
       }
     }
-  ]
+  ],
+  "perfil_visual": "LEGADO_REJEITADO_SOMENTE_QA"
 }

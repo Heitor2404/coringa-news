@@ -37,7 +37,8 @@ def test_evento_estrutura_sozinha_dois_dominios():
     assert [CAT.decidir(s)[0] for s in material['shots']]==[
         'optical_projection','lock_cycle_standalone']
     assert [len(s['cues']) for s in material['shots']]==[4,7]
-    assert material['diretor_automatico']['revisao_visual']=='PENDENTE'
+    assert material['diretor_automatico']['revisao_visual']=='REPROVADO_ESTILO_LEGADO'
+    assert F.avaliar(fonte)['visual_approval']=='REPROVADO_ESTILO_LEGADO'
     assert [e['action'] for e in material['shots'][1]['cues']]==[
         'enter','seal','valves','rise','equalize','open','exit']
     assert fonte.get('shots') is None  # não altera dado original
@@ -140,3 +141,24 @@ def test_legacy_continua_validando_sem_auto():
     p=json.loads((ROOT/'docs/v4/formatos/filme_panama_ciclo_19s.json').read_text('utf8'))
     assert F.avaliar(p)['pronto']
     assert DP.expandir(p) is p
+
+
+def test_nao_reciclar_estetica_ja_rejeitada_em_preview_novo():
+    p=plano()
+    del p['perfil_visual']
+    assert 'F-VISUAL-LEGADO-DESCARTADO' in codigos(p)
+    with pytest.raises(DP.FalhaDiretor,match='F-VISUAL-LEGADO-DESCARTADO'):
+        DP.expandir(p)
+    # A exceção só abre REGRESSÃO de código, nunca aprova visualmente.
+    p['perfil_visual']='LEGADO_REJEITADO_SOMENTE_QA'
+    res=DP.expandir(p)
+    assert res['diretor_automatico']['aprovacao_estetica'] is False
+    assert res['diretor_automatico']['revisao_visual']=='REPROVADO_ESTILO_LEGADO'
+    assert F.avaliar(p)['visual_approval']=='REPROVADO_ESTILO_LEGADO'
+
+
+def test_regressao_legada_nao_virou_permissao_para_publicar():
+    p=plano()
+    p['publicar']=True
+    p['tipo']='FILME_FINAL'
+    assert 'F-DIRETOR-SEM-GATE' in codigos(p)

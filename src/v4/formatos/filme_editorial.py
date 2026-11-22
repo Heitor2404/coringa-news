@@ -642,7 +642,10 @@ def avaliar(plano: dict) -> dict:
             'medias_unicas': len(visual), 'momentos_visuais':len(momentos),
             'contrato_comum': comum,
             'area_segura':area_segura,
-            'visual_approval': 'NAO_FOI_AVALIADO'}
+            'visual_approval': ('REPROVADO_ESTILO_LEGADO'
+                                if plano.get('perfil_visual') ==
+                                   'LEGADO_REJEITADO_SOMENTE_QA'
+                                else 'NAO_FOI_AVALIADO')}
 
 
 def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> dict:

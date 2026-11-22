@@ -1,4 +1,4 @@
-name: "QA — diretor por capacidades e ciclo de três fases"
+name: "QA técnico — capacidades LEGADAS (sem render visual reprovado)"
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -22,9 +22,9 @@ concurrency:
   group: qa-diretor-capacidades
   cancel-in-progress: true
 jobs:
-  contrato_e_prova_visual:
+  contrato_sem_video_legado:
     runs-on: ubuntu-22.04
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -58,45 +58,30 @@ jobs:
           npm ci --no-audit --no-fund
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
           node --experimental-strip-types --test tests/area-segura-movimento.test.mjs
-      - name: Renderizar duas causas físicas independentes com entrada e saída
-        timeout-minutes: 15
+      - name: Registrar resultado SEM renderizar modelo visual rejeitado
         run: |
-          cd motor4
-          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../prova_diretor/diretor_qa.mp4 --props=../prova_diretor/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
-      - name: Gerar evidência inspecionável do vídeo completo
-        run: |
-          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
-          fi
-          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height -of json prova_diretor/diretor_qa.mp4 > prova_diretor/metadata.json
-          FREQ=$(python - <<'PY'
-          import json
-          x=json.load(open('prova_diretor/metadata.json'))
-          print(16/float(x['format']['duration']))
-          PY
-          )
-          ffmpeg -hide_banner -loglevel error -y -i prova_diretor/diretor_qa.mp4 -vf "fps=${FREQ},scale=270:480,tile=4x4" -frames:v 1 prova_diretor/contato_16_quadros.jpg
           python - <<'PY'
-          import json,hashlib
+          import json
           from pathlib import Path
-          folder=Path('prova_diretor')
-          p=json.loads((folder/'props.json').read_text())
-          m=json.loads((folder/'metadata.json').read_text())
-          assert abs(float(m['format']['duration'])-p['duracao'])<.08
-          v=[x for x in m['streams'] if x['codec_type']=='video']
-          assert len(v)==1 and v[0]['width']==540 and v[0]['height']==960
-          assert not any(x['codec_type']=='audio' for x in m['streams'])
-          media=folder/'diretor_qa.mp4'
-          report={'status':'QA_TECNICO_SEM_APROVACAO_HUMANA','sha256':hashlib.sha256(media.read_bytes()).hexdigest(),'duration_s':float(m['format']['duration']),'renderers':[x['mechanism'] for x in p['shots']],'revisao_visual':'PENDENTE','publicar':False,'telegram':False}
-          (folder/'resultado.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-          print(json.dumps(report,ensure_ascii=False))
+          pasta=Path('prova_diretor')
+          p=json.loads((pasta/'props.json').read_text('utf8'))
+          assert p['perfil_visual']=='LEGADO_REJEITADO_SOMENTE_QA'
+          assert all(c['processo_visual']['grafo_causal_requerido'] for c in p['shots'])
+          assert not list(pasta.glob('*.mp4'))
+          rel={'status':'CONTRATO_TECNICO_OK_ESTETICA_REJEITADA',
+               'render_mp4_executado':False,
+               'motivo':'componentes OpticalProjection e LockCausalCycle LEGADOS, já rejeitados',
+               'componentes':[c['mechanism'] for c in p['shots']],
+               'revisao_estetica':'REPROVADO_ESTILO_LEGADO',
+               'publicar':False,'telegram':False}
+          (pasta/'resultado.json').write_text(json.dumps(rel,ensure_ascii=False,indent=2))
+          print(json.dumps(rel,ensure_ascii=False))
           PY
       - name: Guardar prova temporária privada
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qa-diretor-por-capacidades
+          name: contrato-diretor-legado-sem-mp4
           path: prova_diretor/
           retention-days: 5
           if-no-files-found: warn

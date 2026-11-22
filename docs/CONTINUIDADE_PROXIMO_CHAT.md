@@ -1853,3 +1853,20 @@ Após a CI 45/45 do portão completo, foi criada a pesquisa de fontes originais 
 - Documentação atualizada: `docs/v4/formatos/COMPRESSOR_PV_CICLO_CAUSAL_20261122.md`.
 - **Limite honesto:** mesmo renderizador 2D de compressor P-V, não gerador universal a partir de referência filmada. Publicação, `main`, `FilmeEditorial`, NTC, DOSSIÊ, Claude e Telegram NÃO modificados.
 
+
+## 100. 22/11 ~20h44 — Usuário reprova identidade visual: “Mas isso não me parece um compressor”
+
+**Diagnóstico CONFIRMADO por comparação entre vídeo `COMPRESSOR_AR_FISICO_2D_PRIVADO.mp4` e referências de Atlas Copco, KAESER e manual Industrial Air:** desenhava-se apenas miolo pistão–biela num invólucro genérico, mais um recipiente vertical minúsculo à direita. Faltavam motor elétrico, filtro de admissão, aletas de refrigeração, cabeçote e reservatório proporcional. A física P–V correta NÃO basta para representar o equipamento. Não “salvar” apenas com novo zoom/cor.
+
+**Prova visual PARTICULAR no container desta conversa (NÃO integrada ao GitHub):**
+- `/mnt/data/compressor_assembly_lab/out/COMPRESSOR_COMPLETO_EM_CORTE_PRIVADO.mp4` — 8 segundos, 24 fps, 540×960, sem áudio, privado, SVG autoral com motor elétrico e transmissão por correia, bomba de pistão em corte com válvulas/cabeçote/aletamento, filtro, descarga até reservatório horizontal grande. Física `compressor_pv_core` intacta; manômetro do tanque estático, pressão câmara alterna.
+- `/mnt/data/compressor_assembly_lab/out/COMPARACAO_IDENTIDADE_VISUAL.jpg`: antes pistão genérico vs nova configuração de compressor de oficina. `/mnt/data/compressor_assembly_lab/out/CONTATO_8_ESTADOS_COMPRESSOR_COMPLETO.jpg` oito tempos do MP4. Arquivo de código **só no container** `/mnt/data/compressor_assembly_lab/src/v4/formatos/render_compressor_conjunto_2d.py`. Não prometer que repo consegue executar este renderer até integrá-lo; REVALIDAR caminhos em outra conversa.
+- A arte ainda é gráfica/didática, não CAD nem reconstrução por referência filmada. Aguardando aceitação humana da identidade e direção visual antes de integrar o renderizador.
+
+**Código de motor efetivamente COMMITADO na branch experimental**:
+- `src/v4/formatos/identidade_visual_maquina.py`: gate novo de identidade visual **separado do cálculo de física**; confere topologia declarada e papéis, conexões filtro→cabeçote→tubo→reservatório e motor→correia→polia, proporção horizontal do tanque. Escopo de subtipo exato `compressor_ar_eletrico_tanque_horizontal_correia`, não aplicar a todos compressores.
+- `docs/v4/formatos/reference_first/identidade_compressor_oficina_tanque_horizontal.json`: manifesto topológico desta prova, anotado manualmente; `tests/test_identidade_visual_maquina.py` (8 testes).
+- [GitHub Actions 45068011240](https://github.com/Heitor2404/coringa-news/actions/runs/45068011240) **SUCCESS 8/8**. Resultado `ESTRUTURA_DECLARADA_OK_VISUAL_NAO_CERTIFICADO`: testes verificam manifesto, não vídeo por pixels. NÃO afirmar estética aprovada nem máquina real reconstruída.
+- Documento: `docs/v4/formatos/IDENTIDADE_VISUAL_COMPRESSOR_OFICINA_20261122.md`. Fontes: Atlas Copco `https://www.atlascopco.com/en-us/compressors/wiki/compressed-air-articles/piston-compressors`, Kaeser `https://www.kaeser.com/in-en/products/reciprocating-compressors/stationary-reciprocating-compressors/oil-lubricated-workshop-compressors`, Industrial Air `https://www.industrialairusa.com/pdfs/200-2735.pdf`.
+
+**Direção para próxima fase:** não repetir desenho de pistão e concluir “compressor”. Configuração industrial reconhecível precisa ser selecionada pela semântica visual e demonstrada por imagem; diferenciar provado visual vs manifesto declarado. Se o usuário aprovar o novo protótipo, integrar em componentes reutilizáveis e adicionar QA visual por pixels/frames; caso rejeite o estilo SVG, investir em assets CAD/real footage, não redesenhar infinitamente. Sem Claude, Telegram ou produção.

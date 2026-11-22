@@ -135,6 +135,38 @@ def test_duto_continuo_ate_tanque_e_legenda_em_area_util():
     assert 'M 467 656 V 680' in frame
     assert 'cx="498.0"' in frame
     # Marca pode estar no topo; texto explicativo fica abaixo da interface.
-    assert 'x="44" y="155"' in frame
-    assert 'x="44" y="197"' in frame
-    assert 'x="44" y="233"' in frame
+    assert 'x="44" y="118"' in frame
+    assert 'x="44" y="159"' in frame
+    assert 'x="44" y="195"' in frame
+
+def test_todo_mecanismo_sobe_40px_sem_zoom_nem_mover_rodape():
+    from src.v4.formatos.render_compressor_pv_2d import (
+        MECHANISM_SHIFT_Y, HEADER_BOTTOM_Y
+    )
+    assert MECHANISM_SHIFT_Y == -40
+    assert HEADER_BOTTOM_Y == 225
+    for t in (.03, .25, .70, .94):
+        frame = draw_svg(t)
+        assert '<g id="mechanical-stage" transform="translate(0 -40)">' in frame
+        assert frame.count('id="mechanical-stage"') == 1
+        assert frame.index('<g id="mechanical-stage"') < frame.index(
+            'M 499 338 V 625 H 467 V 656'
+        )
+        assert frame.index('M 499 338 V 625 H 467 V 656') < frame.index(
+            '<text x="43" y="920"'
+        )
+        assert 'width="540" height="225" fill="#112C41"' in frame
+        assert 'x="44" y="118"' in frame
+        assert 'x="44" y="159"' in frame
+        assert 'x="44" y="195"' in frame
+        assert '<text x="43" y="920"' in frame
+        assert 'M 499 338 V 625 H 467 V 656' in frame
+
+def test_topo_das_valvulas_e_base_do_tanque_ainda_cabem():
+    from src.v4.formatos.render_compressor_pv_2d import (
+        MECHANISM_SHIFT_Y, HEADER_BOTTOM_Y
+    )
+    # A válvula central está em y=283 no SVG original; após o shift:
+    assert 283 + MECHANISM_SHIFT_Y > HEADER_BOTTOM_Y + 12
+    # O fim do tanque não invade o rodapé técnico y=920.
+    assert 859 + MECHANISM_SHIFT_Y < 900

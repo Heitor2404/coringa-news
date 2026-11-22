@@ -25,6 +25,10 @@ from src.v4.formatos.compressor_pv_core import (
 )
 
 SIZE = (540,960)
+# Layout comum para qualquer ciclo P–V da família. Não alterar por episódio.
+# O cabeçalho cedeu espaço vazio à máquina; a física permanece intocada.
+MECHANISM_SHIFT_Y = -40
+HEADER_BOTTOM_Y = 225
 STATE_STYLE = {
     "REEXPANSAO_RESIDUAL": ("01","AR RESIDUAL EXPANDE",
         "A pressão cai antes da admissão.", "#70B8C8"),
@@ -92,7 +96,7 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     current_index=sequence_keys.index(s.estado)
     progress=round(454*t)
     stage_bars="".join(
-        f'<rect x="{43+i*115}" y="252" width="103" height="7" rx="3" '
+        f'<rect x="{43+i*115}" y="214" width="103" height="7" rx="3" '
         f'fill="{accent if i==current_index else "#527086"}"/>'
         for i in range(4))
     # P-V plot: texto/valores na esquerda baixa, não no overlay de rede.
@@ -137,17 +141,20 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
     </defs>
     <rect width="540" height="960" fill="url(#back)"/>
     <rect x="0" y="218" width="540" height="702" fill="url(#grid)"/>
-    <rect width="540" height="265" fill="#112C41"/>
+    <rect width="540" height="{HEADER_BOTTOM_Y}" fill="#112C41"/>
     <rect x="44" y="18" width="177" height="26" rx="6" fill="#F3C45C"/>
     <text x="55" y="36" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#1E3242">CORINGA EXPLICA</text>
-    <text x="44" y="155" font-family="DejaVu Sans" font-size="30"
+    <text x="44" y="118" font-family="DejaVu Sans" font-size="30"
       font-weight="900" fill="#FFFFFF">COMPRESSOR DE AR</text>
-    <text x="44" y="197" font-family="DejaVu Sans" font-size="22"
+    <text x="44" y="159" font-family="DejaVu Sans" font-size="22"
       font-weight="900" fill="{accent}">{escape(label)}</text>
-    <text x="44" y="233" font-family="DejaVu Sans" font-size="15"
+    <text x="44" y="195" font-family="DejaVu Sans" font-size="15"
       fill="#D8E7EB">{escape(description)}</text>
     {stage_bars}
+    <!-- Uma única transformação desloca todas as peças, indicadores e fluxos.
+         Nunca transladar apenas pistão/biela/valvulas separadamente. -->
+    <g id="mechanical-stage" transform="translate(0 {MECHANISM_SHIFT_Y})">
     <!-- Continuidade hidráulica da saída ao reservatório; o fluxo
          NÃO termina na borda do quadro. A arte periférica pode passar
          sob UI da rede, mas conexão mecânica deve continuar coerente. -->
@@ -261,6 +268,7 @@ def draw_svg(t: float, spec: CompressorSpec = CompressorSpec()) -> str:
       font-weight="900" fill="#36556A">TANQUE</text>
     <text x="457" y="763" font-family="DejaVu Sans" font-size="11"
       font-weight="900" fill="#36556A">AR</text>
+    </g>
     <text x="43" y="920" fill="#466A7E" font-family="DejaVu Sans"
       font-size="13" font-weight="800">FÍSICA P–V · SIMULAÇÃO DIDÁTICA PRIVADA</text>
     <text x="480" y="920" fill="#3B7189" font-family="DejaVu Sans"

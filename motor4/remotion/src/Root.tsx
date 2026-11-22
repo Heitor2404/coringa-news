@@ -13,8 +13,21 @@ import probes2d from './formatos/mechanisms2d-probes.json';
 import { AtlasAProof } from './formatos/AtlasAProof';
 import { SliderCrankProof } from './formatos/SliderCrankProof';
 import { CinematicCutaway3D } from './formatos/CinematicCutaway3D';
+import { LockCausalCycle } from './formatos/LockCausalCycle';
+import palcoEclusaLab from './formatos/palco-eclusa-hidraulica-lab.json';
+import { useCurrentFrame,useVideoConfig } from 'remotion';
 import atlasAProof from './formatos/atlas-a-proof.json';
 import sliderProof from './formatos/slider-crank-proofs.json';
+
+/** Reusa a eclusa causal EXISTENTE. Apenas escolhe o modo de palco em laboratório. */
+const ProvaPalcoEclusaHidraulica:React.FC<{duracao:number;private_review_only:boolean;modo:'compacto'|'anterior'}> =
+  ({duracao,private_review_only,modo})=>{
+    if(!private_review_only)throw new Error('F-LAB-PRIVADO');
+    const t=useCurrentFrame()/useVideoConfig().fps;
+    return <LockCausalCycle t={t} duration={duracao}
+      events={palcoEclusaLab.eventos}
+      privateStageLayout={modo==='compacto'}/>;
+  };
 
 // Amostra ATLAS: palco + legendas em UMA renderizacao, com o tempo GLOBAL do episodio.
 const AtlasAmostra: React.FC<{ visual: any; legenda: any; duracao: number }> = ({ visual, legenda }) => (
@@ -47,6 +60,13 @@ export const Root: React.FC = () => (
     <Composition id="ProvaEngrenagens2D" component={Mechanism2DOtherModels as any}
       {...base} defaultProps={{duracao:probes2d.demo.gears.duration,
         kind:'gears',private_review_only:true} as any}/>
+    {/* Terceira família: eclusa hidráulica com o mesmo contrato geométrico
+        do compressor/Otto. Modo privado opt-in; não muda filme existente. */}
+    <Composition id="ProvaPalcoEclusaHidraulica" component={ProvaPalcoEclusaHidraulica as any}
+      {...base} fps={24}
+      calculateMetadata={({props}:any)=>({durationInFrames:Math.round((props.duracao??17.5)*24)})}
+      defaultProps={{duracao:palcoEclusaLab.duracao_s,
+        private_review_only:true,modo:'compacto'} as any}/>
     {/* A — arte ilustrada 2.5D autoral, amplitude de tela.
         Provas eclusa/EUV PRIVADAS, nunca no pipeline de episódios. */}
     <Composition id="ProvaA-Eclusa" component={AtlasAProof as any}

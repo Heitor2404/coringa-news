@@ -9,6 +9,7 @@
 import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
 import {areaInterna,planejarAreaSegura,limitarDestinoSeguro,limitesDoAtor,integralmenteVisivel} from './AreaSeguraMovimento';
+import palcoLaboratorio from './palco-eclusa-hidraulica-lab.json';
 
 export type LockCycleAction =
   'enter' | 'seal' | 'valves' | 'rise' | 'equalize' | 'open' | 'exit';
@@ -17,7 +18,7 @@ export type LockCycleCue = {
   action?: LockCycleAction | string;
   label: string;
 };
-type Props = {t: number; events: LockCycleCue[]; referenceAsset?: string; duration?:number};
+type Props = {t: number; events: LockCycleCue[]; referenceAsset?: string; duration?:number; privateStageLayout?:boolean};
 
 const YLOW=1110, YHIGH=817, YFLOOR=1335;
 const INLET_X=288, OUTLET_X=748;
@@ -32,7 +33,13 @@ const GOLD='#FFD21F', WHITE='#F6F4EC', CYAN='#75DDEB';
 const clamp=(x:number)=>Math.max(0,Math.min(1,x));
 const ease=(x:number)=>{const y=clamp(x);return y*y*(3-2*y);};
 
-export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,duration}) => {
+export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,duration,privateStageLayout=false}) => {
+  // Somente a prova isolada aplica a translação declarada pelo PalcoVertical
+  // do Python; o FilmeEditorial e pilotos antigos continuam no layout original.
+  if(privateStageLayout && (palcoLaboratorio.publicar!==false || palcoLaboratorio.schema!=='palco-vertical-lab-v1')){
+    throw new Error('F-LAB-ECLUSA-MANIFESTO-INVALIDO');
+  }
+  const layoutShift=privateStageLayout?palcoLaboratorio.subida_px:0;
   const find=(action:LockCycleAction,fallback:number) =>
     events.find(e=>e.action===action)?.at ?? fallback;
   const timeline = {
@@ -113,11 +120,13 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
         {/* Tipografia é secundária: a câmara ocupa o centro da tela. */}
         <text x="75" y="448" fill="#9CC0CC" fontSize="26" fontWeight="800" letterSpacing="2.8">PRINCÍPIO FÍSICO · VISTA LATERAL SIMPLIFICADA</text>
         <text x="74" y="511" fill={WHITE} fontSize="55" fontWeight="900">COMO UM NAVIO SOBE?</text>
-        <path d="M77 538 H1003" stroke="#54798B" strokeWidth="2"/>
-        <text x="98" y="590" fill="#ADC0CC" fontSize="24" fontWeight="800">CANAL INFERIOR</text>
-        <text x="375" y="590" fill="#F3F5F4" fontSize="24" fontWeight="800">CÂMARA</text>
-        <text x="808" y="590" fill={CYAN} fontSize="24" fontWeight="800">NÍVEL ALTO</text>
+        <path d={`M77 ${privateStageLayout?palcoLaboratorio.tipografia.linha_separadora_y:538} H1003`} stroke="#54798B" strokeWidth="2"/>
+        <text x="98" y={privateStageLayout?palcoLaboratorio.tipografia.rotulos_cotas_y:590} fill="#ADC0CC" fontSize="24" fontWeight="800">CANAL INFERIOR</text>
+        <text x="375" y={privateStageLayout?palcoLaboratorio.tipografia.rotulos_cotas_y:590} fill="#F3F5F4" fontSize="24" fontWeight="800">CÂMARA</text>
+        <text x="808" y={privateStageLayout?palcoLaboratorio.tipografia.rotulos_cotas_y:590} fill={CYAN} fontSize="24" fontWeight="800">NÍVEL ALTO</text>
 
+        {/* Somente o palco físico sofre o deslocamento. Cabeçalho e rodapé não. */}
+        <g id="lock-physical-stage" transform={`translate(0 -${layoutShift})`}>
         {/* Seção longitudinal completa: duas cotas diferentes e câmara entre portões. */}
         <g clipPath="url(#cycleMapClip)">
           <path d="M60 750 H287 V1335 H748 V720 H1018 V1372 H60Z" fill="#253D4C"/>
@@ -198,6 +207,7 @@ export const LockCausalCycle: React.FC<Props> = ({t,events,referenceAsset,durati
 
         <path d={'M89 '+YLOW+' H268'} stroke="#C3F2F5" strokeWidth="4" strokeDasharray="10 8" opacity=".75"/>
         <path d={'M770 '+YHIGH+' H997'} stroke="#C3F2F5" strokeWidth="4" strokeDasharray="10 8" opacity=".85"/>
+        </g>
 
         {/* Status: ações da animação, não cartões decorativos gigantes. */}
         <path d="M75 1536 H1005" stroke="#557384" strokeWidth="2"/>

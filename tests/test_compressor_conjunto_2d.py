@@ -31,9 +31,10 @@ def difference(a, b, crop):
     return sum(ImageStat.Stat(x).mean) / 3.0
 
 
-def shifted_bbox(box, amount=40):
+def shifted_bbox(box, amount=None):
     x1, y1, x2, y2 = box
-    return (x1, y1 - amount, x2, y2 - amount)
+    shift = R.AssemblyLayout().mechanism_lift_px if amount is None else amount
+    return (x1, y1 - shift, x2, y2 - shift)
 
 
 def dark_fraction(img, box):
@@ -159,26 +160,26 @@ def test_layout_nao_permite_maquina_sem_biela_valida():
 def test_texto_editorial_respeita_faixa_superior_sem_deslocar_maquina():
     p=load()
     svg=R.frame_svg(.24,p)
-    # Baselines do título e textos ficam abaixo de 14% da altura
-    # aproximadamente, mantendo espaço para interface dos aplicativos.
-    assert 'x="42" y="168"' in svg
-    assert 'x="42" y="207"' in svg
-    assert 'x="42" y="239"' in svg
-    assert '<rect width="540" height="266" fill="#122E43"/>' in svg
-    assert '<rect x="42" y="253"' in svg
-    assert 'x="56" y="289"' in svg
-    assert 'x="258" y="289"' in svg
+    # Compactação real do cabeçalho, sem sobrepor a etiqueta FILTRO.
+    assert 'x="42" y="108"' in svg
+    assert 'x="42" y="148"' in svg
+    assert 'x="42" y="180"' in svg
+    assert '<rect width="540" height="202" fill="#122E43"/>' in svg
+    assert '<rect x="42" y="190"' in svg
+    assert 'x="56" y="225"' in svg
+    assert 'x="258" y="225"' in svg
+    assert R.EditorialHeader().max_mechanism_lift_px() == 100
     # A posição dos objetos físicos fica idêntica à prévia anterior.
     assert 'x="56.0" y="774.0"' in svg
     assert 'y="371"' in svg
     assert 'translate(294.00 705.00)' in svg
 
 
-def test_conjunto_integral_sobe_40_sem_escala_e_texto_parado():
+def test_conjunto_integral_sobe_100_sem_escala_e_texto_parado():
     p = load()
     high = R.frame_svg(.71, p)
     low = R.frame_svg(.71, p, layout=R.AssemblyLayout(mechanism_lift_px=0.))
-    assert '<g id="machine-assembly" transform="translate(0 -40.0)">' in high
+    assert '<g id="machine-assembly" transform="translate(0 -100.0)">' in high
     assert '<g id="machine-assembly" transform="translate(0 -0.0)">' in low
     # Ninguém pode remover motor/tanque/pressão da translação única.
     start=high.index('<g id="machine-assembly"')
@@ -190,10 +191,10 @@ def test_conjunto_integral_sobe_40_sem_escala_e_texto_parado():
         assert f'id="role-{role}"' in stage, role
     assert 'id="pressure_card"' in stage
     # Elementos editoriais essenciais/rodapé ficam fora da cena móvel.
-    assert 'x="42" y="168"' in high[:start]
-    assert 'x="42" y="207"' in high[:start]
-    assert 'x="42" y="239"' in high[:start]
-    assert '<rect x="44" y="268"' in high[:start]
+    assert 'x="42" y="108"' in high[:start]
+    assert 'x="42" y="148"' in high[:start]
+    assert 'x="42" y="180"' in high[:start]
+    assert '<rect x="44" y="205"' in high[:start]
     assert 'PROVA PRIVADA' in high[end:]
 
 
@@ -202,15 +203,28 @@ def test_subida_conserva_fisica_e_relacoes_visualmente():
     high=png_at(.71)
     low=png_at(.71, layout=R.AssemblyLayout(mechanism_lift_px=0))
     # Região editorial não muda em 540×960.
-    assert difference(high, low, (0,0,540,260)) == 0
+    assert difference(high, low, (0,0,540,235)) == 0
     # Conjunto é realmente reposicionado, não apenas o texto/label.
-    assert difference(high, low, (45,325,495,895)) > 10
+    assert difference(high, low, (45,240,495,895)) > 10
     # Pressão/progresso dependem exclusivamente de P-V, não da posição.
     assert R.AssemblyLayout().spec() == R.AssemblyLayout(mechanism_lift_px=0).spec()
 
 
 def test_nao_subir_alem_da_area_disponivel():
     with pytest.raises(ValueError,match="LIFT-AREA-SEGURA"):
-        R.frame_svg(.3,load(),layout=R.AssemblyLayout(mechanism_lift_px=72))
+        R.frame_svg(.3,load(),layout=R.AssemblyLayout(mechanism_lift_px=101))
     with pytest.raises(ValueError,match="LIFT-AREA-SEGURA"):
         R.frame_svg(.3,load(),layout=R.AssemblyLayout(mechanism_lift_px=-8))
+
+def test_editorial_compacto_nao_encosta_filtro_e_conserva_rodape():
+    e = R.EditorialHeader()
+    m = R.AssemblyLayout()
+    assert e.header_height < 210
+    assert e.progress_y + 6 < e.header_height
+    assert e.category_y > e.header_height
+    # Fonte FILTRO 12px, baseline geométrica 354, folga >=7px.
+    assert 354 - 12 - m.mechanism_lift_px >= e.category_y + e.category_height + 7
+    assert 900 - m.mechanism_lift_px < 905
+    a, b = png_at(.03), png_at(.95)
+    assert difference(a,b,(0,0,540,235)) > 0  # fase e progressão
+    assert difference(a,b,(0,28,540,52)) == 0  # marca fica fixa

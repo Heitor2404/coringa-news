@@ -70,15 +70,20 @@ jobs:
           def delta(a,b,box):
               stat=ImageStat.Stat(ImageChops.difference(a.crop(box),b.crop(box)))
               return round(sum(stat.mean)/3,3)
+          report=json.loads(path.with_suffix('.json').read_text('utf8'))
+          lift=round(report['layout']['conjunto_subida_px'])
+          def lifted(box):
+              x1,y1,x2,y2=box
+              return (x1,y1-lift,x2,y2-lift)
           tests={
-            'pistao_mexe':delta(frames[0],frames[3],(245,450,342,620)),
-            'pressao_muda':delta(frames[2],frames[5],(241,421,343,600)),
-            'fluxo_muda':delta(frames[5],frames[7],(418,402,460,765)),
+            'pistao_mexe':delta(frames[0],frames[3],lifted((245,490,342,660))),
+            'pressao_muda':delta(frames[2],frames[5],lifted((241,461,343,640))),
+            'fluxo_muda':delta(frames[5],frames[7],lifted((418,442,460,805))),
           }
           assert tests['pistao_mexe']>5,tests
           assert tests['pressao_muda']>5,tests
           assert tests['fluxo_muda']>.1,tests
-          report=json.loads(path.with_suffix('.json').read_text('utf8'))
+          assert report['layout']['cabecalho_altura_px'] == 202
           assert not report['publicar']
           assert not report['identidade_por_pixels_aprovada']
           (root/'QA_IMAGENS_E_INTEGRIDADE.json').write_text(json.dumps({

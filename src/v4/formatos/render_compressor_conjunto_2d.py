@@ -47,6 +47,23 @@ FASES = {
 
 
 @dataclass(frozen=True)
+class EditorialHeader:
+    """Layout editorial superior reutilizável na família de mecanismos."""
+    header_height: int = 202
+    title_y: int = 108
+    phase_y: int = 148
+    detail_y: int = 180
+    progress_y: int = 190
+    category_y: int = 205
+    category_height: int = 30
+    category_label_y: int = 225
+
+    def max_mechanism_lift_px(self) -> float:
+        # FILTRO: baseline 354, fonte 12; manter 7px de folga da categoria.
+        return 354.0 - 12.0 - (self.category_y + self.category_height) - 7.0
+
+
+@dataclass(frozen=True)
 class AssemblyLayout:
     # Metadados geográficos e físicos internos desta família, sem ajustes por episódio.
     center_x: float = 294.0
@@ -62,8 +79,8 @@ class AssemblyLayout:
     pump_wheel_radius: float = 65.0
     motor_pulley_radius: float = 29.0
     # Sobe o conjunto COMPLETO, sem mudar o P-V, escala ou textos seguros.
-    # 40 px em 540×960 deixam rótulos abaixo do header (termina em y=300).
-    mechanism_lift_px: float = 40.0
+    # O palco compacto permite subir TUDO, sem alterar física ou escala.
+    mechanism_lift_px: float = 100.0
 
     def spec(self, base: CompressorSpec | None = None) -> CompressorSpec:
         cfg = base or CompressorSpec()
@@ -111,10 +128,11 @@ def _spokes(x: float, y: float, radius: float, angle_deg: float, *,
 
 def frame_svg(progress: float, manifest: dict, *,
               layout: AssemblyLayout = AssemblyLayout(),
-              physics: CompressorSpec | None = None) -> str:
+              physics: CompressorSpec | None = None,
+              editorial: EditorialHeader = EditorialHeader()) -> str:
     validar_plano(manifest)
     if (not math.isfinite(layout.mechanism_lift_px) or
-            not 0 <= layout.mechanism_lift_px <= 44):
+            not 0 <= layout.mechanism_lift_px <= editorial.max_mechanism_lift_px()):
         raise ValueError("F-LAYOUT-LIFT-AREA-SEGURA")
     s = estado(progress, layout.spec(physics))
     phase, detail, accent = FASES[s.estado]
@@ -209,25 +227,25 @@ def frame_svg(progress: float, manifest: dict, *,
       </pattern>
     </defs>
     <rect width="540" height="960" fill="url(#bg)"/>
-    <rect x="0" y="266" width="540" height="648" fill="url(#grid)"/>
-    <rect width="540" height="266" fill="#122E43"/>
+    <rect x="0" y="{editorial.header_height}" width="540" height="{914-editorial.header_height}" fill="url(#grid)"/>
+    <rect width="540" height="{editorial.header_height}" fill="#122E43"/>
     <rect x="42" y="28" width="157" height="22" rx="5" fill="#FFCE67"/>
     <text x="53" y="44" font-family="DejaVu Sans" font-size="12"
       font-weight="900" fill="#152D3D">CORINGA EXPLICA</text>
-    <text x="42" y="168" font-family="DejaVu Sans" font-size="27"
+    <text x="42" y="{editorial.title_y}" font-family="DejaVu Sans" font-size="27"
       font-weight="900" fill="white">COMPRESSOR DE AR</text>
-    <text x="42" y="207" font-family="DejaVu Sans" font-size="22"
+    <text x="42" y="{editorial.phase_y}" font-family="DejaVu Sans" font-size="22"
       font-weight="900" fill="{accent}">{escape(phase)}</text>
-    <text x="42" y="239" font-family="DejaVu Sans" font-size="14"
+    <text x="42" y="{editorial.detail_y}" font-family="DejaVu Sans" font-size="14"
       fill="#D5E8F0">{escape(detail)}</text>
-    <rect x="42" y="253" width="456" height="6" rx="3" fill="#4E6C7E"/>
-    <rect x="42" y="253" width="{int(progress*456)}" height="6" rx="3"
+    <rect x="42" y="{editorial.progress_y}" width="456" height="6" rx="3" fill="#4E6C7E"/>
+    <rect x="42" y="{editorial.progress_y}" width="{int(progress*456)}" height="6" rx="3"
       fill="{accent}"/>
-    <rect x="44" y="268" width="451" height="32" rx="10"
+    <rect x="44" y="{editorial.category_y}" width="451" height="{editorial.category_height}" rx="10"
       fill="#E6F1F3" stroke="#A8C8D1" stroke-width="1.8"/>
-    <text x="56" y="289" font-family="DejaVu Sans" font-size="13"
+    <text x="56" y="{editorial.category_label_y}" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#426478">MOTOR ELÉTRICO</text>
-    <text x="258" y="289" font-family="DejaVu Sans" font-size="13"
+    <text x="258" y="{editorial.category_label_y}" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#426478">BOMBA EM CORTE</text>
 
     <!-- Cena física única. Pistão, motor, tanque, partículas, pressão e
@@ -409,7 +427,9 @@ def renderizar(arquivo: Path, manifest: dict, *,
         "layout": {
             "conjunto_subida_px": layout.mechanism_lift_px,
             "escala_inalterada": True,
-            "cabecalho_preservado": True,
+            "cabecalho_reorganizado": True,
+            "cabecalho_altura_px": EditorialHeader().header_height,
+            "faixa_categoria_termina_y": EditorialHeader().category_y + EditorialHeader().category_height,
             "rodape_preservado": True,
         },
         "fps": fps, "duracao_s": duration, "dimensoes": [WIDTH, HEIGHT],

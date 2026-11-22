@@ -257,3 +257,13 @@ def test_one_call_prancha_para_callback_injetado(tmp_path):
     assert len(calls)==1 and len(calls[0][1])==1
     assert calls[0][1][0][:2]==bytes([0xff,0xd8])
     assert result["estado"]=="GRAFO_PROVISORIO_SEM_RENDER"
+
+def test_compressor_pv_demonstra_ciclo_mas_ainda_bloqueia_sem_referencia_real():
+    result = RF.verificar_renderizador("compressor_alternativo", "CompressorPV2D")
+    assert result["aprovado"] is False
+    assert result["faltantes"] == []
+    assert "F-RENDERER-EXPERIMENTAL_NAO_APROVADO" in result["bloqueios"]
+    # O motor antigo continua sem as capacidades físicas da compressão.
+    old = RF.verificar_renderizador("compressor_alternativo", "CinematicCutaway3D")
+    assert old["faltantes"]
+    assert old["aprovado"] is False

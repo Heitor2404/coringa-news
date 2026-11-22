@@ -156,9 +156,9 @@ def test_todo_mecanismo_sobe_40px_sem_zoom_nem_mover_rodape():
             '<text x="43" y="920"'
         )
         assert 'width="540" height="265" fill="#112C41"' in frame
-        assert 'x="44" y="118"' in frame
-        assert 'x="44" y="159"' in frame
-        assert 'x="44" y="195"' in frame
+        assert 'x="44" y="155"' in frame
+        assert 'x="44" y="197"' in frame
+        assert 'x="44" y="233"' in frame
         assert '<text x="43" y="920"' in frame
         assert 'M 499 338 V 625 H 467 V 656' in frame
 

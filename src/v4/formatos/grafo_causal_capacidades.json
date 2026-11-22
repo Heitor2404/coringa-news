@@ -271,6 +271,7 @@
         ],
         "foco": [
           "inlet_gate",
+          "lower_channel",
           "ship",
           "chamber"
         ],

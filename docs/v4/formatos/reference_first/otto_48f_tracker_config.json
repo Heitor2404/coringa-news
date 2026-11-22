@@ -1,0 +1,21 @@
+{
+  "referencia_id": "commons-by-sa-otto",
+  "processo": "motor_otto_4t",
+  "sha256": "ec9238971e2b213b240ca1a707430bf3690a23c1153088cdc22debbe5e672d69",
+  "search_roi": [
+    98,
+    128,
+    155,
+    265
+  ],
+  "template_bbox": [
+    116,
+    154,
+    138,
+    175
+  ],
+  "min_correlation": 0.75,
+  "keyframe": 0,
+  "revolutions": 2,
+  "max_fit_mae_px": 1.5
+}

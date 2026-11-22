@@ -1,0 +1,76 @@
+{
+  "schema": "reference-first-reviewed-scene-v1",
+  "processo": "motor_otto_4t",
+  "referencia_id": "commons-by-sa-otto",
+  "origem_sha256": "ec9238971e2b213b240ca1a707430bf3690a23c1153088cdc22debbe5e672d69",
+  "titulo": "MOTOR DE 4 TEMPOS",
+  "publicar": false,
+  "render_em_privado": true,
+  "revisao_humana": "REVISADA_NA_FONTE",
+  "licenca_origem_verificada": true,
+  "creditos": "Referência: UtzOnBike, Cuddlyable3, Jahobr. Wikimedia Commons, CC BY-SA 3.0. Reconstrução vetorial original não usa pixels do GIF.",
+  "ciclo": [
+    {
+      "tipo": "admissao_mistura",
+      "quadro_inicio": 0,
+      "titulo": "ADMISSÃO",
+      "detalhe": "Mistura entra. Pistão desce."
+    },
+    {
+      "tipo": "compressao_mistura",
+      "quadro_inicio": 12,
+      "titulo": "COMPRESSÃO",
+      "detalhe": "Válvulas fecham. Pistão sobe."
+    },
+    {
+      "tipo": "ignicao_expansao",
+      "quadro_inicio": 24,
+      "titulo": "IGNIÇÃO E EXPANSÃO",
+      "detalhe": "Faísca! Gases empurram o pistão."
+    },
+    {
+      "tipo": "escape_gases",
+      "quadro_inicio": 36,
+      "titulo": "ESCAPE",
+      "detalhe": "Pistão sobe. Gases saem."
+    }
+  ],
+  "evidencia_eventos": [
+    {
+      "tipo": "admissao_mistura",
+      "quadro_comprovacao": [
+        0,
+        6,
+        12
+      ],
+      "metodo": "INSPECAO_HUMANA_DA_REFERENCIA"
+    },
+    {
+      "tipo": "compressao_mistura",
+      "quadro_comprovacao": [
+        12,
+        18,
+        24
+      ],
+      "metodo": "INSPECAO_HUMANA_DA_REFERENCIA"
+    },
+    {
+      "tipo": "ignicao_expansao",
+      "quadro_comprovacao": [
+        24,
+        30,
+        36
+      ],
+      "metodo": "INSPECAO_HUMANA_DA_REFERENCIA"
+    },
+    {
+      "tipo": "escape_gases",
+      "quadro_comprovacao": [
+        36,
+        42,
+        47
+      ],
+      "metodo": "INSPECAO_HUMANA_DA_REFERENCIA"
+    }
+  ]
+}

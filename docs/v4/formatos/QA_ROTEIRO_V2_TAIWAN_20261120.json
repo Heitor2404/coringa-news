@@ -60,5 +60,7 @@
         }
       }
     ]
-  }
+  },
+  "perfil_visual": "LEGADO_REJEITADO_SOMENTE_QA",
+  "observacao": "REGRESSAO TÉCNICA: renderizadores vetoriais antigos REPROVADOS esteticamente; não usar como prévia aprovada."
 }

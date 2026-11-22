@@ -72,6 +72,19 @@ RENDERERS_LAB_NAO_APROVADOS = {
         )),
         "estado": "PROVA_FISICA_NAO_RECONSTRUCAO_POR_REFERENCIA",
     },
+    "CompressorConjunto2D": {
+        # Conjunto completo (motor elétrico, correia, bomba e tanque).
+        # Exibe estados P-V, mas a identidade ainda depende de
+        # configuração declarada; não há IA visual independente.
+        "capacidades": frozenset((
+            "cilindro_com_volume_variavel",
+            "valvulas_entrada_e_saida_visiveis",
+            "fluxo_admissao_visivel",
+            "fluxo_descarga_visivel",
+            "ciclo_sincronizado_com_pistao",
+        )),
+        "estado": "PROVA_2D_CONJUNTO_COMPLETO_NAO_RECONSTRUCAO_AUTOMATICA",
+    },
 }
 
 

@@ -149,3 +149,21 @@ def test_layout_nao_permite_maquina_sem_biela_valida():
     p=load()
     with pytest.raises(ValueError,match="PARAMETROS"):
         R.frame_svg(.3,p,layout=R.AssemblyLayout(connecting_rod=65))
+
+
+def test_texto_editorial_respeita_faixa_superior_sem_deslocar_maquina():
+    p=load()
+    svg=R.frame_svg(.24,p)
+    # Baselines do título e textos ficam abaixo de 14% da altura
+    # aproximadamente, mantendo espaço para interface dos aplicativos.
+    assert 'x="42" y="168"' in svg
+    assert 'x="42" y="207"' in svg
+    assert 'x="42" y="239"' in svg
+    assert '<rect width="540" height="266" fill="#122E43"/>' in svg
+    assert '<rect x="42" y="253"' in svg
+    assert 'x="56" y="289"' in svg
+    assert 'x="258" y="289"' in svg
+    # A posição dos objetos físicos fica idêntica à prévia anterior.
+    assert 'x="56.0" y="774.0"' in svg
+    assert 'y="371"' in svg
+    assert 'translate(294.00 705.00)' in svg

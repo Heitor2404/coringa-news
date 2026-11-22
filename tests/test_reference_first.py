@@ -267,3 +267,11 @@ def test_compressor_pv_demonstra_ciclo_mas_ainda_bloqueia_sem_referencia_real():
     old = RF.verificar_renderizador("compressor_alternativo", "CinematicCutaway3D")
     assert old["faltantes"]
     assert old["aprovado"] is False
+
+
+def test_nova_montagem_visual_nao_promove_renderer_por_pouco_qa():
+    result = RF.verificar_renderizador(
+        "compressor_alternativo", "CompressorConjunto2D")
+    assert not result["aprovado"]
+    assert result["faltantes"] == []
+    assert "F-RENDERER-EXPERIMENTAL_NAO_APROVADO" in result["bloqueios"]

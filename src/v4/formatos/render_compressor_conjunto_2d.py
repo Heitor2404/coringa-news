@@ -203,25 +203,25 @@ def frame_svg(progress: float, manifest: dict, *,
       </pattern>
     </defs>
     <rect width="540" height="960" fill="url(#bg)"/>
-    <rect x="0" y="219" width="540" height="695" fill="url(#grid)"/>
-    <rect width="540" height="219" fill="#122E43"/>
+    <rect x="0" y="266" width="540" height="648" fill="url(#grid)"/>
+    <rect width="540" height="266" fill="#122E43"/>
     <rect x="42" y="28" width="157" height="22" rx="5" fill="#FFCE67"/>
     <text x="53" y="44" font-family="DejaVu Sans" font-size="12"
       font-weight="900" fill="#152D3D">CORINGA EXPLICA</text>
-    <text x="42" y="101" font-family="DejaVu Sans" font-size="27"
+    <text x="42" y="168" font-family="DejaVu Sans" font-size="27"
       font-weight="900" fill="white">COMPRESSOR DE AR</text>
-    <text x="42" y="148" font-family="DejaVu Sans" font-size="22"
+    <text x="42" y="207" font-family="DejaVu Sans" font-size="22"
       font-weight="900" fill="{accent}">{escape(phase)}</text>
-    <text x="42" y="181" font-family="DejaVu Sans" font-size="14"
+    <text x="42" y="239" font-family="DejaVu Sans" font-size="14"
       fill="#D5E8F0">{escape(detail)}</text>
-    <rect x="42" y="200" width="456" height="6" rx="3" fill="#4E6C7E"/>
-    <rect x="42" y="200" width="{int(progress*456)}" height="6" rx="3"
+    <rect x="42" y="253" width="456" height="6" rx="3" fill="#4E6C7E"/>
+    <rect x="42" y="253" width="{int(progress*456)}" height="6" rx="3"
       fill="{accent}"/>
-    <rect x="44" y="225" width="451" height="32" rx="10"
+    <rect x="44" y="268" width="451" height="32" rx="10"
       fill="#E6F1F3" stroke="#A8C8D1" stroke-width="1.8"/>
-    <text x="56" y="246" font-family="DejaVu Sans" font-size="13"
+    <text x="56" y="289" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#426478">MOTOR ELÉTRICO</text>
-    <text x="258" y="246" font-family="DejaVu Sans" font-size="13"
+    <text x="258" y="289" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#426478">BOMBA EM CORTE</text>
 
     <!-- O reservatório é a MAIOR peça. Um compressor de oficina reconhecível. -->

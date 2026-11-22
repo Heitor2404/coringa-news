@@ -31,6 +31,11 @@ def difference(a, b, crop):
     return sum(ImageStat.Stat(x).mean) / 3.0
 
 
+def shifted_bbox(box, amount=40):
+    x1, y1, x2, y2 = box
+    return (x1, y1 - amount, x2, y2 - amount)
+
+
 def dark_fraction(img, box):
     pix = img.crop(box).convert("RGB")
     pixels = list(pix.getdata())
@@ -94,7 +99,7 @@ def test_janela_do_pistao_muda_de_posicao_em_quadros_reais():
     one = png_at(.05)
     two = png_at(.48)
     assert one.size == two.size == (540,960)
-    diff = difference(one, two, (245,470,342,610))
+    diff = difference(one, two, shifted_bbox((245,470,342,610)))
     assert diff > 7, f"pistao parado na janela ({diff})"
 
 
@@ -102,17 +107,17 @@ def test_tanque_e_motor_aparecem_na_imagem_ao_mesmo_tempo():
     im = png_at(.25)
     # Não basta JSON dizer que as peças existem: regiões do quadro precisam
     # conter massa visual. Isso é heurística de pixels, não classificação VLM.
-    assert dark_fraction(im, (58,784,475,875)) > .1
-    assert dark_fraction(im, (70,600,202,735)) > .1
-    assert dark_fraction(im, (223,453,365,630)) > .1
+    assert dark_fraction(im, shifted_bbox((58,784,475,875))) > .1
+    assert dark_fraction(im, shifted_bbox((70,600,202,735))) > .1
+    assert dark_fraction(im, shifted_bbox((223,453,365,630))) > .1
 
 
 def test_filtro_e_tubo_nao_somem_ao_mudar_fase():
     for t in (.04,.20,.71,.95):
         img = png_at(t)
         # Filtro (parte superior esquerda) e ligação vertical à direita
-        assert dark_fraction(img, (152,370,208,426)) > .15
-        assert dark_fraction(img, (429,421,453,745)) > .15
+        assert dark_fraction(img, shifted_bbox((152,370,208,426))) > .15
+        assert dark_fraction(img, shifted_bbox((429,421,453,745))) > .15
 
 
 def test_estado_de_pressao_altera_a_janela_e_os_fluxos():
@@ -121,11 +126,11 @@ def test_estado_de_pressao_altera_a_janela_e_os_fluxos():
     compress = png_at(.71)
     discharge = png_at(.94)
     # O miolo, e não só o texto no topo, deve mudar em cores e movimento.
-    assert difference(intake, compress, (243,415,347,611)) > 10
-    assert difference(compress, discharge, (243,415,347,611)) > 8
+    assert difference(intake, compress, shifted_bbox((243,415,347,611))) > 10
+    assert difference(compress, discharge, shifted_bbox((243,415,347,611))) > 8
     # Os elementos extra-pistão mudam na admissão/descarga.
-    assert difference(reexp, intake, (128,370,220,426)) > .2
-    assert difference(compress, discharge, (410,399,457,748)) > .2
+    assert difference(reexp, intake, shifted_bbox((128,370,220,426))) > .2
+    assert difference(compress, discharge, shifted_bbox((410,399,457,748))) > .2
 
 
 def test_licenca_fonte_nao_autoriza_video_publico():
@@ -167,3 +172,45 @@ def test_texto_editorial_respeita_faixa_superior_sem_deslocar_maquina():
     assert 'x="56.0" y="774.0"' in svg
     assert 'y="371"' in svg
     assert 'translate(294.00 705.00)' in svg
+
+
+def test_conjunto_integral_sobe_40_sem_escala_e_texto_parado():
+    p = load()
+    high = R.frame_svg(.71, p)
+    low = R.frame_svg(.71, p, layout=R.AssemblyLayout(mechanism_lift_px=0.))
+    assert '<g id="machine-assembly" transform="translate(0 -40.0)">' in high
+    assert '<g id="machine-assembly" transform="translate(0 -0.0)">' in low
+    # Ninguém pode remover motor/tanque/pressão da translação única.
+    start=high.index('<g id="machine-assembly"')
+    end=high.index('<path d="M 52 905 H 488"')
+    stage=high[start:end]
+    for role in ("receiver_horizontal", "electric_motor", "drive_belt",
+                 "finned_cylinder", "piston_cutaway", "discharge_pipe",
+                 "compressor_head", "pump_flywheel"):
+        assert f'id="role-{role}"' in stage, role
+    assert 'id="pressure_card"' in stage
+    # Elementos editoriais essenciais/rodapé ficam fora da cena móvel.
+    assert 'x="42" y="168"' in high[:start]
+    assert 'x="42" y="207"' in high[:start]
+    assert 'x="42" y="239"' in high[:start]
+    assert '<rect x="44" y="268"' in high[:start]
+    assert 'PROVA PRIVADA' in high[end:]
+
+
+def test_subida_conserva_fisica_e_relacoes_visualmente():
+    p=load()
+    high=png_at(.71)
+    low=png_at(.71, layout=R.AssemblyLayout(mechanism_lift_px=0))
+    # Região editorial não muda em 540×960.
+    assert difference(high, low, (0,0,540,260)) == 0
+    # Conjunto é realmente reposicionado, não apenas o texto/label.
+    assert difference(high, low, (45,325,495,895)) > 10
+    # Pressão/progresso dependem exclusivamente de P-V, não da posição.
+    assert R.AssemblyLayout().spec() == R.AssemblyLayout(mechanism_lift_px=0).spec()
+
+
+def test_nao_subir_alem_da_area_disponivel():
+    with pytest.raises(ValueError,match="LIFT-AREA-SEGURA"):
+        R.frame_svg(.3,load(),layout=R.AssemblyLayout(mechanism_lift_px=72))
+    with pytest.raises(ValueError,match="LIFT-AREA-SEGURA"):
+        R.frame_svg(.3,load(),layout=R.AssemblyLayout(mechanism_lift_px=-8))

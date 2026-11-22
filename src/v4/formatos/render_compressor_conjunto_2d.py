@@ -61,6 +61,9 @@ class AssemblyLayout:
     motor_y: float = 675.0
     pump_wheel_radius: float = 65.0
     motor_pulley_radius: float = 29.0
+    # Sobe o conjunto COMPLETO, sem mudar o P-V, escala ou textos seguros.
+    # 40 px em 540×960 deixam rótulos abaixo do header (termina em y=300).
+    mechanism_lift_px: float = 40.0
 
     def spec(self, base: CompressorSpec | None = None) -> CompressorSpec:
         cfg = base or CompressorSpec()
@@ -110,6 +113,9 @@ def frame_svg(progress: float, manifest: dict, *,
               layout: AssemblyLayout = AssemblyLayout(),
               physics: CompressorSpec | None = None) -> str:
     validar_plano(manifest)
+    if (not math.isfinite(layout.mechanism_lift_px) or
+            not 0 <= layout.mechanism_lift_px <= 44):
+        raise ValueError("F-LAYOUT-LIFT-AREA-SEGURA")
     s = estado(progress, layout.spec(physics))
     phase, detail, accent = FASES[s.estado]
     chamber_top = 416.0
@@ -224,6 +230,9 @@ def frame_svg(progress: float, manifest: dict, *,
     <text x="258" y="289" font-family="DejaVu Sans" font-size="13"
       font-weight="900" fill="#426478">BOMBA EM CORTE</text>
 
+    <!-- Cena física única. Pistão, motor, tanque, partículas, pressão e
+         conduítes se movem juntos em Y. NÃO reposicionar peças isoladas. -->
+    <g id="machine-assembly" transform="translate(0 {-layout.mechanism_lift_px:.1f})">
     <!-- O reservatório é a MAIOR peça. Um compressor de oficina reconhecível. -->
     <g id="role-receiver_horizontal">
       <rect x="{layout.tank_left:.1f}" y="{layout.tank_top:.1f}"
@@ -345,6 +354,7 @@ def frame_svg(progress: float, manifest: dict, *,
       <text x="64" y="564" fill="{accent}" font-family="DejaVu Sans"
         font-size="27" font-weight="900">{s.pressao_relativa:.1f}×</text>
     </g>
+    </g>
     <path d="M 52 905 H 488" stroke="#ADC7D0" stroke-width="2"/>
     <text x="43" y="932" fill="#496A7C" font-family="DejaVu Sans"
       font-size="12" font-weight="900">PROVA PRIVADA · BOMBA E RESERVATÓRIO</text>
@@ -396,6 +406,12 @@ def renderizar(arquivo: Path, manifest: dict, *,
         "atores_identificados_por_visao": False,
         "identidade_por_pixels_aprovada": False,
         "revisao_estetica": "PENDENTE",
+        "layout": {
+            "conjunto_subida_px": layout.mechanism_lift_px,
+            "escala_inalterada": True,
+            "cabecalho_preservado": True,
+            "rodape_preservado": True,
+        },
         "fps": fps, "duracao_s": duration, "dimensoes": [WIDTH, HEIGHT],
         "fases": limites_fases(layout.spec(physics)),
         "sha256_video": hashlib.sha256(arquivo.read_bytes()).hexdigest(),

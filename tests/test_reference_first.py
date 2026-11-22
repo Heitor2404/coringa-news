@@ -225,3 +225,35 @@ def test_nem_override_externo_habilita_renderer_sem_auditoria():
         capacidades_override=list(feats))
     assert not result["aprovado"]
     assert "F-RENDERER-NAO-AUDITADO" in result["bloqueios"]
+
+def test_prancha_de_doze_quadros_vira_uma_imagem_numerada(tmp_path):
+    from PIL import Image
+    import io
+    _, folder, _=source(tmp_path)
+    _, images=F.carregar(folder)
+    prancha=RF.prancha_temporal(images)
+    with Image.open(io.BytesIO(prancha)) as im:
+        assert im.format=="JPEG"
+        assert im.size==(930,1688)
+    assert len(prancha)>20000
+
+
+def test_execucao_padrao_nao_chama_gemini_nem_com_chave(tmp_path,monkeypatch):
+    _, folder, _=source(tmp_path)
+    monkeypatch.setenv("GEMINI_API_KEY", "falsa-credencial")
+    result=RF.executar(folder,"motor_otto_4t",tmp_path/"safe_off")
+    assert result["estado"]=="BLOQUEADO"
+    assert result["renderer"] is None and not result["publicar"]
+    assert "F-VISAO-SEM-RESPOSTA-ESTRUTURADA" in result["bloqueios"]
+
+
+def test_one_call_prancha_para_callback_injetado(tmp_path):
+    _, folder, _=source(tmp_path)
+    calls=[]
+    def simulated(prompt,images):
+        calls.append((prompt,images))
+        return answer("motor_otto_4t")
+    result=RF.executar(folder,"motor_otto_4t",tmp_path/"out",chamar_visao=simulated)
+    assert len(calls)==1 and len(calls[0][1])==1
+    assert calls[0][1][0][:2]==bytes([0xff,0xd8])
+    assert result["estado"]=="GRAFO_PROVISORIO_SEM_RENDER"

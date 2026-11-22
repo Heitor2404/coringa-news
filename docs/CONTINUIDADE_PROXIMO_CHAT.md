@@ -1908,3 +1908,21 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Limites:** o novo layout não valida estética ou fidelidade por classificador; não houve refilmagem, referência nova nem motor genérico totalmente automático. Ainda pode existir espaço inferior vazio antes do rodapé; não aumentar mais `translateY` sem novo layout/QA. Resultado exige avaliação visual do usuário. `main`, NTC, DOSSIÊ, `motor-integral-v4`, `FilmeEditorial`, Telegram e publicação intocados.
 
+## 104. 22/11 ~22h05 — Palco vertical compartilhado em DOIS processos reais, 40 testes e 2 MP4s
+
+**Gatilho:** usuário disse "Prossiga" após a correção do cabeçalho azul do compressor. O objetivo é **não ficar ajustando cada vídeo por assunto**. Nenhum Claude usado.
+
+**Implementação no ramo experimental** `atlas-direcao-visual-20261118`, commits `a5eb6cd7faa2d603fe60410cf0ac45a16f5c226c` (motor) e `f0a5470f8f643edfd35145c8e4e25e64e04fcb8f` (CI):
+- NOVO `src/v4/formatos/palco_vertical.py`: `CaixaVisivel` e `PalcoVertical`; calcula deslocamento Y sem escala, com caixa mínima/máxima anotada do ativo, limite de editoriais, rodapé e folgas. Recusa NaN/infinitos, caixa fora do canvas, colisões e subida maior que o máximo. **NÃO é detector automático de silhueta ou motor de layout universal**; trabalha com geometria fornecida pelo componente.
+- `src/v4/formatos/render_compressor_conjunto_2d.py`: deixa de duplicar cálculo do limite. `EditorialHeader.palco()` declara bounds conservadores e usa o mesmo solucionador; resultado atual **100 px** acima, exatamente a prévia já revisada na etapa 103. Física P-V e todos os componentes preservados.
+- `src/v4/formatos/render_reconstrucao_causal_2d.py`: usa o MESMO `PalcoVertical` para outra família, **motor Otto 4 tempos** com movimento medido de GIF licenciado/revisão das fases anterior. Novo grupo SVG `mechanical-stage`; solver encontra **28 px** de subida possível, mantendo header e rodapé. Não transforma Otto em compressor nem muda o grafo físico.
+- Novo `tests/test_palco_vertical_multifamilia.py` com provas por PIXELS de ambos os SVGs, regras de erro para extrapolação, preservação do header e integridade física; novo CI `.github/workflows/qa-palco-vertical-multifamilia.yml` com render de 2 MP4s de 8s reais sem IA, seis quadros de cada e contato lado a lado.
+
+**Prova GitHub:** [run 45075498191](https://github.com/Heitor2404/coringa-news/actions/runs/45075498191) **SUCCESS**, **40 testes** (regressões combinadas com 11 avisos), ambos MP4 540×960 24fps 8s, sem áudio; artifact **14774779056** `prova-palco-comum-compressor-otto-sem-ia` com expiração 27/11/2026 22:04 UTC. QA de variação RGB nas regiões físicas: compressor 4,171 e Otto 11,569 (prova de movimento, NÃO estética). Vídeo do compressor tem SHA `eb3b78f7e1da7178358695ccdb5a75638f8810d0ae1f2c9f2dd6a6cfaec12466` (idêntico à etapa anterior), Otto SHA `bc17137950c5ac62b1612c0fc5c6a8ef8843737e194c2a50ddadb0c147e6d7ae`. Contato inspecionado: equipamentos inteiros nos quadros, nenhuma perda evidente do cabeçalho/rodapé; qualidade editorial **não homologada pelo usuário**.
+
+**Limites sérios:** ambos são 2D orientados por código especializado; o contrato comum generaliza *posicionamento vertical*, NÃO visão/reconstrução automática, não escolhe ativo por tema, não verifica UI real de Reels/TikTok/Shorts nem ensina físicas novas. O `layout.py` e `plataformas.json` existentes continuam sendo os perfis reais de safe area para a composição final; este solver trata apenas as faixas internas do laboratório 540x960. Não promover ao `FilmeEditorial`/ATLAS produtivo sem revisão humana e regressões.
+
+**Próxima etapa recomendada:** testar diretor semântico capaz de escolher quais eventos/operadores são necessários e identificar lacunas para uma **terceira família independente** (não repetir compressor/Otto ou simplesmente aumentar peças), aproveitando `catalogo_mecanismos.py` e a especificação `ARQUITETURA_MOTOR_ANIMACAO_MULTITEMA_20261121.md`. Antes de promover: teste real de montagem com legendas/overlays de plataformas, sem usar área protegida como máscara gigantesca que encolhe o vídeo.
+
+`main`, `motor-integral-v4`, NTC, DOSSIÊ, `FilmeEditorial`, Telegram e postagem **intocados**.
+

@@ -188,6 +188,10 @@ def frame_svg(progress: float, manifest: dict, *,
             cor="#203F51", filete="#A5D8E0", largura=12,
             deslocamento_trama_px=s.angulo * layout.pump_wheel_radius)
         belt = f'<g id="role-drive_belt" data-transmissao="tangentes_externas_f10">{caminho}</g>'
+    # No modo F10 a correia passa ATRÁS das faces opacas dos rotores.
+    # A versão F9 original mantém a ordem antiga e o raster anterior.
+    belt_before= belt if transmissao_parametrica else ""
+    belt_after= "" if transmissao_parametrica else belt
     filt_particles = ""
     if s.admissao_aberta:
         for i in range(5):
@@ -391,9 +395,10 @@ def frame_svg(progress: float, manifest: dict, *,
         x2="{s.crank_x:.3f}" y2="{s.crank_y:.3f}"
         stroke="#D9A567" stroke-width="14" stroke-linecap="round"/>
     </g>
+    {belt_before}
     <g id="role-pump_flywheel">{wheel}</g>
     <g id="role-motor_pulley">{motor_rotor}</g>
-    {belt}
+    {belt_after}
     <g id="role-receiver_gauge">
       <circle cx="466" cy="719" r="26" fill="#F5FBFD"
         stroke="#31596C" stroke-width="6"/>

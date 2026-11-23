@@ -185,7 +185,7 @@ def estado(scene:dict,t:float)->dict:
             "time":t}
 
 
-def frame_svg(scene:dict,t:float)->str:
+def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False)->str:
     spec=validar(scene)
     state=estado(scene,t)
     rig=state["rig"]
@@ -230,8 +230,11 @@ def frame_svg(scene:dict,t:float)->str:
        f'<path d="M {motor_x-25:.2f} {motor_y-48:.2f} H {motor_x+25:.2f} '
        f'M {motor_x-25:.2f} {motor_y-32:.2f} H {motor_x+25:.2f}" '
        'stroke="#3C6478" stroke-width="6"/>')
+    # F11 opt-in: MESMO operador de tangentes e marcacoes do compressor F10.
+    # theta*raio_volante e a distancia ideal sem escorregamento; a camera fica travada.
     belt=P.transmissao_correia(motor_x,motor_y,motor_r,
-                              cx,cy,wheel,largura=11)
+                              cx,cy,wheel,largura=11,
+                              deslocamento_trama_px=(state["theta"]*wheel if transmissao_animada else None))
     flywheel=P.rotor(cx,cy,wheel,math.degrees(state["theta"]),
                      corpo="#345C72",borda="#173D52",raios=5)
     pulley=P.rotor(motor_x,motor_y,motor_r,math.degrees(state["motor_angle_rad"]),
@@ -305,7 +308,7 @@ def frame_svg(scene:dict,t:float)->str:
     return svg
 
 
-def renderizar(scene:dict,path:Path)->dict:
+def renderizar(scene:dict,path:Path,*,transmissao_animada:bool=False)->dict:
     spec=validar(scene)
     filename=Path(path)
     filename.parent.mkdir(parents=True,exist_ok=True)
@@ -319,7 +322,7 @@ def renderizar(scene:dict,path:Path)->dict:
     proc=subprocess.Popen(cmd,stdin=subprocess.PIPE)
     try:
         for i in range(round(duration*fps)):
-            markup=frame_svg(scene,i/fps)
+            markup=frame_svg(scene,i/fps,transmissao_animada=transmissao_animada)
             data=cairosvg.svg2png(bytestring=markup.encode("utf8"))
             with Image.open(io.BytesIO(data)) as im:
                 pixels=im.convert("RGB").tobytes()
@@ -337,6 +340,8 @@ def renderizar(scene:dict,path:Path)->dict:
        "kernel":"cinematica_biela_manivela.calcular",
        "rod_constraint_exact":True,
        "belt_ratio_no_slip_ideal":True,
+       "belt_animation_f11":bool(transmissao_animada),
+       "belt_primitive_shared":"primitivas_fisicas_parametricas.transmissao_correia",
        "camera_fixed":True,"video":[WIDTH,HEIGHT],"fps":fps,
        "duration_s":duration,"has_audio":False,
        "external_media_copied":False,"publish":False,
@@ -355,10 +360,11 @@ if __name__=="__main__":
     parser.add_argument("scene_json",type=Path)
     parser.add_argument("saida_mp4",type=Path)
     parser.add_argument("--visual-f8",action="store_true",help="Opt-in: peca SVG autoral com hash; nao homologada")
+    parser.add_argument("--transmissao-animada",action="store_true",help="LAB F11: marcacoes no trajeto da correia usando F10")
     args=parser.parse_args()
     scene=carregar(args.scene_json)
     if args.visual_f8:
         scene["visual_parts"]={"cylinder":"cylinder_shell_f8"}
         scene["id"]+="_f8"
-    print(json.dumps(renderizar(scene,args.saida_mp4),
+    print(json.dumps(renderizar(scene,args.saida_mp4,transmissao_animada=args.transmissao_animada),
                      ensure_ascii=False,indent=2))

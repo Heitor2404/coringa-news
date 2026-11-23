@@ -1,0 +1,144 @@
+name: "LAB F12 — layout HERO alto, escala preservada e QA mobile comparativa"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-layout-hero-f12.yml"
+      - "src/v4/formatos/layout_hero_mecanico_f12.py"
+      - "src/v4/formatos/compositor_cinematico_parametrico_2d.py"
+      - "src/v4/formatos/qa_svg_mobile_f11.py"
+      - "tests/test_layout_hero_mecanico_f12.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-f12-layout-hero-mobile
+  cancel-in-progress: true
+jobs:
+  qa_hero_f12:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Ambiente SVG existente sem API paga
+        run: |
+          python -m pip install -q pytest cairosvg pillow numpy scipy opencv-python-headless
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Provar layout F12, regresao F11/F10/F7
+        run: |
+          python -m pytest -q \
+            tests/test_layout_hero_mecanico_f12.py \
+            tests/test_qa_svg_mobile_f11.py \
+            tests/test_transmissao_parametrica_f10.py \
+            tests/test_mecanica_parametrica_f7.py
+      - name: Gerar MP4s F11 baseline e DUAS configuracoes F12
+        timeout-minutes: 11
+        run: |
+          mkdir -p qa_f12/
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f12/BIELA_CURTO_F11_BASELINE.mp4 --transmissao-animada
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f12/BIELA_CURTO_F12_HERO.mp4 --transmissao-animada --hero-f12
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_longo.json \
+            qa_f12/BIELA_LONGO_F12_HERO.mp4 --transmissao-animada --hero-f12
+      - name: Coletar before after com mesmas mascaras F11 para cada rig
+        run: |
+          for rig in curto longo; do
+            python -m src.v4.formatos.qa_svg_mobile_f11 \
+              src/v4/formatos/cenas_parametricas/biela_manivela_curso_${rig}.json qa_f12 > /dev/null
+            python -m src.v4.formatos.qa_svg_mobile_f11 \
+              src/v4/formatos/cenas_parametricas/biela_manivela_curso_${rig}.json qa_f12 --hero-f12 > /dev/null
+          done
+      - name: Validar videos MP4 reais e medir reducao de oclusao simulada
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageStat,ImageChops
+          root=Path("qa_f12")
+          titles=["BIELA_CURTO_F11_BASELINE","BIELA_CURTO_F12_HERO","BIELA_LONGO_F12_HERO"]
+          movie_stats={}
+          frames={}
+          board=Image.new("RGB",(4*270,3*480),"#ecf5f8")
+          for row,name in enumerate(titles):
+              mp4=root/(name+".mp4")
+              data=json.loads(subprocess.check_output(["ffprobe","-v","error",
+                  "-show_entries","stream=codec_type,width,height,r_frame_rate:format=duration",
+                  "-of","json",str(mp4)]))
+              track=next(s for s in data["streams"] if s["codec_type"]=="video")
+              assert (track["width"],track["height"])==(540,960)
+              assert track["r_frame_rate"]=="24/1"
+              assert abs(float(data["format"]["duration"])-9)<.05
+              assert not any(s["codec_type"]=="audio" for s in data["streams"])
+              report=json.loads((root/(name+".json")).read_text("utf8"))
+              assert hashlib.sha256(mp4.read_bytes()).hexdigest()==report["sha256"]
+              assert report["publish"] is False and report["camera_fixed"]
+              hero="_F12_" in name
+              assert (report["layout_mobile_f12"]=="hero_elevado_f12")==hero
+              assert report["scale_reduction_f12"] is False
+              movie_stats[name]={"sha256":report["sha256"],
+                    "layout":report["layout_mobile_f12"],"duration_s":9}
+              frames[name]=[]
+              for col,t in enumerate((.5,2.3,4.5,6.8)):
+                  frame=root/(name+f"_{col}.png")
+                  subprocess.check_call(["ffmpeg","-hide_banner","-loglevel","error",
+                         "-y","-ss",str(t),"-i",str(mp4),"-frames:v","1",str(frame)])
+                  img=Image.open(frame).convert("RGB")
+                  frames[name].append(img)
+                  board.paste(img.resize((270,480)),(col*270,row*480))
+          board.save(root/"COMPARATIVO_F11_VS_F12_12_QUADROS.jpg",quality=91)
+          diffs=[]
+          for i in range(4):
+              diff=ImageChops.difference(frames[titles[0]][i],frames[titles[1]][i])
+              change=sum(ImageStat.Stat(diff).mean)/3
+              assert change>5,("alteracao de enquadramento nao visivel",i,change)
+              diffs.append(round(change,3))
+          risks={}
+          for rig in ("curto","longo"):
+              key="biela_manivela_curso_"+rig
+              old=json.loads((root/(key+"_F11_AUDITORIA.json")).read_text("utf8"))
+              new=json.loads((root/(key+"_F12_AUDITORIA.json")).read_text("utf8"))
+              assert old["platform_source"]==new["platform_source"]
+              assert old["masks_are_conservative_estimates"] and new["masks_are_conservative_estimates"]
+              assert new["status"]=="INSPECAO_UI_HUMANA_PENDENTE"
+              assert new["publish"] is False and not new["automatically_shrink_machine"]
+              def worst_per_role(a,role):
+                  return max(win[role]["max_overlap_fraction"] for win in a["windows"].values())
+              risk={}
+              for role in ("piston","connecting_rod","flywheel","drive_belt"):
+                  a=worst_per_role(old,role)
+                  b=worst_per_role(new,role)
+                  risk[role]={"baseline":a,"hero":b,"change_percentage_points":round((b-a)*100,2)}
+              assert risk["flywheel"]["hero"] < risk["flywheel"]["baseline"],risk
+              assert risk["drive_belt"]["hero"] < risk["drive_belt"]["baseline"],risk
+              risks[rig]=risk
+          report={
+              "status":"F12_TECNICO_OK_UI_REAL_NAO_HOMOLOGADA",
+              "scene_count":2,"renderer_count":1,
+              "camera_pan_or_zoom_added":False,
+              "mechanism_scaled_down":False,
+              "masks_are_only_estimates":True,
+              "publication_allowed":False,
+              "rgb_difference_measured":diffs,
+              "videos":movie_stats,
+              "risks":risks
+          }
+          (root/"QA_F12.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f12-hero-alto-mecanica-mascara-privado
+          path: qa_f12/
+          retention-days: 5
+          if-no-files-found: warn

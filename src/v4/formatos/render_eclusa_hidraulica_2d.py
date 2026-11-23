@@ -23,6 +23,7 @@ import cairosvg
 from PIL import Image
 
 from src.v4.formatos import camera_causal_svg, grafo_causal, realce_causal_svg, biblioteca_componentes_fisicos
+from src.v4.formatos import primitivas_fisicas_parametricas as PRIM
 
 WIDTH, HEIGHT = 540, 960
 DURATION = 12.6
@@ -126,6 +127,13 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
     # A linha do conduto coincide com o traçado curado no realce. A água
     # high-side só alcança a câmara por esse conduto após abrir válvula.
     dash=-s.tempo*42
+    # Mesmas FUNCOES parametricas usadas pela quarta familia de teste.
+    # A eclusa continua com seu core fisico e com exatamente o mesmo palco.
+    conduto_svg=PRIM.conduto("M 461 566 V 809 H 314 V 754",
+                             vazao=flowing,deslocamento=dash)
+    valvula_svg=PRIM.valvula(461,800,s.valvula_aberta)
+    left_wall=PRIM.barreira(150,414,776,1-shut)
+    right_wall=PRIM.barreira(396,414,777,out)
     return f'''<g id="lock-stage">
       <g id="role-lower_channel">
         <path d="M 16 582 H 140 V 778 H 16Z" fill="#547487"/>
@@ -142,13 +150,7 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
       <!-- Conduto à frente das águas laterais para o fluxo real ser visível.
            Continua ATRÁS da câmara: nenhuma água "mágica" atravessa parede. -->
       <g id="role-conduit">
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#294F62" stroke-width="32"
-          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#102F45" stroke-width="17"
-          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#7BDAE5" stroke-width="8"
-          stroke-dasharray="12 21" stroke-dashoffset="{dash:.2f}"
-          opacity="{.75*flowing:.3f}" fill="none" stroke-linecap="round"/>
+        {conduto_svg}
         {highlight}
       </g>
       <g id="role-chamber">
@@ -172,8 +174,8 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
         </g>
         <path d="M 161 758 H 386" stroke="#23485C" stroke-width="14"/>
       </g>
-      <path d="M 150 414 V 776" stroke="#264D62" stroke-width="16" opacity="{shut:.3f}"/>
-      <path d="M 396 414 V 777" stroke="#264D62" stroke-width="16" opacity="{1-out:.3f}"/>
+      {left_wall}
+      {right_wall}
       <g id="role-inlet_gate">
         <rect x="139" y="421" width="16" height="348" rx="3"
           fill="#DFE8E8" stroke="#668695" stroke-width="3"
@@ -190,10 +192,7 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
       </g>
       {_ship(s.navio_x,s.navio_y)}
       <g id="role-valve">
-        <circle cx="461" cy="800" r="15" fill="#2C5469"
-          stroke="{'#F5C368' if s.valvula_aberta>.8 else '#CADFE1'}" stroke-width="4"/>
-        <path d="M 451 800 L 471 800" stroke="#F2C97B" stroke-width="4"
-          transform="rotate({90*s.valvula_aberta:.2f} 461 800)"/>
+        {valvula_svg}
       </g>
       <path d="M 160 778 H 388" stroke="#668995" stroke-width="10"/>
     </g>'''

@@ -12,11 +12,11 @@ from xml.etree import ElementTree as ET
 from src.v4.formatos import camera_causal_svg as C
 
 MAP=json.loads(Path(__file__).with_name('rastreador_componentes_svg.json').read_text('utf8'))
-FLOAT=r'[-+]?(?:\\d+\\.?\\d*|\\.\\d+)'
-TRANS=re.compile(r'^translate\\(('+FLOAT+r') ('+FLOAT+r')\\)$')
+FLOAT=r'[-+]?(?:\d+\.?\d*|\.\d+)'
+TRANS=re.compile(r'^translate\(('+FLOAT+r') ('+FLOAT+r')\)$')
 STAGE=re.compile(
-    r'^translate\\(('+FLOAT+r') ('+FLOAT+r')\\) '
-    r'scale\\(('+FLOAT+r')\\) translate\\(0 ('+FLOAT+r')\\)$'
+    r'^translate\(('+FLOAT+r') ('+FLOAT+r')\) '
+    r'scale\(('+FLOAT+r')\) translate\(0 ('+FLOAT+r')\)$'
 )
 
 def _err(x):

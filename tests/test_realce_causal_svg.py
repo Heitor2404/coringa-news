@@ -29,6 +29,12 @@ def _rgb(svg):
 def _delta(a,b,roi):
     return sum(ImageStat.Stat(ImageChops.difference(a.crop(roi),b.crop(roi))).mean)/3
 
+def _sem_linhas_vazias(svg):
+    # Unica diferenca ignorada: a linha em branco após retirar camada SVG.
+    # Nenhuma alteracao de tags, coords, estilo ou fisica e permitida.
+    return "\\n".join(line.rstrip() for line in svg.splitlines() if line.strip())
+
+
 
 def test_duas_familias_contem_rotas_verdadeiras_do_grafo():
     for fam in ('compressor_oficina_pv','otto_4t_reference'):
@@ -94,8 +100,9 @@ def test_ciclo_compressor_preserva_camera_fisica_e_titulos():
         assert _delta(a,b,(0,903,540,960))==0
         assert _delta(a,b,(75,255,485,850))>0.02
         # A unica diferença no XML deve ser o grupo de realce.
-        assert re.sub(r'    <g id="causal-emphasis".*?</g>','',new,
-                      flags=re.DOTALL)==base
+        assert _sem_linhas_vazias(re.sub(
+            r'    <g id="causal-emphasis".*?</g>','',new,
+            flags=re.DOTALL))==_sem_linhas_vazias(base)
 
 
 def test_otto_sem_pulsar_camera_e_sem_duplicar_faisca():
@@ -115,8 +122,9 @@ def test_otto_sem_pulsar_camera_e_sem_duplicar_faisca():
         else:
             assert 'id="causal-emphasis"' in after
             assert _delta(a,b,(30,247,510,905))>0.02
-            assert re.sub(r'    <g id="causal-emphasis".*?</g>','',after,
-                          flags=re.DOTALL)==before
+            assert _sem_linhas_vazias(re.sub(
+                r'    <g id="causal-emphasis".*?</g>','',after,
+                flags=re.DOTALL))==_sem_linhas_vazias(before)
 
 
 def test_sem_efeito_em_estados_sem_evidencia_ou_ativos():

@@ -58,3 +58,25 @@ Os novos CSVs não representam automaticamente novos dos **12 mecanismos** do be
 - Exigir QA independente dos vídeos, além de testes de resíduos matemáticos.
 
 **Tudo permanece na branch experimental; `main`, NTC, DOSSIÊ, Telegram, produção e postagem NÃO alterados.**
+
+
+## Fechamento final E8 — quatro vídeos reais no MESMO renderizador
+
+**Execução de encerramento:** [GitHub Actions **45270545501**](https://github.com/Heitor2404/coringa-news/actions/runs/45270545501) **SUCCESS, 52 testes PASS**, regressões E7/E1/E2/E8, duas fontes MIT recuperadas, seis novos CSVs testados, quatro `MechanismSpec` válidas, quatro MP4s do mesmo `renderer_corpos_e1.py`. Artifact `lab-e8-independent-mit-sources-unseen-private` ID **14865665877**, expira **28/11/2026 21:33:22 UTC**. ZIP baixado, extraído, hashes confrontados com `E8_ALL_VIDEOS_QA.json`, folha `E8_ACCEPTED_MECHANISMS_CONTACT.jpg` aberta e inspecionada.
+
+**Vídeos finais** (540×960, 18 fps, silenciosos, PRIVADOS; dados de fonte MIT, sem importar mídia externa):
+
+| Fonte estruturada | Arquivo final | Corpos | Juntas | SHA256 |
+|---|---|---:|---:|---|
+| `shaper.csv` | `E8_UNSEEN_GENERIC_PRIVATE.mp4` | 4 | 7 | `3b748fc2f1ee5481a44726ece95073577113e887fdd9ffa18809893685a6a0b9` |
+| `hoekens.csv` | `E8_GENERIC_hoekens.mp4` | 3 | 4 | `37bf3910c59a925f66246b2d4beeace78b6115f337cfdb4d7a3b5661023e0185` |
+| `pump-jack.csv` | `E8_GENERIC_pump_jack.mp4` | 3 | 4 | `c4a3c382ca846fe190ea701132763b9553ed0ea43a1c6681cb62719655de58e3` |
+| `knuckle-press.csv` | `E8_GENERIC_knuckle_press.mp4` | 5 | 8 | `63d0cd083366cd5804818b6fb604a0aceeedbc3ac1792bcdab6ce0cdee44f64e` |
+
+Todos têm movimentos de pixels reais na área do mecanismo; diferenças RGB **2,53; 2,90; 3,11 e 3,97**, respectivamente. As posições físicas derivam do mesmo solver E1 e geometria CSV importada, sem vídeo-fonte copiado.
+
+**Avaliação visual dos quatro quadros reais:** todos são reconhecíveis como *esquemas de barras e juntas*, mas **não são máquinas industriais reconhecíveis**, não há carcaças/estrutura física, escala contextual, demonstração visual de causa e efeito, nem direção artística suficiente. O fundo claro continua pouco aproveitado em várias poses. **VISUAL NÃO HOMOLOGADO, NÃO PUBLICAR**. Ter solucionado juntas e corpos não equivale a reproduzir visualmente uma máquina de maneira interessante para o canal.
+
+**Comparação honesta:** o importador foi corrigido **depois** da primeira medição 2/6, para reconhecer `parallel/perpendicular`. O reteste final é **4/6**, mas NÃO é um holdout cego. Todos os seis CSVs pertencem ao mesmo upstream E7; o segundo repositório MIT possui presets e trajetórias-oráculo, sem âncoras, e **0 specs foram importadas dele**. Nenhuma nova topologia do benchmark congelado de 12 foi promovida; **4/12 candidatos já demonstrados numericamente** permanece como histórico, não um score autônomo de pesquisa. Visual ainda 0 aprovado.
+
+**Próxima E9:** modelar formas gráficas genéricas a partir de geometria real de peças (furos, trilhos, contato, rodas, carcaça ou CAD licenciado), com QA de congruência física-vídeo. Testar nova fonte de formato mecânico *com juntas explícitas* em outro repositório, sem criar exceção por título de mecanismo e sem voltar aos desenhos miniaturizados rejeitados.

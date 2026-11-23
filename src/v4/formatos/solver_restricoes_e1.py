@@ -29,7 +29,7 @@ def _id(x):
     if not isinstance(x,str) or not NAME.fullmatch(x):fail("ID")
     return x
 
-def validate(spec):
+def validate(spec, *, cad_bodies=None):
     if not isinstance(spec,dict) or spec.get("schema")!=SCHEMA or spec.get("units")!="m":
         fail("CONTRATO")
     if spec.get("publish") is not False or spec.get("visual_approved") is not False:
@@ -46,6 +46,8 @@ def validate(spec):
         ident=_id(b["id"])
         if ident in ids:fail("ID_DUPLICADO")
         ids.append(ident); vec(b["seed"],3)
+        if cad_bodies is not None and ident in cad_bodies and b["shapes"] == []:
+            continue  # Geometry is supplied by an external, registered CAD solid.
         if not isinstance(b["shapes"],list) or not b["shapes"]:
             fail("FORMA")
         for shape in b["shapes"]:
@@ -85,6 +87,7 @@ def validate(spec):
                     fail("FORMA")
                 if float(np.linalg.norm(a-b))/shape["tooth_pitch_m"]>160:
                     fail("DENTES")
+    if cad_bodies is not None and set(ids) != set(cad_bodies):fail("CORPOS_CAD")
     joints=spec.get("joints")
     if not isinstance(joints,list) or not 2<=len(joints)<=40:
         fail("JUNTAS")
@@ -209,8 +212,8 @@ def solve_constraints(equations, q, args=()):
     if rank<len(result.x):fail("SINGULAR_OU_SUBDETERMINADO")
     return result,err,rank
 
-def solve_one(spec,t,previous=None):
-    names=validate(spec)
+def solve_one(spec,t,previous=None,*,cad_bodies=None):
+    names=validate(spec,cad_bodies=cad_bodies)
     if type(t) not in (float,int) or not math.isfinite(t) or not 0<=t<=spec["duration_s"]:
         fail("INSTANTE")
     q=np.concatenate([vec(b["seed"],3) for b in spec["bodies"]]) if previous is None else np.array(previous,dtype=float)
@@ -235,12 +238,12 @@ def solve_one(spec,t,previous=None):
             "jacobian_rank":rank,"jacobian_size":len(result.x),
             "iterations":int(result.nfev),"q":result.x.tolist()}
 
-def trajectory(spec,samples=121):
-    validate(spec)
+def trajectory(spec,samples=121,*,cad_bodies=None):
+    validate(spec,cad_bodies=cad_bodies)
     if type(samples) is not int or not 3<=samples<=500:fail("AMOSTRAS")
     output=[];prior=None
     for t in np.linspace(0,float(spec["duration_s"]),samples):
-        frame=solve_one(spec,float(t),prior)
+        frame=solve_one(spec,float(t),prior,cad_bodies=cad_bodies)
         if prior is not None:
             jump=np.abs(np.array(frame["q"])-np.array(prior))
             if float(np.max(jump))>.8:

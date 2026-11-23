@@ -1,0 +1,22 @@
+{
+  "source": "https://xemstudio.com/objects/print-in-place-crank-slider/",
+  "credit": "Xem Studio",
+  "files": {
+    "step": ["https://xemstudio.com/files/hardware/print-in-place-crank-slider/print-in-place-crank-slider-assembly.step", "46deb739264875321094559b203bed2db1b3339f4e543acc5ca435db3480c619"],
+    "license": ["https://xemstudio.com/files/hardware/print-in-place-crank-slider/LICENSE.md", "567e1040e3d7ca0c930870f60911ac1f4be2704f8594bb2e2d4aad2ec44fedee"]
+  },
+  "license_name": "Xem Studio Design License v1.0 (file notice 2026-11-04)",
+  "assembly": "print-in-place-crank-slider",
+  "ground": "frame",
+  "driver": "crank",
+  "measurement_body": "slider",
+  "horizontal": [1,0,0],
+  "vertical": [0,0,1],
+  "pin_pairs": [["frame","crank"],["crank","rod"],["rod","slider"]],
+  "slider_pair": ["frame","slider"],
+  "guide_direction": [1,0,0],
+  "reference_stroke_mm": 31.06,
+  "title": "Biela e manivela",
+  "legend": {"crank":"Manivela","rod":"Biela","slider":"Cursor"},
+  "palette": {"frame":[0.18,0.25,0.31],"crank":[0.89,0.47,0.045],"rod":[0.15,0.52,0.64],"slider":[0.76,0.78,0.78]}
+}

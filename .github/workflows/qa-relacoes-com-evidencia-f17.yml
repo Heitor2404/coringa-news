@@ -1,0 +1,114 @@
+name: "LAB F17 — proveniência por relação + lacunas do núcleo hidráulico"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-relacoes-com-evidencia-f17.yml"
+      - "src/v4/formatos/relacoes_com_evidencia_f17.py"
+      - "tests/test_relacoes_com_evidencia_f17.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-f17-relations-by-span
+  cancel-in-progress: true
+jobs:
+  source_truth_and_gap_plan:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Bibliotecas do laboratório, sem API paga ou acesso a mídia externa
+        run: |
+          python -m pip install -q pytest cairosvg pillow numpy scipy
+      - name: Provar extração por relação, inversão, paráfrase, direitos e regressões F16/F15
+        run: |
+          python -m pytest -q \
+            tests/test_relacoes_com_evidencia_f17.py \
+            tests/test_ingestao_evidencias_f16.py \
+            tests/test_compilador_topologia_f15.py
+      - name: Checar fontes HTTPS reais ou registrar BLOQUEIO explícito
+        timeout-minutes: 4
+        run: |
+          mkdir -p qa_f17
+          python -m src.v4.formatos.relacoes_com_evidencia_f17 \
+            src/v4/formatos/evidencias_f16/par_engrenagens_educacional.json qa_f17 --live
+          python -m src.v4.formatos.relacoes_com_evidencia_f17 \
+            src/v4/formatos/evidencias_f16/biela_cinematica_parcial.json qa_f17 --live
+          python -m src.v4.formatos.relacoes_com_evidencia_f17 \
+            src/v4/formatos/evidencias_f16/plataforma_tesoura_fonte_alternativa.json qa_f17 --live
+          python -m src.v4.formatos.relacoes_com_evidencia_f17 \
+            src/v4/formatos/evidencias_f16/plataforma_tesoura_hidraulica.json qa_f17 --live
+      - name: Validar três grafos, referências por ligação e bloqueios físicos
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("qa_f17")
+          names=("par_engrenagens_educacional",
+                 "biela_cinematica_parcial",
+                 "plataforma_tesoura_fonte_alternativa",
+                 "plataforma_tesoura_hidraulica")
+          outcomes={}
+          for name in names:
+              doc=json.loads((root/(name+"_F17_RELATIONS.json")).read_text("utf8"))
+              assert doc["publication_allowed"] is False
+              assert doc["render_allowed"] is False
+              assert doc["human_review_required"] is True
+              assert doc["visual_reference_rights_verified"] is False
+              if doc["source_live_verified"]:
+                  assert len(doc["source_sha256"])==64
+                  assert doc["source_excerpt_count"]==3
+                  assert doc["all_claims_have_span_id"] is True
+                  assert doc["graph"]["numeric_geometry_inferred"] is False
+                  assert all(e["evidence_kind"]=="direct_lexical_relation" and
+                             len(e["supported_span_ids"])==1
+                             for e in doc["graph"]["edges"])
+                  if name=="plataforma_tesoura_fonte_alternativa":
+                      assert doc["graph"]["family_candidate"]=="hydraulic_scissor_lift"
+                      assert {e["joint"] for e in doc["graph"]["edges"]}=={
+                          "drives","fluid_to","pushes"}
+                      assert doc["capability_gap"]["status"]=="BLOCKED_NO_KERNEL"
+                      assert len(doc["capability_gap"]["required_subsystems"])==4
+                      assert "hydraulic_cylinder" in doc["capability_gap"]["new_node_kinds"]
+                  elif name=="biela_cinematica_parcial":
+                      assert doc["capability_gap"]["status"]=="BLOCKED_MISSING_JOINTS_AND_COMPONENTS"
+                  elif name=="par_engrenagens_educacional":
+                      assert doc["graph"]["family_candidate"]=="external_spur_pair"
+                      assert doc["capability_gap"]["unknown_input_output_orientation"] is True
+              else:
+                  assert doc["status"].startswith("BLOCKED_")
+                  assert "graph" not in doc
+              outcomes[name]={
+                  "live":doc["source_live_verified"],
+                  "status":doc["status"],
+                  "family":doc.get("graph",{}).get("family_candidate"),
+                  "relations_proven":len(doc.get("graph",{}).get("edges",[]))
+              }
+          result={
+              "schema":"coringa-f17-gate-v1",
+              "status":"RELATION_PROVENANCE_OR_EXPLICIT_SOURCE_BLOCK",
+              "uses_free_web_http_not_paid_model":True,
+              "per_edge_source_ids_required":True,
+              "hydraulic_renderer_exists":False,
+              "site_document_vs_visual_license_distinguished":True,
+              "graph_is_evidence_constrained_not_CAD":True,
+              "no_video_or_external_visual_asset_produced":True,
+              "production_enabled":False,
+              "publish":False,
+              "sources":outcomes
+          }
+          (root/"QA_F17.json").write_text(
+              json.dumps(result,ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps(result,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f17-arestas-com-citacoes-e-plano-hidraulico-privado
+          path: qa_f17/
+          retention-days: 5
+          if-no-files-found: warn

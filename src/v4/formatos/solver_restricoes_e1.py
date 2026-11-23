@@ -120,12 +120,31 @@ def validate(spec):
                 fail("LADO_CONTATO")
         nc+=KINDS[kind]
     dr=spec.get("driver")
-    if not isinstance(dr,dict) or set(dr)!={"body","theta0","speed"}:
+    if not isinstance(dr,dict) or set(dr) not in (
+        {"body","theta0","speed"},{"body","theta0","speed","profile"}):
         fail("ACIONADOR")
     if dr["body"]==gid or dr["body"] not in ids:fail("ACIONADOR")
     if any(type(dr[x]) not in (int,float) or not math.isfinite(dr[x])
            for x in ("theta0","speed")):fail("ACIONADOR")
     if not .01<=abs(dr["speed"])<=25:fail("ACIONADOR")
+    if "profile" in dr:
+        profile=dr["profile"]
+        if (not isinstance(profile,dict)
+            or set(profile)!={"kind","range_min_rad","range_max_rad","phase_rad"}
+            or profile["kind"]!="oscillating"):
+            fail("PERFIL_ACIONADOR")
+        for key in ("range_min_rad","range_max_rad","phase_rad"):
+            if type(profile[key]) not in (int,float) or not math.isfinite(profile[key]):
+                fail("PERFIL_NUMERO")
+        low=profile["range_min_rad"];high=profile["range_max_rad"]
+        if not (-2*math.pi<=low<high<=2*math.pi and .001<high-low<math.pi):
+            fail("PERFIL_INTERVALO")
+        if not -2*math.pi<=profile["phase_rad"]<=2*math.pi:
+            fail("PERFIL_FASE")
+        # A source's current pose must be exactly the first frame.
+        start=(low+high)/2+(high-low)/2*math.cos(profile["phase_rad"])
+        if abs(start-dr["theta0"])>1e-6:
+            fail("PERFIL_POSE_INICIAL_DIVERGE")
     duration=spec.get("duration_s")
     if type(duration) not in (int,float) or not 2<=duration<=12:fail("TEMPO")
     # With prescribed driver angle, 3 vars/body must be matched by constraint count.
@@ -169,7 +188,14 @@ def residual(q,spec,t,names):
             out.append(along+j["pitch_side"]*j["pitch_radius_m"]*
                        (a[2]-b[2])-j["phase_m"])
     d=spec["driver"]
-    out.append(state[d["body"]][2]-d["theta0"]-d["speed"]*t)
+    if "profile" in d:
+        profile=d["profile"]
+        lo=profile["range_min_rad"];hi=profile["range_max_rad"]
+        target=(lo+hi)/2+(hi-lo)/2*math.cos(
+            profile["phase_rad"]+d["speed"]*t)
+    else:
+        target=d["theta0"]+d["speed"]*t
+    out.append(state[d["body"]][2]-target)
     return np.asarray(out,dtype=float)
 
 def solve_one(spec,t,previous=None):

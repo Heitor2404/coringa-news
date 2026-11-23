@@ -14,12 +14,12 @@ from PIL import ImageFont
 NS="{http://www.w3.org/2000/svg}"
 X=35
 WIDTH=169
-TITLE_Y=170
+TITLE_Y=160
 TITLE_STEP=24
-PHASE_Y=234
-DETAIL_Y=257
+PHASE_Y=222
+DETAIL_Y=246
 DETAIL_STEP=17
-MAX_Y=313
+MAX_Y=298
 
 def _fail(name):
     raise ValueError("F13-HOOK-"+name)
@@ -93,6 +93,21 @@ def aplicar(svg:str)->tuple[str,dict]:
     detail_lines=_wrap(d,WIDTH,11,False,3)
     if DETAIL_Y+(len(detail_lines)-1)*DETAIL_STEP>MAX_Y:
         _fail("TEXTO_SAIU_AREA")
+    # F13b: o topo escuro da F12 ficava 134px com quase nenhum conteúdo
+    # essencial (encoberto pela UI). Reduzir a faixa sem tocar no palco físico.
+    header=[node for node in root if node.tag==NS+"rect"
+            and node.get("width")=="540" and node.get("height")=="134"]
+    grid=[node for node in root if node.tag==NS+"rect"
+          and node.get("y")=="134" and node.get("height")=="780"]
+    progress=[node for node in root if node.tag==NS+"rect"
+              and node.get("x")=="35" and node.get("y")=="127" and node.get("height")=="4"]
+    if len(header)!=1 or len(grid)!=1 or len(progress)!=2:
+        _fail("CABECALHO_F12_INCOMPATIVEL")
+    header[0].set("height","105")
+    grid[0].set("y","105")
+    grid[0].set("height","809")
+    for bar in progress:
+        bar.set("y","99")
     for item in (title,phase,detail,subtitle):
         root.remove(item)
     pocket=ET.SubElement(root,NS+"g",{
@@ -113,7 +128,8 @@ def aplicar(svg:str)->tuple[str,dict]:
        "stage_transform_preserved":stage.get("transform"),
        "title_lines":len(title_lines),
        "detail_lines":len(detail_lines),
-       "pocket":[X,149,X+WIDTH,MAX_Y+9],
+       "pocket":[X,142,X+WIDTH,MAX_Y+9],
+       "decorative_header_px":105,
        "scale_reduced":False,
        "publish":False,
        "observed_ui_only":True,

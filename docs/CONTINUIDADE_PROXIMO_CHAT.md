@@ -2153,7 +2153,7 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 - **Próximo passo:** avaliar adequação da arte da F6 no celular; ampliar primitives para acionamentos, engrenagens e atuadores físicos, e integrar quarto mecanismo no inventário F5 sem IDs/contagens hardcoded, condicionado a identidade visual auditada. Manter F-VISUAL-LEGADO-DESCARTADO e camera fixa.
 - `main`, produção, NTC, DOSSIÊ, Telegram e publicação NÃO alterados. Tudo na branch atlas-direcao-visual-20261118.
 
-## 117. 23/11 ~02h17 BRT — F7 MECÂNICA PARAMÉTRICA EM IMPLEMENTAÇÃO (QA AINDA PENDENTE)
+## 117. 23/11 ~02h17 BRT — F7 MECÂNICA PARAMÉTRICA IMPLEMENTADA E VALIDADA TECNICAMENTE (ARTE NÃO HOMOLOGADA)
 
 **Pedido do usuário:** “Prossiga”, após aprovação da F6 paramétrica, mantendo a exigência de registrar SEMPRE o progresso neste documento GitHub. Planejamento: rotor, pistão, transmissão e biela como peças DESENHÁVEIS, provar reuso entre compressor, Otto e NOVA montagem mecânica configurável por JSON, preservando câmera estável, estética/referência não certificadas e bloqueio de publicação.
 
@@ -2169,3 +2169,17 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 **IMPORTANTE:** ainda NÃO atribuir testes aprovados nem prévia nova à F7, pois integração/CI ainda NÃO tinham sido executados ao escrever este checkpoint. F5 mantém 29 atores/3 famílias certificados, nova F7 apenas prova candidata. Sem Claude, sem publicação, sem Telegram/main/NTC/DOSSIÊ.
 
 **Próximo agora:** implementar um único compositor mecânico de cenas JSON, testes de junta/curso/polia/câmera e regressões das duas famílias existentes; rodar GitHub Actions e inspecionar as duas prévias privadas. ATUALIZAR ESTA seção com resultado final e relatório F7.
+
+### Resultado final F7 — 23/11 ~02h22 BRT, pós-inspeção do vídeo real
+
+- **Workflow GitHub Actions final:** https://github.com/Heitor2404/coringa-news/actions/runs/45117061112 — **SUCCESS, 85 testes aprovados, 11 warnings Pillow**, sem falhas em compressor, Otto, F6, eclusa, câmera e rig novo.
+- Primeira execução https://github.com/Heitor2404/coringa-news/actions/runs/45116857946 apresentou **83 PASS e 2 FAIL** por assert de rodapé inteiro constante; o contador LEGÍTIMO muda de `01/02` para `02/02`. O teste foi corrigido para exigir estabilidade do rodapé, excluindo apenas a área do contador, e agora verifica a troca de fase explicitamente. **Não mascarou falha física**.
+- Dois vídeos PRIVADOS feitos pelo **MESMO compositor** `compositor_cinematico_parametrico_2d.py` a partir de 2 cenas JSON, 540×960, 24fps, **9,000s**, sem áudio, FFprobe confirmado em container.
+- `BIELA_CURSO_CURTO_F7.mp4` SHA256 `9dd2ec0e0f58b874f710774c1c4bf7a2dc982c45bcaa6747a0ea1a30367b71e3`, curso **92px**, razão ideal polias ~2,74×.
+- `BIELA_CURSO_LONGO_F7.mp4` SHA256 `1274cc979c6ae3c349db73902f600e0a0bef3f8fd0ce8fc0daa2d216d0300ef3`, curso **128px**, razão ideal polias ~2,96×.
+- **Artifact GitHub** `lab-f7-mecanica-biela-manivela-dois-rigs-privados`, ID **14792495211**, expira **28/11/2026 05:20 UTC**. Inclui 2 MP4s, JSONs e 8 PNGs de fases mais `COMPARACAO_F7_2_RIGS_8_QUADROS.jpg` e `QA_F7_MECANICA.json`.
+- **Inspeção humana da prancha e frames reais:** máquina grande em fundo claro, polias à esquerda, volante à direita, pistão e biela conectados ao mesmo pino; curso longo visivelmente maior; os dois rigs ficam no mesmo enquadramento estático; peças parecem legíveis, mas apresentação ainda é **didática e estilizada**, não modelo real certificado nem identidade visual homologada para postar.
+- Núcleo `cinematica_biela_manivela.py` de junta rígida e razão ideal de polias foi usado em 3 consumidores: `compressor_pv_core.estado`, `render_reconstrucao_causal_2d.pose`, novo compositor. Primitiva `rotor` desenha também volante e polia do compressor anterior mantendo configuração visual; `biela`, `pistao` e `transmissao_correia` montam rig novo.
+- **F7 agora tem 8/13 tipos desenháveis** (F6 tinha 5); 5 tipos do catálogo F5 ainda carecem de funções de desenho. O compositor de vasos comunicantes F6 continua com pipeline próprio: o reuso é das primitivas e do núcleo geométrico, NÃO um compositor universal para hidráulica e mecânica.
+- **Próxima fase:** entrada de modelos/peças referenciadas/curadas (direitos e identidade, não apenas site técnico), normalização de unidade/ancoragem, montagem entre famílias e QA visual de colisão/área segura real Reels/TikTok/Shorts; remover hardcodes no gate F5 com cuidado. NÃO prometer geração livre em 2D/3D a partir de título.
+- O resumo técnico completo da fase está em `docs/v4/formatos/F7_MECANICA_PARAMETRICA_20261123.md` (mesmo commit). `main`, NTC, DOSSIÊ, produção, Telegram e postagem intocados.

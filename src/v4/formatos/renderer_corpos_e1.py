@@ -43,10 +43,15 @@ def geometry_bounds(spec,frames):
     allpoints=np.array(hits,dtype=float)
     lo=np.min(allpoints,axis=0); hi=np.max(allpoints,axis=0)
     middle=(lo+hi)/2
-    span=np.maximum(hi-lo,1.)
-    # Shared E2 hero stage: higher in the 9:16 frame, larger useful area.
-    # Conservative full-cycle bounds prevent hidden machine extremities.
-    scale=float(min(455/(span[0]+.45),495/(span[1]+.45)))
+    # A 1-metre minimum span made small real mechanisms (e.g. a 300 mm
+    # slotted lever) appear microscopic. Framing is RELATIVE to actual
+    # full-trajectory geometry; keep a small absolute margin for stability.
+    span=np.maximum(hi-lo,1e-6)
+    pad_x=max(.012,float(span[0])*.18)
+    pad_y=max(.012,float(span[1])*.18)
+    # Fixed, enlarged hero stage. Use conservative effective dimensions;
+    # never crop extents to make the object look larger.
+    scale=float(min(455/(span[0]+pad_x),495/(span[1]+pad_y)))
     return {"center":[float(n) for n in middle],
             "scale_px_per_m":scale,"span_m":[float(x) for x in span],
             "world_fixed_for_all_frames":True}
@@ -56,7 +61,8 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
     if not frame["poses"] or not camera["world_fixed_for_all_frames"]:
         raise ValueError("E1-RENDER-ESTADO")
     cx,cy=camera["center"];scale=camera["scale_px_per_m"]
-    if not 20<scale<1000:raise ValueError("E1-RENDER-CAMERA")
+    if not 0<scale<100000 or not math.isfinite(scale):
+        raise ValueError("E1-RENDER-CAMERA")
     shapes=[]
     for idx,b in enumerate(spec["bodies"]):
         x,y,ang=frame["poses"][b["id"]]
@@ -120,8 +126,12 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
         if j["kind"]!="pin":continue
         pose=frame["poses"][j["a"]]
         u,v=S.world(pose,j["pa"])
-        pins.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r=".045" '
-                    'fill="#FCE8B0" stroke="#263E4A" stroke-width=".013"/>')
+        # Node marker size is a SCREEN-SPACE constant, not a fixed 45 mm
+        # physical object (which swamped short, source-dimensioned links).
+        pin_radius=8.5/scale
+        pin_stroke=2.4/scale
+        pins.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{pin_radius:.8g}" '
+                    f'fill="#FCE8B0" stroke="#263E4A" stroke-width="{pin_stroke:.8g}"/>')
     fraction=frame["t"]/spec["duration_s"]
     title=escape(title[:55])
     svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960"

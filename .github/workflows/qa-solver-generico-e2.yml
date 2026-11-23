@@ -87,8 +87,22 @@ jobs:
               board.paste(img.resize((270,480)),(col*270,0))
               grabs.append(img.copy())
           board.save(root/"CONTATO_E2_4_QUADROS.jpg",quality=92)
-          differences=[sum(ImageStat.Stat(ImageChops.difference(grabs[0],g)).mean)/3 for g in grabs[1:]]
-          assert max(differences)>1, "Frames not visibly changing"
+          # Compare only physical stage: header/progress/footer should not dilute motion.
+          stage=[img.crop((18,153,522,769)) for img in grabs]
+          differences=[sum(ImageStat.Stat(ImageChops.difference(stage[0],g)).mean)/3 for g in stage[1:]]
+          assert max(differences)>1, "Stage not visibly changing"
+          import numpy as np
+          yellow_centers=[]
+          for img in grabs:
+              pix=np.asarray(img,dtype=np.uint8)
+              roi=pix[250:700]
+              # Gold rack (not the header): observe its real position in pixels.
+              mask=(roi[:,:,0]>170)&(roi[:,:,1]>110)&(roi[:,:,2]<150)
+              xx=np.where(mask)[1]
+              assert len(xx)>400, "Rack not visible"
+              yellow_centers.append(float(xx.mean()))
+          rack_screen_shift=yellow_centers[-1]-yellow_centers[0]
+          assert rack_screen_shift>40, "Rack does not follow solved motion in SVG"
           camera=R.geometry_bounds(spec,frames)
           report={
             "schema":"coringa-e2-pinion-rack-qa-v0",
@@ -106,7 +120,8 @@ jobs:
             "max_joint_residual_m":max(f["max_residual_m"] for f in frames),
             "rack_stroke_m":frames[-1]["poses"]["rack"][0]-frames[0]["poses"]["rack"][0],
             "pitch_radius_m":radius,
-            "max_sampled_rgb_change":max(differences),
+            "max_stage_rgb_change":max(differences),
+            "measured_rack_motion_px":rack_screen_shift,
             "camera_fixed":camera["world_fixed_for_all_frames"],
             "sha256":sha,
             "visual_approved":False, "publish":False,

@@ -27,6 +27,7 @@ jobs:
           sparse-checkout: |
             urdf/msg_description
             urdf/ssg48_description
+            urdf/parol6_description
             source/jaws/ssg48_pinch
       - uses: actions/setup-python@v5
         with:

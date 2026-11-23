@@ -36,6 +36,20 @@ class TestCAD(unittest.TestCase):
                     np.testing.assert_allclose(rel[:3,3],expected,rtol=0,atol=1e-10)
                     np.testing.assert_allclose(rel[:3,:3],R,rtol=0,atol=1e-10)
 
+    def test_hinge_registration_and_measured_rotation(self):
+        case = self.lock["hinges"][0]
+        model, meshes = load_model(self.root,self.lock,case["file"],case["joint"])
+        self.assertEqual({m[0] for m in meshes},{"upper_arm_link","forearm_link"})
+        # URDF zero configuration. The child axis stays on the same world line.
+        joint0 = Rotation.from_euler("xyz",[np.pi,0,-np.pi/2]).as_matrix()
+        for t in np.linspace(0,1,97):
+            poses, _, _, _ = model.frame(t)
+            pose = poses["forearm_link"]
+            np.testing.assert_allclose(pose[:3,3],[0,-.18,0],atol=1e-12)
+            q = -1.3 + 3.3*t
+            expected = joint0 @ Rotation.from_euler("z",q).as_matrix()
+            np.testing.assert_allclose(pose[:3,:3],expected,atol=1e-12)
+
     def test_reject_unsupported_revolute(self):
         xml = ET.parse(self.root/self.lock["models"][0]).getroot()
         xml.find("joint[@type='prismatic']").set("type","revolute")

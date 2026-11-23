@@ -20,10 +20,21 @@
     "urdf/msg_description/meshes/msg/jaw2.STL": "2c0d7206ba05af4228f8c3a4486af4a77dc8aa7beafa73514a8c0e09a119f4b1",
     "urdf/ssg48_description/meshes/ssg48/gripper.STL": "6459981e5522ccbd0c3091da6e3810810bc2a4c30a6a77f339f41cadf1e585cd",
     "urdf/ssg48_description/meshes/ssg48/jaws/pinch/left.STL": "3c51d877fba7892faf2badff3813be9ea3a8783dfa29facce077932c74022f55",
-    "urdf/ssg48_description/meshes/ssg48/jaws/pinch/right.STL": "7d74b69e7c027632cb289e97194dd0101069f2d5f20f854bc47756a8b9e6c91a"
+    "urdf/ssg48_description/meshes/ssg48/jaws/pinch/right.STL": "7d74b69e7c027632cb289e97194dd0101069f2d5f20f854bc47756a8b9e6c91a",
+    "urdf/parol6_description/parol6_flange.urdf": "f15629dbd8b32c53c94af00b61e543414d039211ca385c075fd3a45e241d92bf",
+    "urdf/parol6_description/meshes/arm/visual/upper_arm_structure_visual.STL": "9419c857079db4137e0be283b0c9e6d3f891a046d3e8c6bcd72b49adbe42720a",
+    "urdf/parol6_description/meshes/arm/visual/j3_actuator_visual.STL": "d5245d07ed1e0c5ba453dcc3a63c25ed9f22d5e81323e3239092112fbc1516e3",
+    "urdf/parol6_description/meshes/arm/L3.STL": "4a3584a29eee9266dc0c7bc22224f2c282aa275b65a35999f9316604b1483e2f"
   },
   "step_registration": {
     "registration": "source/jaws/ssg48_pinch/jaw.json",
     "mesh": "urdf/ssg48_description/meshes/ssg48/jaws/pinch/left.STL"
-  }
+  },
+  "hinges": [
+    {
+      "file": "urdf/parol6_description/parol6_flange.urdf",
+      "joint": "elbow_joint",
+      "title": "PAROL6 · Cotovelo"
+    }
+  ]
 }

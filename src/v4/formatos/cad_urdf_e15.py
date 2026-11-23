@@ -45,7 +45,7 @@ def triangles(data):
 
 
 class Assembly:
-    def __init__(self, xml):
+    def __init__(self, xml, allow_hinge=False):
         self.links = [l.attrib["name"] for l in xml.findall("link")]
         self.joints = {}
         self.moving = []
@@ -55,12 +55,12 @@ class Assembly:
             kind = j.attrib["type"]
             parent = j.find("parent").attrib["link"]
             child = j.find("child").attrib["link"]
-            if (kind not in {"fixed", "prismatic"} or child in children or name in self.joints
+            if (kind not in ({"fixed", "prismatic", "revolute"} if allow_hinge else {"fixed", "prismatic"}) or child in children or name in self.joints
                     or parent not in self.links or child not in self.links):
                 raise ValueError("unsupported joint or invalid tree")
             children.add(child)
-            entry = dict(parent=parent, child=child, origin=origin(j))
-            if kind == "prismatic":
+            entry = dict(kind=kind, parent=parent, child=child, origin=origin(j))
+            if kind != "fixed":
                 axis = vector(j.find("axis").attrib["xyz"], 3)
                 if abs(np.linalg.norm(axis) - 1) > 1e-7:
                     raise ValueError("invalid axis")
@@ -111,7 +111,10 @@ class Assembly:
                     q = values[name]
                     if not j["low"] - 1e-10 <= q <= j["high"] + 1e-10:
                         raise ValueError("joint limit exceeded")
-                    local[:3, 3] += local[:3, :3] @ (j["axis"] * q)
+                    if j["kind"] == "revolute":
+                        local[:3, :3] = local[:3, :3] @ Rotation.from_rotvec(j["axis"] * q).as_matrix()
+                    else:
+                        local[:3, 3] += local[:3, :3] @ (j["axis"] * q)
                 poses[j["child"]] = poses[j["parent"]] @ local
                 del pending[name]
             if before == len(pending):
@@ -119,10 +122,20 @@ class Assembly:
         return poses, values, error, rank
 
 
-def load_model(root, manifest, filename):
+def load_model(root, manifest, filename, hinge=None):
     path = root / filename
     xml = ET.fromstring(checked(path, root, manifest))
-    model = Assembly(xml)
+    if hinge is not None:
+        joints = [j for j in xml.findall("joint") if j.attrib["name"] == hinge]
+        if len(joints) != 1 or joints[0].attrib["type"] != "revolute" or joints[0].find("mimic") is not None:
+            raise ValueError("expected one bounded independent hinge")
+        joint = joints[0]
+        names = {joint.find(tag).attrib["link"] for tag in ("parent", "child")}
+        section = ET.Element("robot")
+        section.extend(link for link in xml.findall("link") if link.attrib["name"] in names)
+        section.append(joint)
+        xml = section
+    model = Assembly(xml, allow_hinge=hinge is not None)
     meshes = []
     for link in xml.findall("link"):
         for visual in link.findall("visual"):

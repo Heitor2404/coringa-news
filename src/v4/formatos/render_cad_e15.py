@@ -55,30 +55,58 @@ def raster(tris, color):
     return low, depth, rgb
 
 
-def render(root, manifest, file, out):
-    model, meshes = load_model(root, manifest, file)
+def rotate_tile(low, depth, pixels, matrix, shift):
+    """Inverse sample an orthographic layer rotating about the viewing axis."""
+    hi = low + [depth.shape[1], depth.shape[0]]
+    corners = np.array([low, [hi[0], low[1]], hi, [low[0], hi[1]]]) @ matrix.T + shift
+    start = np.floor(corners.min(axis=0)).astype(int)
+    stop = np.ceil(corners.max(axis=0)).astype(int)
+    size = tuple(stop-start)
+    inverse = matrix.T
+    offset = inverse @ (start-shift) - low
+    coeff = np.column_stack((inverse,offset)).ravel()
+    transform = Image.Transform.AFFINE
+    def warp(array, fill):
+        return np.asarray(Image.fromarray(array).transform(size, transform, coeff,
+                          resample=Image.Resampling.NEAREST, fillcolor=fill))
+    return start, warp(depth.astype(np.float32),float("-inf")), warp(pixels,0)
+
+
+def render(root, manifest, file, out, hinge=None, title_text=None):
+    model, meshes = load_model(root, manifest, file, hinge)
     fractions = (1 - np.cos(np.linspace(0, 2*np.pi, FRAMES))) / 2
     frames = [model.frame(float(t)) for t in fractions]
     base = frames[0][0]
     # World Z is up. The orthographic view shows the rails and the tool face.
     eye = unit(np.array([1., -.38, .31]))
-    right = unit(np.cross([0, 0, 1], eye))
+    if hinge:
+        j = model.joints[hinge]
+        eye = -unit(j["origin"][:3,:3] @ j["axis"])
+    up = [0, 1, 0] if abs(eye[2]) > .95 else [0, 0, 1]
+    right = unit(np.cross(up, eye))
     view = np.array([right, -np.cross(eye, right), eye]).T
     projected = []
     bounds = []
     for body, path, points, color in meshes:
         pose = base[body]
         tri = (points @ pose[:3, :3].T + pose[:3, 3]) @ view
+        if hinge and body != model.root:
+            color = np.array([.72, .39, .105])  # Editorial highlight of the moving member.
         projected.append((body, tri, color))
         delta = (frames[FRAMES//2][0][body][:3, 3]-pose[:3, 3]) @ view
         bounds.extend([tri.min(axis=(0, 1)), tri.max(axis=(0, 1)),
                        tri.min(axis=(0, 1))+delta, tri.max(axis=(0, 1))+delta])
+        if hinge and body != model.root:
+            for poses, _, _, _ in frames:
+                current = poses[body]
+                xy = (points @ current[:3,:3].T + current[:3,3]) @ view
+                bounds.extend([xy.min(axis=(0,1)), xy.max(axis=(0,1))])
     lo, hi = np.min(bounds, axis=0), np.max(bounds, axis=0)
-    scale = min(426/(hi[0]-lo[0]), 550/(hi[1]-lo[1]))
+    scale = min(426/(hi[0]-lo[0]), 500/(hi[1]-lo[1]))
     center = (lo+hi)/2
     layers = [(body, *raster((tri-center)*scale + [255,410,0], color))
               for body, tri, color in projected]
-    stem = Path(file).stem
+    stem = Path(file).stem + ("_"+hinge if hinge else "")
     movie = out/(stem+".mp4")
     cmd = ["ffmpeg","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s","540x960",
            "-r",str(FPS),"-i","-","-c:v","libx264","-threads","2","-crf","17","-pix_fmt","yuv420p",
@@ -93,7 +121,17 @@ def render(root, manifest, file, out):
             depth = np.full(rgb.shape[:2], -np.inf)
             for body, low, z, pixels in layers:
                 delta = (poses[body][:3, 3]-base[body][:3, 3]) @ view * scale
+                if hinge and body != model.root:
+                    turn = view.T @ poses[body][:3,:3] @ base[body][:3,:3].T @ view
+                    pivot = ((base[body][:3,3] @ view - center)*scale)[:2] + [255,410]
+                    low,z,pixels = rotate_tile(low,z,pixels,turn[:2,:2],pivot-turn[:2,:2]@pivot)
                 x, y = low + np.rint(delta[:2]).astype(int)
+                h, w = z.shape
+                # A rotated tile can have transparent corners outside the viewport.
+                x0, y0 = max(0,-x), max(0,-y)
+                x1, y1 = min(w,SIZE[0]-x), min(h,SIZE[1]-y)
+                z, pixels = z[y0:y1,x0:x1], pixels[y0:y1,x0:x1]
+                y, x = y+y0, x+x0
                 h, w = z.shape
                 region = depth[y:y+h, x:x+w]
                 front = z + delta[2] > region
@@ -101,16 +139,18 @@ def render(root, manifest, file, out):
                 rgb[y:y+h, x:x+w][front] = pixels[front]
             image = Image.fromarray(rgb)
             draw = ImageDraw.Draw(image)
-            draw.text((48,102),stem.replace("_solid","").upper(),font=title,fill="white")
+            draw.text((48,102),title_text or stem.replace("_solid","").upper(),font=title,fill="white")
             travel = abs(values[model.driver]-frames[0][1][model.driver])*1000
-            draw.text((48,712),f"Curso de uma mandíbula   {travel:.1f} mm".replace(".",","),font=caption,fill="#f4cf63")
+            measure = (f"Ângulo da junta   {np.degrees(values[model.driver]):.1f}°" if hinge
+                       else f"Curso de uma mandíbula   {travel:.1f} mm")
+            draw.text((48,712),measure.replace(".",","),font=caption,fill="#f4cf63")
             draw.text((48,768),"CAD: Source Robotics · CC BY 4.0",font=credit,fill="#bed0df")
             encoder.stdin.write(image.tobytes())
         encoder.stdin.close()
         if encoder.wait():
             raise RuntimeError("encoding failed")
     return dict(model=file, video=movie.name, sha256=hashlib.sha256(movie.read_bytes()).hexdigest(),
-                frames=FRAMES, max_residual_m=max(f[2] for f in frames), min_rank=min(f[3] for f in frames),
+                frames=FRAMES, coordinate_unit="rad" if hinge else "m", max_constraint_residual=max(f[2] for f in frames), min_rank=min(f[3] for f in frames),
                 bindings=[dict(body=b, mesh=p, triangles=len(t)) for b,p,t,_ in meshes],
                 joints={name:{k:np.asarray(v).tolist() for k,v in j.items()} for name,j in model.joints.items()},
                 publish=False, visual_approved=False)
@@ -128,6 +168,8 @@ def main():
     for file in ("LICENSE", "ATTRIBUTION.md"):
         shutil.copyfile(args.source/file, args.output/file)
     reports = [render(args.source, manifest, file, args.output) for file in manifest["models"]]
+    reports.extend(render(args.source,manifest,h["file"],args.output,h["joint"],h["title"])
+                   for h in manifest.get("hinges", []))
     (args.output/"QA.json").write_text(json.dumps(dict(source=manifest, models=reports),indent=2))
 
 

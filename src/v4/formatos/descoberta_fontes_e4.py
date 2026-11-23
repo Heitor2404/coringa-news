@@ -30,9 +30,9 @@ NUMBER=re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*(millimetres?|millimeters?|"
                   r"degrees)(?![A-Za-z])",re.I)
 TOKEN=re.compile(r"\b(?:the|and|for|from|mechanism|linkage|machine|system|a|of)\b")
 STRUCTURE=re.compile(
-    r"\\b(?P<count>zero|one|two|three|four|five|six|seven|eight|nine|ten|\\d{1,3})"
-    r"\\s+(?P<part>degrees? of freedom|joints?|bodies|bars|links?|"
-    r"turning pairs?|sliding pairs?|pivots?|gears?|shafts?|teeth)\\b",re.I)
+    r"\b(?P<count>zero|one|two|three|four|five|six|seven|eight|nine|ten|\d{1,3})"
+    r"\s+(?P<part>degrees? of freedom|joints?|bodies|bars|links?|"
+    r"turning pairs?|sliding pairs?|pivots?|gears?|shafts?|teeth)\b",re.I)
 NUMBER_WORDS={"zero":0,"one":1,"two":2,"three":3,"four":4,
               "five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10}
 MAX_RESULTS=4

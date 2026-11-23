@@ -2183,3 +2183,21 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 - **F7 agora tem 8/13 tipos desenháveis** (F6 tinha 5); 5 tipos do catálogo F5 ainda carecem de funções de desenho. O compositor de vasos comunicantes F6 continua com pipeline próprio: o reuso é das primitivas e do núcleo geométrico, NÃO um compositor universal para hidráulica e mecânica.
 - **Próxima fase:** entrada de modelos/peças referenciadas/curadas (direitos e identidade, não apenas site técnico), normalização de unidade/ancoragem, montagem entre famílias e QA visual de colisão/área segura real Reels/TikTok/Shorts; remover hardcodes no gate F5 com cuidado. NÃO prometer geração livre em 2D/3D a partir de título.
 - O resumo técnico completo da fase está em `docs/v4/formatos/F7_MECANICA_PARAMETRICA_20261123.md` (mesmo commit). `main`, NTC, DOSSIÊ, produção, Telegram e postagem intocados.
+
+## 118. 23/11 — F8, entrada de peças vetoriais verificáveis (laboratório)
+
+**Objetivo:** iniciar uma ponte real entre arquivo visual de peça, sua procedência/sha256, geometria e o compositor paramétrico F7, sem inventar que pesquisa de referências industriais ou reconstrução 3D já funcionam. Usuário autorizou prosseguir após F7. Atualizar com resultado real da CI após terminar.
+
+**Branch de isolamento:** `atlas-direcao-visual-20261118`; `main`, NTC, DOSSIÊ e postagem NÃO alterados.
+
+### Implementação F8 (primeira passagem, ainda sem resultado CI)
+
+- Novo `src/v4/formatos/pecas_visuais_f8.py`: contrato **OPT-IN** `visual_parts` para vincular ator físico `cylinder` a arquivo SVG estático, com manifesto de autoria, sha256, viewBox, duas âncoras e direitos explicitamente restritos a uso interno. Só aceita geometria de SVG sob whitelist e recusa scripts, carregamentos remotos, CSS, foreignObject, adulteração, troca de ator e publicações. Os outros atores continuam F7.
+- Novo `src/v4/formatos/referencias_visuais_f8/{manifesto.json,cylinder_shell_f8.svg}`: arte de carcaça/cilindro **AUTORAL DO PRÓPRIO LABORATÓRIO**, NÃO importada de fabricante, NÃO é reconstrução comprovada de um compressor real. Manter `identity_match_verified=false`; fonte física não equivale a licença visual.
+- `compositor_cinematico_parametrico_2d.py` mantém **F7 INALTERADA POR PADRÃO** e disponibiliza `--visual-f8` para substituir exclusivamente a carcaça estática. Câmera fixa, biela/pistão/polias, partes dinâmicas, header e footer permanecem sob as regras anteriores.
+- Novos testes `tests/test_pecas_visuais_f8.py`: rejeição de SVG inseguro e papel não autorizado, manifestos/direitos adulterados, SHA, compatibilidade F7, variação no palco e invariância de câmera/cinemática.
+- Workflow `.github/workflows/qa-pecas-visuais-f8.yml`: renderiza baseline F7 e duas variantes F8, MP4s privados 540×960/24fps/9s, folha 12 quadros e relatório. Sem Claude, Telegram, publicação ou integração ao compositor documental.
+- Execução CI inicial: `45120024136`, **em andamento na primeira consulta**. Regressão F7 em `45119925085` também em andamento. **NÃO afirmar sucesso/arte aprovada até inspeção final.**
+
+**Limite deliberado:** este primeiro passo valida a **ponte segura** de peça SVG até um vídeo parametrizado; ainda NÃO demonstra ingestão de referência externa licenciada, reconhecimento automático em fotos, coerência dimensional calibrada em unidade real, identidade industrial comprovada ou qualidade cinematográfica. Próximo gate: uma peça de referência visual industrial real com direito e correspondência verificáveis, calibração da montagem e avaliação em celular; não salvar um tema com desenho caso a caso nem liberar publicação.
+

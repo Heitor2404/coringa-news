@@ -65,6 +65,8 @@ jobs:
                "verified_excerpts":sum(p["excerpt_count"] for p in r["pages"]),
                "candidate_relations":sum(len(p["candidate_relations"]) for p in r["pages"]),
                "quantity_candidates_not_usable":sum(len(p["candidate_quantities"]) for p in r["pages"]),
+               "structural_count_candidates_not_instantiable":sum(
+                   len(p["candidate_structural_counts"]) for p in r["pages"]),
                "failures":r["blocked_pages"]} for r in records]
           total=sum(x["verified_pages"] for x in evidence)
           report={

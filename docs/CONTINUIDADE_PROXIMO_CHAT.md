@@ -2697,3 +2697,35 @@ Vídeos efetivamente gerados/inspecionados:
 
 **Relatório auditável:** `docs/v4/formatos/E9_E11_RENDER_FISICO_ESTILIZADO_QA_INTEGRADO_20261123.md`.
 **Isolamento:** `atlas-direcao-visual-20261118` somente; `main`, NTC, DOSSIÊ, Telegram, vídeos produtivos e publicação permanecem intactos.
+
+
+## 138. 23/11 — E12–E14: segundo AUTOR, segundo FORMATO e curso oscilatório com 4/4 MP4s; visual ainda NÃO homologado
+
+**Instrução de processo do usuário:** "Então continue fazendo sem que eu tenha que mandar 'prossiga', como agora por exemplo". Resposta PRÁTICA: este turno executou um bloco E12–E14 completo na branch, incluindo programação, testes físicos/visuais, GitHub Actions, correção de erro de manifesto, download de artefato, inspeção do quadro REAL e atualização de continuidade sem pedidos intermediários de confirmação. **Limite honesto:** não há programação contínua depois que a resposta termina; ChatGPT Work é a configuração indicada para delegação de tarefas longas, nunca inventar execução assíncrona ou prazos.
+
+**Origem externa realmente independente:** `MeghRaval30/compliant-linkage-toolkit`, MIT, commit imutável `bb6137456a04d9afaa51240e9fc3e8540d269532`, licença Git blob `c59d45323926af6c3ebed8264aecffa096065a91`. É **outro autor e outro formato** em relação aos CSVs E7/E8. Dados JSON contêm `bodies[]`, `joints{...}` com `bodies[]`, `xy_mm` e `revolute`, `input_joint`, `input_range_deg` e `meta.reference_input_deg`. NÃO são informações extraídas de prosa nem autoprojetadas por IA. O texto de copyright do LICENSE contém placeholder `TODO-TEAM-NAME`; manter aviso original e NÃO postar como mídia de terceiros de autoria comprovada. Fonte indica que modelos de flexure têm propriedades de material não verificadas e `is_physical=false`; suas malhas STL são objetos deformáveis monolíticos, NÃO devem ser atribuídas aos corpos rígidos do E1.
+
+**E12 — código:** `src/v4/formatos/importador_juntas_json_e12.py`, com manifesto imutável `benchmarks/e12_independent_planar_json_v1.json` para quatro arquivos (`examples/fourbar.json`, `examples/designs/fb_02_0052.json`, `...0090.json`, `...0203.json`). Download HTTPS RAW de host fixo, revisão commit, licença/hash de blob, tamanho limitado e sem redirects. Valida estrutura de grafo, ground, conexões, medidas e ângulo de referência. Converte genericamente corpos, pin joints e âncoras locais `mm→m` na `MechanismSpec` sem `if` por título. Segmentos desenhados são **ILUSTRATIVOS a partir dos pivôs**, NÃO contornos CAD. STL externo foi intencionalmente excluído para não simular peça flexível como metal rígido.
+
+**E13 — avanço de motor:** `src/v4/formatos/solver_restricoes_e1.py` aceita agora um `driver.profile` opcional `{kind:"oscillating",range_min_rad,range_max_rad,phase_rad}`. Para driver antigo, mesma equação `theta0+speed*t`; para oscilatório, `(min+max)/2+(max-min)/2*cos(phase+speed*t)`. O importador deriva amplitude e fase apenas dos limites angulares e pose inicial comprova da fonte e verifica coerência inicial por tolerância 1e-6. É genérico, não um novo solver por máquina. Testes E1/E2/E7/E8/E9/E10 continuam incluídos.
+
+**E14 — workflow:** `.github/workflows/qa-fonte-independente-e12-e14.yml` cobre testes adversariais e regressões, reconsulta live de quatro JSONs com SHA e licença, 121 frames físicos por arquivo, Jacobiano de posto completo, quatro MP4s privados pelo **mesmo E9 renderer**, auditoria E10 de área segura, movimento, SVG e pivôs, FFprobe sem áudio e hashes.
+
+**Falha detectada e corrigida dentro do lote:** [Actions **45275751318**](https://github.com/Heitor2404/coringa-news/actions/runs/45275751318) teve **75 testes PASS**, mas falhou corretamente em `E12-SOURCE-SOURCE_BLOB` no último JSON: o manifesto havia transcrito o hash errado como `6d0cddc8...`; consultada a mesma revisão de origem, Git blob correto de `fb_02_0203.json` é **`6e4e570b4be2206155792472fb00db8442d314a5`**. Consertado hash com registro de correção no manifesto, sem trocar o arquivo ou alterar critérios; CI reexecutado.
+
+**VALIDAÇÃO FINAL** [GitHub Actions **45276058168**](https://github.com/Heitor2404/coringa-news/actions/runs/45276058168): **SUCCESS — 75 testes PASS**, **4/4 JSONs importados**, **0 bloqueados** e **4/4 MP4s privados gerados** (540×960, 18fps, sem áudio). Artifact `lab-e12-e14-second-author-real-joints-private`, ID **14867361709**, expira **28/11/2026 22:05:41 UTC**. ZIP baixado `/mnt/data/lab_e12_e14_verified.zip` e extraído em `/mnt/data/e12_e14_verified`; hashes SHA256 dos quatro MP4s conferidos, `E14_SECOND_SOURCE_STORYBOARD.jpg` aberto e inspecionado.
+
+Fonte real e intervalos:
+- `fourbar.json`: curso de 40–100 graus, max residual 1,39e-17 m, arquivo `E14_SECOND_SOURCE_fourbar.mp4`.
+- `fb_02_0052.json`: curso 48,8945–70,605 graus, max residual 2,78e-17 m, arquivo `E14_SECOND_SOURCE_fb_02_0052.mp4`.
+- `fb_02_0090.json`: curso 80,7528–97,555 graus, max residual 1,39e-17 m, arquivo `E14_SECOND_SOURCE_fb_02_0090.mp4`.
+- `fb_02_0203.json`: curso 61,1470–80,4910 graus, max residual 1,39e-17 m, arquivo `E14_SECOND_SOURCE_fb_02_0203.mp4`.
+
+**JULGAMENTO VISUAL NÃO DOURADO:** storyboard real mostra quatro sistemas de elos articulados com comprimentos/ângulos distintos, mas ainda **paus mecânicos elaborados**, sem formas verdadeiras de equipamentos. A E13 corrige movimento parcial, não resolve a **falta de CAD por corpo**. `visual_approved=false` e `publish=false`. A fonte contém STL de objeto **complacente**, e reutilizá-lo como três corpos rígidos seria fisicamente falso. **NÃO aprovar estética nem postar.**
+
+**Placar congelado 12:** permanece **4/12 topologias demonstradas numericamente no histórico**, **0 novos mecanismos arbitrários de texto/foto/vídeo**, **0 CAD real com contorno individual de peça ligada a corpo**, **0 visuais homologados**. As quatro fontes do segundo repo são **variações de quatro barras**, NÃO quatro classes inéditas; significa **generalização ENTRE AUTORES E FORMATOS**, não para todas as máquinas.
+
+**Relatório detalhado:** `docs/v4/formatos/E12_E14_SEGUNDO_AUTOR_JSON_ACIONADOR_LIMITADO_20261123.md`.
+
+**Próximo passo MATERIAL (E15+) se continuar em Work ou novo bloco:** encontrar assembly CAD/STEP/DXF/SVG/partes STL **separados** com escala/mates/pivôs da MESMA máquina, licenças efetivamente verificadas; construir `part source → body ID → anchor local → pose solver`, medir erro de acoplamento dos furos e não apenas pontuação RGB. Candidatos NÃO integrados: `BrayEngineering/Crank-Slider-Mechanism` possui `.ipt` Inventor por peça MIT mas sem conversor comprovado; `shakc04/strandbeest-forge` MIT OpenSCAD e STLs sem prova de mapeamento de peças/anchors; `clawbit` SVG explícito meramente ilustrativo, CAD STEP/DXF faltante. Não gastar outro bloco fazendo barras mais brilhantes sem geometrias reais.
+**Isolamento preservado:** branch `atlas-direcao-visual-20261118` SOMENTE; `main`, NTC, DOSSIÊ, Telegram, pipeline produtivo e publicação intactos.

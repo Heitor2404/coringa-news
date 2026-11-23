@@ -1,0 +1,48 @@
+{
+  "schema": "coringa-e7-upstream-geometry-manifest-v1",
+  "frozen_at": "2026-11-23",
+  "upstream_repository": "jackhale98/linkage_design",
+  "upstream_commit": "c1ae13b040213b55ece567418bc14e4d2c8d1b0f",
+  "upstream_license": "MIT",
+  "upstream_license_path": "LICENSE",
+  "upstream_license_git_blob_sha1": "c9582739f2438eacbc6984f8002e3289e3b1f9db",
+  "upstream_csv_format": "LinkageDesign,1",
+  "source_origin": "https://raw.githubusercontent.com",
+  "source_authorship": "third_party_open_source_parametric_examples",
+  "urls_are_pinned": true,
+  "point_coordinates_provenance": "upstream_csv_points_with_length_unit",
+  "joints_provenance": "upstream_csv_joints_and_lines",
+  "solver_body_seeds": "derived_from_upstream_points_and_lines",
+  "visual_shapes": "derived_strokes_for_private_test_only_not_a_cad_copy",
+  "dynamical_forces": "not_imported",
+  "no_special_case_by_example_name": true,
+  "publication_allowed": false,
+  "files": [
+    {
+      "path": "src/examples/quick-return.csv",
+      "blob_sha1": "3f15ee8937e6107a720621be707a8519bafc6b7a",
+      "group": "new_source_mechanism"
+    },
+    {
+      "path": "src/examples/four-bar.csv",
+      "blob_sha1": "9f6178c238dcb29e663ddd3fd19068b6a99f5c51",
+      "group": "prior_manual_mechanism"
+    },
+    {
+      "path": "src/examples/slider-crank.csv",
+      "blob_sha1": "95c7241b5fad3c9bca3034973ddeae6ef40c4129",
+      "group": "independent_oracle"
+    },
+    {
+      "path": "src/examples/scotch-yoke.csv",
+      "blob_sha1": "9f8e0fa62c6a4d1d122f9c7c610695b1201578fc",
+      "group": "adversarial_overconstraint"
+    },
+    {
+      "path": "src/examples/gears.csv",
+      "blob_sha1": "be9c33cb72e059c88e5094c7826d90f81cee0d4f",
+      "group": "unsupported_compound_contact"
+    }
+  ],
+  "publish": false
+}

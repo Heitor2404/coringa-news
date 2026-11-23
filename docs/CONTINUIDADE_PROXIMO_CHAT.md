@@ -2274,3 +2274,15 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 **Estado inicial:** código F11 e workflow enviados, execução CI deve ser observada antes de declarar sucesso. Não homologar visual apenas por testes verdes. `main`, NTC, DOSSIÊ, produção e publicação intocados.
 
 **Próximo:** checar o run F11, corrigir testes ou código com contraprovas, baixar os vídeos/folhas reais, registrar taxas concretas de sobreposição e avaliar necessidade de tornar layout responsivo por família sem diminuir desnecessariamente a presença do mecanismo.
+
+### Resultado final F11 — 23/11 ~03h25 BRT
+
+- **Run F11 final:** https://github.com/Heitor2404/coringa-news/actions/runs/45123709031 **SUCCESS, 50 testes aprovados**. Regressões F7 e F8 runs `45123521501` e `45123521194` também SUCCESS.
+- **Artifact:** `lab-f11-correia-multirrig-mascaras-mobile-privado`, ID **14794427961**, expira **28/11/2026 ~06h24 UTC**. ZIP baixado e inspecionado. Três MP4s REAIS, 540×960 24fps, 9s, sem áudio:
+  - F7 baseline `BIELA_CURTO_F7_BASELINE.mp4`, SHA **`9dd2ec0e0f58b874f710774c1c4bf7a2dc982c45bcaa6747a0ea1a30367b71e3`**, **IGUAL** ao vídeo da F7 original.
+  - F11 curso curto `BIELA_CURTO_F11_CORREIA.mp4`, SHA **`13b43cb2a5ef39e53774740b84e9119cf2a489c93ce54c734e8ceb0b96ae9451`**.
+  - F11 curso longo `BIELA_LONGO_F11_CORREIA.mp4`, SHA **`609b9e62ae1f912e7444892ce005747840e89f080d08fe2851167d1d8a3d63e5`**.
+- **Inspeção dos 12 quadros reais:** `COMPARATIVO_F7_VS_F11_TRES_RIGS_12_QUADROS.jpg` mostra mesmo mecanismo, dois cursos de pistão, transmissão marcada opt-in, câmera estável. Ganho visual de correia discreto; **estética NÃO HOMOLOGADA**.
+- **Achado MAIS IMPORTANTE:** folhas `biela_manivela_curso_{curto,longo}_F11_MASCARAS_PERFIL_SIMULADO.jpg` e JSON de auditoria, com medição pixel a pixel da contribuição visível dos atores, mostraram que nos três **perfis conservadores ESTIMADOS** ativos a correia e o volante ficam **100% dentro da zona simulada como coberta** (principalmente a faixa inferior) nos instantes amostrados; biela chega a 100%, pistão tem até **25,61% (curto) e 31,58% (longo)** de seus pixels sob máscara. Isso NÃO é prova de que somem nos aplicativos reais; uma máscara simulada não é tela real. **Homologação mobile BLOQUEADA**, pois a política conservadora alerta risco severo.
+- **Decisão:** NÃO encolher a máquina no chute; o usuário já reprovou objetos pequenos e pediu ocupar a área superior. Testar rearranjo editorial/posição do mecanismo de forma gradual e comparar overlays atualizados com interface real, privilegiando presença grande, visibilidade dos componentes e câmera sem oscilação. Não chamar 9:16 por si só de safe zone homologada.
+- Relatório: `docs/v4/formatos/F11_CORREIA_MULTIRRIG_QA_MOBILE_20261123.md`. `main`, motor documental produtivo, NTC, DOSSIÊ, Telegram e publicação INTACTOS; a F11 permanece apenas branch experimental.

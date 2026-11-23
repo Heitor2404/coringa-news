@@ -23,6 +23,7 @@ def fixture_page(doc):
     ("par_engrenagens_educacional","known_spur_pair"),
     ("biela_cinematica_parcial","partial_slider_crank"),
     ("plataforma_tesoura_hidraulica","hydraulic_scissor_lift_UNSUPPORTED"),
+    ("plataforma_tesoura_fonte_alternativa","hydraulic_scissor_lift_UNSUPPORTED"),
 ])
 def test_extrai_candidatos_de_trechos_presentes_no_html_nao_de_url(name,expected):
     d=load(name)
@@ -78,6 +79,15 @@ def test_confirma_lista_de_spans_mas_nao_acha_fisica_oculta_por_alias():
     assert not any(x["id"]=="motor_pulley" for x in a["nodes"])
     with pytest.raises(ValueError,match="F16-FONTE-PREVOO_SEM_PROVA_EXTERNA"):
         E.compile_gear_from_verified(E.audit(d,fixture_page(d),origin="live"),{})
+
+
+def test_alternativa_hidraulica_mesma_topologia_mas_nunca_eh_kernel():
+    d=load("plataforma_tesoura_fonte_alternativa")
+    r=E.audit(d,fixture_page(d),origin="fixture")
+    assert r["candidate_graph"]["kind"]=="hydraulic_scissor_lift_UNSUPPORTED"
+    assert r["source_live_verified"] is False
+    assert len(r["candidate_graph"]["edges"])==3
+    assert r["publication_allowed"] is False
 
 
 def test_eleva_tesoura_esta_documentada_mas_terceira_familia_nao_renderiza():

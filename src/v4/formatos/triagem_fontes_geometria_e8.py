@@ -22,7 +22,7 @@ OUT_SCHEMA="coringa-e8-source-triage-v1"
 REPO=re.compile(r"^[A-Za-z0-9_.-]{1,48}/[A-Za-z0-9_.-]{1,80}$")
 COMMIT=re.compile(r"^[a-f0-9]{40}$")
 BLOB=re.compile(r"^[a-f0-9]{40}$")
-PATH=re.compile(r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+){0,7}$")
+PATH=re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]*){0,7}$")
 MAX_BYTES=100000
 ORIGIN="https://raw.githubusercontent.com"
 

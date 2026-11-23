@@ -143,7 +143,7 @@ def test_movimento_real_de_navio_e_agua_nao_efeito_de_titulo():
     b=_img(L.frame_svg(7.40))
     assert _difference(a,b,(153,420,389,760))>7
     assert _difference(a,b,(0,0,540,90))==0
-    assert _difference(a,b,(0,904,540,960))>0  # contador de etapa ou barra?
+    assert _difference(a,b,(0,904,540,960))==0  # rodapé não muda durante subida
     
 
 def test_controle_bloqueia_inicio_invalido_sem_fallback_generico():

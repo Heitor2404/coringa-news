@@ -187,9 +187,21 @@ def validar(obj:dict)->dict:
                 _fail("F-COMP-ATOR-SEM-BBOX")
         elif name in ("left_water","right_water"):
             container=l if name=="left_water" else r
-            if (bbox.x1>container["x"]+13 or bbox.x2<container["x"]+container["width"]-13
-                 or bbox.y1>f["initial_left_y"] if name=="left_water" else False):
+            level=(f["initial_left_y"] if name=="left_water"
+                   else f["initial_right_y"])
+            area_left=l["width"]-26
+            area_right=r["width"]-26
+            target=(area_left*f["initial_left_y"]+
+                    area_right*f["initial_right_y"])/(area_left+area_right)
+            if (bbox.x1>container["x"]+13 or
+                bbox.x2<container["x"]+container["width"]-13 or
+                bbox.y1>min(level,target) or
+                bbox.y2<container["y"]+container["height"]-13):
                 _fail("F-COMP-AGUA-SEM-BBOX")
+        elif name=="link_pipe":
+            if (bbox.x1>p1-14 or bbox.x2<p2+14 or
+                bbox.y1>py-14 or bbox.y2<py+14):
+                _fail("F-COMP-CONDUTO-SEM-BBOX")
         elif name=="control_valve":
             if not (bbox.x1<=vx-18 and bbox.x2>=vx+18
                     and bbox.y1<=py-18 and bbox.y2>=py+18):

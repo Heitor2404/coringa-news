@@ -1995,3 +1995,19 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 `main`, NTC, DOSSIÊ e publicação intocados. NÃO apresentar nova prova desses renders legados como avanço estético.
 
+## 109. 23/11 ~00h08 SP — REFERÊNCIA VISUAL RECUPERADA PELO USUÁRIO: P–V COMPRESSOR EM TELA GRANDE
+
+**Evidência EXATA:** usuário anexou screenshot da fase "COMPRESSOR DE AR / O VOLUME DIMINUI / As duas válvulas ficam fechadas", mecânica ocupando grande parte do quadro, destaque "PRESSÃO 1.4×", "ENTRADA", "SAÍDA", reservatório vertical pequeno, rodapé "FÍSICA P–V · SIMULAÇÃO DIDÁTICA PRIVADA" e "03/04"; disse: **"A gente tinha chegado nisso aqui"**. Esta é a referência de **ocupação e linguagem gráfica** que deveria ter guiado as iterações, em contraste com os 16 quadros posteriores de EUV/eclusa com minúsculos diagramas no topo do quadro e enorme fundo escuro.
+
+**Identificação de origem conferida DIRETAMENTE no código:** `src/v4/formatos/render_compressor_pv_2d.py` (não foi apagado). No momento da inspeção tem `SIZE=(540,960)`, `MECHANISM_SHIFT_Y=-40`, `HEADER_BOTTOM_Y=265`, estado `COMPRESSAO_AR`, título "O VOLUME DIMINUI", descrição "As duas válvulas ficam fechadas", nome do reservatório e rodapé idênticos. O código é um módulo SVG Python de ciclo P–V.
+
+**Decisão de direção visual desta referência:** objeto mecânico **principal, grande, com alta ocupação do palco**, corte técnico legível em tela de celular, peças grossas e reconhecíveis, cores claras/metálicas com fundo de apresentação claro, cabeçalho editorial compacto relativo à área de mecanismo, explicação derivada de MOVIMENTO FÍSICO (pistão, válvulas, pressão) e não de cards. A composição 9:16 precisa se adaptar a outros mecanismos por bboxes/relacionamentos, **NÃO copiar dimensões fixas ou repetir a mesma máquina**.
+
+**Limite explícito — não declarar compressor pronto:** este screenshot ainda é simplificação de pistão-biela e tanque vertical pequeno, NÃO um compressor de oficina identificável como conjunto completo. A fase posterior `render_compressor_conjunto_2d.py` corrigiu identidade da máquina (motor elétrico, correia, filtro, reservatório horizontal), mas a qualidade de composição/movimento e o uso do palco devem ser comparados ao benchmark aqui, não substituídos por um slide escuro. Usar **fidelidade de máquina posterior + presença em tela deste exemplo**, sem aceitar nenhum como direção final sem revisão humana.
+
+**Causa da regressão explicada:** `FilmeEditorial.tsx` ainda apresenta `OpticalProjection.tsx` e `LockCausalCycle.tsx` legados; a nova F1 SceneGraph só cria dados e não consome as câmeras/caixas para redesenhar o vídeo. A execução 45078614477 comprovou contrato e render, mas visual REPROVADO. O gate `F-VISUAL-LEGADO-DESCARTADO` da etapa 108 deve continuar ativo. Não mostrar regressões antigas ao usuário como novas prévias.
+
+**Critério da próxima prova:** componente protagonista no palco, sem cortes de partes essenciais, ação visível ao longo do tempo, passagem integral dos eventos, geometria visual fiel ao objeto real/referência, header/rodapé não competindo com o mecanismo, UI Reels/TikTok/Shorts conferida. A câmera precisa consumir focos do SceneGraph; não basta deslocar coordenadas nem contar testes verdes.
+
+**Não foi criado novo vídeo nem implementada a câmera F2 nesta etapa:** foi recuperada a **referência correta** e a origem reproduzível no repositório. `main` e produção intocados.
+

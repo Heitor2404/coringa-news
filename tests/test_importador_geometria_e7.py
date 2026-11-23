@@ -170,3 +170,37 @@ def test_shared_camera_uses_source_dimensions_and_prevents_clipping():
     assert svg.count('stroke="#EAF3F6"')>=1
     assert 'id="generic-machine-stage"' in svg
     assert "NÃO PUBLICAR" in svg
+
+
+def test_generic_parallel_and_perpendicular_from_source_not_a_mechanism_rule():
+    """Add independent construction lines without changing ANY body/joint names."""
+    source=SYNTHETIC.replace(
+        "P4,83.2050294338,288.230676849,0,\n",
+        "P4,83.2050294338,288.230676849,0,\n"
+        "P5,50,0,0,\nP6,50,150,0,\n")
+    source=source.replace(
+        "L3,P1,P4,0\n",
+        "L3,P1,P4,0\nL4,P5,P6,1\nL5,P1,P5,1\n")
+    source=source.replace(
+        "C6,distance,L3,,,300,0,,\n",
+        "C6,distance,L3,,,300,0,,\n"
+        "C7,parallel,L1,L4,,,0,,\n"
+        "C8,perpendicular,L1,L5,,,0,,\n")
+    converted,provenance=E7.source_geometry(source.encode())
+    assert provenance["source_geometry_satisfied_constraints"]==8
+    assert len(converted["joints"])==3
+    assert max(x["max_residual_m"] for x in S.trajectory(converted,21))<1e-7
+
+    # Drawing coordinates must agree: changing the end of an independent
+    # parallel guide invalidates the source instead of silently 'fixing' it.
+    tilted=source.replace("P6,50,150,0,", "P6,65,150,0,")
+    with pytest.raises(ValueError,match="E7-FONTE-DESENHO_NAO_SATISFAZ_CONSTRAINT"):
+        E7.source_geometry(tilted.encode())
+    wrong_angle=source.replace("C8,perpendicular,L1,L5,,,0,,",
+                               "C8,parallel,L1,L5,,,0,,")
+    with pytest.raises(ValueError,match="E7-FONTE-DESENHO_NAO_SATISFAZ_CONSTRAINT"):
+        E7.source_geometry(wrong_angle.encode())
+    alias=source.replace("C7,parallel,L1,L4,,,0,,",
+                         "C7,parallel,L1,L1,,,0,,")
+    with pytest.raises(ValueError,match="E7-FONTE-RESTRICAO_DEGENERADA"):
+        E7.source_geometry(alias.encode())

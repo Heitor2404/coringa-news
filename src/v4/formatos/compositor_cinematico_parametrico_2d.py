@@ -24,6 +24,7 @@ from src.v4.formatos import (
     camera_causal_svg as C,
     grafo_causal as G,
     primitivas_fisicas_parametricas as P,
+    pecas_visuais_f8 as V,
 )
 
 FAMILY="slider_crank_parametrico"
@@ -164,6 +165,7 @@ def validar(scene:dict)->dict:
     # Physics-and-parts checks require a FULL belt path in the same frame.
     P.transmissao_correia(mx,my,mr,cx,cy,wheel)
     P.verificar_reuso()
+    V.validar_pecas(scene.get("visual_parts"))
     return {"graph":graph,"duration":duration,
             "radius":r,"rod":L,"center":(cx,cy),
             "motor":(mx,my,mr),"wheel_radius":wheel,
@@ -218,6 +220,8 @@ def frame_svg(scene:dict,t:float)->str:
        'stroke="#B5CDD3" stroke-width="4" fill="none"/>'
        f'<rect x="{tx-13:.2f}" y="{ty-15:.2f}" width="{tw+26:.2f}" '
        'height="23" rx="7" fill="#375D72" stroke="#25475B" stroke-width="4"/>')
+    if scene.get("visual_parts"):
+        cylinder_svg=V.desenhar_cilindro(scene["visual_parts"], tx-9, ty-15, tw+18, th+23)
     motor_casing=(f'<rect x="{motor_x-37:.2f}" y="{motor_y-81:.2f}" '
        'width="74" height="137" rx="17" fill="#62899D" stroke="#34596C" '
        'stroke-width="6"/>'
@@ -336,6 +340,8 @@ def renderizar(scene:dict,path:Path)->dict:
        "camera_fixed":True,"video":[WIDTH,HEIGHT],"fps":fps,
        "duration_s":duration,"has_audio":False,
        "external_media_copied":False,"publish":False,
+       "visual_part_source":"autoral_interno_f8" if scene.get("visual_parts") else "f7_original",
+       "industrial_reference_verified":False,
        "visual_approval":False,
        "sha256":hashlib.sha256(filename.read_bytes()).hexdigest()
     }
@@ -348,6 +354,11 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("scene_json",type=Path)
     parser.add_argument("saida_mp4",type=Path)
+    parser.add_argument("--visual-f8",action="store_true",help="Opt-in: peca SVG autoral com hash; nao homologada")
     args=parser.parse_args()
-    print(json.dumps(renderizar(carregar(args.scene_json),args.saida_mp4),
+    scene=carregar(args.scene_json)
+    if args.visual_f8:
+        scene["visual_parts"]={"cylinder":"cylinder_shell_f8"}
+        scene["id"]+="_f8"
+    print(json.dumps(renderizar(scene,args.saida_mp4),
                      ensure_ascii=False,indent=2))

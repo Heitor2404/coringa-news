@@ -84,7 +84,7 @@ def estado(tempo_s:float,duracao:float=DURATION)->EstadoEclusa:
     exiting=_ease((u-10.0)/2.48)
     flow=valve*(1-_ease((u-7.65)/.60))
     water=LOW+(HIGH-LOW)*up
-    ship_x=83+185*entry+185*exiting
+    ship_x=83+185*entry+196*exiting
     # Relação hidrostática e flutuação: altura do navio = nível da água.
     return EstadoEclusa(
         tempo_s,action,title,detail,color,i+1,max(0.,min(1.,(u-start)/(end-start))),
@@ -129,14 +129,14 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
     return f'''<g id="lock-stage">
       <g id="role-lower_channel">
         <path d="M 16 582 H 140 V 778 H 16Z" fill="#547487"/>
-        <rect x="17" y="{LOW}" width="123" height="{FLOOR-LOW+9}" fill="url(#water)"/>
-        <path d="M 19 {LOW:.2f} H 138" stroke="#D3FFFF" stroke-width="4"/>
+        <rect x="17" y="{LOW}" width="{123+17*(1-shut):.2f}" height="{FLOOR-LOW+9}" fill="url(#water)"/>
+        <path d="M 19 {LOW:.2f} H {138+20*(1-shut):.2f}" stroke="#D3FFFF" stroke-width="4"/>
         <path d="M 18 594 H 135" stroke="#678D9E" stroke-width="8"/>
       </g>
       <g id="role-upper_channel">
         <path d="M 407 411 H 527 V 778 H 407Z" fill="#577989"/>
-        <rect x="408" y="{HIGH}" width="121" height="{FLOOR-HIGH+9}" fill="url(#water)"/>
-        <path d="M 409 {HIGH:.2f} H 528" stroke="#D6FFFF" stroke-width="4"/>
+        <rect x="{408-17*out:.2f}" y="{HIGH}" width="{121+17*out:.2f}" height="{FLOOR-HIGH+9}" fill="url(#water)"/>
+        <path d="M {409-17*out:.2f} {HIGH:.2f} H 528" stroke="#D6FFFF" stroke-width="4"/>
         <path d="M 409 419 H 527" stroke="#91A9B2" stroke-width="8"/>
       </g>
       <!-- Conduto à frente das águas laterais para o fluxo real ser visível.
@@ -152,21 +152,28 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
         {highlight}
       </g>
       <g id="role-chamber">
-        <rect x="149" y="415" width="244" height="354" rx="6"
-          fill="#E2EEF0" stroke="#4A7082" stroke-width="10"/>
+        <rect x="149" y="415" width="244" height="354" rx="6" fill="#E2EEF0"/>
+        <path d="M 149 415 H 393 M 149 770 H 393"
+          stroke="#4A7082" stroke-width="10"/>
+        <!-- A barreira cede em projeção lateral, sem parede fantasma. -->
+        <path d="M 149 415 V 770" stroke="#4A7082" stroke-width="9"
+          opacity="{shut:.3f}"/>
+        <path d="M 393 415 V 770" stroke="#4A7082" stroke-width="9"
+          opacity="{1-out:.3f}"/>
         <rect x="158" y="429" width="227" height="327" fill="#31576A"/>
         <g id="role-water">
-          <rect x="158" y="{wave:.3f}" width="227" height="{FLOOR-wave}"
+          <rect x="{158-16*(1-shut):.2f}" y="{wave:.3f}"
+            width="{227+16*(1-shut)+20*out:.2f}" height="{FLOOR-wave}"
             fill="url(#water)"/>
-          <path d="M 158 {wave:.3f} H 385" stroke="#D5FFFF" stroke-width="5"/>
+          <path d="M {158-16*(1-shut):.2f} {wave:.3f} H {385+20*out:.2f}" stroke="#D5FFFF" stroke-width="5"/>
           <path d="M 174 {wave+26:.2f} h46 M 263 {wave+37:.2f} h52
             M 334 {wave+24:.2f} h36" stroke="#B9F6F4" stroke-width="3"
             opacity=".58"/>
         </g>
         <path d="M 161 758 H 386" stroke="#23485C" stroke-width="14"/>
       </g>
-      <path d="M 150 414 V 776" stroke="#264D62" stroke-width="16"/>
-      <path d="M 396 414 V 777" stroke="#264D62" stroke-width="16"/>
+      <path d="M 150 414 V 776" stroke="#264D62" stroke-width="16" opacity="{shut:.3f}"/>
+      <path d="M 396 414 V 777" stroke="#264D62" stroke-width="16" opacity="{1-out:.3f}"/>
       <g id="role-inlet_gate">
         <rect x="139" y="421" width="16" height="348" rx="3"
           fill="#DFE8E8" stroke="#668695" stroke-width="3"

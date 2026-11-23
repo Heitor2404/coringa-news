@@ -44,7 +44,8 @@ def test_primeiro_ultimo_quadro_navio_inteiro_com_cotas_correntes():
     assert start.agua_y==L.LOW and finish.agua_y==L.HIGH
     assert start.navio_y==start.agua_y
     assert finish.navio_y==finish.agua_y
-    assert 20<=start.navio_x-62 and finish.navio_x+66<=520
+    assert 20<=start.navio_x-62 and finish.navio_x+66<=530
+    assert finish.navio_x-62 > L.RIGHT_GATE+4
     assert start.navio_x<L.LEFT_GATE<finish.navio_x
     assert finish.navio_x>L.RIGHT_GATE
     assert finish.portao_entrada_fechado==1
@@ -161,3 +162,16 @@ def test_eclusa_nao_reutiliza_remotion_legado_nem_publica():
     assert 'PROVA PRIVADA' in s
     assert R.REGISTRO['publicar'] is False
     assert C.CAMERAS['publicar'] is False
+
+
+
+def test_portao_superior_aberto_nao_continua_parede_fantasma():
+    fim=L.estado(L.DURATION)
+    assert fim.navio_x-62 > L.RIGHT_GATE+4
+    assert fim.navio_x+68 < 540
+    fechado=L.frame_svg(8.3,camera_causal=False)
+    aberto=L.frame_svg(10.0,camera_causal=False)
+    assert 'H 385' in fechado
+    assert 'H 405.00' in aberto
+    assert '<path d="M 396 414 V 777" stroke="#264D62" stroke-width="16" opacity="0.000"/>' in aberto
+    assert '<path d="M 396 414 V 777" stroke="#264D62" stroke-width="16" opacity="1.000"/>' in fechado

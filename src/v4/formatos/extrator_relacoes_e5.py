@@ -78,6 +78,9 @@ def candidate(sentence,*,sentence_id):
     if HEADING.search(sentence):excluded.append("HEADER")
     if NEG.search(sentence):excluded.append("NEGATIVE_OR_ALTERNATIVE")
     if GENERIC.search(sentence):excluded.append("GENERIC_DEFINITION")
+    if "?" in sentence:excluded.append("QUESTION_NOT_ASSERTION")
+    if re.search(r"\b(?:might|could|would|may)\s+(?:be\s+)?(?:connect|attach|engage|pin|couple)\b",sentence,re.I):
+        excluded.append("HYPOTHETICAL_LINK")
     if len(names)<2:excluded.append("INSUFFICIENT_NAMED_COMPONENTS")
     if not pred:excluded.append("NO_EXPLICIT_LINK_VERB")
     return {

@@ -223,7 +223,13 @@ def source_geometry(source):
             def local(key):
                 return [pts[key][i]-origin[i] for i in (0,1)]
             span=distance(pts[pa],pts[pb])
-            shapes.append({"kind":"segment","a":local(pa),"b":local(pb),
+            # Draw ALL source-identified slotted lines using one reusable
+            # component. Visual width is illustrative; not in source CSV.
+            source_line_is_slot=any(
+                j["type"]=="pin_in_slot" and j["line"]==ln
+                and j["body_a"]==original for j in table["joints"])
+            shape_kind="slotted_link" if source_line_is_slot else "segment"
+            shapes.append({"kind":shape_kind,"a":local(pa),"b":local(pb),
                            "thickness":min(.03,max(.0015,.05*span))})
         bodies.append({"id":name,"seed":[*origin,0.],"shapes":shapes})
     for line in lines:
@@ -389,6 +395,8 @@ def validate_source_run(manifest,source_entry,*,source_bytes=None,
         finite=finite_slots(spec,frames,details)
         return {
             **base,"status":"PASS_SOURCE_GEOMETRY_SOLVER_ONLY",
+            "automated_source_to_solver_spec":True,
+            "source_to_spec_accepted":True,
             "trajectory_frames":len(frames),
             "max_residual_m":max(f["max_residual_m"] for f in frames),
             "min_jacobian_rank":min(f["jacobian_rank"] for f in frames),
@@ -412,6 +420,18 @@ def cli():
     manifest=json.loads(args.manifest.read_text("utf8"))
     source_manifest(manifest)
     args.out.mkdir(parents=True,exist_ok=True)
+    # Preserve attribution and MIT copyright notice in the private artifact,
+    # even though upstream CSV examples are NOT republished here.
+    license_bytes=fetch_pinned("LICENSE")
+    if git_blob_sha1(license_bytes)!=manifest["upstream_license_git_blob_sha1"]:
+        fail("LICENCA_DIVERGIU")
+    (args.out/"UPSTREAM_MIT_LICENSE.txt").write_bytes(license_bytes)
+    (args.out/"UPSTREAM_ATTRIBUTION.txt").write_text(
+        "Open-source source geometry: "+REPOSITORY+" at commit "+COMMIT+"\\n"
+        "License: MIT, copyright 2026 linkage_design contributors.\\n"
+        "This lab independently translates third-party project CSVs to a generic "
+        "2D solver. Original media and visual assets are not copied.\\n",
+        encoding="utf8")
     reports=[]
     for source in manifest["files"]:
         report,spec,frames=validate_source_run(manifest,source,live=args.live)

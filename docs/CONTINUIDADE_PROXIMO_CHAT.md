@@ -2512,3 +2512,27 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 **Score estritamente verdadeiro:** F15 antigo 0/12 admissões nos grafos artificiais; solver comum atual validou **três mecanismos** (quatro barras, Scotch yoke, pinhão-cremalheira) em **três dos 12 desafios**, todos descritos por specs manuais. **Nove não tentados, 0 holdouts, 0 specs geradas autonomamente, 0 visuais homologados.** Biela F7 serve como oráculo de comparação, não como quarto alvo inédito.
 
 **Relatório completo:** `docs/v4/formatos/E2_PINHAO_CREMALHEIRA_SOLVER_COMUM_20261123.md`. **Próximo E3 sugerido:** criar ingestão revisável fonte→`MechanismSpec` com evidência por junta, validação de parâmetros e recusa honesta, medir taxa de falhas/intervenção/custo. Depois atacar o visual de forma GENÉRICA (composição e escala sem recortar peças) em vez de templates por tema. Preservar benchmark congelado, família de testes e bloqueio do render legado rejeitado. **`main`, NTC, DOSSIÊ, Telegram, canal e produção não alterados.**
+
+
+## 131. 23/11 — E3: ponte entre citações técnicas F16/F17 e juntas do solver genérico, com recusa honesta
+
+**Pedido:** usuário disse "Continue" após E2 ter comprovado a terceira topologia (pinhão-cremalheira) em spec manual. Objetivo: começar a conectar pesquisa com `MechanismSpec`, sem inventar dados de máquina nem criar renderizador exclusivo.
+
+**Implementação REAL na branch `atlas-direcao-visual-20261118`:**
+- `src/v4/formatos/ponte_evidencia_solver_e3.py`: nova camada de **prova de juntas por fonte**. Reutiliza downloader seguro HTTPS exato de F16 e extração léxica por aresta de F17. Para cada `joint_index` de um protótipo E1, exige `edge_id` presente em trecho verificado, relação/tipo de junta compatíveis e endpoints mapeados. `hinged_to→pin` e `slides_in→slider` são relações candidatas; tipos `meshes_with`, `drives`, `fluid_to`, `pushes` NÃO têm correspondência direta no solver comum. Os parâmetros numéricos continuam manuais e explicitamente NÃO atribuídos à fonte. Recusa fonte falsa/sem prova, redirecionamento, texto não ancorado, aresta inventada, tipo de junta errado, ponta incorreta e crédito de mídia/publicação falso. **Nunca publica/renderiza automaticamente.**
+- `benchmarks/bindings_e3/biela_parcial_f17_e3.json`: papéis dos corpos da biela E1 ligados aos nós da F17; fonte prova **apenas a junta de deslizamento**, índice 3, não os outros três pinos. `spec_authorship=manual_prototype`, `numbers_from_source=false`.
+- `tests/test_ponte_evidencia_solver_e3.py` e `.github/workflows/qa-ponte-evidencia-solver-e3.yml`: testes de falsos positivos, origem live/fixture, recusa de relacionamentos sem fonte, regressões F16/F17/E1/E2 e tentativa REAL de GET HTTPS para três páginas, com artifact JSON. Não usa Claude/LLM nem modelos pagos.
+- Relatório `docs/v4/formatos/E3_PROVA_FONTES_POR_JUNTA_SOLVER_COMUM_20261123.md`, com as evidências, métricas, limitações e próximas tarefas.
+
+**Validação FINAL observada:** https://github.com/Heitor2404/coringa-news/actions/runs/45212820200 — **SUCCESS, 62 testes aprovados**, três URLs HTTPS obtidas e trechos confirmados. Artifact **14836667890**, `lab-e3-relacoes-fonte-viva-e-contraprovas-privado`, expira **28/11/2026 16:07:26 UTC**. ZIP baixado e 4 JSONs efetivos conferidos.
+
+**Fontes LIVE e resultados:**
+1. Slider-crank (Mechanic) SHA HTML `4b67df19838531d3afc8065806d36c9ce9d76adfb151c299ed4e942b2aa3d897`: **só 1/4 juntas** da spec de biela associada a evidência `piston_slide_b3`. Outras três articulações sem trecho suficiente. Status `BLOCKED_UNPROVEN_JOINTS` apesar de o modelo numérico MANUAL continuar passando.
+2. Spur gears (Applied Mechanics) SHA `9ce7ac8639bfbfe7f3ebdc8fa45e7e68a66cbd33dae5e5ca5d2294efb9fffe8b`: `gear_mesh_g2` sustentada por g2, mas `meshes_with` não é junta genérica disponível em E1/E2; `STRUCTURE_RECOGNIZED_DESIGNER_BINDING_REQUIRED`, sem Spec ou vídeo.
+3. Scissor lift (HydraProducts) SHA `b0259e470995a0cd1655b8f9fd92058ab961244843216ee2faebc1dab298b175`: motor→bomba h1, bomba→cilindro h2, cilindro→braços h3, porém ainda sem solver hidráulico/kinemático, `BLOCKED_NO_KERNEL`, sem Spec ou vídeo.
+
+**Cuidado para o próximo chat:** isto **NÃO é geração autônoma de `MechanismSpec`**. As páginas foram previamente escolhidas e trechos curados manualmente; F17 reconhece expressões controladas; números, seeds, geometria, forma industrial e bind do corpo ainda são manuais. E3 cria propostas **parciais** e bloqueia qualquer declaração de prova completa. Não somar acerto ao benchmark: E1/E2 continuam 3 alvos numéricos resolvidos com especificações manuais, 9 alvos sem tentativa, 0 holdouts, 0 fonte→spec completa, 0 arte aprovada, 0 integração em produção.
+
+**Próximo E3b/E4:** pesquisar como sair de lista fechada e excertos curados para descoberta e extração com verificação efetiva de fontes por junta + parâmetros; medir taxa de falsos positivos, taxa de recusas, custos e revisão humana. Não promover por CI verde, não reintroduzir modelos visuais pequenos descartados, nem codificar um `if` para cada título ou fonte.
+
+**Estado de segurança:** somente branch experimental; `main`, produção, NTC, DOSSIÊ, Telegram e publicação permanecem intocados.

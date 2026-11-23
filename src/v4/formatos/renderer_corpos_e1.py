@@ -28,7 +28,7 @@ def geometry_bounds(spec,frames):
         for b in spec["bodies"]:
             p=frame["poses"][b["id"]]
             for shape in b["shapes"]:
-                if shape["kind"]=="segment":
+                if shape["kind"] in ("segment","slotted_link"):
                     hits.extend([S.world(p,shape["a"]),S.world(p,shape["b"])])
                 elif shape["kind"] in ("disc","gear"):
                     center=S.world(p,shape["center"])
@@ -69,10 +69,25 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
         parts=[]
         color=COLORS[idx%len(COLORS)]
         for shape in b["shapes"]:
-            if shape["kind"]=="segment":
+            if shape["kind"] in ("segment","slotted_link"):
                 ax,ay=shape["a"];bx,by=shape["b"]
-                parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
-                   f'stroke="{color}" stroke-width="{shape["thickness"]:.7g}" stroke-linecap="round"/>')
+                if shape["kind"]=="slotted_link":
+                    # A reusable illustrated SLIT, not dimensioned industrial CAD.
+                    # The central channel is shown using source-referenced line
+                    # geometry, with visual-only thickness derived by importer.
+                    width=shape["thickness"]
+                    parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
+                        f'stroke="#163447" stroke-width="{width+2.6/scale:.8g}" '
+                        'stroke-linecap="round"/>')
+                    parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
+                        f'stroke="{color}" stroke-width="{width:.8g}" '
+                        'stroke-linecap="round"/>')
+                    parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
+                        f'stroke="#EAF3F6" stroke-width="{max(.0018,width*.35):.8g}" '
+                        'stroke-linecap="round"/>')
+                else:
+                    parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
+                       f'stroke="{color}" stroke-width="{shape["thickness"]:.7g}" stroke-linecap="round"/>')
             elif shape["kind"]=="disc":
                 u,v=shape["center"]
                 parts.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{shape["radius"]:.7g}" '
@@ -123,15 +138,16 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
            +''.join(parts)+'</g>')
     pins=[]
     for j in spec["joints"]:
-        if j["kind"]!="pin":continue
+        if j["kind"] not in ("pin","slot"):continue
         pose=frame["poses"][j["a"]]
         u,v=S.world(pose,j["pa"])
-        # Node marker size is a SCREEN-SPACE constant, not a fixed 45 mm
-        # physical object (which swamped short, source-dimensioned links).
-        pin_radius=8.5/scale
+        # Fixed-size screen markers for both pivots and travelling slot pins;
+        # no mechanism-specific drawing or invented mechanical clearances.
+        pin_radius=(7.3 if j["kind"]=="slot" else 8.5)/scale
         pin_stroke=2.4/scale
+        fill="#FFE7A6" if j["kind"]=="pin" else "#F7F3DD"
         pins.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{pin_radius:.8g}" '
-                    f'fill="#FCE8B0" stroke="#263E4A" stroke-width="{pin_stroke:.8g}"/>')
+                    f'fill="{fill}" stroke="#263E4A" stroke-width="{pin_stroke:.8g}"/>')
     fraction=frame["t"]/spec["duration_s"]
     title=escape(title[:55])
     svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960"

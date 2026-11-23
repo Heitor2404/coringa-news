@@ -164,6 +164,81 @@
         ]
       },
       "politica_camera": "plano_geral_travado"
+    },
+    "lock_cycle_standalone": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        14,
+        340,
+        530,
+        844
+      ],
+      "viewport": [
+        2,
+        257,
+        538,
+        898
+      ],
+      "zoom_max": 1.018,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "lower_channel": [
+          16,
+          575,
+          141,
+          783
+        ],
+        "upper_channel": [
+          405,
+          417,
+          528,
+          780
+        ],
+        "chamber": [
+          149,
+          407,
+          396,
+          777
+        ],
+        "inlet_gate": [
+          138,
+          414,
+          157,
+          775
+        ],
+        "outlet_gate": [
+          389,
+          414,
+          409,
+          775
+        ],
+        "valve": [
+          448,
+          779,
+          480,
+          823
+        ],
+        "conduit": [
+          303,
+          541,
+          474,
+          829
+        ],
+        "water": [
+          16,
+          424,
+          527,
+          782
+        ],
+        "ship": [
+          20,
+          348,
+          516,
+          630
+        ]
+      }
     }
   }
 }

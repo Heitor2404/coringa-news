@@ -99,6 +99,40 @@
         ],
         "color": "#EC9058"
       }
+    },
+    "lock_cycle_standalone": {
+      "valves": {
+        "kind": "flow",
+        "edge": [
+          "valve",
+          "controls",
+          "conduit"
+        ],
+        "path": "M 461 566 V 809 H 314 V 754",
+        "bounds": [
+          314,
+          566,
+          461,
+          809
+        ],
+        "color": "#5FCAD6"
+      },
+      "rise": {
+        "kind": "flow",
+        "edge": [
+          "conduit",
+          "feeds",
+          "chamber"
+        ],
+        "path": "M 461 566 V 809 H 314 V 754",
+        "bounds": [
+          314,
+          566,
+          461,
+          809
+        ],
+        "color": "#5FCAD6"
+      }
     }
   }
 }

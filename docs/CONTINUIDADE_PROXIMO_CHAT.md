@@ -2765,3 +2765,27 @@ Ensaio local com E1: 97 poses em uma volta completa, curso 31,057101 mm, 150 int
 ## 144. E17 — ligação STEP ao solver e primeira inspeção do filme
 
 Base de auditoria [ed643dd](https://github.com/Heitor2404/coringa-news/commit/ed643dd4212f41d3b8092ccb836133f5959c9d5b). O importador lê as colocações da montagem e mede cada par de eixos diretamente nas faces analíticas. O solver E1 aceita a geometria externa registrada para os quatro corpos; as três juntas de pino e a guia usam as restrições E1 existentes. Teste independente calcula as 97 posições do cursor pela solução analítica do mecanismo deslocado. Os quatro testes E17 locais passaram. A primeira inspeção do MP4 mostrou a conversão do giro em deslizamento, mas as cores não identificavam as peças. A segunda composição acrescenta uma legenda por corpo e explica a transformação do movimento. Gráfico e silhuetas usam a mesma trajetória.
+
+## 145. E17 — validação remota concluída (run 45283333166)
+
+- Commit validado: [c216de5](https://github.com/Heitor2404/coringa-news/commit/c216de5da4446430676c5bc976627364cf44d5c4) (URL do STEP obtida pela API oficial `https://xemstudio.com/mcp`, `get_free_files`, aceita só se começar por `https://xemstudio.com/files/`).
+- [Actions 45283333166](https://github.com/Heitor2404/coringa-news/actions/runs/45283333166): **success**, job `cycle`, todos os passos verdes. Pytest: **79 passed** (E17 + regressões E1/E2/E7/E8/E9/E10/E12).
+- QA impresso no log público do job (conferido nesta sessão, 23/11 20h BRT): 97 quadros, curso medido **31,057101 mm** contra 31,06 mm da fonte, erro máximo de pino **1,55e-14 mm**, **150** interseções booleanas entre pares de sólidos em 25 poses com volume comum máximo **0 mm³**, posto mínimo do Jacobiano 9, 97 quadros decodificados, pico de 7.696 pixels alterados e 1 pixel no retorno ao início, `publish=false`. SHA256 do MP4 no runner: `46e43cde40c86df6dfacd11525028eb8eb9a1d0ae4f0f3e762212989bdcf362f`.
+- Artifact `e17-volta-step-verificada`, ID **14869802868**, 195.766 bytes, digest `sha256:409e06201c500de9c7f78cbb122dc895a9c5d823b89d119657db990dfc57d99f`, expira **07/12/2026 22:51 UTC**. **Limite desta sessão:** o download de artifacts exige token e o token da sessão era inválido; o MP4 do CI **não** foi aberto aqui. A inspeção visual registrada na seção 144 é a da prévia local do chat anterior.
+- Limites mantidos: o STEP não pode ser redistribuído (licença Xem Studio); pares de juntas e guia curados no manifesto; projeto para impressão 3D, sem verificação em bancada; interseções amostradas (1 a cada 4 poses); visual não homologado.
+
+## 146. Auditoria de arquitetura (base c216de5) — obstáculos reais à generalização
+
+1. **Três núcleos cinemáticos disjuntos.** E1 (`solver_restricoes_e1.py`) é planar SE(2); E15 (`cad_urdf_e15.py`) é árvore URDF sem ciclos; E17 (`cad_fechado_e17.py`) é STEP planar com pares de juntas escritos no manifesto. Só `solve_constraints` é comum.
+2. **E1 exige contagem exata** (`nc+1 == 3n`, `RESTRICOES_CONTAGEM`): rejeita restrições redundantes (normais quando um laço planar é descrito em 3D) e qualquer mecanismo subatuado.
+3. **Nenhum caminho resolve laço fechado espacial nem grau de liberdade passivo** (garras adaptativas, molas, batentes). E15 recusa ciclos; E1 é só plano.
+4. **Texto específico de máquina nos renderers** — viola a regra de não ter template por máquina: E15 grava "CAD: Source Robotics · CC BY 4.0" e "Curso de uma mandíbula"; E17 grava "Do giro ao movimento em linha reta", "0°/360°" e três posições fixas de legenda.
+5. **Render E15 não é 3D de verdade para movimento espacial:** rasteriza uma vez e desloca ladrilhos; rotação só em torno do eixo de visão (cotovelo). Uma cadeia serial completa não cabe nisso.
+6. **Rasterização em Python puro por triângulo:** inviável para modelos com >100 mil triângulos por quadro.
+7. **Câmeras escolhidas à mão** (vetor `eye` fixo em E15, rolagem de 42° em E17).
+8. **Oráculos externos fracos:** só E17 compara com medida da fonte; nenhum caminho confronta com ficha técnica do fabricante.
+9. **Um fornecedor por caminho** (Source Robotics; Xem Studio).
+
+Preservar: `solve_constraints` (fechamento + posto), verificação SHA256 de cada arquivo, recusas com código, `check_video`/decodificação, isolamento de fonte (nada de CAD de terceiros no repositório).
+
+Decisão técnica do bloco E18–E20: um **núcleo multicorpo 3D único** que lê o modelo compilado (MJCF e URDF são analisados pelo compilador do MuJoCo, só como *parser*), faz a cinemática direta **própria**, impõe fechamentos (`connect`, `weld`, acoplamento polinomial de juntas), mede a mobilidade pelo posto do Jacobiano e, quando sobra grau de liberdade, só resolve se a fonte declarar molas e limites (mínimo de energia elástica com batentes); caso contrário recusa. Oráculos independentes: cinemática direta e resíduo de igualdades calculados pelo próprio MuJoCo, simulação dinâmica do MuJoCo para a postura subatuada, e medidas de ficha técnica dos fabricantes.

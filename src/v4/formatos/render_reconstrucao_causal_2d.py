@@ -420,6 +420,8 @@ def renderizar(mov: dict, scene: dict, saida: Path,
             "subida_px": PALCO_OTTO.deslocar(),
             "faixa_resultante": list(PALCO_OTTO.faixa_resultante()),
             "escala": 1.0,
+            "nota_escala": "ESCALA_NOMINAL_DA_GEOMETRIA; ZOOM_VISUAL_E_SEPARADO",
+            "zoom_maximo_da_camera": (camera_causal_svg.CAMERAS["familias"]["otto_4t_reference"]["zoom_max"] if camera_causal else 1.0),
             "aprovacao_humana": "PENDENTE",
         },
     }

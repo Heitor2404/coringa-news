@@ -90,6 +90,12 @@ jobs:
             assert delta>2, (kind,delta)
             report=json.loads(video.with_suffix('.json').read_text('utf8'))
             assert report['camera_causal']['habilitada'] is True
+            if kind=='COMPRESSOR':
+              assert report['layout']['escala_inalterada'] is False
+              assert report['layout']['proporcoes_e_fisica_inalteradas'] is True
+              assert report['layout']['zoom_maximo_da_camera']>1.07
+            else:
+              assert report['enquadramento_compartilhado']['zoom_maximo_da_camera']>1.02
             assert report['publicar'] is False
             records[kind]={'delta_fisico_rgb':round(delta,3),
                            'sha256':hashlib.sha256(video.read_bytes()).hexdigest(),

@@ -11,11 +11,13 @@ from xml.etree import ElementTree as ET
 
 import cairosvg
 import pytest
-from PIL import Image,ImageChops,ImageStat
+from PIL import Image,ImageChops,ImageStat,ImageDraw
 
 from src.v4.formatos import engrenagens_parametricas_f14 as G
 from src.v4.formatos import compositor_engrenagens_f14 as M
 from src.v4.formatos import compositor_cinematico_parametrico_2d as F7
+from src.v4.formatos import qa_ui_organico_f13 as UI
+from src.v4.formatos import qa_svg_mobile_f11 as Q
 
 DIR=Path(__file__).resolve().parents[1]/"src/v4/formatos/cenas_parametricas"
 SAMPLES=[DIR/"redutor_engrenagens_18x36.json",
@@ -46,13 +48,14 @@ def test_movimento_inverso_sem_slip_angular(index):
     phase=math.pi+math.pi/p.driven.z
     for t in (0,.31,2.4,4.49,4.5,6.7,9):
         st=M.state(scene,t)
-        assert math.isclose(st["driver_angle_rad"],2*math.pi*t/9,abs_tol=1e-12)
+        assert math.isclose(st["driver_angle_rad"],4*math.pi*t/9,abs_tol=1e-12)
         assert math.isclose(st["driven_angle_rad"],phase-st["driver_angle_rad"]*p.driving.z/p.driven.z,abs_tol=1e-12)
         assert st["opposite_rotation"] is True
         assert st["pitch_tangential_error"]<1e-8
         assert st["driver_teeth"]==p.driving.z
         assert st["driven_teeth"]==p.driven.z
     assert (M.state(scene,9)["driven_angle_rad"]-M.state(scene,0)["driven_angle_rad"])<0
+    assert scene["driver_revolutions"]==2
 
 def test_dentes_involutos_forma_continua_com_raiz_gerada():
     for scene in scenes():
@@ -104,6 +107,48 @@ def test_nao_aceita_geometria_alucinada(invalid,code):
     scene["gears"].update(invalid)
     with pytest.raises(ValueError,match="F14-GEAR-"+code):
         M.validate(scene)
+
+
+@pytest.mark.parametrize("index",[0,1])
+def test_dentes_nao_se_penetraram_na_rasterizacao_2d(index):
+    """40 poses/ciclo, tolerância de 30 pixels discretos no contato.
+
+    Não certifica folga industrial, mas captura interpenetração
+    grosseira por fase/centros incorretos.
+    """
+    p=M.validate(scenes()[index])
+    points=[G.outline(p.driving),G.outline(p.driven)]
+    max_overlap=0
+    for k in range(40):
+        st=M.state(scenes()[index],9*k/40)
+        polys=[]
+        for pts,x,ang in zip(points,(p.cx1,p.cx2),
+                             (st["driver_angle_rad"],st["driven_angle_rad"])):
+            c,sn=math.cos(ang),math.sin(ang)
+            xy=[(x+c*u-sn*v,p.cy+sn*u+c*v) for u,v in pts]
+            layer=Image.new("L",(540,960),0)
+            ImageDraw.Draw(layer).polygon(xy,fill=255)
+            polys.append(layer)
+        collision=ImageChops.multiply(*polys).histogram()[-1]
+        max_overlap=max(max_overlap,collision)
+    assert max_overlap<=30,max_overlap
+
+
+@pytest.mark.parametrize("index",[0,1])
+def test_titulo_essencial_fica_fora_das_mascaras_ui_de_terceiros(index):
+    scene=scenes()[index]
+    xml=M.frame(scene,2.8)
+    root=ET.fromstring(xml)
+    title=[n for n in root if n.get("data-essential")=="machine_title"]
+    assert len(title)==1 and title[0].get("y")=="162"
+    original=Q._raster(xml)
+    root.remove(title[0])
+    removed=Q._raster(ET.tostring(root,encoding="unicode"))
+    pixels=Q._threshold_difference(original,removed)
+    assert Q._count(pixels)>100
+    for profile in UI._profiles():
+        overlap=ImageChops.multiply(pixels,UI.mask(profile))
+        assert Q._count(overlap)/Q._count(pixels)<.035,profile["id"]
 
 def test_nao_habilita_publicacao_e_nao_confunde_fonte_tecnica_com_imagem():
     scene=scenes()[0]

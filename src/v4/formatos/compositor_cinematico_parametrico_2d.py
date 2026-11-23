@@ -26,6 +26,7 @@ from src.v4.formatos import (
     primitivas_fisicas_parametricas as P,
     pecas_visuais_f8 as V,
     layout_hero_mecanico_f12 as H12,
+    layout_organico_f13 as H13,
 )
 
 FAMILY="slider_crank_parametrico"
@@ -189,7 +190,7 @@ def estado(scene:dict,t:float)->dict:
 def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False,
               enquadramento_mobile:str|None=None)->str:
     spec=validar(scene)
-    if enquadramento_mobile not in (None,"hero_elevado_f12"):
+    if enquadramento_mobile not in (None,"hero_elevado_f12","hero_lateral_f13"):
         fail("F-COMP-MEC-LAYOUT-NAO-CADASTRADO")
     state=estado(scene,t)
     rig=state["rig"]
@@ -309,8 +310,10 @@ def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False,
            if (x.get("id") or "").startswith("role-")]
     if len(found)!=len(ACTORS) or set(found)!=set(ACTORS):
         fail("F-COMP-MEC-SVG-ATOR-INCOERENTE")
-    if enquadramento_mobile=="hero_elevado_f12":
+    if enquadramento_mobile in ("hero_elevado_f12","hero_lateral_f13"):
         svg,_=H12.aplicar(svg,family=FAMILY,pose=pose)
+        if enquadramento_mobile=="hero_lateral_f13":
+            svg,_=H13.aplicar(svg)
     return svg
 
 
@@ -372,11 +375,15 @@ if __name__=="__main__":
     parser.add_argument("--visual-f8",action="store_true",help="Opt-in: peca SVG autoral com hash; nao homologada")
     parser.add_argument("--transmissao-animada",action="store_true",help="LAB F11: marcacoes no trajeto da correia usando F10")
     parser.add_argument("--hero-f12",action="store_true",help="LAB F12: cabeçalho compacto e mecanismo deslocado pra cima, SEM encolher")
+    parser.add_argument("--organico-f13",action="store_true",help="LAB F13: título essencial em área lateral abaixo de UI orgânica estimada")
     args=parser.parse_args()
     scene=carregar(args.scene_json)
+    if args.hero_f12 and args.organico_f13:
+        fail("F-COMP-MEC-DOIS-LAYOUTS")
     if args.visual_f8:
         scene["visual_parts"]={"cylinder":"cylinder_shell_f8"}
         scene["id"]+="_f8"
+    layout_arg=("hero_lateral_f13" if args.organico_f13 else "hero_elevado_f12" if args.hero_f12 else None)
     print(json.dumps(renderizar(scene,args.saida_mp4,transmissao_animada=args.transmissao_animada,
-                               enquadramento_mobile="hero_elevado_f12" if args.hero_f12 else None),
+                               enquadramento_mobile=layout_arg),
                      ensure_ascii=False,indent=2))

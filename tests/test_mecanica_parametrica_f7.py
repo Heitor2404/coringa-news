@@ -131,7 +131,9 @@ def test_cena_real_tem_pistao_movendo_sem_cartoes_ou_camera_nervosa(idx):
     assert diff(a,b,(63,303,475,820))>7
     assert diff(a,c,(63,303,475,820))>2
     assert diff(a,b,(0,0,540,55))==0
-    assert diff(a,b,(0,906,540,959))==0
+    assert diff(a,b,(0,906,446,959))==0
+    # Contador discreto muda de 01/02 para 02/02. O rodape nao se move.
+    assert "01/02" in first and "02/02" in middle
 
 
 def test_kits_corretamente_bloqueiam_geometria_impossivel():

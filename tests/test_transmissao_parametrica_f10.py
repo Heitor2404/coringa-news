@@ -105,6 +105,16 @@ def test_marcas_progridem_no_ritmo_linear_ideal_sem_oscilar_camera():
     assert _role(a,"machine-assembly").attrib["transform"]==_role(b,"machine-assembly").attrib["transform"]
 
 
+def test_f10_correia_atras_das_faces_e_antigo_mantem_ordem():
+    antigo=_frame(.35)
+    novo=_frame(.35,new=True)
+    assert novo.index('id="role-drive_belt"') < novo.index('id="role-pump_flywheel"')
+    assert novo.index('id="role-drive_belt"') < novo.index('id="role-motor_pulley"')
+    assert antigo.index('id="role-drive_belt"') > antigo.index('id="role-pump_flywheel"')
+    assert len([x for x in ET.fromstring(novo).iter()
+               if x.get("id")=="role-drive_belt"])==1
+
+
 def test_f7_duas_cenas_continuam_exatamente_iguais_por_padrao():
     for filename in ("biela_manivela_curso_curto.json","biela_manivela_curso_longo.json"):
         scene=F7.carregar(SCENES/filename)

@@ -136,7 +136,107 @@ def agua_no_tanque(x,y,largura,base,*,cor="#379BAF",superficie="#C9FAFA"):
     )
 
 
-PRIMITIVAS_DESENHAVEIS=frozenset(_ALLOWED)
+
+
+# F7: os três tipos mecânicos também são SVGs realmente desenháveis.
+def rotor(cx,cy,raio,angulo_graus,*,corpo="#365A6D",borda="#1B3E4F",raios=5):
+    """Polia/volante rotativo parametrizado: a rotação move o grupo inteiro."""
+    x=_num(cx,0,540);y=_num(cy,0,960);r=_num(raio,18,110)
+    theta=_num(angulo_graus,-1e7,1e7)
+    if type(raios) is not int or not 3<=raios<=10:
+        raise ValueError("F-PRIMITIVA-ROTOR")
+    _hex(corpo);_hex(borda)
+    spokes=[]
+    for i in range(raios):
+        a=2*math.pi*i/raios
+        spokes.append(
+            f'<line x1="0" y1="0" x2="{r*.78*math.cos(a):.2f}" '
+            f'y2="{r*.78*math.sin(a):.2f}" stroke="#C6D9DF" '
+            'stroke-width="10" stroke-linecap="round"/>'
+        )
+    return (f'<g transform="translate({x:.2f} {y:.2f}) rotate({theta:.3f})">'
+          f'<circle r="{r:.2f}" fill="{corpo}" stroke="{borda}" stroke-width="7"/>'
+          f'<circle r="{r-10:.2f}" fill="#4D7082" stroke="#C4D7DC" stroke-width="5"/>'
+          + "".join(spokes)+
+          '<circle r="13" fill="#DDE8E9" stroke="#1D4354" stroke-width="5"/></g>')
+
+
+def pistao(x,y,largura,altura,*,cor="#C3D9E0",borda="#294D63",topo="#E9F4F6"):
+    """Corpo sólido, sem biela falsa."""
+    x=_num(x,0,540);y=_num(y,0,960)
+    w=_num(largura,40,240);h=_num(altura,30,125)
+    if x+w>540 or y+h>930:
+        raise ValueError("F-PRIMITIVA-PISTAO-FORA")
+    for color in (cor,borda,topo):_hex(color)
+    return (f'<rect x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" '
+       f'height="{h:.2f}" rx="12" fill="{cor}" stroke="{borda}" stroke-width="7"/>'
+       f'<rect x="{x+3:.2f}" y="{y+2:.2f}" width="{w-6:.2f}" '
+       f'height="16" rx="5" fill="{topo}" opacity=".93"/>'
+       f'<path d="M {x+9:.2f} {y+24:.2f} H {x+w-9:.2f} '
+       f'M {x+9:.2f} {y+34:.2f} H {x+w-9:.2f}" '
+       f'stroke="{borda}" stroke-width="2.6" opacity=".52"/>'
+       f'<circle cx="{x+w/2:.2f}" cy="{y+h-19:.2f}" r="10" '
+       'fill="#D5E9EC" stroke="#416A7D" stroke-width="3"/>')
+
+
+def biela(x1,y1,x2,y2,*,largura=21,cor="#D5A76C",
+          contorno="#294A5D",reflexo="#F6D7A0"):
+    """Biela entre duas juntas reais; nunca articula por texto de roteiro."""
+    ax=_num(x1,0,540);ay=_num(y1,0,960)
+    bx=_num(x2,0,540);by=_num(y2,0,960)
+    w=_num(largura,6,45)
+    for color in (cor,contorno,reflexo):_hex(color)
+    if math.hypot(ax-bx,ay-by)<10 or math.hypot(ax-bx,ay-by)>650:
+        raise ValueError("F-PRIMITIVA-BIELA-DEGENERADA")
+    return (f'<line x1="{ax:.3f}" y1="{ay:.3f}" '
+        f'x2="{bx:.3f}" y2="{by:.3f}" stroke="{contorno}" '
+        f'stroke-width="{w+8:g}" stroke-linecap="round"/>'
+        f'<line x1="{ax:.3f}" y1="{ay:.3f}" '
+        f'x2="{bx:.3f}" y2="{by:.3f}" stroke="{cor}" '
+        f'stroke-width="{w:g}" stroke-linecap="round"/>'
+        f'<line x1="{ax:.3f}" y1="{ay:.3f}" '
+        f'x2="{bx:.3f}" y2="{by:.3f}" stroke="{reflexo}" '
+        'stroke-width="3" opacity=".78"/>'
+        f'<circle cx="{bx:.3f}" cy="{by:.3f}" r="10" '
+        f'fill="#D8EBED" stroke="{contorno}" stroke-width="4"/>'
+        f'<circle cx="{ax:.3f}" cy="{ay:.3f}" r="11" '
+        f'fill="#D8EBED" stroke="{contorno}" stroke-width="4"/>')
+
+
+def transmissao_correia(x1,y1,r1,x2,y2,r2,*,
+                        cor="#223F52",filete="#8CAFB9",largura=10):
+    """Correia aberta ao longo de tangentes EXTERNAS das duas polias."""
+    x1=_num(x1,0,540);y1=_num(y1,0,960)
+    x2=_num(x2,0,540);y2=_num(y2,0,960)
+    r1=_num(r1,10,110);r2=_num(r2,10,110)
+    w=_num(largura,5,20);_hex(cor);_hex(filete)
+    dx=x2-x1;dy=y2-y1;d=math.hypot(dx,dy)
+    if d<=r1+r2+8:
+        raise ValueError("F-PRIMITIVA-CORREIA-SEM-TANGENCIA")
+    ux,uy=dx/d,dy/d
+    nx,ny=-uy,ux
+    cos=(r1-r2)/d
+    sine=math.sqrt(1-cos*cos)
+    n1=(cos*ux-sine*nx,cos*uy-sine*ny)
+    n2=(cos*ux+sine*nx,cos*uy+sine*ny)
+    a=(x1+r1*n1[0],y1+r1*n1[1])
+    b=(x2+r2*n1[0],y2+r2*n1[1])
+    c=(x2+r2*n2[0],y2+r2*n2[1])
+    e=(x1+r1*n2[0],y1+r1*n2[1])
+    for px,py in (a,b,c,e):
+        if px<-6 or py<230 or px>546 or py>905:
+            raise ValueError("F-PRIMITIVA-CORREIA-FORA-PALCO")
+    path=(f'M {a[0]:.2f} {a[1]:.2f} L {b[0]:.2f} {b[1]:.2f} '
+        f'A {r2:.2f} {r2:.2f} 0 0 1 {c[0]:.2f} {c[1]:.2f} '
+        f'L {e[0]:.2f} {e[1]:.2f} '
+        f'A {r1:.2f} {r1:.2f} 0 0 1 {a[0]:.2f} {a[1]:.2f}')
+    return (f'<path d="{path}" fill="none" stroke="{cor}" '
+        f'stroke-width="{w:g}" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'<path d="M {a[0]:.2f} {a[1]:.2f} L {b[0]:.2f} {b[1]:.2f}" '
+        f'stroke="{filete}" stroke-width="2.5" opacity=".72"/>')
+
+
+PRIMITIVAS_DESENHAVEIS=frozenset(_ALLOWED | {'rotor','piston','transmission'})
 
 
 def verificar_reuso():

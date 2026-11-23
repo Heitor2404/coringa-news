@@ -34,9 +34,11 @@ COMPONENTS=(
 )
 # 'connect', 'attach', 'couple' etc express *candidate* relations.
 # 'pin' is included only as a verb with pronoun/number context, not a noun.
-REL_VERB=re.compile(r"\b(?:connects?|connected|connecting|attaches?|attached|"
+REL_VERB=re.compile(r"\b(?:connects?|connected|attaches?|attached|"
                     r"attachments?|engages?|engaged|couples?|coupled|"
-                    r"hinges?|hinged|pins?|pinned|pinning)\b",re.I)
+                    r"hinges?|hinged|pinned|pinning)\b"
+                    r"|\b(?:pin|pins)\s+(?:their|its|the)\b"
+                    r"|\bconnecting\s+(?:to|with|a|an|the)\b",re.I)
 COMP_RE=re.compile(r"\b(?:"+"|".join(COMPONENTS)+r")\b",re.I)
 NEG=re.compile(r"\b(?:not|never|without|cannot|does not|no|instead of|rather than)\b",re.I)
 GENERIC=re.compile(r"^\s*(?:a link\b|a coupler\b|a joint\b|each joint\b|"

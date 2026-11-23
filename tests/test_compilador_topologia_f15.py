@@ -35,7 +35,7 @@ def test_identifica_pela_estrutura_nao_pela_palavra_no_titulo(index,family):
     assert plan["media_license_verified"] is False
     # De propósito, dar título enganoso para provar que ele NÃO roteia.
     changed=copy.deepcopy(request)
-    changed["title"]="ENGRENAGENS" if index==0 else "PISTAO"
+    changed["title"]="REDUTOR" if index==0 else "PISTAO"
     compiled=ROUTER.compile_request(changed)
     assert compiled["compiled_family"]==family
     assert compiled["scene"]["title"]==changed["title"]

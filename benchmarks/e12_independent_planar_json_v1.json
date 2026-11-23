@@ -28,7 +28,7 @@
     },
     {
       "path": "examples/designs/fb_02_0203.json",
-      "blob_sha1": "6d0cddc8e4f69f08ee20cb696fed6276319bfc0a",
+      "blob_sha1": "6e4e570b4be2206155792472fb00db8442d314a5",
       "group": "independent_variant"
     }
   ],
@@ -38,5 +38,6 @@
     "reason": "compliant_single_mesh_not_per_rigid_body; cannot attach to rigid solver without distortion"
   },
   "freeze": "Do not replace failing paths, labels, hashes or specimen geometry within this manifest to manufacture 4/4 pass",
-  "publish": false
+  "publish": false,
+  "source_blob_correction_log": "Initial manifest erroneously transcribed fb_02_0203 git blob; first LIVE run 45275751318 correctly blocked at SOURCE_BLOB. Hash corrected to upstream commit's actual Git blob 6e4e570b4be2206155792472fb00db8442d314a5; source file and split unchanged."
 }

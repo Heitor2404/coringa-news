@@ -1,0 +1,120 @@
+{
+  "schema": "coringa-mechanism-spec-planar-v0",
+  "units": "m",
+  "ground": {
+    "id": "ground",
+    "pose": [
+      0,
+      0,
+      0
+    ]
+  },
+  "duration_s": 6,
+  "publish": false,
+  "visual_approved": false,
+  "bodies": [
+    {
+      "id": "pinion",
+      "seed": [
+        0,
+        0,
+        -1.5707963267948966
+      ],
+      "shapes": [
+        {
+          "kind": "gear",
+          "center": [
+            0,
+            0
+          ],
+          "pitch_radius_m": 0.4,
+          "teeth": 20,
+          "tooth_height_m": 0.045
+        }
+      ]
+    },
+    {
+      "id": "rack",
+      "seed": [
+        -0.6283185307179586,
+        -0.4,
+        0
+      ],
+      "shapes": [
+        {
+          "kind": "rack",
+          "a": [
+            -1.1,
+            -0.14
+          ],
+          "b": [
+            1.1,
+            -0.14
+          ],
+          "tooth_pitch_m": 0.12566370614359174,
+          "tooth_height_m": 0.1,
+          "thickness": 0.15,
+          "tooth_side": 1
+        }
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "kind": "pin",
+      "a": "ground",
+      "b": "pinion",
+      "pa": [
+        0,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "slider",
+      "a": "ground",
+      "b": "rack",
+      "pa": [
+        0,
+        -0.4
+      ],
+      "pb": [
+        0,
+        0
+      ],
+      "axis_a": [
+        1,
+        0
+      ],
+      "angle_offset": 0
+    },
+    {
+      "kind": "rack_pinion",
+      "a": "pinion",
+      "b": "rack",
+      "pa": [
+        0,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ],
+      "axis_b": [
+        1,
+        0
+      ],
+      "pitch_radius_m": 0.4,
+      "pitch_side": -1,
+      "phase_m": 0
+    }
+  ],
+  "driver": {
+    "body": "pinion",
+    "theta0": -1.5707963267948966,
+    "speed": 0.5235987755982988
+  }
+}

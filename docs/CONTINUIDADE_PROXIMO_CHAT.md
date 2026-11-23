@@ -2309,3 +2309,25 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 - **Resultados por pixels (pior overlap na máscara CONSERVADORA dos 3 instantes, NÃO UI real):** curto pistão **25,61→17,07%**, biela **100→22,81%**, volante **100→58,10%**, correia **100→51,16%**. Longo pistão **31,58→19,90%**, biela **100→42,01%**, volante **100→58,38%**, correia **100→52,13%**. **Redução real de oclusão simulada SEM encolher a escala da máquina**; câmera fixa, header compacto de 134 px, máquina elevada ~135 px por transform único.
 - **Inspeção VISUAL:** animação agora ocupa mais área alta, mecanismo é o MESMO e continua legível, sem mudança de estilo radical. Parte inferior tem espaço livre para overlay; o header novo é apertado e, sobretudo, os **perfis conservadores simulam a zona SUPERIOR inteira como coberta**, de modo que título/identidade/legendas altas NÃO foram homologados. Volante/correia ainda intersectam colunas UI. Nenhuma alegação de seguro para produção ou visual industrial profissional.
 - **Relatório fonte:** `docs/v4/formatos/F12_LAYOUT_HERO_QA_MOBILE_20261123.md`. **Próximo F13:** calibrar máscaras com screenshot real do TikTok/Reels/Shorts e comparar com mesmo vídeo, sem encolher automaticamente; sanar header/legendas e verificar máquina na UI real. Nenhum `main`, NTC, DOSSIÊ, Telegram ou postagem alterados.
+
+## 123. 23/11 — F13: interface orgânica versus diretriz de ads, texto lateral
+
+**Ponto de retomada:** após F12 ter melhorado a montagem SEM reduzir máquina, mas UI visual e título na faixa superior não homologados. Usuário autorizou prosseguir. Branch `atlas-direcao-visual-20261118`, sem alteração em `main`, NTC, DOSSIÊ ou postagem.
+
+**Pesquisa externa 23/11/2026:**
+- O `plataformas.json:ativos_seguros` existente é DELIBERADAMENTE conservador (topo ~240–280/1920; base ~660–672/1920): serve para anúncios/áreas críticas, mas NÃO é medição de sobreposição de botões em Reels orgânico de um aparelho específico.
+- Terceiros publicaram medições recentes de UI orgânica, **NÃO oficiais e NÃO capturadas no aparelho do usuário**:
+  - Reels Android 20/10/2026: https://pulkitediting.com/blog/instagram-reels-safe-zone/ (topo 150, rodapé 280, botões da direita largura 190 desde y800, corte lateral ~45, na tela virtual 1080×1920).
+  - Reels Android/iPhone 12/11/2026: https://myshorts.in/instagram-reels-safe-zone (topo 220, base 420, direita 140, margem esquerda 60; início vertical dos botões NÃO informado, tratado como faixa de altura integral).
+  - TikTok Sept/2026: https://bannerpeek.com/tools/tiktok-safe-zone (topo 200, base 600, direita 170; y da barra não informado, aplicado com cautela).
+  - Shorts outubro/2026: https://softphoria.com/tools/youtube-shorts-safe-zone (topo 180, base 190, direita 170 a partir de y1060; recortes laterais aproximados).
+  - Guia Meta **ADS**: 14% topo, 35% base, 6% lados (fontes https://quelta.ai/tools/safe-zones/instagram-reels/ e Meta Ads Guide). **NÃO afirmar que isso mede Reels orgânico.** TikTok Ads Manager também diz que safe zone varia segundo dimensão, legenda e adicionais (https://ads.tiktok.com/resources/help/article/tiktok-auction-in-feed-ads).
+- **Sem screenshot original fornecido pelo usuário**, portanto a F13 pode testar hipóteses com procedência, nunca calibrar/confirmar UI específica do aparelho.
+
+**Implementação F13 (CI ainda precisa ser verificada):**
+- Novo `src/v4/formatos/perfis_ui_evidencia_f13.json`: 4 perfis orgânicos indicativos de terceiros + 1 ads referenciado, fontes, datas, proveniência e gate `captured_in_user_device=false`.
+- Novo `layout_organico_f13.py`: sobre o HERO F12, sem mexer no `machine-stage`, cria um bolso lateral esquerdo para título, fase e explicação, abaixo das abas UI observadas; mantém escala, câmera travada, física, polias e correia integralmente. Texto longo bloqueia ao invés de transbordar; marca `data-layout=hero_lateral_f13`.
+- `compositor_cinematico_parametrico_2d.py`: `--organico-f13` / `enquadramento_mobile="hero_lateral_f13"` opcional; F7/F11/F12 continuam padrões intactos.
+- Novo `qa_ui_organico_f13.py`: cálculo do risco de sobreposição sobre pixels verdadeiros do SVG de cada peça e textos essenciais. Compara F12 vs F13 para os dois cursos em três momentos. Folhas com perfis publicados como hipóteses, NÃO imagens de aplicativos copiadas.
+- `tests/test_layout_organico_f13.py`; `.github/workflows/qa-ui-organico-f13.yml`: regressões, 3 MP4s privados de 9s, JSONs e prancha de 12 quadros. Sem Claude, sem Telegram, sem publicação.
+- **Próximo obrigatório:** checar run iniciado no commit `918997b9`, corrigir falhas, analisar MP4/QA por pixels e registrar resultado final real. Principal gate da F13 **não pode ser declarado aprovado para produção sem screenshot dos aplicativos de verdade no celular de destino**.

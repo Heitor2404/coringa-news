@@ -156,19 +156,22 @@ def prancha(svg,path):
     board.save(path,quality=89)
 
 
-def analisar(scene, out, *, animation=True):
+def analisar(scene, out, *, animation=True, enquadramento_mobile=None):
     """Faz QA de 3 instantes das duas fases, sem fingir safe zone aprovada."""
     M.validar(scene)
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     slices={}
     worst=0.0
     for t in TIMES:
-        xml=M.frame_svg(scene,t,transmissao_animada=animation)
+        xml=M.frame_svg(scene,t,transmissao_animada=animation,
+                        enquadramento_mobile=enquadramento_mobile)
         data=medir(xml)
         slices[str(t)]=data
         worst=max(worst,*(item["max_overlap_fraction"] for item in data.values()))
-    prancha(M.frame_svg(scene,3.6,transmissao_animada=animation),
-           out/(scene["id"]+"_F11_MASCARAS_PERFIL_SIMULADO.jpg"))
+    suffix="F12" if enquadramento_mobile else "F11"
+    prancha(M.frame_svg(scene,3.6,transmissao_animada=animation,
+                        enquadramento_mobile=enquadramento_mobile),
+           out/(scene["id"]+f"_{suffix}_MASCARAS_PERFIL_SIMULADO.jpg"))
     report={
         "schema":"coringa-svg-mobile-role-audit-v1",
         "scene":scene["id"],"renderer":"compositor_cinematico_parametrico_2d",
@@ -179,11 +182,12 @@ def analisar(scene, out, *, animation=True):
         "bbox_is_effectively_visible_not_envelope_camera":True,
         "worst_observed_overlap_fraction":round(worst,4),
         "status":"INSPECAO_UI_HUMANA_PENDENTE",
+        "mobile_layout_mode":enquadramento_mobile or "original_f11",
         "publish":False,"visual_approval":False,
         "automatically_shrink_machine":False,
         "windows":slices,
     }
-    (out/(scene["id"]+"_F11_AUDITORIA.json")).write_text(
+    (out/(scene["id"]+f"_{suffix}_AUDITORIA.json")).write_text(
         json.dumps(report,ensure_ascii=False,indent=2),encoding="utf8")
     return report
 
@@ -193,9 +197,11 @@ def main():
     p.add_argument("scene",type=Path)
     p.add_argument("out",type=Path)
     p.add_argument("--baseline",action="store_true")
+    p.add_argument("--hero-f12",action="store_true")
     args=p.parse_args()
     print(json.dumps(analisar(M.carregar(args.scene),args.out,
-                              animation=not args.baseline),ensure_ascii=False,indent=2))
+                              animation=not args.baseline,
+                              enquadramento_mobile="hero_elevado_f12" if args.hero_f12 else None),ensure_ascii=False,indent=2))
 
 
 if __name__=="__main__":

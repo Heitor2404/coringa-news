@@ -1,0 +1,29 @@
+{
+  "schema": "coringa-documentary-evidence-f16-v1",
+  "id": "par_engrenagens_educacional",
+  "url": "https://mechanics.ju.se/MachineElements/spur-gears.html",
+  "kind": "public_technical_article",
+  "quoted_spans": [
+    {
+      "id": "g1",
+      "locator": "10.2 Spur gears, lead paragraph",
+      "text": "A spur gear passes rotation between parallel shafts"
+    },
+    {
+      "id": "g2",
+      "locator": "A crossed string is an ideal gear pair",
+      "text": "as two gears in mesh turn"
+    },
+    {
+      "id": "g3",
+      "locator": "A crossed string is an ideal gear pair",
+      "text": "opposite directions"
+    }
+  ],
+  "claim_scope": "tooth engagement, opposing rotation; gear ratio from independently validated F14 equations",
+  "checked_by": "manual_public_web_inspection_2026-11-23",
+  "original_media_used": false,
+  "image_license_claimed": false,
+  "publication_allowed": false,
+  "extraction_requires_live_anchor_check": true
+}

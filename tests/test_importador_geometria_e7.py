@@ -10,6 +10,7 @@ import pytest
 
 from src.v4.formatos import importador_geometria_e7 as E7
 from src.v4.formatos import solver_restricoes_e1 as S
+from src.v4.formatos import renderer_corpos_e1 as R
 
 ROOT=Path(__file__).resolve().parents[1]
 MANIFEST=json.loads((ROOT/"benchmarks/e7_open_geometry_sources_v1.json").read_text("utf8"))
@@ -139,3 +140,28 @@ def test_non_supported_pair_and_source_unit_are_blocked():
         E7.source_geometry(SYNTHETIC.replace("length_unit,mm","length_unit,px").encode())
     with pytest.raises(ValueError,match="E7-FONTE-CONTATO_COMPOSTO_NAO_SUPORTADO"):
         E7.source_geometry((SYNTHETIC+"\n[pairs]\nid,type\nG1,gear\n").encode())
+
+
+def test_shared_camera_uses_source_dimensions_and_prevents_clipping():
+    """Regression: the old 1.0-m minimum span shrunk a 0.3-m machine."""
+    spec,_=E7.source_geometry(SYNTHETIC.encode())
+    frames=S.trajectory(spec,91)
+    camera=R.geometry_bounds(spec,frames)
+    assert camera["world_fixed_for_all_frames"]
+    assert camera["scale_px_per_m"]>800, camera
+    assert max(camera["span_m"])<.9, camera
+    cx,cy=camera["center"];scale=camera["scale_px_per_m"]
+    for f in frames:
+        for body in spec["bodies"]:
+            p=f["poses"][body["id"]]
+            for sh in body["shapes"]:
+                for key in ("a","b"):
+                    x,y=S.world(p,sh[key])
+                    screen_x=270+(x-cx)*scale
+                    screen_y=461-(y-cy)*scale
+                    assert 25<=screen_x<=515,(screen_x,screen_y)
+                    assert 170<=screen_y<=750,(screen_x,screen_y)
+    svg=R.svg_frame(spec,frames[30],camera,title="DADOS GENERICOS")
+    assert svg.count('id="body-')==2
+    assert 'id="generic-machine-stage"' in svg
+    assert "NÃO PUBLICAR" in svg

@@ -6,10 +6,13 @@ on:
       - ".github/workflows/qa-biblioteca-fisica-multifamilia.yml"
       - "src/v4/formatos/biblioteca_componentes_fisicos.py"
       - "src/v4/formatos/biblioteca_componentes_fisicos.json"
+      - "src/v4/formatos/rastreador_componentes_svg.py"
+      - "src/v4/formatos/rastreador_componentes_svg.json"
       - "src/v4/formatos/render_compressor_conjunto_2d.py"
       - "src/v4/formatos/render_reconstrucao_causal_2d.py"
       - "src/v4/formatos/render_eclusa_hidraulica_2d.py"
       - "tests/test_biblioteca_componentes_fisicos.py"
+      - "tests/test_rastreador_componentes_svg.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,6 +33,7 @@ jobs:
       - name: Regressão do catálogo e dos três mecanismos
         run: |
           python -m pytest -q tests/test_biblioteca_componentes_fisicos.py \
+            tests/test_rastreador_componentes_svg.py \
             tests/test_compressor_conjunto_2d.py \
             tests/test_camera_causal_svg.py \
             tests/test_realce_causal_svg.py \
@@ -45,6 +49,7 @@ jobs:
           import cairosvg
           from PIL import Image,ImageDraw
           from src.v4.formatos import biblioteca_componentes_fisicos as B
+          from src.v4.formatos import rastreador_componentes_svg as T
           from src.v4.formatos import camera_causal_svg as C
           from src.v4.formatos import render_compressor_conjunto_2d as P
           from src.v4.formatos import render_reconstrucao_causal_2d as O
@@ -65,25 +70,23 @@ jobs:
             img=Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode()))).convert('RGB')
             cfg=C.CAMERAS['familias'][family]
             box=B.fichas(family)
-            # Posição da caixa original é aproximada; o palco pode ter
-            # deslocamento/zoom. A marcação é DIAGNÓSTICA, não inspeção por pixels.
+            # AS BBOX DA CAMERA SAO ENVELOPES DE MOVIMENTO,
+            # nao a caixa exata da peca visivel no quadro.
             draw=ImageDraw.Draw(img)
+            tracked_role=next(iter(T.MAP['tracked'][family]))
+            tracked=T.bbox_instante(family,tracked_role,svg)
+            x1,y1,x2,y2=tracked['pixel_bbox']
+            draw.rectangle((x1,y1,x2,y2),outline='#F3A340',width=4)
+            draw.rectangle((10,262,476,287),fill='#14364B')
+            draw.text((18,269),'BBOX NESTE QUADRO: '+tracked_role,
+                      fill='#FFFFFF')
             names=box['components']
-            for idx,role in enumerate(names):
-              x1,y1,x2,y2=role['bbox']
-              dy=cfg['subida_base_px']
-              from src.v4.formatos import grafo_causal as G
-              action=G.GRAFOS[family]['eventos'][0]['acao']
-              pose=C.calcular(family,action,0,0,12.6)
-              x1,x2=x1*pose.scale+pose.tx,x2*pose.scale+pose.tx
-              y1,y2=(y1-dy)*pose.scale+pose.ty,(y2-dy)*pose.scale+pose.ty
-              draw.rectangle((x1,y1,x2,y2),outline='#FBCB60',width=1)
-              if idx%2==0:
-                draw.text((x1+1,max(258,y1-12)),role['id'][:16],fill='#122F43')
             img.save(root/(family+'.png'))
             board.paste(img,(i*540,0))
             coverage[family]={
                'actors':len(names),
+               'tracked_actor':tracked,
+               'camera_boxes_are_swept_envelopes_not_pixel_bboxes':True,
                'primitive_types':sorted(set(x['primitive'] for x in names)),
                'technical_source':box['source'],
                'reference_is_technical_not_image_license':True,

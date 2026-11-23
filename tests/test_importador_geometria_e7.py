@@ -83,6 +83,8 @@ def test_parser_builds_source_driven_joints_not_a_named_template():
     assert set(x["kind"] for x in spec["joints"])=={"pin","slot"}
     assert [x["kind"] for x in spec["joints"]]==["pin","pin","slot"]
     assert len(spec["bodies"])==2
+    assert any(sh["kind"]=="slotted_link" for body in spec["bodies"]
+               for sh in body["shapes"])
     assert spec["driver"]["body"]=="b1"
     assert math.isclose(spec["driver"]["speed"],math.pi)
     assert spec["duration_s"]==2
@@ -163,5 +165,8 @@ def test_shared_camera_uses_source_dimensions_and_prevents_clipping():
                     assert 170<=screen_y<=750,(screen_x,screen_y)
     svg=R.svg_frame(spec,frames[30],camera,title="DADOS GENERICOS")
     assert svg.count('id="body-')==2
+    # The channel is visualized from an explicit pin_in_slot source relation,
+    # not a title-specific draw call.
+    assert svg.count('stroke="#EAF3F6"')>=1
     assert 'id="generic-machine-stage"' in svg
     assert "NÃO PUBLICAR" in svg

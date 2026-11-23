@@ -1,0 +1,128 @@
+name: "LAB F16 — texto técnico auditável para grafo ou bloqueio"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-ingestao-evidencias-f16.yml"
+      - "src/v4/formatos/ingestao_evidencias_f16.py"
+      - "src/v4/formatos/evidencias_f16/**"
+      - "tests/test_ingestao_evidencias_f16.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-f16-evidencia-tecnica
+  cancel-in-progress: true
+jobs:
+  proof_or_block:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias minimas de núcleo F15, sem APIs pagas ou mídia externa
+        run: |
+          python -m pip install -q pytest pillow cairosvg numpy scipy
+      - name: Regressões de extracao, evidência, direitos e seleção anterior
+        run: |
+          python -m pytest -q \
+            tests/test_ingestao_evidencias_f16.py \
+            tests/test_compilador_topologia_f15.py \
+            tests/test_engrenagens_f14.py
+      - name: Conferir de VERDADE os três sites e trechos exatos ou registrar bloqueio
+        timeout-minutes: 3
+        run: |
+          mkdir -p qa_f16
+          python -m src.v4.formatos.ingestao_evidencias_f16 \
+            src/v4/formatos/evidencias_f16/par_engrenagens_educacional.json \
+            qa_f16 --live --gear-spec \
+            src/v4/formatos/evidencias_f16/especificacao_engrenagens_f16.json
+          python -m src.v4.formatos.ingestao_evidencias_f16 \
+            src/v4/formatos/evidencias_f16/biela_cinematica_parcial.json \
+            qa_f16 --live
+          python -m src.v4.formatos.ingestao_evidencias_f16 \
+            src/v4/formatos/evidencias_f16/plataforma_tesoura_hidraulica.json \
+            qa_f16 --live
+      - name: Demonstrar grafo parcial offline sem assumir fontes adquiridas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import ingestao_evidencias_f16 as F
+          src=Path('src/v4/formatos/evidencias_f16')
+          output=Path('qa_f16')
+          rows={}
+          for id in ('par_engrenagens_educacional','biela_cinematica_parcial',
+                     'plataforma_tesoura_hidraulica'):
+              doc=F.load_document(src/(id+'.json'))
+              simulated_text=' '.join(x['text'] for x in doc['quoted_spans'])
+              r=F.audit(doc,simulated_text,origin='fixture')
+              assert r['source_live_verified'] is False
+              assert r['status']=='BLOQUEADO_ORIGEM_NAO_COMPROVADA'
+              rows[id]={'candidate':r['candidate_graph'],
+                        'source_live_verified':False,
+                        'human_review_required':True,
+                        'private_only':True}
+          (output/'DEMONSTRACAO_OFFLINE_NAO_COMPROVA_ORIGEM.json').write_text(
+              json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf8')
+          PY
+      - name: Reprovar falsos positivos (não reprovar fontes que dão 429/403)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('qa_f16')
+          sources=('par_engrenagens_educacional','biela_cinematica_parcial',
+                   'plataforma_tesoura_hidraulica')
+          states={}
+          for key in sources:
+              r=json.loads((root/(key+'_AUDITORIA.json')).read_text('utf8'))
+              assert r['publication_allowed'] is False
+              assert r['image_license_proven'] is False
+              assert r['visual_media_used'] is False
+              assert r['human_review_required'] is True
+              if r['source_live_verified']:
+                  assert len(r['verified_anchors'])==3
+                  assert r['source_retrieval']=='HTTPS_SOURCE_SAME_URL_AND_ANCHORS'
+                  assert len(r['raw_source_sha256'])==64
+              else:
+                  assert r['f15_preflight_passed'] is False
+                  assert r['status'].startswith('BLOQUEADO_')
+              if key=='plataforma_tesoura_hidraulica':
+                  assert not r['f15_preflight_passed']
+                  assert not (root/(key+'_PLANO_F15.json')).exists()
+                  if r['source_live_verified']:
+                      assert r['candidate_graph']['kind']=='hydraulic_scissor_lift_UNSUPPORTED'
+              if key=='biela_cinematica_parcial':
+                  assert not r['f15_preflight_passed']
+              if key=='par_engrenagens_educacional' and r['f15_preflight_passed']:
+                  plan=json.loads((root/(key+'_PLANO_F15.json')).read_text('utf8'))
+                  assert plan['compiled_family']=='external_spur_gear_reduction'
+                  assert plan['scene']['gears']['z1']==20
+                  assert plan['scene']['gears']['z2']==40
+                  assert plan['publish'] is False
+                  assert plan['industrial_identity_verified'] is False
+              states[key]={'source_live_verified':r['source_live_verified'],
+                           'status':r['status'],'f15_preflight':r['f15_preflight_passed'],
+                           'publication_allowed':False}
+          final={
+              'schema':'coringa-f16-proof-report-v1',
+              'status':'FONTE_CONFERIDA_OU_BLOQUEADA_SEM_FALSOS_APROVADOS',
+              'third_party_media_copied':False,
+              'third_mechanism_automatically_rendered':False,
+              'natural_language_autonomous_research':False,
+              'production_integration':False,'publication_allowed':False,
+              'sources':states}
+          (root/'QA_F16.json').write_text(
+              json.dumps(final,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(final,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f16-tres-fontes-grafos-e-bloqueios-privado
+          path: qa_f16/
+          retention-days: 5
+          if-no-files-found: warn

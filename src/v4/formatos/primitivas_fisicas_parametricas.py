@@ -204,7 +204,8 @@ def biela(x1,y1,x2,y2,*,largura=21,cor="#D5A76C",
 
 
 def transmissao_correia(x1,y1,r1,x2,y2,r2,*,
-                        cor="#223F52",filete="#8CAFB9",largura=10):
+                        cor="#223F52",filete="#8CAFB9",largura=10,
+                        deslocamento_trama_px=None):
     """Correia aberta ao longo de tangentes EXTERNAS das duas polias."""
     x1=_num(x1,0,540);y1=_num(y1,0,960)
     x2=_num(x2,0,540);y2=_num(y2,0,960)
@@ -230,10 +231,20 @@ def transmissao_correia(x1,y1,r1,x2,y2,r2,*,
         f'A {r2:.2f} {r2:.2f} 0 0 1 {c[0]:.2f} {c[1]:.2f} '
         f'L {e[0]:.2f} {e[1]:.2f} '
         f'A {r1:.2f} {r1:.2f} 0 0 1 {a[0]:.2f} {a[1]:.2f}')
-    return (f'<path d="{path}" fill="none" stroke="{cor}" '
+    base=(f'<path d="{path}" fill="none" stroke="{cor}" '
         f'stroke-width="{w:g}" stroke-linecap="round" stroke-linejoin="round"/>'
         f'<path d="M {a[0]:.2f} {a[1]:.2f} L {b[0]:.2f} {b[1]:.2f}" '
         f'stroke="{filete}" stroke-width="2.5" opacity=".72"/>')
+    if deslocamento_trama_px is None:
+        return base  # exatamente o SVG anterior: F7/F6 inalterados
+    deslocamento=_num(deslocamento_trama_px,-100000,100000)
+    # Marcas sobre a CORREIA REAL; o padrão se desloca em um corpo rígido.
+    # Ângulo da polia motora -> distância tangencial, sem slip, sem giro de câmera.
+    return (base+
+        f'<path data-belt-travel="{deslocamento:.3f}" d="{path}" fill="none" '
+        f'stroke="{filete}" stroke-width="3" opacity=".95" '
+        f'stroke-dasharray="9 39" stroke-dashoffset="{-deslocamento:.3f}" '
+        'stroke-linecap="round"/>')
 
 
 PRIMITIVAS_DESENHAVEIS=frozenset(_ALLOWED | {'rotor','piston','transmission'})

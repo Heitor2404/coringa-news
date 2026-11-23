@@ -1,0 +1,105 @@
+name: "LAB F6 — compositor 2D paramétrico, 2 montagens sem novo renderer"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-compositor-parametrico-2d.yml"
+      - "src/v4/formatos/primitivas_fisicas_parametricas.py"
+      - "src/v4/formatos/fisica_reservatorios_parametricos.py"
+      - "src/v4/formatos/compositor_mecanismo_parametrico_2d.py"
+      - "src/v4/formatos/cenas_parametricas/**"
+      - "src/v4/formatos/grafo_causal_capacidades.json"
+      - "src/v4/formatos/camera_causal_geometrias.json"
+      - "src/v4/formatos/render_eclusa_hidraulica_2d.py"
+      - "tests/test_compositor_parametrico_2d.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-compositor-parametrico-2d
+  cancel-in-progress: true
+jobs:
+  render_fisica_reutilizavel:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar render/QA sem IA
+        run: |
+          python -m pip install -q pytest pillow cairosvg numpy scipy opencv-python-headless
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testar dois presets, conservação de volume, papéis e eclusa F4
+        run: |
+          python -m pytest -q tests/test_compositor_parametrico_2d.py \
+            tests/test_eclusa_hidraulica_moderna.py \
+            tests/test_grafo_causal.py tests/test_camera_causal_svg.py
+      - name: Gerar vídeos privados a partir dos DOIS arquivos JSON
+        timeout-minutes: 11
+        run: |
+          mkdir -p qa_compositor_f6
+          python -m src.v4.formatos.compositor_mecanismo_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/vasos_comunicantes_iguais.json \
+            qa_compositor_f6/VASOS_IGUAIS_F6.mp4
+          python -m src.v4.formatos.compositor_mecanismo_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/vasos_comunicantes_assimetricos.json \
+            qa_compositor_f6/VASOS_ASSIMETRICOS_F6.mp4
+      - name: Provas de quadros reais, duração e hashes dos dois vídeos
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageChops,ImageStat
+          root=Path('qa_compositor_f6')
+          films=['VASOS_IGUAIS_F6.mp4','VASOS_ASSIMETRICOS_F6.mp4']
+          board=Image.new('RGB',(4*270,2*480),'#E8F0F2')
+          results={}
+          for row,name in enumerate(films):
+            video=root/name
+            meta=json.loads(subprocess.check_output(['ffprobe','-v','error',
+                '-show_entries','format=duration:stream=codec_type,width,height,r_frame_rate',
+                '-of','json',str(video)]))
+            stream=next(s for s in meta['streams'] if s['codec_type']=='video')
+            assert (stream['width'],stream['height'])==(540,960)
+            assert stream['r_frame_rate']=='24/1'
+            assert abs(float(meta['format']['duration'])-12)<.05
+            assert not any(s['codec_type']=='audio' for s in meta['streams'])
+            frames=[]
+            for col,second in enumerate((1.5,3.5,6.5,11.25)):
+              out=root/f'{name[:-4]}_{col}.png'
+              subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                   '-y','-ss',str(second),'-i',str(video),'-frames:v','1',str(out)])
+              image=Image.open(out).convert('RGB')
+              frames.append(image)
+              board.paste(image.resize((270,480)),(col*270,row*480))
+            diff=ImageChops.difference(frames[0].crop((45,355,505,765)),
+                                       frames[3].crop((45,355,505,765)))
+            delta=sum(ImageStat.Stat(diff).mean)/3.
+            assert delta>10,delta
+            report=json.loads(video.with_suffix('.json').read_text('utf8'))
+            digest=hashlib.sha256(video.read_bytes()).hexdigest()
+            assert report['sha256']==digest
+            assert report['publication_approved'] is False
+            assert report['camera_static'] is True
+            results[name]={'sha256':digest,'delta_rgb':round(delta,2)}
+          board.save(root/'COMPARATIVO_DOIS_PRESETS.jpg',quality=92)
+          (root/'QA_COMPOSITOR_F6.json').write_text(json.dumps({
+             'status':'DUAS_MONTAGENS_COM_UM_COMPOSITOR',
+             'publication_approved':False,'visual_approval':'PENDENTE',
+             'external_media_copied':False,'videos':results
+          },ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(results,ensure_ascii=False))
+          PY
+      - name: Arquivar somente laboratório, nunca postar
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f6-duas-cenas-parametricas-videos-privados
+          path: qa_compositor_f6/
+          retention-days: 5
+          if-no-files-found: warn

@@ -106,6 +106,7 @@ def load_document(path):
 def validate_document(d):
     if (not isinstance(d,dict) or d.get("schema")!=SCHEMA or
         d.get("url") not in CANONICAL or
+        not isinstance(d.get("id"),str) or not SELECTOR.IDENT.fullmatch(d["id"]) or
         d.get("original_media_used") is not False or
         d.get("image_license_claimed") is not False or
         d.get("publication_allowed") is not False or

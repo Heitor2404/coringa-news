@@ -12,6 +12,7 @@ import hashlib
 import io
 import json
 import math
+import numbers
 import re
 import subprocess
 from pathlib import Path
@@ -33,9 +34,11 @@ def err(code):
     raise ValueError("E9-VISUAL-"+code)
 
 def _num(n):
-    if type(n) not in (float,int) or not math.isfinite(n):
+    # The common E1 solver returns NumPy real-valued coordinates.
+    # Reject strings/complex/NaN but accept finite np.float64/np.int64.
+    if isinstance(n,bool) or not isinstance(n,numbers.Real) or not math.isfinite(float(n)):
         err("NAN")
-    return f"{n:.7f}"
+    return f"{float(n):.7f}"
 
 def _line(a,b,width,color,**other):
     stroke=" ".join(f'{k.replace("_","-")}="{escape(str(v))}"'

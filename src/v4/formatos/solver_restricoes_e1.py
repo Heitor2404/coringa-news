@@ -198,6 +198,17 @@ def residual(q,spec,t,names):
     out.append(state[d["body"]][2]-target)
     return np.asarray(out,dtype=float)
 
+def solve_constraints(equations, q, args=()):
+    """Common numeric closure and rank check, independent of coordinate chart."""
+    result=least_squares(equations,q,args=args,method="lm",
+          xtol=1e-12,ftol=1e-12,gtol=1e-12,max_nfev=400)
+    err=float(np.max(np.abs(result.fun)))
+    if not result.success or err>1e-7:fail("FECHAMENTO")
+    # Jacobian rank at solution: count alone can hide underconstraint/singularity.
+    rank=int(np.linalg.matrix_rank(result.jac,tol=1e-8))
+    if rank<len(result.x):fail("SINGULAR_OU_SUBDETERMINADO")
+    return result,err,rank
+
 def solve_one(spec,t,previous=None):
     names=validate(spec)
     if type(t) not in (float,int) or not math.isfinite(t) or not 0<=t<=spec["duration_s"]:
@@ -205,13 +216,7 @@ def solve_one(spec,t,previous=None):
     q=np.concatenate([vec(b["seed"],3) for b in spec["bodies"]]) if previous is None else np.array(previous,dtype=float)
     if len(q)!=3*len(spec["bodies"]) or not np.isfinite(q).all():
         fail("ESTADO")
-    result=least_squares(residual,q,args=(spec,t,names),method="lm",
-          xtol=1e-12,ftol=1e-12,gtol=1e-12,max_nfev=400)
-    err=float(np.max(np.abs(result.fun)))
-    if not result.success or err>1e-7:fail("FECHAMENTO")
-    # Jacobian rank at solution: count alone can hide underconstraint/singularity.
-    rank=int(np.linalg.matrix_rank(result.jac,tol=1e-8))
-    if rank<len(result.x):fail("SINGULAR_OU_SUBDETERMINADO")
+    result,err,rank=solve_constraints(residual,q,(spec,t,names))
     states={names[0]:vec(spec["ground"]["pose"],3).tolist()}
     states.update({b["id"]:result.x[3*k:3*k+3].tolist()
                    for k,b in enumerate(spec["bodies"])})

@@ -1,0 +1,29 @@
+{
+  "repo": "Source-Robotics/robot_descriptions",
+  "commit": "a626564c30119b8493a8e0d5e48d7294382cbae2",
+  "license": "CC-BY-4.0",
+  "models": [
+    "urdf/msg_description/msg_solid.urdf",
+    "urdf/ssg48_description/ssg48_solid.urdf"
+  ],
+  "sha256": {
+    "LICENSE": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+    "ATTRIBUTION.md": "31389bf4d6d5323bc41070e893e2304c0e4f121e9adaee1a5984acb084285281",
+    "source/jaws/ssg48_pinch/jaw.json": "839d6931a2ac0861c1a2f3d7cb997086361ca18ce2bb4bbd7798e00aa1699c47",
+    "source/jaws/ssg48_pinch/solid_jaws_pinch.STEP": "ee2f151ab9fab9e60d15df57c9e0796cb0c016a4558970da25ae35b0b01455d2",
+    "urdf/msg_description/msg_solid.urdf": "1fa34b42cac1a8b3aa9d8574607e4d3c8155d30c79606beceaa03fb64f5fb504",
+    "urdf/ssg48_description/ssg48_solid.urdf": "e9ad2a595ed4ba863ef3d1c3743ee533285c0c6c922bbc770fbf162cd212e1fa",
+    "urdf/msg_description/meshes/msg/visual/msg_gripper_structure_visual.STL": "5d44e68876b964781eb695f6e19ac1e3f753c94f6c7529cc257d779833bc7678",
+    "urdf/msg_description/meshes/msg/visual/msg_camera_lens_visual.STL": "3cc5cac2ca4fa8659875f58c056632973c42a4d5c50eb6715cba1a290da2afa4",
+    "urdf/msg_description/meshes/msg/visual/msg_gripper_motor_visual.STL": "27f2023f986ba509e8799284484c2a089e33b96e8b4fae3ddebb174a9edb7432",
+    "urdf/msg_description/meshes/msg/jaw1.STL": "9230322709aab12df0e039d88e7b77a3f0e0e8b6f2c4e274e359e1066abdd4de",
+    "urdf/msg_description/meshes/msg/jaw2.STL": "2c0d7206ba05af4228f8c3a4486af4a77dc8aa7beafa73514a8c0e09a119f4b1",
+    "urdf/ssg48_description/meshes/ssg48/gripper.STL": "6459981e5522ccbd0c3091da6e3810810bc2a4c30a6a77f339f41cadf1e585cd",
+    "urdf/ssg48_description/meshes/ssg48/jaws/pinch/left.STL": "3c51d877fba7892faf2badff3813be9ea3a8783dfa29facce077932c74022f55",
+    "urdf/ssg48_description/meshes/ssg48/jaws/pinch/right.STL": "7d74b69e7c027632cb289e97194dd0101069f2d5f20f854bc47756a8b9e6c91a"
+  },
+  "step_registration": {
+    "registration": "source/jaws/ssg48_pinch/jaw.json",
+    "mesh": "urdf/ssg48_description/meshes/ssg48/jaws/pinch/left.STL"
+  }
+}

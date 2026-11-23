@@ -2733,3 +2733,7 @@ Fonte real e intervalos:
 ## 139. E15 — auditoria e fonte de CAD articulado
 
 Base auditada `b57aa2fb1e86af0482065ee1e9cea47b03108b1a`. E12 lê juntas e E9 desenha símbolos. E1 já resolve slider, mas exige acionador angular. A fonte [Source Robotics](https://github.com/Source-Robotics/robot_descriptions/tree/a626564c30119b8493a8e0d5e48d7294382cbae2) fornece URDF de duas pinças, malhas STL visuais vinculadas aos links, origins, limites e mimic. ATTRIBUTION.md inclui expressamente a geometria em CC BY 4.0. Existe STEP para as mandíbulas pinch; a prova usará as malhas identificadas pelo URDF. Nenhuma homologação. Resultados de execução abaixo quando medidos.
+
+## 140. E15 — implementação experimental da ligação CAD ao solver
+
+Commit de auditoria e seleção da fonte: e3416e0cfa43d1c58aa5a4c66e230aeb7d5cbf41. O novo leitor mantém o STL no link indicado pelo visual URDF e compõe origem visual, escala, pose da junta e árvore de montagem. O núcleo numérico de E1 é compartilhado com o novo sistema de coordenadas prismáticas com acoplamento mimic. O render usa triângulos e profundidade das malhas originais. O movimento de ida e volta em quatro segundos é uma escolha de apresentação. Testados dois equipamentos da mesma família cinemática. Movimentos rotativos neste importador e contatos sob carga ainda pendentes. Não há aprovação editorial.

@@ -103,11 +103,12 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
                 for k in range(int(length/pitch)):
                     d=(k+.5)*pitch
                     if d+.4*pitch>length:continue
-                    x=ax+ux*d;y=ay+uy*d
-                    points=((x-ux*.4*pitch,y-uy*.4*pitch),
-                            (x-ux*.24*pitch+nx*h,y-uy*.24*pitch+ny*h),
-                            (x+ux*.24*pitch+nx*h,y+uy*.24*pitch+ny*h),
-                            (x+ux*.4*pitch,y+uy*.4*pitch))
+                    # Local tooth coordinates must NEVER overwrite body pose x/y.
+                    tooth_x=ax+ux*d;tooth_y=ay+uy*d
+                    points=((tooth_x-ux*.4*pitch,tooth_y-uy*.4*pitch),
+                            (tooth_x-ux*.24*pitch+nx*h,tooth_y-uy*.24*pitch+ny*h),
+                            (tooth_x+ux*.24*pitch+nx*h,tooth_y+uy*.24*pitch+ny*h),
+                            (tooth_x+ux*.4*pitch,tooth_y+uy*.4*pitch))
                     pp=" ".join(f"{a:.6f},{b:.6f}" for a,b in points)
                     parts.append(f'<polygon points="{pp}" fill="{color}" '
                                  'stroke="#19394A" stroke-width=".009"/>')

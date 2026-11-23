@@ -127,16 +127,6 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
     # high-side só alcança a câmara por esse conduto após abrir válvula.
     dash=-s.tempo*42
     return f'''<g id="lock-stage">
-      <g id="role-conduit">
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#294F62" stroke-width="32"
-          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#102F45" stroke-width="17"
-          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 461 566 V 809 H 314 V 754" stroke="#7BDAE5" stroke-width="8"
-          stroke-dasharray="12 21" stroke-dashoffset="{dash:.2f}"
-          opacity="{.75*flowing:.3f}" fill="none" stroke-linecap="round"/>
-        {highlight}
-      </g>
       <g id="role-lower_channel">
         <path d="M 16 582 H 140 V 778 H 16Z" fill="#547487"/>
         <rect x="17" y="{LOW}" width="123" height="{FLOOR-LOW+9}" fill="url(#water)"/>
@@ -148,6 +138,18 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
         <rect x="408" y="{HIGH}" width="121" height="{FLOOR-HIGH+9}" fill="url(#water)"/>
         <path d="M 409 {HIGH:.2f} H 528" stroke="#D6FFFF" stroke-width="4"/>
         <path d="M 409 419 H 527" stroke="#91A9B2" stroke-width="8"/>
+      </g>
+      <!-- Conduto à frente das águas laterais para o fluxo real ser visível.
+           Continua ATRÁS da câmara: nenhuma água "mágica" atravessa parede. -->
+      <g id="role-conduit">
+        <path d="M 461 566 V 809 H 314 V 754" stroke="#294F62" stroke-width="32"
+          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 461 566 V 809 H 314 V 754" stroke="#102F45" stroke-width="17"
+          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 461 566 V 809 H 314 V 754" stroke="#7BDAE5" stroke-width="8"
+          stroke-dasharray="12 21" stroke-dashoffset="{dash:.2f}"
+          opacity="{.75*flowing:.3f}" fill="none" stroke-linecap="round"/>
+        {highlight}
       </g>
       <g id="role-chamber">
         <rect x="149" y="415" width="244" height="354" rx="6"

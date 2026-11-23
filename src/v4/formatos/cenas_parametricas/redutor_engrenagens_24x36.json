@@ -51,8 +51,9 @@
   "gears": {
     "z1": 24,
     "z2": 36,
-    "module": 5,
-    "input_x": 170,
+    "module": 5.4,
+    "input_x": 164,
     "center_y": 510
-  }
+  },
+  "driver_revolutions": 2
 }

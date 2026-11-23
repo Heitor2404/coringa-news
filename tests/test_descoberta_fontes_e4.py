@@ -173,3 +173,25 @@ def test_numeric_words_without_units_do_not_fill_specs():
     assert r["candidate_quantities"]==[]
     assert r["mechanism_spec_generated"] is False
     assert r["publish"] is False
+
+
+def test_structural_counts_are_evidenced_but_never_individual_joints():
+    p={"pageid":1442361,"revid":1380680795,"title":"Four-bar linkage",
+       "plain_text":("It consists of four bodies called bars connected in a "
+                     "loop by four joints. "
+                     "The rocker and crank rotate while the links remain "
+                     "connected and the system has one degree of freedom. "),
+       "source_url":"https://en.wikipedia.org/wiki/Four-bar_linkage"}
+    p["text_sha256"]=hashlib.sha256(p["plain_text"].encode()).hexdigest()
+    r=E4.derive_evidence(p)
+    counts=r["candidate_structural_counts"]
+    assert {x["count"] for x in counts}>={1,4}
+    assert any("four bodies" in x["verbatim"] for x in counts)
+    assert any("four joints" in x["verbatim"] for x in counts)
+    assert any("one degree of freedom" in x["verbatim"] for x in counts)
+    assert all(x["span_id"] in {s["id"] for s in r["evidence_spans"]} for x in counts)
+    assert all(x["which_bodies_or_joints"] is None for x in counts)
+    assert all(x["full_topology_or_mounting_verified"] is False for x in counts)
+    assert all(x["safe_to_instantiate_joint"] is False for x in counts)
+    assert r["encyclopedia_is_not_machine_design"] is True
+    assert r["visual_assets_copied"] is False

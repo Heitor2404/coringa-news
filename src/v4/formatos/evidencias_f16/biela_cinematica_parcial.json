@@ -1,0 +1,29 @@
+{
+  "schema": "coringa-documentary-evidence-f16-v1",
+  "id": "biela_cinematica_parcial",
+  "url": "https://jd-jones-ases.github.io/Mechanic/things/slider-crank/",
+  "kind": "public_technical_article",
+  "quoted_spans": [
+    {
+      "id": "b1",
+      "locator": "Assumptions",
+      "text": "rigid crank and connecting rod"
+    },
+    {
+      "id": "b2",
+      "locator": "Assumptions",
+      "text": "ideal pin joints"
+    },
+    {
+      "id": "b3",
+      "locator": "Assumptions",
+      "text": "the piston pin slides on the cylinder axis"
+    }
+  ],
+  "claim_scope": "crank rod piston only; belt, motor pulley and flywheel not supported by excerpts",
+  "checked_by": "manual_public_web_inspection_2026-11-23",
+  "original_media_used": false,
+  "image_license_claimed": false,
+  "publication_allowed": false,
+  "extraction_requires_live_anchor_check": true
+}

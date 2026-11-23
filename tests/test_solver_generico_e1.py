@@ -132,7 +132,7 @@ def test_default_no_phone_safe_zone_claim_and_no_3d_claim():
     assert "quatro_barras_e1" not in source
     assert "scotch_yoke_e1" not in source
     assert not hasattr(SOLVER,"contact_solver")
-    assert SOLVER.KINDS=={"pin":2,"slider":2,"slot":1}
+    assert SOLVER.KINDS=={"pin":2,"slider":2,"slot":1,"rack_pinion":1}
 
 def test_closed_form_oracle_makes_f7_regression_stronger_than_green_test_count():
     f=spec("oraculo_biela_e1")

@@ -2120,3 +2120,21 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Próxima fase útil:** usar `fichas` como entrada de um compositor de primitivas **paramétricas** reais (renderers de fluido, gate, válvula e correia compartilhados), e criar ingestão de referências visuais com revisão/licença para introduzir **novas** famílias sem desenhar um renderer inteiro. Provar num quarto mecanismo de outra classe SEM copiar manualmente os componentes ou alternar para o estilo descartado.
 
+## 116. 23/11 ~02h05 BRT — F6 PARAMÉTRICO IMPLEMENTADO, QA AINDA PENDENTE
+
+**Pedido:** usuário disse Prossiga e EXIGIU atualizar sempre o arquivo de continuidade no GitHub. Esta seção registra implementação antes da confirmação de CI; completar com resultados verdadeiros depois.
+
+**Direção:** sair de apenas 29 IDs de peças da biblioteca F5 para componentes visuais REALMENTE parametrizados. Mesmo código precisa servir a eclusa existente e a um quarto mecanismo, sem Claude, sem alternar para os antigos diagramas miniaturizados, sem mexer em main/Telegram/publicação.
+
+- Novo src/v4/formatos/primitivas_fisicas_parametricas.py: cinco funções SVG genéricas VALIDADAS (conduto, valvula, barreira, reservatorio, agua_no_tanque), todos tipos já contidos na biblioteca F5. Outros 8 dos 13 tipos ainda NÃO são renderizáveis por esta API. Sem usar pixels externos.
+- A eclusa F4 existente foi migrada para os MESMOS componentes para conduto, válvula e barreiras, sem trocar a física, câmera travada ou a arte dos outros elementos.
+- Nova família SceneGraph vasos_comunicantes em grafo_causal_capacidades.json: 6 atores (2 tanques, 2 massas d'água, conduto e válvula), 4 eventos (isolar, abrir, transferir, equilibrio), relações, precondições e mudança de estados. A câmera de quarto mecanismo usa a mesma política plano_geral_travado em camera_causal_geometrias.json; o envelope do conduto para as DUAS variantes é [185,677,386,755].
+- Novo fisica_reservatorios_parametricos.py: modelo didático de equalização com áreas transversais diferentes e conservação explícita de volume total. A curva temporal (diferença de níveis decai quadraticamente) NÃO tem tempo experimental calibrado e o vídeo deve dizer isso claramente.
+- Novo compositor_mecanismo_parametrico_2d.py: um único código para duas disposições de vasos comunicantes a partir de cena JSON; valida direitos, partes, tipo, conexão real do tubo, coerência de válvula, dados físicos, grafo, câmera segura e fonte; compõe SVG 540x960 e MP4 privado de 12s 24fps sem som.
+- Duas cenas JSON paramétricas src/v4/formatos/cenas_parametricas/vasos_comunicantes_iguais.json e vasos_comunicantes_assimetricos.json; dimensões de tanques diferentes e física calculada pelas áreas, SEM copiar renderizador ou desenhar quadros por assunto.
+- Fonte técnica textual para equilíbrio hidrostático: https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure. NÃO se copiaram imagens nem se inferiram direitos editoriais/licenças do site.
+- Criados testes/test_compositor_parametrico_2d.py e workflow .github/workflows/qa-compositor-parametrico-2d.yml com provas de volume, fluxo, panorâmica fixa, relação papel→SVG, entradas adulteradas e regressão da eclusa; renderizar dois vídeos e contato visual.
+- QA atualmente executando no GitHub Actions run 45115182926. O primeiro run 45115092207 foi CANCELADO automaticamente por push de ajuste de bbox; não chamar cancelamento de falha ou sucesso. Ainda NÃO temos vídeo F6 homologado ao registrar esta seção.
+- O certificado F5 de 29 atores/3 famílias continua histórico e inalterado; a família F6 é candidata adicional ainda NÃO promovida ao gate visual F5. Não anunciar 35 peças aprovadas.
+
+**PRÓXIMO OBRIGATÓRIO:** inspecionar run 45115182926, corrigir falhas reais se houver, ver as duas prévias, atualizar ESTA seção com run final, SHA, testes e limites; gerar docs/F6 com o que foi COMPROVADO. Nenhum vídeo deve ser publicado automaticamente.

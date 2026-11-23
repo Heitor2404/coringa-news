@@ -3,7 +3,9 @@
 O algoritmo é o MESMO para qualquer família, mas as bboxes são metadados
 revisados do próprio renderizador. Nunca infere peça a partir de um título.
 Mantém a máquina CRÍTICA inteira no viewport; recusa falta de ator, clipping,
-zoom inseguro e atributos/caixas inválidos. Opt-in só em prova privada.
+zoom inseguro e atributos/caixas inválidos. Pose travada durante o ciclo;
+transição de fase nunca é motivo para deslocar o quadro.
+Opt-in só em prova privada.
 """
 from __future__ import annotations
 
@@ -55,11 +57,6 @@ class Pose:
         # SVG aplica o translate mais à direita antes do scale.
         return (f"translate({self.tx:.4f} {self.ty:.4f}) "
                 f"scale({self.scale:.5f}) translate(0 {-shift:.1f})")
-
-
-def _ease(t):
-    x = max(0.0,min(1.0,t))
-    return x*x*(3-2*x)
 
 
 def _clamp(v,lo,hi):
@@ -126,28 +123,20 @@ def calcular(familia: str, action: str, tempo_s: float,
         raise ValueError("F-CAMERA-ACAO-SEM-GRAFO")
     i=ids.index(action)
     current=scene["eventos"][i]["camera"]["alvos"]
-    previous=scene["eventos"][max(0,i-1)]["camera"]["alvos"]
-    roles=cfg["roles"]; shift=cfg["subida_base_px"]
-    def centroid(ids):
-        # Focos de relações: não escolher só uma ponta do mecanismo.
-        bb=[Caixa.parse(roles[name]) for name in ids]
-        return ((min(b.x1 for b in bb)+max(b.x2 for b in bb))/2,
-                (min(b.y1 for b in bb)+max(b.y2 for b in bb))/2-shift)
-    bx,by=box.shift(-shift).center
-    px,py=centroid(previous)
-    cx,cy=centroid(current)
-    mix=_ease((tempo_s-inicio_fase_s)/.5)
-    fx=px+(cx-px)*mix
-    fy=py+(cy-py)*mix
-    zoom_in=_ease((tempo_s-.20)/.75)
+    shift=cfg["subida_base_px"]
+    if cfg.get("politica_camera") != "plano_geral_travado":
+        raise ValueError("F-CAMERA-POLITICA-NAO-HOMOLOGADA")
+    # Cada fase mantém seus alvos causais, mas NÃO desloca a câmera.
+    # Uma única pose estática por ciclo evita oscilação e zoom pulsante.
     max_fit=min((viewport.x2-viewport.x1)/(box.x2-box.x1),
                 (viewport.y2-viewport.y1)/(box.y2-box.y1))
-    scale=min(1+(cfg["zoom_max"]-1)*zoom_in,max_fit)
+    scale=min(cfg["zoom_max"],max_fit)
     if scale < 1-1e-8:
         raise ValueError("F-CAMERA-CORTE-INEVITAVEL")
     vx,vy=viewport.center
-    idealx=vx-scale*bx + (bx-fx)*.35*zoom_in
-    idealy=vy-scale*by + (by-fy)*.11*zoom_in
+    bx,by=box.shift(-shift).center
+    idealx=vx-scale*bx
+    idealy=vy-scale*by
     stage=box.shift(-shift)
     lowx=viewport.x1-scale*stage.x1
     highx=viewport.x2-scale*stage.x2

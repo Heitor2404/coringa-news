@@ -87,7 +87,8 @@
           487,
           901
         ]
-      }
+      },
+      "politica_camera": "plano_geral_travado"
     },
     "otto_4t_reference": {
       "width": 540,
@@ -161,7 +162,8 @@
           524,
           406
         ]
-      }
+      },
+      "politica_camera": "plano_geral_travado"
     }
   }
 }

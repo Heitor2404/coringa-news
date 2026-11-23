@@ -179,3 +179,51 @@ def test_qualidade_nao_alegada_automaticamente():
     assert G.GRAFOS['compressor_oficina_pv']['fontes_visuais'].startswith('roles_reais')
     assert all(not G.montar(cap,tuple(x['acao'] for x in G.GRAFOS[cap]['eventos']))['publicar']
                for cap in ('compressor_oficina_pv','otto_4t_reference'))
+
+
+
+def test_ciclo_inteiro_sem_zoom_nem_pan_em_duas_familias():
+    for family in ('compressor_oficina_pv','otto_4t_reference'):
+        actions=tuple(e['acao'] for e in G.GRAFOS[family]['eventos'])
+        poses=set()
+        focos=set()
+        for frame in range(240):
+            t=frame/30
+            idx=min(len(actions)-1,int(t/(8/len(actions))))
+            cam=C.calcular(family,actions[idx],t,idx*8/len(actions),8)
+            assert C.verificar_pose(family,cam)
+            poses.add((cam.scale,cam.tx,cam.ty))
+            focos.add(cam.focus_roles)
+        assert len(poses)==1, (family,poses)
+        assert len(focos)>=3
+        assert next(iter(poses))[0]>1
+        assert C.CAMERAS['familias'][family]['politica_camera']=='plano_geral_travado'
+
+
+def test_religar_camera_nervosa_nao_e_aceito(monkeypatch):
+    cfg=copy.deepcopy(C.CAMERAS)
+    cfg['familias']['compressor_oficina_pv']['politica_camera']='pan_por_fase'
+    monkeypatch.setattr(C,'CAMERAS',cfg)
+    with pytest.raises(ValueError,match='F-CAMERA-POLITICA-NAO-HOMOLOGADA'):
+        C.calcular('compressor_oficina_pv','ADMISSAO_AR',3,2,8)
+
+
+def test_transformacao_svg_permanece_identica_em_quatro_fases():
+    import re
+    manifest=meta()
+    measured_motion,scene=measured()
+    for family,frames,group in [
+        ('compressor_oficina_pv',[
+            P.frame_svg(t,manifest,camera_causal=True)
+            for t in (.01,.23,.58,.95)],'machine-assembly'),
+        ('otto_4t_reference',[
+            O.svg_frame(measured_motion,scene,t,camera_causal=True)
+            for t in (.1,.35,.6,.85)],'mechanical-stage')
+    ]:
+        transforms=[
+            re.search(r'id="'+group+r'" transform="([^"]+)"',svg).group(1)
+            for svg in frames
+        ]
+        assert len(set(transforms))==1, (family,transforms)
+        assert 'scale(' in transforms[0]
+        assert len(set(frames))==4  # Peças continuam se movendo.

@@ -412,7 +412,9 @@ def renderizar(mov: dict, scene: dict, saida: Path,
         "camera_causal": {
             "habilitada":camera_causal,
             "origem":"grafo_causal.eventos.camera.alvos",
-            "motor_reutilizavel":"camera_causal_svg_v1",
+            "motor_reutilizavel":"camera_causal_svg_v2_travada",
+            "politica_camera": ("PLANO_GERAL_TRAVADO_SEM_PAN_OU_ZOOM"
+                               if camera_causal else "DESLIGADA"),
             "aprovacao_humana":"PENDENTE",
         },
         "enquadramento_compartilhado": {

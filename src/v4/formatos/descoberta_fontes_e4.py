@@ -29,6 +29,12 @@ NUMBER=re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*(millimetres?|millimeters?|"
                   r"centimetres?|centimeters?|meters?|metres?|mm|cm|inches|inch|"
                   r"degrees)(?![A-Za-z])",re.I)
 TOKEN=re.compile(r"\b(?:the|and|for|from|mechanism|linkage|machine|system|a|of)\b")
+STRUCTURE=re.compile(
+    r"\\b(?P<count>zero|one|two|three|four|five|six|seven|eight|nine|ten|\\d{1,3})"
+    r"\\s+(?P<part>degrees? of freedom|joints?|bodies|bars|links?|"
+    r"turning pairs?|sliding pairs?|pivots?|gears?|shafts?|teeth)\\b",re.I)
+NUMBER_WORDS={"zero":0,"one":1,"two":2,"three":3,"four":4,
+              "five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10}
 MAX_RESULTS=4
 MAX_PAGES=2
 MAX_BYTES=600000
@@ -150,6 +156,21 @@ def derive_evidence(page,*,verified_network=False):
             })
             if len(measurements)>=12:break
         if len(measurements)>=12:break
+    structure=[]
+    for span in spans:
+        for m in STRUCTURE.finditer(span["text"]):
+            word=m.group("count").casefold()
+            count=NUMBER_WORDS.get(word,int(word) if word.isdigit() else -1)
+            structure.append({
+                "span_id":span["id"],"verbatim":m.group(0),
+                "count":count,"component_type_verbatim":m.group("part"),
+                "source_sentence":span["text"][:200],
+                "which_bodies_or_joints":None,
+                "full_topology_or_mounting_verified":False,
+                "safe_to_instantiate_joint":False,
+            })
+            if len(structure)>=12:break
+        if len(structure)>=12:break
     relations=(graph["edges"] if graph else [])
     return {
         "source":"MediaWiki_Action_API",
@@ -162,6 +183,9 @@ def derive_evidence(page,*,verified_network=False):
              "relation":e["joint"],"supported_span_ids":e["supported_span_ids"],
              "relationship_semantics_need_review":True} for e in relations],
         "candidate_quantities":measurements,
+        "candidate_structural_counts":structure,
+        "encyclopedia_is_not_machine_design":True,
+        "visual_assets_copied":False,
         "evidence_mode":"EXTRACTED_FROM_RETRIEVED_PAGE_NOT_SEARCH_SNIPPET",
         "human_review_required":True,
         "excerpts_precurated":False,

@@ -2729,3 +2729,7 @@ Fonte real e intervalos:
 
 **Próximo passo MATERIAL (E15+) se continuar em Work ou novo bloco:** encontrar assembly CAD/STEP/DXF/SVG/partes STL **separados** com escala/mates/pivôs da MESMA máquina, licenças efetivamente verificadas; construir `part source → body ID → anchor local → pose solver`, medir erro de acoplamento dos furos e não apenas pontuação RGB. Candidatos NÃO integrados: `BrayEngineering/Crank-Slider-Mechanism` possui `.ipt` Inventor por peça MIT mas sem conversor comprovado; `shakc04/strandbeest-forge` MIT OpenSCAD e STLs sem prova de mapeamento de peças/anchors; `clawbit` SVG explícito meramente ilustrativo, CAD STEP/DXF faltante. Não gastar outro bloco fazendo barras mais brilhantes sem geometrias reais.
 **Isolamento preservado:** branch `atlas-direcao-visual-20261118` SOMENTE; `main`, NTC, DOSSIÊ, Telegram, pipeline produtivo e publicação intactos.
+
+## 139. E15 — auditoria e fonte de CAD articulado
+
+Base auditada `b57aa2fb1e86af0482065ee1e9cea47b03108b1a`. E12 lê juntas e E9 desenha símbolos. E1 já resolve slider, mas exige acionador angular. A fonte [Source Robotics](https://github.com/Source-Robotics/robot_descriptions/tree/a626564c30119b8493a8e0d5e48d7294382cbae2) fornece URDF de duas pinças, malhas STL visuais vinculadas aos links, origins, limites e mimic. ATTRIBUTION.md inclui expressamente a geometria em CC BY 4.0. Existe STEP para as mandíbulas pinch; a prova usará as malhas identificadas pelo URDF. Nenhuma homologação. Resultados de execução abaixo quando medidos.

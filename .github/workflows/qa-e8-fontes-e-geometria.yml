@@ -1,0 +1,135 @@
+name: "LAB E8 — catalogo independente MIT e geometrias nao vistas"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-e8-fontes-e-geometria.yml"
+      - "src/v4/formatos/triagem_fontes_geometria_e8.py"
+      - "tests/test_triagem_fontes_geometria_e8.py"
+      - "benchmarks/e8_unseen_linkage_sources_v1.json"
+      - "benchmarks/e8_multi_repo_catalog_v1.json"
+      - "src/v4/formatos/importador_geometria_e7.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e8-catalog-and-unseen-geometry
+  cancel-in-progress: true
+jobs:
+  verify_sources_and_generalization:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Reuse existing numerical and testing tools without paid APIs
+        run: |
+          python -m pip install -q pytest numpy scipy cairosvg pillow
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Test catalog security and prior solver/E7 regressions
+        run: |
+          python -m pytest -q \
+            tests/test_triagem_fontes_geometria_e8.py \
+            tests/test_importador_geometria_e7.py \
+            tests/test_solver_generico_e1.py \
+            tests/test_solver_generico_e2.py
+      - name: Verify two independently versioned MIT projects with pinned bytes
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_e8
+          python -m src.v4.formatos.triagem_fontes_geometria_e8 \
+            benchmarks/e8_multi_repo_catalog_v1.json \
+            qa_e8/E8_SOURCE_CATALOG.json
+      - name: Import six E7-unseen source CSVs without mechanism-name dispatch
+        timeout-minutes: 11
+        run: |
+          python -m src.v4.formatos.importador_geometria_e7 \
+            benchmarks/e8_unseen_linkage_sources_v1.json qa_e8 --live
+          mv qa_e8/QA_E7_GEOMETRY.json qa_e8/QA_E8_UNSEEN_GEOMETRY.json
+      - name: Audit source paths, explicit refusals and separate coverage counts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          q=Path("qa_e8")
+          c=json.loads((q/"E8_SOURCE_CATALOG.json").read_text("utf8"))
+          e=json.loads((q/"QA_E8_UNSEEN_GEOMETRY.json").read_text("utf8"))
+          assert c["status"]=="PROVENANCE_CONFIRMED_CAPABILITY_GATED"
+          assert c["source_count"]==2
+          assert c["source_sample_files"]==4
+          assert c["source_files_with_complete_anchor_geometry"]==2
+          assert c["unusable_sample_files"]==2
+          cap={x["repository"]:x["source_files"] for x in c["source_checks"]}
+          assert {x["capability"] for x in cap["MasoudMiM/sketch-mechanisms"]}=={
+            "PARAMETRIC_PRESET_NO_EXPLICIT_JOINT_ANCHORS",
+            "INDEPENDENT_KINEMATIC_ORACLE_ONLY"}
+          assert c["open_internet_topic_discovery"] is False
+          assert c["auto_publish"] is False
+          assert len(e["source_cases"])==6
+          assert e["network_reported_live"] is True
+          assert e["source_to_solver_convert_only"]
+          for r in e["source_cases"]:
+              assert r["license_verified"] and r["source_https_verified_in_ci"]
+              assert r["visual_approved"] is False and r["publish"] is False
+              assert r["status"].startswith(("PASS_","BLOCKED_"))
+          assert e["passed"]+e["blocked"]==6
+          # A PASS only means the third-party CSV converted, stayed on the
+          # solved trajectory and preserved finite-slot contacts. No art approval.
+          seen={r["source_path"] for r in e["source_cases"]}
+          old=json.loads(Path("benchmarks/e7_open_geometry_sources_v1.json").read_text("utf8"))
+          assert seen.isdisjoint({x["path"] for x in old["files"]})
+          summary={
+            "schema":"coringa-e8-unseen-geometry-qa-v1",
+            "source_repositories_verified":2,
+            "independent_repo_with_new_complete_mechanism_schema":0,
+            "legacy_csv_unseen_count":6,
+            "legacy_csv_unseen_passed":e["passed"],
+            "legacy_csv_unseen_blocked":e["blocked"],
+            "source_cases":[{"path":r["source_path"],"status":r["status"],
+                "residual_m":r.get("max_residual_m"),
+                "frames":r.get("trajectory_frames")} for r in e["source_cases"]],
+            "from_unstructured_prose":False,
+            "new_automatically_discovered_source_websites":0,
+            "source_urls_fixed_after_human_review":True,
+            "importer_was_not_rewritten_per_target":True,
+            "no_new_physics_kernel":True,
+            "not_independently_visually_approved":True,
+            "publish":False
+          }
+          (q/"QA_E8_REPORT.json").write_text(json.dumps(summary,indent=2),encoding="utf8")
+          print(json.dumps(summary,ensure_ascii=False))
+          PY
+      - name: Render the first qualifying unseen CSV in the common renderer (private)
+        timeout-minutes: 7
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          root=Path("qa_e8")
+          qa=json.loads((root/"QA_E8_UNSEEN_GEOMETRY.json").read_text("utf8"))
+          chosen=next((x for x in qa["source_cases"] if x["status"].startswith("PASS_")),None)
+          if chosen is None:
+              print("NO_NEW_SOURCE_SATISFIED_THE_GENERAL_SOLVER — truthful abstention")
+          else:
+              stem=Path(chosen["source_path"]).stem.replace("-","_")
+              inp=root/(stem+"_E7_SPEC.json")
+              assert inp.is_file()
+              subprocess.run(["python","-m","src.v4.formatos.renderer_corpos_e1",
+                 str(inp),str(root/"E8_UNSEEN_PRIVATE.mp4"),
+                 "--title","E8 | FONTE LICENCIADA"],check=True)
+              (root/"E8_SELECTED_SOURCE.json").write_text(json.dumps({
+                "source_path":chosen["source_path"],"status":"RENDERED_PRIVATE",
+                "visual_approved":False,"publish":False},indent=2),encoding="utf8")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e8-two-repos-six-unseen-private
+          path: qa_e8/
+          retention-days: 5
+          if-no-files-found: warn

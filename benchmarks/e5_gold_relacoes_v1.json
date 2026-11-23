@@ -1,0 +1,88 @@
+{
+  "schema": "coringa-e5-explicit-connection-gold-v1",
+  "annotated_at": "2026-11-23",
+  "label_definition": "A sentence directly asserts an attachment, engagement, pinning or connecting relation between identifiable mechanical components; generic definitions, mere coexistence, motion descriptions, ambiguous pronouns and negated connections are NEGATIVE. Binary sentence-level evidence, NOT validated joint endpoints.",
+  "annotation_provenance": "manually reviewed extracted sentences from GitHub Actions E4/E5 source snapshots; rules fixed before E5 extractor implementation; independent audit pending",
+  "published_corpus_license": "Do not copy full third-party text; retrieve matching public page revision, verify SHA, then select sentences deterministically",
+  "gold_not_vetted_by_independent_engineer": true,
+  "benchmark_freeze": true,
+  "pages": [
+    {
+      "pageid": 1442361,
+      "title": "Four-bar linkage",
+      "revid": 1380680795,
+      "text_sha256": "848cec5f762b6fd71d02f631b78cca26970a43a138b515271e810d1ae401773e",
+      "selection": "e4",
+      "count": 12,
+      "split": "development",
+      "positive_sentence_ids": []
+    },
+    {
+      "pageid": 49162954,
+      "title": "Quick return mechanism",
+      "revid": 1386479381,
+      "text_sha256": "9917b2fe7c1a50a425a22aea471573c4d3e40ea64d8e769c5408310ba59f3bc0",
+      "selection": "e4",
+      "count": 12,
+      "split": "development",
+      "positive_sentence_ids": []
+    },
+    {
+      "pageid": 1949491,
+      "title": "Scotch yoke",
+      "revid": 1386480718,
+      "text_sha256": "52fbb3b3c8f95dbe37471d14733af78d8f75caced631a0a7b649a7ac68fea6eb",
+      "selection": "e5",
+      "count": 18,
+      "split": "development",
+      "positive_sentence_ids": [
+        "s2"
+      ]
+    },
+    {
+      "pageid": 622034,
+      "title": "Connecting rod",
+      "revid": 1385154929,
+      "text_sha256": "348a99e1278490b89ffd2b2a3e4dd24c0a8344b426817eedfa0c4a568b5cb77f",
+      "selection": "e5",
+      "count": 40,
+      "split": "development",
+      "positive_sentence_ids": [
+        "s1",
+        "s13",
+        "s15",
+        "s19",
+        "s20",
+        "s33",
+        "s34",
+        "s38"
+      ]
+    },
+    {
+      "pageid": 33346874,
+      "title": "Six-bar linkage",
+      "revid": 1380705291,
+      "text_sha256": "ac42705e83fa4d7c9a56dcfbaf25f272c76ee22f890d702d2807d61056745879",
+      "selection": "e4",
+      "count": 12,
+      "split": "heldout",
+      "positive_sentence_ids": []
+    },
+    {
+      "pageid": 3002380,
+      "title": "Crankpin",
+      "revid": 1376334632,
+      "text_sha256": "acc8ee22f7bf17b8a3717e3cfdcbd3f3de3fe5d3085f9bddfa337b167500aeab",
+      "selection": "e5",
+      "count": 22,
+      "split": "heldout",
+      "positive_sentence_ids": [
+        "s1",
+        "s5",
+        "s6",
+        "s16"
+      ]
+    }
+  ],
+  "lock_notice": "Do not change labels, splits or source metadata to improve score. Amend only by separately reviewed new version."
+}

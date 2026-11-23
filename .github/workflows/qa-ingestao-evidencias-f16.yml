@@ -45,6 +45,9 @@ jobs:
           python -m src.v4.formatos.ingestao_evidencias_f16 \
             src/v4/formatos/evidencias_f16/plataforma_tesoura_hidraulica.json \
             qa_f16 --live
+          python -m src.v4.formatos.ingestao_evidencias_f16 \
+            src/v4/formatos/evidencias_f16/plataforma_tesoura_fonte_alternativa.json \
+            qa_f16 --live
       - name: Demonstrar grafo parcial offline sem assumir fontes adquiridas
         run: |
           python - <<'PY'
@@ -55,7 +58,7 @@ jobs:
           output=Path('qa_f16')
           rows={}
           for id in ('par_engrenagens_educacional','biela_cinematica_parcial',
-                     'plataforma_tesoura_hidraulica'):
+                     'plataforma_tesoura_hidraulica','plataforma_tesoura_fonte_alternativa'):
               doc=F.load_document(src/(id+'.json'))
               simulated_text=' '.join(x['text'] for x in doc['quoted_spans'])
               r=F.audit(doc,simulated_text,origin='fixture')
@@ -75,7 +78,7 @@ jobs:
           from pathlib import Path
           root=Path('qa_f16')
           sources=('par_engrenagens_educacional','biela_cinematica_parcial',
-                   'plataforma_tesoura_hidraulica')
+                   'plataforma_tesoura_hidraulica','plataforma_tesoura_fonte_alternativa')
           states={}
           for key in sources:
               r=json.loads((root/(key+'_AUDITORIA.json')).read_text('utf8'))
@@ -90,7 +93,7 @@ jobs:
               else:
                   assert r['f15_preflight_passed'] is False
                   assert r['status'].startswith('BLOQUEADO_')
-              if key=='plataforma_tesoura_hidraulica':
+              if key in ('plataforma_tesoura_hidraulica','plataforma_tesoura_fonte_alternativa'):
                   assert not r['f15_preflight_passed']
                   assert not (root/(key+'_PLANO_F15.json')).exists()
                   if r['source_live_verified']:

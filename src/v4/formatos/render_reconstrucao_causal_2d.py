@@ -20,7 +20,7 @@ import cairosvg
 from PIL import Image
 
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
-from src.v4.formatos import camera_causal_svg
+from src.v4.formatos import camera_causal_svg, realce_causal_svg
 
 WIDTH, HEIGHT = 540, 960
 # Cutaway com admissão/escape e válvulas: caixa conservadora do desenho.
@@ -122,6 +122,7 @@ def pose(t: float, mov: dict) -> dict:
 def svg_frame(mov: dict, scene: dict, t: float, *,
               subida_palco_px: float | None = None,
               camera_causal: bool = False,
+              realce_causal: bool = False,
               duracao_s: float = 8.) -> str:
     deslocamento = PALCO_OTTO.deslocar(subida_palco_px)
     s = pose(t, mov)
@@ -196,6 +197,12 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
         if not camera_causal_svg.verificar_pose("otto_4t_reference",cam):
             raise ValueError("F-CAMERA-CORTE-MAQUINA")
         stage_transform=cam.transform_svg(deslocamento)
+    realce_svg=""
+    if realce_causal:
+        realce_svg=realce_causal_svg.renderizar(
+            "otto_4t_reference",beat["tipo"],max(0.,min(1.,phase)),
+            dinamicos={"piston":(188.,crown,158.,95.)},
+            fisica_confirma=True)
     title = escape(scene.get("titulo", "COMO FUNCIONA")[:31])
     step_title = escape(beat["titulo"].upper())
     explanation = escape(beat["detalhe"][:57])
@@ -355,6 +362,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
     <path d="M 164 406 V 657 M 373 406 V 657"
       fill="none" stroke="#B8D1D5" stroke-width="8"/>
     {flow}
+    {realce_svg}
     </g>
     <rect x="0" y="919" width="540" height="41" fill="#0F2636"/>
     <text x="26" y="943" fill="#D1DEE2" font-size="12"
@@ -367,7 +375,8 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
 
 def renderizar(mov: dict, scene: dict, saida: Path,
                fps: int = 24, duracao: float = 8.,
-               camera_causal: bool = False) -> dict:
+               camera_causal: bool = False,
+               realce_causal: bool = False) -> dict:
     validar(mov, scene)
     if fps not in (24, 30) or not 4 <= duracao <= 30:
         raise ValueError("F-DURACAO-PRIVADA-INVALIDA")
@@ -382,7 +391,8 @@ def renderizar(mov: dict, scene: dict, saida: Path,
     try:
         for i in range(round(duracao * fps)):
             svg = svg_frame(mov, scene, i / (duracao * fps),
-                            camera_causal=camera_causal,duracao_s=duracao)
+                            camera_causal=camera_causal,realce_causal=realce_causal,
+                            duracao_s=duracao)
             png = cairosvg.svg2png(bytestring=svg.encode())
             with Image.open(io.BytesIO(png)) as image:
                 frame = image.convert("RGB").tobytes()
@@ -409,6 +419,11 @@ def renderizar(mov: dict, scene: dict, saida: Path,
         "fps": fps,
         "dimensoes": [WIDTH, HEIGHT],
         "revisao_estetica": "PENDENTE",
+        "realce_causal": {
+            "habilitado":realce_causal,
+            "tipo":"TRAJETOS_FISICOS_E_CONTORNO_DE_PECA_MOVEL",
+            "aprovacao_humana":"PENDENTE",
+        },
         "camera_causal": {
             "habilitada":camera_causal,
             "origem":"grafo_causal.eventos.camera.alvos",
@@ -439,8 +454,9 @@ if __name__ == "__main__":
     parser.add_argument("cena_json")
     parser.add_argument("saida_mp4")
     parser.add_argument("--camera-causal",action="store_true")
+    parser.add_argument("--realce-causal",action="store_true")
     args = parser.parse_args()
     motion = json.loads(Path(args.medicao_json).read_text(encoding="utf8"))
     scene = json.loads(Path(args.cena_json).read_text(encoding="utf8"))
-    print(json.dumps(renderizar(motion, scene, Path(args.saida_mp4),camera_causal=args.camera_causal),
+    print(json.dumps(renderizar(motion, scene, Path(args.saida_mp4),camera_causal=args.camera_causal,realce_causal=args.realce_causal),
                      ensure_ascii=False))

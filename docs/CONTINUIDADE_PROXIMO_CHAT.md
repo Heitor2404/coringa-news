@@ -2201,3 +2201,12 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Limite deliberado:** este primeiro passo valida a **ponte segura** de peça SVG até um vídeo parametrizado; ainda NÃO demonstra ingestão de referência externa licenciada, reconhecimento automático em fotos, coerência dimensional calibrada em unidade real, identidade industrial comprovada ou qualidade cinematográfica. Próximo gate: uma peça de referência visual industrial real com direito e correspondência verificáveis, calibração da montagem e avaliação em celular; não salvar um tema com desenho caso a caso nem liberar publicação.
 
+
+### Resultado final F8 — 23/11 ~02h50 BRT
+
+- **CI F8 FINAL:** https://github.com/Heitor2404/coringa-news/actions/runs/45120024136 — **SUCCESS, 48 testes**. SHA do workflow/implementação testada `8f4a3a44760189b2df65eb654ef01d3cd94c21d5`.
+- **Regressão F7 FINAL:** https://github.com/Heitor2404/coringa-news/actions/runs/45119925085 — **SUCCESS, 85 testes, 11 avisos Pillow**. O compositor sem `visual_parts` preserva o MP4 F7 no mesmo SHA original (`9dd2ec0e0f58...`).
+- **Artifact F8:** `lab-f8-peca-svg-autoral-tres-mp4s-privados`, ID **14792598868**, expira **28/11/2026 05h49 UTC**. Baixado e aberto na conversa para verificação de 12 quadros de vídeo REAL. Três MP4s 540×960/24fps/9s/sem som: `BIELA_F7_BASELINE.mp4` SHA `9dd2ec0e0f58b874f710774c1c4bf7a2dc982c45bcaa6747a0ea1a30367b71e3`; `BIELA_CURTO_F8_PECA_INTERNA.mp4` SHA `54cceab2ad52bdae9c0111f0e65dd018dd41c6e99027c97ee4f3fe8aca40cf08`; `BIELA_LONGO_F8_PECA_INTERNA.mp4` SHA `f0d58a3655a15eef0a2f54b93c36f887284a95075651701ad2f6d08ca071fe52`.
+- **Visual inspecionado:** folha `COMPARATIVO_F7_VS_F8_3_VIDEOS_12_QUADROS.jpg`; a carcaça recebeu aletas/parafusos, a pose física segue igual, a câmera fixa, mas a **melhoria estética é muito limitada**. Não vender isto como solução do estilo, reconhecimento industrial ou capacidade de desenhar qualquer mecanismo.
+- Relatório consolidado: `docs/v4/formatos/F8_PONTE_VISUAL_SVG_20261123.md`. O laboratório **NÃO** está pronto para promoção a motor de produção. O primeiro asset externo REAL com direitos/identidade verificáveis ainda não foi incorporado.
+- **Próximo passo obrigatório:** provar ingestor de referência industrial licenciada com revisão de conteúdo, ancoragem, escala e direitos, e demonstrar melhora de qualidade no conjunto de compressor completo, não apenas troca cosmética em rig genérico. Gate de publicação segue fechado. `main`, NTC, DOSSIÊ, Telegram e produção intocados.

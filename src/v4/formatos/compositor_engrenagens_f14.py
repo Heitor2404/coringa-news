@@ -67,6 +67,8 @@ def validate(s):
                          "stress_tolerance_verified":False}:
         err("FISICA")
     t=G.num(s.get("duration_s"),8,11)
+    if type(s.get("driver_revolutions")) is not int or not 1<=s["driver_revolutions"]<=2:
+        err("GIRO_ENTRADA")
     shape=s.get("gears")
     if not isinstance(shape,dict) or set(shape)!={"z1","z2","module","input_x","center_y"}:
         err("ENGRENAGEM")
@@ -94,7 +96,7 @@ def validate(s):
 def state(scene,t):
     p=validate(scene)
     # Uma volta do eixo de entrada em todo o clip didático.
-    return G.state(p,t,scene["duration_s"])
+    return G.state(p,t,scene["duration_s"],turns=scene["driver_revolutions"])
 
 def frame(scene,t):
     p=validate(scene)
@@ -135,13 +137,13 @@ def frame(scene,t):
       <rect width="540" height="106" fill="#112F43"/>
       <rect x="28" y="13" width="130" height="21" rx="5" fill="#FFCF68"/>
       <text x="38" y="28" fill="#153648" font-family="DejaVu Sans" font-size="9.2" font-weight="900">CORINGA EXPLICA</text>
-      <text x="29" y="68" fill="#FFFFFF" font-family="DejaVu Sans" font-size="23" font-weight="900">{title}</text>
-      <text x="29" y="93" fill="#AED3E1" font-family="DejaVu Sans" font-size="13">{subtitle}</text>
+      <text x="30" y="162" data-essential="machine_title" fill="#173A50" font-family="DejaVu Sans" font-size="22" font-weight="900">{title}</text>
+      <text x="30" y="185" data-essential="subtitle" fill="#567888" font-family="DejaVu Sans" font-size="11">{subtitle}</text>
       <rect x="28" y="98" width="474" height="4" rx="2" fill="#55778A"/>
       <rect x="28" y="98" width="{move:.3f}" height="4" rx="2" fill="#F6BE57"/>
-      <text x="30" y="159" fill="#153A50" font-family="DejaVu Sans" font-size="23" font-weight="900">{step}</text>
-      <text x="30" y="184" fill="#436A7C" font-family="DejaVu Sans" font-size="12.5">{detail}</text>
-      <path d="M30 202 H510" stroke="#B9D1DB" stroke-width="2"/>
+      <text x="30" y="225" data-essential="phase" fill="#153A50" font-family="DejaVu Sans" font-size="20" font-weight="900">{step}</text>
+      <text x="30" y="250" data-essential="detail" fill="#436A7C" font-family="DejaVu Sans" font-size="12">{detail}</text>
+      <path d="M30 269 H510" stroke="#B9D1DB" stroke-width="2"/>
       <g id="machine-stage" data-camera-policy="static" transform="translate(0 0)">
         <rect x="65" y="292" width="410" height="434" rx="30" fill="#426B81" stroke="#244658" stroke-width="9"/>
         <rect x="79" y="308" width="382" height="400" rx="18" fill="url(#f14_bg)" stroke="#AECBD6" stroke-width="5"/>
@@ -218,6 +220,7 @@ def render(scene,out_path):
        "camera_static":True,"geometry_generated_from_module_and_teeth":True,
        "teeth":[p.driving.z,p.driven.z],
        "ratio":p.ratio,"center_distance_px":p.center_distance,
+       "driver_revolutions":scene["driver_revolutions"],
        "sha256":hashlib.sha256(out.read_bytes()).hexdigest()
     }
     out.with_suffix(".json").write_text(json.dumps(record,ensure_ascii=False,indent=2),encoding="utf8")

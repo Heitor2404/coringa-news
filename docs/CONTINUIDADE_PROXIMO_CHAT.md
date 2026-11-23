@@ -2536,3 +2536,26 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 **Próximo E3b/E4:** pesquisar como sair de lista fechada e excertos curados para descoberta e extração com verificação efetiva de fontes por junta + parâmetros; medir taxa de falsos positivos, taxa de recusas, custos e revisão humana. Não promover por CI verde, não reintroduzir modelos visuais pequenos descartados, nem codificar um `if` para cada título ou fonte.
 
 **Estado de segurança:** somente branch experimental; `main`, produção, NTC, DOSSIÊ, Telegram e publicação permanecem intocados.
+
+
+## 132. 23/11 — E4: descoberta por consulta e fonte/revisão confirmada; compreensão ainda insuficiente
+
+**Pedido:** usuário disse "Prossiga" após E3, que só consultava URLs/trechos curados. E4 realiza **descoberta de páginas sem URLs de artigos pré-programadas** e fornece provas de texto e versão para futura compreensão, sem tocar em produção.
+
+**Código entregue** na branch experimental `atlas-direcao-visual-20261118`:
+- `src/v4/formatos/descoberta_fontes_e4.py`: usa **MediaWiki Action API em host fixo** `en.wikipedia.org`. Entrada é texto de consulta, restringido e inicialmente fornecido manualmente. Busca por palavras, seleciona até duas páginas por consulta, busca novamente o **texto por `pageid`** e registra `revid` + SHA256. Snippet de resultado NÃO é evidência. HTTPS, bloqueio de redirects, tempo/tamanho limitados; mock não pode se declarar rede real.
+- Extração de frases genéricas de mecanismos e de candidatos de unidades/contagens estruturais, cada um com ID de trecho. F17 é reutilizada para reconhecer relações na linguagem da página, mas nada é acrescentado ao solver sem `joint` específico, endpoints, escala, geometria e prova de fonte. Contagens `four joints` e `six links` são fatos **textuais**, não topologia completa. Números não preenchem parâmetros automaticamente; nenhum direito sobre arte/imagem de terceiros é alegado.
+- `tests/test_descoberta_fontes_e4.py`, `.github/workflows/qa-descoberta-fontes-e4.yml`, relatório `docs/v4/formatos/E4_DESCOBERTA_FONTE_NAO_CURADA_20261123.md`. Sem novas dependências pagas nem novos renderers.
+
+**RESULTADO FINAL observado no GitHub:** [Actions **45216575775**](https://github.com/Heitor2404/coringa-news/actions/runs/45216575775) **SUCCESS — 41 testes passaram**, consulta LIVE pública, extração de texto e revisão verificadas. Artifact `lab-e4-public-search-provenance-no-publish` ID **14837647914**, expira **28/11/2026 16:27:11 UTC**. ZIP baixado; contém `E4_whitworth_quick_return.json`, `E4_four_bar_linkage.json`, `QA_E4_DISCOVERY.json`; artefato aberto e inspecionado.
+
+**Resultados realmente encontrados:**
+- Busca `Whitworth quick return`: artigo **Quick return mechanism** (`pageid=49162954`, `revid=1386479381`) e **Four-bar linkage** (`pageid=1442361`, `revid=1380680795`).
+- Busca `four bar linkage`: **Four-bar linkage** (mesmo pageid/revid) e **Six-bar linkage** (`pageid=33346874`, `revid=1380705291`).
+- **4 recuperações; 3 páginas únicas**, todas com texto SHA/revisão; 24 excertos por consulta, 15 ocorrências de contagens estruturais (com repetição). Exemplos de fatos sustentados por frases recuperadas: `four bodies`, `four joints`, `six links`, `seven joints`, `one degree of freedom`, `three turning pairs`.
+- **Resultado negativo crucial:** o F17 não extraiu **NENHUMA aresta mecânica tipada dessas quatro recuperações**, e houve **0 candidatos de dimensões com unidade** nos trechos selecionados. A busca funciona, mas a compreensão atual ainda não transforma o texto em mecanismo executável. A fonte é uma enciclopédia geral, não um manual CAD industrial. Não prometer cópia automática de máquinas ou fidelidade de aparência por esta demonstração.
+- Não houve nova `MechanismSpec` completa, nenhum vídeo, nenhuma simulação nova, nenhum teste de holdout nem arte aprovada. Score do benchmark permanece os **3 alvos resolvidos manualmente em E1/E2**, nove ainda não testados, zero fonte→spec completa. Não inflar `3/12` como autonomia.
+
+**Próximo E5:** provar **extração de relações e dimensões** de textos reais não curados: conjunto de frases rotulado antes dos testes, benchmark de cobertura/falso positivo, possibilidade de extrator linguístico geral sob orçamento e revisão. Exigir parâmetros e conexões por fonte; se faltarem, bloquear. Depois `MechanismSpec` e render comum em desafio não usado para desenvolver as regras. Não adicionar novo compositor exclusivo nem reintroduzir estilo de pequenos diagramas rejeitado.
+
+**Isolamento:** somente experimental; `main`, NTC, DOSSIÊ, Telegram, catálogo produtivo e postagem intactos. Sempre atualizar este arquivo no próximo marco.

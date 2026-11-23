@@ -1,0 +1,48 @@
+{
+  "schema": "coringa-e7-upstream-geometry-manifest-v1",
+  "frozen_at": "2026-11-23",
+  "evaluation": "E8",
+  "upstream_repository": "jackhale98/linkage_design",
+  "upstream_commit": "c1ae13b040213b55ece567418bc14e4d2c8d1b0f",
+  "upstream_license": "MIT",
+  "upstream_license_path": "LICENSE",
+  "upstream_license_git_blob_sha1": "c9582739f2438eacbc6984f8002e3289e3b1f9db",
+  "source_origin": "https://raw.githubusercontent.com",
+  "source_authorship": "third_party_open_source_parametric_examples",
+  "urls_are_pinned": true,
+  "eval_files_not_seen_in_e7": true,
+  "no_source_title_special_cases": true,
+  "files": [
+    {
+      "path": "src/examples/shaper.csv",
+      "blob_sha1": "1b512e27856fae3c29627e78c9c807a85b2b4ec0",
+      "group": "unseen_multibody_slot"
+    },
+    {
+      "path": "src/examples/hoekens.csv",
+      "blob_sha1": "ade535db9afb9758cd89ac0395394be8b01d8f5c",
+      "group": "unseen_crank_rocker"
+    },
+    {
+      "path": "src/examples/watt.csv",
+      "blob_sha1": "de1a14defffaf6498d59fd288c88e8a44dfb0b29",
+      "group": "unseen_partial_sweep"
+    },
+    {
+      "path": "src/examples/pump-jack.csv",
+      "blob_sha1": "414e225400c0644118f912ee3f63aecd8f3effa6",
+      "group": "unseen_crank_rocker"
+    },
+    {
+      "path": "src/examples/knuckle-press.csv",
+      "blob_sha1": "2426421711eaf8928e285e136eb0cb0f1944559d",
+      "group": "unseen_toggle_chain"
+    },
+    {
+      "path": "src/examples/hydraulic-boom.csv",
+      "blob_sha1": "7c68475695ebcea6b67ec52e38998bcc8e7b8e5c",
+      "group": "unseen_linear_actuator"
+    }
+  ],
+  "publish": false
+}

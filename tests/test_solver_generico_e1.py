@@ -137,6 +137,7 @@ def test_default_no_phone_safe_zone_claim_and_no_3d_claim():
 def test_closed_form_oracle_makes_f7_regression_stronger_than_green_test_count():
     f=spec("oraculo_biela_e1")
     bad=copy.deepcopy(f)
-    bad["bodies"][1]["seed"][1]=100
+    # Move the slider axis five meters away: crank and rod cannot reach it.
+    bad["joints"][-1]["pa"]=[5,0]
     with pytest.raises(ValueError,match="E1-SOLVER-FECHAMENTO"):
         SOLVER.solve_one(bad,0)

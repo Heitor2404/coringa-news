@@ -69,11 +69,13 @@ jobs:
                    len(p["candidate_structural_counts"]) for p in r["pages"]),
                "failures":r["blocked_pages"]} for r in records]
           total=sum(x["verified_pages"] for x in evidence)
+          unique_revisions={(p["pageid"],p["revid"]) for p in source_pages}
           report={
             "schema":"coringa-e4-source-discovery-qa-v1",
             "query_count":2,
-            "verified_pages":total,
-            "source_pages_auto_discovered":total,
+            "verified_page_fetches":total,
+            "verified_unique_pages":len(unique_revisions),
+            "source_pages_auto_discovered":len(unique_revisions),
             "technical_reference_completeness_proven":False,
             "new_mechanism_solved":False,
             "complete_specs_from_source":0,

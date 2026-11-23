@@ -84,12 +84,24 @@ jobs:
                   frames[name].append(im)
                   board.paste(im.resize((270,480)),(col*270,row*480))
           before,after=frames[names[0]],frames[names[1]]
+          pixel_audit=[]
           for i in range(4):
               delta=ImageChops.difference(before[i],after[i])
-              assert delta.crop((0,0,540,270)).getbbox() is None
-              assert delta.crop((0,905,540,960)).getbbox() is None
-              movement=sum(ImageStat.Stat(delta.crop((55,498,395,700))).mean)/3
-              assert movement>.15,('sem mudanca visivel',i,movement)
+              def delta_mean(box):
+                  return sum(ImageStat.Stat(delta.crop(box)).mean)/3
+              header=delta_mean((0,0,540,270))
+              footer=delta_mean((0,905,540,960))
+              belt=delta_mean((55,498,395,700))
+              pixel_audit.append({'frame':i,
+                  'header_rgb_delta':round(header,4),
+                  'footer_rgb_delta':round(footer,4),
+                  'belt_roi_rgb_delta':round(belt,4)})
+              # SVG direto e invariancia exata sao cobrados na suite Python.
+              # MP4 H.264 muda blocos ate fora do ROI por quantizacao,
+              # com ruido medio empiricamente baixo (<0.15 no header).
+              assert header<.20,('cabecalho realmente alterado',i,header)
+              assert footer<.08,('rodape realmente alterado',i,footer)
+              assert belt>1.,('correia sem diferenca visual',i,belt)
           board.save(out/'COMPARATIVO_COMPRESSOR_F10_8_QUADROS.jpg',quality=90)
           (out/'QA_F10_TRANSMISSAO.json').write_text(json.dumps({
             'status':'PROVA_GEOMETRICA_COM_VIDEO_REAL',
@@ -97,7 +109,7 @@ jobs:
             'sistema_fisico_novo':False,
             'avaliacao_humana': 'PENDENTE',
             'copia_de_midia_externa':False,
-            'publicar':False,'movies':report
+            'publicar':False,'pixel_audit_mp4_h264':pixel_audit,'movies':report
           },ensure_ascii=False,indent=2),encoding='utf8')
           print(json.dumps(report,ensure_ascii=False))
           PY

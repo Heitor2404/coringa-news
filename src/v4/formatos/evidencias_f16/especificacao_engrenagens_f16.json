@@ -1,0 +1,13 @@
+{
+  "id": "engrenagens_evidencia_f16",
+  "title": "ENGRENAGENS EM PAR",
+  "subtitle": "DOIS EIXOS EM CONTATO",
+  "parameters": {
+    "z_input": 20,
+    "z_output": 40,
+    "module_px": 5.8,
+    "input_x_px": 155,
+    "center_y_px": 510,
+    "driver_revolutions": 2
+  }
+}

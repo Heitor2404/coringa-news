@@ -2,7 +2,7 @@
 
 Independentemente do mecanismo: poses SE(2), pin (2 equações), slider (2),
 slot/pino na ranhura (1), driver angular (1), ground fixo.
-Unidades são METROS, sem limite 540x960. Usa scipy.optimize.least_squares.
+Unidades são METROS, sem qualquer limite vinculado ao formato do vídeo. Usa scipy.optimize.least_squares.
 Não simula dinâmica, contato, fricção, pressão, forças ou segurança industrial.
 """
 from __future__ import annotations

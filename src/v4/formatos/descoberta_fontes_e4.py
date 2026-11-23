@@ -174,6 +174,9 @@ def derive_evidence(page,*,verified_network=False):
 def discover(query,out_dir,*,get_json=_get_json,real_network=False):
     """A mocked API response may exercise the code; it is NOT external proof."""
     validate_query(query)
+    # Test doubles must never be mislabeled as live HTTP source evidence.
+    if real_network and get_json is not _get_json:
+        fail("MOCK_NAO_E_FONTE_LIVE")
     out=Path(out_dir);out.mkdir(parents=True,exist_ok=True)
     audit={"schema":"coringa-e4-public-discovery-audit-v0",
         "query":query,"provider":"en.wikipedia.org MediaWiki Action API",

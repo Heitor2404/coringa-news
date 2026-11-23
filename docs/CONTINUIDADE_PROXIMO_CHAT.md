@@ -2011,3 +2011,16 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Não foi criado novo vídeo nem implementada a câmera F2 nesta etapa:** foi recuperada a **referência correta** e a origem reproduzível no repositório. `main` e produção intocados.
 
+
+## 110. 23/11 ~00h10 BRT — USUÁRIO ENVIA MP4 DO VERDADEIRO ÚLTIMO PROTÓTIPO; PRIORIDADE DE REFERÊNCIA CORRIGIDA
+
+**Fonte direta**: o usuário anexou `COMPRESSOR_CONJUNTO_2D_PRIVADO(5).mp4` e disse **"Nosso ultimo video teste no outro chat foi esse aqui"**. O MP4 foi ABERTO e inspecionado nesta conversa, com 12 quadros de 0.10s a 7.60s. O arquivo anexado mede **512×910, 30fps, 8,0 segundos, H.264, sem áudio**, tamanho 1.546.255 bytes. Dimensões/fps são da versão ENVIADA pelo usuário, possivelmente recomprimida; NÃO alegar que hash coincide com renders 540×960 24fps do GitHub sem prova por hashes/frames.
+
+**Conclusão fundamental:** a foto anterior do compressor de pistão grande `render_compressor_pv_2d.py` é uma REFERÊNCIA HISTÓRICA de presença visual e clareza da física, **NÃO o último vídeo de teste**. O último marco real é o **conjunto de compressor de oficina** de `render_compressor_conjunto_2d.py`: motor elétrico e transmissão por correia/polia à esquerda, bomba/pistão em corte à direita, cabeçote e filtro, entrada e descarga, reservatório horizontal largo na base, manômetro e caixa de pressão. Palco claro ocupa a maior parte da imagem sob cabeçalho grafite-azul com título/fase/explicação. Coringa Explica em marca amarela. Máquina inteira legível de forma protagonista no eixo vertical; **NÃO** usar os renderers antigos e minúsculos do FilmeEditorial (`OpticalProjection.tsx`, `LockCausalCycle.tsx`) como direção artística.
+
+**Inspeção do MP4**: estados percorrem `AR RESIDUAL EXPANDE` (0.1–~1.1s), `ADMISSÃO` (~1.3–4.0s), `COMPRESSÃO` (~4.7–7.0s), `DESCARGA` (próximo a 7.6s); manômetro de pressão de câmara muda, biela/pistão/volante evoluem. Máquina tem componentes físicos relacionáveis, não somente barras de texto. No fechamento, a fase de descarga é muito breve, e algumas zonas/editoriais continuam competindo pela tela; nenhum julgamento de aprovação definitiva ou realismo industrial foi feito.
+
+**Decisão de continuidade:** priorizar **fidelidade da montagem completa + direção visual grande e clara**. Não voltar à geometria do pistão isolado só para copiar a imagem da seção 109. Não voltar ao esquema EUV/eclusa encolhido de 16 quadros. Conectar o `SceneGraph` aos *alvos físicos e câmera* usando este padrão de ocupação, e provar pelo menos duas famílias com design visual consistente e mecanismo sem cortes. Não afirmar generalização com testes estruturais de contrato apenas.
+
+**Status:** esta etapa apenas validou e documentou o **checkpoint correto**. Nenhuma nova versão renderizada, nenhuma aprovação humana final, nenhum arquivo do usuário enviado ao repo. `main`, NTC, DOSSIÊ e publicação intocados.
+

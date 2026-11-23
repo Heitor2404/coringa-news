@@ -1,0 +1,116 @@
+name: "LAB F8 — SVG referenciado SHA e regressao mecanica"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-pecas-visuais-f8.yml"
+      - "src/v4/formatos/pecas_visuais_f8.py"
+      - "src/v4/formatos/referencias_visuais_f8/**"
+      - "src/v4/formatos/compositor_cinematico_parametrico_2d.py"
+      - "tests/test_pecas_visuais_f8.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: f8-pecas-visuais-lab
+  cancel-in-progress: true
+jobs:
+  referencia_local_f8:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Preparar ambiente offline (sem IA, sem render produtivo)
+        run: |
+          python -m pip install -q pytest cairosvg pillow numpy scipy opencv-python-headless
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testar integridade de SVG, compositor e familias anteriores
+        run: |
+          python -m pytest -q \
+            tests/test_pecas_visuais_f8.py \
+            tests/test_mecanica_parametrica_f7.py \
+            tests/test_compositor_parametrico_2d.py \
+            tests/test_camera_causal_svg.py
+      - name: Renderizar prova F8 e um baseline F7 privado
+        timeout-minutes: 10
+        run: |
+          mkdir -p qa_f8_visual
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f8_visual/BIELA_F7_BASELINE.mp4
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f8_visual/BIELA_CURTO_F8_PECA_INTERNA.mp4 --visual-f8
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_longo.json \
+            qa_f8_visual/BIELA_LONGO_F8_PECA_INTERNA.mp4 --visual-f8
+      - name: Auditar diferença no palco, SHA de MP4, duração e rodapé
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageChops, ImageStat
+          import hashlib, json, subprocess
+          root=Path('qa_f8_visual')
+          names=['BIELA_F7_BASELINE.mp4','BIELA_CURTO_F8_PECA_INTERNA.mp4','BIELA_LONGO_F8_PECA_INTERNA.mp4']
+          board=Image.new('RGB',(4*270,3*480),'#F2F7F8')
+          report={}
+          firsts=[]
+          for row,name in enumerate(names):
+            movie=root/name
+            data=json.loads(subprocess.check_output(['ffprobe','-v','error',
+               '-show_entries','format=duration:stream=codec_type,width,height,r_frame_rate','-of','json',str(movie)]))
+            stream=next(x for x in data['streams'] if x['codec_type']=='video')
+            assert (stream['width'],stream['height'])==(540,960)
+            assert stream['r_frame_rate']=='24/1'
+            assert abs(float(data['format']['duration'])-9)<.05
+            assert not any(x['codec_type']=='audio' for x in data['streams'])
+            frames=[]
+            for col,sec in enumerate((.5,2.3,4.5,6.8)):
+              output=root/f'{movie.stem}_{col}.png'
+              subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                                     '-y','-ss',str(sec),'-i',str(movie),
+                                     '-frames:v','1',str(output)])
+              im=Image.open(output).convert('RGB')
+              frames.append(im)
+              board.paste(im.resize((270,480)),(col*270,row*480))
+            firsts.append(frames[0])
+            provenance=json.loads(movie.with_suffix('.json').read_text('utf8'))
+            assert provenance['sha256']==hashlib.sha256(movie.read_bytes()).hexdigest()
+            assert provenance['industrial_reference_verified'] is False
+            assert provenance['publish'] is False
+            report[name]={'sha256':provenance['sha256'],
+              'visual_part_source':provenance['visual_part_source'],
+              'duration_s':float(data['format']['duration']),
+              'industrial_identity_verified':False}
+          base,enhanced=firsts[:2]
+          delta=ImageChops.difference(base.crop((210,330,420,690)),
+                                      enhanced.crop((210,330,420,690)))
+          assert sum(ImageStat.Stat(delta).mean)/3>.3
+          assert ImageChops.difference(base.crop((0,0,540,207)),
+                                       enhanced.crop((0,0,540,207))).getbbox() is None
+          assert ImageChops.difference(base.crop((0,910,540,960)),
+                                       enhanced.crop((0,910,540,960))).getbbox() is None
+          board.save(root/'COMPARATIVO_F7_VS_F8_3_VIDEOS_12_QUADROS.jpg',quality=92)
+          (root/'QA_F8.json').write_text(json.dumps({
+             'status':'PASSAGEM_SVG_INTERNO_AUTORAL_FUNCIONA',
+             'third_party_reference_ingestion':False,
+             'industrial_identity_homologated':False,
+             'rights_for_publication':False,
+             'physics_and_camera_preserved':True,
+             'films':report
+          },ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f8-peca-svg-autoral-tres-mp4s-privados
+          path: qa_f8_visual/
+          retention-days: 5
+          if-no-files-found: warn

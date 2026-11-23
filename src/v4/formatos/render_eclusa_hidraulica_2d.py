@@ -119,7 +119,7 @@ def _stage(s:EstadoEclusa, *, realce:bool)->str:
     out=s.portao_saida_aberto
     flowing=s.fluxo_ativo
     highlight=""
-    if realce and s.fase in ("valves","rise"):
+    if realce and s.fase in ("valves","rise") and s.valvula_aberta>.001:
         highlight=realce_causal_svg.renderizar(
             "lock_cycle_standalone",s.fase,s.fase_fracao,
             fisica_confirma=s.valvula_aberta>0.001)

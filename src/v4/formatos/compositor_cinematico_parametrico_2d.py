@@ -25,6 +25,7 @@ from src.v4.formatos import (
     grafo_causal as G,
     primitivas_fisicas_parametricas as P,
     pecas_visuais_f8 as V,
+    layout_hero_mecanico_f12 as H12,
 )
 
 FAMILY="slider_crank_parametrico"
@@ -185,8 +186,11 @@ def estado(scene:dict,t:float)->dict:
             "time":t}
 
 
-def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False)->str:
+def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False,
+              enquadramento_mobile:str|None=None)->str:
     spec=validar(scene)
+    if enquadramento_mobile not in (None,"hero_elevado_f12"):
+        fail("F-COMP-MEC-LAYOUT-NAO-CADASTRADO")
     state=estado(scene,t)
     rig=state["rig"]
     steps=scene["phases"]
@@ -305,10 +309,13 @@ def frame_svg(scene:dict,t:float,*,transmissao_animada:bool=False)->str:
            if (x.get("id") or "").startswith("role-")]
     if len(found)!=len(ACTORS) or set(found)!=set(ACTORS):
         fail("F-COMP-MEC-SVG-ATOR-INCOERENTE")
+    if enquadramento_mobile=="hero_elevado_f12":
+        svg,_=H12.aplicar(svg,family=FAMILY,pose=pose)
     return svg
 
 
-def renderizar(scene:dict,path:Path,*,transmissao_animada:bool=False)->dict:
+def renderizar(scene:dict,path:Path,*,transmissao_animada:bool=False,
+              enquadramento_mobile:str|None=None)->dict:
     spec=validar(scene)
     filename=Path(path)
     filename.parent.mkdir(parents=True,exist_ok=True)
@@ -322,7 +329,8 @@ def renderizar(scene:dict,path:Path,*,transmissao_animada:bool=False)->dict:
     proc=subprocess.Popen(cmd,stdin=subprocess.PIPE)
     try:
         for i in range(round(duration*fps)):
-            markup=frame_svg(scene,i/fps,transmissao_animada=transmissao_animada)
+            markup=frame_svg(scene,i/fps,transmissao_animada=transmissao_animada,
+                             enquadramento_mobile=enquadramento_mobile)
             data=cairosvg.svg2png(bytestring=markup.encode("utf8"))
             with Image.open(io.BytesIO(data)) as im:
                 pixels=im.convert("RGB").tobytes()
@@ -341,6 +349,8 @@ def renderizar(scene:dict,path:Path,*,transmissao_animada:bool=False)->dict:
        "rod_constraint_exact":True,
        "belt_ratio_no_slip_ideal":True,
        "belt_animation_f11":bool(transmissao_animada),
+       "layout_mobile_f12":enquadramento_mobile or "f7_original",
+       "scale_reduction_f12":False,
        "belt_primitive_shared":"primitivas_fisicas_parametricas.transmissao_correia",
        "camera_fixed":True,"video":[WIDTH,HEIGHT],"fps":fps,
        "duration_s":duration,"has_audio":False,
@@ -361,10 +371,12 @@ if __name__=="__main__":
     parser.add_argument("saida_mp4",type=Path)
     parser.add_argument("--visual-f8",action="store_true",help="Opt-in: peca SVG autoral com hash; nao homologada")
     parser.add_argument("--transmissao-animada",action="store_true",help="LAB F11: marcacoes no trajeto da correia usando F10")
+    parser.add_argument("--hero-f12",action="store_true",help="LAB F12: cabeçalho compacto e mecanismo deslocado pra cima, SEM encolher")
     args=parser.parse_args()
     scene=carregar(args.scene_json)
     if args.visual_f8:
         scene["visual_parts"]={"cylinder":"cylinder_shell_f8"}
         scene["id"]+="_f8"
-    print(json.dumps(renderizar(scene,args.saida_mp4,transmissao_animada=args.transmissao_animada),
+    print(json.dumps(renderizar(scene,args.saida_mp4,transmissao_animada=args.transmissao_animada,
+                               enquadramento_mobile="hero_elevado_f12" if args.hero_f12 else None),
                      ensure_ascii=False,indent=2))

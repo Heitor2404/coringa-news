@@ -66,7 +66,6 @@ jobs:
                "candidate_relations":sum(len(p["candidate_relations"]) for p in r["pages"]),
                "quantity_candidates_not_usable":sum(len(p["candidate_quantities"]) for p in r["pages"]),
                "failures":r["blocked_pages"]} for r in records]
-          ]
           total=sum(x["verified_pages"] for x in evidence)
           report={
             "schema":"coringa-e4-source-discovery-qa-v1",

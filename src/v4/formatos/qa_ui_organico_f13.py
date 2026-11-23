@@ -91,27 +91,6 @@ def mask(profile):
         d.rectangle((x,y,x2-1,y2-1),fill=255)
     return canvas
 
-def _text_layer(root,name,scene,layout):
-    clone=copy.deepcopy(root)
-    if layout=="hero_lateral_f13":
-        target=LABELS[name]
-        matches=[(parent,node) for parent in clone.iter() for node in list(parent)
-                 if node.get("id")==target]
-    elif layout=="hero_elevado_f12":
-        desired={"title":scene["title"],
-                 "phase":next((p["title"] for p in scene["phases"]
-                               if p["start"]<=root._time < p["end"]),None),
-                 "detail":next((p["detail"] for p in scene["phases"]
-                                if p["start"]<=root._time < p["end"]),None)}
-        matches=[(clone,node) for node in list(clone)
-                 if node.tag.endswith("}text") and node.text==desired[name]]
-    else: fail("LAYOUT_INVALIDO")
-    if len(matches)!=1:
-        fail("TEXTO_AUSENTE:"+name)
-    parent,child=matches[0]
-    parent.remove(child)
-    return ET.tostring(clone,encoding="unicode")
-
 def _remove(root,layout,scene,role,time,typ):
     if typ=="role":
         return Q._no_role(root,role)

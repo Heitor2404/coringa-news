@@ -45,6 +45,26 @@ def test_f13_mesma_maquina_f12_sem_zoom_pan_ou_mudanca_de_fisica(mode):
     assert M.frame_svg(s,3.6)==M.frame_svg(s,3.6,enquadramento_mobile=None)
 
 
+
+def test_f13_nao_desperdica_faixa_azul_escuro_no_topo():
+    s=scene("curto")
+    old=M.frame_svg(s,3.6,transmissao_animada=True,
+                    enquadramento_mobile="hero_elevado_f12")
+    new=M.frame_svg(s,3.6,transmissao_animada=True,
+                    enquadramento_mobile="hero_lateral_f13")
+    root=ET.fromstring(new)
+    ns="{http://www.w3.org/2000/svg}"
+    rects=[n for n in root if n.tag==ns+"rect"]
+    assert len([n for n in rects if n.get("width")=="540" and n.get("height")=="105"])==1
+    assert len([n for n in rects if n.get("y")=="105" and n.get("height")=="809"])==1
+    assert len([n for n in rects if n.get("x")=="35" and n.get("y")=="99" and n.get("height")=="4"])==2
+    assert stage(old)==stage(new)
+    audit=Q.avaliar(s,3.6,"hero_lateral_f13")
+    assert audit["essential_text"]["title"]["bbox"][1]>=135
+    assert audit["essential_text"]["title"]["ui_risks"]["reels_ads_guide_conservative"]==0
+
+
+
 def test_f13_titulo_real_abaixo_de_topo_observado_sem_colidir_com_cilindro():
     s=scene()
     b=Q.avaliar(s,3.6,"hero_elevado_f12")

@@ -9,6 +9,7 @@ on:
       - "benchmarks/e8_multi_repo_catalog_v1.json"
       - "benchmarks/e8_unseen_linkage_sources_v1.json"
       - "tests/test_triagem_fontes_geometria_e8.py"
+      - "tests/test_importador_geometria_e7.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -170,6 +171,86 @@ jobs:
             "visual_approved":False,"publish":False}
           (out/"E8_VIDEO_QA.json").write_text(json.dumps(report,indent=2),encoding="utf8")
           print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Render ALL accepted source-derived mechanisms using one generic renderer
+        timeout-minutes: 8
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageChops,ImageStat
+          from src.v4.formatos import solver_restricoes_e1 as S
+          from src.v4.formatos import renderer_corpos_e1 as R
+          root=Path("qa_e8")
+          batch=json.loads((root/"QA_E7_GEOMETRY.json").read_text("utf8"))
+          first=(root/"FIRST_SUCCESSFUL_STEM.txt").read_text("utf8")
+          winners=[r for r in batch["source_cases"]
+                   if r["status"]=="PASS_SOURCE_GEOMETRY_SOLVER_ONLY"]
+          assert len(winners)==batch["passed"]>=1
+          preview=Image.new("RGB",(270*len(winners),480),"#ecf2f5")
+          reports=[]
+          for i,r in enumerate(winners):
+              stem=Path(r["source_path"]).stem.replace("-","_")
+              path=root/(stem+"_E7_SPEC.json")
+              assert path.is_file()
+              spec=json.loads(path.read_text("utf8"))
+              S.validate(spec)
+              camera=R.geometry_bounds(spec,S.trajectory(spec,121))
+              assert camera["world_fixed_for_all_frames"]
+              dest=(root/"E8_UNSEEN_GENERIC_PRIVATE.mp4" if stem==first
+                    else root/("E8_GENERIC_"+stem+".mp4"))
+              if stem!=first:
+                  subprocess.run(["python","-m","src.v4.formatos.renderer_corpos_e1",
+                      str(path),str(dest),"--title","LAB E8 | MESMO SOLVER"],
+                      check=True)
+              metadata=json.loads(dest.with_suffix(".json").read_text("utf8"))
+              sha=hashlib.sha256(dest.read_bytes()).hexdigest()
+              assert sha==metadata["sha256"] and metadata["renderer"]=="single_shared_svg_compositor"
+              assert not metadata["publish"] and not metadata["visual_approved"]
+              assert metadata["camera_fixed"]
+              probe=json.loads(subprocess.check_output(["ffprobe","-v","error",
+                  "-show_entries","stream=codec_type,width,height:format=duration",
+                  "-of","json",str(dest)]))
+              video=next(v for v in probe["streams"] if v["codec_type"]=="video")
+              assert (video["width"],video["height"])==(540,960)
+              assert not any(v["codec_type"]=="audio" for v in probe["streams"])
+              duration=float(probe["format"]["duration"])
+              crops=[]
+              for sample in (0.18,0.61):
+                  imgpath=root/f"E8_{stem}_{int(sample*100)}.png"
+                  subprocess.check_call(["ffmpeg","-hide_banner","-loglevel","error","-y",
+                     "-ss",str(duration*sample),"-i",str(dest),
+                     "-frames:v","1",str(imgpath)])
+                  crops.append(Image.open(imgpath).convert("RGB"))
+              delta=ImageChops.difference(crops[0].crop((18,153,522,769)),
+                                          crops[1].crop((18,153,522,769)))
+              intensity=sum(ImageStat.Stat(delta).mean)/3
+              assert intensity>.10,("STATIC_BODY",r["source_path"],intensity)
+              preview.paste(crops[0].resize((270,480)),(270*i,0))
+              reports.append({
+                  "source_path":r["source_path"],
+                  "source_commit":r["source_commit"],
+                  "source_csv_sha256":r["source_sha256"],
+                  "video":dest.name,
+                  "sha256":sha,
+                  "distinct_moving_bodies":r["converted_body_count"],
+                  "source_joint_count":r["converted_joint_count"],
+                  "max_residual_m":r["max_residual_m"],
+                  "motion_rgb_change":intensity,
+                  "visual_approved":False,"publish":False})
+          preview.save(root/"E8_ACCEPTED_MECHANISMS_CONTACT.jpg",quality=90)
+          summary={
+              "schema":"coringa-e8-cross-topology-video-v1",
+              "count":len(reports),
+              "same_generic_solver_and_renderer":True,
+              "source_to_spec_from_text":False,
+              "sources":reports,
+              "independent_visual_homologation":False,
+              "publish":False}
+          (root/"E8_ALL_VIDEOS_QA.json").write_text(
+              json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps({"count":len(reports),"video_names":[x["video"] for x in reports],
+              "media_copied":False,"publish":False},ensure_ascii=False))
           PY
       - uses: actions/upload-artifact@v4
         if: always()

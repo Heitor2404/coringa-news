@@ -1,0 +1,167 @@
+{
+  "schema": "coringa-camera-causal-svg-v1",
+  "status": "LAB_NAO_ESTETICA_APROVADA",
+  "publicar": false,
+  "familias": {
+    "compressor_oficina_pv": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 100,
+      "bounds": [
+        51,
+        342,
+        492,
+        900
+      ],
+      "viewport": [
+        12,
+        239,
+        528,
+        885
+      ],
+      "zoom_max": 1.08,
+      "roles": {
+        "electric_motor": [
+          66,
+          590,
+          198,
+          744
+        ],
+        "drive_belt": [
+          128,
+          634,
+          362,
+          783
+        ],
+        "pump_flywheel": [
+          227,
+          638,
+          360,
+          772
+        ],
+        "piston_cutaway": [
+          245,
+          465,
+          342,
+          615
+        ],
+        "finned_cylinder": [
+          216,
+          434,
+          375,
+          622
+        ],
+        "compressor_head": [
+          229,
+          368,
+          352,
+          437
+        ],
+        "intake_filter": [
+          149,
+          345,
+          243,
+          427
+        ],
+        "suction_valve": [
+          250,
+          388,
+          277,
+          436
+        ],
+        "discharge_valve": [
+          306,
+          386,
+          335,
+          435
+        ],
+        "discharge_pipe": [
+          333,
+          374,
+          459,
+          789
+        ],
+        "receiver_horizontal": [
+          53,
+          771,
+          487,
+          901
+        ]
+      }
+    },
+    "otto_4t_reference": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 28,
+      "bounds": [
+        16,
+        273,
+        524,
+        888
+      ],
+      "viewport": [
+        7,
+        245,
+        533,
+        916
+      ],
+      "zoom_max": 1.025,
+      "roles": {
+        "cylinder": [
+          108,
+          332,
+          435,
+          871
+        ],
+        "chamber": [
+          184,
+          394,
+          355,
+          690
+        ],
+        "piston": [
+          184,
+          386,
+          351,
+          691
+        ],
+        "crankshaft": [
+          172,
+          673,
+          360,
+          890
+        ],
+        "inlet_valve": [
+          185,
+          275,
+          239,
+          402
+        ],
+        "outlet_valve": [
+          308,
+          275,
+          357,
+          402
+        ],
+        "sparkplug": [
+          254,
+          300,
+          280,
+          394
+        ],
+        "intake_flow": [
+          16,
+          291,
+          235,
+          406
+        ],
+        "exhaust_flow": [
+          313,
+          291,
+          524,
+          406
+        ]
+      }
+    }
+  }
+}

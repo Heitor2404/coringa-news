@@ -12,11 +12,11 @@ from pathlib import Path
 
 GRAFOS = json.loads((Path(__file__).with_name('grafo_causal_capacidades.json')).read_text('utf8'))
 OPERADORES = frozenset(('emit','reflect','project','expose','translate','open',
-                        'close','fill','flow','equalize'))
+                        'close','fill','flow','equalize','compress','ignite'))
 CAMERAS = frozenset(('show_context','follow_actor','show_connection','show_consequence'))
 RELACOES = frozenset(('illuminates','reflects_to','projects_to','rests_on','floats_on',
                       'inside','connected_to','controls','feeds'))
-FAMILIAS = frozenset(('optics','semiconductor','hydraulic','vessel'))
+FAMILIAS = frozenset(('optics','semiconductor','hydraulic','vessel','mechanics','combustion','compressed_air'))
 
 
 class GrafoInvalido(ValueError):

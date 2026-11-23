@@ -580,5 +580,391 @@
     ],
     "fontes_visuais": "componentes_cadastrados_sem_inspecao_por_pixels",
     "renderer": "LockCausal.tsx"
+  },
+  "compressor_oficina_pv": {
+    "atores": [
+      {
+        "id": "electric_motor",
+        "tipo": "motor",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "drive_belt",
+        "tipo": "correia",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "pump_flywheel",
+        "tipo": "polia",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "piston_cutaway",
+        "tipo": "pistao",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "finned_cylinder",
+        "tipo": "cilindro",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "compressor_head",
+        "tipo": "cabecote",
+        "asset_family": "compressed_air"
+      },
+      {
+        "id": "intake_filter",
+        "tipo": "filtro",
+        "asset_family": "compressed_air"
+      },
+      {
+        "id": "suction_valve",
+        "tipo": "valvula_admissao",
+        "asset_family": "compressed_air"
+      },
+      {
+        "id": "discharge_valve",
+        "tipo": "valvula_descarga",
+        "asset_family": "compressed_air"
+      },
+      {
+        "id": "discharge_pipe",
+        "tipo": "tubulacao",
+        "asset_family": "compressed_air"
+      },
+      {
+        "id": "receiver_horizontal",
+        "tipo": "reservatorio",
+        "asset_family": "compressed_air"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "electric_motor",
+        "type": "connected_to",
+        "to": "drive_belt"
+      },
+      {
+        "from": "drive_belt",
+        "type": "connected_to",
+        "to": "pump_flywheel"
+      },
+      {
+        "from": "pump_flywheel",
+        "type": "connected_to",
+        "to": "piston_cutaway"
+      },
+      {
+        "from": "piston_cutaway",
+        "type": "inside",
+        "to": "finned_cylinder"
+      },
+      {
+        "from": "compressor_head",
+        "type": "connected_to",
+        "to": "finned_cylinder"
+      },
+      {
+        "from": "intake_filter",
+        "type": "feeds",
+        "to": "suction_valve"
+      },
+      {
+        "from": "suction_valve",
+        "type": "feeds",
+        "to": "compressor_head"
+      },
+      {
+        "from": "compressor_head",
+        "type": "feeds",
+        "to": "discharge_valve"
+      },
+      {
+        "from": "discharge_valve",
+        "type": "feeds",
+        "to": "discharge_pipe"
+      },
+      {
+        "from": "discharge_pipe",
+        "type": "feeds",
+        "to": "receiver_horizontal"
+      }
+    ],
+    "estado_inicial": {
+      "compressor_head.phase": "ready",
+      "suction_valve.open": "false",
+      "discharge_valve.open": "false",
+      "receiver_horizontal.receiving": "false"
+    },
+    "eventos": [
+      {
+        "acao": "REEXPANSAO_RESIDUAL",
+        "operador": "equalize",
+        "atores": [
+          "compressor_head",
+          "piston_cutaway"
+        ],
+        "foco": [
+          "compressor_head",
+          "finned_cylinder",
+          "piston_cutaway"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "compressor_head.phase": "ready"
+        },
+        "altera": {
+          "compressor_head.phase": "reexpansion"
+        }
+      },
+      {
+        "acao": "ADMISSAO_AR",
+        "operador": "flow",
+        "atores": [
+          "intake_filter",
+          "suction_valve"
+        ],
+        "foco": [
+          "intake_filter",
+          "suction_valve",
+          "compressor_head"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "compressor_head.phase": "reexpansion",
+          "suction_valve.open": "false"
+        },
+        "altera": {
+          "compressor_head.phase": "intake",
+          "suction_valve.open": "true"
+        }
+      },
+      {
+        "acao": "COMPRESSAO_AR",
+        "operador": "compress",
+        "atores": [
+          "piston_cutaway"
+        ],
+        "foco": [
+          "pump_flywheel",
+          "piston_cutaway",
+          "finned_cylinder"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "compressor_head.phase": "intake",
+          "suction_valve.open": "true"
+        },
+        "altera": {
+          "compressor_head.phase": "compression",
+          "suction_valve.open": "false"
+        }
+      },
+      {
+        "acao": "DESCARGA_PRESSURIZADA",
+        "operador": "flow",
+        "atores": [
+          "discharge_valve",
+          "discharge_pipe"
+        ],
+        "foco": [
+          "compressor_head",
+          "discharge_valve",
+          "discharge_pipe",
+          "receiver_horizontal"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "compressor_head.phase": "compression",
+          "discharge_valve.open": "false"
+        },
+        "altera": {
+          "compressor_head.phase": "discharge",
+          "discharge_valve.open": "true",
+          "receiver_horizontal.receiving": "true"
+        }
+      }
+    ],
+    "renderer": "render_compressor_conjunto_2d.py",
+    "fontes_visuais": "roles_reais_do_renderer_svg_nao_inspecao_independente"
+  },
+  "otto_4t_reference": {
+    "atores": [
+      {
+        "id": "cylinder",
+        "tipo": "cilindro",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "chamber",
+        "tipo": "camara",
+        "asset_family": "combustion"
+      },
+      {
+        "id": "piston",
+        "tipo": "pistao",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "crankshaft",
+        "tipo": "virabrequim",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "inlet_valve",
+        "tipo": "valvula_admissao",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "outlet_valve",
+        "tipo": "valvula_escape",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "sparkplug",
+        "tipo": "vela",
+        "asset_family": "combustion"
+      },
+      {
+        "id": "intake_flow",
+        "tipo": "fluxo_admissao",
+        "asset_family": "combustion"
+      },
+      {
+        "id": "exhaust_flow",
+        "tipo": "fluxo_escape",
+        "asset_family": "combustion"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "piston",
+        "type": "inside",
+        "to": "cylinder"
+      },
+      {
+        "from": "piston",
+        "type": "connected_to",
+        "to": "crankshaft"
+      },
+      {
+        "from": "chamber",
+        "type": "inside",
+        "to": "cylinder"
+      },
+      {
+        "from": "intake_flow",
+        "type": "feeds",
+        "to": "inlet_valve"
+      },
+      {
+        "from": "inlet_valve",
+        "type": "feeds",
+        "to": "chamber"
+      },
+      {
+        "from": "sparkplug",
+        "type": "connected_to",
+        "to": "chamber"
+      },
+      {
+        "from": "chamber",
+        "type": "feeds",
+        "to": "outlet_valve"
+      },
+      {
+        "from": "outlet_valve",
+        "type": "feeds",
+        "to": "exhaust_flow"
+      }
+    ],
+    "estado_inicial": {
+      "chamber.phase": "pre_intake"
+    },
+    "eventos": [
+      {
+        "acao": "admissao_mistura",
+        "operador": "flow",
+        "atores": [
+          "inlet_valve",
+          "intake_flow"
+        ],
+        "foco": [
+          "intake_flow",
+          "inlet_valve",
+          "chamber"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "chamber.phase": "pre_intake"
+        },
+        "altera": {
+          "chamber.phase": "intake"
+        }
+      },
+      {
+        "acao": "compressao_mistura",
+        "operador": "compress",
+        "atores": [
+          "piston"
+        ],
+        "foco": [
+          "piston",
+          "cylinder",
+          "crankshaft"
+        ],
+        "camera": "follow_actor",
+        "requer": {
+          "chamber.phase": "intake"
+        },
+        "altera": {
+          "chamber.phase": "compression"
+        }
+      },
+      {
+        "acao": "ignicao_expansao",
+        "operador": "ignite",
+        "atores": [
+          "sparkplug",
+          "chamber"
+        ],
+        "foco": [
+          "sparkplug",
+          "chamber",
+          "piston",
+          "cylinder"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "chamber.phase": "compression"
+        },
+        "altera": {
+          "chamber.phase": "power"
+        }
+      },
+      {
+        "acao": "escape_gases",
+        "operador": "flow",
+        "atores": [
+          "outlet_valve",
+          "exhaust_flow"
+        ],
+        "foco": [
+          "chamber",
+          "outlet_valve",
+          "exhaust_flow"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "chamber.phase": "power"
+        },
+        "altera": {
+          "chamber.phase": "exhaust"
+        }
+      }
+    ],
+    "renderer": "render_reconstrucao_causal_2d.py",
+    "fontes_visuais": "geometria_curada_e_movimento_medidos_na_fonte_sem_classificador_visual"
   }
 }

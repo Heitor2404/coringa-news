@@ -68,7 +68,7 @@ def render(manifest,solids,plane,origins,frames,out):
                 if name == ground and base is not None:
                     low,z,pixels = base
                 else:
-                    low,z,pixels = raster((tri-center)*scale+[255,405,0], np.array(source_color[name]))
+                    low,z,pixels = raster((tri-center)*scale+[255,382,0], np.array(source_color[name]))
                     if name == ground:
                         base = low,z,pixels
                 x,y = low
@@ -83,8 +83,8 @@ def render(manifest,solids,plane,origins,frames,out):
             pen.text((48,152),"Do giro ao movimento em linha reta",font=fonts[1],fill="#ffcc62")
             for x,(name,label) in zip((48,212,323),manifest["legend"].items()):
                 swatch = tuple((np.sqrt(source_color[name])*225).astype(int))
-                pen.ellipse((x,573,x+10,583),fill=swatch)
-                pen.text((x+17,566),label,font=fonts[0],fill="#bed0db")
+                pen.ellipse((x,601,x+10,611),fill=swatch)
+                pen.text((x+17,594),label,font=fonts[0],fill="#bed0db")
             pen.text((48,635),"Posição do cursor",font=fonts[1],fill="white")
             pen.text((310,635),f"{positions[i]:.1f} mm".replace(".",","),font=fonts[1],fill="#ffcc62")
             pen.line(chart,fill="#4c6271",width=2)

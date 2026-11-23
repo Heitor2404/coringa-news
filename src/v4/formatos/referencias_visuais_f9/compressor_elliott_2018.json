@@ -1,0 +1,138 @@
+{
+  "schema": "coringa-reference-evidence-f9-v1",
+  "id": "compressor_portatil_monoestagio_elliott_2018",
+  "status": "CANDIDATO_CURADORIA_AINDA_NAO_APROVADA",
+  "intended_use": "COMPARACAO_VISUAL_PRIVADA_NAO_ASSET_DE_RENDER",
+  "reference_family": "compressor_alternativo_reservatorio_horizontal",
+  "reference_type": "ilustracao_tecnica_estatica_nao_fotografia",
+  "source": {
+    "page": "https://commons.wikimedia.org/wiki/File:Portable_Single_Stage_Air_Compressor.jpg",
+    "file_url": "https://upload.wikimedia.org/wikipedia/commons/1/19/Portable_Single_Stage_Air_Compressor.jpg",
+    "author": "Brian S. Elliott",
+    "title": "Portable Single Stage Air Compressor",
+    "date": "2018-02-13",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Brian S. Elliott · Portable Single Stage Air Compressor (2018) · CC BY-SA 4.0 · Wikimedia Commons",
+    "changes_notice": "Imagem original exibida como referencia, redimensionada para comparacao",
+    "source_page_reviewed": "2026-11-23",
+    "external_media_authorization": "LICENCA_DECLARADA_NA_PAGINA_REQUER_CREDITO_E_SHAREALIKE_SE_APLICAVEL"
+  },
+  "file": {
+    "expected_sha256": null,
+    "format": "JPEG",
+    "width": 2100,
+    "height": 1500,
+    "max_bytes": 1500000
+  },
+  "claims": {
+    "configuration": "portable_single_stage_electric_motor_horizontal_receiver",
+    "type": "external_appearance_only",
+    "limits": [
+      "pecas_internas_do_pistao_nao_observaveis",
+      "correia_oculta_por_carenagem",
+      "arte_nao_permite_calibrar_medidas_cad",
+      "modelo_2_estagios_nao_equivalente"
+    ],
+    "visible_parts": [
+      {
+        "role": "receiver_horizontal",
+        "bbox": [
+          0.19,
+          0.43,
+          0.62,
+          0.39
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "electric_motor",
+        "bbox": [
+          0.3,
+          0.22,
+          0.15,
+          0.19
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "compressor_head",
+        "bbox": [
+          0.53,
+          0.1,
+          0.14,
+          0.31
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "intake_filter",
+        "bbox": [
+          0.65,
+          0.09,
+          0.08,
+          0.13
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "discharge_pipe",
+        "bbox": [
+          0.47,
+          0.11,
+          0.12,
+          0.3
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "belt_guard",
+        "bbox": [
+          0.3,
+          0.22,
+          0.14,
+          0.2
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "tank_pressure_gauge",
+        "bbox": [
+          0.51,
+          0.43,
+          0.06,
+          0.08
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      },
+      {
+        "role": "wheel",
+        "bbox": [
+          0.21,
+          0.7,
+          0.18,
+          0.28
+        ],
+        "basis": "BBOX_MANUAL_IMAGEM_ORIGINAL"
+      }
+    ],
+    "hidden_parts": [
+      "drive_belt",
+      "piston_cutaway",
+      "valve_kinematics",
+      "internal_crankshaft"
+    ],
+    "image_analysis": "INSPECAO_VISUAL_CURATORIAL_CANDIDATA",
+    "independent_recognition": "NAO_EXECUTADO",
+    "industrial_identity_certified": false
+  },
+  "rights_and_gates": {
+    "source_license_reproduced_as_declared": true,
+    "commercial_use_review_pending": true,
+    "derivative_obligations_review_pending": true,
+    "publication_allowed": false,
+    "reference_only": true,
+    "automatic_geometry_extraction": false,
+    "visual_approval": false
+  }
+}

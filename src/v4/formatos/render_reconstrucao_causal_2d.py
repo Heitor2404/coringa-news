@@ -187,6 +187,14 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
             fill="none" stroke="#C77D25" stroke-width="4"/>
           </g>"""
 
+    # Cada tipo de fluxo possui seu proprio ator SVG mesmo quando inativo.
+    if is_intake:
+        flow = f'<g id="role-intake_flow">{flow}</g><g id="role-exhaust_flow"></g>'
+    elif is_exhaust:
+        flow = f'<g id="role-intake_flow"></g><g id="role-exhaust_flow">{flow}</g>'
+    else:
+        flow = f'<g id="role-intake_flow"></g><g id="role-exhaust_flow"></g>{flow}'
+
     stage_transform=f"translate(0 -{deslocamento:.1f})"
     if camera_causal:
         if abs(deslocamento-camera_causal_svg.CAMERAS["familias"]["otto_4t_reference"]["subida_base_px"])>1e-6:
@@ -295,19 +303,23 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
       width="169" height="{chamber:.2f}"
       fill="{gas}" opacity="{gas_opacity}"/></g>
     <!-- Válvulas com estados DISCRETOS de processo -->
-    <g>
+    <g id="role-inlet_valve">
       <rect x="206" y="277" width="12" height="{111+in_open}"
         rx="5" fill="#7A99A9" stroke="#2C4E61" stroke-width="3"/>
       <path d="M 189 {389+in_open}
         Q 213 {377+in_open} 235 {389+in_open}
         L 235 {395+in_open} H 189 Z"
         fill="#4E92A6" stroke="#244858" stroke-width="3"/>
+    </g>
+    <g id="role-outlet_valve">
       <rect x="327" y="277" width="12" height="{111+out_open}"
         rx="5" fill="#7A99A9" stroke="#2C4E61" stroke-width="3"/>
       <path d="M 311 {389+out_open}
         Q 334 {377+out_open} 354 {389+out_open}
         L 354 {395+out_open} H 311 Z"
         fill="#DAA06D" stroke="#6D5549" stroke-width="3"/>
+    </g>
+    <g id="role-sparkplug">
       <path d="M 267 306 V 377"
         stroke="#617F90" stroke-width="12" stroke-linecap="round"/>
       <path d="M 267 328 V 372"

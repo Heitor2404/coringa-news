@@ -2152,3 +2152,20 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 - **NÃO ALEGAR:** busca automática de referência, reconhecimento de peça em foto, extração de CAD/3D, licença para copiar ilustração OpenStax, motor universal de qualquer tema ou estética publicável. F5 continua certificado de 29 atores/3 famílias; F6 só quarto mecanismo experimental, ainda não promovido ao F5. A velocidade do fluxo é DIDÁTICA, não medida cientificamente.
 - **Próximo passo:** avaliar adequação da arte da F6 no celular; ampliar primitives para acionamentos, engrenagens e atuadores físicos, e integrar quarto mecanismo no inventário F5 sem IDs/contagens hardcoded, condicionado a identidade visual auditada. Manter F-VISUAL-LEGADO-DESCARTADO e camera fixa.
 - `main`, produção, NTC, DOSSIÊ, Telegram e publicação NÃO alterados. Tudo na branch atlas-direcao-visual-20261118.
+
+## 117. 23/11 ~02h17 BRT — F7 MECÂNICA PARAMÉTRICA EM IMPLEMENTAÇÃO (QA AINDA PENDENTE)
+
+**Pedido do usuário:** “Prossiga”, após aprovação da F6 paramétrica, mantendo a exigência de registrar SEMPRE o progresso neste documento GitHub. Planejamento: rotor, pistão, transmissão e biela como peças DESENHÁVEIS, provar reuso entre compressor, Otto e NOVA montagem mecânica configurável por JSON, preservando câmera estável, estética/referência não certificadas e bloqueio de publicação.
+
+**Já implementado na branch atlas-direcao-visual-20261118:**
+- `src/v4/formatos/cinematica_biela_manivela.py` núcleo físico compartilhado para resolver posição de pistão, pino de manivela e comprimento rígido, mais fórmula de velocidade ideal de polias.
+- `compressor_pv_core.py` e `render_reconstrucao_causal_2d.py` passam a chamar o MESMO solver geométrico; as fases de pressão do compressor, válvulas e condições da combustão Otto continuam locais aos mecanismos, não trocadas entre si.
+- `primitivas_fisicas_parametricas.py` ampliado para DESENHAR 8/13 tipos F5: os cinco hidráulicos F6 mais rotor, piston e transmission; funções mecânicas `rotor`, `pistao`, `biela` e `transmissao_correia`. Biela e correia compartilham o tipo transmission. Tangentes externas da correia calculadas a partir dos raios/centros; entradas fora de faixa/traçados externos rejeitados.
+- `render_compressor_conjunto_2d.py` delega agora as polias/volantes `_spokes` à primitiva `rotor` preservando desenho existente; alteração não deve converter arte do motor inteiro para novos cartões ou antigos diagramas.
+- NOVO grafo `slider_crank_parametrico` com seis atores, relações físicas e dois eventos curso_descendente/curso_ascendente; câmera com plano geral travado e envelopes seguros em `camera_causal_geometrias.json`.
+- DUAS novas cenas JSON `cenas_parametricas/biela_manivela_curso_curto.json` e `biela_manivela_curso_longo.json`, cada uma parametriza polias, raio da manivela, biela, pistão e cilindro; o compositor mecânico ainda está em construção ao registrar este trecho.
+- Ajuste de teste F6 para 8 primitives desenháveis, sem mudar o comportamento hidráulico.
+
+**IMPORTANTE:** ainda NÃO atribuir testes aprovados nem prévia nova à F7, pois integração/CI ainda NÃO tinham sido executados ao escrever este checkpoint. F5 mantém 29 atores/3 famílias certificados, nova F7 apenas prova candidata. Sem Claude, sem publicação, sem Telegram/main/NTC/DOSSIÊ.
+
+**Próximo agora:** implementar um único compositor mecânico de cenas JSON, testes de junta/curso/polia/câmera e regressões das duas famílias existentes; rodar GitHub Actions e inspecionar as duas prévias privadas. ATUALIZAR ESTA seção com resultado final e relatório F7.

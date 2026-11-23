@@ -38,7 +38,7 @@ def diff(a,b,roi):
 
 
 def test_primitivas_reais_sao_utilizadas_sem_modelos_novos():
-    assert P.verificar_reuso()==["conduit","fluid_body","gate","reservoir","valve"]
+    assert P.verificar_reuso()==["conduit","fluid_body","gate","piston","reservoir","rotor","transmission","valve"]
     assert "stroke-width" in P.conduto("M 211 714 H 331")
     assert 'opacity="0.000"' in P.conduto("M 211 714 H 331")
     assert 'opacity="0.000"' in P.barreira(396,414,777,1.)

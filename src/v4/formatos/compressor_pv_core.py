@@ -9,6 +9,7 @@ NÃO utiliza a animação do motor Otto como prova de compressor.
 from __future__ import annotations
 from dataclasses import dataclass, asdict
 import math
+from src.v4.formatos import cinematica_biela_manivela as CM
 
 PROCESSO = "compressor_alternativo"
 REFERENCIAS = (
@@ -70,9 +71,10 @@ def estado(progress: float, spec: CompressorSpec = CompressorSpec()) -> Compress
         raise ValueError("F-COMPRESSOR-PROGRESSO")
     theta = 2 * math.pi * progress
     r, L = spec.raio, spec.biela
-    dx = r * math.sin(theta)
-    crank_y = spec.eixo_y - r * math.cos(theta)
-    piston_y = crank_y - math.sqrt(L*L - dx*dx)
+    rig = CM.calcular(theta,r,L,spec.eixo_x,spec.eixo_y)
+    dx = rig.crank_x - rig.piston_x
+    crank_y = rig.crank_y
+    piston_y = rig.piston_y
     y_tdc = spec.eixo_y - r - L
     pos = max(0., min(1., (piston_y - y_tdc) / (2*r)))
     V = spec.folga_relativa + pos

@@ -21,6 +21,7 @@ from PIL import Image
 
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
 from src.v4.formatos import camera_causal_svg, realce_causal_svg, biblioteca_componentes_fisicos
+from src.v4.formatos import cinematica_biela_manivela as CM
 
 WIDTH, HEIGHT = 540, 960
 # Cutaway com admissão/escape e válvulas: caixa conservadora do desenho.
@@ -106,9 +107,10 @@ def pose(t: float, mov: dict) -> dict:
     scale = 64. / fit["raio_px"]
     r, L = 64., fit["biela_px"] * scale
     theta = 2 * math.pi * mov["revolucoes"] * t + fit["fase_rad"]
-    dx = r * math.sin(theta)
-    y_crank = CY - r * math.cos(theta)
-    piston_y = y_crank - math.sqrt(L * L - dx * dx)
+    rig = CM.calcular(theta,r,L,CX,CY)
+    dx = rig.crank_x-CX
+    y_crank = rig.crank_y
+    piston_y = rig.piston_y
     return {
         "theta": theta, "piston_y": piston_y,
         "crank_x": CX + dx, "crank_y": y_crank,

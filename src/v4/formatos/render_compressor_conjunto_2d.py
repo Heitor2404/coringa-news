@@ -28,6 +28,7 @@ from src.v4.formatos.compressor_pv_core import (
 from src.v4.formatos.identidade_visual_maquina import verificar as verificar_identidade
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
 from src.v4.formatos import camera_causal_svg, temporizacao_causal, realce_causal_svg, biblioteca_componentes_fisicos
+from src.v4.formatos import primitivas_fisicas_parametricas as PRIM
 
 WIDTH, HEIGHT = 540, 960
 CONFIG_ID = "compressor_ar_eletrico_tanque_horizontal_correia"
@@ -120,21 +121,8 @@ def validar_plano(manifesto: dict) -> None:
 
 def _spokes(x: float, y: float, radius: float, angle_deg: float, *,
             body: str, stroke: str, count: int = 5) -> str:
-    spokes = []
-    for i in range(count):
-        radians = 2 * math.pi * i / count
-        spokes.append(
-            f'<line x1="0" y1="0" x2="{radius*.78*math.cos(radians):.2f}" '
-            f'y2="{radius*.78*math.sin(radians):.2f}" stroke="#C6D9DF" '
-            'stroke-width="10" stroke-linecap="round"/>'
-        )
-    return (
-        f'<g transform="translate({x:.2f} {y:.2f}) rotate({angle_deg:.3f})">'
-        f'<circle r="{radius:.2f}" fill="{body}" stroke="{stroke}" stroke-width="7"/>'
-        f'<circle r="{radius-10:.2f}" fill="#4D7082" stroke="#C4D7DC" stroke-width="5"/>'
-        + "".join(spokes) +
-        '<circle r="13" fill="#DDE8E9" stroke="#1D4354" stroke-width="5"/></g>'
-    )
+    """Compatibilidade visual: desenho F5 agora usa rotor paramétrico F7."""
+    return PRIM.rotor(x,y,radius,angle_deg,corpo=body,borda=stroke,raios=count)
 
 
 def frame_svg(progress: float, manifest: dict, *,

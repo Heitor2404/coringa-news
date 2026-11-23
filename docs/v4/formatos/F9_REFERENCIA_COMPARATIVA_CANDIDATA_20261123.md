@@ -39,3 +39,13 @@ Essa é uma correspondência de NOMES/PAPÉIS declarados, não uma verificação
 - Somente com evidência de correspondência e direitos, considerar tradução para peças vetoriais genéricas. **Não** incorporar imagem estática no rig como se fosse animação 2D/3D.
 - Não promover a `main`, não publicar e manter o gate de legado descartado.
 
+
+## Validação técnica final do checkpoint F9b
+
+**GitHub Actions:** https://github.com/Heitor2404/coringa-news/actions/runs/45121238521 — **SUCCESS, 54 testes aprovados, 11 avisos Pillow**, na implementação commit `b151558f`. O resultado verde certifica APENAS código e matriz local. A fonte Commons **continuou bloqueada por HTTP 429**, registrado como `BLOQUEADO_HTTP_429_LIMITE_WIKIMEDIA` no JSON, sem baixar original e sem fixar SHA e SEM produzir vídeo comparativo de fonte externa.
+
+**Artefato real:** `lab-f9-referencia-compressor-real-privado`, ID **14793354589**, expira em **28/11/2026 06:01 UTC**. ZIP foi baixado e inspecionado. Contém `AUDITORIA_SEMANTICA_F9.json`, `BLOQUEIO_FONTE_429_F9.json` e `MAQUINA_EXISTENTE_4_FASES_SEM_REFERENCIA_EXTERNA.jpg`. A prancha **é o render SVG próprio** do compressor em quatro etapas: reexpansão residual, admissão, compressão e descarga. NÃO contém o JPEG de Brian S. Elliott.
+
+**Análise:** a arte do compressor do Coringa mantém o conjunto grande em tela clara, motor, correia, câmara/pistão em corte, saída, manômetro e tanque horizontal. É uma ilustração didática de mecânica: não há semelhança homologada com modelo industrial de fabricante nem reconstrução a partir da referência externa. O relatório semântico fez a correspondência 6/8 de PAPÉIS declarados, não de PIXELS: seis nomes presentes no código; `wheel` e `belt_guard` pertencem à variante portátil e não devem ser adicionados automaticamente ao nosso subtipo de oficina. A correia sob carenagem e interior do pistão não são observáveis na imagem externa, portanto NÃO demonstram seu movimento.
+
+**Próximo:** manter o candidate externo fechado até o limite de requisições do provedor permitir o ORIGINAL; não procurar proxy que altere hash. Em paralelo, refinar o CONTRATO DE VARIANTE e diferenciar fonte para compressor com correia exposta e bomba em corte, validando objeto protagonista sem que o render dependa de supor que páginas de manual liberam imagens. Necessário QA visual humano no dispositivo antes de qualquer publicação.

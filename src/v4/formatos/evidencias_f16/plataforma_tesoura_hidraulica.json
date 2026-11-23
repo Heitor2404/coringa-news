@@ -1,0 +1,29 @@
+{
+  "schema": "coringa-documentary-evidence-f16-v1",
+  "id": "plataforma_tesoura_hidraulica",
+  "url": "https://www.ahydraulics.com/en/about-us/frequently-asked-questions/frequently-asked-questions-about-scissor-lifts/how-does-a-scissor-lift-work-hydraulically/",
+  "kind": "manufacturer_technical_faq",
+  "quoted_spans": [
+    {
+      "id": "h1",
+      "locator": "How does a scissor lift work hydraulically?",
+      "text": "electric motor drives the pump"
+    },
+    {
+      "id": "h2",
+      "locator": "How does a scissor lift work hydraulically?",
+      "text": "pump sends oil to the lift cylinder"
+    },
+    {
+      "id": "h3",
+      "locator": "How does a scissor lift work hydraulically?",
+      "text": "pushes the scissor arms upward"
+    }
+  ],
+  "claim_scope": "power hydraulic cylinder linkage; cannot determine geometry, pin positions, pressure",
+  "checked_by": "manual_public_web_inspection_2026-11-23",
+  "original_media_used": false,
+  "image_license_claimed": false,
+  "publication_allowed": false,
+  "extraction_requires_live_anchor_check": true
+}

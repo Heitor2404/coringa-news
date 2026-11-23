@@ -1,0 +1,139 @@
+{
+  "schema": "coringa-generalization-benchmark-v1",
+  "created": "2026-11-23",
+  "status": "FROZEN_BEFORE_SOLVER",
+  "targets": [
+    {
+      "id": "quatro_barras",
+      "source_url": "https://dynamicref.web.engr.illinois.edu/aml.html",
+      "motion_contract": "Quatro juntas rotativas fechadas; manivela continua, balancim oscilante.",
+      "category": "linkage",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "scotch_yoke",
+      "source_url": "https://507movements.com/mm_093.html",
+      "motion_contract": "Manivela continua; cursor em linha reta sem perda de contato com a ranhura.",
+      "category": "slider",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "came_seguidor",
+      "source_url": "https://www.roymech.co.uk/Useful_Tables/Cams_Springs/Cams.html",
+      "motion_contract": "Elevação, repouso e retorno do seguidor mantendo contato.",
+      "category": "contact",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "pinhao_cremalheira",
+      "source_url": "https://roymech.org/Useful_Tables/Drive/Gears",
+      "motion_contract": "Rotação do pinhão e deslocamento da cremalheira por raio primitivo.",
+      "category": "gear",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "planetaria",
+      "source_url": "https://mechanics.ju.se/MachineElements/planetary-gears.html",
+      "motion_contract": "Coroa fixa, planetas orbitam e giram segundo equação de Willis.",
+      "category": "compound_gear",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "cruz_malta",
+      "source_url": "https://mechanicalnotebook.com/pages/geneva-drive.html",
+      "motion_contract": "Saída avança por etapas com repouso geométrico entre indexações.",
+      "category": "intermittent",
+      "holdout": true,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "coroa_sem_fim",
+      "source_url": "https://roymech.org/Useful_Tables/Drive/Worm_Gears",
+      "motion_contract": "Eixos ortogonais e transmissão dentada espacial com relação correta.",
+      "category": "spatial",
+      "holdout": true,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "catraca",
+      "source_url": "https://507simulations.com/movement/225/",
+      "motion_contract": "Lingueta trava giro reverso e avança por etapas sem penetração.",
+      "category": "one_way",
+      "holdout": true,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "whitworth",
+      "source_url": "https://wiki.dtonline.org/index.php/Whitworth_Quick_Return_Mechanism",
+      "motion_contract": "Alavanca ranhurada produz curso de retorno mais rápido que o de ida.",
+      "category": "quick_return",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "limpador_para_brisa",
+      "source_url": "https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt5.html",
+      "motion_contract": "Entrada contínua e saídas oscilantes coerentes em movimento e fase.",
+      "category": "linkage",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "corrente_bicicleta",
+      "source_url": "https://www.sheldonbrown.com/chain-wear.html",
+      "motion_contract": "Elos com comprimento fixo engatam nas coroas sem atravessamentos.",
+      "category": "chain",
+      "holdout": true,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    },
+    {
+      "id": "tesoura_hidraulica",
+      "source_url": "https://www.extrica.com/article/25338",
+      "motion_contract": "Atuador altera altura com pivôs de fechamento e elos constantes.",
+      "category": "linkage",
+      "holdout": false,
+      "source_use": "technical_principle_only_no_media_license",
+      "publish": false
+    }
+  ],
+  "scoring": {
+    "level0": "rejeição/sem trajetória",
+    "level1": "grafo sem animação",
+    "level2": "animação com erro cinemático",
+    "level3": "movimento fisicamente correto no solver/renderer comum, sem código específico",
+    "level4": "nível 3 e revisão visual independente aprovada",
+    "pass_at": 3,
+    "report_separately": [
+      "from_manual_spec",
+      "from_source_generated_spec",
+      "solver_correct",
+      "visual_approved",
+      "human_edits",
+      "actual_cost_usd"
+    ],
+    "hard_rules": [
+      "No target-specific renderer/kernel",
+      "No special-case patch for holdouts",
+      "No score from reusing a pre-recorded video",
+      "No production/publishing"
+    ]
+  },
+  "claim": "8/12 is a stretch goal, not established capability",
+  "current_benchmark_status": "BASELINE_NOT_YET_RUN"
+}

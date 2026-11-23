@@ -1,0 +1,58 @@
+{
+  "schema": "coringa-spur-gear-pair-f14-v1",
+  "family": "external_spur_gear_reduction",
+  "version": 1,
+  "video": [
+    540,
+    960
+  ],
+  "fps": 24,
+  "camera": "locked",
+  "publish": false,
+  "industrial_approval": false,
+  "visual_approval": false,
+  "title": "REDUTOR DE ENGRENAGENS",
+  "subtitle": "DOIS EIXOS · UMA RELAÇÃO DE GIRO",
+  "duration_s": 9,
+  "source": {
+    "url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/calculation_gear_dimensions.html",
+    "scope": "PRINCIPIO_FISICO_NAO_ASSET_VISUAL",
+    "external_pixels_copied": false,
+    "source_is_license": false
+  },
+  "physics": {
+    "model": "external_spur_gears_ideal",
+    "module_units": "pixels_didaticos",
+    "no_slip_pitch_circles": true,
+    "tooth_profile": "20deg_involute_with_simplified_root",
+    "stress_tolerance_verified": false
+  },
+  "palette": {
+    "input": "silver",
+    "output": "blue"
+  },
+  "phases": [
+    {
+      "action": "engagement",
+      "start": 0,
+      "end": 4.5,
+      "title": "OS DENTES SE ENCAIXAM",
+      "detail": "Duas engrenagens externas giram em sentidos opostos."
+    },
+    {
+      "action": "reduction",
+      "start": 4.5,
+      "end": 9,
+      "title": "A SAÍDA GIRA MAIS DEVAGAR",
+      "detail": "Mais dentes na saída reduzem a velocidade do eixo."
+    }
+  ],
+  "id": "redutor_externo_18x36",
+  "gears": {
+    "z1": 18,
+    "z2": 36,
+    "module": 5.6,
+    "input_x": 155,
+    "center_y": 510
+  }
+}

@@ -1,7 +1,7 @@
 """E1 — solver planar de corpos/juntas genéricos. EXPERIMENTAL, NÃO produção.
 
 Independentemente do mecanismo: poses SE(2), pin (2 equações), slider (2),
-slot/pino na ranhura (1), driver angular (1), ground fixo.
+slot/pino na ranhura (1), rack_pinion/rolamento ideal (1), driver angular (1), ground fixo.
 Unidades são METROS, sem qualquer limite vinculado ao formato do vídeo. Usa scipy.optimize.least_squares.
 Não simula dinâmica, contato, fricção, pressão, forças ou segurança industrial.
 """
@@ -13,7 +13,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 SCHEMA="coringa-mechanism-spec-planar-v0"
-KINDS={"pin":2,"slider":2,"slot":1}
+KINDS={"pin":2,"slider":2,"slot":1,"rack_pinion":1}
 NAME=re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 
 def fail(reason):raise ValueError("E1-SOLVER-"+reason)
@@ -70,6 +70,7 @@ def validate(spec):
         expected={"kind","a","b","pa","pb"}
         if kind=="slider":expected|={"axis_a","angle_offset"}
         if kind=="slot":expected|={"axis_b"}
+        if kind=="rack_pinion":expected|={"axis_b","pitch_radius_m","pitch_side","phase_m"}
         if set(j)!=expected:fail("CONTRATO_JUNTA")
         if j["a"] not in ids or j["b"] not in ids or j["a"]==j["b"]:
             fail("REFERENCIA_JUNTA")
@@ -81,6 +82,16 @@ def validate(spec):
         if kind=="slot":
             axis=vec(j["axis_b"],2)
             if abs(np.linalg.norm(axis)-1)>1e-7:fail("EIXO_UNITARIO")
+        if kind=="rack_pinion":
+            axis=vec(j["axis_b"],2)
+            if abs(np.linalg.norm(axis)-1)>1e-7:fail("EIXO_UNITARIO")
+            radius=j["pitch_radius_m"];phase=j["phase_m"]
+            if type(radius) not in (int,float) or not math.isfinite(radius) or not .02<radius<5:
+                fail("RAIO_PRIMITIVO")
+            if type(phase) not in (int,float) or not math.isfinite(phase):
+                fail("FASE")
+            if type(j["pitch_side"]) is not int or j["pitch_side"] not in (-1,1):
+                fail("LADO_CONTATO")
         nc+=KINDS[kind]
     dr=spec.get("driver")
     if not isinstance(dr,dict) or set(dr)!={"body","theta0","speed"}:
@@ -120,10 +131,17 @@ def residual(q,spec,t,names):
             delta=pb-pa
             out.append(axis[0]*delta[1]-axis[1]*delta[0])
             out.append(b[2]-a[2]-j["angle_offset"])
-        else:
+        elif j["kind"]=="slot":
             axis=rotate(j["axis_b"],b[2])
             delta=pa-pb
             out.append(axis[0]*delta[1]-axis[1]*delta[0])
+        else:  # rack_pinion: pitch-line rolling; NO collision / tooth contact.
+            axis=rotate(j["axis_b"],b[2])
+            delta=pb-pa
+            along=float(np.dot(delta,axis))
+            # The pitch_side sets which side of the rack faces the pinion.
+            out.append(along+j["pitch_side"]*j["pitch_radius_m"]*
+                       (a[2]-b[2])-j["phase_m"])
     d=spec["driver"]
     out.append(state[d["body"]][2]-d["theta0"]-d["speed"]*t)
     return np.asarray(out,dtype=float)
@@ -145,6 +163,17 @@ def solve_one(spec,t,previous=None):
     states={names[0]:vec(spec["ground"]["pose"],3).tolist()}
     states.update({b["id"]:result.x[3*k:3*k+3].tolist()
                    for k,b in enumerate(spec["bodies"])})
+    # A rolling equation alone could "work" with the rack far from its wheel.
+    # Enforce pitch-line tangency independently, without adding a redundant
+    # constraint to the optimization. The slider must preserve this geometry.
+    for j in spec["joints"]:
+        if j["kind"]!="rack_pinion":continue
+        a=states[j["a"]];b=states[j["b"]]
+        axis=rotate(j["axis_b"],b[2])
+        delta=world(b,j["pb"])-world(a,j["pa"])
+        normal=float(axis[0]*delta[1]-axis[1]*delta[0])
+        expected=j["pitch_side"]*j["pitch_radius_m"]
+        if abs(normal-expected)>1e-6:fail("RACK_SEM_TANGENCIA")
     return {"t":float(t),"poses":states,"max_residual_m":err,
             "jacobian_rank":rank,"jacobian_size":len(result.x),
             "iterations":int(result.nfev),"q":result.x.tolist()}

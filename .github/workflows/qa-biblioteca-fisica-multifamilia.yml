@@ -1,0 +1,107 @@
+name: "LAB F5 — biblioteca física e 29 atores visuais (3 famílias)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-biblioteca-fisica-multifamilia.yml"
+      - "src/v4/formatos/biblioteca_componentes_fisicos.py"
+      - "src/v4/formatos/biblioteca_componentes_fisicos.json"
+      - "src/v4/formatos/render_compressor_conjunto_2d.py"
+      - "src/v4/formatos/render_reconstrucao_causal_2d.py"
+      - "src/v4/formatos/render_eclusa_hidraulica_2d.py"
+      - "tests/test_biblioteca_componentes_fisicos.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-biblioteca-fisica-3-familias
+  cancel-in-progress: true
+jobs:
+  contrato_visual_multifamilia:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Ferramentas locais de render e QA
+        run: python -m pip install -q pytest pillow cairosvg numpy scipy opencv-python-headless
+      - name: Regressão do catálogo e dos três mecanismos
+        run: |
+          python -m pytest -q tests/test_biblioteca_componentes_fisicos.py \
+            tests/test_compressor_conjunto_2d.py \
+            tests/test_camera_causal_svg.py \
+            tests/test_realce_causal_svg.py \
+            tests/test_eclusa_hidraulica_moderna.py \
+            tests/test_reference_reconstruction_2d.py \
+            tests/test_grafo_causal.py
+      - name: Produzir inventário verificável e quadros com papéis
+        run: |
+          mkdir -p qa_biblioteca_componentes
+          python - <<'PY'
+          import io,json,hashlib
+          from pathlib import Path
+          import cairosvg
+          from PIL import Image,ImageDraw
+          from src.v4.formatos import biblioteca_componentes_fisicos as B
+          from src.v4.formatos import camera_causal_svg as C
+          from src.v4.formatos import render_compressor_conjunto_2d as P
+          from src.v4.formatos import render_reconstrucao_causal_2d as O
+          from src.v4.formatos import render_eclusa_hidraulica_2d as L
+          root=Path('qa_biblioteca_componentes')
+          d=Path('docs/v4/formatos/reference_first')
+          m=json.loads(P.MANIFESTO_PADRAO.read_text('utf8'))
+          motion=json.loads((d/'otto_48f_measured_motion.json').read_text('utf8'))
+          scene=json.loads((d/'otto_48f_causal_reviewed_scene.json').read_text('utf8'))
+          inputs=[
+            ('compressor_oficina_pv',P.frame_svg(.69,m,camera_causal=True,realce_causal=True)),
+            ('otto_4t_reference',O.svg_frame(motion,scene,.41,camera_causal=True,realce_causal=True)),
+            ('lock_cycle_standalone',L.frame_svg(6.15)),
+          ]
+          board=Image.new('RGB',(3*540,960),'#D9E8EC')
+          coverage={}
+          for i,(family,svg) in enumerate(inputs):
+            img=Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode()))).convert('RGB')
+            cfg=C.CAMERAS['familias'][family]
+            box=B.fichas(family)
+            # Posição da caixa original é aproximada; o palco pode ter
+            # deslocamento/zoom. A marcação é DIAGNÓSTICA, não inspeção por pixels.
+            draw=ImageDraw.Draw(img)
+            names=box['components']
+            for idx,role in enumerate(names):
+              x1,y1,x2,y2=role['bbox']
+              dy=cfg['subida_base_px']
+              from src.v4.formatos import grafo_causal as G
+              action=G.GRAFOS[family]['eventos'][0]['acao']
+              pose=C.calcular(family,action,0,0,12.6)
+              x1,x2=x1*pose.scale+pose.tx,x2*pose.scale+pose.tx
+              y1,y2=(y1-dy)*pose.scale+pose.ty,(y2-dy)*pose.scale+pose.ty
+              draw.rectangle((x1,y1,x2,y2),outline='#FBCB60',width=1)
+              if idx%2==0:
+                draw.text((x1+1,max(258,y1-12)),role['id'][:16],fill='#122F43')
+            img.save(root/(family+'.png'))
+            board.paste(img,(i*540,0))
+            coverage[family]={
+               'actors':len(names),
+               'primitive_types':sorted(set(x['primitive'] for x in names)),
+               'technical_source':box['source'],
+               'reference_is_technical_not_image_license':True,
+               'frame_sha256':hashlib.sha256(svg.encode()).hexdigest(),
+               'status':'SVG_IDENTITY_STRUCTURALLY_PRESENT_PIXEL_IDENTITY_UNVERIFIED'}
+          board.save(root/'CONTATO_3_FAMILIAS_COM_PAPEIS.jpg',quality=91)
+          report={'schema':'physical-asset-library-evidence-v1',
+                  'gate':B.validar(),'families':coverage,
+                  'source_images_reused':False,'republication_approved':False,
+                  'release':'PRIVATE_QA_ONLY'}
+          (root/'COBERTURA_COMPONENTES_F5.json').write_text(
+            json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps({'gate':report['gate'],'families':coverage},ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f5-biblioteca-29-atores-tres-familias
+          path: qa_biblioteca_componentes/
+          retention-days: 5
+          if-no-files-found: warn

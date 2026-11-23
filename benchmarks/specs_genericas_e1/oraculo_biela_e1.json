@@ -1,0 +1,151 @@
+{
+  "schema": "coringa-mechanism-spec-planar-v0",
+  "units": "m",
+  "ground": {
+    "id": "ground",
+    "pose": [
+      0,
+      0,
+      0
+    ]
+  },
+  "duration_s": 6,
+  "publish": false,
+  "visual_approved": false,
+  "bodies": [
+    {
+      "id": "crank",
+      "seed": [
+        0,
+        0,
+        -1.5707963267948966
+      ],
+      "shapes": [
+        {
+          "kind": "segment",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            0.35,
+            0
+          ],
+          "thickness": 0.075
+        },
+        {
+          "kind": "disc",
+          "center": [
+            0,
+            0
+          ],
+          "radius": 0.12
+        }
+      ]
+    },
+    {
+      "id": "rod",
+      "seed": [
+        0,
+        -0.35,
+        -1.5707963267948966
+      ],
+      "shapes": [
+        {
+          "kind": "segment",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            1.2,
+            0
+          ],
+          "thickness": 0.065
+        }
+      ]
+    },
+    {
+      "id": "slider",
+      "seed": [
+        0,
+        -1.55,
+        0
+      ],
+      "shapes": [
+        {
+          "kind": "disc",
+          "center": [
+            0,
+            0
+          ],
+          "radius": 0.19
+        }
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "kind": "pin",
+      "a": "ground",
+      "b": "crank",
+      "pa": [
+        0,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "pin",
+      "a": "crank",
+      "b": "rod",
+      "pa": [
+        0.35,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "pin",
+      "a": "rod",
+      "b": "slider",
+      "pa": [
+        1.2,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "slider",
+      "a": "ground",
+      "b": "slider",
+      "pa": [
+        0,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ],
+      "axis_a": [
+        0,
+        1
+      ],
+      "angle_offset": 0
+    }
+  ],
+  "driver": {
+    "body": "crank",
+    "theta0": -1.5707963267948966,
+    "speed": 1.0471975511965976
+  }
+}

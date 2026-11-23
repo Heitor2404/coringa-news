@@ -1,0 +1,42 @@
+{
+  "schema": "coringa-e12-independent-planar-json-v1",
+  "purpose": "Source authored planar linkage bodies/joints and restricted input angles from SECOND independent upstream; no geometry inferred from prose or title",
+  "source_repository": "MeghRaval30/compliant-linkage-toolkit",
+  "source_commit": "bb6137456a04d9afaa51240e9fc3e8540d269532",
+  "source_license_path": "LICENSE",
+  "source_license_blob_sha1": "c59d45323926af6c3ebed8264aecffa096065a91",
+  "source_license": "MIT",
+  "rights_note": "Upstream LICENSE includes placeholder copyright attribution; preserve original notice, no redistribution or publication from this lab",
+  "metadata_note": "Source analysis explicitly says physical predictions unverified; flexure STL is a compliant one-piece object and MUST NOT be animated as rigid members",
+  "source_unit": "mm",
+  "source_format": "planar_linkage_bodies_joints_json",
+  "files": [
+    {
+      "path": "examples/fourbar.json",
+      "blob_sha1": "41158d41a6bb4d553f6286ea2553a6d2efab30a6",
+      "group": "baseline_source_json"
+    },
+    {
+      "path": "examples/designs/fb_02_0052.json",
+      "blob_sha1": "706236db728933964969f40362604d48fb1d8649",
+      "group": "independent_wide_linkage"
+    },
+    {
+      "path": "examples/designs/fb_02_0090.json",
+      "blob_sha1": "51dbda5ec93ad7d0acb14ce11dc925f0fac49706",
+      "group": "independent_variant"
+    },
+    {
+      "path": "examples/designs/fb_02_0203.json",
+      "blob_sha1": "6d0cddc8e4f69f08ee20cb696fed6276319bfc0a",
+      "group": "independent_variant"
+    }
+  ],
+  "excluded_mesh_example": {
+    "path": "examples/mechanisms/fb_02_0052.stl",
+    "blob_sha1": "d8316b2be2337e36267fbba34f67aef0518ef432",
+    "reason": "compliant_single_mesh_not_per_rigid_body; cannot attach to rigid solver without distortion"
+  },
+  "freeze": "Do not replace failing paths, labels, hashes or specimen geometry within this manifest to manufacture 4/4 pass",
+  "publish": false
+}

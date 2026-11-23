@@ -966,5 +966,174 @@
     ],
     "renderer": "render_reconstrucao_causal_2d.py",
     "fontes_visuais": "geometria_curada_e_movimento_medidos_na_fonte_sem_classificador_visual"
+  },
+  "vasos_comunicantes": {
+    "atores": [
+      {
+        "id": "left_tank",
+        "tipo": "tanque_esquerdo",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "right_tank",
+        "tipo": "tanque_direito",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "left_water",
+        "tipo": "agua_esquerda",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "right_water",
+        "tipo": "agua_direita",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "link_pipe",
+        "tipo": "conduto_de_ligacao",
+        "asset_family": "hydraulic"
+      },
+      {
+        "id": "control_valve",
+        "tipo": "valvula_de_controle",
+        "asset_family": "hydraulic"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "left_water",
+        "type": "inside",
+        "to": "left_tank"
+      },
+      {
+        "from": "right_water",
+        "type": "inside",
+        "to": "right_tank"
+      },
+      {
+        "from": "left_tank",
+        "type": "connected_to",
+        "to": "link_pipe"
+      },
+      {
+        "from": "right_tank",
+        "type": "connected_to",
+        "to": "link_pipe"
+      },
+      {
+        "from": "control_valve",
+        "type": "controls",
+        "to": "link_pipe"
+      },
+      {
+        "from": "left_tank",
+        "type": "feeds",
+        "to": "link_pipe"
+      },
+      {
+        "from": "link_pipe",
+        "type": "feeds",
+        "to": "right_tank"
+      }
+    ],
+    "estado_inicial": {
+      "control_valve.open": "unknown",
+      "left_water.level": "higher",
+      "right_water.level": "lower",
+      "link_pipe.flowing": "false"
+    },
+    "eventos": [
+      {
+        "acao": "isolar",
+        "operador": "close",
+        "atores": [
+          "control_valve"
+        ],
+        "foco": [
+          "control_valve",
+          "link_pipe",
+          "left_tank"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "control_valve.open": "unknown"
+        },
+        "altera": {
+          "control_valve.open": "false"
+        }
+      },
+      {
+        "acao": "abrir",
+        "operador": "open",
+        "atores": [
+          "control_valve"
+        ],
+        "foco": [
+          "control_valve",
+          "link_pipe",
+          "left_tank"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "control_valve.open": "false"
+        },
+        "altera": {
+          "control_valve.open": "true"
+        }
+      },
+      {
+        "acao": "transferir",
+        "operador": "flow",
+        "atores": [
+          "left_water",
+          "link_pipe"
+        ],
+        "foco": [
+          "left_water",
+          "left_tank",
+          "link_pipe",
+          "right_tank",
+          "right_water"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "control_valve.open": "true",
+          "link_pipe.flowing": "false"
+        },
+        "altera": {
+          "left_water.level": "falling",
+          "right_water.level": "rising",
+          "link_pipe.flowing": "true"
+        }
+      },
+      {
+        "acao": "equilibrio",
+        "operador": "equalize",
+        "atores": [
+          "left_water",
+          "right_water"
+        ],
+        "foco": [
+          "left_water",
+          "right_water",
+          "left_tank",
+          "right_tank",
+          "link_pipe"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "left_water.level": "falling",
+          "right_water.level": "rising"
+        },
+        "altera": {
+          "left_water.level": "equal",
+          "right_water.level": "equal",
+          "link_pipe.flowing": "false"
+        }
+      }
+    ],
+    "renderer": "compositor_mecanismo_parametrico_2d.py",
+    "fontes_visuais": "PRIMITIVAS_SVG_AUTORAIS_PARAMETRICAS_CENAS_JSON"
   }
 }

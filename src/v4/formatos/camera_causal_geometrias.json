@@ -239,6 +239,63 @@
           630
         ]
       }
+    },
+    "vasos_comunicantes": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        25,
+        323,
+        520,
+        800
+      ],
+      "viewport": [
+        8,
+        255,
+        532,
+        877
+      ],
+      "zoom_max": 1.025,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "left_tank": [
+          27,
+          330,
+          260,
+          765
+        ],
+        "right_tank": [
+          312,
+          330,
+          519,
+          765
+        ],
+        "left_water": [
+          42,
+          412,
+          252,
+          757
+        ],
+        "right_water": [
+          323,
+          412,
+          510,
+          757
+        ],
+        "link_pipe": [
+          202,
+          679,
+          370,
+          752
+        ],
+        "control_valve": [
+          250,
+          680,
+          319,
+          743
+        ]
+      }
     }
   }
 }

@@ -1,0 +1,79 @@
+{
+  "schema": "coringa-topology-request-f15-v1",
+  "publish": false,
+  "visual_approval": false,
+  "id": "biela_estrutura_f15",
+  "title": "BIELA E MANIVELA",
+  "subtitle": "ROTACAO MOVE UM PISTAO",
+  "graph": {
+    "nodes": [
+      {
+        "id": "transmissor",
+        "kind": "belt"
+      },
+      {
+        "id": "eixo_motriz",
+        "kind": "rotor"
+      },
+      {
+        "id": "volante",
+        "kind": "rotor"
+      },
+      {
+        "id": "haste",
+        "kind": "rod"
+      },
+      {
+        "id": "bloco",
+        "kind": "piston"
+      },
+      {
+        "id": "camisa",
+        "kind": "chamber"
+      }
+    ],
+    "edges": [
+      {
+        "from": "eixo_motriz",
+        "to": "transmissor",
+        "joint": "drives"
+      },
+      {
+        "from": "transmissor",
+        "to": "volante",
+        "joint": "transmits_to"
+      },
+      {
+        "from": "volante",
+        "to": "haste",
+        "joint": "hinged_to"
+      },
+      {
+        "from": "haste",
+        "to": "bloco",
+        "joint": "hinged_to"
+      },
+      {
+        "from": "bloco",
+        "to": "camisa",
+        "joint": "slides_in"
+      }
+    ]
+  },
+  "required_events": [
+    "curso_descendente",
+    "curso_ascendente"
+  ],
+  "parameters": {
+    "crank_radius_px": 50,
+    "rod_length_px": 175,
+    "wheel_radius_px": 74,
+    "motor_pulley_radius_px": 27
+  },
+  "evidence": {
+    "type": "internal_kernel",
+    "locator": "src/v4/formatos/cinematica_biela_manivela.py",
+    "external_pixels_copied": false,
+    "source_is_image_license": false
+  }
+}

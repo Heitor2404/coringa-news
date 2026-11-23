@@ -1,0 +1,45 @@
+{
+  "schema": "coringa-topology-request-f15-v1",
+  "publish": false,
+  "visual_approval": false,
+  "id": "engrenagens_estrutura_f15",
+  "title": "ENGRENAGENS EM PAR",
+  "subtitle": "DOIS EIXOS GIRAM AO CONTRARIO",
+  "graph": {
+    "nodes": [
+      {
+        "id": "lado_saida",
+        "kind": "spur_gear"
+      },
+      {
+        "id": "lado_entrada",
+        "kind": "spur_gear"
+      }
+    ],
+    "edges": [
+      {
+        "from": "lado_entrada",
+        "to": "lado_saida",
+        "joint": "meshes_with"
+      }
+    ]
+  },
+  "required_events": [
+    "engagement",
+    "reduction"
+  ],
+  "parameters": {
+    "z_input": 20,
+    "z_output": 40,
+    "module_px": 5.8,
+    "input_x_px": 155,
+    "center_y_px": 510,
+    "driver_revolutions": 2
+  },
+  "evidence": {
+    "type": "technical_equations",
+    "locator": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/calculation_gear_dimensions.html",
+    "external_pixels_copied": false,
+    "source_is_image_license": false
+  }
+}

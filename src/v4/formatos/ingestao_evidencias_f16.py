@@ -30,6 +30,7 @@ CANONICAL={
  "https://mechanics.ju.se/MachineElements/spur-gears.html",
  "https://jd-jones-ases.github.io/Mechanic/things/slider-crank/",
  "https://www.ahydraulics.com/en/about-us/frequently-asked-questions/frequently-asked-questions-about-scissor-lifts/how-does-a-scissor-lift-work-hydraulically/",
+ "https://hydraproducts.co.uk/hydraulic-power-packs/power-pack-applications/commercial-systems/scissor-lift/",
 }
 
 def fail(code):
@@ -168,9 +169,15 @@ def infer_graph(spans):
             "uncertainties":["motor_pulley_not_evidenced","belt_not_evidenced",
                              "flywheel_not_evidenced","motion_not_measured"],
         }
-    if all(x in facts for x in ("electric motor drives the pump",
-                                "pump sends oil to the lift cylinder",
-                                "pushes the scissor arms upward")):
+    known_hydraulic=(all(x in facts for x in (
+         "electric motor drives the pump",
+         "pump sends oil to the lift cylinder",
+         "pushes the scissor arms upward"))
+      or all(x in facts for x in (
+         "motor runs the hydraulic pump",
+         "pumping hydraulic oil into the hydraulci ram",
+         "ram extends the scissors open")))
+    if known_hydraulic:
         return {
             "kind":"hydraulic_scissor_lift_UNSUPPORTED",
             "nodes":[{"id":"motor","kind":"electric_motor"},

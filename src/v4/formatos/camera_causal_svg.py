@@ -78,10 +78,12 @@ def _validar(familia: str):
     if CAMERAS.get("schema") != "coringa-camera-causal-svg-v1" or (
             CAMERAS.get("publicar") is not False):
         raise ValueError("F-CAMERA-PRIVACIDADE")
+    # Primeiro exigir um processo físico cadastrado; depois geometria.
+    # Não apresentar um tema desconhecido como se só faltassem coordenadas.
+    scene=_plano(familia)
     cfg=CAMERAS["familias"].get(familia)
     if not isinstance(cfg,dict):
         raise ValueError("F-CAMERA-SEM-GEOMETRIA")
-    scene=_plano(familia)
     box=Caixa.parse(cfg["bounds"])
     viewport=Caixa.parse(cfg["viewport"])
     shift=cfg["subida_base_px"]

@@ -1,0 +1,102 @@
+{
+  "schema": "coringa-ui-evidence-f13-v1",
+  "canvas": [
+    1080,
+    1920
+  ],
+  "captured_in_user_device": false,
+  "measurements_are_first_party": false,
+  "all_profiles_organic_except_ad_reference": true,
+  "no_platform_certification": true,
+  "measured_source_date_note": "Datas de medições de autores terceiros; não substituir por captura real do dispositivo usado pelo canal.",
+  "profiles": [
+    {
+      "id": "reels_organic_android_oct2026",
+      "platform": "instagram_reels",
+      "placement": "organic",
+      "tier": "third_party_screen_measurement",
+      "source": "https://pulkitediting.com/blog/instagram-reels-safe-zone/",
+      "date_measured": "2026-10-20",
+      "device": "Android, modelo nao declarado",
+      "top": 150,
+      "bottom": 280,
+      "button_right_width": 190,
+      "button_start_y": 800,
+      "side_crop_left": 45,
+      "side_crop_right": 45,
+      "notes": "Capturas de um aparelho; não homologadas no aparelho do canal"
+    },
+    {
+      "id": "reels_organic_crosscheck_nov2026",
+      "platform": "instagram_reels",
+      "placement": "organic",
+      "tier": "third_party_multidevice_estimate",
+      "source": "https://myshorts.in/instagram-reels-safe-zone",
+      "date_measured": "2026-11-12",
+      "device": "Android e iPhone, modelos não declarados",
+      "top": 220,
+      "bottom": 420,
+      "button_right_width": 140,
+      "button_start_y": 0,
+      "side_crop_left": 60,
+      "side_crop_right": 0,
+      "notes": "A fonte não especifica início vertical dos botões: faixa lateral aplicada por toda a altura por cautela"
+    },
+    {
+      "id": "tiktok_organic_sep2026",
+      "platform": "tiktok",
+      "placement": "organic",
+      "tier": "third_party_screen_measurement",
+      "source": "https://bannerpeek.com/tools/tiktok-safe-zone",
+      "date_measured": "2026-09",
+      "device": "Não especificado",
+      "top": 200,
+      "bottom": 600,
+      "button_right_width": 170,
+      "button_start_y": 0,
+      "side_crop_left": 0,
+      "side_crop_right": 0,
+      "notes": "Início da coluna não divulgado; conservadoramente aplicada desde o topo; legendas longas podem mudar zona"
+    },
+    {
+      "id": "shorts_organic_oct2026",
+      "platform": "youtube_shorts",
+      "placement": "organic",
+      "tier": "third_party_multidevice_measurement",
+      "source": "https://softphoria.com/tools/youtube-shorts-safe-zone",
+      "date_measured": "2026-10",
+      "device": "iPhone 14 Plus e Samsung Galaxy A20s",
+      "top": 180,
+      "bottom": 190,
+      "button_right_width": 170,
+      "button_start_y": 1060,
+      "side_crop_left": 55,
+      "side_crop_right": 55,
+      "notes": "Automated captions off, caption curta; não cobre todas as variações de Shorts"
+    },
+    {
+      "id": "reels_ads_guide_conservative",
+      "platform": "instagram_reels",
+      "placement": "ad",
+      "tier": "publisher_ads_guidance_retranscribed",
+      "source": "https://quelta.ai/tools/safe-zones/instagram-reels/",
+      "official_source": "https://www.facebook.com/business/ads-guide/update/video/instagram-reels/outcome-engagement",
+      "date_measured": "2026-10-24",
+      "device": "not_app_screenshot",
+      "top": 269,
+      "bottom": 672,
+      "button_right_width": 65,
+      "button_start_y": 0,
+      "side_crop_left": 65,
+      "side_crop_right": 0,
+      "notes": "14% top, 35% bottom e 6% laterais são regra de anúncios, NÃO captura de Reels orgânicos"
+    }
+  ],
+  "proof_requirements": {
+    "real_screenshot_of_app_required": true,
+    "app_version_required": true,
+    "device_and_caption_required": true,
+    "manual_visual_approval_required": true,
+    "permission_to_publish": false
+  }
+}

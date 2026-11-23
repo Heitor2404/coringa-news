@@ -130,6 +130,12 @@ def test_common_visual_shapes_have_real_teeth_and_are_not_cut():
     assert cam["world_fixed_for_all_frames"]
     for f in (frames[0],frames[30],frames[60],frames[90],frames[-1]):
         svg=R.svg_frame(s,f,cam,title="ROLAMENTO IDEAL")
+        for body in s["bodies"]:
+            # Regression of a REAL E2 rendering bug: a local tooth loop
+            # overwrote x/y before the body SVG transform was emitted.
+            px,py,_=f["poses"][body["id"]]
+            assert (f'id="body-{body["id"]}" data-pose-x="{px:.9f}" '
+                    f'data-pose-y="{py:.9f}"') in svg
         assert svg.count("<polygon")>=30
         assert 'id="generic-machine-stage"' in svg
         assert "NÃO PUBLICAR" in svg

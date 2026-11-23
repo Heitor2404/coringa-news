@@ -49,7 +49,7 @@ def validate(spec):
         if not isinstance(b["shapes"],list) or not b["shapes"]:
             fail("FORMA")
         for shape in b["shapes"]:
-            if not isinstance(shape,dict) or shape.get("kind") not in ("segment","disc"):
+            if not isinstance(shape,dict) or shape.get("kind") not in ("segment","disc","gear","rack"):
                 fail("FORMA")
             if shape["kind"]=="segment":
                 if set(shape)!={"kind","a","b","thickness"}:fail("FORMA")
@@ -59,6 +59,32 @@ def validate(spec):
                 if set(shape)!={"kind","center","radius"}:fail("FORMA")
                 vec(shape["center"],2)
                 if not 0<float(shape["radius"])<5:fail("RAIO")
+            if shape["kind"]=="gear":
+                if set(shape)!={"kind","center","pitch_radius_m","teeth","tooth_height_m"}:
+                    fail("FORMA")
+                vec(shape["center"],2)
+                if type(shape["teeth"]) is not int or not 8<=shape["teeth"]<=120:
+                    fail("DENTES")
+                if any(type(shape[x]) not in (int,float) or not math.isfinite(shape[x])
+                       for x in ("pitch_radius_m","tooth_height_m")):
+                    fail("FORMA")
+                if not .02<shape["pitch_radius_m"]<5 or not 0<shape["tooth_height_m"]<.2:
+                    fail("FORMA")
+            if shape["kind"]=="rack":
+                if set(shape)!={"kind","a","b","tooth_pitch_m","tooth_height_m","thickness","tooth_side"}:
+                    fail("FORMA")
+                a=vec(shape["a"],2);b=vec(shape["b"],2)
+                if float(np.linalg.norm(a-b))<.1:fail("FORMA")
+                if any(type(shape[x]) not in (int,float) or not math.isfinite(shape[x])
+                       for x in ("tooth_pitch_m","tooth_height_m","thickness")):
+                    fail("FORMA")
+                if not .025<shape["tooth_pitch_m"]<1 or not 0<shape["tooth_height_m"]<.2:
+                    fail("FORMA")
+                if not 0<shape["thickness"]<.5:fail("FORMA")
+                if type(shape["tooth_side"]) is not int or shape["tooth_side"] not in (-1,1):
+                    fail("FORMA")
+                if float(np.linalg.norm(a-b))/shape["tooth_pitch_m"]>160:
+                    fail("DENTES")
     joints=spec.get("joints")
     if not isinstance(joints,list) or not 2<=len(joints)<=40:
         fail("JUNTAS")

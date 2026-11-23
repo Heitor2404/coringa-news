@@ -185,6 +185,10 @@ def adquirir(ref: dict, *, get=None, exigir_pin=False) -> bytes:
         if "image/jpeg" not in response.headers.get("Content-Type","").lower():
             fail("CONTENT-TYPE")
         body = response.content
+    except requests.HTTPError as exc:
+        if getattr(getattr(exc, "response", None), "status_code", None) == 429:
+            raise ValueError("F9-REFERENCIA-HTTP-429-LIMITE-PROVEDOR") from exc
+        raise ValueError("F9-REFERENCIA-HTTP-"+type(exc).__name__) from exc
     except requests.RequestException as exc:
         raise ValueError("F9-REFERENCIA-HTTP-"+type(exc).__name__) from exc
     conferir_bytes(ref,body,exigir_pin=exigir_pin)

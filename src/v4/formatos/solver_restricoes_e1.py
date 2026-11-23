@@ -1,0 +1,164 @@
+"""E1 — solver planar de corpos/juntas genéricos. EXPERIMENTAL, NÃO produção.
+
+Independentemente do mecanismo: poses SE(2), pin (2 equações), slider (2),
+slot/pino na ranhura (1), driver angular (1), ground fixo.
+Unidades são METROS, sem limite 540x960. Usa scipy.optimize.least_squares.
+Não simula dinâmica, contato, fricção, pressão, forças ou segurança industrial.
+"""
+from __future__ import annotations
+
+import math
+import re
+import numpy as np
+from scipy.optimize import least_squares
+
+SCHEMA="coringa-mechanism-spec-planar-v0"
+KINDS={"pin":2,"slider":2,"slot":1}
+NAME=re.compile(r"^[a-z][a-z0-9_]{0,39}$")
+
+def fail(reason):raise ValueError("E1-SOLVER-"+reason)
+
+def vec(x,n):
+    if not isinstance(x,(list,tuple)) or len(x)!=n:
+        fail("VETOR")
+    if any(type(v) not in (int,float) or not math.isfinite(v) for v in x):
+        fail("NUMERO")
+    return np.array(x,dtype=float)
+
+def _id(x):
+    if not isinstance(x,str) or not NAME.fullmatch(x):fail("ID")
+    return x
+
+def validate(spec):
+    if not isinstance(spec,dict) or spec.get("schema")!=SCHEMA or spec.get("units")!="m":
+        fail("CONTRATO")
+    if spec.get("publish") is not False or spec.get("visual_approved") is not False:
+        fail("PUBLICACAO")
+    g=spec.get("ground")
+    if not isinstance(g,dict) or set(g)!={"id","pose"}:fail("GROUND")
+    gid=_id(g["id"]); vec(g["pose"],3)
+    bodies=spec.get("bodies")
+    if not isinstance(bodies,list) or not 2<=len(bodies)<=12:fail("CORPOS")
+    ids=[gid]
+    for b in bodies:
+        if not isinstance(b,dict) or set(b)!={"id","seed","shapes"}:
+            fail("CORPO")
+        ident=_id(b["id"])
+        if ident in ids:fail("ID_DUPLICADO")
+        ids.append(ident); vec(b["seed"],3)
+        if not isinstance(b["shapes"],list) or not b["shapes"]:
+            fail("FORMA")
+        for shape in b["shapes"]:
+            if not isinstance(shape,dict) or shape.get("kind") not in ("segment","disc"):
+                fail("FORMA")
+            if shape["kind"]=="segment":
+                if set(shape)!={"kind","a","b","thickness"}:fail("FORMA")
+                vec(shape["a"],2);vec(shape["b"],2)
+                if not 0<float(shape["thickness"])<1:fail("ESPESSURA")
+            if shape["kind"]=="disc":
+                if set(shape)!={"kind","center","radius"}:fail("FORMA")
+                vec(shape["center"],2)
+                if not 0<float(shape["radius"])<5:fail("RAIO")
+    joints=spec.get("joints")
+    if not isinstance(joints,list) or not 2<=len(joints)<=40:
+        fail("JUNTAS")
+    pairs=set();nc=0
+    for j in joints:
+        if not isinstance(j,dict) or j.get("kind") not in KINDS:
+            fail("JUNTA_NAO_SUPORTADA")
+        kind=j["kind"]
+        expected={"kind","a","b","pa","pb"}
+        if kind=="slider":expected|={"axis_a","angle_offset"}
+        if kind=="slot":expected|={"axis_b"}
+        if set(j)!=expected:fail("CONTRATO_JUNTA")
+        if j["a"] not in ids or j["b"] not in ids or j["a"]==j["b"]:
+            fail("REFERENCIA_JUNTA")
+        vec(j["pa"],2);vec(j["pb"],2)
+        if kind=="slider":
+            axis=vec(j["axis_a"],2)
+            if abs(np.linalg.norm(axis)-1)>1e-7:fail("EIXO_UNITARIO")
+            if not math.isfinite(j["angle_offset"]):fail("ANGULO")
+        if kind=="slot":
+            axis=vec(j["axis_b"],2)
+            if abs(np.linalg.norm(axis)-1)>1e-7:fail("EIXO_UNITARIO")
+        nc+=KINDS[kind]
+    dr=spec.get("driver")
+    if not isinstance(dr,dict) or set(dr)!={"body","theta0","speed"}:
+        fail("ACIONADOR")
+    if dr["body"]==gid or dr["body"] not in ids:fail("ACIONADOR")
+    if any(type(dr[x]) not in (int,float) or not math.isfinite(dr[x])
+           for x in ("theta0","speed")):fail("ACIONADOR")
+    if not .01<=abs(dr["speed"])<=25:fail("ACIONADOR")
+    duration=spec.get("duration_s")
+    if type(duration) not in (int,float) or not 2<=duration<=12:fail("TEMPO")
+    # With prescribed driver angle, 3 vars/body must be matched by constraint count.
+    # This is a topology diagnostic, not a proof of independent constraints.
+    n=3*len(bodies)
+    if nc+1!=n:
+        fail("RESTRICOES_CONTAGEM")
+    return tuple(ids)
+
+def rotate(p,theta):
+    c=math.cos(theta);s=math.sin(theta)
+    return np.array((c*p[0]-s*p[1],s*p[0]+c*p[1]))
+
+def world(pose,local):
+    return np.array(pose[:2])+rotate(local,pose[2])
+
+def residual(q,spec,t,names):
+    state={spec["ground"]["id"]:vec(spec["ground"]["pose"],3)}
+    state.update({n:np.asarray(q[3*k:3*k+3])
+                  for k,n in enumerate(names[1:])})
+    out=[]
+    for j in spec["joints"]:
+        a=state[j["a"]];b=state[j["b"]]
+        pa=world(a,j["pa"]);pb=world(b,j["pb"])
+        if j["kind"]=="pin":
+            out.extend(pa-pb)
+        elif j["kind"]=="slider":
+            axis=rotate(j["axis_a"],a[2])
+            delta=pb-pa
+            out.append(axis[0]*delta[1]-axis[1]*delta[0])
+            out.append(b[2]-a[2]-j["angle_offset"])
+        else:
+            axis=rotate(j["axis_b"],b[2])
+            delta=pa-pb
+            out.append(axis[0]*delta[1]-axis[1]*delta[0])
+    d=spec["driver"]
+    out.append(state[d["body"]][2]-d["theta0"]-d["speed"]*t)
+    return np.asarray(out,dtype=float)
+
+def solve_one(spec,t,previous=None):
+    names=validate(spec)
+    if type(t) not in (float,int) or not math.isfinite(t) or not 0<=t<=spec["duration_s"]:
+        fail("INSTANTE")
+    q=np.concatenate([vec(b["seed"],3) for b in spec["bodies"]]) if previous is None else np.array(previous,dtype=float)
+    if len(q)!=3*len(spec["bodies"]) or not np.isfinite(q).all():
+        fail("ESTADO")
+    result=least_squares(residual,q,args=(spec,t,names),method="lm",
+          xtol=1e-12,ftol=1e-12,gtol=1e-12,max_nfev=400)
+    err=float(np.max(np.abs(result.fun)))
+    if not result.success or err>1e-7:fail("FECHAMENTO")
+    # Jacobian rank at solution: count alone can hide underconstraint/singularity.
+    rank=int(np.linalg.matrix_rank(result.jac,tol=1e-8))
+    if rank<len(result.x):fail("SINGULAR_OU_SUBDETERMINADO")
+    states={names[0]:vec(spec["ground"]["pose"],3).tolist()}
+    states.update({b["id"]:result.x[3*k:3*k+3].tolist()
+                   for k,b in enumerate(spec["bodies"])})
+    return {"t":float(t),"poses":states,"max_residual_m":err,
+            "jacobian_rank":rank,"jacobian_size":len(result.x),
+            "iterations":int(result.nfev),"q":result.x.tolist()}
+
+def trajectory(spec,samples=121):
+    validate(spec)
+    if type(samples) is not int or not 3<=samples<=500:fail("AMOSTRAS")
+    output=[];prior=None
+    for t in np.linspace(0,float(spec["duration_s"]),samples):
+        frame=solve_one(spec,float(t),prior)
+        if prior is not None:
+            jump=np.abs(np.array(frame["q"])-np.array(prior))
+            if float(np.max(jump))>.8:
+                fail("SALTO_DE_RAMO")
+        prior=frame["q"]
+        output.append(frame)
+    return output

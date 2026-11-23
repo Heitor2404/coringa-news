@@ -2559,3 +2559,30 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 **Próximo E5:** provar **extração de relações e dimensões** de textos reais não curados: conjunto de frases rotulado antes dos testes, benchmark de cobertura/falso positivo, possibilidade de extrator linguístico geral sob orçamento e revisão. Exigir parâmetros e conexões por fonte; se faltarem, bloquear. Depois `MechanismSpec` e render comum em desafio não usado para desenvolver as regras. Não adicionar novo compositor exclusivo nem reintroduzir estilo de pequenos diagramas rejeitado.
 
 **Isolamento:** somente experimental; `main`, NTC, DOSSIÊ, Telegram, catálogo produtivo e postagem intactos. Sempre atualizar este arquivo no próximo marco.
+
+
+## 133. 23/11 — E5: extrator de conexões físicas candidatas medido em 116 frases reais, com falso positivo conhecido
+
+**Pedido do usuário:** "Prossiga" após E4, que havia localizado três artigos públicos mas ainda retornava 0 arestas tipadas F17. Prioridade: testar **interpretação linguística auditável**, sem iniciar renderizações baseadas em relações inventadas.
+
+**Implementação REAL na branch experimental `atlas-direcao-visual-20261118`:**
+- Coleta pública `.github/workflows/lab-e5-coleta-corpus.yml`: consultas por tema `Scotch yoke`, `connecting rod`, `crankpin`, páginas recuperadas novamente por MediaWiki `pageid/revid/SHA256`, até 40 frases relevantes por consulta, não passagens copiadas de snippets. [Run **45220383061**](https://github.com/Heitor2404/coringa-news/actions/runs/45220383061) SUCCESS; artifact `14841515280`, expira **28/11/2026 16:47:23 UTC**. A seleção dos assuntos foi manual; não é pesquisa irrestrita feita por IA.
+- `benchmarks/e5_gold_relacoes_v1.json`: **rotulagem congelada ANTES da implementação** com seis artigos distintos (4 desenvolvimento, 2 teste), cada um identificado por `pageid/revid/SHA`. **116 frases reais**, sendo **82 desenvolvimento (9 positivas)** e **34 teste por página (4 positivas)**. O gold foi anotado pela mesma sessão, NÃO recebeu verificação humana independente nem avaliação duplo-cega; há risco de viés. Não alterar rótulos ou splits para deixar CI verde. SHA256 do arquivo gold **`5af7d8c0a6dedaa406a410279a184d531dcdc9a3b888be773d3d15497e5ebb69`**.
+- `src/v4/formatos/extrator_relacoes_e5.py`: detector conservador de **afirmação textual explícita** por `connect/attach/engage/couple/hinge/pin` + menções a pelo menos dois componentes; recusa negação, substantivo `connecting rod` confundido com verbo, perguntas, hipóteses, exemplos/definições genéricas. **Não** determina corpos instanciados, endpoints confiáveis, tipo de junta, raio/posição, geometria nem mídia. Sempre devolve `safe_for_solver=false`, `render_allowed=false` e revisão humana.
+- `tests/test_extrator_relacoes_e5.py` + `.github/workflows/qa-extrator-relacoes-e5.yml`: regressão E4/F17, testes adversariais e **seis recuperações LIVE** que exigem mesma revisão+SHA do corpus congelado. Se conteúdo mudar, BLOQUEIA, nunca substitui por resultado de busca. Compara classificação binária (não qualidade do tipo de junta), calcula TP/FP/FN/TN e aplica gate predefinido precisão **≥0,80** e recall **≥0,50** no teste separado por artigo.
+
+**Validação final vista no GitHub:** [Actions **45222048740**](https://github.com/Heitor2404/coringa-news/actions/runs/45222048740) **SUCCESS — 55 testes PASS**. Artifact `lab-e5-frozen-corpus-connection-precision-recall`, ID **14840352298**, expira **28/11/2026 16:56:31 UTC**; ZIP baixado e `E5_CORPUS_REAL_METRICAS.json` conferido.
+
+**Métricas E5 no conjunto de desenvolvimento:** TP 9, FP 0, FN 0, TN 73 — **precisão 100%, recall 100%** sobre 82 frases.
+**Métricas E5 no conjunto separado de teste:** TP 4, **FP 1**, FN 0, TN 29 — **precisão 80%, recall 100%** sobre 34 frases.
+**Comparação descritiva F17 na mesma tarefa binária:** nenhuma das 13 frases positivas do gold gerou aresta F17, recall 0; porém F17 só pretende **juntas tipadas**, enquanto E5 prediz conexão **não tipada**, então essas taxas NÃO autorizam concluir superioridade física do E5.
+
+**Erro real preservado:** artigo **Crankpin**, `pageid=3002380`, frase **s19**: o sujeito é o pronome inglês **`They`** sem antecedente recuperado na mesma sentença, e a presença de `driving rods` + `wheel` levou a uma declaração falsa de conexão confirmada. A frase foi corretamente marcada NEGATIVA na definição do gold. **Não ajustar a regra E5 v1 usando o próprio holdout;** no E6, resolver pronomes por uma estratégia genérica e medir em **novas fontes congeladas**. Não inventar juntas.
+
+**O QUE E5 NÃO COMPROVA:** nenhuma `MechanismSpec` gerada do artigo, nenhuma ligação física suficientemente definida para o solver, nenhuma dimensão/eixo/câmera, nenhuma consulta CAD ou vídeo técnico, zero novos mecanismos dos 12 desafios, 0 holdouts cinemáticos testados, zero renderizações e zero modelos 3D. Somente achou **candidatos de afirmações de conexão em texto** com provenance. O benchmark dos 12 continua com **3 alvos testados e numericamente resolvidos usando specs manuais, nove não tentados**. Zero integração da E5 na produção.
+
+**Relatório completo:** `docs/v4/formatos/E5_EXTRACAO_RELACOES_CORPUS_REAL_20261123.md`.
+
+**PRÓXIMO E6 recomendado:** testar resolução de entidade/antecedente, separação entre definição de junta vs instância concreta, identificação de extremos `pin/slider/slot` com evidência, parâmetros dimensionais com fonte por campo, benchmark independente novo e recusa de ambiguidades. Sem template por nome de máquina, sem alterar gold E5, sem prometer pesquisa sem custo medido. Só renderizar experimento privado após topologia+geometria comprovadas.
+
+**Isolamento confirmado:** branch experimental `atlas-direcao-visual-20261118` somente; `main`, NTC, DOSSIÊ, Telegram, pipeline documental produtivo e postagem preservados. O visual atual do solver permanece **NÃO HOMOLOGADO**.

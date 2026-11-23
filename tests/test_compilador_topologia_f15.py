@@ -35,7 +35,7 @@ def test_identifica_pela_estrutura_nao_pela_palavra_no_titulo(index,family):
     assert plan["media_license_verified"] is False
     # De propósito, dar título enganoso para provar que ele NÃO roteia.
     changed=copy.deepcopy(request)
-    changed["title"]="REDUTOR DE ENGRENAGENS" if index==0 else "PISTAO EM MOVIMENTO"
+    changed["title"]="ENGRENAGENS" if index==0 else "PISTAO"
     compiled=ROUTER.compile_request(changed)
     assert compiled["compiled_family"]==family
     assert compiled["scene"]["title"]==changed["title"]
@@ -140,6 +140,14 @@ def test_rejeita_parametros_fisicos_impossiveis_sem_ativar_render():
             req["parameters"]["z_input"]=200
             with pytest.raises((ValueError,TypeError)):
                 ROUTER.compile_request(req)
+
+
+def test_titulo_que_nao_cabe_na_area_editorial_bloqueia_render_sem_trocar_familia():
+    req=requests()[0]
+    req["title"]="REDUTOR DE ENGRENAGENS"
+    assert ROUTER.identify(req)[0]=="slider_crank_parametrico"
+    with pytest.raises(ValueError,match="F13-HOOK-LINHAS_NAO_CABEM"):
+        ROUTER.compile_request(req)
 
 
 def test_efeito_de_titulo_so_editorial_nao_muda_resultado_do_router():

@@ -49,9 +49,9 @@ def validate(spec):
         if not isinstance(b["shapes"],list) or not b["shapes"]:
             fail("FORMA")
         for shape in b["shapes"]:
-            if not isinstance(shape,dict) or shape.get("kind") not in ("segment","disc","gear","rack"):
+            if not isinstance(shape,dict) or shape.get("kind") not in ("segment","slotted_link","disc","gear","rack"):
                 fail("FORMA")
-            if shape["kind"]=="segment":
+            if shape["kind"] in ("segment","slotted_link"):
                 if set(shape)!={"kind","a","b","thickness"}:fail("FORMA")
                 vec(shape["a"],2);vec(shape["b"],2)
                 if not 0<float(shape["thickness"])<1:fail("ESPESSURA")

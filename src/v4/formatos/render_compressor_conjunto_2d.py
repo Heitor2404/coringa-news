@@ -131,6 +131,7 @@ def frame_svg(progress: float, manifest: dict, *,
               editorial: EditorialHeader = EditorialHeader(),
               camera_causal: bool = False,
               realce_causal: bool = False,
+              transmissao_parametrica: bool = False,
               tempo_s: float | None = None,
               inicio_fase_s: float | None = None,
               duracao_s: float = 8.) -> str:
@@ -178,6 +179,15 @@ def frame_svg(progress: float, manifest: dict, *,
         '<path d="M 142 647 L 278 645" stroke="#71919F" stroke-width="3"/>'
         '</g>'
     )
+    if transmissao_parametrica:
+        # F10: geometria por tangentes EXTERNAS, já usada no compositor F7.
+        # A mesma velocidade linear ideal vale em ambas as polias.
+        caminho = PRIM.transmissao_correia(
+            layout.motor_x, layout.motor_y, layout.motor_pulley_radius,
+            layout.center_x, layout.shaft_y, layout.pump_wheel_radius,
+            cor="#203F51", filete="#A5D8E0", largura=12,
+            deslocamento_trama_px=s.angulo * layout.pump_wheel_radius)
+        belt = f'<g id="role-drive_belt" data-transmissao="tangentes_externas_f10">{caminho}</g>'
     filt_particles = ""
     if s.admissao_aberta:
         for i in range(5):
@@ -420,7 +430,8 @@ def renderizar(arquivo: Path, manifest: dict, *,
               physics: CompressorSpec | None = None,
               fps: int = 24, duration: float = 8.,
               camera_causal: bool = False,
-              realce_causal: bool = False) -> dict:
+              realce_causal: bool = False,
+              transmissao_parametrica: bool = False) -> dict:
     validar_plano(manifest)
     if fps not in (24, 30) or not 5 <= duration <= 20:
         raise ValueError("F-DURACAO-OU-FPS")
@@ -445,10 +456,12 @@ def renderizar(arquivo: Path, manifest: dict, *,
                 phys,action,from_s=temporizacao_causal.mapear(clock,trilha)
                 svg=frame_svg(phys,manifest,layout=layout,physics=physics,
                     camera_causal=True,realce_causal=realce_causal,
+                    transmissao_parametrica=transmissao_parametrica,
                     tempo_s=clock,inicio_fase_s=from_s,duracao_s=duration)
             else:
                 svg=frame_svg(i/(duration*fps),manifest,layout=layout,physics=physics,
-                              realce_causal=realce_causal)
+                              realce_causal=realce_causal,
+                              transmissao_parametrica=transmissao_parametrica)
             pixels = cairosvg.svg2png(bytestring=svg.encode())
             with Image.open(io.BytesIO(pixels)) as im:
                 content = im.convert("RGB").tobytes()
@@ -471,6 +484,14 @@ def renderizar(arquivo: Path, manifest: dict, *,
         "atores_identificados_por_visao": False,
         "identidade_por_pixels_aprovada": False,
         "revisao_estetica": "PENDENTE",
+        "transmissao_parametrica": {
+            "habilitada":transmissao_parametrica,
+            "origem":"primitivas_fisicas_parametricas.transmissao_correia" if transmissao_parametrica else "legacy",
+            "tangentes_externas":bool(transmissao_parametrica),
+            "marcas_deslocam_sem_slip_ideal":bool(transmissao_parametrica),
+            "camera_inalterada":True,
+            "desenho_industrial_certificado":False,
+        },
         "realce_causal": {
             "habilitado":realce_causal,
             "tipo":"TRAJETOS_FISICOS_E_CONTORNO_DE_PECA_MOVEL",
@@ -514,11 +535,13 @@ def main(argv=None) -> int:
     p.add_argument("--fps", type=int, default=24)
     p.add_argument("--camera-causal",action="store_true",help="LAB privado: câmera por atores e retiming de fases")
     p.add_argument("--realce-causal",action="store_true",help="LAB privado: realce sem câmera móvel ou cards")
+    p.add_argument("--transmissao-parametrica",action="store_true",help="LAB F10: correia com tangentes e movimento sincronizado")
     args = p.parse_args(argv)
     manifest = json.loads(Path(args.manifesto).read_text(encoding="utf8"))
     result = renderizar(Path(args.output_mp4), manifest, fps=args.fps,
                         duration=args.duracao,camera_causal=args.camera_causal,
-                        realce_causal=args.realce_causal)
+                        realce_causal=args.realce_causal,
+                        transmissao_parametrica=args.transmissao_parametrica)
     print(json.dumps(result, ensure_ascii=False))
     return 0
 

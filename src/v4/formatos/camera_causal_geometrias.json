@@ -296,6 +296,63 @@
           743
         ]
       }
+    },
+    "slider_crank_parametrico": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        55,
+        339,
+        413,
+        834
+      ],
+      "viewport": [
+        8,
+        253,
+        532,
+        893
+      ],
+      "zoom_max": 1.18,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "motor_pulley": [
+          60,
+          656,
+          153,
+          781
+        ],
+        "drive_belt": [
+          60,
+          621,
+          398,
+          815
+        ],
+        "flywheel": [
+          216,
+          627,
+          396,
+          816
+        ],
+        "connecting_rod": [
+          222,
+          414,
+          378,
+          806
+        ],
+        "piston": [
+          221,
+          418,
+          382,
+          661
+        ],
+        "cylinder": [
+          221,
+          348,
+          387,
+          664
+        ]
+      }
     }
   }
 }

@@ -1135,5 +1135,121 @@
     ],
     "renderer": "compositor_mecanismo_parametrico_2d.py",
     "fontes_visuais": "PRIMITIVAS_SVG_AUTORAIS_PARAMETRICAS_CENAS_JSON"
+  },
+  "slider_crank_parametrico": {
+    "atores": [
+      {
+        "id": "motor_pulley",
+        "tipo": "polia_motriz",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "drive_belt",
+        "tipo": "correia_aberta",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "flywheel",
+        "tipo": "volante_de_manivela",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "connecting_rod",
+        "tipo": "biela_rigida",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "piston",
+        "tipo": "pistao_deslizante",
+        "asset_family": "mechanics"
+      },
+      {
+        "id": "cylinder",
+        "tipo": "cilindro_guia",
+        "asset_family": "mechanics"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "motor_pulley",
+        "type": "connected_to",
+        "to": "drive_belt"
+      },
+      {
+        "from": "drive_belt",
+        "type": "connected_to",
+        "to": "flywheel"
+      },
+      {
+        "from": "flywheel",
+        "type": "connected_to",
+        "to": "connecting_rod"
+      },
+      {
+        "from": "connecting_rod",
+        "type": "connected_to",
+        "to": "piston"
+      },
+      {
+        "from": "piston",
+        "type": "inside",
+        "to": "cylinder"
+      }
+    ],
+    "estado_inicial": {
+      "piston.position": "upper",
+      "flywheel.rotation": "stopped"
+    },
+    "eventos": [
+      {
+        "acao": "curso_descendente",
+        "operador": "translate",
+        "atores": [
+          "piston",
+          "connecting_rod"
+        ],
+        "foco": [
+          "motor_pulley",
+          "drive_belt",
+          "flywheel",
+          "connecting_rod",
+          "piston",
+          "cylinder"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "piston.position": "upper",
+          "flywheel.rotation": "stopped"
+        },
+        "altera": {
+          "piston.position": "lower",
+          "flywheel.rotation": "moving"
+        }
+      },
+      {
+        "acao": "curso_ascendente",
+        "operador": "translate",
+        "atores": [
+          "piston",
+          "connecting_rod"
+        ],
+        "foco": [
+          "motor_pulley",
+          "drive_belt",
+          "flywheel",
+          "connecting_rod",
+          "piston",
+          "cylinder"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "piston.position": "lower",
+          "flywheel.rotation": "moving"
+        },
+        "altera": {
+          "piston.position": "upper"
+        }
+      }
+    ]
   }
 }

@@ -175,7 +175,7 @@ def pistao(x,y,largura,altura,*,cor="#C3D9E0",borda="#294D63",topo="#E9F4F6"):
        f'<path d="M {x+9:.2f} {y+24:.2f} H {x+w-9:.2f} '
        f'M {x+9:.2f} {y+34:.2f} H {x+w-9:.2f}" '
        f'stroke="{borda}" stroke-width="2.6" opacity=".52"/>'
-       f'<circle cx="{x+w/2:.2f}" cy="{y+h-19:.2f}" r="10" '
+       f'<circle cx="{x+w/2:.2f}" cy="{y+h/2:.2f}" r="10" '
        'fill="#D5E9EC" stroke="#416A7D" stroke-width="3"/>')
 
 

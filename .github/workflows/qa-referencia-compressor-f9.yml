@@ -5,9 +5,11 @@ on:
     paths:
       - ".github/workflows/qa-referencia-compressor-f9.yml"
       - "src/v4/formatos/referencia_evidencia_f9.py"
+      - "src/v4/formatos/auditoria_alinhamento_f9.py"
       - "src/v4/formatos/referencias_visuais_f9/**"
       - "src/v4/formatos/render_compressor_conjunto_2d.py"
       - "tests/test_referencia_evidencia_f9.py"
+      - "tests/test_auditoria_alinhamento_f9.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,51 +36,84 @@ jobs:
         run: |
           python -m pytest -q \
             tests/test_referencia_evidencia_f9.py \
+            tests/test_auditoria_alinhamento_f9.py \
             tests/test_compressor_conjunto_2d.py \
             tests/test_identidade_visual_maquina.py \
             tests/test_pecas_visuais_f8.py
-      - name: Download restrito Commons, SHA, foto e confronto visual
+      - name: Gerar confronto semantico das pecas do compressor REAL
+        run: |
+          python -m src.v4.formatos.auditoria_alinhamento_f9 --saida qa_f9_evidencia
+      - name: Adquirir Commons somente se provedor permitir (429 bloqueia, nunca inventa bytes)
         timeout-minutes: 8
         run: |
           mkdir -p qa_f9_evidencia
-          PINNED=$(python - <<'PY'
+          python - <<'PY'
           import json
-          d=json.load(open('src/v4/formatos/referencias_visuais_f9/compressor_elliott_2018.json'))
-          print('yes' if d['file']['expected_sha256'] else 'no')
+          from pathlib import Path
+          from src.v4.formatos import referencia_evidencia_f9 as F
+          out=Path("qa_f9_evidencia")
+          ref=F.carregar()
+          try:
+              body=F.adquirir(ref,exigir_pin=False)
+          except ValueError as exc:
+              if str(exc) != "F9-REFERENCIA-HTTP-429-LIMITE-PROVEDOR":
+                  raise
+              report={
+                 "state":"BLOQUEADO_HTTP_429_LIMITE_WIKIMEDIA",
+                 "source_acquired":False,"sha_pinned":False,
+                 "external_visual_comparison_completed":False,
+                 "source_url":ref["source"]["page"],
+                 "publication_allowed":False,
+                 "do_not_retry_automatically":True,
+                 "reference_type":ref["reference_type"],
+              }
+              (out/"BLOQUEIO_FONTE_429_F9.json").write_text(
+                  json.dumps(report,ensure_ascii=False,indent=2),encoding="utf8")
+              print("Fonte Wikimedia limitou requisicoes; so matriz semantica local liberada")
+          else:
+              report=F.gerar(ref,body,out,animar=bool(ref["file"]["expected_sha256"]))
+              print("F9_SHA_ORIGINAL="+report["original_sha256"])
+              print("F9_PIN_CONFERE="+str(report["sha_pinned_and_verified"]))
           PY
-          )
-          if [ "$PINNED" = yes ]; then
-            python -m src.v4.formatos.referencia_evidencia_f9 \
-              --saida qa_f9_evidencia --animar
-          else
-            python -m src.v4.formatos.referencia_evidencia_f9 \
-              --saida qa_f9_evidencia
-            echo "ATENÇÃO: candidato ainda NÃO tem SHA fixado; nenhum MP4 final liberado"
-          fi
-      - name: Rejeitar relatório com publicação ou identidade falsamente aprovadas
+      - name: Validar resultado sem inventar importacao ou homologacao
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           from PIL import Image
           base=Path('qa_f9_evidencia')
-          r=json.loads((base/'RELATORIO_REFERENCIA_F9.json').read_text('utf8'))
-          assert r['publication_allowed'] is False
-          assert r['identity_homologated'] is False
-          assert r['frames_inferred_from_image'] is False
-          assert r['physics_simulated_from_external_image'] is False
-          assert r['license']=='CC BY-SA 4.0'
-          assert r['hidden_unverified_roles']
-          assert r['original_sha256']
-          assert r['dimensions']==[2100,1500]
-          with Image.open(base/'CONTATO_REFERENCIA_VS_COMPRESSOR_REAL_F9.jpg') as image:
-              assert image.size==(1530,1050)
-          if r['sha_pinned_and_verified']:
-              assert r['private_comparison_duration_s']==8
-              assert (base/'AUDITORIA_F9_COMPRESSOR_VS_REFERENCIA_PRIVADA.mp4').is_file()
-          else:
+          a=json.loads((base/'AUDITORIA_SEMANTICA_F9.json').read_text('utf8'))
+          assert a['publication_allowed'] is False
+          assert a['external_image_identity_verified'] is False
+          assert a['industrial_visual_homologated'] is False
+          assert a['declared_actor_overlap']==6
+          assert {x['referencia_papel'] for x in a['variant_specific_absent']}=={'wheel','belt_guard'}
+          with Image.open(base/'MAQUINA_EXISTENTE_4_FASES_SEM_REFERENCIA_EXTERNA.jpg') as im:
+              assert im.size==(1080,2040)
+          blocked=base/'BLOQUEIO_FONTE_429_F9.json'
+          if blocked.exists():
+              state=json.loads(blocked.read_text('utf8'))
+              assert state['source_acquired'] is False
+              assert state['sha_pinned'] is False
               assert not list(base.glob('*.mp4'))
-          print('F9: proveniência, direitos e estado visual auditados')
+              print('F9: QA SEMANTICA OK; FONTE EXTERNA BLOQUEADA POR 429 — NAO CONCLUIDA')
+          else:
+              r=json.loads((base/'RELATORIO_REFERENCIA_F9.json').read_text('utf8'))
+              assert r['publication_allowed'] is False
+              assert r['identity_homologated'] is False
+              assert r['frames_inferred_from_image'] is False
+              assert r['physics_simulated_from_external_image'] is False
+              assert r['license']=='CC BY-SA 4.0'
+              assert r['hidden_unverified_roles']
+              assert r['original_sha256'] and r['dimensions']==[2100,1500]
+              with Image.open(base/'CONTATO_REFERENCIA_VS_COMPRESSOR_REAL_F9.jpg') as im:
+                  assert im.size==(1530,1050)
+              if r['sha_pinned_and_verified']:
+                  assert r['private_comparison_duration_s']==8
+                  assert (base/'AUDITORIA_F9_COMPRESSOR_VS_REFERENCIA_PRIVADA.mp4').is_file()
+              else:
+                  assert not list(base.glob('*.mp4'))
+              print('F9: proveniencia e estado privado auditados')
           PY
       - uses: actions/upload-artifact@v4
         if: always()

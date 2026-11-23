@@ -141,7 +141,7 @@ def extract(spans):
             for sid in explicit_spur:
                 if sid not in nodes[gear_id]["supported_span_ids"]:
                     nodes[gear_id]["supported_span_ids"].append(sid)
-    edges.sort(key=lambda e:e["id"])
+    # Keep the order of the confirming excerpts for traceability.
     order=sorted(nodes)
     families={r["joint"] for r in edges}
     if families and families<=set(("drives","fluid_to","pushes")):

@@ -186,6 +186,18 @@ def source_geometry(source):
             p1,p2=lines[a]
             measured=(pts[p1][1]-pts[p2][1]) if kind=="horizontal" else (
                       pts[p1][0]-pts[p2][0])
+        elif kind in ("parallel","perpendicular") and a in lines and b in lines:
+            # Generic 2D line relations in source sketch. Both the parallel
+            # and anti-parallel directions count as parallel. Normalize
+            # against independent line lengths, not arbitrary mm scales.
+            if a==b:fail("RESTRICAO_DEGENERADA")
+            pa,pb=lines[a];pc,pd=lines[b]
+            ux=pts[pb][0]-pts[pa][0];uy=pts[pb][1]-pts[pa][1]
+            vx=pts[pd][0]-pts[pc][0];vy=pts[pd][1]-pts[pc][1]
+            normal=math.hypot(ux,uy)*math.hypot(vx,vy)
+            if normal<1e-13:fail("LINHA_DEGENERADA")
+            measured=((ux*vy-uy*vx)/normal if kind=="parallel"
+                      else (ux*vx+uy*vy)/normal)
         elif kind=="point_on_line" and a in pts and b in lines:
             p1,p2=lines[b];u=pts[p1];v=pts[p2];p=pts[a]
             measured=((p[0]-u[0])*(v[1]-u[1])-

@@ -27,6 +27,7 @@ from src.v4.formatos.compressor_pv_core import (
 )
 from src.v4.formatos.identidade_visual_maquina import verificar as verificar_identidade
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
+from src.v4.formatos import camera_causal_svg, temporizacao_causal
 
 WIDTH, HEIGHT = 540, 960
 CONFIG_ID = "compressor_ar_eletrico_tanque_horizontal_correia"
@@ -139,7 +140,11 @@ def _spokes(x: float, y: float, radius: float, angle_deg: float, *,
 def frame_svg(progress: float, manifest: dict, *,
               layout: AssemblyLayout = AssemblyLayout(),
               physics: CompressorSpec | None = None,
-              editorial: EditorialHeader = EditorialHeader()) -> str:
+              editorial: EditorialHeader = EditorialHeader(),
+              camera_causal: bool = False,
+              tempo_s: float | None = None,
+              inicio_fase_s: float | None = None,
+              duracao_s: float = 8.) -> str:
     validar_plano(manifest)
     try:
         editorial.palco().deslocar(layout.mechanism_lift_px)
@@ -215,6 +220,22 @@ def frame_svg(progress: float, manifest: dict, *,
         for i in range(11)
     )
     sparks = ""  # COMPRESSOR, NÃO há vela/faísca no processo.
+    # A ação física real determina os alvos; o grafo causal determina o foco.
+    # A câmera transforma toda a máquina e NUNCA move biela/válvula sozinha.
+    stage_transform=f"translate(0 {-layout.mechanism_lift_px:.1f})"
+    if camera_causal:
+        if (abs(layout.mechanism_lift_px -
+                camera_causal_svg.CAMERAS["familias"]["compressor_oficina_pv"]["subida_base_px"])>1e-6):
+            raise ValueError("F-CAMERA-BASE-NAO-HOMOLOGADA")
+        if tempo_s is None:
+            tempo_s=progress*duracao_s
+        if inicio_fase_s is None:
+            inicio_fase_s=(limites_fases(layout.spec(physics))[s.estado]["de"]*duracao_s)
+        camera=camera_causal_svg.calcular(
+            "compressor_oficina_pv",s.estado,tempo_s,inicio_fase_s,duracao_s)
+        if not camera_causal_svg.verificar_pose("compressor_oficina_pv",camera):
+            raise ValueError("F-CAMERA-CORTE-MAQUINA")
+        stage_transform=camera.transform_svg(layout.mechanism_lift_px)
     # Cuidado: header e rodapé não sofrem translação da máquina.
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"
       viewBox="0 0 540 960">
@@ -261,7 +282,7 @@ def frame_svg(progress: float, manifest: dict, *,
 
     <!-- Cena física única. Pistão, motor, tanque, partículas, pressão e
          conduítes se movem juntos em Y. NÃO reposicionar peças isoladas. -->
-    <g id="machine-assembly" transform="translate(0 {-layout.mechanism_lift_px:.1f})">
+    <g id="machine-assembly" transform="{stage_transform}">
     <!-- O reservatório é a MAIOR peça. Um compressor de oficina reconhecível. -->
     <g id="role-receiver_horizontal">
       <rect x="{layout.tank_left:.1f}" y="{layout.tank_top:.1f}"
@@ -396,10 +417,15 @@ def frame_svg(progress: float, manifest: dict, *,
 def renderizar(arquivo: Path, manifest: dict, *,
               layout: AssemblyLayout = AssemblyLayout(),
               physics: CompressorSpec | None = None,
-              fps: int = 24, duration: float = 8.) -> dict:
+              fps: int = 24, duration: float = 8.,
+              camera_causal: bool = False) -> dict:
     validar_plano(manifest)
     if fps not in (24, 30) or not 5 <= duration <= 20:
         raise ValueError("F-DURACAO-OU-FPS")
+    # Ritmo didático só no modo novo: piso por fase, física P-V intacta.
+    fisicos=limites_fases(layout.spec(physics))
+    trilha=(temporizacao_causal.distribuir(fisicos,duration,1.15)
+            if camera_causal else None)
     arquivo = Path(arquivo)
     arquivo.parent.mkdir(parents=True, exist_ok=True)
     command = [
@@ -412,7 +438,13 @@ def renderizar(arquivo: Path, manifest: dict, *,
     proc = subprocess.Popen(command, stdin=subprocess.PIPE)
     try:
         for i in range(int(duration * fps)):
-            svg = frame_svg(i/(duration*fps), manifest, layout=layout, physics=physics)
+            clock=i/fps
+            if trilha:
+                phys,action,from_s=temporizacao_causal.mapear(clock,trilha)
+                svg=frame_svg(phys,manifest,layout=layout,physics=physics,
+                    camera_causal=True,tempo_s=clock,inicio_fase_s=from_s,duracao_s=duration)
+            else:
+                svg=frame_svg(i/(duration*fps),manifest,layout=layout,physics=physics)
             pixels = cairosvg.svg2png(bytestring=svg.encode())
             with Image.open(io.BytesIO(pixels)) as im:
                 content = im.convert("RGB").tobytes()
@@ -435,6 +467,15 @@ def renderizar(arquivo: Path, manifest: dict, *,
         "atores_identificados_por_visao": False,
         "identidade_por_pixels_aprovada": False,
         "revisao_estetica": "PENDENTE",
+        "camera_causal": {
+            "habilitada": camera_causal,
+            "origem": "grafo_causal.eventos.camera.alvos",
+            "geometria": "CAIXAS_CURADAS_POR_RENDERER_SEM_VISAO_AUTOMATICA",
+            "motor_reutilizavel": "camera_causal_svg_v1",
+            "tempo_uniforme": not camera_causal,
+            "fases_video": trilha,
+            "aprovacao_humana": "PENDENTE",
+        },
         "layout": {
             "conjunto_subida_px": layout.mechanism_lift_px,
             "escala_inalterada": True,
@@ -458,10 +499,11 @@ def main(argv=None) -> int:
     p.add_argument("--manifesto", default=str(MANIFESTO_PADRAO))
     p.add_argument("--duracao", type=float, default=8.0)
     p.add_argument("--fps", type=int, default=24)
+    p.add_argument("--camera-causal",action="store_true",help="LAB privado: câmera por atores e retiming de fases")
     args = p.parse_args(argv)
     manifest = json.loads(Path(args.manifesto).read_text(encoding="utf8"))
     result = renderizar(Path(args.output_mp4), manifest, fps=args.fps,
-                        duration=args.duracao)
+                        duration=args.duracao,camera_causal=args.camera_causal)
     print(json.dumps(result, ensure_ascii=False))
     return 0
 

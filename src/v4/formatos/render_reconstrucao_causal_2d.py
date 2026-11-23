@@ -20,6 +20,7 @@ import cairosvg
 from PIL import Image
 
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
+from src.v4.formatos import camera_causal_svg
 
 WIDTH, HEIGHT = 540, 960
 # Cutaway com admissão/escape e válvulas: caixa conservadora do desenho.
@@ -119,7 +120,9 @@ def pose(t: float, mov: dict) -> dict:
 
 
 def svg_frame(mov: dict, scene: dict, t: float, *,
-              subida_palco_px: float | None = None) -> str:
+              subida_palco_px: float | None = None,
+              camera_causal: bool = False,
+              duracao_s: float = 8.) -> str:
     deslocamento = PALCO_OTTO.deslocar(subida_palco_px)
     s = pose(t, mov)
     position = t * mov["quadros"]
@@ -183,6 +186,16 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
             fill="none" stroke="#C77D25" stroke-width="4"/>
           </g>"""
 
+    stage_transform=f"translate(0 -{deslocamento:.1f})"
+    if camera_causal:
+        if abs(deslocamento-camera_causal_svg.CAMERAS["familias"]["otto_4t_reference"]["subida_base_px"])>1e-6:
+            raise ValueError("F-CAMERA-BASE-NAO-HOMOLOGADA")
+        start=beat["quadro_inicio"]/mov["quadros"]*duracao_s
+        cam=camera_causal_svg.calcular(
+            "otto_4t_reference",beat["tipo"],t*duracao_s,start,duracao_s)
+        if not camera_causal_svg.verificar_pose("otto_4t_reference",cam):
+            raise ValueError("F-CAMERA-CORTE-MAQUINA")
+        stage_transform=cam.transform_svg(deslocamento)
     title = escape(scene.get("titulo", "COMO FUNCIONA")[:31])
     step_title = escape(beat["titulo"].upper())
     explanation = escape(beat["detalhe"][:57])
@@ -234,9 +247,9 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
     <rect x="42" y="227" width="457" height="6" rx="3" fill="#D2DDE0"/>
     <rect x="42" y="227" width="{int(457*t)}" height="6" rx="3" fill="#0B8198"/>
     <!-- Deslocamento determinado pelo limite editorial, não pelo roteiro. -->
-    <g id="mechanical-stage" transform="translate(0 -{deslocamento:.1f})">
+    <g id="mechanical-stage" transform="{stage_transform}">
     <!-- Cutaway: caixa, cabeçote e dutos em geometria INDEPENDENTE do GIF -->
-    <g filter="url(#shadow)">
+    <g id="role-cylinder" filter="url(#shadow)">
       <path d="M 163 345 L 378 345 L 401 374 L 407 688
         L 432 729 L 432 856 L 110 856 L 110 735 L 135 684 L 135 376 Z"
         fill="#718A9A" stroke="#203B49" stroke-width="9"
@@ -271,7 +284,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
         fill="#6B8A9C" stroke="#304D60" stroke-width="6"/>
     </g>
     <!-- Volume de gás ligado ao topo real do pistão -->
-    <g clip-path="url(#chamber)"><rect x="185" y="394"
+    <g id="role-chamber" clip-path="url(#chamber)"><rect x="185" y="394"
       width="169" height="{chamber:.2f}"
       fill="{gas}" opacity="{gas_opacity}"/></g>
     <!-- Válvulas com estados DISCRETOS de processo -->
@@ -297,7 +310,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
     </g>
     {spark}
     <!-- Volante e pino excêntrico acionados pelo MESMO theta -->
-    <g transform="translate({CX:.2f} {CY:.2f})
+    <g id="role-crankshaft" transform="translate({CX:.2f} {CY:.2f})
       rotate({s['theta']*180/math.pi:.4f})">
       <circle r="92" fill="#92A7B3" stroke="#344E60" stroke-width="10"/>
       <circle r="75" fill="#D9E5E7" stroke="#5B7C8C" stroke-width="12"/>
@@ -317,7 +330,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
       x2="{s['crank_x']:.3f}" y2="{s['crank_y']:.3f}"
       stroke="#EAC99A" opacity=".58" stroke-width="5"/>
     <!-- Pistão é ator ligado ao pino, não outro elemento temporal solto -->
-    <g transform="translate(0 {crown:.3f})">
+    <g id="role-piston" transform="translate(0 {crown:.3f})">
       <rect x="188" y="0" width="158" height="95" rx="15"
         fill="url(#piston)" stroke="#264858" stroke-width="7"/>
       <rect x="189" y="0" width="156" height="20" rx="7"
@@ -353,7 +366,8 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
 
 
 def renderizar(mov: dict, scene: dict, saida: Path,
-               fps: int = 24, duracao: float = 8.) -> dict:
+               fps: int = 24, duracao: float = 8.,
+               camera_causal: bool = False) -> dict:
     validar(mov, scene)
     if fps not in (24, 30) or not 4 <= duracao <= 30:
         raise ValueError("F-DURACAO-PRIVADA-INVALIDA")
@@ -367,7 +381,8 @@ def renderizar(mov: dict, scene: dict, saida: Path,
     process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     try:
         for i in range(round(duracao * fps)):
-            svg = svg_frame(mov, scene, i / (duracao * fps))
+            svg = svg_frame(mov, scene, i / (duracao * fps),
+                            camera_causal=camera_causal,duracao_s=duracao)
             png = cairosvg.svg2png(bytestring=svg.encode())
             with Image.open(io.BytesIO(png)) as image:
                 frame = image.convert("RGB").tobytes()
@@ -394,6 +409,12 @@ def renderizar(mov: dict, scene: dict, saida: Path,
         "fps": fps,
         "dimensoes": [WIDTH, HEIGHT],
         "revisao_estetica": "PENDENTE",
+        "camera_causal": {
+            "habilitada":camera_causal,
+            "origem":"grafo_causal.eventos.camera.alvos",
+            "motor_reutilizavel":"camera_causal_svg_v1",
+            "aprovacao_humana":"PENDENTE",
+        },
         "enquadramento_compartilhado": {
             "palco": "palco_vertical_v1",
             "subida_px": PALCO_OTTO.deslocar(),
@@ -413,8 +434,9 @@ if __name__ == "__main__":
     parser.add_argument("medicao_json")
     parser.add_argument("cena_json")
     parser.add_argument("saida_mp4")
+    parser.add_argument("--camera-causal",action="store_true")
     args = parser.parse_args()
     motion = json.loads(Path(args.medicao_json).read_text(encoding="utf8"))
     scene = json.loads(Path(args.cena_json).read_text(encoding="utf8"))
-    print(json.dumps(renderizar(motion, scene, Path(args.saida_mp4)),
+    print(json.dumps(renderizar(motion, scene, Path(args.saida_mp4),camera_causal=args.camera_causal),
                      ensure_ascii=False))

@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/qa-importacao-geometria-e7.yml"
       - "src/v4/formatos/importador_geometria_e7.py"
+      - "src/v4/formatos/renderer_corpos_e1.py"
       - "tests/test_importador_geometria_e7.py"
       - "benchmarks/e7_open_geometry_sources_v1.json"
   workflow_dispatch:

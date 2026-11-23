@@ -20,7 +20,7 @@ import cairosvg
 from PIL import Image
 
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
-from src.v4.formatos import camera_causal_svg, realce_causal_svg
+from src.v4.formatos import camera_causal_svg, realce_causal_svg, biblioteca_componentes_fisicos
 
 WIDTH, HEIGHT = 540, 960
 # Cutaway com admissão/escape e válvulas: caixa conservadora do desenho.
@@ -214,7 +214,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
     title = escape(scene.get("titulo", "COMO FUNCIONA")[:31])
     step_title = escape(beat["titulo"].upper())
     explanation = escape(beat["detalhe"][:57])
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="540"
+    svg=f"""<svg xmlns="http://www.w3.org/2000/svg" width="540"
       height="960" viewBox="0 0 540 960">
     <defs>
       <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
@@ -383,6 +383,7 @@ def svg_frame(mov: dict, scene: dict, t: float, *,
       font-weight="900" font-family="DejaVu Sans">
       {stage+1:02d}/0{len(scene['ciclo'])}</text>
   </svg>"""
+    return biblioteca_componentes_fisicos.etiquetar_svg("otto_4t_reference",svg)
 
 
 def renderizar(mov: dict, scene: dict, saida: Path,

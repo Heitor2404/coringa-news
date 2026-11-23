@@ -27,7 +27,7 @@ from src.v4.formatos.compressor_pv_core import (
 )
 from src.v4.formatos.identidade_visual_maquina import verificar as verificar_identidade
 from src.v4.formatos.palco_vertical import CaixaVisivel, PalcoVertical
-from src.v4.formatos import camera_causal_svg, temporizacao_causal, realce_causal_svg
+from src.v4.formatos import camera_causal_svg, temporizacao_causal, realce_causal_svg, biblioteca_componentes_fisicos
 
 WIDTH, HEIGHT = 540, 960
 CONFIG_ID = "compressor_ar_eletrico_tanque_horizontal_correia"
@@ -248,7 +248,7 @@ def frame_svg(progress: float, manifest: dict, *,
                              else s.descarga_aberta if s.estado=="DESCARGA_PRESSURIZADA"
                              else True))
     # Cuidado: header e rodapé não sofrem translação da máquina.
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"
+    svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"
       viewBox="0 0 540 960">
     <defs>
       <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
@@ -424,6 +424,7 @@ def frame_svg(progress: float, manifest: dict, *,
       font-size="12">{phase_index:02d}/04</text>
     {sparks}
   </svg>'''
+    return biblioteca_componentes_fisicos.etiquetar_svg("compressor_oficina_pv",svg)
 
 
 def renderizar(arquivo: Path, manifest: dict, *,

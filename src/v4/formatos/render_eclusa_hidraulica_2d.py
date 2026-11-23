@@ -22,7 +22,7 @@ from xml.sax.saxutils import escape
 import cairosvg
 from PIL import Image
 
-from src.v4.formatos import camera_causal_svg, grafo_causal, realce_causal_svg
+from src.v4.formatos import camera_causal_svg, grafo_causal, realce_causal_svg, biblioteca_componentes_fisicos
 
 WIDTH, HEIGHT = 540, 960
 DURATION = 12.6
@@ -217,7 +217,7 @@ def frame_svg(tempo_s:float,*,duracao:float=DURATION,
     else:
         transform="translate(0 0)"
     # Cabeçalho e rodapé externos: zoom nunca altera os textos.
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}"
+    svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}"
       height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}">
       <defs>
         <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
@@ -272,6 +272,7 @@ def frame_svg(tempo_s:float,*,duracao:float=DURATION,
       <text x="464" y="930" font-size="13" fill="#456C7E"
         font-family="DejaVu Sans" font-weight="900">{s.fase_indice:02d}/07</text>
     </svg>'''
+    return biblioteca_componentes_fisicos.etiquetar_svg("lock_cycle_standalone",svg)
 
 
 def renderizar(arquivo:Path,*,fps:int=24,duracao:float=DURATION,

@@ -272,7 +272,14 @@ def source_geometry(source):
             vx=end[0]-start[0];vy=end[1]-start[1];length=math.hypot(vx,vy)
             if length<1e-5:fail("RASGO_CURTO")
             proj=((pts[p][0]-start[0])*vx+(pts[p][1]-start[1])*vy)/length**2
-            if not -.000001<=proj<=1.000001:fail("PINO_FORA_RASGO_NA_ORIGEM")
+            # An explicitly drawn SLOT on a moving link is finite.
+            # A ground CONSTRUCTION line is a guide axis; its endpoints
+            # are sketch helpers, NOT physical rail end stops.
+            is_guide=(a=="ground" and any(
+                rr["id"]==line and rr.get("construction")=="1"
+                for rr in table["lines"]))
+            if not is_guide and not -.000001<=proj<=1.000001:
+                fail("PINO_FORA_RASGO_NA_ORIGEM")
             converted.append({"kind":"slot","a":b,"b":a,
                 "pa":local_xy(b,p),"pb":local_xy(a,p1),
                 "axis_b":[vx/length,vy/length]})
@@ -282,7 +289,10 @@ def source_geometry(source):
             "source_slot_line_id":j["line"] or None,
             "source_body_a":j["body_a"],"source_body_b":j["body_b"],
             "solver_joint_index":len(converted)-1,
-            "finite_slot_length_m":length if k=="pin_in_slot" else None,
+            "finite_slot_length_m":(
+                length if k=="pin_in_slot" and not is_guide else None),
+            "source_line_is_infinite_construction_guide":(
+                bool(is_guide) if k=="pin_in_slot" else False),
         })
     dr=kv(table["driver"])
     if dr.get("type")!="rotary" or dr.get("line_ref") or dr.get("return") not in ("0",""):
@@ -324,7 +334,8 @@ def source_geometry(source):
 def finite_slots(spec,frames,provenance):
     """CSV line is finite; E1 mathematical slot alone describes an infinite line."""
     slots=[p for p in provenance["joint_provenance"]
-           if p["source_type"]=="pin_in_slot"]
+           if p["source_type"]=="pin_in_slot" and
+              p["finite_slot_length_m"] is not None]
     minimum=1.;maximum=0.
     for f in frames:
         for j in slots:

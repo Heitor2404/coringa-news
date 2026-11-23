@@ -2120,7 +2120,7 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 
 **Próxima fase útil:** usar `fichas` como entrada de um compositor de primitivas **paramétricas** reais (renderers de fluido, gate, válvula e correia compartilhados), e criar ingestão de referências visuais com revisão/licença para introduzir **novas** famílias sem desenhar um renderer inteiro. Provar num quarto mecanismo de outra classe SEM copiar manualmente os componentes ou alternar para o estilo descartado.
 
-## 116. 23/11 ~02h05 BRT — F6 PARAMÉTRICO IMPLEMENTADO, QA AINDA PENDENTE
+## 116. 23/11 ~02h05 BRT — F6 PARAMÉTRICO IMPLEMENTADO E VALIDADO TECNICAMENTE (ARTE PENDENTE)
 
 **Pedido:** usuário disse Prossiga e EXIGIU atualizar sempre o arquivo de continuidade no GitHub. Esta seção registra implementação antes da confirmação de CI; completar com resultados verdadeiros depois.
 
@@ -2138,3 +2138,17 @@ Branch `atlas-direcao-visual-20261118` somente, `main`, NTC, DOSSIÊ, FilmeEdito
 - O certificado F5 de 29 atores/3 famílias continua histórico e inalterado; a família F6 é candidata adicional ainda NÃO promovida ao gate visual F5. Não anunciar 35 peças aprovadas.
 
 **PRÓXIMO OBRIGATÓRIO:** inspecionar run 45115182926, corrigir falhas reais se houver, ver as duas prévias, atualizar ESTA seção com run final, SHA, testes e limites; gerar docs/F6 com o que foi COMPROVADO. Nenhum vídeo deve ser publicado automaticamente.
+
+
+### Resultado final da Fase 6 — validado em 23/11 ~02h06 BRT
+
+- **GitHub Actions FINAL:** https://github.com/Heitor2404/coringa-news/actions/runs/45115182926 — SUCCESS, **47 testes aprovados**, sem passos reprovados; cobre dois presets JSON, conservação de volume, câmera travada, segurança e REGRESSÃO da eclusa F4.
+- **Dois MP4s reais PRIVADOS**, 12.000s, 540×960, H264, 24fps, sem áudio. Mesmo compositor: src/v4/formatos/compositor_mecanismo_parametrico_2d.py. Somente JSON e áreas de água variam.
+- `VASOS_IGUAIS_F6.mp4` SHA256: ea8bce285a173754fb96138276024ff47262180c51af070c6357e699fb602f14.
+- `VASOS_ASSIMETRICOS_F6.mp4` SHA256: 6d2153c9600172e02b0fd7970cc4d4fbdd61f27d707c63f555f1c25658fc1423.
+- **Artifact privado** ID 14791407195, nome lab-f6-duas-cenas-parametricas-videos-privados; expira **28/11/2026 05:02 UTC**. Inclui MP4s, 8 frames PNG, COMPARATIVO_DOIS_PRESETS.jpg, relatórios JSON.
+- **Inspeção visual realizada:** duas variantes visivelmente diferentes na largura dos tanques; água do lado alto baixa, água do lado baixo sobe; conduto com válvula visível; níveis se igualam; câmera permanece fixa; não há cards antigos nem movimento estranho. A composição ainda é **esquemática e simples**, não cinematografia aprovada. A folha de contato é do vídeo REAL; quaisquer imagens externas de referência NÃO são o render.
+- **Ganhos de arquitetura:** 5 funções de desenho SVG REAIS com parâmetros e controles, efetivamente chamadas em eclusa e vasos comunicantes; 2 configurações completas montadas pelo mesmo compositor sem segundo script por variante; kernel hidráulico conserva o volume e é separado do desenho; SceneGraph mantém relações e eventos do quarto mecanismo.
+- **NÃO ALEGAR:** busca automática de referência, reconhecimento de peça em foto, extração de CAD/3D, licença para copiar ilustração OpenStax, motor universal de qualquer tema ou estética publicável. F5 continua certificado de 29 atores/3 famílias; F6 só quarto mecanismo experimental, ainda não promovido ao F5. A velocidade do fluxo é DIDÁTICA, não medida cientificamente.
+- **Próximo passo:** avaliar adequação da arte da F6 no celular; ampliar primitives para acionamentos, engrenagens e atuadores físicos, e integrar quarto mecanismo no inventário F5 sem IDs/contagens hardcoded, condicionado a identidade visual auditada. Manter F-VISUAL-LEGADO-DESCARTADO e camera fixa.
+- `main`, produção, NTC, DOSSIÊ, Telegram e publicação NÃO alterados. Tudo na branch atlas-direcao-visual-20261118.

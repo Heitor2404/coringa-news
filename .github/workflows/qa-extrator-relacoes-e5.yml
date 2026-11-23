@@ -1,0 +1,89 @@
+name: "LAB E5 — extracao de conexoes reais com corpus congelado por revisao"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-extrator-relacoes-e5.yml"
+      - "src/v4/formatos/extrator_relacoes_e5.py"
+      - "benchmarks/e5_gold_relacoes_v1.json"
+      - "tests/test_extrator_relacoes_e5.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e5-frozen-revision-eval
+  cancel-in-progress: true
+jobs:
+  evaluate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install existing F17/E4 dependencies (no LLM cost)
+        run: python -m pip install -q pytest numpy scipy cairosvg pillow
+      - name: Adversarial tests of linguistic safety and source checks
+        run: |
+          python -m pytest -q \
+            tests/test_extrator_relacoes_e5.py \
+            tests/test_descoberta_fontes_e4.py \
+            tests/test_relacoes_com_evidencia_f17.py
+      - name: Re-fetch six source pages and evaluate frozen labels by revision and SHA
+        timeout-minutes: 7
+        run: |
+          mkdir -p qa_e5
+          python -m src.v4.formatos.extrator_relacoes_e5 \
+            benchmarks/e5_gold_relacoes_v1.json \
+            qa_e5/E5_CORPUS_REAL_METRICAS.json
+      - name: Audit heldout quality and prohibit joint/spec promotion
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path("qa_e5/E5_CORPUS_REAL_METRICAS.json")
+          a=json.loads(path.read_text("utf8"))
+          g=json.loads(Path("benchmarks/e5_gold_relacoes_v1.json").read_text("utf8"))
+          assert g["benchmark_freeze"] is True
+          assert g["gold_not_vetted_by_independent_engineer"] is True
+          assert a["source_pages_live_refetched"]==6
+          assert a["split_by_source_page"] and a["source_revisions_verified"]
+          assert len(a["pages"])==6
+          assert a["joint_endpoints_validated"]==0
+          assert a["geometry_bound_from_source"]==0
+          assert a["autonomous_specs_generated"]==0
+          assert a["holdout_mechanism_simulations"]==0
+          assert a["human_review_required"] and not a["render_allowed"] and not a["publish"]
+          dev=a["metrics"]["development"]["e5"]
+          h=a["metrics"]["heldout"]["e5"]
+          n=sum(g["count"] for g in g["pages"])
+          assert n==116
+          assert dev["support_positive"]==9
+          assert h["support_positive"]==4
+          # This is a falsifiable, PREDECLARED quality gate. If it fails,
+          # save the QA and do not claim a pass. Never alter frozen labels.
+          assert h["precision"] is not None and h["precision"]>=.8, h
+          assert h["recall"] is not None and h["recall"]>=.5, h
+          print(json.dumps({
+             "schema":"coringa-e5-gating-summary-v1",
+             "source_sentences":n,
+             "development":dev,"heldout":h,
+             "gold_label_version":1,
+             "source_revision_sha_locked":True,
+             "source_to_spec_completed":False,
+             "joint_type_verified":False,
+             "independent_gold_review":False,
+             "external_generalization_proven":False,
+             "render_allowed":False,"publish":False,
+             "gold_sha256":hashlib.sha256(
+                Path("benchmarks/e5_gold_relacoes_v1.json").read_bytes()).hexdigest()
+          },ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e5-frozen-corpus-connection-precision-recall
+          path: qa_e5/
+          retention-days: 5
+          if-no-files-found: warn

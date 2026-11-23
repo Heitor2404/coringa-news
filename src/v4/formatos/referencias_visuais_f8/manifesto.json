@@ -1,0 +1,40 @@
+{
+  "schema": "coringa-visual-references-f8-v1",
+  "publication_approved": false,
+  "visual_approval": false,
+  "scope": "LAB_INTERNO_AUTORAL_SEM_REFERENCIA_INDUSTRIAL_COMPROVADA",
+  "entries": [
+    {
+      "id": "cylinder_shell_f8",
+      "actor": "cylinder",
+      "primitive": "chamber",
+      "asset": "cylinder_shell_f8.svg",
+      "sha256": "d7b0dc55582d8c64363621b6f405ac70c7e41c64f5536604928a3f2f4314116e",
+      "viewbox": [
+        160,
+        340
+      ],
+      "anchors": {
+        "axis_top": [
+          80,
+          5
+        ],
+        "axis_bottom": [
+          80,
+          336
+        ]
+      },
+      "origin": {
+        "kind": "desenho_autoral_interno",
+        "author": "Projeto Coringa — laboratorio F8",
+        "external_pixels_copied": false,
+        "identity_match_verified": false
+      },
+      "rights": {
+        "status": "USO_INTERNO_LAB_APENAS",
+        "external_license_inferred": false,
+        "publication_allowed": false
+      }
+    }
+  ]
+}

@@ -30,16 +30,23 @@ def geometry_bounds(spec,frames):
             for shape in b["shapes"]:
                 if shape["kind"]=="segment":
                     hits.extend([S.world(p,shape["a"]),S.world(p,shape["b"])])
-                else:
+                elif shape["kind"] in ("disc","gear"):
                     center=S.world(p,shape["center"])
-                    r=float(shape["radius"])
+                    r=float(shape["radius"]) if shape["kind"]=="disc" else (
+                      float(shape["pitch_radius_m"])+float(shape["tooth_height_m"]))
                     hits.extend([center+[-r,-r],center+[r,r]])
+                else:  # Generic rack envelope, accounting for teeth/stroke.
+                    margin=float(shape["tooth_height_m"])+float(shape["thickness"])
+                    for point in (shape["a"],shape["b"]):
+                        center=S.world(p,point)
+                        hits.extend([center+[-margin,-margin],center+[margin,margin]])
     allpoints=np.array(hits,dtype=float)
     lo=np.min(allpoints,axis=0); hi=np.max(allpoints,axis=0)
     middle=(lo+hi)/2
     span=np.maximum(hi-lo,1.)
-    # 420x430 stage; reserve upper and lower UI areas.
-    scale=float(min(420/(span[0]+.5),425/(span[1]+.5)))
+    # Shared E2 hero stage: higher in the 9:16 frame, larger useful area.
+    # Conservative full-cycle bounds prevent hidden machine extremities.
+    scale=float(min(455/(span[0]+.45),495/(span[1]+.45)))
     return {"center":[float(n) for n in middle],
             "scale_px_per_m":scale,"span_m":[float(x) for x in span],
             "world_fixed_for_all_frames":True}
@@ -60,10 +67,50 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
                 ax,ay=shape["a"];bx,by=shape["b"]
                 parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
                    f'stroke="{color}" stroke-width="{shape["thickness"]:.7g}" stroke-linecap="round"/>')
-            else:
+            elif shape["kind"]=="disc":
                 u,v=shape["center"]
                 parts.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{shape["radius"]:.7g}" '
                     f'fill="{color}" stroke="#153347" stroke-width=".015"/>')
+            elif shape["kind"]=="gear":
+                u,v=shape["center"]
+                pitch=float(shape["pitch_radius_m"]);h=float(shape["tooth_height_m"])
+                root=pitch-.45*h;tip=pitch+h
+                count=shape["teeth"];step=2*math.pi/count
+                parts.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{root:.7g}" '
+                             f'fill="{color}" stroke="#19394A" stroke-width=".018"/>')
+                for k in range(count):
+                    a=k*step
+                    pts=[]
+                    for rr,dd in ((root,-.43*step),(tip,-.20*step),
+                                  (tip,.20*step),(root,.43*step)):
+                        pts.append(f"{u+rr*math.cos(a+dd):.6f},{v+rr*math.sin(a+dd):.6f}")
+                    parts.append(f'<polygon points="{" ".join(pts)}" fill="{color}" '
+                                 'stroke="#19394A" stroke-width=".009"/>')
+                parts.append(f'<circle cx="{u:.7g}" cy="{v:.7g}" r="{pitch*.17:.7g}" '
+                             'fill="#F0F5F7" stroke="#19394A" stroke-width=".023"/>')
+                parts.append(f'<line x1="{u:.7g}" y1="{v:.7g}" x2="{u+pitch*.75:.7g}" '
+                             f'y2="{v:.7g}" stroke="#F8E3A3" stroke-width=".027" '
+                             'stroke-linecap="round"/>')
+            else:  # Reusable rack teeth, illustrative NOT manufacturing geometry.
+                ax,ay=shape["a"];bx,by=shape["b"]
+                length=math.hypot(bx-ax,by-ay)
+                ux=(bx-ax)/length;uy=(by-ay)/length
+                nx=-uy*shape["tooth_side"];ny=ux*shape["tooth_side"]
+                pitch=shape["tooth_pitch_m"];h=shape["tooth_height_m"]
+                parts.append(f'<line x1="{ax:.7g}" y1="{ay:.7g}" x2="{bx:.7g}" y2="{by:.7g}" '
+                             f'stroke="{color}" stroke-width="{shape["thickness"]:.7g}" '
+                             'stroke-linecap="square"/>')
+                for k in range(int(length/pitch)):
+                    d=(k+.5)*pitch
+                    if d+.4*pitch>length:continue
+                    x=ax+ux*d;y=ay+uy*d
+                    points=((x-ux*.4*pitch,y-uy*.4*pitch),
+                            (x-ux*.24*pitch+nx*h,y-uy*.24*pitch+ny*h),
+                            (x+ux*.24*pitch+nx*h,y+uy*.24*pitch+ny*h),
+                            (x+ux*.4*pitch,y+uy*.4*pitch))
+                    pp=" ".join(f"{a:.6f},{b:.6f}" for a,b in points)
+                    parts.append(f'<polygon points="{pp}" fill="{color}" '
+                                 'stroke="#19394A" stroke-width=".009"/>')
         shapes.append(f'<g id="body-{b["id"]}" data-pose-x="{x:.9f}" data-pose-y="{y:.9f}" '
            f'data-pose-angle="{ang:.9f}" transform="translate({x:.10f} {y:.10f}) rotate({math.degrees(ang):.10f})">'
            +''.join(parts)+'</g>')
@@ -85,14 +132,14 @@ def svg_frame(spec,frame,camera,*,title="CORINGA · PROVA E1"):
     <text x="25" y="74" fill="white" font-family="DejaVu Sans" font-size="19" font-weight="900">{title}</text>
     <rect x="0" y="99" width="540" height="8" fill="#B0CAD5"/>
     <rect x="0" y="99" width="{540*fraction:.3f}" height="8" fill="#E0A44F"/>
-    <rect x="18" y="210" width="504" height="570" rx="22" fill="#D8E9F0" stroke="#A3BEC9" stroke-width="3"/>
+    <rect x="14" y="153" width="512" height="616" rx="22" fill="#D8E9F0" stroke="#A3BEC9" stroke-width="3"/>
     <g id="generic-machine-stage"
-       transform="translate(270 505) scale({scale:.10f} {-scale:.10f}) translate({-cx:.10f} {-cy:.10f})">
+       transform="translate(270 461) scale({scale:.10f} {-scale:.10f}) translate({-cx:.10f} {-cy:.10f})">
        {''.join(shapes)}{''.join(pins)}
     </g>
     <text x="27" y="818" fill="#31536B" font-family="DejaVu Sans" font-size="13">CORPOS + JUNTAS · SOLVER COMUM · UNIDADES EM METROS</text>
     <text x="27" y="846" fill="#4A6B7D" font-family="DejaVu Sans" font-size="12">RESÍDUO MÁXIMO: {frame["max_residual_m"]:.2e} m</text>
-    <text x="27" y="921" fill="#4A6B7D" font-family="DejaVu Sans" font-size="12">LAB E1 — NÃO PUBLICAR · ESTÉTICA NÃO HOMOLOGADA</text>
+    <text x="27" y="921" fill="#4A6B7D" font-family="DejaVu Sans" font-size="12">LAB E1/E2 — NÃO PUBLICAR · ESTÉTICA NÃO HOMOLOGADA</text>
     </svg>'''
     return svg
 

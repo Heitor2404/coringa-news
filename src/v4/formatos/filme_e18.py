@@ -635,19 +635,21 @@ def main():
         return
     man = json.loads(a.manifesto.read_text())
     ids = set(a.ids.split(",")) if a.ids else None
+    from src.v4.formatos.gates_qualidade_e21 import classificar, resumo
     relatorio = []
     for modelo in man["modelos"]:
         if ids and modelo["id"] not in ids:
             continue
         try:
             r = gerar(man, modelo, a.raiz, a.saida, a.rapido)
-            r["estado"] = "PASS"
         except ValueError as e:
-            r = dict(id=modelo["id"], estado="BLOCKED", motivo=str(e))
+            r = dict(id=modelo["id"], motivo=str(e))
+        r = classificar(r)
         relatorio.append(r)
         print(json.dumps(r, ensure_ascii=False, default=float))
     a.saida.mkdir(parents=True, exist_ok=True)
-    (a.saida / "QA.json").write_text(json.dumps(dict(fonte=man["fonte"], modelos=relatorio), indent=2,
+    (a.saida / "QA.json").write_text(json.dumps(dict(fonte=man["fonte"], modelos=relatorio,
+                   resumo_gates=resumo(relatorio)), indent=2,
                                                 ensure_ascii=False, default=float))
 
 

@@ -129,3 +129,14 @@ def test_e209_retimar_sem_esticar_video_ou_mapa(tmp_path):
         D.retimar_documental(p,d,[5.,4.,3.])
     with pytest.raises(ValueError,match='E209-ATLAS-RETIMAR'):
         D.retimar_documental(p,d,[2.,4.,5.])
+
+
+def test_e210_url_file_codificada_e_ausente():
+    a=_page()
+    a['imageinfo'][0]['descriptionurl']='https://commons.wikimedia.org/wiki/File%3ANature.jpg'
+    b=_page(url='https://upload.wikimedia.org/wikipedia/commons/a/a2/Nature2.jpg')
+    b['title']='File:Nature2 landscape.jpg'
+    del b['imageinfo'][0]['descriptionurl']
+    out,err=G.candidatos_documentais(['nature'],False,lambda q,video:[a,b])
+    assert not err and len(out)==2
+    assert out[1]['pagina']=='https://commons.wikimedia.org/wiki/File:Nature2_landscape.jpg'

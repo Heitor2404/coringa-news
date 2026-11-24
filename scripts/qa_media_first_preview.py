@@ -10,12 +10,12 @@ def main():
     E.STAGE=out/'originais';E.STAGE.mkdir(exist_ok=True)
     spec=E.read('benchmarks/e219/kilauea_2018.json')
     media=[]
-    tech={'title':'Tecnologia de campo','credit':'USGS · ciência e tecnologia',
-          'videos':[['using-drones-study-rivers-above','Pesquisa de rios com drones'],
-                    ['usgs-road-remotely-sampling-a-stream-contaminants','Amostragem remota'],
+    tech={'title':'Tecnologia de campo','credit':'USGS',
+          'videos':[['usgs-road-remotely-sampling-a-stream-contaminants','Amostragem remota'],
                     ['usgs-sediment-core-laboratory-ad','Laboratório de sedimentos']]}
-    history={'title':'Acervo histórico','credit':'USGS · EROS',
-             'videos':[['outreach-eros-overview','Acervo e observação terrestre']]}
+    history={'title':'Acervo histórico','credit':'USGS · NOAA','optional':True,
+             'videos':[['mount-st-helens-1980-ash-cloud-seen-space','Sequência de imagens NOAA de 1980']]}
+    omissions=[]
     for chapter in (spec['chapters'][0],spec['chapters'][2],tech,history):
         # A failed original must not end the whole sample while another
         # licensed candidate for the SAME chapter can satisfy the same gate.
@@ -30,6 +30,10 @@ def main():
             except (ValueError,RuntimeError,OSError,subprocess.SubprocessError) as exc:
                 print('AMOSTRA FONTE RECUSADA',row[0],type(exc).__name__,str(exc)[:120],flush=True)
         else:
+            if chapter.get('optional'):
+                omissions.append({'chapter':chapter['title'],'reason':'sem original elegível'})
+                print('AMOSTRA COBERTURA PARCIAL',chapter['title'],flush=True)
+                continue
             raise RuntimeError('Sem registro elegível para a amostra: '+chapter['title'])
         asset='e219_visual/'+m['expected_sha256']+'.mp4'
         dest=E.PUBLIC/asset;dest.parent.mkdir(parents=True,exist_ok=True)
@@ -44,8 +48,9 @@ def main():
         (0,'integral',['CONTEXTO','DA','COSTA']),
         (1,'imersivo',['FISSURAS','EM','ATIVIDADE']),
         (2,'1:1',['TECNOLOGIA','DE','CAMPO']),
-        (3,'integral',['ACERVO','EROS']),
     ]
+    if len(media)==4:
+        variants.append((3,'integral',['ACERVO','DE','1980']))
     for i,(j,mode,words) in enumerate(variants):
         m,asset,offset=media[j];start=i*3
         shot={'id':str(i),'type':'video','asset':asset,'start':start,'end':start+3,'source_in_seconds':offset,
@@ -68,5 +73,5 @@ def main():
     props={'duracao':dur,'shots':shots,'preview':True,'private_review_only':True,'scene_narration_asset':audio,
            'documentary_captions':captions,'documentary_caption_origin':'FRASES_MEDIDAS_LAB'}
     E.write(out/'props.json',props)
-    E.write(out/'fontes.json',{'publish':False,'laboratory_silent':True,'semantic_approval':'PENDING','framing':'LAB_MANUAL_COMPARISON_NOT_ROI','history_scope':'modern archive overview; historical footage not verified','sources':[m for m,_,_ in media]})
+    E.write(out/'fontes.json',{'publish':False,'laboratory_silent':True,'semantic_approval':'PENDING','framing':'LAB_MANUAL_COMPARISON_NOT_ROI','history_scope':'NOAA satellite image sequence; archival moving camera footage not verified','omissions':omissions,'sources':[m for m,_,_ in media]})
 if __name__=='__main__':main()

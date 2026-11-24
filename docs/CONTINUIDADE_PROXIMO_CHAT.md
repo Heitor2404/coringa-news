@@ -2789,3 +2789,58 @@ Base de auditoria [ed643dd](https://github.com/Heitor2404/coringa-news/commit/ed
 Preservar: `solve_constraints` (fechamento + posto), verificação SHA256 de cada arquivo, recusas com código, `check_video`/decodificação, isolamento de fonte (nada de CAD de terceiros no repositório).
 
 Decisão técnica do bloco E18–E20: um **núcleo multicorpo 3D único** que lê o modelo compilado (MJCF e URDF são analisados pelo compilador do MuJoCo, só como *parser*), faz a cinemática direta **própria**, impõe fechamentos (`connect`, `weld`, acoplamento polinomial de juntas), mede a mobilidade pelo posto do Jacobiano e, quando sobra grau de liberdade, só resolve se a fonte declarar molas e limites (mínimo de energia elástica com batentes); caso contrário recusa. Oráculos independentes: cinemática direta e resíduo de igualdades calculados pelo próprio MuJoCo, simulação dinâmica do MuJoCo para a postura subatuada, e medidas de ficha técnica dos fabricantes.
+
+## 147. E17 — fechamento da documentação (24/11)
+
+- Run [45283333166](https://github.com/Heitor2404/coringa-news/actions/runs/45283333166) reconferido nesta sessão pela API: `success`, head `c216de5`. No log do job 138073149375: **79 passed**, curso **31,057101049625075 mm**, `max_pin_error_mm` **1,55e-14**, SHA256 do MP4 `46e43cde…cf362f`.
+- **Limites desta sessão:** o proxy recusa o armazenamento de artifacts (`productionresultssa7.blob.core.windows.net`, 403) e o site `xemstudio.com` (403). O MP4 do CI da E17 **não foi aberto**, e a E17 não pôde ser reproduzida localmente. A inspeção visual da E17 continua sendo a da prévia local do chat anterior (seção 144).
+- Método adotado daqui em diante para inspeção sem artifact: o QA imprime o SHA256 dos **quadros RGB antes da codificação**; render local com o mesmo commit e comparação de hashes (seção 150).
+
+## 148. E18 — núcleo multicorpo 3D único (commits 18b72cb, 74c4f04)
+
+Código encontrado não commitado no disco (multicorpo/raster/filme E18 + manifesto de 4 modelos Menagerie). Antes de commitar, 2 de 12 testes falhavam:
+1. **Quase-estática não convergia.** Mínimos quadrados com penalidade 1e5 contra rigidez 0,05 estacionava (`status 3`). Substituída por **conjunto ativo**: projeção no fechamento, Newton no espaço nulo, batente entra quando atingido, sai pelo sinal do multiplicador KKT; projeção com busca em profundidade de batentes (o guloso fixava o acoplador antes da mola no Robotiq e virava inviável).
+2. **Teste do cinco-barras estava errado:** a junta `f` ficava sobre o próprio pino do `connect` (corpo de comprimento zero). Refeito com cinco-barras real; o oráculo (simulação MuJoCo) só ficou válido com `armature` e `solref` rígido — sem mexer na tolerância.
+3. `carregar` tratava malha inline (sem arquivo) como caminho "." — corrigido.
+- Projeção trocada por **Gauss-Newton de norma mínima**: o `lm` do SciPy recusa menos equações que incógnitas (variedade com GL) e caía no TRF lento (Cassie: 21 s → 0,4 s por pose). Estacionariedade no nível do ruído do Jacobiano por diferenças finitas (1e-7 relativo ou passo < 1e-9).
+
+## 149. E19–E20 — generalização sem ramo por máquina (commits 74c4f04, f1d7f44, 6832a08)
+
+Novas capacidades, todas genéricas (teste `test_manifesto_sem_ramo_por_maquina` continua passando):
+- **Juntas esféricas** (3 coordenadas, vetor de rotação), **base `free` congelada**, espaço q próprio com `para_qpos/de_qpos` para os oráculos.
+- **GL ocioso**: direção sem rigidez que move um único corpo (giro de haste sobre o eixo entre seus vínculos) é mantida no quadro anterior — convenção registrada no QA, não física.
+- **Varredura**: demais acionadores mantidos; chave da fonte projetada no fechamento; servo de posição afim lê a pose do **comando** da chave (`(g·ctrl+b0)/(−b1)`); filme percorre o **curso viável completo**; faixa cortada por bisseção quando outra junta bate no batente e no **primeiro contato NOVO** entre malhas (FCL com BVH única por peça). Sobreposições que já existem na pose de referência da fonte ficam registradas e não cortam.
+- **URDF**: `discardvisual=false` injetado em memória (a fonte conferida por hash não muda), `mimic` vira igualdade de junta; sem atuador na fonte, a junta de entrada é escolhida no manifesto e registrada como tal.
+- **Medidas/oráculos**: `deslocamento` (ponto de B visto de A desde a pose inicial) e `curso_mm`. Erro real encontrado: distância entre origens **não** é curso quando o eixo não é colinear (Stretch dava 420 mm; e o filme começava na chave, a 0,10 m).
+- **Visual**: estrutura parada esmaecida; papel "acoplada" (azul); legenda só para papéis com pixels visíveis (o corpo do joelho do Cassie tem 0 px → sem "entrada" na legenda); todo texto cabe em 900 px, título quebra em 2 linhas antes de < 48 px.
+- **CI**: espelho do apt a ~100 KB/s derrubou 2 runs (45299334493, 45300852666, timeout); agora ffmpeg estático do wheel `imageio-ffmpeg` e verificação do vídeo sem ffprobe. Run 45295240497 cancelado (instalação travada sem saída).
+
+Fontes e resultados (CI [45302101314](https://github.com/Heitor2404/coringa-news/actions/runs/45302101314), head `6832a08`, **success**, **59 testes**, 8/8 PASS, **0 contato novo** em todos os quadros amostrados, FK idêntica ao MuJoCo ≤ 8,9e-16 m, resíduo de fechamento ≤ 9,5e-14):
+
+| Modelo (fornecedor, licença) | Classe de mecanismo | Oráculo externo | Medido |
+|---|---|---|---|
+| Robotiq 2F-85 (BSD-2) | 2 laços + 2 GL elásticos com batentes | 85 mm (ficha) | 85,4 mm ✓; dinâmica MuJoCo ≤ 3,9e-4 rad |
+| UFACTORY xArm Gripper (BSD-3) | 2 laços | 84 mm (manual V2.2.0) | **88,9 mm ✗ fora (±4,2)** — divergência do modelo, exibida em vermelho |
+| Franka Hand (Apache-2.0) | 2 prismáticas acopladas | 80 mm | 79,8 mm ✓ |
+| UR5e (BSD-3) | cadeia serial 6R | tabela DH oficial | desvio máx. 1,29 mm ✓ |
+| **Agility Cassie** (MIT) — novo | laço espacial com esférica + 2 molas por perna | sem ficha numérica usada | joelho cortado nos 2 extremos por contato real (canela×coxa; canela×mola do calcanhar) |
+| **Hello Robot Stretch 3** (Apache-2.0) — novo | telescópio de 4 estágios acoplados por tendão | 0,52 m (Hardware Guide) | 520,0 mm ✓ — independência **parcial** (cursos dos estágios estão no modelo) |
+| Source Robotics SSG-48 (CC BY 4.0) — via núcleo único | prismática + mimic (URDF) | 0–48 mm (Hackaday do fabricante) | 47,0 mm ✓ |
+| Source Robotics MSG (CC BY 4.0) — via núcleo único | prismática + mimic (URDF) | variante 105 mm (docs MSG) | 103,4 mm ✓ (mandíbulas se tocam antes do fim da junta) |
+
+Recusado/adiado com motivo: **PAROL6** (alcance "408 mm até o flange" sem referência de origem; página de cotas diz "Dimensions can change!"); **IIT SoftFoot** (sem atuador; precisa de movimento por contato com o chão); **Tetheria Aero Hand** (tendões espaciais → `TENDAO_ESPACIAL`).
+
+## 150. Inspeção dos filmes do CI sem baixar artifact
+
+Render local completo com o mesmo commit (6832a08) e comparação do SHA256 dos quadros RGB pré-codificação com o log do CI: **7/8 idênticos** (Robotiq, xArm, Franka, UR5e, Stretch, SSG-48, MSG) — as folhas e quadros inspecionados aqui valem para os vídeos do CI. **Cassie difere**: medida min 213,72840197 (CI) vs 213,72840212 mm (local), mesma câmera, mesmos cortes → ruído de ponto flutuante da quase-estática, não comportamento distinto. Artifact `e18-multicorpo-privado` ID **14880766635** (não baixável desta sessão). `publish=false`, `visual_approved=false` em todos.
+
+Julgamento visual desta sessão (não é homologação): garras e telescópio legíveis, papéis coloridos coerentes, texto dentro das margens. Pendências visuais: UR5e fica deslocado para o alto à direita na pose `home` (câmera fixa para o filme inteiro); Cassie mostra as duas pernas sobrepostas na vista escolhida; nenhuma narração, ritmo editorial ou identidade ATLAS aplicada — são pranchas de laboratório.
+
+## 151. Estado da auditoria (seção 146) e próximo bloco
+
+- Obstáculo 1 (três núcleos): **parcialmente resolvido** — E15/E16 (URDF) e Menagerie rodam no núcleo único. **E17 (STEP Xem Studio) continua em caminho próprio**: fonte inacessível desta sessão e STEP não traz juntas (pares curados no manifesto). Próximo passo: adaptador STEP→`Montagem` testado só no CI.
+- Obstáculos 2, 3 (contagem exata, GL passivo): resolvidos no núcleo E18 (posto + molas/batentes + ociosos).
+- Obstáculo 4 (texto por máquina): o renderer E18 é genérico; os renderers antigos E15/E17 continuam com texto fixo, agora redundantes para E15.
+- Obstáculos 5–7: render 3D real com numba; câmera escolhida por busca; foco automático nas peças móveis quando < 40% da máquina.
+- Obstáculo 8: 7 de 8 modelos com oráculo de fabricante; xArm fora da tolerância.
+- **Ainda não feito:** compreender mecanismo a partir de texto/vídeo (o motor ainda depende de modelo articulado publicado); integração com narração/ATLAS; aprovação humana de qualquer vídeo.

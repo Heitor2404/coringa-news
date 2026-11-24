@@ -1,0 +1,144 @@
+{
+  "schema": "coringa.documentario.curado.v1",
+  "id": "kilauea_review_e232",
+  "title": "A erupção que fez o Havaí crescer",
+  "publish": false,
+  "facts": [
+    "https://www.usgs.gov/volcanoes/kilauea/science/2018-lower-east-rift-zone-eruption-and-summit-collapse-kilauea",
+    "https://www.usgs.gov/volcanoes/kilauea/kilauea-2018-summit-collapse-and-lower-east-rift-zone-eruption"
+  ],
+  "chapters": [
+    {
+      "title": "Terra nova",
+      "speech": "Essa lava está chegando ao oceano e construindo terra onde antes havia apenas água. Em dois mil e dezoito, uma erupção mudou a costa de uma ilha inteira.",
+      "videos": [
+        [
+          "kilauea-volcano-lava-entering-kapoho-bay",
+          "Lava chegando à baía de Kapoho"
+        ],
+        [
+          "kilauea-volcano-ocean-entry-kapoho-bay",
+          "Encontro entre lava e oceano"
+        ]
+      ]
+    },
+    {
+      "title": "Onde aconteceu",
+      "speech": "Isso aconteceu no sudeste da ilha do Havaí, no vulcão Kilauea.",
+      "atlas": {
+        "roi": [
+          -156.3,
+          18.8,
+          -154.4,
+          20.4
+        ],
+        "label": "Ilha do Havaí",
+        "lonlat": [
+          -155.5,
+          19.6
+        ],
+        "raster": "bmng_regional_havai",
+        "regional_base": {
+          "bbox": [
+            -162,
+            14,
+            -150,
+            26
+          ],
+          "zoom": 7
+        }
+      }
+    },
+    {
+      "title": "Fissuras no solo",
+      "speech": "Em maio, fissuras se abriram numa região habitada. O magma chegou à superfície, lançando fragmentos incandescentes. A lava avançou por ruas e terrenos, obrigando moradores a abandonar suas casas.",
+      "videos": [
+        [
+          "kilauea-lower-east-rift-zone-eruption-may-13-2018",
+          "Fissura em atividade"
+        ],
+        [
+          "kilauea-volcano-pahoehoe-flows-kaupili-street",
+          "Lava avançando em área habitada"
+        ],
+        [
+          "kilauea-east-rift-zone-eruption-may-6-2018-0",
+          "Lava na rua Makamae"
+        ]
+      ]
+    },
+    {
+      "title": "Um rio de lava",
+      "speech": "Uma das fissuras, a de número oito, passou a alimentar um canal de lava. Em julho, os cientistas mediram velocidades de mais de vinte quilômetros por hora em trechos próximos à saída. Drones ajudavam a acompanhar esse movimento.",
+      "videos": [
+        [
+          "july-14-2018-kilauea-fissure-8-video-captured-uas",
+          "Canal da fissura oito"
+        ],
+        [
+          "kilauea-volcano-fissure-8-aerial",
+          "Registro aéreo da lava"
+        ]
+      ]
+    },
+    {
+      "title": "O litoral mudou",
+      "speech": "A lava percorreu vários quilômetros até chegar à baía de Kapoho. Ao entrar em contato com a água, parte do material esfriava e se solidificava. Com o acúmulo de rocha, a antiga baía foi preenchida.",
+      "videos": [
+        [
+          "kilauea-volcano-video-compilation-kapoho-bay-ocean-entry",
+          "Lava entrando em Kapoho"
+        ],
+        [
+          "kilauea-volcano-kapoho-bay",
+          "Formação de um delta de lava"
+        ],
+        [
+          "kilauea-volcano-overflight-ocean-entry",
+          "Vapor e lava na costa"
+        ]
+      ]
+    },
+    {
+      "title": "O topo também mudou",
+      "speech": "Enquanto isso, no topo do Kilauea, o reservatório de magma perdia material. A estrutura acima dele desabou repetidamente, aprofundando a cratera. A erupção na costa e o colapso no topo faziam parte do mesmo processo.",
+      "videos": [
+        [
+          "overflight-kilauea-summit",
+          "Cratera após os colapsos"
+        ],
+        [
+          "kilauea-volcanos-summit-0",
+          "Vista aérea do topo"
+        ]
+      ]
+    },
+    {
+      "title": "O tamanho da transformação",
+      "speech": "No total, a lava cobriu trinta e cinco quilômetros quadrados e meio. Mais de três quilômetros quadrados e meio de terra foram acrescentados ao litoral. A erupção mostra como um vulcão pode destruir paisagens e construir outras ao mesmo tempo.",
+      "videos": [
+        [
+          "kilauea-volcano-video-compilation-lower-east-rift-zone",
+          "O caminho da lava em junho"
+        ],
+        [
+          "kilauea-lower-east-rift-zone",
+          "Registro da região após a erupção"
+        ]
+      ]
+    }
+  ],
+  "review_music": true,
+  "reviewed_source_modes": {
+    "kilauea-volcano-lava-entering-kapoho-bay": "4:5",
+    "kilauea-volcano-pahoehoe-flows-kaupili-street": "imersivo",
+    "july-14-2018-kilauea-fissure-8-video-captured-uas": "1:1",
+    "kilauea-volcano-video-compilation-kapoho-bay-ocean-entry": "4:5",
+    "overflight-kilauea-summit": "1:1"
+  },
+  "review_scope": {
+    "user_feedback": "positive review of short regional map and narrative montage; authorized next private test",
+    "semantic_review": "PENDING",
+    "publication": false
+  }
+}

@@ -122,9 +122,9 @@ def mapplan(ch,span):
                              't0':.3,'t1':span,'p':{'linhas':location_title(ch,span)}}]}], 'cta':False}
     return A.resolver_tempos(p,[])
 
-def mapclip(ch,span):
+def mapclip(ch,span,*,plano_resolvido=None):
     MAP.mkdir(parents=True,exist_ok=True)
-    p=mapplan(ch,span)
+    p=plano_resolvido if plano_resolvido is not None else mapplan(ch,span)
     prep=B.preparar(p,0,span,MAP,PUBLIC)
     clip=MAP/'mapa.mp4'
     subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
@@ -191,6 +191,8 @@ def main():
     if duration<60 or duration>180 or len(tempos)!=len(spec['chapters']):raise ValueError('E219-DURACAO '+str(duration))
     words=D.palavras_de_caps(caps)
     total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
+    from src.v4.formatos import direcao_eventos as DE
+    historico_visual=[];selection_report=[]
     for i,(ch,(a,b)) in enumerate(zip(spec['chapters'],tempos)):
         end=round(b*30) if i+1<len(tempos) else round(total*30)
         frames=end-start
@@ -211,12 +213,33 @@ def main():
             if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
             ordered=available[k%len(available):]+available[:k%len(available)]
             selected=None
-            for m in ordered:
-                prev=used_windows.get(m['expected_sha256'],[])
-                for t,im in windows(m,span+.1):
-                    if all(t+span<=a or t>=b for a,b in prev):
-                        selected=(m,t,im);break
-                if selected:break
+            if spec.get('perceptual_selection'):
+                candidates=[]
+                for m in ordered:
+                    prev=used_windows.get(m['expected_sha256'],[])
+                    for t,im in windows(m,span+.1):
+                        if not all(t+span<=a or t>=b for a,b in prev):continue
+                        try:
+                            samples=[frame(m['local_source'],t+span*f) for f in (.12,.5,.86)]
+                            signature=DE.assinatura_janela(samples)
+                        except Exception:continue
+                        candidates.append({'ordem':len(candidates),'assinatura':signature,'selection':(m,t,im)})
+                        # Bound extra decoding; retain two eligible alternatives per source.
+                        if sum(c['selection'][0]['id']==m['id'] for c in candidates)>=2:break
+                ranked=DE.ordenar_janelas(candidates,historico_visual[-4:])
+                if ranked:
+                    best=ranked[0];selected=best['selection']
+                    score=max((DE.similaridade_janelas(best['assinatura'],h) for h in historico_visual[-4:]),default=0.)
+                    historico_visual.append(best['assinatura'])
+                    selection_report.append({'chapter':ch['title'],'source':selected[0]['id'],'t':selected[1],
+                        'candidate_count':len(ranked),'similarity_recent':round(score,4),'semantic_review':'PENDING'})
+            else:
+                for m in ordered:
+                    prev=used_windows.get(m['expected_sha256'],[])
+                    for t,im in windows(m,span+.1):
+                        if all(t+span<=a or t>=b for a,b in prev):
+                            selected=(m,t,im);break
+                    if selected:break
             if not selected:raise ValueError('E219-COBERTURA '+ch['title'])
             m,t,im=selected
             used_windows.setdefault(m['expected_sha256'],[]).append((t,t+span))
@@ -246,6 +269,7 @@ def main():
           'duracao':total,'media':media,'shots':shots}
     for cid,clip,proof in maps:plan=B.inserir_no_filme(plan,cid,clip,proof)
     write(out/'plano.json',plan)
+    if spec.get('perceptual_selection'):write(out/'selecao_perceptiva.json',selection_report)
     result=F.preparar(plan,out/'documental',PUBLIC)
     props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
     groups=[]

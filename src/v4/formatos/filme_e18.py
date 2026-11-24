@@ -313,7 +313,7 @@ def cor_visual(v, papel):
     return base, 0.45
 
 
-def escolher_camera(mont, qs, cima, regiao, fov=24):
+def escolher_camera(mont, qs, cima, regiao, fov=24, alvos=None):
     """Busca determinística, com movimento material e caixa de todos os quadros."""
     amostra = [qs[i] for i in C.indices_amostra(len(qs), 24)]
     bounds, tracks = C.evidencia(mont, qs)
@@ -338,7 +338,9 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
     candidatos = []
     margem = .012
     interna = (x0+margem,y0+margem,x1-margem,y1-margem)
-    for elev in (12, 22, 32):
+    if alvos is not None and (not alvos or not set(alvos)<=set(v.corpo for v in mont.visuais)):
+        raise ValueError('E43-ALVOS')
+    for elev in ((-72,-45,-22,12,22,32,45,72) if alvos else (12,22,32)):
         for guinada in range(0, 360, 15):
             g, el = math.radians(guinada), math.radians(elev)
             d = math.cos(el) * (math.cos(g) * e1 + math.sin(g) * e2) - math.sin(el) * cima
@@ -360,12 +362,19 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
         raise ValueError('E24-CAMERA_FORA_DA_REGIAO')
     scenes=V.preparar(mont,qs,C.indices_amostra(len(qs),5))
     melhor=None
-    for geom,cam,meta in V.candidatos_por_setor(candidatos):
-        oc=V.avaliar(cam,scenes,moveis)
+    pool=V.candidatos_por_setor(candidatos)
+    if alvos:
+        # Keep both hemispheres and high elevations in the shortlist.
+        pool=[]
+        for e in (-72,-45,-22,12,22,32,45,72):
+            pool.extend(V.candidatos_por_setor([x for x in candidatos if x[2]['elevacao_graus']==e])[:4])
+    for geom,cam,meta in pool:
+        oc=V.avaliar(cam,scenes,alvos if alvos else moveis)
         score=V.nota(geom,oc)
         if melhor is None or score>melhor[0]+1e-12:
             melhor=(score,cam,dict(meta,nota=float(score),
-                      metodo="e26_oclusao_zbuffer",oclusao=oc))
+                      metodo="e43_foco_geometrico" if alvos else "e26_oclusao_zbuffer",oclusao=oc,
+                      **({"alvos":list(alvos)} if alvos else {})))
     return melhor[1],melhor[2],pontos
 
 
@@ -472,7 +481,7 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
     # --- imagem
     cima = np.array([0, 0, 1.0])
     pap = papeis(mont, acion, qs, varrido)
-    cam, escolha, pontos = escolher_camera(mont, qs, cima, (0.08, 0.15, 0.92, 0.64))
+    cam, escolha, pontos = escolher_camera(mont, qs, cima, (0.08, 0.15, 0.92, 0.64), alvos=modelo.get("camera_alvos"))
     chao = float(pontos[:, 2].min())
     fundo = R.fundo_gradiente(W, H)
     saida.mkdir(parents=True, exist_ok=True)

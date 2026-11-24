@@ -3161,3 +3161,8 @@ Câmera do lado da entrada ou corte do flange de saída para mostrar os lóbulos
 
 ### Próximo gargalo
 Engrenagens de dentes evolventes (contagem de dentes + verificação de conjugação análoga), pares com eixos não paralelos (cônicas, sem-fim), e procedência por sólido (metadado) no lugar do nome.
+
+
+## 182. 24/11 — auditoria E41, E42 integração e E43 câmera focal
+
+CI E41 original 45346073717 SUCCESS, artifact 14899831075 baixado: MP4 SHA256 9a53becd21b878b1b26b418a747f6a987511b3f868c5dd63d3760de79f502fbc, igual ao relatório; RGB a63feb87…ff6178, 240 quadros. Upload do usuário recomprimido em 512x910, 240 quadros/8s. Não confundir tempo de solver (~5–6s) com duração de vídeo (8s). Relatório CI confirma 1080° → −98,1818°, 8/8 poses auditadas com interferência, pico 0,0022409601 mm³, 36 pares por pose (não auditoria da montagem completa), câmera com média 0,0874 para 16 corpos móveis. Flange oculta lóbulos. E38/E39 anterior 45330658126 e E40 45330952405 SUCCESS. E42 passa QA E41 por gate E21/E36, exporta QA/palco/eventos e fonte real do inventário (hash STEP conferido), marca direitos por sólido pendentes; cues de razão/totais derivados das séries angulares do solver, não de tempos inventados. Elimina três novas leituras de STEP usando os mesmos objetos OCC já contidos em leitura.corpos, sem cache persistente; índices conferidos. E43 opt-in: busca elevações de ambos lados e usa perfis lobulados comprovados como alvo de visibilidade, preservando todas as malhas da exibição original e as poses. Não faz corte nem declara melhoria antes de render real. CI leve e CI completo disparados, pendentes. Nenhuma alteração de tolerância/solver, sem Claude e sem publicação.

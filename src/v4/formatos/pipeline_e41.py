@@ -22,6 +22,8 @@ from pathlib import Path
 import numpy as np
 
 from . import brep_e35 as B
+from . import editorial_e42 as E42
+from . import gates_qualidade_e21 as Q
 from . import lobulos_e41 as LB
 from . import multicorpo_e18 as M
 from . import transmissao_e41 as TR
@@ -69,7 +71,7 @@ def _marca(rel, etapa, t0=[None]):
     print("E41-ETAPA", etapa, rel["tempos_s"][etapa], file=sys.stderr, flush=True)
 
 
-def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120):
+def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120, fonte=None):
     saida = Path(saida)
     saida.mkdir(parents=True, exist_ok=True)
     rel = dict(arquivo=str(step), publish=False, visual_approved=False, homologacao_visual="NAO_HOMOLOGADO")
@@ -83,7 +85,7 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120)
     _marca(rel, "vinculos")
     rel["vinculos"] = V.resumo(leitura, an)
     conjuntos = LB.conjuntos_cilindricos(corpos, convexo=True)      # uma vez só (busca por consenso é cara)
-    tr = TR.analisar_transmissao(leitura, an, lambda ids: B.solidos(step, ids), n_theta, conjuntos)
+    tr = TR.analisar_transmissao(leitura, an, lambda ids: E42.formas(leitura, ids), n_theta, conjuntos)
     _marca(rel, "transmissao")
     aceitos = [p for p in tr.get("pares", []) if p["lobulado"].get("aceito")]
     rel["transmissao"] = dict(conjuntos_roletes=len(tr.get("conjuntos_roletes", [])),
@@ -166,7 +168,10 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120)
                 if abs(c["R"] - sd["R"]) < 1e-6 and abs(c["raio"] - sd["raio_rolete_mm"]) < 1e-6 and abs(c["z"] - np.dot(corpos[p["corpo"]].centroide, np.asarray(c["eixo"]))) < 3:
                     alvo_pares += [(p["corpo"], r) for r in c["corpos"] if r in grupo_de]
     alvo_pares = sorted(set(alvo_pares))
-    formas = B.solidos(step, sorted({a for a, _ in alvo_pares} | {b for _, b in alvo_pares}))
+    formas = E42.formas(leitura, sorted({a for a, _ in alvo_pares} | {b for _, b in alvo_pares}))
+    if not alvo_pares:
+        rel["resultado"]="RECUSADO:SEM_PARES_AUDITADOS"
+        return _gravar(rel,saida)
     rel["pares_auditados"] = len(alvo_pares)
     _marca(rel, "preparar_auditoria")
     rel["interferencia_brep"] = interferencia_nucleo(formas, mont, grupo_de, alvo_pares, qs,
@@ -175,7 +180,7 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120)
     if renderizar:
         from . import filme_e18 as F
         ids = sorted(grupo_de)
-        sol = B.solidos(step, ids)
+        sol = E42.formas(leitura, ids)
         visuais = []
         for i in ids:
             v, f = sol[i].tessellate(0.1, 0.2)
@@ -200,14 +205,25 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120)
         qa = dict(id="e41_" + classe, mobilidade_max=rel["solver"]["mobilidade_max"],
                   residuo_max=rel["solver"]["residuo_max"], natureza="CAD de projeto; vínculos e pares inferidos",
                   homologacao_visual="NAO_HOMOLOGADO", publish=False, visual_approved=False)
+        if fonte is not None and fonte.get("step_sha256")!=leitura["sha256"]:
+            raise ValueError("E42-FONTE_HASH")
         modelo = dict(id="e41_" + classe, titulo=nome_classe,
-                      credito="CAD: fonte E35 congelada · MIT (raiz do repositório)",
-                      licenca="MIT", natureza=("Estrutura fixa oculta · " if oculta else "") +
+                      credito=("CAD: "+fonte["url"].split("github.com/")[-1] if fonte else "CAD local · procedência pendente"),
+                      licenca=(fonte["licenca_informada"] if fonte else "NAO_VERIFICADA"), natureza=("Estrutura fixa oculta · " if oculta else "") +
                       f"entrada {voltas:g} voltas · razão {k:.4f} deduzida da geometria",
-                      estilo_visual="e33", exportar_palco=True)
+                      estilo_visual="e33", exportar_palco=True, fonte_cad=fonte,
+                      camera_alvos=[nucleo[g] for g in perfis])
         acion = {"entrada": {j: float(c) for j, c in enumerate(lin[entrada]) if c}}
         qa = F.renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida, varrido="entrada")
-        rel["render"] = {k2: qa.get(k2) for k2 in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video", "camera")}
+        qa["interferencia_brep"]=rel["interferencia_brep"]
+        qa["transmissao_observada"]=E42.transmissao(ang(entrada),serie,k,F.FPS)
+        qa["escopo_auditoria"]="apenas pares perfil-roletes selecionados; componentes omitidos/congelados"
+        qa=Q.classificar(qa)
+        rel["gates"]={x:qa[x] for x in ("estado","estado_execucao","validacao_externa",
+                            "verificacao_contato","liberado_para_publicacao")}
+        rel["render"] = {k2: qa.get(k2) for k2 in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video", "camera",
+                            "palco_cad","eventos_trajetoria","transmissao_observada","apresentacao_e33")}
+        (saida/"QA.json").write_text(json.dumps(_limpar(qa),ensure_ascii=False,indent=2))
     _marca(rel, "fim")
     rel["resultado"] = "MP4_GERADO" if renderizar else "SOLVER_E_ORACULOS"
     return _gravar(rel, saida)

@@ -110,6 +110,9 @@ def props(qa, asset):
             fail("REPOUSO_INCOMPLETO")
         if any(f["tipo"]=="repouso_amostrado" for f in phases):
             cues=new
+    if "transmissao_observada" in qa:
+        from . import editorial_e42 as E42
+        cues=E42.cues(qa["transmissao_observada"],n)
     # No claimed causal explanation, no invented voice or duration.
     shot=dict(id="cad_privado_e28",start=0,end=n/30,type="cad_preview",
               asset=asset,cad_source_roi=roi,source=stage["credito"],

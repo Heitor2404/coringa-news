@@ -152,7 +152,11 @@ def executar(candidatos_json, trabalho, saida, rapido=False, renderizar=True, cl
                 if a["estagio"] != "ROTA_E41":
                     continue
                 try:
-                    r41 = P41.executar(destino / a["arquivo"], saida, renderizar=renderizar)
+                    arq=next(x for x in c["arquivos"] if x["caminho"]==a["arquivo"])
+                    fonte=dict(url=c["url"],commit=c["commit"],arquivo=a["arquivo"],
+                        step_sha256=arq["sha256"],licenca_informada=str(c["licenca"].get("spdx")),
+                        direitos_por_solido="NAO_VERIFICADOS")
+                    r41 = P41.executar(destino / a["arquivo"], saida, renderizar=renderizar,fonte=fonte)
                 except ValueError as e:
                     a.update(estagio="E41", motivo=str(e))
                     continue

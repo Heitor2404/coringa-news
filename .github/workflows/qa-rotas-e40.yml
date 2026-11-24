@@ -27,7 +27,7 @@ jobs:
         with: {python-version: "3.11"}
       - name: Validar relatório histórico com o gate atual
         run: |
-          python -m pip install --only-binary=:all: numpy scipy pytest
+          python -m pip install --only-binary=:all: numpy scipy pytest cairosvg pillow
           python -m pytest -q tests/test_rota_explicativa_e40.py
           python - <<'PY'
           import json

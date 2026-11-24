@@ -439,6 +439,8 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
                                  'consultas_en': [q.strip() for q in (n.get('consultas_en') or [])[:2]
                                                   if isinstance(q, str) and 2 <= len(q.strip()) <= 120],
                                  'verificar_direitos': True, 'inspecionar_conteudo': True},
+                    'politica_complemento': 'REAVALIAR_APOS_INSPECAO_DE_MIDIA',
+                    'fallback_sem_animacao_adequada': 'REPLANEJAR_MIDIA_REAL_OU_DECLARAR_LACUNA',
                     'pronto_para_render': False})
     if not out:
         raise ValueError('E205-SEM-NECESSIDADES')
@@ -455,7 +457,7 @@ def planejar_documental(caso: dict, permitir_chamada: bool = True, cache: Path =
 Para cada fato, identifique o que precisa ser visto, não desenhe a narração.
 Use registro para filmagem/foto real; territorio para localização, fronteira, rota ou relevo factual no ATLAS;
 lacuna_explicativa somente para uma ação específica que registros não mostram (descreva a lacuna).
-Não transforme falta de acervo em animação. Não gere URLs, assets, desenhos, licenças ou geometrias.
+A animação só complementa a explicação de funcionamento ou ação que mídia real não demonstra, após busca sem registro adequado ou impossibilidade física de filmar. Se uma animação adequada não existir, replaneje com mídia real/contexto identificado ou declare a lacuna. Nunca use modelo reprovado como fallback. Não gere URLs, assets, desenhos, licenças ou geometrias.
 Inclua duas consultas curtas em inglês para mídia real. Não invente fatos.
 Responda JSON {"necessidades_visuais":[{"id":"n1","fatos":["id existente"],"sujeito":"...","mostrar":"...",
 "necessidade":"registro|territorio|lacuna_explicativa","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
@@ -533,6 +535,10 @@ def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino:
     # O perfil cartográfico original não foi recertificado para safe_area_profile.
     if any(s['type'] == 'atlas_map' for s in shots):
         props.pop('safe_area_profile', None)
+    from src.v4.formatos import politica_animacao as PA
+    if props.get('animation_policy_mode')==PA.LEGACY:
+        raise ValueError('E211-LEGADO-NAO-ENTRA-EM-DOCUMENTARIO')
+    PA.exigir(props['shots'], modo=props.get('animation_policy_mode'), privado=True)
     if audio or palavras:
         if not audio or not palavras:
             raise ValueError('E207-AUDIO-E-PALAVRAS')
@@ -602,6 +608,10 @@ def anexar_audio_documental(props: dict, audio: str, grupos: list[dict], public_
     import wave
     if props.get('preview') is not True or props.get('private_review_only') is not True:
         raise ValueError('E207-PRIVADO')
+    from src.v4.formatos import politica_animacao as PA
+    if props.get('animation_policy_mode')==PA.LEGACY:
+        raise ValueError('E211-LEGADO-NAO-ENTRA-EM-DOCUMENTARIO')
+    PA.exigir(props['shots'], modo=props.get('animation_policy_mode'), privado=True)
     if metodo not in ('PALAVRAS_MEDIDAS', 'FRASES_MEDIDAS_LAB'):
         raise ValueError('E207-METODO')
     if not isinstance(audio, str) or not re.fullmatch(r'e202/[0-9a-f]{64}\.wav', audio):

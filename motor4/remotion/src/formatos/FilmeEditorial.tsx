@@ -18,7 +18,8 @@ export type FilmShot = {
   id: string;
   start: number;
   end: number;
-  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview' | 'scene_graph';
+  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview' | 'scene_graph' | 'animation_clip';
+  animation_proof?: {schema:string;renderer:string;sha256:string;run:number;frames:number;fps:number;dimensions:number[];duration_s:number;status:string;publish:boolean;viewport:string;geometry_approval:string;acao:string;lacuna:string;motivo_lacuna:string;midia_adequada:boolean};
   scene_graph?: SceneData | SceneDataV2;
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
   cad_phrase_captions?: {start:number;end:number;text:string}[]; // measured phrase-level audio, private QA
@@ -209,7 +210,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({s
     }))} referenceAsset={shot.reference_asset}/>;
   if(shot.type==='mechanism'&&shot.mechanism==='lock_filling')
     return <LockFilling p={p}/>;
-  if(shot.type === 'atlas_map') {
+  if(shot.type === 'animation_clip' || shot.type === 'atlas_map') {
     // É um MP4 do Formato/PalcoMapa ORIGINAL, com seu próprio raster, créditos,
     // destaques e câmera. Nunca redesenhar mapa, crop ou duplicar títulos.
     return <AbsoluteFill><Sequence from={Math.round(shot.start*30)}
@@ -500,6 +501,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     if(!shot.scene_graph||shot.evidence!=='explainer')throw new Error('E201-ESQUEMA');
     return <SceneGraphE201 data={shot.scene_graph} t={now-shot.start} duration={duration} headline={shot.headline} source={shot.source_display||shot.source}/>;
   }
+  if(shot.type==='animation_clip') {
+    // Reproduce the verified full vertical clip, never crop or duplicate its baked labels.
+    return <AbsoluteFill style={{background:'#08101A'}}><Body shot={shot} p={p} t={now-shot.start}/></AbsoluteFill>;
+  }
   if(shot.type==='atlas_map') {
     // O clip ATLAS antigo tem tipografia/attribution rasterizadas internamente.
     // Não fingir que o render está homologado pela área segura nova.
@@ -612,14 +617,28 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   for(const s of shots){
     const key=s.type==='mechanism'?'mechanism:'+(s.mechanism||''):
       s.type==='scene_graph'?'scene_graph:'+(s.scene_graph?.schema||''):
-      s.type==='cad_preview'?'cad_preview':null;
+      s.type==='cad_preview'?'cad_preview':s.type==='animation_clip'?'animation_clip:'+(s.animation_proof?.schema||''):null;
     if(!key)continue;
+    if(s.type==='animation_clip'){
+      const p=s.animation_proof;
+      const candidates=animationPolicy.external_candidates as Record<string,{status:string;reference_sha256?:string;reference_run?:number;frames?:number;fps?:number;dimensions?:number[]}>;
+      const e=p?candidates[p.renderer]:undefined;
+      if(!p||!e||e.status!=='CANDIDATO'||!e.frames||!e.fps||p.sha256!==e.reference_sha256||p.run!==e.reference_run||
+        p.frames!==e.frames||p.fps!==e.fps||p.dimensions?.join(',')!==e.dimensions?.join(',')||
+        p.publish!==false||p.viewport!=='INTEGRAL_SEM_CROP'||p.status!=='CANDIDATO'||p.geometry_approval!=='PENDENTE'||
+        p.midia_adequada!==false||s.evidence!=='explainer'||s.asset!=='animation_e213/'+p.sha256+'.mp4'||
+        !p.acao?.trim()||!p.lacuna?.trim()||!['BUSCA_SEM_REGISTRO_ADEQUADO','IMPOSSIVEL_FILMAR'].includes(p.motivo_lacuna)||
+        Math.abs(p.duration_s-e.frames/e.fps)>1e-6||
+        Math.abs(s.end-s.start-Math.ceil(e.frames/e.fps*30-1e-8)/30)>1e-6||
+        Math.abs(s.start*30-Math.round(s.start*30))>1e-6)
+        throw new Error('E213-PROVA-INVALIDA '+s.id);
+    }
     const status=registry[key]?.status;
     if(!status||(status==='REPROVADO'&&!legacyQA)||
       ((status==='LABORATORIO'||status==='CANDIDATO')&&(!preview||!private_review_only)))
       throw new Error('E211-ROTA-BLOQUEADA '+s.id+' '+key);
   }
-  if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph') && (!preview || !private_review_only))
+  if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph'||s.type==='animation_clip') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
   if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
     throw new Error('E47-PRIVATE-AUDIO');
@@ -634,6 +653,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
+    {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
     {docCap&&<div data-safe-role="subtitle" style={{...safeSlot('subtitle'),display:'flex',alignItems:'center',
         justifyContent:'center',textAlign:'center',pointerEvents:'none'}}>
       <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:44,lineHeight:1.08,color:OFF_WHITE,

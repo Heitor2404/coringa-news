@@ -6,6 +6,7 @@ on:
       - ".github/workflows/qa-step-fechado-e17.yml"
       - "src/v4/formatos/*e17.py"
       - "src/v4/formatos/adaptador_step_e23.py"
+      - "src/v4/formatos/previa_step_e25.py"
       - "src/v4/formatos/multicorpo_e18.py"
       - "tests/test_adaptador_step_e23.py"
       - "src/v4/formatos/solver_restricoes_e1.py"
@@ -17,7 +18,7 @@ permissions:
 jobs:
   cycle:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 35
     env:
       OPENBLAS_NUM_THREADS: 1
       E17_CAD_DIR: source_e17
@@ -28,11 +29,8 @@ jobs:
           python-version: "3.11"
       - name: Runtime
         run: |
-          if ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ffmpeg
-          fi
-          python -m pip install -q cadquery==2.7.0 pillow scipy pytest cairosvg
+          python -m pip install -q cadquery==2.7.0 pillow scipy pytest cairosvg numba imageio-ffmpeg
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
       - name: Download source for local use on runner
         run: |
           mkdir -p source_e17
@@ -49,11 +47,17 @@ jobs:
         run: python -m pytest -q -s tests/test_adaptador_step_e23.py tests/test_cad_fechado_e17.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py tests/test_renderer_mecanico_e9_e10.py tests/test_importador_geometria_e7.py tests/test_triagem_fontes_geometria_e8.py
       - name: Solid intersections, render and decode
         run: python -m src.v4.formatos.previa_cad_e17 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e17
+      - name: STEP no solver e renderer compartilhados E25
+        run: python -m src.v4.formatos.previa_step_e25 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e25
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: e17-volta-step-verificada
           path: |
             qa_e17/volta_completa.mp4
             qa_e17/volta_completa.jpg
             qa_e17/QA.json
+            qa_e25/*.mp4
+            qa_e25/*_folha.jpg
+            qa_e25/QA.json
           retention-days: 14

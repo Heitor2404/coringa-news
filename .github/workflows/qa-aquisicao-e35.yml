@@ -1,0 +1,73 @@
+name: E35 aquisição CAD e juntas inferidas
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-aquisicao-e35.yml"
+      - "src/v4/formatos/*_e35.py"
+      - "src/v4/formatos/multicorpo_e18.py"
+      - "src/v4/formatos/filme_e18.py"
+      - "benchmarks/e35/**"
+      - "benchmarks/e35_classes_mecanismo.json"
+      - "tests/test_e35_aquisicao.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  e35:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      OPENBLAS_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python
+        timeout-minutes: 10
+        run: |
+          python -m pip install --progress-bar off --only-binary=:all: cadquery==2.7.0 mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+      - name: Testes E35 (sintéticos n=5/6, adversariais) e regressões do núcleo
+        run: python -m pytest -q tests/test_e35_aquisicao.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_adaptador_step_e23.py
+      - name: Consulta 1 — geneva mechanism CAD (descoberta → MP4)
+        run: |
+          # Fontes públicas por git (só dados; hooks desativados no clone); nenhuma credencial.
+          python -m src.v4.formatos.pipeline_e35 benchmarks/e35/consulta_geneva.json trabalho qa_e35_geneva
+      - name: Consulta 2 — cycloidal drive CAD (até o estágio alcançado)
+        run: python -m src.v4.formatos.pipeline_e35 benchmarks/e35/consulta_cycloidal.json trabalho qa_e35_ciclo --sem-render
+      - name: Resumo verificável
+        run: |
+          python - <<'EOF'
+          import json
+          for d in ("qa_e35_geneva", "qa_e35_ciclo"):
+              r = json.load(open(f"{d}/E35_relatorio.json"))
+              print("E35-RESUMO", json.dumps(dict(
+                  consulta=r["consulta"], classe=r["classe"], resultado=r["resultado"],
+                  candidatos=[dict(url=c["url"], commit=c.get("commit"), estagio=c.get("estagio"),
+                                   motivo=c.get("motivo"), licenca=(c.get("licenca") or {}).get("spdx"),
+                                   analises=[dict(arquivo=a["arquivo"], estagio=a["estagio"], motivo=a.get("motivo"),
+                                                  entendido=a.get("entendido")) for a in c.get("analises", [])])
+                              for c in r["candidatos"]],
+                  escolha=r.get("escolha"), entrada=r.get("entrada"), solver=r.get("solver"),
+                  oraculo=r.get("oraculo_classe"),
+                  interferencia={k: v for k, v in (r.get("interferencia_brep") or {}).items() if k != "por_quadro"},
+                  render=r.get("render") and {k: r["render"].get(k) for k in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video")},
+                  publish=r["publish"], visual_approved=r["visual_approved"]), ensure_ascii=False, default=str))
+          g = json.load(open("qa_e35_geneva/E35_relatorio.json"))
+          assert g["resultado"] == "MP4_GERADO" and g["render"]["verificacao_video"]["quadros"] == 240
+          assert abs(g["oraculo_classe"]["avanco_por_volta_graus"] - g["oraculo_classe"]["avanco_esperado_graus"]) < 1e-6
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e35-aquisicao-privado
+          path: |
+            qa_e35_geneva/*.mp4
+            qa_e35_geneva/*_folha.jpg
+            qa_e35_geneva/E35_relatorio.json
+            qa_e35_ciclo/E35_relatorio.json
+          retention-days: 14

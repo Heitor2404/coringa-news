@@ -444,7 +444,11 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     qa["cortes_por_contato_novo"] = cache.get("cortes_por_contato_novo", [])
     qa["pares_que_cortaram_o_curso"] = [list(x) for x in cache.get("pares_que_cortaram", [])]
     qa["abaixo_do_plano_da_base_mm"] = abaixo_da_base(mont, qs, pap_auditoria := papeis(mont, acion, qs, cache["varrido"]))
-    qa["medida"] = dict(tipo=medida["tipo"], min_mm=float(serie.min() * 1000), max_mm=float(serie.max() * 1000))
+    if medida.get("unidade") == "rad":
+        qa["medida"] = dict(tipo=medida["tipo"], unidade="rad", min_graus=float(np.degrees(serie.min())),
+                            max_graus=float(np.degrees(serie.max())))
+    else:
+        qa["medida"] = dict(tipo=medida["tipo"], min_mm=float(serie.min() * 1000), max_mm=float(serie.max() * 1000))
     qa["metrologia_e22"] = D.diagnostico(mont, qs, medida, serie)
     if "oraculo" in modelo:
         o = modelo["oraculo"]
@@ -558,8 +562,12 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
                 d.ellipse((x, y + 8, x + 22, y + 30), fill=tuple(int(c * 255) for c in cor))
                 d.text((x + 34, y), nome, font=fonte(30), fill="#d5e1ea")
                 x += 60 + int(d.textlength(nome, font=fonte(30)))
-            valor = f"{serie[i]*1000:.1f} mm".replace(".", ",")
-            larg_valor = d.textlength(f"{serie.max()*1000:.1f} mm", font=fonte(48, True))
+            if medida.get("unidade") == "rad":   # medida angular: exibe em graus
+                valor = f"{np.degrees(serie[i]):.1f}°".replace(".", ",")
+                larg_valor = d.textlength(f"{np.degrees(np.abs(serie).max()):.1f}°", font=fonte(48, True))
+            else:
+                valor = f"{serie[i]*1000:.1f} mm".replace(".", ",")
+                larg_valor = d.textlength(f"{serie.max()*1000:.1f} mm", font=fonte(48, True))
             d.text((90, 1370), rotulo, font=caber(rotulo, 36, 900 - larg_valor - 30), fill="white")
             d.text((990 - d.textlength(valor, font=fonte(48, True)), 1360), valor, font=fonte(48, True), fill="#f2b94b")
             d.line(grafico, fill="#3b5163", width=4)

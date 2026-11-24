@@ -28,7 +28,39 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial.transform import Rotation
 
-from .solver_restricoes_e1 import solve_constraints
+from .solver_restricoes_e1 import solve_constraints as _solve_constraints_e1
+
+
+def solve_constraints(fun, q):
+    """Fechamento de posto completo. Usa o E1; se o critério de parada do
+    LM do E1 falhar (visto com coordenadas ~1e-16), cai na projeção
+    Gauss-Newton de norma mínima e REPETE a verificação de posto do E1."""
+    try:
+        return _solve_constraints_e1(fun, q)
+    except ValueError as e:
+        if "FECHAMENTO" not in str(e):
+            raise
+    q = np.array(q, float)
+    for _ in range(60):
+        r = fun(q)
+        if np.abs(r).max() < 1e-13:
+            break
+        J = jacobiano(fun, q)
+        q = q + np.linalg.lstsq(J, -r, rcond=None)[0]
+    r = fun(q)
+    err = float(np.abs(r).max())
+    if err > 1e-7:
+        raise ValueError("E1-SOLVER-FECHAMENTO")
+    J = jacobiano(fun, q)
+    rank = int(np.linalg.matrix_rank(J, tol=1e-8))
+    if rank < len(q):
+        raise ValueError("E1-SOLVER-SINGULAR_OU_SUBDETERMINADO")
+
+    class _R:  # mesma interface usada pelo E18 (x, fun)
+        pass
+    res = _R()
+    res.x, res.fun = q, r
+    return res, err, rank
 
 
 def fail(reason):

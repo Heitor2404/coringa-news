@@ -1,0 +1,39 @@
+{
+  "esquema": "coringa-e35-classes-v1",
+  "nota": "Taxonomia de CLASSES de mecanismo (conhecimento de engenharia geral), não de equipamentos. Cada classe declara termos de consulta, a assinatura geométrica que a análise do CAD precisa encontrar para confirmar a identidade, e o oráculo de livro-texto usado só como conferência fora do solver.",
+  "classes": {
+    "genebra": {
+      "termos": [
+        "geneva",
+        "genebra",
+        "maltese",
+        "intermittent",
+        "indexing"
+      ],
+      "assinatura": {
+        "par": "pino_rasgo",
+        "rasgos_min": 3,
+        "rasgos_radiais": true,
+        "espacamento_uniforme_tol_graus": 0.1,
+        "entrada_ortogonal_tol_rel": 0.005
+      },
+      "oraculo": "genebra_classico",
+      "referencia": "Relação clássica do mecanismo de Genebra externo: entrada ortogonal c·sin(π/n) = a; durante o engate tan β = a·sin θ / (c − a·cos θ); avanço 2π/n por volta; repouso (π + 2π/n)/(2π) da volta. Ex.: Norton, Design of Machinery; Shigley & Uicker, Theory of Machines and Mechanisms.",
+      "nome_exibicao": "Mecanismo de Genebra"
+    },
+    "cicloidal": {
+      "termos": [
+        "cycloidal",
+        "cycloid",
+        "cicloidal",
+        "cyclo"
+      ],
+      "assinatura": {
+        "par": "engrenamento_lobulado"
+      },
+      "oraculo": "razao_cicloidal",
+      "referencia": "Redutor cicloidal de um estágio: rotor de N lóbulos em M = N+1 roletes/dentes; razão −N quando a carcaça é fixa e a saída segue a rotação absoluta do rotor.",
+      "nome_exibicao": "Redutor cicloidal"
+    }
+  }
+}

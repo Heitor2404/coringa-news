@@ -18,6 +18,7 @@ export type FilmShot = {
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
+  cad_compact_panel?: boolean; // E46C private, preserve hero viewport
   cad_transmissao?: {schema:string;modo:string;razao:string;entrada:string;saida:string;publish:boolean};
   cad_warning?: string; // private CAD QA warning, never a publication clearance
   cad_reflow?: {schema:string;scale:number;tx:number;ty:number;viewport:number[];publish:boolean}; // E31 private
@@ -445,9 +446,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const age=active?now-shot.start-active.at:0;
   const reflowCAD=shot.type==='cad_preview'&&Boolean(shot.cad_reflow);
   const painelCAD=reflowCAD&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,962'?shot.cad_transmissao:undefined;
-  if(painelCAD&&(painelCAD.schema!=='coringa.cad.transmission.panel.v1'||painelCAD.publish!==false||
-    !['REDUÇÃO OBSERVADA','MULTIPLICAÇÃO OBSERVADA'].includes(painelCAD.modo)||
-    ![painelCAD.razao,painelCAD.entrada,painelCAD.saida].every(s=>typeof s==='string'&&s.length<=20)))
+  const compactoCAD=reflowCAD&&shot.cad_compact_panel&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,1092'?shot.cad_transmissao:undefined;
+  const dadosCAD=painelCAD||compactoCAD;
+  if(dadosCAD&&(dadosCAD.schema!=='coringa.cad.transmission.panel.v1'||dadosCAD.publish!==false||
+    !['REDUÇÃO OBSERVADA','MULTIPLICAÇÃO OBSERVADA'].includes(dadosCAD.modo)||
+    ![dadosCAD.razao,dadosCAD.entrada,dadosCAD.saida].every(s=>typeof s==='string'&&s.length<=20)))
     throw new Error('E46-PANEL');
   if(legacyVisualPreview && shot.type==='mechanism') {
     // Volta ao visual ORIGINAL 20/11 somente em prévia privada: SVG
@@ -551,7 +554,16 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
       <div style={{fontSize:19,color:"#B8CCD8",marginTop:8}}>Totais da trajetória calculada</div>
     </div>}
-    {reflowCAD&&!painelCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
+    {compactoCAD&&!subtitleMode&&<div data-cad-compact-panel="true" data-safe-role="mechanism_step"
+      style={{...rectStyle(MECH.step),fontFamily:"Inter,Arial,sans-serif",color:OFF_WHITE,overflow:"hidden",display:"flex",alignItems:"center",gap:18}}>
+      {p<.5?<><div style={{fontSize:48,fontWeight:900,letterSpacing:-1.4,color:GOLD,whiteSpace:"nowrap"}}>{compactoCAD.razao}</div>
+      <div style={{fontSize:23,fontWeight:800,lineHeight:1.06}}>{compactoCAD.modo}</div></>:<>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:18,color:"#B8CCD8",fontWeight:700}}>ENTRADA · TOTAL</div><div style={{fontSize:compactoCAD.entrada.length>12?24:36,fontWeight:850,lineHeight:1.08}}>{compactoCAD.entrada}</div></div>
+        <span style={{fontSize:30,color:GOLD}}>→</span>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:18,color:"#B8CCD8",fontWeight:700}}>SAÍDA · TOTAL</div><div style={{fontSize:compactoCAD.saida.length>12?24:36,fontWeight:850,lineHeight:1.08}}>{compactoCAD.saida}</div></div>
+      </>}
+    </div>}
+    {reflowCAD&&!painelCAD&&!compactoCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
         color:OFF_WHITE,fontWeight:800,lineHeight:1.12}}>
       <div style={{fontSize:25,color:GOLD}}>{active?.label||''}</div>

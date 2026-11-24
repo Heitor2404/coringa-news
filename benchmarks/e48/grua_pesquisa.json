@@ -1,0 +1,173 @@
+{
+  "schema": "coringa.episodio.pesquisa.v1",
+  "id": "grua_autoelevacao",
+  "tema": "Como uma grua consegue aumentar a própria altura?",
+  "duracao_alvo_s": 75,
+  "minimo_s": 60,
+  "publish": false,
+  "visual_approved": false,
+  "escopo": "Grua de torre com sistema de escalada externa por adição de segmentos. Não confundir com escalada interna do edifício.",
+  "gancho": "Essa máquina consegue levantar a própria parte superior para ficar ainda mais alta. Mas como ela faz isso?",
+  "sinal_demanda": {
+    "fonte": "vidIQ YouTube Shorts",
+    "video": "https://www.youtube.com/watch?v=ZiFAZ4rUxVQ",
+    "views": 2900000,
+    "consultado": "2026-11-24",
+    "limite": "Visualizações aproximadas do concorrente; não é medida de retenção."
+  },
+  "fontes": [
+    {
+      "id": "f1",
+      "url": "https://www.worksafe.qld.gov.au/news-and-events/alerts/incident-alerts/2021/falling-object-from-tower-crane",
+      "tipo": "regulador",
+      "uso": "Princípio físico: quadro de escalada externo, cilindro hidráulico, guias e espaço para segmento. Não é roteiro de operação."
+    },
+    {
+      "id": "f2",
+      "url": "https://www.morrow.com/learn/tower-crane-101",
+      "tipo": "documentacao_tecnica",
+      "uso": "Identificação das partes; referência, não licença de mídia."
+    },
+    {
+      "id": "f3",
+      "url": "https://patents.google.com/patent/EP3489187A1/en",
+      "tipo": "patente",
+      "uso": "Referência de sistema de inserção e retirada de segmentos; não prova de CAD disponível."
+    },
+    {
+      "id": "f4",
+      "url": "https://news.samsungcnt.com/en/features/engineering-construction/2022-11-climbing-high-safely-with-construction-cranes/",
+      "tipo": "documentacao_tecnica",
+      "uso": "Referência complementar de escalada e estabilidade."
+    }
+  ],
+  "midias_candidatas": [
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:Grue_de_chantier_%C3%A0_Amb%C3%A9rieux-en-Dombes_en_janvier_2022.webm",
+      "autor": "Benoît Prieur",
+      "licenca_declarada": "CC0",
+      "papel": "contexto",
+      "estado": "METADADOS_CONFERIDOS_NAO_DECUPADO"
+    },
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:Construction_Timelapse_-_SPIE.webm",
+      "licenca_declarada": "CC BY 3.0",
+      "papel": "contexto",
+      "estado": "METADADOS_CONFERIDOS_NAO_DECUPADO"
+    },
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:Tower_Crane.gif",
+      "autor": "DesignByData",
+      "licenca_declarada": "CC0",
+      "papel": "contexto_simulado",
+      "estado": "METADADOS_CONFERIDOS_NAO_DECUPADO"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=j1ijmN9Y-w0",
+      "papel": "referencia_escalada",
+      "estado": "DIREITOS_NAO_VERIFICADOS_NAO_USAR"
+    }
+  ],
+  "cad_candidatos": [
+    {
+      "url": "https://github.com/osrf/gazebo_models/blob/master/tower_crane/model.sdf",
+      "estado": "ESTATICO_SEM_JUNTAS_DE_ESCALADA"
+    },
+    {
+      "url": "https://cad-unigraphics-projects.blogspot.com/2011/07/tower-crane-3d-model-free-cad-download.html",
+      "estado": "LICENCA_E_MONTAGEM_NAO_VERIFICADAS"
+    },
+    {
+      "url": "https://www.innerscene.com/tools/library/3d-parts/tower-crane-898f1b82",
+      "estado": "GLB_CC0_DECLARADO_ARTICULACAO_NAO_VERIFICADA"
+    }
+  ],
+  "cenas": [
+    {
+      "ini": 0,
+      "fim": 3,
+      "fato": "A parte superior sobe em relação à torre existente.",
+      "visual": "Prova de escalada real ou representação técnica validada.",
+      "fontes": [
+        "f1"
+      ],
+      "obrigatoria": true
+    },
+    {
+      "ini": 3,
+      "fim": 12,
+      "fato": "A torre é composta por segmentos.",
+      "visual": "Grua e prédio; destacar segmentos.",
+      "fontes": [
+        "f1",
+        "f2"
+      ],
+      "obrigatoria": false
+    },
+    {
+      "ini": 12,
+      "fim": 23,
+      "fato": "Uma estrutura externa de escalada envolve o mastro.",
+      "visual": "Vista geral seguida de detalhe da estrutura.",
+      "fontes": [
+        "f1"
+      ],
+      "obrigatoria": true
+    },
+    {
+      "ini": 23,
+      "fim": 36,
+      "fato": "O sistema hidráulico eleva a parte superior.",
+      "visual": "Movimento relativo entre mastro e estrutura superior.",
+      "fontes": [
+        "f1"
+      ],
+      "obrigatoria": true
+    },
+    {
+      "ini": 36,
+      "fim": 49,
+      "fato": "O espaço criado recebe um segmento adicional.",
+      "visual": "Mostrar a entrada do segmento e a torre resultante; não inventar contato ou trajetória.",
+      "fontes": [
+        "f1",
+        "f3"
+      ],
+      "obrigatoria": true
+    },
+    {
+      "ini": 49,
+      "fim": 62,
+      "fato": "Guias mantêm o alinhamento durante a escalada.",
+      "visual": "Detalhe dos elementos de guia e mudança de altura.",
+      "fontes": [
+        "f1",
+        "f4"
+      ],
+      "obrigatoria": true
+    },
+    {
+      "ini": 62,
+      "fim": 75,
+      "fato": "A torre pode crescer em novos ciclos; a retirada de segmentos permite reduzir sua altura.",
+      "visual": "Comparação visual de alturas e retorno ao gancho.",
+      "fontes": [
+        "f1",
+        "f3"
+      ],
+      "obrigatoria": false
+    }
+  ],
+  "estado": "PESQUISA",
+  "bloqueios": [
+    "PROVA_VISUAL_DE_ESCALADA_NAO_LICENCIADA",
+    "CAD_ARTICULADO_NAO_VALIDADO",
+    "E35_SEM_CLASSE_DE_ESCALADA_E_TOPOLOGIA_VARIAVEL"
+  ],
+  "regras": [
+    "Não converter grua estática em prova de escalada.",
+    "Não copiar vídeo de referência sem licença.",
+    "Não inventar dimensões, força, juntas ou segurança estrutural.",
+    "Vídeo explicativo, não instrução de montagem."
+  ]
+}

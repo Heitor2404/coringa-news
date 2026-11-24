@@ -10,6 +10,7 @@ import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
 import {SceneGraphE201, type SceneData, type SceneDataV2} from './SceneGraphE201';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
+import animationPolicy from './animation-policy.json';
 import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
@@ -70,6 +71,7 @@ export type FilmProps = {
   // E202: narração privada medida (hash no nome), somente prévia privada com cenas declarativas
   scene_narration_asset?: string;
   documentary_captions?: {start:number;end:number;words:{w:string;hl?:boolean}[]}[];
+  animation_policy_mode?: 'EDITORIAL'|'LEGADO_REJEITADO_SOMENTE_QA';
   documentary_caption_origin?: 'PALAVRAS_MEDIDAS'|'FRASES_MEDIDAS_LAB';
 };
 
@@ -598,8 +600,25 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset,documentary_captions,documentary_caption_origin}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset,documentary_captions,documentary_caption_origin,animation_policy_mode}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
+  // E211: check actual resolved renderer on every input, including cached or manually authored props.
+  const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
+  if(animation_policy_mode!==undefined&&animation_policy_mode!=='EDITORIAL'&&!legacyQA)
+    throw new Error('E211-MODO-INVALIDO');
+  if(legacyQA&&(!preview||!private_review_only||documentary_captions?.length||scene_narration_asset||cad_narration_asset))
+    throw new Error('E211-LEGADO-SOMENTE-QA-SEM-NARRACAO');
+  const registry=animationPolicy.renderers as Record<string,{status:string}>;
+  for(const s of shots){
+    const key=s.type==='mechanism'?'mechanism:'+(s.mechanism||''):
+      s.type==='scene_graph'?'scene_graph:'+(s.scene_graph?.schema||''):
+      s.type==='cad_preview'?'cad_preview':null;
+    if(!key)continue;
+    const status=registry[key]?.status;
+    if(!status||(status==='REPROVADO'&&!legacyQA)||
+      ((status==='LABORATORIO'||status==='CANDIDATO')&&(!preview||!private_review_only)))
+      throw new Error('E211-ROTA-BLOQUEADA '+s.id+' '+key);
+  }
   if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
   if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
@@ -644,6 +663,10 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       height:4,background:'rgba(255,255,255,.25)'}}>
       <div style={{width:`${100*clamp(t/Math.max(.01,duracao))}%`,height:'100%',background:GOLD}}/>
     </div>
+    {legacyQA&&<div style={{position:'absolute',top:210,left:0,right:0,zIndex:100,
+        color:'#FFF',background:'#8D2525',padding:12,textAlign:'center',fontSize:28,fontWeight:900}}>
+      ESTILO REPROVADO · REGRESSÃO HISTÓRICA · NÃO ENTREGAR
+    </div>}
     {preview&&private_review_only&&reference_style_preview&&<div
       style={{position:'absolute',top:105,left:0,right:0,
         color:GOLD,textAlign:'center',fontSize:20,fontWeight:850,

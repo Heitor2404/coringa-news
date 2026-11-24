@@ -1,4 +1,5 @@
 name: E44 compositor documental com transmissão E41
+# Revalidar com o compositor corrigido; o push só reage a este próprio arquivo.
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

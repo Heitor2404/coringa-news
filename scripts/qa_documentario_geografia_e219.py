@@ -73,16 +73,22 @@ def windows(m,span):
         if len(out)>=8:break
     return out
 
-def mapclip(ch,span):
-    q=ch['atlas'];MAP.mkdir(parents=True,exist_ok=True)
+def mapplan(ch,span):
+    q=ch['atlas']
     p={'formato':'atlas','canal':'coringa','video_id':'e219-location','titulo':ch['title'],'geo':'motor4/formatos/dados/mundo.topo.json',
        'duracao':span,'camera':'roi','rasters':[{'nome':q['raster']}],
        'narracao':{'fatos':[]},'destaques':[],'rotas':[],'clipes':[],
-       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':.2,'t1':span,'estilo':'ponto'}],
-       'beats':[{'id':'local','composicao':'atlas.protagonista','t':0,'roi':q['roi'],'movimento':'fixo',
+       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*.70,'t1':span,'estilo':'ponto'}],
+       'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
                  'prova':'Localização em base de relevo Natural Earth; não representa a costa de 2018.',
-                 'camadas':[]}], 'cta':False}
-    p=A.resolver_tempos(p,[])
+                 'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
+                             't0':.3,'t1':span,'p':{'linhas':[{'texto':'HA­VAÍ'.replace('­',''),'t':.3},
+                                 {'texto':'NO PACÍFICO','t':span*.45,'destaque':True}]}}]}], 'cta':False}
+    return A.resolver_tempos(p,[])
+
+def mapclip(ch,span):
+    MAP.mkdir(parents=True,exist_ok=True)
+    p=mapplan(ch,span)
     prep=B.preparar(p,0,span,MAP,PUBLIC)
     clip=MAP/'mapa.mp4'
     subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
@@ -94,6 +100,9 @@ def mapclip(ch,span):
 def main():
     spec=read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True);STAGE.mkdir(parents=True,exist_ok=True)
     if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
+    # Catch structural cartographic errors before spending a voice request.
+    for ch in spec['chapters']:
+        if 'atlas' in ch:B.verificar_plano(mapplan(ch,5.5),0,5.5)
     rows=[r for ch in spec['chapters'] for r in ch.get('videos',[])]
     acquired={};errors=[]
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:

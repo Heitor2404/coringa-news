@@ -2,7 +2,7 @@ name: E219 - mapa real isolado sem TTS
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-atlas-localizacao-e219.yml','src/v4/formatos/ponte_mapa_atlas.py']
+    paths: ['src/v4/formatos/ponte_mapa_atlas.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -67,3 +67,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: mapas-localizacao-cifrados, path: entrega/, retention-days: 7, if-no-files-found: error}
+  avisar_falha:
+    needs: map
+    if: ${{ always() && (needs.map.result == 'failure' || needs.map.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.map.result }}
+      job_name: map
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

@@ -2,7 +2,7 @@ name: E219 - cobertura de fontes documentais sem TTS
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-documentario-fontes.yml','scripts/qa_documentario_fontes.py','benchmarks/e219/salmao_retorno_pesquisa.json']
+    paths: ['scripts/qa_documentario_fontes.py','benchmarks/e219/salmao_retorno_pesquisa.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,3 +37,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: fontes-documentais-cifradas, path: entrega/, retention-days: 7, if-no-files-found: error}
+  avisar_falha:
+    needs: coverage
+    if: ${{ always() && (needs.coverage.result == 'failure' || needs.coverage.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.coverage.result }}
+      job_name: coverage
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

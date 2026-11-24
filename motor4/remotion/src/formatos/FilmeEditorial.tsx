@@ -7,7 +7,7 @@ import React from 'react';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
-import {SceneGraphE201, type SceneData} from './SceneGraphE201';
+import {SceneGraphE201, type SceneData, type SceneDataV2} from './SceneGraphE201';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
 import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
@@ -18,7 +18,7 @@ export type FilmShot = {
   start: number;
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview' | 'scene_graph';
-  scene_graph?: SceneData;
+  scene_graph?: SceneData | SceneDataV2;
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
   cad_phrase_captions?: {start:number;end:number;text:string}[]; // measured phrase-level audio, private QA
   cad_compact_panel?: boolean; // E46C private, preserve hero viewport
@@ -67,6 +67,8 @@ export type FilmProps = {
   safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
   direitos_pendentes?: string[];
   cad_narration_asset?: string;
+  // E202: narração privada medida (hash no nome), somente prévia privada com cenas declarativas
+  scene_narration_asset?: string;
 };
 
 const W = 1080, H = 1920;
@@ -594,15 +596,18 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
   if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
     throw new Error('E47-PRIVATE-AUDIO');
+  if(scene_narration_asset&&(!preview||!private_review_only||cad_narration_asset||!/^e202\/[0-9a-f]{64}\.wav$/.test(scene_narration_asset)||!shots.some(s=>s.type==='scene_graph')))
+    throw new Error('E202-PRIVATE-AUDIO');
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
     {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
+    {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>

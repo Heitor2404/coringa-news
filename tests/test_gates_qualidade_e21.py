@@ -98,6 +98,19 @@ class GatesE21(unittest.TestCase):
         r=classificar(qa)
         self.assertEqual(r["estado_execucao"],"BLOCKED")
 
+    def test_nonconvergent_solver_or_static_movie_is_not_pass(self):
+        for field,val in (("residuo_max", 0.0001),
+                          ("residuo_max", -1.0),
+                          ("residuo_max", float("nan")),
+                          ("verificacao_video", {"quadros":180,"pico_pixels_mudados":0}),
+                          ("verificacao_video", {"quadros":0,"pico_pixels_mudados":1000}),
+                          ("verificacao_video", {"quadros":180})):
+            qa=qa_base();qa[field]=val
+            r=classificar(qa)
+            self.assertEqual(r["estado_execucao"],"BLOCKED")
+            self.assertEqual(r["estado"],"BLOQUEADO_NA_EXECUCAO")
+            self.assertFalse(r["liberado_para_publicacao"])
+
     def test_summary_cannot_claim_100percent_with_xarm_failure(self):
         data=[]
         for flag in (True, False, None):

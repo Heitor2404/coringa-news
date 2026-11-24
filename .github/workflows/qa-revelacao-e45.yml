@@ -1,0 +1,24 @@
+name: E45 revelação por oclusão - testes leves
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - 'src/v4/formatos/revelacao_e45.py'
+      - 'tests/test_revelacao_e45.py'
+      - '.github/workflows/qa-revelacao-e45.yml'
+permissions:
+  contents: read
+jobs:
+  sintetico:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install numpy numba pillow pytest
+      - run: python -m pytest -q tests/test_revelacao_e45.py
+      - run: python -m py_compile src/v4/formatos/revelacao_e45.py src/v4/formatos/filme_e18.py src/v4/formatos/pipeline_e41.py

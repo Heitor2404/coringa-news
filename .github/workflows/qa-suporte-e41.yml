@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 100
     env:
       OPENBLAS_NUM_THREADS: 1
+      CORINGA_E45: '1'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +34,7 @@ jobs:
           python -m pip install --progress-bar off --only-binary=:all: cadquery==2.7.0 mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
           echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
       - name: Testes E41 (sintéticos com suporte modelado) + E35/E37 + núcleo
-        run: python -m pytest -q tests/test_editorial_e42.py tests/test_e41_vinculos.py tests/test_e35_aquisicao.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_adaptador_step_e23.py
+        run: python -m pytest -q tests/test_editorial_e42.py tests/test_e41_vinculos.py tests/test_e35_aquisicao.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_adaptador_step_e23.py tests/test_revelacao_e45.py
       - name: Consulta cicloidal congelada da E35 → descoberta → E41 → MP4
         timeout-minutes: 75
         run: python -m src.v4.formatos.pipeline_e35 benchmarks/e35/consulta_cycloidal.json trabalho_e41 qa_e41
@@ -60,6 +61,7 @@ jobs:
               publish=r.get("publish"), visual_approved=r.get("visual_approved")), ensure_ascii=False, default=str))
           assert r["gates"]["estado"] == "REPROVADO_INTERFERENCIA_BREP"
           assert r["render"]["transmissao_observada"]["quadros"] == 240
+          assert r["render"]["revelacao_e45"]["publish"] is False
           EOF
       - uses: actions/upload-artifact@v4
         if: always()

@@ -620,6 +620,14 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
             fonte=modelo.get("fonte_cad"),
             direitos_publicacao="NAO_AVALIADOS",homologacao_visual="NAO_HOMOLOGADO",
             publish=False)
+    if modelo.get("revelacao_e45"):
+        from . import revelacao_e45 as E45
+        qa["revelacao_e45"] = E45.previa(mont, qs, cam, modelo["revelacao_e45"],
+            saida / (modelo["id"] + "_revelacao.mp4"), ffmpeg_exe(), fonte,
+            modelo.get("aviso_e45", "MODELO NÃO VALIDADO"))
+        if qa["revelacao_e45"]["resultado"] == "PREVIA_GERADA":
+            r45=qa["revelacao_e45"]
+            r45["verificacao_video"]=conferir_video(saida/r45["arquivo"],r45["quadros"])
     return qa
 
 

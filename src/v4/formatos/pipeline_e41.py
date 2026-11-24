@@ -213,6 +213,15 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120,
                       f"entrada {voltas:g} voltas · razão {k:.4f} deduzida da geometria",
                       estilo_visual="e33", exportar_palco=True, fonte_cad=fonte,
                       camera_alvos=[nucleo[g] for g in perfis])
+        import os
+        if os.environ.get("CORINGA_E45") == "1":
+            # IDs por sólido original, não por nome nem por grupo rígido.
+            exibidos = [i for i in ids if grupo_de[i] in exibir_corpos]
+            pos = {i: k for k,i in enumerate(exibidos)}
+            modelo["revelacao_e45"] = {pos[p["corpo"]]: [pos[r] for a,r in alvo_pares
+                if a == p["corpo"] and r in pos] for p in aceitos}
+            modelo["aviso_e45"] = ("INTERFERÊNCIA · NÃO VALIDADO" if
+                rel["interferencia_brep"]["quadros_com_interferencia"] else "MODELO NÃO VALIDADO")
         acion = {"entrada": {j: float(c) for j, c in enumerate(lin[entrada]) if c}}
         qa = F.renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida, varrido="entrada")
         qa["interferencia_brep"]=rel["interferencia_brep"]
@@ -222,7 +231,7 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120,
         rel["gates"]={x:qa[x] for x in ("estado","estado_execucao","validacao_externa",
                             "verificacao_contato","liberado_para_publicacao")}
         rel["render"] = {k2: qa.get(k2) for k2 in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video", "camera",
-                            "palco_cad","eventos_trajetoria","transmissao_observada","apresentacao_e33")}
+                            "palco_cad","eventos_trajetoria","transmissao_observada","apresentacao_e33","revelacao_e45")}
         (saida/"QA.json").write_text(json.dumps(_limpar(qa),ensure_ascii=False,indent=2))
     _marca(rel, "fim")
     rel["resultado"] = "MP4_GERADO" if renderizar else "SOLVER_E_ORACULOS"

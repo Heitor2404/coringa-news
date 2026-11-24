@@ -15,6 +15,8 @@ def chave(shot):
         return 'scene_graph:'+str((shot.get('scene_graph') or {}).get('schema') or '')
     if tipo=='cad_preview':
         return 'cad_preview'
+    if tipo=='animation_clip':
+        return 'animation_clip:'+str((shot.get('animation_proof') or {}).get('schema') or '')
     return None
 
 def avaliar(shots, *, modo=None, privado=False, preview=True):
@@ -39,6 +41,27 @@ def avaliar(shots, *, modo=None, privado=False, preview=True):
             motivo='renderer reprovado; replanejar com mídia real ou nova representação validável'
         elif status in ('LABORATORIO','CANDIDATO') and not (privado and preview):
             motivo='animação não homologada, somente avaliação privada'
+        if s.get('type')=='animation_clip':
+            p=s.get('animation_proof') or {}
+            e=POLICY['external_candidates'].get(p.get('renderer'),{})
+            if (e.get('status')!='CANDIDATO' or not e.get('reference_sha256')
+                or p.get('sha256')!=e.get('reference_sha256') or p.get('run')!=e.get('reference_run')
+                or p.get('frames')!=e.get('frames') or p.get('fps')!=e.get('fps')
+                or p.get('dimensions')!=e.get('dimensions') or p.get('publish') is not False
+                or p.get('viewport')!='INTEGRAL_SEM_CROP' or p.get('status')!='CANDIDATO'
+                or p.get('geometry_approval')!='PENDENTE' or p.get('midia_adequada') is not False
+                or s.get('evidence')!='explainer' or s.get('asset')!='animation_e213/'+str(p.get('sha256'))+'.mp4'
+                or not str(p.get('acao') or '').strip() or not str(p.get('lacuna') or '').strip()
+                or p.get('motivo_lacuna') not in ('BUSCA_SEM_REGISTRO_ADEQUADO','IMPOSSIVEL_FILMAR')):
+                motivo='clipe candidato sem prova registrada ou finalidade específica'
+            else:
+                import math
+                dur=e['frames']/e['fps']
+                try:
+                    if abs(p['duration_s']-dur)>1e-6 or abs((s['end']-s['start'])-math.ceil(dur*30-1e-8)/30)>1e-6:
+                        motivo='duração do clipe diverge da referência'
+                except (KeyError,TypeError):
+                    motivo='duração do clipe ausente'
         if motivo:
             bloqueios.append({'codigo':'A-ROTA-BLOQUEADA','cena':s.get('id'),'motivo':motivo})
     return {'permitido':not bloqueios,'rotas':rotas,'bloqueios':bloqueios,

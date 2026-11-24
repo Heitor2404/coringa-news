@@ -14,6 +14,7 @@ import { geoMercator, geoPath } from 'd3-geo';
 import { carregarML, arrumar } from '../MapaRota';
 import { W, H, clamp, easeIO, lerp } from '../ident';
 import type { FormatoProps, PalcoKey } from './tipos';
+import { progresso, progressoMarcos } from './TempoVisualE200';
 
 export const palcoEm = (pk: PalcoKey[], t: number) => {
   let i = 0;
@@ -206,7 +207,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       map.setPaintProperty(`destl_${i}`, 'line-opacity', v);
     });
     (P.rotas || []).forEach((r, i) => {
-      const k = easeIO(clamp((t - r.t0) / Math.max(.01, r.t1 - r.t0))) * (r.ate ?? 1);
+      const k = (r.marcos_progresso ? progressoMarcos(t,r.marcos_progresso,r.interpolacao!) : progresso(t,r.t0,r.t1,'easeIO')) * (r.ate ?? 1);
       const some = r.some != null ? clamp((r.some - t) / .4 + 1) : 1;
       // trecho com direção: de (fração) → para (fração); a água "desce" do lago para cada mar no instante da fala
       const de = (r as any).de ?? 0, para = (r as any).para ?? 1, fim = de + (para - de) * k;

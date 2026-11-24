@@ -1,3 +1,4 @@
+import type { MarcoProgresso, Interpolacao } from './TempoVisualE200';
 // Contrato dos FORMATOS (ATLAS / DOSSIÊ). Python monta, valida e faz o preflight; aqui só se desenha, de forma
 // determinística (tudo é função do quadro). Posições vêm prontas em caixas (slots) calculadas no Python.
 export type Caixa = { x: number; y: number; w: number; h: number };
@@ -21,7 +22,7 @@ export type PalcoKey = {
 export type Raster = { dataset?: string; nome: string; src: string; cantos: [number, number][]; de?: number | null; ate?: number | null; atribuicao: string; tipo: string;
   ajuste?: { saturacao?: number; contraste?: number; brilho_min?: number; brilho_max?: number } };
 export type Destaque = { fonte: 'paises' | 'lagos'; nome: string; cor?: 'destaque' | 'destaque2' | 'agua'; t0: number; t1?: number };
-export type Rota = { t0: number; t1: number; ate?: number; cor?: 'destaque' | 'agua'; some?: number };
+export type Rota = { marcos_progresso?: MarcoProgresso[]; interpolacao?: Interpolacao; t0: number; t1: number; ate?: number; cor?: 'destaque' | 'agua'; some?: number };
 export type Rotulo = { nome: string; lonlat: [number, number]; t0: number; t1?: number; estilo?: 'ponto' | 'area' | 'oceano' | 'lago' };
 export type Camada = { id: string; componente: string; t0: number; t1: number; caixa: Caixa; p: any };
 export type FormatoProps = {

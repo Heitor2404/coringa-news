@@ -103,6 +103,8 @@ def resolver_tempos(plano: dict, palavras: list[dict], duracao_audio: float | No
         r['t0'], r['t1'] = a(r['t0']), a(r['t1'])
         if r.get('some') is not None:
             r['some'] = a(r['some'])
+        for m in r.get('marcos_progresso') or []:
+            m['t'] = a(m['t'])
     for e in p.get('explicacoes') or []:
         e['t0'], e['t1'] = a(e['t0']), a(e['t1'])
     for c in p.get('clipes') or []:
@@ -790,7 +792,10 @@ def eventos(plano: dict) -> list[float]:
     ev = [k['t'] for k in plano.get('palco') or []]
     ev += [x['t0'] for x in plano.get('destaques') or []] + [x['t0'] for x in plano.get('rotulos') or []]
     for r in plano.get('rotas') or []:
-        ev += [r['t0'], (r['t0'] + r['t1']) / 2, r['t1']]
+        if r.get('marcos_progresso'):
+            ev += [m['t'] for m in r['marcos_progresso'] if isinstance(m,dict) and isinstance(m.get('t'),(int,float))]
+        else:
+            ev += [r['t0'], (r['t0'] + r['t1']) / 2, r['t1']]
     for c in plano.get('clipes') or []:
         # clipe aprovado com ação/filme verificado (o portão CONGELADO confere no render): progride o tempo todo
         ev += [c['t0'] + x for x in c['params'].get('tempos') or []] + [c['t0']] + list(_passos(c['t0'], c['t1'], 1.0))
@@ -1189,6 +1194,14 @@ def validar(plano: dict, imagens: dict | None = None) -> list[dict]:
     mudanca = [e for e in eventos(plano) if .2 < e < g]
     if plano.get('formato') == 'atlas' and (not fortes or not mudanca):
         v('erro', 'F-GANCHO', f'0–{g:.0f}s', 'sem prova visual forte no início (clipe, foto protagonista, documento ou pergunta) ou sem mudança antes de 3 s')
+    # Marcos de apresentação, não inferência de posição histórica ou velocidade real.
+    from .tempo_visual_e200 import validar_marcos
+    for i,r in enumerate(plano.get('rotas') or []):
+        if 'marcos_progresso' in r or 'interpolacao' in r:
+            try:
+                validar_marcos(r.get('marcos_progresso'),r.get('interpolacao'),r.get('t0'),r.get('t1'))
+            except ValueError as e:
+                v('erro','F-ROTA-MARCOS',f'rota {i}',str(e))
     # rota prometida exige geometria
     if any(not r.get('arco') for r in plano.get('rotas') or []) and not plano.get('geo'):
         v('erro', 'F-ROTA-SEM-GEOMETRIA', '-', 'rota sem arquivo de geometria')

@@ -4,14 +4,14 @@
  */
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
+import {progresso} from './TempoVisualE200';
 
 export type MotionEditorialData =
   | {kind:'stat_reveal'; eyebrow:string; value:string; line1:string; line2:string; fraction?:number}
   | {kind:'causal_flow'; eyebrow:string; stages:[string,string,string]};
 
 const GOLD='#FFD21F', INK='#091523', WHITE='#F5F2EB', MUTED='#AAC0CE';
-const clamp=(n:number)=>Math.max(0,Math.min(1,n));
-const appear=(p:number,at:number,len:number)=>{const n=clamp((p-at)/len);return 1-Math.pow(1-n,3);};
+const appear=(p:number,at:number,len:number)=>progresso(p,at,at+len,'easeOut');
 
 export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({data,p})=>{
   const bodyStart=460;

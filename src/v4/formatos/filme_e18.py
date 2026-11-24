@@ -62,7 +62,12 @@ def suave(n):
     return (1 - np.cos(np.linspace(0, math.pi, n))) / 2
 
 
-def plano_movimento(mont, modelo, solver_cache):
+def excluidos_da_fonte(m, mont):
+    exc = [(int(x) >> 16, int(x) & 0xFFFF) for x in m.exclude_signature[: m.nexclude]]
+    return M.pares_excluidos(mont, exc)
+
+
+def plano_movimento(mont, modelo, solver_cache, m=None):
     mov = modelo["movimento"]
     dur = float(mov.get("duracao_s", 6.0))
     n = int(round(dur * FPS))
@@ -70,27 +75,46 @@ def plano_movimento(mont, modelo, solver_cache):
         nome = mov["atuador"]
         if nome not in mont.atuadores:
             raise ValueError("E18-ATUADOR_DESCONHECIDO")
-        acion = {nome: mont.atuadores[nome]}
+        # Todos os acionadores da fonte entram; só o nomeado varre, os outros
+        # ficam no valor da pose inicial (servo de posição mantido).
+        acion = dict(mont.atuadores)
+        r = list(acion).index(nome)
         solver = M.Resolvedor(mont, acion)
-        faixa = solver.faixa_acionador(0)
+        chave = mov.get("chave_inicial", "qpos0")
+        if chave not in mont.chaves:
+            raise ValueError("E18-CHAVE_DESCONHECIDA")
+        # A pose-chave da fonte pode não fechar exatamente: projeta no fechamento.
+        fixos_val = solver.linhas @ mont.chaves[chave]
+        montar = lambda s_, v=fixos_val: np.concatenate([v[:r], [s_], v[r + 1:]])
+        faixa = solver.faixa_acionador(r)
+        inicio = float(np.clip(fixos_val[r], *faixa))
+        q0, info0 = solver.resolver(montar(inicio), mont.chaves[chave])
+        solver_cache["projecao_chave_inicial_rad"] = float(np.abs(q0 - mont.chaves[chave]).max())
+        faixa, limitados = M.faixa_viavel(solver, faixa, inicio, q0, montar)
+        if m is not None:
+            # Contato NOVO entre peças (além do que a fonte já sobrepõe na
+            # própria pose de referência) encerra o curso.
+            colisor = M.Colisor(mont, excluidos_da_fonte(m, mont))
+            ref = colisor.pares(q0)
+            faixa, cortes_c, novos = M.faixa_sem_contato_novo(solver, colisor, faixa, inicio, q0, montar, ref)
+            solver_cache.update(sobreposicao_referencia=ref, cortes_por_contato_novo=cortes_c,
+                                pares_que_cortaram=novos)
         medida = modelo["medida"]
         if medida["tipo"] == "folga":
-            faixa, cortes, eixo = M.corte_no_contato(mont, solver, faixa, medida["a"], medida["b"],
-                                                     mont.chaves["qpos0"])
+            faixa, cortes, eixo = M.corte_no_contato(mont, solver, faixa, medida["a"], medida["b"], q0,
+                                                     montar=montar)
         else:
             cortes, eixo = [], None
-        q0 = mont.chaves["qpos0"]
-        inicio = float(solver.linhas[0] @ q0)
         if not faixa[0] - 1e-9 <= inicio <= faixa[1] + 1e-9:
             inicio = faixa[0]
+            q0, _ = solver.resolver(montar(inicio), q0)
         outro = faixa[1] if abs(faixa[1] - inicio) >= abs(faixa[0] - inicio) else faixa[0]
         # Pausa · ida · pausa · volta · pausa (proporções fixas para todo modelo).
         p, v = int(n * .1), int(n * .35)
         perfil = np.concatenate([np.zeros(p), suave(v), np.ones(n - 2 * p - 2 * v), suave(v)[::-1], np.zeros(p)])
-        alvos = (inicio + perfil * (outro - inicio))[:, None]
-        solver_cache["faixa"] = faixa
-        solver_cache["cortes"] = cortes
-        solver_cache["eixo"] = eixo
+        alvos = np.array([montar(inicio + x * (outro - inicio)) for x in perfil])
+        solver_cache.update(faixa=faixa, cortes=cortes, eixo=eixo, limitada_por_batente=limitados,
+                            varrido=nome, indice_varrido=r)
         return acion, alvos, q0
     if mov["tipo"] == "poses_chave":
         chaves = [mont.chaves[k] for k in mov["chaves"]]
@@ -104,9 +128,8 @@ def plano_movimento(mont, modelo, solver_cache):
             alvos.extend(a + (b - a) * x for x in t)
         while len(alvos) < n:
             alvos.append(chaves[-1])
-        solver_cache["faixa"] = None
-        solver_cache["cortes"] = []
-        solver_cache["eixo"] = None
+        solver_cache.update(faixa=None, cortes=[], eixo=None, limitada_por_batente=[], varrido=None,
+                            indice_varrido=None)
         return acion, np.array(alvos), chaves[0]
     raise ValueError("E18-MOVIMENTO_NAO_SUPORTADO")
 
@@ -171,7 +194,7 @@ def oraculo_dh(mont, dh, amostras=60):
 
 
 # --------------------------------------------------------------- papéis
-def papeis(mont, acion, qs):
+def papeis(mont, acion, qs, varrido=None):
     moveis = set()
     X0 = mont.poses(qs[0])
     for q in qs[:: max(1, len(qs) // 12)]:
@@ -180,10 +203,10 @@ def papeis(mont, acion, qs):
             if np.abs(X[b] - X0[b]).max() > 1e-7:
                 moveis.add(b)
     entrada, laco = set(), set()
-    if len(acion) == 1:
-        for coef in acion.values():
-            for k in coef:
-                entrada.add(mont.juntas[k].corpo)
+    nomes = [varrido] if varrido else (list(acion) if len(acion) == 1 else [])
+    for n in nomes:
+        for k in acion[n]:
+            entrada.add(mont.coords[k].corpo)
     for e in mont.igualdades:
         if e.tipo in ("connect", "weld"):
             laco.update((e.a, e.b))
@@ -200,6 +223,8 @@ def cor_visual(v, papel):
         return AMBAR * 0.85 + base * 0.15, 0.7
     if papel == "laco":
         return VERDE_AGUA * 0.8 + base * 0.2, 0.6
+    if papel == "estrutura":   # o que não se move recua visualmente
+        return base * 0.55, 0.3
     return base, 0.45
 
 
@@ -267,29 +292,43 @@ def fonte(n, negrito=False):
 def gerar(manifesto, modelo, raiz, saida, rapido=False):
     m, mont, lidos = carregar(modelo, raiz)
     cache = {}
-    acion, alvos, semente = plano_movimento(mont, modelo, cache)
+    acion, alvos, semente = plano_movimento(mont, modelo, cache, m)
     traj, solver = M.trajetoria(mont, acion, alvos, semente)
     qs = [q for q, _ in traj]
     medida = modelo["medida"]
     serie = np.array([medir(mont, q, medida, cache["eixo"]) for q in qs])
     # --- auditoria
-    qa = dict(id=modelo["id"], quadros=len(qs), juntas=mont.nq, igualdades=[e.tipo for e in mont.igualdades],
+    qa = dict(id=modelo["id"], quadros=len(qs), juntas=len(mont.juntas), coordenadas=mont.nq,
+              tipos_junta=sorted({j.tipo for j in mont.juntas}), base_congelada=mont.base_congelada,
+              igualdades=[e.tipo for e in mont.igualdades],
               atuadores=list(mont.atuadores), modos=sorted({i["modo"] for _, i in traj}),
               mobilidade_max=max(i["mobilidade"] for _, i in traj),
               residuo_max=max(i["residuo"] for _, i in traj), faixa_acionador=cache["faixa"],
+              ociosos_max=max(i.get("ociosos", 0) for _, i in traj),
+              faixa_limitada_por_batente=cache.get("limitada_por_batente"),
+              projecao_chave_inicial_rad=cache.get("projecao_chave_inicial_rad"),
               cortes_por_contato=cache["cortes"], arquivos_conferidos=lidos)
     qa["oraculo_mujoco_cinematica"] = M.oraculo_cinematica(m, mont, qs[:: max(1, len(qs) // 24)])
-    if qa["mobilidade_max"] > 0 and m.nu == 1:
+    if qa["mobilidade_max"] > 0 and m.nu == 1 and len(acion) == 1:
         import mujoco
         m2 = mujoco.MjModel.from_xml_path(str(Path(raiz).resolve() / modelo["xml"]))
-        lo, hi = float(alvos.min()), float(alvos.max())
+        lo, hi = float(alvos[:, 0].min()), float(alvos[:, 0].max())
         qa["oraculo_mujoco_dinamica"] = M.oraculo_simulacao(m2, mont, M.Resolvedor(mont, acion),
                                                              np.linspace(lo, hi, 5)[1:-1])
-    exc = [(int(s) >> 16, int(s) & 0xFFFF) for s in m.exclude_signature[: m.nexclude]]
-    excl = M.pares_excluidos(mont, exc)
-    amostra = sorted({0, len(qs) // 4, len(qs) // 2, 3 * len(qs) // 4, len(qs) - 1, int(np.argmin(serie)), int(np.argmax(serie))})
-    qa["interferencias"] = {str(i): M.interferencias(mont, qs[i], excl) for i in amostra}
-    qa["abaixo_do_plano_da_base_mm"] = abaixo_da_base(mont, qs, pap_auditoria := papeis(mont, acion, qs))
+    elif qa["mobilidade_max"] > 0:
+        qa["oraculo_mujoco_dinamica"] = "nao_aplicado: oráculo dinâmico implementado só para um atuador"
+    colisor = M.Colisor(mont, excluidos_da_fonte(m, mont))
+    ref = cache.get("sobreposicao_referencia")
+    if ref is None:
+        ref = colisor.pares(qs[0])
+    ref_set = set(map(tuple, ref))
+    amostra = sorted(set(range(0, len(qs), max(1, len(qs) // 24))) | {len(qs) - 1, int(np.argmin(serie)), int(np.argmax(serie))})
+    # Só contam pares NOVOS; os já sobrepostos na pose de referência da fonte ficam registrados.
+    qa["sobreposicao_na_referencia_da_fonte"] = [list(x) for x in ref]
+    qa["interferencias"] = {str(i): [list(x) for x in sorted(set(colisor.pares(qs[i])) - ref_set)] for i in amostra}
+    qa["cortes_por_contato_novo"] = cache.get("cortes_por_contato_novo", [])
+    qa["pares_que_cortaram_o_curso"] = [list(x) for x in cache.get("pares_que_cortaram", [])]
+    qa["abaixo_do_plano_da_base_mm"] = abaixo_da_base(mont, qs, pap_auditoria := papeis(mont, acion, qs, cache["varrido"]))
     qa["medida"] = dict(tipo=medida["tipo"], min_mm=float(serie.min() * 1000), max_mm=float(serie.max() * 1000))
     if "oraculo" in modelo:
         o = modelo["oraculo"]
@@ -302,7 +341,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
             qa["oraculo_fabricante"] = dict(o, **r, dentro_da_tolerancia=r["erro_max_mm"] <= o["tolerancia_mm"])
     # --- imagem
     cima = np.array([0, 0, 1.0])
-    pap = papeis(mont, acion, qs)
+    pap = papeis(mont, acion, qs, cache["varrido"])
     cam, escolha, pontos = escolher_camera(mont, qs, cima, (0.08, 0.15, 0.92, 0.64))
     chao = float(pontos[:, 2].min())
     fundo = R.fundo_gradiente(W, H)
@@ -313,9 +352,25 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
           "-metadata", "comment=" + modelo["credito"] + " | " + modelo["licenca"] + " | privado, nao publicar",
           str(filme)]
     legenda_papel = {"entrada": ("Entrada (atuador)", AMBAR), "laco": ("Laço fechado", VERDE_AGUA)}
-    presentes = [p for p in ("entrada", "laco") if p in pap.values()]
+    # Título cabe na largura útil (900 px): reduz o corpo até caber.
+    tam = 64
+    while tam > 36 and ImageDraw.Draw(Image.new("RGB", (8, 8))).textlength(modelo["titulo"], font=fonte(tam, True)) > 900:
+        tam -= 2
+    fonte_titulo = fonte(tam, True)
+    # Legenda só para papéis que aparecem: pré-passada em 3 poses, pixels por peça.
+    vis = {}
+    for i in (0, len(qs) // 2, len(qs) - 1):
+        X = mont.poses(qs[i])
+        malhas = [(v.vertices @ (X[v.corpo] @ v.local)[:3, :3].T + (X[v.corpo] @ v.local)[:3, 3], v.faces,
+                   np.ones(3), 0.0) for v in mont.visuais]
+        _, inf = R.renderizar(cam, malhas, fundo, ss=1)
+        for v, px in zip(mont.visuais, inf["pixels_por_malha"]):
+            vis[pap[v.corpo]] = vis.get(pap[v.corpo], 0) + px
+    minimo = 0.0015 * W * H * 3
+    presentes = [p for p in ("entrada", "laco") if vis.get(p, 0) >= minimo]
+    qa_legenda = dict(pixels_por_papel={k: int(v) for k, v in vis.items()}, legenda=presentes)
     n_lacos = sum(e.tipo in ("connect", "weld") for e in mont.igualdades)
-    resumo = [f"{mont.nq} juntas", f"{len(mont.atuadores)} atuador" + ("es" if len(mont.atuadores) > 1 else "")]
+    resumo = [f"{len(mont.juntas)} juntas", f"{len(mont.atuadores)} atuador" + ("es" if len(mont.atuadores) > 1 else "")]
     if n_lacos:
         resumo.append(f"{n_lacos} laço" + ("s" if n_lacos > 1 else "") + " fechado" + ("s" if n_lacos > 1 else ""))
     if qa["mobilidade_max"]:
@@ -338,7 +393,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
             rgb, info = R.renderizar(cam, malhas, fundo, chao=chao)
             im = Image.fromarray(rgb)
             d = ImageDraw.Draw(im)
-            d.text((90, 96), modelo["titulo"], font=fonte(64, True), fill="white")
+            d.text((90, 96), modelo["titulo"], font=fonte_titulo, fill="white")
             d.text((90, 186), " · ".join(resumo), font=fonte(32), fill="#9fb6c8")
             y = 1290
             x = 90
@@ -375,6 +430,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     Image.fromarray(folha).save(saida / f"{modelo['id']}_folha.jpg", quality=90)
     qa.update(video=filme.name, sha256_mp4=sha256(filme), sha256_quadros_rgb=hashes.hexdigest(),
               camera=dict(olho=cam.olho.tolist(), **escolha), cobertura_ultimo=info["cobertura"],
+              legenda=qa_legenda, tamanho_titulo=tam,
               verificacao_video=conferir_video(filme, len(list(indices))), publish=False, visual_approved=False)
     return qa
 

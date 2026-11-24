@@ -118,10 +118,58 @@ def test_grau_passivo_sem_mola_e_recusado():
         M.Resolvedor(mont, mont.atuadores).resolver([0.05], mont.chaves["qpos0"])
 
 
-def test_juntas_bola_ou_livre_sao_recusadas():
-    m = mujoco.MjModel.from_xml_string(mjcf("""<body><joint type="ball"/><geom type="mesh" mesh="cx"/></body>"""))
-    with pytest.raises(ValueError, match="E18-JUNTA_NAO_SUPORTADA"):
+def test_esferica_e_base_livre_conferem_com_mujoco():
+    g = '<geom type="mesh" mesh="cx" contype="0" conaffinity="0"/>'
+    corpo = f"""<body name="raiz" pos="0.3 0.1 0.5"><freejoint/>{g}
+      <body name="b1" pos="0.1 0 0" euler="0.2 0.1 0.3"><joint type="ball" pos="0.01 0.02 0"/>{g}
+        <body name="b2" pos="0 0.2 0"><joint type="hinge" axis="1 0 0"/>{g}</body></body></body>"""
+    m = mujoco.MjModel.from_xml_string(mjcf(corpo))
+    mont = M.de_mujoco(m)
+    assert mont.base_congelada == ["raiz"] and mont.nq == 4
+    rng = np.random.default_rng(5)
+    qs = [rng.uniform(-1.2, 1.2, mont.nq) for _ in range(12)]
+    r = M.oraculo_cinematica(m, mont, qs)
+    assert r["fk_pos_max_m"] < 1e-12 and r["fk_rot_max"] < 1e-12
+    for q in qs:
+        assert np.abs(mont.de_qpos(mont.para_qpos(q)) - q).max() < 1e-12
+
+
+def test_esferica_limitada_e_livre_aninhada_sao_recusadas():
+    g = '<geom type="mesh" mesh="cx"/>'
+    # (free fora do nível superior já é recusada pelo compilador do MuJoCo)
+    with pytest.raises(ValueError, match="free joint can only be used on top level"):
+        mujoco.MjModel.from_xml_string(mjcf(f"""<body>{g}<body pos="0 0 1"><freejoint/>{g}</body></body>"""))
+    m = mujoco.MjModel.from_xml_string(mjcf(f"""<body><joint type="ball" range="0 0.5"/>{g}</body>"""))
+    with pytest.raises(ValueError, match="E18-ESFERICA_LIMITADA"):
         M.de_mujoco(m)
+
+
+def test_haste_esferica_em_laco_tem_giro_ocioso_mantido():
+    """Haste com esférica numa ponta e pino (connect) na outra: o giro da
+    haste sobre o próprio eixo não move nenhuma outra peça e não tem mola. O
+    solver deve detectá-lo como ocioso, mantê-lo e resolver o resto."""
+    g = '<geom type="mesh" mesh="cx" contype="0" conaffinity="0"/>'
+    # Manivela (hinge z, raio 0,05) e balancim (hinge z, raio 0,1, pivô em x=0,2);
+    # a haste vai da ponta da manivela (esférica) até a ponta do balancim.
+    A = np.array([0.05, 0.0, 0.0]); O4 = np.array([0.2, 0.0, 0.0])
+    P = O4 + 0.1 * np.array([math.cos(math.radians(100)), math.sin(math.radians(100)), 0])
+    corpo = f"""<body name="base">{g}
+      <body name="manivela"><joint name="m" type="hinge" axis="0 0 1" range="-3 3"/>{g}
+        <body name="haste" pos="{A[0]} 0 0"><joint type="ball"/>{g}</body></body>
+      <body name="balancim" pos="{O4[0]} 0 0" euler="0 0 {math.radians(100)}"><joint type="hinge" axis="0 0 1"/>{g}</body></body>"""
+    extra = f"""<equality><connect body1="haste" body2="balancim" anchor="{P[0]-A[0]} {P[1]} 0"/></equality>
+    <actuator><motor joint="m"/></actuator>"""
+    m = mujoco.MjModel.from_xml_string(mjcf(corpo, extra))
+    mont = M.de_mujoco(m)
+    s = M.Resolvedor(mont, mont.atuadores)
+    q, info = s.resolver([0.4], mont.chaves["qpos0"])
+    assert info["ociosos"] == 1 and info["mobilidade"] == 0 and info["residuo"] < 1e-9
+    # Oráculo: distância entre a ponta da manivela e a ponta do balancim = haste.
+    X = mont.poses(q)
+    pm = X[mont.indice_corpo("manivela")][:3, :3] @ A + X[mont.indice_corpo("manivela")][:3, 3]
+    pb = X[mont.indice_corpo("balancim")][:3, :3] @ np.array([0.1, 0, 0]) + X[mont.indice_corpo("balancim")][:3, 3]
+    assert abs(np.linalg.norm(pb - pm) - np.linalg.norm(P - A)) < 1e-9
+    assert M.oraculo_cinematica(m, mont, [q])["igualdade_mujoco_max"] < 1e-9
 
 
 def test_corte_no_primeiro_contato_entre_malhas():
@@ -141,6 +189,26 @@ def test_corte_no_primeiro_contato_entre_malhas():
     assert cortes == ["fim"] and abs(faixa[1] - 0.045) < 1e-6
     q, _ = s.resolver([faixa[1]], mont.chaves["qpos0"])
     assert abs(M.folga(mont, q, "esq", "dir", eixo)[0]) < 1e-6
+
+
+def test_contato_novo_corta_curso_e_sobreposicao_de_referencia_nao():
+    g = '<geom type="mesh" mesh="cx" contype="0" conaffinity="0"/>'
+    # 'fixo' e 'grudado' já se sobrepõem na referência (como malhas simplificadas
+    # de fonte); 'carro' desliza em x até bater em 'parede' (folga inicial 40 mm).
+    corpo = f"""<body name="base">{g}
+      <body name="fixo" pos="0 0.2 0">{g}</body><body name="grudado" pos="0.005 0.2 0">{g}</body>
+      <body name="parede" pos="0.05 0 0">{g}</body>
+      <body name="carro"><joint name="x" type="slide" axis="1 0 0" range="-0.1 0.1"/>{g}</body></body>"""
+    m = mujoco.MjModel.from_xml_string(mjcf(corpo, '<actuator><motor joint="x"/></actuator>'))
+    mont = M.de_mujoco(m)
+    s = M.Resolvedor(mont, mont.atuadores)
+    col = M.Colisor(mont, M.pares_excluidos(mont))
+    q0 = mont.chaves["qpos0"]
+    ref = col.pares(q0)
+    assert ref == [("fixo", "grudado")]
+    faixa, cortes, novos = M.faixa_sem_contato_novo(s, col, (-0.1, 0.1), 0.0, q0, lambda v: [v], ref)
+    assert cortes == ["fim"] and novos == [("parede", "carro")]
+    assert abs(faixa[1] - 0.04) < 1e-6 and faixa[0] == -0.1
 
 
 def cinco_barras_mjcf(springref):
@@ -238,8 +306,8 @@ def test_fontes_reais_carregam_com_hash_e_fk_igual_ao_mujoco():
         m, mont, lidos = F.carregar(modelo, RAIZ)
         assert set(lidos) <= set(modelo["sha256"])
         rng = np.random.default_rng(0)
-        lo = np.array([j.limite[0] if j.limite else -1 for j in mont.juntas])
-        hi = np.array([j.limite[1] if j.limite else 1 for j in mont.juntas])
+        lo = np.array([c.limite[0] if c.limite else -1 for c in mont.coords])
+        hi = np.array([c.limite[1] if c.limite else 1 for c in mont.coords])
         r = M.oraculo_cinematica(m, mont, [rng.uniform(lo, hi) for _ in range(8)])
         assert r["fk_pos_max_m"] < 1e-12
 

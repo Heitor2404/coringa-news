@@ -162,7 +162,9 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     img[obj] = cor
     img[borda] = img[borda] * 0.35 + np.array(contorno) / 255 * 0.65
     out = Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
-    return np.asarray(out.resize((cam.W, cam.H), Image.Resampling.BOX)), dict(cobertura=float(obj.mean()))
+    px = np.bincount(idbuf[obj], minlength=len(malhas))[: len(malhas)] / (ss * ss)
+    return (np.asarray(out.resize((cam.W, cam.H), Image.Resampling.BOX)),
+            dict(cobertura=float(obj.mean()), pixels_por_malha=px.tolist()))
 
 
 def _sombra(img, cam, malhas, chao, ss, obj):

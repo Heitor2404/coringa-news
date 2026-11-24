@@ -211,6 +211,44 @@
         "universal_robots_ur5e/assets/wrist3.obj": "0e51748f9c93bd66604360a5cf7e2e8a6e754550be64076333ff4fc19ec90c61",
         "universal_robots_ur5e/ur5e.xml": "2311486b7d013caa5db76d0abe46b5b235642c7baf3b91fbb7dbd93048774fa5"
       }
+    },
+    {
+      "id": "agility_cassie_perna",
+      "titulo": "Agility Robotics Cassie — perna",
+      "xml": "agility_cassie/cassie.xml",
+      "licenca_arquivo": "agility_cassie/LICENSE",
+      "licenca": "MIT (Agility Robotics)",
+      "credito": "Modelo: MuJoCo Menagerie · Agility Cassie · MIT",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "left-knee",
+        "chave_inicial": "home",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "distancia",
+        "a": "left-hip-pitch",
+        "b": "left-foot",
+        "rotulo": "Quadril até o pé (perna esquerda)"
+      },
+      "sha256": {
+        "agility_cassie/LICENSE": "66a031b71b6164c91683ccf2929faef82b3df5e51844322807fd7dc5cf238c38",
+        "agility_cassie/assets/achilles-rod.obj": "8bbf95148db0a3b0df1ca9014f7ef2aa800a2947d44601a56c50632da4df39bb",
+        "agility_cassie/assets/foot-crank.obj": "21588e4ea034c26e7eb69df2824cb5007dfa6d36cebbed4df9fea8ea56d0a03f",
+        "agility_cassie/assets/foot.obj": "a8df9e6ff35de70a94fa9942cb76729b0e6d6ab7c7f2273ceac092f812b8a010",
+        "agility_cassie/assets/heel-spring.obj": "d9d30ee356544d9ace1cb57e84d0971c6a82f6d441607a9f053c7ab649e51e85",
+        "agility_cassie/assets/hip-pitch.obj": "19bec989a3f966843708496e0670b64d44e3b3811ced179444d5e5e3f7d06f21",
+        "agility_cassie/assets/hip-roll.obj": "d1d33d949bdae781cf15406cdec8ebc7318729d2410ce87030ae986cd9c8011c",
+        "agility_cassie/assets/hip-yaw.obj": "cd8f0fb370f8f5cf271e96438a00b1d4aed81bf31b075295ca299e0ad7ae1d2f",
+        "agility_cassie/assets/knee-spring.obj": "918d42bfc6991982a9de9c41748bb1cdb4c153a4f354b8f4a2bc527f72e6af55",
+        "agility_cassie/assets/knee.obj": "286d950322265b0e79e70d2e59df735d45272990dfd91138b3672f890cdda707",
+        "agility_cassie/assets/pelvis.obj": "ddb1dac51a06931562482f13d87c8906f4c682175b2f435350e5c40cf8fab8ab",
+        "agility_cassie/assets/plantar-rod.obj": "c2d5c15c1c1232ab15554fcdfd8e0d8f4682f83f6f42789db4748fab1b3c70af",
+        "agility_cassie/assets/shin.obj": "b896cab8f5606b16ceec2ae949a5aafb4514e3eba545981241746ccf430de27f",
+        "agility_cassie/assets/tarsus.obj": "97fdde6c725cdee595dd6dc4bc224b27b62a190c8ba5def2fdecb37f113d6cf9",
+        "agility_cassie/cassie.xml": "ee650a1f643b3aaee11f8ee31e4abf4765d2488f9e5d7bf4dc2c59b5aab0ddcd"
+      }
     }
   ]
 }

@@ -23,13 +23,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Runtime
+        timeout-minutes: 10
         run: |
           if ! command -v ffmpeg >/dev/null; then
             sudo apt-get update -qq
             sudo apt-get install -y -qq ffmpeg
           fi
-          python -m pip install -q mujoco==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
-          sudo apt-get install -y -qq fonts-dejavu-core >/dev/null || true
+          python -m pip install -q mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
       - name: Fonte no commit fixado (somente no runner; nada é copiado para o repositório ou artifact)
         run: |
           commit=$(jq -er .fonte.commit benchmarks/e18_multifornecedor.json)
@@ -54,6 +54,8 @@ jobs:
                   modos=m.get("modos"), mobilidade_max=m.get("mobilidade_max"), residuo_max=m.get("residuo_max"),
                   fk_mujoco=m.get("oraculo_mujoco_cinematica"), dinamica=m.get("oraculo_mujoco_dinamica"),
                   interferencias=m.get("interferencias"), abaixo_base_mm=m.get("abaixo_do_plano_da_base_mm"),
+                  sobreposicao_referencia=m.get("sobreposicao_na_referencia_da_fonte"), cortes_contato=m.get("cortes_por_contato_novo"),
+                  pares_corte=m.get("pares_que_cortaram_o_curso"), ociosos_max=m.get("ociosos_max"), legenda=m.get("legenda"),
                   medida=m.get("medida"), fabricante=dict(valor=o.get("valor_mm"), medido=o.get("medido_mm"),
                   erro_dh_max_mm=o.get("erro_max_mm"), dentro=o.get("dentro_da_tolerancia")),
                   camera=m.get("camera"), video=m.get("verificacao_video"),

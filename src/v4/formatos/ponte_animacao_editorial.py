@@ -73,6 +73,18 @@ def inserir(props, shot, pos, public_root):
     if any(props.get(k) for k in ('scene_narration_asset','cad_narration_asset','documentary_captions')):
         raise ValueError('E213-RETIMAR-VOZ-PRIMEIRO')
     ss=props['shots']
+    # This insertion path uses a 30fps timeline; reject rather than silently
+    # round pre-existing cuts (which would alter real source windows).
+    t=0.
+    for s in ss:
+        a,b=s['start'],s['end']
+        if (not math.isfinite(a) or not math.isfinite(b) or b<=a
+            or abs(a*30-round(a*30))>1e-6 or abs(b*30-round(b*30))>1e-6
+            or abs(a-t)>1e-6):
+            raise ValueError('E213-TIMELINE-FRAMES')
+        t=b
+    if abs(props['duracao']-t)>1e-6:
+        raise ValueError('E213-TIMELINE-DURACAO')
     if not 0<=pos<=len(ss) or any(s['id']==shot['id'] for s in ss):
         raise ValueError('E213-POSICAO')
     p=shot['animation_proof']; verified=verificar(p['renderer'],Path(public_root)/shot['asset'])

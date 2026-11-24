@@ -137,7 +137,7 @@ def coletar(briefs: list[dict], destino: Path, procurar_candidatos=None, escolhe
 
 
 # E206 — aquisição documental antes de solicitar representação sintética.
-def candidatos_documentais(consultas, video, buscar=None):
+def candidatos_documentais(consultas, video, buscar=None, diagnostico=None):
     """Reusa pesquisa Commons de midia, mas preserva página e original da API.
     Metadados não demonstram ação e não homologam direitos.
     """
@@ -153,6 +153,9 @@ def candidatos_documentais(consultas, video, buscar=None):
             if getattr(getattr(exc, 'response', None), 'status_code', None) in (403, 429):
                 break
             continue
+        if diagnostico is not None:
+            diagnostico.append({'consulta': q, 'tipo': 'video' if video else 'foto', 'retornados_api': len(pages),
+                                'recusados': {}})
         for p in pages:
             inf = (p.get('videoinfo' if video else 'imageinfo') or [{}])[0]
             meta = inf.get('extmetadata') or {}
@@ -161,14 +164,27 @@ def candidatos_documentais(consultas, video, buscar=None):
             url, pagina = inf.get('url') or '', inf.get('descriptionurl') or ''
             u, pg = urlsplit(url), urlsplit(pagina)
             mime = inf.get('mime') or ''
-            if (lic not in LICENCAS or not autor or u.scheme != 'https'
-                    or u.netloc != 'upload.wikimedia.org' or not u.path.startswith('/wikipedia/commons/')
-                    or u.query or u.fragment or pg.scheme != 'https'
-                    or pg.netloc != 'commons.wikimedia.org' or not pg.path.startswith('/wiki/File:')
-                    or url in vistos or not midia._relevante(p.get('title', ''), q)
-                    or min(inf.get('width') or 0, inf.get('height') or 0) < 700
-                    or not 0 < (inf.get('size') or 0) <= 25_000_000
-                    or mime not in (('video/webm', 'video/ogg', 'video/mp4', 'application/ogg') if video else ('image/jpeg', 'image/png'))):
+            razoes = []
+            if lic not in LICENCAS or not autor:
+                razoes.append('licenca_ou_autor')
+            if (u.scheme != 'https' or u.netloc != 'upload.wikimedia.org'
+                    or not u.path.startswith('/wikipedia/commons/') or u.query or u.fragment
+                    or pg.scheme != 'https' or pg.netloc != 'commons.wikimedia.org'
+                    or not pg.path.startswith('/wiki/File:')):
+                razoes.append('origem')
+            if url in vistos or not midia._relevante(p.get('title', ''), q):
+                razoes.append('repetida_ou_relevancia_textual')
+            if min(inf.get('width') or 0, inf.get('height') or 0) < 700:
+                razoes.append('resolucao')
+            if not 0 < (inf.get('size') or 0) <= 25_000_000:
+                razoes.append('tamanho')
+            if mime not in (('video/webm', 'video/ogg', 'video/mp4', 'application/ogg') if video else ('image/jpeg', 'image/png')):
+                razoes.append('mime')
+            if razoes:
+                if diagnostico is not None:
+                    d = diagnostico[-1]['recusados']
+                    for motivo in razoes:
+                        d[motivo] = d.get(motivo, 0)+1
                 continue
             vistos.add(url)
             out.append({'url': url, 'pagina': pagina, 'titulo': p.get('title'),
@@ -198,7 +214,8 @@ def _original_documental(candidato, destino, reader=None):
                         raise ValueError('E206-LIMITE')
                 return bytes(data)
     data = reader(candidato['url'])
-    if not isinstance(data, bytes) or len(data) != candidato['bytes_declarados'] or len(data) > 25_000_000:
+    if (not isinstance(data, bytes) or not 0 < len(data) <= 25_000_000
+            or (candidato.get('bytes_declarados') is not None and len(data) != candidato['bytes_declarados'])):
         raise ValueError('E206-BYTES')
     sha = hashlib.sha256(data).hexdigest()
     ext = {'video/webm': '.webm', 'video/ogg': '.ogv', 'application/ogg': '.ogv',
@@ -236,7 +253,32 @@ def _original_documental(candidato, destino, reader=None):
             'publicar': False}
 
 
-def pesquisar_triagem(triagem, destino, buscar=None, reader=None):
+
+def candidato_institucional(fonte):
+    """Adapter for specific FWS media pages with individually declared PD status.
+    This accepts a research receipt, not a model-generated license or a final approval.
+    """
+    from urllib.parse import urlsplit
+    u = urlsplit(str(fonte.get('url') or ''))
+    p = urlsplit(str(fonte.get('pagina') or ''))
+    if (u.scheme != 'https' or u.netloc != 'www.fws.gov'
+            or not u.path.startswith('/sites/default/files/images/')
+            or not u.path.lower().endswith(('.jpg','.jpeg','.png')) or u.query or u.fragment
+            or p.scheme != 'https' or p.netloc != 'www.fws.gov'
+            or not p.path.startswith('/media/') or p.query or p.fragment
+            or fonte.get('licenca') != 'PUBLIC DOMAIN'
+            or not all(isinstance(fonte.get(k), str) and fonte[k].strip()
+                       for k in ('autor','titulo','mostra','evidencia_licenca'))):
+        raise ValueError('E208-FONTE-INSTITUCIONAL')
+    return {'url': fonte['url'], 'pagina': fonte['pagina'], 'titulo': fonte['titulo'],
+            'autor': fonte['autor'], 'licenca': fonte['licenca'],
+            'credito': fonte['autor']+' · U.S. Fish & Wildlife Service · Public Domain',
+            'evidencia_licenca': fonte['evidencia_licenca'], 'mostra': fonte['mostra'],
+            'bytes_declarados': None, 'mime': 'image/png' if u.path.lower().endswith('.png') else 'image/jpeg',
+            'tipo': 'foto', 'provedor': 'FWS', 'estado': 'CANDIDATO_SEM_INSPECAO', 'publicar': False}
+
+
+def pesquisar_triagem(triagem, destino, buscar=None, reader=None, fontes_institucionais=None):
     """Pesquisa necessidades documentais; mantém mapa e lacuna em filas próprias.
     Procura vídeo e foto, sem conversão automática para desenho.
     """
@@ -248,9 +290,9 @@ def pesquisar_triagem(triagem, destino, buscar=None, reader=None):
             resultados.append({'id': n['id'], 'estado': n['estado']})
             continue
         q = n['pesquisa'].get('consultas_en') or n['pesquisa']['consultas']
-        linha = {'id': n['id'], 'candidatos': [], 'falhas': [], 'adquiridos': []}
+        linha = {'id': n['id'], 'candidatos': [], 'falhas': [], 'adquiridos': [], 'diagnostico_busca': []}
         for video in (True, False):
-            cs, falhas = candidatos_documentais(q, video, buscar)
+            cs, falhas = candidatos_documentais(q, video, buscar, linha['diagnostico_busca'])
             linha['candidatos'] += cs
             linha['falhas'] += falhas
             for c in [x for x in cs if x['url'] not in usados][:2]:
@@ -264,6 +306,21 @@ def pesquisar_triagem(triagem, destino, buscar=None, reader=None):
                     linha['falhas'].append({'url': c['url'], 'erro': str(exc)[:180]})
                     if 'HTTP 429' in str(exc) or 'HTTP 403' in str(exc):
                         break
+        # Fonte institucional explícita, pesquisada/registrada fora do modelo.
+        # Nunca aceitar links arbitrários sugeridos pela IA.
+        if not linha['adquiridos']:
+            for fonte in (fontes_institucionais or {}).get(n['id'], [])[:3]:
+                try:
+                    c = candidato_institucional(fonte)
+                    linha['candidatos'].append(c)
+                    if c['url'] in usados:
+                        continue
+                    a = _original_documental(c, destino / 'originais', reader)
+                    adquiridos.append(a)
+                    usados.add(c['url'])
+                    linha['adquiridos'].append(a['sha256_origem'])
+                except Exception as exc:
+                    linha['falhas'].append({'provedor':'institucional', 'erro':str(exc)[:180]})
         linha['estado'] = ('REVISAO_MIDIA_PENDENTE' if linha['adquiridos'] else 'PESQUISA_SEM_BYTES')
         resultados.append(linha)
     r = {'publicar': False, 'aprovacao_humana': 'PENDENTE',

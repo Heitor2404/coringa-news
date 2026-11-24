@@ -48,6 +48,7 @@ export type FilmShot = {
   subject: string;
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
+  photo_framing?: 'integral';
   focusB?: [number, number];
   lead: string;
   headline: string;
@@ -276,6 +277,13 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({s
       {right>.04 && <div style={{position:'absolute',left:`${right*100}%`,top:0,bottom:0,width:4,background:GOLD,boxShadow:`0 0 22px ${GOLD}`}}/>}
       <div style={{position:'absolute',top:470,left:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:OFF_WHITE}}>{shot.compareLabels?.[0] || 'ANTES'}</div>
       {right>.6 && <div style={{position:'absolute',top:470,right:42,background:'rgba(5,14,24,.85)',padding:'9px 18px',fontWeight:900,fontSize:31,letterSpacing:1.2,color:GOLD}}>{shot.compareLabels?.[1] || 'DEPOIS'}</div>}
+    </AbsoluteFill>;
+  }
+  if(shot.type==='photo'&&shot.photo_framing==='integral'&&!shot.graphic_original){
+    // Preserve the complete scientific/archival photograph without inventing
+    // borders or cutting essential context. The editorial layers remain separate.
+    return <AbsoluteFill style={{background:'#060C15'}}>
+      <Img src={staticFile(shot.asset||'')} style={{position:'absolute',left:0,top:360,width:1080,height:1110,objectFit:'contain'}}/>
     </AbsoluteFill>;
   }
   if (shot.type === 'photo' && shot.graphic_original && shot.motion_graphic) {

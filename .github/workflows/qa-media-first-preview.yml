@@ -29,7 +29,7 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4
           npm ci --prefix motor4 --no-audit --no-fund
           cd motor4
-          npx tsc --noEmit
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
       - name: Preparar fontes USGS reais sem TTS
         run: python -m scripts.qa_media_first_preview
       - name: Render de nove segundos no compositor existente

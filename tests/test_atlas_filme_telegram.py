@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,12 @@ def _preparar(tmp_path):
     }), encoding="utf-8")
     (d / "prova_causal_8s.mp4").write_bytes(b"x" * 55000)
     (d / "contato_causal_8s.jpg").write_bytes(b"y" * 15000)
+    # Fixture sem animação: vincula props e MP4 apenas para testar transporte.
+    (d / 'props.json').write_text(json.dumps({'preview':True,'shots':[{'id':'m','type':'photo'}]}))
+    qa=json.loads((d/'qa_causal.json').read_text())
+    qa.update(props_sha256=hashlib.sha256((d/'props.json').read_bytes()).hexdigest(),
+              video_sha256=hashlib.sha256((d/'prova_causal_8s.mp4').read_bytes()).hexdigest())
+    (d/'qa_causal.json').write_text(json.dumps(qa))
     return d
 
 
@@ -77,3 +84,22 @@ def test_nao_envia_quando_publicacao_privada_nao_comprovada(tmp_path, monkeypatc
     with pytest.raises(RuntimeError):
         envio.entregar(d)
     assert "sendVideo" not in [m for m, *_ in enviados]
+
+
+def test_legado_e_artefato_sem_vinculo_nao_sao_entregues(tmp_path,monkeypatch):
+    d=_preparar(tmp_path)
+    eventos=_mock(monkeypatch)
+    p=d/'props.json'
+    p.write_text(json.dumps({'preview':True,'private_review_only':True,
+        'animation_policy_mode':'LEGADO_REJEITADO_SOMENTE_QA',
+        'shots':[{'id':'a','type':'mechanism','mechanism':'lock_filling'}]}))
+    qa=json.loads((d/'qa_causal.json').read_text())
+    qa['props_sha256']=hashlib.sha256(p.read_bytes()).hexdigest()
+    (d/'qa_causal.json').write_text(json.dumps(qa))
+    with pytest.raises(RuntimeError,match='bloqueada'):
+        envio.entregar(d)
+    assert [e[0] for e in eventos]==['sendMessage']
+    p.unlink()
+    with pytest.raises(RuntimeError,match='bloqueada'):
+        envio.entregar(d)
+    assert all(e[0]=='sendMessage' for e in eventos)

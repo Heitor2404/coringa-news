@@ -2,7 +2,7 @@ name: E218 - documentario astronomia curado privado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-documentario-e218.yml','scripts/qa_documentario_curado_e218.py','benchmarks/e218/aneis_saturno.json']
+    paths: ['scripts/qa_documentario_curado_e218.py','benchmarks/e218/aneis_saturno.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -86,3 +86,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: e218-documentario-privado-cifrado, path: entrega/, retention-days: 7, if-no-files-found: error}
+  avisar_falha:
+    needs: documentario
+    if: ${{ always() && (needs.documentario.result == 'failure' || needs.documentario.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.documentario.result }}
+      job_name: documentario
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

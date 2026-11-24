@@ -208,3 +208,38 @@ def test_video_longo_com_roi_dirigido_e_progressao_real():
     # Teste estrutural sintético: isso NÃO atesta que a filmagem real
     # contém as ações escritas acima, nem libera uso comercial.
     assert r["visual_approval"]=="NAO_FOI_AVALIADO"
+
+
+@pytest.mark.parametrize("width,expected",[
+    (.20,None),(.39,'4:5'),(.49,'1:1'),(.85,'integral'),
+])
+def test_adaptive_relationship_selects_largest_compatible_viewport(width,expected):
+    # Synthetic geometry regression, never represented as observed footage.
+    p=plano()
+    shot=p["shots"][0]
+    m=p["media"]["video-acervo"]
+    m.update(width=1280,height=720)
+    shot["video_framing"]={
+        "modo":"relacao_observada","sha256_origem":m["expected_sha256"],
+        "inspecao":"Fixture geométrica sintética para testar seleção de enquadramento",
+        "pontos":[{"at":at,"fonte_s":at,"elementos":[
+            {"nome":"A","bbox":[.5-width/2,.20,.5-width/2+.03,.80]},
+            {"nome":"B","bbox":[.5+width/2-.03,.20,.5+width/2,.80]}]}
+            for at in (0.,1.4)]}
+    r=F.resolver_relacao_video(shot,m,(1280,720),adaptativo=True)
+    if expected=='integral':
+        assert r['layout']=='cena_integral'
+        assert not r['framing_positions']
+    else:
+        assert r['layout']=='recorte_relacional_seguro'
+        assert r.get('documentary_viewport')==expected
+        assert len(r['framing_positions'])==2
+    assert r['elementos_protegidos']==['A','B']
+
+
+def test_adaptive_relationship_does_not_weaken_sha_binding():
+    p=plano()
+    shot=p["shots"][0]
+    shot["video_framing"].update(modo="relacao_observada",sha256_origem="b"*64)
+    with pytest.raises(ValueError,match="F-RELACAO-SHA"):
+        F.resolver_relacao_video(shot,p["media"]["video-acervo"],(1360,720),adaptativo=True)

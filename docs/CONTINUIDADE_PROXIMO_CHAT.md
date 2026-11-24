@@ -2888,3 +2888,19 @@ Julgamento visual desta sessão (não é homologação): garras e telescópio le
 - Nenhuma alteração em `main`, nenhum vídeo publicado, nenhum modelo CAD de terceiros incorporado e nenhuma tolerância externa alterada.
 
 **Próximo passo executável pelo ChatGPT**: diagnosticar a xArm com geometria/ficha real e pontos de medição comparáveis, sem aumentar tolerância; manter a distinção entre cinemática válida e dimensão validada. Depois, preparar a integração narrativa ATLAS em 60+s (grau de automação verificável), começando por um mecanismo já aceito e repetindo em outro **sem código por nome**. Reservar Claude apenas se surgir gargalo matemático/refatoração que de fato exija ganho relevante.
+
+
+## 154. 24/11 — diagnóstico da discrepância xArm: metrologia não comprovadamente equivalente à ficha
+
+Após E21, o ChatGPT **investigou a medição** sem consumir tokens do Claude. Fonte primária confirmada: manual UFACTORY xArm Gripper V2.2.0 `https://www.ufactory.cc/wp-content/uploads/2023/11/xArm-Gripper-User-Manual-V2.2.0.pdf` e documentação oficial `https://docs.xarm.ufactory.cc/8.technical_specifications.html`: referência `Working Range 0–84 mm`. **A fonte consultada não bastou para demonstrar que esse número é medido exatamente entre os vértices das subárvores do modelo MuJoCo.**
+
+Causa de incerteza real encontrada no código:
+- Manifesto `benchmarks/e18_multifornecedor.json` declara `medida: {tipo:folga,a:left_finger,b:right_finger}` e `oraculo: {tipo:medida_maxima_mm, valor_mm:84, tolerancia_mm:4.2}`.
+- `multicorpo_e18.folga` **não** calcula medida em faces de contato conforme desenho técnico específico do fabricante: obtém todos os vértices das **subárvores** dos dois dedos, escolhe um eixo entre **centróides** na pose de referência e mede `min(projeção da subárvore B) - max(projeção da subárvore A)`. Isto é uma convenção geometricamente objetiva do modelo, mas **pode não coincidir** com a definição metrológica da ficha `Working Range`.
+- Run antigo E18–E20 45302101314: `min_gap = 1.6400311133718988 mm`; `max_gap = 88.92358047912954 mm`; diferença `max-min = 87.28354936575764 mm`. Comparar `max` ao nominal 84 → diferença **4.92358 mm** (fora de ±4.2, gate E21 `REPROVADO`). Comparar `max-min` ao nominal 84 → **3.28355 mm** (dentro de ±4.2). **Essas são grandezas diferentes**. Não substituir o oráculo por `curso_mm` apenas porque a segunda comparação passaria; primeiro provar no documento do fornecedor se `Working Range` denota abertura absoluta, amplitude de curso ou outro referencial e qual região dos dedos é usada.
+- A coincidência entre solver próprio e cinemática MuJoCo verifica **a geometria do mesmo modelo**, não a correspondência física de montagem simplificada com a máquina comercial. Não usar esse oráculo como prova de gabarito de abertura industrial.
+- **Status E21 permanece como `REPROVADO_REFERENCIA_EXTERNA`** por contrato de avaliação atual, com hipótese de comparabilidade de medição **em investigação**, não erro físico comprovado nem novo PASS. **Nenhuma tolerância ou valor da fonte alterado.**
+
+**Próxima ação concreta:** derivar um **protocolo genérico de medição por superfícies/datum geométrico licenciadas** (corpo/face, normal, orientação, unidade, origem de coordenadas, expressão de abertura/curso e fonte), separado do solver; verificar, idealmente com CAD dimensional do fabricante, que os mesmos pontos/superfícies são medidos. Recalcular e registrar os dois oráculos **sem corrigir dados por conveniência**; manter a falha da xArm visível até equivalência comprovada.
+
+**Estado CI na verificação:** workflow leve [E21 45315768827](https://github.com/Heitor2404/coringa-news/actions/runs/45315768827) **success, 11 testes**. Runs completos E18 com novas regras de conformidade estavam **em andamento**, sem conclusão final verificada; potencial resultado vermelho por desvio do fabricante é proposital. Nenhuma alteração na `main`, nenhum vídeo publicado, nenhuma participação do Claude.

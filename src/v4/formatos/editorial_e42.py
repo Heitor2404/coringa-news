@@ -50,3 +50,19 @@ def cues(t,n):
     rotulo=f"Redução observada: {f(ratio,1)}:1" if ratio>=1 else f"Multiplicação: {f(1/ratio,1)}:1"
     return [dict(at=0,label=rotulo,kind="fact"),
             dict(at=(n//2)/30,label=f"Totais: {f(a/(2*math.pi),1)} voltas → {f(math.degrees(b),1)}°",kind="fact")]
+
+
+def painel(t,n):
+    """Totais observados, sem inferir ângulos instantâneos de um resumo."""
+    cues(t,n)  # mesma validação do contrato físico e relógio
+    a,b=t["entrada_rad"],t["saida_rad"]
+    ratio=abs(a/b)
+    fmt=lambda x: format(x,".1f").replace(".",",")
+    data=dict(schema="coringa.cad.transmission.panel.v1",
+        modo="REDUÇÃO OBSERVADA" if ratio>=1 else "MULTIPLICAÇÃO OBSERVADA",
+        razao=fmt(ratio if ratio>=1 else 1/ratio)+":1",
+        entrada=fmt(a/(2*math.pi))+" voltas",
+        saida=fmt(math.degrees(b))+"°",publish=False)
+    if any(len(data[k])>20 for k in ("razao","entrada","saida")):
+        raise ValueError("E46-VALORES_EXTENSOS")
+    return data

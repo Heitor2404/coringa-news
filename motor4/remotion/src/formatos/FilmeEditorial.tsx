@@ -18,6 +18,7 @@ export type FilmShot = {
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
+  cad_transmissao?: {schema:string;modo:string;razao:string;entrada:string;saida:string;publish:boolean};
   cad_warning?: string; // private CAD QA warning, never a publication clearance
   cad_reflow?: {schema:string;scale:number;tx:number;ty:number;viewport:number[];publish:boolean}; // E31 private
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
@@ -331,7 +332,7 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
   if (shot.type==='cad_preview' && shot.cad_reflow) {
     const r=shot.cad_reflow;
     if (subtitleMode || r.schema!=='coringa.cad.reflow.private.v1' ||
-      r.publish!==false || r.viewport.join(',')!=='50,400,1030,1092' ||
+      r.publish!==false || (r.viewport.join(',')!=='50,400,1030,1092' && !(shot.cad_transmissao && r.viewport.join(',')==='50,400,1030,962')) ||
       ![r.scale,r.tx,r.ty].every(Number.isFinite) || r.scale<.35 || r.scale>1.6)
       throw new Error('E31-PRIVATE-REFLOW');
     const [x,y,ex,ey]=r.viewport;
@@ -443,6 +444,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
   const age=active?now-shot.start-active.at:0;
   const reflowCAD=shot.type==='cad_preview'&&Boolean(shot.cad_reflow);
+  const painelCAD=reflowCAD&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,962'?shot.cad_transmissao:undefined;
+  if(painelCAD&&(painelCAD.schema!=='coringa.cad.transmission.panel.v1'||painelCAD.publish!==false||
+    !['REDUÇÃO OBSERVADA','MULTIPLICAÇÃO OBSERVADA'].includes(painelCAD.modo)||
+    ![painelCAD.razao,painelCAD.entrada,painelCAD.saida].every(s=>typeof s==='string'&&s.length<=20)))
+    throw new Error('E46-PANEL');
   if(legacyVisualPreview && shot.type==='mechanism') {
     // Volta ao visual ORIGINAL 20/11 somente em prévia privada: SVG
     // integral em tela, títulos do PRÓPRIO mecanismo e rótulos grandes.
@@ -532,7 +538,20 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:shot.subject}
     </div>}
-    {reflowCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
+    {painelCAD&&!subtitleMode&&<div data-cad-transmission-panel="true"
+      style={{...rectStyle([160,974,760,1187]),fontFamily:"Inter,Arial,sans-serif",color:OFF_WHITE,overflow:"hidden"}}>
+      <div style={{display:"flex",alignItems:"baseline",gap:20,borderBottom:"2px solid #344858",paddingBottom:8}}>
+        <span style={{fontSize:53,fontWeight:900,color:GOLD,letterSpacing:-2}}>{painelCAD.razao}</span>
+        <span style={{fontSize:22,fontWeight:750,letterSpacing:.6}}>{painelCAD.modo}</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 35px 1fr",alignItems:"center",gap:12,marginTop:10}}>
+        <div><div style={{fontSize:19,color:"#B8CCD8",fontWeight:700}}>ENTRADA</div><div style={{fontSize:painelCAD.entrada.length>12?27:38,fontWeight:850}}>{painelCAD.entrada}</div></div>
+        <div style={{fontSize:30,color:GOLD}}>→</div>
+        <div><div style={{fontSize:19,color:"#B8CCD8",fontWeight:700}}>SAÍDA</div><div style={{fontSize:painelCAD.saida.length>12?27:38,fontWeight:850}}>{painelCAD.saida}</div></div>
+      </div>
+      <div style={{fontSize:19,color:"#B8CCD8",marginTop:8}}>Totais da trajetória calculada</div>
+    </div>}
+    {reflowCAD&&!painelCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
         color:OFF_WHITE,fontWeight:800,lineHeight:1.12}}>
       <div style={{fontSize:25,color:GOLD}}>{active?.label||''}</div>

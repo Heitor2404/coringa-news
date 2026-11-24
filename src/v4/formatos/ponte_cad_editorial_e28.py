@@ -119,6 +119,8 @@ def props(qa, asset):
               source_display=stage["credito"],evidence="explainer",
               lead="Representação CAD",headline=medida[:85],subject="Estudo cinemático",
               cues=cues)
+    if "transmissao_observada" in qa:
+        shot["cad_transmissao"]=E42.painel(qa["transmissao_observada"],n)
     if qa.get("estado")=="REPROVADO_INTERFERENCIA_BREP":
         shot["cad_warning"]="INTERFERÊNCIA DETECTADA · MODELO NÃO VALIDADO"
     elif "interferencia_brep" in qa and qa.get("verificacao_contato")!="SEM_INTERFERENCIA_BREP_NA_AMOSTRA":

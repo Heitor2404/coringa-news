@@ -15,6 +15,7 @@ from .ponte_cad_editorial_e28 import ffmpeg,sha,fail
 W,H=1080,1920
 SW,SH=270,480
 VIEW=[50,400,1030,1092]
+VIEW_E46=[50,400,1030,962]
 LEGACY_SCALE=min(620/908,600/942)
 
 
@@ -35,31 +36,31 @@ def masks(frames):
     return fg,motion
 
 
-def limites(fg,motion,s,ty):
+def limites(fg,motion,s,ty,view=VIEW):
     yy,xx=np.nonzero(fg)
     fx0,fx1=4*xx.min()-4,4*(xx.max()+1)+4
     fy0,fy1=4*yy.min()-4,4*(yy.max()+1)+4
     yy,xx=np.nonzero(motion)
     mx,my=4*xx,4*yy
-    if s*fy0+ty<VIEW[1]-1e-7 or s*fy1+ty>VIEW[3]+1e-7:
+    if s*fy0+ty<view[1]-1e-7 or s*fy1+ty>view[3]+1e-7:
         return None
     my0=s*my+ty-8
     my1=s*(my+4)+ty+8
-    if my0.min()<VIEW[1] or my1.max()>VIEW[3]:
+    if my0.min()<view[1] or my1.max()>view[3]:
         return None
     # Union of platform bands: wider above y840, conservative narrower
     # band below. Pixel cells crossing boundary obey the narrower band.
     lower=my1>=840
     lefts=np.where(lower,150,120)
     rights=np.where(lower,770,960)
-    lo=max(VIEW[0]-s*fx0,float(np.max(lefts-s*mx+8)))
-    hi=min(VIEW[2]-s*fx1,float(np.min(rights-s*(mx+4)-8)))
+    lo=max(view[0]-s*fx0,float(np.max(lefts-s*mx+8)))
+    hi=min(view[2]-s*fx1,float(np.min(rights-s*(mx+4)-8)))
     if lo>hi:
         return None
     return lo,hi,(fx0,fy0,fx1,fy1)
 
 
-def planejar(fg,motion):
+def planejar(fg,motion,view=VIEW):
     if fg.shape!=(SH,SW) or motion.shape!=(SH,SW) or not fg.any() or not motion.any():
         fail("E31-MASCARAS")
     yy,xx=np.nonzero(fg)
@@ -69,7 +70,7 @@ def planejar(fg,motion):
         s=scale/100
         for top in range(400,551,5):
             ty=top-s*fy0
-            r=limites(fg,motion,s,ty)
+            r=limites(fg,motion,s,ty,view)
             if r is None:
                 continue
             lo,hi,b=r
@@ -82,14 +83,14 @@ def planejar(fg,motion):
         fail("E31-SEM_ENQUADRAMENTO")
     s,tx,ty,b=best
     return dict(schema="coringa.cad.reflow.private.v1",scale=s,tx=tx,ty=ty,
-                viewport=VIEW,mask_resolution=[SW,SH],mask_method="all_frames_rgb_difference",
+                viewport=list(view),mask_resolution=[SW,SH],mask_method="all_frames_rgb_difference",
                 motion_pixels=int(motion.sum()),foreground_pixels=int(fg.sum()),
                 foreground_bbox=[int(x) for x in b],
                 scale_legacy=LEGACY_SCALE,scale_ratio=s/LEGACY_SCALE,
                 status="EXPERIMENTAL_PIXEL_PROXY",publish=False)
 
 
-def preparar(props_path,public_root,qa_path):
+def preparar(props_path,public_root,qa_path,painel=False):
     props_path=Path(props_path)
     p=json.loads(props_path.read_text())
     if p.get("preview") is not True or p.get("private_review_only") is not True or p.get("subtitle_mode"):
@@ -107,7 +108,9 @@ def preparar(props_path,public_root,qa_path):
     if len(fr)!=round(p["duracao"]*30):
         fail("E31-RELOGIO")
     fg,motion=masks(fr)
-    r=planejar(fg,motion)
+    if painel and not shot.get("cad_transmissao"):
+        fail("E46-SEM_TRANSMISSAO")
+    r=planejar(fg,motion,VIEW_E46 if painel else VIEW)
     shot["cad_reflow"]=r
     # Existing safe-area certificate does not cover this experimental variant.
     p.pop("safe_area_profile",None)
@@ -121,5 +124,6 @@ if __name__=="__main__":
     p.add_argument("props")
     p.add_argument("public")
     p.add_argument("qa")
+    p.add_argument("--painel-e46",action="store_true")
     a=p.parse_args()
-    print(json.dumps(preparar(a.props,a.public,a.qa),ensure_ascii=False))
+    print(json.dumps(preparar(a.props,a.public,a.qa,a.painel_e46),ensure_ascii=False))

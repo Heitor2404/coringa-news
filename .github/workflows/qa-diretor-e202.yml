@@ -18,7 +18,7 @@ env:
 jobs:
   e202:
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -56,6 +56,7 @@ jobs:
         run: |
           ls benchmarks/e202/cache 2>/dev/null | sed 's/^/cache-antes: /' > /tmp/cache_antes.txt || true
           python -m src.v4.formatos.ciclo_e202 benchmarks/e202/temas_ineditos.json qa_e202 || echo "E202-CICLO-SAIDA $?"
+          python -m src.v4.formatos.ciclo_e202 benchmarks/e203/documentario_flamingo.json qa_e202 || echo "E203-CICLO-SAIDA $?"
       - name: Proveniência para reprodução local (respostas da IA e tempos medidos; sem áudio nem vídeo)
         if: always()
         run: |
@@ -67,7 +68,7 @@ jobs:
                   print('E202-CACHE', p.name, json.dumps(json.loads(p.read_text()),ensure_ascii=False))
           for p in sorted(pathlib.Path('benchmarks/e202/narracao').glob('*.json')):
               print('E202-NARRACAO', p.name, json.dumps(json.loads(p.read_text()),ensure_ascii=False))
-          for p in sorted(pathlib.Path('qa_e202').glob('*_registro.json')):
+          for p in sorted(pathlib.Path('qa_e202').glob('*_registro.json')):  # inclui E203
               r=json.loads(p.read_text())
               print('E202-REGISTRO', p.name, json.dumps({k:r.get(k) for k in ('caso','estado','mp4_final','direcao','etapas','erro')},ensure_ascii=False)[:60000])
           PY

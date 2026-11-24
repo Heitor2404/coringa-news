@@ -1,0 +1,28 @@
+{
+  "schema": "coringa.e203.documentario_privado.v1",
+  "publish": false,
+  "private_review_only": true,
+  "escolha": "Selecionado entre os três temas E202 pelo gancho de curiosidade (contradição 'não nasce rosa') e virada narrativa verificável (pais perdem a cor ao alimentar os filhotes), com fontes primárias do Smithsonian/NHM. Potencial de viralização é hipótese editorial, não medida.",
+  "note": "Fatos consultados em 2026-11-24 (WebSearch/WebFetch). Sem desenhos, keyframes ou cenas escolhidas: o diretor E202 decide representação. Fontes de mídia de terceiros não usadas.",
+  "cases": [
+    {
+      "id": "doc_flamingo",
+      "pergunta": "Por que os flamingos são rosas — e por que os pais ficam brancos?",
+      "alvo_duracao": [55, 75],
+      "fatos": [
+        {"id": "f1", "texto": "Filhotes de flamingo nascem com penugem branco-acinzentada e bico reto; levam anos para adquirir a cor rosa e o bico curvo.", "fonte": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts"},
+        {"id": "f2", "texto": "Carotenoides são pigmentos vermelhos, amarelos ou laranja produzidos por muitas plantas; também estão em algas microscópicas que as artêmias (pequenos crustáceos) comem.", "fonte": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts"},
+        {"id": "f3", "texto": "O flamingo se alimenta com a cabeça de ponta-cabeça na água; placas no bico funcionam como filtro, deixando a água sair e retendo o alimento.", "fonte": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts"},
+        {"id": "f4", "texto": "O fígado metaboliza os carotenoides e moléculas derivadas são depositadas nas penas; a intensidade da cor depende da dieta.", "fonte": "https://www.nhm.ac.uk/discover/rainbow-nature-life-in-pink.html"},
+        {"id": "f5", "texto": "Os dois pais produzem no papo um 'leite' vermelho para alimentar o filhote; ele é vermelho porque contém os mesmos pigmentos que deixam os adultos rosa.", "fonte": "https://www.smithsonianmag.com/blogs/national-zoo-conservation-biology-institute/2026/07/17/practical-tips-for-anyone-currently-raising-nine-flamingo-chicks-at-the-same-time/"},
+        {"id": "f6", "texto": "Os pigmentos saem das penas dos pais e passam para esse leite; no fim da temporada de reprodução os pais ficam quase brancos.", "fonte": "https://www.smithsonianmag.com/blogs/national-zoo-conservation-biology-institute/2026/07/17/practical-tips-for-anyone-currently-raising-nine-flamingo-chicks-at-the-same-time/"},
+        {"id": "f7", "texto": "Os filhotes ficam cada vez mais rosa ao receber os pigmentos pelo leite; a plumagem rosa completa só aparece por volta dos dois ou três anos.", "fonte": "https://www.smithsonianmag.com/blogs/national-zoo-conservation-biology-institute/2026/07/17/practical-tips-for-anyone-currently-raising-nine-flamingo-chicks-at-the-same-time/"}
+      ],
+      "limites": [
+        "Não inventar estrutura molecular, nome de pigmento específico, escala anatômica, quantidades ou tempos além dos fatos.",
+        "Distinguir esquema ilustrativo de anatomia real; o 'leite' é secreção do papo, não leite de mamífero.",
+        "Pais 'quase brancos' no fim da temporada; não dizer que ficam totalmente brancos nem que é permanente."
+      ]
+    }
+  ]
+}

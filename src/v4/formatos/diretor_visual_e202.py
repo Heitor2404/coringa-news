@@ -117,8 +117,15 @@ def prompt(caso: dict, disp: dict, correcoes: list[dict] | None = None, anterior
     fatos = '\n'.join(f"- {f['id']}: {f['texto']} [fonte: {f['fonte']}]" for f in caso['fatos'])
     limites = '\n'.join(f'- {x}' for x in caso.get('limites') or [])
     d = '\n'.join(f"- {k}: {'DISPONÍVEL' if v['disponivel'] else 'INDISPONÍVEL'} ({v['motivo']})" for k, v in disp.items())
+    episodio = caso.get('alvo_duracao')
+    if episodio:
+        alvo = tuple(episodio)
+        pedido_txt = (f'Transforme os fatos abaixo em UM EPISÓDIO de {alvo[0]}–{alvo[1]} s, com 5–7 CENAS encadeadas (cada cena '
+                      'com seus atores e 2–3 beats), que MOSTRE os acontecimentos acontecendo.')
+    else:
+        pedido_txt = f'Transforme os fatos abaixo em UMA cena animada de {alvo[0]}–{alvo[1]} s que MOSTRE o acontecimento acontecendo.'
     base = f"""Você é o DIRETOR VISUAL do Coringa Explica (documentário vertical 9:16, Reels/TikTok/Shorts, pt-BR).
-Transforme os fatos abaixo em UMA cena animada de {alvo[0]}–{alvo[1]} s que MOSTRE o acontecimento acontecendo.
+{pedido_txt}
 
 PERGUNTA: {caso['pergunta']}
 
@@ -139,6 +146,13 @@ CATÁLOGO DE ÍCONES (Fluent Emoji Flat, MIT; nomes exatos):
 {catalogo_icones()}
 
 {SAIDA}"""
+    if episodio:
+        base += f"""
+
+MODO EPISÓDIO (substitui a regra 8 no que conflitar): 5–7 cenas; 2–3 beats por cena; total ≈ {alvo[0]}–{alvo[1]} s
+({int(alvo[0] * 2.4)}–{int(alvo[1] * 2.4)} palavras). Cena 1 = gancho com contradição; meio = causa → mecanismo → consequência,
+cada cena com informação nova; última cena = virada/payoff que ecoa o gancho. Use TODOS os fatos relevantes, sem inventar.
+Atores podem repetir entre cenas com o MESMO id quando forem a mesma coisa."""
     if correcoes:
         base += ('\n\nSUA RESPOSTA ANTERIOR violou regras verificadas em código. Corrija SÓ o necessário e devolva o JSON inteiro:\n'
                  + '\n'.join(f"- [{c['regra']}] {c['texto']}" for c in correcoes)
@@ -332,27 +346,47 @@ def palavras_de_caps(caps: list[dict]) -> list[dict]:
     return out
 
 
+def _cenas_decl(plano: dict) -> list[dict]:
+    return [c for c in plano['cenas'] if c.get('modalidade') == 'cena_declarativa']
+
+
 def filme(resultado: dict, caso: dict, duracoes: list[float] | None = None, palavras: list[dict] | None = None,
           audio: str | None = None) -> dict:
-    """Uma cena declarativa → props do FilmeEditorial (mesmo compositor das outras modalidades)."""
+    """Cenas declarativas em sequência → props do FilmeEditorial (mesmo compositor das outras modalidades).
+    `duracoes` = um valor por beat de TODAS as cenas, na ordem; `palavras` em tempo absoluto do áudio."""
     plano = resultado['plano']
-    cena = next(c for c in plano['cenas'] if c.get('modalidade') == 'cena_declarativa')
-    dur = duracoes or estimar_duracoes(cena)
-    comp = CD.compilar(cena, dur, caso['fatos'], palavras, titulo=str(plano.get('titulo') or ''))
-    sg = comp['scene_graph']
-    total = round(comp['duracao'], 4)          # mesmo arredondamento dos estados (t ≤ duração)
-    shot = {'id': cena['id'], 'start': 0, 'end': total, 'type': 'scene_graph', 'evidence': 'explainer',
-            'subject': str(plano.get('acontecimento_central') or cena.get('acontecimento') or '')[:120],
-            'lead': cena.get('verbo', 'DEMONSTRAR'), 'headline': sg['headline'],
-            'source': sg['source'], 'source_display': ', '.join(_dominio(u) for u in sg['sources']),
-            'scene_graph': sg,
-            'direcao_visual': {'verbo': cena.get('verbo'), 'referente': cena.get('acontecimento'),
-                               'aprendizado': cena['beats'][-1]['fala'], 'provas': sorted({f for b in cena['beats'] for f in b['fatos']})},
-            'estados_esperados': [], 'cues': []}
-    props = {'formato': 'filme_editorial', 'duracao': total, 'shots': [shot], 'preview': True, 'private_review_only': True}
+    cenas = _cenas_decl(plano)
+    if not cenas:
+        raise ValueError('plano sem cena declarativa')
+    nbeats = [len(c['beats']) for c in cenas]
+    dur = duracoes or [d for c in cenas for d in estimar_duracoes(c)]
+    if len(dur) != sum(nbeats):
+        raise ValueError(f'durações ({len(dur)}) ≠ beats ({sum(nbeats)})')
+    shots, provs, t0, k = [], [], 0.0, 0
+    for c, n in zip(cenas, nbeats):
+        d_c = dur[k:k + n]; k += n
+        t1 = t0 + sum(d_c)
+        pal = None
+        if palavras:
+            pal = [{**w, 's': round(w['s'] - t0, 3), 'e': round(w['e'] - t0, 3)} for w in palavras if t0 - 1e-6 <= w['s'] < t1 - 1e-6]
+        comp = CD.compilar(c, d_c, caso['fatos'], pal, titulo=str(plano.get('titulo') or ''))
+        sg = comp['scene_graph']
+        ini = round(t0, 4)
+        fim = round(t0 + comp['duracao'], 4)            # mesmo arredondamento dos estados (t ≤ duração)
+        shots.append({'id': c['id'], 'start': ini, 'end': fim, 'type': 'scene_graph', 'evidence': 'explainer',
+                      'subject': str(c.get('acontecimento') or plano.get('acontecimento_central') or '')[:120],
+                      'lead': c.get('verbo', 'DEMONSTRAR'), 'headline': sg['headline'],
+                      'source': sg['source'], 'source_display': ', '.join(_dominio(u) for u in sg['sources']),
+                      'scene_graph': sg,
+                      'direcao_visual': {'verbo': c.get('verbo'), 'referente': c.get('acontecimento'),
+                                         'aprendizado': c['beats'][-1]['fala'], 'provas': sorted({f for b in c['beats'] for f in b['fatos']})},
+                      'estados_esperados': [], 'cues': []})
+        provs.append({'cena': c['id'], **comp['proveniencia']})
+        t0 = fim
+    props = {'formato': 'filme_editorial', 'duracao': round(t0, 4), 'shots': shots, 'preview': True, 'private_review_only': True}
     if audio:
         props['scene_narration_asset'] = audio
-    return {'props': props, 'proveniencia': comp['proveniencia']}
+    return {'props': props, 'proveniencia': provs[0] if len(provs) == 1 else {'cenas': provs, 'legendas': provs[0]['legendas']}}
 
 
 def _dominio(u: str) -> str:
@@ -377,14 +411,58 @@ Responda JSON: {{"referente_visivel":bool,"aprendizado_demonstrado":bool,"enquad
 "correcoes":[{{"beat":n,"tipo":"enquadramento|forma|acao|rotulo","descricao":"..."}}]}}"""
 
 
+def _visao_claude(jpgs: list[bytes], texto: str) -> dict:
+    """Mesma revisão pelo Claude Code da assinatura, lendo os quadros como arquivos (só a ferramenta Read,
+    numa pasta temporária com apenas as imagens). Usado quando o Gemini (visão) está indisponível."""
+    import subprocess
+    import tempfile
+    from src import claude, gemini
+    if not claude.disponivel():
+        os.environ['USAR_CLAUDE'] = '1'
+        if not claude.disponivel():
+            raise RuntimeError('Claude Code indisponível para visão')
+    with tempfile.TemporaryDirectory() as d:
+        nomes = []
+        for k, b in enumerate(jpgs):
+            n = f'q{k + 1}.jpg'
+            Path(d, n).write_bytes(b)
+            nomes.append(n)
+        pedido = (texto + '\n\nAs imagens estão nesta pasta, em ordem: ' + ', '.join(nomes)
+                  + '. Abra CADA uma com a ferramenta Read antes de responder. Responda SOMENTE o JSON pedido.')
+        cmd = ['claude', '-p', '--model', claude.MODELO, '--output-format', 'json', '--max-turns', str(len(nomes) + 4),
+               '--allowedTools', 'Read', '--disallowedTools', 'Bash,Edit,Write,Glob,Grep,WebFetch,WebSearch,Task,NotebookEdit,TodoWrite']
+        r = subprocess.run(cmd, input=pedido, capture_output=True, text=True, timeout=420, cwd=d, env=claude._ambiente())
+    saida = json.loads(r.stdout)
+    if isinstance(saida, list):
+        saida = next((x for x in reversed(saida) if isinstance(x, dict) and x.get('type') == 'result'), {})
+    if saida.get('is_error') or not str(saida.get('result') or '').strip():
+        raise RuntimeError(f"visão Claude falhou: {str(saida.get('result') or saida.get('subtype'))[:200]}")
+    obj = gemini.extrair_json(str(saida['result']))
+    obj['_provedor'] = f'claude_code:{claude.MODELO}'
+    obj['_credito_usd'] = float(saida.get('total_cost_usd') or 0)
+    return obj
+
+
 def revisao_visual(jpgs: list[bytes], caso: dict, plano: dict) -> dict:
-    """Visão automatizada (Gemini) com a rubrica comum. Não é aprovação; serve para UMA correção dirigida."""
+    """Visão automatizada com a rubrica comum (Gemini → Claude Code). Não é aprovação; serve para UMA correção dirigida."""
     from src import gemini
     from src.v4.formatos import contrato_visual_comum as CV
     texto = PROMPT_VISAO.format(pergunta=caso['pergunta'], acontecimento=plano.get('acontecimento_central', ''))
-    r = gemini.json_visao(texto, jpgs, leve=False)
+    tentativas = []
+    r = None
+    for prov in [x.strip() for x in os.getenv('E202_VISAO', 'gemini,claude').split(',') if x.strip()]:
+        try:
+            r = gemini.json_visao(texto, jpgs, leve=False) if prov == 'gemini' else _visao_claude(jpgs, texto)
+            if isinstance(r, dict):
+                r.setdefault('_provedor', 'gemini' if prov == 'gemini' else r.get('_provedor'))
+                break
+        except Exception as e:
+            tentativas.append(f'{prov}: {type(e).__name__}: {str(e)[:160]}')
+            r = None
+    if r is None:
+        raise RuntimeError('visão indisponível: ' + ' | '.join(tentativas))
     verbo = plano['cenas'][0].get('verbo', 'DEMONSTRAR')
-    return {'resposta': r, 'falhas': CV.julgar_inspecao(verbo, False, r)}
+    return {'resposta': r, 'falhas': CV.julgar_inspecao(verbo, False, r), 'tentativas': tentativas}
 
 
 # ───────────────────────── CLI ─────────────────────────

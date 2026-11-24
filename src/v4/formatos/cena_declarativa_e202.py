@@ -252,7 +252,7 @@ def diagramar(cena: dict, formas: dict) -> dict:
     ncol = 1 if len(blocos) <= 1 else 2
     if any(b[0] > 520 for b in blocos):            # unidade larga ocupa a linha toda
         ncol = 1
-    GAP = 70
+    GAP = 46
     linhas = [blocos[k:k + ncol] for k in range(0, len(blocos), ncol)]
     out = {}
     y = 0.0
@@ -467,7 +467,17 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
     for k, b in enumerate(cena['beats']):
         env = envolvidos[k]
         t_meio = inicio[k] + duracoes[k] * .6
-        caixa = _bbox([(i, trilhas[i], pos[i]['s'], formas[i]) for i in env], t_meio, inicio[k], inicio[k] + duracoes[k], extras)
+        # quem só APARECE ou é DESTACADO não precisa caber; quem participa da ação nunca é cortado
+        so_aparece = set()
+        for a in b['acoes']:
+            if a.get('verbo') in ('aparecer', 'destacar') and isinstance(a.get('alvo'), str):
+                so_aparece.add(a['alvo'])
+        for a in b['acoes']:
+            if a.get('verbo') not in ('aparecer', 'destacar'):
+                so_aparece -= {a[x] for x in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior') if isinstance(a.get(x), str)}
+        so_aparece.discard((b.get('camera') or {}).get('foco'))
+        enquadrar = (env - so_aparece) or env
+        caixa = _bbox([(i, trilhas[i], pos[i]['s'], formas[i]) for i in enquadrar], t_meio, inicio[k], inicio[k] + duracoes[k], extras)
         foco = (b.get('camera') or {}).get('foco')
         if foco not in atores or atores[foco]['papel'] == 'contexto':
             foco = max(env, key=lambda i: pos[i]['s']) if env else None
@@ -549,10 +559,12 @@ def _enquadrar(caixa, caixa_foco=None, minimo: float = 0.40) -> dict:
     zoom = max(0.35, min(2.2, bw / w, bh / h))
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     if caixa_foco:
+        # o foco só cresce enquanto TODOS os participantes ainda cabem: aproximar mais cortaria a ação.
+        # Se ainda ficar pequeno, o alerta G-SUJEITO-PEQUENO fica registrado (defeito de diagramação, não do modelo).
         fx0, fy0, fx1, fy1 = caixa_foco
         hf = max(1.0, (fy1 - 58) - fy0)               # sem o espaço do rótulo
         if hf * zoom < minimo * bh:
-            zoom = min(2.2, minimo * bh / hf, bw / max(1, (fx1 - fx0) * 1.06), bh / max(1, (fy1 - fy0) * 1.06))
+            zoom = min(zoom, 2.2)
         hw, hh = bw / 2 / zoom, bh / 2 / zoom
         lo_x, hi_x = fx1 - hw, fx0 + hw
         lo_y, hi_y = fy1 - hh, fy0 + hh

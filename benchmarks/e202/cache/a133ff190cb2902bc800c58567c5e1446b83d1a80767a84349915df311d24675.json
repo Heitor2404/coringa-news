@@ -1,0 +1,264 @@
+{
+ "pedido_sha256": "a133ff190cb2902bc800c58567c5e1446b83d1a80767a84349915df311d24675",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 12.0,
+ "data": "2026-11-24T15:08:35Z",
+ "caracteres_pedido": 26306,
+ "caracteres_resposta": 3774,
+ "json": {
+  "titulo": "Como tiram a cafeína do café?",
+  "acontecimento_central": "Grãos de café liberam seus solúveis na água; o extrato passa por um filtro de carvão ativado que prende a cafeína; a água com sabor, já descafeinada, volta para novos grãos.",
+  "referencias_visuais": [
+   "esquema ilustrativo identificado, não reconstrução exata",
+   "fluxo de partículas coloridas entre atores",
+   "filtro com partículas retidas e partículas que atravessam",
+   "corte esquemático com revelar_interior",
+   "ciclo de reaproveitamento da água"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "A água extrai solúveis do grão, o extrato atravessa o carvão ativado que retém a cafeína, e a água com sabor volta para novos grãos.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há mídia real, mapa ou CAD disponíveis; o processo é esquemático e cabe no compilador declarativo com fluxo, filtrar e acumular.",
+    "atores": [
+     {
+      "id": "graos",
+      "rotulo": "Grãos de café",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "beans"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "a1"
+      ]
+     },
+     {
+      "id": "agua",
+      "rotulo": "Água",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "fluido",
+       "cor": "#4FA3E0"
+      },
+      "fatos": [
+       "a1"
+      ]
+     },
+     {
+      "id": "filtro",
+      "rotulo": "Filtro de carvão ativado",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "filtro",
+       "cor": "#333333"
+      },
+      "fatos": [
+       "a2"
+      ]
+     },
+     {
+      "id": "extrato",
+      "rotulo": "Extrato aquoso",
+      "papel": "produto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "recipiente",
+       "cor": "#8B5A2B"
+      },
+      "fatos": [
+       "a1",
+       "a2"
+      ]
+     },
+     {
+      "id": "novos_graos",
+      "rotulo": "Novos lotes de grãos",
+      "papel": "destino",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "beans"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "a2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "graos",
+      "b": "agua"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "extrato",
+      "b": "filtro"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "filtro",
+      "b": "novos_graos"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Como tiram a cafeína do café sem estragar o grão? Tudo começa com água.",
+      "etapa": "Água extrai",
+      "fatos": [
+       "a1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "graos",
+        "inicio": 0.0,
+        "fim": 0.15
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "agua",
+        "inicio": 0.0,
+        "fim": 0.2
+       },
+       {
+        "verbo": "fluxo",
+        "de": "graos",
+        "para": "agua",
+        "item": {
+         "rotulo": "Solúveis",
+         "cor": "#8B5A2B"
+        },
+        "quantidade": 10,
+        "inicio": 0.25,
+        "fim": 0.9
+       }
+      ],
+      "camera": {
+       "foco": "graos",
+       "enquadramento": "medio",
+       "motivo": "Mostrar o grão já em quadro enquanto a água extrai as substâncias solúveis."
+      }
+     },
+     {
+      "fala": "A água vira um extrato, carregado de sabor e também de cafeína.",
+      "etapa": "Extrato",
+      "fatos": [
+       "a1"
+      ],
+      "acoes": [
+       {
+        "verbo": "transformar",
+        "de": "agua",
+        "para": "extrato",
+        "inicio": 0.0,
+        "fim": 0.5
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "extrato",
+        "para_cor": "#8B5A2B",
+        "intensidade": 0.8,
+        "inicio": 0.2,
+        "fim": 0.9
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "filtro",
+        "inicio": 0.5,
+        "fim": 0.8
+       }
+      ],
+      "camera": {
+       "foco": "extrato",
+       "enquadramento": "medio",
+       "motivo": "O líquido escurece, mostrando o extrato formado antes de chegar ao filtro."
+      }
+     },
+     {
+      "fala": "Esse extrato passa por carvão ativado, que prende a cafeína e deixa o sabor passar.",
+      "etapa": "Filtração",
+      "fatos": [
+       "a2"
+      ],
+      "acoes": [
+       {
+        "verbo": "filtrar",
+        "de": "extrato",
+        "filtro": "filtro",
+        "para": "novos_graos",
+        "passa": {
+         "item": {
+          "rotulo": "Sabor",
+          "cor": "#C98B4B"
+         }
+        },
+        "retido": {
+         "item": {
+          "rotulo": "Cafeína",
+          "cor": "#E04F4F"
+         }
+        },
+        "quantidade": 10,
+        "inicio": 0.05,
+        "fim": 0.95
+       }
+      ],
+      "camera": {
+       "foco": "filtro",
+       "enquadramento": "detalhe",
+       "motivo": "Ver a cafeína ficando retida no carvão enquanto o sabor atravessa."
+      }
+     },
+     {
+      "fala": "A água com sabor, sem cafeína, é reaproveitada em novos lotes de grãos.",
+      "etapa": "Reuso",
+      "fatos": [
+       "a2"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "filtro",
+        "para": "novos_graos",
+        "item": {
+         "rotulo": "Água com sabor",
+         "cor": "#C98B4B"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.0,
+        "fim": 0.8
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "novos_graos",
+        "inicio": 0.0,
+        "fim": 0.2
+       }
+      ],
+      "camera": {
+       "foco": "novos_graos",
+       "enquadramento": "geral",
+       "motivo": "Payoff: o ciclo fecha, com a água descafeinada voltando a novos grãos."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45420134949 (job 138537103175)"
+}

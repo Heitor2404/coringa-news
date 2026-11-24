@@ -33,8 +33,7 @@ def _sha(p: Path) -> str:
 
 
 def _falas(plano: dict) -> list[str]:
-    cena = next(c for c in plano['cenas'] if c.get('modalidade') == 'cena_declarativa')
-    return [str(b['fala']) for b in cena['beats']]
+    return [str(b['fala']) for c in D._cenas_decl(plano) for b in c['beats']]
 
 
 def narrar(plano: dict, caso_id: str, pasta: Path, usar_voz: bool) -> dict:
@@ -47,8 +46,8 @@ def narrar(plano: dict, caso_id: str, pasta: Path, usar_voz: bool) -> dict:
         if salvo.exists():
             n = json.loads(salvo.read_text(encoding='utf8'))
             return {**n, 'audio': None, 'origem': 'tempos_medidos_gravados_sem_audio_local'}
-        cena = next(c for c in plano['cenas'] if c.get('modalidade') == 'cena_declarativa')
-        return {'duracoes': D.estimar_duracoes(cena), 'palavras': None, 'audio': None, 'origem': 'ESTIMADA_SEM_VOZ'}
+        return {'duracoes': [d for c in D._cenas_decl(plano) for d in D.estimar_duracoes(c)], 'palavras': None, 'audio': None,
+                'origem': 'ESTIMADA_SEM_VOZ'}
     from src import voz
     pasta.mkdir(parents=True, exist_ok=True)
     wav, tempos, caps, dur = voz.narrar([{'fala': f} for f in falas], pasta)
@@ -97,31 +96,33 @@ def _rgb(mp4: Path, escala: int = 4):
     return np.frombuffer(raw, np.uint8).reshape(-1, h, w, 3), escala
 
 
-def movimento_no_foco(mp4: Path, sg: dict, fps: int = 30) -> tuple[list[dict], str]:
-    """Pixels que mudam DENTRO da caixa de tela dos atores em foco, durante cada beat. Medida de presença de
-    movimento no referente — NÃO prova que a ação é compreensível (isso é revisão visual/humana)."""
+def movimento_no_foco(mp4: Path, shots: list[dict], fps: int = 30) -> tuple[list[dict], str]:
+    """Pixels que mudam DENTRO da caixa de tela dos atores em foco, durante cada beat de cada plano. Medida de
+    presença de movimento no referente — NÃO prova que a ação é compreensível (isso é revisão visual/humana)."""
     import numpy as np
     a, esc = _rgb(mp4)
     sha_rgb = hashlib.sha256(a.tobytes()).hexdigest()
-    ts = [b['t'] for b in sg['beats']] + [sg['camera'][-1]['t']]
     out = []
-    for k in range(len(sg['beats'])):
-        i0, i1 = int(ts[k] * fps), min(len(a) - 1, int(ts[k + 1] * fps))
-        t = ts[k] + (ts[k + 1] - ts[k]) * .6
-        cam = D._interp(sg['camera'], t, ('x', 'y', 'zoom'))
-        xs, ys = [], []
-        for at in sg['actors']:
-            if at['id'] in (sg['beats'][k].get('foco_ids') or []):
-                st = D._interp(at['states'], t, ('x', 'y', 'scale', 'sx', 'sy', 'opacity'))
-                x0, y0, x1, y1 = D._tela(at, st, cam)
-                xs += [x0, x1]; ys += [y0, y1]
-        if not xs or i1 <= i0 + 1:
-            out.append({'beat': k + 1, 'pixels': 0, 'caixa': None}); continue
-        x0, x1 = max(0, int(min(xs) / esc)), min(a.shape[2], int(max(xs) / esc) + 1)
-        y0, y1 = max(0, int(min(ys) / esc)), min(a.shape[1], int(max(ys) / esc) + 1)
-        b = a[i0:i1, y0:y1, x0:x1].astype(np.int16)
-        n = int((np.abs(b[1:] - b[:-1]).max(axis=3) > 12).any(axis=0).sum()) if b.shape[1] and b.shape[2] else 0
-        out.append({'beat': k + 1, 'pixels': n, 'caixa': [x0 * esc, y0 * esc, x1 * esc, y1 * esc]})
+    for s in shots:
+        sg, off = s['scene_graph'], s['start']
+        ts = [b['t'] for b in sg['beats']] + [sg['camera'][-1]['t']]
+        for k in range(len(sg['beats'])):
+            i0, i1 = int((off + ts[k]) * fps), min(len(a) - 1, int((off + ts[k + 1]) * fps))
+            t = ts[k] + (ts[k + 1] - ts[k]) * .6
+            cam = D._interp(sg['camera'], t, ('x', 'y', 'zoom'))
+            xs, ys = [], []
+            for at in sg['actors']:
+                if at['id'] in (sg['beats'][k].get('foco_ids') or []):
+                    st = D._interp(at['states'], t, ('x', 'y', 'scale', 'sx', 'sy', 'opacity'))
+                    x0, y0, x1, y1 = D._tela(at, st, cam)
+                    xs += [x0, x1]; ys += [y0, y1]
+            if not xs or i1 <= i0 + 1:
+                out.append({'plano': s['id'], 'beat': k + 1, 'pixels': 0, 'caixa': None}); continue
+            x0, x1 = max(0, int(min(xs) / esc)), min(a.shape[2], int(max(xs) / esc) + 1)
+            y0, y1 = max(0, int(min(ys) / esc)), min(a.shape[1], int(max(ys) / esc) + 1)
+            b = a[i0:i1, y0:y1, x0:x1].astype(np.int16)
+            n = int((np.abs(b[1:] - b[:-1]).max(axis=3) > 12).any(axis=0).sum()) if b.shape[1] and b.shape[2] else 0
+            out.append({'plano': s['id'], 'beat': k + 1, 'pixels': n, 'caixa': [x0 * esc, y0 * esc, x1 * esc, y1 * esc]})
     return out, sha_rgb
 
 
@@ -155,20 +156,25 @@ def ciclo(caso: dict, saida: Path, usar_ia: bool, usar_voz: bool, usar_visao: bo
         n = narrar(r['plano'], caso['id'], pasta / f'voz{rodada}', usar_voz)
         reg['etapas'][f'narracao{rodada}'] = {k: v for k, v in n.items() if k != 'palavras'}
         f = D.filme(r, caso, n['duracoes'], n.get('palavras'), n.get('audio'))
-        sg = f['props']['shots'][0]['scene_graph']
-        geo = D.geometria(sg)
+        shots = f['props']['shots']
+        geo = [g for s in shots for g in D.geometria(s['scene_graph'], s['id'])]
         mp4 = pasta / f"{caso['id']}_r{rodada}.mp4"
         renderizar(f['props'], mp4)
         info = sondar(mp4)
-        mov, sha_rgb = movimento_no_foco(mp4, sg)
+        mov, sha_rgb = movimento_no_foco(mp4, shots)
         folha(mp4, pasta / f"{caso['id']}_r{rodada}_folha.jpg")
-        meios = [b['t'] + (t1 - b['t']) * .6 for b, t1 in zip(sg['beats'], [x['t'] for x in sg['beats'][1:]] + [sg['camera'][-1]['t']])]
-        jpgs = quadros_jpg(mp4, meios, pasta / f'quadros_r{rodada}')
+        meios = []
+        for s in shots:
+            sg = s['scene_graph']
+            fins = [x['t'] for x in sg['beats'][1:]] + [sg['camera'][-1]['t']]
+            meios += [s['start'] + b['t'] + (t1 - b['t']) * .6 for b, t1 in zip(sg['beats'], fins)]
+        jpgs = quadros_jpg(mp4, meios[:12], pasta / f'quadros_r{rodada}')
         etapa = {'mp4': mp4.name, 'sonda': info, 'sha256_quadros_rgb': sha_rgb, 'movimento_no_foco': mov,
                  'geometria': geo, 'proveniencia': f['proveniencia'], 'contrato_comum': D.auditoria_contrato(f['props'])}
-        falhas_auto = [g for g in geo] + [{'regra': 'M-SEM-MOVIMENTO-NO-FOCO', 'texto': f"beat {m['beat']}: {m['pixels']} px"} for m in mov if m['pixels'] < 150]
-        if info['duracao'] < 8:
-            falhas_auto.append({'regra': 'M-CURTO', 'texto': f"{info['duracao']:.2f}s < 8s"})
+        falhas_auto = [g for g in geo] + [{'regra': 'M-SEM-MOVIMENTO-NO-FOCO', 'texto': f"{m['plano']} beat {m['beat']}: {m['pixels']} px"} for m in mov if m['pixels'] < 150]
+        minimo = (caso.get('alvo_duracao') or [8])[0]
+        if info['duracao'] < minimo:
+            falhas_auto.append({'regra': 'M-CURTO', 'texto': f"{info['duracao']:.2f}s < {minimo}s"})
         visao = None
         if usar_visao:
             try:
@@ -181,13 +187,15 @@ def ciclo(caso: dict, saida: Path, usar_ia: bool, usar_voz: bool, usar_visao: bo
         print('E202-RENDER', json.dumps({'caso': caso['id'], 'rodada': rodada, 'sonda': info, 'rgb': sha_rgb,
                                         'mov': [m['pixels'] for m in mov], 'falhas': falhas_auto,
                                         'visao': (visao or {}).get('falhas') if isinstance(visao, dict) else None}, ensure_ascii=False))
-        problemas = list(falhas_auto)
+        # só vai ao modelo o que ELE pode corrigir: falta de movimento no foco, duração e revisão visual.
+        # Diagramação/câmera (G-*) é responsabilidade do compilador: registrada, nunca terceirizada ao modelo.
+        problemas = [p for p in falhas_auto if not p['regra'].startswith('G-')]
         if isinstance(visao, dict) and visao.get('falhas'):
             resp = visao.get('resposta') or {}
             problemas += [{'regra': 'V-REVISAO', 'texto': str(p)[:240]} for p in (resp.get('problemas') or [])[:4]]
             problemas += [{'regra': 'V-CORRECAO', 'texto': json.dumps(c, ensure_ascii=False)[:240]} for c in (resp.get('correcoes') or [])[:4]]
         if rodada == 2 or not problemas:
-            reg['estado'] = 'MP4_PRIVADO_GERADO' if not problemas else 'MP4_PRIVADO_COM_DEFEITOS_REGISTRADOS'
+            reg['estado'] = 'MP4_PRIVADO_GERADO' if not falhas_auto and not problemas else 'MP4_PRIVADO_COM_DEFEITOS_REGISTRADOS'
             reg['mp4_final'] = mp4.name
             break
         # UMA correção dirigida pelo que foi MEDIDO/VISTO no MP4 real

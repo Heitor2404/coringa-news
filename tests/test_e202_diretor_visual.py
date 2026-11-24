@@ -132,3 +132,18 @@ def test_tingir_para_cor_e_caixa_justa():
     assert copo['tint_color'] == '#6B3F1D' and copo['states'][0]['tint'] == 0 and copo['states'][-1]['tint'] > .7
     v = F.icone(['potted-plant'])['view']
     assert v[0] > 0 and v[2] < 32                       # moldura do ícone sem o respiro lateral
+
+
+def test_episodio_varias_cenas_no_mesmo_compositor():
+    p = _copia()
+    c2 = json.loads(json.dumps(p['cenas'][0])); c2['id'] = 'c2'
+    p['cenas'].append(c2)
+    nb = sum(len(c['beats']) for c in p['cenas'])
+    dur = [3.0] * nb
+    pal = [{'w': 'x', 's': 0.1, 'e': 0.4}, {'w': 'y', 's': 9.2, 'e': 9.6}]
+    f = D.filme({'plano': p}, FX['caso'], dur, pal)
+    s1, s2 = f['props']['shots']
+    assert s1['end'] == s2['start'] and abs(f['props']['duracao'] - 3.0 * nb) < 1e-3
+    assert s2['scene_graph']['captions'][0]['words'][0]['s'] == pytest.approx(0.2, abs=1e-3)   # 9.2 - 9.0
+    caso_ep = {**FX['caso'], 'alvo_duracao': [55, 75]}
+    assert 'MODO EPISÓDIO' in D.prompt(caso_ep, DISP) and 'MODO EPISÓDIO' not in D.prompt(FX['caso'], DISP)

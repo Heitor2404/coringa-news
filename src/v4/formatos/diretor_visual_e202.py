@@ -395,6 +395,123 @@ def filme(resultado: dict, caso: dict, duracoes: list[float] | None = None, pala
     return {'props': props, 'proveniencia': provs[0] if len(provs) == 1 else {'cenas': provs, 'legendas': provs[0]['legendas']}}
 
 
+
+# E205: triagem documental anterior à escolha de renderer.
+def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: dict | None = None) -> list[dict]:
+    """Recebe necessidades editoriais, não desenhos. Candidatos não são prova de ação.
+    Falta de acervo gera pedido de pesquisa, nunca conversão automática em esquema.
+    """
+    from src.v4.formatos import diretor_roteiro, ponte_biblioteca
+    bib = ponte_biblioteca.catalogo() if biblioteca is None else biblioteca
+    ids_fatos = {f['id'] for f in fatos}
+    vistos = set()
+    out = []
+    for n in necessidades:
+        cid = n.get('id')
+        if not isinstance(cid, str) or not cid or cid in vistos:
+            raise ValueError('E205-ID')
+        vistos.add(cid)
+        refs = n.get('fatos')
+        if not isinstance(refs, list) or not refs or not all(isinstance(x, str) and x in ids_fatos for x in refs):
+            raise ValueError('E205-FATOS')
+        sujeito = str(n.get('sujeito') or '').strip()
+        mostrar = str(n.get('mostrar') or '').strip()
+        tipo = n.get('necessidade')
+        if not sujeito or not mostrar or tipo not in ('registro', 'territorio', 'lacuna_explicativa'):
+            raise ValueError('E205-NECESSIDADE')
+        candidatos = diretor_roteiro.candidatos({'acontecimento': {'sujeito': sujeito}}, 'ambiente', bib)
+        candidatos.sort(key=lambda x: (x.get('natureza') != 'video', x['asset_id']))
+        if tipo == 'territorio':
+            destino, estado = 'mapa_atlas', 'SOLICITAR_ATLAS'
+        elif tipo == 'registro':
+            destino = 'registro_real'
+            estado = 'REVISAR_CANDIDATOS' if candidatos else 'PESQUISAR_MIDIA'
+        else:
+            lacuna = str(n.get('lacuna') or '').strip()
+            if not lacuna:
+                raise ValueError('E205-SEM-LACUNA')
+            # A lacuna é hipótese editorial até a revisão das mídias/referências.
+            destino, estado = 'cena_declarativa', 'REVISAR_LACUNA_E_REFERENCIAS'
+        out.append({'id': cid, 'fatos': refs, 'sujeito': sujeito, 'mostrar': mostrar,
+                    'necessidade': tipo, 'modalidade_proposta': destino, 'estado': estado,
+                    'candidatos': candidatos, 'lacuna': n.get('lacuna'),
+                    'pesquisa': {'consultas': [sujeito + ' ' + mostrar, sujeito],
+                                 'verificar_direitos': True, 'inspecionar_conteudo': True},
+                    'pronto_para_render': False})
+    if not out:
+        raise ValueError('E205-SEM-NECESSIDADES')
+    return out
+
+
+def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino: Path,
+                   public_root: Path, duracoes: list[float], downloader=None) -> dict:
+    """Primeira ponte privada E205: mídia/ATLAS pelo preflight original; esquemas
+    pelo compilador E202; todos intercalados na ordem e tempos da mesma narrativa.
+    Entrada documental vem da curadoria, não de caminhos/URLs inventados pela IA.
+    Não adiciona áudio ainda: legendas das cenas reais precisam da ponte medida.
+    """
+    from src.v4.formatos import filme_editorial as FILME
+    cenas = resultado['plano']['cenas']
+    ids = [c['id'] for c in cenas]
+    if not ids or len(set(ids)) != len(ids):
+        raise ValueError('E205-CENAS')
+    if plano_documental.get('tipo') != 'PROVA_VISUAL_PRIVADA' or plano_documental.get('publicar') is not False:
+        raise ValueError('E205-PRIVADO')
+    if len(duracoes) != sum(len(c['beats']) for c in cenas) or any(
+            not isinstance(d, (int, float)) or isinstance(d, bool) or not math.isfinite(d) or d <= 0 for d in duracoes):
+        raise ValueError('E205-TEMPOS')
+    externos = [c for c in cenas if c['modalidade'] != 'cena_declarativa']
+    if not externos or len(externos) == len(cenas):
+        raise ValueError('E205-NAO-MISTO')
+    origem = plano_documental.get('shots') or []
+    if [s['id'] for s in origem] != [c['id'] for c in externos]:
+        raise ValueError('E205-ORDEM-MIDIA')
+    tipos = {'registro_real': ('photo', 'video'), 'mapa_atlas': ('atlas_map',)}
+    for c, s in zip(externos, origem):
+        if s.get('type') not in tipos.get(c['modalidade'], ()):
+            raise ValueError('E205-MODALIDADE')
+    # Checa a duração ANTES de baixar e renderizar. Não estica nem acelera o original.
+    partes, k = {}, 0
+    for c in cenas:
+        n = len(c['beats'])
+        if not n or any(not str(b.get('fala') or '').strip() for b in c['beats']):
+            raise ValueError('E205-FALA')
+        partes[c['id']] = duracoes[k:k+n]
+        k += n
+    for s in origem:
+        if abs((s['end'] - s['start']) - sum(partes[s['id']])) > .001:
+            raise ValueError('E205-DURACAO-MIDIA')
+    destino = Path(destino)
+    preparado = FILME.preparar(plano_documental, destino / 'documental', public_root, downloader=downloader)
+    if preparado.get('pronto') is not True:
+        raise ValueError('E205-PREFLIGHT')
+    base = json.loads(Path(preparado['props']).read_text(encoding='utf8'))
+    if [s['id'] for s in base['shots']] != [c['id'] for c in externos]:
+        raise ValueError('E205-PREFLIGHT-ORDEM')
+    midias = {s['id']: s for s in base['shots']}
+    shots, provs, t = [], [], 0.0
+    for c in cenas:
+        ds = partes[c['id']]
+        if c['modalidade'] == 'cena_declarativa':
+            trecho = filme({'plano': {**resultado['plano'], 'cenas': [c]}}, caso, ds)
+            s = trecho['props']['shots'][0]
+            provs.append({'id': c['id'], 'proveniencia': trecho['proveniencia']})
+        else:
+            s = dict(midias[c['id']])
+        fim = round(t + sum(ds), 4)
+        shots.append({**s, 'start': t, 'end': fim})
+        t = fim
+    props = {**base, 'shots': shots, 'duracao': t, 'preview': True, 'private_review_only': True}
+    # O perfil cartográfico original não foi recertificado para safe_area_profile.
+    if any(s['type'] == 'atlas_map' for s in shots):
+        props.pop('safe_area_profile', None)
+    destino.mkdir(parents=True, exist_ok=True)
+    (destino / 'props.json').write_text(json.dumps(props, ensure_ascii=False, indent=2), encoding='utf8')
+    return {'props': props, 'proveniencia': {'documental': str(destino / 'documental' / 'midias.json'),
+                                           'esquemas': provs},
+            'estado': 'MONTAGEM_PRIVADA_SEM_AUDIO', 'publicar': False, 'aprovacao_humana': 'PENDENTE'}
+
+
 def _dominio(u: str) -> str:
     m = re.match(r'https://(?:www\.)?([^/]+)', u)
     return m.group(1) if m else u

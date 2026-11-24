@@ -296,5 +296,47 @@
     ],
     "max_motion_ui_fraction": 0.4,
     "notes": "Experimental: preserve entire visible foreground, text in conservative lanes; motion risk is a pixel proxy, not semantic certification."
+  },
+  "cad_hero_balanced_private": {
+    "viewport": [
+      20,
+      465,
+      1060,
+      1435
+    ],
+    "brand": [
+      160,
+      300,
+      360,
+      330
+    ],
+    "section": [
+      365,
+      300,
+      760,
+      330
+    ],
+    "step": [
+      160,
+      333,
+      760,
+      414
+    ],
+    "source": [
+      160,
+      418,
+      760,
+      458
+    ],
+    "target_center": [
+      500,
+      950
+    ],
+    "center_y_range": [
+      900,
+      1000
+    ],
+    "max_motion_ui_fraction": 0.4,
+    "notes": "Private visual balance based on inspected compressor reference; text in header, large mechanism centered, UI exposure is proxy."
   }
 }

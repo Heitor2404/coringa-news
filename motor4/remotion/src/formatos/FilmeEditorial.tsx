@@ -79,6 +79,7 @@ const squareStage = safeSlot('visual');
  */
 const MECH = safety.mechanism_layout;
 const HERO = safety.cad_hero_private;
+const BALANCED = safety.cad_hero_balanced_private;
 const rectStyle = (r: readonly number[]):React.CSSProperties=>({
   position:'absolute',left:r[0],top:r[1],width:r[2]-r[0],height:r[3]-r[1],
 });
@@ -333,7 +334,7 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
   }
   if (shot.type==='cad_preview' && shot.cad_reflow) {
     const r=shot.cad_reflow;
-    const wide=r.schema==='coringa.cad.hero.private.v1'&&r.viewport.join(',')===HERO.viewport.join(',');
+    const wide=(r.schema==='coringa.cad.hero.private.v1'&&r.viewport.join(',')===HERO.viewport.join(','))||(r.schema==='coringa.cad.hero.balanced.private.v1'&&r.viewport.join(',')===BALANCED.viewport.join(','));
     const old=r.schema==='coringa.cad.reflow.private.v1'&&(r.viewport.join(',')==='50,400,1030,1092'||(shot.cad_transmissao&&r.viewport.join(',')==='50,400,1030,962'));
     if (subtitleMode || (!wide&&!old) || r.publish!==false ||
       ![r.scale,r.tx,r.ty].every(Number.isFinite) || r.scale<.35 || r.scale>(wide?2.4:1.6))
@@ -447,7 +448,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
   const age=active?now-shot.start-active.at:0;
   const reflowCAD=shot.type==='cad_preview'&&Boolean(shot.cad_reflow);
-  const heroCAD=reflowCAD&&shot.cad_reflow?.schema==='coringa.cad.hero.private.v1';
+  const balancedCAD=reflowCAD&&shot.cad_reflow?.schema==='coringa.cad.hero.balanced.private.v1';
+  const heroCAD=reflowCAD&&(balancedCAD||shot.cad_reflow?.schema==='coringa.cad.hero.private.v1');
+  const heroLayout=balancedCAD?BALANCED:HERO;
   const painelCAD=reflowCAD&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,962'?shot.cad_transmissao:undefined;
   const compactoCAD=reflowCAD&&shot.cad_compact_panel&&(heroCAD||shot.cad_reflow?.viewport.join(',')==='50,400,1030,1092')?shot.cad_transmissao:undefined;
   const dadosCAD=painelCAD||compactoCAD;
@@ -495,12 +498,12 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <AbsoluteFill style={{pointerEvents:'none',background:
         'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
     {/* Camada editorial universal. Não repetir logo+linha no topo de cada card. */}
-    <div data-safe-role="brand" style={{...(heroCAD?rectStyle(HERO.brand):safeSlot('brand')),
+    <div data-safe-role="brand" style={{...(heroCAD?rectStyle(heroLayout.brand):safeSlot('brand')),
       fontFamily:'Inter,Arial,sans-serif',fontSize:heroCAD?19:26,fontWeight:900,
       color:OFF_WHITE,letterSpacing:.8,whiteSpace:'nowrap'}}>
       CORINGA <span style={{color:GOLD}}>EXPLICA</span>
     </div>
-    <div data-safe-role="section" style={{...(heroCAD?rectStyle(HERO.section):portraitExperiment&&shot.type==='mechanism'&&
+    <div data-safe-role="section" style={{...(heroCAD?rectStyle(heroLayout.section):portraitExperiment&&shot.type==='mechanism'&&
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')?
       rectStyle(MECH.mechanism_section):safeSlot('section')),
       fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:heroCAD?16:22,
@@ -558,7 +561,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <div style={{fontSize:19,color:"#B8CCD8",marginTop:8}}>Totais da trajetória calculada</div>
     </div>}
     {compactoCAD&&!subtitleMode&&<div data-cad-compact-panel="true" data-safe-role="mechanism_step"
-      style={{...rectStyle(MECH.step),fontFamily:"Inter,Arial,sans-serif",color:OFF_WHITE,overflow:"hidden",display:"flex",alignItems:"center",gap:18}}>
+      style={{...rectStyle(balancedCAD?BALANCED.step:MECH.step),fontFamily:"Inter,Arial,sans-serif",color:OFF_WHITE,overflow:"hidden",display:"flex",alignItems:"center",gap:18}}>
       {p<.5?<><div style={{fontSize:48,fontWeight:900,letterSpacing:-1.4,color:GOLD,whiteSpace:"nowrap"}}>{compactoCAD.razao}</div>
       <div style={{fontSize:23,fontWeight:800,lineHeight:1.06}}>{compactoCAD.modo}</div></>:<>
         <div style={{flex:1,minWidth:0}}><div style={{fontSize:18,color:"#B8CCD8",fontWeight:700}}>ENTRADA · TOTAL</div><div style={{fontSize:compactoCAD.entrada.length>12?24:36,fontWeight:850,lineHeight:1.08}}>{compactoCAD.entrada}</div></div>
@@ -567,12 +570,12 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </>}
     </div>}
     {reflowCAD&&!painelCAD&&!compactoCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
-      style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
+      style={{...rectStyle(balancedCAD?BALANCED.step:MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
         color:OFF_WHITE,fontWeight:800,lineHeight:1.12}}>
       <div style={{fontSize:25,color:GOLD}}>{active?.label||''}</div>
       <div style={{fontSize:29,overflowWrap:'break-word'}}>{shot.headline}</div>
     </div>}
-    <div data-safe-role="source" style={{...safeSlot('source'),
+    <div data-safe-role="source" style={{...(balancedCAD?rectStyle(BALANCED.source):safeSlot('source')),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
       {shot.type==='mechanism'?'ESQUEMA ILUSTRATIVO · ':shot.type==='cad_preview'?'REPRESENTAÇÃO CAD · ':''}FONTE: {shot.source_display || shot.source}

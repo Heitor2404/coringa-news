@@ -1,0 +1,39 @@
+name: E219 - cobertura de fontes documentais sem TTS
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-documentario-fontes.yml','scripts/qa_documentario_fontes.py','benchmarks/e219/salmao_retorno_pesquisa.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - name: Dependencias de aquisicao
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4
+      - name: Cobertura documental sem narracao ou render
+        run: python -m scripts.qa_documentario_fontes benchmarks/e219/salmao_retorno_pesquisa.json qa_fontes
+      - name: Cifrar arquivos para o destinatario original
+        if: always()
+        run: |
+          mkdir -p entrega qa_fontes
+          export GNUPGHOME=$(mktemp -d)
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          gpg --batch --quiet --import .github/piloto/chave_publica.asc
+          original=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          test -n "$original"
+          tar -czf /tmp/fontes.tgz qa_fontes
+          gpg --batch --yes --trust-model always --encrypt -r "$original" -o entrega/fontes.tgz.gpg /tmp/fontes.tgz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: fontes-documentais-cifradas, path: entrega/, retention-days: 7, if-no-files-found: error}

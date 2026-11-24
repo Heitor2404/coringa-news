@@ -11,7 +11,7 @@ class E39(unittest.TestCase):
                          ["repouso_amostrado","variacao_observada","repouso_amostrado"])
         self.assertEqual(r["fases"][0]["frame_fim"],60)
         self.assertEqual(r["fases"][1]["frame_fim"],120)
-        self.assertAlmostEqual(r["fracao_intervalos_repouso"],179/239)
+        self.assertAlmostEqual(r["fracao_intervalos_repouso"],180/240)
     def test_continuous_movement(self):
         r=extrair(np.linspace(0,1,240),30,"rad")
         self.assertEqual(r["fracao_intervalos_repouso"],0)

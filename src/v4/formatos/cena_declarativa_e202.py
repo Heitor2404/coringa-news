@@ -509,6 +509,33 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
     for e in extras:
         graf_atores.append({**{k: v for k, v in e.items() if k != 'trilha'}, 'states': _estados(e['trilha'], dur)})
     graf_atores.sort(key=lambda a: {'contexto': 0, 'essencial': 1, 'efeito': 2, 'particula': 3}[a['layer']])
+
+    # E208: plano-mestre estável pelo envelope dos atores em ação, incluindo
+    # rotação e os estados intermediários. Só recua quando a caixa real excede
+    # o palco; não reduzir tudo à área de textos nem oscilar câmera por beat.
+    limites = []
+    for a in graf_atores:
+        if a['layer'] != 'essencial':
+            continue
+        vw, vh = a['view'][2:]
+        fator = a['size'] / max(vw, vh)
+        for st in a['states']:
+            if st['opacity'] < .5:
+                continue
+            hw = vw*fator*st['scale']*st['sx']/2
+            hh = vh*fator*st['scale']*st['sy']/2
+            rad = math.radians(st.get('angle', 0))
+            rx = abs(math.cos(rad))*hw + abs(math.sin(rad))*hh
+            ry = abs(math.sin(rad))*hw + abs(math.cos(rad))*hh
+            limites.append((st['x']-rx, st['y']-ry, st['x']+rx, st['y']+ry))
+    if limites:
+        x0=min(b[0] for b in limites); y0=min(b[1] for b in limites)
+        x1=max(b[2] for b in limites); y1=max(b[3] for b in limites)
+        if x0<CAIXA[0] or x1>CAIXA[2] or y0<CAIXA[1] or y1>CAIXA[3]:
+            fit=_enquadrar((x0,y0,x1,y1))
+            fit['zoom']=min(1.,fit['zoom'])
+            camera=[{'t':0.,**fit},{'t':round(dur,4),**fit}]
+
     fontes = sorted({f['fonte'] for f in fatos if any(f['id'] in (b.get('fatos') or []) for b in cena['beats'])})
     creditos = sorted({o['credito'] for o in origem.values() if o.get('credito')})
     natureza = 'esquema_com_dado_real' if any(o['natureza'] == 'dado_real' for o in origem.values()) else 'esquema_sem_escala'

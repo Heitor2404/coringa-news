@@ -1,0 +1,88 @@
+name: E218 - documentario astronomia curado privado
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-documentario-e218.yml','scripts/qa_documentario_curado_e218.py','benchmarks/e218/aneis_saturno.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: e218-documental
+  cancel-in-progress: false
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+jobs:
+  documentario:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias do compositor existente
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Aquisição de registros e voz Gemini medida
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        run: python -m scripts.qa_documentario_curado_e218 benchmarks/e218/aneis_saturno.json qa_e218
+      - name: Render do episódio no FilmeEditorial existente
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e218/filme.mp4 --props=../qa_e218/props.json --codec=h264 --crf=21 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: QA de duração, imagem e áudio
+        run: |
+          ffprobe -v error -show_streams -show_format -of json qa_e218/filme.mp4 > qa_e218/probe.json
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=json.load(open('qa_e218/props.json')); q=json.load(open('qa_e218/probe.json'))
+          v=next(s for s in q['streams'] if s['codec_type']=='video')
+          assert p['private_review_only'] and p['preview'] and p['duracao']>=60
+          assert (v['width'],v['height'])==(540,960) and int(v['nb_frames'])==round(p['duracao']*30)
+          assert any(s['codec_type']=='audio' for s in q['streams'])
+          assert abs(float(q['format']['duration'])-p['duracao'])<.15
+          out={'duration':p['duracao'],'shots':len(p['shots']),'types':sorted(set(s['type'] for s in p['shots'])),
+               'sha256':hashlib.sha256(Path('qa_e218/filme.mp4').read_bytes()).hexdigest(),
+               'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING'}
+          Path('qa_e218/qa.json').write_text(json.dumps(out,indent=2));print('E218 MP4',out)
+          PY
+          ffmpeg -v error -y -i qa_e218/filme.mp4 -vf "fps=1/4,scale=216:384,tile=5x5" -frames:v 1 qa_e218/contato.jpg
+      - name: Cifrar resultados para revisão privada
+        if: always()
+        run: |
+          mkdir -p entrega qa_e218
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --quiet --import .github/piloto/chave_publica.asc
+          original=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          cat >/tmp/e218-review.asc <<'KEY'
+          -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+          mDMEawXdZhYJKwYBBAHaRw8BAQdADQkjH10X3WJEbPyGlIQPoD1KfisROGAa3iJR
+          d6aX7d20G0UyMTggZXBoZW1lcmFsIFFBIHJlY2lwaWVudIiQBBMWCgA4FiEEHDfD
+          uOLBerIoewCApxgHLYZd24AFAmsF3WYCGwEFCwkIBwIGFQoJCAsCBBYCAwECHgEC
+          F4AACgkQpxgHLYZd24BF+AD/d3SfLejpuUPKtEgg1nIFacwPu3KDOgO1pKQfOmJA
+          WAYA/23lqQlTCRmdg2d+3zKywgMKo+zfRpUVqA1e/9H6c8kJuDgEawXdZhIKKwYB
+          BAGXVQEFAQEHQLlPYoCqQKIX8BF4OXm8yrRccJ1hzfE7qW8eHg4igo81AwEIB4h4
+          BBgWCgAgFiEEHDfDuOLBerIoewCApxgHLYZd24AFAmsF3WYCGwwACgkQpxgHLYZd
+          24D9iAD/fviSfbQcfDqfbtiCC7P0KdSghD3hWm4QIiu+jxPWS6wBAKJ3uDYpJnxM
+          NyfefqDdZwQdwz2d0p3dNuCw2FtlaTwP
+          =wbAB
+          -----END PGP PUBLIC KEY BLOCK-----
+          KEY
+          gpg --batch --quiet --import /tmp/e218-review.asc
+          tar -czf /tmp/e218.tgz qa_e218
+          gpg --batch --yes --quiet --trust-model always --encrypt -r "$original" -r 1C37C3B8E2C17AB2287B0080A718072D865DDB80 -o entrega/e218.tgz.gpg /tmp/e218.tgz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: e218-documentario-privado-cifrado, path: entrega/, retention-days: 7, if-no-files-found: error}

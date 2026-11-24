@@ -34,3 +34,15 @@ class E27(unittest.TestCase):
         for seq,idx in [([1,float("nan")],None),([1,2],[1,0]),([1,2],[0,2])]:
             with self.assertRaises(ValueError):
                 extrair(seq,30,"folga","Folga",idx)
+
+
+    def test_angular_units(self):
+        r=extrair([0,-np.pi/2,-np.pi/2],30,"angulo","Rotação",unidade="rad")
+        self.assertEqual(r["medida"]["unidade"],"rad")
+        self.assertAlmostEqual(r["curso_amostrado_rad"],np.pi/2)
+        self.assertAlmostEqual(r["fases"][0]["delta_rad"],-np.pi/2)
+        self.assertNotIn("delta_mm",r["fases"][0])
+
+    def test_unsupported_unit(self):
+        with self.assertRaisesRegex(ValueError,"UNIDADE"):
+            extrair([0,1],30,"angulo","Rotação",unidade="kg")

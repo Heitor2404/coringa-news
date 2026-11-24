@@ -524,7 +524,7 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
     indices = list(range(0, len(qs), 6)) if rapido else list(range(len(qs)))
     if len(indices)<2:
         raise ValueError("E27-QUADROS_INSUFICIENTES")
-    qa["eventos_trajetoria"] = E.extrair(serie, FPS, medida["tipo"], medida["rotulo"], indices)
+    qa["eventos_trajetoria"] = E.extrair(serie, FPS, medida["tipo"], medida["rotulo"], indices, unidade=medida.get("unidade","m"))
     estilo=modelo.get("estilo_visual","legado")
     if estilo not in ("legado","e33"):
         raise ValueError("E33-ESTILO")

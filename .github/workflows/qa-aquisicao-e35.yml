@@ -10,6 +10,7 @@ on:
       - "benchmarks/e35/**"
       - "benchmarks/e35_classes_mecanismo.json"
       - "tests/test_e35_aquisicao.py"
+      - "tests/test_gates_brep_e36.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,7 +33,7 @@ jobs:
           python -m pip install --progress-bar off --only-binary=:all: cadquery==2.7.0 mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
           echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
       - name: Testes E35 (sintéticos n=5/6, adversariais) e regressões do núcleo
-        run: python -m pytest -q tests/test_e35_aquisicao.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_adaptador_step_e23.py
+        run: python -m pytest -q tests/test_gates_brep_e36.py tests/test_eventos_trajetoria_e27.py tests/test_e35_aquisicao.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_adaptador_step_e23.py
       - name: Consulta 1 — geneva mechanism CAD (descoberta → MP4)
         run: |
           # Fontes públicas por git (só dados; hooks desativados no clone); nenhuma credencial.
@@ -59,6 +60,8 @@ jobs:
                   publish=r["publish"], visual_approved=r["visual_approved"]), ensure_ascii=False, default=str))
           g = json.load(open("qa_e35_geneva/E35_relatorio.json"))
           assert g["resultado"] == "MP4_GERADO" and g["render"]["verificacao_video"]["quadros"] == 240
+          assert g["gates"]["estado"] == "REPROVADO_INTERFERENCIA_BREP"
+          assert g["render"]["eventos_trajetoria"]["medida"]["unidade"] == "rad"
           assert abs(g["oraculo_classe"]["avanco_por_volta_graus"] - g["oraculo_classe"]["avanco_esperado_graus"]) < 1e-6
           EOF
       - uses: actions/upload-artifact@v4
@@ -69,5 +72,6 @@ jobs:
             qa_e35_geneva/*.mp4
             qa_e35_geneva/*_folha.jpg
             qa_e35_geneva/E35_relatorio.json
+            qa_e35_geneva/QA.json
             qa_e35_ciclo/E35_relatorio.json
           retention-days: 14

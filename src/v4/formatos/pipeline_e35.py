@@ -176,8 +176,7 @@ def executar(candidatos_json, trabalho, saida, rapido=False, renderizar=True, cl
         qa = dict(id="e35_" + classe, mobilidade_max=rel["solver"]["mobilidade_max"],
                   residuo_max=rel["solver"]["residuo_max"], natureza="CAD de projeto; juntas inferidas da geometria",
                   homologacao_visual="NAO_HOMOLOGADO", publish=False, visual_approved=False)
-        nome_rep = reg["url"].rstrip("/").split("/")[-1]
-        modelo = dict(id="e35_" + classe, titulo=f"{cfg.get('nome_exibicao', classe)} — {nome_rep}",
+        modelo = dict(id="e35_" + classe, titulo=cfg.get("nome_exibicao", classe),
                       credito=f"CAD: {reg['url'].split('github.com/')[-1]} · {reg['licenca'].get('spdx')}",
                       licenca=str(reg["licenca"].get("spdx")),
                       natureza="Juntas e contato deduzidos da geometria · prévia privada",
@@ -185,8 +184,14 @@ def executar(candidatos_json, trabalho, saida, rapido=False, renderizar=True, cl
                       fonte_cad=dict(url=reg["url"], commit=reg["commit"], step_sha256=arq["sha256"]))
         qa = F.renderizar_trajetoria(mont, {"entrada": {entrada: 1.0}}, qs, medida, serie, qa, modelo,
                                      saida, varrido="entrada")
+        from . import gates_qualidade_e21 as Q
+        qa["interferencia_brep"]=rel["interferencia_brep"]
+        qa=Q.classificar(qa)
+        rel["gates"]= {k:qa[k] for k in ("estado_execucao","validacao_externa","verificacao_contato",
+                                       "estado","homologacao_visual","liberado_para_publicacao")}
         rel["render"] = {k: qa.get(k) for k in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video",
-                                                "camera", "quadros", "eventos_trajetoria")}
+                                                "camera", "quadros", "eventos_trajetoria","palco_cad","apresentacao_e33")}
+        (saida / "QA.json").write_text(json.dumps(_limpar(qa),ensure_ascii=False,indent=2))
     rel["resultado"] = "MP4_GERADO" if renderizar else "SOLVER_E_ORACULOS"
     (saida / "E35_relatorio.json").write_text(json.dumps(_limpar(rel), ensure_ascii=False, indent=2))
     return rel

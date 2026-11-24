@@ -60,6 +60,9 @@ def props(qa, asset):
         fail("EVENTOS")
     labels={"aumenta":"A medida aumenta","diminui":"A medida diminui",
             "variacao_pequena":"Pequena variação da medida"}
+    unit=ev.get("medida",{}).get("unidade","mm")
+    if unit not in ("mm","rad"):
+        fail("UNIDADE_MEDIDA")
     cues=[]
     anterior=0
     for f in fases:
@@ -69,7 +72,7 @@ def props(qa, asset):
                 or abs(f.get("tempo_inicio_s",-1)-a/30)>1e-8
                 or abs(f.get("tempo_fim_s",-1)-b/30)>1e-8):
             fail("EVENTO_FORA_DO_VIDEO")
-        delta=f.get("delta_mm")
+        delta=f.get("delta_"+unit)
         if not isinstance(delta,(int,float)) or not math.isfinite(delta):
             fail("EVENTO_MEDIDA")
         label=labels[f["tipo"]]

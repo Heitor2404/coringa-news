@@ -56,8 +56,26 @@ def classificar(qa):
     else:
         contact = "SEM_COLISAO_NOVA_NA_AMOSTRA"
 
+    if "interferencia_brep" in r:
+        audit=r["interferencia_brep"]
+        contact="NAO_VERIFICADO"
+        if executado and isinstance(audit,dict):
+            n=audit.get("quadros_auditados")
+            bad=audit.get("quadros_com_interferencia")
+            worst=audit.get("pior",{})
+            vol=worst.get("volume_mm3") if isinstance(worst,dict) else None
+            if (type(n) is int and 0<n<=video["quadros"] and type(bad) is int
+                and 0<=bad<=n and _finito(vol) and vol>=0
+                and bool(bad)==bool(vol>0)):
+                contact=("INTERFERENCIA_BREP_DETECTADA" if bad else
+                         "SEM_INTERFERENCIA_BREP_NA_AMOSTRA")
+
     if not executado:
         state = "BLOQUEADO_NA_EXECUCAO"
+    elif contact == "INTERFERENCIA_BREP_DETECTADA":
+        state = "REPROVADO_INTERFERENCIA_BREP"
+    elif "interferencia_brep" in r and contact=="NAO_VERIFICADO":
+        state = "BLOQUEADO_AUDITORIA_CONTATO"
     elif contact == "COLISAO_NOVA_DETECTADA":
         state = "REPROVADO_CONTATO_NOVO"
     elif external == "REPROVADO":

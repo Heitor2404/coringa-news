@@ -8,7 +8,10 @@ import math
 import numpy as np
 
 
-def extrair(serie_m, fps, tipo, rotulo, indices=None):
+def extrair(serie_m, fps, tipo, rotulo, indices=None, unidade='m'):
+    if unidade not in ('m','rad'):
+        raise ValueError('E27-UNIDADE')
+    out_unit='mm' if unidade=='m' else 'rad'
     s=np.asarray(serie_m,dtype=float)
     if s.ndim!=1 or len(s)<2 or not np.isfinite(s).all():
         raise ValueError("E27-SERIE")
@@ -22,11 +25,11 @@ def extrair(serie_m, fps, tipo, rotulo, indices=None):
     if (ix.ndim!=1 or len(ix)<2 or ix.dtype.kind not in "iu"
             or ix[0]<0 or ix[-1]>=len(s) or (np.diff(ix)<=0).any()):
         raise ValueError("E27-INDICES")
-    y=s[ix]*1000
+    y=s[ix]*(1000 if unidade=='m' else 1)
     amplitude=float(np.ptp(y))
     # Hysteresis is a declared presentation sampling threshold, NOT a
     # manufacturing tolerance. No tiny noise promoted to physical event.
-    eps=max(1e-5,amplitude*.02)
+    eps=max(1e-5 if unidade=='m' else 1e-8,amplitude*.02)
     limites=[0]
     d=0
     extremo=0
@@ -52,15 +55,13 @@ def extrair(serie_m, fps, tipo, rotulo, indices=None):
         fases.append(dict(tipo=classe,frame_inicio=int(a),frame_fim=int(b),
                           tempo_inicio_s=a/fps,tempo_fim_s=b/fps,
                           pose_inicio=int(ix[a]),pose_fim=int(ix[b]),
-                          inicio_mm=float(y[a]),fim_mm=float(y[b]),
-                          delta_mm=delta))
+                          **{f'inicio_{out_unit}':float(y[a]),f'fim_{out_unit}':float(y[b]),f'delta_{out_unit}':delta}))
     pontos=[dict(tipo="minimo_amostrado",frame=int(np.argmin(y))),
             dict(tipo="maximo_amostrado",frame=int(np.argmax(y)))]
     for p in pontos:
-        p.update(tempo_s=p["frame"]/fps,valor_mm=float(y[p["frame"]]),
-                 pose=int(ix[p["frame"]]))
+        p.update(tempo_s=p["frame"]/fps,pose=int(ix[p["frame"]]), **{f"valor_{out_unit}":float(y[p["frame"]])})
     return dict(schema="coringa.eventos.trajetoria.v1",medida=dict(tipo=tipo,rotulo=rotulo,
-                     unidade="mm"),fps=float(fps),quadros=len(y),duracao_s=len(y)/fps,
-                indices_pose=ix.tolist(),limiar_visual_mm=eps,curso_amostrado_mm=amplitude,
+                     unidade=out_unit),fps=float(fps),quadros=len(y),duracao_s=len(y)/fps,
+                indices_pose=ix.tolist(),**{f'limiar_visual_{out_unit}':eps,f'curso_amostrado_{out_unit}':amplitude},
                 fases=fases,extremos=pontos,interpretacao_causal="NAO_INFERIDA",
                 publish=False,visual_approved=False)

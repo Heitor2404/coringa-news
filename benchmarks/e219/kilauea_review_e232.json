@@ -139,6 +139,7 @@
   "review_scope": {
     "user_feedback": "positive review of short regional map and narrative montage; authorized next private test",
     "semantic_review": "PENDING",
-    "publication": false
+    "publication": false,
+    "timing_revision": "E233 marker progression and speech cut gate, retry after pre-TTS failure"
   }
 }

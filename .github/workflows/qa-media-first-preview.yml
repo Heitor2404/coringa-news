@@ -2,7 +2,7 @@ name: E226 - amostra visual real antes de novo documentario
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-media-first-preview.yml']
+    paths: ['scripts/qa_media_first_preview.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -62,3 +62,16 @@ jobs:
               raise SystemExit('Envio privado não confirmado') from None
           print('AMOSTRA PRIVADA ENTREGUE')
           PY
+  avisar_falha:
+    needs: visual
+    if: ${{ always() && (needs.visual.result == 'failure' || needs.visual.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.visual.result }}
+      job_name: visual
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

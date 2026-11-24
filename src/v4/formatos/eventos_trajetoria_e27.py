@@ -6,6 +6,7 @@ pressure, load, contact, opening of a valve, etc.
 """
 import math
 import numpy as np
+from . import repouso_e39 as R39
 
 
 def extrair(serie_m, fps, tipo, rotulo, indices=None, unidade='m'):
@@ -63,5 +64,5 @@ def extrair(serie_m, fps, tipo, rotulo, indices=None, unidade='m'):
     return dict(schema="coringa.eventos.trajetoria.v1",medida=dict(tipo=tipo,rotulo=rotulo,
                      unidade=out_unit),fps=float(fps),quadros=len(y),duracao_s=len(y)/fps,
                 indices_pose=ix.tolist(),**{f'limiar_visual_{out_unit}':eps,f'curso_amostrado_{out_unit}':amplitude},
-                fases=fases,extremos=pontos,interpretacao_causal="NAO_INFERIDA",
+                fases=fases,extremos=pontos,repouso=R39.extrair(y,fps,out_unit),interpretacao_causal="NAO_INFERIDA",
                 publish=False,visual_approved=False)

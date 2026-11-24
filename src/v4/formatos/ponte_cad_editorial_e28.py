@@ -83,12 +83,43 @@ def props(qa, asset):
     medida=ev.get("medida",{}).get("rotulo")
     if not isinstance(medida,str) or not medida.strip():
         fail("MEDIDA")
+    # Optional observed dwell. Check coverage and frame clock before using.
+    dwell=ev.get("repouso")
+    if dwell is not None:
+        if (not isinstance(dwell,dict) or dwell.get("schema")!="coringa.repouso.amostrado.v1"
+            or dwell.get("unidade")!=unit or dwell.get("fps")!=30 or dwell.get("quadros")!=n
+            or dwell.get("interpretacao_causal")!="NAO_INFERIDA"
+            or dwell.get("publish") is not False):
+            fail("REPOUSO_CONTRATO")
+        phases=dwell.get("fases")
+        if not isinstance(phases,list) or not phases:
+            fail("REPOUSO_FASES")
+        new=[]; last=0
+        for f in phases:
+            a,b=f.get("frame_inicio"),f.get("frame_fim")
+            kind=f.get("tipo")
+            if (type(a) is not int or type(b) is not int or a!=last or not 0<=a<b<n
+                or kind not in ("repouso_amostrado","variacao_observada")
+                or abs(f.get("tempo_inicio_s",-1)-a/30)>1e-8
+                or abs(f.get("tempo_fim_s",-1)-b/30)>1e-8):
+                fail("REPOUSO_RELOGIO")
+            label=("Repouso da medida" if kind=="repouso_amostrado" else "Variação da medida")
+            new.append(dict(at=a/30,label=label,kind="fact"))
+            last=b
+        if last!=n-1:
+            fail("REPOUSO_INCOMPLETO")
+        if any(f["tipo"]=="repouso_amostrado" for f in phases):
+            cues=new
     # No claimed causal explanation, no invented voice or duration.
     shot=dict(id="cad_privado_e28",start=0,end=n/30,type="cad_preview",
               asset=asset,cad_source_roi=roi,source=stage["credito"],
               source_display=stage["credito"],evidence="explainer",
               lead="Representação CAD",headline=medida[:85],subject="Estudo cinemático",
               cues=cues)
+    if qa.get("estado")=="REPROVADO_INTERFERENCIA_BREP":
+        shot["cad_warning"]="INTERFERÊNCIA DETECTADA · MODELO NÃO VALIDADO"
+    elif "interferencia_brep" in qa and qa.get("verificacao_contato")!="SEM_INTERFERENCIA_BREP_NA_AMOSTRA":
+        shot["cad_warning"]="AUDITORIA DE CONTATO PENDENTE"
     return dict(duracao=n/30,shots=[shot],preview=True,private_review_only=True,
                 direitos_pendentes=[stage["licenca_informada"]],
                 safe_area_profile="MULTIPLATAFORMA_CONSERVADOR_V1")

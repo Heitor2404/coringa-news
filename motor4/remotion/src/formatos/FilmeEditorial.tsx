@@ -18,6 +18,7 @@ export type FilmShot = {
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
+  cad_warning?: string; // private CAD QA warning, never a publication clearance
   cad_reflow?: {schema:string;scale:number;tx:number;ty:number;viewport:number[];publish:boolean}; // E31 private
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
@@ -530,6 +531,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:shot.subject}
+    </div>}
+    {shot.type==='cad_preview'&&shot.cad_warning&&!subtitleMode&&<div
+      style={{position:'absolute',left:150,top:340,width:620,textAlign:'center',
+        fontSize:23,fontWeight:800,lineHeight:1.1,color:'#FFB1A0',fontFamily:'Inter,Arial,sans-serif'}}>
+      {shot.cad_warning}
     </div>}
     {reflowCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',

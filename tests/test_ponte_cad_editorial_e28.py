@@ -53,3 +53,17 @@ class E28(unittest.TestCase):
     def test_reject_asset_hash(self):
         with self.assertRaisesRegex(ValueError,"HASH_ASSET"):
             props(fixture(),"cad_e28/"+"b"*64+".mp4")
+
+
+    def test_warning_persists_in_private_preview(self):
+        q=fixture()
+        q["estado"]="REPROVADO_INTERFERENCIA_BREP"
+        self.assertIn("INTERFERÊNCIA DETECTADA",props(q,self.asset)["shots"][0]["cad_warning"])
+
+    def test_dwell_replaces_generic_cues(self):
+        q=fixture()
+        q["eventos_trajetoria"]["repouso"]=dict(schema="coringa.repouso.amostrado.v1",
+            unidade="mm",fps=30,quadros=31,interpretacao_causal="NAO_INFERIDA",publish=False,
+            fases=[dict(tipo="repouso_amostrado",frame_inicio=0,frame_fim=15,tempo_inicio_s=0,tempo_fim_s=.5),
+                   dict(tipo="variacao_observada",frame_inicio=15,frame_fim=30,tempo_inicio_s=.5,tempo_fim_s=1)])
+        self.assertEqual(props(q,self.asset)["shots"][0]["cues"][0]["label"],"Repouso da medida")

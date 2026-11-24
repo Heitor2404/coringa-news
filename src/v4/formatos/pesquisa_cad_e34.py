@@ -54,7 +54,13 @@ def get(path):
         return json.loads(raw)
     except HTTPError as e:
         if e.code in (403,429):
-            fail("BLOQUEADO_OU_LIMITADO")
+            # Do not infer cause from status alone; preserve rate headers.
+            remaining=e.headers.get("X-RateLimit-Remaining")
+            retry=e.headers.get("Retry-After")
+            reset=e.headers.get("X-RateLimit-Reset")
+            err=PesquisaErro("E34-BLOQUEADO_OU_LIMITADO")
+            err.http=dict(status=e.code,remaining=remaining,retry_after=retry,reset=reset)
+            raise err from None
         fail("HTTP_"+str(e.code))
     except (URLError,TimeoutError):
         fail("REDE")
@@ -161,10 +167,16 @@ def discover(q,limit=4,getter=get,reach=None):
     ids=search(q,limit,getter) if reach is None else agent_reach_ids(reach)
     found=[];blocked=[]
     for rid in ids:
+        stage="metadata"
+        def tracked(path):
+            nonlocal stage
+            stage=("revision" if "/commits?" in path else "tree" if "/git/trees/" in path
+                   else "license" if "/license?" in path else "metadata")
+            return getter(path)
         try:
-            found.append(inspect(rid,getter))
+            found.append(inspect(rid,tracked))
         except PesquisaErro as e:
-            blocked.append(dict(repository=rid,reason=str(e)))
+            blocked.append(dict(repository=rid,stage=stage,reason=str(e),http=getattr(e,"http",None)))
             if str(e)=="E34-BLOQUEADO_OU_LIMITADO":
                 break
     # Prioritize structured joint file candidates, not name or stars.
@@ -172,7 +184,27 @@ def discover(q,limit=4,getter=get,reach=None):
                              bool(x["license_candidate"])),reverse=True)
     return dict(schema="coringa.pesquisa.cad.v1",query=q,
                 backend="github_public" if reach is None else "agent_reach_envelope_then_github_public",
-                candidates=found,blocked=blocked,complete_search=False,publish=False)
+                discovered_ids=ids,candidates=found,blocked=blocked,complete_search=False,publish=False)
+
+def discover_many(queries,limit=4,getter=get):
+    reports=[];stop=False
+    for q in queries:
+        q=query(q)
+        if stop:
+            reports.append(dict(schema="coringa.pesquisa.cad.v1",query=q,discovered_ids=[],
+                    candidates=[],blocked=[dict(reason="E34-NAO_EXECUTADA_APOS_BLOQUEIO")],
+                    complete_search=False,publish=False))
+            continue
+        try:
+            r=discover(q,limit,getter)
+        except PesquisaErro as e:
+            r=dict(schema="coringa.pesquisa.cad.v1",query=q,discovered_ids=[],candidates=[],
+                    blocked=[dict(stage="search",reason=str(e),http=getattr(e,"http",None))],
+                    complete_search=False,publish=False)
+        reports.append(r)
+        stop=any(x["reason"]=="E34-BLOQUEADO_OU_LIMITADO" for x in r["blocked"])
+    return reports
+
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)
@@ -180,7 +212,15 @@ if __name__=="__main__":
     p.add_argument("output")
     p.add_argument("--limit",type=int,default=4)
     p.add_argument("--agent-reach-json")
+    p.add_argument("--also",action="append",default=[])
     a=p.parse_args()
+    if a.also:
+        if a.agent_reach_json:
+            fail("LOTE_AGENT_REACH_NAO_SUPORTADO")
+        reports=discover_many([a.query]+a.also,a.limit)
+        Path(a.output).write_text(json.dumps(reports,ensure_ascii=False,indent=2))
+        print(json.dumps(reports,ensure_ascii=False))
+        raise SystemExit(0 if all(x["candidates"] for x in reports) else 2)
     reach=json.loads(Path(a.agent_reach_json).read_text()) if a.agent_reach_json else None
     try:
         r=discover(a.query,a.limit,reach=reach)

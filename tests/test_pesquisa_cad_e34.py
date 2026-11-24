@@ -72,3 +72,17 @@ class E34(unittest.TestCase):
             raise P.PesquisaErro("E34-BLOQUEADO_OU_LIMITADO")
         r=P.discover("geneva mechanism",getter=get)
         self.assertEqual(len(r["blocked"]),1)
+
+
+    def test_batch_stops_after_limit(self):
+        calls=[]
+        def get(path):
+            calls.append(path)
+            if path.startswith("/search/"):
+                return {"items":[{"full_name":"a/b","html_url":"https://github.com/a/b"}]}
+            raise P.PesquisaErro("E34-BLOQUEADO_OU_LIMITADO")
+        r=P.discover_many(["geneva mechanism","cycloidal drive"],getter=get)
+        self.assertEqual(len(calls),2)
+        self.assertEqual(r[0]["discovered_ids"],["a/b"])
+        self.assertEqual(r[0]["blocked"][0]["stage"],"metadata")
+        self.assertEqual(r[1]["blocked"][0]["reason"],"E34-NAO_EXECUTADA_APOS_BLOQUEIO")

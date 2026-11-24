@@ -627,7 +627,7 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
             modelo.get("aviso_e45", "MODELO NÃO VALIDADO"))
         if qa["revelacao_e45"]["resultado"] == "PREVIA_GERADA":
             r45=qa["revelacao_e45"]
-            r45["verificacao_video"]=conferir_video(saida/r45["arquivo"],r45["quadros"])
+            r45["verificacao_video"]=E45.verificar_previa(saida/r45["arquivo"],r45,ffmpeg_exe())
     return qa
 
 

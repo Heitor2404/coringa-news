@@ -153,3 +153,27 @@ def previa(mont, qs, cam, protegidos, destino, ffmpeg, font, aviso):
                quadros=len(sequencias)*len(indices),
                sha256=hashlib.sha256(destino.read_bytes()).hexdigest())
     return rel
+
+
+def verificar_previa(path, rel, ffmpeg):
+    """Não confunde mudança de vista com movimento dentro de cada segmento."""
+    import re
+    info = subprocess.run([ffmpeg,"-hide_banner","-i",str(path)],
+                          capture_output=True,text=True).stderr
+    streams = re.findall(r"Stream #\d+:\d+.*?: (Video|Audio|Data|Subtitle): (.*)",info)
+    if (len(streams)!=1 or streams[0][0]!="Video" or
+        not streams[0][1].startswith("h264") or
+        not re.search(r"\b540x960\b",streams[0][1])):
+        raise ValueError("E45-FORMATO")
+    raw = subprocess.check_output([ffmpeg,"-v","error","-i",str(path),
+        "-vf","scale=270:480","-f","rawvideo","-pix_fmt","rgb24","-"])
+    frames = np.frombuffer(raw,np.uint8).reshape(-1,480,270,3)
+    if len(frames)!=rel["quadros"]:
+        raise ValueError("E45-QUADROS")
+    picos=[]
+    for s in rel["segmentos"]:
+        ini=s["frame_inicio"]
+        parte=frames[ini:ini+len(s["indices_pose"]),72:308].astype(np.int16)
+        picos.append(int((np.abs(parte-parte[0]).max(-1)>18).sum((1,2)).max()))
+    return dict(quadros=len(frames),picos_movimento_por_segmento=picos,
+                movimento_em_todos_segmentos=all(p>=300 for p in picos))

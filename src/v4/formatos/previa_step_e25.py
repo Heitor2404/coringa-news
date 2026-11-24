@@ -64,7 +64,10 @@ def gerar(manifesto_path, step, license_file, saida):
     modelo=dict(id="step_e25",titulo=manifesto["title"],
                 credito="Projeto CAD: "+manifesto["credit"],
                 licenca=manifesto["license_name"],
-                natureza="STEP verificado · prévia técnica de projeto")
+                natureza="STEP verificado · prévia técnica de projeto",
+                exportar_palco=True, fonte_cad=dict(url=manifesto["source"],
+                    step_sha256=manifesto["files"]["step"][1],
+                    license_sha256=manifesto["files"]["license"][1]))
     # Exatamente o renderer E18–E24, sem uma arte por tipo de máquina.
     qa=F.renderizar_trajetoria(mont,{nome:{int(k):float(c) for k,c in enumerate(linha) if c!=0}
                       for nome,linha in zip(solver.nomes,solver.linhas)},

@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
@@ -26,6 +27,7 @@ from . import raster_e18 as R
 from . import metrologia_e22 as D
 from . import camera_e24 as C
 from . import visibilidade_e26 as V
+from . import eventos_trajetoria_e27 as E
 
 W, H, FPS = 1080, 1920, 30
 
@@ -473,6 +475,8 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
           "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
           "-metadata", "comment=" + modelo["credito"] + " | " + modelo["licenca"] + " | privado, nao publicar",
           str(filme)]
+    palco = saida / f"{modelo['id']}_palco.mp4" if modelo.get('exportar_palco') else None
+    ff_palco = ff[:-1] + [str(palco)] if palco else None
     legenda_papel = {"entrada": ("Peça acionada", AMBAR), "laco": ("Laço fechado", VERDE_AGUA),
                      "acoplado": ("Acoplada à entrada", AZUL_ACOPLADO)}
     # Título na largura útil (900 px): encolhe até 48 px; abaixo disso, 2 linhas.
@@ -511,8 +515,14 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
                for i, v in enumerate(serie)]
     hashes = hashlib.sha256()
     quadros_contato = {}
-    indices = range(0, len(qs), 6) if rapido else range(len(qs))
-    with subprocess.Popen(ff, stdin=subprocess.PIPE) as enc:
+    indices = list(range(0, len(qs), 6)) if rapido else list(range(len(qs)))
+    if len(indices)<2:
+        raise ValueError("E27-QUADROS_INSUFICIENTES")
+    qa["eventos_trajetoria"] = E.extrair(serie, FPS, medida["tipo"], medida["rotulo"], indices)
+    # Both encoders receive the SAME rasterized frame; no lab title/chart baked
+    # into the clean stage. No stage is released for publication.
+    ctx = subprocess.Popen(ff_palco, stdin=subprocess.PIPE) if palco else nullcontext(None)
+    with subprocess.Popen(ff, stdin=subprocess.PIPE) as enc, ctx as enc_palco:
         for i in indices:
             X = mont.poses(qs[i])
             malhas = []
@@ -521,6 +531,8 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
                 cor, brilho = cor_visual(v, pap[v.corpo])
                 malhas.append((v.vertices @ T[:3, :3].T + T[:3, 3], v.faces, cor, brilho))
             rgb, info = R.renderizar(cam, malhas, fundo, chao=chao)
+            if enc_palco is not None:
+                enc_palco.stdin.write(rgb.tobytes())
             im = Image.fromarray(rgb)
             d = ImageDraw.Draw(im)
             for k, linha in enumerate(titulo_linhas):
@@ -554,6 +566,10 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
             if i in (0, len(qs) // 4, len(qs) // 2, 3 * len(qs) // 4, len(qs) - 1) or rapido:
                 quadros_contato[i] = np.asarray(im)
         enc.stdin.close()
+        if enc_palco is not None:
+            enc_palco.stdin.close()
+            if enc_palco.wait():
+                raise RuntimeError("E27-CODIFICACAO_PALCO")
         if enc.wait():
             raise RuntimeError("E18-CODIFICACAO")
     chaves = sorted(quadros_contato)
@@ -564,6 +580,16 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
               camera=dict(olho=cam.olho.tolist(), **escolha), cobertura_ultimo=info["cobertura"],
               legenda=qa_legenda, tamanho_titulo=tam,
               verificacao_video=conferir_video(filme, len(list(indices))), publish=False, visual_approved=False)
+    if palco:
+        ver=conferir_video(palco,len(indices))
+        qa["palco_cad"] = dict(schema="coringa.palco.cad.v1",arquivo=palco.name,
+            sha256=sha256(palco),quadros=ver["quadros"],fps=FPS,
+            dimensoes=[W,H],verificacao_video=ver,
+            tipo_evidencia="representacao_tecnica",credito=modelo["credito"],
+            licenca_informada=modelo["licenca"],natureza=modelo["natureza"],
+            fonte=modelo.get("fonte_cad"),
+            direitos_publicacao="NAO_AVALIADOS",homologacao_visual="NAO_HOMOLOGADO",
+            publish=False)
     return qa
 
 
@@ -625,6 +651,7 @@ def main():
     ap.add_argument("saida", type=Path, nargs="?")
     ap.add_argument("--ids")
     ap.add_argument("--rapido", action="store_true")
+    ap.add_argument("--palco", action="store_true", help="exportar clipe CAD limpo apenas para laboratorio")
     a = ap.parse_args()
     if a.acao == "fixar":
         fixar(a.manifesto, a.raiz)
@@ -637,6 +664,8 @@ def main():
         if ids and modelo["id"] not in ids:
             continue
         try:
+            if a.palco:
+                modelo = dict(modelo, exportar_palco=True, fonte_cad=man["fonte"])
             r = gerar(man, modelo, a.raiz, a.saida, a.rapido)
         except ValueError as e:
             r = dict(id=modelo["id"], motivo=str(e))

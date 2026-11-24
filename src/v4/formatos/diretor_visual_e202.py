@@ -554,6 +554,49 @@ def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino:
 
 
 
+
+def retimar_documental(plano: dict, plano_documental: dict, duracoes: list[float]) -> dict:
+    """Atualiza somente cortes da timeline após a voz. Não altera velocidade,
+    timestamps originais, cues ou duração de clipe ATLAS autenticado.
+    Se o material não couber, exige nova decupagem/render do mapa.
+    """
+    import copy
+    cenas = plano['cenas']
+    if len(duracoes) != sum(len(c['beats']) for c in cenas):
+        raise ValueError('E209-BEATS')
+    if any(not isinstance(x,(int,float)) or isinstance(x,bool) or not math.isfinite(x) or x<=0 for x in duracoes):
+        raise ValueError('E209-TEMPOS')
+    p = copy.deepcopy(plano_documental)
+    externos = [c for c in cenas if c['modalidade'] != 'cena_declarativa']
+    if [s['id'] for s in p['shots']] != [c['id'] for c in externos]:
+        raise ValueError('E209-ORDEM')
+    k,t=0,0.
+    shots={s['id']:s for s in p['shots']}
+    for c in cenas:
+        n=len(c['beats'])
+        d=round(sum(duracoes[k:k+n]),4)
+        k+=n
+        if c['modalidade']=='cena_declarativa':
+            continue
+        s=shots[c['id']]
+        if s['type']=='atlas_map':
+            # A duração do mapa vem da prova, não da sugestão do roteiro.
+            m=p['media'][s['asset']]
+            q=json.loads(Path(m['atlas_proof']).read_text(encoding='utf8'))
+            if abs(d-float(q['duracao_s']))>.05:
+                raise ValueError('E209-ATLAS-RETIMAR: '+s['id'])
+        if s['type']=='video':
+            m=p['media'][s['asset']]
+            if m.get('duration_s') is not None and float(s.get('source_in_seconds') or 0)+d>float(m['duration_s'])+.05:
+                raise ValueError('E209-VIDEO-CURTO: '+s['id'])
+        if any(float(x['at'])>=d for x in s.get('cues') or []):
+            raise ValueError('E209-CUE-FORA: '+s['id'])
+        s['start'],s['end']=t,round(t+d,4)
+        t=s['end']
+    p['duracao']=t
+    return p
+
+
 def anexar_audio_documental(props: dict, audio: str, grupos: list[dict], public_root: Path, metodo: str) -> dict:
     """Áudio privado autenticado e legendas em tempo absoluto. Nenhuma alteração da cadência."""
     import wave
@@ -688,6 +731,8 @@ def main(argv=None) -> int:
     mx = sub.add_parser('montagem-mista')
     mx.add_argument('resultado'); mx.add_argument('caso'); mx.add_argument('plano_documental')
     mx.add_argument('duracoes'); mx.add_argument('saida'); mx.add_argument('public_root')
+    mx.add_argument('--narracao', help='JSON com duracoes/palavras e audio autenticado')
+    mx.add_argument('--retimar', action='store_true')
     aq = sub.add_parser('pesquisa-documental')
     aq.add_argument('entrada', help='JSON: fatos + necessidades_visuais, ou caso com pergunta e fatos')
     aq.add_argument('saida'); aq.add_argument('--autor-ia', action='store_true')
@@ -714,8 +759,13 @@ def main(argv=None) -> int:
     if a.cmd == 'montagem-mista':
         def ler(p):
             return json.loads(Path(p).read_text(encoding='utf8'))
-        preparar_misto(ler(a.resultado), ler(a.caso), ler(a.plano_documental),
-                       Path(a.saida), Path(a.public_root), ler(a.duracoes))
+        res, caso, doc = ler(a.resultado), ler(a.caso), ler(a.plano_documental)
+        n = ler(a.narracao) if a.narracao else {}
+        ds = n.get('duracoes') or ler(a.duracoes)
+        if a.retimar:
+            doc = retimar_documental(res['plano'], doc, ds)
+        preparar_misto(res, caso, doc, Path(a.saida), Path(a.public_root), ds,
+                       palavras=n.get('palavras'), audio=n.get('audio'))
         return 0
     if a.cmd == 'dirigir':
         ent = json.loads(Path(a.entrada).read_text(encoding='utf8'))

@@ -8,12 +8,13 @@ fonte; a função não pode alterar ou aumentar tolerâncias.
 from __future__ import annotations
 
 import math
+from numbers import Real
 
 SCHEMA = "coringa-e21-gates-independentes-v1"
 
 
 def _finito(x):
-    return type(x) in (int, float) and math.isfinite(x)
+    return not isinstance(x, bool) and isinstance(x, Real) and math.isfinite(float(x))
 
 
 def classificar(qa):
@@ -21,8 +22,15 @@ def classificar(qa):
     if not isinstance(qa, dict):
         raise ValueError("E21-QA-OBJETO")
     r = dict(qa)
-    executado = "motivo" not in r and _finito(r.get("residuo_max")) and (
-        r.get("verificacao_video") is not None
+    video = r.get("verificacao_video")
+    executado = (
+        "motivo" not in r
+        and _finito(r.get("residuo_max"))
+        and 0 <= float(r["residuo_max"]) <= 1e-7
+        and isinstance(video, dict)
+        and type(video.get("quadros")) is int and video["quadros"] >= 3
+        and type(video.get("pico_pixels_mudados")) is int
+        and video["pico_pixels_mudados"] >= 300
     )
     r["estado_execucao"] = "PASS" if executado else "BLOCKED"
 

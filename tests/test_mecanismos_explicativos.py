@@ -36,7 +36,8 @@ def test_mecanismos_geram_props_sem_fotos_falsas(tmp_path):
     assert out['pronto'] and out['shots']==2 and out['midias']==0
     props=json.loads((tmp_path/'saida/props.json').read_text(encoding='utf8'))
     assert props['preview'] is True
-    assert props['private_review_only'] is False
+    assert props['private_review_only'] is True
+    assert props['animation_policy_mode']=='LEGADO_REJEITADO_SOMENTE_QA'
     assert all(s['type']=='mechanism' and s['evidence']=='explainer' for s in props['shots'])
     assert all('asset' not in s and 'literal_identity' not in s for s in props['shots'])
     assert 'asml.com' in props['shots'][0]['source']

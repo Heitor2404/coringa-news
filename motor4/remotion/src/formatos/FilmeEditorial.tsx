@@ -78,6 +78,7 @@ const squareStage = safeSlot('visual');
  * Não confundir zoom editorial com validação pixel-a-pixel de personagens móveis.
  */
 const MECH = safety.mechanism_layout;
+const HERO = safety.cad_hero_private;
 const rectStyle = (r: readonly number[]):React.CSSProperties=>({
   position:'absolute',left:r[0],top:r[1],width:r[2]-r[0],height:r[3]-r[1],
 });
@@ -332,9 +333,10 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
   }
   if (shot.type==='cad_preview' && shot.cad_reflow) {
     const r=shot.cad_reflow;
-    if (subtitleMode || r.schema!=='coringa.cad.reflow.private.v1' ||
-      r.publish!==false || (r.viewport.join(',')!=='50,400,1030,1092' && !(shot.cad_transmissao && r.viewport.join(',')==='50,400,1030,962')) ||
-      ![r.scale,r.tx,r.ty].every(Number.isFinite) || r.scale<.35 || r.scale>1.6)
+    const wide=r.schema==='coringa.cad.hero.private.v1'&&r.viewport.join(',')===HERO.viewport.join(',');
+    const old=r.schema==='coringa.cad.reflow.private.v1'&&(r.viewport.join(',')==='50,400,1030,1092'||(shot.cad_transmissao&&r.viewport.join(',')==='50,400,1030,962'));
+    if (subtitleMode || (!wide&&!old) || r.publish!==false ||
+      ![r.scale,r.tx,r.ty].every(Number.isFinite) || r.scale<.35 || r.scale>(wide?2.4:1.6))
       throw new Error('E31-PRIVATE-REFLOW');
     const [x,y,ex,ey]=r.viewport;
     return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 47%,#10202C,#070D14 80%)'}}>
@@ -445,8 +447,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
   const age=active?now-shot.start-active.at:0;
   const reflowCAD=shot.type==='cad_preview'&&Boolean(shot.cad_reflow);
+  const heroCAD=reflowCAD&&shot.cad_reflow?.schema==='coringa.cad.hero.private.v1';
   const painelCAD=reflowCAD&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,962'?shot.cad_transmissao:undefined;
-  const compactoCAD=reflowCAD&&shot.cad_compact_panel&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,1092'?shot.cad_transmissao:undefined;
+  const compactoCAD=reflowCAD&&shot.cad_compact_panel&&(heroCAD||shot.cad_reflow?.viewport.join(',')==='50,400,1030,1092')?shot.cad_transmissao:undefined;
   const dadosCAD=painelCAD||compactoCAD;
   if(dadosCAD&&(dadosCAD.schema!=='coringa.cad.transmission.panel.v1'||dadosCAD.publish!==false||
     !['REDUÇÃO OBSERVADA','MULTIPLICAÇÃO OBSERVADA'].includes(dadosCAD.modo)||
@@ -492,15 +495,15 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <AbsoluteFill style={{pointerEvents:'none',background:
         'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
     {/* Camada editorial universal. Não repetir logo+linha no topo de cada card. */}
-    <div data-safe-role="brand" style={{...safeSlot('brand'),
-      fontFamily:'Inter,Arial,sans-serif',fontSize:26,fontWeight:900,
+    <div data-safe-role="brand" style={{...(heroCAD?rectStyle(HERO.brand):safeSlot('brand')),
+      fontFamily:'Inter,Arial,sans-serif',fontSize:heroCAD?19:26,fontWeight:900,
       color:OFF_WHITE,letterSpacing:.8,whiteSpace:'nowrap'}}>
       CORINGA <span style={{color:GOLD}}>EXPLICA</span>
     </div>
-    <div data-safe-role="section" style={{...(portraitExperiment&&shot.type==='mechanism'&&
+    <div data-safe-role="section" style={{...(heroCAD?rectStyle(HERO.section):portraitExperiment&&shot.type==='mechanism'&&
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')?
       rectStyle(MECH.mechanism_section):safeSlot('section')),
-      fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:22,
+      fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:heroCAD?16:22,
       color:shot.type==='cad_preview'&&shot.cad_warning?'#FFB1A0':'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.type==='cad_preview'&&shot.cad_warning?(shot.cad_warning.includes('INTERFERÊNCIA DETECTADA')?'INTERFERÊNCIA · NÃO VALIDADO':'CONTATO PENDENTE · NÃO VALIDADO'):shot.lead.toUpperCase()}

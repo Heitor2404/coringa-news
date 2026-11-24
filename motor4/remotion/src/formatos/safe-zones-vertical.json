@@ -262,5 +262,39 @@
       760,
       380
     ]
+  },
+  "cad_hero_private": {
+    "viewport": [
+      20,
+      100,
+      1060,
+      1070
+    ],
+    "brand": [
+      160,
+      1074,
+      360,
+      1100
+    ],
+    "section": [
+      365,
+      1074,
+      760,
+      1100
+    ],
+    "step": [
+      160,
+      1102,
+      760,
+      1187
+    ],
+    "source": [
+      160,
+      1195,
+      760,
+      1235
+    ],
+    "max_motion_ui_fraction": 0.4,
+    "notes": "Experimental: preserve entire visible foreground, text in conservative lanes; motion risk is a pixel proxy, not semantic certification."
   }
 }

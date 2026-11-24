@@ -3,6 +3,9 @@ import argparse
 import hashlib
 import json
 import math
+import os
+import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -10,6 +13,12 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from .cad_fechado_e17 import load, solver, audit
 from .render_cad_e15 import raster, unit
+
+
+def ffmpeg_exe():
+    if os.environ.get('FFMPEG'):
+        return os.environ['FFMPEG']
+    return shutil.which('ffmpeg') or 'ffmpeg'
 
 
 def project(solids, plane, origins, frames):
@@ -54,7 +63,7 @@ def render(manifest,solids,plane,origins,frames,out):
                           for f in frames])*1000
     positions -= positions.min()
     chart = [(48+int(i*396/(len(frames)-1)),int(754-v*60/positions.max())) for i,v in enumerate(positions)]
-    cmd = ["ffmpeg","-v","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s","540x960",
+    cmd = [ffmpeg_exe(),"-v","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s","540x960",
            "-r","24","-i","-","-c:v","libx264","-threads","2","-crf","17","-pix_fmt","yuv420p",
            "-metadata","comment=CAD: Xem Studio; adaptation: motion study and editorial colors. "+manifest["source"],
            str(target)]
@@ -103,11 +112,23 @@ def render(manifest,solids,plane,origins,frames,out):
 
 
 def check_video(path):
-    streams = json.loads(subprocess.check_output(["ffprobe","-v","error","-show_streams","-of","json",str(path)]))["streams"]
-    stream, = streams
-    if (stream["width"],stream["height"],stream["r_frame_rate"]) != (540,960,"24/1"):
-        raise ValueError("unexpected media format")
-    data = subprocess.check_output(["ffmpeg","-v","error","-i",str(path),"-vf","scale=270:480",
+    if shutil.which("ffprobe"):
+        streams = json.loads(subprocess.check_output(["ffprobe","-v","error","-show_streams","-of","json",str(path)]))["streams"]
+        stream, = streams
+        if (stream["width"],stream["height"],stream["r_frame_rate"]) != (540,960,"24/1"):
+            raise ValueError("unexpected media format")
+    else:
+        # Wheel estático imageio-ffmpeg não traz ffprobe. Preservar as
+        # verificações de codec, stream único, dimensão e fps sem apt.
+        info = subprocess.run([ffmpeg_exe(),"-hide_banner","-i",str(path)],
+                              capture_output=True,text=True).stderr
+        streams = re.findall(r"Stream #\d+:\d+.*?: (Video|Audio|Data|Subtitle): (.*)",info)
+        if (len(streams)!=1 or streams[0][0]!="Video"
+                or not streams[0][1].startswith("h264")
+                or not re.search(r"\b540x960\b",streams[0][1])
+                or not re.search(r"\b24(?:\.0+)? fps\b",streams[0][1])):
+            raise ValueError("unexpected media format (ffmpeg metadata)")
+    data = subprocess.check_output([ffmpeg_exe(),"-v","error","-i",str(path),"-vf","scale=270:480",
                                     "-f","rawvideo","-pix_fmt","rgb24","-"])
     frames = np.frombuffer(data,np.uint8).reshape(-1,480,270,3)
     roi = frames[:,95:310].astype(np.int16)

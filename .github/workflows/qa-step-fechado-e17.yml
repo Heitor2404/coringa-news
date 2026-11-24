@@ -45,10 +45,10 @@ jobs:
           curl -fsSL --retry 2 --max-time 60 "$(jq -r .files.license[0] benchmarks/e17_closed_step.json)" -o source_e17/LICENSE.md
       - name: Regressions and independent kinematic oracle
         run: python -m pytest -q -s tests/test_adaptador_step_e23.py tests/test_cad_fechado_e17.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py tests/test_renderer_mecanico_e9_e10.py tests/test_importador_geometria_e7.py tests/test_triagem_fontes_geometria_e8.py
-      - name: Solid intersections, render and decode
-        run: python -m src.v4.formatos.previa_cad_e17 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e17
       - name: STEP no solver e renderer compartilhados E25
         run: python -m src.v4.formatos.previa_step_e25 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e25
+      - name: Solid intersections, render and decode
+        run: python -m src.v4.formatos.previa_cad_e17 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e17
       - uses: actions/upload-artifact@v4
         if: always()
         with:

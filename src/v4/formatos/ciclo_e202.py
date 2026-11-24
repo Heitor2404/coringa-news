@@ -136,7 +136,8 @@ def quadros_jpg(mp4: Path, tempos: list[float], pasta: Path) -> list[Path]:
 
 
 def folha(mp4: Path, saida: Path) -> None:
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-vf', 'fps=2/3,scale=360:640,tile=4x2', '-frames:v', '1', str(saida)], check=True)
+    dur = sondar(mp4)['duracao']          # 8 quadros espalhados pela duração inteira
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(mp4), '-vf', f'fps=8/{dur:.3f},scale=360:640,tile=4x2', '-frames:v', '1', str(saida)], check=True)
 
 
 def ciclo(caso: dict, saida: Path, usar_ia: bool, usar_voz: bool, usar_visao: bool) -> dict:
@@ -145,7 +146,7 @@ def ciclo(caso: dict, saida: Path, usar_ia: bool, usar_voz: bool, usar_visao: bo
     reg = {'caso': caso['id'], 'etapas': {}, 'publicar': False, 'aprovacao_humana': 'PENDENTE'}
     r = D.dirigir(caso, permitir_chamada=usar_ia)
     comp = r.pop('compilado', None) or {}
-    reg['direcao'] = {k: r[k] for k in ('estado', 'violacoes_finais', 'historico', 'chamadas_ia', 'disponibilidade')}
+    reg['direcao'] = {k: r[k] for k in ('estado', 'violacoes_finais', 'alertas_geometria', 'historico', 'chamadas_ia', 'disponibilidade')}
     reg['plano'] = r['plano']
     if r['estado'] != 'PLANO_COMPILADO':
         reg['estado'] = 'BLOQUEADO_DIRECAO'

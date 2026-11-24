@@ -32,6 +32,7 @@ const SceneGraphV2:React.FC<{data:SceneDataV2;t:number;duration:number;headline:
       {flt&&<defs><filter id={`sat-${a.id}`}><feColorMatrix type="saturate" values={String(k.sat)}/></filter></defs>}
       {a.shapes.map((s,i)=><path key={i} d={s.d} fill={s.fill} stroke={s.stroke||'none'} strokeWidth={(s.sw||0)} vectorEffect={a.layer==='contexto'?'non-scaling-stroke':undefined} strokeLinecap="round" strokeLinejoin="round"
         {...(a.tracado?{pathLength:1,strokeDasharray:`${k.draw} 1`}:{})}/>)}
+      {a.tint_color&&k.tint>0.003&&<g opacity={k.tint}>{a.shapes.filter(s=>s.fill!=='none').map((s,i)=><path key={'t'+i} d={s.d} fill={a.tint_color}/>)}</g>}
     </g></g>;
   });
   const placed:Lb[]=[];

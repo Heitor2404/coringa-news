@@ -34,7 +34,8 @@ def test_formas_tem_origem_e_licenca():
 
 def test_compila_fixture_sem_problemas_e_contrato_v2():
     probs, comp = D.verificar(FX['plano'], FX['caso'], DISP)
-    assert probs == []
+    # fixture lotada (6 atores) no plano geral final: alerta honesto de sujeito pequeno, nada além disso
+    assert probs == [] and {g['regra'] for g in comp['c1']['alertas_geometria']} <= {'G-SUJEITO-PEQUENO'}
     sg = comp['c1']['scene_graph']
     assert sg['schema'] == 'coringa.scene_graph.private.v2' and sg['publish'] is False
     dur = comp['c1']['duracao']
@@ -121,3 +122,13 @@ def test_rubrica_comum_reconhece_cena_declarativa():
     r = D.auditoria_contrato(f['props'])
     assert r['estrutura_declarada_ok'] and r['provas_resolvidas_no_plano'] == 1
     assert r['prova_visual'] == 'NAO_INSPECIONADA' and r['aprovacao_humana'] == 'PENDENTE'
+
+
+def test_tingir_para_cor_e_caixa_justa():
+    p = _copia()
+    p['cenas'][0]['beats'][0]['acoes'].append({'verbo': 'tingir', 'alvo': 'copo', 'para_cor': '#6B3F1D', 'inicio': 0.2, 'fim': 0.9})
+    _, comp = D.verificar(p, FX['caso'], DISP)
+    copo = next(a for a in comp['c1']['scene_graph']['actors'] if a['id'] == 'copo')
+    assert copo['tint_color'] == '#6B3F1D' and copo['states'][0]['tint'] == 0 and copo['states'][-1]['tint'] > .7
+    v = F.icone(['potted-plant'])['view']
+    assert v[0] > 0 and v[2] < 32                       # moldura do ícone sem o respiro lateral

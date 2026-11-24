@@ -37,6 +37,67 @@ def _cor(c: str | None, padrao: str = '#9FB7C8') -> str:
     return c.upper() if COR.fullmatch(c) else padrao
 
 
+# ───────────────────────── caixa justa dos traçados (sem o respiro dos ícones) ─────────────────────────
+_NUM = re.compile(r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?')
+_ARGS = {'M': 2, 'L': 2, 'T': 2, 'H': 1, 'V': 1, 'C': 6, 'S': 4, 'Q': 4, 'A': 7, 'Z': 0}
+
+
+def caixa_justa(shapes: list[dict]) -> list[float] | None:
+    """Caixa que contém extremos e pontos de controle (conservadora) de todos os traçados; arcos pelo extremo
+    ± raio. Serve para medir o desenho de verdade, não a moldura 32×32 com respiro do ícone."""
+    xs, ys = [], []
+    for s in shapes:
+        x = y = x0 = y0 = 0.0
+        for cmd, args in re.findall(r'([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)', s['d']):
+            C, rel = cmd.upper(), cmd.islower()
+            nums = [float(n) for n in _NUM.findall(args)]
+            n = _ARGS[C]
+            if C == 'Z':
+                x, y = x0, y0; continue
+            for k in range(0, len(nums) - n + 1 if n else 0, n):
+                g = nums[k:k + n]
+                if C == 'H':
+                    x = x + g[0] if rel else g[0]; pts = [(x, y)]
+                elif C == 'V':
+                    y = y + g[0] if rel else g[0]; pts = [(x, y)]
+                elif C == 'A':
+                    ex, ey = (x + g[5], y + g[6]) if rel else (g[5], g[6])
+                    r = max(abs(g[0]), abs(g[1]))
+                    pts = [(ex, ey), (min(x, ex) - 0 * r, min(y, ey)), (max(x, ex), max(y, ey))]
+                    mx, my = (x + ex) / 2, (y + ey) / 2
+                    pts += [(mx - r, my - r), (mx + r, my + r)] if r < 1e6 else []
+                    x, y = ex, ey
+                else:
+                    pares = [(g[i] + (x if rel else 0), g[i + 1] + (y if rel else 0)) for i in range(0, n, 2)]
+                    pts = pares
+                    x, y = pares[-1]
+                if C == 'M' and k == 0:
+                    x0, y0 = x, y
+                if C == 'M' and k > 0:
+                    pass
+                for px, py in pts:
+                    xs.append(px); ys.append(py)
+                if C == 'M':
+                    C = 'L'                      # pares extras após M são linhas
+                    n = 2
+    if not xs:
+        return None
+    return [min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)]
+
+
+def _justa(view: list[float], shapes: list[dict]) -> list[float]:
+    cj = caixa_justa(shapes)
+    if not cj or cj[2] <= 0 or cj[3] <= 0:
+        return view
+    m = 0.03 * max(cj[2], cj[3])
+    x, y, w, h = cj[0] - m, cj[1] - m, cj[2] + 2 * m, cj[3] + 2 * m
+    # nunca maior que a moldura original (pontos de controle podem exagerar)
+    vx, vy, vw, vh = view
+    x0, y0 = max(x, vx), max(y, vy)
+    x1, y1 = min(x + w, vx + vw), min(y + h, vy + vh)
+    return [round(x0, 3), round(y0, 3), round(x1 - x0, 3), round(y1 - y0, 3)] if x1 > x0 and y1 > y0 else view
+
+
 # ───────────────────────── ícones ─────────────────────────
 @functools.lru_cache(maxsize=1)
 def _icones() -> dict:
@@ -88,7 +149,7 @@ def icone(termos: list[str]) -> dict | None:
 
 def _icone_res(nome: str, termo: str, modo: str) -> dict:
     return {'origem': f'icone:fluent-emoji-flat/{nome}', 'termo': termo, 'casamento': modo,
-            'view': [0, 0, 32, 32], 'shapes': _icones()[nome], 'credito': CREDITO_ICONE,
+            'view': _justa([0, 0, 32, 32], _icones()[nome]), 'shapes': _icones()[nome], 'credito': CREDITO_ICONE,
             'licenca': 'MIT', 'natureza': 'ilustracao'}
 
 

@@ -32,7 +32,7 @@ VERBOS = ('aparecer', 'sair', 'mover', 'fluxo', 'tingir', 'afastar', 'filtrar', 
           'destacar', 'revelar_interior')
 RELACOES = ('sobre', 'dentro', 'ao_lado')
 PAPEIS = ('protagonista', 'origem', 'destino', 'meio', 'produto', 'contexto')
-BASE = {'protagonista': 330, 'origem': 230, 'destino': 260, 'meio': 230, 'produto': 210, 'contexto': 520}
+BASE = {'protagonista': 380, 'origem': 230, 'destino': 260, 'meio': 230, 'produto': 210, 'contexto': 520}
 TAM_PARTICULA = 46
 MAX_PARTICULAS = 14
 
@@ -50,6 +50,44 @@ def _p(regra: str, texto: str, cena: str = '') -> dict:
 def _ease(p: float) -> float:
     p = min(1.0, max(0.0, p))
     return p * p * (3 - 2 * p)
+
+
+# ───────────────────────── normalização (variações de formato, registradas) ─────────────────────────
+def _item(x) -> dict:
+    """item de partícula: aceita {'rotulo','cor','forma'}, {'item':{...}} e forma como nome de primitiva."""
+    if isinstance(x, dict) and isinstance(x.get('item'), dict) and not x.get('rotulo'):
+        x = {**x['item'], **{k: v for k, v in x.items() if k != 'item'}}
+    x = dict(x) if isinstance(x, dict) else {'rotulo': str(x or '')}
+    f = x.get('forma')
+    if isinstance(f, str):
+        x['forma'] = {'tipo': 'primitiva', 'nome': f if f in F.PRIMITIVAS else 'particula', 'cor': x.get('cor')}
+    return x
+
+
+def normalizar(cena: dict) -> tuple[dict, list[str]]:
+    """Corrige VARIAÇÕES DE FORMATO sem mudar o significado e registra cada ajuste (nunca inventa ator ou fato).
+    Ator com papel 'contexto' que é alvo de ação física deixa de ser fundo: vira 'meio' (só papel visual)."""
+    import copy
+    c = copy.deepcopy(cena)
+    ajustes = []
+    for b in c.get('beats') or []:
+        for a in b.get('acoes') or []:
+            for k in ('item', 'passa', 'retido', 'preencher_com'):
+                if k in a and a[k] is not None:
+                    antes = a[k]
+                    a[k] = _item(a[k])
+                    if a[k] != antes:
+                        ajustes.append(f"{a.get('verbo')}.{k}: formato normalizado")
+    ativos = set()
+    for b in c.get('beats') or []:
+        for a in b.get('acoes') or []:
+            if a.get('verbo') not in ('aparecer', 'destacar'):
+                ativos |= {a[x] for x in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior') if isinstance(a.get(x), str)}
+    for at in c.get('atores') or []:
+        if at.get('papel') == 'contexto' and at.get('id') in ativos:
+            at['papel'] = 'meio'
+            ajustes.append(f"{at['id']}: papel contexto→meio (participa de ação)")
+    return c, ajustes
 
 
 # ───────────────────────── validação semântica (antes de qualquer forma) ─────────────────────────
@@ -135,15 +173,23 @@ def diagramar(cena: dict, formas: dict) -> dict:
     atores = {a['id']: a for a in cena['atores']}
     rel = cena.get('relacoes') or []
     acoes = [a for b in cena.get('beats') or [] for a in b.get('acoes') or []]
+    ancorados = {x for r in rel if r['tipo'] in ('sobre', 'ao_lado') for x in (r['a'], r['b'])}
+    ancorados |= {x for a in acoes if a.get('verbo') == 'afastar' for x in (a.get('a'), a.get('b'))}
     dependentes = {}
-    for r in rel:
-        if r['tipo'] == 'dentro':
+    for r in rel:                                   # explícito primeiro
+        if r['tipo'] == 'dentro' and r['a'] not in ancorados:
             dependentes[r['a']] = ('dentro', r['b'])
-    for a in acoes:
+    for a in acoes:                                 # implícito só se não houver posição explícita
         if a.get('verbo') == 'transformar' and a.get('de') in atores and a.get('para') in atores:
-            dependentes[a['para']] = ('mesmo', a['de'])
+            dependentes.setdefault(a['para'], ('mesmo', a['de'])) if a['para'] not in ancorados else None
         if a.get('verbo') == 'revelar_interior' and a.get('interior') in atores and a.get('alvo') in atores:
-            dependentes[a['interior']] = ('dentro', a['alvo'])
+            dependentes.setdefault(a['interior'], ('dentro', a['alvo'])) if a['interior'] not in ancorados else None
+    for i in list(dependentes):                     # ciclos: quem depende de um dependente que volta a ele fica livre
+        visto, x = {i}, dependentes[i][1]
+        while x in dependentes:
+            if x in visto:
+                dependentes.pop(i, None); break
+            visto.add(x); x = dependentes[x][1]
     livres = [i for i, a in atores.items() if i not in dependentes and a['papel'] != 'contexto']
     arestas = [(u, v) for u, v in _arestas(cena) if u in livres and v in livres]
     nivel = {i: 0 for i in livres}
@@ -220,10 +266,13 @@ def diagramar(cena: dict, formas: dict) -> dict:
                 out[i] = {'x': round(cx + dx, 2), 'y': round(cy + dy, 2), 's': tam[i]}
             x += w + GAP
         y += alt + GAP
-    for i, (tipo, ref) in dependentes.items():
-        if ref in out:
-            f = 0.55 if tipo == 'dentro' else 1.0
-            out[i] = {'x': out[ref]['x'], 'y': out[ref]['y'], 's': out[ref]['s'] * f}
+    pend = dict(dependentes)
+    for _ in range(len(pend) + 1):
+        for i, (tipo, ref) in list(pend.items()):
+            if ref in out:
+                f = 0.55 if tipo == 'dentro' else 1.0
+                out[i] = {'x': out[ref]['x'], 'y': out[ref]['y'], 's': out[ref]['s'] * f}
+                pend.pop(i)
     altura_total = max(y - GAP, 1)
     for i, a in atores.items():
         if a['papel'] == 'contexto':
@@ -240,7 +289,7 @@ def _aspecto(forma: dict) -> tuple[float, float]:
 
 
 # ───────────────────────── trilhas por propriedade ─────────────────────────
-PROPS = ('x', 'y', 'scale', 'sx', 'sy', 'opacity', 'sat', 'draw')
+PROPS = ('x', 'y', 'scale', 'sx', 'sy', 'opacity', 'sat', 'draw', 'tint')
 
 
 class Trilha:
@@ -280,7 +329,7 @@ def _estados(tr: Trilha, dur: float) -> list[dict]:
         for p in PROPS:
             st[p] = round(tr.valor(p, t), 4)
         st['scale'] = max(st['scale'], 1e-3); st['sx'] = max(st['sx'], 1e-3); st['sy'] = max(st['sy'], 1e-3)
-        st['opacity'] = min(1, max(0, st['opacity'])); st['sat'] = min(1.5, max(0, st['sat'])); st['draw'] = min(1, max(0, st['draw']))
+        st['opacity'] = min(1, max(0, st['opacity'])); st['sat'] = min(1.5, max(0, st['sat'])); st['draw'] = min(1, max(0, st['draw'])); st['tint'] = min(1, max(0, st['tint']))
         if out and st['t'] <= out[-1]['t']:
             continue
         out.append(st)
@@ -318,6 +367,7 @@ def _seed(*xs) -> float:
 def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: list[dict] | None = None,
              titulo: str = '') -> dict:
     """cena semântica + duração de cada beat (medida da narração ou estimada) → SceneGraph v2 + proveniência."""
+    cena, ajustes = normalizar(cena)
     fatos_ids = {f['id'] for f in fatos}
     problemas = validar(cena, fatos_ids)
     texto_fatos = ' '.join(f['texto'] for f in fatos)
@@ -343,7 +393,7 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
     inicio = [sum(duracoes[:k]) for k in range(len(duracoes))]
     dur = sum(duracoes)
     trilhas = {i: Trilha({'x': pos[i]['x'], 'y': pos[i]['y'], 'scale': 1, 'sx': 1, 'sy': 1,
-                          'opacity': 0, 'sat': 1, 'draw': 1}) for i in atores}
+                          'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0}) for i in atores}
     extras: list[dict] = []                     # partículas, anéis e preenchimentos gerados por ações
     primeira = {}
     for k, b in enumerate(cena['beats']):
@@ -365,12 +415,15 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
         trilhas[i].ir('opacity', t0, t0 + .35, alvo_op, 0)
         trilhas[i].ir('scale', t0, t0 + .45, 1.0, 0.82)
     # saturação inicial de quem será tingido (estado inicial visível antes da mudança)
+    tintas = {}
     for b in cena['beats']:
         for a in b['acoes']:
             if a.get('verbo') == 'tingir' and a.get('alvo') in trilhas:
                 tr = trilhas[a['alvo']]
-                if not tr.seg['sat']:
+                if not tr.seg['sat'] and 'de_saturacao' in a or (not tr.seg['sat'] and not a.get('para_cor')):
                     tr.base['sat'] = float(a.get('de_saturacao', 0.15))
+                if F.COR.fullmatch(str(a.get('para_cor') or '')):
+                    tintas[a['alvo']] = a['para_cor'].upper()
     acoes_planas = []
     for k, b in enumerate(cena['beats']):
         for a in b['acoes']:
@@ -410,12 +463,20 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
             t_ini = inicio[k] if k > primeira[i] else inicio[k] + .45
             trilhas[i].ir('opacity', t_ini, t_ini + .45, alvo_op)
     # câmera por beat: enquadra atores envolvidos na caixa segura
-    camera = []
+    camera, focos = [], []
     for k, b in enumerate(cena['beats']):
         env = envolvidos[k]
         t_meio = inicio[k] + duracoes[k] * .6
         caixa = _bbox([(i, trilhas[i], pos[i]['s'], formas[i]) for i in env], t_meio, inicio[k], inicio[k] + duracoes[k], extras)
-        alvo = _enquadrar(caixa)
+        foco = (b.get('camera') or {}).get('foco')
+        if foco not in atores or atores[foco]['papel'] == 'contexto':
+            foco = max(env, key=lambda i: pos[i]['s']) if env else None
+        geral = (b.get('camera') or {}).get('enquadramento') == 'geral'
+        caixa_foco = _bbox([(foco, trilhas[foco], pos[foco]['s'], formas[foco])], t_meio, inicio[k], inicio[k] + duracoes[k], extras) if foco else None
+        # plano geral = revelação do conjunto: mostra todos os envolvidos, sem forçar aproximação do foco
+        enq = (b.get('camera') or {}).get('enquadramento')
+        alvo = _enquadrar(caixa, None if geral else caixa_foco, MIN_FOCO.get(enq, 0.40))
+        focos.append(foco)
         if camera:
             t_ini = inicio[k]
             camera.append({'t': round(t_ini, 4), **camera[-1]['_v']})
@@ -432,7 +493,7 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
         f = formas[i]
         graf_atores.append({'id': i, 'label': a['rotulo'], 'layer': 'contexto' if a['papel'] == 'contexto' else 'essencial',
                             'view': f['view'], 'size': pos[i]['s'], 'shapes': f['shapes'], 'states': _estados(trilhas[i], dur),
-                            'curve': 'linear', 'origem': f['origem']})
+                            'curve': 'linear', 'origem': f['origem'], **({'tint_color': tintas[i]} if i in tintas else {})})
     for e in extras:
         graf_atores.append({**{k: v for k, v in e.items() if k != 'trilha'}, 'states': _estados(e['trilha'], dur)})
     graf_atores.sort(key=lambda a: {'contexto': 0, 'essencial': 1, 'efeito': 2, 'particula': 3}[a['layer']])
@@ -444,9 +505,10 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
             'sources': fontes, 'credits': creditos, 'headline': titulo[:44],
             'actors': graf_atores, 'camera': camera,
             'beats': [{'t': round(inicio[k], 4), 'text': str(b.get('etapa') or b['fala'])[:60], 'foco_ids': sorted(envolvidos[k]),
+                       'foco_principal': focos[k],
                        'enquadramento': (b.get('camera') or {}).get('enquadramento', 'medio')} for k, b in enumerate(cena['beats'])],
             'captions': legendas['grupos'], 'captions_origin': legendas['origem']}
-    prov = {'atores': origem, 'posicoes': {i: pos[i] for i in atores}, 'acoes': len(acoes_planas),
+    prov = {'atores': origem, 'normalizacao': ajustes, 'posicoes': {i: pos[i] for i in atores}, 'acoes': len(acoes_planas),
             'particulas_e_efeitos': len(extras), 'duracao_s': round(dur, 3), 'beats_s': [round(d, 3) for d in duracoes],
             'fatos_por_beat': [b.get('fatos') for b in cena['beats']], 'legendas': legendas['origem']}
     return {'scene_graph': data, 'proveniencia': prov, 'duracao': dur}
@@ -475,12 +537,28 @@ def _bbox(itens, t, ta, tb, extras) -> tuple[float, float, float, float]:
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def _enquadrar(caixa) -> dict:
+MIN_FOCO = {'detalhe': 0.55, 'medio': 0.40}   # fração da altura da área segura (regra ≥ 1/3 com folga); geral não força
+
+
+def _enquadrar(caixa, caixa_foco=None, minimo: float = 0.40) -> dict:
+    """Câmera que mostra os envolvidos; se o ator em foco ficar menor que o mínimo, aproxima até o mínimo e
+    desloca o centro só o necessário para o foco caber inteiro (os demais podem ser cortados nas bordas)."""
     x0, y0, x1, y1 = caixa
-    bw, bh = CAIXA[2] - CAIXA[0], CAIXA[3] - CAIXA[1]
+    bw, bh = CAIXA[2] - CAIXA[0], CAIXA[3] - CAIXA[1] - 40      # 20 px de respiro em cima e embaixo
     w, h = max(40, x1 - x0) * 1.08, max(40, y1 - y0) * 1.08
     zoom = max(0.35, min(2.2, bw / w, bh / h))
-    return {'x': round((x0 + x1) / 2, 2), 'y': round((y0 + y1) / 2, 2), 'zoom': round(zoom, 4)}
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    if caixa_foco:
+        fx0, fy0, fx1, fy1 = caixa_foco
+        hf = max(1.0, (fy1 - 58) - fy0)               # sem o espaço do rótulo
+        if hf * zoom < minimo * bh:
+            zoom = min(2.2, minimo * bh / hf, bw / max(1, (fx1 - fx0) * 1.06), bh / max(1, (fy1 - fy0) * 1.06))
+        hw, hh = bw / 2 / zoom, bh / 2 / zoom
+        lo_x, hi_x = fx1 - hw, fx0 + hw
+        lo_y, hi_y = fy1 - hh, fy0 + hh
+        cx = min(max(cx, lo_x), hi_x) if lo_x <= hi_x else (fx0 + fx1) / 2
+        cy = min(max(cy, lo_y), hi_y) if lo_y <= hi_y else (fy0 + fy1) / 2
+    return {'x': round(cx, 2), 'y': round(cy, 2), 'zoom': round(zoom, 4)}
 
 
 def _ponto_borda(c, s, alvo):
@@ -510,14 +588,18 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
     elif v == 'sair':
         trilhas[a['alvo']].ir('opacity', t0, t1, 0)
     elif v == 'tingir':
-        trilhas[a['alvo']].ir('sat', t0, t1, float(a.get('para_saturacao', 1.0)))
+        if F.COR.fullmatch(str(a.get('para_cor') or '')):
+            # muda para uma COR (camada da mesma forma por cima); a cor é escolha de ilustração, não medida
+            trilhas[a['alvo']].ir('tint', t0, t1, float(a.get('intensidade', 0.8)))
+        else:
+            trilhas[a['alvo']].ir('sat', t0, t1, float(a.get('para_saturacao', 1.0)))
     elif v == 'mover':
         tr = trilhas[a['alvo']]
         alvo = a.get('para')
         if alvo in pos:
             x, y = pos[alvo]['x'], pos[alvo]['y'] - pos[alvo]['s'] * .1
         else:
-            d = pos[a['alvo']]['s'] * float(a.get('distancia', 0.8))
+            d = pos[a['alvo']]['s'] * float(a.get('distancia', 0.35))
             dx, dy = {'esquerda': (-d, 0), 'direita': (d, 0), 'cima': (0, -d), 'baixo': (0, d), 'centro': (0, 0)}.get(alvo, (0, 0))
             x, y = tr.valor('x', t0) + dx, tr.valor('y', t0) + dy
         tr.ir('x', t0, t1, x); tr.ir('y', t0, t1, y)
@@ -537,7 +619,7 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
             r, info = _particula(eid, item, item.get('rotulo'))
             # preenchimento cresce no vão; largura acompanha a separação (sx), altura das placas
             hA = pos[a['a']]['s'] * _aspecto(formas[a['a']])[1]
-            tr = Trilha({'x': (ax + bx) / 2, 'y': (ay + by) / 2, 'scale': 1, 'sx': .02, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1})
+            tr = Trilha({'x': (ax + bx) / 2, 'y': (ay + by) / 2, 'scale': 1, 'sx': .02, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
             tr.ir('opacity', t0, t0 + .3, 1, 0)
             tr.ir('sx', t0, t1, (2 * d) / (hA * .9) * 1.0)
             extras.append({'id': eid, 'label': item.get('rotulo'), 'layer': 'efeito', 'view': r['view'], 'size': hA * .9,
@@ -546,7 +628,7 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
             if item.get('subir', True):
                 for j in range(5):         # material novo sobe pelo vão
                     pid = f'{eid}p{j}'
-                    tp = Trilha({'x': (ax + bx) / 2, 'y': (ay + by) / 2 + hA * .45, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1})
+                    tp = Trilha({'x': (ax + bx) / 2, 'y': (ay + by) / 2 + hA * .45, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
                     s0 = t0 + (t1 - t0) * (j / 6)
                     tp.ir('opacity', s0, s0 + .2, 1, 0)
                     tp.ir('y', s0, s0 + (t1 - t0) * .5, (ay + by) / 2 - hA * .25)
@@ -575,7 +657,7 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
             cor = (grupos[0][1].get('cor') or '#FFD21F')
             x_min, y_min = min(x0, x1) - 20, min(y0, y1) - 20
             w_, h_ = abs(x1 - x0) + 40, abs(y1 - y0) + 40
-            tr = Trilha({'x': x_min + w_ / 2, 'y': y_min + h_ / 2, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 0})
+            tr = Trilha({'x': x_min + w_ / 2, 'y': y_min + h_ / 2, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 0, 'tint': 0})
             a0 = t0 + (t1 - t0) * .25 * s_i
             tr.ir('opacity', a0, a0 + .2, .55, 0)
             tr.ir('draw', a0, a0 + (t1 - t0) * .45, 1, 0)
@@ -603,7 +685,7 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
                            meio[1] - pos[filtro]['s'] * .1 + (_seed(pid, 'y2') - .5) * pos[filtro]['s'] * .3)
                 else:
                     fim = (dest[0] + (_seed(pid, 'x3') - .5) * pos[para]['s'] * .25, dest[1])
-                tp = Trilha({'x': start[0], 'y': start[1], 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1})
+                tp = Trilha({'x': start[0], 'y': start[1], 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
                 tp.ir('opacity', u0, u0 + .15, 1, 0)
                 curva = .18 * (1 if j % 2 else -1)
                 pts = [start, meio, fim] if (meio and modo != 'retido') else [start, fim]
@@ -637,7 +719,7 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, e
     elif v == 'destacar':
         alvo = a['alvo']
         r = F.primitiva('anel', '#FFD21F')
-        tr = Trilha({'x': pos[alvo]['x'], 'y': pos[alvo]['y'], 'scale': .9, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1})
+        tr = Trilha({'x': pos[alvo]['x'], 'y': pos[alvo]['y'], 'scale': .9, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
         tr.ir('opacity', t0, t0 + .2, 1, 0); tr.ir('scale', t0, t1, 1.25); tr.ir('opacity', t1 - .25, t1, 0)
         extras.append({'id': eid, 'label': None, 'layer': 'efeito', 'view': r['view'], 'size': pos[alvo]['s'] * 1.15,
                        'shapes': r['shapes'], 'curve': 'linear', 'origem': r['origem'], 'trilha': tr})

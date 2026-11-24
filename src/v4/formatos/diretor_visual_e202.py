@@ -64,7 +64,7 @@ VOCABULARIO = """AÇÕES (tempo em fração 0–1 do beat: "inicio","fim"):
      partículas saem de "de" e são absorvidas por "para" (substância, energia, informação, pessoas…)
 - acumular {de?, para, item, quantidade}  partículas ficam DENTRO de "para"
 - filtrar {de, filtro, para, passa:{item}, retido:{item}, quantidade}  parte atravessa, parte fica presa no filtro
-- tingir {alvo, de_saturacao 0–1, para_saturacao 0–1}   mudança de intensidade de cor do próprio ator
+- tingir {alvo, de_saturacao 0–1, para_saturacao 0–1} intensidade da cor do próprio ator, OU {alvo, para_cor:"#RRGGBB", intensidade 0–1} mudança de cor
 - afastar {a, b, distancia 0.15–0.4, preencher_com?:{rotulo, cor, forma?}}  dois atores se separam; o vão é preenchido
 - transformar {de, para}               um ator vira outro no mesmo lugar
 - revelar_interior {alvo, interior}    o exterior fica translúcido e mostra o que há dentro
@@ -87,9 +87,14 @@ REGRAS = """REGRAS (verificadas em código; violar gera correção):
    Mapa inventado é proibido; contorno geo é dado real e serve para localizar sem desenhar limites inexistentes.
 7. Ícones: use nomes EXATOS do catálogo. Se nenhum representa fielmente o objeto (ex.: um órgão ausente), use primitiva
    com rótulo — nunca um ícone de outra coisa só porque parece.
-8. Narração em português do Brasil, frases curtas e faladas, 8–20 palavras por beat. 3–4 beats (≈ 9–14 s no total).
+8. Narração em português do Brasil, frases curtas e faladas, 8–15 palavras por beat. 3–4 beats (≈ 12–18 s no total).
 9. Rótulos de ator curtos (≤ 22 caracteres) em português. Até 6 atores por cena.
-10. Câmera por beat: "foco" (ator) + "enquadramento" detalhe|medio|geral + "motivo". Termine com "geral" no payoff."""
+10. Câmera por beat: "foco" (ator) + "enquadramento" detalhe|medio|geral + "motivo". Termine com "geral" no payoff.
+11. ESTADO INICIAL VISÍVEL: se algo muda (cor, posição, forma), o 1º quadro mostra o ANTES. O protagonista não pode
+    exibir o resultado antes da causa (ex.: comece com de_saturacao baixa e só depois aumente).
+12. COERÊNCIA ESPACIAL: o que acontece num lugar acontece NELE. Use relações (dentro/sobre/ao_lado) e preencher_com;
+    não crie ator solto para algo que já é preenchimento, partícula ou parte de outro ator.
+13. O "foco" da câmera deve ser um ator que PARTICIPA da ação principal do beat (para a ação não sair do quadro)."""
 
 SAIDA = """Responda SÓ com JSON:
 {"titulo":"pergunta curta ≤ 40 caracteres",
@@ -226,7 +231,7 @@ def verificar(plano: dict, caso: dict, disp: dict) -> tuple[list[dict], dict]:
                 probs.append(CD._p('P-GEO-PAPEL', f"contorno geo {a.get('id')} só localiza/identifica", cid))
         try:
             comp[cid] = CD.compilar(c, estimar_duracoes(c), caso['fatos'], titulo=str(plano.get('titulo') or ''))
-            probs += geometria(comp[cid]['scene_graph'], cid)
+            comp[cid]['alertas_geometria'] = geometria(comp[cid]['scene_graph'], cid)   # defeito do compilador, não do modelo
         except CD.CenaInvalida as e:
             probs += e.problemas
         except Exception as e:        # erro do compilador é defeito NOSSO: registrar sem culpar o modelo
@@ -275,17 +280,22 @@ def geometria(sg: dict, cid: str = '') -> list[dict]:
         if not vis:
             out.append(CD._p('G-VAZIO', f'beat {k + 1}: nenhum ator essencial visível', cid)); continue
         foco = set(sg['beats'][k].get('foco_ids') or [])
+        principal = sg['beats'][k].get('foco_principal')
         geral = sg['beats'][k].get('enquadramento') == 'geral'
-        maior = max((b[3] - b[1] for a, b in vis if a['id'] in foco), default=0)
-        minimo = .25 if geral else 1 / 3       # plano geral de revelação tolera sujeito menor
-        if maior < altura * minimo:
-            out.append(CD._p('G-SUJEITO-PEQUENO', f'beat {k + 1}: maior ator em foco ocupa {maior / altura:.0%} da altura (< {minimo:.0%})', cid))
+        alvo_h = [b[3] - b[1] for a, b in vis if a['id'] == principal] or [max((b[3] - b[1] for a, b in vis if a['id'] in foco), default=0)]
+        maior = max(alvo_h)
+        minimo = .20 if geral else 1 / 3       # plano geral (revelação do conjunto) tolera sujeito menor; regra fixada na E202
+        if maior < altura * minimo - 1:
+            out.append(CD._p('G-SUJEITO-PEQUENO', f'beat {k + 1}: ator em foco ocupa {maior / altura:.0%} da altura (< {minimo:.0%})', cid))
         for a, (x0, y0, x1, y1) in vis:
             if a['id'] not in foco:
                 continue
-            fora = max(CD.CAIXA[0] - x0, x1 - CD.CAIXA[2], CD.CAIXA[1] - y0, y1 - (CD.CAIXA[3] + 30), 0)
-            if fora > 40:
-                out.append(CD._p('G-FORA-DA-AREA', f'beat {k + 1}: {a["id"]} sai {fora:.0f}px da área segura', cid))
+            area = max(1.0, (x1 - x0) * (y1 - y0))
+            ix = max(0.0, min(x1, CD.CAIXA[2]) - max(x0, CD.CAIXA[0])) * max(0.0, min(y1, CD.CAIXA[3] + 30) - max(y0, CD.CAIXA[1]))
+            if a['id'] == principal and ix / area < .97:
+                out.append(CD._p('G-FOCO-CORTADO', f'beat {k + 1}: foco {a["id"]} só {ix / area:.0%} dentro da área segura', cid))
+            elif ix / area < .5:
+                out.append(CD._p('G-FORA-DA-AREA', f'beat {k + 1}: {a["id"]} só {ix / area:.0%} dentro da área segura', cid))
     return out
 
 
@@ -305,7 +315,8 @@ def dirigir(caso: dict, permitir_chamada: bool = True, cache: Path = CACHE) -> d
         if len(probs2) <= len(probs):
             plano, probs, comp = plano2, probs2, comp2
     estado = 'PLANO_COMPILADO' if not probs and comp else 'BLOQUEADO'
-    return {'caso': caso['id'], 'estado': estado, 'plano': plano, 'violacoes_finais': probs, 'historico': hist,
+    alertas = [g for x in comp.values() for g in x.get('alertas_geometria') or []]
+    return {'caso': caso['id'], 'estado': estado, 'plano': plano, 'violacoes_finais': probs, 'alertas_geometria': alertas, 'historico': hist,
             'disponibilidade': disp, 'chamadas_ia': reg, 'compilado': comp,
             'aprovacao_humana': 'PENDENTE', 'publicar': False}
 
@@ -359,6 +370,8 @@ PROMPT_VISAO = """Você revisa quadros de um vídeo vertical do canal Coringa Ex
 Pergunta do vídeo: {pergunta}
 O que o espectador precisa ver acontecer: {acontecimento}
 Imagens: quadros em ordem temporal (um por etapa).
+Verifique também: cada ícone representa FIELMENTE o rótulo (não um objeto parecido)? o estado inicial aparece antes
+da mudança (o resultado não aparece antes da causa)? as partes que interagem estão no mesmo lugar?
 Responda JSON: {{"referente_visivel":bool,"aprendizado_demonstrado":bool,"enquadramento_adequado":bool,
 "imagem_celular_legivel":bool,"acao_ou_relacao_visivel":bool,"problemas":["defeito concreto e onde"],
 "correcoes":[{{"beat":n,"tipo":"enquadramento|forma|acao|rotulo","descricao":"..."}}]}}"""

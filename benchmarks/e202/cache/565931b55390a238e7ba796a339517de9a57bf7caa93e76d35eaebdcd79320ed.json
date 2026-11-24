@@ -1,0 +1,269 @@
+{
+ "pedido_sha256": "565931b55390a238e7ba796a339517de9a57bf7caa93e76d35eaebdcd79320ed",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 12.4,
+ "data": "2026-11-24T14:48:35Z",
+ "caracteres_pedido": 30108,
+ "caracteres_resposta": 3877,
+ "json": {
+  "titulo": "Por que flamingos são rosas?",
+  "acontecimento_central": "Algas e pequenos crustáceos com carotenoides são comidos pelo flamingo; o fígado processa os carotenoides, que vão para as penas, e o flamingo passa de pálido a rosa.",
+  "referencias_visuais": [
+   "fluxo de partículas coloridas da comida até o animal",
+   "corte esquemático com revelação do interior",
+   "tingimento gradual da plumagem",
+   "esquema ilustrativo, não filmagem real nem anatomia exata"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "Partículas de carotenoides de algas e crustáceos entram no flamingo, passam pelo fígado e chegam às penas, que ficam rosa.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há mídia real, mapa ou CAD disponíveis; o processo é mostrado como esquema ilustrativo com ícone de flamingo e primitivas rotuladas.",
+    "atores": [
+     {
+      "id": "a_flamingo",
+      "rotulo": "Flamingo",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "b1",
+       "b2"
+      ]
+     },
+     {
+      "id": "a_algas",
+      "rotulo": "Algas",
+      "papel": "origem",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "leafy-green",
+        "herb"
+       ],
+       "alternativa": "fluido"
+      },
+      "fatos": [
+       "b1"
+      ]
+     },
+     {
+      "id": "a_crustaceos",
+      "rotulo": "Pequenos crustáceos",
+      "papel": "origem",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "shrimp"
+       ],
+       "alternativa": "celula"
+      },
+      "fatos": [
+       "b1"
+      ]
+     },
+     {
+      "id": "a_figado",
+      "rotulo": "Fígado (esquema)",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "celula",
+       "cor": "#8D4B3A"
+      },
+      "fatos": [
+       "b2"
+      ]
+     },
+     {
+      "id": "a_penas",
+      "rotulo": "Penas",
+      "papel": "destino",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#F4B6C2"
+      },
+      "fatos": [
+       "b1",
+       "b2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "a_figado",
+      "b": "a_flamingo"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_penas",
+      "b": "a_flamingo"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Por que o flamingo é rosa? Não nasce da cor: ela vem do que ele come.",
+      "etapa": "Pergunta",
+      "fatos": [
+       "b1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_flamingo",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_penas",
+        "de_saturacao": 0.2,
+        "para_saturacao": 0.25,
+        "inicio": 0.3,
+        "fim": 0.5
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_algas",
+        "inicio": 0.4,
+        "fim": 0.7
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_crustaceos",
+        "inicio": 0.5,
+        "fim": 0.8
+       }
+      ],
+      "camera": {
+       "foco": "a_flamingo",
+       "enquadramento": "medio",
+       "motivo": "Apresentar o protagonista pálido e levantar a pergunta antes da resposta."
+      }
+     },
+     {
+      "fala": "Algas e pequenos crustáceos trazem carotenoides, pigmentos que dão cor rosa ou vermelha.",
+      "etapa": "Dieta",
+      "fatos": [
+       "b1"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "a_algas",
+        "para": "a_flamingo",
+        "item": {
+         "rotulo": "Carotenoides",
+         "cor": "#F26B4E"
+        },
+        "quantidade": 8,
+        "inicio": 0.0,
+        "fim": 0.8,
+        "efeito_no_destino": "pulsar"
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_crustaceos",
+        "para": "a_flamingo",
+        "item": {
+         "rotulo": "Carotenoides",
+         "cor": "#F26B4E"
+        },
+        "quantidade": 6,
+        "inicio": 0.1,
+        "fim": 0.9
+       }
+      ],
+      "camera": {
+       "foco": "a_flamingo",
+       "enquadramento": "medio",
+       "motivo": "Mostrar a comida entrando no animal como causa."
+      }
+     },
+     {
+      "fala": "Dentro do corpo, o fígado metaboliza esses carotenoides, e as moléculas derivadas seguem para as penas.",
+      "etapa": "Fígado",
+      "fatos": [
+       "b2"
+      ],
+      "acoes": [
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_flamingo",
+        "interior": "a_figado",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_figado",
+        "para": "a_penas",
+        "item": {
+         "rotulo": "Derivados dos carotenoides",
+         "cor": "#FF7F9E"
+        },
+        "quantidade": 10,
+        "inicio": 0.3,
+        "fim": 0.9,
+        "efeito_no_destino": "pulsar"
+       }
+      ],
+      "camera": {
+       "foco": "a_figado",
+       "enquadramento": "detalhe",
+       "motivo": "Mostrar a transformação no fígado e o transporte até as penas."
+      }
+     },
+     {
+      "fala": "Quanto mais carotenoides na dieta, mais rosa fica a pena. A cor vem do prato!",
+      "etapa": "Payoff",
+      "fatos": [
+       "b1",
+       "b2"
+      ],
+      "acoes": [
+       {
+        "verbo": "acumular",
+        "de": "a_figado",
+        "para": "a_penas",
+        "item": {
+         "rotulo": "Pigmento",
+         "cor": "#FF7F9E"
+        },
+        "quantidade": 10,
+        "inicio": 0.0,
+        "fim": 0.6
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_penas",
+        "de_saturacao": 0.25,
+        "para_saturacao": 0.95,
+        "inicio": 0.2,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_flamingo",
+       "enquadramento": "geral",
+       "motivo": "Fechar com o flamingo todo rosa como resposta clara."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45417598655 (job 138527978286)"
+}

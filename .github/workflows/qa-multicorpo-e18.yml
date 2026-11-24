@@ -1,0 +1,74 @@
+name: E18 núcleo multicorpo 3D multi-fornecedor
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-multicorpo-e18.yml"
+      - "src/v4/formatos/*_e18.py"
+      - "src/v4/formatos/solver_restricoes_e1.py"
+      - "benchmarks/e18_*.json"
+      - "tests/test_multicorpo_e18.py"
+permissions:
+  contents: read
+jobs:
+  multicorpo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: 1
+      E18_MENAGERIE: ${{ github.workspace }}/fonte_e18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Runtime
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          python -m pip install -q mujoco==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
+          sudo apt-get install -y -qq fonts-dejavu-core >/dev/null || true
+      - name: Fonte no commit fixado (somente no runner; nada é copiado para o repositório ou artifact)
+        run: |
+          commit=$(jq -er .fonte.commit benchmarks/e18_multifornecedor.json)
+          repo=$(jq -er .fonte.repositorio benchmarks/e18_multifornecedor.json)
+          git init -q fonte_e18
+          git -C fonte_e18 fetch -q --depth 1 "$repo" "$commit"
+          git -C fonte_e18 checkout -q FETCH_HEAD
+          test "$(git -C fonte_e18 rev-parse HEAD)" = "$commit"
+      - name: Testes E18 (sintéticos + fonte real) e regressões do solver comum
+        run: python -m pytest -q tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py
+      - name: Filmes privados, oráculos e auditoria
+        run: |
+          python -m src.v4.formatos.filme_e18 gerar benchmarks/e18_multifornecedor.json "$E18_MENAGERIE" qa_e18 > qa_e18_log.jsonl
+          python - <<'EOF'
+          import json
+          qa = json.load(open("qa_e18/QA.json"))
+          falhas = 0
+          for m in qa["modelos"]:
+              o = m.get("oraculo_fabricante", {})
+              print("E18-RESUMO", json.dumps(dict(
+                  id=m["id"], estado=m["estado"], motivo=m.get("motivo"), quadros=m.get("quadros"),
+                  modos=m.get("modos"), mobilidade_max=m.get("mobilidade_max"), residuo_max=m.get("residuo_max"),
+                  fk_mujoco=m.get("oraculo_mujoco_cinematica"), dinamica=m.get("oraculo_mujoco_dinamica"),
+                  interferencias=m.get("interferencias"), abaixo_base_mm=m.get("abaixo_do_plano_da_base_mm"),
+                  medida=m.get("medida"), fabricante=dict(valor=o.get("valor_mm"), medido=o.get("medido_mm"),
+                  erro_dh_max_mm=o.get("erro_max_mm"), dentro=o.get("dentro_da_tolerancia")),
+                  camera=m.get("camera"), video=m.get("verificacao_video"),
+                  sha256_mp4=m.get("sha256_mp4"), sha256_quadros_rgb=m.get("sha256_quadros_rgb"),
+                  publish=m.get("publish")), ensure_ascii=False, default=float))
+              falhas += m["estado"] != "PASS"
+              falhas += any(v for v in (m.get("interferencias") or {}).values())
+          raise SystemExit(1 if falhas else 0)
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e18-multicorpo-privado
+          path: |
+            qa_e18/*.mp4
+            qa_e18/*_folha.jpg
+            qa_e18/QA.json
+          retention-days: 14

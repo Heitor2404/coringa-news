@@ -16,7 +16,8 @@ export type FilmShot = {
   id: string;
   start: number;
   end: number;
-  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map';
+  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
+  cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
@@ -325,6 +326,29 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
       <Body shot={shot} p={p} t={t} portrait/>
     </AbsoluteFill>;
   }
+  if (shot.type==='cad_preview') {
+    const roi=shot.cad_source_roi;
+    if (!roi || roi.join(',')!=='86,288,994,1230' || shot.evidence!=='explainer')
+      throw new Error('E28-CAD-ROI-OR-EVIDENCE');
+    const [sx,sy,ex,ey]=roi;
+    const dw=SAFE.visual[2]-SAFE.visual[0],dh=SAFE.visual[3]-SAFE.visual[1];
+    const scale=Math.min(dw/(ex-sx),dh/(ey-sy));
+    return <AbsoluteFill style={{background:'#0B1926'}}>
+      <div data-safe-role="visual" style={{...safeSlot('visual'),overflow:'hidden'}}>
+        <div style={{position:'absolute',left:(dw-(ex-sx)*scale)/2,
+          top:(dh-(ey-sy)*scale)/2,width:ex-sx,height:ey-sy,overflow:'hidden',
+          transform:`scale(${scale})`,transformOrigin:'top left'}}>
+          <div style={{position:'absolute',left:-sx,top:-sy,width:1080,height:1920}}>
+            <Sequence from={Math.round(shot.start*30)}
+              durationInFrames={Math.round((shot.end-shot.start)*30)}>
+              <OffthreadVideo src={staticFile(shot.asset||'')} muted
+                style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+            </Sequence>
+          </div>
+        </div>
+      </div>
+    </AbsoluteFill>;
+  }
   if (shot.type==='mechanism') {
     // Fallback conservador para mecanismos que AINDA não possuem reflow
     // vertical nativo; não declarar estes tipos homologados sem inspeção.
@@ -431,7 +455,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   }
   return <AbsoluteFill style={{background:'#08101A',overflow:'hidden'}}>
     <SafeBody shot={shot} p={p} t={now-shot.start} subtitleMode={subtitleMode} portraitExperiment={portraitExperiment}/>
-    {!shot.graphic_original&&shot.type!=='mechanism'&&shot.type!=='video'&&
+    {!shot.graphic_original&&shot.type!=='mechanism'&&shot.type!=='video'&&shot.type!=='cad_preview'&&
       <AbsoluteFill style={{pointerEvents:'none',background:
         'linear-gradient(180deg,rgba(3,8,16,.38),transparent 40%,rgba(3,8,16,.68))'}}/>}
     {/* Camada editorial universal. Não repetir logo+linha no topo de cada card. */}
@@ -487,13 +511,15 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
-      {shot.type==='mechanism'?'ESQUEMA ILUSTRATIVO · ':''}FONTE: {shot.source_display || shot.source}
+      {shot.type==='mechanism'?'ESQUEMA ILUSTRATIVO · ':shot.type==='cad_preview'?'REPRESENTAÇÃO CAD · ':''}FONTE: {shot.source_display || shot.source}
     </div>
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
+  if(shots.some(s=>s.type==='cad_preview') && (!preview || !private_review_only))
+    throw new Error('E28-CAD-PRIVATE-ONLY');
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}

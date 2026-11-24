@@ -584,7 +584,7 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
         ver=conferir_video(palco,len(indices))
         qa["palco_cad"] = dict(schema="coringa.palco.cad.v1",arquivo=palco.name,
             sha256=sha256(palco),quadros=ver["quadros"],fps=FPS,
-            dimensoes=[W,H],verificacao_video=ver,
+            dimensoes=[W,H],roi_px=[86,288,994,1230],verificacao_video=ver,
             tipo_evidencia="representacao_tecnica",credito=modelo["credito"],
             licenca_informada=modelo["licenca"],natureza=modelo["natureza"],
             fonte=modelo.get("fonte_cad"),

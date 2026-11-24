@@ -9,6 +9,9 @@ on:
       - "src/v4/formatos/previa_step_e25.py"
       - "src/v4/formatos/visibilidade_e26.py"
       - "src/v4/formatos/eventos_trajetoria_e27.py"
+      - "src/v4/formatos/ponte_cad_editorial_e28.py"
+      - "tests/test_ponte_cad_editorial_e28.py"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "tests/test_eventos_trajetoria_e27.py"
       - "src/v4/formatos/filme_e18.py"
       - "tests/test_visibilidade_e26.py"
@@ -20,6 +23,7 @@ on:
       - "tests/test_cad_fechado_e17.py"
 permissions:
   contents: read
+  actions: read
 jobs:
   cycle:
     runs-on: ubuntu-24.04
@@ -66,3 +70,64 @@ jobs:
             qa_e25/*_folha.jpg
             qa_e25/QA.json
           retention-days: 14
+
+  editorial-cad:
+    needs: cycle
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      DO_NOT_TRACK: "1"
+      REMOTION_DISABLE_TELEMETRY: "1"
+      CORINGA_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: e17-volta-step-verificada
+          path: prova_cad
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Validar fonte e eventos, sem publicar
+        run: |
+          python -m pip install --only-binary=:all: numpy pytest imageio-ffmpeg
+          python -m pytest -q tests/test_ponte_cad_editorial_e28.py
+          python -m src.v4.formatos.ponte_cad_editorial_e28 prova_cad/qa_e25/QA.json motor4/remotion/public qa_e28
+      - name: Instalar e compilar o compositor existente
+        run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+      - name: Render privado do palco CAD no FilmeEditorial
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../qa_e28/editorial_cad.mp4 --props=../qa_e28/props.json \
+            --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Decodificar e auditar a saida
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          from src.v4.formatos.ponte_cad_editorial_e28 import verificar_video,ffmpeg,sha
+          root=Path("qa_e28")
+          p=json.loads((root/"props.json").read_text())
+          n=round(p["duracao"]*30)
+          movie=root/"editorial_cad.mp4"
+          r=verificar_video(movie,n)
+          r.update(sha256=sha(movie),publish=False,visual_approved=False)
+          (root/"QA_EDITORIAL.json").write_text(json.dumps(r,indent=2))
+          subprocess.check_call([ffmpeg(),"-v","error","-y","-i",str(movie),"-vf",
+              "fps=2,scale=270:480,tile=4x2","-frames:v","1",str(root/"contato.jpg")])
+          print("E28-EDITORIAL",json.dumps(r))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e28-cad-editorial-privado
+          path: qa_e28/
+          retention-days: 7

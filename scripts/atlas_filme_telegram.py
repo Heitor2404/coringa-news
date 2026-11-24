@@ -40,6 +40,12 @@ def entregar(saida: Path, titulo: str = "Panamá — eclusa causal 7,8 s", *,
         motivos.append(f"duração da prévia divergente de {duracao:g} s")
     if not filme.is_file() or filme.stat().st_size < 50_000:
         motivos.append("MP4 ausente ou vazio")
+    # E212: old artifacts cannot bypass the renderer policy by being resent.
+    from src.v4.formatos import politica_animacao
+    try:
+        politica_animacao.validar_entrega_privada(pasta / "props.json", filme, qa)
+    except (ValueError, OSError, TypeError) as exc:
+        motivos.append("política de animação: " + str(exc)[:250])
     if motivos:
         txt = ("ATLAS — PANAMÁ: PRÉVIA PRIVADA BLOQUEADA\n"
                "NÃO PUBLICADO · nenhum vídeo enviado\n"

@@ -1,0 +1,40 @@
+name: "E21 — separação entre solver, fabricante e homologação"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-gates-e21.yml"
+      - "src/v4/formatos/gates_qualidade_e21.py"
+      - "src/v4/formatos/filme_e18.py"
+      - "tests/test_gates_qualidade_e21.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Python parse of production integration
+        run: python -m py_compile src/v4/formatos/gates_qualidade_e21.py src/v4/formatos/filme_e18.py
+      - name: Negative examples must be classified as failures without CAD downloads
+        run: python -m unittest discover -s tests -p test_gates_qualidade_e21.py -v
+      - name: Check gate is wired into the real batch and forbidden from publishing
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          s=Path("src/v4/formatos/filme_e18.py").read_text()
+          ast.parse(s)
+          assert "r = classificar(r)" in s
+          assert "resumo_gates=resumo(relatorio)" in s
+          full=Path(".github/workflows/qa-multicorpo-e18.yml").read_text()
+          assert '"REPROVADO", "INDETERMINADO"' in full
+          assert 'falhas += m.get("validacao_externa")' in full
+          assert "falhas += m.get(\"estado_execucao\") != \"PASS\"" in full
+          assert "if: always()" in full
+          print("E21-WIRED: xArm reprovada no oraculo externo; laboratorio sem publicacao")
+          PY

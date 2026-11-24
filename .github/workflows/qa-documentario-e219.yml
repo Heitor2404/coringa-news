@@ -2,7 +2,7 @@ name: E219 - documentario geografia curado privado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-documentario-e219.yml','scripts/qa_documentario_geografia_e219.py','benchmarks/e219/kilauea_2018.json']
+    paths: ['scripts/qa_documentario_geografia_e219.py','benchmarks/e219/kilauea_2018.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -57,10 +57,17 @@ jobs:
           assert abs(float(q['format']['duration'])-p['duracao'])<.15
           out={'duration':p['duracao'],'shots':len(p['shots']),'types':sorted(set(s['type'] for s in p['shots'])),
                'sha256':hashlib.sha256(Path('qa_e219/filme.mp4').read_bytes()).hexdigest(),
+               'video_sha256':hashlib.sha256(Path('qa_e219/filme.mp4').read_bytes()).hexdigest(),
+               'props_sha256':hashlib.sha256(Path('qa_e219/props.json').read_bytes()).hexdigest(),
                'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING'}
           Path('qa_e219/qa.json').write_text(json.dumps(out,indent=2));print('E219 MP4',out)
           PY
           ffmpeg -v error -y -i qa_e219/filme.mp4 -vf "fps=1/4,scale=216:384,tile=5x5" -frames:v 1 qa_e219/contato.jpg
+      - name: Entregar documentário narrado ao Telegram privado
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m scripts.documentario_telegram qa_e219 --titulo "A erupção que fez o Havaí crescer"
       - name: Cifrar resultados para revisão privada
         if: always()
         run: |

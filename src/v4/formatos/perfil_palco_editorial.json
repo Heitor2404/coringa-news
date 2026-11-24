@@ -1,0 +1,25 @@
+{
+  "schema": "coringa.editorial-stage.private.v1",
+  "resolution": [
+    540,
+    960
+  ],
+  "stage": [
+    12,
+    244,
+    528,
+    844
+  ],
+  "text": [
+    80,
+    150,
+    380,
+    235
+  ],
+  "background": "#E8F1F4",
+  "ink": "#173447",
+  "muted": "#476577",
+  "accent": "#E0A83C",
+  "scale_max": 1.35,
+  "notes": "Perfil candidato, texto e arte separados. Sem homologação de UI. O palco não impõe a interseção conservadora de textos à geometria."
+}

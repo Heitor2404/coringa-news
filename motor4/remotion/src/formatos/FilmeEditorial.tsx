@@ -7,6 +7,7 @@ import React from 'react';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
+import {SceneGraphE201, type SceneData} from './SceneGraphE201';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
 import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
@@ -16,7 +17,8 @@ export type FilmShot = {
   id: string;
   start: number;
   end: number;
-  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
+  type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview' | 'scene_graph';
+  scene_graph?: SceneData;
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
   cad_phrase_captions?: {start:number;end:number;text:string}[]; // measured phrase-level audio, private QA
   cad_compact_panel?: boolean; // E46C private, preserve hero viewport
@@ -488,6 +490,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
     </AbsoluteFill>;
   }
+  if(shot.type==='scene_graph') {
+    if(!shot.scene_graph||shot.evidence!=='explainer')throw new Error('E201-ESQUEMA');
+    return <SceneGraphE201 data={shot.scene_graph} t={now-shot.start} duration={duration} headline={shot.headline} source={shot.source_display||shot.source}/>;
+  }
   if(shot.type==='atlas_map') {
     // O clip ATLAS antigo tem tipografia/attribution rasterizadas internamente.
     // Não fingir que o render está homologado pela área segura nova.
@@ -590,7 +596,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
-  if(shots.some(s=>s.type==='cad_preview') && (!preview || !private_review_only))
+  if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
   if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
     throw new Error('E47-PRIVATE-AUDIO');

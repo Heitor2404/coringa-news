@@ -30,6 +30,8 @@ def test_dois_mecanismos_diferentes_usam_mesmo_filme_editorial():
 
 def test_mecanismos_geram_props_sem_fotos_falsas(tmp_path):
     p=plano()
+    # Contrato histórico: não autoriza o estilo descartado em documentários.
+    p.update(perfil_visual='LEGADO_REJEITADO_SOMENTE_QA',publicar=False)
     out=FILME.preparar(p,tmp_path/'saida',tmp_path/'public')
     assert out['pronto'] and out['shots']==2 and out['midias']==0
     props=json.loads((tmp_path/'saida/props.json').read_text(encoding='utf8'))

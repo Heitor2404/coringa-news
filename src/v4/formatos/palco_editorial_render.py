@@ -116,7 +116,7 @@ def renderizar(frames,grupo,arquivo,*,fps,titulo,fonte,subtitulo='',fonte_curta=
     arquivo=Path(arquivo);arquivo.parent.mkdir(parents=True,exist_ok=True)
     p=PROFILE; w,h=p['resolution']
     legendas=legendas or []
-    if not fonte_curta: fonte_curta='MODELO DIDÁTICO'
+    if not fonte_curta: fonte_curta='DIDÁTICO'
     with tempfile.TemporaryDirectory() as temp:
         root=Path(temp); boxes=[]; paths=[]
         for i,svg in enumerate(frames):

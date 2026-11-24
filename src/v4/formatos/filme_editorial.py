@@ -578,7 +578,7 @@ def avaliar(plano: dict) -> dict:
                     and (
                         urlsplit(str(asset.get('page') or '')).hostname in (
                             'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov',
-                            'svs.gsfc.nasa.gov','science.nasa.gov'
+                            'svs.gsfc.nasa.gov','science.nasa.gov', 'www.usgs.gov'
                         ) or (
                             asset.get('original_graphic') is True
                             and asset.get('license')=='CC0'

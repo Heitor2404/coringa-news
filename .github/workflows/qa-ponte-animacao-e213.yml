@@ -1,0 +1,85 @@
+name: E213 - ponte de animacao privada multitema
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-ponte-animacao-e213.yml','scripts/qa_e213_ponte_animacao.py','tests/test_ponte_animacao_editorial.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prova:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - uses: actions/download-artifact@v4
+        with:
+          name: filme-panama-eclusa-real-1080p-master
+          run-id: "44519739030"
+          github-token: ${{ github.token }}
+          path: stage_hero
+      - uses: actions/download-artifact@v4
+        with:
+          name: e200-atlas-rota-privado
+          run-id: "45409576578"
+          github-token: ${{ github.token }}
+          path: stage_atlas/e213
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: "45110717183"
+          github-token: ${{ github.token }}
+          path: stage_lock
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: lab-f10-compressor-correia-antes-depois-privado
+          run-id: "45122774333"
+          github-token: ${{ github.token }}
+          path: stage_comp
+      - name: Dependencias e testes
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_politica_animacao.py tests/test_ponte_animacao_editorial.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Preparar fontes verificadas
+        run: python -m scripts.qa_e213_ponte_animacao
+      - name: Render no mesmo compositor
+        run: |
+          cd motor4
+          for tema in panama compressor; do
+            npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e213/$tema.mp4 --props=../qa_e213/$tema.json --codec=h264 --crf=22 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+          done
+      - name: Verificar duração e quadros reais
+        run: |
+          for tema in panama compressor; do
+            ffprobe -v error -show_streams -show_format -of json qa_e213/$tema.mp4 > qa_e213/$tema-probe.json
+            ffmpeg -v error -y -i qa_e213/$tema.mp4 -vf "fps=1/2,scale=270:480,tile=5x3" -frames:v 1 qa_e213/$tema-contato.jpg
+          done
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          for tema in ('panama','compressor'):
+              p=json.load(open('qa_e213/'+tema+'.json'))
+              q=json.load(open('qa_e213/'+tema+'-probe.json'))
+              s=q['streams'][0]
+              assert (s['width'],s['height'])==(540,960)
+              assert int(s['nb_frames'])==round(p['duracao']*30)
+              print('E213-MP4',tema,hashlib.sha256(Path('qa_e213/'+tema+'.mp4').read_bytes()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e213-ponte-animacao-privada
+          path: qa_e213/
+          retention-days: 7
+          if-no-files-found: warn

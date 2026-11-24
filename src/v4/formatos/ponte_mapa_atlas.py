@@ -140,12 +140,16 @@ def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path) -> di
 
 def confirmar(preparo:dict, mp4:Path, pasta:Path) -> dict:
     mp4=Path(mp4)
-    if not mp4.is_file() or mp4.stat().st_size<120_000:
-        raise ValueError("clipe ATLAS ausente/vazio; nenhum fallback permitido")
+    if not mp4.is_file():
+        raise ValueError("clipe ATLAS ausente: "+str(mp4))
+    if mp4.stat().st_size==0:
+        raise ValueError("clipe ATLAS vazio: "+str(mp4))
+    # Compressed byte size does not establish whether a map is valid.
+    # Verify the complete decoded stream below instead of a fixed byte floor.
     if preparo.get("renderer")!="ATLAS/Formato/PalcoMapa/MapLibre":
         raise ValueError("preparo não é do motor cartográfico ATLAS")
     probe=subprocess.run(["ffprobe","-v","error","-show_entries",
-       "stream=codec_type,width,height,r_frame_rate:format=duration",
+       "stream=codec_type,width,height,r_frame_rate,nb_frames:format=duration",
        "-of","json",str(mp4)],capture_output=True,text=True,check=True,timeout=40)
     d=json.loads(probe.stdout)
     video=next((x for x in d.get("streams",[]) if x.get("codec_type")=="video"),{})
@@ -153,6 +157,18 @@ def confirmar(preparo:dict, mp4:Path, pasta:Path) -> dict:
         any(x.get("codec_type")=="audio" for x in d.get("streams",[])) or
         abs(float(d["format"]["duration"])-preparo["duracao_s"])>.07):
         raise ValueError("MP4 não coincide com intervalo ATLAS, dimensão ou natureza silenciosa")
+    from fractions import Fraction
+    expected=preparo["frame_fim_inclusivo"]-preparo["frame_inicio"]+1
+    if Fraction(video.get("r_frame_rate","0/1"))!=30 or int(video.get("nb_frames") or 0)!=expected:
+        raise ValueError("MP4 ATLAS com FPS ou contagem de quadros divergente")
+    # Decode the entire video, with errors fatal; metadata alone is insufficient.
+    decoded=subprocess.run(["ffmpeg","-v","error","-xerror","-i",str(mp4),
+        "-map","0:v:0","-progress","pipe:1","-nostats","-f","null","-"],
+        capture_output=True,text=True,check=True,timeout=90)
+    counts=[int(line.split("=",1)[1]) for line in decoded.stdout.splitlines()
+            if line.startswith("frame=")]
+    if not counts or counts[-1]!=expected:
+        raise ValueError("MP4 ATLAS com quadros decodificados divergentes")
     from PIL import Image,ImageStat
     from io import BytesIO
     checks=[]
@@ -166,10 +182,12 @@ def confirmar(preparo:dict, mp4:Path, pasta:Path) -> dict:
         gray=ImageStat.Stat(im.convert("L"))
         if gray.mean[0]<7:
             raise ValueError("F-MAPA-QUADRO-ESCURO: raster ausente no vídeo real")
-        checks.append({"t":round(t,2),"luminancia":round(gray.mean[0],2)})
+        if gray.stddev[0]<2:
+            raise ValueError("F-MAPA-QUADRO-UNIFORME: ausência de informação visual na amostra")
+        checks.append({"t":round(t,2),"luminancia":round(gray.mean[0],2),"contraste":round(gray.stddev[0],2)})
     rel={**preparo,"status":"PRONTO_PARA_REVISAO_HUMANA",
          "video_sha256":sha256(mp4),"video_bytes":mp4.stat().st_size,
-         "quadros_reais":checks,"exame_semantico":"PENDENTE",
+         "quadros_reais":checks,"quadros_decodificados":counts[-1],"exame_semantico":"PENDENTE",
          "qualidade_estetica":"NAO_INSPECIONADA",
          "aprovacao_humana":"PENDENTE","publicado":False}
     jwrite(Path(pasta)/"comprovante_atlas.json",rel)

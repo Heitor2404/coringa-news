@@ -9,7 +9,7 @@ import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
-import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 export type Cue = {at: number; label: string; kind?: 'callout' | 'fact'; x?: number; y?: number; action?: 'closed' | 'water_enter' | 'rise' | 'equalize' | 'release' | 'enter' | 'seal' | 'valves' | 'open' | 'exit'};
 export type FilmShot = {
@@ -18,6 +18,7 @@ export type FilmShot = {
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
+  cad_phrase_captions?: {start:number;end:number;text:string}[]; // measured phrase-level audio, private QA
   cad_compact_panel?: boolean; // E46C private, preserve hero viewport
   cad_transmissao?: {schema:string;modo:string;razao:string;entrada:string;saida:string;publish:boolean};
   cad_warning?: string; // private CAD QA warning, never a publication clearance
@@ -63,6 +64,7 @@ export type FilmProps = {
   subtitle_mode?: boolean; // quando a Camada de fala está presente, ela ocupa lane própria
   safe_area_profile?: 'MULTIPLATAFORMA_CONSERVADOR_V1';
   direitos_pendentes?: string[];
+  cad_narration_asset?: string;
 };
 
 const W = 1080, H = 1920;
@@ -454,6 +456,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const painelCAD=reflowCAD&&shot.cad_reflow?.viewport.join(',')==='50,400,1030,962'?shot.cad_transmissao:undefined;
   const compactoCAD=reflowCAD&&shot.cad_compact_panel&&(heroCAD||shot.cad_reflow?.viewport.join(',')==='50,400,1030,1092')?shot.cad_transmissao:undefined;
   const dadosCAD=painelCAD||compactoCAD;
+  const frasesCAD=balancedCAD?shot.cad_phrase_captions:undefined;
+  const fraseCAD=frasesCAD?.find(c=>now-shot.start>=c.start&&now-shot.start<c.end);
   if(dadosCAD&&(dadosCAD.schema!=='coringa.cad.transmission.panel.v1'||dadosCAD.publish!==false||
     !['REDUÇÃO OBSERVADA','MULTIPLICAÇÃO OBSERVADA'].includes(dadosCAD.modo)||
     ![dadosCAD.razao,dadosCAD.entrada,dadosCAD.saida].every(s=>typeof s==='string'&&s.length<=20)))
@@ -560,7 +564,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
       <div style={{fontSize:19,color:"#B8CCD8",marginTop:8}}>Totais da trajetória calculada</div>
     </div>}
-    {compactoCAD&&!subtitleMode&&<div data-cad-compact-panel="true" data-safe-role="mechanism_step"
+    {compactoCAD&&!frasesCAD&&!subtitleMode&&<div data-cad-compact-panel="true" data-safe-role="mechanism_step"
       style={{...rectStyle(balancedCAD?BALANCED.step:MECH.step),fontFamily:"Inter,Arial,sans-serif",color:OFF_WHITE,overflow:"hidden",display:"flex",alignItems:"center",gap:18}}>
       {p<.5?<><div style={{fontSize:48,fontWeight:900,letterSpacing:-1.4,color:GOLD,whiteSpace:"nowrap"}}>{compactoCAD.razao}</div>
       <div style={{fontSize:23,fontWeight:800,lineHeight:1.06}}>{compactoCAD.modo}</div></>:<>
@@ -569,12 +573,13 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         <div style={{flex:1,minWidth:0}}><div style={{fontSize:18,color:"#B8CCD8",fontWeight:700}}>SAÍDA · TOTAL</div><div style={{fontSize:compactoCAD.saida.length>12?24:36,fontWeight:850,lineHeight:1.08}}>{compactoCAD.saida}</div></div>
       </>}
     </div>}
-    {reflowCAD&&!painelCAD&&!compactoCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
+    {reflowCAD&&!painelCAD&&!compactoCAD&&!frasesCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(balancedCAD?BALANCED.step:MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
         color:OFF_WHITE,fontWeight:800,lineHeight:1.12}}>
       <div style={{fontSize:25,color:GOLD}}>{active?.label||''}</div>
       <div style={{fontSize:29,overflowWrap:'break-word'}}>{shot.headline}</div>
     </div>}
+    {frasesCAD&&!subtitleMode&&<div data-safe-role="mechanism_step" data-cad-phrase="true" style={{...rectStyle(BALANCED.step),fontFamily:"Inter,Arial,sans-serif",fontSize:30,fontWeight:800,color:OFF_WHITE,lineHeight:1.12,display:"flex",alignItems:"center",overflow:"hidden"}}>{fraseCAD?.text||""}</div>}
     <div data-safe-role="source" style={{...(balancedCAD?rectStyle(BALANCED.source):safeSlot('source')),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,
       lineHeight:1.12,fontWeight:550,overflow:'hidden'}}>
@@ -583,12 +588,15 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   if(shots.some(s=>s.type==='cad_preview') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
+  if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
+    throw new Error('E47-PRIVATE-AUDIO');
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
   return <AbsoluteFill style={{background:'#050A12'}}>
+    {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>

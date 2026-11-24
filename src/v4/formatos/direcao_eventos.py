@@ -74,7 +74,7 @@ def aproximacao_geografica(plano:dict, *, zoom_desejado=.75)->tuple[dict,dict]:
         raise ValueError('D-IMERSAO-PLANO')
     if len(plano.get('palco',[]))!=1 or plano['palco'][0].get('tipo')!='mapa':
         raise ValueError('D-IMERSAO-BEAT')
-    if not .2<=zoom_desejado<=1.2:
+    if not .2<=zoom_desejado<=1.8:
         raise ValueError('D-IMERSAO-ZOOM')
     duration=float(plano['duracao'])
     if not 1.4<=duration<=8:raise ValueError('D-IMERSAO-TEMPO')
@@ -91,7 +91,7 @@ def aproximacao_geografica(plano:dict, *, zoom_desejado=.75)->tuple[dict,dict]:
                    and m['nitido_ate']>=c['zoom']-1e-6
                    and A.opacidade_raster(c['zoom'],r.get('de'),r.get('ate'))>.02
                    for r,m in bases)
-    for delta in [round(zoom_desejado-i*.05,3) for i in range(25)]:
+    for delta in [round(zoom_desejado-i*.05,3) for i in range(33)]:
         if delta<.2:break
         if end-delta<A.Z_MIN:continue
         k['camera']['zoom']=end-delta
@@ -157,3 +157,37 @@ def enquadrar_observacoes(cena,midia,observacoes):
         raise ValueError('D-OBS-MODO')
     return F.resolver_relacao_video({**cena,'video_framing':observacoes},midia,
         (midia['width'],midia['height']),adaptativo=True)
+
+
+def plano_entrada_geografica(plano, *, roi_destino, bases, rotulo, lonlat,
+                             fonte_localizacao, zoom_desejado=1.6):
+    """Resolve a closer, sourced regional destination using the existing ATLAS.
+    Caller supplies actual licensed bases and a verified geographic region.
+    The marker is regional, not a claimed position of a recording camera.
+    """
+    import copy,math
+    from src.v4.formatos import plano as A
+    if not isinstance(fonte_localizacao,str) or not fonte_localizacao.startswith('https://'):
+        raise ValueError('D-ENTRADA-FONTE')
+    if len(roi_destino)!=4 or not all(math.isfinite(v) for v in roi_destino):
+        raise ValueError('D-ENTRADA-ROI')
+    o,s,l,n=roi_destino
+    if not (-180<=o<l<=180 and -85<=s<n<=85 and o<=lonlat[0]<=l and s<=lonlat[1]<=n):
+        raise ValueError('D-ENTRADA-ROI')
+    if not bases or not rotulo.strip() or len(plano.get('beats',[]))!=1:
+        raise ValueError('D-ENTRADA-DADOS')
+    p=copy.deepcopy(plano)
+    p['rasters']=copy.deepcopy(bases)
+    p['beats'][0]['roi']=list(roi_destino)
+    p['beats'][0]['movimento']='fixo'
+    duration=float(p['duracao'])
+    gap=float(A.REGRAS['progressao_max_s'])
+    marker=max(duration*.45,duration-gap+.05)
+    p['rotulos']=[{'nome':rotulo,'lonlat':list(lonlat),'t0':marker,'t1':duration,'estilo':'ponto'}]
+    p['palco']=A.palco_dos_beats(p)
+    A.posicionar_pinos(p)
+    p,report=aproximacao_geografica(p,zoom_desejado=zoom_desejado)
+    report.update(fonte_localizacao=fonte_localizacao,rotulo=rotulo,
+                  lonlat=list(lonlat),marcador_s=marker,
+                  escopo='REGIAO_VERIFICADA_NAO_POSICAO_DA_CAMERA')
+    return p,report

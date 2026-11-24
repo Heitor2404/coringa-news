@@ -9,12 +9,21 @@ def main():
     out=Path('qa_media_first');out.mkdir(exist_ok=True)
     E.STAGE=out/'originais';E.STAGE.mkdir(exist_ok=True)
     spec=E.read('benchmarks/e219/kilauea_2018.json')
-    rows=[spec['chapters'][0]['videos'][0],spec['chapters'][2]['videos'][0]]
     media=[]
-    for row in rows:
-        m=E.acquire(row)
-        cuts=E.windows(m,3.1)
-        if not cuts:raise RuntimeError('sem trecho de teste')
+    for chapter in (spec['chapters'][0],spec['chapters'][2]):
+        # A failed original must not end the whole sample while another
+        # licensed candidate for the SAME chapter can satisfy the same gate.
+        for row in chapter['videos']:
+            try:
+                m=E.acquire(row)
+                cuts=E.windows(m,3.1)
+                if not cuts:raise RuntimeError('sem trecho de teste')
+                print('AMOSTRA FONTE OK',row[0],flush=True)
+                break
+            except (ValueError,RuntimeError,OSError,subprocess.SubprocessError) as exc:
+                print('AMOSTRA FONTE RECUSADA',row[0],type(exc).__name__,str(exc)[:120],flush=True)
+        else:
+            raise RuntimeError('Sem registro elegível para a amostra: '+chapter['title'])
         asset='e219_visual/'+m['expected_sha256']+'.mp4'
         dest=E.PUBLIC/asset;dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(m['local_source'],dest)

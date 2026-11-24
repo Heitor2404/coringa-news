@@ -2,7 +2,7 @@ name: E219 - documentario geografia curado privado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['scripts/qa_documentario_geografia_e219.py','benchmarks/e219/kilauea_2018.json']
+    paths: ['.github/workflows/qa-documentario-e219.yml','scripts/qa_documentario_geografia_e219.py','benchmarks/e219/kilauea_2018.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,6 +33,19 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4
           npm ci --prefix motor4 --no-audit --no-fund
           ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Confirmar destino privado Telegram antes de gastar TTS
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          from src.v3 import previa_telegram
+          try:
+              previa_telegram.chat_autorizado()
+          except Exception:
+              raise SystemExit("Telegram privado não confirmado; TTS não iniciado") from None
+          print("TELEGRAM: destino privado autorizado, sem envio de mensagem de teste")
+          PY
       - name: Aquisição de registros e voz Gemini medida
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -6,6 +6,8 @@ on:
       - ".github/workflows/qa-multicorpo-e18.yml"
       - "src/v4/formatos/*_e18.py"
       - "src/v4/formatos/metrologia_e22.py"
+      - "src/v4/formatos/camera_e24.py"
+      - "tests/test_camera_e24.py"
       - "tests/test_metrologia_e22.py"
       - "src/v4/formatos/solver_restricoes_e1.py"
       - "benchmarks/e18_*.json"
@@ -45,7 +47,7 @@ jobs:
           buscar benchmarks/e18_multifornecedor.json fonte_e18
           buscar benchmarks/e19_urdf_unificado.json fonte_e19
       - name: Testes E18 (sintéticos + fonte real) e regressões do solver comum
-        run: python -m pytest -q tests/test_multicorpo_e18.py tests/test_metrologia_e22.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py
+        run: python -m pytest -q tests/test_multicorpo_e18.py tests/test_metrologia_e22.py tests/test_camera_e24.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py
       - name: Filmes privados, oráculos e auditoria
         run: |
           python -m src.v4.formatos.filme_e18 gerar benchmarks/e18_multifornecedor.json "$E18_MENAGERIE" qa_e18 > qa_e18_log.jsonl

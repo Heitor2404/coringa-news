@@ -1,0 +1,25 @@
+name: E24 camera e ponte STEP - testes sem downloads CAD
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-camera-e24.yml"
+      - "src/v4/formatos/camera_e24.py"
+      - "src/v4/formatos/filme_e18.py"
+      - "src/v4/formatos/adaptador_step_e23.py"
+      - "tests/test_camera_e24.py"
+      - "tests/test_adaptador_step_e23.py"
+permissions:
+  contents: read
+jobs:
+  camera:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install --only-binary=:all: numpy scipy pytest
+      - run: python -m pytest -q tests/test_camera_e24.py tests/test_adaptador_step_e23.py
+      - run: python -m py_compile src/v4/formatos/filme_e18.py src/v4/formatos/camera_e24.py

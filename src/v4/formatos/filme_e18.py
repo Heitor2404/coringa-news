@@ -24,6 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 from . import multicorpo_e18 as M
 from . import raster_e18 as R
 from . import metrologia_e22 as D
+from . import camera_e24 as C
 
 W, H, FPS = 1080, 1920, 30
 
@@ -308,35 +309,11 @@ def cor_visual(v, papel):
 
 
 def escolher_camera(mont, qs, cima, regiao, fov=24):
-    """Busca determinística do ponto de vista: guinada a cada 15° e três
-    elevações. Pontuação = √(ocupação da região do quadro) × visibilidade do
-    movimento (deslocamento projetado médio das peças móveis / altura da
-    região). Nenhuma regra por máquina; o mesmo critério para todos."""
-    amostra = qs[:: max(1, len(qs) // 16)]
-    pontos, centros = [], []
-    for q in amostra:
-        X = mont.poses(q)
-        for v in mont.visuais:
-            T = X[v.corpo] @ v.local
-            pontos.append(v.vertices[:: max(1, len(v.vertices) // 300)] @ T[:3, :3].T + T[:3, 3])
-        centros.append([X[b][:3, 3] for b in range(len(mont.corpos))])
-    pontos = np.vstack(pontos)
-    centros = np.array(centros)  # (amostras, corpos, 3)
-    moveis = [b for b in range(len(mont.corpos)) if np.ptp(centros[:, b], axis=0).max() > 1e-6]
-    # Se o que se move é pequeno frente à máquina inteira, enquadra o
-    # movimento e o entorno imediato (a máquina pode sair pelas bordas).
-    pm = []
-    for q in amostra:
-        X = mont.poses(q)
-        pm += [v.vertices[:: max(1, len(v.vertices) // 300)] @ (X[v.corpo] @ v.local)[:3, :3].T
-               + (X[v.corpo] @ v.local)[:3, 3] for v in mont.visuais if v.corpo in moveis]
-    foco = "tudo"
-    if pm:
-        pm = np.vstack(pm)
-        if np.ptp(pm, axis=0).max() < 0.4 * np.ptp(pontos, axis=0).max():
-            c, meia = (pm.max(0) + pm.min(0)) / 2, np.ptp(pm, axis=0).max() * 0.65
-            dentro = np.all(np.abs(pontos - c) <= meia, axis=1)
-            pontos, foco = pontos[dentro], "pecas_moveis"
+    """Busca determinística, com movimento material e caixa de todos os quadros."""
+    amostra = [qs[i] for i in C.indices_amostra(len(qs), 24)]
+    bounds, tracks = C.evidencia(mont, qs)
+    pontos, foco = C.pontos_foco(bounds, tracks)
+    moveis = sorted(tracks)
     # Eixo principal 3D de cada peça móvel em cada pose amostrada: mede o
     # quanto as peças ficam escorçadas (apontando para a câmera).
     eixos = []  # lista por pose; a nota usa a PIOR pose (o espectador vê todas)
@@ -354,26 +331,30 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
     e2 = np.cross(cima, e1)
     x0, y0, x1, y1 = regiao
     melhor = None
+    margem = .012
+    interna = (x0+margem,y0+margem,x1-margem,y1-margem)
     for elev in (12, 22, 32):
         for guinada in range(0, 360, 15):
             g, el = math.radians(guinada), math.radians(elev)
             d = math.cos(el) * (math.cos(g) * e1 + math.sin(g) * e2) - math.sin(el) * cima
-            cam = R.enquadrar(pontos, d, cima, fov, W, H, regiao)
+            cam = R.enquadrar(pontos, d, cima, fov, W, H, interna)
+            if not C.cabe(cam,pontos,regiao,W,H):
+                continue
             u, v, _, _ = cam.projetar(pontos)
             ocup = (np.ptp(u) * np.ptp(v)) / ((x1 - x0) * W * (y1 - y0) * H)
-            vis = 0.0
-            for b in moveis:
-                pu, pv, _, _ = cam.projetar(centros[:, b])
-                vis += math.hypot(np.ptp(pu), np.ptp(pv)) / ((y1 - y0) * H)
-            vis /= max(1, len(moveis))
+            vis = C.movimento_projetado(cam, tracks, (y1-y0)*H)
             # Ponderado pelo tamanho: peças longas dominam a leitura.
             leg = min((sum(np.linalg.norm(e - d * (e @ d)) for e in pose) / sum(np.linalg.norm(e) for e in pose)
                        for pose in eixos if pose), default=1.0)
-            nota = math.sqrt(ocup) * vis * leg
+            nota = math.sqrt(max(0., ocup)) * (vis if tracks else 1.) * leg
             if melhor is None or nota > melhor[0] + 1e-12:
                 melhor = (nota, cam, dict(guinada_graus=guinada, elevacao_graus=elev,
                                           ocupacao=float(ocup), visibilidade=float(vis),
-                                          legibilidade=float(leg), nota=float(nota), foco=foco))
+                                          legibilidade=float(leg), nota=float(nota), foco=foco,
+                                          metodo='e24_vertices_caixas_todos_quadros',
+                                          corpos_moveis=len(moveis)))
+    if melhor is None:
+        raise ValueError('E24-CAMERA_FORA_DA_REGIAO')
     return melhor[1], melhor[2], pontos
 
 
@@ -467,9 +448,15 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
         elif o["tipo"] == "dh":
             r = oraculo_dh(mont, o)
             qa["oraculo_fabricante"] = dict(o, **r, dentro_da_tolerancia=r["erro_max_mm"] <= o["tolerancia_mm"])
+    return renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
+                                 varrido=cache["varrido"], rapido=rapido)
+
+
+def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
+                         varrido=None, rapido=False):
     # --- imagem
     cima = np.array([0, 0, 1.0])
-    pap = papeis(mont, acion, qs, cache["varrido"])
+    pap = papeis(mont, acion, qs, varrido)
     cam, escolha, pontos = escolher_camera(mont, qs, cima, (0.08, 0.15, 0.92, 0.64))
     chao = float(pontos[:, 2].min())
     fundo = R.fundo_gradiente(W, H)

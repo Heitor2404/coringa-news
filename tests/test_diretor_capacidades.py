@@ -36,6 +36,8 @@ def test_um_diretor_escolhe_dois_renderers_diferentes():
 
 def test_preparo_usa_mecanismo_resolvido_no_render_e_nao_auto(tmp_path):
     p=plano()
+    # Contrato histórico: não autoriza o estilo descartado em documentários.
+    p.update(perfil_visual='LEGADO_REJEITADO_SOMENTE_QA',publicar=False)
     output=FILME.preparar(p,tmp_path/'run',tmp_path/'public')
     assert output['pronto']
     props=json.loads((tmp_path/'run/props.json').read_text(encoding='utf8'))

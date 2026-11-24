@@ -42,7 +42,8 @@ def avaliar(shots, *, modo=None, privado=False, preview=True):
         if motivo:
             bloqueios.append({'codigo':'A-ROTA-BLOQUEADA','cena':s.get('id'),'motivo':motivo})
     return {'permitido':not bloqueios,'rotas':rotas,'bloqueios':bloqueios,
-            'editorial_homologado':not bloqueios and modo!=LEGACY and all(x['status']=='APROVADO' for x in rotas),
+            'editorial_homologado':False,  # rota permitida não homologa um filme
+            'rotas_animacao_aprovadas':bool(rotas) and not bloqueios and modo!=LEGACY and all(x['status']=='APROVADO' for x in rotas),
             'aprovacao_humana':'PENDENTE'}
 
 def exigir(shots, **kwargs):
@@ -69,3 +70,23 @@ def decidir_complemento(*, midia_adequada: bool, acao: str, lacuna: str,
     if status=='CANDIDATO':
         return 'ANIMACAO_COMPLEMENTAR_EM_QA_PRIVADA'
     return 'REPLANEJAR_MIDIA_REAL_OU_DECLARAR_LACUNA'
+
+
+def validar_entrega_privada(props_path, video_path, qa):
+    """Protect old cached artifacts at delivery; binding is technical, not artistic."""
+    import hashlib
+    props_path,video_path=Path(props_path),Path(video_path)
+    if not props_path.is_file() or not video_path.is_file():
+        raise ValueError('E211-ENTREGA-SEM-PROPS-OU-VIDEO')
+    def sha(p):
+        h=hashlib.sha256()
+        with p.open('rb') as f:
+            for block in iter(lambda:f.read(1024*1024),b''):
+                h.update(block)
+        return h.hexdigest()
+    if qa.get('props_sha256')!=sha(props_path) or qa.get('video_sha256')!=sha(video_path):
+        raise ValueError('E211-ENTREGA-HASH')
+    p=json.loads(props_path.read_text(encoding='utf8'))
+    if not p.get('shots') or p.get('preview') is not True or p.get('animation_policy_mode')==LEGACY:
+        raise ValueError('E211-ENTREGA-LEGADO-OU-SEM-CENAS')
+    return exigir(p['shots'],modo=p.get('animation_policy_mode'),privado=p.get('private_review_only') is True)

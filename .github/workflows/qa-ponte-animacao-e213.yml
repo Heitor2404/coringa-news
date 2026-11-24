@@ -76,6 +76,8 @@ jobs:
               assert int(s['nb_frames'])==round(p['duracao']*30)
               print('E213-MP4',tema,hashlib.sha256(Path('qa_e213/'+tema+'.mp4').read_bytes()).hexdigest())
           PY
+      - name: Comparar quadros renderizados com originais
+        run: python -m scripts.qa_e214_integridade_visual
       - uses: actions/upload-artifact@v4
         if: always()
         with:

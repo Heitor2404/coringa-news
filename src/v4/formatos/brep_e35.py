@@ -42,6 +42,23 @@ class Plano:
 
 
 @dataclass
+class Esfera:
+    raio: float
+    centro: np.ndarray
+    area: float
+
+
+@dataclass
+class Toro:
+    raio_maior: float
+    raio_menor: float
+    centro: np.ndarray
+    eixo: np.ndarray
+    concavo: bool
+    area: float
+
+
+@dataclass
 class Corpo:
     indice: int
     nome: str              # nome de produto no STEP (evidência textual)
@@ -53,6 +70,10 @@ class Corpo:
     vertices: np.ndarray | None = None
     faces: np.ndarray | None = None
     forma: object = None
+    esferas: list = field(default_factory=list)
+    toros: list = field(default_factory=list)
+    tipos_face: dict = field(default_factory=dict)
+    caminho_montagem: tuple = ()   # nomes dos ancestrais no STEP (evidência textual)
 
 
 UNIDADES = {".MILLI.": 1e-3, "$": 1.0, ".CENTI.": 1e-2, ".MICRO.": 1e-6}
@@ -104,7 +125,7 @@ def _nomes_por_solido(caminho):
 
     saida = []
 
-    def visitar(l, loc, nome_inst):
+    def visitar(l, loc, nome_inst, trilha):
         if st.IsAssembly_s(l):
             comps = TDF_LabelSequence()
             st.GetComponents_s(l, comps)
@@ -112,28 +133,29 @@ def _nomes_por_solido(caminho):
                 c = comps.Value(i)
                 ref = TDF_Label()
                 st.GetReferredShape_s(c, ref)
-                visitar(ref, loc.Multiplied(st.GetLocation_s(c)), nome(c) or nome(ref))
+                visitar(ref, loc.Multiplied(st.GetLocation_s(c)), nome(c) or nome(ref), trilha + (nome(l),))
             return
         forma = st.GetShape_s(l).Moved(loc)
         ex = TopExp_Explorer(forma, TopAbs_SOLID)
         k = 0
         while ex.More():
-            saida.append((nome(l) or nome_inst, ex.Current(), k))
+            saida.append((nome(l) or nome_inst, ex.Current(), k, trilha))
             k += 1
             ex.Next()
 
     livres = TDF_LabelSequence()
     st.GetFreeShapes(livres)
     for i in range(1, livres.Length() + 1):
-        visitar(livres.Value(i), TopLoc_Location(), "")
+        visitar(livres.Value(i), TopLoc_Location(), "", ())
     return saida
 
 
-def ler(caminho, tolerancia_tess=0.1, angular_tess=0.15, excluir=None):
-    """`excluir(nome)` → True pula o sólido (registrado em `excluidos`)."""
+def ler(caminho, tolerancia_tess=0.1, angular_tess=0.15, excluir=None, tesselar=True):
+    """`excluir(nome)` → True pula o sólido (registrado em `excluidos`).
+    `tesselar=False` lê só feições (rápido para montagens grandes)."""
     import cadquery as cq
     from OCP.BRepAdaptor import BRepAdaptor_Surface
-    from OCP.GeomAbs import GeomAbs_Cylinder, GeomAbs_Plane
+    from OCP.GeomAbs import GeomAbs_Cylinder, GeomAbs_Plane, GeomAbs_Sphere, GeomAbs_Torus
     from OCP.TopAbs import TopAbs_REVERSED
 
     caminho = Path(caminho)
@@ -143,7 +165,7 @@ def ler(caminho, tolerancia_tess=0.1, angular_tess=0.15, excluir=None):
         rb"SI_UNIT\s*\([^;]*?\.METRE\.\s*\)|CONVERSION_BASED_UNIT\s*\(\s*'[A-Z]+'", dados))
     unidade = unidade_comprimento(texto)
     corpos, excluidos = [], []
-    for nome, forma, sub in _nomes_por_solido(caminho):
+    for nome, forma, sub, trilha in _nomes_por_solido(caminho):
         if excluir is not None and excluir(nome):
             excluidos.append(nome)
             continue
@@ -152,10 +174,24 @@ def ler(caminho, tolerancia_tess=0.1, angular_tess=0.15, excluir=None):
         c = so.Center()
         bb = so.BoundingBox()
         corpo = Corpo(idx, nome + (f"#{sub}" if sub else ""), float(so.Volume()), np.array([c.x, c.y, c.z]),
-                      ((bb.xmin, bb.ymin, bb.zmin), (bb.xmax, bb.ymax, bb.zmax)), forma=so)
+                      ((bb.xmin, bb.ymin, bb.zmin), (bb.xmax, bb.ymax, bb.zmax)), forma=so,
+                      caminho_montagem=tuple(trilha))
         for f in so.Faces():
             ad = BRepAdaptor_Surface(f.wrapped)
             invertida = f.wrapped.Orientation() == TopAbs_REVERSED
+            tipo = str(ad.GetType()).split("_")[-1]
+            corpo.tipos_face[tipo] = corpo.tipos_face.get(tipo, 0) + 1
+            if ad.GetType() == GeomAbs_Sphere:
+                sp = ad.Sphere()
+                c0 = sp.Location()
+                corpo.esferas.append(Esfera(float(sp.Radius()), np.array([c0.X(), c0.Y(), c0.Z()]), float(f.Area())))
+            elif ad.GetType() == GeomAbs_Torus:
+                to = ad.Torus()
+                ax = to.Axis()
+                o = np.array([ax.Location().X(), ax.Location().Y(), ax.Location().Z()])
+                d = np.array([ax.Direction().X(), ax.Direction().Y(), ax.Direction().Z()])
+                corpo.toros.append(Toro(float(to.MajorRadius()), float(to.MinorRadius()), o, d / np.linalg.norm(d),
+                                        invertida, float(f.Area())))
             if ad.GetType() == GeomAbs_Cylinder:
                 cy = ad.Cylinder()
                 ax = cy.Axis()
@@ -190,11 +226,24 @@ def ler(caminho, tolerancia_tess=0.1, angular_tess=0.15, excluir=None):
                 vs = np.array([[v_.X, v_.Y, v_.Z] for v_ in f.Vertices()])
                 corpo.planos.append(Plano(n / np.linalg.norm(n), np.array([fc.x, fc.y, fc.z]),
                                           float(f.Area()), vs))
-        vt, ft = so.tessellate(tolerancia_tess, angular_tess)
-        corpo.vertices = np.asarray([p_.toTuple() for p_ in vt], float)
-        corpo.faces = np.asarray(ft, dtype=int)
+        if tesselar:
+            vt, ft = so.tessellate(tolerancia_tess, angular_tess)
+            corpo.vertices = np.asarray([p_.toTuple() for p_ in vt], float)
+            corpo.faces = np.asarray(ft, dtype=int)
         corpos.append(corpo)
     if len(corpos) + len(excluidos) < 2:
         fail("MENOS_DE_DOIS_SOLIDOS")
     return dict(corpos=corpos, excluidos=excluidos, unidade=unidade,
                 sha256=hashlib.sha256(dados).hexdigest(), bytes=len(dados))
+
+
+def solidos(caminho, indices):
+    """Formas OCC (cq.Solid) dos sólidos de índice dado, na MESMA ordem de
+    enumeração de `ler(..., excluir=None)`."""
+    import cadquery as cq
+    alvo = set(indices)
+    out = {}
+    for k, (_, forma, _, _) in enumerate(_nomes_por_solido(caminho)):
+        if k in alvo:
+            out[k] = cq.Solid(forma)
+    return out

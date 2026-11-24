@@ -1,0 +1,69 @@
+name: E41 suportes reais, grupos rígidos e pares superiores
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-suporte-e41.yml"
+      - "src/v4/formatos/*_e41.py"
+      - "src/v4/formatos/pipeline_e35.py"
+      - "src/v4/formatos/brep_e35.py"
+      - "tests/test_e41_vinculos.py"
+      - "tests/fixtures_e41.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  e41:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      OPENBLAS_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python
+        timeout-minutes: 10
+        run: |
+          python -m pip install --progress-bar off --only-binary=:all: cadquery==2.7.0 mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+      - name: Testes E41 (sintéticos com suporte modelado) + E35/E37 + núcleo
+        run: python -m pytest -q tests/test_e41_vinculos.py tests/test_e35_aquisicao.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_adaptador_step_e23.py
+      - name: Consulta cicloidal congelada da E35 → descoberta → E41 → MP4
+        timeout-minutes: 75
+        run: python -m src.v4.formatos.pipeline_e35 benchmarks/e35/consulta_cycloidal.json trabalho_e41 qa_e41
+      - name: Resumo verificável
+        if: always()
+        run: |
+          python - <<'EOF'
+          import json, pathlib
+          r35 = json.load(open("qa_e41/E35_relatorio.json"))
+          p = pathlib.Path("qa_e41/E41_relatorio.json")
+          r = json.loads(p.read_text()) if p.exists() else {}
+          print("E41-RESUMO", json.dumps(dict(
+              consulta=r35["consulta"], resultado=r35["resultado"], escolha=r35.get("escolha"),
+              candidatos=[(c["url"], c.get("estagio"), c.get("motivo")) for c in r35["candidatos"]],
+              leitura=r.get("leitura"), vinculos={k: v for k, v in (r.get("vinculos") or {}).items() if k not in ("juntas", "grupos")},
+              transmissao=[dict(corpo=c["corpo"], motivo=c.get("motivo"), aceito=c["lobulado"].get("aceito"),
+                                lobulos=c["lobulado"].get("lobulos"), roletes=c["lobulado"].get("roletes"),
+                                penetracao=(c["lobulado"].get("teste_razao_derivada") or {}).get("penetracao_max_mm"),
+                                alternativas=[(a["razao"], a["penetracao_max_mm"]) for a in (c.get("alternativas") or [])])
+                           for c in (r.get("transmissao") or {}).get("candidatos", [])],
+              modelo=r.get("modelo"), solver=r.get("solver"),
+              interferencia={k: v for k, v in (r.get("interferencia_brep") or {}).items() if k != "por_quadro"},
+              render=r.get("render"), tempos=r.get("tempos_s"), faltas=r.get("faltas"),
+              publish=r.get("publish"), visual_approved=r.get("visual_approved")), ensure_ascii=False, default=str))
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e41-suporte-privado
+          path: |
+            qa_e41/*.mp4
+            qa_e41/*_folha.jpg
+            qa_e41/E41_relatorio.json
+            qa_e41/E35_relatorio.json
+          retention-days: 14

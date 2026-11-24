@@ -52,6 +52,9 @@ def filtrar_terceiros(leitura):
 
 def analisar_arquivo(caminho, classe, cfg):
     reg = dict(arquivo=str(caminho))
+    if cfg["assinatura"]["par"] == "engrenamento_lobulado":
+        # E41: montagem com suporte real; lê TODOS os sólidos (sem excluir por nome)
+        return dict(reg, estagio="ROTA_E41"), None, None
     t = time.time()
     try:
         leitura = B.ler(caminho, excluir=lambda n: bool(Fo.TERCEIRO.search(n)))
@@ -141,6 +144,25 @@ def executar(candidatos_json, trabalho, saida, rapido=False, renderizar=True, cl
                 escolhido = (reg, a, leitura, ctr)
         reg["estagio"] = "PRONTO_PARA_SOLVER" if any(x["estagio"] == "PRONTO_PARA_SOLVER" for x in reg["analises"]) \
             else reg["analises"][-1]["estagio"]
+    if escolhido is None and cfg["assinatura"]["par"] == "engrenamento_lobulado":
+        from . import pipeline_e41 as P41
+        for c in rel["candidatos"]:
+            destino = Path(trabalho) / c["url"].rstrip("/").split("github.com/")[-1].replace("/", "__")
+            for a in sorted(c.get("analises", []), key=lambda x: -Path(destino / x["arquivo"]).stat().st_size):
+                if a["estagio"] != "ROTA_E41":
+                    continue
+                try:
+                    r41 = P41.executar(destino / a["arquivo"], saida, renderizar=renderizar)
+                except ValueError as e:
+                    a.update(estagio="E41", motivo=str(e))
+                    continue
+                a.update(estagio="E41", resultado=r41["resultado"], faltas=r41.get("faltas"))
+                if r41["resultado"] in ("MP4_GERADO", "SOLVER_E_ORACULOS"):
+                    rel.update(resultado="E41:" + r41["resultado"], escolha=dict(url=c["url"], commit=c.get("commit"),
+                                                                                  arquivo=a["arquivo"]))
+                    (saida / "E35_relatorio.json").write_text(json.dumps(_limpar(rel), ensure_ascii=False, indent=2))
+                    return rel
+            c["estagio"] = c.get("analises") and c["analises"][-1]["estagio"] or c.get("estagio")
     if escolhido is None:
         rel["resultado"] = "NENHUMA_FONTE_CHEGOU_AO_SOLVER"
         (saida / "E35_relatorio.json").write_text(json.dumps(_limpar(rel), ensure_ascii=False, indent=2))

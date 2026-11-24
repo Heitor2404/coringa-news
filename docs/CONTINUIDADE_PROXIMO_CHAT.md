@@ -2863,3 +2863,28 @@ Julgamento visual desta sessão (não é homologação): garras e telescópio le
 **Estado-base nesta decisão:** o Claude concluiu experimentalmente E18–E20 e o run [45302101314](https://github.com/Heitor2404/coringa-news/actions/runs/45302101314) passou com 59 testes e 8 modelos executados; ainda há divergência externa na xArm, lacuna STEP→núcleo E18 e nenhuma homologação editorial. **Próxima execução deve preferir ChatGPT para corrigir os gates de validação, revisar os vídeos e integrar narrativa/ATLAS até onde as ferramentas disponíveis alcançarem.** Só solicitar Claude para um gargalo técnico claramente demonstrado, não para dar sequência por inércia.
 
 **Resumo da regra:** **“O que conseguirmos implementar e validar diretamente, fazemos aqui; Claude apenas onde trouxer avanço substancial por token.”**
+
+
+## 153. 24/11 — E21 implementada pelo ChatGPT, sem gastar tokens do Claude: gates externos e editoriais independentes
+
+**Pedido do usuário:** "Beleza, agora eu falo algo para o claude ou você pode seguir agora?" — a decisão foi **continuar diretamente no ChatGPT**, conforme a regra permanente da seção 152. Não delegar ao Opus o que conseguimos implementar/testar com as ferramentas GitHub disponíveis.
+
+**Problema demonstrado no CI E18–E20 `45302101314`:** modelo `ufactory_xarm_gripper` tinha `medido_mm=88.92358047912954`, referência externa `84 mm` e tolerância fixada `±4.2 mm`: erro absoluto **4.92358 mm > 4.2 mm**. O relatório antigo registrava `dentro_da_tolerancia=false`, MAS o código de CLI `filme_e18.main()` rotulava todos os modelos que renderizassem como `estado="PASS"` e o workflow E18 só reprovava falha de render ou novas colisões. Isso fazia a conclusão "8/8 PASS" parecer comprovação externa, indevidamente. Cassie não tem oráculo numérico de fabricante usado na execução; tampouco tem homologação.
+
+**Mudanças executadas e commitadas diretamente no ramo `atlas-direcao-visual-20261118`:**
+
+- Novo `src/v4/formatos/gates_qualidade_e21.py`: classificador genérico **sem nenhuma ramificação por equipamento**. Exige vídeo realmente decodificado com quadros e movimento, resíduo numérico finito entre 0 e 1e-7, registra `estado_execucao` separadamente de `validacao_externa` (`APROVADO`/`REPROVADO`/`SEM_REFERENCIA`/`INDETERMINADO`) e de `verificacao_contato` (`SEM_COLISAO_NOVA_NA_AMOSTRA`/`COLISAO_NOVA_DETECTADA`/`NAO_VERIFICADO`). Sobreposição inicial da fonte fica explicitamente registrada, sem ser falsamente tratada como segurança absoluta.
+- A xArm fica `estado="REPROVADO_REFERENCIA_EXTERNA"`, mesmo com `estado_execucao="PASS"`. Cassie sem oráculo → `estado="SEM_REFERENCIA_EXTERNA"`. Valores compatíveis → `VALIDADO_TECNICAMENTE_SEM_HOMOLOGACAO_VISUAL`, **nunca aprovação de publicação**.
+- Para **todos**: `homologacao_visual="NAO_HOMOLOGADO"`, `homologacao_documental="NAO_AVALIADO_60S_NARRACAO"`, `liberado_para_publicacao=false`, `publish=false` e `visual_approved=false`. O relatório `QA.json` recebe `resumo_gates` com números de oráculos aprovados, reprovados e sem fonte; não pode afirmar "100% validado" havendo qualquer falha.
+- `src/v4/formatos/filme_e18.py` integrado a `classificar()`/ `resumo()` no CLI de geração, preservando vídeo/visualização como PREVIEW PRIVADA.
+- Workflow `.github/workflows/qa-multicorpo-e18.yml` alterado para **falhar explicitamente quando um oráculo do fabricante não passa**, mesmo com solver convergente. A xArm deve produzir CI de conformidade **vermelho até investigação/correção real do modelo**, não relaxar o limiar. O artifact permanece `if: always()` para diagnóstico mesmo em falha.
+- Teste puro `tests/test_gates_qualidade_e21.py` com 11 casos: discrepância xArm observada, oráculo aprovado ainda não autoriza publicação, oráculo ausente/indevido, colisão nova, sobreposição de referência, bloqueio por execução, ausência de movimento, resíduo alto/negativo/não finito, resumo não podendo declarar 100%, nenhuma família `if` de equipamento.
+- Novo workflow **rápido e econômico** `.github/workflows/qa-gates-e21.yml`, sem baixar CAD, MuJoCo ou renderizar 8 vídeos; executa `unittest`, compila o código de integração e verifica estaticamente que o gate de fabricante está integrado no workflow pesado.
+
+**Comprovação objetiva:**
+- [GitHub Actions **45315768827**](https://github.com/Heitor2404/coringa-news/actions/runs/45315768827): **SUCCESS — 11 testes E21**, integração do gate verificada, sem tokens do Claude.
+- Commits de código/teste/CI: `ba61b91` (classificador), `544578b` (integração no filme), `9adb426` (testes), `d67f6bc` (workflow E18 estrito), `551ded9` (workflow leve), `84a5833` (limiar numérico e prova de movimento), `f73457c` (teste de residuais altos / vídeos estáticos).
+- **O run pesado E18** tinha execuções em andamento na consulta. Não marcar como revalidado no commit mais recente até que CI e artifact concluam; a execução integral pode **ficar vermelha propositadamente** por conta da divergência verdadeira da xArm. Um CI vermelho de conformidade é preferível a um verde falso. O gate rápido E21 está verde.
+- Nenhuma alteração em `main`, nenhum vídeo publicado, nenhum modelo CAD de terceiros incorporado e nenhuma tolerância externa alterada.
+
+**Próximo passo executável pelo ChatGPT**: diagnosticar a xArm com geometria/ficha real e pontos de medição comparáveis, sem aumentar tolerância; manter a distinção entre cinemática válida e dimensão validada. Depois, preparar a integração narrativa ATLAS em 60+s (grau de automação verificável), começando por um mecanismo já aceito e repetindo em outro **sem código por nome**. Reservar Claude apenas se surgir gargalo matemático/refatoração que de fato exija ganho relevante.

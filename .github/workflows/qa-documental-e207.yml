@@ -1,0 +1,66 @@
+name: E207 - regressao audiovisual multimodal privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-documental-e207.yml','scripts/qa_e207_documental.py','tests/test_e207_documental.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prova:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - uses: actions/download-artifact@v4
+        with:
+          name: filme-panama-eclusa-real-1080p-master
+          run-id: "44519739030"
+          github-token: ${{ github.token }}
+          path: stage_hero
+      - uses: actions/download-artifact@v4
+        with:
+          name: e200-atlas-rota-privado
+          run-id: "45409576578"
+          github-token: ${{ github.token }}
+          path: stage_atlas/e207
+      - name: Dependencias
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg espeak-ng
+          python -m pip install -q -r requirements.txt pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Preflight e voz medida
+        run: python -m scripts.qa_e207_documental
+      - name: Render privado no compositor existente
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e207/filme.mp4 --props=../qa_e207/props.json --codec=h264 --crf=22 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: Verificar MP4 e contato
+        run: |
+          ffprobe -v error -show_streams -show_format -of json qa_e207/filme.mp4 > qa_e207/probe.json
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=json.load(open('qa_e207/probe.json'))
+          v=next(s for s in p['streams'] if s['codec_type']=='video')
+          assert (v['width'],v['height'])==(540,960) and int(v['nb_frames'])==492
+          assert any(s['codec_type']=='audio' for s in p['streams'])
+          assert abs(float(p['format']['duration'])-16.4)<.12
+          print('E207-MP4',hashlib.sha256(Path('qa_e207/filme.mp4').read_bytes()).hexdigest())
+          PY
+          ffmpeg -v error -y -i qa_e207/filme.mp4 -vf "fps=1/1.4,scale=270:480,tile=4x3" -frames:v 1 qa_e207/contato.jpg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e207-regressao-documental-privada
+          path: qa_e207/
+          retention-days: 7
+          if-no-files-found: warn

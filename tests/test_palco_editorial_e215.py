@@ -25,3 +25,26 @@ def test_extract_preserves_transform_and_defs_but_not_lab_header():
 def test_invalid_envelope_refused():
     with pytest.raises(ValueError,match='E215-ENVELOPE'):
         ajustar_envelope(CaixaVisivel(0,0,0,50),CaixaVisivel(*PROFILE['stage']))
+
+
+def test_e216_tipografia_sem_invadiar_arte():
+    from PIL import Image,ImageChops
+    from src.v4.formatos.palco_editorial_render import cabecalho
+    base=Image.new('RGB',(540,960),PROFILE['background'])
+    for title,subtitle,source in [
+        ('COMPRESSÃO DO AR','Como o pistão comprime o ar.','P–V'),
+        ('EQUILÍBRIO DA ÁGUA','Dois níveis, uma ligação.','OpenStax')]:
+        for caption in [None,{'words':['A','pressão','aumenta.'],'highlight':2}]:
+            img=cabecalho(title,subtitle,source,caption)
+            b=ImageChops.difference(img,base).getbbox()
+            assert b[0]>=80 and b[2]<=381 and b[1]>=150 and b[3]<=236
+    assert PROFILE['stage']==[12,244,528,844]
+
+def test_e216_rejeita_legenda_sem_origem_e_sobreposicao():
+    from src.v4.formatos.palco_editorial_render import validar_legendas
+    g={'start':1.,'end':2.,'words':['A','água','flui.'],'highlight':2}
+    with pytest.raises(ValueError,match='ORIGEM-LEGENDA'):
+        validar_legendas([g],3.,None)
+    with pytest.raises(ValueError,match='LEGENDA-INVALIDA'):
+        validar_legendas([g,{**g,'start':1.5}],3.,'LAB_TEMPOS_DECLARADOS')
+    validar_legendas([g],3.,'LAB_TEMPOS_DECLARADOS')

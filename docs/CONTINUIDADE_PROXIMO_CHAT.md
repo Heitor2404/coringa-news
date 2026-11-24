@@ -3123,3 +3123,41 @@ E33 artifact STEP 14888608501 e URDF 14888972252 baixados; SHA256 de ambos MP4 c
 
 ### 180. Checkpoint E38–E40 antes do bloco E41
 Suite leve 45330809479 **34 PASS**. E40 prova real 45330952405 na última consulta: [{"status":"in_progress","conclusion":null}]. E35/E38/E39 completo 45330658126 em execução; não considerar vídeo E38 confirmado. E37 leve verde, regressão real 45330218844 em andamento. Próximo escopo de alto retorno para Opus: agrupamento de corpos rigidamente ligados, identificação de suporte/rolamentos com evidência e extensão de pares superiores. Usar o cicloidal já congelado na E35 como prova adversarial e também fixture de suporte modelado com oráculo independente. Não tratar coaxialidade/contato como soldagem; não remover rolamentos/peças essenciais só pelo nome; não presumir que todo perfil periódico é engrenamento. Manter fonte rejeitada Genebra, gates E21/E36, aquisição E37 e decisão E40. Separar resolução de suporte e contato lobulado, registrar ambiguidades, não alterar tolerâncias nem publicar. ChatGPT assume inspeção editorial/CI e correções menores. Não reimplementar E38–E40 e não declarar fallback completo sem nova representação fundamentada do mesmo alvo.
+
+
+## 181. 24/11 — E41 (Claude Opus): suportes reais, grupos rígidos, rolamentos e pares superiores
+
+Base `a66605a`; seções 169–180 lidas; E36–E40 preservadas (64 testes de regressão E21–E41 locais verdes). Commit `2c8b6d9`.
+
+### O que mudou (genérico; `test_sem_nome_de_equipamento_no_codigo_e41` proíbe nomes)
+- **`vinculos_e41`** — grafo de vínculos por sólido, lendo os 812 sólidos SEM excluir nada pelo nome (o filtro por nome da E35 não é usado nesta rota).
+  - *Ajuste* coaxial (|Δr| ≤ 0,05 mm) e *ajuste com interferência* = **par de revolução** (interpretação mais permissiva; nunca solda).
+  - *Fixador comprovado* = rosca modelada (furo coaxial menor que a haste) + face de aperto perpendicular + porte de fixador (volume ≤ 25% e haste ≤ 20% de cada corpo envolvido). Rosca no diâmetro nominal ⇒ só "possível fixador" (não une).
+  - *Rolamento* = ≥5 esferas de mesmo raio em círculo (consenso com limiares decrescentes, resíduo ≤ 0,02 mm) + pistas (toro ou cilindro tangente) nos anéis; anel interno/externo pelo lado do raio primitivo.
+  - *Rigidez derivada*: dois grupos são fundidos só se NENHUMA direção admissível das restrições os move relativamente (espaço nulo do Jacobiano na referência). Coaxialidade/proximidade nunca unem; sem evidência ⇒ "sem vínculo".
+- **`lobulos_e41`** — roletes por círculos de consenso (separa anéis concêntricos de cilindros iguais); perfil pela **seção exata do B-rep**; lóbulos por harmônico dominante; par aceito SÓ se o perfil for conjugado aos roletes numa volta inteira com a razão derivada das contagens −(M−L)/L, com critérios fixados antes de medir (penetração ≤ 0,02 mm; algum rolete ≤ 0,25 mm) E as razões alternativas falharem por ≥10×. Pino-em-furo: r_furo − r_rolete = excentricidade (±0,02).
+- **`transmissao_e41`** — portador de roletes e entrada por alcance coaxial; ângulo absoluto linear em cadeias de eixos paralelos (eixo não paralelo ⇒ recusa); pares viram linhas lineares no `Resolvedor` E18 (subclasse; núcleo intacto); poda: uma junta livre por corpo do núcleo (rolamento preferido), demais congeladas e contadas.
+- **`pipeline_e41`** + rota no `pipeline_e35`: classe com assinatura `engrenamento_lobulado` vai da consulta/descoberta (E34/E37) direto à E41. O caminho do Genebra (pino-rasgo) não mudou.
+
+**Erros meus corrigidos no caminho (registro):** (1) primeira regra de fixador aceitava eixo/anel/carcaça como "fixador" (interferência lida como rosca) — corrigido com porte; (2) primeira regra "dois eixos diretos" não pegava pinos-guia — substituída por rigidez derivada do espaço nulo; (3) **primeira medição da conjugação deu 0,0487 mm (> 0,02)** por reamostragem angular do perfil (deslocava pontos até 0,09 mm tangencialmente); refeita com as coordenadas verdadeiras da seção: 0,0034 mm — **critério NÃO alterado**; (4) a "espessura" da interseção (menor lado da caixa) não mede profundidade de lente curva — renomeada `menor_lado_caixa_mm`.
+
+### Provas sintéticas (relações conhecidas por construção; `tests/test_e41_vinculos.py`, 9 PASS)
+Eixo em dois mancais de esferas dentro de carcaça + flange aparafusado (grupo rígido {eixo, flange, 2 parafusos} pela rosca; 2 rolamentos, resíduo do círculo 3e-13; eixo-com-colar NÃO vira fixador); duas placas com dois pinos (fundidas por rigidez derivada) × **um pino (não fundidas)**; corpo só apoiado e corpo coaxial com folga ⇒ sem vínculo; poda escolhe a junta de rolamento; disco cicloidal clássico (9 lóbulos × 10 roletes) **aceito** (0,0007 mm), mesmo disco girado 20° **recusado** (3,0 mm), perfil senoidal com o mesmo nº de lóbulos **recusado** nas duas fases; critérios congelados no teste.
+
+### Benchmark real: cicloidal congelado da E35 (geez0x1 @841a92ef, MIT na raiz; sólidos de terceiros NÃO removidos)
+- 812 sólidos; **38 conjuntos de esferas** (36 rolamentos com anéis; 1 incompleto); **0 fixadores comprovados** (62 possíveis: roscas nominais) → as duas carcaças só se unem por **rigidez derivada** (pinos dos roletes atravessam ambas), eixo de saída + anel de rigidez idem (6 parafusos de ombro); motor/ventoinha/encoder ficam sem vínculo determinante (congelados, fora da exibição).
+- Pares: 2 rotores, **11 lóbulos × 12 roletes** (R = 41,5; r = 4,5; e = 2,025 — batem com o nome "R=4.15 / N=12 / Rr=0.45", evidência textual do mesmo autor), conjugação com −1/11: **penetração 0,0034 mm**, alternativas −1/12 e +1/11: 1,03 e 4,05 mm; saída por pino-em-furo (6,525 − 4,5 = 2,025 = e).
+- Papéis: base = carcaça (portador dos roletes externos — **hipótese declarada**); entrada = eixo de entrada; saída = eixo de saída. Modelo: 136 grupos, 4 juntas livres, 131 congeladas, 674 sólidos fora do modelo conexo.
+- Solver: 3 voltas na entrada (1080°) → saída **−98,1818°** (razão observada −0,090909); resíduo 2,6e-18; mobilidade 0; 6 s.
+- Auditoria exata OCC perfil × roletes (8 quadros × 36 pares): **microinterferência em todos os 8 quadros, 90 pares, 2,3e-6 a 0,0022 mm³** — coerente com a penetração de 3 µm da spline do CAD. **O gate E36 estrito (qualquer volume > 1e-6) reprova; não foi alterado.** O critério do par (≤ 0,02 mm) aprova. Os dois juízos ficam separados.
+- MP4 local `2c8b6d9`: 240 quadros, 1080×1920, 30 fps, sha256 MP4 `ec82527f…26cbb3`, quadros RGB `a63feb87…2ff6178`; exibe só núcleo + superfícies de contato (41 sólidos; 97 ocultos; "Estrutura fixa oculta" na tela). Inspeção: anel de 12 roletes, dois rotores lobulados encostados, flange de saída girando devagar e entrada no centro — reconhecível; o flange encobre parte dos lóbulos (câmera E26 com visibilidade média 0,09). **Não homologado; não publicar.**
+- CI: E35 [45346073630](https://github.com/Heitor2404/coringa-news/actions/runs/45346073630) **success** (69 PASS): Genebra continua **REPROVADO_INTERFERENCIA_BREP** (156,23 mm³); consulta cicloidal agora termina em `E41:SOLVER_E_ORACULOS` pela própria descoberta. E41 [45346073717](https://github.com/Heitor2404/coringa-news/actions/runs/45346073717): testes verdes; render ver complemento.
+
+### Limitações
+Base fixa por hipótese (portador dos roletes); giro dos roletes nos pinos, anéis e esferas não modelado (congelado); "rigidez derivada" depende de os ajustes nominais serem lidos como revolução (se o CAD modelar pinos com folga, as carcaças não se fundem); fixação por parafuso sem rosca modelada continua não comprovada; 674 sólidos fora do modelo; só pares com eixos paralelos (planar); só classes de engrenamento lobulado e pino-rasgo; auditoria em 8 quadros (custo ~2 s por booleana tangente).
+
+### Tarefas menores devolvíveis ao ChatGPT
+Câmera do lado da entrada ou corte do flange de saída para mostrar os lóbulos (E31/E33); passar o relatório E41 pelos gates E21/E36 e pela ponte E28; legenda de entrada × saída (razão 11:1) com cues E27/E39; comparar o hash RGB do artifact E41 com o local; cache de `B.solidos` para evitar reler o STEP de 39 MB três vezes.
+
+### Próximo gargalo
+Engrenagens de dentes evolventes (contagem de dentes + verificação de conjugação análoga), pares com eixos não paralelos (cônicas, sem-fim), e procedência por sólido (metadado) no lugar do nome.

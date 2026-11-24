@@ -1,0 +1,72 @@
+{
+  "schema": "coringa.documentario.pesquisa.v1",
+  "id": "salmao_retorno",
+  "title": "Por que os salmões voltam ao rio onde nasceram?",
+  "publish": false,
+  "status": "CANDIDATOS_SEM_INSPECAO",
+  "facts": [
+    "https://www.fisheries.noaa.gov/west-coast/science-data/pacific-salmon-life-history-research",
+    "https://www.fisheries.noaa.gov/west-coast/science-data/fish-olfaction-and-homing-research",
+    "https://www.fisheries.noaa.gov/species/pacific-salmon-and-steelhead"
+  ],
+  "needs": [
+    {
+      "id": "retorno",
+      "description": "Salmão adulto em água doce; travessia documentada sem inventar imagens de barragens",
+      "sources": [
+        {
+          "slug": "salmon-swim-near-clackamas-river-big-bottom-streamgage",
+          "label": "Salmão no rio Clackamas",
+          "credit": "USGS · Oregon Water Science Center",
+          "role": "adulto_no_rio",
+          "note": "Página informa 175 milhas fluviais e três barragens; vídeo não comprova visualmente todo o percurso."
+        },
+        {
+          "slug": "drano-lake-sockeye-salmon",
+          "label": "Salmões sockeye adultos",
+          "credit": "USGS · Columbia River Research Laboratory",
+          "role": "adultos_contexto",
+          "note": "Não inferir direção de nado ou desova de descrição genérica."
+        }
+      ]
+    },
+    {
+      "id": "juvenil",
+      "description": "Juvenil no habitat de transição; não confundir outras espécies",
+      "sources": [
+        {
+          "slug": "underwater-views-common-fish-inhabiting-eelgrass-meadows-skagit-bay-washington",
+          "label": "Fauna subaquática da baía de Skagit",
+          "credit": "Chelsea Hurtado, Steve Rubin e Eric Grossman · USGS",
+          "role": "video_multiespecies",
+          "note": "Somente trecho de Chinook juvenil após identificação visual; resto não demonstra salmão."
+        }
+      ]
+    },
+    {
+      "id": "reproducao",
+      "description": "Adultos na área de reprodução",
+      "sources": [
+        {
+          "slug": "spawning-sockeye-salmon-izembek-national-wildlife-refuge-alaska",
+          "label": "Salmões sockeye em desova, Alasca",
+          "credit": "Jordan Wight · USGS",
+          "role": "area_desova",
+          "note": "Não alegar postura de ovos sem observar ação."
+        },
+        {
+          "slug": "salmon-river-redd-surveys",
+          "label": "Pesquisa de ninhos no Salmon River",
+          "credit": "Tobyn N. Rhodes · USGS",
+          "role": "contexto_pesquisa",
+          "note": "Pode mostrar pesquisadores e rio, não necessariamente ovos ou peixe."
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Páginas institucionais pesquisadas; bytes, resolução, janelas e direitos individuais ainda precisam de confirmação pela aquisição.",
+    "Não usar cheiro, nascimento, mar aberto ou ovos como ação filmada sem fonte específica; replanejar roteiro conforme registros observados.",
+    "Sem animação compulsória; mapa apenas se localização acrescentar informação."
+  ]
+}

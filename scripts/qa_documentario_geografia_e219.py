@@ -106,9 +106,9 @@ def mapplan(ch,span):
     p={'formato':'atlas','canal':'coringa','video_id':'e219-location','titulo':ch['title'],'geo':'motor4/formatos/dados/mundo.topo.json',
        'duracao':span,'camera':'roi','rasters':[{'nome':q['raster']}],
        'narracao':{'fatos':[]},'destaques':[],'rotas':[],'clipes':[],
-       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*2/3,'t1':span,'estilo':'ponto'}],
+       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*.60,'t1':span,'estilo':'ponto'}],
        'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
-                 'prova':'Localização em base de relevo Natural Earth; não representa a costa histórica de um evento.',
+                 'prova':'Localização em base cartográfica licenciada; não representa a costa histórica de um evento.',
                  'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
                              't0':.3,'t1':span,'p':{'linhas':location_title(ch,span)}}]}], 'cta':False}
     return A.resolver_tempos(p,[])
@@ -126,9 +126,27 @@ def mapclip(ch,span):
     print('E219 MAPA VALIDADO',proof['duracao_s'],proof['quadros_decodificados'],flush=True)
     return clip,MAP/'comprovante_atlas.json'
 
+def cortes_medidos(inicio,fim,words):
+    """Editorial cadence target, not a semantic proof. Use speech boundaries in frames."""
+    cuts=[inicio]
+    boundaries=sorted({round(w['e']*30) for w in words if inicio<w['e']*30<fim})
+    while fim-cuts[-1]>165:
+        left=cuts[-1]
+        valid=[b for b in boundaries if left+66<=b<=min(left+150,fim-66)]
+        chosen=min(valid,key=lambda b:abs(b-(left+114))) if valid else min(left+114,fim-66)
+        cuts.append(chosen)
+    cuts.append(fim)
+    return cuts
+
 def main():
     spec=read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True);STAGE.mkdir(parents=True,exist_ok=True)
     if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
+    for ch in spec['chapters']:
+        q=ch.get('atlas') or {}
+        if q.get('regional_base'):
+            from scripts.qa_atlas_regional import regional_base
+            meta=regional_base(q['raster'],q['regional_base']['bbox'],q['regional_base']['zoom'])
+            write(out/'raster-regional.json',meta)
     # Catch structural cartographic errors before spending a voice request.
     for ch in spec['chapters']:
         if 'atlas' in ch:
@@ -152,7 +170,8 @@ def main():
     subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
     with wave.open(str(audio),'rb') as f:duration=f.getnframes()/f.getframerate()
     if duration<60 or duration>180 or len(tempos)!=len(spec['chapters']):raise ValueError('E219-DURACAO '+str(duration))
-    total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[]
+    words=D.palavras_de_caps(caps)
+    total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
     for i,(ch,(a,b)) in enumerate(zip(spec['chapters'],tempos)):
         end=round(b*30) if i+1<len(tempos) else round(total*30)
         frames=end-start
@@ -163,27 +182,44 @@ def main():
             shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':ch['atlas']['label'],
                           'lead':ch['title'],'subject':ch['title'],'evidence':'explainer','cues':[{'at':.2,'label':ch['atlas']['label']}]})
             maps.append((cid,clip,proof));start=end;continue
-        n=math.ceil(frames/112);span=frames/n/30
-        if span<1.4:raise ValueError('E219-CORTE-CURTO')
+        cuts=cortes_medidos(start,end,words)
+        n=len(cuts)-1
         available=[acquired[r[0]] for r in ch['videos'] if r[0] in acquired]
-        # Interleave distinct original sources; each window is unique and far
-        # enough apart to count as a different moment under existing gate.
-        options=[[(m,t,im) for t,im in windows(m,span+.1)] for m in available]
-        selected=[]
-        for k in range(max(map(len,options),default=0)):
-            for opts in options:
-                if k<len(opts):selected.append(opts[k])
-                if len(selected)>=n:break
-            if len(selected)>=n:break
-        if len(selected)<n:raise ValueError('E219-COBERTURA '+ch['title'])
-        for k,(m,t,im) in enumerate(selected):
-            s=(start+round(frames*k/n))/30;e=(start+round(frames*(k+1)/n))/30
+        modes=spec.get('reviewed_source_modes',{})
+        available.sort(key=lambda m:m['id'] not in modes)
+        for k,(fa,fb) in enumerate(zip(cuts,cuts[1:])):
+            s,e=fa/30,fb/30;span=e-s
+            if span<1.4:raise ValueError('E219-CORTE-CURTO')
+            ordered=available[k%len(available):]+available[:k%len(available)]
+            selected=None
+            for m in ordered:
+                prev=used_windows.get(m['expected_sha256'],[])
+                for t,im in windows(m,span+.1):
+                    if all(t+span<=a or t>=b for a,b in prev):
+                        selected=(m,t,im);break
+                if selected:break
+            if not selected:raise ValueError('E219-COBERTURA '+ch['title'])
+            m,t,im=selected
+            used_windows.setdefault(m['expected_sha256'],[]).append((t,t+span))
             mid=m['id'];media[mid]=m;cid=f'c{i}-{k}'
-            shots.append({'id':cid,'type':'video','asset':mid,'start':s,'end':e,
-                          'source_in_seconds':t,'video_zoom':1,'video_context_layout':'cena_integral',
-                          'lead':ch['title'],'headline':m['label'],'subject':m['subject'],
-                          'source_display':m['credit'],'evidence':'literal','literal_identity':m['subject'],
-                          'cues':[{'at':.2,'label':m['label']}]})
+            shot={'id':cid,'type':'video','asset':mid,'start':s,'end':e,
+                  'source_in_seconds':t,'video_zoom':1,'video_context_layout':'cena_integral',
+                  'lead':ch['title'] if k==0 else '', 'headline':m['label'],'subject':m['subject'],
+                  'source_display':m['credit'],'evidence':'literal','literal_identity':m['subject'],
+                  'cues':[{'at':.2,'label':m['label']}]}
+            # Reuse the candidate visual grammar of the reviewed source, only
+            # for the opening window within the length of the previous proof.
+            # This is still private review, NOT observed ROI certification.
+            mode=modes.get(mid)
+            reference=windows(m,4.6) if mode else []
+            if reference and abs(t-reference[0][0])<.01 and span<=4.5:
+                if mode=='imersivo':
+                    shot.pop('video_context_layout')
+                elif mode in ('4:5','1:1'):
+                    shot['video_context_layout']='recorte_relacional_seguro'
+                    shot['documentary_viewport']=mode
+                shot['focus']=[.5,.5]
+            shots.append(shot)
             pics.append((cid,m['id'],t,im))
         cut_report.append({'chapter':ch['title'],'start':start/30,'end':end/30,'shots':n})
         start=end
@@ -193,16 +229,25 @@ def main():
     write(out/'plano.json',plan)
     result=F.preparar(plan,out/'documental',PUBLIC)
     props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
-    words=D.palavras_de_caps(caps);groups=[]
+    groups=[]
     for g in LS.grupos(words,maximo=3):
         ws=words[g['i0']:g['i0']+g['n']];hi=max(range(len(ws)),key=lambda i:len(ws[i]['w']))
         a=max(0,g['ini']);b=min(duration,g['fim'])
         if groups:a=max(a,groups[-1]['end'])
         if b>a:groups.append({'start':a,'end':b,'words':[{'w':w['w'],'hl':i==hi} for i,w in enumerate(ws)]})
+    original_sha=sha(audio)
+    track=Path('assets/musica/explica/infinite-wonder.mp3')
+    if spec.get('review_music'):
+        mixed=out/'narracao-com-trilha.wav'
+        subprocess.run(['ffmpeg','-v','error','-y','-i',str(audio),'-stream_loop','-1','-i',str(track),
+            '-filter_complex',f'[0:a]volume=0.92[v];[1:a]volume=0.055,afade=t=in:d=0.5,afade=t=out:st={max(0,duration-2)}:d=2[m];[v][m]amix=inputs=2:duration=first:normalize=0[a]',
+            '-map','[a]','-ar','48000','-ac','1',str(mixed)],check=True,timeout=90)
+        write(out/'trilha.json',{'track':str(track),'sha256':sha(track),'voice_sha256':original_sha,'mix_sha256':sha(mixed),'gain_music':.055,'license_manifest':'assets/musica/LEIAME.txt','review':'PENDING'})
+        audio=mixed
     h=sha(audio);asset='e202/'+h+'.wav'
     (PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(audio,PUBLIC/asset)
     props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
-    write(out/'props.json',props);write(out/'narracao.json',{'audio_sha256':h,'duration_s':duration,'words':words,'chapters':cut_report,'publish':False})
+    write(out/'props.json',props);write(out/'narracao.json',{'audio_sha256':h,'voice_sha256':original_sha,'duration_s':duration,'words':words,'chapters':cut_report,'publish':False})
     board=Image.new('RGB',(960,math.ceil(len(pics)/4)*172),'#101c28');draw=ImageDraw.Draw(board)
     for i,(cid,mid,t,im) in enumerate(pics):
         im.thumbnail((236,140));x=(i%4)*240;y=(i//4)*172;board.paste(im,(x,y))

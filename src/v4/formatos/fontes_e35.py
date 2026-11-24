@@ -18,6 +18,7 @@ Classes de uso (separadas): ``permissiva`` (MIT/BSD/Apache/CC BY/CERN-OHL-P),
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -79,32 +80,71 @@ def identidade_textual(consulta, textos):
                 pontuacao=len(q & alvo) / max(1, len(q)), evidencia="comprovado_textual")
 
 
-def clonar(url, destino, commit=None):
-    """git clone de DADOS (sem hooks executados: core.hooksPath vazio)."""
-    destino = Path(destino)
-    if not (destino / ".git").exists():
-        r = subprocess.run(["git", "-c", "core.hooksPath=/dev/null", "clone", "-q", "--depth", "1",
-                            "--no-recurse-submodules", url, str(destino)], capture_output=True, text=True,
-                           timeout=600)
-        if r.returncode:
-            fail("CLONE:" + r.stderr.strip()[-200:])
-    if commit:
-        sub = subprocess.run(["git", "-C", str(destino), "rev-parse", "HEAD"], capture_output=True, text=True)
-        if sub.stdout.strip() != commit:
-            r = subprocess.run(["git", "-C", str(destino), "-c", "core.hooksPath=/dev/null", "fetch", "-q",
-                                "--depth", "1", "origin", commit], capture_output=True, text=True, timeout=600)
-            if r.returncode:
-                fail("COMMIT_INDISPONIVEL")
-            subprocess.run(["git", "-C", str(destino), "checkout", "-q", commit], check=True)
-    return subprocess.run(["git", "-C", str(destino), "rev-parse", "HEAD"], capture_output=True,
-                          text=True).stdout.strip()
+def validar_fonte(url,commit):
+    if (not isinstance(url,str) or
+        not re.fullmatch(r"https://github\.com/[A-Za-z0-9-]{1,39}/[A-Za-z0-9_.-]{1,100}",url)
+        or url.rsplit("/",1)[-1] in (".","..")):
+        fail("URL_NAO_CANONICA")
+    if not isinstance(commit,str) or not re.fullmatch(r"[0-9a-f]{40}",commit):
+        fail("COMMIT_NAO_FIXADO")
+
+
+def ambiente_git():
+    # Never inherit user-level Git configuration, credential helpers or
+    # tokens from the documentary pipeline. Public HTTPS is the sole route.
+    env={k:os.environ[k] for k in ("PATH","LANG","LC_ALL","SYSTEMROOT")
+         if k in os.environ}
+    env.update(GIT_CONFIG_NOSYSTEM="1",GIT_CONFIG_GLOBAL=os.devnull,
+               GIT_TERMINAL_PROMPT="0",GIT_ALLOW_PROTOCOL="https",
+               GIT_LFS_SKIP_SMUDGE="1")
+    return env
+
+
+def _git(args,cwd=None,timeout=600):
+    cmd=["git","-c","core.hooksPath="+os.devnull,
+         "-c","credential.helper=","-c","http.followRedirects=false",
+         "-c","protocol.file.allow=never","-c","protocol.ext.allow=never"]+args
+    try:
+        r=subprocess.run(cmd,cwd=cwd,env=ambiente_git(),capture_output=True,
+                         text=True,timeout=timeout)
+    except (OSError,subprocess.TimeoutExpired):
+        fail("GIT_EXECUCAO")
+    if r.returncode:
+        fail("GIT_REPROVADO")
+    return r.stdout.strip()
+
+
+def clonar(url,destino,commit=None):
+    """Only public canonical HTTPS and pinned revision; no repository code."""
+    validar_fonte(url,commit)
+    destino=Path(destino)
+    if destino.is_symlink():
+        fail("DESTINO_SYMLINK")
+    if destino.exists():
+        # Fresh isolated input preferred; reuse only exact clean checkout.
+        git=destino/".git"
+        if git.is_symlink() or not git.is_dir():
+            fail("DESTINO_EXISTENTE")
+        # Do not trust local repository configuration in an existing checkout:
+        # no subprocess may read it. Reuse is deliberately refused.
+        fail("DESTINO_EXISTENTE")
+    destino.parent.mkdir(parents=True,exist_ok=True)
+    _git(["clone","-q","--depth","1","--no-recurse-submodules","--no-checkout",
+          "--",url,str(destino)])
+    # Fetch exact commit rather than accept a mutable default branch.
+    _git(["fetch","-q","--depth","1","--no-recurse-submodules","origin",commit],cwd=destino)
+    _git(["checkout","-q","--detach",commit],cwd=destino)
+    atual=_git(["rev-parse","HEAD"],cwd=destino,timeout=15)
+    if atual!=commit:
+        fail("COMMIT_DIVERGENTE")
+    return atual
 
 
 def inventario(raiz, consulta):
     raiz = Path(raiz)
     arquivos, licencas = [], []
     for p in sorted(raiz.rglob("*")):
-        if ".git" in p.parts or not p.is_file():
+        if ".git" in p.relative_to(raiz).parts or p.is_symlink() or not p.is_file():
             continue
         rel = p.relative_to(raiz).as_posix()
         if re.match(r"(LICEN[CS]E|COPYING)(\.|$)", p.name, re.I):
@@ -118,9 +158,12 @@ def inventario(raiz, consulta):
     lic = classificar_licenca(raiz_lic[0][1]) if raiz_lic else dict(spdx=None, classe="sem_licenca")
     if raiz_lic:
         lic.update(arquivo=raiz_lic[0][0], sha256=hashlib.sha256(raiz_lic[0][1].encode()).hexdigest())
-    readme = next((p for p in raiz.glob("README*") if p.is_file()), None)
+    readme = next((p for p in raiz.glob("README*") if p.is_file() and not p.is_symlink()), None)
     texto = (readme.read_text("utf-8", "replace") if readme else "")
     ident = identidade_textual(consulta, [raiz.name.replace("_", " "), texto[:20000]] + [a["caminho"] for a in arquivos])
+    lic["escopo"]="LICENCA_RAIZ_CANDIDATA; DIREITOS_POR_SOLIDO_NAO_VERIFICADOS"
+    for arq in arquivos:
+        arq["direitos"]="NAO_VERIFICADOS_POR_ARQUIVO"
     return dict(arquivos=arquivos, licenca=lic, licencas_em_subpastas=[l[0] for l in licencas if "/" in l[0]],
                 identidade_textual=ident, readme=texto)
 

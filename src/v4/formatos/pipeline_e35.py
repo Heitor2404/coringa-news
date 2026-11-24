@@ -118,8 +118,9 @@ def executar(candidatos_json, trabalho, saida, rapido=False, renderizar=True, cl
     for c in cand["candidatos"]:
         reg = dict(url=c["url"], origem_descoberta=c.get("origem_descoberta"))
         rel["candidatos"].append(reg)
-        destino = Path(trabalho) / c["url"].rstrip("/").split("github.com/")[-1].replace("/", "__")
         try:
+            Fo.validar_fonte(c["url"],c.get("commit"))
+            destino = Path(trabalho) / c["url"].split("github.com/")[-1].replace("/", "__")
             reg["commit"] = Fo.clonar(c["url"], destino, c.get("commit"))
         except ValueError as e:
             reg.update(estagio="CLONE", motivo=str(e))

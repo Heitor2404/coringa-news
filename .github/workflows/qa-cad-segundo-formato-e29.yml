@@ -1,0 +1,81 @@
+name: E29 CAD URDF - segundo formato no FilmeEditorial
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-cad-segundo-formato-e29.yml"
+      - "src/v4/formatos/ponte_cad_qa_e29.py"
+      - "tests/test_ponte_cad_qa_e29.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  segundo-formato:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      OPENBLAS_NUM_THREADS: 1
+      DO_NOT_TRACK: "1"
+      REMOTION_DISABLE_TELEMETRY: "1"
+      CORINGA_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Dependencias e testes da ponte privada
+        run: |
+          python -m pip install --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+          python -m pytest -q tests/test_ponte_cad_editorial_e28.py tests/test_ponte_cad_qa_e29.py tests/test_eventos_trajetoria_e27.py tests/test_visibilidade_e26.py
+      - name: Fonte URDF do manifesto no commit fixado
+        run: |
+          commit=$(jq -er .fonte.commit benchmarks/e19_urdf_unificado.json)
+          repo=$(jq -er .fonte.repositorio benchmarks/e19_urdf_unificado.json)
+          git init -q fonte_e29
+          git -C fonte_e29 fetch -q --depth 1 "$repo" "$commit"
+          git -C fonte_e29 checkout -q FETCH_HEAD
+          test "$(git -C fonte_e29 rev-parse HEAD)" = "$commit"
+      - name: Render CAD privado com o mesmo solver e renderer
+        run: |
+          python -m src.v4.formatos.filme_e18 gerar benchmarks/e19_urdf_unificado.json fonte_e29 qa_e29 --ids source_robotics_ssg48 --palco > qa_e29_log.jsonl
+          python -m src.v4.formatos.ponte_cad_qa_e29 qa_e29/QA.json source_robotics_ssg48 motor4/remotion/public qa_e29_editorial
+      - name: Compositor documental existente
+        run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../qa_e29_editorial/editorial_cad.mp4 --props=../qa_e29_editorial/props.json \
+            --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Decodificar saida e comprovar movimento
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          from src.v4.formatos.ponte_cad_editorial_e28 import verificar_video,ffmpeg,sha
+          root=Path("qa_e29_editorial")
+          p=json.loads((root/"props.json").read_text())
+          movie=root/"editorial_cad.mp4"
+          qa=verificar_video(movie,round(p["duracao"]*30))
+          qa.update(sha256=sha(movie),publish=False,visual_approved=False)
+          (root/"QA_EDITORIAL.json").write_text(json.dumps(qa,indent=2))
+          subprocess.check_call([ffmpeg(),"-v","error","-y","-i",str(movie),"-vf",
+              "fps=1,scale=270:480,tile=3x2","-frames:v","1",str(root/"contato.jpg")])
+          print("E29-EDITORIAL",json.dumps(qa))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e29-urdf-editorial-privado
+          path: |
+            qa_e29/QA.json
+            qa_e29/*.mp4
+            qa_e29/*_folha.jpg
+            qa_e29_log.jsonl
+            qa_e29_editorial/
+          retention-days: 7

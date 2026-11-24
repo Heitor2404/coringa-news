@@ -340,3 +340,52 @@ def test_ur5e_confere_com_tabela_dh_oficial():
     # Controle negativo: a3 trocado por 10 mm a mais tem de ser detectado.
     errado = dict(modelo["oraculo"], a=[0, -0.425, -0.4022, 0, 0, 0])
     assert F.oraculo_dh(mont, errado)["erro_max_mm"] > 5
+
+
+# ------------------------------------------------------------ URDF (E19)
+def _stl_caixa(caminho, lado):
+    import struct
+    V = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], float) * lado
+    Fc = [[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4], [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]]
+    with open(caminho, "wb") as f:
+        f.write(b"\0" * 80 + struct.pack("<I", len(Fc)))
+        for t in Fc:
+            f.write(struct.pack("<3f", 0, 0, 0) + b"".join(struct.pack("<3f", *V[i]) for i in t) + b"\0\0")
+
+
+def test_urdf_mantem_malhas_visuais_e_mimic_vira_acoplamento(tmp_path):
+    for n, lado in (("base.stl", 0.05), ("vis.stl", 0.02), ("col.stl", 0.005)):
+        _stl_caixa(tmp_path / n, lado)
+    (tmp_path / "g.urdf").write_text("""<robot name="g"><link name="base"><visual><geometry><mesh filename="base.stl"/></geometry></visual></link>
+      <link name="e"><visual><geometry><mesh filename="vis.stl"/></geometry></visual><collision><geometry><mesh filename="col.stl"/></geometry></collision></link>
+      <link name="d"><visual><geometry><mesh filename="vis.stl"/></geometry></visual><collision><geometry><mesh filename="col.stl"/></geometry></collision></link>
+      <joint name="je" type="prismatic"><parent link="base"/><child link="e"/><origin xyz="-0.05 0 0.05"/><axis xyz="1 0 0"/><limit lower="-0.02" upper="0" effort="1" velocity="1"/></joint>
+      <joint name="jd" type="prismatic"><parent link="base"/><child link="d"/><origin xyz="0.05 0 0.05"/><axis xyz="1 0 0"/><limit lower="0" upper="0.02" effort="1" velocity="1"/><mimic joint="je" multiplier="-1" offset="0"/></joint></robot>""")
+    m = F.compilar(tmp_path / "g.urdf")
+    mont = M.de_mujoco(m)
+    # Malha visual (2 cm) escolhida para os dedos, não a de colisão (5 mm).
+    lados = sorted(round(float(np.ptp(v.vertices[:, 0])), 4) for v in mont.visuais if v.corpo != 0)
+    assert lados == [0.02, 0.02]
+    assert [e.tipo for e in mont.igualdades] == ["joint"] and not mont.atuadores
+    cache = {}
+    modelo = dict(movimento=dict(tipo="varredura_atuador", junta="je", duracao_s=1.0),
+                  medida=dict(tipo="deslocamento", a="e", b="d", rotulo="x"))
+    acion, alvos, q0 = F.plano_movimento(mont, modelo, cache, m)
+    traj, _ = M.trajetoria(mont, acion, alvos, q0)
+    curso = max(F.medir(mont, q, modelo["medida"], None, traj[0][0]) for q, _ in traj)
+    assert abs(curso - 0.04) < 1e-9 and cache["entrada_escolhida_no_manifesto"] == "je"
+
+
+FONTE_URDF = os.environ.get("E19_FONTE")
+
+
+@pytest.mark.skipif(not FONTE_URDF, reason="E19_FONTE não definido")
+def test_urdf_real_hash_e_fk_igual_ao_mujoco():
+    man = json.loads(Path("benchmarks/e19_urdf_unificado.json").read_text())
+    for modelo in man["modelos"]:
+        m, mont, lidos = F.carregar(modelo, FONTE_URDF)
+        assert set(lidos) <= set(modelo["sha256"])
+        assert any(e.tipo == "joint" for e in mont.igualdades)
+        rng = np.random.default_rng(1)
+        lo = np.array([c.limite[0] for c in mont.coords]); hi = np.array([c.limite[1] for c in mont.coords])
+        assert M.oraculo_cinematica(m, mont, [rng.uniform(lo, hi) for _ in range(8)])["fk_pos_max_m"] < 1e-12

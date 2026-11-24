@@ -25,12 +25,51 @@ from . import multicorpo_e18 as M
 from . import raster_e18 as R
 
 W, H, FPS = 1080, 1920, 30
+
+
+def ffmpeg_exe():
+    """ffmpeg do sistema; senão o binário estático do wheel imageio-ffmpeg."""
+    import os
+    import shutil
+    if os.environ.get("FFMPEG"):
+        return os.environ["FFMPEG"]
+    if shutil.which("ffmpeg"):
+        return "ffmpeg"
+    import imageio_ffmpeg
+    return imageio_ffmpeg.get_ffmpeg_exe()
 AMBAR = np.array([0.93, 0.58, 0.16])
 VERDE_AGUA = np.array([0.18, 0.66, 0.68])
+AZUL_ACOPLADO = np.array([0.42, 0.58, 0.92])
 
 
 def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def compilar(xml):
+    """Compila MJCF ou URDF. Num URDF, o compilador do MuJoCo descarta por
+    padrão as malhas VISUAIS e fica só com as de colisão; aqui a opção
+    discardvisual="false" é injetada EM MEMÓRIA (a fonte conferida por hash
+    não é alterada) e as malhas entram como assets lidos do disco."""
+    import re
+    import xml.etree.ElementTree as ET
+    import mujoco
+    xml = Path(xml)
+    if xml.suffix.lower() != ".urdf":
+        return mujoco.MjModel.from_xml_path(str(xml))
+    texto = xml.read_text()
+    if "<mujoco" in texto:
+        raise ValueError("E18-URDF_COM_EXTENSAO_MUJOCO")
+    texto2, n = re.subn(r"(<robot\b[^>]*>)", r'\1<mujoco><compiler discardvisual="false"/></mujoco>', texto, count=1)
+    if n != 1:
+        raise ValueError("E18-URDF_SEM_ROBOT")
+    assets = {}
+    for el in ET.fromstring(texto).iter("mesh"):
+        nome = el.get("filename")
+        if nome is None or nome.startswith(("package://", "/", "file:")):
+            raise ValueError("E18-URDF_CAMINHO_DE_MALHA")
+        assets[nome] = (xml.parent / nome).read_bytes()
+    return mujoco.MjModel.from_xml_string(texto2, assets)
 
 
 def carregar(modelo, raiz):
@@ -43,7 +82,7 @@ def carregar(modelo, raiz):
         if sha256(raiz / rel) != dig:
             raise ValueError(f"E18-FONTE-SHA256:{rel}")
     xml = raiz / modelo["xml"]
-    m = mujoco.MjModel.from_xml_path(str(xml))
+    m = compilar(xml)
     lidos = {modelo["xml"]}
     for adr in m.mesh_pathadr:
         if adr < 0:  # malha definida no próprio XML (sem arquivo)
@@ -72,12 +111,22 @@ def plano_movimento(mont, modelo, solver_cache, m=None):
     dur = float(mov.get("duracao_s", 6.0))
     n = int(round(dur * FPS))
     if mov["tipo"] == "varredura_atuador":
-        nome = mov["atuador"]
-        if nome not in mont.atuadores:
+        acion = dict(mont.atuadores)
+        if "junta" in mov:
+            # A fonte não declara atuador para esta junta: o manifesto escolhe
+            # a junta de entrada (registrado no QA como escolha, não da fonte).
+            nomes = [c.nome for c in mont.coords]
+            if mov["junta"] not in nomes:
+                raise ValueError("E18-JUNTA_DESCONHECIDA")
+            nome = "junta:" + mov["junta"]
+            acion[nome] = {nomes.index(mov["junta"]): 1.0}
+            solver_cache["entrada_escolhida_no_manifesto"] = mov["junta"]
+        else:
+            nome = mov["atuador"]
+        if nome not in acion:
             raise ValueError("E18-ATUADOR_DESCONHECIDO")
         # Todos os acionadores da fonte entram; só o nomeado varre, os outros
         # ficam no valor da pose inicial (servo de posição mantido).
-        acion = dict(mont.atuadores)
         r = list(acion).index(nome)
         solver = M.Resolvedor(mont, acion)
         chave = mov.get("chave_inicial", "qpos0")
@@ -230,12 +279,16 @@ def papeis(mont, acion, qs, varrido=None):
     for n in nomes:
         for k in acion[n]:
             entrada.add(mont.coords[k].corpo)
+    acoplado = set()
     for e in mont.igualdades:
         if e.tipo in ("connect", "weld"):
             laco.update((e.a, e.b))
+        elif e.tipo == "joint":
+            acoplado.update((mont.coords[e.a].corpo, mont.coords[e.b].corpo))
     out = {}
     for b in range(len(mont.corpos)):
         out[b] = ("entrada" if b in entrada else "laco" if b in laco else
+                  "acoplado" if b in acoplado and b in moveis else
                   "movel" if b in moveis else "estrutura")
     return out
 
@@ -246,6 +299,8 @@ def cor_visual(v, papel):
         return AMBAR * 0.85 + base * 0.15, 0.7
     if papel == "laco":
         return VERDE_AGUA * 0.8 + base * 0.2, 0.6
+    if papel == "acoplado":
+        return AZUL_ACOPLADO * 0.75 + base * 0.25, 0.55
     if papel == "estrutura":   # o que não se move recua visualmente
         return base * 0.55, 0.3
     return base, 0.45
@@ -372,11 +427,13 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
               ociosos_max=max(i.get("ociosos", 0) for _, i in traj),
               faixa_limitada_por_batente=cache.get("limitada_por_batente"),
               projecao_chave_inicial_rad=cache.get("projecao_chave_inicial_rad"),
+              entrada_escolhida_no_manifesto=cache.get("entrada_escolhida_no_manifesto"),
+              comandos_da_chave=cache.get("comandos_da_chave"),
               cortes_por_contato=cache["cortes"], arquivos_conferidos=lidos)
     qa["oraculo_mujoco_cinematica"] = M.oraculo_cinematica(m, mont, qs[:: max(1, len(qs) // 24)])
     if qa["mobilidade_max"] > 0 and m.nu == 1 and len(acion) == 1:
         import mujoco
-        m2 = mujoco.MjModel.from_xml_path(str(Path(raiz).resolve() / modelo["xml"]))
+        m2 = compilar(Path(raiz).resolve() / modelo["xml"])
         lo, hi = float(alvos[:, 0].min()), float(alvos[:, 0].max())
         qa["oraculo_mujoco_dinamica"] = M.oraculo_simulacao(m2, mont, M.Resolvedor(mont, acion),
                                                              np.linspace(lo, hi, 5)[1:-1])
@@ -416,11 +473,12 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     fundo = R.fundo_gradiente(W, H)
     saida.mkdir(parents=True, exist_ok=True)
     filme = saida / f"{modelo['id']}.mp4"
-    ff = ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
+    ff = [ffmpeg_exe(), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
           "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
           "-metadata", "comment=" + modelo["credito"] + " | " + modelo["licenca"] + " | privado, nao publicar",
           str(filme)]
-    legenda_papel = {"entrada": ("Entrada (atuador)", AMBAR), "laco": ("Laço fechado", VERDE_AGUA)}
+    legenda_papel = {"entrada": ("Peça acionada", AMBAR), "laco": ("Laço fechado", VERDE_AGUA),
+                     "acoplado": ("Acoplada à entrada", AZUL_ACOPLADO)}
     # Título na largura útil (900 px): encolhe até 48 px; abaixo disso, 2 linhas.
     titulo_linhas, fonte_titulo = linhas_titulo(modelo["titulo"])
     tam = fonte_titulo.size
@@ -437,10 +495,15 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
         for v, px in zip(mont.visuais, inf["pixels_por_malha"]):
             vis[pap[v.corpo]] = vis.get(pap[v.corpo], 0) + px
     minimo = 0.0015 * W * H * 3
-    presentes = [p for p in ("entrada", "laco") if vis.get(p, 0) >= minimo]
+    presentes = [p for p in ("entrada", "laco", "acoplado") if vis.get(p, 0) >= minimo]
     qa_legenda = dict(pixels_por_papel={k: int(v) for k, v in vis.items()}, legenda=presentes)
     n_lacos = sum(e.tipo in ("connect", "weld") for e in mont.igualdades)
-    resumo = [f"{len(mont.juntas)} juntas", f"{len(mont.atuadores)} atuador" + ("es" if len(mont.atuadores) > 1 else "")]
+    resumo = [f"{len(mont.juntas)} juntas"]
+    if mont.atuadores:
+        resumo.append(f"{len(mont.atuadores)} atuador" + ("es" if len(mont.atuadores) > 1 else ""))
+    n_acopl = sum(e.tipo == "joint" for e in mont.igualdades)
+    if n_acopl:
+        resumo.append(f"{n_acopl} acoplamento" + ("s" if n_acopl > 1 else "") + " entre juntas")
     if n_lacos:
         resumo.append(f"{n_lacos} laço" + ("s" if n_lacos > 1 else "") + " fechado" + ("s" if n_lacos > 1 else ""))
     if qa["mobilidade_max"]:
@@ -522,10 +585,13 @@ def linha_oraculo(o):
 
 
 def conferir_video(path, esperados):
-    s = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(path)]))["streams"]
-    if len(s) != 1 or (s[0]["width"], s[0]["height"]) != (W, H) or s[0]["codec_name"] != "h264":
+    import re
+    info = subprocess.run([ffmpeg_exe(), "-hide_banner", "-i", str(path)], capture_output=True, text=True).stderr
+    streams = re.findall(r"Stream #\d+:\d+.*?: (Video|Audio|Data|Subtitle): (.*)", info)
+    if len(streams) != 1 or streams[0][0] != "Video" or not streams[0][1].startswith("h264") \
+            or not re.search(rf"\b{W}x{H}\b", streams[0][1]):
         raise ValueError("E18-VIDEO-FORMATO")
-    dados = subprocess.check_output(["ffmpeg", "-v", "error", "-i", str(path), "-vf", "scale=270:480",
+    dados = subprocess.check_output([ffmpeg_exe(), "-v", "error", "-i", str(path), "-vf", "scale=270:480",
                                      "-f", "rawvideo", "-pix_fmt", "rgb24", "-"])
     fr = np.frombuffer(dados, np.uint8).reshape(-1, 480, 270, 3).astype(np.int16)
     if len(fr) != esperados:
@@ -544,8 +610,8 @@ def fixar(manifesto_path, raiz):
     raiz = Path(raiz).resolve()
     for modelo in man["modelos"]:
         xml = raiz / modelo["xml"]
-        m = mujoco.MjModel.from_xml_path(str(xml))
-        arquivos = {modelo["xml"], modelo["licenca_arquivo"]}
+        m = compilar(xml)
+        arquivos = {modelo["xml"], modelo["licenca_arquivo"]} | set(modelo.get("arquivos_extra", []))
         for adr in m.mesh_pathadr:
             if adr < 0:
                 continue

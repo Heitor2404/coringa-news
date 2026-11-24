@@ -7,6 +7,7 @@ on:
       - "src/v4/formatos/*_e18.py"
       - "src/v4/formatos/solver_restricoes_e1.py"
       - "benchmarks/e18_*.json"
+      - "benchmarks/e19_*.json"
       - "tests/test_multicorpo_e18.py"
 permissions:
   contents: read
@@ -17,42 +18,41 @@ jobs:
     env:
       OPENBLAS_NUM_THREADS: 1
       E18_MENAGERIE: ${{ github.workspace }}/fonte_e18
+      E19_FONTE: ${{ github.workspace }}/fonte_e19
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: FFmpeg
-        timeout-minutes: 8
-        run: |
-          if ! command -v ffmpeg >/dev/null; then
-            sudo apt-get -o DPkg::Lock::Timeout=180 update
-            sudo apt-get -o DPkg::Lock::Timeout=180 install -y --no-install-recommends ffmpeg
-          fi
-          ffmpeg -version | head -1
       - name: Python
         timeout-minutes: 8
         run: |
-          python -m pip install --progress-bar off --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
-          python -c "import mujoco, fcl, numba; print(mujoco.__version__, numba.__version__)"
-      - name: Fonte no commit fixado (somente no runner; nada é copiado para o repositório ou artifact)
+          python -m pip install --progress-bar off --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
+          python -c "import mujoco, fcl, numba, imageio_ffmpeg; print(mujoco.__version__, numba.__version__, imageio_ffmpeg.get_ffmpeg_exe())"
+          # Espelho do apt lento (24/11): ffmpeg estático do wheel, sem apt.
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+      - name: Fontes nos commits fixados (somente no runner; nada é copiado para o repositório ou artifact)
         run: |
-          commit=$(jq -er .fonte.commit benchmarks/e18_multifornecedor.json)
-          repo=$(jq -er .fonte.repositorio benchmarks/e18_multifornecedor.json)
-          git init -q fonte_e18
-          git -C fonte_e18 fetch -q --depth 1 "$repo" "$commit"
-          git -C fonte_e18 checkout -q FETCH_HEAD
-          test "$(git -C fonte_e18 rev-parse HEAD)" = "$commit"
+          buscar() {  # manifesto destino
+            commit=$(jq -er .fonte.commit "$1"); repo=$(jq -er .fonte.repositorio "$1")
+            git init -q "$2"
+            git -C "$2" fetch -q --depth 1 "$repo" "$commit"
+            git -C "$2" checkout -q FETCH_HEAD
+            test "$(git -C "$2" rev-parse HEAD)" = "$commit"
+          }
+          buscar benchmarks/e18_multifornecedor.json fonte_e18
+          buscar benchmarks/e19_urdf_unificado.json fonte_e19
       - name: Testes E18 (sintéticos + fonte real) e regressões do solver comum
         run: python -m pytest -q tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py
       - name: Filmes privados, oráculos e auditoria
         run: |
           python -m src.v4.formatos.filme_e18 gerar benchmarks/e18_multifornecedor.json "$E18_MENAGERIE" qa_e18 > qa_e18_log.jsonl
+          python -m src.v4.formatos.filme_e18 gerar benchmarks/e19_urdf_unificado.json "$E19_FONTE" qa_e19 > qa_e19_log.jsonl
           python - <<'EOF'
           import json
-          qa = json.load(open("qa_e18/QA.json"))
+          modelos = json.load(open("qa_e18/QA.json"))["modelos"] + json.load(open("qa_e19/QA.json"))["modelos"]
           falhas = 0
-          for m in qa["modelos"]:
+          for m in modelos:
               o = m.get("oraculo_fabricante", {})
               print("E18-RESUMO", json.dumps(dict(
                   id=m["id"], estado=m["estado"], motivo=m.get("motivo"), quadros=m.get("quadros"),
@@ -78,4 +78,7 @@ jobs:
             qa_e18/*.mp4
             qa_e18/*_folha.jpg
             qa_e18/QA.json
+            qa_e19/*.mp4
+            qa_e19/*_folha.jpg
+            qa_e19/QA.json
           retention-days: 14

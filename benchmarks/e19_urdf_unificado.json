@@ -1,0 +1,115 @@
+{
+  "esquema": "coringa-e18-cad-articulado-v1",
+  "fonte": {
+    "repositorio": "https://github.com/Source-Robotics/robot_descriptions",
+    "commit": "a626564c30119b8493a8e0d5e48d7294382cbae2",
+    "observacao": "URDF do fabricante com malhas STL por link; mimic vira igualdade de junta no compilador. Nada é copiado para o repositório nem para artifacts."
+  },
+  "nota_tolerancias": "Tolerância de 5% do curso da ficha, a MESMA regra já fixada para garras no manifesto E18 (antes de medir estes modelos).",
+  "modelos": [
+    {
+      "id": "source_robotics_ssg48",
+      "titulo": "Source Robotics SSG-48",
+      "xml": "urdf/ssg48_description/ssg48_solid.urdf",
+      "licenca_arquivo": "LICENSE",
+      "arquivos_extra": [
+        "ATTRIBUTION.md"
+      ],
+      "licenca": "CC BY 4.0 (geometria, conforme ATTRIBUTION.md)",
+      "credito": "CAD: Source Robotics · SSG-48 · CC BY 4.0",
+      "natureza": "Malhas STL por peça do fabricante (projeto para impressão 3D)",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "junta": "left_finger_joint",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "deslocamento",
+        "a": "left_finger_link",
+        "b": "right_finger_link",
+        "rotulo": "Curso percorrido entre as mandíbulas",
+        "nota": "Mandíbulas de pinça se intercalam: folga projetada não se aplica; mede-se a variação da posição relativa."
+      },
+      "oraculo": {
+        "tipo": "curso_mm",
+        "valor_mm": 48,
+        "tolerancia_mm": 2.4,
+        "fonte": "https://hackaday.io/project/202979-ssg-48-adaptive-electric-gripper",
+        "texto": "Stroke: 0 - 48 mm"
+      },
+      "sha256": {
+        "ATTRIBUTION.md": "31389bf4d6d5323bc41070e893e2304c0e4f121e9adaee1a5984acb084285281",
+        "LICENSE": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_00.STL": "02c2d0fc8e03ac8ae2bbd2891d66abce2b0806a31243689ad4899683268c12df",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_01.STL": "aa1ebed6de864de7597800e41002a59b24d4a5901f8238ba606b6b3dad1c4235",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_02.STL": "6031c242a0b7c867f1700caf2b7150dd28851b5d0091758b8dd083e218f09a54",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_03.STL": "52e1b6f59acd216603825f8c22ea52821ee8f3e83dac92cf82f86c369f4d147c",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_04.STL": "5258d599e986e6a2c5ff2e31f72f04d32871332107405304bc7f599f902be63d",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/left_05.STL": "98e88099817e4b968abcb11b8d4c3dc5e08a82748f6f9beaa366d913b8f5a908",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_00.STL": "f46bf4e1262cee2743b0d8295117f57ab436f54ace50bd54d2e1e350bdda434f",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_01.STL": "490040a6755db97cba1c17b35b614fac47f429fa9bb7dc136d8eb5aa0f1a5f4a",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_02.STL": "fcf629c8fb32d4adfb81eaacd0ff3315de4ad588df79e1e86505674b10a9cc7c",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_03.STL": "f67b0e5e392ed1325765c9e86e95c335bae20b112b31e145b12cc5f37a98dacc",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_04.STL": "c5e0a37689015dc16f63a35ae7c1154dbec6a383441d870a39af33c4fd804446",
+        "urdf/ssg48_description/meshes/contacts/ssg48_solid/right_05.STL": "7b79acc19d39a65ca60b3945d4a4267454d1c021478cf4a36b5ade474e4cd871",
+        "urdf/ssg48_description/meshes/ssg48/gripper.STL": "6459981e5522ccbd0c3091da6e3810810bc2a4c30a6a77f339f41cadf1e585cd",
+        "urdf/ssg48_description/meshes/ssg48/jaws/pinch/left.STL": "3c51d877fba7892faf2badff3813be9ea3a8783dfa29facce077932c74022f55",
+        "urdf/ssg48_description/meshes/ssg48/jaws/pinch/right.STL": "7d74b69e7c027632cb289e97194dd0101069f2d5f20f854bc47756a8b9e6c91a",
+        "urdf/ssg48_description/ssg48_solid.urdf": "e9ad2a595ed4ba863ef3d1c3743ee533285c0c6c922bbc770fbf162cd212e1fa"
+      }
+    },
+    {
+      "id": "source_robotics_msg",
+      "titulo": "Source Robotics MSG",
+      "xml": "urdf/msg_description/msg_solid.urdf",
+      "licenca_arquivo": "LICENSE",
+      "arquivos_extra": [
+        "ATTRIBUTION.md"
+      ],
+      "licenca": "CC BY 4.0 (geometria, conforme ATTRIBUTION.md)",
+      "credito": "CAD: Source Robotics · MSG · CC BY 4.0",
+      "natureza": "Malhas STL por peça do fabricante (projeto para impressão 3D)",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "junta": "left_finger_joint",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "folga",
+        "a": "left_finger_link",
+        "b": "right_finger_link",
+        "rotulo": "Abertura entre as mandíbulas"
+      },
+      "oraculo": {
+        "tipo": "curso_mm",
+        "valor_mm": 105,
+        "tolerancia_mm": 5.25,
+        "fonte": "https://source-robotics.github.io/MSG-gripper-docs/page2_1_gripper_options",
+        "texto": "Stroke: 3 options: 55 mm, 105 mm, and 155 mm (variante de 105 mm)"
+      },
+      "sha256": {
+        "ATTRIBUTION.md": "31389bf4d6d5323bc41070e893e2304c0e4f121e9adaee1a5984acb084285281",
+        "LICENSE": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_00.STL": "aac783d75654283882be15f34b94296d0990d568d3feaf90a6e396c6df5b5fec",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_01.STL": "8b6d17316cd3de483e0f8a1d731ff89a161408139f7f283756e1b243bb1b9aab",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_02.STL": "58770733ae40d341b79008071d74f5e0be23b3ed8408af5075caa4ed6d20b5ff",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_03.STL": "180bed71f842531f52967bad68833055ac80654e5d35c2c6dcd581179ead0db7",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_04.STL": "13b117718181bd86be28690a1544dcc161c5705a23ccd2bf975db3cba655158f",
+        "urdf/msg_description/meshes/contacts/msg_solid/left_05.STL": "95fbda88ff30da88ec77400f827c037e31bd2c60b13a55e7a37f887f91d0cb11",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_00.STL": "b3fc404df9003583425480cfc79b72b6d1c9dd8ba29136983677b2d8dd0e30b1",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_01.STL": "1a543251561ecd2f0efef7d2b03036c8128de34bbedae600f0ffb2917c1891d4",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_02.STL": "d2302842a9ccb3b253f4374c7a2be000098d1bb3e0b8e6df88f7b6056e01c464",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_03.STL": "289ed4b29e2d2b94eee831dd8d034795a1913ab1f5adffd97b40f90a5c2b0500",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_04.STL": "9226038de9cca7ef0f5f1b73eb2700093ccf1f508b5608b322491a02669eb598",
+        "urdf/msg_description/meshes/contacts/msg_solid/right_05.STL": "0f098090671076ee09b2ada15a5a8c7390a220b7e458f2371a766655d856cfb7",
+        "urdf/msg_description/meshes/msg/gripper.STL": "3027b14dbade6431bd8ccd9c87cc8496500062bf68891c718ee9b29fdea4cb6c",
+        "urdf/msg_description/meshes/msg/jaw1.STL": "9230322709aab12df0e039d88e7b77a3f0e0e8b6f2c4e274e359e1066abdd4de",
+        "urdf/msg_description/meshes/msg/jaw2.STL": "2c0d7206ba05af4228f8c3a4486af4a77dc8aa7beafa73514a8c0e09a119f4b1",
+        "urdf/msg_description/meshes/msg/visual/msg_camera_lens_visual.STL": "3cc5cac2ca4fa8659875f58c056632973c42a4d5c50eb6715cba1a290da2afa4",
+        "urdf/msg_description/meshes/msg/visual/msg_gripper_motor_visual.STL": "27f2023f986ba509e8799284484c2a089e33b96e8b4fae3ddebb174a9edb7432",
+        "urdf/msg_description/meshes/msg/visual/msg_gripper_structure_visual.STL": "5d44e68876b964781eb695f6e19ac1e3f753c94f6c7529cc257d779833bc7678",
+        "urdf/msg_description/msg_solid.urdf": "1fa34b42cac1a8b3aa9d8574607e4d3c8155d30c79606beceaa03fb64f5fb504"
+      }
+    }
+  ]
+}

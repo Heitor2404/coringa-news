@@ -73,17 +73,44 @@ def windows(m,span):
         if len(out)>=8:break
     return out
 
+def location_title(ch,span):
+    """Preserve every word of the geographic label; use channel fonts, never per-episode sizes."""
+    q=ch['atlas']
+    words=q['label'].upper().split()
+    if not words:raise ValueError('E219-MAPA-ROTULO-VAZIO')
+    slot=A.caixa({'slot':'pergunta'},'atlas.abertura')
+    tokens=A.canal('coringa')['titulo']['pergunta']
+    # The same conservative width estimator as the original ATLAS fiscal.
+    def wrap(text,size):
+        lines=[]
+        for word in text.split():
+            if A._largura(word,size)>slot['w']:
+                raise ValueError('E219-MAPA-PALAVRA-NAO-CABE '+word)
+            if lines and A._largura(lines[-1]+' '+word,size)<=slot['w']:
+                lines[-1]+=' '+word
+            else:
+                lines.append(word)
+        return lines
+    # Reveal a complete first phrase and then the highlighted place name.
+    # Single-word places use the chapter's actual title as context.
+    prefix=' '.join(words[:-1]) or ch['title'].upper()
+    normal=wrap(prefix,tokens['normal'])
+    focus=wrap(words[-1],tokens['destaque'])
+    if len(normal)+len(focus)>A.REGRAS['titulo_max_linhas']:
+        raise ValueError('E219-MAPA-TITULO-LONGO: revisar texto sem reduzir a fonte')
+    return ([{'texto':line,'t':.3} for line in normal]+
+            [{'texto':line,'t':span/3,'destaque':True} for line in focus])
+
 def mapplan(ch,span):
     q=ch['atlas']
     p={'formato':'atlas','canal':'coringa','video_id':'e219-location','titulo':ch['title'],'geo':'motor4/formatos/dados/mundo.topo.json',
        'duracao':span,'camera':'roi','rasters':[{'nome':q['raster']}],
        'narracao':{'fatos':[]},'destaques':[],'rotas':[],'clipes':[],
-       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*.70,'t1':span,'estilo':'ponto'}],
+       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*2/3,'t1':span,'estilo':'ponto'}],
        'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
-                 'prova':'Localização em base de relevo Natural Earth; não representa a costa de 2018.',
+                 'prova':'Localização em base de relevo Natural Earth; não representa a costa histórica de um evento.',
                  'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
-                             't0':.3,'t1':span,'p':{'linhas':[{'texto':q['label'].upper(),'t':.3,'tamanho':48},
-                                 {'texto':ch['title'].upper(),'t':span*.45,'destaque':True,'tamanho':48}]}}]}], 'cta':False}
+                             't0':.3,'t1':span,'p':{'linhas':location_title(ch,span)}}]}], 'cta':False}
     return A.resolver_tempos(p,[])
 
 def mapclip(ch,span):
@@ -102,7 +129,10 @@ def main():
     if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
     # Catch structural cartographic errors before spending a voice request.
     for ch in spec['chapters']:
-        if 'atlas' in ch:B.verificar_plano(mapplan(ch,5.5),0,5.5)
+        if 'atlas' in ch:
+            for span in (1.4,3.0,5.5,8.0):
+                B.verificar_plano(mapplan(ch,span),0,span)
+            print('E219 PREFLIGHT ATLAS OK',ch['title'],flush=True)
     rows=[r for ch in spec['chapters'] for r in ch.get('videos',[])]
     acquired={};errors=[]
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:

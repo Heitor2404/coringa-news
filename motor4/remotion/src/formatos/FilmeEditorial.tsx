@@ -455,7 +455,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         display:'flex',justifyContent:'space-between',alignItems:'center',
         color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
         <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
-        <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
+        <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.type==='cad_preview'&&shot.cad_warning?(shot.cad_warning.includes('INTERFERÊNCIA DETECTADA')?'INTERFERÊNCIA · NÃO VALIDADO':'CONTATO PENDENTE · NÃO VALIDADO'):shot.lead.toUpperCase()}</span>
       </div>
       <div style={{position:'absolute',top:302,left:62,width:140,height:5,
         background:GOLD,transformOrigin:'left',transform:`scaleX(${ease(p)})`}}/>
@@ -492,7 +492,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')?
       rectStyle(MECH.mechanism_section):safeSlot('section')),
       fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:22,
-      color:'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
+      color:shot.type==='cad_preview'&&shot.cad_warning?'#FFB1A0':'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
       {shot.lead.toUpperCase()}
     </div>
@@ -531,11 +531,6 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:shot.subject}
-    </div>}
-    {shot.type==='cad_preview'&&shot.cad_warning&&!subtitleMode&&<div
-      style={{position:'absolute',left:150,top:340,width:620,textAlign:'center',
-        fontSize:23,fontWeight:800,lineHeight:1.1,color:'#FFB1A0',fontFamily:'Inter,Arial,sans-serif'}}>
-      {shot.cad_warning}
     </div>}
     {reflowCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
       style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',

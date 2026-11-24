@@ -2,7 +2,7 @@ name: E224 - preservar revisoes cifradas no cofre privado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-cofre-review.yml']
+    paths: ['scripts/arquivar_cofre_review.sh']
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,3 +26,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: bash scripts/arquivar_cofre_review.sh review-e219-cifrado-45495045391 revisao/havai-45495045391.tgz.gpg
+  avisar_falha:
+    needs: archive
+    if: ${{ always() && (needs.archive.result == 'failure' || needs.archive.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.archive.result }}
+      job_name: archive
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

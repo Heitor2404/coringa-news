@@ -13,6 +13,7 @@ import math
 import numpy as np
 from numba import njit
 from PIL import Image, ImageFilter
+from . import apresentacao_e33 as E33
 
 
 @njit(cache=True)
@@ -97,10 +98,12 @@ def enquadrar(pontos, direcao, cima, fov_graus, largura, altura, regiao):
     return Camera(alvo - direcao * dist, alvo, cima, fov_graus, largura, altura)
 
 
-def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorno=(14, 20, 26)):
+def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorno=(14, 20, 26), estilo="legado"):
     """malhas: lista de (vertices_mundo, faces, rgb 0-1, brilho 0-1).
     fundo: imagem RGB uint8 (H, W, 3) no tamanho final.
     chao: altura z do plano de apoio para sombra de contato (ou None)."""
+    if estilo not in ("legado","e33"):
+        raise ValueError("E33-ESTILO")
     W, H = cam.W * ss, cam.H * ss
     f, cx, cy = cam.f * ss, cam.cx * ss, cam.cy * ss
     depth = np.full((H, W), np.inf)
@@ -144,6 +147,8 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     cor += (0.22 * rim)[:, None] * np.array([.55, .7, .85])
     cor += (spec * (0.25 + 0.75 * br))[:, None]
     cor = np.clip(cor, 0, 1)
+    if estilo=="e33":
+        cor=E33.sombrear(base,lam,fill,rim)
     # Contorno: troca de peça, salto relativo de profundidade ou quebra de normal.
     borda = np.zeros((H, W), bool)
     for dy, dx in ((0, 1), (1, 0)):
@@ -160,7 +165,11 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     if chao is not None:
         img = _sombra(img, cam, malhas, chao, ss, obj)
     img[obj] = cor
-    img[borda] = img[borda] * 0.35 + np.array(contorno) / 255 * 0.65
+    if estilo=="e33":
+        borda=E33.bordas_locais(idbuf,depth,N)
+        img[borda]=img[borda]*.46+np.array([.025,.035,.045])
+    else:
+        img[borda] = img[borda] * 0.35 + np.array(contorno) / 255 * 0.65
     out = Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
     px = np.bincount(idbuf[obj], minlength=len(malhas))[: len(malhas)] / (ss * ss)
     return (np.asarray(out.resize((cam.W, cam.H), Image.Resampling.BOX)),

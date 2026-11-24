@@ -35,7 +35,7 @@ def frames_planar(mont, traj, plane, solver, angles):
     return frames
 
 
-def gerar(manifesto_path, step, license_file, saida):
+def gerar(manifesto_path, step, license_file, saida, estilo="legado"):
     manifesto=json.loads(Path(manifesto_path).read_text())
     solids,P,origins,pins,spec=E17.load(manifesto,step,license_file)
     # A cadência é de laboratório. As 97 poses são as mesmas da prova E17.
@@ -65,7 +65,7 @@ def gerar(manifesto_path, step, license_file, saida):
                 credito="Projeto CAD: "+manifesto["credit"],
                 licenca=manifesto["license_name"],
                 natureza="STEP verificado · prévia técnica de projeto",
-                exportar_palco=True, fonte_cad=dict(url=manifesto["source"],
+                estilo_visual=estilo, exportar_palco=True, fonte_cad=dict(url=manifesto["source"],
                     step_sha256=manifesto["files"]["step"][1],
                     license_sha256=manifesto["files"]["license"][1]))
     # Exatamente o renderer E18–E24, sem uma arte por tipo de máquina.
@@ -83,5 +83,6 @@ if __name__=="__main__":
     p.add_argument("step")
     p.add_argument("license")
     p.add_argument("saida")
+    p.add_argument("--estilo",choices=["legado","e33"],default="legado")
     a=p.parse_args()
-    gerar(a.manifesto,a.step,a.license,a.saida)
+    gerar(a.manifesto,a.step,a.license,a.saida,a.estilo)

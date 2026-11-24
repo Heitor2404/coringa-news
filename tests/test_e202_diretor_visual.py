@@ -60,7 +60,16 @@ def test_acoes_mudam_estado_visivel():
     d1 = dirr['states'][-1]['x'] - esq['states'][-1]['x']
     assert d1 > d0 + 50                                                                 # afastar
     retidos = [a for a in sg['actors'] if re.fullmatch(r'filtrar\d+r\d+', a['id']) and a['layer'] == 'particula']
-    assert retidos and all(a['states'][-1]['opacity'] > .9 for a in retidos)           # retido fica no filtro
+    fim_beat2 = sg['beats'][2]['t'] - 0.01                                              # até a encenação mudar
+    def op(a, t):
+        ks = a['states']
+        for i in range(1, len(ks)):
+            if t < ks[i]['t']:
+                l, r = ks[i - 1], ks[i]
+                return l['opacity'] + (r['opacity'] - l['opacity']) * (t - l['t']) / (r['t'] - l['t'])
+        return ks[-1]['opacity']
+    assert retidos and all(op(a, fim_beat2) > .9 for a in retidos)                     # retido fica no filtro
+    assert all(a['states'][-1]['opacity'] < .01 for a in retidos)                      # e sai com o beat
 
 
 @pytest.mark.parametrize('mut,regra', [

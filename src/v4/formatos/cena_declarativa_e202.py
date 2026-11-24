@@ -163,123 +163,116 @@ def _arestas(cena: dict) -> list[tuple[str, str]]:
     return [x for x in e if x[0] != x[1]]
 
 
-def diagramar(cena: dict, formas: dict) -> dict:
-    """posições de mundo (centro) e tamanho (px do maior lado) por ator; determinístico.
-
-    Ordem de leitura = ordem do fluxo (maior caminho no grafo de ações). Como a área segura é quase quadrada
-    (620×600), as UNIDADES (ator; par lado a lado de afastar/ao_lado; pilha de 'sobre') vão para uma grade em
-    leitura ocidental (esquerda→direita, cima→baixo) com no máximo 2 colunas, em vez de uma coluna alta.
-    """
-    atores = {a['id']: a for a in cena['atores']}
+def _dependencias(cena: dict) -> dict:
+    """quem é desenhado DENTRO/NO LUGAR de outro: relação explícita > transformar > revelar_interior;
+    atores com posição explícita (sobre/ao_lado/afastar) nunca viram dependentes; ciclos são quebrados."""
+    atores = {a['id'] for a in cena['atores']}
     rel = cena.get('relacoes') or []
     acoes = [a for b in cena.get('beats') or [] for a in b.get('acoes') or []]
     ancorados = {x for r in rel if r['tipo'] in ('sobre', 'ao_lado') for x in (r['a'], r['b'])}
     ancorados |= {x for a in acoes if a.get('verbo') == 'afastar' for x in (a.get('a'), a.get('b'))}
-    dependentes = {}
-    for r in rel:                                   # explícito primeiro
+    dep = {}
+    for r in rel:
         if r['tipo'] == 'dentro' and r['a'] not in ancorados:
-            dependentes[r['a']] = ('dentro', r['b'])
-    for a in acoes:                                 # implícito só se não houver posição explícita
-        if a.get('verbo') == 'transformar' and a.get('de') in atores and a.get('para') in atores:
-            dependentes.setdefault(a['para'], ('mesmo', a['de'])) if a['para'] not in ancorados else None
-        if a.get('verbo') == 'revelar_interior' and a.get('interior') in atores and a.get('alvo') in atores:
-            dependentes.setdefault(a['interior'], ('dentro', a['alvo'])) if a['interior'] not in ancorados else None
-    for i in list(dependentes):                     # ciclos: quem depende de um dependente que volta a ele fica livre
-        visto, x = {i}, dependentes[i][1]
-        while x in dependentes:
+            dep[r['a']] = ('dentro', r['b'])
+    for a in acoes:
+        if a.get('verbo') == 'transformar' and a.get('de') in atores and a.get('para') in atores and a['para'] not in ancorados:
+            dep.setdefault(a['para'], ('mesmo', a['de']))
+        if a.get('verbo') == 'revelar_interior' and a.get('interior') in atores and a.get('alvo') in atores and a['interior'] not in ancorados:
+            dep.setdefault(a['interior'], ('dentro', a['alvo']))
+    for i in list(dep):
+        visto, x = {i}, dep[i][1]
+        while x in dep:
             if x in visto:
-                dependentes.pop(i, None); break
-            visto.add(x); x = dependentes[x][1]
-    livres = [i for i, a in atores.items() if i not in dependentes and a['papel'] != 'contexto']
-    arestas = [(u, v) for u, v in _arestas(cena) if u in livres and v in livres]
-    nivel = {i: 0 for i in livres}
-    for _ in range(len(livres)):
-        mudou = False
+                dep.pop(i, None); break
+            visto.add(x); x = dep[x][1]
+    return dep
+
+
+ROTULO = 58                      # altura reservada ao rótulo abaixo de cada ator
+PADROES = {1: [[1]], 2: [[1, 1], [2]], 3: [[2, 1], [1, 2], [1, 1, 1]], 4: [[2, 2]], 5: [[2, 2, 1], [3, 2]],
+           6: [[2, 2, 2], [3, 3]]}
+
+
+def _arranjar(ids: list[str], cena: dict, formas: dict) -> dict:
+    """Arranjo de UM beat na área segura: unidades (ator; par lado a lado; pilha 'sobre') em linhas, na ordem do
+    fluxo (origem antes do destino). Escolhe o padrão de linhas que MAXIMIZA o menor ator. → {id: (x, y, tamanho)}"""
+    if not ids:
+        return {}
+    atores = {a['id']: a for a in cena['atores']}
+    rel = cena.get('relacoes') or []
+    acoes = [a for b in cena.get('beats') or [] for a in b.get('acoes') or []]
+    arestas = [(u, v) for u, v in _arestas(cena) if u in ids and v in ids]
+    nivel = {i: 0 for i in ids}
+    for _ in range(len(ids)):
         for u, v in arestas:
-            if nivel[v] < nivel[u] + 1 and nivel[u] + 1 < len(livres):
-                nivel[v] = nivel[u] + 1; mudou = True
-        if not mudou:
-            break
-    ordem = sorted(livres, key=lambda i: (nivel[i], list(atores).index(i)))
-    # unidades compostas
-    pares = [(a['a'], a['b']) for a in acoes if a.get('verbo') == 'afastar' and a.get('a') in livres and a.get('b') in livres]
-    pares += [(r['a'], r['b']) for r in rel if r['tipo'] == 'ao_lado' and r['a'] in livres and r['b'] in livres]
-    pilhas = [(r['a'], r['b']) for r in rel if r['tipo'] == 'sobre' and r['a'] in livres and r['b'] in livres]
+            if nivel[v] < nivel[u] + 1 < len(ids) + 1:
+                nivel[v] = nivel[u] + 1
+    ordem = sorted(ids, key=lambda i: (nivel[i], list(atores).index(i)))
+    pares = [(a['a'], a['b']) for a in acoes if a.get('verbo') == 'afastar' and a.get('a') in ids and a.get('b') in ids]
+    pares += [(r['a'], r['b']) for r in rel if r['tipo'] == 'ao_lado' and r['a'] in ids and r['b'] in ids]
+    pilhas = [(r['a'], r['b']) for r in rel if r['tipo'] == 'sobre' and r['a'] in ids and r['b'] in ids]
     usado, unidades = set(), []
     for i in ordem:
         if i in usado:
             continue
-        par = next((p for p in pares if i in p and not (set(p) & usado)), None)
         pil = next((p for p in pilhas if i in p and not (set(p) & usado)), None)
+        par = next((p for p in pares if i in p and not (set(p) & usado)), None)
         if pil:
-            de_cima, de_baixo = pil
-            ext = next((p for p in pares if de_baixo in p and not (set(p) & usado) and de_cima not in p), None)
-            membros = [de_cima] + ([*ext] if ext else [de_baixo])
-            unidades.append(('pilha', de_cima, list(ext) if ext else [de_baixo])); usado |= set(membros)
+            cima, baixo = pil
+            ext = next((p for p in pares if baixo in p and cima not in p and not (set(p) & usado)), None)
+            linha = list(ext) if ext else [baixo]
+            unidades.append(('pilha', [cima], linha)); usado |= {cima, *linha}
         elif par:
             unidades.append(('par', list(par))); usado |= set(par)
         else:
-            unidades.append(('um', i)); usado.add(i)
-    tam = {i: BASE[atores[i]['papel']] for i in atores}
-    asp = {i: _aspecto(formas[i]) for i in atores}
-    ROT = 70                                       # espaço do rótulo
+            unidades.append(('um', [i])); usado.add(i)
+    asp = {i: _aspecto(formas[i]) for i in ids}
+    X0, Y0, X1, Y1 = CAIXA
+    W, Hh = X1 - X0, Y1 - Y0
 
-    def linha(ids):                                # par lado a lado, encostados (o vão nasce na ação)
-        larg = sum(tam[i] * asp[i][0] for i in ids)
-        alt = max(tam[i] * asp[i][1] for i in ids) + ROT
-        x = -larg / 2; pos = {}
-        for i in ids:
-            w = tam[i] * asp[i][0]
-            pos[i] = (x + w / 2, 0.0); x += w
-        return larg, alt, pos
-
-    blocos = []
-    for u in unidades:
-        if u[0] == 'um':
-            i = u[1]
-            blocos.append((tam[i] * asp[i][0], tam[i] * asp[i][1] + ROT, {i: (0.0, 0.0)}))
-        elif u[0] == 'par':
-            blocos.append(linha(u[1]))
-        else:
-            cima, baixo = u[1], u[2]
-            lb, ab, pb = linha(baixo)
-            wc, hc = tam[cima] * asp[cima][0], tam[cima] * asp[cima][1]
-            larg, alt = max(lb, wc), hc + ab
-            pos = {cima: (0.0, -alt / 2 + hc / 2)}
-            for i, (x, _) in pb.items():
-                pos[i] = (x, -alt / 2 + hc + (ab - ROT) / 2)
-            blocos.append((larg, alt + ROT * 0.2, pos))
-    ncol = 1 if len(blocos) <= 1 else 2
-    if any(b[0] > 520 for b in blocos):            # unidade larga ocupa a linha toda
-        ncol = 1
-    GAP = 46
-    linhas = [blocos[k:k + ncol] for k in range(0, len(blocos), ncol)]
-    out = {}
-    y = 0.0
-    for ln in linhas:
-        alt = max(b[1] for b in ln)
-        larg = sum(b[0] for b in ln) + GAP * (len(ln) - 1)
-        x = -larg / 2
-        for w, h, pos in ln:
-            cx, cy = x + w / 2, y + alt / 2
-            for i, (dx, dy) in pos.items():
-                out[i] = {'x': round(cx + dx, 2), 'y': round(cy + dy, 2), 's': tam[i]}
-            x += w + GAP
-        y += alt + GAP
-    pend = dict(dependentes)
-    for _ in range(len(pend) + 1):
-        for i, (tipo, ref) in list(pend.items()):
-            if ref in out:
-                f = 0.55 if tipo == 'dentro' else 1.0
-                out[i] = {'x': out[ref]['x'], 'y': out[ref]['y'], 's': out[ref]['s'] * f}
-                pend.pop(i)
-    altura_total = max(y - GAP, 1)
-    for i, a in atores.items():
-        if a['papel'] == 'contexto':
-            out[i] = {'x': 0.0, 'y': altura_total / 2, 's': max(BASE['contexto'], altura_total * 1.05)}
-    for i in atores:
-        out.setdefault(i, {'x': 0.0, 'y': 0.0, 's': 200})
-    return out
+    def caber(u, cw, ch):
+        """maior tamanho s (maior lado de cada ator) para a unidade caber na célula; e posições relativas."""
+        if u[0] == 'pilha':
+            cima, linha = u[1][0], u[2]
+            larg = max(asp[cima][0], sum(asp[i][0] for i in linha))
+            alt = asp[cima][1] + max(asp[i][1] for i in linha)
+            s = min(cw * .9 / larg, (ch - 2 * ROTULO) * .9 / alt, 520.0)
+            out, y = {}, -(alt * s + 2 * ROTULO) / 2
+            out[cima] = (0.0, y + asp[cima][1] * s / 2, s); y += asp[cima][1] * s + ROTULO
+            x = -sum(asp[i][0] for i in linha) * s / 2
+            hl = max(asp[i][1] for i in linha) * s
+            for i in linha:
+                w = asp[i][0] * s; out[i] = (x + w / 2, y + hl / 2, s); x += w
+            return s, out
+        membros = u[1]
+        larg = sum(asp[i][0] for i in membros) + (0 if u[0] == 'par' else 0)
+        alt = max(asp[i][1] for i in membros)
+        s = min(cw * .88 / larg, (ch - ROTULO) * .88 / alt, 520.0)
+        out, x = {}, -larg * s / 2
+        for i in membros:
+            w = asp[i][0] * s; out[i] = (x + w / 2, -ROTULO / 2, s); x += w
+        return s, out
+    n = len(unidades)
+    padroes = PADROES.get(n) or [[3] * (n // 3) + ([n % 3] if n % 3 else [])]
+    melhor = None
+    for pad in padroes:
+        linhas, k = [], 0
+        for c in pad:
+            linhas.append(unidades[k:k + c]); k += c
+        ch = Hh / len(linhas)
+        res, menor = {}, 1e9
+        for r, ln in enumerate(linhas):
+            cw = W / len(ln)
+            for c, u in enumerate(ln):
+                s, rel_pos = caber(u, cw, ch)
+                menor = min(menor, s)
+                ux, uy = X0 + cw * (c + .5), Y0 + ch * (r + .5)
+                for i, (dx, dy, ss) in rel_pos.items():
+                    res[i] = (ux + dx, uy + dy, ss)
+        if melhor is None or menor > melhor[0] + 1:
+            melhor = (menor, res)
+    return melhor[1]
 
 
 def _aspecto(forma: dict) -> tuple[float, float]:
@@ -389,34 +382,74 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
         raise CenaInvalida(problemas)
 
     atores = {a['id']: a for a in cena['atores']}
-    pos = diagramar(cena, formas)
     inicio = [sum(duracoes[:k]) for k in range(len(duracoes))]
     dur = sum(duracoes)
-    trilhas = {i: Trilha({'x': pos[i]['x'], 'y': pos[i]['y'], 'scale': 1, 'sx': 1, 'sy': 1,
-                          'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0}) for i in atores}
-    extras: list[dict] = []                     # partículas, anéis e preenchimentos gerados por ações
-    primeira = {}
+    nb = len(cena['beats'])
+    # participantes por beat (ação + foco); "geral" = todos os essenciais
+    envolvidos = []
     for k, b in enumerate(cena['beats']):
+        env = set()
         for a in b['acoes']:
-            for key in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior'):
-                if isinstance(a.get(key), str) and a[key] in atores:
-                    primeira.setdefault(a[key], k)
-        if b.get('camera', {}).get('foco') in atores:
-            primeira.setdefault(b['camera']['foco'], k)
-    for i, a in atores.items():
-        primeira.setdefault(i, 0)
-    # entrada automática: ator surge no início do beat em que é citado (escalonado, gancho imediato no beat 1)
-    for n, (i, k) in enumerate(sorted(primeira.items(), key=lambda x: (x[1], list(atores).index(x[0])))):
-        explicito = any(a.get('verbo') == 'aparecer' and a.get('alvo') == i for a in cena['beats'][k]['acoes'])
-        if explicito:
-            continue
-        t0 = inicio[k] + (0.05 + 0.12 * (n % 4) if k == 0 else 0.0)
-        alvo_op = 0.38 if atores[i]['papel'] == 'contexto' else 1.0
-        trilhas[i].ir('opacity', t0, t0 + .35, alvo_op, 0)
-        trilhas[i].ir('scale', t0, t0 + .45, 1.0, 0.82)
-    # saturação inicial de quem será tingido (estado inicial visível antes da mudança)
+            env |= {a[x] for x in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior') if isinstance(a.get(x), str) and a[x] in atores}
+        foco = (b.get('camera') or {}).get('foco')
+        if foco in atores:
+            env.add(foco)
+        if (b.get('camera') or {}).get('enquadramento') == 'geral' or not env:
+            env = {i for i in atores if atores[i]['papel'] != 'contexto'}
+        envolvidos.append({i for i in env if atores[i]['papel'] != 'contexto'})
+    dep = _dependencias(cena)
+    for k in range(nb):                              # dependente acompanha o pai em cena
+        for i, (_, ref) in dep.items():
+            if i in envolvidos[k]:
+                envolvidos[k].add(ref)
+    # ENCENAÇÃO por beat: só os participantes, grandes, em arranjo limpo; o mundo é a própria área segura
+    palcos = []
+    for k in range(nb):
+        livres = [i for i in atores if i in envolvidos[k] and i not in dep]
+        st = _arranjar(livres, cena, formas)
+        for _ in range(len(dep) + 1):
+            for i, (tipo, ref) in dep.items():
+                if i in envolvidos[k] and ref in st and i not in st:
+                    x, y, s = st[ref]
+                    st[i] = (x, y, s * (0.55 if tipo == 'dentro' else 1.0))
+        palcos.append(st)
+    S = {i: max([p[i][2] for p in palcos if i in p] or [BASE[atores[i]['papel']]]) for i in atores}
+    cx, cy = (CAIXA[0] + CAIXA[2]) / 2, (CAIXA[1] + CAIXA[3]) / 2
+    trilhas = {}
+    for i in atores:
+        k0 = next((k for k in range(nb) if i in palcos[k]), None)
+        x, y, s = palcos[k0][i] if k0 is not None else (cx, cy, S[i])
+        trilhas[i] = Trilha({'x': x, 'y': y, 'scale': s / S[i], 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
+    for i, a in atores.items():                      # contexto: fundo fixo, translúcido, do início ao fim
+        if a['papel'] == 'contexto':
+            S[i] = 640.0
+            trilhas[i] = Trilha({'x': cx, 'y': cy, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
+            trilhas[i].ir('opacity', 0, .5, .3, 0)
+    explicito = {(k, a['alvo']) for k, b in enumerate(cena['beats']) for a in b['acoes'] if a.get('verbo') == 'aparecer' and isinstance(a.get('alvo'), str)}
+    TRANS = 0.55
+    visivel = set()
+    for k in range(nb):
+        T = inicio[k]
+        for i in sorted(visivel - set(palcos[k])):           # sai de cena
+            trilhas[i].ir('opacity', T, T + .35, 0)
+        n = 0
+        for i in atores:
+            if i not in palcos[k]:
+                continue
+            x, y, s = palcos[k][i]
+            tr = trilhas[i]
+            if i in visivel:                                  # continuidade: desliza para o novo lugar
+                tr.ir('x', T, T + TRANS, x); tr.ir('y', T, T + TRANS, y); tr.ir('scale', T, T + TRANS, s / S[i])
+            else:
+                tr.ir('x', T, T + .001, x); tr.ir('y', T, T + .001, y)
+                if (k, i) not in explicito:
+                    t0 = T + (0.05 + 0.12 * n if k == 0 else 0.08 * n)
+                    tr.ir('opacity', t0, t0 + .35, 1.0, 0)
+                    tr.ir('scale', t0, t0 + .45, s / S[i], .82 * s / S[i])
+                n += 1
+        visivel = set(palcos[k])
     tintas = {}
-    for b in cena['beats']:
+    for b in cena['beats']:                                   # estado inicial visível antes da mudança
         for a in b['acoes']:
             if a.get('verbo') == 'tingir' and a.get('alvo') in trilhas:
                 tr = trilhas[a['alvo']]
@@ -429,80 +462,36 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
         for a in b['acoes']:
             t0 = inicio[k] + float(a.get('inicio', 0)) * duracoes[k]
             t1 = inicio[k] + float(a.get('fim', 1)) * duracoes[k]
-            acoes_planas.append((t0, t1, k, a))
+            if k > 0 and a.get('verbo') != 'aparecer':        # a ação começa depois que a encenação assentou
+                t0 = max(t0, inicio[k] + TRANS)
+                t1 = max(t1, t0 + .4)
+            acoes_planas.append((t0, min(t1, dur), k, a))
     acoes_planas.sort(key=lambda x: x[0])
-    for t0, t1, k, a in acoes_planas:
-        _acao(a, t0, t1, k, atores, pos, formas, trilhas, extras)
 
-    # envolvidos por beat (ação + foco); "geral" envolve todos os essenciais
-    envolvidos = []
+    def P(i, tt):
+        tr = trilhas[i]
+        return {'x': tr.valor('x', tt), 'y': tr.valor('y', tt), 's': S[i] * tr.valor('scale', tt)}
+    extras: list[dict] = []                     # partículas, anéis, trilhas de rota e preenchimentos
+    for t0, t1, k, a in acoes_planas:
+        n0 = len(extras)
+        _acao(a, t0, t1, k, atores, P, formas, trilhas, extras)
+        if k + 1 < nb:                          # efeitos pertencem ao beat: saem quando a encenação muda
+            for e in extras[n0:]:
+                e['trilha'].ir('opacity', inicio[k + 1], inicio[k + 1] + .3, 0)
+    camera = [{'t': 0.0, 'x': cx, 'y': cy, 'zoom': 1.0}, {'t': round(dur, 4), 'x': cx, 'y': cy, 'zoom': 1.0}]
+    focos = []
     for k, b in enumerate(cena['beats']):
-        env = set()
-        for a in b['acoes']:
-            env |= {a[x] for x in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior') if isinstance(a.get(x), str) and a[x] in atores}
-        foco = (b.get('camera') or {}).get('foco')
-        if foco in atores:
-            env.add(foco)
-        if (b.get('camera') or {}).get('enquadramento') == 'geral' or not env:
-            env = {i for i in atores if atores[i]['papel'] != 'contexto'}
-        envolvidos.append(env)
-    # foco por atenuação: quem não age no beat fica em segundo plano (opacidade .32); quem tem fade explícito é poupado
-    explicitos = {a.get(x) for b in cena['beats'] for a in b['acoes'] if a.get('verbo') in ('sair', 'transformar', 'revelar_interior', 'aparecer')
-                  for x in ('alvo', 'de', 'para', 'interior') if isinstance(a.get(x), str)}
-    for i in atores:
-        if atores[i]['papel'] == 'contexto' or i in explicitos:
-            continue
-        for k in range(len(cena['beats'])):
-            if k < primeira[i]:
-                continue
-            alvo_op = 1.0 if i in envolvidos[k] else 0.32
-            if k > 0 and (i in envolvidos[k - 1] or k - 1 < primeira[i]) == (i in envolvidos[k]):
-                continue
-            if k == primeira[i] and i in envolvidos[k]:
-                continue
-            t_ini = inicio[k] if k > primeira[i] else inicio[k] + .45
-            trilhas[i].ir('opacity', t_ini, t_ini + .45, alvo_op)
-    # câmera por beat: enquadra atores envolvidos na caixa segura
-    camera, focos = [], []
-    for k, b in enumerate(cena['beats']):
-        env = envolvidos[k]
-        t_meio = inicio[k] + duracoes[k] * .6
-        # quem só APARECE ou é DESTACADO não precisa caber; quem participa da ação nunca é cortado
-        so_aparece = set()
-        for a in b['acoes']:
-            if a.get('verbo') in ('aparecer', 'destacar') and isinstance(a.get('alvo'), str):
-                so_aparece.add(a['alvo'])
-        for a in b['acoes']:
-            if a.get('verbo') not in ('aparecer', 'destacar'):
-                so_aparece -= {a[x] for x in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior') if isinstance(a.get(x), str)}
-        so_aparece.discard((b.get('camera') or {}).get('foco'))
-        enquadrar = (env - so_aparece) or env
-        caixa = _bbox([(i, trilhas[i], pos[i]['s'], formas[i]) for i in enquadrar], t_meio, inicio[k], inicio[k] + duracoes[k], extras)
-        foco = (b.get('camera') or {}).get('foco')
-        if foco not in atores or atores[foco]['papel'] == 'contexto':
-            foco = max(env, key=lambda i: pos[i]['s']) if env else None
-        geral = (b.get('camera') or {}).get('enquadramento') == 'geral'
-        caixa_foco = _bbox([(foco, trilhas[foco], pos[foco]['s'], formas[foco])], t_meio, inicio[k], inicio[k] + duracoes[k], extras) if foco else None
-        # plano geral = revelação do conjunto: mostra todos os envolvidos, sem forçar aproximação do foco
-        enq = (b.get('camera') or {}).get('enquadramento')
-        alvo = _enquadrar(caixa, None if geral else caixa_foco, MIN_FOCO.get(enq, 0.40))
-        focos.append(foco)
-        if camera:
-            t_ini = inicio[k]
-            camera.append({'t': round(t_ini, 4), **camera[-1]['_v']})
-            camera.append({'t': round(t_ini + min(.7, duracoes[k] * .3), 4), **alvo})
-        else:
-            camera.append({'t': 0.0, **alvo})
-        camera[-1]['_v'] = alvo
-    for c in camera:
-        c.pop('_v', None)
-    camera = _cam_monotona(camera, dur)
+        f = (b.get('camera') or {}).get('foco')
+        if f not in palcos[k]:
+            f = max(palcos[k], key=lambda i: palcos[k][i][2]) if palcos[k] else None
+        focos.append(f)
+    pos = {i: {'x': trilhas[i].base['x'], 'y': trilhas[i].base['y'], 's': S[i]} for i in atores}
 
     graf_atores = []
     for i, a in atores.items():
         f = formas[i]
         graf_atores.append({'id': i, 'label': a['rotulo'], 'layer': 'contexto' if a['papel'] == 'contexto' else 'essencial',
-                            'view': f['view'], 'size': pos[i]['s'], 'shapes': f['shapes'], 'states': _estados(trilhas[i], dur),
+                            'view': f['view'], 'size': S[i], 'shapes': f['shapes'], 'states': _estados(trilhas[i], dur),
                             'curve': 'linear', 'origem': f['origem'], **({'tint_color': tintas[i]} if i in tintas else {})})
     for e in extras:
         graf_atores.append({**{k: v for k, v in e.items() if k != 'trilha'}, 'states': _estados(e['trilha'], dur)})
@@ -518,7 +507,8 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
                        'foco_principal': focos[k],
                        'enquadramento': (b.get('camera') or {}).get('enquadramento', 'medio')} for k, b in enumerate(cena['beats'])],
             'captions': legendas['grupos'], 'captions_origin': legendas['origem']}
-    prov = {'atores': origem, 'normalizacao': ajustes, 'posicoes': {i: pos[i] for i in atores}, 'acoes': len(acoes_planas),
+    prov = {'atores': origem, 'normalizacao': ajustes, 'encenacao': [{i: [round(v, 1) for v in p[i]] for i in p} for p in palcos],
+            'acoes': len(acoes_planas),
             'particulas_e_efeitos': len(extras), 'duracao_s': round(dur, 3), 'beats_s': [round(d, 3) for d in duracoes],
             'fatos_por_beat': [b.get('fatos') for b in cena['beats']], 'legendas': legendas['origem']}
     return {'scene_graph': data, 'proveniencia': prov, 'duracao': dur}
@@ -590,7 +580,28 @@ def _particula(eid: str, item: dict, rotulo: str | None) -> tuple[dict, dict]:
     return r, {'origem': r['origem'], 'motivo': motivo, 'rotulo': rotulo}
 
 
-def _acao(a: dict, t0: float, t1: float, k: int, atores, pos, formas, trilhas, extras):
+class _Posicoes(dict):
+    """pos[id] avaliado no instante da ação (mesma interface do mapa estático anterior)."""
+    def __init__(self, P, t):
+        super().__init__()
+        self._P, self._t = P, t
+
+    def __missing__(self, k):
+        v = self._P(k, self._t)
+        self[k] = v
+        return v
+
+    def __contains__(self, k):
+        try:
+            self._P(k, self._t)
+            return True
+        except KeyError:
+            return False
+
+
+def _acao(a: dict, t0: float, t1: float, k: int, atores, P, formas, trilhas, extras):
+    """P(id, t) → posição/tamanho ATUAIS (a encenação move os atores entre beats)."""
+    pos = _Posicoes(P, t0)
     v = a['verbo']
     eid = f"{v}{len(extras)}"
     if v == 'aparecer':

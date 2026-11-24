@@ -33,7 +33,7 @@ def _sha(p: Path) -> str:
 
 
 def _falas(plano: dict) -> list[str]:
-    return [str(b['fala']) for c in D._cenas_decl(plano) for b in c['beats']]
+    return [str(b['fala']) for c in plano['cenas'] for b in c['beats']]
 
 
 def narrar(plano: dict, caso_id: str, pasta: Path, usar_voz: bool) -> dict:
@@ -46,7 +46,7 @@ def narrar(plano: dict, caso_id: str, pasta: Path, usar_voz: bool) -> dict:
         if salvo.exists():
             n = json.loads(salvo.read_text(encoding='utf8'))
             return {**n, 'audio': None, 'origem': 'tempos_medidos_gravados_sem_audio_local'}
-        return {'duracoes': [d for c in D._cenas_decl(plano) for d in D.estimar_duracoes(c)], 'palavras': None, 'audio': None,
+        return {'duracoes': [d for c in plano['cenas'] for d in D.estimar_duracoes(c)], 'palavras': None, 'audio': None,
                 'origem': 'ESTIMADA_SEM_VOZ'}
     from src import voz
     pasta.mkdir(parents=True, exist_ok=True)

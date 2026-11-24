@@ -660,6 +660,22 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
     # Não inserir este passo antes de criar o contrato bloqueador.
     from src.v4.formatos import diretor_processos, diretor_roteiro
     plano = diretor_processos.expandir(diretor_roteiro.expandir_preview(plano))
+    # E211: o preflight histórico é estrutural; o gate de render é visual.
+    # Resolve também 'auto' antes de permitir qualquer aquisição ou composição.
+    from src.v4.formatos import politica_animacao as PA, catalogo_mecanismos as CM
+    rotas=[]
+    for s in plano['shots']:
+        if s.get('type')=='mechanism' and s.get('mechanism')=='auto':
+            renderer, issues=CM.decidir(s)
+            if issues or not renderer:
+                raise ValueError('mecanismo automatico sem capacidade: '+str(issues))
+            s={**s,'mechanism':renderer}
+        rotas.append(s)
+    modo=PA.LEGACY if plano.get('perfil_visual')==PA.LEGACY else None
+    privado=plano.get('tipo')=='PROVA_VISUAL_PRIVADA' and plano.get('publicar') is False
+    gate=PA.avaliar(rotas,modo=modo,privado=privado)
+    (destino/'politica_animacao.json').write_text(json.dumps(gate,ensure_ascii=False,indent=2),encoding='utf8')
+    PA.exigir(rotas,modo=modo,privado=privado)
     if downloader is None:
         def downloader(url: str) -> bytes:
             r=requests.get(url,timeout=90,headers={'User-Agent':'CoringaExplica/1.0 (license verification; contact via GitHub)'})
@@ -808,9 +824,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
               if item.get('license')=='REVIEW_PENDING']
     from src.v4.formatos import qa_area_segura
     props={'duracao':plano['duracao'],'shots':shots,'preview':True,
-           'private_review_only':bool(pendentes),
+           'private_review_only':bool(pendentes) or modo==PA.LEGACY,
            'safe_area_profile':plano.get('safe_area_profile') or qa_area_segura.PERFIL,
            'direitos_pendentes':pendentes}
+    if modo==PA.LEGACY:
+        props['animation_policy_mode']=modo
     (destino/'props.json').write_text(json.dumps(props,ensure_ascii=False,indent=2),encoding='utf-8')
     (destino/'midias.json').write_text(json.dumps(relatorio,ensure_ascii=False,indent=2),encoding='utf-8')
     return {'pronto':True,'shots':len(shots),'midias':len(medias),'props':str(destino/'props.json')}

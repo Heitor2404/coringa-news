@@ -222,6 +222,16 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120,
                 if a == p["corpo"] and r in pos] for p in aceitos}
             modelo["aviso_e45"] = ("INTERFERÊNCIA · NÃO VALIDADO" if
                 rel["interferencia_brep"]["quadros_com_interferencia"] else "MODELO NÃO VALIDADO")
+        if os.environ.get("CORINGA_E46F") == "1":
+            exibidos = [i for i in ids if grupo_de[i] in exibir_corpos]
+            perfis_ids = {p["corpo"] for p in aceitos}
+            contatos_ids = {r for _,r in alvo_pares}
+            modelo["direcao_e46f"] = {
+                j: ("perfil" if i in perfis_ids else
+                    "entrada" if grupo_de[i]==nucleo[entrada] else
+                    "saida" if grupo_de[i] in {nucleo[g] for g in saidas_g} else "contato")
+                for j,i in enumerate(exibidos)
+                if i in perfis_ids or i in contatos_ids or grupo_de[i] in {nucleo[entrada],*(nucleo[g] for g in saidas_g)}}
         acion = {"entrada": {j: float(c) for j, c in enumerate(lin[entrada]) if c}}
         qa = F.renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida, varrido="entrada")
         qa["interferencia_brep"]=rel["interferencia_brep"]
@@ -231,7 +241,7 @@ def executar(step, saida, voltas=3.0, quadros=240, renderizar=True, n_theta=120,
         rel["gates"]={x:qa[x] for x in ("estado","estado_execucao","validacao_externa",
                             "verificacao_contato","liberado_para_publicacao")}
         rel["render"] = {k2: qa.get(k2) for k2 in ("sha256_mp4", "sha256_quadros_rgb", "verificacao_video", "camera",
-                            "palco_cad","eventos_trajetoria","transmissao_observada","apresentacao_e33","revelacao_e45")}
+                            "palco_cad","eventos_trajetoria","transmissao_observada","apresentacao_e33","revelacao_e45","direcao_e46f")}
         (saida/"QA.json").write_text(json.dumps(_limpar(qa),ensure_ascii=False,indent=2))
     _marca(rel, "fim")
     rel["resultado"] = "MP4_GERADO" if renderizar else "SOLVER_E_ORACULOS"

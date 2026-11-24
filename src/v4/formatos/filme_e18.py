@@ -635,6 +635,10 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
         if qa["revelacao_e45"]["resultado"] == "PREVIA_GERADA":
             r45=qa["revelacao_e45"]
             r45["verificacao_video"]=E45.verificar_previa(saida/r45["arquivo"],r45,ffmpeg_exe())
+    if modelo.get("direcao_e46f") and qa.get("revelacao_e45",{}).get("resultado")=="PREVIA_GERADA":
+        from . import direcao_cad_e46f as E46F
+        qa["direcao_e46f"]=E46F.renderizar(mont,qs,cam,qa["revelacao_e45"],pap,
+            modelo["direcao_e46f"],saida,ffmpeg_exe(),FPS)
     return qa
 
 

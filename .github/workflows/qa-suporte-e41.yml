@@ -11,6 +11,8 @@ on:
       - "src/v4/formatos/editorial_e42.py"
       - "tests/test_editorial_e42.py"
       - "tests/fixtures_e41.py"
+      - "src/v4/formatos/direcao_cad_e46f.py"
+      - "tests/test_direcao_cad_e46f.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +23,7 @@ jobs:
     env:
       OPENBLAS_NUM_THREADS: 1
       CORINGA_E45: '1'
+      CORINGA_E46F: '1'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +37,7 @@ jobs:
           python -m pip install --progress-bar off --only-binary=:all: cadquery==2.7.0 mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
           echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
       - name: Testes E41 (sintéticos com suporte modelado) + E35/E37 + núcleo
-        run: python -m pytest -q tests/test_editorial_e42.py tests/test_e41_vinculos.py tests/test_e35_aquisicao.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_adaptador_step_e23.py tests/test_revelacao_e45.py
+        run: python -m pytest -q tests/test_editorial_e42.py tests/test_e41_vinculos.py tests/test_e35_aquisicao.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_multicorpo_e18.py tests/test_solver_generico_e1.py tests/test_adaptador_step_e23.py tests/test_revelacao_e45.py tests/test_direcao_cad_e46f.py
       - name: Consulta cicloidal congelada da E35 → descoberta → E41 → MP4
         timeout-minutes: 75
         run: python -m src.v4.formatos.pipeline_e35 benchmarks/e35/consulta_cycloidal.json trabalho_e41 qa_e41
@@ -62,7 +65,21 @@ jobs:
           assert r["gates"]["estado"] == "REPROVADO_INTERFERENCIA_BREP"
           assert r["render"]["transmissao_observada"]["quadros"] == 240
           assert r["render"]["revelacao_e45"]["publish"] is False
+          assert r["render"]["direcao_e46f"]["publish"] is False
           EOF
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: E46F integrar vistas privadas no compositor
+        timeout-minutes: 20
+        run: |
+          python -m src.v4.formatos.direcao_cad_e46f qa_e41/QA.json motor4/remotion/public qa_e46f
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e46f/editorial.mp4 --props=../qa_e46f/props.json --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -73,4 +90,5 @@ jobs:
             qa_e41/E41_relatorio.json
             qa_e41/QA.json
             qa_e41/E35_relatorio.json
+            qa_e46f/
           retention-days: 14

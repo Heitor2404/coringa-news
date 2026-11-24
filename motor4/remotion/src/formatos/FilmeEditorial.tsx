@@ -69,6 +69,8 @@ export type FilmProps = {
   cad_narration_asset?: string;
   // E202: narração privada medida (hash no nome), somente prévia privada com cenas declarativas
   scene_narration_asset?: string;
+  documentary_captions?: {start:number;end:number;words:{w:string;hl?:boolean}[]}[];
+  documentary_caption_origin?: 'PALAVRAS_MEDIDAS'|'FRASES_MEDIDAS_LAB';
 };
 
 const W = 1080, H = 1920;
@@ -596,19 +598,30 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset,documentary_captions,documentary_caption_origin}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   if(shots.some(s=>s.type==='cad_preview'||s.type==='scene_graph') && (!preview || !private_review_only))
     throw new Error('E28-CAD-PRIVATE-ONLY');
   if(cad_narration_asset&&(!preview||!private_review_only||subtitle_mode||!/^cad_e47\/[0-9a-f]{64}\.wav$/.test(cad_narration_asset)||shots.some(s=>s.type!=='cad_preview'||s.cad_reflow?.schema!=='coringa.cad.hero.balanced.private.v1')))
     throw new Error('E47-PRIVATE-AUDIO');
-  if(scene_narration_asset&&(!preview||!private_review_only||cad_narration_asset||!/^e202\/[0-9a-f]{64}\.wav$/.test(scene_narration_asset)||!shots.some(s=>s.type==='scene_graph')))
+  if(scene_narration_asset&&(!preview||!private_review_only||cad_narration_asset||!/^e202\/[0-9a-f]{64}\.wav$/.test(scene_narration_asset)||(!documentary_captions?.length&&!shots.some(s=>s.type==='scene_graph'))))
     throw new Error('E202-PRIVATE-AUDIO');
+  if(documentary_captions?.length&&(!preview||!private_review_only||!scene_narration_asset||
+      !['PALAVRAS_MEDIDAS','FRASES_MEDIDAS_LAB'].includes(documentary_caption_origin||'')))
+    throw new Error('E207-PRIVATE-CAPTIONS');
   const shot=shots.findIndex(s=>t>=s.start&&t<s.end);
+  const docCap=shot>=0&&shots[shot].type!=='scene_graph'?documentary_captions?.find(g=>t>=g.start&&t<g.end):undefined;
   return <AbsoluteFill style={{background:'#050A12'}}>
     {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
+    {docCap&&<div data-safe-role="subtitle" style={{...safeSlot('subtitle'),display:'flex',alignItems:'center',
+        justifyContent:'center',textAlign:'center',pointerEvents:'none'}}>
+      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:44,lineHeight:1.08,color:OFF_WHITE,
+        padding:'8px 14px',background:'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
+        {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
+      </div>
+    </div>}
     {/* QA: margem transparente demonstra riscos sem alterar o vídeo de publicação. */}
     {safe_zone_debug&&<>
       <div style={{position:'absolute',left:0,right:0,top:0,height:safety.universal[1],

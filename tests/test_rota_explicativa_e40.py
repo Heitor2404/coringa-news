@@ -1,8 +1,11 @@
 import unittest
-from src.v4.formatos.rota_explicativa_e40 import planejar
+from src.v4.formatos.rota_explicativa_e40 import planejar as _planejar
+
+def planejar(c,exige_contorno_industrial=False):
+    return _planejar(c,exige_contorno_industrial,alvo="alvo-de-teste")
 
 def base(tipo):
-    return dict(tipo=tipo,identidade_verificada=True,fonte_sha256="a"*64,
+    return dict(tipo=tipo,alvo="alvo-de-teste",identidade_verificada=True,fonte_sha256="a"*64,
                 fonte_url="https://example.org/source",licenca_candidata="permissiva",
                 juntas_fundamentadas=True,movimento_fundamentado=True)
 
@@ -44,3 +47,11 @@ class E40(unittest.TestCase):
     def test_no_source_hash(self):
         p=plano();p["fonte_sha256"]="not-verified"
         self.assertIsNone(planejar([p])["decisao"])
+
+
+    def test_different_mechanism_never_fallback(self):
+        p=plano();p["alvo"]="outro-mecanismo"
+        c=cad();c["estado"]="REPROVADO_INTERFERENCIA_BREP"
+        r=planejar([c,p])
+        self.assertIsNone(r["decisao"])
+        self.assertEqual(r["candidatos"][1]["status"],"ALVO_DIFERENTE_OU_NAO_IDENTIFICADO")

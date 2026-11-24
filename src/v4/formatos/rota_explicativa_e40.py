@@ -40,18 +40,22 @@ def avaliar(c):
             return "SOLVER_NAO_VERIFICADO"
     return "ELEGIVEL_APENAS_REVISAO_PRIVADA"
 
-def planejar(candidatos,exige_contorno_industrial=False):
+def planejar(candidatos,exige_contorno_industrial=False,*,alvo):
     if not isinstance(candidatos,list) or type(exige_contorno_industrial) is not bool:
         raise ValueError("E40-CONTRATO")
+    if not isinstance(alvo,str) or not alvo.strip() or len(alvo)>150:
+        raise ValueError("E40-ALVO")
     rows=[]
     for i,c in enumerate(candidatos):
         status=avaliar(c)
+        if isinstance(c,dict) and c.get("alvo")!=alvo:
+            status="ALVO_DIFERENTE_OU_NAO_IDENTIFICADO"
         tipo=c.get("tipo") if isinstance(c,dict) else None
         if status.startswith("ELEGIVEL") and exige_contorno_industrial and tipo!="cad_real":
             status="PRINCIPIO_NAO_SUBSTITUI_CONTORNO_INDUSTRIAL"
         rows.append(dict(indice=i,tipo=tipo,status=status))
     eligible=[r for r in rows if r["status"]=="ELEGIVEL_APENAS_REVISAO_PRIVADA"]
     choice=min(eligible,key=lambda r:KINDS.index(r["tipo"])) if eligible else None
-    return dict(schema="coringa.rota.explicativa.v1",decisao=choice,
+    return dict(schema="coringa.rota.explicativa.v1",alvo=alvo,decisao=choice,
         candidatos=rows,resultado="REVISAO_PRIVADA" if choice else "SEM_REPRESENTACAO_FUNDAMENTADA",
         publish=False,visual_approved=False,direitos_publicacao="NAO_AVALIADOS")

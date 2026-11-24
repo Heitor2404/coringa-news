@@ -1,5 +1,8 @@
 name: E44 compositor documental com transmissão E41
 on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-editorial-ciclo-e44.yml']
   workflow_dispatch:
     inputs:
       run_id:
@@ -24,7 +27,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: e41-suporte-privado
-          run-id: ${{ inputs.run_id }}
+          run-id: ${{ inputs.run_id || '45383874036' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: fonte_e44
       - uses: actions/setup-python@v5

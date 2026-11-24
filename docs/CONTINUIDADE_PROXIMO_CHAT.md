@@ -3294,3 +3294,39 @@ Workflow 45410857845 E201 disparado: verifica o MP4 ATLAS existente com ponte or
 Usuário pediu avançar até precisar Claude e então entregar prompt detalhado. E201 run 45410857845 falhou em E201-SHAPE: exatamente dois traços de vasos com sw=42 acima do limite 40; commit bf63eada ajustou os dados, sem enfraquecer gate. Run 45411564001 já passou a etapa dependências/tsc/testes e confirmação do mapa, na consulta está renderizando FilmeEditorial; não afirmar vídeo aprovado. Auditoria de diretor_roteiro.py, diretor_processos.py, diretor_hibrido.py, src/v4/diretor.py, src/v4/episodio.py e contrato_visual_comum.py: diretor V4 tem prompt IA, componentes cadastrados, narrativa e orçamento/tempo; porém rota FilmeEditorial ainda exige correspondência exata das ações/fases a catálogo, ou mídia real previamente comprovada, e mapa permanece bloqueado até prova própria. E201 scene_graph é apenas entrada manual privada, sem caminho de autoria por fatos ou integração do preflight. Gargalo transversal justifica Claude Opus para conectar autoria declarativa, seleção por evidência, render e revisão, não para desenvolver mais templates CAD.
 
 Commit cccfbee0e093a8b93050a81a0d9386e4b753bd80 fixa benchmarks/e202/temas_ineditos.json antes de implementar diretor: flamingos/cor por carotenoides (Smithsonian e NHM), Islândia/divergência de placas (USGS e parque Thingvellir), descafeinação por água e carvão ativado (Specialty Coffee Association). Fatos externos consultados 24/11, sem geometria, assets, keyframes ou renderer por caso. São temas inéditos em relação a E201, não teste cego independente nem comprovação de demanda. Meta 3 clipes >=8s, mesma rota, autoria automática registrada, render real e inspeção, sem aprovação implícita. Preservar ATLAS/MapLibre como geografia factual, E200 timeline, E201 estados/atores, Lemo técnicas e licença §199, CAD especializado, portas de fonte/direitos. Reusar diretor V4 e provedores configurados, sem credencial nova obrigatória, execução offline de testes distinta de autoria IA efetivamente executada; cache, uma correção dirigida, bloqueio explicável. Não entregar apenas esquema de caixas, nem confundir movimento pixel com demonstração. Se E201 falhar, corrigir pontualmente; após E202/E203, priorizar episódio privado >=60s com narrativa/voz real e interesse de público, não nova sequência de infraestrutura. Claude ainda não acionado por nós: usuário receberá prompt. Sem main/publicação.
+
+
+## 203. 24/11 — E202/E203 (Claude Opus): diretor visual autônomo multitema → cena declarativa → MP4
+
+Base `7e747c2`; §197–202 lidas; Actions anteriores verdes (E201 45411564001). Commits `8356aa6` → `3b3b300`.
+
+### Arquitetura (ampliação, não paralela)
+- `formas_e202.py`: forma de cada ator com origem/licença registradas — ícones **Fluent Emoji Flat (MIT, npm fixado 1.2.6)** com caixa justa; **contorno real Natural Earth 1:50m** (world-atlas já instalado); 8 primitivas genéricas; `svg_ia` validado (caixa 0..100) como último recurso.
+- `cena_declarativa_e202.py` (compilador): vocabulário genérico de ações (fluxo, acumular, filtrar, tingir [saturação ou cor], afastar+preencher, transformar, mover [encosta], revelar_interior, aparecer/sair/destacar), relações (sobre/dentro/ao_lado), **encenação por beat** (só participantes, padrão de linhas que maximiza o menor ator, ordem do fluxo, continuidade entre beats, câmera fixa = área segura), trilhas de rota, foco, efeitos saem com o beat, legendas por palavra medida. Normalização de formato registrada (nunca inventa ator/fato).
+- `diretor_visual_e202.py`: disponibilidade REAL das modalidades antes do pedido (acervo via `diretor_roteiro.candidatos`, ATLAS só com clipe/comprovante, CAD só com fonte aprovada); prompt com fatos+limites+catálogo real de ícones; provedores do projeto em ordem `gemini,claude` (Gemini grátis → Claude Code assinatura/sonnet); **cache por sha256 do pedido** (`benchmarks/e202/cache`, com proveniência); verificação semântica (fatos citados, números inexistentes nos fatos, ação fraca, verbos, referências) → no máximo UMA correção; geometria (sujeito ≥1/3, foco inteiro) é alerta do compilador e **não vai ao modelo**; modo episódio 5–7 cenas.
+- `ciclo_e202.py`: direção → voz do projeto (`src.voz`, Gemini TTS Charon) → FilmeEditorial → movimento no foco por beat → quadros → visão (Gemini → **Claude Code lendo os quadros**, rubrica `contrato_visual_comum`) → 1 correção dirigida por defeitos medidos/vistos → re-narração/re-render.
+- SceneGraph **v2** no mesmo `FilmeEditorial` (v1/E201 intacto, regressão verde); `scene_narration_asset` privado; `contrato_visual_comum` reconhece `scene_graph`; `diretor_roteiro` aponta a rota E202.
+- Lemo-Opuscar @8ca0dd8: só TÉCNICAS reimplementadas (render f(t), mundo→tela único, sujeito ≥1/3, tempo de leitura, revisão por folha/quadros). Nenhum código/doc copiado.
+
+### Execuções reais (workflow `qa-diretor-e202.yml`, disparo `.github/e202/disparo.txt`)
+- Ciclo 1 45416588008 e 2 45417598655: Gemini 503 em todos os modelos/chaves; ciclo 2 dirigido pelo Claude Code; bloqueios eram defeitos NOSSOS (formato de item, papel contexto, câmera).
+- Ciclo 3 45420134949: ciclo completo nos 3 temas (direção Claude, voz Gemini TTS, MP4 com áudio, correção, re-render). Visão indisponível.
+- Ciclo 5 45425844838: 3 prévias (22,3 / 22,8 / 24,3 s) + **E203 episódio 78,6 s** com voz; visão Gemini aprovou as prévias (leniente: não viu flamingo rosa no gancho); visão Claude reprovou o E203 com defeitos concretos → correção → r2 ainda com defeitos. Ciclo 4 cancelado (compilador antigo). Ciclo 6 (`3b3b300`) com correções genéricas.
+- Mídia no artifact `e202-diretor-privado` **cifrada (GPG, chave pública do projeto)**. Plano/narração/tempos impressos no log (repo público ⇒ texto do roteiro exposto no log; sem áudio/vídeo).
+- Custo: só assinatura Claude Code (≈8–40 s por chamada; E203 194 s) + cota grátis Gemini (TTS/visão). Nenhum serviço novo.
+
+### Inspeção humana (Claude, quadros reais; NÃO é aprovação — só o Heitor aprova)
+- Biologia: fluxo de carotenoides até o flamingo e tingimento das penas visíveis; **defeito**: o plano usa uma faixa "Penas" separada e o flamingo já aparece rosa no gancho ("não nasce rosa").
+- Geografia: contorno real da Islândia; placas se afastam com magma subindo no vão (ESQUEMA rotulado); **defeitos**: plano geral final amontoado; ator "magma" solto além do preenchimento.
+- Café: cafeína retida no filtro de carvão e sabor passando, reaproveitamento; **defeito**: ícone "beans" é feijão, não grão de café.
+- E203 (78,6 s): gancho filhote cinza × adulto rosa funciona; cadeia algas→artêmia→flamingo, fígado, "leite" vermelho do papo, pais desbotando no fim; **defeitos**: "algas" (primitiva célula) parece disco laranja; alimentação de cabeça para baixo não é mostrada (vocabulário sem pose/rotação); amontoamento nas cenas 5–6.
+
+### Limitações honestas
+Ícones de emoji não cobrem tudo e podem enganar (feijão por café): só a visão pega. Sem pose/rotação/deformação de ator. Encenação com 5+ participantes fica pequena. Visão Gemini leniente; Claude rigorosa. Mapa ATLAS não foi usado (nenhum clipe/comprovante para Islândia) — contorno geo é localização, não mapa. Nenhum vídeo real/foto usado (acervo sem itens dos temas). Testes: 18 PASS `tests/test_e202_diretor_visual.py`, contrato TS v1/v2, regressões (compositor, áreas seguras, E201, roteiro, híbrido) verdes.
+
+### Próximos passos (devolvíveis ao ChatGPT)
+1. Verbo `girar`/`inclinar` (estado `angle` já existe no contrato) e prompt avisando a cor resolvida de cada ícone.
+2. Visão Claude como padrão (Gemini leniente) e regra "ícone fiel ao rótulo" virando correção obrigatória.
+3. Limitar a 4 participantes por beat no prompt; geral final só com protagonista + resultado.
+4. Integrar ATLAS real quando o caso tiver lugar (gerar clipe e comprovante) — o diretor já escolhe se estiver disponível.
+5. Rodar o mesmo ciclo em 3 temas NOVOS antes de qualquer piloto público.

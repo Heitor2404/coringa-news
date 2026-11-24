@@ -470,6 +470,70 @@ Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_a
 
 
 
+
+def selecionar_complemento(necessidade: dict, revisao: dict, referencias: list[dict],
+                            *, pesquisar_cad=False, getter_cad=None) -> dict:
+    """E217: bridge documentary inspection -> existing evidence/solver route E40.
+    Only a reviewed specific action can request CAD or a grounded schematic.
+    Neither search metadata nor an LLM assertion constitutes verified motion.
+    """
+    from src.v4.formatos import politica_animacao as PA, rota_explicativa_e40 as E40
+    if (necessidade.get('necessidade')!='lacuna_explicativa'
+        or not necessidade.get('id') or not necessidade.get('mostrar')
+        or not necessidade.get('lacuna') or not necessidade.get('fatos')):
+        raise ValueError('E217-NECESSIDADE')
+    if (revisao.get('id')!=necessidade['id'] or revisao.get('acao')!=necessidade['mostrar']
+        or revisao.get('fatos')!=necessidade['fatos']
+        or type(revisao.get('midia_adequada')) is not bool
+        or not isinstance(revisao.get('justificativa'),str) or not revisao['justificativa'].strip()):
+        raise ValueError('E217-REVISAO')
+    if revisao.get('origem') not in ('CURADORIA_HUMANA','REVISAO_MIDIA_VERIFICADA'):
+        raise ValueError('E217-ORIGEM-REVISAO')
+    base={'id':necessidade['id'],'acao':necessidade['mostrar'],'fatos':necessidade['fatos'],
+          'lacuna':necessidade['lacuna'],'publicar':False,'pronto_para_render':False,
+          'aprovacao_visual':'PENDENTE'}
+    if revisao['midia_adequada']:
+        return {**base,'decisao':'USAR_MIDIA_REAL'}
+    motivo=revisao.get('motivo')
+    if motivo not in ('BUSCA_SEM_REGISTRO_ADEQUADO','IMPOSSIVEL_FILMAR'):
+        return {**base,'decisao':'PESQUISAR_OU_REPLANEJAR_MIDIA_REAL'}
+    if motivo=='BUSCA_SEM_REGISTRO_ADEQUADO':
+        consultas=revisao.get('consultas_executadas')
+        if not isinstance(consultas,list) or not consultas or not all(isinstance(q,str) and q.strip() for q in consultas):
+            raise ValueError('E217-SEM-BUSCA')
+    alvo=revisao.get('alvo_tecnico')
+    if not isinstance(alvo,str) or not alvo.strip():
+        raise ValueError('E217-ALVO')
+    contorno=revisao.get('exige_contorno_industrial')
+    if type(contorno) is not bool:
+        raise ValueError('E217-CONTORNO')
+    # Match the actual explanatory action as well as the technical subject.
+    # References are curator/solver outputs, not arbitrary model proposals.
+    compativeis=[r for r in referencias if isinstance(r,dict)
+                  and r.get('acao_revisada')==necessidade['mostrar']
+                  and r.get('fatos_revisados')==necessidade['fatos']]
+    rota=E40.planejar(compativeis,contorno,alvo=alvo)
+    base.update(rota=rota,referencias_fora_do_escopo=len(referencias)-len(compativeis))
+    if rota['decisao'] is not None:
+        c=compativeis[rota['decisao']['indice']]
+        renderer='cad_preview' if c['tipo']=='cad_real' else 'scene_graph:coringa.scene_graph.private.v2'
+        decisao=PA.decidir_complemento(midia_adequada=False,acao=necessidade['mostrar'],
+            lacuna=necessidade['lacuna'],motivo_lacuna=motivo,renderer=renderer)
+        return {**base,'decisao':decisao,'renderer_proposto':renderer,
+                'referencia':c,'proximo':'VINCULAR_GEOMETRIA_E_RENDER_VERIFICADO'}
+    if pesquisar_cad:
+        from src.v4.formatos import pesquisa_cad_e34 as E34
+        q=revisao.get('consulta_cad')
+        if not isinstance(q,str) or not q.strip():
+            raise ValueError('E217-CONSULTA-CAD')
+        # Respect the bounded existing discovery and its stop-on-block behavior.
+        rel=E34.discover_many([q],limit=3,**({'getter':getter_cad} if getter_cad else {}))[0]
+        base['pesquisa_cad']=rel
+        if rel['candidates']:
+            return {**base,'decisao':'REVISAR_FONTE_CAD_ANTES_DO_SOLVER'}
+    return {**base,'decisao':'REPLANEJAR_MIDIA_REAL_OU_DECLARAR_LACUNA'}
+
+
 def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino: Path,
                    public_root: Path, duracoes: list[float], downloader=None,
                    palavras: list[dict] | None = None, audio: str | None = None) -> dict:

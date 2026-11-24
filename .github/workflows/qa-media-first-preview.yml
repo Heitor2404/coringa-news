@@ -1,4 +1,4 @@
-name: E226 - amostra visual real antes de novo documentario
+name: E230.1 - montagem narrativa curta privada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -34,7 +34,7 @@ jobs:
         run: python -m pytest -q tests/test_video_framing_multitema.py
       - name: Preparar fontes USGS reais sem TTS
         run: python -m scripts.qa_media_first_preview
-      - name: Render curto multitema no compositor existente
+      - name: Render da montagem narrativa no compositor existente
         run: |
           cd motor4
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_media_first/amostra.mp4 --props=../qa_media_first/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=2 --public-dir=remotion/public --log=info
@@ -60,7 +60,7 @@ jobs:
           from src.v3 import previa_telegram as T
           try:
               chat,info=T.chat_autorizado()
-              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · AMOSTRA ADAPTATIVA SEM NARRAÇÃO. Imersivo, 4:5, integral e outras fontes. Recortes de laboratório, não homologados. Aguardando revisão humana.','supports_streaming':'true'},('video',Path('qa_media_first/amostra.mp4')))
+              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · E230.1. Montagem narrativa de 22,5s sem narração, com fontes distintas e enquadramento estável. Legendas de laboratório. Revisão visual pendente.','supports_streaming':'true'},('video',Path('qa_media_first/amostra.mp4')))
               if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
           except Exception:
               raise SystemExit('Envio privado não confirmado') from None

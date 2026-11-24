@@ -474,7 +474,7 @@ const Caption: React.FC<{text:string; highlighted?:string}> = ({text,highlighted
   </div>;
 };
 
-const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean;legacyVisualPreview:boolean;portraitExperiment:boolean}> = ({shot,subtitleMode,legacyVisualPreview,portraitExperiment}) => {
+const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMode:boolean;legacyVisualPreview:boolean;portraitExperiment:boolean;mediaFirst:boolean}> = ({shot,subtitleMode,legacyVisualPreview,portraitExperiment,mediaFirst}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps;
   const now=frame/fps;
   const duration=Math.max(.01,shot.end-shot.start);
@@ -522,7 +522,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   }
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
-  if(subtitleMode&&realMedia(shot)) {
+  if(mediaFirst&&realMedia(shot)) {
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55),transparent 24%,transparent 53%,rgba(3,8,16,.74) 79%,#050A12 100%)'}}/>
@@ -696,11 +696,11 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   return <AbsoluteFill style={{background:'#050A12'}}>
     {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&documentary_captions?.length)}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
     {docCap&&<div data-safe-role="subtitle" style={{...(realMedia(shots[shot])?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:realMedia(shots[shot])?'flex-start':'center',textAlign:realMedia(shots[shot])?'left':'center',pointerEvents:'none'}}>
-      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.min(58,Math.floor(760/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64))):44,lineHeight:1.08,color:OFF_WHITE,
+      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.max(44,Math.min(58,Math.floor(760/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64)))):44,lineHeight:1.08,color:OFF_WHITE,
         padding:realMedia(shots[shot])?'0':'8px 14px',background:realMedia(shots[shot])?'transparent':'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
         {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
       </div>

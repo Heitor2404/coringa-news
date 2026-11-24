@@ -37,3 +37,21 @@ def test_native_approach_preserves_final_roi_and_samples_coverage(monkeypatch):
     monkeypatch.setattr(A,'raster_info',lambda name:{'bbox':[-1,-1,1,1],'nitido_ate':7})
     with pytest.raises(ValueError,match='D-IMERSAO-SEM-BASE'):
         D.aproximacao_geografica(p)
+
+
+def test_stronger_native_approach_within_coverage(monkeypatch):
+    p={'formato':'atlas','_resolvido':True,'duracao':5.5,
+        'palco':[{'tipo':'mapa','t':0,'camera':{'foco':[0,0],'ancora':[540,960],'zoom':8},
+            'roi':[-.3,-.3,.3,.3],'movimento':'fixo'}],
+        'beats':[{'roi':[-.3,-.3,.3,.3]}],'rasters':[{'nome':'fixture'}]}
+    monkeypatch.setattr(A,'raster_info',lambda name:{'bbox':[-50,-50,50,50],'nitido_ate':8})
+    monkeypatch.setattr(A,'validar',lambda p:[])
+    result,proof=D.aproximacao_geografica(p,zoom_desejado=1.6)
+    assert proof['escala']==pytest.approx(2**1.6)
+    assert A.camera_em(result['palco'],0)['zoom']==pytest.approx(6.4)
+    assert A.camera_em(result['palco'],5.5)['zoom']==pytest.approx(8)
+
+def test_entrance_rejects_pin_outside_destination():
+    with pytest.raises(ValueError,match='D-ENTRADA-ROI'):
+        D.plano_entrada_geografica({},roi_destino=[-1,-1,1,1],bases=[{'nome':'x'}],
+            rotulo='região',lonlat=[2,0],fonte_localizacao='https://example.org/source')

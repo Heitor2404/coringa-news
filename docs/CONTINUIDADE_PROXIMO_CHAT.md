@@ -2904,3 +2904,14 @@ Causa de incerteza real encontrada no código:
 **Próxima ação concreta:** derivar um **protocolo genérico de medição por superfícies/datum geométrico licenciadas** (corpo/face, normal, orientação, unidade, origem de coordenadas, expressão de abertura/curso e fonte), separado do solver; verificar, idealmente com CAD dimensional do fabricante, que os mesmos pontos/superfícies são medidos. Recalcular e registrar os dois oráculos **sem corrigir dados por conveniência**; manter a falha da xArm visível até equivalência comprovada.
 
 **Estado CI na verificação:** workflow leve [E21 45315768827](https://github.com/Heitor2404/coringa-news/actions/runs/45315768827) **success, 11 testes**. Runs completos E18 com novas regras de conformidade estavam **em andamento**, sem conclusão final verificada; potencial resultado vermelho por desvio do fabricante é proposital. Nenhuma alteração na `main`, nenhum vídeo publicado, nenhuma participação do Claude.
+
+
+## 155. 24/11 — E22: metrologia explícita por faces da malha e verificação final do E21
+
+Pedido do usuário: avançar por blocos sem comandos "prossiga" entre cada etapa e sem Claude até existir ganho concreto. Base b37f9e5. Main conferida em 8d55069329dfa2f33cdf7b0502ca8101a1dd6c14.
+
+Run pesado E21 [45315598843](https://github.com/Heitor2404/coringa-news/actions/runs/45315598843), job 138181576111: **59 testes aprovados, 8 vídeos decodificados com movimento, 6 comparações externas compatíveis, 1 reprovada (xArm: 88,923580 mm contra 84 mm), 1 sem referência (Cassie)**. O log final confirma exatamente uma falha de conformidade; artifact foi enviado. Não foi feita nova inspeção dos MP4s neste chat. A reprovação não foi erro de instalação. O manual UFACTORY V2.2.0, pp. 4, 9, 34, confirma faixa 0–84 mm e comandos -10 a 850, mas não fornece datums dimensionais equivalentes aos extremos das subárvores.
+
+E22: módulo metrologia_e22.py seleciona patches por corpo + visual + índices de triângulos compilados, transforma pelo referencial rígido do corpo e do visual, verifica planaridade e compatibilidade normal, calcula separação projetada assinada, registra origem do datum, mínimo, máximo, curso e índices amostrais. Não confunde separação entre planos com contato físico 3D; não infere equivalência de fabricante. Não inventa índices reais. Integração no filme E18 em QA.metrologia_e22, preservando todos os oráculos e gates anteriores. Os modelos legados recebem diagnóstico min/max/curso; datum opcional ainda não preenchido para xArm por falta de documentação. 14 testes sintéticos foram escritos, workflow leve qa-metrologia-e22.yml e regressão pesada atualizados; **resultado de execução ainda pendente nesta entrada**. Sem publicação, sem geometria de terceiros adicionada, sem Claude.
+
+Próximo: verificar CI E22 e, sem bloquear todo o projeto pela xArm, auditar adaptador STEP→Montagem E18. Manter diferença entre fixture sintética, fonte real e aprovação visual.

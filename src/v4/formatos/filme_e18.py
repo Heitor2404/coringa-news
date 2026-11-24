@@ -23,6 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from . import multicorpo_e18 as M
 from . import raster_e18 as R
+from . import metrologia_e22 as D
 
 W, H, FPS = 1080, 1920, 30
 
@@ -452,6 +453,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     qa["pares_que_cortaram_o_curso"] = [list(x) for x in cache.get("pares_que_cortaram", [])]
     qa["abaixo_do_plano_da_base_mm"] = abaixo_da_base(mont, qs, pap_auditoria := papeis(mont, acion, qs, cache["varrido"]))
     qa["medida"] = dict(tipo=medida["tipo"], min_mm=float(serie.min() * 1000), max_mm=float(serie.max() * 1000))
+    qa["metrologia_e22"] = D.diagnostico(mont, qs, medida, serie)
     if "oraculo" in modelo:
         o = modelo["oraculo"]
         if o["tipo"] == "curso_mm":

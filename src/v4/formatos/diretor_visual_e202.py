@@ -469,11 +469,12 @@ Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_a
 
 
 def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino: Path,
-                   public_root: Path, duracoes: list[float], downloader=None) -> dict:
+                   public_root: Path, duracoes: list[float], downloader=None,
+                   palavras: list[dict] | None = None, audio: str | None = None) -> dict:
     """Primeira ponte privada E205: mídia/ATLAS pelo preflight original; esquemas
     pelo compilador E202; todos intercalados na ordem e tempos da mesma narrativa.
     Entrada documental vem da curadoria, não de caminhos/URLs inventados pela IA.
-    Não adiciona áudio ainda: legendas das cenas reais precisam da ponte medida.
+    Áudio opcional e palavras medidas usam o relógio global, sem duplicar legendas.
     """
     from src.v4.formatos import filme_editorial as FILME
     cenas = resultado['plano']['cenas']
@@ -518,7 +519,9 @@ def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino:
     for c in cenas:
         ds = partes[c['id']]
         if c['modalidade'] == 'cena_declarativa':
-            trecho = filme({'plano': {**resultado['plano'], 'cenas': [c]}}, caso, ds)
+            local = [{**w, 's': round(w['s']-t, 4), 'e': round(min(w['e'], t+sum(ds))-t, 4)}
+                     for w in palavras or [] if t <= w['s'] < t+sum(ds)]
+            trecho = filme({'plano': {**resultado['plano'], 'cenas': [c]}}, caso, ds, local or None)
             s = trecho['props']['shots'][0]
             provs.append({'id': c['id'], 'proveniencia': trecho['proveniencia']})
         else:
@@ -530,11 +533,63 @@ def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino:
     # O perfil cartográfico original não foi recertificado para safe_area_profile.
     if any(s['type'] == 'atlas_map' for s in shots):
         props.pop('safe_area_profile', None)
+    if audio or palavras:
+        if not audio or not palavras:
+            raise ValueError('E207-AUDIO-E-PALAVRAS')
+        from src.v4.formatos import legenda_sync as LS
+        # Agrupamento GLOBAL; só o compositor de mídia real usa esta camada.
+        # O scene_graph v2 mantém sua própria legenda medida.
+        pal = LS.destacar_atlas(palavras, {'titulo': resultado['plano'].get('titulo'),
+                                           'narracao': {'fatos': caso['fatos']}}, maximo=3)
+        grupos = [{'start': max(0., g['ini']), 'end': min(t, g['fim']),
+                   'words': [{'w': w['w'], 'hl': w.get('hl', False)}
+                             for w in pal[g['i0']:g['i0']+g['n']]]}
+                  for g in LS.grupos(pal, maximo=3)]
+        props = anexar_audio_documental(props, audio, grupos, public_root, 'PALAVRAS_MEDIDAS')
     destino.mkdir(parents=True, exist_ok=True)
     (destino / 'props.json').write_text(json.dumps(props, ensure_ascii=False, indent=2), encoding='utf8')
     return {'props': props, 'proveniencia': {'documental': str(destino / 'documental' / 'midias.json'),
                                            'esquemas': provs},
-            'estado': 'MONTAGEM_PRIVADA_SEM_AUDIO', 'publicar': False, 'aprovacao_humana': 'PENDENTE'}
+            'estado': 'MONTAGEM_PRIVADA_COM_AUDIO' if audio else 'MONTAGEM_PRIVADA_SEM_AUDIO', 'publicar': False, 'aprovacao_humana': 'PENDENTE'}
+
+
+
+def anexar_audio_documental(props: dict, audio: str, grupos: list[dict], public_root: Path, metodo: str) -> dict:
+    """Áudio privado autenticado e legendas em tempo absoluto. Nenhuma alteração da cadência."""
+    import wave
+    if props.get('preview') is not True or props.get('private_review_only') is not True:
+        raise ValueError('E207-PRIVADO')
+    if metodo not in ('PALAVRAS_MEDIDAS', 'FRASES_MEDIDAS_LAB'):
+        raise ValueError('E207-METODO')
+    if not isinstance(audio, str) or not re.fullmatch(r'e202/[0-9a-f]{64}\.wav', audio):
+        raise ValueError('E207-ASSET')
+    raiz = Path(public_root).resolve()
+    p = (raiz / audio).resolve()
+    if not p.is_relative_to(raiz) or not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != p.stem:
+        raise ValueError('E207-HASH')
+    with wave.open(str(p), 'rb') as w:
+        dur = w.getnframes()/w.getframerate()
+    total = float(props['duracao'])
+    if abs(dur-total) > .08:
+        raise ValueError(f'E207-DURACAO-AUDIO: {dur:.3f} x {total:.3f}')
+    if not grupos:
+        raise ValueError('E207-SEM-LEGENDAS')
+    prev = 0.
+    for g in grupos:
+        a,b = g['start'],g['end']
+        ws = g.get('words')
+        if (not all(isinstance(x,(int,float)) and not isinstance(x,bool) and math.isfinite(x) for x in (a,b))
+                or a < prev-.001 or b <= a or b > total+.001 or not isinstance(ws,list) or not ws
+                or len(ws)>6 or any(not isinstance(w.get('w'),str) or not w['w'].strip() for w in ws)
+                or sum(bool(w.get('hl')) for w in ws)>1):
+            raise ValueError('E207-LEGENDA')
+        prev = b
+    # Every non-declarative shot must actually have a caption interval.
+    for s in props['shots']:
+        if s['type'] != 'scene_graph' and not any(g['start']<s['end'] and g['end']>s['start'] for g in grupos):
+            raise ValueError('E207-CENA-SEM-LEGENDA: '+s['id'])
+    return {**props, 'scene_narration_asset': audio, 'documentary_captions': grupos,
+            'documentary_caption_origin': metodo}
 
 
 def _dominio(u: str) -> str:

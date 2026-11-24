@@ -22,7 +22,7 @@ ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
 
 
-def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,int]) -> list[dict]:
+def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,int], *, viewport: tuple[int,int]=(1080,1920)) -> list[dict]:
     """Converte ROIs inspecionadas em posições CSS de object-fit:cover para 9:16.
 
     Não detecta pessoas/objetos automaticamente. Confere matematicamente que a
@@ -49,9 +49,12 @@ def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,i
     if (not isinstance(w,int) or not isinstance(h,int) or isinstance(w,bool)
             or isinstance(h,bool) or min(w,h)<240):
         raise ValueError('F-ROI-DIMENSOES: dimensões da fonte inválidas')
-    escala=max(1080/w,1920/h)
-    vw=min(1.0,1080/(escala*w))
-    vh=min(1.0,1920/(escala*h))
+    if viewport not in ((1080,1920),(1080,1350),(1080,1080)):
+        raise ValueError('F-ROI-VIEWPORT: proporção não registrada')
+    dw,dh=viewport
+    escala=max(dw/w,dh/h)
+    vw=min(1.0,dw/(escala*w))
+    vh=min(1.0,dh/(escala*h))
     margem_x=vw*.03 if vw<.999999 else 0.0
     margem_y=vh*.03 if vh<.999999 else 0.0
     pontos=contrato.get('pontos')
@@ -108,7 +111,7 @@ def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,i
 
 
 
-def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int])->dict:
+def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int], *, adaptativo:bool=False)->dict:
     """Determina apresentação de um clipe REAL com 1+ referentes observados.
 
     Se todas as regiões essenciais cabem JUNTAS no 9:16, recorta com câmera
@@ -184,9 +187,18 @@ def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int])->dic
     except ValueError as exc:
         if not str(exc).startswith('F-ROI-NAO-CABE'):
             raise
+        if adaptativo:
+            for viewport,ratio in (((1080,1350),'4:5'),((1080,1080),'1:1')):
+                try:
+                    positions=planejar_enquadramento_video(roi,midia,dimensoes,viewport=viewport)
+                    return {'layout':'recorte_relacional_seguro','documentary_viewport':ratio,
+                            'framing_positions':positions,
+                            'elementos_protegidos':sorted({e['nome'] for x in points for e in x['elementos']})}
+                except ValueError as err:
+                    if not str(err).startswith('F-ROI-NAO-CABE'):raise
         return {'layout':'cena_integral',
                 'framing_positions':[],
-                'motivo':'referentes separados fisicamente; recorte 9:16 amputaria a relação',
+                'motivo':'referentes separados fisicamente; recorte vertical/intermediário não comprovado',
                 'elementos_protegidos':sorted({e['nome'] for x in points
                                                for e in x['elementos']})}
 
@@ -799,9 +811,12 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> 
                     raise ValueError(c['id']+': dimensões reais diferem do enquadramento auditado')
                 if c['video_framing'].get('modo')=='relacao_observada':
                     strategy=resolver_relacao_video(
-                        c,plano['media'][c['asset']],dimensoes_reais)
+                        c,plano['media'][c['asset']],dimensoes_reais,
+                        adaptativo=plano.get('tipo')=='PROVA_VISUAL_PRIVADA' and plano.get('documentary_framing')=='ADAPTIVE_REVIEW_V1')
                     x['video_context_layout']=strategy['layout']
                     x['framing_positions']=strategy['framing_positions']
+                    if strategy.get('documentary_viewport'):
+                        x['documentary_viewport']=strategy['documentary_viewport']
                 elif c['video_framing'].get('modo')=='fonte_integral':
                     x['video_context_layout']=proteger_fonte_integral(
                         c,plano['media'][c['asset']],dimensoes_reais)

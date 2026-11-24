@@ -14,9 +14,19 @@ def main():
     spec=E.read('benchmarks/e219/kilauea_review_e232.json')
     ch=next(c for c in spec['chapters'] if 'atlas' in c)
     q=ch['atlas']
-    meta=regional_base(q['raster'],[-166,9,-144,30],7)
+    wide=regional_base('bmng_e234_regional',[-166,9,-144,30],7)
+    close=regional_base('bmng_e234_detalhe',[-159,13,-151,26],8)
     duration=5.5
-    p,approach=DE.aproximacao_geografica(E.mapplan(ch,duration))
+    # The USGS identifies the southeast island / lower East Rift Zone as
+    # the eruption region. The pin is a regional label, not a camera GPS.
+    location_source='https://www.usgs.gov/volcanoes/kilauea/science/2018-lower-east-rift-zone-eruption-and-summit-collapse'
+    base_ch={**ch,'atlas':{**q,'raster':wide['nome']}}
+    p,approach=DE.plano_entrada_geografica(E.mapplan(base_ch,duration),
+        roi_destino=[-155.45,19.15,-154.80,19.75],
+        bases=[{'nome':wide['nome']},{'nome':close['nome'],'de':7.35}],
+        rotulo='Sudeste da ilha',lonlat=[-155.1,19.45],
+        fonte_localizacao=location_source,zoom_desejado=1.6)
+    meta=[wide,close]
     clip,proof=E.mapclip(ch,duration,plano_resolvido=p)
     proof_data=E.read(proof)
     assert proof_data['video_sha256']==E.sha(clip)
@@ -25,7 +35,7 @@ def main():
     shutil.copyfile(clip,E.PUBLIC/map_asset)
     # These sources were reviewed in E230.1. Same island, different places;
     # the cut is editorial rather than an assertion of identical camera pose.
-    rows=[spec['chapters'][0]['videos'][0],spec['chapters'][2]['videos'][1]]
+    rows=[spec['chapters'][2]['videos'][1],spec['chapters'][3]['videos'][0]]
     clips=[];signatures=[]
     for row in rows:
         m=E.acquire(row)
@@ -48,11 +58,11 @@ def main():
             shot.update(video_context_layout='recorte_relacional_seguro',documentary_viewport=mode)
         shots.append(shot)
         captions.append({'start':start,'end':start+3.5,'words':[{'w':w,'hl':k==len(words)-1} for k,w in enumerate(words)]})
-    film(0,0,'4:5','Registro de 2018',['LAVA','E','OCEANO'])
+    film(0,0,'imersivo','Registro de 2018',['A','LAVA','AVANÇA'])
     shots.append({'id':'mapa','type':'atlas_map','asset':map_asset,'start':3.5,'end':9,
         'headline':q['label'],'lead':'Onde aconteceu','subject':'Mapa regional contemporâneo',
         'source':'NASA Blue Marble','evidence':'explainer'})
-    film(1,9,'imersivo','Registro na ilha',['A','LAVA','AVANÇA'])
+    film(1,9,'4:5','Vista aérea · 2018',['FISSURA','NÚMERO','OITO'])
     total=12.5
     wav=out/'silencio.wav'
     with wave.open(str(wav),'wb') as w:
@@ -65,8 +75,8 @@ def main():
     E.write(out/'props.json',props)
     E.write(out/'prova.json',{'publish':False,'visual_review':'PENDING','laboratory_silent':True,
         'camera':approach,'map_sha256':E.sha(clip),'map_proof':proof_data,'raster':meta,
-        'sources':[m for m,_,_ in clips],'geographic_scope':'ilha; não continuidade óptica',
+        'sources':[m for m,_,_ in clips],'geographic_scope':'sudeste da ilha / lower East Rift Zone; não continuidade óptica',
         'similarity_two_sources':DE.similaridade_janelas(*signatures),
-        'framing':'previously reviewed source windows, candidate crops only'})
+        'framing':'first previously reviewed source, aerial 4:5 crop candidate; semantic review pending'})
     print('E234 APROXIMACAO',approach,flush=True)
 if __name__=='__main__':main()

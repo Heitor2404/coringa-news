@@ -602,7 +602,24 @@ def main(argv=None) -> int:
     d.add_argument('--sem-ia', action='store_true', help='só cache; falha se faltar')
     m = sub.add_parser('filme'); m.add_argument('resultado'); m.add_argument('entrada'); m.add_argument('saida')
     m.add_argument('--narracao', help='json com duracoes e palavras medidas'); m.add_argument('--audio')
+    tr = sub.add_parser('triagem-documental')
+    tr.add_argument('entrada', help='JSON com fatos e necessidades_visuais')
+    tr.add_argument('saida')
+    mx = sub.add_parser('montagem-mista')
+    mx.add_argument('resultado'); mx.add_argument('caso'); mx.add_argument('plano_documental')
+    mx.add_argument('duracoes'); mx.add_argument('saida'); mx.add_argument('public_root')
     a = ap.parse_args(argv)
+    if a.cmd == 'triagem-documental':
+        ent = json.loads(Path(a.entrada).read_text(encoding='utf8'))
+        r = triagem_documental(ent['necessidades_visuais'], ent['fatos'])
+        Path(a.saida).write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding='utf8')
+        return 0
+    if a.cmd == 'montagem-mista':
+        def ler(p):
+            return json.loads(Path(p).read_text(encoding='utf8'))
+        preparar_misto(ler(a.resultado), ler(a.caso), ler(a.plano_documental),
+                       Path(a.saida), Path(a.public_root), ler(a.duracoes))
+        return 0
     if a.cmd == 'dirigir':
         ent = json.loads(Path(a.entrada).read_text(encoding='utf8'))
         out = Path(a.saida); out.mkdir(parents=True, exist_ok=True)

@@ -25,6 +25,7 @@ from . import multicorpo_e18 as M
 from . import raster_e18 as R
 from . import metrologia_e22 as D
 from . import camera_e24 as C
+from . import visibilidade_e26 as V
 
 W, H, FPS = 1080, 1920, 30
 
@@ -330,7 +331,7 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
     e1 /= np.linalg.norm(e1)
     e2 = np.cross(cima, e1)
     x0, y0, x1, y1 = regiao
-    melhor = None
+    candidatos = []
     margem = .012
     interna = (x0+margem,y0+margem,x1-margem,y1-margem)
     for elev in (12, 22, 32):
@@ -347,15 +348,21 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
             leg = min((sum(np.linalg.norm(e - d * (e @ d)) for e in pose) / sum(np.linalg.norm(e) for e in pose)
                        for pose in eixos if pose), default=1.0)
             nota = math.sqrt(max(0., ocup)) * (vis if tracks else 1.) * leg
-            if melhor is None or nota > melhor[0] + 1e-12:
-                melhor = (nota, cam, dict(guinada_graus=guinada, elevacao_graus=elev,
-                                          ocupacao=float(ocup), visibilidade=float(vis),
-                                          legibilidade=float(leg), nota=float(nota), foco=foco,
-                                          metodo='e24_vertices_caixas_todos_quadros',
-                                          corpos_moveis=len(moveis)))
-    if melhor is None:
+            candidatos.append((nota,cam,dict(guinada_graus=guinada,elevacao_graus=elev,
+                                  ocupacao=float(ocup),visibilidade=float(vis),
+                                  legibilidade=float(leg),nota_geometrica=float(nota),foco=foco,
+                                  corpos_moveis=len(moveis))))
+    if not candidatos:
         raise ValueError('E24-CAMERA_FORA_DA_REGIAO')
-    return melhor[1], melhor[2], pontos
+    scenes=V.preparar(mont,qs,C.indices_amostra(len(qs),5))
+    melhor=None
+    for geom,cam,meta in V.candidatos_por_setor(candidatos):
+        oc=V.avaliar(cam,scenes,moveis)
+        score=V.nota(geom,oc)
+        if melhor is None or score>melhor[0]+1e-12:
+            melhor=(score,cam,dict(meta,nota=float(score),
+                      metodo="e26_oclusao_zbuffer",oclusao=oc))
+    return melhor[1],melhor[2],pontos
 
 
 # ---------------------------------------------------------------- filme

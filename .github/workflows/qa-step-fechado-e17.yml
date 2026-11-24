@@ -7,6 +7,9 @@ on:
       - "src/v4/formatos/*e17.py"
       - "src/v4/formatos/adaptador_step_e23.py"
       - "src/v4/formatos/previa_step_e25.py"
+      - "src/v4/formatos/visibilidade_e26.py"
+      - "src/v4/formatos/filme_e18.py"
+      - "tests/test_visibilidade_e26.py"
       - "src/v4/formatos/multicorpo_e18.py"
       - "tests/test_adaptador_step_e23.py"
       - "src/v4/formatos/solver_restricoes_e1.py"
@@ -44,7 +47,7 @@ jobs:
           curl -fsS --retry 2 --max-time 60 "$step_url" -o source_e17/loop.step
           curl -fsSL --retry 2 --max-time 60 "$(jq -r .files.license[0] benchmarks/e17_closed_step.json)" -o source_e17/LICENSE.md
       - name: Regressions and independent kinematic oracle
-        run: python -m pytest -q -s tests/test_adaptador_step_e23.py tests/test_cad_fechado_e17.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py tests/test_renderer_mecanico_e9_e10.py tests/test_importador_geometria_e7.py tests/test_triagem_fontes_geometria_e8.py
+        run: python -m pytest -q -s tests/test_visibilidade_e26.py tests/test_adaptador_step_e23.py tests/test_cad_fechado_e17.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py tests/test_renderer_mecanico_e9_e10.py tests/test_importador_geometria_e7.py tests/test_triagem_fontes_geometria_e8.py
       - name: STEP no solver e renderer compartilhados E25
         run: python -m src.v4.formatos.previa_step_e25 benchmarks/e17_closed_step.json source_e17/loop.step source_e17/LICENSE.md qa_e25
       - name: Solid intersections, render and decode

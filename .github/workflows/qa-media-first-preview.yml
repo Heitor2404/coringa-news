@@ -1,0 +1,64 @@
+name: E226 - amostra visual real antes de novo documentario
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-media-first-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias e tipos
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          cd motor4
+          npx tsc --noEmit
+      - name: Preparar fontes USGS reais sem TTS
+        run: python -m scripts.qa_media_first_preview
+      - name: Render de nove segundos no compositor existente
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_media_first/amostra.mp4 --props=../qa_media_first/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=2 --public-dir=remotion/public --log=info
+      - name: Validar MP4 da amostra
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          q=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json','qa_media_first/amostra.mp4']))
+          v=next(s for s in q['streams'] if s['codec_type']=='video')
+          assert (v['width'],v['height'])==(540,960) and int(v['nb_frames'])==270
+          assert abs(float(q['format']['duration'])-9)<.15
+          PY
+          ffmpeg -v error -xerror -i qa_media_first/amostra.mp4 -map 0:v:0 -f null -
+      - name: Enviar somente amostra privada identificada ao Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          try:
+              chat,info=T.chat_autorizado()
+              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · AMOSTRA VISUAL DE 9s, SEM NARRAÇÃO. Comparação: imersivo / integral / imersivo. Não é episódio. Aguardando revisão humana.','supports_streaming':'true'},('video',Path('qa_media_first/amostra.mp4')))
+              if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
+          except Exception:
+              raise SystemExit('Envio privado não confirmado') from None
+          print('AMOSTRA PRIVADA ENTREGUE')
+          PY

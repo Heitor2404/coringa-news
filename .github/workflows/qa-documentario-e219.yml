@@ -43,6 +43,7 @@ jobs:
           cd motor4
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e219/filme.mp4 --props=../qa_e219/props.json --codec=h264 --crf=21 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
       - name: QA de duração, imagem e áudio
+        id: qa
         run: |
           ffprobe -v error -show_streams -show_format -of json qa_e219/filme.mp4 > qa_e219/probe.json
           python - <<'PY'
@@ -68,6 +69,13 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m scripts.documentario_telegram qa_e219 --titulo "A erupção que fez o Havaí crescer"
+      - name: Arquivar MP4 e arquivos de revisão no cofre privado
+        if: ${{ !cancelled() && steps.qa.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          tar -czf /tmp/qa-e219.tgz qa_e219
+          bash scripts/arquivar_cofre_review.sh "review-e219-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" qa_e219/filme.mp4 /tmp/qa-e219.tgz qa_e219/qa.json
       - name: Cifrar resultados para revisão privada
         if: always()
         run: |

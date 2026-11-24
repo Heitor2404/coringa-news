@@ -142,7 +142,7 @@ def candidatos_documentais(consultas, video, buscar=None, diagnostico=None):
     Metadados não demonstram ação e não homologam direitos.
     """
     from src import midia
-    from urllib.parse import urlsplit
+    from urllib.parse import urlsplit, unquote, quote
     buscar = buscar or midia._commons
     out, vistos, falhas = [], set(), []
     for q in consultas[:2]:
@@ -162,16 +162,22 @@ def candidatos_documentais(consultas, video, buscar=None, diagnostico=None):
             lic = midia._txt(meta, 'LicenseShortName').upper()
             autor = midia._txt(meta, 'Artist')
             url, pagina = inf.get('url') or '', inf.get('descriptionurl') or ''
+            # MediaWiki pode fornecer File%3A ou omitir descriptionurl. Derivar
+            # a página canônica apenas do título File: retornado pela própria API.
+            titulo_api = str(p.get('title') or '')
+            if not pagina and titulo_api.startswith('File:') and len(titulo_api)>5:
+                pagina = 'https://commons.wikimedia.org/wiki/' + quote(titulo_api.replace(' ', '_'), safe=':')
             u, pg = urlsplit(url), urlsplit(pagina)
             mime = inf.get('mime') or ''
             razoes = []
             if lic not in LICENCAS or not autor:
                 razoes.append('licenca_ou_autor')
             if (u.scheme != 'https' or u.netloc != 'upload.wikimedia.org'
-                    or not u.path.startswith('/wikipedia/commons/') or u.query or u.fragment
-                    or pg.scheme != 'https' or pg.netloc != 'commons.wikimedia.org'
-                    or not pg.path.startswith('/wiki/File:')):
-                razoes.append('origem')
+                    or not unquote(u.path).startswith('/wikipedia/commons/') or u.query or u.fragment):
+                razoes.append('origem_arquivo')
+            if (pg.scheme != 'https' or pg.netloc != 'commons.wikimedia.org'
+                    or not unquote(pg.path).startswith('/wiki/File:') or pg.query or pg.fragment):
+                razoes.append('origem_pagina')
             if url in vistos or not midia._relevante(p.get('title', ''), q):
                 razoes.append('repetida_ou_relevancia_textual')
             if min(inf.get('width') or 0, inf.get('height') or 0) < 700:

@@ -1,0 +1,243 @@
+{
+ "pedido_sha256": "cef3eae208f9175ea0bea00769c6cd84c52125404dff6574bca3d00e2540d10e",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 10.4,
+ "data": "2026-11-24T16:00:58Z",
+ "caracteres_pedido": 32228,
+ "caracteres_resposta": 3594,
+ "json": {
+  "titulo": "Como tiram a cafeína do café?",
+  "acontecimento_central": "Grãos de café dentro de uma panela com água soltam seus solúveis; o extrato escuro passa por um cartucho de carvão ativado que prende a cafeína; a água com sabor, descafeinada, segue para novos grãos.",
+  "referencias_visuais": [
+   "esquema ilustrativo identificado, não reconstrução exata",
+   "fluxo de partículas coloridas entre atores",
+   "filtro com partículas retidas e partículas que atravessam",
+   "ciclo de reaproveitamento da água"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "A água extrai solúveis dos grãos, o extrato atravessa o carvão ativado que retém a cafeína, e a água com sabor descafeinada vai para novos grãos.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há mídia real, mapa ou CAD disponíveis; o processo é um esquema ilustrativo que cabe no compilador declarativo com fluxo, filtrar e acumular.",
+    "atores": [
+     {
+      "id": "panela",
+      "rotulo": "Água com grãos",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "recipiente",
+       "cor": "#7FB8E6"
+      },
+      "fatos": [
+       "a1"
+      ]
+     },
+     {
+      "id": "graos",
+      "rotulo": "Grãos de café",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "beans",
+        "coffee-beans"
+       ],
+       "alternativa": "celula"
+      },
+      "fatos": [
+       "a1"
+      ]
+     },
+     {
+      "id": "carvao",
+      "rotulo": "Carvão ativado",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "filtro",
+       "cor": "#1F1F1F"
+      },
+      "fatos": [
+       "a2"
+      ]
+     },
+     {
+      "id": "novos_graos",
+      "rotulo": "Novos grãos",
+      "papel": "destino",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "beans"
+       ],
+       "alternativa": "celula"
+      },
+      "fatos": [
+       "a2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "graos",
+      "b": "panela"
+     },
+     {
+      "tipo": "sobre",
+      "a": "panela",
+      "b": "carvao"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "carvao",
+      "b": "novos_graos"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Como tiram a cafeína do café sem estragar o grão? Começa com água.",
+      "etapa": "Grãos na água",
+      "fatos": [
+       "a1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "panela",
+        "inicio": 0.0,
+        "fim": 0.15
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "graos",
+        "inicio": 0.0,
+        "fim": 0.15
+       },
+       {
+        "verbo": "destacar",
+        "alvo": "graos",
+        "inicio": 0.15,
+        "fim": 0.3
+       }
+      ],
+      "camera": {
+       "foco": "graos",
+       "enquadramento": "medio",
+       "motivo": "Mostrar os grãos grandes e reconhecíveis dentro da água, ainda com a água clara (estado inicial)."
+      }
+     },
+     {
+      "fala": "A água extrai do grão as substâncias solúveis, e vira um extrato escuro.",
+      "etapa": "Extração",
+      "fatos": [
+       "a1"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "graos",
+        "para": "panela",
+        "item": {
+         "rotulo": "Solúveis",
+         "cor": "#8B5A2B"
+        },
+        "quantidade": 10,
+        "inicio": 0.1,
+        "fim": 0.8
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "panela",
+        "para_cor": "#6B4423",
+        "intensidade": 0.8,
+        "inicio": 0.3,
+        "fim": 0.95
+       }
+      ],
+      "camera": {
+       "foco": "panela",
+       "enquadramento": "medio",
+       "motivo": "Ver os solúveis saindo do grão e a água escurecendo: a extração."
+      }
+     },
+     {
+      "fala": "Esse extrato passa por carvão ativado, que prende a cafeína e deixa o sabor passar.",
+      "etapa": "Filtração",
+      "fatos": [
+       "a2"
+      ],
+      "acoes": [
+       {
+        "verbo": "filtrar",
+        "de": "panela",
+        "filtro": "carvao",
+        "para": "novos_graos",
+        "passa": {
+         "item": {
+          "rotulo": "Sabor",
+          "cor": "#C98B4B"
+         }
+        },
+        "retido": {
+         "item": {
+          "rotulo": "Cafeína",
+          "cor": "#E04F4F"
+         }
+        },
+        "quantidade": 10,
+        "inicio": 0.05,
+        "fim": 0.95
+       }
+      ],
+      "camera": {
+       "foco": "carvao",
+       "enquadramento": "detalhe",
+       "motivo": "Ver a cafeína ficando retida no carvão enquanto o sabor atravessa."
+      }
+     },
+     {
+      "fala": "A água com sabor, já sem cafeína, é reaproveitada em novos lotes de grãos.",
+      "etapa": "Reuso",
+      "fatos": [
+       "a2"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "novos_graos",
+        "inicio": 0.0,
+        "fim": 0.2
+       },
+       {
+        "verbo": "fluxo",
+        "de": "carvao",
+        "para": "novos_graos",
+        "item": {
+         "rotulo": "Água com sabor",
+         "cor": "#C98B4B"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.2,
+        "fim": 0.9
+       }
+      ],
+      "camera": {
+       "foco": "novos_graos",
+       "enquadramento": "geral",
+       "motivo": "Payoff: a água descafeinada, com sabor, volta para novos grãos."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45430485122"
+}

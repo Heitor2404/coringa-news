@@ -156,3 +156,52 @@ def test_episodio_varias_cenas_no_mesmo_compositor():
     assert s2['scene_graph']['captions'][0]['words'][0]['s'] == pytest.approx(0.2, abs=1e-3)   # 9.2 - 9.0
     caso_ep = {**FX['caso'], 'alvo_duracao': [55, 75]}
     assert 'MODO EPISÓDIO' in D.prompt(caso_ep, DISP) and 'MODO EPISÓDIO' not in D.prompt(FX['caso'], DISP)
+
+
+def test_e205_triagem_prioriza_registro_e_atlas_sem_fallback():
+    necessidades = [
+        {'id': 'r', 'sujeito': 'ambiente natural', 'mostrar': 'visão geral', 'necessidade': 'registro', 'fatos': ['t1']},
+        {'id': 'm', 'sujeito': 'região natural', 'mostrar': 'localização', 'necessidade': 'territorio', 'fatos': ['t1']},
+        {'id': 'a', 'sujeito': 'processo interno', 'mostrar': 'transformação', 'necessidade': 'lacuna_explicativa',
+         'lacuna': 'interior invisível no registro', 'fatos': ['t1']},
+    ]
+    r = D.triagem_documental(necessidades, FX['caso']['fatos'], {'itens': [], 'reprovados': []})
+    assert [x['estado'] for x in r] == ['PESQUISAR_MIDIA', 'SOLICITAR_ATLAS', 'REVISAR_LACUNA_E_REFERENCIAS']
+    assert [x['modalidade_proposta'] for x in r] == ['registro_real', 'mapa_atlas', 'cena_declarativa']
+    assert all(not x['pronto_para_render'] for x in r)
+    del necessidades[2]['lacuna']
+    with pytest.raises(ValueError, match='E205-SEM-LACUNA'):
+        D.triagem_documental(necessidades, FX['caso']['fatos'], {'itens': []})
+
+
+def test_e205_intercala_sem_perder_tempo_e_reusa_preflight(tmp_path, monkeypatch):
+    from src.v4.formatos import filme_editorial as FILME
+    p = _copia()
+    anim = p['cenas'][0]
+    media = [{'id': 'r', 'modalidade': 'registro_real', 'beats': [{'fala': 'Registro.'}]},
+             {'id': 'm', 'modalidade': 'mapa_atlas', 'beats': [{'fala': 'Localização.'}]}]
+    p['cenas'] = [media[0], anim, media[1]]
+    docs = {'tipo': 'PROVA_VISUAL_PRIVADA', 'publicar': False,
+            'shots': [{'id': 'r', 'type': 'photo', 'start': 0, 'end': 3},
+                      {'id': 'm', 'type': 'atlas_map', 'start': 3, 'end': 6}]}
+    calls = []
+    def fake_preparar(plano, destino, public_root, downloader=None):
+        calls.append(plano)
+        destino.mkdir(parents=True)
+        path = destino / 'props.json'
+        path.write_text(json.dumps({'shots': [{**s, 'asset': 'film_editorial/teste.png', 'source': 'fixture'} for s in plano['shots']],
+                                    'direitos_pendentes': ['fixture'], 'safe_area_profile': 'MULTIPLATAFORMA_CONSERVADOR_V1'}))
+        return {'pronto': True, 'props': str(path)}
+    monkeypatch.setattr(FILME, 'preparar', fake_preparar)
+    dur = [3.] * (len(anim['beats']) + 2)
+    r = D.preparar_misto({'plano': p}, FX['caso'], docs, tmp_path, tmp_path, dur)
+    shots = r['props']['shots']
+    assert calls == [docs] and [s['type'] for s in shots] == ['photo', 'scene_graph', 'atlas_map']
+    assert all(a['end'] == b['start'] for a, b in zip(shots, shots[1:]))
+    assert r['props']['duracao'] == sum(dur) and r['props']['direitos_pendentes'] == ['fixture']
+    assert 'safe_area_profile' not in r['props'] and r['publicar'] is False
+    with pytest.raises(ValueError, match='E205-DURACAO-MIDIA'):
+        D.preparar_misto({'plano': p}, FX['caso'], docs, tmp_path, tmp_path, [2.] + dur[1:])
+    with pytest.raises(ValueError, match='E205-PRIVADO'):
+        D.preparar_misto({'plano': p}, FX['caso'], {**docs, 'publicar': True}, tmp_path, tmp_path, dur)
+    assert len(calls) == 1

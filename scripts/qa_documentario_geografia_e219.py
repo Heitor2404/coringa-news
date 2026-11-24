@@ -121,7 +121,9 @@ def mapclip(ch,span):
     subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
                     '--props='+str((MAP/'props_atlas_formato.json').resolve()),
                     '--frames=0-'+str(prep['frame_fim_inclusivo']),'--codec=h264','--crf=22','--concurrency=1','--public-dir=remotion/public','--log=error'],cwd='motor4',check=True,timeout=420)
-    B.confirmar(prep,clip,MAP)
+    print('E219 MAPA BINARIO',clip.exists(),clip.stat().st_size if clip.exists() else None,flush=True)
+    proof=B.confirmar(prep,clip,MAP)
+    print('E219 MAPA VALIDADO',proof['duracao_s'],proof['quadros_decodificados'],flush=True)
     return clip,MAP/'comprovante_atlas.json'
 
 def main():

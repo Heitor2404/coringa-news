@@ -23,11 +23,16 @@ const SceneGraphV2:React.FC<{data:SceneDataV2;t:number;duration:number;headline:
       cand.push({id:a.id,x:sx,y:sy+(vh*f*k.sy*z)/2+12,w,text:a.label,op:Math.min(1,(k.opacity-0.5)/0.35),kind:a.layer,
         pri:(a.layer==='essencial'?(k.opacity>0.9?3:2):a.layer==='efeito'?1:0)});
     }
-    return <g key={a.id} opacity={k.opacity} transform={`translate(${sx} ${sy}) scale(${z*k.sx*f} ${z*k.sy*f}) translate(${-(vx+vw/2)} ${-(vy+vh/2)})`} filter={flt}>
+    const essencial=a.layer==='essencial';
+    const hh=(vh*f*k.sy*z)/2,ww=(vw*f*k.sx*z)/2;
+    return <g key={a.id}>
+      {/* sombra de contato (profundidade 2.5D), só para atores essenciais */}
+      {essencial&&<ellipse cx={sx} cy={sy+hh*0.96} rx={ww*0.78} ry={Math.max(5,hh*0.09)} fill="#000" opacity={0.32*k.opacity}/>}
+      <g opacity={k.opacity} transform={`translate(${sx} ${sy}) scale(${z*k.sx*f} ${z*k.sy*f}) translate(${-(vx+vw/2)} ${-(vy+vh/2)})`} filter={flt??(essencial?'url(#e202-pop)':undefined)}>
       {flt&&<defs><filter id={`sat-${a.id}`}><feColorMatrix type="saturate" values={String(k.sat)}/></filter></defs>}
       {a.shapes.map((s,i)=><path key={i} d={s.d} fill={s.fill} stroke={s.stroke||'none'} strokeWidth={(s.sw||0)} vectorEffect={a.layer==='contexto'?'non-scaling-stroke':undefined} strokeLinecap="round" strokeLinejoin="round"
         {...(a.tracado?{pathLength:1,strokeDasharray:`${k.draw} 1`}:{})}/>)}
-    </g>;
+    </g></g>;
   });
   const placed:Lb[]=[];
   for(const c of cand.sort((p,q)=>q.pri-p.pri)){
@@ -51,7 +56,11 @@ const SceneGraphV2:React.FC<{data:SceneDataV2;t:number;duration:number;headline:
       <defs><linearGradient id="e202-fade" x1="0" y1="0" x2="0" y2="1920" gradientUnits="userSpaceOnUse">
         <stop offset={330/1920} stopColor="#fff" stopOpacity="0"/><stop offset={440/1920} stopColor="#fff" stopOpacity="1"/>
         <stop offset={1170/1920} stopColor="#fff" stopOpacity="1"/><stop offset={1270/1920} stopColor="#fff" stopOpacity="0"/></linearGradient>
-        <mask id="e202-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920"><rect width="1080" height="1920" fill="url(#e202-fade)"/></mask></defs>
+        <mask id="e202-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920"><rect width="1080" height="1920" fill="url(#e202-fade)"/></mask>
+        <filter id="e202-pop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#000" floodOpacity=".45"/></filter>
+        <radialGradient id="e202-spot" cx="50%" cy="50%" r="50%"><stop offset="0" stopColor="#FFD21F" stopOpacity=".10"/><stop offset="1" stopColor="#FFD21F" stopOpacity="0"/></radialGradient></defs>
+      {/* luz de palco quente no centro da área segura (identidade dourada do canal), não essencial */}
+      <ellipse cx={(BOX_V2[0]+BOX_V2[2])/2} cy={(BOX_V2[1]+BOX_V2[3])/2+40} rx={520} ry={470} fill="url(#e202-spot)"/>
       <g mask="url(#e202-mask)">{drawn}</g></svg>
     {labels}
     <div style={{position:'absolute',left:160,top:308,fontWeight:900,fontSize:27,letterSpacing:.5}}>CORINGA <span style={{color:GOLD}}>EXPLICA</span></div>

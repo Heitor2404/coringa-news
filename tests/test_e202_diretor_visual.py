@@ -114,3 +114,10 @@ def test_sem_ramos_por_tema_no_codigo():
     for nome in ('formas_e202.py', 'cena_declarativa_e202.py', 'diretor_visual_e202.py', 'ciclo_e202.py'):
         txt = Path('src/v4/formatos', nome).read_text(encoding='utf8')
         assert not proibidos.search(txt), nome
+
+
+def test_rubrica_comum_reconhece_cena_declarativa():
+    f = D.filme({'plano': FX['plano']}, FX['caso'])
+    r = D.auditoria_contrato(f['props'])
+    assert r['estrutura_declarada_ok'] and r['provas_resolvidas_no_plano'] == 1
+    assert r['prova_visual'] == 'NAO_INSPECIONADA' and r['aprovacao_humana'] == 'PENDENTE'

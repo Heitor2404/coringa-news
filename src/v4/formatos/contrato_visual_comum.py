@@ -87,6 +87,13 @@ def extrair(plano: dict) -> list[dict]:
             if tipo == 'mechanism':
                 if s.get('mechanism') and s.get('evidence') == 'explainer':
                     evid.append('mecanismo.ilustrativo')
+            elif tipo == 'scene_graph':
+                # E202: cena declarativa compilada a partir de fatos com fonte; prova = ids de fatos citados
+                # pelo diretor e checados no compilador (não é prova de imagem nem de exatidão)
+                fatos = (s.get('direcao_visual') or {}).get('provas') or []
+                sg = s.get('scene_graph') or {}
+                if s.get('evidence') == 'explainer' and fatos and sg.get('sources'):
+                    evid += [f'cena_declarativa.fato:{f}' for f in fatos]
             else:
                 for field in ('asset', 'assetB'):
                     if s.get(field) in (plano.get('media') or {}):
@@ -99,6 +106,7 @@ def extrair(plano: dict) -> list[dict]:
                 'referente': s.get('subject') or '',
                 'aprendizado': s.get('headline') or '',
                 'provas_declaradas': ([s.get('mechanism')] if tipo == 'mechanism'
+                                     else list((s.get('direcao_visual') or {}).get('provas') or []) if tipo == 'scene_graph'
                                      else [s.get(k) for k in ('asset', 'assetB') if s.get(k)]),
                 'provas_resolvidas': len(evid),
                 'suportes': evid,

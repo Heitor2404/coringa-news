@@ -156,13 +156,39 @@ def pedir_ia(texto: str, registro: list[dict], cache: Path = CACHE, permitir_cha
     if not permitir_chamada:
         raise RuntimeError(f'E202-SEM-CACHE: pedido {h[:12]} não está no cache e chamadas de IA estão desligadas')
     from src import claude, gemini
-    p0 = claude.GASTO['pedidos']
     t0 = time.time()
-    bruto = gemini.texto(texto)          # cascata oficial do projeto (Claude Code se ligado → Gemini → reservas)
+    falhas, bruto, prov = [], None, None
+    # ordem explícita (padrão: Gemini grátis → Claude Code por assinatura, ambos já usados pelo projeto)
+    for nome in [x.strip() for x in os.getenv('E202_PROVEDORES', 'gemini,claude').split(',') if x.strip()]:
+        try:
+            if nome == 'gemini':
+                antigo = os.environ.get('USAR_CLAUDE')
+                os.environ['USAR_CLAUDE'] = '0'          # a cascata do Gemini não deve pular para o Claude sozinha
+                try:
+                    bruto = gemini.texto(texto)
+                finally:
+                    if antigo is None:
+                        os.environ.pop('USAR_CLAUDE', None)
+                    else:
+                        os.environ['USAR_CLAUDE'] = antigo
+                prov = 'gemini_cascata' + ('+' + '+'.join(gemini.RESERVAS_USADAS) if getattr(gemini, 'RESERVAS_USADAS', None) else '')
+            elif nome == 'claude':
+                os.environ['USAR_CLAUDE'] = '1'
+                if not claude.disponivel():
+                    raise RuntimeError('Claude Code indisponível (sem token/CLI)')
+                bruto = claude.pedir(texto)
+                prov = f'claude_code:{claude.MODELO}'
+            else:
+                raise RuntimeError(f'provedor desconhecido {nome}')
+            if bruto and bruto.strip():
+                break
+        except Exception as e:
+            falhas.append(f'{nome}: {type(e).__name__}: {str(e)[:160]}')
+            bruto = None
+    if not bruto:
+        raise RuntimeError('E202-SEM-PROVEDOR: ' + ' | '.join(falhas))
     obj = gemini.extrair_json(bruto)
-    prov = 'claude_code' if claude.GASTO['pedidos'] > p0 else ('gemini_cascata' + (
-        '+' + '+'.join(gemini.RESERVAS_USADAS) if getattr(gemini, 'RESERVAS_USADAS', None) else ''))
-    item = {'pedido_sha256': h, 'provedor': prov, 'segundos': round(time.time() - t0, 1), 'data': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    item = {'pedido_sha256': h, 'provedor': prov, 'falhas_antes': falhas, 'segundos': round(time.time() - t0, 1), 'data': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
             'caracteres_pedido': len(texto), 'caracteres_resposta': len(bruto), 'json': obj}
     cache.mkdir(parents=True, exist_ok=True)
     arq.write_text(json.dumps(item, ensure_ascii=False, indent=1) + '\n', encoding='utf8')
@@ -312,7 +338,7 @@ def filme(resultado: dict, caso: dict, duracoes: list[float] | None = None, pala
             'direcao_visual': {'verbo': cena.get('verbo'), 'referente': cena.get('acontecimento'),
                                'aprendizado': cena['beats'][-1]['fala'], 'provas': sorted({f for b in cena['beats'] for f in b['fatos']})},
             'estados_esperados': [], 'cues': []}
-    props = {'duracao': total, 'shots': [shot], 'preview': True, 'private_review_only': True}
+    props = {'formato': 'filme_editorial', 'duracao': total, 'shots': [shot], 'preview': True, 'private_review_only': True}
     if audio:
         props['scene_narration_asset'] = audio
     return {'props': props, 'proveniencia': comp['proveniencia']}
@@ -324,19 +350,9 @@ def _dominio(u: str) -> str:
 
 
 def auditoria_contrato(props: dict) -> dict:
-    """Mesma rubrica do ATLAS/FILME (contrato_visual_comum) — estrutura; visão e humano à parte."""
+    """Mesma rubrica do ATLAS/FILME (contrato_visual_comum.auditar): estrutura declarada; visão e humano à parte."""
     from src.v4.formatos import contrato_visual_comum as CV
-    falhas = []
-    for s in props['shots']:
-        dv = s.get('direcao_visual') or {}
-        if dv.get('verbo') not in CV.VERBOS:
-            falhas.append({'id': s['id'], 'codigo': 'U-SEM-INTENCAO'})
-        if not dv.get('referente') or not dv.get('aprendizado'):
-            falhas.append({'id': s['id'], 'codigo': 'U-SEM-REFERENTE'})
-        if not dv.get('provas'):
-            falhas.append({'id': s['id'], 'codigo': 'U-SEM-PROVA'})
-    return {'falhas': falhas, 'criterios_visuais': {s['id']: CV.criterios(s['direcao_visual']['verbo']) for s in props['shots']},
-            'prova_visual': 'NAO_INSPECIONADA', 'aprovacao_humana': 'PENDENTE'}
+    return CV.auditar(props)
 
 
 PROMPT_VISAO = """Você revisa quadros de um vídeo vertical do canal Coringa Explica. Avalie SÓ o que está nas imagens.

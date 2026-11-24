@@ -215,8 +215,11 @@ def analisar(plano: dict, biblioteca: dict | None = None) -> dict:
             bloquear('R-MAPA-SEM-PROVA',
                      'mapa precisa de roi, clipe ATLAS e comprovante vinculados ao acontecimento')
         else:
+            # E202: existe rota genérica (diretor_visual_e202 → cena declarativa v2 → FilmeEditorial), mas ela
+            # parte dos FATOS e passa pela própria verificação; esta triagem não a aprova por correspondência.
+            row['rota_disponivel'] = 'diretor_visual_e202'
             bloquear('R-FORMA-NAO-IMPLEMENTADA',
-                     'recurso adequado não disponível no FilmeEditorial ou dados/fonte insuficientes')
+                     'sem renderer por catálogo; usar diretor_visual_e202 (cena declarativa a partir dos fatos)')
         if not ac.get('fonte'):
             bloquear('R-FONTE-NAO-DECLARADA',
                      'fato não tem fonte; sem isso não é possível aprovar roteiro')

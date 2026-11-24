@@ -101,12 +101,21 @@ def location_title(ch,span):
     return ([{'texto':line,'t':.3} for line in normal]+
             [{'texto':line,'t':span/3,'destaque':True} for line in focus])
 
+def marker_time(span):
+    # Reveal early for short clips, but preserve actual informational cadence
+    # for longer map holds. No artificial event or validator bypass.
+    gap=float(A.REGRAS['progressao_max_s'])
+    t=max(span*.60,span-gap+.05)
+    if t-span/3>gap or span-t>gap:
+        raise ValueError('E219-MAPA-PROGRESSAO: dividir conteúdo geográfico')
+    return t
+
 def mapplan(ch,span):
     q=ch['atlas']
     p={'formato':'atlas','canal':'coringa','video_id':'e219-location','titulo':ch['title'],'geo':'motor4/formatos/dados/mundo.topo.json',
        'duracao':span,'camera':'roi','rasters':[{'nome':q['raster']}],
        'narracao':{'fatos':[]},'destaques':[],'rotas':[],'clipes':[],
-       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':span*.60,'t1':span,'estilo':'ponto'}],
+       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':marker_time(span),'t1':span,'estilo':'ponto'}],
        'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
                  'prova':'Localização em base cartográfica licenciada; não representa a costa histórica de um evento.',
                  'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
@@ -127,13 +136,23 @@ def mapclip(ch,span):
     return clip,MAP/'comprovante_atlas.json'
 
 def cortes_medidos(inicio,fim,words):
-    """Editorial cadence target, not a semantic proof. Use speech boundaries in frames."""
+    """Prefer speech boundaries, keeping the existing unverified-action gate.
+    Longer shots need real action annotations, never fabricated here.
+    """
+    minimum,maximum=42,113
+    length=fim-inicio
+    if length<minimum:raise ValueError('E219-CORTE-CURTO')
+    n=math.ceil(length/maximum)
+    if length<n*minimum:raise ValueError('E219-CADENCIA-INVIAVEL')
     cuts=[inicio]
     boundaries=sorted({round(w['e']*30) for w in words if inicio<w['e']*30<fim})
-    while fim-cuts[-1]>165:
+    for remaining in range(n-1,0,-1):
         left=cuts[-1]
-        valid=[b for b in boundaries if left+66<=b<=min(left+150,fim-66)]
-        chosen=min(valid,key=lambda b:abs(b-(left+114))) if valid else min(left+114,fim-66)
+        lo=max(left+minimum,fim-remaining*maximum)
+        hi=min(left+maximum,fim-remaining*minimum)
+        target=left+(fim-left)/(remaining+1)
+        valid=[b for b in boundaries if lo<=b<=hi]
+        chosen=min(valid,key=lambda b:abs(b-target)) if valid else max(lo,min(hi,round(target)))
         cuts.append(chosen)
     cuts.append(fim)
     return cuts
@@ -189,7 +208,7 @@ def main():
         available.sort(key=lambda m:m['id'] not in modes)
         for k,(fa,fb) in enumerate(zip(cuts,cuts[1:])):
             s,e=fa/30,fb/30;span=e-s
-            if span<1.4:raise ValueError('E219-CORTE-CURTO')
+            if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
             ordered=available[k%len(available):]+available[:k%len(available)]
             selected=None
             for m in ordered:

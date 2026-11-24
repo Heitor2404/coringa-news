@@ -29,7 +29,9 @@ const SceneGraphV2:React.FC<{data:SceneDataV2;t:number;duration:number;headline:
       {/* sombra de contato (profundidade 2.5D), só para atores essenciais */}
       {essencial&&<ellipse cx={sx} cy={sy+hh*0.96} rx={ww*0.78} ry={Math.max(5,hh*0.09)} fill="#000" opacity={0.32*k.opacity}/>}
       <g opacity={k.opacity} transform={`translate(${sx} ${sy}) scale(${z*k.sx*f} ${z*k.sy*f}) translate(${-(vx+vw/2)} ${-(vy+vh/2)})`} filter={flt??(essencial?'url(#e202-pop)':undefined)}>
-      {flt&&<defs><filter id={`sat-${a.id}`}><feColorMatrix type="saturate" values={String(k.sat)}/></filter></defs>}
+      {/* saturação < 1 = DESBOTAR: tira a cor e clareia (pálido), em vez de escurecer para cinza */}
+      {flt&&<defs><filter id={`sat-${a.id}`}><feColorMatrix type="saturate" values={String(Math.min(1.5,k.sat))}/>
+        {k.sat<1&&<feComponentTransfer>{(['R','G','B'] as const).map(c=>{const w=0.55*(1-k.sat);const F=c==='R'?'feFuncR':c==='G'?'feFuncG':'feFuncB';return React.createElement(F,{key:c,type:'linear',slope:1-w,intercept:w});})}</feComponentTransfer>}</filter></defs>}
       {a.shapes.map((s,i)=><path key={i} d={s.d} fill={s.fill} stroke={s.stroke||'none'} strokeWidth={(s.sw||0)} vectorEffect={a.layer==='contexto'?'non-scaling-stroke':undefined} strokeLinecap="round" strokeLinejoin="round"
         {...(a.tracado?{pathLength:1,strokeDasharray:`${k.draw} 1`}:{})}/>)}
       {a.tint_color&&k.tint>0.003&&<g opacity={k.tint}>{a.shapes.filter(s=>s.fill!=='none').map((s,i)=><path key={'t'+i} d={s.d} fill={a.tint_color}/>)}</g>}

@@ -1,0 +1,975 @@
+{
+ "pedido_sha256": "26b5c306fb7ef772062341cc266f6d8890ab71573a583f3e1c30663c131d264a",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high dema)"
+ ],
+ "segundos": 79.9,
+ "data": "2026-11-24T15:42:52Z",
+ "caracteres_pedido": 43174,
+ "caracteres_resposta": 13477,
+ "json": {
+  "titulo": "Por que flamingo é rosa?",
+  "acontecimento_central": "Ver o pigmento viajar do alimento até as penas do adulto, sair das penas dos pais pelo 'leite' vermelho do papo e tingir o filhote, enquanto os pais ficam quase brancos no fim da temporada.",
+  "referencias_visuais": [
+   "corte esquemático com revelar_interior (esquema ilustrativo, não anatomia real)",
+   "fluxo de partículas coloridas para o pigmento",
+   "tingir para mostrar a intensidade da cor mudando",
+   "filtro com partículas retidas e passantes",
+   "primitivas rotuladas como 'esquema' para fígado e papo, que não têm ícone fiel"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "CONECTAR",
+    "acontecimento": "Adulto rosa forte ao lado de um filhote pálido: a contradição inicial. O filhote se aproxima do adulto.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há registro real comprovado do assunto; o compilador declarativo mostra o contraste com ícones e tingir.",
+    "atores": [
+     {
+      "id": "a_adulto",
+      "rotulo": "Adulto rosa",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f1"
+      ]
+     },
+     {
+      "id": "a_filhote",
+      "rotulo": "Filhote cinza",
+      "papel": "contexto",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f1"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "ao_lado",
+      "a": "a_filhote",
+      "b": "a_adulto"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Filhote de flamingo nasce branco-acinzentado, de bico reto. Mas o adulto é rosa. Por quê?",
+      "etapa": "Contraste",
+      "fatos": [
+       "f1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_adulto",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_adulto",
+        "de_saturacao": 0.9,
+        "para_saturacao": 0.95,
+        "inicio": 0.0,
+        "fim": 1.0
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_filhote",
+        "inicio": 0.2,
+        "fim": 0.5
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_filhote",
+        "de_saturacao": 0.05,
+        "para_saturacao": 0.1,
+        "inicio": 0.5,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_adulto",
+        "para": "direita",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_adulto",
+       "enquadramento": "medio",
+       "motivo": "Protagonista em quadro com a pergunta logo no início."
+      }
+     },
+     {
+      "fala": "Leva anos para ficar rosa e ter o bico curvo. E o mais estranho: no fim, os pais é que ficam pálidos.",
+      "etapa": "Segunda contradição",
+      "fatos": [
+       "f1",
+       "f6"
+      ],
+      "acoes": [
+       {
+        "verbo": "mover",
+        "alvo": "a_filhote",
+        "para": "a_adulto",
+        "inicio": 0.1,
+        "fim": 0.9
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_filhote",
+        "de_saturacao": 0.1,
+        "para_saturacao": 0.2,
+        "inicio": 0.1,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_filhote",
+       "enquadramento": "geral",
+       "motivo": "O filhote pálido se aproxima do adulto rosa."
+      }
+     }
+    ]
+   },
+   {
+    "id": "c2",
+    "verbo": "MOSTRAR",
+    "acontecimento": "Algas microscópicas com pigmento são comidas pelas artêmias; o pigmento passa para elas e depois chega ao flamingo.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Esquema ilustrativo do caminho do pigmento; não há registro real disponível.",
+    "atores": [
+     {
+      "id": "a_alga",
+      "rotulo": "Algas microscópicas",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "celula",
+       "cor": "#D9822B"
+      },
+      "fatos": [
+       "f2"
+      ]
+     },
+     {
+      "id": "a_artemia",
+      "rotulo": "Artêmia",
+      "papel": "meio",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "shrimp"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f2"
+      ]
+     },
+     {
+      "id": "a_adulto",
+      "rotulo": "Adulto rosa",
+      "papel": "destino",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f2",
+       "f4"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "ao_lado",
+      "a": "a_alga",
+      "b": "a_artemia"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_artemia",
+      "b": "a_adulto"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "A cor começa em pigmentos vermelhos, amarelos ou laranja, feitos por plantas e algas.",
+      "etapa": "Origem da cor",
+      "fatos": [
+       "f2"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_alga",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_alga",
+        "para_cor": "#E8603C",
+        "intensidade": 0.8,
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_alga",
+        "para": "esquerda",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_alga",
+       "enquadramento": "detalhe",
+       "motivo": "O pigmento aparece na alga."
+      }
+     },
+     {
+      "fala": "Artêmias, pequenos crustáceos, comem essas algas. O pigmento passa para elas.",
+      "etapa": "Pigmento na artêmia",
+      "fatos": [
+       "f2"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_artemia",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_alga",
+        "para": "a_artemia",
+        "item": {
+         "rotulo": "Pigmento",
+         "cor": "#E8603C"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_artemia",
+        "para": "a_alga",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_artemia",
+       "enquadramento": "medio",
+       "motivo": "A artêmia recebe o pigmento da alga."
+      }
+     },
+     {
+      "fala": "Quem se alimenta disso recebe o pigmento. Por isso a cor depende da dieta.",
+      "etapa": "Pigmento no flamingo",
+      "fatos": [
+       "f2",
+       "f4"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_adulto",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_artemia",
+        "para": "a_adulto",
+        "item": {
+         "rotulo": "Pigmento",
+         "cor": "#E8603C"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_adulto",
+        "para": "a_artemia",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_adulto",
+       "enquadramento": "medio",
+       "motivo": "O pigmento chega ao flamingo que se alimenta."
+      }
+     }
+    ]
+   },
+   {
+    "id": "c3",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "O flamingo se alimenta de cabeça para baixo e as placas do bico filtram a água, retendo o alimento com pigmento.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Mecanismo de filtragem mostrado por esquema ilustrativo com o ator filtro.",
+    "atores": [
+     {
+      "id": "a_adulto",
+      "rotulo": "Adulto rosa",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f3"
+      ]
+     },
+     {
+      "id": "a_bico",
+      "rotulo": "Placas do bico (esquema)",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "filtro",
+       "cor": "#8D6E63"
+      },
+      "fatos": [
+       "f3"
+      ]
+     },
+     {
+      "id": "a_agua",
+      "rotulo": "Água com alimento",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "fluido",
+       "cor": "#4FA3D1"
+      },
+      "fatos": [
+       "f3"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "a_bico",
+      "b": "a_adulto"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_agua",
+      "b": "a_bico"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "O flamingo come de cabeça para baixo, com o bico mergulhado na água.",
+      "etapa": "Postura de alimentação",
+      "fatos": [
+       "f3"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_agua",
+        "inicio": 0.0,
+        "fim": 0.2
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_adulto",
+        "para": "baixo",
+        "inicio": 0.2,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_adulto",
+       "enquadramento": "medio",
+       "motivo": "Acompanhar a cabeça descendo até a água."
+      }
+     },
+     {
+      "fala": "Placas no bico funcionam como filtro: a água sai e o alimento fica preso.",
+      "etapa": "Filtragem",
+      "fatos": [
+       "f3"
+      ],
+      "acoes": [
+       {
+        "verbo": "filtrar",
+        "de": "a_agua",
+        "filtro": "a_bico",
+        "para": "a_adulto",
+        "passa": {
+         "item": {
+          "rotulo": "Água",
+          "cor": "#4FA3D1"
+         }
+        },
+        "retido": {
+         "item": {
+          "rotulo": "Alimento",
+          "cor": "#E8603C"
+         }
+        },
+        "quantidade": 10,
+        "inicio": 0.0,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_bico",
+        "para": "baixo",
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_bico",
+       "enquadramento": "detalhe",
+       "motivo": "A filtragem acontece nas placas do bico."
+      }
+     }
+    ]
+   },
+   {
+    "id": "c4",
+    "verbo": "REVELAR",
+    "acontecimento": "O fígado metaboliza os pigmentos, moléculas derivadas vão para as penas e o flamingo ganha cor conforme a dieta.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Corte esquemático sem pretensão anatômica; o fígado é primitiva rotulada porque não há ícone fiel.",
+    "atores": [
+     {
+      "id": "a_adulto",
+      "rotulo": "Adulto rosa",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f4"
+      ]
+     },
+     {
+      "id": "a_figado",
+      "rotulo": "Fígado (esquema)",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "celula",
+       "cor": "#8E4A3A"
+      },
+      "fatos": [
+       "f4"
+      ]
+     },
+     {
+      "id": "a_penas",
+      "rotulo": "Penas",
+      "papel": "destino",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#F48FB1"
+      },
+      "fatos": [
+       "f4"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "a_figado",
+      "b": "a_adulto"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_penas",
+      "b": "a_adulto"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Dentro do corpo, o fígado processa os pigmentos do alimento.",
+      "etapa": "Processamento",
+      "fatos": [
+       "f4"
+      ],
+      "acoes": [
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_adulto",
+        "interior": "a_figado",
+        "inicio": 0.0,
+        "fim": 0.4
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_figado",
+        "para_cor": "#E8603C",
+        "intensidade": 0.8,
+        "inicio": 0.4,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_figado",
+        "para": "direita",
+        "inicio": 0.4,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_figado",
+       "enquadramento": "detalhe",
+       "motivo": "Mostrar o fígado recebendo o pigmento."
+      }
+     },
+     {
+      "fala": "Moléculas derivadas são depositadas nas penas, e o flamingo vai ficando rosa.",
+      "etapa": "Deposição nas penas",
+      "fatos": [
+       "f4"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "a_figado",
+        "para": "a_penas",
+        "item": {
+         "rotulo": "Derivados",
+         "cor": "#F06292"
+        },
+        "quantidade": 8,
+        "inicio": 0.0,
+        "fim": 0.6
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_adulto",
+        "de_saturacao": 0.1,
+        "para_saturacao": 0.7,
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_penas",
+        "para": "a_adulto",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_penas",
+       "enquadramento": "medio",
+       "motivo": "A cor surge onde o pigmento é depositado."
+      }
+     },
+     {
+      "fala": "Quanto mais pigmento na dieta, mais intensa fica a cor.",
+      "etapa": "Dieta e intensidade",
+      "fatos": [
+       "f4"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_adulto",
+        "de_saturacao": 0.7,
+        "para_saturacao": 0.95,
+        "inicio": 0.0,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_adulto",
+        "para": "centro",
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_adulto",
+       "enquadramento": "geral",
+       "motivo": "Ver o adulto com a cor mais forte."
+      }
+     }
+    ]
+   },
+   {
+    "id": "c5",
+    "verbo": "MOSTRAR",
+    "acontecimento": "Os pais produzem no papo um 'leite' vermelho, secreção que não é leite de mamífero, e o oferecem ao filhote.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Esquema ilustrativo; o papo é primitiva rotulada porque o catálogo não tem ícone fiel.",
+    "atores": [
+     {
+      "id": "a_adulto",
+      "rotulo": "Adulto rosa",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f5"
+      ]
+     },
+     {
+      "id": "a_papo",
+      "rotulo": "Papo (esquema)",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "recipiente",
+       "cor": "#C62828"
+      },
+      "fatos": [
+       "f5"
+      ]
+     },
+     {
+      "id": "a_filhote",
+      "rotulo": "Filhote cinza",
+      "papel": "destino",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f5"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "dentro",
+      "a": "a_papo",
+      "b": "a_adulto"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_filhote",
+      "b": "a_adulto"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Na hora de criar, os dois pais produzem no papo um líquido vermelho.",
+      "etapa": "Produção no papo",
+      "fatos": [
+       "f5"
+      ],
+      "acoes": [
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_adulto",
+        "interior": "a_papo",
+        "inicio": 0.0,
+        "fim": 0.4
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_papo",
+        "para_cor": "#C62828",
+        "intensidade": 0.9,
+        "inicio": 0.4,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_papo",
+       "enquadramento": "detalhe",
+       "motivo": "O líquido se forma dentro do papo."
+      }
+     },
+     {
+      "fala": "É o 'leite' do flamingo, não de mamífero. É vermelho pelos mesmos pigmentos das penas.",
+      "etapa": "Alimentando o filhote",
+      "fatos": [
+       "f5"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "a_papo",
+        "para": "a_filhote",
+        "item": {
+         "rotulo": "Leite vermelho",
+         "cor": "#C62828"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_filhote",
+       "enquadramento": "medio",
+       "motivo": "O leite chega ao filhote."
+      }
+     }
+    ]
+   },
+   {
+    "id": "c6",
+    "verbo": "CONECTAR",
+    "acontecimento": "A cor sai das penas dos pais, passa pelo leite e chega ao filhote: os pais ficam quase brancos e o filhote, cada vez mais rosa.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Esquema ilustrativo da transferência de pigmento, mostrada com fluxo e tingir.",
+    "atores": [
+     {
+      "id": "a_pais",
+      "rotulo": "Pais",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f6"
+      ]
+     },
+     {
+      "id": "a_penas",
+      "rotulo": "Penas",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#F48FB1"
+      },
+      "fatos": [
+       "f6"
+      ]
+     },
+     {
+      "id": "a_papo",
+      "rotulo": "Papo (esquema)",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "recipiente",
+       "cor": "#C62828"
+      },
+      "fatos": [
+       "f5",
+       "f6"
+      ]
+     },
+     {
+      "id": "a_filhote",
+      "rotulo": "Filhote",
+      "papel": "destino",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "f7"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "ao_lado",
+      "a": "a_penas",
+      "b": "a_pais"
+     },
+     {
+      "tipo": "dentro",
+      "a": "a_papo",
+      "b": "a_pais"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_filhote",
+      "b": "a_pais"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Os pigmentos saem das penas dos pais e vão para esse leite.",
+      "etapa": "Pigmento deixa as penas",
+      "fatos": [
+       "f6"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_pais",
+        "de_saturacao": 0.9,
+        "para_saturacao": 0.9,
+        "inicio": 0.0,
+        "fim": 0.2
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_penas",
+        "para": "a_papo",
+        "item": {
+         "rotulo": "Pigmento",
+         "cor": "#E8603C"
+        },
+        "quantidade": 10,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.2,
+        "fim": 0.8
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_pais",
+        "de_saturacao": 0.9,
+        "para_saturacao": 0.55,
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_penas",
+        "para": "a_papo",
+        "inicio": 0.2,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_penas",
+       "enquadramento": "medio",
+       "motivo": "A cor sai das penas."
+      }
+     },
+     {
+      "fala": "Recebendo o leite, o filhote fica cada vez mais rosa.",
+      "etapa": "Filhote ganha cor",
+      "fatos": [
+       "f7"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "a_papo",
+        "para": "a_filhote",
+        "item": {
+         "rotulo": "Leite vermelho",
+         "cor": "#C62828"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.0,
+        "fim": 0.6
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_filhote",
+        "de_saturacao": 0.1,
+        "para_saturacao": 0.5,
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_filhote",
+        "para": "a_pais",
+        "inicio": 0.0,
+        "fim": 0.8
+       }
+      ],
+      "camera": {
+       "foco": "a_filhote",
+       "enquadramento": "detalhe",
+       "motivo": "A cor do filhote aumenta com o leite."
+      }
+     },
+     {
+      "fala": "No fim da temporada, pais quase brancos. O filhote só fica todo rosa por volta dos dois ou três anos.",
+      "etapa": "Payoff",
+      "fatos": [
+       "f6",
+       "f7"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_pais",
+        "de_saturacao": 0.55,
+        "para_saturacao": 0.15,
+        "inicio": 0.0,
+        "fim": 0.8
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_filhote",
+        "de_saturacao": 0.5,
+        "para_saturacao": 0.85,
+        "inicio": 0.0,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_pais",
+        "para": "centro",
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_pais",
+       "enquadramento": "geral",
+       "motivo": "Fechar com os dois em quadro: a cor passou dos pais para o filhote."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45425844838 (job 138557643125)"
+}

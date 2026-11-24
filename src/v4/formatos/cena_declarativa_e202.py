@@ -426,6 +426,13 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
             trilhas[i] = Trilha({'x': cx, 'y': cy, 'scale': 1, 'sx': 1, 'sy': 1, 'opacity': 0, 'sat': 1, 'draw': 1, 'tint': 0})
             trilhas[i].ir('opacity', 0, .5, .3, 0)
     explicito = {(k, a['alvo']) for k, b in enumerate(cena['beats']) for a in b['acoes'] if a.get('verbo') == 'aparecer' and isinstance(a.get('alvo'), str)}
+    # quem nasce por transformar/revelar_interior entra PELA ação (não aparece antes, sobreposto ao pai)
+    for k, b in enumerate(cena['beats']):
+        for a in b['acoes']:
+            if a.get('verbo') == 'transformar' and isinstance(a.get('para'), str):
+                explicito.add((k, a['para']))
+            if a.get('verbo') == 'revelar_interior' and isinstance(a.get('interior'), str):
+                explicito.add((k, a['interior']))
     TRANS = 0.55
     visivel = set()
     for k in range(nb):
@@ -619,8 +626,13 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, P, formas, trilhas, ext
     elif v == 'mover':
         tr = trilhas[a['alvo']]
         alvo = a.get('para')
-        if alvo in pos:
-            x, y = pos[alvo]['x'], pos[alvo]['y'] - pos[alvo]['s'] * .1
+        if alvo in pos and alvo in atores:
+            # aproxima até ENCOSTAR (não sobrepõe); com absorver=true entra no alvo
+            ax, ay = tr.valor('x', t0), tr.valor('y', t0)
+            bx, by = pos[alvo]['x'], pos[alvo]['y']
+            L = math.hypot(bx - ax, by - ay) or 1
+            contato = 0 if a.get('absorver') else (pos[alvo]['s'] + pos[a['alvo']]['s']) / 2 * .62
+            x, y = bx - (bx - ax) / L * contato, by - (by - ay) / L * contato
         else:
             d = pos[a['alvo']]['s'] * float(a.get('distancia', 0.35))
             dx, dy = {'esquerda': (-d, 0), 'direita': (d, 0), 'cima': (0, -d), 'baixo': (0, d), 'centro': (0, 0)}.get(alvo, (0, 0))
@@ -670,6 +682,10 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, P, formas, trilhas, ext
         else:
             grupos.append(('fluxo', a.get('item') or {'cor': '#FFD21F'}))
         n = max(1, min(MAX_PARTICULAS, int(a.get('quantidade', 8))))
+        if de not in atores:                    # 'de' é opcional em acumular: partículas chegam de cima do destino
+            alvo_ = pos[para]
+            pos = {**{k_: pos[k_] for k_ in (para, filtro) if k_}, '__origem__': {'x': alvo_['x'], 'y': alvo_['y'] - alvo_['s'] * .9, 's': alvo_['s'] * .5}}
+            de = '__origem__'
         pc = (pos[de]['x'], pos[de]['y'])
         dest = (pos[para]['x'], pos[para]['y']) if para in pos else (pc[0], pc[1] + 200)
         meio = (pos[filtro]['x'], pos[filtro]['y']) if filtro else None

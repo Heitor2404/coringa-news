@@ -1,0 +1,83 @@
+{
+  "schema": "coringa.e202.prova_multitema.v1",
+  "publish": false,
+  "private_review_only": true,
+  "note": "Assuntos inéditos em relação à E201; entradas factuais sem desenhos, shots, renderers, keyframes, assets ou trajetórias escolhidos. Não é teste cego independente nem validação de retenção. Fontes consultadas 2026-11-24; licença de mídia separada.",
+  "cases": [
+    {
+      "id": "biologia",
+      "pergunta": "Por que os flamingos são rosas?",
+      "fatos": [
+        {
+          "id": "b1",
+          "texto": "Carotenoides na alimentação, incluindo algas e pequenos crustáceos, contribuem para a cor rosa ou vermelha dos flamingos.",
+          "fonte": "https://nationalzoo.si.edu/animals/american-flamingo"
+        },
+        {
+          "id": "b2",
+          "texto": "O fígado metaboliza carotenoides e moléculas derivadas são depositadas em tecidos, inclusive penas; a intensidade da cor depende da dieta.",
+          "fonte": "https://www.nhm.ac.uk/discover/rainbow-nature-life-in-pink.html"
+        }
+      ],
+      "limites": [
+        "Não inventar estrutura molecular, escala anatômica ou tempo de mudança da plumagem.",
+        "Distinguir analogia de anatomia e filmagem real."
+      ]
+    },
+    {
+      "id": "geografia",
+      "pergunta": "Por que a Islândia está se afastando em duas direções?",
+      "fatos": [
+        {
+          "id": "g1",
+          "texto": "A Islândia fica sobre a Dorsal Mesoatlântica, onde as placas norte-americana e eurasiática se afastam.",
+          "fonte": "https://www.thingvellir.is/en/education/nature/tectonic-movements/"
+        },
+        {
+          "id": "g2",
+          "texto": "Em limites divergentes, o afastamento das placas está associado à formação de nova crosta a partir de magma.",
+          "fonte": "https://pubs.usgs.gov/gip/dynamic/understanding.html"
+        }
+      ],
+      "limites": [
+        "Não representar limite geográfico preciso sem geometria georreferenciada verificada.",
+        "Não afirmar que a ilha vai se dividir repentinamente; movimento ilustrativo sem velocidade medida."
+      ]
+    },
+    {
+      "id": "atividade_humana",
+      "pergunta": "Como tiram a cafeína do café sem destruir o grão?",
+      "fatos": [
+        {
+          "id": "a1",
+          "texto": "Um processo de descafeinação usa água para extrair substâncias solúveis do café.",
+          "fonte": "https://sca.coffee/sca-news/coffee-decoded-21-chemistry-of-decaf"
+        },
+        {
+          "id": "a2",
+          "texto": "A cafeína pode ser removida do extrato aquoso por filtração com carvão ativado; a água rica em sabor e descafeinada pode ser reutilizada com novos lotes.",
+          "fonte": "https://sca.coffee/sca-news/coffee-decoded-21-chemistry-of-decaf"
+        }
+      ],
+      "limites": [
+        "Mostrar apenas o método selecionado, sem confundir com CO2 supercrítico ou solventes.",
+        "Não inventar pureza, concentração, tempo, dimensões ou equipamento industrial exato."
+      ]
+    }
+  ],
+  "acceptance": {
+    "minimum_preview_seconds_each": 8,
+    "vertical": [
+      1080,
+      1920
+    ],
+    "fps": 30,
+    "same_compositor": true,
+    "theme_specific_renderer": false,
+    "manual_geometry_for_test": false,
+    "requires_actual_generation_provenance": true,
+    "requires_actual_mp4_review": true,
+    "source_declaration_is_not_proof": true,
+    "publication": false
+  }
+}

@@ -1,0 +1,28 @@
+name: E224 - preservar revisoes cifradas no cofre privado
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-cofre-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Recuperar arquivos cifrados existentes sem render
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p revisao
+          gh run download 45495045391 --repo Heitor2404/coringa-news --name e219-documentario-privado-cifrado --dir revisao/havai
+          test -s revisao/havai/e219.tgz.gpg
+          cp revisao/havai/e219.tgz.gpg revisao/havai-45495045391.tgz.gpg
+      - name: Verificar destino e arquivar sem descriptografar
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: bash scripts/arquivar_cofre_review.sh review-e219-cifrado-45495045391 revisao/havai-45495045391.tgz.gpg

@@ -52,6 +52,7 @@ jobs:
           import json
           modelos = json.load(open("qa_e18/QA.json"))["modelos"] + json.load(open("qa_e19/QA.json"))["modelos"]
           falhas = 0
+          oraculos_reprovados = 0
           for m in modelos:
               o = m.get("oraculo_fabricante", {})
               print("E18-RESUMO", json.dumps(dict(
@@ -66,8 +67,19 @@ jobs:
                   camera=m.get("camera"), video=m.get("verificacao_video"),
                   sha256_mp4=m.get("sha256_mp4"), sha256_quadros_rgb=m.get("sha256_quadros_rgb"),
                   publish=m.get("publish")), ensure_ascii=False, default=float))
-              falhas += m["estado"] != "PASS"
+              # E21: sucesso do solver nao equivale a conformidade com o
+              # fabricante. O CI de conformidade deve FALHAR na xArm ate que
+              # a origem da divergencia esteja comprovada e corrigida.
+              falhas += m.get("estado_execucao") != "PASS"
+              falhas += m.get("validacao_externa") in ("REPROVADO", "INDETERMINADO")
+              oraculos_reprovados += m.get("validacao_externa") == "REPROVADO"
               falhas += any(v for v in (m.get("interferencias") or {}).values())
+              falhas += m.get("liberado_para_publicacao") is not False
+          print("E21-QUALIDADE-EXTERNA", json.dumps({
+              "oraculos_reprovados":oraculos_reprovados,
+              "falhas_conformidade":falhas,
+              "status":"REPROVADO" if falhas else "SEM_FALHAS_DETECTADAS",
+              "aprovacao_visual":False,"publish":False}, ensure_ascii=False))
           raise SystemExit(1 if falhas else 0)
           EOF
       - uses: actions/upload-artifact@v4

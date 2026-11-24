@@ -578,7 +578,7 @@ def avaliar(plano: dict) -> dict:
                     and (
                         urlsplit(str(asset.get('page') or '')).hostname in (
                             'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov',
-                            'svs.gsfc.nasa.gov'
+                            'svs.gsfc.nasa.gov','science.nasa.gov'
                         ) or (
                             asset.get('original_graphic') is True
                             and asset.get('license')=='CC0'
@@ -612,7 +612,7 @@ def avaliar(plano: dict) -> dict:
                 and isinstance(asset.get('expected_sha256'),str)
                 and len(asset['expected_sha256'])==64
                 and urlsplit(str(asset.get('page') or '')).hostname in (
-                    'www.nist.gov','svs.gsfc.nasa.gov')
+                    'www.nist.gov','svs.gsfc.nasa.gov','science.nasa.gov')
             )
             if (asset.get('license') not in LICENCAS and not direitos_pendentes
                     or not asset.get('page') or not asset.get('credit')):

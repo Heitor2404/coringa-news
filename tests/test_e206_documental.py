@@ -109,3 +109,23 @@ def test_e207_audio_hash_tempo_privado_e_cobertura(tmp_path):
         D.anexar_audio_documental({**p,'private_review_only':False},asset,gs,tmp_path,'FRASES_MEDIDAS_LAB')
     with pytest.raises(ValueError,match='E207-HASH'):
         D.anexar_audio_documental(p,'e202/'+'0'*64+'.wav',gs,tmp_path,'FRASES_MEDIDAS_LAB')
+
+
+def test_e209_retimar_sem_esticar_video_ou_mapa(tmp_path):
+    import json,pytest
+    from src.v4.formatos import diretor_visual_e202 as D
+    proof=tmp_path/'proof.json';proof.write_text(json.dumps({'duracao_s':3.0}))
+    p={'cenas':[{'id':'r','modalidade':'registro_real','beats':[{}]},
+                {'id':'a','modalidade':'cena_declarativa','beats':[{}]},
+                {'id':'m','modalidade':'mapa_atlas','beats':[{}]}]}
+    d={'shots':[{'id':'r','type':'video','asset':'v','start':0.,'end':3.,'source_in_seconds':1.,'cues':[{'at':.5}]},
+                {'id':'m','type':'atlas_map','asset':'m','start':3.,'end':6.}],
+       'media':{'v':{'duration_s':5.},'m':{'atlas_proof':str(proof)}},'duracao':6.}
+    r=D.retimar_documental(p,d,[2.,4.,3.])
+    assert r['duracao']==5. and r['shots'][1]['start']==2.
+    assert r['shots'][0]['source_in_seconds']==1. and r['shots'][0]['cues']==d['shots'][0]['cues']
+    assert d['duracao']==6.
+    with pytest.raises(ValueError,match='E209-VIDEO-CURTO'):
+        D.retimar_documental(p,d,[5.,4.,3.])
+    with pytest.raises(ValueError,match='E209-ATLAS-RETIMAR'):
+        D.retimar_documental(p,d,[2.,4.,5.])

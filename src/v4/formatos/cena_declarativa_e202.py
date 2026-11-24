@@ -27,7 +27,7 @@ W, H = 1080, 1920
 CAIXA = (36, 510, 1044, 1450)
 LEGENDA = (150, 365, 770, 485)
 VERBOS = ('aparecer', 'sair', 'mover', 'fluxo', 'tingir', 'afastar', 'filtrar', 'acumular', 'transformar',
-          'destacar', 'revelar_interior')
+          'destacar', 'revelar_interior', 'girar')
 RELACOES = ('sobre', 'dentro', 'ao_lado')
 PAPEIS = ('protagonista', 'origem', 'destino', 'meio', 'produto', 'contexto')
 BASE = {'protagonista': 380, 'origem': 230, 'destino': 260, 'meio': 230, 'produto': 210, 'contexto': 520}
@@ -125,6 +125,10 @@ def validar(cena: dict, fatos_ids: set[str]) -> list[dict]:
             v = a.get('verbo')
             if v not in VERBOS:
                 out.append(_p('C-VERBO', f'{bid}: verbo {v} fora do vocabulário', cid)); continue
+            if v == 'girar':
+                graus = a.get('graus')
+                if a.get('alvo') not in ids or type(graus) not in (int,float) or not math.isfinite(graus) or not -180 <= graus <= 180:
+                    out.append(_p('C-GIRO', f'{bid}: giro exige ator e graus relativos entre -180 e 180', cid))
             for k in ('alvo', 'de', 'para', 'a', 'b', 'filtro', 'interior'):
                 if k in a and isinstance(a[k], str) and a[k] not in ids and not (v == 'mover' and k == 'para' and a[k] in ('esquerda', 'direita', 'cima', 'baixo', 'centro')):
                     out.append(_p('C-REF', f'{bid}: ação {v} referencia ator inexistente {k}={a[k]}', cid))
@@ -280,13 +284,13 @@ def _aspecto(forma: dict) -> tuple[float, float]:
 
 
 # ───────────────────────── trilhas por propriedade ─────────────────────────
-PROPS = ('x', 'y', 'scale', 'sx', 'sy', 'opacity', 'sat', 'draw', 'tint')
+PROPS = ('x', 'y', 'scale', 'sx', 'sy', 'opacity', 'sat', 'draw', 'tint', 'angle')
 
 
 class Trilha:
     """trechos (t0, t1, v0, v1) por propriedade; valor fora dos trechos = último alvo atingido."""
     def __init__(self, base: dict):
-        self.base = dict(base)
+        self.base = {'angle': 0, **base}
         self.seg = {p: [] for p in PROPS}
 
     def ir(self, prop: str, t0: float, t1: float, v1: float, v0: float | None = None):
@@ -316,7 +320,7 @@ class Trilha:
 def _estados(tr: Trilha, dur: float) -> list[dict]:
     out = []
     for t in tr.chaves(dur):
-        st = {'t': round(t, 4), 'angle': 0}
+        st = {'t': round(t, 4)}
         for p in PROPS:
             st[p] = round(tr.valor(p, t), 4)
         st['scale'] = max(st['scale'], 1e-3); st['sx'] = max(st['sx'], 1e-3); st['sy'] = max(st['sy'], 1e-3)
@@ -619,6 +623,9 @@ def _acao(a: dict, t0: float, t1: float, k: int, atores, P, formas, trilhas, ext
         tr.ir('scale', t0, t1, 1.0, .6)
     elif v == 'sair':
         trilhas[a['alvo']].ir('opacity', t0, t1, 0)
+    elif v == 'girar':
+        tr = trilhas[a['alvo']]
+        tr.ir('angle', t0, t1, tr.valor('angle', t0) + float(a['graus']))
     elif v == 'tingir':
         if F.COR.fullmatch(str(a.get('para_cor') or '')):
             # muda para uma COR (camada da mesma forma por cima); a cor é escolha de ilustração, não medida

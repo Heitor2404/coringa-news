@@ -16,19 +16,22 @@ const SceneGraphV2:React.FC<{data:SceneDataV2;t:number;duration:number;headline:
     const k=stateAtV2(a,t);if(k.opacity<=0.003)return null;
     const [vx,vy,vw,vh]=a.view,m=Math.max(vw,vh),f=a.size/m;
     const [sx,sy]=worldToScreen(cam,k.x,k.y);const z=cam.zoom*k.scale;
+    const rad=k.angle*Math.PI/180;
+    const rw=vw*f*k.sx*z/2,rh=vh*f*k.sy*z/2;
+    const hh=Math.abs(Math.sin(rad))*rw+Math.abs(Math.cos(rad))*rh;
+    const ww=Math.abs(Math.cos(rad))*rw+Math.abs(Math.sin(rad))*rh;
     const flt=Math.abs(k.sat-1)>0.01?`url(#sat-${a.id})`:undefined;
     const janela=!a.label_t||(t>=a.label_t[0]&&t<=a.label_t[1]);
     if(a.label&&a.layer!=='contexto'&&k.opacity>0.5&&janela){
       const w=Math.min(620,a.label.length*15.5+34);
-      cand.push({id:a.id,x:Math.min(870-w/2,Math.max(150+w/2,sx)),y:sy+(vh*f*k.sy*z)/2+12,w,text:a.label,op:Math.min(1,(k.opacity-0.5)/0.35),kind:a.layer,
+      cand.push({id:a.id,x:Math.min(870-w/2,Math.max(150+w/2,sx)),y:sy+hh+12+48<=1240?sy+hh+12:Math.max(BOX_V2[1],sy-hh-52),w,text:a.label,op:Math.min(1,(k.opacity-0.5)/0.35),kind:a.layer,
         pri:(a.layer==='essencial'?(k.opacity>0.9?3:2):a.layer==='efeito'?1:0)});
     }
     const essencial=a.layer==='essencial';
-    const hh=(vh*f*k.sy*z)/2,ww=(vw*f*k.sx*z)/2;
     return <g key={a.id}>
       {/* sombra de contato (profundidade 2.5D), só para atores essenciais */}
       {essencial&&<ellipse cx={sx} cy={sy+hh*0.96} rx={ww*0.78} ry={Math.max(5,hh*0.09)} fill="#000" opacity={0.32*k.opacity}/>}
-      <g opacity={k.opacity} transform={`translate(${sx} ${sy}) scale(${z*k.sx*f} ${z*k.sy*f}) translate(${-(vx+vw/2)} ${-(vy+vh/2)})`} filter={flt??(essencial?'url(#e202-pop)':undefined)}>
+      <g opacity={k.opacity} transform={`translate(${sx} ${sy}) rotate(${k.angle}) scale(${z*k.sx*f} ${z*k.sy*f}) translate(${-(vx+vw/2)} ${-(vy+vh/2)})`} filter={flt??(essencial?'url(#e202-pop)':undefined)}>
       {/* saturação < 1 = DESBOTAR: tira a cor e clareia (pálido), em vez de escurecer para cinza */}
       {flt&&<defs><filter id={`sat-${a.id}`}><feColorMatrix type="saturate" values={String(Math.min(1.5,k.sat))}/>
         {k.sat<1&&<feComponentTransfer>{(['R','G','B'] as const).map(c=>{const w=0.55*(1-k.sat);const F=c==='R'?'feFuncR':c==='G'?'feFuncG':'feFuncB';return React.createElement(F,{key:c,type:'linear',slope:1-w,intercept:w});})}</feComponentTransfer>}</filter></defs>}

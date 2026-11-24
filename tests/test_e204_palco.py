@@ -14,3 +14,15 @@ def test_primeiro_quadro_e_palco():
     fx=json.loads(Path('tests/dados/e202_cena_sintetica.json').read_text())
     sg=D.filme({'plano':fx['plano']},fx['caso'])['props']['shots'][0]['scene_graph']
     assert any(a['layer']=='essencial' and a['states'][0]['opacity']>.9 for a in sg['actors'])
+
+
+def test_giro_compilado_e_validado():
+    fx=json.loads(Path('tests/dados/e202_cena_sintetica.json').read_text())
+    c=fx['plano']['cenas'][0]
+    a={'verbo':'girar','alvo':'planta','graus':90,'inicio':.1,'fim':.8}
+    c['beats'][0]['acoes'].append(a)
+    sg=C.compilar(c,D.estimar_duracoes(c),fx['caso']['fatos'])['scene_graph']
+    k=next(x for x in sg['actors'] if x['id']=='planta')['states']
+    assert k[0]['angle']==0 and k[-1]['angle']==90
+    a['graus']=999
+    assert 'C-GIRO' in {p['regra'] for p in C.validar(c,{f['id'] for f in fx['caso']['fatos']})}

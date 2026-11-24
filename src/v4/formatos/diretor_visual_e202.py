@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import math
 import json
 import os
 import re
@@ -59,6 +60,7 @@ def disponibilidade(caso: dict) -> dict:
 # ───────────────────────── pedido ao modelo ─────────────────────────
 VOCABULARIO = """AÇÕES (tempo em fração 0–1 do beat: "inicio","fim"):
 - aparecer {alvo}                      - sair {alvo}
+- girar {alvo, graus: -180 a 180} rotação relativa do objeto inteiro, não articulação anatômica
 - mover {alvo, para: <ator>|esquerda|direita|cima|baixo|centro, absorver?: true}
 - fluxo {de, para, item:{rotulo, cor:"#RRGGBB", forma?}, quantidade 4–12, efeito_no_destino?: "pulsar"}
      partículas saem de "de" e são absorvidas por "para" (substância, energia, informação, pessoas…)
@@ -80,15 +82,15 @@ REGRAS = """REGRAS (verificadas em código; violar gera correção):
 1. Use SÓ os fatos listados; cite os ids em cada beat. Nenhum número, data, nome, dimensão ou mecanismo fora deles.
 2. Respeite os LIMITES do caso. Representação é ESQUEMA ILUSTRATIVO identificado, não reconstrução exata.
 3. Cada beat precisa de AÇÃO VISÍVEL que demonstre causa → consequência (fluxo, tingir, afastar, filtrar, acumular,
-   transformar, mover, revelar_interior). Card, texto, seta ou ícone parado NÃO substituem ação.
+   transformar, mover, revelar_interior, girar). Card, texto, seta ou ícone parado NÃO substituem ação.
 4. Gancho: o 1º beat começa com o protagonista em quadro e uma pergunta/contradição forte; nada de introdução lenta.
 5. Progressão: cada beat acrescenta informação nova; o último beat é o payoff (resposta clara).
 6. Escolha a modalidade pelo ACONTECIMENTO e pela disponibilidade REAL abaixo; nunca peça modalidade indisponível.
    Mapa inventado é proibido; contorno geo é dado real e serve para localizar sem desenhar limites inexistentes.
 7. Ícones: use nomes EXATOS do catálogo. Se nenhum representa fielmente o objeto (ex.: um órgão ausente), use primitiva
-   com rótulo — nunca um ícone de outra coisa só porque parece.
+   com rótulo apenas se a forma for reconhecível e fiel; caso contrário solicite referência apropriada ou desenho próprio fundamentado. Nunca substitua objeto real por emoji parecido. Confira as cores da forma: o estado inicial não pode antecipar o resultado.
 8. Narração em português do Brasil, frases curtas e faladas, 8–15 palavras por beat. 3–4 beats (≈ 12–18 s no total).
-9. Rótulos de ator curtos (≤ 22 caracteres) em português. Até 6 atores por cena.
+9. Rótulos curtos (≤ 22 caracteres). Até 6 atores por cena, no máximo 4 participantes essenciais por beat.
 10. Câmera por beat: "foco" (ator) + "enquadramento" detalhe|medio|geral + "motivo". Termine com "geral" no payoff.
 11. ESTADO INICIAL VISÍVEL: se algo muda (cor, posição, forma), o 1º quadro mostra o ANTES. O protagonista não pode
     exibir o resultado antes da causa (ex.: comece com de_saturacao baixa e só depois aumente).
@@ -259,6 +261,8 @@ def _tela(a: dict, st: dict, cam: dict) -> tuple[float, float, float, float]:
     cx, cy = (CD.CAIXA[0] + CD.CAIXA[2]) / 2, (CD.CAIXA[1] + CD.CAIXA[3]) / 2
     x, y = cx + (st['x'] - cam['x']) * cam['zoom'], cy + (st['y'] - cam['y']) * cam['zoom']
     w, h = vw * f * cam['zoom'] * st['scale'] * st['sx'], vh * f * cam['zoom'] * st['scale'] * st['sy']
+    rad = math.radians(st.get('angle', 0))
+    w, h = abs(math.cos(rad))*w + abs(math.sin(rad))*h, abs(math.sin(rad))*w + abs(math.cos(rad))*h
     return x - w / 2, y - h / 2, x + w / 2, y + h / 2
 
 
@@ -278,7 +282,7 @@ def geometria(sg: dict, cid: str = '') -> list[dict]:
     ts = [b['t'] for b in sg['beats']]
     dur = sg['camera'][-1]['t']
     ts_fim = ts[1:] + [dur]
-    props = ('x', 'y', 'scale', 'sx', 'sy', 'opacity')
+    props = ('x', 'y', 'scale', 'sx', 'sy', 'opacity', 'angle')
     altura = CD.CAIXA[3] - CD.CAIXA[1]
     for k, (t0, t1) in enumerate(zip(ts, ts_fim)):
         t = t0 + (t1 - t0) * .6
@@ -356,6 +360,8 @@ def filme(resultado: dict, caso: dict, duracoes: list[float] | None = None, pala
     `duracoes` = um valor por beat de TODAS as cenas, na ordem; `palavras` em tempo absoluto do áudio."""
     plano = resultado['plano']
     cenas = _cenas_decl(plano)
+    if len(cenas) != len(plano['cenas']):
+        raise ValueError('E204-MODALIDADE-SEM-PONTE: não descartar cenas não declarativas')
     if not cenas:
         raise ValueError('plano sem cena declarativa')
     nbeats = [len(c['beats']) for c in cenas]

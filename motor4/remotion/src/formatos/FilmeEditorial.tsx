@@ -18,6 +18,7 @@ export type FilmShot = {
   end: number;
   type: 'photo' | 'video' | 'comparison' | 'mechanism' | 'atlas_map' | 'cad_preview';
   cad_source_roi?: [number,number,number,number]; // private E28 stage ROI
+  cad_reflow?: {schema:string;scale:number;tx:number;ty:number;viewport:number[];publish:boolean}; // E31 private
   asset?: string; // caminho relativo a motor4/remotion/public, verificado pelo preflight Python
   assetB?: string;
   source_in_seconds?: number; // corte verdadeiro dentro do master local do arquivo
@@ -326,6 +327,27 @@ const SafeBody: React.FC<{shot:FilmShot;p:number;t:number;subtitleMode:boolean;p
       <Body shot={shot} p={p} t={t} portrait/>
     </AbsoluteFill>;
   }
+  if (shot.type==='cad_preview' && shot.cad_reflow) {
+    const r=shot.cad_reflow;
+    if (subtitleMode || r.schema!=='coringa.cad.reflow.private.v1' ||
+      r.publish!==false || r.viewport.join(',')!=='50,400,1030,1092' ||
+      ![r.scale,r.tx,r.ty].every(Number.isFinite) || r.scale<.35 || r.scale>1.6)
+      throw new Error('E31-PRIVATE-REFLOW');
+    const [x,y,ex,ey]=r.viewport;
+    return <AbsoluteFill style={{background:'radial-gradient(ellipse at 46% 47%,#10202C,#070D14 80%)'}}>
+      <div data-cad-experimental-reflow="true"
+        style={{position:'absolute',left:x,top:y,width:ex-x,height:ey-y,overflow:'hidden'}}>
+        <div style={{position:'absolute',left:r.tx-x,top:r.ty-y,width:1080,height:1920,
+          transform:`scale(${r.scale})`,transformOrigin:'top left'}}>
+          <Sequence from={Math.round(shot.start*30)}
+            durationInFrames={Math.round((shot.end-shot.start)*30)}>
+            <OffthreadVideo src={staticFile(shot.asset||'')} muted
+              style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+          </Sequence>
+        </div>
+      </div>
+    </AbsoluteFill>;
+  }
   if (shot.type==='cad_preview') {
     const roi=shot.cad_source_roi;
     if (!roi || roi.join(',')!=='86,288,994,1230' || shot.evidence!=='explainer')
@@ -419,6 +441,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   const p=clamp((now-shot.start)/duration);
   const active=shot.cues?.filter(c=>now>=shot.start+c.at).slice(-1)[0];
   const age=active?now-shot.start-active.at:0;
+  const reflowCAD=shot.type==='cad_preview'&&Boolean(shot.cad_reflow);
   if(legacyVisualPreview && shot.type==='mechanism') {
     // Volta ao visual ORIGINAL 20/11 somente em prévia privada: SVG
     // integral em tela, títulos do PRÓPRIO mecanismo e rótulos grandes.
@@ -490,23 +513,29 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         textShadow:'0 2px 12px rgba(0,0,0,.8)'}}>
       <span style={{color:GOLD,marginRight:8}}>●</span>{active?.label||shot.headline}
     </div>}
-    {!subtitleMode&&active&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
+    {!subtitleMode&&active&&!reflowCAD&&!shot.graphic_original&&shot.type!=='mechanism'&&<div data-safe-role="cue"
       style={{...safeSlot('cue'),fontFamily:'Inter,Arial,sans-serif',
         fontSize:active.label.length>32?24:28,fontWeight:900,color:GOLD,
         opacity:ease(age/.20),overflow:'hidden',lineHeight:1.15,
         transform:`translateY(${(1-ease(age/.20))*8}px)`}}>
       {active.label}
     </div>}
-    {!subtitleMode&&shot.type!=='mechanism'&&!shot.graphic_original&&<div data-safe-role="headline"
+    {!subtitleMode&&!reflowCAD&&shot.type!=='mechanism'&&!shot.graphic_original&&<div data-safe-role="headline"
       style={{...safeSlot('headline'),color:OFF_WHITE,
         textShadow:'0 2px 14px rgba(0,0,0,.78)',
         overflow:'hidden',opacity:ease((now-shot.start-.08)/.25)}}>
       <Caption text={shot.headline} highlighted={shot.highlight}/>
     </div>}
-    {!subtitleMode&&shot.type!=='mechanism'&&<div data-safe-role="subject" style={{...safeSlot('subject'),
+    {!subtitleMode&&!reflowCAD&&shot.type!=='mechanism'&&<div data-safe-role="subject" style={{...safeSlot('subject'),
       color:'#D4E1E9',fontFamily:'Inter,Arial',fontSize:21,
       fontWeight:650,lineHeight:1.15,overflow:'hidden'}}>
       {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · '+shot.subject:shot.subject}
+    </div>}
+    {reflowCAD&&!subtitleMode&&<div data-safe-role="mechanism_step"
+      style={{...rectStyle(MECH.step),overflow:'hidden',fontFamily:'Inter,Arial,sans-serif',
+        color:OFF_WHITE,fontWeight:800,lineHeight:1.12}}>
+      <div style={{fontSize:25,color:GOLD}}>{active?.label||''}</div>
+      <div style={{fontSize:29,overflowWrap:'break-word'}}>{shot.headline}</div>
     </div>}
     <div data-safe-role="source" style={{...safeSlot('source'),
       color:'#B9C9D4',fontFamily:'Inter,Arial',fontSize:18.5,

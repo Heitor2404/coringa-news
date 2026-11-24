@@ -436,11 +436,36 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
                     'necessidade': tipo, 'modalidade_proposta': destino, 'estado': estado,
                     'candidatos': candidatos, 'lacuna': n.get('lacuna'),
                     'pesquisa': {'consultas': [sujeito + ' ' + mostrar, sujeito],
+                                 'consultas_en': [q.strip() for q in (n.get('consultas_en') or [])[:2]
+                                                  if isinstance(q, str) and 2 <= len(q.strip()) <= 120],
                                  'verificar_direitos': True, 'inspecionar_conteudo': True},
                     'pronto_para_render': False})
     if not out:
         raise ValueError('E205-SEM-NECESSIDADES')
     return out
+
+
+
+def planejar_documental(caso: dict, permitir_chamada: bool = True, cache: Path = CACHE) -> dict:
+    """Autoria das necessidades ANTES da escolha de assets/renderers.
+    Usa o provedor/cache existente. Não aceita URL ou licença fornecida pelo modelo.
+    """
+    fatos = caso['fatos']
+    texto = """Você é o diretor documental do Coringa Explica. Mídia real primeiro.
+Para cada fato, identifique o que precisa ser visto, não desenhe a narração.
+Use registro para filmagem/foto real; territorio para localização, fronteira, rota ou relevo factual no ATLAS;
+lacuna_explicativa somente para uma ação específica que registros não mostram (descreva a lacuna).
+Não transforme falta de acervo em animação. Não gere URLs, assets, desenhos, licenças ou geometrias.
+Inclua duas consultas curtas em inglês para mídia real. Não invente fatos.
+Responda JSON {"necessidades_visuais":[{"id":"n1","fatos":["id existente"],"sujeito":"...","mostrar":"...",
+"necessidade":"registro|territorio|lacuna_explicativa","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
+Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_ascii=False) + "\nLimites: " + json.dumps(caso.get('limites') or [], ensure_ascii=False)
+    registro = []
+    resposta = pedir_ia(texto, registro, cache, permitir_chamada)
+    necessidades = resposta['necessidades_visuais']
+    triagem = triagem_documental(necessidades, fatos)
+    return {'triagem': triagem, 'chamadas_ia': registro, 'publicar': False}
+
 
 
 def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino: Path,
@@ -608,7 +633,24 @@ def main(argv=None) -> int:
     mx = sub.add_parser('montagem-mista')
     mx.add_argument('resultado'); mx.add_argument('caso'); mx.add_argument('plano_documental')
     mx.add_argument('duracoes'); mx.add_argument('saida'); mx.add_argument('public_root')
+    aq = sub.add_parser('pesquisa-documental')
+    aq.add_argument('entrada', help='JSON: fatos + necessidades_visuais, ou caso com pergunta e fatos')
+    aq.add_argument('saida'); aq.add_argument('--autor-ia', action='store_true')
+    aq.add_argument('--sem-ia', action='store_true')
     a = ap.parse_args(argv)
+    if a.cmd == 'pesquisa-documental':
+        from src.v4.formatos import garimpo_visual
+        ent = json.loads(Path(a.entrada).read_text(encoding='utf8'))
+        destino = Path(a.saida)
+        destino.mkdir(parents=True, exist_ok=True)
+        if a.autor_ia:
+            plano = planejar_documental(ent, permitir_chamada=not a.sem_ia)
+        else:
+            plano = {'triagem': triagem_documental(ent['necessidades_visuais'], ent['fatos']),
+                     'chamadas_ia': [], 'publicar': False}
+        (destino / 'triagem.json').write_text(json.dumps(plano, ensure_ascii=False, indent=2), encoding='utf8')
+        garimpo_visual.pesquisar_triagem(plano['triagem'], destino)
+        return 0
     if a.cmd == 'triagem-documental':
         ent = json.loads(Path(a.entrada).read_text(encoding='utf8'))
         r = triagem_documental(ent['necessidades_visuais'], ent['fatos'])

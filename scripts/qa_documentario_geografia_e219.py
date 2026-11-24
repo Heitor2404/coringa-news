@@ -82,8 +82,8 @@ def mapplan(ch,span):
        'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
                  'prova':'Localização em base de relevo Natural Earth; não representa a costa de 2018.',
                  'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
-                             't0':.3,'t1':span,'p':{'linhas':[{'texto':'HA­VAÍ'.replace('­',''),'t':.3},
-                                 {'texto':'NO PACÍFICO','t':span*.45,'destaque':True}]}}]}], 'cta':False}
+                             't0':.3,'t1':span,'p':{'linhas':[{'texto':q['label'].upper(),'t':.3,'tamanho':48},
+                                 {'texto':ch['title'].upper(),'t':span*.45,'destaque':True,'tamanho':48}]}}]}], 'cta':False}
     return A.resolver_tempos(p,[])
 
 def mapclip(ch,span):
@@ -128,7 +128,7 @@ def main():
             span=frames/30
             if not 1.4<=span<=8:raise ValueError('E219-MAPA-DURACAO '+str(span))
             cid='mapa-'+str(i);clip,proof=mapclip(ch,span)
-            shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':'Ilha do Havaí',
+            shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':ch['atlas']['label'],
                           'lead':ch['title'],'subject':ch['title'],'evidence':'explainer','cues':[{'at':.2,'label':ch['atlas']['label']}]})
             maps.append((cid,clip,proof));start=end;continue
         n=math.ceil(frames/112);span=frames/n/30

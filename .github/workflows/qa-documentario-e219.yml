@@ -121,3 +121,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: e219-documentario-privado-cifrado, path: entrega/, retention-days: 7, if-no-files-found: error}
+  avisar_falha:
+    needs: documentario
+    if: ${{ always() && (needs.documentario.result == 'failure' || needs.documentario.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.documentario.result }}
+      job_name: documentario
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

@@ -29,7 +29,7 @@ jobs:
           assert p["cenas"][0]["ini"]==0 and p["cenas"][-1]["fim"]==p["duracao_alvo_s"]
           assert all(a["fim"]==b["ini"] for a,b in zip(p["cenas"],p["cenas"][1:]))
           assert all(set(c["fontes"])<={f["id"] for f in p["fontes"]} for c in p["cenas"])
-          r=discover_many(["tower crane climbing CAD","tower crane STEP","tower crane URDF"],limit=4)
+          r=discover_many(["tower crane","towercrane","crane CAD","climbing crane"],limit=4)
           Path("qa_e48/pesquisa.json").write_text(json.dumps(r,ensure_ascii=False,indent=2))
           print("E48-PESQUISA",json.dumps(r,ensure_ascii=False))
           PY

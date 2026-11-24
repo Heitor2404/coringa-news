@@ -549,10 +549,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
       <div style={{position:'absolute',left:72,top:302,width:130,height:4,background:GOLD}}/>
-      <div style={{...rectStyle(DOC_MEDIA.section),color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',
+      {shot.lead&&<div style={{...rectStyle(DOC_MEDIA.section),color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',
         fontSize:25,fontWeight:800,letterSpacing:.5,textShadow:'0 1px 4px #000,0 2px 6px #000',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
         {shot.lead.toUpperCase()}
-      </div>
+      </div>}
       <div style={{...rectStyle(DOC_MEDIA.source),color:'#E0E5EB',fontFamily:'Inter,Arial,sans-serif',
         fontSize:24,lineHeight:1.12,fontWeight:600,overflow:'hidden',textShadow:'0 1px 4px #000,0 2px 6px #000'}}>
         {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}

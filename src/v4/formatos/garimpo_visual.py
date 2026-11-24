@@ -135,6 +135,143 @@ def coletar(briefs: list[dict], destino: Path, procurar_candidatos=None, escolhe
     return res
 
 
+
+# E206 — aquisição documental antes de solicitar representação sintética.
+def candidatos_documentais(consultas, video, buscar=None):
+    """Reusa pesquisa Commons de midia, mas preserva página e original da API.
+    Metadados não demonstram ação e não homologam direitos.
+    """
+    from src import midia
+    from urllib.parse import urlsplit
+    buscar = buscar or midia._commons
+    out, vistos, falhas = [], set(), []
+    for q in consultas[:2]:
+        try:
+            pages = buscar(q, video=video)
+        except Exception as exc:
+            falhas.append({'consulta': q, 'erro': str(exc)[:180]})
+            if getattr(getattr(exc, 'response', None), 'status_code', None) in (403, 429):
+                break
+            continue
+        for p in pages:
+            inf = (p.get('videoinfo' if video else 'imageinfo') or [{}])[0]
+            meta = inf.get('extmetadata') or {}
+            lic = midia._txt(meta, 'LicenseShortName').upper()
+            autor = midia._txt(meta, 'Artist')
+            url, pagina = inf.get('url') or '', inf.get('descriptionurl') or ''
+            u, pg = urlsplit(url), urlsplit(pagina)
+            mime = inf.get('mime') or ''
+            if (lic not in LICENCAS or not autor or u.scheme != 'https'
+                    or u.netloc != 'upload.wikimedia.org' or not u.path.startswith('/wikipedia/commons/')
+                    or u.query or u.fragment or pg.scheme != 'https'
+                    or pg.netloc != 'commons.wikimedia.org' or not pg.path.startswith('/wiki/File:')
+                    or url in vistos or not midia._relevante(p.get('title', ''), q)
+                    or min(inf.get('width') or 0, inf.get('height') or 0) < 700
+                    or not 0 < (inf.get('size') or 0) <= 25_000_000
+                    or mime not in (('video/webm', 'video/ogg', 'video/mp4', 'application/ogg') if video else ('image/jpeg', 'image/png'))):
+                continue
+            vistos.add(url)
+            out.append({'url': url, 'pagina': pagina, 'titulo': p.get('title'),
+                        'autor': autor, 'licenca': lic, 'credito': autor + ' · ' + lic,
+                        'bytes_declarados': inf['size'], 'mime': mime,
+                        'tipo': 'video' if video else 'foto', 'consulta': q,
+                        'estado': 'CANDIDATO_SEM_INSPECAO', 'publicar': False})
+    return out, falhas
+
+
+def _original_documental(candidato, destino, reader=None):
+    """Preserva bytes, gera amostras de vídeo com tempos originais.
+    Ainda não autoriza uso, nem insere automaticamente no acervo comprovado.
+    """
+    from src.v4.formatos import prospeccao_video_acao as V
+    if reader is None:
+        def reader(url):
+            import requests
+            with requests.get(url, timeout=(12, 45), stream=True, allow_redirects=False,
+                              headers={'User-Agent': 'CoringaExplica/QA-Privada/1.0 (GitHub Heitor2404)'}) as r:
+                if r.status_code != 200:
+                    raise ValueError('HTTP ' + str(r.status_code))
+                data = bytearray()
+                for chunk in r.iter_content(256 * 1024):
+                    data.extend(chunk)
+                    if len(data) > 25_000_000:
+                        raise ValueError('E206-LIMITE')
+                return bytes(data)
+    data = reader(candidato['url'])
+    if not isinstance(data, bytes) or len(data) != candidato['bytes_declarados'] or len(data) > 25_000_000:
+        raise ValueError('E206-BYTES')
+    sha = hashlib.sha256(data).hexdigest()
+    ext = {'video/webm': '.webm', 'video/ogg': '.ogv', 'application/ogg': '.ogv',
+           'video/mp4': '.mp4', 'image/jpeg': '.jpg', 'image/png': '.png'}[candidato['mime']]
+    destino = Path(destino)
+    destino.mkdir(parents=True, exist_ok=True)
+    arq = destino / (sha + ext)
+    if candidato['tipo'] == 'foto':
+        with Image.open(io.BytesIO(data)) as im:
+            im.verify()
+        with Image.open(io.BytesIO(data)) as im:
+            if im.format not in ('JPEG', 'PNG') or min(im.size) < 700:
+                raise ValueError('E206-FOTO')
+            meta = {'largura': im.width, 'altura': im.height}
+            im = im.convert('RGB')
+            im.thumbnail((900, 900))
+            im.save(destino / (sha + '-contato.jpg'), quality=90)
+        arq.write_bytes(data)
+    else:
+        arq.write_bytes(data)
+        try:
+            meta = V.ffprobe(arq)
+            if min(meta['largura'], meta['altura']) < 700:
+                raise ValueError('E206-VIDEO')
+            dur = meta['duracao_s']
+            janela = min(8., dur - .1)
+            meta.update(V.contato(arq, {'janela_candidata': {'inicio_s': (dur-janela)/2,
+                        'duracao_s': janela}}, destino / (sha + '-contato.jpg'), meta))
+        except Exception:
+            arq.unlink(missing_ok=True)
+            raise
+    return {**candidato, **meta, 'arquivo': arq.name, 'sha256_origem': sha,
+            'contato': sha + '-contato.jpg', 'estado': 'BYTES_ADQUIRIDOS_REVISAO_PENDENTE',
+            'identidade_e_acao_confirmadas': False, 'direitos_revisados': False,
+            'publicar': False}
+
+
+def pesquisar_triagem(triagem, destino, buscar=None, reader=None):
+    """Pesquisa necessidades documentais; mantém mapa e lacuna em filas próprias.
+    Procura vídeo e foto, sem conversão automática para desenho.
+    """
+    destino = Path(destino)
+    destino.mkdir(parents=True, exist_ok=True)
+    resultados, adquiridos, usados = [], [], set()
+    for n in triagem:
+        if n['modalidade_proposta'] != 'registro_real':
+            resultados.append({'id': n['id'], 'estado': n['estado']})
+            continue
+        q = n['pesquisa'].get('consultas_en') or n['pesquisa']['consultas']
+        linha = {'id': n['id'], 'candidatos': [], 'falhas': [], 'adquiridos': []}
+        for video in (True, False):
+            cs, falhas = candidatos_documentais(q, video, buscar)
+            linha['candidatos'] += cs
+            linha['falhas'] += falhas
+            for c in [x for x in cs if x['url'] not in usados][:2]:
+                try:
+                    a = _original_documental(c, destino / 'originais', reader)
+                    adquiridos.append(a)
+                    usados.add(c['url'])
+                    linha['adquiridos'].append(a['sha256_origem'])
+                    break
+                except Exception as exc:
+                    linha['falhas'].append({'url': c['url'], 'erro': str(exc)[:180]})
+                    if 'HTTP 429' in str(exc) or 'HTTP 403' in str(exc):
+                        break
+        linha['estado'] = ('REVISAO_MIDIA_PENDENTE' if linha['adquiridos'] else 'PESQUISA_SEM_BYTES')
+        resultados.append(linha)
+    r = {'publicar': False, 'aprovacao_humana': 'PENDENTE',
+         'resultados': resultados, 'adquiridos': adquiridos}
+    (destino / 'manifesto.json').write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding='utf8')
+    return r
+
+
 def main(argv=None) -> int:
     args = argv or sys.argv[1:]
     if len(args) != 2:

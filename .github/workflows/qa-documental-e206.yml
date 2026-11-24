@@ -1,0 +1,53 @@
+name: E206 - pesquisa documental multitema privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-documental-e206.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pesquisa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - name: Dependencias e testes offline
+        run: |
+          python -m pip install -q -r requirements.txt pytest
+          python -m pytest -q tests/test_e206_documental.py
+      - name: Pesquisa e aquisicao real sem IA
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import diretor_visual_e202 as D, garimpo_visual as G
+          for c in json.loads(Path('benchmarks/e202/necessidades_documentais_e206.json').read_text())['cases']:
+              p = Path('qa_e206') / c['id']
+              t = D.triagem_documental(c['necessidades_visuais'], c['fatos'])
+              r = G.pesquisar_triagem(t, p)
+              print('E206', c['id'], 'adquiridos', len(r['adquiridos']), 'estados', [x['estado'] for x in r['resultados']])
+          PY
+      - name: Cifrar originais e contatos de QA
+        if: always()
+        run: |
+          mkdir -p entrega
+          if [ -d qa_e206 ]; then
+            for f in qa_e206/*/manifesto.json; do
+              [ -f "$f" ] && cp "$f" "entrega/$(basename "$(dirname "$f")").json"
+            done
+            tar -czf /tmp/e206.tgz qa_e206
+            export GNUPGHOME=$(mktemp -d)
+            gpg --batch --quiet --import .github/piloto/chave_publica.asc
+            dest=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+            gpg --batch --yes --quiet --trust-model always --encrypt -r "$dest" -o entrega/e206.tgz.gpg /tmp/e206.tgz
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: e206-pesquisa-documental, path: entrega/, retention-days: 7, if-no-files-found: warn}

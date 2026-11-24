@@ -194,7 +194,10 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
   </AbsoluteFill>;
 };
 
-const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({shot,p,t,portrait=false}) => {
+// Private narrated real-media review: the picture is not a text-safe slot.
+const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
+const DOC_MEDIA={brand:[72,250,810,300],section:[72,310,810,355],subtitle:[72,1170,850,1330],source:[72,1390,850,1460],integral:[0,385,1080,1245]} as const;
+const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
@@ -221,6 +224,18 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean}> = ({s
     </Sequence></AbsoluteFill>;
   }
   if(shot.type === 'video') {
+    if(mediaFirst && (shot.video_context_layout==='cena_integral'||shot.video_context_layout==='quadro_integral')) {
+      // Preserve all source pixels, but give the shot the FULL canvas width.
+      // Integral is an exception for essential context, never the default crop.
+      return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
+        <div data-media-layout="integral-wide" style={{...rectStyle(DOC_MEDIA.integral),overflow:'hidden'}}>
+          <Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+            <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
+              style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+          </Sequence>
+        </div>
+      </AbsoluteFill>;
+    }
     if(shot.video_context_layout==='quadro_integral') {
       // Cameras quadradas de missões, bancadas e registros de processos:
       // preservar o arquivo INTEIRO, sem aplicar object-fit:cover.
@@ -505,6 +520,27 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
     </AbsoluteFill>;
   }
+  // Restore the media-led documentary grammar for narrated footage/photos.
+  // Keep the existing protected laboratory layout for mechanisms and graphics.
+  if(subtitleMode&&realMedia(shot)) {
+    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
+      <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
+      <AbsoluteFill style={{pointerEvents:'none',background:'linear-gradient(180deg,rgba(3,8,16,.55),transparent 24%,transparent 53%,rgba(3,8,16,.74) 79%,#050A12 100%)'}}/>
+      <div style={{...rectStyle(DOC_MEDIA.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
+        fontSize:28,fontWeight:850,color:OFF_WHITE,letterSpacing:1}}>
+        CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
+      </div>
+      <div style={{position:'absolute',left:72,top:302,width:130,height:4,background:GOLD}}/>
+      <div style={{...rectStyle(DOC_MEDIA.section),color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',
+        fontSize:25,fontWeight:800,letterSpacing:.5,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+        {shot.lead.toUpperCase()}
+      </div>
+      <div style={{...rectStyle(DOC_MEDIA.source),color:'#E0E5EB',fontFamily:'Inter,Arial,sans-serif',
+        fontSize:24,lineHeight:1.12,fontWeight:600,overflow:'hidden'}}>
+        {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
+      </div>
+    </AbsoluteFill>;
+  }
   if(shot.type==='scene_graph') {
     if(!shot.scene_graph||shot.evidence!=='explainer')throw new Error('E201-ESQUEMA');
     return <SceneGraphE201 data={shot.scene_graph} t={now-shot.start} duration={duration} headline={shot.headline} source={shot.source_display||shot.source}/>;
@@ -662,10 +698,10 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
-    {docCap&&<div data-safe-role="subtitle" style={{...safeSlot('subtitle'),display:'flex',alignItems:'center',
-        justifyContent:'center',textAlign:'center',pointerEvents:'none'}}>
-      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:44,lineHeight:1.08,color:OFF_WHITE,
-        padding:'8px 14px',background:'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
+    {docCap&&<div data-safe-role="subtitle" style={{...(realMedia(shots[shot])?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
+        justifyContent:realMedia(shots[shot])?'flex-start':'center',textAlign:realMedia(shots[shot])?'left':'center',pointerEvents:'none'}}>
+      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.min(58,Math.floor(760/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64))):44,lineHeight:1.08,color:OFF_WHITE,
+        padding:realMedia(shots[shot])?'0':'8px 14px',background:realMedia(shots[shot])?'transparent':'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
         {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
       </div>
     </div>}

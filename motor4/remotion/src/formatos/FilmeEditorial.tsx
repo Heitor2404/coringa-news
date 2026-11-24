@@ -455,7 +455,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         display:'flex',justifyContent:'space-between',alignItems:'center',
         color:OFF_WHITE,fontFamily:'Inter,Arial',fontSize:28,fontWeight:800,letterSpacing:2.1}}>
         <span>CORINGA <span style={{color:GOLD}}>EXPLICA</span></span>
-        <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.type==='cad_preview'&&shot.cad_warning?(shot.cad_warning.includes('INTERFERÊNCIA DETECTADA')?'INTERFERÊNCIA · NÃO VALIDADO':'CONTATO PENDENTE · NÃO VALIDADO'):shot.lead.toUpperCase()}</span>
+        <span style={{fontSize:24,fontWeight:600,color:'#C2CCD5'}}>{shot.lead.toUpperCase()}</span>
       </div>
       <div style={{position:'absolute',top:302,left:62,width:140,height:5,
         background:GOLD,transformOrigin:'left',transform:`scaleX(${ease(p)})`}}/>
@@ -494,7 +494,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       fontFamily:'Inter,Arial,sans-serif',fontWeight:750,fontSize:22,
       color:shot.type==='cad_preview'&&shot.cad_warning?'#FFB1A0':'#B8CCD8',letterSpacing:1.35,overflow:'hidden',
       textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-      {shot.lead.toUpperCase()}
+      {shot.type==='cad_preview'&&shot.cad_warning?(shot.cad_warning.includes('INTERFERÊNCIA DETECTADA')?'INTERFERÊNCIA · NÃO VALIDADO':'CONTATO PENDENTE · NÃO VALIDADO'):shot.lead.toUpperCase()}
     </div>
     {shot.type==='mechanism'&&!subtitleMode&&
       (MECH.native_portrait as readonly string[]).includes(shot.mechanism||'')&&

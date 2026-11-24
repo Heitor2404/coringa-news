@@ -190,7 +190,10 @@ def ciclo(caso: dict, saida: Path, usar_ia: bool, usar_voz: bool, usar_visao: bo
         # só vai ao modelo o que ELE pode corrigir: falta de movimento no foco, duração e revisão visual.
         # Diagramação/câmera (G-*) é responsabilidade do compilador: registrada, nunca terceirizada ao modelo.
         problemas = [p for p in falhas_auto if not p['regra'].startswith('G-')]
+        if usar_visao and (not isinstance(visao, dict) or visao.get('erro')):
+            falhas_auto.append({'regra': 'V-REVISAO-PENDENTE', 'texto': 'revisão visual indisponível'})
         if isinstance(visao, dict) and visao.get('falhas'):
+            problemas += [{'regra': 'V-REQUISITO', 'texto': str(v)[:240]} for v in visao['falhas']]
             resp = visao.get('resposta') or {}
             problemas += [{'regra': 'V-REVISAO', 'texto': str(p)[:240]} for p in (resp.get('problemas') or [])[:4]]
             problemas += [{'regra': 'V-CORRECAO', 'texto': json.dumps(c, ensure_ascii=False)[:240]} for c in (resp.get('correcoes') or [])[:4]]

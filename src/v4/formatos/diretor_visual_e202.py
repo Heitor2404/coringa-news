@@ -407,7 +407,7 @@ Imagens: quadros em ordem temporal (um por etapa).
 Verifique também: cada ícone representa FIELMENTE o rótulo (não um objeto parecido)? o estado inicial aparece antes
 da mudança (o resultado não aparece antes da causa)? as partes que interagem estão no mesmo lugar?
 Responda JSON: {{"referente_visivel":bool,"aprendizado_demonstrado":bool,"enquadramento_adequado":bool,
-"imagem_celular_legivel":bool,"acao_ou_relacao_visivel":bool,"problemas":["defeito concreto e onde"],
+"imagem_celular_legivel":bool,"acao_ou_relacao_visivel":bool,"icones_fieis":bool,"estados_coerentes":bool,"problemas":["defeito concreto e onde"],
 "correcoes":[{{"beat":n,"tipo":"enquadramento|forma|acao|rotulo","descricao":"..."}}]}}"""
 
 
@@ -444,13 +444,13 @@ def _visao_claude(jpgs: list[bytes], texto: str) -> dict:
 
 
 def revisao_visual(jpgs: list[bytes], caso: dict, plano: dict) -> dict:
-    """Visão automatizada com a rubrica comum (Gemini → Claude Code). Não é aprovação; serve para UMA correção dirigida."""
+    """Visão automatizada com a rubrica comum (Claude por padrão). Não é aprovação; serve para correção dirigida."""
     from src import gemini
     from src.v4.formatos import contrato_visual_comum as CV
     texto = PROMPT_VISAO.format(pergunta=caso['pergunta'], acontecimento=plano.get('acontecimento_central', ''))
     tentativas = []
     r = None
-    for prov in [x.strip() for x in os.getenv('E202_VISAO', 'gemini,claude').split(',') if x.strip()]:
+    for prov in [x.strip() for x in os.getenv('E202_VISAO', 'claude').split(',') if x.strip()]:
         try:
             r = gemini.json_visao(texto, jpgs, leve=False) if prov == 'gemini' else _visao_claude(jpgs, texto)
             if isinstance(r, dict):
@@ -462,7 +462,13 @@ def revisao_visual(jpgs: list[bytes], caso: dict, plano: dict) -> dict:
     if r is None:
         raise RuntimeError('visão indisponível: ' + ' | '.join(tentativas))
     verbo = plano['cenas'][0].get('verbo', 'DEMONSTRAR')
-    return {'resposta': r, 'falhas': CV.julgar_inspecao(verbo, False, r), 'tentativas': tentativas}
+    falhas = CV.julgar_inspecao(verbo, False, r)
+    for campo in ('icones_fieis', 'estados_coerentes'):
+        if r.get(campo) is not True:
+            falhas.append('V-' + campo + ': confirmação obrigatória ausente')
+    if not str(r.get('_provedor', '')).startswith('claude_code:'):
+        falhas.append('V-REVISAO-RIGOROSA-PENDENTE: Gemini não substitui Claude')
+    return {'resposta': r, 'falhas': falhas, 'tentativas': tentativas}
 
 
 # ───────────────────────── CLI ─────────────────────────

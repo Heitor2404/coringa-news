@@ -23,11 +23,9 @@ from src.v4.formatos import formas_e202 as F
 
 SCHEMA = 'coringa.scene_graph.private.v2'
 W, H = 1080, 1920
-# área essencial: largura do perfil MULTIPLATAFORMA_CONSERVADOR_V1 (x 150..770); altura no arranjo equilibrado
-# da E46E (palco centrado, aprovado após a reprovação do palco alto da E46D): y 430..1170. A legenda vai a
-# y 1185..1320 — 80 px abaixo do limite universal conservador (1240); registrado como desvio medido, não ignorado.
-CAIXA = (150, 430, 770, 1170)
-LEGENDA = (150, 1185, 770, 1320)
+# E204: palco visual amplo, textos em faixa protegida acima. Prévia privada; não certifica sobreposição dos apps.
+CAIXA = (36, 510, 1044, 1450)
+LEGENDA = (150, 365, 770, 485)
 VERBOS = ('aparecer', 'sair', 'mover', 'fluxo', 'tingir', 'afastar', 'filtrar', 'acumular', 'transformar',
           'destacar', 'revelar_interior')
 RELACOES = ('sobre', 'dentro', 'ao_lado')
@@ -237,7 +235,7 @@ def _arranjar(ids: list[str], cena: dict, formas: dict) -> dict:
             cima, linha = u[1][0], u[2]
             larg = max(asp[cima][0], sum(asp[i][0] for i in linha))
             alt = asp[cima][1] + max(asp[i][1] for i in linha)
-            s = min(cw * .9 / larg, (ch - 2 * ROTULO) * .9 / alt, 520.0)
+            s = min(cw * .9 / larg, (ch - 2 * ROTULO) * .9 / alt, 840.0)
             out, y = {}, -(alt * s + 2 * ROTULO) / 2
             out[cima] = (0.0, y + asp[cima][1] * s / 2, s); y += asp[cima][1] * s + ROTULO
             x = -sum(asp[i][0] for i in linha) * s / 2
@@ -248,7 +246,7 @@ def _arranjar(ids: list[str], cena: dict, formas: dict) -> dict:
         membros = u[1]
         larg = sum(asp[i][0] for i in membros) + (0 if u[0] == 'par' else 0)
         alt = max(asp[i][1] for i in membros)
-        s = min(cw * .88 / larg, (ch - ROTULO) * .88 / alt, 520.0)
+        s = min(cw * .88 / larg, (ch - ROTULO) * .88 / alt, 840.0)
         out, x = {}, -larg * s / 2
         for i in membros:
             w = asp[i][0] * s; out[i] = (x + w / 2, -ROTULO / 2, s); x += w
@@ -394,7 +392,7 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
         foco = (b.get('camera') or {}).get('foco')
         if foco in atores:
             env.add(foco)
-        if (b.get('camera') or {}).get('enquadramento') == 'geral' or not env:
+        if not env:
             env = {i for i in atores if atores[i]['papel'] != 'contexto'}
         envolvidos.append({i for i in env if atores[i]['papel'] != 'contexto'})
     dep = _dependencias(cena)
@@ -450,9 +448,13 @@ def compilar(cena: dict, duracoes: list[float], fatos: list[dict], palavras: lis
             else:
                 tr.ir('x', T, T + .001, x); tr.ir('y', T, T + .001, y)
                 if (k, i) not in explicito:
-                    t0 = T + (0.05 + 0.12 * n if k == 0 else 0.08 * n)
-                    tr.ir('opacity', t0, t0 + .35, 1.0, 0)
-                    tr.ir('scale', t0, t0 + .45, s / S[i], .82 * s / S[i])
+                    if k == 0:
+                        tr.base['opacity'] = 1.0
+                        tr.base['scale'] = s / S[i]
+                    else:
+                        t0 = T + .08 * n
+                        tr.ir('opacity', t0, t0 + .35, 1.0, 0)
+                        tr.ir('scale', t0, t0 + .45, s / S[i], .82 * s / S[i])
                 n += 1
         visivel = set(palcos[k])
     tintas = {}

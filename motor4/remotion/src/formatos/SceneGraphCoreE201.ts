@@ -39,8 +39,8 @@ export type ActorV2={id:string;label?:string|null;label_t?:[number,number];layer
 export type CamKey={t:number;x:number;y:number;zoom:number};
 export type CaptionV2={start:number;end:number;words:{w:string;s:number;e:number}[]};
 export type SceneDataV2={schema:'coringa.scene_graph.private.v2';nature:'esquema_sem_escala'|'esquema_com_dado_real';publish:false;source:string;sources:string[];credits:string[];headline:string;actors:ActorV2[];camera:CamKey[];beats:{t:number;text:string}[];captions:CaptionV2[];captions_origin:string};
-export const BOX_V2=[150,430,770,1170] as const;
-export const CAPTION_V2=[150,1185,770,1320] as const;
+export const BOX_V2=[36,510,1044,1450] as const;
+export const CAPTION_V2=[150,365,770,485] as const;
 export function validateSceneV2(d:SceneDataV2,dur:number){
   const url=(s:unknown)=>typeof s==='string'&&s.startsWith('https://');
   if(!d||d.schema!=='coringa.scene_graph.private.v2'||!['esquema_sem_escala','esquema_com_dado_real'].includes(d.nature)||d.publish!==false||!finite(dur)||dur<=0||!url(d.source)||!Array.isArray(d.sources)||!d.sources.every(url)||!Array.isArray(d.credits)||typeof d.headline!=='string'||!Array.isArray(d.actors)||!d.actors.length||d.actors.length>400||!Array.isArray(d.camera)||!d.camera.length||!Array.isArray(d.captions))throw new Error('E202-CONTRACT');

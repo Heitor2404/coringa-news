@@ -305,7 +305,7 @@ def de_mujoco(m):
                               np.array(m.mesh_vert[va:va+vn], float), np.array(m.mesh_face[fa:fa+fn], np.int32), rgba))
     if not visuais:
         fail("SEM_MALHA")
-    atuadores = {}
+    atuadores, servos = {}, {}
     for a in range(m.nu):
         t = int(m.actuator_trntype[a])
         alvo = int(m.actuator_trnid[a][0])
@@ -320,11 +320,20 @@ def de_mujoco(m):
         else:
             fail("TRANSMISSAO_NAO_SUPORTADA")
         atuadores[nome(obj.mjOBJ_ACTUATOR, a)] = coef
+        # Servo de posição afim: equilíbrio estático em g·ctrl + b0 + b1·L = 0.
+        if (int(m.actuator_biastype[a]) == int(mujoco.mjtBias.mjBIAS_AFFINE)
+                and int(m.actuator_gaintype[a]) == int(mujoco.mjtGain.mjGAIN_FIXED)
+                and m.actuator_biasprm[a][1] < 0):
+            servos[nome(obj.mjOBJ_ACTUATOR, a)] = (float(m.actuator_gainprm[a][0]), float(m.actuator_biasprm[a][0]),
+                                                   float(m.actuator_biasprm[a][1]))
     mont = Montagem(corpos, pai, local, juntas, igualdades, visuais, atuadores, {},
                     np.array(m.qpos0, float), congeladas)
     mont.chaves["qpos0"] = mont.de_qpos(m.qpos0)
+    mont.servos, mont.comandos = servos, {}
     for k in range(m.nkey):
         mont.chaves[nome(obj.mjOBJ_KEY, k)] = mont.de_qpos(m.key_qpos[k])
+        if m.nu:
+            mont.comandos[nome(obj.mjOBJ_KEY, k)] = dict(zip(atuadores, map(float, m.key_ctrl[k])))
     return mont
 
 

@@ -22,14 +22,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Runtime
-        timeout-minutes: 10
+      - name: FFmpeg
+        timeout-minutes: 8
         run: |
           if ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ffmpeg
+            sudo apt-get -o DPkg::Lock::Timeout=180 update
+            sudo apt-get -o DPkg::Lock::Timeout=180 install -y --no-install-recommends ffmpeg
           fi
-          python -m pip install -q mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
+          ffmpeg -version | head -1
+      - name: Python
+        timeout-minutes: 8
+        run: |
+          python -m pip install --progress-bar off --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg
+          python -c "import mujoco, fcl, numba; print(mujoco.__version__, numba.__version__)"
       - name: Fonte no commit fixado (somente no runner; nada é copiado para o repositório ou artifact)
         run: |
           commit=$(jq -er .fonte.commit benchmarks/e18_multifornecedor.json)

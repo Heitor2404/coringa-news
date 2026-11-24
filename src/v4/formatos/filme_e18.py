@@ -85,6 +85,15 @@ def plano_movimento(mont, modelo, solver_cache, m=None):
             raise ValueError("E18-CHAVE_DESCONHECIDA")
         # A pose-chave da fonte pode não fechar exatamente: projeta no fechamento.
         fixos_val = solver.linhas @ mont.chaves[chave]
+        # Servos de posição: a chave guarda a pose no COMANDO (key_ctrl).
+        comandos = getattr(mont, "comandos", {}).get(chave, {})
+        usados = {}
+        for k_, n_ in enumerate(acion):
+            if n_ in getattr(mont, "servos", {}) and n_ in comandos:
+                g_, b0_, b1_ = mont.servos[n_]
+                fixos_val[k_] = (g_ * comandos[n_] + b0_) / (-b1_)
+                usados[n_] = float(fixos_val[k_])
+        solver_cache["comandos_da_chave"] = usados
         montar = lambda s_, v=fixos_val: np.concatenate([v[:r], [s_], v[r + 1:]])
         faixa = solver.faixa_acionador(r)
         inicio = float(np.clip(fixos_val[r], *faixa))
@@ -105,10 +114,12 @@ def plano_movimento(mont, modelo, solver_cache, m=None):
                                                      montar=montar)
         else:
             cortes, eixo = [], None
-        if not faixa[0] - 1e-9 <= inicio <= faixa[1] + 1e-9:
-            inicio = faixa[0]
-            q0, _ = solver.resolver(montar(inicio), q0)
-        outro = faixa[1] if abs(faixa[1] - inicio) >= abs(faixa[0] - inicio) else faixa[0]
+        # O filme percorre o curso viável COMPLETO, começando pelo extremo
+        # mais próximo da pose-chave (que é só o ponto de partida da fonte).
+        perto = faixa[0] if abs(faixa[0] - inicio) <= abs(faixa[1] - inicio) else faixa[1]
+        outro = faixa[1] if perto == faixa[0] else faixa[0]
+        q0, _ = solver.resolver(montar(perto), q0)
+        inicio = perto
         # Pausa · ida · pausa · volta · pausa (proporções fixas para todo modelo).
         p, v = int(n * .1), int(n * .35)
         perfil = np.concatenate([np.zeros(p), suave(v), np.ones(n - 2 * p - 2 * v), suave(v)[::-1], np.zeros(p)])
@@ -134,7 +145,19 @@ def plano_movimento(mont, modelo, solver_cache, m=None):
     raise ValueError("E18-MOVIMENTO_NAO_SUPORTADO")
 
 
-def medir(mont, q, medida, eixo):
+def ponto_em(mont, X, nome, ponto):
+    b = mont.indice_corpo(nome)
+    return X[b][:3, :3] @ np.asarray(ponto, float) + X[b][:3, 3]
+
+
+def medir(mont, q, medida, eixo, q_ref=None):
+    if medida["tipo"] == "deslocamento":
+        # Quanto um ponto de B andou desde a pose inicial, visto do corpo A.
+        def local(qq):
+            X = mont.poses(qq)
+            A = X[mont.indice_corpo(medida["a"])]
+            return A[:3, :3].T @ (ponto_em(mont, X, medida["b"], medida.get("ponto_b", [0, 0, 0])) - A[:3, 3])
+        return float(np.linalg.norm(local(q) - local(q_ref)))
     if medida["tipo"] == "folga":
         return M.folga(mont, q, medida["a"], medida["b"], eixo)[0]
     if medida["tipo"] == "distancia":
@@ -244,6 +267,20 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
     pontos = np.vstack(pontos)
     centros = np.array(centros)  # (amostras, corpos, 3)
     moveis = [b for b in range(len(mont.corpos)) if np.ptp(centros[:, b], axis=0).max() > 1e-6]
+    # Se o que se move é pequeno frente à máquina inteira, enquadra o
+    # movimento e o entorno imediato (a máquina pode sair pelas bordas).
+    pm = []
+    for q in amostra:
+        X = mont.poses(q)
+        pm += [v.vertices[:: max(1, len(v.vertices) // 300)] @ (X[v.corpo] @ v.local)[:3, :3].T
+               + (X[v.corpo] @ v.local)[:3, 3] for v in mont.visuais if v.corpo in moveis]
+    foco = "tudo"
+    if pm:
+        pm = np.vstack(pm)
+        if np.ptp(pm, axis=0).max() < 0.4 * np.ptp(pontos, axis=0).max():
+            c, meia = (pm.max(0) + pm.min(0)) / 2, np.ptp(pm, axis=0).max() * 0.65
+            dentro = np.all(np.abs(pontos - c) <= meia, axis=1)
+            pontos, foco = pontos[dentro], "pecas_moveis"
     # Eixo principal 3D de cada peça móvel em cada pose amostrada: mede o
     # quanto as peças ficam escorçadas (apontando para a câmera).
     eixos = []  # lista por pose; a nota usa a PIOR pose (o espectador vê todas)
@@ -280,13 +317,41 @@ def escolher_camera(mont, qs, cima, regiao, fov=24):
             if melhor is None or nota > melhor[0] + 1e-12:
                 melhor = (nota, cam, dict(guinada_graus=guinada, elevacao_graus=elev,
                                           ocupacao=float(ocup), visibilidade=float(vis),
-                                          legibilidade=float(leg), nota=float(nota)))
+                                          legibilidade=float(leg), nota=float(nota), foco=foco))
     return melhor[1], melhor[2], pontos
 
 
 # ---------------------------------------------------------------- filme
 def fonte(n, negrito=False):
     return ImageFont.truetype("DejaVuSans-Bold.ttf" if negrito else "DejaVuSans.ttf", n)
+
+
+_MEDIDOR = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+
+
+def caber(texto, tam, largura, negrito=False, minimo=18):
+    """Maior corpo ≤ tam em que o texto cabe na largura (px)."""
+    while tam > minimo and _MEDIDOR.textlength(texto, font=fonte(tam, negrito)) > largura:
+        tam -= 1
+    return fonte(tam, negrito)
+
+
+def linhas_titulo(titulo, largura=900, maximo=64, minimo=48):
+    """Uma linha se couber com corpo ≥ mínimo; senão quebra no travessão ou no
+    último espaço que deixa a 1ª linha caber, e ajusta as duas linhas."""
+    f = caber(titulo, maximo, largura, True, minimo)
+    if _MEDIDOR.textlength(titulo, font=f) <= largura:
+        return [titulo], f
+    if " — " in titulo:
+        partes = titulo.split(" — ", 1)
+        partes = [partes[0], "— " + partes[1]]
+    else:
+        palavras = titulo.split()
+        k = max(i for i in range(1, len(palavras))
+                if _MEDIDOR.textlength(" ".join(palavras[:i]), font=fonte(minimo, True)) <= largura)
+        partes = [" ".join(palavras[:k]), " ".join(palavras[k:])]
+    tam = min(caber(p, maximo, largura, True, 30).size for p in partes)
+    return partes, fonte(tam, True)
 
 
 def gerar(manifesto, modelo, raiz, saida, rapido=False):
@@ -296,7 +361,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     traj, solver = M.trajetoria(mont, acion, alvos, semente)
     qs = [q for q, _ in traj]
     medida = modelo["medida"]
-    serie = np.array([medir(mont, q, medida, cache["eixo"]) for q in qs])
+    serie = np.array([medir(mont, q, medida, cache["eixo"], qs[0]) for q in qs])
     # --- auditoria
     qa = dict(id=modelo["id"], quadros=len(qs), juntas=len(mont.juntas), coordenadas=mont.nq,
               tipos_junta=sorted({j.tipo for j in mont.juntas}), base_congelada=mont.base_congelada,
@@ -332,7 +397,11 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
     qa["medida"] = dict(tipo=medida["tipo"], min_mm=float(serie.min() * 1000), max_mm=float(serie.max() * 1000))
     if "oraculo" in modelo:
         o = modelo["oraculo"]
-        if o["tipo"] == "medida_maxima_mm":
+        if o["tipo"] == "curso_mm":
+            curso = qa["medida"]["max_mm"] - qa["medida"]["min_mm"]
+            qa["oraculo_fabricante"] = dict(o, medido_mm=curso, diferenca_mm=curso - o["valor_mm"],
+                                            dentro_da_tolerancia=abs(curso - o["valor_mm"]) <= o["tolerancia_mm"])
+        elif o["tipo"] == "medida_maxima_mm":
             dif = qa["medida"]["max_mm"] - o["valor_mm"]
             qa["oraculo_fabricante"] = dict(o, medido_mm=qa["medida"]["max_mm"], diferenca_mm=dif,
                                             dentro_da_tolerancia=abs(dif) <= o["tolerancia_mm"])
@@ -352,11 +421,12 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
           "-metadata", "comment=" + modelo["credito"] + " | " + modelo["licenca"] + " | privado, nao publicar",
           str(filme)]
     legenda_papel = {"entrada": ("Entrada (atuador)", AMBAR), "laco": ("Laço fechado", VERDE_AGUA)}
-    # Título cabe na largura útil (900 px): reduz o corpo até caber.
-    tam = 64
-    while tam > 36 and ImageDraw.Draw(Image.new("RGB", (8, 8))).textlength(modelo["titulo"], font=fonte(tam, True)) > 900:
-        tam -= 2
-    fonte_titulo = fonte(tam, True)
+    # Título na largura útil (900 px): encolhe até 48 px; abaixo disso, 2 linhas.
+    titulo_linhas, fonte_titulo = linhas_titulo(modelo["titulo"])
+    tam = fonte_titulo.size
+    y_resumo = 96 + int(tam * 1.25) * len(titulo_linhas) + 16
+    rodape = [caber(t, 25, 900) for t in (modelo["credito"], modelo["natureza"],
+                                           "Prévia privada de laboratório · não publicar")]
     # Legenda só para papéis que aparecem: pré-passada em 3 poses, pixels por peça.
     vis = {}
     for i in (0, len(qs) // 2, len(qs) - 1):
@@ -375,6 +445,7 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
         resumo.append(f"{n_lacos} laço" + ("s" if n_lacos > 1 else "") + " fechado" + ("s" if n_lacos > 1 else ""))
     if qa["mobilidade_max"]:
         resumo.append(f"{qa['mobilidade_max']} GL passivos")
+    fonte_resumo = caber(" · ".join(resumo), 32, 900)
     rotulo = medida["rotulo"]
     vmin, vmax = serie.min(), serie.max()
     grafico = [(90 + int(i * 900 / (len(serie) - 1)), int(1588 - (v - vmin) / max(vmax - vmin, 1e-9) * 120))
@@ -393,8 +464,9 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
             rgb, info = R.renderizar(cam, malhas, fundo, chao=chao)
             im = Image.fromarray(rgb)
             d = ImageDraw.Draw(im)
-            d.text((90, 96), modelo["titulo"], font=fonte_titulo, fill="white")
-            d.text((90, 186), " · ".join(resumo), font=fonte(32), fill="#9fb6c8")
+            for k, linha in enumerate(titulo_linhas):
+                d.text((90, 96 + int(tam * 1.25) * k), linha, font=fonte_titulo, fill="white")
+            d.text((90, y_resumo), " · ".join(resumo), font=fonte_resumo, fill="#9fb6c8")
             y = 1290
             x = 90
             for p in presentes:
@@ -402,8 +474,9 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
                 d.ellipse((x, y + 8, x + 22, y + 30), fill=tuple(int(c * 255) for c in cor))
                 d.text((x + 34, y), nome, font=fonte(30), fill="#d5e1ea")
                 x += 60 + int(d.textlength(nome, font=fonte(30)))
-            d.text((90, 1370), rotulo, font=fonte(36), fill="white")
             valor = f"{serie[i]*1000:.1f} mm".replace(".", ",")
+            larg_valor = d.textlength(f"{serie.max()*1000:.1f} mm", font=fonte(48, True))
+            d.text((90, 1370), rotulo, font=caber(rotulo, 36, 900 - larg_valor - 30), fill="white")
             d.text((990 - d.textlength(valor, font=fonte(48, True)), 1360), valor, font=fonte(48, True), fill="#f2b94b")
             d.line(grafico, fill="#3b5163", width=4)
             d.line(grafico[: i + 1], fill="#f2b94b", width=6)
@@ -411,11 +484,11 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
             d.ellipse((u - 9, vv - 9, u + 9, vv + 9), fill="white")
             if "oraculo_fabricante" in qa:
                 for k, linha in enumerate(linha_oraculo(qa["oraculo_fabricante"])):
-                    d.text((90, 1636 + 38 * k), linha, font=fonte(28),
+                    d.text((90, 1636 + 38 * k), linha, font=caber(linha, 28, 900),
                            fill="#9fb6c8" if qa["oraculo_fabricante"]["dentro_da_tolerancia"] else "#ff8a7a")
-            d.text((90, 1762), modelo["credito"], font=fonte(25), fill="#7f97aa")
-            d.text((90, 1798), modelo["natureza"], font=fonte(25), fill="#7f97aa")
-            d.text((90, 1834), "Prévia privada de laboratório · não publicar", font=fonte(25), fill="#7f97aa")
+            for k, (t, ft) in enumerate(zip((modelo["credito"], modelo["natureza"],
+                                             "Prévia privada de laboratório · não publicar"), rodape)):
+                d.text((90, 1762 + 36 * k), t, font=ft, fill="#7f97aa")
             buf = np.asarray(im).tobytes()
             hashes.update(buf)
             enc.stdin.write(buf)
@@ -436,7 +509,9 @@ def gerar(manifesto, modelo, raiz, saida, rapido=False):
 
 
 def linha_oraculo(o):
-    if o["tipo"] == "medida_maxima_mm":
+    if o["tipo"] == "curso_mm":
+        txt = f"Curso na ficha do fabricante: {o['valor_mm']:g} mm · neste modelo: {o['medido_mm']:.1f} mm"
+    elif o["tipo"] == "medida_maxima_mm":
         txt = f"Ficha do fabricante: {o['valor_mm']:g} mm · neste modelo: {o['medido_mm']:.1f} mm"
     else:
         txt = f"Tabela DH do fabricante: desvio máx. {o['erro_max_mm']:.1f} mm em {o['amostras']} poses"

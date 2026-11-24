@@ -28,10 +28,11 @@ jobs:
           import json
           from pathlib import Path
           from src.v4.formatos import diretor_visual_e202 as D, garimpo_visual as G
+          fontes = json.loads(Path('benchmarks/e202/fontes_institucionais_e208.json').read_text())['cases']
           for c in json.loads(Path('benchmarks/e202/necessidades_documentais_e206.json').read_text())['cases']:
               p = Path('qa_e206') / c['id']
               t = D.triagem_documental(c['necessidades_visuais'], c['fatos'])
-              r = G.pesquisar_triagem(t, p)
+              r = G.pesquisar_triagem(t, p, fontes_institucionais=fontes.get(c['id'], {}))
               print('E206', c['id'], 'adquiridos', len(r['adquiridos']), 'estados', [x['estado'] for x in r['resultados']])
           PY
       - name: Cifrar originais e contatos de QA

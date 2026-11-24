@@ -1,7 +1,7 @@
-"""Short visual-only comparison of real USGS footage, no TTS or new documentary.
-The same native footage is deliberately repeated for crop vs full-context review.
+"""E230.1: short narrative montage with distinct real sources.
+Manual review fixture, not semantic automation or measured narration.
 """
-import hashlib,json,shutil,subprocess,wave
+import shutil,subprocess,wave
 from pathlib import Path
 from scripts import qa_documentario_geografia_e219 as E
 
@@ -9,69 +9,58 @@ def main():
     out=Path('qa_media_first');out.mkdir(exist_ok=True)
     E.STAGE=out/'originais';E.STAGE.mkdir(exist_ok=True)
     spec=E.read('benchmarks/e219/kilauea_2018.json')
-    media=[]
-    tech={'title':'Tecnologia de campo','credit':'USGS',
-          'videos':[['usgs-road-remotely-sampling-a-stream-contaminants','Amostragem remota'],
-                    ['usgs-sediment-core-laboratory-ad','Laboratório de sedimentos']]}
-    history={'title':'Acervo histórico','credit':'USGS · NOAA','optional':True,
-             'videos':[['mount-st-helens-1980-ash-cloud-seen-space','Sequência de imagens NOAA de 1980']]}
-    omissions=[]
-    for chapter in (spec['chapters'][0],spec['chapters'][2],tech,history):
-        # A failed original must not end the whole sample while another
-        # licensed candidate for the SAME chapter can satisfy the same gate.
+    span=4.5
+    # Editorial order: hook, fissures, flow, coastline, consequence at summit.
+    # One framing for each distinct original, not three views of one take.
+    plan=[
+        (0,'4:5','O encontro com o mar',['LAVA','E','OCEANO']),
+        (2,'imersivo','Fissuras no solo',['O','SOLO','SE','ABRIU']),
+        (3,'1:1','Um rio de lava',['UM','RIO','DE','LAVA']),
+        (4,'4:5','O litoral mudou',['A','COSTA','MUDOU']),
+        (5,'1:1','O topo também mudou',['A','CRATERA','MUDOU']),
+    ]
+    shots=[];captions=[];media=[];used=set()
+    for i,(chapter_index,mode,lead,words) in enumerate(plan):
+        chapter=spec['chapters'][chapter_index]
         for row in chapter['videos']:
             try:
                 m=E.acquire(row)
-                if chapter.get('credit'):m['credit']=chapter['credit']
-                cuts=E.windows(m,3.1)
-                if not cuts:raise RuntimeError('sem trecho de teste')
+                if m['expected_sha256'] in used:raise ValueError('original já usado')
+                cuts=E.windows(m,span+.1)
+                if not cuts:raise ValueError('sem janela contínua elegível')
                 print('AMOSTRA FONTE OK',row[0],flush=True)
                 break
             except (ValueError,RuntimeError,OSError,subprocess.SubprocessError) as exc:
                 print('AMOSTRA FONTE RECUSADA',row[0],type(exc).__name__,str(exc)[:120],flush=True)
         else:
-            if chapter.get('optional'):
-                omissions.append({'chapter':chapter['title'],'reason':'sem original elegível'})
-                print('AMOSTRA COBERTURA PARCIAL',chapter['title'],flush=True)
-                continue
-            raise RuntimeError('Sem registro elegível para a amostra: '+chapter['title'])
+            raise RuntimeError('Sem original distinto elegível: '+chapter['title'])
+        used.add(m['expected_sha256'])
         asset='e219_visual/'+m['expected_sha256']+'.mp4'
         dest=E.PUBLIC/asset;dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(m['local_source'],dest)
         if E.sha(dest)!=m['expected_sha256']:raise RuntimeError('hash')
-        media.append((m,asset,cuts[0][0]))
-    shots=[]
-    captions=[]
-    variants=[
-        (0,'imersivo',['LAVA','NO','OCEANO']),
-        (0,'4:5',['RECORTE','INTERMEDIÁRIO']),
-        (0,'integral',['CONTEXTO','DA','COSTA']),
-        (1,'imersivo',['FISSURAS','EM','ATIVIDADE']),
-        (2,'1:1',['TECNOLOGIA','DE','CAMPO']),
-    ]
-    if len(media)==4:
-        variants.append((3,'integral',['ACERVO','DE','1980']))
-    for i,(j,mode,words) in enumerate(variants):
-        m,asset,offset=media[j];start=i*3
-        shot={'id':str(i),'type':'video','asset':asset,'start':start,'end':start+3,'source_in_seconds':offset,
-              'headline':m['label'],'lead':{'integral':'Enquadramento integral','imersivo':'Enquadramento imersivo','4:5':'Recorte de teste 4:5','1:1':'Recorte de teste 1:1'}[mode],
-              'subject':m['subject'],'source':m['page'],'source_display':m['credit'],'evidence':'literal','video_zoom':1,'focus':[.5,.5]}
-        if mode=='integral':shot['video_context_layout']='cena_integral'
-        elif mode in ('4:5','1:1'):
-            # Explicit laboratory comparison, NOT measured ROI or automatic semantic decision.
+        start=i*span;end=start+span
+        shot={'id':str(i),'type':'video','asset':asset,'start':start,'end':end,
+              'source_in_seconds':cuts[0][0],'headline':m['label'],'lead':lead,
+              'subject':m['subject'],'source':m['page'],'source_display':m['credit'],
+              'evidence':'literal','video_zoom':1,'focus':[.5,.5]}
+        if mode in ('4:5','1:1'):
+            # Candidate crops only; no claim of detected/verified ROI.
             shot['video_context_layout']='recorte_relacional_seguro'
             shot['documentary_viewport']=mode
         shots.append(shot)
-        captions.append({'start':start,'end':start+3,'words':[{'w':w,'hl':k==0} for k,w in enumerate(words)]})
-    dur=3*len(variants)
-    # Silent laboratory asset only: captions demonstrate typography, not sync.
+        captions.append({'start':start,'end':end,'words':[{'w':w,'hl':k==len(words)-1} for k,w in enumerate(words)]})
+        media.append({'source':m,'window_s':[cuts[0][0],cuts[0][0]+span],'mode':mode,'review':'PENDING'})
+    dur=len(shots)*span
+    assert len(used)==len(shots) and 20<=dur<=30
     wav=out/'silencio_lab.wav'
     with wave.open(str(wav),'wb') as w:
-        w.setnchannels(1);w.setsampwidth(2);w.setframerate(48000);w.writeframes(bytes(dur*48000*2))
+        w.setnchannels(1);w.setsampwidth(2);w.setframerate(48000);w.writeframes(bytes(round(dur*48000)*2))
     h=E.sha(wav);audio='e202/'+h+'.wav'
     (E.PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(wav,E.PUBLIC/audio)
     props={'duracao':dur,'shots':shots,'preview':True,'private_review_only':True,'scene_narration_asset':audio,
            'documentary_captions':captions,'documentary_caption_origin':'FRASES_MEDIDAS_LAB'}
     E.write(out/'props.json',props)
-    E.write(out/'fontes.json',{'publish':False,'laboratory_silent':True,'semantic_approval':'PENDING','framing':'LAB_MANUAL_COMPARISON_NOT_ROI','history_scope':'NOAA satellite image sequence; archival moving camera footage not verified','omissions':omissions,'sources':[m for m,_,_ in media]})
+    E.write(out/'fontes.json',{'publish':False,'laboratory_silent':True,'semantic_approval':'PENDING',
+        'framing':'LAB_MANUAL_NOT_VERIFIED_ROI','sources':media,'distinct_originals':len(used)})
 if __name__=='__main__':main()

@@ -1,0 +1,36 @@
+name: E217 - referencias fundamentadas e diretor documental
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-referencias-e217.yml','tests/test_referencias_e217.py','scripts/qa_referencias_e217.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  referencias:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e40-rotas-evidencia
+          run-id: "45330952405"
+          github-token: ${{ github.token }}
+          path: fonte_e217
+      - name: Testar roteamento e recuperar auditorias reais
+        run: |
+          python -m pip install -q -r requirements.txt pytest cairosvg
+          python -m pytest -q tests/test_referencias_e217.py tests/test_rota_explicativa_e40.py
+          python -m scripts.qa_referencias_e217
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e217-referencias-privadas
+          path: E217_REAL.json
+          retention-days: 7
+          if-no-files-found: warn

@@ -38,17 +38,38 @@
     "cad_preview": {
       "status": "CANDIDATO",
       "reason": "CAD privado, homologação pendente"
+    },
+    "animation_clip:coringa.animation.clip.private.v1": {
+      "status": "CANDIDATO",
+      "reason": "ponte privada de artefatos registrados, sem homologação estética"
     }
   },
   "external_candidates": {
     "render_eclusa_hidraulica_2d.py": {
-      "status": "CANDIDATO_NAO_INTEGRADO",
+      "status": "CANDIDATO",
       "reference_run": 45110717183,
-      "reference_sha256": "f15498d7b6b86834ccd0e186bf4796314a193ade0b46700c886406a67858e322"
+      "reference_sha256": "f15498d7b6b86834ccd0e186bf4796314a193ade0b46700c886406a67858e322",
+      "frames": 302,
+      "fps": 24,
+      "dimensions": [
+        540,
+        960
+      ],
+      "credit": "Ilustração própria · referência ACP",
+      "source": "https://pancanal.com/en/design-of-the-locks/"
     },
     "render_compressor_conjunto_2d.py": {
-      "status": "CANDIDATO_NAO_INTEGRADO",
-      "reason": "referência de máquina e ocupação, sem homologação final"
+      "status": "CANDIDATO",
+      "reference_run": 45122774333,
+      "reference_sha256": "2ab986d07f4c6e9008c172f7f4582b4002ed23a14e1d2c99ae9e347eb3b97e4c",
+      "frames": 192,
+      "fps": 24,
+      "dimensions": [
+        540,
+        960
+      ],
+      "credit": "Ilustração própria · modelo didático P–V",
+      "source": "Modelo didático do laboratório F10; não reprodução de máquina industrial"
     }
   },
   "rules": [

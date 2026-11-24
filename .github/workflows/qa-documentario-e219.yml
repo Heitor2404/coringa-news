@@ -1,9 +1,12 @@
 name: E219 - documentario geografia curado privado
 on:
-  push:
-    branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-documentario-e219.yml','scripts/qa_documentario_geografia_e219.py','benchmarks/e219/kilauea_2018.json']
   workflow_dispatch:
+    inputs:
+      visual_review_passed:
+        description: "Amostra real revisada e aprovada pelo usuário (não apenas CI)"
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -16,6 +19,7 @@ env:
   REMOTION_DISABLE_TELEMETRY: "1"
 jobs:
   documentario:
+    if: ${{ inputs.visual_review_passed == true && github.ref == 'refs/heads/atlas-direcao-visual-20261118' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:

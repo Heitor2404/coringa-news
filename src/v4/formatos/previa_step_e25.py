@@ -83,6 +83,6 @@ if __name__=="__main__":
     p.add_argument("step")
     p.add_argument("license")
     p.add_argument("saida")
-    p.add_argument("--estilo",choices=["legado","e33"],default="legado")
+    p.add_argument("--estilo",choices=["legado","e33","e46b"],default="legado")
     a=p.parse_args()
     gerar(a.manifesto,a.step,a.license,a.saida,a.estilo)

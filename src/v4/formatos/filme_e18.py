@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 from . import multicorpo_e18 as M
 from . import raster_e18 as R
 from . import apresentacao_e33 as P33
+from . import apresentacao_e46b as P46
 from . import grafo_cinematica_e30 as G30
 from . import metrologia_e22 as D
 from . import camera_e24 as C
@@ -535,15 +536,19 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
         raise ValueError("E27-QUADROS_INSUFICIENTES")
     qa["eventos_trajetoria"] = E.extrair(serie, FPS, medida["tipo"], medida["rotulo"], indices, unidade=medida.get("unidade","m"))
     estilo=modelo.get("estilo_visual","legado")
-    if estilo not in ("legado","e33"):
+    if estilo not in ("legado","e33","e46b"):
         raise ValueError("E33-ESTILO")
     trilha=[]
-    if estilo=="e33":
+    if estilo in ("e33","e46b"):
         grafo=G30.extrair(mont,qs,acion,FPS,indices)
         trilha=P33.focos(mont,grafo,indices)
         qa["apresentacao_e33"]=dict(estilo=estilo,grafo=grafo,focos=trilha,
             hash_poses=hashlib.sha256(np.asarray(qs,dtype="<f8").tobytes()).hexdigest(),
             natureza="atencao_editorial_nao_causal",publish=False)
+        if estilo=="e46b":
+            qa["apresentacao_e46b"]=dict(estilo=estilo,papeis={str(k):v for k,v in pap.items()},
+                hash_poses=qa["apresentacao_e33"]["hash_poses"],
+                natureza="cores_editoriais_por_papel_cinematico",publish=False)
     # Both encoders receive the SAME rasterized frame; no lab title/chart baked
     # into the clean stage. No stage is released for publication.
     ctx = subprocess.Popen(ff_palco, stdin=subprocess.PIPE) if palco else nullcontext(None)
@@ -555,6 +560,8 @@ def renderizar_trajetoria(mont, acion, qs, medida, serie, qa, modelo, saida,
                 T = X[v.corpo] @ v.local
                 cor, brilho = (P33.material(pap[v.corpo],P33.intensidade(frame,v.corpo,trilha))
                                if estilo=="e33" else cor_visual(v, pap[v.corpo]))
+                if estilo=="e46b":
+                    cor,brilho=P46.material(pap[v.corpo],P33.intensidade(frame,v.corpo,trilha))
                 malhas.append((v.vertices @ T[:3, :3].T + T[:3, 3], v.faces, cor, brilho))
             rgb, info = R.renderizar(cam, malhas, fundo, chao=chao, estilo=estilo)
             if enc_palco is not None:
@@ -689,7 +696,7 @@ def main():
     ap.add_argument("saida", type=Path, nargs="?")
     ap.add_argument("--ids")
     ap.add_argument("--rapido", action="store_true")
-    ap.add_argument("--estilo", choices=["legado","e33"], default="legado")
+    ap.add_argument("--estilo", choices=["legado","e33","e46b"], default="legado")
     ap.add_argument("--palco", action="store_true", help="exportar clipe CAD limpo apenas para laboratorio")
     a = ap.parse_args()
     if a.acao == "fixar":

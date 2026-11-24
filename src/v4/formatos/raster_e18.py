@@ -14,6 +14,7 @@ import numpy as np
 from numba import njit
 from PIL import Image, ImageFilter
 from . import apresentacao_e33 as E33
+from . import apresentacao_e46b as E46B
 
 
 @njit(cache=True)
@@ -102,7 +103,7 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     """malhas: lista de (vertices_mundo, faces, rgb 0-1, brilho 0-1).
     fundo: imagem RGB uint8 (H, W, 3) no tamanho final.
     chao: altura z do plano de apoio para sombra de contato (ou None)."""
-    if estilo not in ("legado","e33"):
+    if estilo not in ("legado","e33","e46b"):
         raise ValueError("E33-ESTILO")
     W, H = cam.W * ss, cam.H * ss
     f, cx, cy = cam.f * ss, cam.cx * ss, cam.cy * ss
@@ -149,6 +150,8 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     cor = np.clip(cor, 0, 1)
     if estilo=="e33":
         cor=E33.sombrear(base,lam,fill,rim)
+    elif estilo=="e46b":
+        cor=E46B.sombrear(base,lam,fill,rim,spec,br)
     # Contorno: troca de peça, salto relativo de profundidade ou quebra de normal.
     borda = np.zeros((H, W), bool)
     for dy, dx in ((0, 1), (1, 0)):
@@ -168,6 +171,9 @@ def renderizar(cam, malhas, fundo, luz=(.45, .62, .64), ss=2, chao=None, contorn
     if estilo=="e33":
         borda=E33.bordas_locais(idbuf,depth,N)
         img[borda]=img[borda]*.46+np.array([.025,.035,.045])
+    elif estilo=="e46b":
+        borda=E46B.bordas(idbuf,depth,N)
+        img[borda]=img[borda]*.63+np.array([.018,.025,.035])
     else:
         img[borda] = img[borda] * 0.35 + np.array(contorno) / 255 * 0.65
     out = Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))

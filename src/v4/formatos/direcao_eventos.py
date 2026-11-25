@@ -339,3 +339,49 @@ Dados: """+contexto
     q=aceitar_observacao(pacote,resposta)
     return {**q,'resposta_observada':resposta,'provedor':provedor,
             'chamadas_logicas':1,'aprovacao_editorial':False}
+
+
+def candidato_revisado(pacote, midia, *, fato_id):
+    """Use a reviewed window only for its own editorial obligation.
+    Assisted observations authorize a private framing candidate, never
+    factual identity, continuous action or publication.
+    """
+    if pacote['fato_id']!=fato_id or pacote['sha256_origem']!=midia.get('expected_sha256'):
+        raise ValueError('D-SEL-VINCULO')
+    r=pacote.get('revisao_assistida') or {}
+    if not r.get('resposta_observada'):
+        return {'estado':'SEM_REVISAO','prioridade':None,'publicar':False}
+    q=aceitar_observacao(pacote,r['resposta_observada'])
+    if q['veredito']!='pertinente':
+        return {'estado':q['veredito'].upper(),'prioridade':None,'publicar':False}
+    start= pacote['inicio_s'];span=pacote['duracao_s']
+    if start<0 or start+span>midia['duration_s']:
+        raise ValueError('D-SEL-TEMPO')
+    result={'estado':'CANDIDATO_PERTINENTE','prioridade':0,
+            'revisao_id':pacote['revisao_id'],'source_in_seconds':start,
+            'duracao_s':span,'publicar':False,'prova_de_acao':False,
+            'revisao_humana':'PENDENTE','enquadramento':None}
+    if q['video_framing']:
+        try:
+            result['enquadramento']=enquadrar_observacoes(
+                {'start':0.,'end':span,'source_in_seconds':start},midia,q['video_framing'])
+            result['video_framing']=q['video_framing']
+        except (ValueError,TypeError,KeyError) as exc:
+            result['enquadramento_recusado']=str(exc)[:200]
+    return result
+
+
+def selecionar_revisados(candidatos, *, fato_id, historico=()):
+    """Rank only pertinent observations bound to the same need.
+    Context/insufficient/unreviewed windows stay in the report, not the cut.
+    """
+    valid=[]
+    for order,c in enumerate(candidatos):
+        result=candidato_revisado(c['pacote'],c['midia'],fato_id=fato_id)
+        if result['estado']!='CANDIDATO_PERTINENTE':continue
+        sig=c.get('assinatura')
+        repeticao=max((similaridade_janelas(sig,h) for h in historico),default=0.) if sig else 0.
+        cards=c['pacote'].get('diagnostico_tecnico',{}).get('quadros_grafismo_suspeito',0)
+        valid.append((cards,repeticao,order,{'midia_id':c['midia'].get('id'),
+            'selecao':result,'similaridade_recente':repeticao,'ordem':order}))
+    return [v[3] for v in sorted(valid,key=lambda v:v[:3])]

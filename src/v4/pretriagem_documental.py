@@ -45,3 +45,15 @@ def coletar_fila(queues,transport,on_sample,*,max_samples=3,max_preview_bytes=1_
             if len(st['samples'])<max_samples:next_round.append(st)
         active=next_round
     return [{'id':s['n']['id'],'amostras':s['samples'],'erros':s['errors']} for s in states]
+
+
+def pendencias_do_fluxo(necessidades,resultados,estados):
+    """Use only the existing progressive queue; no new discovery or approval."""
+    rows={r['necessidade_id']:r for r in resultados}
+    queues=[]
+    for n in necessidades:
+        if rows.get(n['id'],{}).get('estado')!='LACUNA_PENDENTE':continue
+        pending=estados.get(n['id'],{}).get('pendentes',[])
+        choices=candidatos(n,pending)
+        if choices:queues.append((n,choices))
+    return queues

@@ -271,3 +271,16 @@ def test_search_facets_require_distinct_visual_components_in_metadata_ranking():
     assert R.cobertura_componentes(n,{'titulo':'Lakeside valley'})[0]==1
     assert R.cobertura_componentes(n,good)[0]==2
     assert not R.relevancia_textual(n,good)['prova_visual']
+
+
+def test_candidate_cap_does_not_starve_other_queries_or_providers():
+    def providers(kind):
+        def source(name):
+            return lambda q:[{'url':'https://example.org/'+name+'/'+q.replace(' ','-')+'/'+str(i),'source_id':i+1,'titulo':q} for i in range(20)]
+        return [(name,source(name)) for name in ('primary','secondary')]
+    r=A.pesquisar_cobertura(need(),fontes=providers,max_buscas=3,max_candidatos=3,progressivo=True)
+    assert len(r['buscas'])==len(r['candidatos'])==3
+    assert {c['fonte'] for c in r['candidatos']}=={'primary','secondary'}
+    assert sum(x['retidos'] for x in r['buscas'])==3
+    assert r['candidatos_nao_retidos']==57
+    assert r['publicar'] is False

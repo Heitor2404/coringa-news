@@ -308,22 +308,40 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         # Diagonal schedule: try alternate wording on strong providers early
         # while still visiting every provider/query pair if budget permits.
         schedule=sorted(((qi+ri,ri,qi) for qi in range(len(consultas)) for ri in range(len(rotas))))
+        # Discovery calls have a global budget independent of the retained
+        # candidate cap. A crowded response must not suppress other routes.
+        batches=[]
         for _,ri,qi in schedule:
             consulta=consultas[qi];tipo,nome,fn=rotas[ri]
             key=(tipo,nome,consulta.casefold())
             if key in attempted:continue
-            if len(report['buscas'])>=max_buscas or len(report['candidatos'])>=max_candidatos:break
+            if len(report['buscas'])>=max_buscas:break
             attempted.add(key);row={'consulta':consulta,'tipo':tipo,'fonte':nome}
             try:raw=fn(consulta) or []
             except Exception as e:
                 report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
-            added=0
+            batch=[]
             for item in raw:
                 c=_candidato_documental(item,nome,tipo)
                 if not c or c['url'] in vistos:continue
+                vistos.add(c['url']);batch.append(c)
+            row={**row,'estado':'OK' if batch else 'SEM_NOVOS_CANDIDATOS','novos':len(batch),'retidos':0}
+            report['buscas'].append(row)
+            if batch:
+                from src.v4.formatos.revisao_documental import ordenar_candidatos
+                batches.append((row,iter(ordenar_candidatos(necessidade,batch))))
+        # Interleave ranked query batches before enforcing the global cap.
+        # Unretained candidates are counted, never called semantic negatives.
+        while batches and len(report['candidatos'])<max_candidatos:
+            next_round=[]
+            for row,it in batches:
                 if len(report['candidatos'])>=max_candidatos:break
-                vistos.add(c['url']);report['candidatos'].append(c);added+=1
-            report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
+                c=next(it,None)
+                if c is None:continue
+                report['candidatos'].append(c);row['retidos']+=1
+                next_round.append((row,it))
+            batches=next_round
+        report['candidatos_nao_retidos']=sum(x.get('novos',0)-x.get('retidos',0) for x in report['buscas'])
         return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
     # Reserve a round for the alternative query instead of exhausting budget
     # on the first query. Without inspection, continue looking for options.

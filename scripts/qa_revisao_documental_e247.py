@@ -17,6 +17,9 @@ def main():
     somente_acervo='--somente-acervo' in sys.argv[4:]
     replay='--replay-privado' in sys.argv[4:] or somente_acervo
     revisar_acervo='--revisar-acervo' in sys.argv[4:]
+    preview_pending='--pretriagem-pendente' in sys.argv[4:]
+    if preview_pending and (not progressive or replay or revisar_acervo):raise ValueError('E275-PRETRIAGEM-ESCOPO')
+    preview_report=[]
     if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
@@ -342,6 +345,18 @@ def main():
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
             from src.v4.formatos import cobertura_documental as C
             for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
+            if preview_pending:
+                from src.v4.pretriagem_documental import pendencias_do_fluxo,coletar_fila
+                queues=pendencias_do_fluxo(tri,results,states)
+                old_http,old_bytes=t.max_http,t.max_bytes
+                t.max_http=min(old_http,t.http+12)
+                t.max_bytes=min(old_bytes,t.bytes+9_000_000)
+                def preview_board(n,c,v,im,digest,index):
+                    name='pretriagem-'+hashlib.sha256(n['id'].encode()).hexdigest()[:12]+'-'+str(index)+'.jpg'
+                    im.thumbnail((960,720));im.save(out/name,quality=90)
+                    return {'necessidade_id':n['id'],'mostrar':n['mostrar'],'pagina':c['pagina'],'source_id':c.get('source_id'),'preview_url':v['url'],'preview_sha256':digest,'folha':name,'estado':'PRETRIAGEM_PENDENTE','publicar':False}
+                try:preview_report=coletar_fila(queues,t,preview_board)
+                finally:t.max_http,t.max_bytes=old_http,old_bytes
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:
             reports=[];consulted=set()
@@ -392,6 +407,7 @@ def main():
                     checkpoint_rows.append({'id':mid,'arquivo':Path(z).name,'sha256':PB.sha(z),'estado':'PRIVADO_LOCAL'})
                 except Exception as e:checkpoint_rows.append({'id':mid,'estado':'FALHA_CHECKPOINT','motivo':type(e).__name__+':'+str(e)[:160]})
         lib.fechar()
+    if preview_pending:Q.write(out/'pretriagem-pendente.json',{'publicar':False,'direitos_aprovados':False,'visao':0,'cobertura_nova':0,'necessidades':preview_report})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
         'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})

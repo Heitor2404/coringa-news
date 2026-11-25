@@ -58,3 +58,14 @@ def test_optional_facets_are_not_a_visual_negative():
     c={'titulo':'Saturn rings','fonte':'commons','tipo':'foto'}
     assert R.cobertura_componentes(n,c)==(0,0,0)
     assert R.relevancia_textual(n,c)['cobertura']>0
+
+
+def test_existing_progressive_queue_preview_only_unresolved_static_needs():
+    from src.v4.pretriagem_documental import pendencias_do_fluxo
+    n={'id':'a','necessidade':'registro','mostrar':'mountain','evidencia_visual':'estatica','pesquisa':{'consultas_en':['mountain']}}
+    c={'fonte':'commons','tipo':'foto','direitos':'DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA','pagina':'p','titulo':'mountain','url':'original','variantes':[{'url':'thumb','width':640,'height':480}]}
+    needs=[n,{**n,'id':'b'},{**n,'id':'c','evidencia_visual':'movimento'},{**n,'id':'d','necessidade':'territorio'}]
+    rows=[{'necessidade_id':x['id'],'estado':'LACUNA_PENDENTE' if x['id']!='b' else 'CANDIDATO_PRIVADO_REVISADO'} for x in needs]
+    states={x['id']:{'pendentes':[c]} for x in needs}
+    assert [(x['id'],v[0][0]['pagina']) for x,v in pendencias_do_fluxo(needs,rows,states)]==[('a','p')]
+    assert states['a']['pendentes']==[c]

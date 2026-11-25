@@ -53,3 +53,18 @@ def test_real_record_has_no_geographic_request():
     n={'id':'r','sujeito':'animal','mostrar':'ação real','necessidade':'registro','fatos':['f1']}
     r=D.triagem_documental([n],[{'id':'f1'}],{'itens':[],'reprovados':[]})[0]
     assert 'solicitacao_atlas' not in r and r['modalidade_proposta']=='registro_real'
+
+
+@pytest.mark.parametrize('caso',CASES,ids=[c['id'] for c in CASES])
+def test_raster_covers_view_at_fade_onset(caso):
+    from src.v4.formatos import plano as A
+    roi=caso['atlas']['roi']
+    c=A.COMP['atlas.abertura']
+    cam=A.camera_roi(roi,c['quadro'],12,.86,c.get('centro_intencao'))
+    fx,fy=A.merc(*cam['foco'])
+    for spec in G.escalas(roi,caso['delta']):
+        if spec['de'] is None:continue
+        z=spec['de']-.5
+        view=A.tela_lonlat(A._restringir({**cam,'fx':fx,'fy':fy,'zoom':z}))
+        assert A.cobre({'bbox':spec['bbox']},view)
+        assert A.opacidade_raster(z,spec['de'])==pytest.approx(0)

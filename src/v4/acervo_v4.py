@@ -292,7 +292,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     # on the first query. Without inspection, continue looking for options.
     por_rodada=max(1,max_buscas//len(consultas))
     for ri,consulta in enumerate(consultas):
-        for tipo,nome,fn in (rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas:
+        for tipo,nome,fn in ((rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas):
             if len(report['buscas'])>=max_buscas:return {**report,'estado':'LACUNA_NAO_VERIFICADA'}
             row={'consulta':consulta,'tipo':tipo,'fonte':nome}
             try:raw=fn(consulta) or []

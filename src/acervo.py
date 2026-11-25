@@ -130,7 +130,11 @@ def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
                              info.get('thumburl') or info['url'], f'"{titulo[:50]}" — {autor} ({lic}), via Wikimedia Commons',
                              fonte, info.get('width'), info.get('height')))
             out[-1].update(pagina=info.get('descriptionurl'), url_original=info['url'],
-                           licenca=lic, tamanho_original=info.get('size'), autor=autor)
+                           licenca=lic, tamanho_original=info.get('size'), autor=autor,
+                           source_id=p.get('pageid'), source_title=p.get('title'),
+                           licenca_url=_txt(meta,'LicenseUrl'), restricoes=_txt(meta,'Restrictions'),
+                           variantes=[{'url':info['thumburl'],'width':info.get('thumbwidth'),
+                                       'height':info.get('thumbheight'),'size':None}] if info.get('thumburl') else [])
     return out
 
 
@@ -174,6 +178,9 @@ def f_nasa(consultas: list[str]) -> list[dict]:
                 url = link.replace('~thumb', '~medium')
                 out.append(_cand(d.get('title'), d.get('description'), _ano_txt(d.get('date_created')), url,
                                  f"{d.get('title', 'imagem')[:50]} — NASA ({d.get('center') or 'domínio público'})", 'NASA'))
+                out[-1].update(source_id=d.get('nasa_id'), nasa_collection=it.get('href'),
+                               nasa_center=d.get('center'), nasa_credit=d.get('photographer'),
+                               nasa_secondary_credit=d.get('secondary_creator'))
         except Exception as e:
             print(f'  [acervo/nasa] {q!r}: {str(e)[:60]}')
     return out

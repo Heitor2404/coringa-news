@@ -49,6 +49,7 @@ def duracao_minima_revisada(c,window,cap,framing=None):
     """
     from . import direcao_eventos as DE
     rid=window.get('revisao_id')
+    if not rid:return cap if cap>=1.4 else None
     for row in c.get('janelas',[]):
         pk=row.get('pacote') or {}
         if pk.get('revisao_id')!=rid or pk.get('sha256_origem')!=(c.get('aquisicao') or {}).get('sha256') or pk.get('inicio_s')!=window.get('source_in_seconds'):continue
@@ -58,8 +59,9 @@ def duracao_minima_revisada(c,window,cap,framing=None):
             times=[a['at'] for a in pk['amostras']]
             if framing:times.extend(pt['at'] for pt in framing['pontos'])
             if any(type(v) not in (int,float) or not math.isfinite(v) or v<0 for v in times):continue
-            # One whole frame strictly after the last sample.
-            minimum=max(1.4,(math.floor(max(times)*30+1e-6)+1)/30)
+            # The final displayed frame must be at or after the last sample;
+            # the end-exclusive timestamp is one frame beyond that frame.
+            minimum=max(1.4,(math.ceil(max(times)*30-1e-6)+1)/30)
             return minimum if minimum<=cap+1e-6 else None
         except (ValueError,TypeError,KeyError,AttributeError):continue
     return cap if cap>=1.4 else None

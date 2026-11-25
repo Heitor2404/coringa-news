@@ -72,7 +72,7 @@ def test_cut_keeps_last_reviewed_sample_and_framing():
     q=pk['revisao_assistida']
     framing=D.aceitar_observacao(pk,q['resposta_observada'])['video_framing']
     minimum=P.duracao_minima_revisada(c,win,3.8,framing)
-    assert 3.42<minimum<=3.8
+    assert minimum<=3.8 and minimum-1/30>=3.42-1e-6
     assert P.duracao_minima_revisada(c,win,3.0,framing) is None
     assert P.duracao_minima_revisada(c,{**win,'revisao_id':'other'},3.8)==3.8
 

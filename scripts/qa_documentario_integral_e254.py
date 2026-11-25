@@ -1,0 +1,55 @@
+"""E254: attempt a narrated >=60s private film only after real coverage."""
+import json,math,shutil,subprocess,sys,wave
+from pathlib import Path
+from src.v4.formatos import ponte_cobertura_filme as P,filme_editorial as F,diretor_visual_e202 as D,legenda_sync as LS
+from scripts.qa_documentario_curado_e218 import write,PUBLIC
+
+def main():
+    root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
+    case=report['case'];chosen,gate=P.preparar_cobertura(report,case)
+    write(root/'integral.json',gate)
+    if not gate['pronto_para_tts']:
+        print('E254 COBERTURA INSUFICIENTE',gate,flush=True);return
+    # Test the existing structural gate before spending TTS.
+    predicted=[];t=0
+    for ch in case['chapters']:
+        t+=sum(math.floor(min(3.6,chosen[i]['cap'])*30) for i in ch['needs']);predicted.append(t)
+    pre=P.plano(case,chosen,predicted);check=F.avaliar(pre)
+    write(root/'preflight.json',check)
+    if pre['duracao']<60 or not check['pronto']:
+        write(root/'integral.json',{**gate,'pronto_para_tts':False,'motivo':'PREFLIGHT_FILME','bloqueios':check['bloqueios']})
+        return
+    from src.v3 import previa_telegram
+    previa_telegram.chat_autorizado()
+    from src import voz
+    wav,tempos,caps,dur=voz.narrar([{'fala':ch['speech']} for ch in case['chapters']],root/'voz',exigir_gemini=True)
+    audio=root/'narracao48k.wav'
+    subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
+    with wave.open(str(audio)) as f:duration=f.getnframes()/f.getframerate()
+    total=math.ceil(duration*30)
+    if duration<60 or len(tempos)!=len(case['chapters']):
+        write(root/'integral.json',{**gate,'motivo':'TEMPO_REAL_INSUFICIENTE','duracao_voz':duration,'pronto_para_render':False});return
+    ends=[round(b*30) for a,b in tempos[:-1]]+[total]
+    try:plan=P.plano(case,chosen,ends)
+    except ValueError as e:
+        write(root/'integral.json',{**gate,'motivo':str(e),'duracao_voz':duration,'pronto_para_render':False});return
+    write(root/'plano.json',plan)
+    check=F.avaliar(plan);write(root/'preflight-real.json',check)
+    if not check['pronto']:
+        write(root/'integral.json',{**gate,'motivo':'PREFLIGHT_REAL','bloqueios':check['bloqueios'],'pronto_para_render':False});return
+    result=F.preparar(plan,root/'documental',PUBLIC)
+    props=json.loads(Path(result['props']).read_text())
+    props['private_review_only']=True
+    words=D.palavras_de_caps(caps);groups=[]
+    for g in LS.grupos(words,maximo=3):
+        ws=words[g['i0']:g['i0']+g['n']];hi=max(range(len(ws)),key=lambda i:len(ws[i]['w']))
+        a=max(0,g['ini']);b=min(duration,g['fim'])
+        if groups:a=max(a,groups[-1]['end'])
+        if b>a:groups.append({'start':a,'end':b,'words':[{'w':w['w'],'hl':i==hi} for i,w in enumerate(ws)]})
+    h=P.sha(audio);asset='e202/'+h+'.wav'
+    (PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(audio,PUBLIC/asset)
+    props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
+    write(root/'props.json',props)
+    write(root/'narracao.json',{'audio_sha256':h,'duration_s':duration,'words':words,'publish':False})
+    write(root/'integral.json',{**gate,'pronto_para_render_privado':True,'duracao_voz':duration,'publicar':False})
+if __name__=='__main__':main()

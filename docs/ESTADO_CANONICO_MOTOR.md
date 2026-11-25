@@ -78,4 +78,7 @@ E280 45634734946 SUCCESS, 43 testes e 19,2s; demais três runs SUCCESS. E281 cor
 E281 commit d1b9d76, [run 45636170163](https://github.com/Heitor2404/coringa-news/actions/runs/45636170163): FAILURE, 78 testes passaram e 1 falhou antes de visão real. Não duplicar execução real nem ampliar cota. Conferir prova.json, observações, cobertura, folhas e eventual MP4. Não confundir sucesso do workflow com aprovação semântica.
 
 ### E281.1 — correção da validação (§331)
-E281 45636170163 FAILURE, 78 aprovados/1 falha, nenhuma visão real: assinatura JPEG no teste tinha escape duplicado. Corrigido com bytes.fromhex('ffd8'), mantendo a asserção e o teto anterior. Nova execução do mesmo workflow pendente; conferir antes de repetir. Não alterar estados de capacidades comprovadas.
+E281 45636170163 FAILURE, 78 aprovados/1 falha, nenhuma visão real: assinatura JPEG no teste tinha escape duplicado. Corrigido com bytes.fromhex('ffd8'), mantendo a asserção e o teto anterior. Nova execução E281.1 SUCCESS, 79 testes; ver §332 para resultado prático. Não alterar estados de capacidades comprovadas.
+
+### E281.1 comprovada em fotografia; E281.2 pendente (§332)
+[45638969866](https://github.com/Heitor2404/coringa-news/actions/runs/45638969866) SUCCESS, 79 testes, duas respostas reais de visão, seleção autônoma do Coliseu e revisão formal privada comprovadas em uma necessidade. Foguete não revisado: ffprobe ausente, não falha semântica. E281.2 instala/verifica dependências e restaura checkpoint específico com replay sem visão/rede, só então usa saldo de duas chamadas/duas operações; teto USD 0. Não repetir aprovação da foto, não afrouxar direitos Archive. Sem MP4 na E281.1; aguardar prova de movimento. Autonomia generalizada e filme integral seguem pendentes.

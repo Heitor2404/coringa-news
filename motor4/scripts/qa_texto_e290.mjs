@@ -23,6 +23,16 @@ for(const [mode,width,bbox] of cases){
   props.shots.push(s);
   props.documentary_captions.push({start:start+.3,end:start+2.8,words:[{w:'TESTE'},{w:'GEOMÉTRICO',hl:true}]});
 }
+// Reuse the native 9:16 footage with synthetic validated-style ROIs:
+ // one can keep the picture large, one conflicts with every text lane.
+const native=props.shots.find(s=>s.id==='video_vertical_nasa');
+for(const [id,bbox] of [['portrait-observed-free',[.15,.35,.85,.48]],['portrait-observed-conflict',[.05,.10,.95,.85]]]){
+  const start=props.shots.length*3;
+  props.shots.push({...native,id:'qa-'+id,start,end:start+3,video_context_layout:undefined,
+    framing_positions:[{at:0,position:[.5,.5]},{at:2.9,position:[.5,.5]}],
+    documentary_roi_points:[{at:0,bbox},{at:2.9,bbox}]});
+  props.documentary_captions.push({start:start+.3,end:start+2.8,words:[{w:'TESTE'},{w:'VERTICAL',hl:true}]});
+}
 props.duracao=props.shots.length*3;
 const longWords='O REGISTRO MOSTRA A CENA EM DETALHES'.split(' ');
 props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
@@ -66,7 +76,20 @@ try {
       }
       const modes=new Set(rows.map(x=>x.layout));
       if(modes.size!==1)result.errors.push('LAYOUT_MISMATCH '+shot.id);
-      if(shot.id==='qa-4-5-collision'&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
+      if(['qa-4-5-collision','qa-portrait-observed-conflict'].includes(shot.id)&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
+      if(['video_vertical_nasa','foto_vertical_salto_angel'].includes(shot.id)){
+        if(!modes.has('PORTRAIT_REVIEW')||rows.some(r=>r.roiStatus!=='UNKNOWN_REVIEW'))
+          result.errors.push('NATIVE_PORTRAIT_DEFAULT '+shot.id);
+        for(const row of rows){
+          const [x,y,r,b]=row.media;
+          if((r-x)*(b-y)<.90*1080*1920||!row.actualOverlay)
+            result.errors.push('NATIVE_PORTRAIT_SHRUNK '+shot.id+' '+row.role);
+          if(shot.id==='video_vertical_nasa'&&[x,y,r,b].join(',')!=='0,0,1080,1920')
+            result.errors.push('NATIVE_9_16_NOT_FULL '+shot.id);
+        }
+      }
+      if(shot.id==='qa-portrait-observed-free'&&(modes.has('INTEGRAL_PROTECTED')||rows.some(r=>r.roiStatus!=='OBSERVED'||r.media.join(',')!=='0,0,1080,1920')))
+        result.errors.push('OBSERVED_PORTRAIT_SHRUNK '+shot.id);
       if(['qa-4-5','qa-1-1','qa-9-16'].includes(shot.id)&&modes.has('INTEGRAL_PROTECTED'))result.errors.push('UNNECESSARY_FALLBACK '+shot.id);
       result.frames.push({shot:shot.id,frame,offset,dimensions:shot.source_dimensions,measurements:rows});
       save();

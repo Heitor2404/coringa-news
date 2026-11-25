@@ -210,7 +210,12 @@ const integralMediaRect=(shot:FilmShot):readonly number[]=>{
   const [w,h]=shot.source_dimensions||[16,9];
   return w/h<=1.15?[0,0,1080,1920]:w/h>=1080/610?[0,405,1080,1015]:[0,405,1080,1135];
 };
+const nativePortrait=(shot:FilmShot)=>Boolean(shot.source_dimensions&&
+  shot.source_dimensions.every(v=>Number.isFinite(v)&&v>0)&&shot.source_dimensions[0]<shot.source_dimensions[1]);
+const nativeIntegral=(shot:FilmShot)=>nativePortrait(shot)&&!shot.documentary_viewport&&
+  !shot.framing_positions?.length&&shot.photo_crop_preview?.status!=='PRIVATE_CANDIDATE_REVIEW_PENDING';
 const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
+  if(nativeIntegral(shot))return containPixels([0,0,W,H],shot.source_dimensions!);
   if(shot.type==='video'&&shot.documentary_viewport)
     return [0,370,1080,370+(shot.documentary_viewport==='4:5'?1350:1080)];
   if(shot.type==='photo'&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'&&
@@ -227,7 +232,7 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'INTEGRAL_PROTECTED';media:readonly number[];protected:readonly number[][];separateStage?:readonly number[]};
+type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[]};
 const stackedDocSlots=(y:number):DocSlots=>({
   brand:[160,y,500,y+38],section:[160,y+43,760,y+93],
   subtitle:[160,y+101,760,y+191],source:[160,y+199,760,y+321],
@@ -246,7 +251,7 @@ const containPixels=(stage:readonly number[],dims:readonly number[])=>{
 // The preflight already establishes the crop. Project observed boxes through
 // that SAME viewport and camera positions. A swept envelope conservatively
 // covers the combinations of sampled positions/boxes (not unobserved action).
-const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]=>{
+const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]|null=>{
   if(shot.type==='photo'&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'){
     const b=shot.photo_crop_preview.essential_screen;
     if(b?.length===4&&b.every(Number.isFinite)&&b[0]>=0&&b[1]>=0&&b[2]<=1080&&b[3]<=shot.photo_crop_preview.height&&b[0]<b[2]&&b[1]<b[3])return [expandBox(b,12)];
@@ -264,22 +269,28 @@ const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]=>{
     return [expandBox([Math.min(...boxes.map(b=>b[0])),Math.min(...boxes.map(b=>b[1])),
       Math.max(...boxes.map(b=>b[2])),Math.max(...boxes.map(b=>b[3]))],12)];
   }
-  // Unknown region: do not guess what is safe to cover.
-  return [Array.from(media)];
+  // Missing annotation is not proof of collision, nor proof of safety.
+  return null;
 };
 const documentaryLayout=(shot:FilmShot):DocLayout=>{
-  const media=originalDocumentaryPixelRect(shot),protectedBoxes=documentaryProtected(shot,media);
-  const candidates:[DocLayout['mode'],DocSlots][]=[['STANDARD',DOC_MEDIA],['UPPER_TEXT',stackedDocSlots(312)],['LOWER_TEXT',stackedDocSlots(910)]];
+  const media=originalDocumentaryPixelRect(shot),observed=documentaryProtected(shot,media);
+  // E292: native portrait gets maximum undistorted size by default. Unknown
+  // subject location is a semantic REVIEW item, not a reason to miniaturize.
+  if(nativePortrait(shot)&&!observed)
+    return {mode:'PORTRAIT_REVIEW',slots:DOC_MEDIA,media,protected:[],roiStatus:'UNKNOWN_REVIEW'};
+  const protectedBoxes=observed??[Array.from(media)];
+  const roiStatus=observed?'OBSERVED':'FULL_SOURCE_PROTECTED';
+  const candidates:[DocLayout['mode'],DocSlots][]=[['STANDARD',DOC_MEDIA],['UPPER_TEXT',stackedDocSlots(312)],['LOWER_TEXT',stackedDocSlots(910)],['MIDDLE_TEXT',stackedDocSlots(620)]];
   for(const [mode,slots] of candidates){
     if(docRects(slots).every(r=>protectedBoxes.every(b=>!intersects(r,b))))
-      return {mode,slots,media,protected:protectedBoxes};
+      return {mode,slots,media,protected:protectedBoxes,roiStatus};
   }
   // If no text placement can preserve the known evidence, restore ALL source
   // pixels in a separate stage; never invent a different crop or cover the ROI.
   // This fallback trades immersion for protection and remains a private review.
   const separateStage=[0,0,1080,900],dims=shot.source_dimensions||[16,9];
   const pixels=containPixels(separateStage,dims.every(v=>Number.isFinite(v)&&v>0)?dims:[16,9]);
-  return {mode:'INTEGRAL_PROTECTED',slots:stackedDocSlots(910),media:pixels,protected:[pixels],separateStage};
+  return {mode:'INTEGRAL_PROTECTED',slots:stackedDocSlots(910),media:pixels,protected:[pixels],roiStatus:'FULL_SOURCE_PROTECTED',separateStage};
 };
 const documentaryPixelRect=(shot:FilmShot):readonly number[]=>documentaryLayout(shot).media;
 const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(documentaryPixelRect(shot),rect);
@@ -313,13 +324,17 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     const painted=[rect[0]+(er.left-hr.left)/sx,rect[1]+(er.top-hr.top)/sy,
       rect[0]+(er.right-hr.left)/sx,rect[1]+(er.bottom-hr.top)/sy];
     const actualOverlay=documentaryOverlay(shot,painted);
-    e.style.background=actualOverlay?'rgba(4,11,20,.84)':'transparent';
+    const layout=documentaryLayout(shot);
+    // Soft local contrast for full-height portrait, without a full-width
+    // opaque panel; stronger local contrast stays for other layouts.
+    const portraitReview=layout.mode==='PORTRAIT_REVIEW';
+    e.style.background=actualOverlay?(portraitReview?'linear-gradient(90deg,rgba(4,11,20,.78),rgba(4,11,20,.62))':'rgba(4,11,20,.84)'):'transparent';
     e.style.textShadow=actualOverlay?'0 1px 3px #000':'none';
     h.dataset.docOverlay=actualOverlay?'review':'none';
-    const layout=documentaryLayout(shot);
+    h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,layout:layout.mode,protected:layout.protected};
+      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
@@ -372,6 +387,16 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
             style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
         </Sequence>:<Img src={staticFile(shot.asset||'')} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>}
       </div>
+    </AbsoluteFill>;
+  }
+  if(mediaFirst&&realMedia(shot)&&nativeIntegral(shot)){
+    // A native 9:16 is exactly full canvas. Other portrait ratios use maximum
+    // contain without distortion or unverified crop. Preserve original frames.
+    return <AbsoluteFill data-media-layout="native-portrait-full" style={{background:'#08121E'}}>
+      {shot.type==='video'?<Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+        <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
+          style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+      </Sequence>:<Img src={staticFile(shot.asset||'')} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>}
     </AbsoluteFill>;
   }
   if(shot.type === 'video') {
@@ -697,8 +722,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const section=shot.lead?.toUpperCase();
     const layout=documentaryLayout(shot),slots=layout.slots;
     const brandOverlay=documentaryOverlay(shot,slots.brand);
-    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V3" data-documentary-layout={layout.mode} style={{background:'#08101A',overflow:'hidden'}}>
+    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V4" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
+      {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',
+        background:'linear-gradient(180deg,rgba(4,11,20,.16) 0%,transparent 35%,transparent 48%,rgba(4,11,20,.48) 65%,rgba(4,11,20,.10) 83%,transparent 100%)'}}/>}
       <div style={{...rectStyle(slots.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
         fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1,
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>

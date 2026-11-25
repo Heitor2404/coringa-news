@@ -54,6 +54,10 @@ def main():
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=0 if replay or '--visao-zero' in sys.argv[4:] else min(20,len(tri)+2) if integral else 4 if multi else 2
+    if os.getenv('CORINGA_LIMITE_VISAO_DOCUMENTAL') is not None:
+        limite=int(os.environ['CORINGA_LIMITE_VISAO_DOCUMENTAL'])
+        if not 0<=limite<=budget:raise ValueError('E264-COTA-DOCUMENTAL')
+        budget=limite
     if revisar_acervo:
         limite=int(os.getenv('CORINGA_LIMITE_REVISAO_LOCAL',str(budget)))
         if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
@@ -285,6 +289,7 @@ def main():
                     if local:
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
+                if phase<0:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 if not replay and not revisar_acervo and n['id'] not in pages_checked:
                     pages_checked.add(n['id'])
                     pages=[Q.candidato_pagina_usgs(x,n) for x in curated if x['necessidade_id']==n['id']]
@@ -296,29 +301,27 @@ def main():
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
             # Second pass: pool all unused budget across unresolved obligations.
-            for phase in (0,1):
+            # Restored cache is inspected across all obligations before fresh vision or remote discovery.
+            # The same queue resumes cache misses; they are not semantic negatives.
+            for phase in ((-1,0,1) if pack and not replay and not revisar_acervo else (0,1)):
                 for index,n in enumerate(tri):
                     nid=n['id'];old=results_by_id.get(nid)
                     if old and old['estado']!='LACUNA_PENDENTE':continue
                     st=states.setdefault(nid,{})
                     start=calls
                     remaining=sum(x['necessidade']!='territorio' for x in tri[index:])
-                    phase_limit=search_limit if phase else total_search+(search_limit-total_search)//max(1,remaining)
-                    if phase:
-                        st['descoberta_sem_visao']=False
-                        for c in list(st.get('rever',[])):
-                            k=(c.get('fonte'),c.get('source_id') or c.get('url'))
-                            st['vistos'].discard(k)
-                            if c not in st['pendentes']:st['pendentes'].insert(0,c)
+                    phase_limit=total_search if phase<0 else search_limit if phase else total_search+(search_limit-total_search)//max(1,remaining)
+                    if phase>=0:
+                        R.reabrir_pendentes(st)
                     def inspect_progress(c,n):
-                        cache_only=replay or calls>=budget or (phase==0 and calls!=start)
+                        cache_only=replay or phase<0 or calls>=budget or (phase==0 and calls!=start)
                         d=inspect(c,n,cache_only=cache_only)
-                        if c.get('revisao_adicional_possivel') or (phase==0 and not replay and calls<budget and d.get('estado')=='ORCAMENTO' and c.get('fonte')=='biblioteca_v3'):
+                        if c.get('revisao_adicional_possivel') or (phase<=0 and not replay and calls<budget and d.get('estado')=='ORCAMENTO' and c.get('fonte')=='biblioteca_v3'):
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:(nid not in local_checked) or (not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
-                        pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
+                        pode_buscar=lambda:(nid not in local_checked) or (phase>=0 and not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
+                        pode_inspecionar=lambda:replay or (phase>=0 and calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
                     results_by_id[nid]=row

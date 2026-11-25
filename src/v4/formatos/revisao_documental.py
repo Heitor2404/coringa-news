@@ -265,6 +265,7 @@ def diagnostico_cobertura(rodadas,parada):
             d=t['decisao'];state=d.get('estado');reason=d.get('motivo','')
             if state=='PERTINENTE_PRIVADO':key='CANDIDATO_PRIVADO'
             elif state=='FALHA_VISAO':key='FALHA_FORMATO_OU_SERVICO'
+            elif reason in ('ANALISE_COMPATIVEL_NAO_DISPONIVEL','CACHE_LOCAL_AUSENTE'):key='REVISAO_SEM_CACHE_COMPATIVEL'
             elif state=='ORCAMENTO' or 'ORCAMENTO' in reason or 'LIMITE' in reason:key='ORCAMENTO_OU_VARIANTE'
             elif 'PENDENTE' in reason or 'PAGINA' in reason:key='RECIBO_PENDENTE'
             elif state=='FALHA_AQUISICAO':key='FALHA_AQUISICAO'
@@ -273,6 +274,15 @@ def diagnostico_cobertura(rodadas,parada):
             counts[key]+=1
     return {'parada':parada,'decisoes_por_tipo':dict(counts),
             'inexistencia_de_midia_comprovada':False,'publicar':False}
+
+def reabrir_pendentes(st):
+    st['descoberta_sem_visao']=False
+    vistos=st.setdefault('vistos',set())
+    pending=st.setdefault('pendentes',[])
+    for c in reversed(st.pop('rever',[])):
+        k=(c.get('fonte'),c.get('source_id') or c.get('url'))
+        vistos.discard(k)
+        if c not in pending:pending.insert(0,c)
 
 def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_inspecionar,
                            max_buscas,passo_buscas=4,max_tentativas=24,estado=None,pode_reusar=None):

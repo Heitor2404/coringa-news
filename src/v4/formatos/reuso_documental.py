@@ -24,7 +24,7 @@ def vinculo_historico(n,row):
     return next((h for h in historicos(n) if h['sha256']==row.get('sha256') and h['pagina']==row.get('url_pagina') and h['tipo']==row.get('tipo')),None)
 
 def _tokens(text):
-    text=unicodedata.normalize('NFKD',str(text).lower())
+    text=unicodedata.normalize('NFKD',str(text or '').lower())
     text=''.join(c for c in text if not unicodedata.combining(c))
     return set(re.findall(r'[a-z0-9]{3,}',text))-{'the','and','with','from','this','that','real','video','photo','photograph','uma','para','com','que','por'}
 

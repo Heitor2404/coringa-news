@@ -221,3 +221,18 @@ def test_nasa_real_metadata_mixed_subjects_do_not_rank_equal():
     assert all(R.relevancia_textual(n,c)['cobertura']==1 for c in rows)
     assert R.relevancia_textual(n,rows[1])['proximidade']>R.relevancia_textual(n,rows[0])['proximidade']
     assert R.ordenar_candidatos(n,rows)[0]['source_id']==2
+
+def test_cache_first_queue_reopens_only_deferred_candidates():
+    local={**candidate(1),'fonte':'biblioteca_v3'}
+    other={**candidate(2),'fonte':'biblioteca_v3'}
+    st={'vistos':{('biblioteca_v3',1),('biblioteca_v3',2)},'pendentes':[],'rever':[local],'descoberta_sem_visao':True}
+    R.reabrir_pendentes(st)
+    assert st['pendentes']==[local] and st['vistos']=={('biblioteca_v3',2)}
+    assert not st['descoberta_sem_visao'] and 'rever' not in st
+    R.reabrir_pendentes(st)
+    assert st['pendentes']==[local]
+
+def test_missing_cache_is_not_a_semantic_negative():
+    r=R.diagnostico_cobertura([{'cobertura':{'trilha':[{'decisao':{'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}}]}}],'ORCAMENTO')
+    assert r['decisoes_por_tipo']=={'REVISAO_SEM_CACHE_COMPATIVEL':1}
+    assert r['inexistencia_de_midia_comprovada'] is False

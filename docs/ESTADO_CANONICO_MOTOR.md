@@ -7,6 +7,18 @@ A fase continua aberta. O bloco E282 em `6083a0005197` terminou. O [replay dos c
 
 O commit `65e0f17cd4db8d6a68e15eaf2249002bf7545858` passou no [controle multitemático](https://github.com/Heitor2404/coringa-news/actions/runs/45644894008). O integral progressivo pode usar a reserva de foto automaticamente. Janelas inválidas sobrevivem ao checkpoint como diagnóstico, movimento alegado entre quadros idênticos é recusado e as marcas de fim de palavra chegam ao agrupador. Inspeção local de três vídeos existentes confirmou amostras decodificáveis. Permanecem pendentes a seleção de ação inédita com revisão formal e os três filmes completos. A matriz e o parecer desta missão ficam em `AUDITORIA_FINAL_FASE_CORRETIVA.md`.
 
+## Estado vigente — consolidação Claude, 25/11 (branch `claude-consolidacao-corretiva-20261125`)
+
+Prevalece sobre os blocos transitórios abaixo. Partida `257ce75d` (Work preservado integralmente). Detalhes, matriz e parecer em [AUDITORIA_FINAL_FASE_CORRETIVA.md](AUDITORIA_FINAL_FASE_CORRETIVA.md).
+
+| Item | Implementação | Validação técnica | Validação prática / autonomia |
+|---|---|---|---|
+| Config Remotion na remotion root (`motor4/remotion.config.js`), Chrome local sem download (causa da falha de Corinto) | `4c7d59bd` | local + CI [45654737439](https://github.com/Heitor2404/coringa-news/actions/runs/45654737439) `REMOTION_CONFIG_RAIZ_OK` | renders locais de `FilmeEditorial` sem download; render ATLAS real não refeito (sem rede para tiles nesta sessão) |
+| Varredura temporal local de filmagens (cortes, câmera × referente, transições, marcas de metadados, nova rodada no mesmo arquivo só com plano promissor) | `6ec76d07`, `e2c8ac03`, `3cb5509d` | `tests/test_varredura_temporal_e283.py`; CI 45654737439 replay e fluxo normal 9/9 reusos, visão 0 | sem visão real após a correção (orçamento esgotado); E281.2 continua 1/2 |
+| Legenda medida fora da filmagem integral horizontal | `b954c3c6` | `tests/test_legenda_fora_da_evidencia_e283.py` | quadros locais inspecionados; escala 16:9 integral continua ~32% da tela (ganho exige ROI declarada) |
+
+Regressões de referência no HEAD: 222 e 206 aprovados (local e CI). Nenhuma chamada paga, nenhum reinício de orçamento, nenhuma publicação. Bloqueios: três documentários ≥60 s e prova de ação com visão real (orçamento); borda S2 não reproduzida (raster bruto inacessível nesta sessão). **Fase corretiva aberta.**
+
 ## Capacidades cuja integração/reutilização já foi comprovada
 | Capacidade | Prova prática histórica | Código existente | Pendência delimitada |
 |---|---|---|---|

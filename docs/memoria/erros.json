@@ -2162,6 +2162,104 @@
     "legenda",
     "layout"
    ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-085",
+   "titulo": "Config do Remotion nunca carregada (navegador baixado com Chrome instalado)",
+   "sintoma": "Prova geográfica de Corinto: Remotion tentou baixar o Chrome Headless Shell com Chrome configurado; log 'No config file loaded'.",
+   "causa_raiz": "O CLI só lê remotion.config.* da pasta do package.json mais próximo (motor4/); o arquivo estava em motor4/remotion/. REMOTION_CHROME, gl=swangle e JPEG 92 eram ignorados.",
+   "arquivos": [
+    "motor4/remotion.config.js",
+    "motor4/remotion/remotion.config.ts"
+   ],
+   "correcao": "Config movida para motor4/remotion.config.js (JS: .ts exigiria tsconfig na raiz) com Chrome REMOTION_CHROME > CORINGA_CHROME > sistema.",
+   "testes": [
+    "tests/test_remotion_config_raiz.py::test_cli_aplica_config_e_nao_baixa_navegador"
+   ],
+   "tags": [
+    "remotion",
+    "atlas",
+    "ambiente"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-086",
+   "titulo": "Janelas uniformes em filmagens longas (cortes e panorâmicas confundidos com ação)",
+   "sintoma": "E281.2: duas chamadas reais em um clipe de 496 s; janelas 134/268/358 e 89/313/447 sem a ação; segunda rodada insistiu no mesmo arquivo.",
+   "causa_raiz": "Grade uniforme de até 12 janelas, diversidade por terços e ranking por diferença bruta de pixels, sem separar câmera, cortes e movimento do referente.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "Varredura local integral (fluxo óptico + afim RANSAC, cortes por diferença compensada, fusões agrupadas), janelas dentro de planos, marcas temporais de metadados, nova rodada no mesmo arquivo só com plano promissor.",
+   "testes": [
+    "tests/test_varredura_temporal_e283.py::test_lote_de_movimento_alcanca_a_acao_tardia_em_plano_proprio",
+    "tests/test_varredura_temporal_e283.py::test_nao_insistir_no_mesmo_arquivo_sem_plano_promissor"
+   ],
+   "tags": [
+    "filmagem",
+    "selecao",
+    "eficiencia"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-087",
+   "titulo": "Reuso de checkpoint perdido ao reinserir janela por chave arredondada",
+   "sintoma": "CI isolado run 45653082312: replay E260 caiu de 9 para 2 reusos.",
+   "causa_raiz": "revisao_id faz hash do início exato; a janela de checkpoint era reinserida com o início arredondado a 4 casas.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "E247 passa o float armazenado (inicios_exatos); reinserção usa o valor exato.",
+   "testes": [
+    "tests/test_varredura_temporal_e283.py::test_reuso_usa_inicio_exato_do_checkpoint_nao_a_chave_arredondada"
+   ],
+   "tags": [
+    "checkpoint",
+    "reuso"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-088",
+   "titulo": "Legenda medida sobre a filmagem integral horizontal",
+   "sintoma": "Quadro renderizado: faixa de legenda (y 1040–1150) cobria a parte inferior do vídeo 16:9 integral.",
+   "causa_raiz": "Caixa DOC_MEDIA.integral ia até y 1150, sobrepondo a faixa de legenda documental.",
+   "arquivos": [
+    "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+   ],
+   "correcao": "Com legendas, vídeo integral usa a caixa das fotos integrais (até y 1030), largura total preservada.",
+   "testes": [
+    "tests/test_legenda_fora_da_evidencia_e283.py::test_caixa_integral_legendada_termina_acima_da_legenda"
+   ],
+   "tags": [
+    "legenda",
+    "layout"
+   ]
   }
  ]
 }

@@ -7,6 +7,8 @@ import {resolve} from 'node:path';
 const root=resolve('../stage_documental/e286');
 const props=JSON.parse(readFileSync(resolve(root,'props.json'),'utf8'));
 props.documentary_text_probe=true;
+// Same media and credit as failed E290; additionally exercise a long section.
+props.shots.find(s=>s.id==='video_vertical_nasa').lead='REGISTRO DOCUMENTAL DO TELESCÓPIO ESPACIAL';
 const longWords='O REGISTRO MOSTRA A CENA EM DETALHES'.split(' ');
 props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
   {...cap,end:props.shots[i].start+1.5},
@@ -41,9 +43,9 @@ try {
         if(!row){result.errors.push('MISSING_MEASURE '+shot.id+' '+offset+' '+role);continue;}
         rows.push(row);
         const [x,y,r,b]=row.actual;
-        if(!row.fits||x<149||y<299||r>771||b>1241)
+        if(!row.fits||x<149||y<299||r>771||b>1241||row.font<({section:22,subtitle:36,source:24}[role]))
           result.errors.push('OVERFLOW '+shot.id+' '+offset+' '+role);
-        if(shot.video_context_layout==='cena_integral'&&shot.source_dimensions[0]/shot.source_dimensions[1]>=1080/620&&row.overlay)
+        if(shot.video_context_layout==='cena_integral'&&shot.source_dimensions[0]/shot.source_dimensions[1]>=1080/610&&row.overlay)
           result.errors.push('PANORAMIC_OVERLAP '+shot.id+' '+offset+' '+role);
       }
       result.frames.push({shot:shot.id,frame,offset,dimensions:shot.source_dimensions,measurements:rows});

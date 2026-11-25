@@ -1,4 +1,4 @@
-name: E290 - medir tipografia e enquadramento antes do fundo autoral
+name: E290.1 - corrigir credito extenso e revalidar tipografia
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

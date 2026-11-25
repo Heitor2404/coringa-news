@@ -84,10 +84,17 @@ def main():
         return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NO_ORCAMENTO'}
     try:
         if adaptive:
-            reports=[]
+            reports=[];consulted=set()
             def search(n,limit):
-                r=D.pesquisar_triagem([n],biblioteca_global=lib,max_buscas=limit)[0]
-                if pack:r['candidatos']=RE.candidatos(lib,n)+r['candidatos']
+                local=RE.candidatos(lib,n) if pack else []
+                if local and n['id'] not in consulted:
+                    consulted.add(n['id'])
+                    r={'id':n['id'],'estado':'REVISAR_ORIGINAIS_LOCAIS','buscas':[],
+                       'candidatos':local,'biblioteca':[],'pronto_para_render':False,'publicar':False}
+                else:
+                    consulted.add(n['id'])
+                    r=D.pesquisar_triagem([n],biblioteca_global=lib,max_buscas=limit)[0]
+                    r['candidatos']=local+r['candidatos']
                 reports.append(r);return r
             for n in tri:
                 results.append(R.cobertura_adaptativa(n,search,inspect,

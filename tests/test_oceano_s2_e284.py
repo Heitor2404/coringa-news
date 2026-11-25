@@ -26,3 +26,12 @@ def test_composicao_mantem_terra_e_faixa_costeira_e_troca_mar_aberto():
     # Sem terra no recorte: tudo vira oceano batimétrico (sem borda do halo S2).
     out2, frac2 = R.compor_oceano(Image.fromarray(s2), (x0, y0), z, [], oceano, lat_ref=cy)
     assert frac2 == 0 and np.abs(np.asarray(out2).astype(int) - (10, 30, 70)).max() <= 2
+
+
+def test_raster_com_oceano_batimetrico_credita_blue_marble():
+    import inspect
+    from pathlib import Path
+    from src.v4.formatos import plano
+    assert "'datasets_extra': ['bmng']" in inspect.getsource(plano)
+    tsx = (Path(__file__).resolve().parents[1] / 'motor4/remotion/src/formatos/Palco.tsx').read_text()
+    assert 'datasets_extra' in tsx and 'vis_ds.add(d)' in tsx

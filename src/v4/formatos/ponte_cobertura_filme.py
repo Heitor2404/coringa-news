@@ -77,6 +77,13 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
                     if not T.validar_progressao_video(trial,cap,{'expected_sha256':a['sha256']}):
                         progression=pgr['progressao_visual']
                     else:cap=min(3.8,proposed)
+        if kind=='video' and progression is None:
+            seq=T.progressao_amostrada(n,c,inicio=window.get('source_in_seconds'))
+            if seq:
+                trial={'type':'video','evidence':'representative','start':0,'end':seq['duracao_s'],'source_in_seconds':seq['inicio_s'],'progressao_visual':seq}
+                if not T.validar_janela_origem(trial,a['duration_s']) and not T.validar_progressao_video(trial,seq['duracao_s'],{'expected_sha256':a['sha256']}):
+                    cap=seq['duracao_s'];progression=seq;framing=None
+                    window={**window,'source_in_seconds':seq['inicio_s'],'duracao_s':cap}
         if cap<1.4 or (kind=='video' and p.suffix.lower() not in ('.mp4','.webm')):
             issues.append({'id':i,'motivo':'JANELA_INSUFICIENTE'});continue
         pages.add(c['pagina']);hashes.add(a['sha256'])

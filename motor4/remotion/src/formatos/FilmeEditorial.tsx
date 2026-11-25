@@ -201,7 +201,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240]} as const;
+const DOC_MEDIA={brand:SAFE.brand,section:[160,355,760,405],subtitle:[160,1040,760,1150],source:[160,1155,760,1240]} as const;
 // E290: same conservative text perimeter and same ROI; no new background design.
 // A 16:9 integral source has room for its actual pixels between header and caption.
 // Taller sources retain the previous maximum height (730px), not a blind crop.
@@ -244,9 +244,9 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     font=Math.max(size[1],font);e.style.fontSize=font+'px';
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
-    if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),...bounds}));
+    if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
-  return <div ref={host} data-documentary-text={role} {...(role==='source'?{'data-documentary-credit':'full'}:{})}
+  return <div ref={host} data-documentary-text={role} data-documentary-credit={role==='source'?'full':undefined}
     data-doc-overlay={overlay?'review':'none'} style={{...rectStyle(rect),display:'flex',alignItems:'center',
       justifyContent:role==='subtitle'?'center':'flex-start',textAlign:role==='subtitle'?'center':'left',pointerEvents:'none'}}>
     <div ref={inner} style={{width:'100%',boxSizing:'border-box',fontFamily:'Inter,Arial,sans-serif',
@@ -613,7 +613,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
-      <div style={{position:'absolute',left:160,top:352,width:130,height:4,background:GOLD}}/>
+      <div style={{position:'absolute',left:160,top:351,width:130,height:3,background:GOLD}}/>
       {section&&<MeasuredDocText role="section" shot={shot} rect={DOC_MEDIA.section} text={section} probe={textProbe}/>}
       <MeasuredDocText role="source" shot={shot} rect={DOC_MEDIA.source} text={credit} probe={textProbe}/>
     </AbsoluteFill>;

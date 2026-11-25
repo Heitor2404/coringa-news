@@ -181,8 +181,8 @@ def fontes_documentais(tipo):
     if tipo=='video':
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
-                ('nasa_video',lambda q:midia.candidatos_nasa_video(q)),
-                ('archive_video',lambda q:midia.candidatos_archive(q))]
+                ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]
     if tipo=='foto':
         return [('commons',acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
@@ -241,13 +241,13 @@ def _candidato_documental(c,fonte,tipo):
 
 
 def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspecionar=None,
-                       max_buscas=6, max_candidatos=12):
+                       max_buscas=6, max_candidatos=12, progressivo=False, buscas_vistas=None):
     """Bounded discovery from director needs, not a list of media by topic.
     A search result or textual match never constitutes verified coverage.
     Optional inspector receives candidates for this exact obligation; its
     positive response still means private review only.
     """
-    if type(max_buscas) is not int or not 1<=max_buscas<=8 or type(max_candidatos) is not int or not 1<=max_candidatos<=20:
+    if type(max_buscas) is not int or not 1<=max_buscas<=(64 if progressivo else 8) or type(max_candidatos) is not int or not 1<=max_candidatos<=(128 if progressivo else 20):
         raise ValueError('E246-ORCAMENTO')
     if necessidade.get('necessidade')=='territorio':
         return {'id':necessidade['id'],'estado':'DELEGAR_ATLAS','buscas':[],
@@ -262,7 +262,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     consultas=[]
     for x in (q.get('consultas_en') or [])+(q.get('consultas') or []):
         if isinstance(x,str) and 2<=len(x.strip())<=180 and x.strip() not in consultas:consultas.append(x.strip())
-    consultas=consultas[:2]
+    if not progressivo:consultas=consultas[:2]
     if not consultas:raise ValueError('E246-CONSULTA')
     report={'id':necessidade['id'],'evidencia_visual':ev,'buscas':[],'candidatos':[],
             'biblioteca':[],'pronto_para_render':False,'publicar':False}
@@ -301,6 +301,28 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     # Take one source per type before considering a second source.
     groups=[[x for x in rotas if x[0]==tipo] for tipo in tipos]
     rotas=[g[i] for i in range(max(map(len,groups),default=0)) for g in groups if i<len(g)]
+    if progressivo:
+        attempted=buscas_vistas if buscas_vistas is not None else set()
+        # Round-robin by provider/query; no truncation by per-source quota.
+        for ri,consulta in enumerate(consultas):
+            ordem=rotas[ri%max(1,len(rotas)):]+rotas[:ri%max(1,len(rotas))]
+            for tipo,nome,fn in ordem:
+                key=(tipo,nome,consulta.casefold())
+                if key in attempted:continue
+                if len(report['buscas'])>=max_buscas or len(report['candidatos'])>=max_candidatos:break
+                attempted.add(key);row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+                try:raw=fn(consulta) or []
+                except Exception as e:
+                    report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+                added=0
+                for item in raw:
+                    c=_candidato_documental(item,nome,tipo)
+                    if not c or c['url'] in vistos:continue
+                    if len(report['candidatos'])>=max_candidatos:break
+                    vistos.add(c['url']);report['candidatos'].append(c);added+=1
+                report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
+            if len(report['buscas'])>=max_buscas or len(report['candidatos'])>=max_candidatos:break
+        return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
     # Reserve a round for the alternative query instead of exhausting budget
     # on the first query. Without inspection, continue looking for options.
     por_rodada=max(1,max_buscas//len(consultas))

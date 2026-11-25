@@ -231,16 +231,15 @@ def candidatos_nasa_video(busca: str, *, documental=False) -> list[dict]:
             d = (it.get('data') or [{}])[0]
             nid = d.get('nasa_id')
             thumb = next((l.get('href') for l in it.get('links') or [] if l.get('render') == 'image'), None)
-            if not nid or not thumb:
+            if not nid or (not documental and not thumb):
                 continue
             if documental:
                 import re
                 from urllib.parse import urlsplit
                 if not isinstance(nid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',nid):continue
-                u=urlsplit(thumb)
-                if u.scheme not in ('http','https') or u.hostname!='images-assets.nasa.gov' or u.username or u.password or u.port not in (None,443):continue
+                # A preview is optional; the official item ID is the discovery identity.
                 # The asset endpoint resolves actual downloadable variants later.
-                out.append({'tipo':'video','url':thumb.replace('http://','https://',1),
+                out.append({'tipo':'video','url':'https://images.nasa.gov/details/'+nid,
                     'pagina':'https://images.nasa.gov/details/'+nid,'source_id':nid,
                     'titulo':d.get('title',''),'descricao':str(d.get('description',''))[:400],
                     'descricao_integral':str(d.get('description',''))[:8000],
@@ -271,6 +270,12 @@ def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
     out = []
     try:
         q = (f'({busca[:80]}) AND mediatype:movies AND (collection:prelinger OR licenseurl:*publicdomain*)')
+        if documental:
+            import re
+            terms=re.findall(r'[^\W_]+',busca[:120],flags=re.UNICODE)
+            if not terms:return []
+            # Keep all supplied search terms, and prioritize individual license declarations.
+            q=' AND '.join('"'+x+'"' for x in terms)+' AND mediatype:movies AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*)'
         r = requests.get('https://archive.org/advancedsearch.php', headers=UA, timeout=30,
                          params={'q': q, 'fl[]': ['identifier', 'title', 'year'], 'rows': 8, 'output': 'json'})
         r.raise_for_status()

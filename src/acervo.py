@@ -133,6 +133,9 @@ def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
                            licenca=lic, tamanho_original=info.get('size'), autor=autor,
                            source_id=p.get('pageid'), source_title=p.get('title'),
                            licenca_url=_txt(meta,'LicenseUrl'), restricoes=_txt(meta,'Restrictions'),
+                           descricao_integral=_txt(meta,'ImageDescription')[:8000],
+                           source=_txt(meta,'Source')[:4000], credit=_txt(meta,'Credit')[:4000],
+                           categories=_txt(meta,'Categories')[:4000],
                            variantes=[{'url':info['thumburl'],'width':info.get('thumbwidth'),
                                        'height':info.get('thumbheight'),'size':None}] if info.get('thumburl') else [])
     return out

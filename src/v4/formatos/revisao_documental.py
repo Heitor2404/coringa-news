@@ -37,6 +37,9 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     result={'estado':'INSUFICIENTE','necessidade_id':necessidade['id'],'publicar':False,
             'pronto_para_render':False,'direitos_aprovados':False,'autenticidade_comprovada':False,
             'prova_de_acao_continua':False,'revisao_humana':'PENDENTE'}
+    sha=(candidato.get('aquisicao') or {}).get('sha256')
+    if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{64}',sha) or revisao.get('sha256_origem')!=sha or revisao.get('necessidade_id')!=necessidade['id'] or not revisao.get('revisao_id'):
+        return {**result,'motivo':'REVISAO_SEM_VINCULO'}
     if candidato.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA' or natureza_declarada(candidato)=='REPRESENTACAO_DECLARADA':
         return {**result,'motivo':'REPRESENTACAO_DECLARADA'}
     if r.get('natureza_visual') not in ('registro_compativel','mosaico_observacional'):
@@ -49,3 +52,42 @@ def decidir(necessidade,candidato,revisao,*,tipo):
         if r.get('mudanca_observada') is not True or not isinstance(indices,list) or len(indices)!=2 or any(type(i) is not int for i in indices) or not 0<=indices[0]<indices[1]<=2 or not isinstance(r.get('descricao_mudanca'),str) or len(r['descricao_mudanca'].strip())<20:
             return {**result,'motivo':'MUDANCA_NAO_OBSERVADA'}
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
+
+
+def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6):
+    """Use the existing discovery result; continue after refusal or failed download.
+    Inspection callback owns actual network/vision budgets. A success is private.
+    No template or topic-specific ranking.
+    """
+    if type(max_candidatos) is not int or not 1<=max_candidatos<=12:
+        raise ValueError('E247-ORCAMENTO')
+    ev=necessidade.get('evidencia_visual')
+    def rank(c):
+        # Prefer stills when static evidence suffices. Prefer provider identity
+        # and descriptions of actual capture, never claim these prove authenticity.
+        descricao=' '.join(str(c.get(k) or '') for k in ('descricao','descricao_integral','source')).lower()
+        captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed)\b',descricao))
+        return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
+                ev=='estatica' and c.get('tipo')!='foto',
+                not captura,
+                c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte')!='nasa',
+                not bool(c.get('source_id')))
+    vistos=set();trace=[];n=0
+    for c in sorted(candidatos,key=rank):
+        if ev=='movimento' and c.get('tipo')!='video':continue
+        key=(c.get('fonte'),c.get('source_id') or c.get('url'))
+        if key in vistos:continue
+        vistos.add(key)
+        if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA' or natureza_declarada(c)=='REPRESENTACAO_DECLARADA':
+            c['decisao']={'estado':'INSUFICIENTE','motivo':'REPRESENTACAO_DECLARADA'}
+            trace.append({'key':key,'decisao':c['decisao']});continue
+        if n>=max_candidatos:break
+        n+=1
+        try:r=inspecionar(c,necessidade)
+        except Exception as e:r={'estado':'FALHA','motivo':type(e).__name__}
+        if not isinstance(r,dict):r={'estado':'FALHA','motivo':'RESPOSTA_INVALIDA'}
+        c['decisao']=r;trace.append({'key':key,'decisao':r})
+        if r.get('estado')=='PERTINENTE_PRIVADO' and r.get('necessidade_id')==necessidade['id'] and r.get('revisao_id') and not r.get('publicar') and r.get('direitos_aprovados') is False:
+            return {'estado':'CANDIDATO_PRIVADO_REVISADO','selecionado':key,'tentativas':n,'trilha':trace,
+                    'pronto_para_render':False,'publicar':False}
+    return {'estado':'LACUNA_PENDENTE','tentativas':n,'trilha':trace,'pronto_para_render':False,'publicar':False}

@@ -147,7 +147,9 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
             url = info.get('thumburl') or info.get('url')
             out.append({'tipo': 'foto', 'historica': True, 'url': url, 'thumb': url, 'descricao': titulo,
                         'legenda': _legenda(titulo, ano),
-                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons"})
+                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
+                        'pagina': info.get('descriptionurl'), 'licenca': lic,
+                        'url_master': info.get('url'), 'derivado': bool(ders)})
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:

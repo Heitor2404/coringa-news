@@ -364,4 +364,4 @@ def test_documentary_photo_preserves_integral_foreground_without_rejected_blur()
     assert "blur(64px)" not in code
     assert 'rectStyle(integralMediaRect(shot))' in code
     assert "objectFit:'contain'" in code
-    assert 'data-documentary-credit="full"' in code
+    assert "data-documentary-credit={role==='source'?'full':undefined}" in code

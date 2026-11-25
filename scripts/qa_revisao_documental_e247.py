@@ -30,7 +30,7 @@ def main():
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=min(20,len(tri)+2) if integral else 4 if multi else 2
-    calls=0;boards=[];results=[];seen_bytes=set();reuses=0;aggregate=None
+    calls=0;boards=[];results=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -40,6 +40,7 @@ def main():
     def inspect(c,n):
         nonlocal reuses
         if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
+        if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
         if c.get('fonte') not in ('nasa','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
         try:
@@ -50,6 +51,7 @@ def main():
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
         c['local_source']=str(p)
+        if integral and meta['sha256'] in used_sha:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_SELECIONADOS_NO_FILME'}
         if adaptive:
             key=(n['id'],meta['sha256'])
             if key in seen_bytes:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_INSPECIONADOS'}
@@ -63,7 +65,11 @@ def main():
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
-            boards.append((c,[im],dec['motivo']));return dec
+            boards.append((c,[im],dec['motivo']))
+            if integral and dec['estado']=='PERTINENTE_PRIVADO':
+                used_sha.add(meta['sha256'])
+                if c.get('pagina'):used_pages.add(c['pagina'])
+            return dec
         span=min(3.8,meta['duration_s']-.15)
         starts=E.windows(m,span,review_technical=True)
         a=starts[0][0] if starts else 0.
@@ -88,7 +94,11 @@ def main():
             c['janelas'].append({'pacote':pack,'decisao':dec})
             boards.append((c,frames,dec['motivo']))
             if dec['estado']=='PERTINENTE_PRIVADO':
-                c['selecao_janela']=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0]);return dec
+                c['selecao_janela']=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
+                if integral:
+                    used_sha.add(meta['sha256'])
+                    if c.get('pagina'):used_pages.add(c['pagina'])
+                return dec
         return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NO_ORCAMENTO'}
     try:
         if adaptive:

@@ -419,6 +419,9 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
         tipo = n.get('necessidade')
         if not sujeito or not mostrar or tipo not in ('registro', 'territorio', 'lacuna_explicativa'):
             raise ValueError('E205-NECESSIDADE')
+        evidencia = n.get('evidencia_visual') or 'indefinida'
+        if evidencia not in ('movimento','estatica','contexto','indefinida'):
+            raise ValueError('E246-EVIDENCIA')
         candidatos = diretor_roteiro.candidatos({'acontecimento': {'sujeito': sujeito}}, 'ambiente', bib)
         candidatos.sort(key=lambda x: (x.get('natureza') != 'video', x['asset_id']))
         geo = None
@@ -450,7 +453,7 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
             # A lacuna é hipótese editorial até a revisão das mídias/referências.
             destino, estado = 'cena_declarativa', 'REVISAR_LACUNA_E_REFERENCIAS'
         out.append({'id': cid, 'fatos': refs, 'sujeito': sujeito, 'mostrar': mostrar,
-                    'necessidade': tipo, 'modalidade_proposta': destino, 'estado': estado,
+                    'necessidade': tipo, 'evidencia_visual': evidencia, 'modalidade_proposta': destino, 'estado': estado,
                     'candidatos': candidatos, 'lacuna': n.get('lacuna'),
                     **({'solicitacao_atlas': geo} if geo is not None else {}),
                     'pesquisa': {'consultas': [sujeito + ' ' + mostrar, sujeito],
@@ -466,7 +469,7 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
 
 
 
-def planejar_documental(caso: dict, permitir_chamada: bool = True, cache: Path = CACHE) -> dict:
+def planejar_documental(caso: dict, permitir_chamada: bool = True, cache: Path = CACHE, *, pesquisar_midia=False, biblioteca_global=None) -> dict:
     """Autoria das necessidades ANTES da escolha de assets/renderers.
     Usa o provedor/cache existente. Não aceita URL ou licença fornecida pelo modelo.
     """
@@ -477,15 +480,25 @@ Use registro para filmagem/foto real; territorio para localização, fronteira, 
 lacuna_explicativa somente para uma ação específica que registros não mostram (descreva a lacuna).
 A animação só complementa a explicação de funcionamento ou ação que mídia real não demonstra, após busca sem registro adequado ou impossibilidade física de filmar. Se uma animação adequada não existir, replaneje com mídia real/contexto identificado ou declare a lacuna. Nunca use modelo reprovado como fallback. Não gere URLs, assets, desenhos, licenças ou geometrias.
 Quando a localização ou relação espacial for indispensável, considere abrir com mapa; caso contrário, priorize o registro real mais informativo. Para territorio indique objetivo_geografico: localizacao, relevo, rota, territorio ou comparacao. Não invente coordenadas ou trajetos: o motor deve pesquisar e verificar a região, a época e a fonte antes de adquirir mapas. Relevo exige elevação verificada, rota e fronteira exigem geometria documentada. Não obrigue aproximação.
-Inclua duas consultas curtas em inglês para mídia real. Não invente fatos.
+Para cada necessidade de mídia real indique evidencia_visual: movimento se exige ação observável, estatica se basta aparência/estrutura, contexto se basta ambiente, indefinida se não souber. Nunca trate fotografia como prova de movimento. Inclua duas consultas curtas e distintas em inglês para mídia real. Não invente fatos.
 Responda JSON {"necessidades_visuais":[{"id":"n1","fatos":["id existente"],"sujeito":"...","mostrar":"...",
-"necessidade":"registro|territorio|lacuna_explicativa","objetivo_geografico":"apenas para territorio: localizacao|relevo|rota|territorio|comparacao","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
+"necessidade":"registro|territorio|lacuna_explicativa","evidencia_visual":"movimento|estatica|contexto|indefinida","objetivo_geografico":"apenas para territorio: localizacao|relevo|rota|territorio|comparacao","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
 Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_ascii=False) + "\nLimites: " + json.dumps(caso.get('limites') or [], ensure_ascii=False)
     registro = []
     resposta = pedir_ia(texto, registro, cache, permitir_chamada)
     necessidades = resposta['necessidades_visuais']
     triagem = triagem_documental(necessidades, fatos)
-    return {'triagem': triagem, 'chamadas_ia': registro, 'publicar': False}
+    resultado = {'triagem': triagem, 'chamadas_ia': registro, 'publicar': False}
+    if pesquisar_midia:
+        resultado['pesquisa_audiovisual'] = pesquisar_triagem(triagem, biblioteca_global=biblioteca_global)
+    return resultado
+
+
+def pesquisar_triagem(triagem, *, biblioteca_global=None, fontes=None, inspecionar=None, max_buscas=6):
+    """Opt-in bridge: never replace the existing render/rights gates."""
+    from src.v4 import acervo_v4
+    return [acervo_v4.pesquisar_cobertura(n,biblioteca=biblioteca_global,fontes=fontes,
+            inspecionar=inspecionar,max_buscas=max_buscas) for n in triagem]
 
 
 

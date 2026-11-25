@@ -300,7 +300,7 @@ def ordenar_janelas_tecnicas(candidatos):
         c['inicio_s']))
 
 
-def revisar_janela_visao(pacote, frames, chamar=None, *, permitir_chamada=False, evidencia_visual=None, exigir_evidencia_direta=False):
+def revisar_janela_visao(pacote, frames, chamar=None, *, permitir_chamada=False, evidencia_visual=None, exigir_evidencia_direta=False, preparar_requisicao=False):
     """One explicit logical vision request; no Claude or automatic fallback.
     Gemini's own client may try its configured models/keys. Caller controls
     logical-call budget; this function is not a provider billing limit.
@@ -341,6 +341,8 @@ Dados: """+contexto
                  "Tipo de evidência solicitado: "+evidencia_visual)
     if exigir_evidencia_direta:
         prompt+='\nExija componente especifico legivel, nao mera associacao tematica. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico visivel que atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira de um quadro. Nao use lista nem troque eixos. Use null se nao localizavel; nao infira pelo assunto geral.'
+    if preparar_requisicao:
+        return {'prompt':prompt,'imagens':imagens}
     r=chamar(prompt,imagens)
     pts=r.get('pontos') if isinstance(r,dict) else None
     if not isinstance(pts,list) or len(pts)!=3 or any(not isinstance(p,dict) or p.get('indice')!=i for i,p in enumerate(pts)):
@@ -423,3 +425,39 @@ def selecionar_revisados(candidatos, *, fato_id, historico=()):
         valid.append((cards,repeticao,order,{'midia_id':c['midia'].get('id'),
             'selecao':result,'similaridade_recente':repeticao,'ordem':order}))
     return [v[3] for v in sorted(valid,key=lambda v:v[:3])]
+
+
+def revisar_janelas_lote(janelas,chamar,*,evidencia_visual,exigir_evidencia_direta=False):
+    """One logical request for up to three distinct windows. Reuse exactly
+    the existing per-window parser and pixel/obligation binding.
+    A batch is not proof of continuous action or of the unobserved intervals.
+    """
+    import json
+    if not 1<=len(janelas)<=3:raise ValueError('D-LOTE-LIMITE')
+    args={'permitir_chamada':True,'evidencia_visual':evidencia_visual,
+          'exigir_evidencia_direta':exigir_evidencia_direta}
+    reqs=[revisar_janela_visao(p,ims,chamar,preparar_requisicao=True,**args) for p,ims in janelas]
+    groups=[{'janela':i,'imagens':list(range(i*3,i*3+3)),
+             'tempos':[a['fonte_s'] for a in p['amostras']]} for i,(p,ims) in enumerate(janelas)]
+    prompt=("Revise TODAS as janelas separadamente. Cada janela tem tres imagens na ordem indicada; "
+            "indices internos 0,1,2 nunca se referem a outra janela. Nao combine quadros de janelas diferentes. "
+            "As regras do revisor abaixo valem para cada janela, substituindo os tempos pelos do grupo. "
+            "Retorne somente JSON com chave janelas, lista de objetos {janela: inteiro, resposta: objeto completo "
+            "do revisor}. Inclua resposta negativa quando nao houver evidencia. Nao omita janelas. Grupos: "
+            +json.dumps(groups,ensure_ascii=False)+"\nREGRAS POR JANELA:\n"+reqs[0]['prompt'])
+    raw=chamar(prompt,[im for r in reqs for im in r['imagens']])
+    rows=raw.get('janelas') if isinstance(raw,dict) else None
+    if not isinstance(rows,list) or len(rows)!=len(janelas):raise ValueError('D-LOTE-RESPOSTA')
+    by={}
+    for r in rows:
+        if not isinstance(r,dict) or type(r.get('janela')) is not int or r['janela'] in by or not isinstance(r.get('resposta'),dict):raise ValueError('D-LOTE-VINCULO')
+        by[r['janela']]=r['resposta']
+    if set(by)!=set(range(len(janelas))):raise ValueError('D-LOTE-VINCULO')
+    out=[]
+    for i,(p,ims) in enumerate(janelas):
+        try:
+            q=revisar_janela_visao(p,ims,lambda _prompt,_images:by[i],**args)
+            out.append({'revisao':{**q,'chamadas_logicas':0,'provedor':'gemini_visao_lote','janela_lote':i}})
+        except (ValueError,TypeError,KeyError,AttributeError) as e:
+            out.append({'falha':type(e).__name__+':'+str(e)[:120]})
+    return {'janelas':out,'chamadas_logicas':1,'imagens_enviadas':len(janelas)*3,'publicar':False}

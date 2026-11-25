@@ -615,7 +615,7 @@ def preparar_misto(resultado: dict, caso: dict, plano_documental: dict, destino:
         if abs((s['end'] - s['start']) - sum(partes[s['id']])) > .001:
             raise ValueError('E205-DURACAO-MIDIA')
     destino = Path(destino)
-    preparado = FILME.preparar(plano_documental, destino / 'documental', public_root, downloader=downloader)
+    preparado = FILME.preparar(plano_documental, destino / 'documental', public_root, downloader=downloader,fragmento_misto=True)
     if preparado.get('pronto') is not True:
         raise ValueError('E205-PREFLIGHT')
     base = json.loads(Path(preparado['props']).read_text(encoding='utf8'))

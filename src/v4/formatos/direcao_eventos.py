@@ -245,3 +245,54 @@ def aceitar_observacao(pacote, resposta):
           'inspecao':resposta['inspecao'],'pontos':[{'at':a['at'],'fonte_s':a['fonte_s'],
           'elementos':p['elementos']} for a,p in zip(pacote['amostras'],pontos)]}
     return result
+
+
+def diagnosticar_janela(frames):
+    """Conservative technical hints; not logo recognition or semantic proof.
+    Detect near-black uniform edge bars and sparse graphics on flat backgrounds.
+    Real dark footage can look similar: the graphic hint is a ranking penalty,
+    never a universal rejection or authority to crop an original.
+    """
+    import numpy as np
+    if len(frames)<3:raise ValueError('D-JANELA-AMOSTRAS')
+    arrays=[np.asarray(im.convert('RGB'),dtype=np.uint8) for im in frames]
+    if any(a.shape!=arrays[0].shape for a in arrays):raise ValueError('D-JANELA-DIMENSOES')
+    h,w=arrays[0].shape[:2]
+    # A bar is dark and nearly uniform across its entire length, at every sample.
+    dark=np.logical_and.reduce([a.max(axis=2)<=12 for a in arrays])
+    def extent(mask,limit):
+        n=0
+        for v in mask[:limit]:
+            if v<.985:break
+            n+=1
+        return n
+    cols=dark.mean(axis=0);rows=dark.mean(axis=1)
+    l,r=extent(cols,w//3),extent(cols[::-1],w//3)
+    t,b=extent(rows,h//3),extent(rows[::-1],h//3)
+    # Only paired, roughly symmetric bars, with an identifiable interior.
+    if min(l,r)<max(3,w*.025) or abs(l-r)>max(3,w*.025):l=r=0
+    if min(t,b)<max(3,h*.025) or abs(t-b)>max(3,h*.025):t=b=0
+    interior=arrays[0][t:h-b,l:w-r]
+    if not interior.size or interior.std()<10:l=r=t=b=0
+    graficos=[]
+    for a in arrays:
+        a=a[t:h-b,l:w-r].astype(np.float32)
+        lum=a.mean(axis=2)
+        med=np.median(a.reshape(-1,3),axis=0)
+        flat=(np.abs(a-med).max(axis=2)<=12).mean()
+        contrast=(np.abs(lum-np.median(lum))>35).mean()
+        # Sparse high-contrast foreground on a dark flat field. This is
+        # evidence of a possible card, not evidence of a specific logo.
+        graficos.append(bool(flat>=.78 and .008<=contrast<=.22 and np.median(lum)<35))
+    return {'bbox_conteudo':[l/w,t/h,1-r/w,1-b/h],
+            'barras_candidatas':bool(l or r or t or b),
+            'quadros_grafismo_suspeito':sum(graficos),
+            'amostras':len(frames),'revisao_semantica':'PENDENTE',
+            'recorte_automatico_autorizado':False}
+
+
+def ordenar_janelas_tecnicas(candidatos):
+    """Keep eligible dark scenes as alternatives; prioritize fewer card hints."""
+    return sorted(candidatos,key=lambda c:(
+        c['diagnostico']['quadros_grafismo_suspeito'],
+        c['inicio_s']))

@@ -11,7 +11,7 @@ def explorar(midia,extrair,*,max_janelas=12,largura=240):
     if not 3<=max_janelas<=24:raise ValueError('E257-LIMITE')
     span=min(3.8,dur-.15)
     end=max(0,dur-span-.05)
-    count=min(max_janelas,max(1,math.ceil(end/max(span*.65,1))+1))
+    count=1 if end<.5 else min(max_janelas,max(1,math.ceil(end/max(span*.65,1))+1))
     starts=[end*i/max(1,count-1) for i in range(count)]
     rows=[]
     for a in starts:

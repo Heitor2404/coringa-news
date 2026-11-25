@@ -1,4 +1,4 @@
-name: E289.3 - realinhar voz existente e renderizar Havai sem IA
+name: E294 - comparar Havai narrado com identidade B sem nova IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -69,16 +69,16 @@ jobs:
           assert json.loads((p/'sincronia-medida.json').read_text())['ok']
           def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
           result={'duration':props['duracao'],'shots':len(props['shots']),'types':sorted(set(s['type'] for s in props['shots'])),
-                  'props_sha256':sha(p/'props.json'),'video_sha256':sha(p/'filme.mp4'),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','direction':'ASSISTED_HISTORICAL'}
+                  'props_sha256':sha(p/'props.json'),'video_sha256':sha(p/'filme.mp4'),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','direction':'ASSISTED_HISTORICAL','comparison':'E289.3','background':'SIGNATURE_B_V1'}
           (p/'qa.json').write_text(json.dumps(result,indent=2));print('E289 MP4',result,flush=True)
           for i,s in enumerate(props['shots']):
-              subprocess.run(['ffmpeg','-v','error','-y','-ss',str((s['start']+s['end'])/2),'-i',str(p/'filme.mp4'),'-frames:v','1','-vf','scale=270:480',str(p/('cena-%02d.jpg'%i))],check=True)
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str((s['start']+s['end'])/2),'-i',str(p/'filme.mp4'),'-frames:v','1','-vf','scale=540:960',str(p/('cena-%02d.jpg'%i))],check=True)
           PY
       - name: Entrega privada para avaliacao humana
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python -m scripts.documentario_telegram qa_e289 --titulo "A erupção que fez o Havaí crescer — candidato E289"
+        run: python -m scripts.documentario_telegram qa_e289 --titulo "A erupção que fez o Havaí crescer — candidato E294 — identidade B"
       - name: Preservar voz e evidencias mesmo se render falhar
         if: ${{ always() }}
         env:

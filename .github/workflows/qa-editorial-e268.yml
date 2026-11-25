@@ -1,4 +1,4 @@
-name: E268.1 - fila editorial e prioridade de metadados sem IA
+name: E268.2 - contrato editorial e rotas explicitas sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

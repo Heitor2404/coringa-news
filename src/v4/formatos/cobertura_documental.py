@@ -8,7 +8,7 @@ from .revisao_documental import cobertura_adaptativa
 def encaminhar(necessidade,row):
     """Plan the next evidence route, never create or approve an asset."""
     base={'id':necessidade['id'],'fatos':necessidade['fatos'],'mostrar':necessidade.get('mostrar'),
-          'pronto_para_render':False,'publicar':False}
+          'pronto_para_render':False,'publicar':False,'animacao_autorizada':False}
     if row['estado']=='DELEGAR_ATLAS':
         return {**base,'rota':'ATLAS','proximo':'VALIDAR_GEOGRAFIA_E_RENDERIZAR_MAPA_COM_COMPROVANTE'}
     if row['estado']=='CANDIDATO_PRIVADO_REVISADO':

@@ -23,7 +23,10 @@ def main():
         lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     t=Transporte(max_http=14,max_bytes=140_000_000,max_wait=30)
     adaptive='--adaptativa' in sys.argv[4:]
-    budget=2;calls=0;boards=[];results=[];seen_bytes=set();reuses=0
+    multi='--multicenas' in sys.argv[4:]
+    if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
+    budget=4 if multi else 2
+    calls=0;boards=[];results=[];seen_bytes=set();reuses=0;aggregate=None
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -96,9 +99,15 @@ def main():
                     r=D.pesquisar_triagem([n],biblioteca_global=lib,max_buscas=limit)[0]
                     r['candidatos']=local+r['candidatos']
                 reports.append(r);return r
-            for n in tri:
-                results.append(R.cobertura_adaptativa(n,search,inspect,
-                    lambda phase:calls<(1 if phase==0 else budget) and t.http<t.max_http and t.bytes<t.max_bytes))
+            if multi:
+                from src.v4.formatos import cobertura_documental as C
+                aggregate=C.cobrir(tri,search,inspect,lambda:{'visao':calls,'http':t.http,'bytes':t.bytes},
+                    max_visao=budget,max_http=t.max_http,max_bytes=t.max_bytes)
+                results=aggregate['cobertura']
+            else:
+                for n in tri:
+                    results.append(R.cobertura_adaptativa(n,search,inspect,
+                        lambda phase:calls<(1 if phase==0 else budget) and t.http<t.max_http and t.bytes<t.max_bytes))
         else:
             reports=D.pesquisar_triagem(tri,biblioteca_global=lib,max_buscas=8)
             for n,r in zip(tri,reports):
@@ -106,7 +115,7 @@ def main():
     finally:lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'modo_adaptativo':adaptive,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_multicenas':multi,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

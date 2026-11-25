@@ -18,3 +18,14 @@ def test_sem_excesso_fator_um_e_excesso_grande_exige_replanejamento():
     case = _case(1); chosen = {f'n{i}': {'cap': 3.8} for i in range(3)}
     assert I.ritmo_necessario(case, chosen, [(0, 10.0)], 10.0) == 1.0
     assert I.ritmo_necessario(case, chosen, [(0, 13.5)], 13.5) > I.FATOR_MAX
+
+
+def test_cortes_de_imagem_podem_adiantar_ou_atrasar_ate_1_2s_sem_exceder_capacidade():
+    """Run 45671032979: voz 63,8 s < capacidade 68,4 s, mas um capítulo pedia fator 1,15."""
+    case = {'chapters': [{'needs': ['a', 'b', 'c']}, {'needs': ['d', 'e', 'f']}]}
+    chosen = {k: {'cap': 3.8, 'min': 1.4} for k in 'abcdef'}
+    ends = [round(12.2 * 30), round(21.0 * 30)]          # capítulo 1 com 12,2 s > 11,4 s de evidência
+    out = I.ajustar_cortes(case, chosen, ends, ends[-1])
+    assert out and out[-1] == ends[-1] and abs(out[0] - ends[0]) <= 36 and out[0] <= 342
+    assert out[1] - out[0] <= 342
+    assert I.ajustar_cortes(case, chosen, [round(14 * 30), round(22 * 30)], round(22 * 30)) is None   # excede 1,2 s

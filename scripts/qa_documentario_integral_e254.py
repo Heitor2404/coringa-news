@@ -27,6 +27,32 @@ def prever_tempos(case,chosen,*,minimo_s=60):
 
 
 FATOR_MAX=1.08
+DESLOCAMENTO_MAX_S=1.2
+
+
+def ajustar_cortes(case,chosen,ends,total):
+    """Visual chapter cuts may lead/lag the spoken boundary by <=1.2 s (J/L-cut) so a chapter whose speech is a bit
+    longer than its verified evidence borrows slack from its neighbours. No image is held beyond its reviewed capacity
+    and none is repeated. Returns new end frames or None when infeasible."""
+    lim=[(sum(math.ceil(chosen[i].get('min',1.4)*30-1e-6) for i in ch['needs']),
+          sum(math.floor(chosen[i]['cap']*30+1e-6) for i in ch['needs'])) for ch in case['chapters']]
+    d=round(DESLOCAMENTO_MAX_S*30);n=len(ends)
+    # Feasible interval of each cumulative cut, forward then backward (interval propagation).
+    lo=[0]*n;hi=[0]*n;a=b=0
+    for k,(mn,mx) in enumerate(lim):
+        a,b=a+mn,b+mx
+        lo[k],hi[k]=max(a,ends[k]-d),min(b,ends[k]+d)
+        if k==n-1:lo[k],hi[k]=max(lo[k],total),min(hi[k],total)
+        if lo[k]>hi[k]:return None
+        a,b=lo[k],hi[k]
+    out=[0]*n;nxt=None
+    for k in range(n-1,-1,-1):
+        mn_next,mx_next=lim[k+1] if k+1<n else (0,0)
+        l,h=lo[k],hi[k]
+        if nxt is not None:l,h=max(l,nxt-mx_next),min(h,nxt-mn_next)
+        if l>h:return None
+        out[k]=min(max(ends[k],l),h);nxt=out[k]
+    return out
 
 
 def ritmo_necessario(case,chosen,tempos,dur):
@@ -79,6 +105,8 @@ def main():
     # images beyond their reviewed capacity: if the overflow is small, tighten the narration tempo uniformly
     # (pitch preserved) and scale every measured word/chapter time by the same factor; otherwise replan the speech.
     fator=ritmo_necessario(case,chosen,tempos,dur)
+    if fator>1.0005 and ajustar_cortes(case,chosen,[round(b*30) for a,b in tempos[:-1]]+[math.ceil(dur*30)],math.ceil(dur*30)):
+        fator=1.0          # boundary shifts alone absorb the overflow: keep the natural voice tempo
     filtro=['-af',f'atempo={fator:.5f}'] if fator>1.0005 else []
     if fator>FATOR_MAX:
         write(root/'integral.json',{**gate,'motivo':'FALA_EXCEDE_EVIDENCIA_REPLANEJAR','fator_necessario':round(fator,4),
@@ -94,6 +122,10 @@ def main():
     if duration<60 or len(tempos)!=len(case['chapters']):
         write(root/'integral.json',{**gate,'motivo':'TEMPO_REAL_INSUFICIENTE','duracao_voz':duration,'pronto_para_render':False});return
     ends=[round(b*30) for a,b in tempos[:-1]]+[total]
+    ajustados=ajustar_cortes(case,chosen,ends,total)
+    if ajustados and ajustados!=ends:
+        write(root/'ajuste_cortes.json',{'cortes_fala':ends,'cortes_imagem':ajustados,'deslocamento_max_s':DESLOCAMENTO_MAX_S,'publicar':False})
+        ends=ajustados
     try:plan=P.plano(case,chosen,ends)
     except ValueError as e:
         write(root/'integral.json',{**gate,'motivo':str(e),'duracao_voz':duration,'pronto_para_render':False});return

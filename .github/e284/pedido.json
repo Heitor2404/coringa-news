@@ -1,1 +1,1 @@
-{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false, "nota": "Reexecução sem visão com roteiro encurtado (assistido) para caber na evidência verificada: run 45669210644 recusou corretamente acelerar a voz em 35%."}
+{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false, "nota": "Reexecução sem visão: cortes de imagem podem adiantar/atrasar até 1,2 s em relação à fala (J/L-cut), sem exceder a capacidade revisada; run 45671032979 tinha 63,8 s de voz para 68,4 s de evidência."}

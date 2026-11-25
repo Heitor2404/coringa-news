@@ -25,12 +25,12 @@ def main():
     # Separate source identity from an assisted assertion of continuous movement.
     mn={'id':'geo','fatos':['geo-regional'],'sujeito':spec['mapa']['atlas']['label'],
         'mostrar':spec['mostrar_mapa'],'necessidade':'territorio','evidencia_visual':'estatica'}
-    geo=spec['mapa']
-    E.MAP=Path('stage_atlas/e2614')
+    geo={**spec['mapa'],'fonte_continua':True}
+    E.MAP=Path('stage_atlas/e2618')
     E.MAP.mkdir(parents=True,exist_ok=True)
     acquired=G.adquirir_bases(geo)
     ch,p,camera=G.resolver(geo,acquired,5.5)
-    clip,proof=E.mapclip(ch,5.5,plano_resolvido=p)
+    clip,proof=E.mapclip(ch,5.5,plano_resolvido=p,documentary_layout=True)
     delivery={'necessidade_id':'geo','fatos':mn['fatos'],'mostrar':mn['mostrar'],
               'origem':'CURADORIA_GEOGRAFICA_VERIFICADA','local_source':str(clip),
               'atlas_proof':str(proof),'expected_sha256':P.sha(clip)}
@@ -49,7 +49,7 @@ def main():
     F.preparar(plan,root/'misto',PUBLIC,fragmento_misto=True)
     result={'publicar':False,'voz':False,'visao_nova':0,'origem_video':spec['pagina'],
         'fonte_identidade':spec['fonte_identidade'],'escopo':'localizacao regional; nao posicao da camera',
-        'camera':camera,'rasters':acquired['metas'],'gate':gate,'plano':plan,
+        'camera':camera,'rasters':acquired['metas'],'gate':gate,'plano':plan,'fonte_continua_experimental':True,
         'duracao_s':plan['duracao'],'revisao_visual':'PENDENTE'}
     (root/'misto.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     print('E261.4 MAPA E VIDEO',plan['duracao'],flush=True)

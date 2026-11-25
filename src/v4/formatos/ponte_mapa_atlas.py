@@ -103,7 +103,29 @@ def verificar_plano(atlas: dict, start: float, dur: float) -> dict:
             "origem_geografica":atlas.get("geo")}
 
 
-def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path) -> dict:
+def layout_documental_privado(props):
+    """Reflow only the native map's single-title localization proof.
+    No post-render crop; preserve attribution, all map pixels and camera.
+    Other map compositions keep their own layout and require separate review.
+    """
+    import copy
+    from .qa_area_segura import carregar
+    q=copy.deepcopy(props)
+    x,y,right,bottom=carregar()['universal']
+    if len(q['palco'])!=1 or q['palco'][0]['tipo']!='mapa' or any(
+            l['componente']!='editorial.titleOrPayoff' for l in q['camadas']):
+        raise ValueError('ATLAS-LAYOUT-DOCUMENTAL-ESCOPO')
+    q['documentary_layout']=True
+    q['creditos']['caixa']=[x+10,bottom-90,right-x-20,90]
+    q['creditos']['px']=18
+    q['creditos']['linha']=20
+    q['seguro']={'esq':x,'topo':y+240,'base':bottom-200,'direita':[], 'dir_max':right}
+    for l in q['camadas']:
+        l['caixa']={'x':x+10,'y':y+10,'w':right-x-20,'h':195}
+    return q
+
+
+def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path, *, documentary_layout=False) -> dict:
     atlas=ATLAS.resolver_tempos(atlas,[]) if not atlas.get("palco") else atlas
     proof=verificar_plano(atlas,start,dur)
     pasta=Path(pasta);pasta.mkdir(parents=True,exist_ok=True)
@@ -125,6 +147,7 @@ def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path) -> di
     if "Natural Earth" not in " ".join((geo.get("meta") or {}).get("atribuicao") or []):
         raise ValueError("geometria sem atribuição Natural Earth")
     props=ATLAS.props(atlas,ATLAS.tokens_canal(ATLAS.canal("coringa")),geo,{})
+    if documentary_layout:props=layout_documental_privado(props)
     jwrite(pasta/"props_atlas_formato.json",props)
     k={"schema":1,"renderer":"ATLAS/Formato/PalcoMapa/MapLibre",
        "palco_original":"Formato","atlas_sha256":hashlib.sha256(json.dumps(atlas,sort_keys=True).encode()).hexdigest(),
@@ -132,7 +155,7 @@ def preparar(atlas: dict, start:float, dur:float, pasta:Path, public:Path) -> di
        "inicio_s":start,"duracao_s":dur,
        "frame_inicio":int(round(start*30)),"frame_fim_inclusivo":int(round((start+dur)*30))-1,
        "quadro_alvo":[1080,1920],"fps":30,
-       "mapeamento":proof,"status":"PREPARADO_NAO_RENDERIZADO",
+       "mapeamento":proof,"documentary_layout":bool(documentary_layout),"status":"PREPARADO_NAO_RENDERIZADO",
        "aprovacao_humana":"PENDENTE","publicado":False}
     jwrite(pasta/"preparo_atlas.json",k)
     return k

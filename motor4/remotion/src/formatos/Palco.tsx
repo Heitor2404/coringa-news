@@ -268,7 +268,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       {roi && <div data-roi="1" style={{ position: 'absolute', left: roi.x, top: roi.y, width: roi.w, height: roi.h, pointerEvents: 'none' }} />}
       {/* escala gráfica: o espectador lê a distância (direção de arte: "escala legível") */}
       {c.zoom >= 6.5 && ka.veu !== 'documento' && (
-        <div data-meta="escala" style={{ position: 'absolute', left: 1008 - esc.px, top: 318, width: esc.px, opacity: .92 }}>
+        <div data-meta="escala" style={{ position: 'absolute', left: (P.documentary_layout ? ((P as any).seguro?.dir_max ?? 770)-10 : 1008) - esc.px, top: P.documentary_layout ? 540 : 318, width: esc.px, opacity: .92 }}>
           <div style={{ height: 8, borderLeft: '3px solid #fff', borderRight: '3px solid #fff', borderBottom: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,.7)' }} />
           <div style={{ position: 'absolute', right: 0, top: -28, fontFamily: P.tokens.fontes.dado, fontWeight: 700, fontSize: 20, color: '#fff', textShadow: '0 1px 6px #000', whiteSpace: 'nowrap' }}>{esc.txt}</div>
         </div>)}

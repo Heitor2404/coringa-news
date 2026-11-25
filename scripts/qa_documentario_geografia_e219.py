@@ -166,10 +166,10 @@ def mapplan(ch,span):
                              't0':.3,'t1':span,'p':{'linhas':location_title(ch,span)}}]}], 'cta':False}
     return A.resolver_tempos(p,[])
 
-def mapclip(ch,span,*,plano_resolvido=None):
+def mapclip(ch,span,*,plano_resolvido=None,documentary_layout=False):
     MAP.mkdir(parents=True,exist_ok=True)
     p=plano_resolvido if plano_resolvido is not None else mapplan(ch,span)
-    prep=B.preparar(p,0,span,MAP,PUBLIC)
+    prep=B.preparar(p,0,span,MAP,PUBLIC,documentary_layout=documentary_layout)
     clip=MAP/'mapa.mp4'
     subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
                     '--props='+str((MAP/'props_atlas_formato.json').resolve()),

@@ -7,7 +7,7 @@ from scripts import formatos_raster as R
 from scripts import qa_documentario_geografia_e219 as E
 from src.v4.formatos import plano as A, direcao_eventos as DE
 
-def escalas(roi, delta=1.6):
+def escalas(roi, delta=1.6, *, fonte_continua=False):
     """Select tile levels and bounding boxes from the existing camera geometry.
     The start of each level covers the full vertical viewport, with overlap.
     No downloaded tile or visual quality is asserted by this planner.
@@ -38,7 +38,7 @@ def escalas(roi, delta=1.6):
         x0,y0=R.tile_xy(bbox[0],bbox[3],z);x1,y1=R.tile_xy(bbox[2],bbox[1],z)
         count=(int(x1)-int(x0)+1)*(int(y1)-int(y0)+1)
         if count>100:raise ValueError('GEO-ORCAMENTO')
-        result.append({'bbox':bbox,'zoom':z,'dataset':'bmng' if z<=8 else 's2_2016',
+        result.append({'bbox':bbox,'zoom':z,'dataset':'s2_2016' if z>8 or (fonte_continua and math.ceil(end)>8) else 'bmng',
                        'tiles':count,'de':None if not result else low+.45})
     return result
 
@@ -57,7 +57,7 @@ def adquirir_bases(caso):
     lon,lat=q['lonlat']
     if not o<=lon<=l or not s<=lat<=n:
         raise ValueError('GEO-MARCADOR')
-    specs=escalas(q['roi'],caso.get('delta',1.6))
+    specs=escalas(q['roi'],caso.get('delta',1.6),fonte_continua=caso.get('fonte_continua') is True)
     bases=[]; metas=[]
     for spec in specs:
         m=R.registrar_base_regional(name+'_z'+str(spec['zoom']),spec['bbox'],spec['zoom'],spec['dataset'])

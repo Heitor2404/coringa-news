@@ -185,3 +185,19 @@ def test_nao_aceita_trecho_que_cruza_mapa_para_outro_palco():
     end=float(ks[ix+1]["t"])
     with pytest.raises(ValueError,match="F-ATLAS-ATRAVESSA-BEAT"):
         BR.verificar_plano(p,t0,end-t0+0.2)
+
+
+def test_documentary_map_layout_preserves_pixels_and_attribution():
+    from src.v4.formatos.qa_area_segura import carregar
+    p={'palco':[{'tipo':'mapa','camera':{'zoom':8}}],'rasters':[{'nome':'r'}],
+       'creditos':{'caixa':[0,0,100,100],'datasets':{'s2':'credit'},'obrigatorias':['s2']},
+       'camadas':[{'componente':'editorial.titleOrPayoff','caixa':{'x':0,'y':0,'w':100,'h':100},'p':{'linhas':['Title']}}]}
+    old=copy.deepcopy(p)
+    q=BR.layout_documental_privado(p)
+    assert p==old and q['palco']==p['palco'] and q['rasters']==p['rasters']
+    assert q['creditos']['datasets']==p['creditos']['datasets']
+    x,y,r,b=carregar()['universal']
+    a,c,w,h=q['creditos']['caixa']
+    assert x<=a and y<=c and a+w<=r and c+h<=b
+    with pytest.raises(ValueError,match='ESCOPO'):
+        BR.layout_documental_privado({**p,'camadas':[{'componente':'atlas.geoPin'}]})

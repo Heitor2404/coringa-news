@@ -68,3 +68,11 @@ def test_raster_covers_view_at_fade_onset(caso):
         view=A.tela_lonlat(A._restringir({**cam,'fx':fx,'fy':fy,'zoom':z}))
         assert A.cobre({'bbox':spec['bbox']},view)
         assert A.opacidade_raster(z,spec['de'])==pytest.approx(0)
+
+
+@pytest.mark.parametrize('caso',CASES,ids=[c['id'] for c in CASES])
+def test_continuous_source_keeps_coverage_and_budget(caso):
+    normal=G.escalas(caso['atlas']['roi'],caso['delta'])
+    trial=G.escalas(caso['atlas']['roi'],caso['delta'],fonte_continua=True)
+    assert [{k:v for k,v in p.items() if k!='dataset'} for p in normal]==[{k:v for k,v in p.items() if k!='dataset'} for p in trial]
+    assert {p['dataset'] for p in trial}=={'s2_2016'}

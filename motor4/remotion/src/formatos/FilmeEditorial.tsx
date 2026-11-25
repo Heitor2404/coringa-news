@@ -198,7 +198,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:[72,250,810,300],section:[72,310,810,355],subtitle:[72,1170,850,1330],source:[160,1195,760,1240],integral:[0,395,1080,1255]} as const;
+const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240],integral:[0,395,1080,1150]} as const;
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
@@ -543,19 +543,19 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {/* Local text contrast only. Never cover the lower part of the footage. */}
-      <div style={{position:'absolute',left:40,top:225,width:830,height:145,pointerEvents:'none',
+      <div style={{position:'absolute',left:150,top:300,width:620,height:105,pointerEvents:'none',
         background:'linear-gradient(90deg,rgba(3,8,16,.48),rgba(3,8,16,.12),transparent)',borderRadius:12}}/>
       <div style={{...rectStyle(DOC_MEDIA.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
         fontSize:28,fontWeight:850,color:OFF_WHITE,letterSpacing:1}}>
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
-      <div style={{position:'absolute',left:72,top:302,width:130,height:4,background:GOLD}}/>
+      <div style={{position:'absolute',left:160,top:352,width:130,height:4,background:GOLD}}/>
       {shot.lead&&<div style={{...rectStyle(DOC_MEDIA.section),color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',
         fontSize:25,fontWeight:800,letterSpacing:.5,textShadow:'0 1px 4px #000,0 2px 6px #000',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
         {shot.lead.toUpperCase()}
       </div>}
       <div style={{...rectStyle(DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:Math.max(18,Math.min(24,Math.floor(1100/Math.max(1,('FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
+        fontSize:Math.max(18,Math.min(24,Math.floor(1550/Math.max(1,('CONTEXTO · FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
         overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
         background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>
         {shot.evidence==='representative'?'CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
@@ -723,7 +723,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
     {docCap&&<div data-safe-role="subtitle" style={{...(realMedia(shots[shot])?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:realMedia(shots[shot])?'flex-start':'center',textAlign:realMedia(shots[shot])?'left':'center',pointerEvents:'none'}}>
-      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.max(44,Math.min(58,Math.floor(760/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64)))):44,lineHeight:1.08,color:OFF_WHITE,
+      <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.max(32,Math.min(52,Math.floor(580/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64)))):44,lineHeight:1.08,color:OFF_WHITE,
         padding:realMedia(shots[shot])?'6px 10px':'8px 14px',background:realMedia(shots[shot])?'rgba(4,11,20,.32)':'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
         {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
       </div>

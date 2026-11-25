@@ -34,6 +34,7 @@ export type FormatoProps = {
   composicoes?: Record<string, { quadro: [number, number, number, number] | null; veu?: string }>;
   creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
   tecnico?: { pais?: string };
+  documentary_layout?: boolean;      // private native map bridge, no crop
   medir?: boolean;                   // registra no console a geometria REAL do quadro (validação sobre quadros renderizados)
   palco: PalcoKey[];
   destaques?: Destaque[];

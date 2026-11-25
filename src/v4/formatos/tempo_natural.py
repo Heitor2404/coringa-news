@@ -58,13 +58,15 @@ def validar_sequencia_amostrada(cena,duracao,fonte):
         return ['sequência amostrada exige uso representativo privado e SHA da origem']
     ini=cena.get('source_in_seconds');rows=p.get('janelas');events=p.get('eventos')
     if not isinstance(ini,(int,float)) or not math.isfinite(ini) or not isinstance(rows,list) or len(rows)<2 or not isinstance(events,list) or len(events)!=len(rows):return ['sequência sem janelas e eventos vinculados']
-    if p.get('inicio_s')!=ini or p.get('duracao_s')!=duracao:return ['sequência amostrada não pode ser retimada']
-    names=set(p.get('referentes') or []);end=ini;prev=-1;ids=set();changes=set()
+    if p.get('inicio_s')!=ini or not isinstance(p.get('duracao_s'),(int,float)) or abs(p['duracao_s']-duracao)>1e-6:return ['sequência amostrada não pode ser retimada']
+    refs=p.get('referentes')
+    if not isinstance(refs,list) or not all(isinstance(x,str) and x.strip() for x in refs):return ['referentes inválidos']
+    names=set(refs);end=ini;prev=-1;ids=set();changes=set()
     if not names:return ['sequência sem referente comum']
     for row,e in zip(rows,events):
         if not isinstance(row,dict) or not isinstance(e,dict):return ['janela inválida']
         a,b,t=[row.get(k) for k in ('inicio_s','fim_s','fonte_s')];rid=row.get('revisao_id')
-        if not all(type(x) in (float,int) and math.isfinite(x) for x in (a,b,t)) or not ini-.001<=a<=end+.001 or b<=end or not a<=t<b or t<=prev or t>=ini+duracao or not isinstance(rid,str) or len(rid)!=64 or rid in ids or not names<=set(row.get('referentes') or []):return ['janelas não adjacentes, sem vínculo ou referente comum']
+        if not all(type(x) in (float,int) and math.isfinite(x) for x in (a,b,t)) or not ini-.001<=a<=end+.001 or b<=end or not a<=t<b or t<=prev or t>=ini+duracao or not isinstance(rid,str) or len(rid)!=64 or rid in ids or not isinstance(row.get('referentes'),list) or not all(isinstance(x,str) for x in row['referentes']) or not names<=set(row['referentes']):return ['janelas não adjacentes, sem vínculo ou referente comum']
         change=row.get('acao_visivel')
         if not isinstance(change,str) or len(change.strip())<20 or change.strip().casefold() in changes or e.get('acao_visivel')!=change or e.get('fonte_s')!=t or not isinstance(e.get('at'),(float,int)) or abs(e['at']-(t-ini))>.001:return ['evento não corresponde à observação']
         ids.add(rid);changes.add(change.strip().casefold());prev=t;end=b

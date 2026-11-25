@@ -190,7 +190,7 @@ def test_metadata_rank_prioritizes_specific_query_without_rejecting_unlabelled()
         {**candidate(3),'titulo':'KSC-05-S-00286','descricao':''},
     ]
     assert [c['source_id'] for c in R.ordenar_candidatos(n,candidates)]==[2,1,3]
-    assert R.relevancia_textual(n,candidates[1])=={'cobertura':1.,'titulo':1.,'prova_visual':False}
+    assert R.relevancia_textual(n,candidates[1])=={'cobertura':1.,'titulo':1.,'proximidade':.75,'prova_visual':False}
     # No hard metadata veto: later candidate without title can still be reviewed.
     order=[]
     def inspect(c,n):
@@ -207,3 +207,17 @@ def test_metadata_rank_retains_local_priority_and_alternative_query():
           {**candidate(3),'fonte':'biblioteca_v3','titulo':'Unknown local record'}]
     assert [c['source_id'] for c in R.ordenar_candidatos(n,rows)]==[3,2,1]
     assert R.relevancia_textual(n,rows[0])['cobertura']<1
+
+
+def test_nasa_real_metadata_mixed_subjects_do_not_rank_equal():
+    # Short excerpts from the actual E261.7 provider report; no claim of
+    # visual relevance from metadata. Both contain both query terms.
+    n={**need(),'pesquisa':{'consultas_en':['Earth rotating']}}
+    rows=[{**candidate(1),'titulo':'How Sunlight Pushes Asteroids',
+           'descricao':'Near-Earth asteroids pose a danger. When sunlight strikes a rotating asteroid, the dayside heats up.'},
+          {**candidate(2),'titulo':'Orion Camera Views of Artemis II Apogee Raise Burn',
+           'descricao':'A view from cameras on the exterior of the Orion spacecraft. The Earth is seen rotating below.'},
+          {**candidate(3),'titulo':'KSC-05-S-00286','descricao':'The Earth is rotating at 24 hours.'}]
+    assert all(R.relevancia_textual(n,c)['cobertura']==1 for c in rows)
+    assert R.relevancia_textual(n,rows[1])['proximidade']>R.relevancia_textual(n,rows[0])['proximidade']
+    assert R.ordenar_candidatos(n,rows)[0]['source_id']==2

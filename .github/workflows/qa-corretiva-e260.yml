@@ -1,4 +1,4 @@
-name: E262 - ordenacao documental por necessidade e regressao de reuso
+name: E262.1 - ranking contextual e regressao de reuso
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

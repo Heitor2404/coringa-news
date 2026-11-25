@@ -117,36 +117,53 @@ def relevancia_textual(necessidade,candidato):
     Keep numbers and proper names; no topic-specific dictionaries.
     """
     import unicodedata
-    def tokens(value):
+    def words(value):
         s=unicodedata.normalize('NFKD',str(value or '').casefold())
         s=''.join(c for c in s if not unicodedata.combining(c))
-        return set(re.findall(r'[^\W_]+',s))-{
+        return [word for word in re.findall(r'[^\W_]+',s) if word not in {
             'the','a','an','of','and','in','on','at','to','for','with','from',
-            'video','footage','real','photo','image','de','da','do','das','dos','e','em','um','uma'}
+            'video','footage','real','photo','image','de','da','do','das','dos','e','em','um','uma'}]
+    def tokens(value):return set(words(value))
+    def proximidade(q,seq):
+        if len(q)<2:return 0.
+        from collections import Counter
+        counts=Counter();left=0;best=None
+        for right,word in enumerate(seq):
+            if word in q:counts[word]+=1
+            while len(counts)==len(q):
+                span=right-left+1
+                best=span if best is None else min(best,span)
+                old=seq[left];left+=1
+                if old in counts:
+                    counts[old]-=1
+                    if not counts[old]:del counts[old]
+        return len(q)/best if best else 0.
     p=necessidade.get('pesquisa') or {}
     queries=[tokens(q) for q in (p.get('consultas_en') or [])+(p.get('consultas') or [])]
     title=tokens(candidato.get('titulo'))
-    desc=tokens(' '.join(str(candidato.get(k) or '') for k in ('descricao','descricao_integral')))
+    descriptions=[words(candidato.get(k)) for k in ('descricao','descricao_integral')]
+    desc=set().union(*map(set,descriptions))
+    sequences=[words(candidato.get('titulo')),*descriptions]
     scores=[]
     for q in queries:
         if not q:continue
         coverage=len(q&(title|desc))/len(q)
         title_coverage=len(q&title)/len(q)
-        scores.append((coverage,title_coverage))
-    coverage,title_coverage=max(scores,default=(0.,0.))
-    return {'cobertura':coverage,'titulo':title_coverage,'prova_visual':False}
+        scores.append((coverage,title_coverage,max(proximidade(q,s) for s in sequences)))
+    coverage,title_coverage,prox=max(scores,default=(0.,0.,0.))
+    return {'cobertura':coverage,'titulo':title_coverage,'proximidade':prox,'prova_visual':False}
 
 
 def ordenar_candidatos(necessidade,candidatos):
     ev=necessidade.get('evidencia_visual')
     def rank(c):
         m=relevancia_textual(necessidade,c)
-        descricao=' '.join(str(c.get(k) or '') for k in ('descricao','descricao_integral','source')).lower()
-        captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed)\b',descricao))
+        descricao=' '.join(str(c.get(k) or '') for k in ('titulo','descricao','descricao_integral','source')).lower()
+        captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed|camera views?|views? from cameras?|recorded (by|with)|filmed (by|with))\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
-                -m['cobertura'],-m['titulo'],not captura,
+                -m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     return sorted(candidatos,key=rank)

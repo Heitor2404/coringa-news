@@ -13,7 +13,8 @@ def main():
     if spec.get('publish') is not False:raise ValueError('PRIVATE_ONLY')
     case=next(c for c in spec['cases'] if c['id']==caseid)
     out.mkdir(parents=True,exist_ok=True);assets=out/'originais';assets.mkdir(exist_ok=True)
-    tri=D.triagem_documental(case['necessidades'],case['fatos'])
+    progressive='--progressiva' in sys.argv[4:]
+    tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     from src.v4.formatos import reuso_documental as RE
     from src.v3 import pacote_biblioteca as PB
@@ -28,13 +29,12 @@ def main():
             n['exigir_evidencia_direta']=True
             n['exigir_legibilidade']=True
     t=Transporte(max_http=54 if integral else 14,max_bytes=270_000_000 if integral else 140_000_000,max_wait=30)
-    progressive='--progressiva' in sys.argv[4:]
     adaptive='--adaptativa' in sys.argv[4:] or progressive
     multi='--multicenas' in sys.argv[4:]
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=min(20,len(tri)+2) if integral else 4 if multi else 2
-    calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -43,6 +43,7 @@ def main():
         return gemini.json_visao(prompt,images,leve=True)
     def inspect(c,n):
         nonlocal reuses
+        c['revisao_adicional_possivel']=False
         if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
         if c.get('fonte') not in ('nasa','nasa_video','archive_video','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
@@ -175,20 +176,28 @@ def main():
     try:
         if progressive:
             from src.v4 import acervo_v4 as A
-            reports=[];states={};results_by_id={};total_search=0
+            reports=[];states={};results_by_id={};total_search=0;local_checked=set()
             search_limit=32 if integral else 16
             def search_progress(n,limit,attempted):
                 nonlocal total_search
-                r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
+                if n['id'] not in local_checked:
+                    local_checked.add(n['id'])
+                    local=RE.candidatos(lib,n)
+                    if local:
+                        r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
+                        reports.append(r);return r
+                r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
             # Second pass: pool all unused budget across unresolved obligations.
             for phase in (0,1):
-                for n in tri:
+                for index,n in enumerate(tri):
                     nid=n['id'];old=results_by_id.get(nid)
                     if old and old['estado']!='LACUNA_PENDENTE':continue
                     st=states.setdefault(nid,{})
                     start=calls
+                    remaining=sum(x['necessidade']!='territorio' for x in tri[index:])
+                    phase_limit=search_limit if phase else total_search+(search_limit-total_search)//max(1,remaining)
                     if phase:
                         st['descoberta_sem_visao']=False
                         for c in list(st.get('rever',[])):
@@ -201,8 +210,8 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:total_search<search_limit,
-                        pode_inspecionar=lambda:calls<budget and (phase==1 or calls==start) and t.http<t.max_http and t.bytes<t.max_bytes,
+                        pode_buscar=lambda:total_search<phase_limit,
+                        pode_inspecionar=lambda:calls<budget and (phase==1 or calls==start),
                         max_buscas=search_limit,estado=st)
                     results_by_id[nid]=row
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]

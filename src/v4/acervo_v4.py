@@ -178,7 +178,7 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 def fontes_documentais(tipo):
     from src import acervo, midia
     if tipo=='video':
-        return [('commons_video',lambda q:midia.candidatos_arquivo(q)),
+        return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True)),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q)),
                 ('archive_video',lambda q:midia.candidatos_archive(q))]
     if tipo=='foto':
@@ -187,6 +187,13 @@ def fontes_documentais(tipo):
                 ('loc',lambda q:acervo.f_loc([q])),
                 ('met',lambda q:acervo.f_met([q]))]
     raise ValueError('E246-TIPO')
+
+
+def natureza_preliminar(c):
+    text=' '.join(str(c.get(k) or '') for k in ('titulo','desc','descricao')).lower()
+    if re.search(r'\b(rendered|rendering|cgi|computer.generated|artist.s (impression|concept)|artistic (impression|render)|simulation|simulação|illustration)\b|autodesk maya',text):
+        return 'REPRESENTACAO_DECLARADA'
+    return 'NATUREZA_PENDENTE_INSPECAO'
 
 
 def _candidato_documental(c,fonte,tipo):
@@ -213,7 +220,13 @@ def _candidato_documental(c,fonte,tipo):
             'url':url,'pagina':page,'credito':credit,'licenca':lic,'direitos':rights,
             'largura_declarada':c.get('w'),'altura_declarada':c.get('h'),
             'duracao_declarada':c.get('dur'),'tamanho_declarado':c.get('tamanho_original'),
-            'derivado':c.get('derivado',False),'url_master':c.get('url_master'),
+            'derivado':c.get('derivado',False),'url_master':c.get('url_master') or c.get('url_original'),
+            'source_id':c.get('source_id'),'source_title':c.get('source_title'),
+            'licenca_url':c.get('licenca_url'),'restricoes':c.get('restricoes'),
+            'variantes':c.get('variantes') or [],'nasa_collection':c.get('nasa_collection'),
+            'nasa_center':c.get('nasa_center'),'nasa_credit':c.get('nasa_credit'),
+            'nasa_secondary_credit':c.get('nasa_secondary_credit'),
+            'natureza_preliminar':natureza_preliminar(c),
             'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
 
 
@@ -279,7 +292,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     # on the first query. Without inspection, continue looking for options.
     por_rodada=max(1,max_buscas//len(consultas))
     for ri,consulta in enumerate(consultas):
-        for tipo,nome,fn in rotas[:por_rodada]:
+        for tipo,nome,fn in (rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas:
             if len(report['buscas'])>=max_buscas:return {**report,'estado':'LACUNA_NAO_VERIFICADA'}
             row={'consulta':consulta,'tipo':tipo,'fonte':nome}
             try:raw=fn(consulta) or []

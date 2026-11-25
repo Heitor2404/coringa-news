@@ -1,0 +1,45 @@
+name: E287 - preparar piloto Havai com filmagens reais sem IA
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-piloto-e287.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      CORINGA_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
+          python -m pytest -q tests/test_e202_diretor_visual.py tests/test_documentario_e233_tempos.py
+          python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e287 --somente-acervo
+      - name: Preservar material original no cofre privado e amostras para auditoria
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          r=json.loads(Path('qa_e287/acervo.json').read_text())
+          files=list(dict.fromkeys(m['local_source'] for m in r['acquired'].values()))
+          assert all(Path(f).is_file() for f in files)
+          assert sum(Path(f).stat().st_size for f in files)<=3_500_000_000
+          diagnostics=['qa_e287/acervo.json','qa_e287/preflight-piloto.json','qa_e287/fontes-contato.jpg']
+          tag='review-e287-${{ github.run_id }}-${{ github.run_attempt }}'
+          subprocess.run(['bash','scripts/arquivar_cofre_review.sh',tag,*diagnostics,*files],check=True,timeout=600)
+          subprocess.run(['python','scripts/espelhar_revisao_cofre.py','e287-${{ github.run_id }}-${{ github.run_attempt }}',*diagnostics],check=True)
+          PY

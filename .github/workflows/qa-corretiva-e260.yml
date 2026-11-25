@@ -1,4 +1,4 @@
-name: E285 - consolidacao tecnica seletiva sem IA
+name: E285.1 - regressao seletiva e memoria vigente
 # Regressao tecnica obrigatoria na branch experimental.
 on:
   push:
@@ -54,4 +54,4 @@ jobs:
           $P igual_ao_work bash -c 'test -s "$CORINGA_CHECKPOINTS_DESCOBERTOS" || exit 1; git fetch -q --depth 1 origin 257ce75db196840cc4d74132f301e7179a842d67 && git worktree add -f base_work FETCH_HEAD && ln -s "$PWD/motor4/node_modules" base_work/motor4/node_modules && ln -s "$PWD/qa_claude_checkpoints" base_work/qa_claude_checkpoints && (cd base_work && python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json ../stage_documental/work-replay contrastes --progressiva --multicenas --qualidade --replay-privado) && python -m scripts.comparar_reuso_work stage_documental/work-replay/revisao.json stage_documental/claude-replay/revisao.json'
       - name: Resumo inequivoco (falha se qualquer prova nao estiver APROVADA)
         if: ${{ always() }}
-        run: python scripts/resumo_provas.py provas remotion_config acumulada_222 multitema_206 novas_claude memoria checkpoints replay_contrato normal_contrato igual_ao_work
+        run: python scripts/resumo_provas.py provas remotion_config acumulada_222 multitema_206 novas_tecnicas memoria checkpoints replay_contrato normal_contrato igual_ao_work

@@ -489,6 +489,10 @@ Para cada necessidade de mídia real, quando houver componentes visuais distinto
 Responda JSON {"necessidades_visuais":[{"id":"n1","fatos":["id existente"],"sujeito":"...","mostrar":"...",
 "necessidade":"registro|territorio|lacuna_explicativa","evidencia_visual":"movimento|estatica|contexto|indefinida","objetivo_geografico":"apenas para territorio: localizacao|relevo|rota|territorio|comparacao","lacuna":"... somente se necessária","consultas_en":["...","..."],"componentes_busca":[["sinônimo de componente A"],["sinônimo de componente B"]],"consultas_precisas":["exemplo específico verificável"],"contexto_busca":["local ou identidade"],"contextos_alternativos":["homônimo conhecido"]}]}.
 Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_ascii=False) + "\nLimites: " + json.dumps(caso.get('limites') or [], ensure_ascii=False)
+    # When a narrative already exists, judge the actual spoken claims, not just a list of visual facts.
+    if caso.get('chapters'):
+        texto += '\nNarração por capítulo: ' + json.dumps([{'title':ch.get('title'),'speech':ch.get('speech'),'needs':ch.get('needs')} for ch in caso['chapters']],ensure_ascii=False)
+        texto += '\nRelacione cada passagem falada à evidência que a explica; distinguir ação observável, mecanismo invisível, localização e resultado estático. Uma foto do resultado não demonstra a ação. Não invente ações nem force modalidades.'
     registro = []
     resposta = pedir_ia(texto, registro, cache, permitir_chamada)
     necessidades = resposta['necessidades_visuais']

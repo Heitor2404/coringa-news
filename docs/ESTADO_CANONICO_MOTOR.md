@@ -131,3 +131,6 @@ E281.2 [45639629861](https://github.com/Heitor2404/coringa-news/actions/runs/456
 Remoção do fundo borrado e melhoria da escala por proporção real; crédito discreto, legenda centralizada. Prova privada de layout multiformato sem IA, não filme narrado nem homologação; conferir quadros. E285 multitema 45683486826 SUCCESS, contrato de reuso 45683486814 pendente nesta consulta. 
 
 E286.1 (§340): contrato de área segura histórico exigia blur reprovado; corrigido para preservar imagem integral e impedir retorno. Nova prova pendente. Candidato prioritário Havaí (curadoria assistida histórica, não autonomia inédita).
+
+### E285.1 / E287 (§341)
+E285 validou código/reuso 9 por identidade, 222/206/35 testes, mas homologação incompleta por resumo e memória de mudanças não integradas; corrigidos registros, novo CI pendente. E286.1 área segura SUCCESS; layout real pendente. Piloto Havaí assistido E219: histórico 79,8s vídeo/mapa, entrega privada confirmada, arquivo 403; E287 prepara originais sem IA, cobertura e cofre pendentes. Direção recebe fala de capítulos quando disponível. Não declarar autonomia inédita nem aprovação de publicação.

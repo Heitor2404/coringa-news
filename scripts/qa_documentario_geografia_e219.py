@@ -239,6 +239,30 @@ def main():
     print('E219 ACERVO',len(acquired),'/',len(rows),flush=True)
     if any(not any(r[0] in acquired for r in ch.get('videos',[])) for ch in spec['chapters'] if 'atlas' not in ch):
         raise ValueError('E219-SEM-REGISTRO-POR-CAPITULO')
+    if '--somente-acervo' in sys.argv[3:]:
+        # Real sources and candidate windows before voice. This is assisted pilot prep, not semantic approval.
+        counts=[];samples=[];rows=[]
+        for i,ch in enumerate(spec['chapters']):
+            if 'atlas' in ch:
+                counts.append({'chapter':ch['title'],'type':'atlas_map','preflight':True})
+                continue
+            found=[]
+            for slug,label in ch.get('videos',[]):
+                m=acquired.get(slug)
+                if not m:continue
+                ww=windows(m,3.8,review_technical=True)
+                found.append({'id':slug,'windows':[t for t,_ in ww],'license':m['license']})
+                if ww:
+                    samples.append(ww[0][1]);rows.append((slug,ww[0][0]))
+            counts.append({'chapter':ch['title'],'type':'video','sources':found,'windows':sum(len(f['windows']) for f in found)})
+        if samples:
+            board=Image.new('RGB',(960,math.ceil(len(samples)/4)*172),'#101c28');draw=ImageDraw.Draw(board)
+            for i,im in enumerate(samples):
+                im.thumbnail((236,140));x=(i%4)*240;y=(i//4)*172;board.paste(im,(x,y));draw.text((x+4,y+142),rows[i][0][:30],fill='white')
+            board.save(out/'fontes-contato.jpg')
+        write(out/'preflight-piloto.json',{'publish':False,'narration':False,'semantic_review':'PENDING','direction':'ASSISTED_HISTORICAL','chapters':counts,'sources':len(acquired),'errors':errors})
+        if any(x.get('type')=='video' and x['windows']==0 for x in counts):raise ValueError('PILOTO-SEM-JANELAS')
+        return
     wav,tempos,caps,dur=voz.narrar([{'fala':c['speech']} for c in spec['chapters']],out/'voz',exigir_gemini=True)
     audio=out/'narracao48k.wav'
     subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)

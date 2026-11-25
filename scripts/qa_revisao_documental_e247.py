@@ -131,6 +131,11 @@ def main():
         m={'id':c.get('source_id') or meta['sha256'],'expected_sha256':meta['sha256'],
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
+        if c.get('tipo')=='video' or meta.get('duration_s'):
+            # Declared metadata (title/description/shot list) feeds the local
+            # temporal scan as ranking hints only; never as proof of the action.
+            m['metadados_texto']='\n'.join(str(c.get(k) or '') for k in ('titulo','descricao','desc') if c.get(k))[:4000]
+            m['termos_necessidade']=[n.get('mostrar') or '',*((n.get('pesquisa') or {}).get('consultas_en') or [])]
         cache_key=None;cached=None
         if progressive:
             from src import gemini
@@ -290,7 +295,7 @@ def main():
                         used_sha.add(meta['sha256'])
                         if c.get('pagina'):used_pages.add(c['pagina'])
                     return eligible[k][2]
-            if progressive and any(round(x['inicio_s'],4) not in history['vistos'] for x in exploration['janelas'] if 'diagnostico' in x) and any('revisao' in row for row in batch['janelas']):
+            if progressive and AD.ha_janelas_promissoras(exploration,history['vistos'],priorizar_movimento=n.get('evidencia_visual')=='movimento',gratuitas=cached_starts) and any('revisao' in row for row in batch['janelas']):
                 c['revisao_adicional_possivel']=True
             else:c['revisao_adicional_possivel']=False
             if all('falha' in r for r in batch['janelas']):

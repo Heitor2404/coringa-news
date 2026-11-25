@@ -16,7 +16,10 @@ jobs:
         with: {persist-credentials: false}
       - uses: actions/setup-python@v5
         with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
       - run: |
+          npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
           fi
@@ -55,13 +58,17 @@ jobs:
         if: ${{ !cancelled() }}
         run: python -m scripts.qa_aquisicao_e258 qa_e260_fontes
       - name: Preservar diagnosticos privados
-        if: ${{ !cancelled() && steps.replay.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: |
           shopt -s nullglob
           root=stage_documental/e260
-          cp qa_e260_checkpoints/descoberta.json "$root/descoberta-checkpoints.json"
+          mkdir -p "$root"
+          if [[ -s qa_e260_checkpoints/descoberta.json ]]; then cp qa_e260_checkpoints/descoberta.json "$root/descoberta-checkpoints.json"; fi
           if [[ -s qa_e260_fontes/revisao.json ]]; then cp qa_e260_fontes/revisao.json "$root/fontes.json"; fi
-          bash scripts/arquivar_cofre_review.sh "review-e260-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/revisao.json" "$root/descoberta-checkpoints.json" "$root"/fontes*.json "$root"/revisao-*.jpg
-          python scripts/espelhar_revisao_cofre.py "e260-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/revisao.json" "$root/descoberta-checkpoints.json" "$root"/fontes*.json "$root"/revisao-*.jpg
+          files=("$root"/*.json "$root"/*.jpg)
+          if (( ${#files[@]} > 0 )); then
+            bash scripts/arquivar_cofre_review.sh "review-e260-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e260-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          fi

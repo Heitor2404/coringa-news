@@ -9,6 +9,21 @@ const props=JSON.parse(readFileSync(resolve(root,'props.json'),'utf8'));
 props.documentary_text_probe=true;
 // Same media and credit as failed E290; additionally exercise a long section.
 props.shots.find(s=>s.id==='video_vertical_nasa').lead='REGISTRO DOCUMENTAL DO TELESCÓPIO ESPACIAL';
+// Real source bytes, synthetic boxes/positions: these test geometry, NOT
+// claims about the ship's actual action or an approved crop.
+const original=props.shots[0];
+const cases=[['4:5',.39,[.30,.32,.69,.54]],['1:1',.49,[.255,.35,.745,.52]],
+  ['9:16',.20,[.40,.35,.60,.55]],['4:5-collision',.39,[.30,.05,.69,.95]]];
+for(const [mode,width,bbox] of cases){
+  const i=props.shots.length,start=i*3;
+  const s={...original,id:'qa-'+mode.replace(':','-'),start,end:start+3,
+    video_context_layout:'recorte_relacional_seguro',documentary_viewport:mode.startsWith('4:5')?'4:5':mode==='1:1'?'1:1':undefined,
+    framing_positions:[{at:0,position:[.5,.5]},{at:2.9,position:[.51,.5]}],
+    documentary_roi_points:[{at:0,bbox},{at:2.9,bbox}]};
+  props.shots.push(s);
+  props.documentary_captions.push({start:start+.3,end:start+2.8,words:[{w:'TESTE'},{w:'GEOMÉTRICO',hl:true}]});
+}
+props.duracao=props.shots.length*3;
 const longWords='O REGISTRO MOSTRA A CENA EM DETALHES'.split(' ');
 props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
   {...cap,end:props.shots[i].start+1.5},
@@ -45,9 +60,14 @@ try {
         const [x,y,r,b]=row.actual;
         if(!row.fits||x<149||y<299||r>771||b>1241||row.font<({section:22,subtitle:36,source:24}[role]))
           result.errors.push('OVERFLOW '+shot.id+' '+offset+' '+role);
-        if(shot.video_context_layout==='cena_integral'&&shot.source_dimensions[0]/shot.source_dimensions[1]>=1080/610&&row.overlay)
+        if(row.evidenceCollision)result.errors.push('EVIDENCE_COLLISION '+shot.id+' '+offset+' '+role);
+        if(shot.video_context_layout==='cena_integral'&&shot.source_dimensions[0]/shot.source_dimensions[1]>=1080/610&&row.actualOverlay)
           result.errors.push('PANORAMIC_OVERLAP '+shot.id+' '+offset+' '+role);
       }
+      const modes=new Set(rows.map(x=>x.layout));
+      if(modes.size!==1)result.errors.push('LAYOUT_MISMATCH '+shot.id);
+      if(shot.id==='qa-4-5-collision'&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
+      if(['qa-4-5','qa-1-1','qa-9-16'].includes(shot.id)&&modes.has('INTEGRAL_PROTECTED'))result.errors.push('UNNECESSARY_FALLBACK '+shot.id);
       result.frames.push({shot:shot.id,frame,offset,dimensions:shot.source_dimensions,measurements:rows});
       save();
     }

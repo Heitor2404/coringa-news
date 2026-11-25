@@ -872,7 +872,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -950,6 +950,20 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
                     )
             elif plano.get('tipo')!='PROVA_VISUAL_PRIVADA' and medias[c['asset']]['width']>medias[c['asset']]['height']:
                 raise ValueError(c['id']+': vídeo horizontal final sem enquadramento dirigido')
+        # E291: forward only observations already validated by the framing
+        # contract above. Sampled geometry is NOT continuous motion certification.
+        if privado and c['type']=='video' and x.get('framing_positions'):
+            contract=c.get('video_framing') or {}
+            points=[]
+            for point in contract.get('pontos',[]):
+                box=point.get('area_essencial')
+                if contract.get('modo')=='relacao_observada':
+                    boxes=[e['bbox'] for e in point['elementos']]
+                    box=[min(b[0] for b in boxes),min(b[1] for b in boxes),
+                         max(b[2] for b in boxes),max(b[3] for b in boxes)]
+                if box is not None:
+                    points.append({'at':point['at'],'bbox':box})
+            if points:x['documentary_roi_points']=points
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

@@ -149,6 +149,10 @@ def test_preparar_exporta_posicoes_no_mesmo_compositor(tmp_path,monkeypatch):
     assert len(shot["framing_positions"])==2
     assert all(0<=x<=1 for v in shot["framing_positions"] for x in v["position"])
     assert (tmp_path/"public"/shot["asset"]).is_file()
+    # This historical fixture can be non-private; the new bridge must not
+    # accept a caller-supplied documentary_roi_points on either path.
+    if props['private_review_only'] and p.get('tipo')=='PROVA_VISUAL_PRIVADA':
+        assert shot['documentary_roi_points'][0]['bbox']==[.45,.32,.68,.88]
 
 
 def test_preparar_recusa_dimensoes_inventadas(tmp_path,monkeypatch):

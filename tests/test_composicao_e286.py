@@ -42,5 +42,7 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     assert 1015-405>=1080*9/16
     assert "width:'fit-content',maxWidth:'100%'" in code
     assert 'documentaryPixelRect' in code and 'documentaryOverlay' in code
+    assert 'documentaryProtected' in code and 'INTEGRAL_PROTECTED' in code
+    assert 'evidenceCollision' in code and 'actualOverlay' in code
     assert "documentary_text_probe&&(!preview||!private_review_only)" in code
     assert "overflowWrap:'anywhere'" in code

@@ -50,7 +50,8 @@ export type FilmShot = {
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
   photo_framing?: 'integral';
-  photo_crop_preview?: {height:number;position:[number,number];status:string}; // private geometric alternative
+  photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
+  documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
@@ -209,7 +210,7 @@ const integralMediaRect=(shot:FilmShot):readonly number[]=>{
   const [w,h]=shot.source_dimensions||[16,9];
   return w/h<=1.15?[0,0,1080,1920]:w/h>=1080/610?[0,405,1080,1015]:[0,405,1080,1135];
 };
-const documentaryPixelRect=(shot:FilmShot):readonly number[]=>{
+const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
   if(shot.type==='video'&&shot.documentary_viewport)
     return [0,370,1080,370+(shot.documentary_viewport==='4:5'?1350:1080)];
   if(shot.type==='photo'&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'&&
@@ -225,6 +226,62 @@ const documentaryPixelRect=(shot:FilmShot):readonly number[]=>{
   return [x+dx,y+dy,r-dx,b-dy];
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
+type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
+type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'INTEGRAL_PROTECTED';media:readonly number[];protected:readonly number[][];separateStage?:readonly number[]};
+const stackedDocSlots=(y:number):DocSlots=>({
+  brand:[160,y,500,y+38],section:[160,y+43,760,y+93],
+  subtitle:[160,y+101,760,y+191],source:[160,y+199,760,y+321],
+});
+const docRects=(slots:DocSlots)=>[slots.brand,slots.section,slots.subtitle,slots.source,
+  [160,slots.brand[3]+1,290,slots.brand[3]+4]];
+const normalizedBox=(b:readonly number[])=>b.length===4&&b.every(Number.isFinite)&&
+  0<=b[0]&&b[0]<b[2]&&b[2]<=1&&0<=b[1]&&b[1]<b[3]&&b[3]<=1;
+const expandBox=(b:readonly number[],n:number)=>[b[0]-n,b[1]-n,b[2]+n,b[3]+n];
+const containPixels=(stage:readonly number[],dims:readonly number[])=>{
+  const [x,y,r,b]=stage,[w,h]=dims;
+  const scale=Math.min((r-x)/w,(b-y)/h);
+  const dx=((r-x)-w*scale)/2,dy=((b-y)-h*scale)/2;
+  return [x+dx,y+dy,r-dx,b-dy];
+};
+// The preflight already establishes the crop. Project observed boxes through
+// that SAME viewport and camera positions. A swept envelope conservatively
+// covers the combinations of sampled positions/boxes (not unobserved action).
+const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]=>{
+  if(shot.type==='photo'&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'){
+    const b=shot.photo_crop_preview.essential_screen;
+    if(b?.length===4&&b.every(Number.isFinite)&&b[0]>=0&&b[1]>=0&&b[2]<=1080&&b[3]<=shot.photo_crop_preview.height&&b[0]<b[2]&&b[1]<b[3])return [expandBox(b,12)];
+  }
+  const points=shot.documentary_roi_points,positions=shot.framing_positions,dims=shot.source_dimensions;
+  if(shot.type==='video'&&points?.length&&positions?.length&&dims&&dims.every(v=>Number.isFinite(v)&&v>0)&&
+      points.length===positions.length&&points.every((p,i)=>normalizedBox(p.bbox)&&Math.abs(p.at-positions[i].at)<.001)&&
+      positions.every(p=>p.position.every(v=>Number.isFinite(v)&&v>=0&&v<=1))){
+    const [x,y,r,b]=media,[w,h]=dims;
+    const scale=Math.max((r-x)/w,(b-y)/h),sw=w*scale,sh=h*scale;
+    const boxes=points.flatMap(p=>positions.map(k=>{
+      const ox=x-(sw-(r-x))*k.position[0],oy=y-(sh-(b-y))*k.position[1];
+      return [ox+p.bbox[0]*sw,oy+p.bbox[1]*sh,ox+p.bbox[2]*sw,oy+p.bbox[3]*sh];
+    }));
+    return [expandBox([Math.min(...boxes.map(b=>b[0])),Math.min(...boxes.map(b=>b[1])),
+      Math.max(...boxes.map(b=>b[2])),Math.max(...boxes.map(b=>b[3]))],12)];
+  }
+  // Unknown region: do not guess what is safe to cover.
+  return [Array.from(media)];
+};
+const documentaryLayout=(shot:FilmShot):DocLayout=>{
+  const media=originalDocumentaryPixelRect(shot),protectedBoxes=documentaryProtected(shot,media);
+  const candidates:[DocLayout['mode'],DocSlots][]=[['STANDARD',DOC_MEDIA],['UPPER_TEXT',stackedDocSlots(312)],['LOWER_TEXT',stackedDocSlots(910)]];
+  for(const [mode,slots] of candidates){
+    if(docRects(slots).every(r=>protectedBoxes.every(b=>!intersects(r,b))))
+      return {mode,slots,media,protected:protectedBoxes};
+  }
+  // If no text placement can preserve the known evidence, restore ALL source
+  // pixels in a separate stage; never invent a different crop or cover the ROI.
+  // This fallback trades immersion for protection and remains a private review.
+  const separateStage=[0,0,1080,900],dims=shot.source_dimensions||[16,9];
+  const pixels=containPixels(separateStage,dims.every(v=>Number.isFinite(v)&&v>0)?dims:[16,9]);
+  return {mode:'INTEGRAL_PROTECTED',slots:stackedDocSlots(910),media:pixels,protected:[pixels],separateStage};
+};
+const documentaryPixelRect=(shot:FilmShot):readonly number[]=>documentaryLayout(shot).media;
 const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(documentaryPixelRect(shot),rect);
 // Use the actual browser font metrics and wrapping, not character-count estimates.
 // Overflow at the readable floor is a diagnostic for editorial review, never silent ellipsis.
@@ -252,7 +309,17 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
       if(fits)break;
     }
     font=Math.max(size[1],font);e.style.fontSize=font+'px';actual=measure();
-    const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual};
+    const er=e.getBoundingClientRect();
+    const painted=[rect[0]+(er.left-hr.left)/sx,rect[1]+(er.top-hr.top)/sy,
+      rect[0]+(er.right-hr.left)/sx,rect[1]+(er.bottom-hr.top)/sy];
+    const actualOverlay=documentaryOverlay(shot,painted);
+    e.style.background=actualOverlay?'rgba(4,11,20,.84)':'transparent';
+    e.style.textShadow=actualOverlay?'0 1px 3px #000':'none';
+    h.dataset.docOverlay=actualOverlay?'review':'none';
+    const layout=documentaryLayout(shot);
+    const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
+    const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
+      actualOverlay,evidenceCollision,layout:layout.mode,protected:layout.protected};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
@@ -293,6 +360,19 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
       <OffthreadVideo src={staticFile(shot.asset || '')} muted
         style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
     </Sequence></AbsoluteFill>;
+  }
+  const separateStage=mediaFirst&&realMedia(shot)?documentaryLayout(shot).separateStage:undefined;
+  if(separateStage){
+    // Same source/sequence; no crop, no zoom, no duplicate blurred video.
+    const stage={...rectStyle(separateStage),overflow:'hidden' as const};
+    return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
+      <div data-media-layout="integral-protected" style={stage}>
+        {shot.type==='video'?<Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+          <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+        </Sequence>:<Img src={staticFile(shot.asset||'')} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>}
+      </div>
+    </AbsoluteFill>;
   }
   if(shot.type === 'video') {
     if(mediaFirst && shot.documentary_viewport) {
@@ -615,17 +695,18 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   if(mediaFirst&&realMedia(shot)) {
     const credit=(shot.evidence==='representative'?'Contexto · ':'')+(shot.source_display||shot.source);
     const section=shot.lead?.toUpperCase();
-    const brandOverlay=documentaryOverlay(shot,DOC_MEDIA.brand);
-    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V2" style={{background:'#08101A',overflow:'hidden'}}>
+    const layout=documentaryLayout(shot),slots=layout.slots;
+    const brandOverlay=documentaryOverlay(shot,slots.brand);
+    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V3" data-documentary-layout={layout.mode} style={{background:'#08101A',overflow:'hidden'}}>
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
-      <div style={{...rectStyle(DOC_MEDIA.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
+      <div style={{...rectStyle(slots.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
         fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1,
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
-      <div style={{position:'absolute',left:160,top:351,width:130,height:3,background:GOLD}}/>
-      {section&&<MeasuredDocText role="section" shot={shot} rect={DOC_MEDIA.section} text={section} probe={textProbe}/>}
-      <MeasuredDocText role="source" shot={shot} rect={DOC_MEDIA.source} text={credit} probe={textProbe}/>
+      <div style={{position:'absolute',left:160,top:slots.brand[3]+1,width:130,height:3,background:GOLD}}/>
+      {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
+      <MeasuredDocText role="source" shot={shot} rect={slots.source} text={credit} probe={textProbe}/>
     </AbsoluteFill>;
   }
   if(shot.type==='scene_graph') {
@@ -788,7 +869,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))} textProbe={documentary_text_probe}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
-    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={DOC_MEDIA.subtitle}
+    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={documentaryLayout(shots[shot]).slots.subtitle}
       text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}

@@ -190,6 +190,8 @@ def fontes_documentais(tipo):
 
 
 def natureza_preliminar(c):
+    from src.v4.formatos.revisao_documental import natureza_declarada
+    if natureza_declarada(c)=='REPRESENTACAO_DECLARADA':return 'REPRESENTACAO_DECLARADA'
     text=' '.join(str(c.get(k) or '') for k in ('titulo','desc','descricao')).lower()
     if re.search(r'\b(rendered|rendering|cgi|computer.generated|artist.s (impression|concept)|artistic (impression|render)|simulation|simulação|illustration)\b|autodesk maya',text):
         return 'REPRESENTACAO_DECLARADA'
@@ -226,6 +228,8 @@ def _candidato_documental(c,fonte,tipo):
             'variantes':c.get('variantes') or [],'nasa_collection':c.get('nasa_collection'),
             'nasa_center':c.get('nasa_center'),'nasa_credit':c.get('nasa_credit'),
             'nasa_secondary_credit':c.get('nasa_secondary_credit'),
+            'descricao_integral':c.get('descricao_integral') or '', 'source':c.get('source'),
+            'credit':c.get('credit'), 'categories':c.get('categories'),
             'natureza_preliminar':natureza_preliminar(c),
             'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
 

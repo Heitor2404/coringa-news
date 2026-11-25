@@ -46,6 +46,11 @@ def main():
     if pre['duracao']<60 or not check['pronto']:
         write(root/'integral.json',{**gate,'pronto_para_tts':False,'motivo':'PREFLIGHT_FILME','bloqueios':check['bloqueios']})
         return
+    if '--somente-preflight' in sys.argv[2:]:
+        write(root/'integral.json',{**gate,'somente_preflight':True,
+            'tempo_provisorio_s':pre['duracao'],'pronto_para_render_privado':False,
+            'voz_gerada':False,'publicar':False})
+        return
     from src.v3 import previa_telegram
     previa_telegram.chat_autorizado()
     from src import voz

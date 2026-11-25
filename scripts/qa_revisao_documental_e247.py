@@ -14,7 +14,8 @@ def main():
     case=next(c for c in spec['cases'] if c['id']==caseid)
     out.mkdir(parents=True,exist_ok=True);assets=out/'originais';assets.mkdir(exist_ok=True)
     progressive='--progressiva' in sys.argv[4:]
-    replay='--replay-privado' in sys.argv[4:]
+    somente_acervo='--somente-acervo' in sys.argv[4:]
+    replay='--replay-privado' in sys.argv[4:] or somente_acervo
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
@@ -26,7 +27,7 @@ def main():
         packet=json.loads(Path(discovery).read_text())
         if packet.get('publicar') is not False or packet.get('direitos_aprovados') is not False:raise ValueError('E259-CHECKPOINT-PRIVADO')
         pack=os.pathsep.join(([pack] if pack else [])+packet['pacotes']) or None
-    if replay and not pack:raise ValueError('E259-PACOTE')
+    if replay and not pack and not somente_acervo:raise ValueError('E259-PACOTE')
     if pack:
         reports_restore=[]
         for directory in pack.split(os.pathsep):
@@ -357,7 +358,7 @@ def main():
         lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

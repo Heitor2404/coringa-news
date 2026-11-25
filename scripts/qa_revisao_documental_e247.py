@@ -268,7 +268,7 @@ def main():
                 previous.update({x['pacote']['revisao_id']:x for x in history['janelas'] if x.get('decisao')})
                 lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':list(previous.values()),'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             if eligible:
-                ranked=DE.selecionar_revisados([{'pacote':p,'midia':m} for p,_,_ in eligible],fato_id=n['fatos'][0])
+                ranked=DE.selecionar_revisados([{'pacote':p,'midia':m,'decisao':dec} for p,_,dec in eligible],fato_id=n['fatos'][0],preferir_legibilidade=bool(n.get('exigir_legibilidade')))
                 if ranked:
                     k=ranked[0]['ordem'];c['selecao_janela']=eligible[k][1]
                     if integral:

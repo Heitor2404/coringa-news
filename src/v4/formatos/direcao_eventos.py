@@ -411,7 +411,7 @@ def candidato_revisado(pacote, midia, *, fato_id):
     return result
 
 
-def selecionar_revisados(candidatos, *, fato_id, historico=()):
+def selecionar_revisados(candidatos, *, fato_id, historico=(), preferir_legibilidade=False):
     """Rank only pertinent observations bound to the same need.
     Context/insufficient/unreviewed windows stay in the report, not the cut.
     """
@@ -422,9 +422,22 @@ def selecionar_revisados(candidatos, *, fato_id, historico=()):
         sig=c.get('assinatura')
         repeticao=max((similaridade_janelas(sig,h) for h in historico),default=0.) if sig else 0.
         cards=c['pacote'].get('diagnostico_tecnico',{}).get('quadros_grafismo_suspeito',0)
-        valid.append((cards,repeticao,order,{'midia_id':c['midia'].get('id'),
-            'selecao':result,'similaridade_recente':repeticao,'ordem':order}))
-    return [v[3] for v in sorted(valid,key=lambda v:v[:3])]
+        # Existing formal decision may contain a normalized declared ROI.
+        # Prefer a legible one only among already pertinent windows. The
+        # measurement is a ranking hint, not a pixel-verified action or crop.
+        legivel=False
+        if preferir_legibilidade:
+            from .revisao_documental import medir_legibilidade_foto
+            dec=c.get('decisao') or {}
+            e=dec.get('evidencia_direta_normalizada')
+            p=c['pacote']
+            if dec.get('estado')=='PERTINENTE_PRIVADO' and dec.get('revisao_id')==p['revisao_id'] and e:
+                measures=[medir_legibilidade_foto(e,x.get('px')) for x in p['amostras']]
+                legivel=bool(measures and all(m and m['suficiente'] for m in measures))
+        valid.append((cards,repeticao,not legivel,order,{'midia_id':c['midia'].get('id'),
+            'selecao':result,'similaridade_recente':repeticao,'ordem':order,
+            'preferencia_legibilidade_declarada':legivel}))
+    return [v[4] for v in sorted(valid,key=lambda v:v[:4])]
 
 
 def revisar_janelas_lote(janelas,chamar,*,evidencia_visual,exigir_evidencia_direta=False):

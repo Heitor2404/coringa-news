@@ -66,3 +66,6 @@ Modo opt-in --encadear-previas reserva saldo existente, observa miniaturas e pas
 Compartilhado resolvedor E272/E279, preview reduzido nas necessidades reservadas e reconsulta de variantes somente para a escolha. Teste do E247.main com dados controlados, duas chamadas simuladas dentro do teto; validação pendente. Não declarar autonomia real. §325.
 
 E279 [45632218472](https://github.com/Heitor2404/coringa-news/actions/runs/45632218472) SUCCESS, 127 testes. E279.1 [45632385794](https://github.com/Heitor2404/coringa-news/actions/runs/45632385794): in_progress/null. Ver §326 antes de continuar. Nenhuma nova IA real.
+
+### E279.1 confirmada; E280 em validação (§327)
+E279.1 [45632385794](https://github.com/Heitor2404/coringa-news/actions/runs/45632385794) SUCCESS, 128 testes. Encadeamento controlado comprovado; visão real não homologada. E280: preferência de janela formal pertinente com ROI declarada legível, sem veto adicional; fundo tonal desfocado e créditos maiores em fotos integrais no compositor existente. Prova comparativa privada com cenas E271.1, zero IA/voz. Não confundir ambiência com evidência nem fragmento mudo com filme narrado completo. Aguardar resultados e inspeção, sem reabrir integrações.

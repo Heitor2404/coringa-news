@@ -1,4 +1,4 @@
-name: E271.1 - foto protagonista com atribuicao no cabecalho
+name: E280 - acabamento documental e regressao de selecao temporal
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -30,7 +30,7 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
-          python -m pytest -q tests/test_documentario_integral_e254.py tests/test_ponte_multimodal_e256.py tests/test_ponte_animacao_editorial.py tests/test_area_segura_plataformas.py
+          python -m pytest -q tests/test_documentario_integral_e254.py tests/test_ponte_multimodal_e256.py tests/test_ponte_animacao_editorial.py tests/test_area_segura_plataformas.py tests/test_amostragem_documental_e257.py
       - name: Recuperar relatorio privado e selecionar fragmento editorial
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
@@ -87,6 +87,6 @@ jobs:
           root=stage_documental/e267
           if [[ -s "$root/fragmento.json" ]]; then
             files=("$root/fragmento.json" "$root"/*-quadro.jpg "$root"/*-safe.jpg "$root"/fragmento.mp4)
-            bash scripts/arquivar_cofre_review.sh "review-e2711-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
-            python scripts/espelhar_revisao_cofre.py "e2711-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            bash scripts/arquivar_cofre_review.sh "review-e280-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e280-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
           fi

@@ -314,7 +314,10 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   if(shot.type==='photo'&&shot.photo_framing==='integral'&&!shot.graphic_original){
     // Preserve the complete scientific/archival photograph without inventing
     // borders or cutting essential context. The editorial layers remain separate.
-    return <AbsoluteFill style={{background:mediaFirst?'linear-gradient(180deg,#112536,#08121E 70%,#050A12)':'#060C15'}}>
+    return <AbsoluteFill style={{background:mediaFirst?'linear-gradient(180deg,#112536,#08121E 70%,#050A12)':'#060C15',overflow:'hidden'}}>
+      {/* Deliberately defocused tonal backdrop from the same image.
+          Never a continuation of source pixels or a second evidence layer. */}
+      {mediaFirst&&<Img aria-hidden data-media-ambience="defocused-non-evidence" src={staticFile(shot.asset||'')} style={{position:'absolute',inset:-60,width:1200,height:2040,objectFit:'cover',filter:'blur(64px) brightness(.42) saturate(.72)',opacity:.72}}/>}
       <Img data-media-layout={photoHero?'integral-photo-hero':mediaFirst?'integral-photo-separated':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(photoHero?DOC_MEDIA.photoHero:DOC_MEDIA.photoIntegral):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
     </AbsoluteFill>;
   }
@@ -556,8 +559,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         {shot.lead.toUpperCase()}
       </div>}
       {photoHero&&<div style={{...rectStyle(DOC_MEDIA.photoTitle),display:'flex',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',fontSize:36,fontWeight:800,lineHeight:1.05,overflowWrap:'anywhere'}}>{shot.headline||shot.subject}</div>}
-      <div style={{...rectStyle(photoHero?DOC_MEDIA.photoCredit:DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:Math.max(18,Math.min(24,Math.floor(1550/Math.max(1,('CONTEXTO · FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
+      <div data-documentary-credit="full" style={{...rectStyle(photoHero?DOC_MEDIA.photoCredit:DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
+        fontSize:Math.max(18,Math.min(26,Math.floor(2300/Math.max(1,((shot.evidence==='representative'?'CONTEXTO · ':'')+'FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
         overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
         background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>
         {shot.evidence==='representative'?'CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}

@@ -356,3 +356,12 @@ def test_qa_overlay_nao_aparece_sem_permissao_explicitamente_informada():
     assert 'safe_zone_debug=false' in s
     assert 'safe_zone_debug&&' in s
     assert 'quadro_integral' in s and "shot.type==='mechanism'" in s
+
+
+def test_documentary_photo_ambience_does_not_replace_integral_foreground():
+    code=_script()
+    assert 'data-media-ambience="defocused-non-evidence"' in code
+    assert "filter:'blur(64px) brightness(.42) saturate(.72)'" in code
+    assert "photoHero?DOC_MEDIA.photoHero:DOC_MEDIA.photoIntegral" in code
+    assert "objectFit:'contain'" in code
+    assert 'data-documentary-credit="full"' in code

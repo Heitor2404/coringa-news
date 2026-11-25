@@ -64,3 +64,21 @@ def test_cache_only_sampling_reaches_a_previously_reviewed_nondefault_window():
     assert [p['revisao_id'] for p,_ in selected]==[p['revisao_id'] for p,_ in again]
     _,excluded=A.preparar_lote(m,n,frame,exploracao=e,priorizar_cache={late},excluir={late})
     assert late not in {round(p['inicio_s'],4) for p,_ in excluded}
+
+
+def test_legible_reviewed_window_is_preferred_without_rejecting_other_windows():
+    m=midia();n=need();_,w=A.preparar_lote(m,n,frame)
+    rows=[]
+    for i,(p,frames) in enumerate(w):
+        q=D.revisar_janela_visao(p,frames,lambda *_:response(True),permitir_chamada=True,evidencia_visual='movimento')
+        p['revisao_assistida']=q
+        p['diagnostico_tecnico']['quadros_grafismo_suspeito']=0
+        box=[.1,.1,.12,.12] if i!=1 else [.1,.1,.9,.9]
+        rows.append({'pacote':p,'midia':m,'decisao':{'estado':'PERTINENTE_PRIVADO','revisao_id':p['revisao_id'],'evidencia_direta_normalizada':{'bbox':box}}})
+    assert D.selecionar_revisados(rows,fato_id='f')[0]['ordem']==0
+    ordered=D.selecionar_revisados(rows,fato_id='f',preferir_legibilidade=True)
+    assert ordered[0]['ordem']==1 and len(ordered)==3
+    assert ordered[0]['preferencia_legibilidade_declarada'] is True
+    assert not ordered[0]['selecao']['prova_de_acao']
+    rows[1]['decisao']['revisao_id']='wrong'
+    assert D.selecionar_revisados(rows,fato_id='f',preferir_legibilidade=True)[0]['ordem']==0

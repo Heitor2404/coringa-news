@@ -46,7 +46,9 @@ def prioridade_memoria(n,row):
                 pk=window.get('pacote') or {};obs=pk.get('revisao_assistida') or {};decision=window.get('decisao') or {}
                 if obs.get('sha256_origem')!=row.get('sha256') or obs.get('necessidade_id')!=scope.get('id') or obs.get('publicar') is not False or decision.get('estado')!='PERTINENTE_PRIVADO' or decision.get('publicar') is not False or decision.get('direitos_aprovados') is not False:continue
                 if not pk.get('revisao_id') or decision.get('revisao_id')!=pk.get('revisao_id'):continue
-                if n.get('evidencia_visual')=='movimento' and (scope.get('evidencia_visual')!='movimento' or decision.get('prova_de_acao_continua') is not True):continue
+                if n.get('evidencia_visual')=='movimento':
+                    observed=obs.get('resposta_observada') or {};indices=observed.get('indices_mudanca')
+                    if scope.get('evidencia_visual')!='movimento' or observed.get('mudanca_observada') is not True or not isinstance(indices,list) or len(indices)!=2 or any(type(i) is not int for i in indices) or not 0<=indices[0]<indices[1]<=2 or len(str(observed.get('descricao_mudanca') or '').strip())<20:continue
                 if _tokens(n.get('mostrar')) and _tokens(n.get('mostrar'))==_tokens(scope.get('mostrar')) and _tokens(n.get('sujeito'))==_tokens(scope.get('sujeito')):scores.append(1.8)
             continue
         if not isinstance(scope,dict) or q.get('sha256_origem')!=row.get('sha256') or q.get('publicar') is not False or d.get('estado')!='PERTINENTE_PRIVADO' or d.get('direitos_aprovados') is not False or d.get('publicar') is not False:continue

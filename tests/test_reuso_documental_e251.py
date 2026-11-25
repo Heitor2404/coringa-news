@@ -116,12 +116,12 @@ def test_replay_thumbnail_rounding_uses_original_square_bounds():
 def test_video_memory_requires_observed_motion_for_motion_hint():
     n={'id':'new','sujeito':'planet','mostrar':'planet rotation','necessidade':'registro','evidencia_visual':'movimento'}
     sha='a'*64
-    d={'estado':'PERTINENTE_PRIVADO','publicar':False,'direitos_aprovados':False,'revisao_id':'r','prova_de_acao_continua':True}
-    obs={'sha256_origem':sha,'necessidade_id':'old','publicar':False}
+    d={'estado':'PERTINENTE_PRIVADO','publicar':False,'direitos_aprovados':False,'revisao_id':'r','prova_de_acao_continua':False}
+    obs={'sha256_origem':sha,'necessidade_id':'old','publicar':False,'resposta_observada':{'mudanca_observada':True,'indices_mudanca':[0,2],'descricao_mudanca':'Visible change across the sampled frames'}}
     rec={'publicar':False,'direitos_aprovados':False,'escopo_pesquisa':{**n,'id':'old'},'janelas':[{'pacote':{'revisao_id':'r','revisao_assistida':obs},'decisao':d}]}
     row={'tipo':'video','sha256':sha,'analises':{'x':rec}}
     assert R.prioridade_memoria(n,row)==1.8
-    d['prova_de_acao_continua']=False
+    obs['resposta_observada']['mudanca_observada']=False
     assert R.prioridade_memoria(n,row)==0
-    d['prova_de_acao_continua']=True
+    obs['resposta_observada']['mudanca_observada']=True
     assert R.prioridade_memoria({**n,'mostrar':'different action'},row)==0

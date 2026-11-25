@@ -1,4 +1,4 @@
-name: E264.9 - contrato de arquivo e memoria de video sem IA
+name: E264.9.1 - contrato de arquivo e pistas de mudanca observada sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

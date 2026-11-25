@@ -144,3 +144,5 @@ E289 (§344): E285.1 SUCCESS, E287.1 SUCCESS, 12 originais USGS e 84 janelas té
 E288 concluído tecnicamente (§345): 51 testes, 3 fotos/9,6s; n6 ganho de área, n3/n5 permanecem inadequadas no aproveitamento vertical. Opt-in privado, não homologado. E285.1 homologação técnica COMPLETA. E289 run 45686246801 em execução na consulta; candidato narrado ainda não avaliado.
 
 E289.1 (§346): run E289 restaurou acervo e ATLAS mas voz HTTP400 por systemInstruction; saldo voz 1/2. Corrigido contrato REST conhecido, preservação de voz bruta e recibo, teste de saldo persistente. Nova execução pendente, sem vídeo aprovado.
+
+E289.2 (§347): recuperação explícita de gravação bruta por SHA, roteiro e voz; nenhuma nova síntese/fallback no replay. Testes novos pendentes; E289.1 em curso na consulta, não iniciar render paralelo.

@@ -406,6 +406,29 @@ def diagnostico_extra(antes: list[str], estilo: str) -> str:
     return f'antes do roteiro a voz disse ({len(ouvidas)} palavras, {da_instrucao:.0%} da instrução): {causa} — "{" ".join(antes)[:120]}"'
 
 
+def recuperar_gravacao_gemini(caminho, destino, pedido, voz):
+    """Reuse only an explicitly selected recording with the exact request and voice.
+    No provider fallback. Verify bytes and PCM before copying into the normal pipeline.
+    """
+    import hashlib, shutil
+    origem=Path(caminho)
+    recibo=json.loads(origem.with_suffix('.json').read_text(encoding='utf8'))
+    if (recibo.get('publicar') is not False or recibo.get('modelo')!='gemini-3.8-flash-tts'
+            or recibo.get('voz')!=voz or recibo.get('estilo_externo') is not False
+            or recibo.get('pedido_sha256')!=hashlib.sha256(pedido.encode()).hexdigest()
+            or recibo.get('audio_sha256')!=hashlib.sha256(origem.read_bytes()).hexdigest()):
+        raise ValueError('TTS-RECUPERACAO-VINCULO')
+    with wave.open(str(origem),'rb') as f:
+        if (f.getnchannels(),f.getsampwidth(),f.getframerate())!=(1,2,24000) or f.getnframes()<24000:
+            raise ValueError('TTS-RECUPERACAO-PCM')
+    destino=Path(destino)
+    if origem.resolve()!=destino.resolve():
+        shutil.copyfile(origem,destino)
+        shutil.copyfile(origem.with_suffix('.json'),destino.with_suffix('.json'))
+    print('TTS recuperada: zero operações externas, gravação vinculada ao roteiro',flush=True)
+    return destino
+
+
 def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
     falas = [c['fala'] for c in cenas]
     # pedaços da mesma frase (planos da mesma ideia) seguem juntos, sem a pausa de parágrafo no meio da frase
@@ -414,10 +437,15 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
         sep = '' if k == 0 else (' ' if c.get('sub') else '\n\n')
         texto += sep + pronuncia(c.get('fala_tts') or c['fala'])
     motivo = ''
-    for tentativa in range(2):                         # grava; se não bater com o roteiro, grava de novo; depois desiste
+    recuperada=os.getenv('CORINGA_TTS_RECUPERAR')
+    for tentativa in range(1 if recuperada else 2):
         bruto = pasta / f'gemini{tentativa}.wav'
-        gemini_tts(texto, bruto, cfg.get('voz_gemini', 'Charon'), cfg.get('estilo_gemini', ESTILO_PADRAO),
-                   estilo_separado=bool(cfg.get('_estilo_separado')))
+        if recuperada:
+            pedido,_=pedido_tts(texto,cfg.get('estilo_gemini',ESTILO_PADRAO),bool(cfg.get('_estilo_separado')))
+            recuperar_gravacao_gemini(recuperada,bruto,pedido,cfg.get('voz_gemini','Charon'))
+        else:
+            gemini_tts(texto, bruto, cfg.get('voz_gemini', 'Charon'), cfg.get('estilo_gemini', ESTILO_PADRAO),
+                       estilo_separado=bool(cfg.get('_estilo_separado')))
         vel = float(cfg.get('velocidade_gemini', 1.1))
         rapido = pasta / f'gemini_rapido{tentativa}.wav'
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(bruto), '-af', f'atempo={vel}', '-ac', '1', str(rapido)], check=True)
@@ -451,7 +479,7 @@ def _narrar_gemini(cenas: list[dict], pasta: Path, cfg: dict):
         for f, ws in zip(falas, por_cena):
             caps += legendas(ws, destaques(f))
         return wav, tempos, caps, round(dur, 3)
-    raise RuntimeError(f'voz do Gemini reprovada 2 vezes ({motivo})')
+    raise RuntimeError(f'voz do Gemini reprovada ({motivo})')
 
 
 def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None = None, exigir_gemini: bool = False):
@@ -465,15 +493,15 @@ def narrar(cenas: list[dict], pasta: Path, teste: bool = False, cfg: dict | None
             raise ValueError('ATLAS: modo de teste não comprova a voz Gemini configurada')
         if cfg.get('voz_motor', 'gemini') != 'gemini':
             raise ValueError('ATLAS: o motor de voz configurado não é Gemini')
-        if not os.getenv('GEMINI_API_KEY'):
+        if not (os.getenv('GEMINI_API_KEY') or os.getenv('CORINGA_TTS_RECUPERAR')):
             raise RuntimeError('ATLAS: chave Gemini ausente; voz Edge não autorizada como fallback')
-    if not teste and cfg.get('voz_motor', 'gemini') == 'gemini' and os.getenv('GEMINI_API_KEY'):
+    if not teste and cfg.get('voz_motor', 'gemini') == 'gemini' and (os.getenv('GEMINI_API_KEY') or os.getenv('CORINGA_TTS_RECUPERAR')):
         try:
             r = _narrar_gemini(cenas, pasta, cfg)
             print(f"  [voz] Gemini ({cfg.get('voz_gemini', 'Charon')})")
             return r
         except Exception as e:
-            if exigir_gemini:
+            if exigir_gemini or os.getenv('CORINGA_TTS_RECUPERAR'):
                 raise RuntimeError('ATLAS: Gemini TTS indisponível; não substituo a voz pelo Edge sem aprovação') from e
             print(f'  [voz] Gemini indisponível ({str(e)[:120]}); usando a voz do Edge')
     if exigir_gemini:

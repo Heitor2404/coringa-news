@@ -42,3 +42,22 @@ def test_invalid_pcm_consumes_operation_and_never_produces_receipt(monkeypatch,t
         voz._tts_autorizada('roteiro',None,p,'Charon')
     assert not p.exists() and not p.with_suffix('.json').exists()
     assert O.saldo('tts-test')['operacoes_consumidas']==1
+
+
+def test_recover_exact_raw_voice_without_provider(monkeypatch,tmp_path):
+    raw=tmp_path/'raw.wav'
+    with wave.open(str(raw),'wb') as f:
+        f.setnchannels(1);f.setsampwidth(2);f.setframerate(24000);f.writeframes(b'\x01\x00'*24000)
+    pedido='Somente roteiro'
+    r={'publicar':False,'modelo':'gemini-3.8-flash-tts','voz':'Charon','estilo_externo':False,
+       'pedido_sha256':hashlib.sha256(pedido.encode()).hexdigest(),'audio_sha256':hashlib.sha256(raw.read_bytes()).hexdigest()}
+    raw.with_suffix('.json').write_text(json.dumps(r))
+    dst=tmp_path/'restaurada.wav'
+    assert voz.recuperar_gravacao_gemini(raw,dst,pedido,'Charon')==dst
+    assert dst.read_bytes()==raw.read_bytes()
+    for text,voice in [('outro roteiro','Charon'),(pedido,'Kore')]:
+        with pytest.raises(ValueError,match='VINCULO'):
+            voz.recuperar_gravacao_gemini(raw,dst,text,voice)
+    raw.write_bytes(raw.read_bytes()+b'x')
+    with pytest.raises(ValueError,match='VINCULO'):
+        voz.recuperar_gravacao_gemini(raw,dst,pedido,'Charon')

@@ -60,6 +60,9 @@ def sample(c,out,t):
     cap=26_000_000 if c['tipo']=='foto' else 80_000_000
     failures=[]
     for v in choices[:3]:
+        remaining=getattr(t,'max_bytes',cap)-getattr(t,'bytes',0)
+        if (v.get('size') or 0)>min(cap,remaining):
+            failures.append('LIMITE_DECLARADO_ANTES_HTTP');continue
         try:
             raw=t.get(v['url'],hosts,cap)
             if c.get('fonte')=='figshare':

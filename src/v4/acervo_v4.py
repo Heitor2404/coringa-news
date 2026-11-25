@@ -376,3 +376,20 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                 if added>=2:break
             report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
     return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
+
+
+def resolver_foto_commons(pagina,source_id):
+    """Refresh the declared full-size variants of a selected provider item.
+    Existing E272 contract, shared with the in-process E279 handoff."""
+    from urllib.parse import urlsplit,unquote
+    from src import acervo
+    u=urlsplit(pagina)
+    if u.scheme!='https' or u.hostname!='commons.wikimedia.org' or u.username or u.password or not u.path.startswith('/wiki/File:'):
+        raise ValueError('E272-PAGINA')
+    title=unquote(u.path.removeprefix('/wiki/')).replace('_',' ')
+    hits=acervo._commons_infos([title],'Commons')
+    raw=next((v for v in hits if v.get('source_id')==source_id and v.get('pagina')==pagina),None)
+    c=_candidato_documental(raw,'commons','foto')
+    if not c or c['direitos']!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA':
+        raise ValueError('E272-DIREITOS_OU_IDENTIDADE')
+    return c

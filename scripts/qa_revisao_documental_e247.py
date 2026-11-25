@@ -337,7 +337,7 @@ def main():
                 if replay or revisar_acervo or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 # The no-vision preview run never acquires a master. Keep normal
                 # resolution variants for any run that can inspect full media.
-                providers=(lambda tipo:A.fontes_documentais(tipo,pretriagem=True)) if preview_pending and budget==0 else None
+                providers=(lambda tipo:A.fontes_documentais(tipo,pretriagem=True)) if preview_pending and (budget==0 or n['id'] in reserved) else None
                 r=A.pesquisar_cobertura(n,biblioteca=lib,fontes=providers,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
@@ -411,6 +411,10 @@ def main():
                                 chain_status.append({'id':n['id'],'estado':'SEM_PRIORIDADE_OU_SALDO','publicar':False});continue
                             try:
                                 c=candidato_priorizado(n,choice,byid[n['id']],states[n['id']]['pendentes'])
+                                fresh=A.resolver_foto_commons(c['pagina'],c['source_id'])
+                                # The preview is not a final variant. Preserve
+                                # provenance and refresh provider-declared sizes.
+                                c.update(fresh)
                                 # One formal call per chosen asset before any
                                 # refinements: protect later obligations.
                                 ceiling=budget;budget=min(budget,calls+1)

@@ -45,11 +45,7 @@ def main():
             row={'id':n['id'],'pagina':a['pagina'],'preview_sha256':a['preview_sha256'],'publicar':False}
             old=t.max_bytes;t.max_bytes=t.bytes+(old-t.bytes)//(len(selected)-idx)
             try:
-                title=unquote(urlsplit(a['pagina']).path.removeprefix('/wiki/')).replace('_',' ')
-                hits=acervo._commons_infos([title],'Commons')
-                raw=next(v for v in hits if v.get('source_id')==a['source_id'] and v.get('pagina')==a['pagina'])
-                c=A._candidato_documental(raw,'commons','foto')
-                if not c or c['direitos']!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA':raise ValueError('E272-DIREITOS')
+                c=A.resolver_foto_commons(a['pagina'],a['source_id'])
                 meta,im,p=Q.sample(c,assets,t,progressivo=True,max_variantes=2)
                 if PF.licenca_documental(c,meta) is None or meta['bytes']>P.MAX_TOTAL:raise ValueError('E272-PROCEDENCIA')
                 h=meta['sha256']

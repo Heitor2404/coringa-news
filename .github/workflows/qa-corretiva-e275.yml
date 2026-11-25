@@ -1,4 +1,4 @@
-name: E279 - regressao do encadeamento documental
+name: E279.1 - prova integrada do encadeamento sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

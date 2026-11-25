@@ -158,3 +158,60 @@ def test_observed_priority_uses_formal_review_and_preserves_rounds():
     assert result['estado']=='LACUNA_PENDENTE' and result['tentativas']==1
     result=revisar_prioridade(n,row,c,lambda *_:{'estado':'PERTINENTE_PRIVADO','necessidade_id':'n','revisao_id':'formal','publicar':False,'direitos_aprovados':False},lambda:True)
     assert result['estado']=='CANDIDATO_PRIVADO_REVISADO' and result['rodadas'][-1]['pesquisa']['candidatos'][0]['decisao']['revisao_id']=='formal'
+
+
+def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(tmp_path,monkeypatch):
+    import io,json,sys
+    from PIL import Image
+    from src.v4 import acervo_v4 as A
+    from src import acervo,gemini
+    from scripts import qa_revisao_documental_e247 as E247
+    case={'id':'fixture','tema':'controlled documentary','fatos':[{'id':'f','tipo':'pedido_visual_de_teste'}],
+        'necessidades':[{'id':'n','fatos':['f'],'sujeito':'mountain','mostrar':'mountain structure','necessidade':'registro','evidencia_visual':'estatica','consultas_en':['mountain structure','mountain landscape']}]}
+    spec=tmp_path/'spec.json';spec.write_text(json.dumps({'publish':False,'cases':[case]}))
+    out=tmp_path/'review'
+    page='https://commons.wikimedia.org/wiki/File:Fixture.jpg'
+    original='https://upload.wikimedia.org/fixture-master.jpg';thumb='https://thumb.wikimedia.org/fixture-preview.jpg'
+    raw={'titulo':'mountain structure','desc':'mountain landscape','url_original':original,'url':thumb,'pagina':page,'source_id':11,'licenca':'CC BY 4.0','credito':'Fixture author (CC BY 4.0)','w':1200,'h':900,'variantes':[{'url':thumb,'width':640,'height':480}]}
+    widths=[]
+    def sources(kind,*,pretriagem=False):
+        widths.append((kind,pretriagem))
+        return [('commons',lambda _: [raw])] if kind=='foto' else []
+    monkeypatch.setattr(A,'fontes_documentais',sources)
+    monkeypatch.setattr(acervo,'_commons_infos',lambda *args,**kwargs:[{**raw,'variantes':[]}])
+    def jpeg(size,color):
+        b=io.BytesIO();Image.new('RGB',size,color).save(b,format='JPEG');return b.getvalue()
+    downloads=[]
+    class Transport:
+        def __init__(self,**kw):
+            self.http=0;self.bytes=0;self.max_http=kw['max_http'];self.max_bytes=kw['max_bytes']
+        def get(self,url,hosts,lim):
+            downloads.append(url);self.http+=1
+            assert url in (thumb,original)
+            b=jpeg((640,480),'blue') if url==thumb else jpeg((1200,900),'green')
+            self.bytes+=len(b);return b
+        def resumo(self):return {'http':self.http,'bytes':self.bytes}
+    monkeypatch.setattr(E247,'Transporte',Transport)
+    calls=[]
+    def model(prompt,images,**kw):
+        calls.append(prompt)
+        if 'miniaturas anexadas' in prompt:
+            return {'observacoes':[{'indice':0,'decisao':'PRIORIZAR_AQUISICAO','observacao':'Controlled preview observation.'}]}
+        return {'veredito':'pertinente','natureza_visual':'registro_compativel','inspecao':'Controlled formal observation of the acquired image.'}
+    monkeypatch.setattr(gemini,'json_visao',model)
+    for k in ('CORINGA_PACOTE_PRIVADO','CORINGA_CHECKPOINTS_DESCOBERTOS'):
+        monkeypatch.delenv(k,raising=False)
+    monkeypatch.setenv('CORINGA_LIMITE_VISAO_DOCUMENTAL','2')
+    monkeypatch.setattr(sys,'argv',['qa',str(spec),str(out),'fixture','--progressiva','--multicenas','--pretriagem-pendente','--revisar-previas','--encadear-previas'])
+    E247.main()
+    report=json.loads((out/'revisao.json').read_text())
+    obs=json.loads((out/'observacoes-previas.json').read_text())
+    assert downloads==[thumb,original] and len(calls)==2
+    assert ('foto',True) in widths
+    assert report['visao_chamadas_logicas']==report['visao_limite']==2
+    row=report['cobertura'][0]
+    assert row['estado']=='CANDIDATO_PRIVADO_REVISADO'
+    c=row['rodadas'][-1]['pesquisa']['candidatos'][0]
+    assert c['aquisicao']['width']==1200 and c['aquisicao']['url_adquirida']==original
+    assert c['aquisicao']['sha256']!=obs['observacoes'][0]['preview_sha256']
+    assert obs['cobertura_nova']==0 and report['publish'] is False and c['decisao']['direitos_aprovados'] is False

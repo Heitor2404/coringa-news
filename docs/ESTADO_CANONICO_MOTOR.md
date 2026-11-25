@@ -61,3 +61,6 @@ E278 f420aeb: [prova](https://github.com/Heitor2404/coringa-news/actions/runs/45
 
 ### E279 — encadeamento no E247
 Modo opt-in --encadear-previas reserva saldo existente, observa miniaturas e passa candidato vinculado à revisão formal existente na mesma execução; não promove prévia, preserva movimento/ATLAS. Implementado, regressão pendente; visão real e qualidade final não homologadas. §324.
+
+### E279.1 — aquisição de resolução normal após prévia
+Compartilhado resolvedor E272/E279, preview reduzido nas necessidades reservadas e reconsulta de variantes somente para a escolha. Teste do E247.main com dados controlados, duas chamadas simuladas dentro do teto; validação pendente. Não declarar autonomia real. §325.

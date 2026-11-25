@@ -14,14 +14,23 @@ def main():
     case=next(c for c in spec['cases'] if c['id']==caseid)
     out.mkdir(parents=True,exist_ok=True);assets=out/'originais';assets.mkdir(exist_ok=True)
     progressive='--progressiva' in sys.argv[4:]
+    replay='--replay-privado' in sys.argv[4:]
+    if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     from src.v4.formatos import reuso_documental as RE
     from src.v3 import pacote_biblioteca as PB
     pack=os.getenv('CORINGA_PACOTE_PRIVADO')
+    if replay and not pack:raise ValueError('E259-PACOTE')
     if pack:
-        lib.fechar()
-        lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca',restaurar_analises_privadas=progressive)
+        reports_restore=[]
+        for directory in pack.split(os.pathsep):
+            lib.fechar()
+            lib,rest=PB.restaurar(directory,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca',restaurar_analises_privadas=progressive)
+            reports_restore.append(rest)
+        if len(reports_restore)>1:
+            rest={'pacotes':reports_restore,'originais_restaurados':sum(x['originais_restaurados'] for x in reports_restore),
+                  'analises_restauradas':sum(x.get('analises_restauradas',0) for x in reports_restore),'direitos_aprovados':False}
     integral='--integral' in sys.argv[4:]
     qualidade='--qualidade' in sys.argv[4:]
     if integral or qualidade:
@@ -33,7 +42,7 @@ def main():
     multi='--multicenas' in sys.argv[4:]
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
-    budget=min(20,len(tri)+2) if integral else 4 if multi else 2
+    budget=0 if replay else min(20,len(tri)+2) if integral else 4 if multi else 2
     telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
@@ -44,7 +53,8 @@ def main():
     def inspect(c,n):
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
-        if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
+        if replay and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
+        if calls>=budget and not (progressive and c.get('fonte')=='biblioteca_v3'):return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
         if c.get('fonte') not in ('nasa','nasa_video','archive_video','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
@@ -97,6 +107,7 @@ def main():
                         cache_hits+=1;c['revisao_reutilizada']=True
                     except (ValueError,KeyError,TypeError):
                         q=R.revisar_foto(m,im,n,ask)
+                elif replay:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
@@ -132,9 +143,13 @@ def main():
                             continue
                         except (ValueError,TypeError,KeyError,AttributeError):pass
                     fresh.append((i,pk,frames))
+                if replay and fresh:
+                    c['janelas_cache_ausentes']=[pk['revisao_id'] for _,pk,_ in fresh]
+                    fresh=[]
+                if replay and not entries:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 fresh_result=DE.revisar_janelas_lote([(pk,frames) for _,pk,frames in fresh],ask,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False)) if fresh else {'janelas':[],'chamadas_logicas':0,'imagens_enviadas':0}
                 for (i,_,_),row in zip(fresh,fresh_result['janelas']):entries[i]=row
-                batch={**fresh_result,'janelas':[entries[i] for i in range(len(windows))]}
+                batch={**fresh_result,'janelas':[entries.get(i,{'falha':'CACHE_AUSENTE_SEM_NOVA_IA'}) for i in range(len(windows))]}
             except Exception as e:
                 for pack,frames in windows:boards.append((c,frames,'FALHA_VISAO_LOTE'))
                 return {'estado':'FALHA_VISAO','motivo':type(e).__name__+':'+str(e)[:100]}
@@ -214,6 +229,7 @@ def main():
                     if local:
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
+                if replay:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
@@ -238,8 +254,8 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:total_search<phase_limit,
-                        pode_inspecionar=lambda:calls<budget and (phase==1 or calls==start),
+                        pode_buscar=lambda:(nid not in local_checked) if replay else total_search<phase_limit,
+                        pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st)
                     results_by_id[nid]=row
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
@@ -280,7 +296,7 @@ def main():
             for n,r in zip(tri,reports):
                 results.append(D.revisar_cobertura_documental(n,r,inspect,max_candidatos=6))
     finally:
-        if progressive:
+        if progressive and not replay:
             lib.exportar_manifesto(out/'manifesto-revisoes.jsonl')
             (out/'ids-adquiridos.json').write_text(json.dumps(sorted(saved_ids)))
             import shutil
@@ -297,7 +313,7 @@ def main():
         lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

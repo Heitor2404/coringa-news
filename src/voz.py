@@ -124,15 +124,31 @@ def _tts_autorizada(pedido,sistema,wav,voz):
     O.abrir(autorizacao,limite_logico=2,limite_operacoes=2,max_operacoes_por_chamada=1)
     ticket=O.reservar(autorizacao,'sintese-voz',limite_finalidade=2)
     ok=False
+    motivo=None
     try:
-        pcm=_rest_tts('gemini-3.8-flash-tts',pedido,voz,'antigo',sistema=sistema)
+        # This REST model has already rejected systemInstruction (400).
+        # Preserve the established legacy fallback: only the actual spoken script.
+        # Never inject the style prompt into contents, nor spend a trial on it.
+        pcm=_rest_tts('gemini-3.8-flash-tts',pedido,voz,'antigo',sistema=None)
+        if not isinstance(pcm,bytes) or len(pcm)<48000 or len(pcm)%2:
+            raise ValueError('TTS-PCM-INVALIDO')
         with wave.open(str(wav),'wb') as f:
             f.setnchannels(1);f.setsampwidth(2);f.setframerate(24000);f.writeframes(pcm)
         ok=True
+        import hashlib
+        # Bind the raw recording before transcription or rendering can fail.
+        receipt={'publicar':False,'modelo':'gemini-3.8-flash-tts','voz':voz,
+                 'pedido_sha256':hashlib.sha256(pedido.encode()).hexdigest(),
+                 'audio_sha256':hashlib.sha256(Path(wav).read_bytes()).hexdigest(),
+                 'autorizacao':autorizacao,'estilo_externo':False}
+        Path(wav).with_suffix('.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2),encoding='utf8')
         print('TTS autorizada: uma operação na cota configurada',flush=True)
         return wav
+    except Exception as ex:
+        motivo=type(ex).__name__+': '+str(ex)[:160] if isinstance(ex,(ValueError,RuntimeError)) else type(ex).__name__
+        raise
     finally:
-        print('TTS saldo',O.liquidar(autorizacao,ticket['id'],operacoes=1,ok=ok),flush=True)
+        print('TTS saldo',O.liquidar(autorizacao,ticket['id'],operacoes=1,ok=ok,motivo=motivo),flush=True)
 
 
 def _estilo(e: str) -> str:

@@ -2484,6 +2484,32 @@
       "tags": [
         "orcamento"
       ]
+    },
+    {
+      "id": "ERR-098",
+      "titulo": "TTS limitada perdeu fallback de systemInstruction",
+      "data": "2026-11-25",
+      "versao": "E289.1",
+      "sintoma": "Run 45686246801 HTTP400 Developer instruction is not enabled for this model",
+      "causa_raiz": "Caminho de TTS autorizada enviava systemInstruction ao modelo REST apesar de incompatibilidade já tratada no caminho histórico.",
+      "arquivos": [
+        "src/voz.py",
+        ".github/workflows/qa-piloto-integral-e289.yml"
+      ],
+      "correcao": "Enviar apenas roteiro ao modelo comprovado, reservar operação persistente, validar PCM, guardar áudio bruto e recibo mesmo se etapa posterior falhar.",
+      "testes": [
+        "tests/test_tts_autorizada_e289.py::test_tts_rest_preserves_last_reservation_and_never_sends_unsupported_system",
+        "tests/test_tts_autorizada_e289.py::test_invalid_pcm_consumes_operation_and_never_produces_receipt"
+      ],
+      "gravidade": "alta",
+      "estado": "parcial",
+      "verificavel": true,
+      "referencia": "E289 run 45686246801; E289.1 validação pendente",
+      "tags": [
+        "voz",
+        "orcamento",
+        "checkpoint"
+      ]
     }
   ]
 }

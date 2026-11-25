@@ -142,3 +142,5 @@ E288 (§343): alternativa privada de crop foto baseada em bbox explícita e vinc
 E289 (§344): E285.1 SUCCESS, E287.1 SUCCESS, 12 originais USGS e 84 janelas técnicas preservadas; prova de acervo inspecionada. Candidato Havaí assistido com voz Charon limitada a 2 operações gratuitas em livro próprio, zero visão, restore por SHA, render e inspeção pendentes. Não publicar automaticamente.
 
 E288 concluído tecnicamente (§345): 51 testes, 3 fotos/9,6s; n6 ganho de área, n3/n5 permanecem inadequadas no aproveitamento vertical. Opt-in privado, não homologado. E285.1 homologação técnica COMPLETA. E289 run 45686246801 em execução na consulta; candidato narrado ainda não avaliado.
+
+E289.1 (§346): run E289 restaurou acervo e ATLAS mas voz HTTP400 por systemInstruction; saldo voz 1/2. Corrigido contrato REST conhecido, preservação de voz bruta e recibo, teste de saldo persistente. Nova execução pendente, sem vídeo aprovado.

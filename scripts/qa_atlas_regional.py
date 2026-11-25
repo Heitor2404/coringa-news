@@ -7,23 +7,7 @@ from scripts import formatos_raster as R
 from scripts import qa_documentario_geografia_e219 as E
 
 def regional_base(name,bbox,z):
-    # Existing NASA GIBS source and existing registered commercial-use dataset.
-    if not 4<=z<=8:raise ValueError('zoom fora do produto NASA')
-    x0,y0=R.tile_xy(bbox[0],bbox[3],z)
-    x1,y1=R.tile_xy(bbox[2],bbox[1],z)
-    if (int(x1)-int(x0)+1)*(int(y1)-int(y0)+1)>100:
-        raise ValueError('região de teste excede orçamento de tiles')
-    im,corners=R.mosaico(R.BMNG_BATI,bbox,z,'RGB')
-    out=E.A.RASTER_DIR;out.mkdir(parents=True,exist_ok=True)
-    img=out/(name+'.jpg')
-    im.save(img,quality=94)
-    meta={'nome':name,'tipo':'satelite','cantos':corners,'px':list(im.size),
-          'px_por_grau_fonte':256*2**z/360,'arquivo':img.name,'dataset':'bmng',
-          'atribuicao':'Imagem: NASA Blue Marble',
-          'fonte':{'url':R.BMNG_BATI,'licenca':'Domínio público (NASA)','zoom_tiles':z,'bbox_pedido':bbox},
-          'sha256':E.sha(img)}
-    E.write(out/(name+'.json'),meta)
-    return meta
+    return R.registrar_base_regional(name,bbox,z,'bmng')
 
 def main():
     out=Path('qa_atlas_regional');out.mkdir(exist_ok=True)

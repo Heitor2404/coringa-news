@@ -172,7 +172,7 @@ def credito_em_tela(credito):
     or invent attribution. Full credit and source page remain in media.
     """
     if not isinstance(credito,str):return credito
-    if credito.endswith(', Wikimedia Commons') and ' — ' in credito:
+    if credito.endswith((', Wikimedia Commons',', via Wikimedia Commons')) and ' — ' in credito:
         title,author=credito.rsplit(' — ',1)
         if title.strip() and author.strip():return author
     return credito

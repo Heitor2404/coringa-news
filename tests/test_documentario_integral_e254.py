@@ -84,3 +84,8 @@ def test_usgs_curated_page_receipt_private_and_bound():
     class Restricted(T):
         def get(self,*args):return super().get(*args).replace(b'Public Domain',b'Copyright')
     with pytest.raises(ValueError,match='USGS-LICENCA'):usgs_receipt(c,Restricted())
+
+def test_credit_compacts_actual_commons_suffix_without_truncating_attribution():
+    from src.v4.formatos.ponte_cobertura_filme import credito_em_tela
+    assert credito_em_tela('"Landscape" — Author Name (CC BY 2.0), via Wikimedia Commons')=='Author Name (CC BY 2.0), via Wikimedia Commons'
+    assert credito_em_tela('Archive — Full institutional credit')=='Archive — Full institutional credit'

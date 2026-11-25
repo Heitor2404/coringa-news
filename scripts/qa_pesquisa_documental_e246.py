@@ -46,6 +46,11 @@ def sample(c,out,t):
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte']=='nasa' and c['tipo']=='foto':
         choices=nasa_receipt(c,t);hosts={'images-assets.nasa.gov'}
+    elif c.get('fonte')=='figshare':
+        from src.v4.fontes_cientificas import HOSTS,safe_url
+        rec=c.get('recibo_cientifico') or {}
+        if c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or rec.get('provedor')!='figshare' or not safe_url(c['url'],HOSTS):raise ValueError('FIGSHARE_RECIBO')
+        choices=[{'url':c['url']}];hosts=HOSTS
     elif c['direitos']=='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA':
         choices=list(variants(c));hosts={'upload.wikimedia.org'}
     else:raise ValueError('PAGINA_PENDENTE')
@@ -54,6 +59,9 @@ def sample(c,out,t):
     for v in choices[:3]:
         try:
             raw=t.get(v['url'],hosts,cap)
+            if c.get('fonte')=='figshare':
+                rec=c['recibo_cientifico']
+                if len(raw)!=rec.get('bytes') or hashlib.md5(raw).hexdigest()!=rec.get('md5_declarado'):raise ValueError('FIGSHARE_INTEGRIDADE')
             sha=hashlib.sha256(raw).hexdigest()
             if c['tipo']=='foto':
                 with Image.open(io.BytesIO(raw)) as im:
@@ -63,7 +71,7 @@ def sample(c,out,t):
                 path=out/(sha+ext);path.write_bytes(raw)
                 meta={'width':w,'height':h,'duration_s':None}
             else:
-                path=out/(sha+('.webm' if urlsplit(v['url']).path.lower().endswith('.webm') else '.mp4'))
+                path=out/(sha+('.webm' if urlsplit(v['url']).path.lower().endswith('.webm') else '.mov' if c.get('recibo_cientifico',{}).get('file_name','').lower().endswith('.mov') else '.mp4'))
                 path.write_bytes(raw)
                 w,h,dur=E.probe(path)
                 if min(w,h)<360 or dur<3:raise ValueError('VIDEO_QUALIDADE')

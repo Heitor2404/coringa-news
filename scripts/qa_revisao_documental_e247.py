@@ -1,5 +1,5 @@
 """E247 private pilot, reuse E246 acquisition and E238-E244 video observations."""
-import hashlib,sys
+import hashlib,sys,os
 from pathlib import Path
 from PIL import Image,ImageDraw
 from scripts import qa_pesquisa_documental_e246 as Q
@@ -15,9 +15,15 @@ def main():
     out.mkdir(parents=True,exist_ok=True);assets=out/'originais';assets.mkdir(exist_ok=True)
     tri=D.triagem_documental(case['necessidades'],case['fatos'])
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
+    from src.v4.formatos import reuso_documental as RE
+    from src.v3 import pacote_biblioteca as PB
+    pack=os.getenv('CORINGA_PACOTE_PRIVADO')
+    if pack:
+        lib.fechar()
+        lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     t=Transporte(max_http=14,max_bytes=140_000_000,max_wait=30)
     adaptive='--adaptativa' in sys.argv[4:]
-    budget=2;calls=0;boards=[];results=[];seen_bytes=set()
+    budget=2;calls=0;boards=[];results=[];seen_bytes=set();reuses=0
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -25,10 +31,14 @@ def main():
         from src import gemini
         return gemini.json_visao(prompt,images,leve=True)
     def inspect(c,n):
+        nonlocal reuses
         if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
-        if c.get('fonte')!='nasa' and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
+        if c.get('fonte') not in ('nasa','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
-        try:meta,im,p=Q.sample(c,assets,t)
+        try:
+            if c.get('fonte')=='biblioteca_v3':
+                meta,im,p=RE.amostra(lib,c,probe=E.probe,frame=E.frame);reuses+=1
+            else:meta,im,p=Q.sample(c,assets,t)
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
@@ -77,6 +87,7 @@ def main():
             reports=[]
             def search(n,limit):
                 r=D.pesquisar_triagem([n],biblioteca_global=lib,max_buscas=limit)[0]
+                if pack:r['candidatos']=RE.candidatos(lib,n)+r['candidatos']
                 reports.append(r);return r
             for n in tri:
                 results.append(R.cobertura_adaptativa(n,search,inspect,
@@ -88,7 +99,7 @@ def main():
     finally:lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'modo_adaptativo':adaptive,'reuso_bytes_validado':False,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'modo_adaptativo':adaptive,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

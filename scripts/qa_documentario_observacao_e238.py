@@ -18,29 +18,35 @@ def main():
         budget=int(args[1])
         if not 1<=budget<=4:raise ValueError('E241-BUDGET')
     attempted=0
-    report=[];rows=[]
+    report=[];rows=[];reviewed=[]
     for need in spec['needs']:
         for item in need['sources']:
             row={'need':need['id'],'slug':item['slug'],'status':'PENDING','windows':[]}
             try:
                 m=E.acquire((item['slug'],item['label']))
                 if E.sha(Path(m['local_source']))!=m['expected_sha256']:raise ValueError('SOURCE_SHA')
-                for t,_ in E.windows(m,3.8,review_technical=True)[:2]:
+                for wi,(t,_) in enumerate(E.windows(m,3.8,review_technical=True)[:2]):
                     samples=[E.frame(m['local_source'],t+3.8*f) for f in (.12,.5,.86)]
                     packet=D.pacote_observacao(m,t,3.8,samples,fato_id=need['id'],
                         necessidade=need['description']+' | '+item['note'])
                     packet['diagnostico_tecnico']=D.diagnosticar_janela(samples)
-                    if attempted<budget:
+                    # One reviewed candidate per source spreads the pilot across needs.
+                    if wi==0 and attempted<budget:
                         attempted+=1
                         try:packet['revisao_assistida']=D.revisar_janela_visao(packet,samples,permitir_chamada=True)
                         except Exception as e:packet['revisao_assistida']={'estado':'FALHA','tipo':type(e).__name__}
                     row['windows'].append(packet)
+                    if packet.get('revisao_assistida',{}).get('resposta_observada'):
+                        reviewed.append({'pacote':packet,'midia':m,'assinatura':D.assinatura_janela(samples)})
                     rows.append((packet,item,samples))
                 row['status']='SAMPLED' if row['windows'] else 'NO_ELIGIBLE_WINDOW'
                 row['source']={k:m[k] for k in ('page','expected_sha256','width','height','duration_s')}
             except Exception as e:row.update(status='REJECTED',error=str(e)[:200])
             report.append(row)
             print('E238 REVIEW',row['slug'],row['status'],len(row['windows']),flush=True)
+    selections={n['id']:D.selecionar_revisados([c for c in reviewed if c['pacote']['fato_id']==n['id']],fato_id=n['id']) for n in spec['needs']}
+    E.write(out/'selection.json',{'publish':False,'semantic_review':'PENDING_HUMAN','selections':selections})
+    print('E242 VISION',attempted,'valid',len(reviewed),'pertinent',sum(map(len,selections.values())),flush=True)
     E.write(out/'review.json',{'publish':False,'records':report,'semantic_review':'PENDING','vision_logical_budget':budget,'vision_logical_attempts':attempted})
     if not rows:raise ValueError('NO_REVIEW_WINDOWS')
     # One chronological row per window, three unaltered samples at known times.
@@ -52,7 +58,8 @@ def main():
         for i,(packet,item,frames) in enumerate(chunk):
             y=i*250
             diag=packet['diagnostico_tecnico']
-            draw.text((12,y+5),item['label']+' | '+packet['revisao_id'][:12]+' | cards? '+str(diag['quadros_grafismo_suspeito'])+' | barras? '+str(diag['barras_candidatas']),fill='white')
+            verdict=packet.get('revisao_assistida',{}).get('veredito','PENDENTE')
+            draw.text((12,y+5),item['label']+' | '+packet['revisao_id'][:12]+' | cards? '+str(diag['quadros_grafismo_suspeito'])+' | barras? '+str(diag['barras_candidatas'])+' | '+verdict,fill='white')
             for j,(im,a) in enumerate(zip(frames,packet['amostras'])):
                 copy=im.copy();copy.thumbnail((350,198))
                 x=j*360+5

@@ -1,2 +1,2 @@
-{"prova": "acao", "fase": "visao", "limite_chamadas": 2, "publicar": false,
- "nota": "Prévia 45665284919 inspecionada: a varredura do clipe Apollo (câmera E-8 na base) encontrou janelas de atividade (chamas, fumaça, torres), mas o ângulo não mostra o veículo se elevando. O motor agora deixa esse arquivo de biblioteca (3 negativas revisadas) atrás de candidatos novos. Até 2 chamadas da autorização E284-visao-8 (finalidade filmagem_acao)."}
+{"prova": "geleiras", "fase": "visao", "limite_chamadas": 6, "publicar": false,
+ "nota": "Geleiras: 15 coberturas por checkpoint (sem visão) e até 6 chamadas da autorização E284-visao-8 (finalidade geleiras) para n16–n18; narração Gemini TTS (cota gratuita) só se cobertura >=60 s; render, QA, cofre e Telegram privados."}

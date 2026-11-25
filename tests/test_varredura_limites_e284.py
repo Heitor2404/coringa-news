@@ -194,3 +194,14 @@ def test_arquivo_da_biblioteca_com_negativas_repetidas_cede_lugar_a_candidato_no
     R.fila_cobertura(n, [poucos, novo], lambda c, _n: ordem.append(c['source_id']) or {'estado': 'INSUFICIENTE'},
                      priorizar_novos=True)
     assert ordem[0] == 'apollo'
+
+
+def test_mesmos_bytes_de_outra_fonte_nao_ganham_nova_chamada_antes_de_candidatos_novos():
+    """Run 45666408862: o clipe Apollo voltou pelo Commons (mesmo SHA da biblioteca) e recebeu a 2ª chamada.
+    O E247 adia nova chamada em arquivo com >=3 negativas revisadas para a necessidade enquanto não é a última fase."""
+    from pathlib import Path
+    code = (Path(__file__).resolve().parents[1] / 'scripts/qa_revisao_documental_e247.py').read_text()
+    bloco = code[code.index('# E284: the SAME BYTES'):code.index('cached_starts=set();cached_exact={}')]
+    assert "n['evidencia_visual']=='movimento' and phase<1" in bloco and 'negs>=3' in bloco
+    assert "ADIADO_ANGULO_COM_NEGATIVAS_REVISADAS" in bloco and "c['revisao_adicional_possivel']=True" in bloco
+    assert "'angulos_adiados':deferred_angles" in code

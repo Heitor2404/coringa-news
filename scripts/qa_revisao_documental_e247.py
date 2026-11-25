@@ -89,7 +89,7 @@ def main():
     global_http,global_bytes=t.max_http,t.max_bytes
     hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
     t.max_http-=hold_http;t.max_bytes-=hold_bytes
-    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];deferred_angles=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     autorizacao=os.getenv('CORINGA_AUTORIZACAO_VISAO')
     if autorizacao and not replay and budget>0:
         # E284: persistent authorization; never more than its remaining logical/operation balance.
@@ -246,6 +246,16 @@ def main():
             from src.v4.formatos import amostragem_documental as AD
             key=(n['id'],meta['sha256'])
             history=window_history.setdefault(key,{'exploracao':None,'vistos':set(),'janelas':[]}) if progressive else {'exploracao':None,'vistos':set(),'janelas':[]}
+            # E284: the SAME BYTES may come back from another source (library + Commons). Before a NEW call on a file whose
+            # reviewed windows for this need are repeatedly negative (any session/source), defer it while other candidates
+            # may still be explored; the last phase can still return to it. No call, no semantic negative.
+            if progressive and not cache_only and calls<budget and n['evidencia_visual']=='movimento' and phase<1:
+                negs=sum(1 for row in AD.consolidar_janelas((cached or {}).get('janelas',[]),history['janelas'])
+                         if (row.get('decisao') or {}).get('motivo') in ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA'))
+                if negs>=3:
+                    c['negativas_revisadas']=negs;c['revisao_adicional_possivel']=True
+                    deferred_angles.append({'necessidade_id':n['id'],'sha256':meta['sha256'],'negativas':negs,'fonte':c.get('fonte')})
+                    return {'estado':'ORCAMENTO','motivo':'ADIADO_ANGULO_COM_NEGATIVAS_REVISADAS'}
             cached_starts=set();cached_exact={}
             if progressive and (cache_only or calls>=budget):
                 for old_row in (cached or {}).get('janelas',[]):
@@ -547,7 +557,7 @@ def main():
     if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status,'encadeamento':chain_status,'reservadas':sorted(reserved)})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'angulos_adiados':deferred_angles,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

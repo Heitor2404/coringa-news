@@ -1,9 +1,10 @@
 """E253: shared budgets and coverage reporting for a complete set of obligations.
 No rendering or automatic approval. Geographic obligations remain with ATLAS.
 """
+from contextlib import nullcontext
 from .revisao_documental import cobertura_adaptativa
 
-def cobrir(necessidades,pesquisar,inspecionar,medir,*,max_visao,max_http,max_bytes):
+def cobrir(necessidades,pesquisar,inspecionar,medir,*,max_visao,max_http,max_bytes,limitar_aquisicao=None):
     if not necessidades or len({n['id'] for n in necessidades})!=len(necessidades):raise ValueError('E253-IDS')
     for x in (max_visao,max_http,max_bytes):
         if type(x) is not int or x<=0:raise ValueError('E253-ORCAMENTO')
@@ -29,7 +30,9 @@ def cobrir(necessidades,pesquisar,inspecionar,medir,*,max_visao,max_http,max_byt
             local={k:now[k]-before[k] for k in limits}
             return local['visao']<min(cap['visao'],phase+1) and local['http']<cap['http'] and local['bytes']<cap['bytes']
         if all(cap.values()):
-            result=cobertura_adaptativa(n,pesquisar,inspecionar,allowed)
+            scope=limitar_aquisicao(before['http']+cap['http'],before['bytes']+cap['bytes']) if limitar_aquisicao else nullcontext()
+            with scope:
+                result=cobertura_adaptativa(n,pesquisar,inspecionar,allowed)
         else:
             result={'estado':'LACUNA_PENDENTE','rodadas':[],'tentativas':0,'pronto_para_render':False,'publicar':False}
         after=medir()

@@ -53,6 +53,9 @@ def sample(c,out,t):
         choices=[{'url':c['url']}];hosts=HOSTS
     elif c['direitos']=='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA':
         choices=list(variants(c));hosts={'upload.wikimedia.org'}
+        if c['fonte']=='commons' and c['tipo']=='foto':
+            # Exact Wikimedia thumbnail host, only URLs already declared by the file API.
+            hosts.add('thumb.wikimedia.org')
     else:raise ValueError('PAGINA_PENDENTE')
     cap=26_000_000 if c['tipo']=='foto' else 80_000_000
     failures=[]

@@ -68,3 +68,22 @@ def test_legacy_thumbnail_cannot_satisfy_motion():
     r=A.pesquisar_cobertura(n,biblioteca=B(),fontes=lambda t:[],inspecionar=inspector)
     assert r['biblioteca'][0]['estado']=='MINIATURA_NAO_E_VIDEO'
     assert r['estado']!='CANDIDATO_PRIVADO_REVISADO'
+
+def test_nasa_receipt_legacy_http_upgrade_and_exact_host():
+    import json
+    from scripts.qa_pesquisa_documental_e246 import nasa_receipt
+    class T:
+        def get(self,url,hosts,lim):
+            assert url=='https://images-api.nasa.gov/asset/PIA123'
+            return json.dumps({'collection':{'items':[{'href':u} for u in [
+                'http://images-assets.nasa.gov/image/PIA123/~medium.jpg',
+                'https://images-assets.nasa.gov/image/PIA123/~medium.jpg',
+                'https://images-assets.nasa.gov.evil.test/a.jpg',
+                'http://user@images-assets.nasa.gov/a.jpg',
+                'https://images-assets.nasa.gov:80/a.jpg',
+                'https://images-assets.nasa.gov/a.json'
+            ]]}}).encode()
+    c={'source_id':'PIA123'}
+    assert nasa_receipt(c,T())==[{'url':'https://images-assets.nasa.gov/image/PIA123/~medium.jpg'}]
+    assert c['recibo_nasa']['variantes_declaradas'][0]['href_declarado'].startswith('http:')
+    assert c['recibo_nasa']['direitos']=='PENDENTE_AUDITORIA_INDIVIDUAL'

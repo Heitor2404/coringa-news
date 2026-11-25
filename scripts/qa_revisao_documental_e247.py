@@ -16,6 +16,8 @@ def main():
     progressive='--progressiva' in sys.argv[4:]
     somente_acervo='--somente-acervo' in sys.argv[4:]
     replay='--replay-privado' in sys.argv[4:] or somente_acervo
+    revisar_acervo='--revisar-acervo' in sys.argv[4:]
+    if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
@@ -52,6 +54,10 @@ def main():
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=0 if replay or '--visao-zero' in sys.argv[4:] else min(20,len(tri)+2) if integral else 4 if multi else 2
+    if revisar_acervo:
+        limite=int(os.getenv('CORINGA_LIMITE_REVISAO_LOCAL',str(budget)))
+        if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
+        budget=limite
     telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
@@ -64,7 +70,7 @@ def main():
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
         if cache_only and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'CACHE_ONLY_SEM_REDE'}
-        if replay and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
+        if (replay or revisar_acervo) and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
         if calls>=budget and not (progressive and c.get('fonte')=='biblioteca_v3'):return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('tipo')!='video' and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
         if c.get('fonte') not in ('nasa','nasa_video','archive_video','usgs_pagina','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
@@ -128,6 +134,11 @@ def main():
                 im.thumbnail(tuple(old_px))
             else:im.thumbnail((1280,1280) if qualidade or integral else (960,960))
             try:
+                negative=RE.negativa_observada(n,c,im)
+                if negative:
+                    c['observacao_negativa_reutilizada']=negative
+                    boards.append((c,[im],n['id']+' INCOMPATIVEL NA AMOSTRA'))
+                    return {'estado':'INSUFICIENTE','motivo':'INCOMPATIBILIDADE_NA_AMOSTRA_REVISADA','escopo':'APENAS_AMOSTRA_IDENTIFICADA','publicar':False}
                 old=(cached or {}).get('revisao') or {}
                 if cache_key and old.get('publicar') is False and old.get('sha256_origem')==meta['sha256'] and old.get('necessidade_id')==n['id'] and old.get('mostrar')==n['mostrar'] and old.get('px')==list(im.size) and old.get('pixels_sha256')==hashlib.sha256(im.convert('RGB').tobytes()).hexdigest():
                     try:
@@ -154,7 +165,7 @@ def main():
                         c['refinamento_foto']={'anterior':q,'decisao_anterior':dec,'modo':'IMAGEM_INTEIRA_MAIOR_RESOLUCAO'}
                         q=second;im=refined;dec=R.decidir(n,c,q,tipo='foto');c['revisao']=q
                     except Exception as e:c['refinamento_foto']={'falha':type(e).__name__}
-            if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':dec},origem='E258')
+            if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':dec,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             boards.append((c,[im],dec['motivo']))
             if integral and dec['estado']=='PERTINENTE_PRIVADO':
                 used_sha.add(meta['sha256'])
@@ -270,16 +281,17 @@ def main():
                 if n['id'] not in local_checked:
                     local_checked.add(n['id'])
                     local=RE.candidatos(lib,n)
+                    if revisar_acervo:local=[c for c in local if c.get('pista_historica') or c.get('pista_memoria_semantica')]
                     if local:
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
-                if not replay and n['id'] not in pages_checked:
+                if not replay and not revisar_acervo and n['id'] not in pages_checked:
                     pages_checked.add(n['id'])
                     pages=[Q.candidato_pagina_usgs(x,n) for x in curated if x['necessidade_id']==n['id']]
                     if pages:
                         rr={'id':n['id'],'buscas':[],'candidatos':pages,'biblioteca':[],'origem':'PAGINAS_CURADAS_PENDENTES','publicar':False,'pronto_para_render':False}
                         reports.append(rr);return rr
-                if replay or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
+                if replay or revisar_acervo or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
@@ -305,7 +317,7 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:(nid not in local_checked) or (not replay and (nid not in pages_checked or total_search<phase_limit)),
+                        pode_buscar=lambda:(nid not in local_checked) or (not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
                         pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
@@ -365,7 +377,7 @@ def main():
         lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

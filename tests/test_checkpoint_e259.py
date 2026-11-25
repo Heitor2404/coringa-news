@@ -53,3 +53,12 @@ def test_historical_lead_without_lexical_overlap_is_only_a_candidate():
     assert R.relevances(row,[{**n,'mostrar':'different'}])=={}
     assert R.relevances({**row,'url_pagina':'https://example.org/b'},[n])=={}
     assert R.relevances(row,[{**n,'evidencia_visual':'movimento'}])=={}
+
+def test_discovery_can_use_previous_review_not_metadata():
+    from scripts import recuperar_checkpoints_documentais as R
+    n={'id':'new','sujeito':'ice','mostrar':'glacier surface','fatos':['newfact'],'necessidade':'registro','evidencia_visual':'estatica','consultas_en':['glacier surface']}
+    q={'publicar':False,'sha256_origem':'a'*64,'necessidade_id':'old','mostrar':'glacier surface','pixels_sha256':'b'*64,'revisao_id':'r'}
+    d={'estado':'PERTINENTE_PRIVADO','publicar':False,'direitos_aprovados':False,'revisao_id':'r'}
+    row={'tipo':'foto','titulo':'IMG001','sha256':'a'*64,'analises':{'x':{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':d,'escopo_pesquisa':{**n,'id':'old'}}}}
+    assert R.relevances(row,[n])=={'new':1.8}
+    assert R.relevances(row,[{**n,'evidencia_visual':'movimento'}])=={}

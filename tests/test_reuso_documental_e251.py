@@ -69,3 +69,34 @@ def test_historical_lead_is_local_pending_and_scope_bound(tmp_path):
         b.caminho(d['sha256'],'.jpg').unlink()
         assert R.candidatos(b,n)==[]
     finally:b.fechar()
+
+def test_memory_positive_is_hint_and_bound_to_source(tmp_path):
+    import hashlib
+    b=Biblioteca(tmp_path/'db',tmp_path/'files')
+    try:
+        f=tmp_path/'a.jpg';Image.new('RGB',(800,600),'blue').save(f)
+        d=b.ingerir(f,{'titulo':'IMG001'})
+        n=need()
+        q={'publicar':False,'sha256_origem':d['sha256'],'necessidade_id':'n','mostrar':'glacier','pixels_sha256':'b'*64,'revisao_id':'r'}
+        dec={'estado':'PERTINENTE_PRIVADO','publicar':False,'direitos_aprovados':False,'revisao_id':'r'}
+        rec={'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':dec,'escopo_pesquisa':{**R.escopo(n),'consultas_en':['glacier']}}
+        b.gravar_analise(d['sha256'],'documental:'+'a'*64,rec)
+        c=R.candidatos(b,n)[0]
+        assert c['pista_memoria_semantica'] and V.decidir(n,c,{},tipo='foto')['estado']=='INSUFICIENTE'
+        assert R.candidatos(b,need('movimento'))==[]
+        assert R.prioridade_memoria(n,{'tipo':'foto','sha256':'c'*64,'analises':{'r':rec}})==0
+        rec['decisao']['estado']='INSUFICIENTE'
+        assert R.prioridade_memoria(n,{'tipo':'foto','sha256':d['sha256'],'analises':{'r':rec}})==0
+    finally:b.fechar()
+
+def test_negative_sample_is_not_a_global_blacklist():
+    import hashlib
+    im=Image.new('RGB',(800,600),'blue')
+    n=need()
+    h={'escopo':R.escopo(n),'sha256':'a'*64,'pagina':'https://example.org/a','tipo':'foto','relatorio':'old','necessidade_anterior':'other','estado':'PISTA_HISTORICA_PENDENTE','publicar':False,'direitos_aprovados':False,
+       'observacao_visual':{'estado':'INCOMPATIVEL_NA_AMOSTRA','publicar':False,'relatorio_amostra':'board','motivo':'different subject','px':list(im.size),'pixels_sha256':hashlib.sha256(im.tobytes()).hexdigest()}}
+    n['candidatos_historicos']=[h]
+    c={'tipo':'foto','sha_catalogo':'a'*64,'pagina':h['pagina'],'pista_historica':h}
+    assert R.negativa_observada(n,c,im)
+    assert R.negativa_observada(n,c,Image.new('RGB',im.size,'red')) is None
+    assert R.negativa_observada({**n,'mostrar':'different'},c,im) is None

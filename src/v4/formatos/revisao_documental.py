@@ -164,6 +164,7 @@ def ordenar_candidatos(necessidade,candidatos):
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
+                not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
                 -m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))

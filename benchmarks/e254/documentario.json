@@ -201,7 +201,19 @@
               "necessidade_anterior": "n5",
               "estado": "PISTA_HISTORICA_PENDENTE",
               "publicar": false,
-              "direitos_aprovados": false
+              "direitos_aprovados": false,
+              "observacao_visual": {
+                "px": [
+                  1280,
+                  306
+                ],
+                "pixels_sha256": "2465bc64426ad112e278800e07132ae887dfb5acad56ae31afa635efdbd3ee7f",
+                "motivo": "Amostra mostra icebergs em lago e margem; nao mostra faixa escura de detritos no centro de uma lingua de gelo.",
+                "relatorio_amostra": "e2643-integral-45609313784-1/revisao-6.jpg",
+                "estado": "INCOMPATIVEL_NA_AMOSTRA",
+                "publicar": false,
+                "origem": "inspecao assistida ChatGPT da folha privada; nao e aprovacao humana"
+              }
             }
           ]
         },
@@ -493,7 +505,19 @@
               "necessidade_anterior": "n18",
               "estado": "PISTA_HISTORICA_PENDENTE",
               "publicar": false,
-              "direitos_aprovados": false
+              "direitos_aprovados": false,
+              "observacao_visual": {
+                "px": [
+                  585,
+                  1280
+                ],
+                "pixels_sha256": "c955141883203e4fb61d6027855da0fa58e8909d910b4e879c9783ace11ab98b",
+                "motivo": "Amostra mostra desfiladeiro com curso de rio sinuoso; lago glacial nao visivel.",
+                "relatorio_amostra": "e2643-integral-45609313784-1/revisao-11.jpg",
+                "estado": "INCOMPATIVEL_NA_AMOSTRA",
+                "publicar": false,
+                "origem": "inspecao assistida ChatGPT da folha privada; nao e aprovacao humana"
+              }
             }
           ]
         }

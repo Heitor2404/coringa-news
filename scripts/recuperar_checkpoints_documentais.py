@@ -16,6 +16,8 @@ def relevances(row,needs):
     for n in needs:
         if n.get('necessidade') not in ('registro','lacuna_explicativa') or (n.get('evidencia_visual')=='movimento' and typ!='video'):continue
         if RE.vinculo_historico(n,row):scores[n['id']]=2
+        memory=RE.prioridade_memoria(n,row)
+        if memory:scores[n['id']]=max(scores.get(n['id'],0),memory)
         for q in n.get('consultas_en') or []:
             qs=tokens(q)
             if qs:

@@ -34,9 +34,9 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     # Private E295 candidate: no relaxation of the canonical safe profile.
     assert cfg['universal']==[150,300,770,1240]
     for x,y,r,b in boxes:
-        assert x==120 and x<r<=760 and 300<=y<b<=1600
+        assert x==120 and x<r<=760 and 300<=y<b<=1608
     assert all(a[3]<=b[1] for a,b in zip(boxes,boxes[1:]))
-    assert boxes[1][3]<555 and 1365<boxes[2][1]
+    assert boxes[1][3]<480 and 1380<boxes[2][1]
     # E290 failed for a 116px measured four-line credit. Preserve all authors,
     # the readable 24px floor, and full-width 16:9 pixels.
     assert boxes[3][3]-boxes[3][1]>=116
@@ -49,7 +49,9 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     assert 'if(nativePortrait(shot)&&!observed)' in code
     assert 'data-media-layout="native-portrait-full"' in code
     assert 'containPixels([0,0,W,H],shot.source_dimensions!)' in code
-    assert 'const stage=[0,555,1080,1365]' in code
+    assert 'const stage=[0,480,1080,1380]' in code
+    assert 'shot.documentary_integral_required' in code
+    assert "if(shot.documentary_roi_points?.length||shot.framing_positions?.length)return full;" in code
     assert 'CENTERED_CROP_REVIEW' in code and 'CENTERED_CROP_OBSERVED' in code
     assert 'const centered=centeredLandscape(shot)' in code
     assert "documentary_text_probe&&(!preview||!private_review_only)" in code

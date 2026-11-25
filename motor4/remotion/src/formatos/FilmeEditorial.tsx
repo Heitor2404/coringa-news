@@ -53,6 +53,7 @@ export type FilmShot = {
   photo_framing?: 'integral';
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
+  documentary_integral_required?: boolean; // preflight explicit context protection
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
@@ -206,7 +207,7 @@ const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_or
 // E295: private editorial composition, NOT a new certified platform-safe profile.
 // Anchor at x120 (largest configured left exclusion), maintain right x760.
 // Lower lanes deliberately need real app UI review; legacy SAFE is unchanged.
-const DOC_MEDIA={brand:[120,300,500,338],section:[120,347,760,397],subtitle:[120,1380,760,1470],source:[120,1478,760,1600]} as const;
+const DOC_MEDIA={brand:[120,300,500,338],section:[120,347,760,397],subtitle:[120,1388,760,1478],source:[120,1486,760,1608]} as const;
 // E290: same conservative text perimeter and same ROI; no new background design.
 // A 16:9 integral source has room for its actual pixels between header and caption.
 // Taller sources retain the previous maximum height (730px), not a blind crop.
@@ -279,16 +280,16 @@ const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]|nu
 const centeredLandscape=(shot:FilmShot):DocLayout|null=>{
   const dims=shot.source_dimensions;
   if(!dims||!dims.every(v=>Number.isFinite(v)&&v>0)||dims[0]<=dims[1])return null;
-  // The visual midpoint is always y960. Full-width 16:9 = 607.5px.
-  // 810px maximum (4:3) is a moderate ~1.33x scale on 16:9.
-  const stage=[0,555,1080,1365];
+  // E296: midpoint y930, 30px above the canvas center.
+  // 900px tall = ~1.48x on 16:9; private candidate, not certified crop.
+  const stage=[0,480,1080,1380];
   const pixels=containPixels(stage,dims);
   const full:DocLayout={mode:'CENTERED_INTEGRAL',slots:DOC_MEDIA,media:pixels,protected:[pixels],
     roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stage,centeredFit:'contain'};
-  // Without a pre-existing private crop candidate or observed framing,
-  // there is no authorization to remove source context.
-  const requested=shot.type==='video'&&(Boolean(shot.documentary_viewport)||Boolean(shot.framing_positions?.length));
-  if(!requested||pixels[3]-pixels[1]>=810-1)return full;
+  // Explicit factual full-source contracts always win. Photographs keep
+  // their existing integral treatment. All remaining landscape videos may
+  // propose a centered crop in this PRIVATE review path only.
+  if(shot.type!=='video'||shot.documentary_integral_required||shot.video_context_layout==='quadro_integral'||pixels[3]-pixels[1]>=900-1)return full;
   const observed=documentaryProtected(shot,stage);
   if(observed){
     // Sweep all sampled ROI/position combinations; reject a crop that would
@@ -297,11 +298,12 @@ const centeredLandscape=(shot:FilmShot):DocLayout|null=>{
       docRects(DOC_MEDIA).every(r=>!intersects(r,b))))return full;
     return {...full,mode:'CENTERED_CROP_OBSERVED',media:stage,protected:observed,roiStatus:'OBSERVED',centeredFit:'cover'};
   }
-  // Historical reviewed crop candidate only, private human review pending.
-  // Less aggressive than the existing square/4:5 crop. Never claim ROI proof.
-  if(shot.documentary_viewport&&shot.video_context_layout==='recorte_relacional_seguro')
-    return {...full,mode:'CENTERED_CROP_REVIEW',media:stage,protected:[],roiStatus:'UNKNOWN_REVIEW',centeredFit:'cover'};
-  return full;
+  // Invalid/incomplete observation is not permission to crop.
+  if(shot.documentary_roi_points?.length||shot.framing_positions?.length)return full;
+  // Unobserved action: propose the same crop for every ordinary landscape
+  // video; explicitly UNKNOWN_REVIEW. Human must compare original context,
+  // embedded attribution and action before any publication approval.
+  return {...full,mode:'CENTERED_CROP_REVIEW',media:stage,protected:[],roiStatus:'UNKNOWN_REVIEW',centeredFit:'cover'};
 };
 const documentaryLayout=(shot:FilmShot):DocLayout=>{
   const centered=centeredLandscape(shot);

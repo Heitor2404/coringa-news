@@ -107,9 +107,23 @@ def publish(files,entries,ident,call):
     for name,data in files.items():
         blob=call('POST','/git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})
         rows.append({'path':root+'/'+name,'mode':'100644','type':'blob','sha':blob['sha']})
-    newtree=call('POST','/git/trees',{'base_tree':parent['tree']['sha'],'tree':rows})
-    commit=call('POST','/git/commits',{'message':'Private review '+ident,'tree':newtree['sha'],'parents':[ref]})
-    call('PATCH','/git/refs/heads/'+BRANCH,{'sha':commit['sha'],'force':False})
+    # Concurrent private review jobs may advance the branch while we upload
+    # blobs. Rebase only the new review tree onto the latest head, never force.
+    for attempt in range(4):
+        newtree=call('POST','/git/trees',{'base_tree':parent['tree']['sha'],'tree':rows})
+        commit=call('POST','/git/commits',{'message':'Private review '+ident,'tree':newtree['sha'],'parents':[ref]})
+        try:
+            call('PATCH','/git/refs/heads/'+BRANCH,{'sha':commit['sha'],'force':False})
+            break
+        except RuntimeError as exc:
+            if not str(exc).startswith('COFRE_HTTP_422 PATCH ') or attempt==3:raise
+            latest=call('GET','/git/ref/heads/'+BRANCH)['object']['sha']
+            if latest==ref:raise
+            ref=latest
+            parent=call('GET','/git/commits/'+ref)
+            tree=call('GET','/git/trees/'+parent['tree']['sha']+'?recursive=1')
+            if tree.get('truncated') or any(x['path'].startswith(root+'/') for x in tree['tree']):
+                raise RuntimeError('COFRE_ID_EXISTENTE_OU_ARVORE_TRUNCADA')
     print('COFRE_ESPELHO_OK',ident,len(files),commit['sha'],flush=True)
 
 def main():

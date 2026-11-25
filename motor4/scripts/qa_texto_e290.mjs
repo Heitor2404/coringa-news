@@ -33,6 +33,11 @@ for(const [id,bbox] of [['portrait-observed-free',[.15,.35,.85,.48]],['portrait-
     documentary_roi_points:[{at:0,bbox},{at:2.9,bbox}]});
   props.documentary_captions.push({start:start+.3,end:start+2.8,words:[{w:'TESTE'},{w:'VERTICAL',hl:true}]});
 }
+// Explicit full-source contract and unannotated ordinary landscape must
+// take different paths, independently of the legacy cena_integral default.
+const forceStart=props.shots.length*3;
+props.shots.push({...original,id:'qa-explicit-integral',start:forceStart,end:forceStart+3,documentary_integral_required:true});
+props.documentary_captions.push({start:forceStart+.3,end:forceStart+2.8,words:[{w:'CONTEXTO'},{w:'INTEGRAL',hl:true}]});
 props.duracao=props.shots.length*3;
 const longWords='O REGISTRO MOSTRA A CENA EM DETALHES'.split(' ');
 props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
@@ -68,7 +73,7 @@ try {
         if(!row){result.errors.push('MISSING_MEASURE '+shot.id+' '+offset+' '+role);continue;}
         rows.push(row);
         const [x,y,r,b]=row.actual;
-        if(!row.fits||x<119||y<299||r>771||b>1601||row.font<({section:22,subtitle:36,source:24}[role]))
+        if(!row.fits||x<119||y<299||r>771||b>1609||row.font<({section:22,subtitle:36,source:24}[role]))
           result.errors.push('OVERFLOW '+shot.id+' '+offset+' '+role);
         if(row.evidenceCollision)result.errors.push('EVIDENCE_COLLISION '+shot.id+' '+offset+' '+role);
         const [mx,my,mr,mb]=row.media;
@@ -81,13 +86,15 @@ try {
       const modes=new Set(rows.map(x=>x.layout));
       if(modes.size!==1)result.errors.push('LAYOUT_MISMATCH '+shot.id);
       if(shot.id==='qa-portrait-observed-conflict'&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
-      if(shot.id==='qa-4-5-collision'&&!modes.has('CENTERED_INTEGRAL'))result.errors.push('LANDSCAPE_FALLBACK_MISSING '+shot.id);
+      if(['qa-4-5-collision','qa-explicit-integral'].includes(shot.id)&&!modes.has('CENTERED_INTEGRAL'))result.errors.push('LANDSCAPE_FALLBACK_MISSING '+shot.id);
+      if(shot.id==='video_horizontal_navio'&&(!modes.has('CENTERED_CROP_REVIEW')||rows.some(r=>r.roiStatus!=='UNKNOWN_REVIEW')))
+        result.errors.push('LANDSCAPE_DEFAULT_NOT_ENLARGED '+shot.id);
       if(shot.source_dimensions[0]>shot.source_dimensions[1]){
         for(const row of rows){
           const [x,y,r,b]=row.media;
-          if(Math.abs((y+b)/2-960)>.01||!row.layout.startsWith('CENTERED_')||row.rect[0]!==120)
+          if(Math.abs((y+b)/2-930)>.01||!row.layout.startsWith('CENTERED_')||row.rect[0]!==120)
             result.errors.push('CENTER_OR_ANCHOR '+shot.id+' '+row.role);
-          if(row.centeredFit==='cover'&&(!row.layout.startsWith('CENTERED_CROP')||b-y!==810))
+          if(row.centeredFit==='cover'&&(!row.layout.startsWith('CENTERED_CROP')||b-y!==900))
             result.errors.push('CROP_GEOMETRY '+shot.id);
         }
       }

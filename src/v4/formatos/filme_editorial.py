@@ -872,7 +872,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -964,6 +964,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
                 if box is not None:
                     points.append({'at':point['at'],'bbox':box})
             if points:x['documentary_roi_points']=points
+        if privado and c['type']=='video' and c.get('video_framing') is not None:
+            # An explicitly reviewed integral source, including a relation
+            # resolver that rejected crop, must never be enlarged blindly.
+            if c['video_framing'].get('modo')=='fonte_integral' or not x.get('documentary_roi_points'):
+                x['documentary_integral_required']=True
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']

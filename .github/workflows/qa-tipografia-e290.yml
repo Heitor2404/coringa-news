@@ -1,4 +1,4 @@
-name: E295.1 - testar centro e recusa de crop de ROI larga
+name: E296 - ampliar horizontais e preservar contratos integrais
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -35,7 +35,7 @@ jobs:
           python -m pytest -q tests/test_composicao_e286.py tests/test_filme_editorial.py tests/test_area_segura_plataformas.py tests/test_video_framing_multitema.py tests/test_alinhamento_e289.py
           ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
           python -m scripts.qa_visual_e286
-      - name: Medir texto, ocupacao vertical e regiao protegida em 20 quadros 1080x1920
+      - name: Medir texto, ocupacao vertical e regiao protegida em 22 quadros 1080x1920
         run: cd motor4 && node scripts/qa_texto_e290.mjs
       - name: Verificar pixels de fundo autoral
         run: python -m scripts.qa_fundo_e293

@@ -1,4 +1,4 @@
-name: E295 - previa narrada de composicao centralizada
+name: E296 - previa narrada com horizontais ampliados
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -75,10 +75,10 @@ jobs:
           try:
               chat,_=T.chat_autorizado()
               envio=T._caber(v);verificar_video(envio,dur)
-              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E295 · TESTE DE ENQUADRAMENTO\n8,67 s · coluna esquerda, palco central, zoom moderado\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
+              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E296 · TESTE DE ENQUADRAMENTO\n8,67 s · palco 30px acima, zoom ampliado nos três planos\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
               if not isinstance(result,dict) or not result.get('message_id'):raise RuntimeError('recibo ausente')
           except Exception:raise RuntimeError('E295 entrega privada não confirmada') from None
-          print('E295_PREVIA_PRIVADA_ENTREGUE')
+          print('E296_PREVIA_PRIVADA_ENTREGUE')
           PY
       - name: Preservar voz e evidencias mesmo se render falhar
         if: ${{ always() }}

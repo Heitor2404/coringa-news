@@ -247,6 +247,24 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
     return out
 
 
+def alinhar_inicios_a_fala(palavras: list[dict], wav: Path, max_atraso: float = .4) -> list[dict]:
+    """E284: a legenda não pode antecipar a palavra. Quando o alinhador da TTS põe o início de uma palavra numa pausa
+    (típico após vírgula/ponto), o início passa para o começo real da fala medido no áudio, se ele ocorrer em até
+    `max_atraso` s e antes do fim da palavra. Fim e ordem são preservados; nada é inventado."""
+    fala = mascara_fala(energia(wav))
+    out = []
+    for w in palavras:
+        s, e = float(w['s']), float(w.get('e', w['s']))
+        a, b = int((s - .08) / PASSO), int((s + .2) / PASSO)
+        if b > a and not fala[max(0, a):b].any():
+            i0, i1 = int(s / PASSO), int(min(s + max_atraso, e) / PASSO)
+            on = next((i for i in range(max(0, i0), min(len(fala), i1 + 1)) if fala[i]), None)
+            if on is not None and on * PASSO < e:
+                w = {**w, 's': round(on * PASSO, 3), 's_alinhador': s}
+        out.append(w)
+    return out
+
+
 def conferir(narracao: Path, wav: Path, maximo: int = 4) -> dict:
     meta = json.loads(Path(narracao).read_text())
     pal = meta['palavras'] if 'palavras' in meta else meta['words']

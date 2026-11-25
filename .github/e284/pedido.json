@@ -1,1 +1,1 @@
-{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false, "nota": "Reexecução sem visão: tolerância de quadros inteiros no fiscal editorial (run 45674218044 reprovou n16 por 3.8000000000000043 s)."}
+{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false, "nota": "Reexecução sem visão: run 45675321595 produziu 65,2 s narrado e entregue, mas a sincronia medida reprovou (9/165 palavras iniciando na pausa antes da fala). Inícios agora alinhados ao começo real da fala; render só com sincronia aprovada."}

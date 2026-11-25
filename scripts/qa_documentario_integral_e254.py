@@ -193,7 +193,7 @@ def main():
     result=F.preparar(plan,root/'documental',PUBLIC)
     props=json.loads(Path(result['props']).read_text())
     props['private_review_only']=True
-    words=D.palavras_de_caps(caps);groups=[]
+    words=LS.alinhar_inicios_a_fala(D.palavras_de_caps(caps),audio);groups=[]
     contexto = {'titulo': case.get('tema'), 'narracao': {'fatos': case.get('fatos', [])}}
     words = LS.destacar_atlas(words, contexto, maximo=3)
     for g in LS.grupos(words,maximo=3):
@@ -206,6 +206,11 @@ def main():
     props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
     write(root/'props.json',props)
     write(root/'narracao.json',{'audio_sha256':h,'duration_s':duration,'words':words,'publish':False})
-    write(root/'sincronia-medida.json', LS.conferir(root/'narracao.json', audio, maximo=3))
+    sinc=LS.conferir(root/'narracao.json', audio, maximo=3)
+    write(root/'sincronia-medida.json', sinc)
+    if not sinc['ok']:
+        # E284: measured caption/speech sync is a render precondition, not an after-the-fact note.
+        write(root/'integral.json',{**gate,'motivo':'SINCRONIA_MEDIDA_REPROVADA','sincronia':{k:sinc[k] for k in ('atraso_s','n_palavras_sem_fala','fala_sem_legenda','trocas_bruscas')},
+                                    'duracao_voz':duration,'pronto_para_render':False});return
     write(root/'integral.json',{**gate,'pronto_para_render_privado':True,'duracao_voz':duration,'publicar':False})
 if __name__=='__main__':main()

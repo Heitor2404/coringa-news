@@ -421,8 +421,25 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
             raise ValueError('E205-NECESSIDADE')
         candidatos = diretor_roteiro.candidatos({'acontecimento': {'sujeito': sujeito}}, 'ambiente', bib)
         candidatos.sort(key=lambda x: (x.get('natureza') != 'video', x['asset_id']))
+        geo = None
         if tipo == 'territorio':
             destino, estado = 'mapa_atlas', 'SOLICITAR_ATLAS'
+            objetivo = n.get('objetivo_geografico') or 'a_definir'
+            politicas = {
+                'a_definir': ('verificar_objetivo',),
+                'localizacao': ('contexto', 'regiao'),
+                'relevo': ('regiao', 'detalhe', 'elevação_verificada'),
+                'rota': ('regiao', 'trajeto_verificado'),
+                'territorio': ('limites_verificados',),
+                'comparacao': ('contexto', 'escala_comparavel'),
+            }
+            if not isinstance(objetivo,str) or objetivo not in politicas:
+                raise ValueError('E237-OBJETIVO-GEOGRAFICO')
+            geo = {'objetivo': objetivo, 'recursos_candidatos': list(politicas[objetivo]),
+                   'pesquisar_localizacao': True, 'verificar_epoca': True,
+                   'revisar_fontes_e_geometria': True, 'pronto_para_render': False,
+                   'aproximacao': 'SOMENTE_SE_AJUDA_EXPLICACAO',
+                   'estado': 'PESQUISAR_E_VALIDAR_GEOGRAFIA'}
         elif tipo == 'registro':
             destino = 'registro_real'
             estado = 'REVISAR_CANDIDATOS' if candidatos else 'PESQUISAR_MIDIA'
@@ -435,6 +452,7 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
         out.append({'id': cid, 'fatos': refs, 'sujeito': sujeito, 'mostrar': mostrar,
                     'necessidade': tipo, 'modalidade_proposta': destino, 'estado': estado,
                     'candidatos': candidatos, 'lacuna': n.get('lacuna'),
+                    **({'solicitacao_atlas': geo} if geo is not None else {}),
                     'pesquisa': {'consultas': [sujeito + ' ' + mostrar, sujeito],
                                  'consultas_en': [q.strip() for q in (n.get('consultas_en') or [])[:2]
                                                   if isinstance(q, str) and 2 <= len(q.strip()) <= 120],
@@ -458,9 +476,10 @@ Para cada fato, identifique o que precisa ser visto, não desenhe a narração.
 Use registro para filmagem/foto real; territorio para localização, fronteira, rota ou relevo factual no ATLAS;
 lacuna_explicativa somente para uma ação específica que registros não mostram (descreva a lacuna).
 A animação só complementa a explicação de funcionamento ou ação que mídia real não demonstra, após busca sem registro adequado ou impossibilidade física de filmar. Se uma animação adequada não existir, replaneje com mídia real/contexto identificado ou declare a lacuna. Nunca use modelo reprovado como fallback. Não gere URLs, assets, desenhos, licenças ou geometrias.
+Quando a localização ou relação espacial for indispensável, considere abrir com mapa; caso contrário, priorize o registro real mais informativo. Para territorio indique objetivo_geografico: localizacao, relevo, rota, territorio ou comparacao. Não invente coordenadas ou trajetos: o motor deve pesquisar e verificar a região, a época e a fonte antes de adquirir mapas. Relevo exige elevação verificada, rota e fronteira exigem geometria documentada. Não obrigue aproximação.
 Inclua duas consultas curtas em inglês para mídia real. Não invente fatos.
 Responda JSON {"necessidades_visuais":[{"id":"n1","fatos":["id existente"],"sujeito":"...","mostrar":"...",
-"necessidade":"registro|territorio|lacuna_explicativa","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
+"necessidade":"registro|territorio|lacuna_explicativa","objetivo_geografico":"apenas para territorio: localizacao|relevo|rota|territorio|comparacao","lacuna":"... somente se necessária","consultas_en":["...","..."]}]}.
 Pergunta: """ + str(caso['pergunta']) + "\nFatos: " + json.dumps(fatos, ensure_ascii=False) + "\nLimites: " + json.dumps(caso.get('limites') or [], ensure_ascii=False)
     registro = []
     resposta = pedir_ia(texto, registro, cache, permitir_chamada)

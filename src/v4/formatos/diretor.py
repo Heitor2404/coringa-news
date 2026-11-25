@@ -73,10 +73,18 @@ def prompt(fatos: list[dict], formato: str, palavras: list[dict] | None, inventa
     )
     direcao_atlas = """DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS (a identidade vem dos tokens do canal):
 - O palco acompanha a EVIDÊNCIA, não um mapa fixo. O mapa NÃO é abertura obrigatória.
-  Use abertura_tipo:"prova_real" quando existir foto/vídeo autêntico que mostre o objeto/acontecimento.
-  Caso o fato central seja territorial (fronteira, rota, localização), abertura_tipo:"mapa" com
-  atlas.abertura e ROI REGIONAL que faça o lugar aparecer grande; sem plano-múndi vazio.
+  Se a localização, distribuição espacial ou terreno for necessário para entender a primeira explicação,
+  prefira abertura_tipo:"mapa" com atlas.abertura e ROI REGIONAL que faça o lugar aparecer grande.
+  Se a primeira explicação for melhor demonstrada por registro autêntico, prefira abertura_tipo:"prova_real".
+  Não forçar mapa antes de uma história sem dependência espacial nem vídeo antes de geografia essencial.
   A abertura mapa não recebe clipe decorativo nos primeiros 3s.
+- Para geografia essencial, planeje escalas da explicação (contexto → região → detalhe), apenas as necessárias.
+  Use ROI e rótulos verificados, não coordenadas inventadas. Reuse câmera ATLAS, rotas, destaques e pins existentes.
+  Priorize base física/relevo para topografia, batimetria para contexto marítimo, satélite detalhado para infraestrutura;
+  limites territoriais e rotas exigem geometria factual da época adequada, não só uma imagem contemporânea.
+  Use somente rasters comprovados presentes no inventário. Se faltar detalhe, indique a região e escala necessária;
+  não invente nome de raster ou tente ampliar a base além da nitidez. A entrada em registro aéreo/terrestre
+  exige correspondência geográfica documentada e não deve alegar continuidade óptica sem prova.
 - Opcional V2, só com prova autenticamente identificada: abertura_tipo:"prova_real". FOTO: beat 0
   atlas.prova, atlas.provaVisual desde 0 até ao menos 2,5s, com origem e crédito. VÍDEO: beat 0
   atlas.abertura, clipe registro.video desde 0 até ao menos 2,5s, com fonte e hash verificável.

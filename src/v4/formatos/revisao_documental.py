@@ -54,7 +54,7 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
 
 
-def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6):
+def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None):
     """Use the existing discovery result; continue after refusal or failed download.
     Inspection callback owns actual network/vision budgets. A success is private.
     No template or topic-specific ranking.
@@ -72,16 +72,18 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6):
                 not captura,
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte')!='nasa',
                 not bool(c.get('source_id')))
-    vistos=set();trace=[];n=0
+    vistos=set() if vistos is None else vistos
+    trace=[];n=0
     for c in sorted(candidatos,key=rank):
         if ev=='movimento' and c.get('tipo')!='video':continue
         key=(c.get('fonte'),c.get('source_id') or c.get('url'))
         if key in vistos:continue
-        vistos.add(key)
         if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA' or natureza_declarada(c)=='REPRESENTACAO_DECLARADA':
+            vistos.add(key)
             c['decisao']={'estado':'INSUFICIENTE','motivo':'REPRESENTACAO_DECLARADA'}
             trace.append({'key':key,'decisao':c['decisao']});continue
-        if n>=max_candidatos:break
+        if n>=max_candidatos or (pode_inspecionar is not None and not pode_inspecionar()):break
+        vistos.add(key)
         n+=1
         try:r=inspecionar(c,necessidade)
         except Exception as e:r={'estado':'FALHA','motivo':type(e).__name__}
@@ -91,3 +93,43 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6):
             return {'estado':'CANDIDATO_PRIVADO_REVISADO','selecionado':key,'tentativas':n,'trilha':trace,
                     'pronto_para_render':False,'publicar':False}
     return {'estado':'LACUNA_PENDENTE','tentativas':n,'trilha':trace,'pronto_para_render':False,'publicar':False}
+
+
+def cobertura_adaptativa(necessidade,pesquisar,inspecionar,pode_inspecionar):
+    """E248: two bounded discovery rounds, second only after a real gap.
+    Search callback returns the existing E246 report, not invented assets.
+    Budget callback owns shared network/vision limits; round 1 reserves vision
+    for round 2. No automatic fallback to drawing or rights approval.
+    """
+    if necessidade.get('necessidade')=='territorio':
+        return {'estado':'DELEGAR_ATLAS','rodadas':[],'tentativas':0,'pronto_para_render':False,'publicar':False}
+    seen=set();rounds=[];tentativas=0;pending=[]
+    base=necessidade['pesquisa']
+    originals=[q.strip() for q in (base.get('consultas_en') or base.get('consultas') or []) if isinstance(q,str) and q.strip()]
+    if not originals:raise ValueError('E248-SEM-CONSULTA')
+    for i in range(2):
+        if not pode_inspecionar(i):break
+        n={**necessidade,'pesquisa':dict(base)}
+        if i:
+            reasons={t['decisao'].get('motivo') for t in rounds[-1]['cobertura']['trilha']}
+            motion=n.get('evidencia_visual')=='movimento'
+            if motion:
+                suffix=' observed behavior video' if 'SEM_JANELA_PERTINENTE_NO_ORCAMENTO' in reasons or 'MUDANCA_NAO_OBSERVADA' in reasons else ' original footage'
+            else:
+                suffix=' original photograph' if reasons & {'REPRESENTACAO_DECLARADA','NATUREZA_INCOMPATIVEL_OU_INCERTA'} else ' archival photograph'
+            # Keep the original subject/action terms intact. No names or URLs added.
+            queries=[q[:180-len(suffix)]+suffix for q in originals[:2]]
+            n['pesquisa']={**base,'consultas_en':queries,'consultas':[]}
+        p=pesquisar(n,4)
+        if p.get('id')!=necessidade['id']:raise ValueError('E248-PESQUISA-VINCULO')
+        # New search results first; uninspected prior candidates stay eligible.
+        candidates=p['candidatos']+pending
+        result=fila_cobertura(necessidade,candidates,inspecionar,max_candidatos=3,
+            vistos=seen,pode_inspecionar=lambda:pode_inspecionar(i))
+        tentativas+=result['tentativas']
+        rounds.append({'rodada':i+1,'pesquisa':p,'cobertura':result})
+        pending=candidates
+        if result['estado']=='CANDIDATO_PRIVADO_REVISADO':
+            return {**result,'rodadas':rounds,'tentativas':tentativas}
+    return {'estado':'LACUNA_PENDENTE','rodadas':rounds,'tentativas':tentativas,
+            'pronto_para_render':False,'publicar':False}

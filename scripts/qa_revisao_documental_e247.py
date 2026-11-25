@@ -21,7 +21,7 @@ def main():
     pack=os.getenv('CORINGA_PACOTE_PRIVADO')
     if pack:
         lib.fechar()
-        lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
+        lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca',restaurar_analises_privadas=progressive)
     integral='--integral' in sys.argv[4:]
     qualidade='--qualidade' in sys.argv[4:]
     if integral or qualidade:
@@ -34,7 +34,7 @@ def main():
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=min(20,len(tri)+2) if integral else 4 if multi else 2
-    telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -42,7 +42,7 @@ def main():
         from src import gemini
         return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
     def inspect(c,n):
-        nonlocal reuses
+        nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
         if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
@@ -70,13 +70,14 @@ def main():
         m={'id':c.get('source_id') or meta['sha256'],'expected_sha256':meta['sha256'],
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
-        cache_key=None
+        cache_key=None;cached=None
         if progressive:
             from src import gemini
-            scope={'contrato':'E258.v1','mostrar':n['mostrar'],'fatos':n['fatos'],'id':n['id'],
+            scope={'contrato':'E258.v1','sujeito':n.get('sujeito'),'mostrar':n['mostrar'],'fatos':n['fatos'],'id':n['id'],
                 'evidencia':n['evidencia_visual'],'direta':n.get('exigir_evidencia_direta',False),
                 'legibilidade':n.get('exigir_legibilidade',False),'modelos':list(gemini.MODELOS_LEVES)}
             cache_key='documental:'+hashlib.sha256(json.dumps(scope,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+            cached=lib.analise(meta['sha256'],cache_key)
             saved=lib.ingerir(p,{'titulo':c['titulo'],'desc':c.get('descricao',''),
                 'url':meta['url_adquirida'],'pagina':c.get('pagina'),'fonte':c['fonte'],
                 'wh':[meta['width'],meta['height']],'licenca_prova':'Revisao privada; direitos pendentes'})
@@ -89,7 +90,14 @@ def main():
         if c['tipo']=='foto':
             im.thumbnail((1280,1280) if qualidade or integral else (960,960))
             try:
-                q=R.revisar_foto(m,im,n,ask)
+                old=(cached or {}).get('revisao') or {}
+                if cache_key and old.get('publicar') is False and old.get('sha256_origem')==meta['sha256'] and old.get('necessidade_id')==n['id'] and old.get('mostrar')==n['mostrar'] and old.get('px')==list(im.size) and old.get('pixels_sha256')==hashlib.sha256(im.convert('RGB').tobytes()).hexdigest():
+                    try:
+                        q=R.revisar_foto(m,im,n,lambda prompt,images:old['resposta'])
+                        cache_hits+=1;c['revisao_reutilizada']=True
+                    except (ValueError,KeyError,TypeError):
+                        q=R.revisar_foto(m,im,n,ask)
+                else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
@@ -108,8 +116,25 @@ def main():
             c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
             if not windows:return {'estado':'INSUFICIENTE' if history['vistos'] else 'FALHA_AQUISICAO','motivo':'SEM_JANELAS_NOVAS' if history['vistos'] else 'SEM_AMOSTRAS_DECODIFICADAS'}
             try:
-                batch=DE.revisar_janelas_lote(windows,ask,evidencia_visual=n['evidencia_visual'],
-                    exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
+                stored={}
+                if cache_key:
+                    for row in (cached or {}).get('janelas',[]):
+                        pk=row.get('pacote') or {};q0=pk.get('revisao_assistida') or {}
+                        if q0.get('publicar') is False and q0.get('sha256_origem')==meta['sha256'] and q0.get('necessidade_id')==n['id'] and isinstance(q0.get('resposta_bruta'),dict):
+                            stored[pk.get('revisao_id')]=q0['resposta_bruta']
+                entries={};fresh=[]
+                for i,(pk,frames) in enumerate(windows):
+                    if pk['revisao_id'] in stored:
+                        try:
+                            q0=DE.revisar_janela_visao(pk,frames,lambda prompt,images:stored[pk['revisao_id']],permitir_chamada=True,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
+                            entries[i]={'revisao':{**q0,'chamadas_logicas':0,'provedor':'reuso_privado'},'cache':True}
+                            cache_hits+=1
+                            continue
+                        except (ValueError,TypeError,KeyError,AttributeError):pass
+                    fresh.append((i,pk,frames))
+                fresh_result=DE.revisar_janelas_lote([(pk,frames) for _,pk,frames in fresh],ask,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False)) if fresh else {'janelas':[],'chamadas_logicas':0,'imagens_enviadas':0}
+                for (i,_,_),row in zip(fresh,fresh_result['janelas']):entries[i]=row
+                batch={**fresh_result,'janelas':[entries[i] for i in range(len(windows))]}
             except Exception as e:
                 for pack,frames in windows:boards.append((c,frames,'FALHA_VISAO_LOTE'))
                 return {'estado':'FALHA_VISAO','motivo':type(e).__name__+':'+str(e)[:100]}
@@ -128,7 +153,10 @@ def main():
                     selection=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
                     if selection['estado']=='CANDIDATO_PERTINENTE':
                         eligible.append((pack,selection,dec))
-            if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':history['janelas'],'exploracao':exploration},origem='E258')
+            if cache_key:
+                previous={x['pacote']['revisao_id']:x for x in (cached or {}).get('janelas',[]) if x.get('pacote',{}).get('revisao_id') and x.get('decisao')}
+                previous.update({x['pacote']['revisao_id']:x for x in history['janelas'] if x.get('decisao')})
+                lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':list(previous.values()),'exploracao':exploration},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m} for p,_,_ in eligible],fato_id=n['fatos'][0])
                 if ranked:
@@ -255,10 +283,21 @@ def main():
         if progressive:
             lib.exportar_manifesto(out/'manifesto-revisoes.jsonl')
             (out/'ids-adquiridos.json').write_text(json.dumps(sorted(saved_ids)))
+            import shutil
+            for mid in sorted(saved_ids):
+                record=lib.obter(mid)
+                if record['tamanho']>PB.MAX_TOTAL:
+                    checkpoint_rows.append({'id':mid,'estado':'LIMITE_PACOTE_ORIGINAL'});continue
+                dest=out/'checkpoints'/mid
+                try:
+                    idx=PB.exportar(lib,[mid],dest,incluir_analises_privadas=True)
+                    z=shutil.make_archive(str(dest),'zip',root_dir=dest)
+                    checkpoint_rows.append({'id':mid,'arquivo':Path(z).name,'sha256':PB.sha(z),'estado':'PRIVADO_LOCAL'})
+                except Exception as e:checkpoint_rows.append({'id':mid,'estado':'FALHA_CHECKPOINT','motivo':type(e).__name__+':'+str(e)[:160]})
         lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

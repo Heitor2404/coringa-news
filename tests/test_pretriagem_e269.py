@@ -128,3 +128,33 @@ def test_motor_preview_batch_scopes_and_validates_observations_without_approval(
         revisar_folhas_lote(n,rows,tmp_path,lambda p,i:{'observacoes':[{'indice':k,'decisao':'PRIORIZAR_AQUISICAO','observacao':'x'} for k in (0,1)]})
     with pytest.raises(ValueError,match='E278.1-RESPOSTA'):
         revisar_folhas_lote(n,rows,tmp_path,lambda p,i:{'observacoes':[{'indice':0,'decisao':'NAO_PRIORIZAR','observacao':'x'}]*2})
+
+
+def test_chain_reservation_does_not_take_motion_budget_or_expand_total():
+    from src.v4.pretriagem_documental import reservar_encadeamento
+    a={'id':'a','necessidade':'registro','evidencia_visual':'estatica'}
+    b={**a,'id':'b','evidencia_visual':'movimento'}
+    c={**a,'id':'c','necessidade':'territorio'}
+    assert reservar_encadeamento([a,b,c],2)==set()
+    assert reservar_encadeamento([a,b,c],3)=={'a'}
+    assert reservar_encadeamento([a,b,c],0)==set()
+
+
+def test_observed_priority_uses_formal_review_and_preserves_rounds():
+    import pytest
+    from src.v4.pretriagem_documental import candidato_priorizado,revisar_prioridade
+    n={'id':'n','sujeito':'x','mostrar':'structure','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica','pesquisa':{'consultas_en':['structure']}}
+    from src.v4.formatos import reuso_documental as RE
+    c={'fonte':'commons','tipo':'foto','pagina':'p','source_id':1,'url':'original','variantes':[{'url':'thumb'}],'titulo':'structure'}
+    a={'pagina':'p','source_id':1,'preview_sha256':'a'*64,'preview_url':'thumb'}
+    o={'escopo':RE.escopo(n),'decisao':'PRIORIZAR_AQUISICAO','source_id':1,'publicar':False}
+    choice={'id':'n','pagina':'p','preview_sha256':'a'*64,'observacao_previa':o}
+    selected=candidato_priorizado(n,choice,[a],[c])
+    assert selected is c and selected['url']=='original'
+    with pytest.raises(ValueError):candidato_priorizado(n,choice,[a],[{**c,'source_id':2}])
+    row={'necessidade_id':'n','estado':'LACUNA_PENDENTE','rodadas':[],'tentativas':0}
+    assert revisar_prioridade(n,row,c,lambda *_:pytest.fail('no budget'),lambda:False)==row
+    result=revisar_prioridade(n,row,c,lambda *_:{'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'},lambda:True)
+    assert result['estado']=='LACUNA_PENDENTE' and result['tentativas']==1
+    result=revisar_prioridade(n,row,c,lambda *_:{'estado':'PERTINENTE_PRIVADO','necessidade_id':'n','revisao_id':'formal','publicar':False,'direitos_aprovados':False},lambda:True)
+    assert result['estado']=='CANDIDATO_PRIVADO_REVISADO' and result['rodadas'][-1]['pesquisa']['candidatos'][0]['decisao']['revisao_id']=='formal'

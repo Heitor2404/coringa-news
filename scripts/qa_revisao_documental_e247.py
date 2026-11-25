@@ -22,7 +22,9 @@ def main():
     preview_report=[]
     review_previews='--revisar-previas' in sys.argv[4:]
     if review_previews and not preview_pending:raise ValueError('E278.1-PRETRIAGEM')
-    preview_observations=[];preview_review_status=[];preview_vision=0
+    chain_previews='--encadear-previas' in sys.argv[4:]
+    if chain_previews and not review_previews:raise ValueError('E279-REVISAO-PREVIAS')
+    preview_observations=[];preview_review_status=[];preview_vision=0;chain_status=[]
     if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
@@ -68,6 +70,12 @@ def main():
         limite=int(os.getenv('CORINGA_LIMITE_REVISAO_LOCAL',str(budget)))
         if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
         budget=limite
+    from src.v4.pretriagem_documental import reservar_encadeamento
+    total_budget=budget
+    reserved=reservar_encadeamento(tri,budget) if chain_previews else set()
+    # The normal review path cannot spend the calls reserved for preview +
+    # formal inspection. Cache-only processing for those needs stays enabled.
+    budget-=2*len(reserved)
     format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
@@ -347,17 +355,18 @@ def main():
                     if phase>=0:
                         R.reabrir_pendentes(st)
                     def inspect_progress(c,n):
-                        cache_only=replay or phase<0 or calls>=budget or (phase==0 and calls!=start)
+                        cache_only=replay or phase<0 or nid in reserved or calls>=budget or (phase==0 and calls!=start)
                         d=inspect(c,n,cache_only=cache_only)
                         if c.get('revisao_adicional_possivel') or (phase<=0 and not replay and calls<budget and d.get('estado')=='ORCAMENTO' and c.get('fonte')=='biblioteca_v3'):
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
                         pode_buscar=lambda:(nid not in local_checked) or (phase>=0 and not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
-                        pode_inspecionar=lambda:replay or (phase>=0 and calls<budget and (phase==1 or calls==start)),
+                        pode_inspecionar=lambda:replay or (nid not in reserved and phase>=0 and calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
                     results_by_id[nid]=row
+            budget=total_budget
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
             from src.v4.formatos import cobertura_documental as C
             for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
@@ -377,10 +386,11 @@ def main():
                     from src.v4.pretriagem_documental import revisar_folhas_lote
                     needs_by_id={n['id']:n for n in tri}
                     before_preview_calls=calls
-                    for row in preview_report:
+                    for row in sorted(preview_report,key=lambda x:x['id'] not in reserved):
                         n=needs_by_id[row['id']]
+                        if chain_previews and n['id'] not in reserved:continue
                         if not row['amostras'] or n['necessidade']!='registro':continue
-                        if calls>=budget:
+                        if calls>=budget or (chain_previews and budget-calls<2):
                             preview_review_status.append({'id':n['id'],'estado':'ORCAMENTO_PENDENTE'});continue
                         try:
                             observations=revisar_folhas_lote(n,row['amostras'],out,ask)
@@ -388,6 +398,28 @@ def main():
                             preview_review_status.append({'id':n['id'],'estado':'PISTAS_OBSERVADAS'})
                         except Exception as e:preview_review_status.append({'id':n['id'],'estado':'REVISAO_PENDENTE','motivo':str(e)[:160]})
                     preview_vision=calls-before_preview_calls
+                    if chain_previews:
+                        from src.v4.pretriagem_documental import escolhas_observadas,candidato_priorizado,revisar_prioridade
+                        observations={'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations}
+                        choices=escolhas_observadas(spec,{'publicar':False,'necessidades':preview_report},observations,out)
+                        byid={r['id']:r['amostras'] for r in preview_report}
+                        choice_byid={x['id']:x for x in choices['selecao']}
+                        for i,n in enumerate(tri):
+                            if n['id'] not in reserved or results[i]['estado']!='LACUNA_PENDENTE':continue
+                            choice=choice_byid.get(n['id'])
+                            if not choice or calls>=budget:
+                                chain_status.append({'id':n['id'],'estado':'SEM_PRIORIDADE_OU_SALDO','publicar':False});continue
+                            try:
+                                c=candidato_priorizado(n,choice,byid[n['id']],states[n['id']]['pendentes'])
+                                # One formal call per chosen asset before any
+                                # refinements: protect later obligations.
+                                ceiling=budget;budget=min(budget,calls+1)
+                                try:results[i]=revisar_prioridade(n,results[i],c,inspect,lambda:calls<budget)
+                                finally:budget=ceiling
+                                chain_status.append({'id':n['id'],'estado':results[i]['estado'],'publicar':False})
+                            except Exception as e:
+                                chain_status.append({'id':n['id'],'estado':'REVISAO_PENDENTE','motivo':str(e)[:160],'publicar':False})
+                        for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:
             reports=[];consulted=set()
@@ -439,7 +471,7 @@ def main():
                 except Exception as e:checkpoint_rows.append({'id':mid,'estado':'FALHA_CHECKPOINT','motivo':type(e).__name__+':'+str(e)[:160]})
         lib.fechar()
     if preview_pending:Q.write(out/'pretriagem-pendente.json',{'publicar':False,'direitos_aprovados':False,'visao':0,'cobertura_nova':0,'necessidades':preview_report})
-    if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status})
+    if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status,'encadeamento':chain_status,'reservadas':sorted(reserved)})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
         'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})

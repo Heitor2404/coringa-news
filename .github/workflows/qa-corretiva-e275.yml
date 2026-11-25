@@ -1,4 +1,4 @@
-name: E278.1 - observacao de previas e regressao conjunta sem IA
+name: E279 - regressao do encadeamento documental
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

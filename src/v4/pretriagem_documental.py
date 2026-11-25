@@ -143,3 +143,39 @@ def revisar_folhas_lote(n,amostras,folder,ask):
         out.append({**bound[i],'decisao':row['decisao'],'observacao':row['observacao'][:1000]})
     if positive>1:raise ValueError('E278.1-PRIORIDADE')
     return sorted(out,key=lambda x:x['indice'])
+
+
+def reservar_encadeamento(necessidades,budget):
+    """Two existing calls per selected static need; reserve one per other
+    reviewable need first. Never expand the caller's budget."""
+    reviewable=[n for n in necessidades if n['necessidade']!='territorio']
+    extra=max(0,budget-len(reviewable))
+    return {n['id'] for n in [x for x in reviewable if x['necessidade']=='registro' and x['evidencia_visual']=='estatica'][:extra]}
+
+
+def candidato_priorizado(n,choice,amostras,pending):
+    """Bind the observed lead to the already discovered original candidate.
+    The preview URL stays distinct from the asset acquired by the inspector."""
+    from src.v4.formatos import reuso_documental as RE
+    o=choice['observacao_previa']
+    if choice['id']!=n['id'] or o.get('escopo')!=RE.escopo(n) or o.get('decisao')!='PRIORIZAR_AQUISICAO' or o.get('publicar') is not False:raise ValueError('E279-ESCOPO')
+    samples=[a for a in amostras if a['pagina']==choice['pagina'] and a['preview_sha256']==choice['preview_sha256'] and a['source_id']==o['source_id']]
+    if len(samples)!=1:raise ValueError('E279-AMOSTRA')
+    a=samples[0]
+    rows=[c for c in pending if c.get('fonte')=='commons' and c.get('tipo')=='foto' and c.get('pagina')==a['pagina'] and c.get('source_id')==a['source_id'] and c.get('url')!=a['preview_url'] and any(v.get('url')==a['preview_url'] for v in c.get('variantes',[]))]
+    if len(rows)!=1:raise ValueError('E279-CANDIDATO')
+    c=rows[0]
+    c['observacao_previa']=o
+    return c
+
+
+def revisar_prioridade(n,row,c,inspect,can_inspect):
+    """Use the SAME formal review and round contract consumed by the film.
+    A preview alone can never advance coverage."""
+    if row['estado']!='LACUNA_PENDENTE' or not can_inspect():return row
+    result=R.fila_cobertura(n,[c],inspect,max_candidatos=1,pode_inspecionar=can_inspect)
+    rounds=[*row['rodadas'],{'rodada':len(row['rodadas'])+1,
+        'pesquisa':{'id':n['id'],'buscas':[],'candidatos':[c],'origem':'PREVIA_OBSERVADA'},
+        'cobertura':result}]
+    return {**row,**result,'rodadas':rounds,'tentativas':row['tentativas']+result['tentativas'],
+        'diagnostico':R.diagnostico_cobertura(rounds,'EVIDENCIA_REVISADA' if result['estado']=='CANDIDATO_PRIVADO_REVISADO' else 'PRIORIDADE_REVISAO_PENDENTE')}

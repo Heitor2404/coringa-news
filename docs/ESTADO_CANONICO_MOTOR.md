@@ -58,3 +58,6 @@ E278 f420aeb: [prova](https://github.com/Heitor2404/coringa-news/actions/runs/45
 
 ### E278/E278.1 — resultados confirmados (§323)
 [45631143175](https://github.com/Heitor2404/coringa-news/actions/runs/45631143175) SUCCESS: 38 testes, 6 prévias pertinentes em inspeção assistida (6 HTTP, 906.046 bytes, zero erros), sem os dois falsos positivos E276. Concentração em uma consulta por tema permanece. Aquisição a partir de observações E276: 2/2 arquivos, 3.392.321 bytes, um derivado declarado 1920x853 e um master 3600x2700, folhas inspecionadas, revisão formal/direitos pendentes. [45631359513](https://github.com/Heitor2404/coringa-news/actions/runs/45631359513) SUCCESS: 125 testes do bloco, observador real ainda não executado. [45631143043](https://github.com/Heitor2404/coringa-news/actions/runs/45631143043) SUCCESS: 195+11 testes. Não repetir o bloco. Próximo: provar observação/seleção autônoma com orçamento permitido, aquisição e revisão integral encadeadas, filmagens de ação e composição; sem reabrir integrações comprovadas.
+
+### E279 — encadeamento no E247
+Modo opt-in --encadear-previas reserva saldo existente, observa miniaturas e passa candidato vinculado à revisão formal existente na mesma execução; não promove prévia, preserva movimento/ATLAS. Implementado, regressão pendente; visão real e qualidade final não homologadas. §324.

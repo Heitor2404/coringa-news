@@ -1,4 +1,4 @@
-name: E238 - observacao documental privada sem TTS
+name: E239 - observacao documental e diagnostico tecnico sem TTS
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -23,7 +23,7 @@ jobs:
           fi
           python -m pip install -q -r requirements.txt beautifulsoup4
       - name: Regressões do contrato de observação
-        run: python -m pip install -q pytest && python -m pytest -q tests/test_direcao_observacao_e238.py
+        run: python -m pip install -q pytest && python -m pytest -q tests/test_direcao_observacao_e238.py tests/test_direcao_observacao_e239.py
       - name: Preparar amostras de biologia
         run: python -m scripts.qa_documentario_observacao_e238 benchmarks/e219/salmao_retorno_pesquisa.json qa_observacao
       - name: Enviar folhas e manifesto ao destino privado
@@ -39,7 +39,7 @@ jobs:
               root=Path('qa_observacao')
               paths=sorted(root.glob('contato-*.jpg'))+[root/'review.json']
               for path in paths:
-                  r=T._api('sendDocument',{'chat_id':chat,'caption':'CORINGA · E238. Revisão privada de janelas de salmão. Não é episódio nem aprovação semântica.'},('document',path))
+                  r=T._api('sendDocument',{'chat_id':chat,'caption':'CORINGA · E239. Revisão técnica privada de janelas de salmão. Não é episódio nem aprovação semântica.'},('document',path))
                   if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
           except Exception:
               raise SystemExit('Entrega privada não confirmada') from None

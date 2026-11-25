@@ -191,3 +191,57 @@ def plano_entrada_geografica(plano, *, roi_destino, bases, rotulo, lonlat,
                   lonlat=list(lonlat),marcador_s=marker,
                   escopo='REGIAO_VERIFICADA_NAO_POSICAO_DA_CAMERA')
     return p,report
+
+
+def pacote_observacao(midia, inicio, duracao, frames, *, fato_id, necessidade):
+    """Bind inspection to three actual decoded frames and one editorial need.
+    Fingerprints authenticate samples, NOT their interpretation.
+    """
+    import hashlib,math,re
+    if not re.fullmatch(r'[0-9a-f]{64}',str(midia.get('expected_sha256',''))):
+        raise ValueError('D-REV-SHA')
+    if not isinstance(fato_id,str) or not fato_id.strip() or not isinstance(necessidade,str) or not necessidade.strip():
+        raise ValueError('D-REV-FATO')
+    if not all(isinstance(x,(int,float)) and not isinstance(x,bool) and math.isfinite(x) for x in (inicio,duracao,midia.get('duration_s'))):
+        raise ValueError('D-REV-TEMPO')
+    if inicio<0 or duracao<1.4 or inicio+duracao>midia['duration_s'] or len(frames)!=3:
+        raise ValueError('D-REV-JANELA')
+    amostras=[]
+    for frac,im in zip((.12,.5,.86),frames):
+        im=im.convert('RGB')
+        digest=hashlib.sha256(im.tobytes()).hexdigest()
+        amostras.append({'at':round(duracao*frac,6),'fonte_s':round(inicio+duracao*frac,6),
+                         'px':list(im.size),'pixels_sha256':digest})
+    base={'sha256_origem':midia['expected_sha256'],'inicio_s':inicio,'duracao_s':duracao,
+          'fato_id':fato_id,'necessidade':necessidade,'amostras':amostras}
+    import json
+    key=hashlib.sha256(json.dumps(base,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+    return {**base,'revisao_id':key,'estado':'PENDENTE','publicar':False}
+
+
+def aceitar_observacao(pacote, resposta):
+    """Validate an external reviewer response, never invent a positive verdict.
+    An assisted opinion remains pending human review. A refusal stays usable
+    as a reason to try another window, not as permission to generate animation.
+    """
+    if resposta.get('revisao_id')!=pacote['revisao_id']:
+        raise ValueError('D-REV-ID')
+    if resposta.get('veredito') not in ('pertinente','contexto','insuficiente'):
+        raise ValueError('D-REV-VEREDITO')
+    if not isinstance(resposta.get('inspecao'),str) or len(resposta['inspecao'].strip())<35:
+        raise ValueError('D-REV-INSPECAO')
+    pontos=resposta.get('pontos')
+    if not isinstance(pontos,list) or len(pontos)!=3:
+        raise ValueError('D-REV-AMOSTRAS')
+    for am,pt in zip(pacote['amostras'],pontos):
+        if pt.get('pixels_sha256')!=am['pixels_sha256']:
+            raise ValueError('D-REV-PIXELS')
+        if not isinstance(pt.get('observacao'),str) or len(pt['observacao'].strip())<12:
+            raise ValueError('D-REV-OBSERVACAO')
+    result={'revisao_id':pacote['revisao_id'],'veredito':resposta['veredito'],
+            'revisao_humana':'PENDENTE','publicar':False,'video_framing':None}
+    if resposta['veredito']=='pertinente' and all(p.get('elementos') for p in pontos):
+        result['video_framing']={'modo':'relacao_observada','sha256_origem':pacote['sha256_origem'],
+          'inspecao':resposta['inspecao'],'pontos':[{'at':a['at'],'fonte_s':a['fonte_s'],
+          'elementos':p['elementos']} for a,p in zip(pacote['amostras'],pontos)]}
+    return result

@@ -22,8 +22,11 @@ def main():
         lib.fechar()
         lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     integral='--integral' in sys.argv[4:]
-    if integral:
-        for n in tri:n['exigir_evidencia_direta']=True
+    qualidade='--qualidade' in sys.argv[4:]
+    if integral or qualidade:
+        for n in tri:
+            n['exigir_evidencia_direta']=True
+            n['exigir_legibilidade']=True
     t=Transporte(max_http=54 if integral else 14,max_bytes=270_000_000 if integral else 140_000_000,max_wait=30)
     adaptive='--adaptativa' in sys.argv[4:]
     multi='--multicenas' in sys.argv[4:]
@@ -60,7 +63,7 @@ def main():
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
         if c['tipo']=='foto':
-            im.thumbnail((960,960))
+            im.thumbnail((1280,1280) if qualidade or integral else (960,960))
             try:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
@@ -137,7 +140,7 @@ def main():
     finally:lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_multicenas':multi,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

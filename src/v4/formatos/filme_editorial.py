@@ -844,7 +844,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
               if item.get('license')=='REVIEW_PENDING']
     from src.v4.formatos import qa_area_segura
     props={'duracao':plano['duracao'],'shots':shots,'preview':True,
-           'private_review_only':bool(pendentes) or modo==PA.LEGACY,
+           'private_review_only':privado or bool(pendentes) or modo==PA.LEGACY,
            'safe_area_profile':plano.get('safe_area_profile') or qa_area_segura.PERFIL,
            'direitos_pendentes':pendentes}
     if modo==PA.LEGACY:

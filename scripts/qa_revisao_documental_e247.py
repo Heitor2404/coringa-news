@@ -62,7 +62,7 @@ def main():
         limite=int(os.getenv('CORINGA_LIMITE_REVISAO_LOCAL',str(budget)))
         if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
         budget=limite
-    telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -133,9 +133,8 @@ def main():
                  'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','recibo_usgs') if k in c}},origem='E258')
         if c['tipo']=='foto':
             original=im.copy() if progressive else None
-            old_px=((cached or {}).get('revisao') or {}).get('px')
-            if progressive and isinstance(old_px,list) and len(old_px)==2 and all(type(v) is int and v>0 for v in old_px) and max(old_px)<=2560:
-                im.thumbnail(tuple(old_px))
+            restored_sample=RE.reproduzir_amostra_foto(im,(cached or {}).get('revisao') or {}) if progressive else None
+            if restored_sample is not None:im=restored_sample
             else:im.thumbnail((1280,1280) if qualidade or integral else (960,960))
             try:
                 negative=RE.negativa_observada(n,c,im)
@@ -160,6 +159,21 @@ def main():
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
+            if progressive and not replay and dec.get('motivo')=='FORMATO_EVIDENCIA_DIRETA_INVALIDO':
+                # Cache-only pass must defer a malformed observation, not mark
+                # the media as a semantic negative. Allow one targeted retry
+                # per need/file per execution, within the existing budget.
+                repair_key=(n['id'],meta['sha256'])
+                if cache_only:
+                    c['revisao_adicional_possivel']=repair_key not in format_repairs
+                elif calls<budget and repair_key not in format_repairs:
+                    format_repairs.add(repair_key)
+                    try:
+                        second=R.revisar_foto(m,im,n,ask)
+                        c['reparo_formato']={'anterior':q,'decisao_anterior':dec}
+                        q=second;dec=R.decidir(n,c,q,tipo='foto');c['revisao']=q
+                    except Exception as e:c['reparo_formato']={'falha':type(e).__name__}
+                elif repair_key not in format_repairs:c['revisao_adicional_possivel']=True
             if progressive and not replay and dec.get('motivo')=='DETALHE_PEQUENO_NA_AMOSTRA' and not cache_only and calls<budget and original is not None and max(original.size)>max(im.size):
                 refined=original.copy();refined.thumbnail((2560,2560))
                 if refined.size!=im.size:

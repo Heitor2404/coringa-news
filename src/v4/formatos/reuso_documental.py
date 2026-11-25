@@ -51,6 +51,19 @@ def prioridade_memoria(n,row):
                 if len(aa&bb)>=2 and len(aa&bb)/max(len(aa),len(bb),1)>=.67:scores.append(1.1)
     return max(scores,default=0)
 
+def reproduzir_amostra_foto(original,revisao):
+    """Replay the actual thumbnail operation, not its rounded output bounds.
+    Never accept a candidate unless exact RGB bytes and dimensions match.
+    """
+    px=revisao.get('px');digest=revisao.get('pixels_sha256')
+    if not isinstance(px,list) or len(px)!=2 or any(type(v) is not int or v<=0 for v in px) or max(px)>2560 or not re.fullmatch('[0-9a-f]{64}',str(digest or '')):return None
+    # Historical thumbnails used square limits; passing a rounded output pair
+    # to thumbnail can shrink one more pixel. Retain old pair as fallback.
+    for bounds in ((max(px),max(px)),tuple(px)):
+        im=original.copy();im.thumbnail(bounds)
+        if list(im.size)==px and hashlib.sha256(im.convert('RGB').tobytes()).hexdigest()==digest:return im
+    return None
+
 def negativa_observada(n,c,im):
     """A scoped external inspection can defer an incompatible exact sample,
     not declare the original useless or certify a different obligation."""

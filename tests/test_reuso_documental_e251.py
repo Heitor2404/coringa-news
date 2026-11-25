@@ -100,3 +100,15 @@ def test_negative_sample_is_not_a_global_blacklist():
     assert R.negativa_observada(n,c,im)
     assert R.negativa_observada(n,c,Image.new('RGB',im.size,'red')) is None
     assert R.negativa_observada({**n,'mostrar':'different'},c,im) is None
+
+def test_replay_thumbnail_rounding_uses_original_square_bounds():
+    import hashlib
+    im=Image.new('RGB',(3001,2000))
+    # Nonconstant pixels ensure size matching alone cannot pass.
+    im.paste((255,0,0),(0,0,1500,1000))
+    expected=im.copy();expected.thumbnail((1280,1280))
+    old={'px':list(expected.size),'pixels_sha256':hashlib.sha256(expected.tobytes()).hexdigest()}
+    restored=R.reproduzir_amostra_foto(im,old)
+    assert restored is not None and restored.size==expected.size and restored.tobytes()==expected.tobytes()
+    assert R.reproduzir_amostra_foto(im,{**old,'pixels_sha256':'0'*64}) is None
+    assert R.reproduzir_amostra_foto(im,{**old,'px':[1281,853]}) is None

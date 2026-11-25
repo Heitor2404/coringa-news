@@ -42,7 +42,7 @@ def normalizar_evidencia_direta(e):
     if isinstance(box,dict):
         keys=('esquerda','topo','direita','base')
         extent=('esquerda','topo','delta_x','delta_y')
-        if scale=='0_1000':scale='xy_0_1000'
+        if scale in ('0_1000','1000'):scale='xy_0_1000'
         if scale not in ('xy_0_1','xy_0_1000'):return None
         if set(box)==set(keys):
             box=[box[k] for k in keys]
@@ -96,7 +96,9 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     if necessidade.get('exigir_evidencia_direta'):
         e=normalizar_evidencia_direta(r.get('evidencia_direta'))
         if e is None:
-            return {**result,'motivo':'EVIDENCIA_DIRETA_NAO_LOCALIZADA'}
+            raw=r.get('evidencia_direta')
+            reason='FORMATO_EVIDENCIA_DIRETA_INVALIDO' if isinstance(raw,dict) and raw.get('classe')=='direta' else 'EVIDENCIA_DIRETA_NAO_LOCALIZADA'
+            return {**result,'motivo':reason}
         result['evidencia_direta_normalizada']=e
         if tipo=='foto' and necessidade.get('exigir_legibilidade'):
             m=medir_legibilidade_foto(e,revisao.get('px'))
@@ -264,7 +266,7 @@ def diagnostico_cobertura(rodadas,parada):
         for t in r['cobertura']['trilha']:
             d=t['decisao'];state=d.get('estado');reason=d.get('motivo','')
             if state=='PERTINENTE_PRIVADO':key='CANDIDATO_PRIVADO'
-            elif state=='FALHA_VISAO':key='FALHA_FORMATO_OU_SERVICO'
+            elif state=='FALHA_VISAO' or reason=='FORMATO_EVIDENCIA_DIRETA_INVALIDO':key='FALHA_FORMATO_OU_SERVICO'
             elif reason in ('ANALISE_COMPATIVEL_NAO_DISPONIVEL','CACHE_LOCAL_AUSENTE'):key='REVISAO_SEM_CACHE_COMPATIVEL'
             elif state=='ORCAMENTO' or 'ORCAMENTO' in reason or 'LIMITE' in reason:key='ORCAMENTO_OU_VARIANTE'
             elif 'PENDENTE' in reason or 'PAGINA' in reason:key='RECIBO_PENDENTE'

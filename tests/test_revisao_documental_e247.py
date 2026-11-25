@@ -48,3 +48,10 @@ def test_photo_review_uses_pixels_and_binding():
     q=R.revisar_foto({'expected_sha256':SHA},im,need(),lambda p,imgs:{'veredito':'pertinente','natureza_visual':'registro_compativel','inspecao':'Descrição concreta da estrutura visível nesta imagem.'})
     assert q['necessidade_id']=='n' and q['sha256_origem']==SHA and len(q['pixels_sha256'])==64
     assert R.decidir(need(),candidate(),q,tipo='foto')['estado']=='PERTINENTE_PRIVADO'
+
+def test_explicit_thousand_alias_not_ambiguous_scale():
+    from src.v4.formatos import revisao_documental as R
+    e={'classe':'direta','detalhe':'specific visible detail of sufficient length','escala':'1000','bbox':{'esquerda':10,'topo':20,'direita':900,'base':950}}
+    assert R.normalizar_evidencia_direta(e)['bbox']==[.01,.02,.9,.95]
+    for scale in ('600_800','500_500'):
+        assert R.normalizar_evidencia_direta({**e,'escala':scale}) is None

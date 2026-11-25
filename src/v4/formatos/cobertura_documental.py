@@ -4,6 +4,21 @@ No rendering or automatic approval. Geographic obligations remain with ATLAS.
 from contextlib import nullcontext
 from .revisao_documental import cobertura_adaptativa
 
+
+def encaminhar(necessidade,row):
+    """Plan the next evidence route, never create or approve an asset."""
+    base={'id':necessidade['id'],'fatos':necessidade['fatos'],'mostrar':necessidade.get('mostrar'),
+          'pronto_para_render':False,'publicar':False}
+    if row['estado']=='DELEGAR_ATLAS':
+        return {**base,'rota':'ATLAS','proximo':'VALIDAR_GEOGRAFIA_E_RENDERIZAR_MAPA_COM_COMPROVANTE'}
+    if row['estado']=='CANDIDATO_PRIVADO_REVISADO':
+        return {**base,'rota':'REGISTRO_REAL','proximo':'AUDITAR_DIREITOS_ENQUADRAMENTO_E_TEMPO'}
+    reasons=[x.get('decisao',{}) for r in row.get('rodadas',[]) for x in r.get('cobertura',{}).get('trilha',[])]
+    semantic=any(x.get('motivo') in ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','FOTO_NAO_PROVA_MOVIMENTO') for x in reasons)
+    if necessidade.get('necessidade')=='lacuna_explicativa' and necessidade.get('lacuna') and semantic:
+        return {**base,'rota':'REAVALIAR_COMPLEMENTO','proximo':'VALIDAR_LACUNA_E_REFERENCIAS_PELO_CONTRATO_E217','animacao_autorizada':False}
+    return {**base,'rota':'REPLANEJAR_REGISTRO','proximo':'PESQUISAR_OU_REORGANIZAR_NARRATIVA_SEM_INVENTAR_EVIDENCIA'}
+
 def cobrir(necessidades,pesquisar,inspecionar,medir,*,max_visao,max_http,max_bytes,limitar_aquisicao=None):
     if not necessidades or len({n['id'] for n in necessidades})!=len(necessidades):raise ValueError('E253-IDS')
     for x in (max_visao,max_http,max_bytes):
@@ -38,6 +53,7 @@ def cobrir(necessidades,pesquisar,inspecionar,medir,*,max_visao,max_http,max_byt
         after=medir()
         rows.append({**result,'necessidade_id':n['id'],'fatos':n['fatos'],'limites_locais':cap,
                      'consumo':{k:after[k]-before[k] for k in limits}})
+    for n,row in zip(necessidades,rows):row['encaminhamento']=encaminhar(n,row)
     end=medir()
     counts={state:sum(r['estado']==state for r in rows) for state in
             ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')}

@@ -69,6 +69,7 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
         captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed)\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
                 ev=='estatica' and c.get('tipo')!='foto',
+                c.get('fonte')!='biblioteca_v3',
                 not captura,
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte')!='nasa',
                 not bool(c.get('source_id')))

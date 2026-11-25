@@ -81,3 +81,23 @@ def test_fluxo_normal_permite_buscas_de_metadados_mas_nao_download(tmp_path):
     assert C.conferir(C.extrair(p), contrato, 'replay')
     r['rede_aquisicao']['http'] = 1; p.write_text(_j.dumps(r))
     assert C.conferir(C.extrair(p), contrato, 'normal')
+
+
+def test_descoberta_ignora_releases_reempacotadas_sem_gastar_manifesto(monkeypatch, tmp_path):
+    """CI 45675321541: rearquivamentos recentes (mesmos pacotes) empurraram a coleção E258 para fora da janela."""
+    from scripts import recuperar_checkpoints_documentais as R
+    def rel(tag, ids):
+        a = [{'name': f'{i}.zip', 'size': 10, 'digest': 'sha256:' + '0' * 64} for i in ids]
+        return {'tag_name': tag, 'draft': True, 'assets': a + [{'name': 'manifesto-revisoes.jsonl', 'size': 5}]}
+    novas = [rel(f'review-e284-{k}', ['cm-aaaaaaaaaaaa']) for k in range(3)]
+    antiga = rel('review-e258-old', ['cm-bbbbbbbbbbbb'])
+    baixados = []
+    monkeypatch.setattr(R, 'api', lambda path: {'private': True, 'id': 1454059520} if path == '' else [])
+    monkeypatch.setattr(R, 'listar_releases', lambda n: novas + [antiga])
+    def dl(tag, asset, folder):
+        baixados.append(tag)
+        p = tmp_path / (tag + '.jsonl'); p.write_text(''); return p
+    monkeypatch.setattr(R, 'verified_download', dl)
+    rep = R.discover([{'id': 'n1'}], tmp_path)
+    assert baixados == ['review-e284-0', 'review-e258-old']
+    assert sum(e.get('motivo') == 'PACOTES_JA_CATALOGADOS' for e in rep['eventos']) == 2

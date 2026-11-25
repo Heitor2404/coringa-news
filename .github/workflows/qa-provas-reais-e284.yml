@@ -56,7 +56,7 @@ jobs:
         run: |
           caso=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo contraste_e281 || echo gelo_paisagem)
           bench=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo benchmarks/e281/contraste.json || echo benchmarks/e254/documentario.json)
-          bash scripts/estado_prova.sh checkpoints bash -c "[ -n \"\$GH_TOKEN\" ] || exit 77; python -m scripts.recuperar_checkpoints_documentais $bench $caso qa_e284_checkpoints || exit 77; test -s qa_e284_checkpoints/descoberta.json"
+          bash scripts/estado_prova.sh checkpoints bash -c "[ -n \"\$GH_TOKEN\" ] || exit 77; python -m scripts.recuperar_checkpoints_documentais $bench $caso qa_e284_checkpoints || exit 77; test -s qa_e284_checkpoints/descoberta.json && python scripts/exigir_pacotes.py qa_e284_checkpoints/descoberta.json 1"
           echo "CORINGA_CHECKPOINTS_DESCOBERTOS=$PWD/qa_e284_checkpoints/descoberta.json" >> "$GITHUB_ENV"
       - name: Abrir/ler autorizacao persistente (nunca reinicia)
         env:

@@ -466,6 +466,8 @@ def avaliar(plano: dict) -> dict:
                 elif largura>altura:
                     falha('F-ROI-SEM-DIRECAO',cid,
                           'vídeo horizontal final exige região essencial e inspeção do recorte vertical')
+        if (cena.get('progressao_visual') or {}).get('tipo')=='sequencia_amostrada_privada' and not (privado and plano.get('publicar') is False):
+            falha('F-SEQUENCIA-PRIVADA',cid,'amostras não homologam continuidade nem filme final')
         if tipo == 'video' and span > 3.8:
             # Usa o MESMO contrato temporal do áudio natural; não forçar
             # corte a cada 3,8s quando uma ação genuína continua.

@@ -146,3 +146,5 @@ E288 concluído tecnicamente (§345): 51 testes, 3 fotos/9,6s; n6 ganho de área
 E289.1 (§346): run E289 restaurou acervo e ATLAS mas voz HTTP400 por systemInstruction; saldo voz 1/2. Corrigido contrato REST conhecido, preservação de voz bruta e recibo, teste de saldo persistente. Nova execução pendente, sem vídeo aprovado.
 
 E289.2 (§347): recuperação explícita de gravação bruta por SHA, roteiro e voz; nenhuma nova síntese/fallback no replay. Testes novos pendentes; E289.1 em curso na consulta, não iniciar render paralelo.
+
+E289.3 (§348): voz real 83,04s preservada, TTS 2/2 esgotado; falha 21/216 palavras fora da fala. Recuperação medida e comparação de realinhamento local sem alterar critérios de aceitação, zero IA; render pendente. 

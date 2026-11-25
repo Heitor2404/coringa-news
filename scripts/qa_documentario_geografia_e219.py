@@ -267,18 +267,37 @@ def main():
         write(out/'preflight-piloto.json',{'publish':False,'narration':False,'semantic_review':'PENDING','direction':'ASSISTED_HISTORICAL','chapters':counts,'sources':len(acquired),'errors':errors})
         if any(x.get('type')=='video' and x['windows']==0 for x in counts):raise ValueError('PILOTO-SEM-JANELAS')
         return
-    wav,tempos,caps,dur=voz.narrar([{'fala':c['speech']} for c in spec['chapters']],out/'voz',exigir_gemini=True)
     audio=out/'narracao48k.wav'
-    subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
+    if '--voz-medida-restaurada' in sys.argv[3:]:
+        meta=read(out/'voz-original.json')
+        if meta.get('publish') is not False or meta.get('script_sha256')!=sha(Path(sys.argv[1])) or meta.get('audio_sha256')!=sha(audio):
+            raise ValueError('E289-VOZ-MEDIDA-VINCULO')
+        tempos,words=meta['tempos'],meta['words']
+    else:
+        wav,tempos,caps,dur=voz.narrar([{'fala':c['speech']} for c in spec['chapters']],out/'voz',exigir_gemini=True)
+        subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
+        words=D.palavras_de_caps(caps)
     with wave.open(str(audio),'rb') as f:duration=f.getnframes()/f.getframerate()
     if duration<60 or duration>180 or len(tempos)!=len(spec['chapters']):raise ValueError('E219-DURACAO '+str(duration))
-    words=D.palavras_de_caps(caps)
     if '--acervo-restaurado' in sys.argv[3:]:
         # Keep measured voice and its exact script before any map or editorial render.
         write(out/'voz-medida.json',{'publish':False,'script_sha256':sha(Path(sys.argv[1])),
             'audio_sha256':sha(audio),'duration_s':duration,'words':words,'tempos':tempos})
+        words,alignment=LS.alinhar_documental(words,audio,maximo=3)
+        write(out/'realinhamento.json',alignment)
+        # Keep chapter cuts anchored to the same word indices, not a new reading.
+        if '--voz-medida-restaurada' in sys.argv[3:]:
+            original=meta['words']
+            starts=[0.]
+            for a,_ in tempos[1:]:
+                i=min(range(len(original)),key=lambda i:abs(original[i]['s']-(a+.12)))
+                starts.append(max(starts[-1],words[i]['s']-.12))
+            tempos=list(zip(starts,starts[1:]+[duration]))
+        write(out/'voz-medida.json',{'publish':False,'script_sha256':sha(Path(sys.argv[1])),
+            'audio_sha256':sha(audio),'duration_s':duration,'words':words,'tempos':tempos})
         sync=LS.conferir(out/'voz-medida.json',audio,maximo=3)
         write(out/'sincronia-medida.json',sync)
+        print('E289 SINCRONIA',alignment,flush=True)
         if not sync['ok']:raise ValueError('E289-SINCRONIA: voz preservada para revisão, não renderizar')
     total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
     from src.v4.formatos import direcao_eventos as DE

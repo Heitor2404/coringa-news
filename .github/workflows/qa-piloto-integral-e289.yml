@@ -1,4 +1,4 @@
-name: E289.1 - corrigir contrato de voz e preservar gravacao
+name: E289.3 - realinhar voz existente e renderizar Havai sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -16,12 +16,11 @@ jobs:
     timeout-minutes: 40
     env:
       CAIXA_TETO_USD: '0'
-      CAIXA_MAX_CHAMADAS: '2'
+      CAIXA_MAX_CHAMADAS: '0'
       USAR_CLAUDE: '0'
       REMOTION_CHROME: /usr/bin/google-chrome
       CORINGA_CHROME: /usr/bin/google-chrome
       REMOTION_DISABLE_TELEMETRY: '1'
-      CORINGA_TTS_AUTORIZACAO: tts-e289-havai
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -33,7 +32,7 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
-          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py
+          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py
           ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
       - name: Restaurar acervo ja adquirido sem consultar origens de video
         env:
@@ -44,11 +43,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -c "from src.v3.previa_telegram import chat_autorizado; chat_autorizado()"
-      - name: Montagem com voz medida (maximo 2 operacoes gratuitas persistentes, zero visao)
+      - name: Recuperar voz medida autenticada
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          CORINGA_ORCAMENTO_TOKEN: ${{ secrets.COFRE_TOKEN }}
-        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_voz_e289 review-e289-45689022910-1 qa_e289 medida
+      - name: Realinhar e montar sem IA
+        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado --voz-medida-restaurada
       - name: Renderizar filme privado
         run: |
           cd motor4
@@ -87,7 +87,7 @@ jobs:
           shopt -s nullglob
           root=qa_e289
           files=()
-          for f in voz-medida.json narracao48k.wav sincronia-medida.json props.json qa.json probe.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json filme.mp4 fontes-contato.jpg; do
+          for f in voz-original.json realinhamento.json voz-medida.json narracao48k.wav sincronia-medida.json props.json qa.json probe.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json filme.mp4 fontes-contato.jpg; do
             [[ ! -s "$root/$f" ]] || files+=("$root/$f")
           done
           for f in "$root"/voz/gemini[0-9].json "$root"/voz/gemini[0-9].wav "$root"/cena-*.jpg; do

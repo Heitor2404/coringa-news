@@ -1,4 +1,4 @@
-name: E292 - tela cheia vertical por padrao, protecao de evidencia e regressao
+name: E293 - identidade autoral B e preservacao de midia
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -37,6 +37,8 @@ jobs:
           python -m scripts.qa_visual_e286
       - name: Medir texto, ocupacao vertical e regiao protegida em 20 quadros 1080x1920
         run: cd motor4 && node scripts/qa_texto_e290.mjs
+      - name: Verificar pixels de fundo autoral
+        run: python -m scripts.qa_fundo_e293
       - name: Preservar medidas e quadros mesmo se houver overflow
         if: ${{ always() }}
         env:
@@ -45,6 +47,7 @@ jobs:
           shopt -s nullglob
           root=stage_documental/e286/e290
           files=("$root"/medidas.json "$root"/*.png)
+          if [[ -f "$root/fundo_pixels.json" ]]; then files+=("$root/fundo_pixels.json"); fi
           if [[ -s "$root/medidas.json" ]]; then
             bash scripts/arquivar_cofre_review.sh "review-e290-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
             python scripts/espelhar_revisao_cofre.py "e290-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"

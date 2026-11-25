@@ -1,4 +1,5 @@
 /** FILME EDITORIAL — compositor visual-first independente do ATLAS de cartões.
+import {SignatureBackground,signatureHasVisibleArea} from './SignatureBackground';
  * Stage 0: documentação real preenchendo a tela; câmera e revelações de cada assunto.
  * Não há palco-mapa persistente, slots pequenos, nem fluxo de cards como ação.
  * Todos os títulos vêm do roteiro; o compositor não inventa fatos.
@@ -325,6 +326,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
       rect[0]+(er.right-hr.left)/sx,rect[1]+(er.bottom-hr.top)/sy];
     const actualOverlay=documentaryOverlay(shot,painted);
     const layout=documentaryLayout(shot);
+    const signatureBackground=document.querySelector('[data-layout-review] [data-documentary-background]')?.getAttribute('data-documentary-background')??null;
     // Soft local contrast for full-height portrait, without a full-width
     // opaque panel; stronger local contrast stays for other layouts.
     const portraitReview=layout.mode==='PORTRAIT_REVIEW';
@@ -334,7 +336,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected};
+      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
@@ -380,7 +382,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   if(separateStage){
     // Same source/sequence; no crop, no zoom, no duplicate blurred video.
     const stage={...rectStyle(separateStage),overflow:'hidden' as const};
-    return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
+    return <AbsoluteFill>
       <div data-media-layout="integral-protected" style={stage}>
         {shot.type==='video'?<Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
           <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
@@ -392,7 +394,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   if(mediaFirst&&realMedia(shot)&&nativeIntegral(shot)){
     // A native 9:16 is exactly full canvas. Other portrait ratios use maximum
     // contain without distortion or unverified crop. Preserve original frames.
-    return <AbsoluteFill data-media-layout="native-portrait-full" style={{background:'#08121E'}}>
+    return <AbsoluteFill data-media-layout="native-portrait-full">
       {shot.type==='video'?<Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
         <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
           style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
@@ -405,7 +407,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
       if(!['4:5','1:1'].includes(shot.documentary_viewport)||shot.video_context_layout!=='recorte_relacional_seguro')
         throw new Error('E229-VIEWPORT');
       const position=enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
-      return <AbsoluteFill style={{background:'#08101A'}}>
+      return <AbsoluteFill>
         <div data-media-layout={shot.documentary_viewport} style={{position:'absolute',left:0,top:370,width:1080,height,overflow:'hidden'}}>
           <Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
@@ -418,7 +420,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
     if(mediaFirst && (shot.video_context_layout==='cena_integral'||shot.video_context_layout==='quadro_integral')) {
       // Preserve all source pixels, but give the shot the FULL canvas width.
       // Integral is an exception for essential context, never the default crop.
-      return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
+      return <AbsoluteFill>
         <div data-media-layout="integral-wide" style={{...rectStyle(integralMediaRect(shot)),overflow:'hidden'}}>
           <Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
@@ -489,10 +491,10 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
     // Preserve the complete scientific/archival photograph without inventing
     // borders or cutting essential context. The editorial layers remain separate.
     const crop=mediaFirst&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'?shot.photo_crop_preview:null;
-    if(crop&&[1080,1350].includes(crop.height))return <AbsoluteFill style={{background:'#08121E'}}>
+    if(crop&&[1080,1350].includes(crop.height))return <AbsoluteFill>
       <Img data-media-layout="photo-roi-private-candidate" src={staticFile(shot.asset||'')} style={{position:'absolute',left:0,top:0,width:1080,height:crop.height,objectFit:'cover',objectPosition:`${crop.position[0]*100}% ${crop.position[1]*100}%`}}/>
     </AbsoluteFill>;
-    return <AbsoluteFill style={{background:'#08121E',overflow:'hidden'}}>
+    return <AbsoluteFill style={{background:mediaFirst?'transparent':'#08121E',overflow:'hidden'}}>
       <Img data-media-layout={mediaFirst?'integral-photo-adaptive':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(integralMediaRect(shot)):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
     </AbsoluteFill>;
   }
@@ -723,6 +725,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const layout=documentaryLayout(shot),slots=layout.slots;
     const brandOverlay=documentaryOverlay(shot,slots.brand);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V4" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
+      {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',
         background:'linear-gradient(180deg,rgba(4,11,20,.16) 0%,transparent 35%,transparent 48%,rgba(4,11,20,.48) 65%,rgba(4,11,20,.10) 83%,transparent 100%)'}}/>}

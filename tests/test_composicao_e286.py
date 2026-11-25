@@ -50,3 +50,14 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     assert 'containPixels([0,0,W,H],shot.source_dimensions!)' in code
     assert "documentary_text_probe&&(!preview||!private_review_only)" in code
     assert "overflowWrap:'anywhere'" in code
+
+
+def test_e293_signature_is_decoration_behind_real_media_only():
+    root=Path('motor4/remotion/src/formatos')
+    code=(root/'FilmeEditorial.tsx').read_text()
+    bg=(root/'SignatureBackground.tsx').read_text()
+    assert 'SIGNATURE_B_V1' in bg and 'aria-hidden="true"' in bg
+    assert 'signatureHasVisibleArea(layout.media)&&<SignatureBackground/>' in code
+    segment=code.split('if(mediaFirst&&realMedia(shot)) {',1)[1]
+    assert segment.index('<SignatureBackground/>') < segment.index('<Body shot={shot}')
+    assert 'staticFile' not in bg and 'Math.random' not in bg and 'filter:' not in bg

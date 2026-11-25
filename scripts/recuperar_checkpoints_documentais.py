@@ -27,10 +27,22 @@ def verified_download(tag,a,root):
     p=root/name
     if p.stat().st_size!=a['size'] or P.sha(p)!=digest[7:]:raise ValueError('E259-DOWNLOAD-SHA')
     return p
-def discover(needs,root,*,max_releases=20,max_bytes=100_000_000,max_packages=6):
+def listar_releases(max_releases):
+    # Bounded catalogue pagination; count manifests separately from release rows.
+    if type(max_releases) is not int or not 1<=max_releases<=100:raise ValueError('E259-LIMITE-RELEASES')
+    size=min(20,max_releases);rows=[]
+    for page in range(1,(max_releases+size-1)//size+1):
+        batch=api('/releases?per_page='+str(size)+'&page='+str(page))
+        if not isinstance(batch,list):raise ValueError('E259-LISTA')
+        rows.extend(batch)
+        if len(batch)<size:break
+    return rows[:max_releases]
+
+
+def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=6):
     root=Path(root);meta=api('')
     if meta.get('private') is not True or meta.get('id')!=1454059520:raise ValueError('E259-COFRE')
-    releases=api('/releases?per_page='+str(max_releases));ranked=[];events=[];spent=0
+    releases=listar_releases(max_releases);ranked=[];events=[];spent=0;manifests=0
     for rel in releases:
         tag=rel.get('tag_name','')
         if rel.get('draft') is not True or not re.fullmatch(r'review-[a-z0-9-]+',tag):continue
@@ -41,7 +53,7 @@ def discover(needs,root,*,max_releases=20,max_bytes=100_000_000,max_packages=6):
         folder=root/tag
         try:
             spent+=manifest['size']
-            p=verified_download(tag,manifest,folder)
+            p=verified_download(tag,manifest,folder);manifests+=1
             for line in p.read_text(encoding='utf8').splitlines():
                 row=json.loads(line);mid=row.get('id','');asset=assets.get(mid+'.zip')
                 if not asset or not re.fullmatch(r'cm-[0-9a-f]{12}',mid) or not 0<asset['size']<=P.MAX_TOTAL+10_000_000:continue
@@ -59,7 +71,7 @@ def discover(needs,root,*,max_releases=20,max_bytes=100_000_000,max_packages=6):
             dirs.append(str(dest));seen.add(mid)
             events.append({'id':mid,'tag':tag,'score':score,'estado':'PACOTE_LOCAL_VERIFICADO'})
         except (OSError,ValueError,subprocess.SubprocessError,KeyError) as e:events.append({'id':mid,'motivo':type(e).__name__})
-    return {'pacotes':dirs,'bytes_reservados':spent,'eventos':events,'publicar':False,'direitos_aprovados':False}
+    return {'pacotes':dirs,'releases_examinadas':len(releases),'limite_releases':max_releases,'manifestos_lidos':manifests,'candidatos_ranqueados':len(ranked),'bytes_reservados':spent,'eventos':events,'publicar':False,'direitos_aprovados':False}
 def main():
     spec=json.loads(Path(sys.argv[1]).read_text());case=next(c for c in spec['cases'] if c['id']==sys.argv[2])
     if spec.get('publish') is not False:raise ValueError('E259-PRIVADO')

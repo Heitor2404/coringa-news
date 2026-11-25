@@ -21,3 +21,14 @@ def test_checkpoint_zip_never_extracts_arbitrary_path(tmp_path):
     with pytest.raises(ValueError,match='E259-ZIP-NOME'):
         P.extrair_checkpoint(z,tmp_path/'bad',expected_sha256=P.sha(z))
     assert not (tmp_path/'escape').exists() and not (tmp_path/'bad').exists()
+
+
+def test_checkpoint_discovery_paginates_past_recent_diagnostics(monkeypatch):
+    from scripts import recuperar_checkpoints_documentais as R
+    calls=[]
+    def api(path):
+        calls.append(path)
+        return [{'tag_name':str(i)} for i in range(20)] if path.endswith('page=1') else [{'tag_name':'older'}]
+    monkeypatch.setattr(R,'api',api)
+    assert R.listar_releases(60)[-1]['tag_name']=='older'
+    assert len(calls)==2

@@ -89,3 +89,21 @@ def test_nasa_receipt_legacy_http_upgrade_and_exact_host():
     assert nasa_receipt(c,T())==[{'url':'https://images-assets.nasa.gov/image/PIA123/~medium.jpg'}]
     assert c['recibo_nasa']['variantes_declaradas'][0]['href_declarado'].startswith('http:')
     assert c['recibo_nasa']['direitos']=='PENDENTE_AUDITORIA_INDIVIDUAL'
+
+
+def test_gateway_and_connection_failures_are_bounded_and_recorded():
+    import requests
+    waits=[]
+    class Transient:
+        def __init__(self):self.i=0
+        def get(self,*args,**kwargs):
+            self.i+=1
+            if self.i==1:return Response(504)
+            if self.i==2:raise requests.exceptions.ReadTimeout('test')
+            return Response(200)
+    tr=Transporte(session=Transient(),sleep=waits.append,max_wait=20)
+    assert tr.get('https://example.org/a',{'example.org'},10)==b'ok'
+    assert tr.http==3 and len(waits)==2 and tr.events[1]['resultado']=='ReadTimeout'
+    tr=Transporte(session=Session([Response(504)]),max_http=1,sleep=lambda _:pytest.fail('no remaining HTTP'))
+    with pytest.raises(AquisiçãoErro,match='FONTE_SUSPENSA'):tr.get('https://example.org/a',{'example.org'},10)
+    assert tr.http==1

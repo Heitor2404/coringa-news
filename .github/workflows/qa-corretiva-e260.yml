@@ -1,4 +1,4 @@
-name: E261.5 - midia real primeiro e complemento com evidencia
+name: E261.6 - lacunas explicativas de fotos e videos
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

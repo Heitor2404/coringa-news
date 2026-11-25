@@ -63,7 +63,7 @@ def evidencia_lacuna(necessidade,row):
                     'duracao_s':pk['duracao_s'],'motivo':d['motivo']}
     return {'necessidade_id':necessidade['id'],'fatos':necessidade['fatos'],
         'consultas_executadas':queries,'revisoes_negativas':list(negatives.values()),
-        'escopo':'APENAS_JANELAS_INSPECIONADAS','inclui_fotos_inspecionadas':any(x.get('tipo')=='foto' for x in negatives.values()),'inexistencia_de_midia_comprovada':False,
+        'escopo':'APENAS_AMOSTRAS_INSPECIONADAS','inclui_fotos_inspecionadas':any(x.get('tipo')=='foto' for x in negatives.values()),'inexistencia_de_midia_comprovada':False,
         'publicar':False,'animacao_autorizada':False}
 
 

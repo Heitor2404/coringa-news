@@ -114,6 +114,6 @@ def test_reviewed_negative_handoff_is_scoped_and_not_approval():
         'candidatos':[c]},'cobertura':{'trilha':[]}}]}
     route=C.encaminhar(n,row)
     assert route['rota']=='REAVALIAR_COMPLEMENTO' and not route['animacao_autorizada']
-    assert route['evidencia_lacuna']['escopo']=='APENAS_JANELAS_INSPECIONADAS'
+    assert route['evidencia_lacuna']['escopo']=='APENAS_AMOSTRAS_INSPECIONADAS'
     assert len(route['evidencia_lacuna']['revisoes_negativas'])==1
     assert C.encaminhar({**n,'mostrar':'outra ação'},row)['rota']=='REPLANEJAR_REGISTRO'

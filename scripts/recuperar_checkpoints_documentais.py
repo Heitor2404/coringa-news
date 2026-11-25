@@ -1,0 +1,70 @@
+"""Recover useful private V3 packages from the existing vault, not a new database."""
+import hashlib,json,re,subprocess,sys
+from pathlib import Path
+from src.v3 import pacote_biblioteca as P
+
+REPO='Heitor2404/coringa-cofre'
+def api(path):
+    return json.loads(subprocess.check_output(['gh','api','repos/'+REPO+path],timeout=60))
+def tokens(s):
+    return set(re.findall(r'[a-z0-9]{3,}',str(s).lower()))-{'the','and','with','from','this','that','video','footage','real'}
+def relevance(row,needs):
+    typ=row.get('tipo')
+    words=tokens(' '.join(str(row.get(k) or '') for k in ('titulo','descricao','mostra')))
+    scores=[]
+    for n in needs:
+        if n.get('necessidade')!='registro' or (n.get('evidencia_visual')=='movimento' and typ!='video'):continue
+        for q in n.get('consultas_en') or []:
+            qs=tokens(q)
+            if qs:scores.append(len(qs&words)/len(qs))
+    return max(scores,default=0)
+def verified_download(tag,a,root):
+    name=a['name'];digest=a.get('digest') or ''
+    if not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):raise ValueError('E259-DIGEST')
+    if not re.fullmatch(r'(?:cm-[0-9a-f]{12}\.zip|manifesto-revisoes\.jsonl)',name):raise ValueError('E259-NOME')
+    root.mkdir(parents=True,exist_ok=True)
+    subprocess.run(['gh','release','download',tag,'--repo',REPO,'--pattern',name,'--dir',str(root)],check=True,timeout=120)
+    p=root/name
+    if p.stat().st_size!=a['size'] or P.sha(p)!=digest[7:]:raise ValueError('E259-DOWNLOAD-SHA')
+    return p
+def discover(needs,root,*,max_releases=20,max_bytes=100_000_000,max_packages=6):
+    root=Path(root);meta=api('')
+    if meta.get('private') is not True or meta.get('id')!=1454059520:raise ValueError('E259-COFRE')
+    releases=api('/releases?per_page='+str(max_releases));ranked=[];events=[];spent=0
+    for rel in releases:
+        tag=rel.get('tag_name','')
+        if rel.get('draft') is not True or not re.fullmatch(r'review-[a-z0-9-]+',tag):continue
+        assets={a['name']:a for a in rel.get('assets',[])}
+        manifest=assets.get('manifesto-revisoes.jsonl')
+        if not manifest or not 0<manifest['size']<=8_000_000 or spent+manifest['size']>max_bytes:continue
+        if not any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):continue
+        folder=root/tag
+        try:
+            spent+=manifest['size']
+            p=verified_download(tag,manifest,folder)
+            for line in p.read_text(encoding='utf8').splitlines():
+                row=json.loads(line);mid=row.get('id','');asset=assets.get(mid+'.zip')
+                if not asset or not re.fullmatch(r'cm-[0-9a-f]{12}',mid) or not 0<asset['size']<=P.MAX_TOTAL+10_000_000:continue
+                score=relevance(row,needs)
+                if score>0:ranked.append((score,tag,asset))
+        except (OSError,ValueError,subprocess.SubprocessError,KeyError) as e:events.append({'tag':tag,'motivo':type(e).__name__})
+    dirs=[];seen=set()
+    for score,tag,a in sorted(ranked,key=lambda x:-x[0]):
+        mid=a['name'][:-4]
+        if mid in seen or len(dirs)>=max_packages or spent+a['size']>max_bytes:continue
+        try:
+            spent+=a['size']
+            p=verified_download(tag,a,root/tag)
+            dest=P.extrair_checkpoint(p,root/tag/mid,expected_sha256=a['digest'][7:])
+            dirs.append(str(dest));seen.add(mid)
+            events.append({'id':mid,'tag':tag,'score':score,'estado':'PACOTE_LOCAL_VERIFICADO'})
+        except (OSError,ValueError,subprocess.SubprocessError,KeyError) as e:events.append({'id':mid,'motivo':type(e).__name__})
+    return {'pacotes':dirs,'bytes_reservados':spent,'eventos':events,'publicar':False,'direitos_aprovados':False}
+def main():
+    spec=json.loads(Path(sys.argv[1]).read_text());case=next(c for c in spec['cases'] if c['id']==sys.argv[2])
+    if spec.get('publish') is not False:raise ValueError('E259-PRIVADO')
+    root=Path(sys.argv[3]);root.mkdir(parents=True,exist_ok=True)
+    report=discover(case['necessidades'],root)
+    (root/'descoberta.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+    print('E259 PACOTES',len(report['pacotes']))
+if __name__=='__main__':main()

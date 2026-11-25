@@ -16,7 +16,8 @@ def main():
     tri=D.triagem_documental(case['necessidades'],case['fatos'])
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     t=Transporte(max_http=14,max_bytes=140_000_000,max_wait=30)
-    budget=2;calls=0;boards=[];results=[]
+    adaptive='--adaptativa' in sys.argv[4:]
+    budget=2;calls=0;boards=[];results=[];seen_bytes=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -31,6 +32,10 @@ def main():
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
+        if adaptive:
+            key=(n['id'],meta['sha256'])
+            if key in seen_bytes:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_INSPECIONADOS'}
+            seen_bytes.add(key)
         m={'id':c.get('source_id') or meta['sha256'],'expected_sha256':meta['sha256'],
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
@@ -51,7 +56,7 @@ def main():
         if meta['duration_s']<15 and other-a>.5:positions.append(other)
         elif len(starts)>1:positions.append(starts[1][0])
         c['janelas']=[]
-        for a in positions:
+        for a in (positions[:1] if adaptive else positions):
             if calls>=budget:break
             frames=[E.frame(p,a+span*f,width=min(960,meta['width'])) for f in (0,.5,.9)]
             pack=DE.pacote_observacao(m,a,span,frames,fato_id=n['fatos'][0],necessidade=n['mostrar'],fracoes=(0,.5,.9))
@@ -68,13 +73,22 @@ def main():
                 c['selecao_janela']=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0]);return dec
         return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NO_ORCAMENTO'}
     try:
-        reports=D.pesquisar_triagem(tri,biblioteca_global=lib,max_buscas=8)
-        for n,r in zip(tri,reports):
-            results.append(D.revisar_cobertura_documental(n,r,inspect,max_candidatos=6))
+        if adaptive:
+            reports=[]
+            def search(n,limit):
+                r=D.pesquisar_triagem([n],biblioteca_global=lib,max_buscas=limit)[0]
+                reports.append(r);return r
+            for n in tri:
+                results.append(R.cobertura_adaptativa(n,search,inspect,
+                    lambda phase:calls<(1 if phase==0 else budget) and t.http<t.max_http and t.bytes<t.max_bytes))
+        else:
+            reports=D.pesquisar_triagem(tri,biblioteca_global=lib,max_buscas=8)
+            for n,r in zip(tri,reports):
+                results.append(D.revisar_cobertura_documental(n,r,inspect,max_candidatos=6))
     finally:lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'reuso_bytes_validado':False,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'modo_adaptativo':adaptive,'reuso_bytes_validado':False,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

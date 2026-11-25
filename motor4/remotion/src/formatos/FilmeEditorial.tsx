@@ -50,6 +50,7 @@ export type FilmShot = {
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
   photo_framing?: 'integral';
+  source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
   headline: string;
@@ -199,6 +200,12 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
 const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240],integral:[0,395,1080,1150],photoIntegral:[0,405,1080,1030],photoHero:[0,535,1080,1585],photoTitle:[160,400,760,449],photoCredit:[160,452,760,530]} as const;
+// E286: preserve every original pixel, but let portrait/square sources use the canvas.
+// Horizontal originals stay full width; a tall crop requires a separately verified ROI.
+const integralMediaRect=(shot:FilmShot):readonly number[]=>{
+  const [w,h]=shot.source_dimensions||[16,9];
+  return w/h<=1.15?[0,0,1080,1920]:[0,400,1080,1030];
+};
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
@@ -245,7 +252,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
       // Preserve all source pixels, but give the shot the FULL canvas width.
       // Integral is an exception for essential context, never the default crop.
       return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
-        <div data-media-layout="integral-wide" style={{...rectStyle(DOC_MEDIA.integral),overflow:'hidden'}}>
+        <div data-media-layout="integral-wide" style={{...rectStyle(integralMediaRect(shot)),overflow:'hidden'}}>
           <Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
               style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
@@ -314,11 +321,8 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   if(shot.type==='photo'&&shot.photo_framing==='integral'&&!shot.graphic_original){
     // Preserve the complete scientific/archival photograph without inventing
     // borders or cutting essential context. The editorial layers remain separate.
-    return <AbsoluteFill style={{background:mediaFirst?'linear-gradient(180deg,#112536,#08121E 70%,#050A12)':'#060C15',overflow:'hidden'}}>
-      {/* Deliberately defocused tonal backdrop from the same image.
-          Never a continuation of source pixels or a second evidence layer. */}
-      {mediaFirst&&<Img aria-hidden data-media-ambience="defocused-non-evidence" src={staticFile(shot.asset||'')} style={{position:'absolute',inset:-60,width:1200,height:2040,objectFit:'cover',filter:'blur(64px) brightness(.42) saturate(.72)',opacity:.72}}/>}
-      <Img data-media-layout={photoHero?'integral-photo-hero':mediaFirst?'integral-photo-separated':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(photoHero?DOC_MEDIA.photoHero:DOC_MEDIA.photoIntegral):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
+    return <AbsoluteFill style={{background:'#08121E',overflow:'hidden'}}>
+      <Img data-media-layout={mediaFirst?'integral-photo-adaptive':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(integralMediaRect(shot)):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
     </AbsoluteFill>;
   }
   if (shot.type === 'photo' && shot.graphic_original && shot.motion_graphic) {
@@ -543,7 +547,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
   if(mediaFirst&&realMedia(shot)) {
-    const photoHero=shot.type==='photo'&&shot.photo_framing==='integral'&&!subtitleMode;
+    const photoHero=false; // do not repeat the narration as a competing headline
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst photoHero={photoHero}/>
       {/* Local text contrast only. Never cover the lower part of the footage. */}
@@ -559,11 +563,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         {shot.lead.toUpperCase()}
       </div>}
       {photoHero&&<div style={{...rectStyle(DOC_MEDIA.photoTitle),display:'flex',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',fontSize:36,fontWeight:800,lineHeight:1.05,overflowWrap:'anywhere'}}>{shot.headline||shot.subject}</div>}
-      <div data-documentary-credit="full" style={{...rectStyle(photoHero?DOC_MEDIA.photoCredit:DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:Math.max(18,Math.min(26,Math.floor(2300/Math.max(1,((shot.evidence==='representative'?'CONTEXTO · ':'')+'FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
-        overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
-        background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>
-        {shot.evidence==='representative'?'CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
+      <div data-documentary-credit="full" style={{...rectStyle(photoHero?DOC_MEDIA.photoCredit:DOC_MEDIA.source),color:'#CED5DB',fontFamily:'Inter,Arial,sans-serif',
+        fontSize:18,lineHeight:1.12,fontWeight:450,
+        overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 3px #000,0 1px 6px #000',
+        background:'rgba(4,11,20,.40)',padding:'2px 6px',boxSizing:'border-box',borderRadius:2,height:'auto'}}>
+        {shot.evidence==='representative'?'Contexto · ':''}{shot.source_display||shot.source}
       </div>
     </AbsoluteFill>;
   }
@@ -727,9 +731,9 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
     {docCap&&<div data-safe-role="subtitle" style={{...(realMedia(shots[shot])?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
-        justifyContent:realMedia(shots[shot])?'flex-start':'center',textAlign:realMedia(shots[shot])?'left':'center',pointerEvents:'none'}}>
+        justifyContent:'center',textAlign:'center',pointerEvents:'none'}}>
       <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:realMedia(shots[shot])?Math.max(32,Math.min(52,Math.floor(580/(Math.max(1,docCap.words.map(w=>w.w).join(' ').length)*.64)))):44,lineHeight:1.08,color:OFF_WHITE,
-        padding:realMedia(shots[shot])?'6px 10px':'8px 14px',background:realMedia(shots[shot])?'rgba(4,11,20,.32)':'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
+        padding:realMedia(shots[shot])?'6px 10px':'8px 14px',background:realMedia(shots[shot])?'rgba(4,11,20,.50)':'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
         {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
       </div>
     </div>}

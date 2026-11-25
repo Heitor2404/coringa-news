@@ -841,6 +841,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if c['type'] != 'mechanism':
             x['asset']=medias[c['asset']]['asset']
             x['source']=medias[c['asset']]['credit']
+            if c['type'] in ('photo','video'):
+                x['source_dimensions']=[medias[c['asset']]['width'],medias[c['asset']]['height']]
         else:
             # Fonte descritiva, sem fingir que o desenho é filmagem.
             # Preserva a legenda das eclusas legadas (não mudar outros vídeos).

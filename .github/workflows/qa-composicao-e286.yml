@@ -1,0 +1,45 @@
+name: E286 - prova de composicao real multiformato sem IA
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-composicao-e286.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install -q -r requirements.txt pytest beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
+          python -m pytest -q tests/test_composicao_e286.py tests/test_filme_editorial.py tests/test_area_segura_plataformas.py
+          python -m scripts.qa_visual_e286
+      - name: Renderizar prova de layout real (audio silencioso, nao documentario)
+        run: |
+          root=stage_documental/e286
+          (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root"/fragmento.mp4 --props=../"$root"/props.json --public-dir=remotion/public --codec=h264 --crf=21 --scale=.5 --concurrency=3 --log=error)
+          ffprobe -v error -show_streams -show_format -of json "$root"/fragmento.mp4 > "$root"/probe.json
+          for t in 1 4 7 10; do ffmpeg -v error -y -ss "$t" -i "$root"/fragmento.mp4 -frames:v 1 "$root"/quadro-"$t".jpg; done
+      - name: Guardar prova privada
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e286
+          files=("$root"/prova.json "$root"/probe.json "$root"/quadro-*.jpg "$root"/fragmento.mp4)
+          bash scripts/arquivar_cofre_review.sh "review-e286-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          python scripts/espelhar_revisao_cofre.py "e286-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"

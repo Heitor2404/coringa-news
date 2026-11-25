@@ -126,3 +126,6 @@ E281 45636170163 FAILURE, 78 aprovados/1 falha, nenhuma visão real: assinatura 
 
 ### E282 — prevenção de reincidências (§333)
 E281.2 [45639629861](https://github.com/Heitor2404/coringa-news/actions/runs/45639629861) SUCCESS 79 testes; foto recuperada; vídeo baixado e decodificado; 2 chamadas reais restantes, 3 janelas sem ação solicitada e 3 inválidas D-REV-OBSERVACAO. Cobertura 1/2, sem MP4/Telegram. Saldo de visão E281 esgotado; não repetir. E282 preflight compartilhado antes de rede, favorece candidatos novos antes de repetir vídeo remoto na segunda fase, conserva resposta inválida sem aprovar; testes de falhas e regressão acumulada sem IA. Regressões E282 confirmadas nos runs 45642199999 e 45642200671. O estado mais recente prevalece. Fechamento exige prova proporcional ao escopo e regressão concreta, não apenas CI verde; sem criar bloqueios editoriais arbitrários.
+
+### E286 — composição em revisão (§339)
+Remoção do fundo borrado e melhoria da escala por proporção real; crédito discreto, legenda centralizada. Prova privada de layout multiformato sem IA, não filme narrado nem homologação; conferir quadros. E285 multitema 45683486826 SUCCESS, contrato de reuso 45683486814 pendente nesta consulta. 

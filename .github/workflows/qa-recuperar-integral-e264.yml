@@ -1,0 +1,39 @@
+name: E264.1 - recuperar originais de sete necessidades do episodio integral
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-recuperar-integral-e264.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recovery:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_acervo_recuperacao_e246.py tests/test_checkpoint_e259.py tests/test_pacote_biblioteca_e250.py tests/test_reuso_documental_e251.py tests/test_documentario_integral_e254.py tests/test_recuperar_originais_e264.py
+      - name: Recuperar fontes exatas de geologia sem IA
+        run: python -m scripts.qa_recuperar_originais_e264 benchmarks/e264/originais_integral.json stage_documental/e264-integral
+      - name: Preservar originais verificaveis e diagnostico
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e264-integral
+          if [[ -s "$root/recuperacao.json" ]]; then
+            files=("$root/recuperacao.json" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip)
+            bash scripts/arquivar_cofre_review.sh "review-e264-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e264-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/recuperacao.json"
+          fi

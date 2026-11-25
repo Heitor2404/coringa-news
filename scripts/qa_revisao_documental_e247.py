@@ -34,13 +34,13 @@ def main():
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=min(20,len(tri)+2) if integral else 4 if multi else 2
-    calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
         calls+=1
         from src import gemini
-        return gemini.json_visao(prompt,images,leve=True)
+        return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
     def inspect(c,n):
         nonlocal reuses
         c['revisao_adicional_possivel']=False
@@ -258,7 +258,7 @@ def main():
         lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

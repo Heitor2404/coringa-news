@@ -31,6 +31,11 @@ def main():
     case=report['case']
     evidence=root/'entregas_verificadas.json'
     entregas=json.loads(evidence.read_text()) if evidence.is_file() else {}
+    if '--sem-atlas-automatico' not in sys.argv[2:]:
+        # E284: territorial needs reach the native ATLAS through two-source verification, no manual curation.
+        from src.v4.formatos import atlas_automatico as AA
+        entregas,atlas_log=AA.completar_entregas(report,entregas,root/'atlas')
+        if atlas_log:write(root/'atlas_automatico.json',{'entregas':atlas_log,'publicar':False})
     chosen,gate=P.preparar_cobertura(report,case,atlas=entregas.get('atlas'),progressao=entregas.get('progressao'))
     write(root/'integral.json',gate)
     if not gate['pronto_para_tts']:

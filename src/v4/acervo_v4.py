@@ -305,7 +305,13 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     # on the first query. Without inspection, continue looking for options.
     por_rodada=max(1,max_buscas//len(consultas))
     for ri,consulta in enumerate(consultas):
-        for tipo,nome,fn in ((rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas):
+        ordem=(rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas
+        # For action evidence, use the primary video source for both queries.
+        # Otherwise the alternative wording may only reach unrelated providers.
+        if ev=='movimento' and ri and rotas and por_rodada>=2:
+            ordem=[rotas[0]]+[x for x in ordem if x[:2]!=rotas[0][:2]]
+            ordem=ordem[:por_rodada]
+        for tipo,nome,fn in ordem:
             if len(report['buscas'])>=max_buscas:return {**report,'estado':'LACUNA_NAO_VERIFICADA'}
             row={'consulta':consulta,'tipo':tipo,'fonte':nome}
             try:raw=fn(consulta) or []

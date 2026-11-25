@@ -121,3 +121,5 @@ ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e dia
 E235: auditoria de reuso, bases regionais e diretor geográfico; sem render/TTS
 
 E235.1 normalizacao dos cantos; regressao sem TTS.
+
+E237: direcao e montagem cartografica multiescala opt-in, sem IA.

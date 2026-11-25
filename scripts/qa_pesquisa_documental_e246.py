@@ -38,7 +38,17 @@ def nasa_receipt(c,t,*,progressivo=False):
         safe=urlunsplit(('https','images-assets.nasa.gov',p.path,p.query,''))
         variants_receipt.append({'href_declarado':u,'href_https':safe})
         if safe not in urls:urls.append(safe)
-    urls.sort(key=lambda u: (0 if '~medium' in u else 1 if '~large' in u else 2 if '~orig' in u else 3,u))
+    # Progressive video discovery favors usable smaller derivatives before
+    # expensive originals. The actual decoded resolution remains mandatory.
+    # Photos and the legacy path retain their established ordering.
+    if progressivo and c.get('tipo')=='video':
+        ranks={'small':0,'medium':1,'mobile':2,'preview':3,'large':4,'orig':5}
+        def rank(u):
+            suffix=urlsplit(u).path.rsplit('~',1)[-1].split('.')[0].lower()
+            return (ranks.get(suffix,4),u)
+        urls.sort(key=rank)
+    else:
+        urls.sort(key=lambda u: (0 if '~medium' in u else 1 if '~large' in u else 2 if '~orig' in u else 3,u))
     if not urls:raise ValueError('NASA_SEM_VARIANTE')
     c['recibo_nasa']={'nasa_id':nid,'asset_response_sha256':hashlib.sha256(raw).hexdigest(),'variantes_declaradas':variants_receipt[:30],'credit_declared':c.get('nasa_credit'),'secondary_credit':c.get('nasa_secondary_credit'),'direitos':'PENDENTE_AUDITORIA_INDIVIDUAL'}
     return [{'url':u} for u in (urls if progressivo else urls[:3])]
@@ -86,7 +96,7 @@ def archive_receipt(c,t):
 def progressive_stop(t):
     return getattr(t,'http',0)>=getattr(t,'max_http',float('inf')) or getattr(t,'bytes',0)>=getattr(t,'max_bytes',float('inf'))
 
-def sample(c,out,t,*,progressivo=False):
+def sample(c,out,t,*,progressivo=False,max_variantes=None):
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte'] in ('nasa','nasa_video'):
         choices=nasa_receipt(c,t,progressivo=progressivo);hosts={'images-assets.nasa.gov'}
@@ -105,7 +115,13 @@ def sample(c,out,t,*,progressivo=False):
     else:raise ValueError('PAGINA_PENDENTE')
     cap=26_000_000 if c['tipo']=='foto' else 80_000_000
     failures=[]
-    for v in (choices if progressivo else choices[:3]):
+    ordered=choices if progressivo else choices[:3]
+    # Optional experimental per-candidate allocation, never a universal
+    # editorial limit. Caller can revisit with remaining global budget.
+    if max_variantes is not None:
+        if type(max_variantes) is not int or max_variantes<1:raise ValueError('LIMITE_PROVA_VARIANTES')
+        ordered=ordered[:max_variantes]
+    for v in ordered:
         if progressive_stop(t):break
         remaining=getattr(t,'max_bytes',cap)-getattr(t,'bytes',0)
         if (v.get('size') or 0)>min(cap,remaining):

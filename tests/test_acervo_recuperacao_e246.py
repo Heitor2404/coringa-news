@@ -45,6 +45,8 @@ def test_size_budget_and_no_403_retry():
     t=Transporte(session=Session([Response(200,{'Content-Length':'100'})]))
     with pytest.raises(AquisiçãoErro,match='CONTENT_LENGTH'):t.get('https://example.org/a',{'example.org'},10)
     assert t.bytes==0
+    assert t.events[-1]['content_length']==100 and t.events[-1]['limite_bytes']==10
+    assert t.events[-1]['resultado']=='LIMITE_CONTENT_LENGTH'
 
 def test_real_manifest_restoration(tmp_path):
     b,r=restaurar_catalogo(db=tmp_path/'db.sqlite3',armazem=tmp_path/'files')

@@ -247,7 +247,6 @@ def candidatos_nasa_video(busca: str, *, documental=False) -> list[dict]:
                     'nasa_secondary_credit':d.get('secondary_creator'),
                     'credito':d.get('photographer') or d.get('center') or 'NASA — crédito individual pendente',
                     'licenca':'','variantes':[]})
-                if len(out)>=POR_FONTE:break
                 continue
             m = requests.get(f'https://images-api.nasa.gov/asset/{nid}', headers=UA, timeout=30).json()
             hrefs = [x.get('href', '') for x in (m.get('collection') or {}).get('items') or []]
@@ -305,7 +304,6 @@ def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
                     'titulo':doc.get('title',''),'descricao':str(doc.get('description') or doc.get('title') or '')[:400],
                     'descricao_integral':str(doc.get('description') or '')[:8000],
                     'credito':'','licenca':'','variantes':[]})
-                if len(out)>=POR_FONTE:break
                 continue
             meta = requests.get(f'https://archive.org/metadata/{ident}', headers=UA, timeout=30).json()
             mp4 = [f for f in meta.get('files') or [] if str(f.get('name', '')).lower().endswith('.mp4')

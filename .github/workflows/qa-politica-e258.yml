@@ -1,4 +1,4 @@
-name: E258.3 - relevancia e aquisicao sem IA
+name: E258.4 - diversidade de candidatos e diagnostico de tamanho
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

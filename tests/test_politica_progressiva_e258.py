@@ -159,3 +159,24 @@ def test_archive_receipt_documented_workable_servers_and_error():
     d['dir']='/12/items/other'
     with pytest.raises(ValueError,match='ARCHIVE_DIRETORIO_PENDENTE'):
         archive_receipt(c,Transport(d))
+
+
+def test_documentary_providers_do_not_hide_candidates_after_three(monkeypatch):
+    from src import midia
+    class Resp:
+        def raise_for_status(self):pass
+        def json(self):
+            return {'collection':{'items':[{'data':[{'nasa_id':f'VIDEO{i}','title':'Record'}]} for i in range(8)]},
+                    'response':{'docs':[{'identifier':f'video{i}','title':'Record'} for i in range(8)]}}
+    monkeypatch.setattr(midia.requests,'get',lambda *a,**k:Resp())
+    assert len(midia.candidatos_nasa_video('record',documental=True))==8
+    assert len(midia.candidatos_archive('record',documental=True))==8
+
+def test_progressive_nasa_prefers_small_declared_video_derivative():
+    base='https://images-assets.nasa.gov/video/VIDEO123/'
+    c={'source_id':'VIDEO123','tipo':'video'}
+    urls=[base+'VIDEO123~'+x+'.mp4' for x in ('orig','large','mobile','small','medium')]
+    result=nasa_receipt(c,Transport({'collection':{'items':[{'href':u} for u in urls]}}),progressivo=True)
+    assert [x['url'] for x in result][:2]==[urls[3],urls[4]]
+    assert set(x['url'] for x in result)==set(urls)
+    assert c['recibo_nasa']['direitos']=='PENDENTE_AUDITORIA_INDIVIDUAL'

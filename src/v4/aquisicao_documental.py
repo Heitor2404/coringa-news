@@ -46,8 +46,12 @@ class Transporte:
                 self.events.append(event)
                 if code==200:
                     length=r.headers.get('Content-Length')
-                    if length and length.isdigit() and int(length)>min(lim,self.max_bytes-self.bytes):
-                        raise AquisiçãoErro('LIMITE_CONTENT_LENGTH')
+                    if length and length.isdigit():
+                        event['content_length']=int(length)
+                        event['limite_bytes']=min(lim,self.max_bytes-self.bytes)
+                        if int(length)>event['limite_bytes']:
+                            event['resultado']='LIMITE_CONTENT_LENGTH'
+                            raise AquisiçãoErro('LIMITE_CONTENT_LENGTH')
                     data=bytearray()
                     for chunk in r.iter_content(65536):
                         self.bytes+=len(chunk)

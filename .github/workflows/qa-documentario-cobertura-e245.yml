@@ -1,0 +1,60 @@
+name: E245 - alternativas de cobertura documental
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-documentario-cobertura-e245.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - name: Dependencias de aquisicao
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4
+      - name: Regressões do contrato de observação
+        run: python -m pip install -q pytest && python -m pytest -q tests/test_direcao_observacao_e238.py tests/test_direcao_observacao_e239.py
+      - name: Verificar alternativas de cobertura
+        run: python -m scripts.qa_documentario_cobertura_e245 benchmarks/e245/cobertura.json qa_cobertura
+      - name: Enviar folhas e manifesto ao destino privado
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          try:
+              chat,_=T.chat_autorizado()
+              root=Path('qa_cobertura')
+              paths=sorted(root.glob('fotos.jpg'))+[root/'coverage.json']
+              for path in paths:
+                  r=T._api('sendDocument',{'chat_id':chat,'caption':'CORINGA · E245. Alternativas de cobertura, revisão privada pendente.'},('document',path))
+                  if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
+          except Exception:
+              raise SystemExit('Entrega privada não confirmada') from None
+          print('E245 COBERTURA ENTREGUE',len(paths))
+          PY
+  avisar_falha:
+    needs: coverage
+    if: ${{ always() && (needs.coverage.result == 'failure' || needs.coverage.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.coverage.result }}
+      job_name: coverage
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

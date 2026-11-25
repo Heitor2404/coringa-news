@@ -52,3 +52,6 @@ Implementado ranking contextual soft antes da fração de correspondência, fall
 
 ### E278.1 — observação por lote, integração experimental
 E278 f420aeb: [prova](https://github.com/Heitor2404/coringa-news/actions/runs/45631143175), [regressão](https://github.com/Heitor2404/coringa-news/actions/runs/45631143043) em execução na consulta. Opção --revisar-previas usa o saldo existente de ask, gera observações vinculadas para aquisição E272; sem saldo, pendente. Testes controlados, nenhuma visão real nova. Não considerar autonomia de seleção homologada até prova com pixels e orçamento autorizado. Ver §321.
+
+### Estado verificado do bloco E278
+[{"id":45631143175,"status":"in_progress","conclusion":null},{"id":45631143043,"status":"completed","conclusion":"success"},{"id":45631359513,"status":"in_progress","conclusion":null}]. E278.1 [run 45631359513](https://github.com/Heitor2404/coringa-news/actions/runs/45631359513). Regressão geral aprovada; testes e nova pesquisa E278 aprovados por etapa, aquisição/folhas ainda não confirmadas. Retomar pelo §322, sem duplicar execução nem reconstruir capacidades existentes.

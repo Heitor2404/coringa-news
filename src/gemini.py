@@ -269,7 +269,7 @@ def _reserva(prompt: str, json_mode: bool, erro_gemini, so_cloudflare: bool = Fa
     raise RuntimeError(f'nenhuma IA disponível (Gemini: {str(erro_gemini)[:120]})')
 
 
-def json_visao(prompt: str, imagens: list[bytes], leve: bool = True):
+def json_visao(prompt: str, imagens: list[bytes], leve: bool = True, telemetria=None):
     """Mostra imagens ao Gemini (que enxerga) e pede uma resposta em JSON. Sem reserva: se falhar, quem chamou decide."""
     from google.genai import types
     partes = []
@@ -278,10 +278,16 @@ def json_visao(prompt: str, imagens: list[bytes], leve: bool = True):
     partes.append(prompt)
 
     def f(modelo):
+        row={'modelo':str(modelo),'imagens':len(imagens),'bytes_imagens':sum(len(x) for x in imagens),'estado':'TENTATIVA'}
+        if telemetria is not None:telemetria.append(row)
         r = cliente().models.generate_content(
             model=modelo, contents=partes,
             config=types.GenerateContentConfig(response_mime_type='application/json', temperature=0.2))
-        return extrair_json(r.text)
+        usage=getattr(r,'usage_metadata',None)
+        row.update(estado='RESPOSTA',tokens={k:getattr(usage,k,None) for k in ('prompt_token_count','candidates_token_count','total_token_count','thoughts_token_count')})
+        out=extrair_json(r.text)
+        row['estado']='JSON_VALIDO'
+        return out
     if leve:
         return _tentar(f, MODELOS_LEVES)
     try:                                   # olhar imagens: principal (todas as chaves) → lite (todas as chaves)

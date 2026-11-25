@@ -246,7 +246,7 @@ def test_progressive_alternative_query_reaches_primary_early():
 
 def test_repeated_series_titles_do_not_crowd_out_other_candidates():
     n={**need(),'pesquisa':{'consultas_en':['planet rotation']}}
-    rows=[{**candidate(i),'titulo':'planet rotation'} for i in range(3)]
+    rows=[{**candidate(i),'titulo':'planet rotation'} for i in range(1,4)]
     other={**candidate(9),'titulo':'planet surface'}
     ordered=R.ordenar_candidatos(n,rows+[other])
-    assert [c['source_id'] for c in ordered]==[0,9,1,2]
+    assert [c['source_id'] for c in ordered]==[1,9,2,3]

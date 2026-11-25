@@ -1,4 +1,4 @@
-name: E266 - bloco de aquisicao das lacunas sem nova visao
+name: E266.1 - bloco de aquisicao das lacunas sem nova visao
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

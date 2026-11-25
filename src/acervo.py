@@ -129,6 +129,8 @@ def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
             out.append(_cand(titulo, _txt(meta, 'ImageDescription') or _txt(meta, 'ObjectName'), _ano(meta),
                              info.get('thumburl') or info['url'], f'"{titulo[:50]}" — {autor} ({lic}), via Wikimedia Commons',
                              fonte, info.get('width'), info.get('height')))
+            out[-1].update(pagina=info.get('descriptionurl'), url_original=info['url'],
+                           licenca=lic, tamanho_original=info.get('size'), autor=autor)
     return out
 
 

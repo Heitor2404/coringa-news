@@ -160,17 +160,28 @@ def cortes_medidos(inicio,fim,words):
 def main():
     spec=read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True);STAGE.mkdir(parents=True,exist_ok=True)
     if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
-    for ch in spec['chapters']:
+    atlas_multiscale={}
+    from scripts import qa_atlas_multiscale as G
+    for i,ch in enumerate(spec['chapters']):
         q=ch.get('atlas') or {}
-        if q.get('regional_base'):
+        if q.get('multiscale'):
+            request=q['multiscale']
+            # Explicit, researched location. No model-generated coordinates or rights.
+            caso={'id':request['id'],'title':ch['title'],'atlas':q,
+                  'fonte_localizacao':request['fonte_localizacao'],'delta':request.get('delta',1.6)}
+            acquired_geo=G.adquirir_bases(caso)
+            atlas_multiscale[i]=(caso,acquired_geo)
+            write(out/('raster-multiescala-'+str(i)+'.json'),acquired_geo)
+        elif q.get('regional_base'):
             from scripts.qa_atlas_regional import regional_base
             meta=regional_base(q['raster'],q['regional_base']['bbox'],q['regional_base']['zoom'])
             write(out/'raster-regional.json',meta)
     # Catch structural cartographic errors before spending a voice request.
-    for ch in spec['chapters']:
+    for i,ch in enumerate(spec['chapters']):
         if 'atlas' in ch:
             for span in (1.4,3.0,5.5,8.0):
-                B.verificar_plano(mapplan(ch,span),0,span)
+                p=G.resolver(*atlas_multiscale[i],span)[1] if i in atlas_multiscale else mapplan(ch,span)
+                B.verificar_plano(p,0,span)
             print('E219 PREFLIGHT ATLAS OK',ch['title'],flush=True)
     rows=[r for ch in spec['chapters'] for r in ch.get('videos',[])]
     acquired={};errors=[]
@@ -199,7 +210,13 @@ def main():
         if 'atlas' in ch:
             span=frames/30
             if not 1.4<=span<=8:raise ValueError('E219-MAPA-DURACAO '+str(span))
-            cid='mapa-'+str(i);clip,proof=mapclip(ch,span)
+            cid='mapa-'+str(i)
+            if i in atlas_multiscale:
+                map_ch,p,report=G.resolver(*atlas_multiscale[i],span)
+                write(out/('camera-multiescala-'+str(i)+'.json'),report)
+                clip,proof=mapclip(map_ch,span,plano_resolvido=p)
+            else:
+                clip,proof=mapclip(ch,span)
             shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':ch['atlas']['label'],
                           'lead':ch['title'],'subject':ch['title'],'evidence':'explainer','cues':[{'at':.2,'label':ch['atlas']['label']}]})
             maps.append((cid,clip,proof));start=end;continue

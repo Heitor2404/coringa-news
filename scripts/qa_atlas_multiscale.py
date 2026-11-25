@@ -27,7 +27,9 @@ def escalas(roi, delta=1.6):
     for z in range(math.ceil(start),math.ceil(end)+1):
         low=max(start,z-1)
         # At most one level of oversampling for the request, not the renderer.
-        # Margin also covers the fade between two bases.
+        # The opacity ramp begins at de-.5 = low-.05. Acquire the full
+        # viewport at low-.06, before any new raster becomes visible.
+        # Prevent rectangular seams while the camera is still zoomed out.
         view=A.tela_lonlat(A._restringir({**cam,'fx':fx,'fy':fy,'zoom':low-.06}))
         w,ss,e,nn=view
         bbox=[min(w,o),min(ss,s),max(e,l),max(nn,n)]
@@ -37,7 +39,7 @@ def escalas(roi, delta=1.6):
         count=(int(x1)-int(x0)+1)*(int(y1)-int(y0)+1)
         if count>100:raise ValueError('GEO-ORCAMENTO')
         result.append({'bbox':bbox,'zoom':z,'dataset':'bmng' if z<=8 else 's2_2016',
-                       'tiles':count,'de':None if not result else low-.3})
+                       'tiles':count,'de':None if not result else low+.45})
     return result
 
 def adquirir_bases(caso):

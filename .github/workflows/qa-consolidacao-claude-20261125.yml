@@ -63,6 +63,20 @@ jobs:
           CORINGA_CHECKPOINTS_DESCOBERTOS: qa_claude_checkpoints/descoberta.json
         run: |
           python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/claude-replay contrastes --progressiva --multicenas --qualidade --replay-privado
+          python - <<'PY'
+          # Diagnóstico só com códigos (sem conteúdo privado): estado/motivo por candidato.
+          import json
+          from pathlib import Path
+          r=json.loads(Path('stage_documental/claude-replay/revisao.json').read_text())
+          for row in r['cobertura']:
+              for k,rd in enumerate(row.get('rodadas',[])):
+                  for c in (rd.get('pesquisa') or {}).get('candidatos',[]):
+                      e=c.get('exploracao_temporal') or {}
+                      print('DIAG',row.get('necessidade_id'),k,c.get('tipo'),c.get('fonte'),(c.get('decisao') or {}).get('estado'),(c.get('decisao') or {}).get('motivo'),
+                            'janelas',len(c.get('janelas') or []),'ausentes',len(c.get('janelas_cache_ausentes') or []),
+                            'sel',e.get('selecionadas_s'),'ckpt',[x['inicio_s'] for x in e.get('janelas',[]) if x.get('origem')=='checkpoint'],
+                            'varr',bool(e.get('varredura_local')),'falhas',[x.get('falha') for x in e.get('janelas',[]) if x.get('falha')][:3])
+          PY
           python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/claude-normal contrastes --progressiva --multicenas --qualidade --visao-zero
           python - <<'PY'
           import json

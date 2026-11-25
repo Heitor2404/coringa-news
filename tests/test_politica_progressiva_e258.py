@@ -343,3 +343,34 @@ def test_retry_stays_available_when_no_new_video_is_found():
         return accepted()
     result=R.cobertura_progressiva(need(),search,inspect,pode_buscar=lambda:True,pode_inspecionar=lambda:True,max_buscas=4,estado=st,priorizar_novos=True)
     assert calls==['search',1] and result['estado']=='CANDIDATO_PRIVADO_REVISADO'
+
+
+def test_fourth_video_provider_reached_before_third_wording_on_one_provider():
+    calls = []
+    names = ['commons_video', 'figshare', 'nasa_video', 'archive_video']
+    def providers(kind):
+        return [(name, lambda q, name=name: calls.append((name, q)) or []) for name in names]
+    A.pesquisar_cobertura(need(), fontes=providers, max_buscas=5, progressivo=True)
+    assert {provider for provider, query in calls} == set(names)
+    assert [provider for provider, query in calls[:2]] == names[:1] * 2
+
+
+def test_exhausted_episode_keeps_zero_even_with_old_runner_allowance(tmp_path, monkeypatch):
+    import json
+    import sys
+    from pathlib import Path
+    from scripts import qa_revisao_documental_e247 as entry
+    from src import gemini
+    from src.v4 import acervo_v4 as discovery
+
+    def forbidden(*args, **kwargs):
+        pytest.fail('episode spent an exhausted vision allocation')
+    monkeypatch.setattr(gemini, 'json_visao', forbidden)
+    monkeypatch.setattr(discovery, 'fontes_documentais', lambda *a, **kw: [])
+    monkeypatch.setenv('CORINGA_LIMITE_VISAO_DOCUMENTAL', '2')
+    monkeypatch.setattr(sys, 'argv', ['qa', 'benchmarks/e281/contraste.json', str(tmp_path),
+                                     'contraste_e281', '--progressiva', '--multicenas'])
+    entry.main()
+    report = json.loads((tmp_path / 'revisao.json').read_text())
+    assert report['visao_limite'] == report['visao_chamadas_logicas'] == 0
+    assert json.loads(Path('benchmarks/e254/documentario.json').read_text())['cases'][0]['visao_esgotada']

@@ -71,6 +71,8 @@ def main():
         limite=int(os.getenv('CORINGA_LIMITE_REVISAO_LOCAL',str(budget)))
         if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
         budget=limite
+    if case.get('visao_esgotada') is True:
+        budget = 0
     from src.v4.pretriagem_documental import reservar_encadeamento
     # An integral production uses the already validated preview path when
     # there is surplus for both observation and formal review. Explicit

@@ -70,10 +70,12 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m scripts.qa_documentario_integral_e254 stage_documental/e254
       - name: Render condicional e QA do video
+        id: render
         run: |
           set -euo pipefail
           root=stage_documental/e254
-          if [[ ! -f "$root/props.json" ]]; then echo "E254 sem filme: consultar integral.json"; exit 0; fi
+          ready=$(jq -r 'if .publicar == false then (.pronto_para_render_privado == true) else error("relatorio privado invalido") end' "$root/integral.json")
+          if [[ "$ready" != true ]]; then echo "E254 sem filme: consultar integral.json"; exit 0; fi
           (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root"/filme.mp4 --props=../"$root"/props.json --codec=h264 --crf=21 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error)
           ffprobe -v error -show_streams -show_format -of json "$root/filme.mp4" > "$root/probe.json"
           python - <<'PY'
@@ -88,6 +90,7 @@ jobs:
           (root/'qa.json').write_text(json.dumps({'duration':p['duracao'],'shots':len(p['shots']),'types':sorted(set(s['type'] for s in p['shots'])),'sha256':hashlib.sha256((root/'filme.mp4').read_bytes()).hexdigest(),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING'},indent=2))
           PY
           ffmpeg -v error -y -i "$root/filme.mp4" -vf "fps=1/4,scale=216:384,tile=5x5" -frames:v 1 "$root/contato.jpg"
+          echo "verificado=true" >> "$GITHUB_OUTPUT"
       - name: Espelhar cobertura, diagnosticos e quadros
         if: ${{ !cancelled() }}
         env:
@@ -95,7 +98,8 @@ jobs:
         run: |
           shopt -s nullglob
           root=stage_documental/e254
-          files=("$root"/*.json "$root"/*.jpg "$root"/*.mp4)
+          files=("$root"/*.json "$root"/*.jpg)
+          if [[ "${{ steps.render.outputs.verificado }}" == true ]]; then files+=("$root/filme.mp4"); fi
           if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e254-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
       - name: Entregar filme ou relatorio privado
         if: ${{ !cancelled() }}
@@ -104,7 +108,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           root=stage_documental/e254
-          if [[ -f "$root/qa.json" && -f "$root/filme.mp4" ]]; then
+          if [[ "${{ steps.render.outputs.verificado }}" == true ]]; then
             python -m scripts.documentario_telegram "$root" --titulo "Como as geleiras esculpem paisagens"
           elif [[ -f "$root/integral.json" ]]; then
             python - <<'PY'
@@ -122,7 +126,7 @@ jobs:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: |
           root=stage_documental/e254
-          if [[ -f "$root/qa.json" && -f "$root/filme.mp4" ]]; then
+          if [[ "${{ steps.render.outputs.verificado }}" == true ]]; then
             bash scripts/arquivar_cofre_review.sh "review-e254-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/filme.mp4" "$root/qa.json"
           fi
   avisar_falha:

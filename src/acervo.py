@@ -34,10 +34,13 @@ def _get(url: str, **params):
         time.sleep(espera or 0.4)
         try:
             r = requests.get(url, params=params, headers=UA, timeout=40)
-            if r.status_code == 429:
+            if r.status_code == 429 and espera != 15:
                 continue
             r.raise_for_status()
-            return r.json()
+            body = r.json()
+            if 'error' in body:
+                raise ValueError('MEDIAWIKI_API:' + str(body['error'].get('code', 'unknown')))
+            return body
         except requests.RequestException:
             if espera == 15:
                 raise
@@ -79,15 +82,17 @@ def _artigo(nome: str, lang: str = 'en') -> str | None:
         return None
 
 
-def _busca_commons(q: str, n: int = 12) -> list[str]:
+def _busca_commons(q: str, n: int = 12, *, estrito=False) -> list[str]:
     try:
         j = _get(COMMONS, action='query', list='search', srsearch=f'{q} filetype:bitmap', srnamespace=6, srlimit=n)
         return [h['title'] for h in j.get('query', {}).get('search', [])]
     except Exception:
+        if estrito:
+            raise
         return []
 
 
-def _categoria_commons(q: str, n: int = 25) -> list[str]:
+def _categoria_commons(q: str, n: int = 25, *, estrito=False) -> list[str]:
     """Categorias do Commons são montadas por pessoas: 'Theft of the Mona Lisa', 'Formicidae', 'Mars'... ouro puro."""
     try:
         j = _get(COMMONS, action='query', list='search', srsearch=q, srnamespace=14, srlimit=2)
@@ -97,10 +102,12 @@ def _categoria_commons(q: str, n: int = 25) -> list[str]:
             out += [x['title'] for x in m.get('query', {}).get('categorymembers', [])]
         return out
     except Exception:
+        if estrito:
+            raise
         return []
 
 
-def _commons_infos(titulos: list[str], fonte: str, *, preview_width: int = 1400) -> list[dict]:
+def _commons_infos(titulos: list[str], fonte: str, *, preview_width: int = 1400, estrito=False) -> list[dict]:
     """Metadados no Commons (arquivo que só existe na Wikipédia — uso justo — não aparece aqui: fica de fora)."""
     out = []
     titulos = [t for t in titulos if not LIXO.search(t)]
@@ -109,6 +116,8 @@ def _commons_infos(titulos: list[str], fonte: str, *, preview_width: int = 1400)
             j = _get(COMMONS, action='query', prop='imageinfo', titles='|'.join(titulos[i:i + 40]),
                      iiprop='url|size|mime|extmetadata', iiurlwidth=preview_width)
         except Exception:
+            if estrito:
+                raise
             continue
         pags = {p['title']: p for p in j.get('query', {}).get('pages', [])}
         for t in titulos[i:i + 40]:          # mantém a ordem original (a 1ª imagem do artigo é a mais importante)
@@ -175,9 +184,17 @@ def f_commons_documental(consulta: str, *, preview_width: int = 1400) -> list[di
         return set(re.findall(r'[a-z]{3,}',normalized)) - {'photo','photograph','image','video','the','and','with','from'}
     wanted=terms(consulta)
     if not wanted:return []
-    files=_busca_commons(consulta,16)
-    categories=_categoria_commons(consulta,n=8)
-    candidates=_commons_infos(list(dict.fromkeys(files+categories))[:32],'Commons',preview_width=preview_width)
+    titles = []
+    failure = None
+    for search, limit in ((_busca_commons, 16), (_categoria_commons, 8)):
+        try:
+            titles.extend(search(consulta, limit, estrito=True))
+        except (requests.RequestException, ValueError, KeyError) as exc:
+            failure = exc
+    if not titles and failure is not None:
+        raise failure
+    candidates = _commons_infos(list(dict.fromkeys(titles))[:32], 'Commons',
+                                preview_width=preview_width, estrito=True)
     def rank(c):
         title=terms(c.get('titulo') or c.get('title') or c.get('source_title'))
         meta=terms(str(c.get('descricao_integral') or '')+' '+str(c.get('categories') or ''))
@@ -610,7 +627,7 @@ def _baixar_item(x: dict, arq: Path) -> dict:
                         r = requests.get(url, headers=cab, timeout=40)
                         if r.status_code != 429:
                             break
-                    if r.status_code == 429:
+                    if r.status_code == 429 and espera != 15:
                         _LOC_BLOQ.append(1)
             else:
                 r = requests.get(url, headers=cab, timeout=60)

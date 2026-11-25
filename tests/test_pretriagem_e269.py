@@ -42,8 +42,8 @@ def test_photo_preview_never_routes_a_motion_or_atlas_obligation():
 def test_documentary_preview_width_is_requested_from_provider(monkeypatch):
     from src import acervo
     calls=[]
-    monkeypatch.setattr(acervo,'_busca_commons',lambda q,n:['File:mountain.jpg'])
-    monkeypatch.setattr(acervo,'_categoria_commons',lambda q,n:[])
+    monkeypatch.setattr(acervo,'_busca_commons',lambda q,n,**kwargs:['File:mountain.jpg'])
+    monkeypatch.setattr(acervo,'_categoria_commons',lambda q,n,**kwargs:[])
     def get(url,**kwargs):
         calls.append(kwargs)
         return {'query':{'pages':[]}}

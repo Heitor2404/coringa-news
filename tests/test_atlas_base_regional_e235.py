@@ -22,6 +22,15 @@ def test_register_licensed_region(tmp_path,monkeypatch,dataset,z,endpoint):
     assert meta["sha256"]==hashlib.sha256((tmp_path/"fixture.jpg").read_bytes()).hexdigest()
     assert meta["px_por_grau_fonte"]==256*2**z/360
     assert json.loads((tmp_path/"fixture.json").read_text())==meta
+    monkeypatch.setattr(R, 'mosaico', lambda *a: pytest.fail('identical raster downloaded twice'))
+    assert R.registrar_base_regional("fixture", bbox, z, dataset, saida=tmp_path) == meta
+    (tmp_path / "fixture.jpg").write_bytes(b"interrupted")
+    monkeypatch.setattr(R, 'mosaico', mosaic)
+    assert R.registrar_base_regional("fixture", bbox, z, dataset, saida=tmp_path) == meta
+    tampered = {**meta, "cantos": [[0, 0]] * 4}
+    (tmp_path / "fixture.json").write_text(json.dumps(tampered))
+    assert R.registrar_base_regional("fixture", bbox, z, dataset, saida=tmp_path) == meta
+
 
 @pytest.mark.parametrize("bbox,z,dataset,error",[
     ([-79.61,8.99,-79.60,9],9,"bmng","GEO-ZOOM"),

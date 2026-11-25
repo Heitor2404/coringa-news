@@ -3,6 +3,7 @@
   "cases": [
     {
       "id": "gelo_paisagem",
+      "visao_esgotada": true,
       "tema": "Como as geleiras esculpem paisagens",
       "necessidades": [
         {

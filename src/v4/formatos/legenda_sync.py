@@ -249,7 +249,7 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
 
 def conferir(narracao: Path, wav: Path, maximo: int = 4) -> dict:
     meta = json.loads(Path(narracao).read_text())
-    pal = meta['palavras']
+    pal = meta['palavras'] if 'palavras' in meta else meta['words']
     fala = mascara_fala(energia(wav))
     marc = np.zeros_like(fala)
     for w in pal:

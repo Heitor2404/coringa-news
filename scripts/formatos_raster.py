@@ -218,19 +218,44 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     x0,y0=tile_xy(o,n,z);x1,y1=tile_xy(l,s,z)
     count=(int(x1)-int(x0)+1)*(int(y1)-int(y0)+1)
     if count>max_tiles:raise ValueError('GEO-ORCAMENTO: reduzir região ou zoom')
-    im,cantos=mosaico(modelo,bbox,z,'RGB')
-    if im.width*im.height!=count*256*256:
+    out = Path(saida) if saida is not None else A.RASTER_DIR
+    out.mkdir(parents=True, exist_ok=True)
+    img = out / (nome + '.jpg')
+    receipt = out / (nome + '.json')
+    px = [256 * (int(x1) - int(x0) + 1), 256 * (int(y1) - int(y0) + 1)]
+    nw = tile_lonlat(int(x0), int(y0), z)
+    se = tile_lonlat(int(x1) + 1, int(y1) + 1, z)
+    corners = [list(nw), [se[0], nw[1]], list(se), [nw[0], se[1]]]
+    meta = {'nome': nome, 'tipo': 'satelite', 'cantos': corners, 'px': px,
+            'px_por_grau_fonte': 256*2**z/360, 'arquivo': img.name, 'dataset': dataset,
+            'atribuicao': lic['atribuicao_exigida'],
+            'fonte': {'url': modelo, 'licenca': lic['licenca'], 'zoom_tiles': z,
+                      'bbox_pedido': list(bbox), 'tiles': count,
+                      'escopo': 'base de referência; não comprova estado histórico'}}
+    try:
+        saved = json.loads(receipt.read_text(encoding='utf8'))
+        if isinstance(saved, dict) and all(saved.get(k) == v for k, v in meta.items()):
+            digest = hashlib.sha256(img.read_bytes()).hexdigest()
+            if digest == saved.get('sha256'):
+                with Image.open(img) as existing:
+                    if existing.format == 'JPEG' and list(existing.size) == px:
+                        existing.load()
+                        return saved
+    except (OSError, ValueError):
+        pass
+    im, observed = mosaico(modelo, bbox, z, 'RGB')
+    if list(im.size) != px or [list(point) for point in observed] != corners:
         raise ValueError('GEO-MOSAICO')
-    out=Path(saida) if saida is not None else A.RASTER_DIR
-    out.mkdir(parents=True,exist_ok=True)
-    img=out/(nome+'.jpg')
-    im.save(img,quality=94)
-    meta={'nome':nome,'tipo':'satelite','cantos':[list(p) for p in cantos],'px':list(im.size),
-          'px_por_grau_fonte':256*2**z/360,'arquivo':img.name,'dataset':dataset,
-          'atribuicao':lic['atribuicao_exigida'],
-          'fonte':{'url':modelo,'licenca':lic['licenca'],'zoom_tiles':z,
-                   'bbox_pedido':list(bbox),'tiles':count,
-                   'escopo':'base de referência; não comprova estado histórico'},
-          'sha256':hashlib.sha256(img.read_bytes()).hexdigest()}
-    (out/(nome+'.json')).write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding='utf-8')
+    from tempfile import NamedTemporaryFile
+    with NamedTemporaryFile(dir=out, suffix='.jpg', delete=False) as temp:
+        pending = Path(temp.name)
+    try:
+        im.save(pending, quality=94)
+        meta['sha256'] = hashlib.sha256(pending.read_bytes()).hexdigest()
+        pending.replace(img)
+    finally:
+        pending.unlink(missing_ok=True)
+    with NamedTemporaryFile('w', dir=out, encoding='utf8', delete=False) as temp:
+        json.dump(meta, temp, ensure_ascii=False, indent=2)
+    Path(temp.name).replace(receipt)
     return meta

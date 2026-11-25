@@ -85,5 +85,6 @@ def main():
     props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
     write(root/'props.json',props)
     write(root/'narracao.json',{'audio_sha256':h,'duration_s':duration,'words':words,'publish':False})
+    write(root/'sincronia-medida.json', LS.conferir(root/'narracao.json', audio, maximo=3))
     write(root/'integral.json',{**gate,'pronto_para_render_privado':True,'duracao_voz':duration,'publicar':False})
 if __name__=='__main__':main()

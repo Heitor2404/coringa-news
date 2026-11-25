@@ -310,11 +310,15 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         from src.v4.formatos.revisao_documental import termos_consulta,consultas_contextuais
         consultas=consultas_contextuais(necessidade,consultas)
         subject=set(termos_consulta(necessidade.get('sujeito')))
-        schedule=sorted(((bool(subject and set(termos_consulta(consultas[qi]))==subject),qi+ri,ri,qi) for qi in range(len(consultas)) for ri in range(len(rotas))))
+        schedule = sorted(
+            (bool(subject and set(termos_consulta(consultas[qi])) == subject),
+             not (qi == 0 or (ri == 0 and qi == 1)), qi + ri, ri, qi)
+            for qi in range(len(consultas)) for ri in range(len(rotas))
+        )
         # Discovery calls have a global budget independent of the retained
         # candidate cap. A crowded response must not suppress other routes.
         batches=[]
-        for _,_,ri,qi in schedule:
+        for _,_,_,ri,qi in schedule:
             consulta=consultas[qi];tipo,nome,fn=rotas[ri]
             key=(tipo,nome,consulta.casefold())
             if key in attempted:continue

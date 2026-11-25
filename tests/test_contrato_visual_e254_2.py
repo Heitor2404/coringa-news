@@ -39,11 +39,24 @@ def test_explicit_named_axes_and_semantics():
     assert decision(BOXES[0],nature='ilustracao')['estado']=='INSUFICIENTE'
 
 def test_rank_file_before_unrelated_category(monkeypatch):
-    monkeypatch.setattr(acervo,'_busca_commons',lambda q,n:['File:relevant'])
-    monkeypatch.setattr(acervo,'_categoria_commons',lambda q,n:['File:garlic','File:partial'])
-    def info(titles,source):
+    monkeypatch.setattr(acervo,'_busca_commons',lambda q,n,**kwargs:['File:relevant'])
+    monkeypatch.setattr(acervo,'_categoria_commons',lambda q,n,**kwargs:['File:garlic','File:partial'])
+    def info(titles,source,*,preview_width,estrito):
+        assert preview_width == 1400 and estrito
         assert titles[0]=='File:relevant'
         return [{'titulo':'Garlic in garden'},{'titulo':'Glacier crevasses aerial'},
                 {'titulo':'Mountain glacier','categories':'Glaciers'}]
     monkeypatch.setattr(acervo,'_commons_infos',info)
     assert [c['titulo'] for c in acervo.f_commons_documental('glacier crevasses aerial')]==['Glacier crevasses aerial','Mountain glacier']
+
+
+def test_commons_documental_reports_provider_error_and_keeps_partial_alternative(monkeypatch):
+    from requests import Timeout
+    def failed(*args, **kw):
+        raise Timeout('provider')
+    monkeypatch.setattr(acervo, '_get', failed)
+    with pytest.raises(Timeout):
+        acervo.f_commons_documental('chamber condensation')
+    monkeypatch.setattr(acervo, '_categoria_commons', lambda *a, **k: ['File:Chamber'])
+    monkeypatch.setattr(acervo, '_commons_infos', lambda titles, *a, **kw: [{'titulo': 'Chamber'}])
+    assert acervo.f_commons_documental('chamber')[0]['titulo'] == 'Chamber'

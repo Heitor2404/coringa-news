@@ -99,7 +99,10 @@ def _commons(busca: str, video: bool) -> list[dict]:
         params.update(prop='imageinfo', iiprop='url|size|mime|extmetadata', iiurlwidth=1400, iiextmetadatafilter=filtro)
     r = requests.get(COMMONS, params=params, headers=UA, timeout=30)
     r.raise_for_status()
-    return sorted(r.json().get('query', {}).get('pages', []), key=lambda p: p.get('index', 99))
+    body = r.json()
+    if 'error' in body:
+        raise ValueError('MEDIAWIKI_API:' + str(body['error'].get('code', 'unknown')))
+    return sorted(body.get('query', {}).get('pages', []), key=lambda p: p.get('index', 99))
 
 
 def _limite(ano_max) -> int | None:

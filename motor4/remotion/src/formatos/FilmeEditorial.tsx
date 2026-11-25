@@ -199,7 +199,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
 const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240],integral:[0,395,1080,1150],photoIntegral:[0,405,1080,1030],photoHero:[0,535,1080,1585],photoTitle:[160,400,760,449],photoCredit:[160,452,760,530]} as const;
-const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
+const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean;captioned?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false,captioned=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
@@ -245,7 +245,9 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
       // Preserve all source pixels, but give the shot the FULL canvas width.
       // Integral is an exception for essential context, never the default crop.
       return <AbsoluteFill style={{background:'linear-gradient(180deg,#112536,#07121E 75%,#050A12)'}}>
-        <div data-media-layout="integral-wide" style={{...rectStyle(DOC_MEDIA.integral),overflow:'hidden'}}>
+        {/* With measured captions, the integral footage ends ABOVE the subtitle lane
+            (same box as integral photos): captions never cover the evidence. */}
+        <div data-media-layout={captioned?'integral-wide-captioned':'integral-wide'} style={{...rectStyle(captioned?DOC_MEDIA.photoIntegral:DOC_MEDIA.integral),overflow:'hidden'}}>
           <Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
             <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))}
               style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
@@ -545,7 +547,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   if(mediaFirst&&realMedia(shot)) {
     const photoHero=shot.type==='photo'&&shot.photo_framing==='integral'&&!subtitleMode;
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
-      <Body shot={shot} p={p} t={now-shot.start} mediaFirst photoHero={photoHero}/>
+      <Body shot={shot} p={p} t={now-shot.start} mediaFirst photoHero={photoHero} captioned={subtitleMode}/>
       {/* Local text contrast only. Never cover the lower part of the footage. */}
       <div style={{position:'absolute',left:150,top:300,width:620,height:105,pointerEvents:'none',
         background:'linear-gradient(90deg,rgba(3,8,16,.48),rgba(3,8,16,.12),transparent)',borderRadius:12}}/>

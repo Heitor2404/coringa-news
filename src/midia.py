@@ -91,7 +91,7 @@ def quadro_do_meio(clipe: Path) -> bytes | None:
 def _commons(busca: str, video: bool) -> list[dict]:
     params = {'action': 'query', 'format': 'json', 'formatversion': 2, 'generator': 'search', 'gsrnamespace': 6,
               'gsrlimit': 15, 'gsrsearch': f'{busca} filetype:{"video" if video else "bitmap"}'}
-    filtro = 'LicenseShortName|LicenseUrl|Artist|Credit|Restrictions|AttributionRequired|ImageDescription|DateTimeOriginal|DateTime'
+    filtro = 'LicenseShortName|LicenseUrl|Artist|Credit|Restrictions|AttributionRequired|ImageDescription|Source|Categories|DateTimeOriginal|DateTime'
     if video:
         params.update(prop='videoinfo', viprop='url|size|mime|extmetadata|derivatives', viurlwidth=640,
                       viextmetadatafilter=filtro)
@@ -182,6 +182,8 @@ def candidatos_arquivo(busca: str, *, estrito=False) -> list[dict]:
                         'source_id': p.get('pageid'), 'source_title':p.get('title'),
                         'licenca_url':_txt(meta,'LicenseUrl'), 'restricoes':_txt(meta,'Restrictions'),
                         'descricao':_txt(meta,'ImageDescription') or titulo,
+                        'descricao_integral':_txt(meta,'ImageDescription')[:8000], 'source':_txt(meta,'Source')[:4000],
+                        'credit':_txt(meta,'Credit')[:4000], 'categories':_txt(meta,'Categories')[:4000],
                         'variantes':[{'url':x['src'],'width':x.get('width'),'height':x.get('height'),'size':x.get('size')} for x in ders],
                         'tamanho_original':info.get('size') if not ders else None})
             if len(out) >= POR_FONTE:

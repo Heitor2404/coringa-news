@@ -125,3 +125,5 @@ E235.1 normalizacao dos cantos; regressao sem TTS.
 E237: direcao e montagem cartografica multiescala opt-in, sem IA.
 
 E237.1: dependency parity for documentary imports.
+
+E237.2: executar regressões depois de npm ci.

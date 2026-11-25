@@ -118,3 +118,4 @@ ATLAS V2 - checagem apos correcao generica de rotulos fotograficos (30 px) e dia
 # 2026-11-19 validate shot-first storyboard and animatic fixes.
 # 2026-11-19 storyboard revised after previsual real portoes: no pin overlaps, causal chain earlier.
 # 2026-11-19 ~05:00: flow 4-stage visual proof, verified provisional narration with no collisions or >3s gaps.
+E235: auditoria de reuso, bases regionais e diretor geográfico; sem render/TTS

@@ -61,7 +61,9 @@ def main():
     import sys
     spec=E.read(sys.argv[1])
     if spec.get('publish') is not False:raise ValueError('GEO-PRIVADO')
-    for caso in spec['cases']:
+    cases=[c for c in spec['cases'] if len(sys.argv)<3 or c['id']==sys.argv[2]]
+    if not cases:raise ValueError('GEO-CASO')
+    for caso in cases:
         E.MAP=Path('qa_atlas_multiscale')/caso['id']
         E.MAP.mkdir(parents=True,exist_ok=True)
         ch,p,report,metas,specs=preparar(caso)

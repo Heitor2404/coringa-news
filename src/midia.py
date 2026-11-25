@@ -91,7 +91,7 @@ def quadro_do_meio(clipe: Path) -> bytes | None:
 def _commons(busca: str, video: bool) -> list[dict]:
     params = {'action': 'query', 'format': 'json', 'formatversion': 2, 'generator': 'search', 'gsrnamespace': 6,
               'gsrlimit': 15, 'gsrsearch': f'{busca} filetype:{"video" if video else "bitmap"}'}
-    filtro = 'LicenseShortName|Artist|DateTimeOriginal|DateTime'
+    filtro = 'LicenseShortName|LicenseUrl|Artist|Credit|Restrictions|AttributionRequired|ImageDescription|DateTimeOriginal|DateTime'
     if video:
         params.update(prop='videoinfo', viprop='url|size|mime|extmetadata|derivatives', viurlwidth=640,
                       viextmetadatafilter=filtro)
@@ -149,7 +149,7 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
                         'legenda': _legenda(titulo, ano),
                         'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
                         'pagina': info.get('descriptionurl'), 'licenca': lic,
-                        'url_master': info.get('url'), 'derivado': bool(ders)})
+                        'url_master': info.get('url'), 'derivado': url != info.get('url')})
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
@@ -157,7 +157,7 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
     return out
 
 
-def candidatos_arquivo(busca: str) -> list[dict]:
+def candidatos_arquivo(busca: str, *, estrito=False) -> list[dict]:
     out = []
     try:
         for p in _commons(busca, video=True):
@@ -176,10 +176,18 @@ def candidatos_arquivo(busca: str) -> list[dict]:
             larg = (ders[0].get('width') if ders else info.get('width')) or 0
             out.append({'tipo': 'video', 'url': url, 'thumb': info.get('thumburl'), 'descricao': titulo,
                         'w': larg, 'h': alt, 'dur': float(info.get('duration') or 0), 'ano': _ano(meta),
-                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons"})
+                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
+                        'pagina': info.get('descriptionurl'), 'licenca': lic,
+                        'url_master': info.get('url'), 'derivado': bool(ders),
+                        'source_id': p.get('pageid'), 'source_title':p.get('title'),
+                        'licenca_url':_txt(meta,'LicenseUrl'), 'restricoes':_txt(meta,'Restrictions'),
+                        'descricao':_txt(meta,'ImageDescription') or titulo,
+                        'variantes':[{'url':x['src'],'width':x.get('width'),'height':x.get('height'),'size':x.get('size')} for x in ders],
+                        'tamanho_original':info.get('size') if not ders else None})
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
+        if estrito:raise
         print(f'  [mídia/arquivo] {busca!r} falhou: {str(e)[:120]}')
     return out
 

@@ -1,4 +1,4 @@
-name: E261.7 - regressao de politica e tempo integral viavel
+name: E261.9 - fila progressiva e reuso apos consumo da cota
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -72,7 +72,9 @@ jobs:
           PY
       - name: Repetir prova de aquisicao de provedores sem IA
         id: sources
-        if: ${{ !cancelled() }}
+        # Provider transport unchanged in this round; avoid repeating the
+        # identical external probe for a scheduling-only correction.
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() }}
         run: python -m scripts.qa_aquisicao_e258 qa_e260_fontes
       - name: Preservar diagnosticos privados
         if: ${{ !cancelled() }}

@@ -111,7 +111,7 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
 
 
-def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None):
+def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None,pode_candidato=None):
     """Use the existing discovery result; continue after refusal or failed download.
     Inspection callback owns actual network/vision budgets. A success is private.
     No template or topic-specific ranking.
@@ -141,6 +141,7 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
             c['decisao']={'estado':'INSUFICIENTE','motivo':'REPRESENTACAO_DECLARADA'}
             trace.append({'key':key,'decisao':c['decisao']});continue
         if n>=max_candidatos or (pode_inspecionar is not None and not pode_inspecionar()):break
+        if pode_candidato is not None and not pode_candidato(c):continue
         vistos.add(key)
         n+=1
         try:r=inspecionar(c,necessidade)
@@ -249,10 +250,14 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
         if pending and (available or reusable):
             # A cache-only inspection does not spend vision. Never pass a remote
             # candidate through the cache-only path, even if it ranks higher.
-            pool=pending if available else reusable
-            guard=pode_inspecionar if available else lambda: True
-            result=fila_cobertura(necessidade,pool,inspecionar,
-                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_inspecionar=guard)
+            # Eligibility can change *inside* the batch when a fresh
+            # review consumes the last allowed call. Skip remote candidates
+            # but keep processing local cache hits, without marking skipped
+            # items as inspected.
+            def eligible(c):
+                return pode_inspecionar() or (pode_reusar is not None and pode_reusar(c))
+            result=fila_cobertura(necessidade,pending,inspecionar,
+                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_candidato=eligible)
             rounds.append({'rodada':len(rounds)+1,'pesquisa':{'id':necessidade['id'],'buscas':[],'candidatos':pending.copy()},'cobertura':result})
             tentativas+=result['tentativas']
             pending[:]=[c for c in pending if (c.get('fonte'),c.get('source_id') or c.get('url')) not in seen]
@@ -260,6 +265,10 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
                 return {**result,'rodadas':rounds,'tentativas':tentativas,'diagnostico':diagnostico_cobertura(rounds,'EVIDENCIA_REVISADA')}
             if result['tentativas']==0 and pending and pode_inspecionar():
                 parada='SEM_CANDIDATO_ELEGIVEL';break
+            if result['tentativas'] and any(eligible(c) for c in pending):
+                # Drain already discovered eligible candidates before new
+                # provider requests. The overall attempts cap still applies.
+                continue
         if buscas>=max_buscas or not pode_buscar():
             parada='ORCAMENTO_BUSCA_ESGOTADO';break
         if not pode_inspecionar() and st.get('descoberta_sem_visao'):

@@ -117,3 +117,32 @@ def test_reviewed_negative_handoff_is_scoped_and_not_approval():
     assert route['evidencia_lacuna']['escopo']=='APENAS_AMOSTRAS_INSPECIONADAS'
     assert len(route['evidencia_lacuna']['revisoes_negativas'])==1
     assert C.encaminhar({**n,'mostrar':'outra ação'},row)['rota']=='REPLANEJAR_REGISTRO'
+
+
+def test_progressive_drains_local_after_budget_changes_mid_batch():
+    n={'id':'n','necessidade':'registro','evidencia_visual':'estatica',
+       'pesquisa':{'consultas_en':['feature']}}
+    candidates=[{'fonte':'remote','source_id':'first','tipo':'foto'},
+                {'fonte':'remote','source_id':'later','tipo':'foto'},
+                {'fonte':'biblioteca_v3','source_id':'cached','tipo':'video'}]
+    ready=True;seen=[];searches=[]
+    def search(*args):
+        searches.append(1)
+        return {'id':'n','buscas':[{'consulta':'feature'}],'candidatos':candidates}
+    def inspect(c,n):
+        nonlocal ready
+        seen.append(c['source_id'])
+        if c['source_id']=='first':
+            ready=False
+            return {'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'}
+        assert c['source_id']=='cached'
+        return {'estado':'PERTINENTE_PRIVADO','necessidade_id':'n','revisao_id':'cache',
+                'publicar':False,'direitos_aprovados':False}
+    st={}
+    r=R.cobertura_progressiva(n,search,inspect,pode_buscar=lambda:True,
+        pode_inspecionar=lambda:ready,max_buscas=4,estado=st,
+        pode_reusar=lambda c:c['fonte']=='biblioteca_v3')
+    assert r['estado']=='CANDIDATO_PRIVADO_REVISADO' and seen==['first','cached']
+    assert len(searches)==1
+    assert ('remote','later') not in st['vistos']
+    assert [c['source_id'] for c in st['pendentes']]==['later']

@@ -56,9 +56,10 @@ def main():
         from src import gemini
         return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
     from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE
-    def inspect(c,n):
+    def inspect(c,n,*,cache_only=False):
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
+        if cache_only and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'CACHE_ONLY_SEM_REDE'}
         if replay and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
         if calls>=budget and not (progressive and c.get('fonte')=='biblioteca_v3'):return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('tipo')!='video' and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
@@ -129,14 +130,14 @@ def main():
                         q=R.revisar_foto(m,im,n,lambda prompt,images:old['resposta'])
                         cache_hits+=1;c['revisao_reutilizada']=True
                     except (ValueError,KeyError,TypeError):
-                        if calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                        if cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
-                elif calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                elif cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
-            if progressive and not replay and dec.get('motivo')=='DETALHE_PEQUENO_NA_AMOSTRA' and calls<budget and original is not None and max(original.size)>max(im.size):
+            if progressive and not replay and dec.get('motivo')=='DETALHE_PEQUENO_NA_AMOSTRA' and not cache_only and calls<budget and original is not None and max(original.size)>max(im.size):
                 refined=original.copy();refined.thumbnail((2560,2560))
                 if refined.size!=im.size:
                     boards.append((c,[im],dec['motivo']))
@@ -176,10 +177,10 @@ def main():
                             continue
                         except (ValueError,TypeError,KeyError,AttributeError):pass
                     fresh.append((i,pk,frames))
-                if calls>=budget and fresh:
+                if (cache_only or calls>=budget) and fresh:
                     c['janelas_cache_ausentes']=[pk['revisao_id'] for _,pk,_ in fresh]
                     fresh=[]
-                if calls>=budget and not entries:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                if (cache_only or calls>=budget) and not entries:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 fresh_result=DE.revisar_janelas_lote([(pk,frames) for _,pk,frames in fresh],ask,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False)) if fresh else {'janelas':[],'chamadas_logicas':0,'imagens_enviadas':0}
                 for (i,_,_),row in zip(fresh,fresh_result['janelas']):entries[i]=row
                 batch={**fresh_result,'janelas':[entries.get(i,{'falha':'CACHE_AUSENTE_SEM_NOVA_IA'}) for i in range(len(windows))]}
@@ -282,15 +283,16 @@ def main():
                             st['vistos'].discard(k)
                             if c not in st['pendentes']:st['pendentes'].insert(0,c)
                     def inspect_progress(c,n):
-                        d=inspect(c,n)
-                        if c.get('revisao_adicional_possivel'):
+                        cache_only=replay or calls>=budget or (phase==0 and calls!=start)
+                        d=inspect(c,n,cache_only=cache_only)
+                        if c.get('revisao_adicional_possivel') or (phase==0 and not replay and calls<budget and d.get('estado')=='ORCAMENTO' and c.get('fonte')=='biblioteca_v3'):
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
                         pode_buscar=lambda:(nid not in local_checked) or (not replay and total_search<phase_limit),
                         pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
-                        pode_reusar=lambda c:calls>=budget and c.get('fonte')=='biblioteca_v3')
+                        pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
                     results_by_id[nid]=row
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
             from src.v4.formatos import cobertura_documental as C

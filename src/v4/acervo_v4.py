@@ -184,7 +184,7 @@ def fontes_documentais(tipo):
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q)),
                 ('archive_video',lambda q:midia.candidatos_archive(q))]
     if tipo=='foto':
-        return [('commons',lambda q:acervo.f_commons([q])),
+        return [('commons',acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),

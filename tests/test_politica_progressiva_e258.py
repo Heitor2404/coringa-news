@@ -236,3 +236,17 @@ def test_missing_cache_is_not_a_semantic_negative():
     r=R.diagnostico_cobertura([{'cobertura':{'trilha':[{'decisao':{'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}}]}}],'ORCAMENTO')
     assert r['decisoes_por_tipo']=={'REVISAO_SEM_CACHE_COMPATIVEL':1}
     assert r['inexistencia_de_midia_comprovada'] is False
+
+def test_progressive_alternative_query_reaches_primary_early():
+    calls=[]
+    def providers(t):
+        return [(k,lambda q,k=k:calls.append((k,q)) or []) for k in ('primary','secondary','third')]
+    A.pesquisar_cobertura(need(),fontes=providers,max_buscas=2,progressivo=True)
+    assert calls==[('primary','subject change'),('primary','subject transformation')]
+
+def test_repeated_series_titles_do_not_crowd_out_other_candidates():
+    n={**need(),'pesquisa':{'consultas_en':['planet rotation']}}
+    rows=[{**candidate(i),'titulo':'planet rotation'} for i in range(3)]
+    other={**candidate(9),'titulo':'planet surface'}
+    ordered=R.ordenar_candidatos(n,rows+[other])
+    assert [c['source_id'] for c in ordered]==[0,9,1,2]

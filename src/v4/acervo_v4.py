@@ -303,25 +303,25 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     rotas=[g[i] for i in range(max(map(len,groups),default=0)) for g in groups if i<len(g)]
     if progressivo:
         attempted=buscas_vistas if buscas_vistas is not None else set()
-        # Round-robin by provider/query; no truncation by per-source quota.
-        for ri,consulta in enumerate(consultas):
-            ordem=rotas[ri%max(1,len(rotas)):]+rotas[:ri%max(1,len(rotas))]
-            for tipo,nome,fn in ordem:
-                key=(tipo,nome,consulta.casefold())
-                if key in attempted:continue
-                if len(report['buscas'])>=max_buscas or len(report['candidatos'])>=max_candidatos:break
-                attempted.add(key);row={'consulta':consulta,'tipo':tipo,'fonte':nome}
-                try:raw=fn(consulta) or []
-                except Exception as e:
-                    report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
-                added=0
-                for item in raw:
-                    c=_candidato_documental(item,nome,tipo)
-                    if not c or c['url'] in vistos:continue
-                    if len(report['candidatos'])>=max_candidatos:break
-                    vistos.add(c['url']);report['candidatos'].append(c);added+=1
-                report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
+        # Diagonal schedule: try alternate wording on strong providers early
+        # while still visiting every provider/query pair if budget permits.
+        schedule=sorted(((qi+ri,ri,qi) for qi in range(len(consultas)) for ri in range(len(rotas))))
+        for _,ri,qi in schedule:
+            consulta=consultas[qi];tipo,nome,fn=rotas[ri]
+            key=(tipo,nome,consulta.casefold())
+            if key in attempted:continue
             if len(report['buscas'])>=max_buscas or len(report['candidatos'])>=max_candidatos:break
+            attempted.add(key);row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            try:raw=fn(consulta) or []
+            except Exception as e:
+                report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+            added=0
+            for item in raw:
+                c=_candidato_documental(item,nome,tipo)
+                if not c or c['url'] in vistos:continue
+                if len(report['candidatos'])>=max_candidatos:break
+                vistos.add(c['url']);report['candidatos'].append(c);added+=1
+            report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
         return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
     # Reserve a round for the alternative query instead of exhausting budget
     # on the first query. Without inspection, continue looking for options.

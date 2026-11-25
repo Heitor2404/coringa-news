@@ -456,7 +456,9 @@
           "evidencia_visual": "estatica",
           "consultas_en": [
             "fjord steep mountain valley aerial",
-            "fjord steep mountain"
+            "fjord steep mountain",
+            "Geirangerfjord Norway aerial fjord",
+            "Nærøyfjord steep mountains"
           ]
         },
         {
@@ -470,7 +472,9 @@
           "evidencia_visual": "estatica",
           "consultas_en": [
             "glacial horn mountain peak",
-            "glacial horn mountain"
+            "glacial horn mountain",
+            "Matterhorn pyramidal peak glacial horn",
+            "mountain horn glaciated arête"
           ]
         },
         {
@@ -484,7 +488,9 @@
           "evidencia_visual": "estatica",
           "consultas_en": [
             "glacial landscape valley lake mountains",
-            "glacial landscape valley"
+            "glacial landscape valley",
+            "Lake Louise glacial valley mountains aerial",
+            "Lake Pukaki glacial valley landscape"
           ],
           "candidatos_historicos": [
             {

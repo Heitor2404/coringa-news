@@ -166,12 +166,24 @@ def ordenar_candidatos(necessidade,candidatos):
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_revisao_mesmo_escopo') is True),
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
+                not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
                 -m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
-    return sorted(candidatos,key=rank)
+    ordered=sorted(candidatos,key=rank)
+    # Exact repeated provider titles often represent a single photo series.
+    # Offer independent subjects first, without deleting alternatives.
+    seen_titles=set();first=[];repeated=[]
+    for c in ordered:
+        title=' '.join(re.findall(r'[^\W_]+',str(c.get('titulo') or '').casefold()))
+        key=(c.get('fonte'),c.get('tipo'),title)
+        if c.get('fonte')!='biblioteca_v3' and title and key in seen_titles:repeated.append(c)
+        else:
+            first.append(c)
+            if title:seen_titles.add(key)
+    return first+repeated
 
 
 def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None,pode_candidato=None):

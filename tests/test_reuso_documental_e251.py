@@ -125,3 +125,13 @@ def test_video_memory_requires_observed_motion_for_motion_hint():
     assert R.prioridade_memoria(n,row)==0
     obs['resposta_observada']['mudanca_observada']=True
     assert R.prioridade_memoria({**n,'mostrar':'different action'},row)==0
+
+def test_pending_acquisition_is_scoped_retrieval_hint_not_approval():
+    n={'id':'n','sujeito':'ice','mostrar':'glacier surface','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica'}
+    row={'tipo':'foto','sha256':'a'*64,'url_pagina':'https://example.org/a'}
+    rec={'publicar':False,'direitos_aprovados':False,'escopo_pesquisa':n,'pista_aquisicao_pendente':{'sha256':row['sha256'],'pagina':row['url_pagina'],'tipo':'foto','estado':'BYTES_VERIFIED_SEMANTICS_PENDING','publicar':False}}
+    row['analises']={'x':rec}
+    assert R.prioridade_memoria(n,row)==2.5
+    assert R.prioridade_memoria({**n,'fatos':['other']},row)==0
+    assert R.prioridade_memoria({**n,'evidencia_visual':'movimento'},row)==0
+    assert R.prioridade_memoria(n,{**row,'url_pagina':'https://example.org/b'})==0

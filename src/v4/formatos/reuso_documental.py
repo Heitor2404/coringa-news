@@ -41,6 +41,9 @@ def prioridade_memoria(n,row):
         if not isinstance(rec,dict) or rec.get('publicar') is not False or rec.get('direitos_aprovados') is not False:continue
         q=rec.get('revisao') or {};d=rec.get('decisao') or {};scope=rec.get('escopo_pesquisa') or {}
         if not isinstance(scope,dict):continue
+        pending=rec.get('pista_aquisicao_pendente') or {}
+        if escopo(n)==escopo(scope) and pending.get('sha256')==row.get('sha256') and pending.get('pagina')==row.get('url_pagina') and pending.get('tipo')==typ and pending.get('estado')=='BYTES_VERIFIED_SEMANTICS_PENDING' and pending.get('publicar') is False:
+            scores.append(2.5)
         if typ=='video':
             for window in rec.get('janelas') or []:
                 pk=window.get('pacote') or {};obs=pk.get('revisao_assistida') or {};decision=window.get('decisao') or {}
@@ -122,7 +125,8 @@ def candidatos(bib,necessidade,limite=4):
             'pagina':d['url_pagina'],'credito':d['atribuicao'],'licenca':d['licenca'],
             'direitos':'QUARENTENA_REVISAO_PRIVADA','sha_catalogo':h,
             'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False,
-            'pista_memoria_semantica':score>=3 or 1<score<2,
+            'pista_memoria_semantica':score>1 and score!=2,
+            'pista_aquisicao_mesmo_escopo':score==2.5,
             'pista_revisao_mesmo_escopo':score>=3,
             **({'pista_historica':vinculo_historico(necessidade,d)} if vinculo_historico(necessidade,d) else {})})
         if len(out)>=limite:return out

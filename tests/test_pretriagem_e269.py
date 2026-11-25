@@ -194,6 +194,7 @@ def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(
     monkeypatch.setattr(E247,'Transporte',Transport)
     calls=[]
     def model(prompt,images,**kw):
+        assert images and all(isinstance(x,bytes) and x.startswith(b'\\xff\\xd8') for x in images)
         calls.append(prompt)
         if 'miniaturas anexadas' in prompt:
             return {'observacoes':[{'indice':0,'decisao':'PRIORIZAR_AQUISICAO','observacao':'Controlled preview observation.'}]}
@@ -215,3 +216,11 @@ def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(
     assert c['aquisicao']['width']==1200 and c['aquisicao']['url_adquirida']==original
     assert c['aquisicao']['sha256']!=obs['observacoes'][0]['preview_sha256']
     assert obs['cobertura_nova']==0 and report['publish'] is False and c['decisao']['direitos_aprovados'] is False
+
+
+def test_network_reservation_preserves_global_ceiling_and_other_modalities():
+    from src.v4.pretriagem_documental import reserva_rede_encadeamento
+    assert reserva_rede_encadeamento(14,140_000_000,0)==(0,0)
+    assert reserva_rede_encadeamento(14,140_000_000,1)==(4,29_000_000)
+    assert reserva_rede_encadeamento(14,140_000_000,20)==(7,70_000_000)
+    assert reserva_rede_encadeamento(1,100,1)==(0,50)

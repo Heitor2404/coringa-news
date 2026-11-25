@@ -123,7 +123,12 @@ def revisar_folhas_lote(n,amostras,folder,ask):
         name=a['folha']
         if Path(name).name!=name or a.get('estado')!='PRETRIAGEM_PENDENTE' or a.get('publicar') is not False or a.get('necessidade_id')!=n['id'] or a.get('mostrar')!=n['mostrar']:raise ValueError('E278.1-VINCULO')
         raw=(Path(folder)/name).read_bytes()
-        with Image.open(io.BytesIO(raw)) as im:images.append(im.convert('RGB'))
+        with Image.open(io.BytesIO(raw)) as im:
+            if im.format!='JPEG':raise ValueError('E281-FOLHA-JPEG')
+            im.load()
+        # Send the very same JPEG bytes whose hash is recorded in the
+        # observation. Gemini.json_visao expects bytes, not PIL objects.
+        images.append(raw)
         bound.append({'indice':i,'id':n['id'],'escopo':RE.escopo(n),'pagina':a['pagina'],'source_id':a['source_id'],'preview_sha256':a['preview_sha256'],'folha':name,'folha_sha256':hashlib.sha256(raw).hexdigest(),'origem':'VISAO_MOTOR','publicar':False})
     prompt=("Avalie apenas as miniaturas anexadas, na ordem. Objetivo visual: "+json.dumps(RE.escopo(n),ensure_ascii=False)+
             ". Observe o referente e os componentes visiveis; nao deduza identidade, licenca, movimento ou fatos ausentes. "
@@ -179,3 +184,11 @@ def revisar_prioridade(n,row,c,inspect,can_inspect):
         'cobertura':result}]
     return {**row,**result,'rodadas':rounds,'tentativas':row['tentativas']+result['tentativas'],
         'diagnostico':R.diagnostico_cobertura(rounds,'EVIDENCIA_REVISADA' if result['estado']=='CANDIDATO_PRIVADO_REVISADO' else 'PRIORIDADE_REVISAO_PENDENTE')}
+
+
+def reserva_rede_encadeamento(http,bytes_,reservadas):
+    """Leave transfer capacity for preview AND final file without increasing
+    global limits. Other modalities keep at least half the shared capacity.
+    Reservation is an allocation, not a new eligibility or quality rule."""
+    if not reservadas:return (0,0)
+    return min(http//2,4*reservadas),min(bytes_//2,29_000_000*reservadas)

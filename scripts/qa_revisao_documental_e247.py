@@ -76,6 +76,10 @@ def main():
     # The normal review path cannot spend the calls reserved for preview +
     # formal inspection. Cache-only processing for those needs stays enabled.
     budget-=2*len(reserved)
+    from src.v4.pretriagem_documental import reserva_rede_encadeamento
+    global_http,global_bytes=t.max_http,t.max_bytes
+    hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
+    t.max_http-=hold_http;t.max_bytes-=hold_bytes
     format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
@@ -367,6 +371,7 @@ def main():
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
                     results_by_id[nid]=row
             budget=total_budget
+            t.max_http,t.max_bytes=global_http,global_bytes
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
             from src.v4.formatos import cobertura_documental as C
             for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
@@ -374,8 +379,15 @@ def main():
                 from src.v4.pretriagem_documental import pendencias_do_fluxo,coletar_fila
                 queues=pendencias_do_fluxo(tri,results,states)
                 old_http,old_bytes=t.max_http,t.max_bytes
-                t.max_http=min(old_http,t.http+12)
-                t.max_bytes=min(old_bytes,t.bytes+9_000_000)
+                if chain_previews:
+                    queues=[q for q in queues if q[0]['id'] in reserved]
+                    # Keep one transfer per reserved need for the selected
+                    # final asset. Unused reservation is returned below.
+                    final_http=min(len(queues),max(0,old_http-t.http)//2)
+                    final_bytes=min(26_000_000*len(queues),max(0,old_bytes-t.bytes)//2)
+                else:final_http=final_bytes=0
+                t.max_http=min(old_http-final_http,t.http+12)
+                t.max_bytes=min(old_bytes-final_bytes,t.bytes+9_000_000)
                 def preview_board(n,c,v,im,digest,index):
                     name='pretriagem-'+hashlib.sha256(n['id'].encode()).hexdigest()[:12]+'-'+str(index)+'.jpg'
                     im.thumbnail((960,720));im.save(out/name,quality=90)

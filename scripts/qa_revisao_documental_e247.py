@@ -60,7 +60,7 @@ def main():
         c['revisao_adicional_possivel']=False
         if replay and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
         if calls>=budget and not (progressive and c.get('fonte')=='biblioteca_v3'):return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
-        if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
+        if integral and c.get('tipo')!='video' and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
         if c.get('fonte') not in ('nasa','nasa_video','archive_video','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
         try:
@@ -77,7 +77,7 @@ def main():
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
         c['local_source']=str(p)
-        if integral and meta['sha256'] in used_sha:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_SELECIONADOS_NO_FILME'}
+        if integral and c.get('tipo')!='video' and meta['sha256'] in used_sha:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_SELECIONADOS_NO_FILME'}
         if adaptive and not progressive:
             key=(n['id'],meta['sha256'])
             if key in seen_bytes:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_INSPECIONADOS'}
@@ -111,7 +111,11 @@ def main():
                  'fonte':c['fonte'],'pagina':c.get('pagina'),'licenca_declarada':c.get('licenca'),'credito_declarado':c.get('credito'),
                  'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico') if k in c}},origem='E258')
         if c['tipo']=='foto':
-            im.thumbnail((1280,1280) if qualidade or integral else (960,960))
+            original=im.copy() if progressive else None
+            old_px=((cached or {}).get('revisao') or {}).get('px')
+            if progressive and isinstance(old_px,list) and len(old_px)==2 and all(type(v) is int and v>0 for v in old_px) and max(old_px)<=2560:
+                im.thumbnail(tuple(old_px))
+            else:im.thumbnail((1280,1280) if qualidade or integral else (960,960))
             try:
                 old=(cached or {}).get('revisao') or {}
                 if cache_key and old.get('publicar') is False and old.get('sha256_origem')==meta['sha256'] and old.get('necessidade_id')==n['id'] and old.get('mostrar')==n['mostrar'] and old.get('px')==list(im.size) and old.get('pixels_sha256')==hashlib.sha256(im.convert('RGB').tobytes()).hexdigest():
@@ -125,6 +129,15 @@ def main():
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
+            if progressive and not replay and dec.get('motivo')=='DETALHE_PEQUENO_NA_AMOSTRA' and calls<budget and original is not None and max(original.size)>max(im.size):
+                refined=original.copy();refined.thumbnail((2560,2560))
+                if refined.size!=im.size:
+                    boards.append((c,[im],dec['motivo']))
+                    try:
+                        second=R.revisar_foto(m,refined,n,ask)
+                        c['refinamento_foto']={'anterior':q,'decisao_anterior':dec,'modo':'IMAGEM_INTEIRA_MAIOR_RESOLUCAO'}
+                        q=second;im=refined;dec=R.decidir(n,c,q,tipo='foto');c['revisao']=q
+                    except Exception as e:c['refinamento_foto']={'falha':type(e).__name__}
             if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':dec},origem='E258')
             boards.append((c,[im],dec['motivo']))
             if integral and dec['estado']=='PERTINENTE_PRIVADO':

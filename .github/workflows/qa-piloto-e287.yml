@@ -1,4 +1,4 @@
-name: E287 - preparar piloto Havai com filmagens reais sem IA
+name: E287.1 - preparar piloto Havai com dependencias completas
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -22,7 +22,10 @@ jobs:
         with: {persist-credentials: false}
       - uses: actions/setup-python@v5
         with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
       - run: |
+          npm ci --prefix motor4 --no-audit --no-fund
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
           python -m pytest -q tests/test_e202_diretor_visual.py tests/test_documentario_e233_tempos.py

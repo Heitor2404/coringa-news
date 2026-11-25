@@ -134,3 +134,5 @@ E286.1 (§340): contrato de área segura histórico exigia blur reprovado; corri
 
 ### E285.1 / E287 (§341)
 E285 validou código/reuso 9 por identidade, 222/206/35 testes, mas homologação incompleta por resumo e memória de mudanças não integradas; corrigidos registros, novo CI pendente. E286.1 área segura SUCCESS; layout real pendente. Piloto Havaí assistido E219: histórico 79,8s vídeo/mapa, entrega privada confirmada, arquivo 403; E287 prepara originais sem IA, cobertura e cofre pendentes. Direção recebe fala de capítulos quando disponível. Não declarar autonomia inédita nem aprovação de publicação.
+
+E287.1 (§342): layout E286.1 renderizado e inspecionado, melhoria vertical e crédito, horizontal e legendas embutidas ainda não aprovados. Preflight E287 falhou por dependência npm ausente, corrigida; novo run pendente.

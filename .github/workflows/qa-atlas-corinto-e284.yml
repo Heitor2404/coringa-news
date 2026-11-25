@@ -1,0 +1,85 @@
+name: E284 - ATLAS Corinto no caminho real de render + diagnostico S2 (sem IA, privado)
+# Exclusivo da branch claude-consolidacao-corretiva-20261125. Disparo: alterar .github/e284/atlas.json.
+on:
+  push:
+    branches: [claude-consolidacao-corretiva-20261125]
+    paths: ['.github/e284/atlas.json']
+permissions:
+  contents: read
+env:
+  DO_NOT_TRACK: '1'
+  REMOTION_DISABLE_TELEMETRY: '1'
+  PROVAS_DIR: provas
+  # Sem REMOTION_CHROME de propósito: a prova é que motor4/remotion.config.js encontra o Chrome do sistema.
+jobs:
+  atlas:
+    if: github.ref == 'refs/heads/claude-consolidacao-corretiva-20261125'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest pyyaml
+          npm ci --prefix motor4 --no-audit --no-fund
+      - name: Provas
+        run: |
+          P=scripts/estado_prova.sh; root=stage_atlas/corinto; mkdir -p $root
+          $P testes python -m pytest -q tests/test_geografia_verificada_e284.py tests/test_atlas_base_regional_e235.py tests/test_ponte_mapa_atlas_filme.py tests/test_remotion_config_raiz.py
+          $P geografia python - <<'PY'
+          import json
+          from src.v4.formatos import geografia_verificada as GV
+          p=json.load(open('.github/e284/atlas.json'))
+          v=GV.verificar(p['lugar'],p['contexto'],rotulo=p['rotulo'],caso_id=p['caso_id'])
+          json.dump(v,open('stage_atlas/corinto/verificacao.json','w'),ensure_ascii=False,indent=1)
+          print('GEO',v['estado'],v.get('motivo'),v.get('distancia_km'),(v.get('caso_atlas') or {}).get('atlas'))
+          assert v['estado']=='VERIFICADA'
+          json.dump({'publish':False,'cases':[v['caso_atlas']]},open('stage_atlas/corinto/caso.json','w'),ensure_ascii=False,indent=1)
+          PY
+          $P render bash -c "python -m scripts.qa_atlas_multiscale $root/caso.json corinto > $root/render.log 2>&1; rc=\$?; cat $root/render.log | tail -20; ! grep -q 'Downloading Chrome' $root/render.log && [ \$rc -eq 0 ] && test -s qa_atlas_multiscale/corinto/mapa.mp4"
+          $P reuso_mosaico bash -c "python -m scripts.qa_atlas_multiscale $root/caso.json corinto > $root/render2.log 2>&1 && python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          from src.v4.formatos import plano as A
+          plan=json.load(open('qa_atlas_multiscale/corinto/planejamento.json'))
+          for m in plan['bases']:
+              f=A.RASTER_DIR/m['arquivo'];assert hashlib.sha256(f.read_bytes()).hexdigest()==m['sha256'],m['nome']
+          print('MOSAICOS_REUSADOS',len(plan['bases']))
+          PY"
+          $P diagnostico_s2 python -m scripts.diagnostico_s2_e284 $root/caso.json qa_atlas_multiscale/corinto $root/s2
+          cp qa_atlas_multiscale/corinto/mapa.mp4 qa_atlas_multiscale/corinto/planejamento.json $root/ 2>/dev/null || true
+          ffmpeg -v error -y -i $root/mapa.mp4 -vf "fps=2,scale=270:480,tile=6x2" -frames:v 1 $root/contato.jpg || true
+      - name: Preservar no cofre
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_atlas/corinto
+          files=("$root"/*.json "$root"/*.jpg "$root"/s2/*.json "$root"/s2/*.jpg "$root"/*.mp4)
+          bash scripts/estado_prova.sh cofre_espelho python scripts/espelhar_revisao_cofre.py "e284-atlas-corinto-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+      - name: Entrega privada (clipe ATLAS sem narracao)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          [ -s stage_atlas/corinto/mapa.mp4 ] || exit 0
+          bash scripts/estado_prova.sh telegram python - <<PY
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          chat,_=T.chat_autorizado()
+          cap=("CORINGA · PROVA PRIVADA E284 · ATLAS\nCanal de Corinto (localização verificada: Wikidata + OSM)\n"
+               "Clipe de mapa sem narração · commit ${GITHUB_SHA::8} · run ${GITHUB_RUN_ID}\n"
+               "Caminho real de render Remotion sem download de navegador · NÃO PUBLICADO")
+          r=T._api('sendVideo',{'chat_id':chat,'caption':cap,'supports_streaming':'true'},('video',T._caber(Path('stage_atlas/corinto/mapa.mp4'))))
+          assert isinstance(r,dict) and r.get('message_id')
+          print('TELEGRAM_ENTREGUE')
+          PY
+      - name: Resumo inequivoco
+        if: ${{ always() }}
+        run: python scripts/resumo_provas.py provas testes geografia render reuso_mosaico diagnostico_s2 cofre_espelho telegram

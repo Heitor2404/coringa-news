@@ -79,7 +79,10 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
         n=tri[i];r=rows.get(i) or {}
         if r.get('estado')=='DELEGAR_ATLAS' and n.get('necessidade')=='territorio':
             m=atlas.get(i) or {}
-            if m.get('necessidade_id')!=i or m.get('fatos')!=n['fatos'] or m.get('mostrar')!=n['mostrar'] or m.get('origem')!='CURADORIA_GEOGRAFICA_VERIFICADA':
+            # Manual curation OR automatic two-source verification (Wikidata P625 + OSM), never model coordinates.
+            from src.v4.formatos import geografia_verificada as GV
+            origem_ok=m.get('origem')=='CURADORIA_GEOGRAFICA_VERIFICADA' or (m.get('origem')==GV.ORIGEM and not GV.validar_verificacao(m.get('verificacao')))
+            if m.get('necessidade_id')!=i or m.get('fatos')!=n['fatos'] or m.get('mostrar')!=n['mostrar'] or not origem_ok:
                 issues.append({'id':i,'motivo':'ATLAS_SEM_VINCULO_GEOGRAFICO'});continue
             errors=B.validar_comprovante(m)
             if errors:

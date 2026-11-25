@@ -8,6 +8,69 @@ import copy
 import math
 
 
+
+def progressao_amostrada(necessidade,candidato,*,inicio=None):
+    """Build a private sequence from adjacent, independently reviewed windows.
+    This is NOT continuous-action proof. Different referents, gaps or negative
+    windows cannot be merged merely to make a longer shot."""
+    from . import revisao_documental as R, direcao_eventos as D
+    a=candidato.get('aquisicao') or {};sha=a.get('sha256')
+    if necessidade.get('evidencia_visual')!='movimento':return None
+    rows=[]
+    for j in candidato.get('janelas',[]):
+        p=j.get('pacote') or {};q=p.get('revisao_assistida') or {}
+        if p.get('sha256_origem')!=sha or p.get('fato_id')!=necessidade['fatos'][0] or p.get('necessidade')!=necessidade['mostrar']:continue
+        try:
+            d=R.decidir(necessidade,candidato,q,tipo='video')
+            obs=D.aceitar_observacao(p,q['resposta_observada'])
+            if d['estado']!='PERTINENTE_PRIVADO' or not obs['video_framing']:continue
+            nomes=set.intersection(*[{e['nome'] for e in pt['elementos']} for pt in obs['video_framing']['pontos']])
+            raw=q['resposta_bruta'];idx=raw['indices_mudanca'][1]
+            rows.append({'inicio_s':p['inicio_s'],'fim_s':p['inicio_s']+p['duracao_s'],
+                         'revisao_id':p['revisao_id'],'referentes':sorted(nomes),
+                         'fonte_s':p['amostras'][idx]['fonte_s'],'acao_visivel':raw['descricao_mudanca']})
+        except (KeyError,ValueError,TypeError,AttributeError,IndexError):continue
+    rows.sort(key=lambda x:x['inicio_s'])
+    best=None
+    for i,first in enumerate(rows):
+        if inicio is not None and abs(first['inicio_s']-inicio)>.001:continue
+        group=[first];names=set(first['referentes']);end=first['fim_s']
+        for row in rows[i+1:]:
+            if row['inicio_s']>end+.001:break
+            common=names&set(row['referentes'])
+            if not common or row['fim_s']<=end or row['fonte_s']<=group[-1]['fonte_s']:continue
+            if row['acao_visivel'].strip().casefold() in {x['acao_visivel'].strip().casefold() for x in group}:continue
+            group.append(row);names=common;end=row['fim_s']
+        span=math.floor((end-first['inicio_s'])*30+1e-6)/30
+        if len(group)<2 or span<=3.8 or not names or any(x['fonte_s']>=first['inicio_s']+span for x in group):continue
+        packet={'tipo':'sequencia_amostrada_privada','sha256_origem':sha,'necessidade_id':necessidade['id'],
+                'inspecao':'Janelas adjacentes revisadas separadamente, sem inferir ação contínua.',
+                'janelas':group,'referentes':sorted(names),'prova_de_acao_continua':False,'publicar':False,
+                'inicio_s':first['inicio_s'],'duracao_s':span,
+                'eventos':[{'at':x['fonte_s']-first['inicio_s'],'fonte_s':x['fonte_s'],'acao_visivel':x['acao_visivel']} for x in group]}
+        if best is None or span>best['duracao_s']:best=packet
+    return best
+
+
+def validar_sequencia_amostrada(cena,duracao,fonte):
+    p=cena.get('progressao_visual') or {};sha=p.get('sha256_origem')
+    if cena.get('evidence')!='representative' or p.get('publicar') is not False or p.get('prova_de_acao_continua') is not False or not isinstance(sha,str) or len(sha)!=64 or (fonte or {}).get('expected_sha256')!=sha:
+        return ['sequência amostrada exige uso representativo privado e SHA da origem']
+    ini=cena.get('source_in_seconds');rows=p.get('janelas');events=p.get('eventos')
+    if not isinstance(ini,(int,float)) or not math.isfinite(ini) or not isinstance(rows,list) or len(rows)<2 or not isinstance(events,list) or len(events)!=len(rows):return ['sequência sem janelas e eventos vinculados']
+    if p.get('inicio_s')!=ini or p.get('duracao_s')!=duracao:return ['sequência amostrada não pode ser retimada']
+    names=set(p.get('referentes') or []);end=ini;prev=-1;ids=set();changes=set()
+    if not names:return ['sequência sem referente comum']
+    for row,e in zip(rows,events):
+        if not isinstance(row,dict) or not isinstance(e,dict):return ['janela inválida']
+        a,b,t=[row.get(k) for k in ('inicio_s','fim_s','fonte_s')];rid=row.get('revisao_id')
+        if not all(type(x) in (float,int) and math.isfinite(x) for x in (a,b,t)) or not ini-.001<=a<=end+.001 or b<=end or not a<=t<b or t<=prev or t>=ini+duracao or not isinstance(rid,str) or len(rid)!=64 or rid in ids or not names<=set(row.get('referentes') or []):return ['janelas não adjacentes, sem vínculo ou referente comum']
+        change=row.get('acao_visivel')
+        if not isinstance(change,str) or len(change.strip())<20 or change.strip().casefold() in changes or e.get('acao_visivel')!=change or e.get('fonte_s')!=t or not isinstance(e.get('at'),(float,int)) or abs(e['at']-(t-ini))>.001:return ['evento não corresponde à observação']
+        ids.add(rid);changes.add(change.strip().casefold());prev=t;end=b
+    if end<ini+duracao-.001:return ['intervalo não coberto pelas janelas revisadas']
+    return []
+
 def validar_progressao_video(cena: dict, duracao: float, fonte: dict | None = None) -> list[str]:
     """Comprovação ESTRUTURAL de ação observada na fonte, não aprovação estética.
 
@@ -23,6 +86,8 @@ def validar_progressao_video(cena: dict, duracao: float, fonte: dict | None = No
     if cena.get('type')!='video':
         return ['somente vídeo real com ação observável pode ultrapassar 3,8 s']
     p=cena.get('progressao_visual')
+    if isinstance(p,dict) and p.get('tipo')=='sequencia_amostrada_privada':
+        return validar_sequencia_amostrada(cena,duracao,fonte)
     if not isinstance(p,dict) or p.get('tipo')!='acao_observada':
         return ['falta progressão por ações reais observadas na fonte']
     sha=p.get('sha256_origem')

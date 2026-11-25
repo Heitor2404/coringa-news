@@ -151,9 +151,9 @@ def main():
                         if cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
                 elif cache_only or calls>=budget:
-                    if somente_acervo and c.get('pista_historica'):
+                    if somente_acervo and (c.get('pista_historica') or c.get('pista_aquisicao_mesmo_escopo')):
                         c['amostra_pendente']={'necessidade_id':n['id'],'sha256_origem':meta['sha256'],'px':list(im.size),'pixels_sha256':hashlib.sha256(im.convert('RGB').tobytes()).hexdigest(),'publicar':False}
-                        boards.append((c,[im],n['id']+' PISTA HISTORICA - SEM APROVACAO'))
+                        boards.append((c,[im],n['id']+' PISTA LOCAL - SEM APROVACAO'))
                     return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:

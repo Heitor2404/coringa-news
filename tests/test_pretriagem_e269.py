@@ -16,3 +16,23 @@ def test_identity_context_does_not_double_count_a_single_component():
     b={'fonte':'commons','tipo':'foto','source_id':2,'titulo':'Matterhorn mountain Switzerland'}
     assert R.ordenar_candidatos(n,[a,b])[0]==b
     assert R.contexto_de_busca(n,{'titulo':'Nevadan'})[0] is False
+
+def test_round_robin_preview_budget_does_not_starve_later_obligations():
+    import io
+    from PIL import Image
+    from src.v4.pretriagem_documental import coletar_fila
+    buf=io.BytesIO();Image.new('RGB',(640,480),'blue').save(buf,format='JPEG')
+    class Transport:
+        http=0;bytes=0;max_http=3;max_bytes=9000000
+        def get(self,url,hosts,lim):
+            self.http+=1
+            if url=='fail':raise ValueError('LIMITE_CONTENT_LENGTH')
+            raw=buf.getvalue();self.bytes+=len(raw);return raw
+    queues=[({'id':n},[({'pagina':n+str(i)},{'url':v}) for i,v in enumerate(vs)]) for n,vs in [('a',['fail','a2','a3']),('b',['b1']),('c',['c1'])]]
+    report=coletar_fila(queues,Transport(),lambda n,c,v,im,h,i:{'id':n['id'],'sha':h})
+    assert [len(r['amostras']) for r in report]==[0,1,1]
+    assert report[0]['erros'][0]['motivo']=='LIMITE_CONTENT_LENGTH'
+
+def test_photo_preview_never_routes_a_motion_or_atlas_obligation():
+    assert candidatos({'necessidade':'registro','evidencia_visual':'movimento'},[{}])==[]
+    assert candidatos({'necessidade':'territorio','evidencia_visual':'estatica'},[{}])==[]

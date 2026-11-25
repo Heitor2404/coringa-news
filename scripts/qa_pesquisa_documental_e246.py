@@ -97,12 +97,71 @@ def archive_receipt(c,t):
 def progressive_stop(t):
     return getattr(t,'http',0)>=getattr(t,'max_http',float('inf')) or getattr(t,'bytes',0)>=getattr(t,'max_bytes',float('inf'))
 
+USGS_VIDEO_HOSTS=E.HOSTS
+USGS_PHOTO_HOSTS={'d9-wret.s3.us-west-2.amazonaws.com','prd-wret.s3.us-west-2.amazonaws.com'}
+
+def candidato_pagina_usgs(row,necessidade):
+    """Only explicitly curated individual source pages, not URLs invented by
+    the director model. Page verification and visual review are downstream."""
+    page=row.get('pagina');kind=row.get('tipo');credit=row.get('credito')
+    if row.get('necessidade_id')!=necessidade['id'] or kind not in ('foto','video') or not isinstance(page,str) or not isinstance(credit,str) or not credit.strip():
+        raise ValueError('USGS-CURADORIA')
+    if necessidade.get('evidencia_visual')=='movimento' and kind!='video':
+        raise ValueError('USGS-TIPO-EVIDENCIA')
+    role='videos' if kind=='video' else 'images'
+    if not re.fullmatch(r'https://www\.usgs\.gov/media/'+role+r'/[a-z0-9-]+',page):
+        raise ValueError('USGS-PAGINA')
+    return {'fonte':'usgs_pagina','source_id':page,'tipo':kind,'url':page,'pagina':page,
+            'titulo':str(row.get('titulo') or page.rsplit('/',1)[-1]),'descricao':str(row.get('escopo') or ''),
+            'credito':credit,'licenca':'','direitos':'REVISAR_PAGINA_INDIVIDUAL',
+            'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False}
+
+
+def usgs_receipt(c,t):
+    from bs4 import BeautifulSoup
+    from urllib.parse import urljoin
+    page=c.get('pagina');kind=c.get('tipo')
+    role='videos' if kind=='video' else 'images' if kind=='foto' else None
+    if not role or not isinstance(page,str) or not re.fullmatch(r'https://www\.usgs\.gov/media/'+role+r'/[a-z0-9-]+',page):
+        raise ValueError('USGS-PAGINA')
+    raw=t.get(page,{'www.usgs.gov'},5_000_000)
+    soup=BeautifulSoup(raw,'html.parser')
+    txt=soup.get_text(' ',strip=True)
+    h=soup.find('h1')
+    if not h or not h.get_text(' ',strip=True):raise ValueError('USGS-TITULO')
+    if not re.search(r'Sources/Usage\s+Public Domain\b',txt,re.I):
+        raise ValueError('USGS-LICENCA')
+    hosts=USGS_VIDEO_HOSTS if kind=='video' else USGS_PHOTO_HOSTS
+    labels=('download video',) if kind=='video' else ('original','medium')
+    choices=[]
+    for label in labels:
+        for link in soup.find_all('a',href=True):
+            text=link.get_text(' ',strip=True).lower()
+            if (label not in text if kind=='video' else text!=label):continue
+            u=urljoin(page,link['href'])
+            try:
+                x=urlsplit(u)
+                if x.scheme!='https' or x.hostname not in hosts or x.username or x.password or x.port not in (None,443) or x.fragment:continue
+            except ValueError:continue
+            if not any(v['url']==u for v in choices):choices.append({'url':u,'rotulo':text})
+    if not choices:raise ValueError('USGS-SEM-VARIANTE')
+    c.update(titulo=h.get_text(' ',strip=True),licenca='Public domain',
+             direitos='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA',
+             recibo_usgs={'pagina':page,'page_sha256':hashlib.sha256(raw).hexdigest(),
+                          'tipo':kind,'licenca_declarada':'Public Domain',
+                          'credito_curado':c['credito'],'variantes':choices,
+                          'direitos':'PENDENTE_AUDITORIA_INDIVIDUAL'})
+    return choices,hosts
+
+
 def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte'] in ('nasa','nasa_video'):
         choices=nasa_receipt(c,t,progressivo=progressivo,min_video_px=min_video_px);hosts={'images-assets.nasa.gov'}
     elif c.get('fonte')=='archive_video':
         choices,hosts=archive_receipt(c,t)
+    elif c.get('fonte')=='usgs_pagina':
+        choices,hosts=usgs_receipt(c,t)
     elif c.get('fonte')=='figshare':
         from src.v4.fontes_cientificas import HOSTS,safe_url
         rec=c.get('recibo_cientifico') or {}

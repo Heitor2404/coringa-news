@@ -63,7 +63,7 @@ def main():
         if replay and c.get('fonte')!='biblioteca_v3':return {'estado':'ORCAMENTO','motivo':'REPLAY_SEM_REDE'}
         if calls>=budget and not (progressive and c.get('fonte')=='biblioteca_v3'):return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('tipo')!='video' and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
-        if c.get('fonte') not in ('nasa','nasa_video','archive_video','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
+        if c.get('fonte') not in ('nasa','nasa_video','archive_video','usgs_pagina','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
         try:
             if c.get('fonte')=='biblioteca_v3':
@@ -74,7 +74,7 @@ def main():
                     meta,im,p,receipt=acquired[identity];im=im.copy();c.update(receipt);reuses+=1
                 else:
                     meta,im,p=Q.sample(c,assets,t,progressivo=progressive,min_video_px=FE.MIN_VIDEO_COMPOSITION_PX if integral else 360)
-                    if progressive:acquired[identity]=(meta,im.copy(),p,{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','licenca','credito') if k in c})
+                    if progressive:acquired[identity]=(meta,im.copy(),p,{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','recibo_usgs','licenca','credito') if k in c})
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
@@ -116,7 +116,7 @@ def main():
             if c.get('fonte')!='biblioteca_v3':lib.gravar_analise(meta['sha256'],'documental:recibo:'+hashlib.sha256(str(c.get('pagina') or c.get('source_id')).encode()).hexdigest(),
                 {'publicar':False,'direitos_aprovados':False,'aquisicao':meta,
                  'fonte':c['fonte'],'pagina':c.get('pagina'),'licenca_declarada':c.get('licenca'),'credito_declarado':c.get('credito'),
-                 'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico') if k in c}},origem='E258')
+                 'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','recibo_usgs') if k in c}},origem='E258')
         if c['tipo']=='foto':
             original=im.copy() if progressive else None
             old_px=((cached or {}).get('revisao') or {}).get('px')
@@ -253,7 +253,9 @@ def main():
     try:
         if progressive:
             from src.v4 import acervo_v4 as A
-            reports=[];states={};results_by_id={};total_search=0;local_checked=set()
+            reports=[];states={};results_by_id={};total_search=0;local_checked=set();pages_checked=set()
+            curated=case.get('paginas_oficiais_curadas') or []
+            if not isinstance(curated,list) or any(not isinstance(x,dict) or x.get('necessidade_id') not in {n['id'] for n in tri} for x in curated):raise ValueError('E263-CURADORIA')
             search_limit=32 if integral else 16
             def search_progress(n,limit,attempted):
                 nonlocal total_search
@@ -263,6 +265,12 @@ def main():
                     if local:
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
+                if not replay and n['id'] not in pages_checked:
+                    pages_checked.add(n['id'])
+                    pages=[Q.candidato_pagina_usgs(x,n) for x in curated if x['necessidade_id']==n['id']]
+                    if pages:
+                        rr={'id':n['id'],'buscas':[],'candidatos':pages,'biblioteca':[],'origem':'PAGINAS_CURADAS_PENDENTES','publicar':False,'pronto_para_render':False}
+                        reports.append(rr);return rr
                 if replay or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
@@ -289,7 +297,7 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:(nid not in local_checked) or (not replay and total_search<phase_limit),
+                        pode_buscar=lambda:(nid not in local_checked) or (not replay and (nid not in pages_checked or total_search<phase_limit)),
                         pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')

@@ -18,7 +18,7 @@ def origem_documental(c,a):
             return None
         provider=source.get('fonte')
         source=source.get('recibos') or {}
-    key={'nasa':'recibo_nasa','nasa_video':'recibo_nasa','archive_video':'recibo_archive'}.get(provider)
+    key={'nasa':'recibo_nasa','nasa_video':'recibo_nasa','archive_video':'recibo_archive','usgs_pagina':'recibo_usgs'}.get(provider)
     if key is None:return None
     receipt=source.get(key)
     if not isinstance(receipt,dict):return None
@@ -37,7 +37,7 @@ def licenca_documental(c,a):
     # license alone is insufficient for an unfamiliar documentary host.
     from urllib.parse import urlsplit
     host=urlsplit(str(c.get('pagina') or '')).hostname
-    if host in ('images.nasa.gov','archive.org') and not F.recibo_documental_valido(asset):return None
+    if (host in ('images.nasa.gov','archive.org') or c.get('fonte')=='usgs_pagina' or (c.get('recibo_restaurado') or {}).get('fonte')=='usgs_pagina') and not F.recibo_documental_valido(asset):return None
     if lic not in F.LICENCAS and not (receipt and F.recibo_documental_valido(asset)):return None
     if not asset['page'] or not asset['credit']:return None
     return asset

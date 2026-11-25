@@ -54,3 +54,33 @@ def test_preflight_respects_verified_minimum_and_uses_feasible_capacity():
         prever_tempos(case,{i:{'min':1.4,'cap':3.6} for i in ids})
     with pytest.raises(ValueError,match='TEMPO-PREFLIGHT'):
         prever_tempos(case,{**chosen,'0':{'min':3.9,'cap':3.8}})
+
+
+def test_usgs_curated_page_receipt_private_and_bound():
+    from scripts.qa_pesquisa_documental_e246 import candidato_pagina_usgs,usgs_receipt
+    from src.v4.formatos import filme_editorial as F
+    import pytest
+    need={'id':'n','evidencia_visual':'movimento'}
+    row={'necessidade_id':'n','tipo':'video','pagina':'https://www.usgs.gov/media/videos/example','credito':'Declared curator credit'}
+    c=candidato_pagina_usgs(row,need)
+    url='https://prd-wret.s3.us-west-2.amazonaws.com/example.mp4'
+    class T:
+        def get(self,p,hosts,lim):
+            assert p==row['pagina'] and hosts=={'www.usgs.gov'}
+            return ('<h1>Source title</h1><p>Sources/Usage Public Domain</p><a href="'+url+'">Download video</a><a href="https://prd-wret.s3.us-west-2.amazonaws.com.evil.test/x.mp4">Download video</a>').encode()
+    choices,hosts=usgs_receipt(c,T())
+    assert len(choices)==1 and choices[0]['url']==url
+    a={'sha256':'a'*64,'bytes':1200,'url_adquirida':url}
+    x=P.licenca_documental(c,a)
+    assert F.recibo_documental_valido(x) and x['rights_status']=='REVIEW_PENDING'
+    assert P.licenca_documental(c,{**a,'url_adquirida':'https://evil.test/a.mp4'}) is None
+    assert P.licenca_documental({**c,'pagina':row['pagina']+'-other'},a) is None
+    restored={**c,'fonte':'biblioteca_v3','recibo_restaurado':{'fonte':'usgs_pagina','pagina':c['pagina'],'aquisicao':a,'recibos':{'recibo_usgs':c['recibo_usgs']}}}
+    assert P.licenca_documental(restored,a)==x
+    with pytest.raises(ValueError,match='USGS-PAGINA'):
+        candidato_pagina_usgs({**row,'pagina':'https://www.usgs.gov.evil.test/media/videos/example'},need)
+    with pytest.raises(ValueError,match='USGS-TIPO-EVIDENCIA'):
+        candidato_pagina_usgs({**row,'tipo':'foto'},need)
+    class Restricted(T):
+        def get(self,*args):return super().get(*args).replace(b'Public Domain',b'Copyright')
+    with pytest.raises(ValueError,match='USGS-LICENCA'):usgs_receipt(c,Restricted())

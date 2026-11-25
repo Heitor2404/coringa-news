@@ -53,6 +53,17 @@ def recibo_documental_valido(asset:dict)->bool:
                 and exact(asset.get('page'),'images.nasa.gov','/details/'+nid)
                 and exact(url,'images-assets.nasa.gov')
                 and isinstance(rows,list) and any(isinstance(row,dict) and row.get('href_https')==url for row in rows))
+    if d.get('provedor')=='usgs_pagina':
+        kind=receipt.get('tipo');page=receipt.get('pagina')
+        role='videos' if kind=='video' else 'images' if kind=='foto' else None
+        if not role or not isinstance(page,str) or not re.fullmatch(r'https://www\.usgs\.gov/media/'+role+r'/[a-z0-9-]+',page):return False
+        hosts={'usgs-ocapsv2-public-input-media.s3.us-west-2.amazonaws.com','www.usgs.gov','prd-wret.s3.us-west-2.amazonaws.com'} if kind=='video' else {'d9-wret.s3.us-west-2.amazonaws.com','prd-wret.s3.us-west-2.amazonaws.com'}
+        rows=receipt.get('variantes')
+        return (page==asset.get('page') and valid_sha(receipt.get('page_sha256')) and asset.get('license')=='Public domain'
+                and receipt.get('licenca_declarada')=='Public Domain' and receipt.get('credito_curado')==asset.get('credit')
+                and bool(asset.get('credit')) and (asset.get('media_type') is None or asset.get('media_type')==('video' if kind=='video' else 'photo'))
+                and type(d.get('bytes')) is int and d['bytes']>0 and any(exact(url,h) for h in hosts)
+                and isinstance(rows,list) and any(isinstance(row,dict) and row.get('url')==url for row in rows))
     if d.get('provedor')=='archive_video':
         ident=receipt.get('identifier')
         if not isinstance(ident,str) or ident in ('.','..') or not re.fullmatch(r'[A-Za-z0-9_.-]{1,150}',ident):return False

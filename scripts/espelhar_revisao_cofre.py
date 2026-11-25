@@ -48,9 +48,20 @@ def collect(paths):
         p=Path(p)
         if not p.is_file():raise ValueError('COFRE_ARQUIVO_AUSENTE')
         if p.suffix.lower()=='.json':
-            if p.stat().st_size>MAX_FILE:raise ValueError('COFRE_JSON_GRANDE')
             data=p.read_bytes();json.loads(data)
-            put(p.name,data,p.name,'relatorio')
+            if len(data)<=MAX_FILE:
+                put(p.name,data,p.name,'relatorio')
+            else:
+                # Preserve exact UTF-8 bytes via bounded base64 JSON chunks.
+                # Do not drop or summarize any original report fields.
+                step=480_000
+                parts=[]
+                for i,pos in enumerate(range(0,len(data),step)):
+                    block=data[pos:pos+step];name=f'{p.stem}-parte-{i:03d}.json'
+                    put(name,json.dumps({'base64':base64.b64encode(block).decode(),'parte':i}).encode(),p.name,'relatorio_parte')
+                    parts.append(name)
+                manifest={'schema':'coringa.json.parts.v1','original':p.name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'partes':parts,'encoding':'base64'}
+                put(p.stem+'-partes.json',json.dumps(manifest).encode(),p.name,'relatorio_indice')
         elif p.suffix.lower() in ('.jpg','.jpeg','.png'):
             put(p.stem+'.jpg',image_bytes(p),p.name,'imagem_revisao')
         elif p.suffix.lower()=='.mp4':

@@ -1,4 +1,4 @@
-name: E261.6 - lacunas explicativas de fotos e videos
+name: E261.7 - regressao de politica e tempo integral viavel
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

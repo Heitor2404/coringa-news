@@ -42,7 +42,7 @@ def test_preflight_bloqueia_fixture_antiga_antes_de_baixar(tmp_path,monkeypatch)
     p=json.loads(Path('docs/v4/formatos/filme_panama_12s_prova.json').read_text())
     p['publicar']=False
     # The structural preflight is deliberately stubbed: test the independent visual gate.
-    monkeypatch.setattr(F,'avaliar',lambda p:{'pronto':True})
+    monkeypatch.setattr(F,'avaliar',lambda p,*,fragmento_misto=False:{'pronto':True})
     with pytest.raises(ValueError,match='E211-POLITICA-VISUAL'):
         F.preparar(p,tmp_path/'out',tmp_path/'public',downloader=lambda u:pytest.fail('download indevido'))
     assert not (tmp_path/'out'/'props.json').exists()

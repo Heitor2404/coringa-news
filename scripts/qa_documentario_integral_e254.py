@@ -4,6 +4,28 @@ from pathlib import Path
 from src.v4.formatos import ponte_cobertura_filme as P,filme_editorial as F,diretor_visual_e202 as D,legenda_sync as LS
 from scripts.qa_documentario_curado_e218 import write,PUBLIC
 
+def prever_tempos(case,chosen,*,minimo_s=60):
+    """A feasible private preflight schedule, not a prediction of speech.
+    Prefer ordinary cuts but never shorten reviewed evidence or reject a
+    feasible duration simply because the provisional preferred cuts are short.
+    """
+    ids=[i for ch in case['chapters'] for i in ch['needs']]
+    mins={i:math.ceil(chosen[i].get('min',1.4)*30-1e-6) for i in ids}
+    caps={i:math.floor(chosen[i]['cap']*30+1e-6) for i in ids}
+    if any(mins[i]>caps[i] for i in ids):raise ValueError('E254-TEMPO-PREFLIGHT')
+    frames={i:max(mins[i],min(caps[i],108)) for i in ids}
+    target=math.ceil(minimo_s*30-1e-6)
+    if sum(caps.values())<target:raise ValueError('E254-CAPACIDADE-PREFLIGHT')
+    # Only use remaining verified capacity, distributing across eligible cuts.
+    while sum(frames.values())<target:
+        i=min((i for i in ids if frames[i]<caps[i]),key=lambda i:frames[i])
+        frames[i]+=1
+    ends=[];total=0
+    for ch in case['chapters']:
+        total+=sum(frames[i] for i in ch['needs']);ends.append(total)
+    return ends
+
+
 def main():
     root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
     case=report['case']
@@ -14,10 +36,12 @@ def main():
     if not gate['pronto_para_tts']:
         print('E254 COBERTURA INSUFICIENTE',gate,flush=True);return
     # Test the existing structural gate before spending TTS.
-    predicted=[];t=0
-    for ch in case['chapters']:
-        t+=sum(round(chosen[i]['cap']*30) if chosen[i].get('min',1.4)==chosen[i]['cap'] else math.floor(min(3.6,chosen[i]['cap'])*30) for i in ch['needs']);predicted.append(t)
-    pre=P.plano(case,chosen,predicted);check=F.avaliar(pre)
+    try:
+        predicted=prever_tempos(case,chosen)
+        pre=P.plano(case,chosen,predicted)
+    except ValueError as e:
+        write(root/'integral.json',{**gate,'pronto_para_tts':False,'motivo':str(e)});return
+    check=F.avaliar(pre)
     write(root/'preflight.json',check)
     if pre['duracao']<60 or not check['pronto']:
         write(root/'integral.json',{**gate,'pronto_para_tts':False,'motivo':'PREFLIGHT_FILME','bloqueios':check['bloqueios']})

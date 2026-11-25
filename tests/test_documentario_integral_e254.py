@@ -39,3 +39,18 @@ def test_archive_private_receipt_normalizes_explicit_license_and_survives_restor
     assert P.licenca_documental(restored,{**a,'bytes':1}) is None
     assert P.licenca_documental({**c,'licenca':'CC BY 4.0'},a) is None
     assert P.licenca_documental({**c,'recibo_archive':None},a) is None
+
+
+def test_preflight_respects_verified_minimum_and_uses_feasible_capacity():
+    from scripts.qa_documentario_integral_e254 import prever_tempos
+    import pytest,math
+    ids=[str(i) for i in range(16)]
+    case={'chapters':[{'needs':ids[:8]},{'needs':ids[8:]}]}
+    chosen={i:{'min':3.7,'cap':3.8} if i=='0' else {'min':1.4,'cap':3.8} for i in ids}
+    ends=prever_tempos(case,chosen)
+    assert ends[-1]==1800
+    assert ends[0]>=math.ceil(3.7*30)+7*108
+    with pytest.raises(ValueError,match='CAPACIDADE'):
+        prever_tempos(case,{i:{'min':1.4,'cap':3.6} for i in ids})
+    with pytest.raises(ValueError,match='TEMPO-PREFLIGHT'):
+        prever_tempos(case,{**chosen,'0':{'min':3.9,'cap':3.8}})

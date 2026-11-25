@@ -58,3 +58,13 @@ def test_size_precheck_and_declared_rendering():
     assert [x['url'] for x in variants(c)]==['https://example.org/small']
     assert A.natureza_preliminar({'desc':'Rendered using Autodesk Maya'})=='REPRESENTACAO_DECLARADA'
     assert A.natureza_preliminar({'desc':'Cassini mosaic'})=='NATUREZA_PENDENTE_INSPECAO'
+
+def test_legacy_thumbnail_cannot_satisfy_motion():
+    class B:
+        def buscar(self,*a,**k):return [{'id':'cm-x','sha256':'a'*64,'ext':'.jpg'}]
+    n={'id':'n','necessidade':'registro','evidencia_visual':'movimento','pesquisa':{'consultas_en':['octopus movement']}}
+    def inspector(c,n):
+        pytest.fail('thumbnail must not be offered as video evidence')
+    r=A.pesquisar_cobertura(n,biblioteca=B(),fontes=lambda t:[],inspecionar=inspector)
+    assert r['biblioteca'][0]['estado']=='MINIATURA_NAO_E_VIDEO'
+    assert r['estado']!='CANDIDATO_PRIVADO_REVISADO'

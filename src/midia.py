@@ -261,6 +261,7 @@ def candidatos_nasa_video(busca: str, *, documental=False) -> list[dict]:
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
+        if documental:raise
         print(f'  [mídia/nasa] {busca!r} falhou: {str(e)[:120]}')
     return out
 
@@ -308,6 +309,7 @@ def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
+        if documental:raise
         print(f'  [mídia/archive] {busca!r} falhou: {str(e)[:120]}')
     return out
 

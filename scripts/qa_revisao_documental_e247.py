@@ -89,7 +89,7 @@ def main():
     global_http,global_bytes=t.max_http,t.max_bytes
     hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
     t.max_http-=hold_http;t.max_bytes-=hold_bytes
-    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -178,7 +178,7 @@ def main():
                 if cache_key and old.get('publicar') is False and old.get('sha256_origem')==meta['sha256'] and old.get('necessidade_id')==n['id'] and old.get('mostrar')==n['mostrar'] and old.get('px')==list(im.size) and old.get('pixels_sha256')==hashlib.sha256(im.convert('RGB').tobytes()).hexdigest():
                     try:
                         q=R.revisar_foto(m,im,n,lambda prompt,images:old['resposta'])
-                        cache_hits+=1;c['revisao_reutilizada']=True
+                        cache_hits+=1;c['revisao_reutilizada']=True;reuse_ids.append(q.get('revisao_id'))
                     except (ValueError,KeyError,TypeError):
                         if cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
@@ -234,7 +234,7 @@ def main():
                             and old_review.get('sha256_origem')==meta['sha256']
                             and old_review.get('necessidade_id')==n['id'] and old_review.get('publicar') is False
                             and isinstance(old_review.get('resposta_bruta'),dict)):
-                        cached_starts.add(round(start,4));cached_exact[round(start,4)]=float(start)
+                        cached_starts.add(round(start,4));cached_exact.setdefault(round(start,4),[]).append(float(start))
             if progressive and (cache_only or calls >= budget) and not cached_starts:
                 return {'estado': 'ORCAMENTO', 'motivo': 'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
             exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts,inicios_exatos=cached_exact)
@@ -254,7 +254,7 @@ def main():
                         try:
                             q0=DE.revisar_janela_visao(pk,frames,lambda prompt,images:stored[pk['revisao_id']],permitir_chamada=True,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
                             entries[i]={'revisao':{**q0,'chamadas_logicas':0,'provedor':'reuso_privado'},'cache':True}
-                            cache_hits+=1
+                            cache_hits+=1;reuse_ids.append(pk['revisao_id'])
                             continue
                         except (ValueError,TypeError,KeyError,AttributeError):pass
                     fresh.append((i,pk,frames))
@@ -522,7 +522,7 @@ def main():
     if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status,'encadeamento':chain_status,'reservadas':sorted(reserved)})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

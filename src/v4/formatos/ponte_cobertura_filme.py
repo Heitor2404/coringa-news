@@ -55,6 +55,13 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
             issues.append({'id':i,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'});continue
         window=c.get('selecao_janela') or {}
         cap=3.8 if kind=='photo' else min(3.8,float(window.get('duracao_s') or 0))
+        framing=None
+        if kind=='video' and window.get('revisao_id')==d.get('revisao_id') and window.get('video_framing'):
+            trial={'type':'video','start':0,'end':cap,'source_in_seconds':window.get('source_in_seconds'),'video_zoom':1,'video_framing':window['video_framing']}
+            try:
+                F.resolver_relacao_video(trial,{'expected_sha256':a['sha256']},(a['width'],a['height']),adaptativo=True)
+                framing=window['video_framing']
+            except (ValueError,TypeError,KeyError):pass
         progression=None
         pgr=progressao.get(i) or {}
         if kind=='video' and pgr.get('necessidade_id')==i and pgr.get('revisao_id')==d.get('revisao_id'):
@@ -73,7 +80,7 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
         if cap<1.4 or (kind=='video' and p.suffix.lower() not in ('.mp4','.webm')):
             issues.append({'id':i,'motivo':'JANELA_INSUFICIENTE'});continue
         pages.add(c['pagina']);hashes.add(a['sha256'])
-        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression}
+        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression,'framing':framing}
     capacity=sum(x['cap'] for x in chosen.values())
     if capacity<minimo_s:issues.append({'id':'filme','motivo':'CAPACIDADE_MENOR_MINIMO','segundos':capacity,'minimo_s':minimo_s})
     return chosen,{'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),
@@ -111,10 +118,12 @@ def plano(case,chosen,tempos):
             if x['kind']=='photo':shot['photo_framing']='integral'
             else:
                 shot.update(source_in_seconds=x['window']['source_in_seconds'],video_zoom=1,video_context_layout='cena_integral')
+            if x.get('framing') and all(p['at']<span for p in x['framing']['pontos']):
+                shot['video_framing']=x['framing']
             if x.get('progressao'):shot['progressao_visual']=x['progressao']
             shots.append(shot);start+=count
     result={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,
-            'titulo':case['tema'],'duracao':start/30,'media':media,'shots':shots}
+            'titulo':case['tema'],'duracao':start/30,'media':media,'shots':shots,'documentary_framing':'ADAPTIVE_REVIEW_V1'}
     for i,m in maps:
         result=B.inserir_no_filme(result,i,Path(m['local_source']),Path(m['atlas_proof']),m.get('intencao','localizar'))
     return result

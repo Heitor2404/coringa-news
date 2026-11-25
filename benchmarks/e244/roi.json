@@ -1,0 +1,27 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "slug": "drano-lake-sockeye-salmon",
+      "label": "Salmões adultos · Drano Lake",
+      "sha256_origem": "6f58210b98b20c7b9d5f3e3b38f731f94d10bb756032fba454a6e40273d54241",
+      "fato_id": "retorno",
+      "necessidade": "Mostrar salmão adulto visível em ambiente aquático; não inferir desova, direção migratória nem trajetória completa. Localizar corpo inteiro dos peixes relevantes, não reflexos.",
+      "duracao_s": 3.8,
+      "inicio_s": 7,
+      "origem_triagem": "059bd5ca100d581b27b7823fa7395acfa7986ed4b507792d12a8388a2c7de051",
+      "estado_anterior": "pertinente_sem_roi"
+    },
+    {
+      "slug": "drano-lake-sockeye-salmon",
+      "label": "Salmões adultos · Drano Lake",
+      "sha256_origem": "6f58210b98b20c7b9d5f3e3b38f731f94d10bb756032fba454a6e40273d54241",
+      "fato_id": "retorno",
+      "necessidade": "Mostrar salmão adulto visível em ambiente aquático; não inferir desova, direção migratória nem trajetória completa. Localizar corpo inteiro dos peixes relevantes, não reflexos.",
+      "duracao_s": 3.8,
+      "inicio_s": 12,
+      "origem_triagem": "8ed0877be1c0a69e4c8cb616c454f095f9d341853af012b918cda4c587244974",
+      "estado_anterior": "candidato_visual_pendente"
+    }
+  ]
+}

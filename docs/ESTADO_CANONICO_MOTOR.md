@@ -80,5 +80,8 @@ E281 commit d1b9d76, [run 45636170163](https://github.com/Heitor2404/coringa-new
 ### E281.1 — correção da validação (§331)
 E281 45636170163 FAILURE, 78 aprovados/1 falha, nenhuma visão real: assinatura JPEG no teste tinha escape duplicado. Corrigido com bytes.fromhex('ffd8'), mantendo a asserção e o teto anterior. Nova execução E281.1 SUCCESS, 79 testes; ver §332 para resultado prático. Não alterar estados de capacidades comprovadas.
 
-### E281.1 comprovada em fotografia; E281.2 pendente (§332)
+### E281.1 comprovada em fotografia; E281.2 concluída, cobertura parcial (§332–333)
 [45638969866](https://github.com/Heitor2404/coringa-news/actions/runs/45638969866) SUCCESS, 79 testes, duas respostas reais de visão, seleção autônoma do Coliseu e revisão formal privada comprovadas em uma necessidade. Foguete não revisado: ffprobe ausente, não falha semântica. E281.2 instala/verifica dependências e restaura checkpoint específico com replay sem visão/rede, só então usa saldo de duas chamadas/duas operações; teto USD 0. Não repetir aprovação da foto, não afrouxar direitos Archive. Sem MP4 na E281.1; aguardar prova de movimento. Autonomia generalizada e filme integral seguem pendentes.
+
+### E282 — prevenção de reincidências (§333)
+E281.2 [45639629861](https://github.com/Heitor2404/coringa-news/actions/runs/45639629861) SUCCESS 79 testes; foto recuperada; vídeo baixado e decodificado; 2 chamadas reais restantes, 3 janelas sem ação solicitada e 3 inválidas D-REV-OBSERVACAO. Cobertura 1/2, sem MP4/Telegram. Saldo de visão E281 esgotado; não repetir. E282 preflight compartilhado antes de rede, favorece candidatos novos antes de repetir vídeo remoto na segunda fase, conserva resposta inválida sem aprovar; testes de falhas e regressão acumulada sem IA. Validação pendente. O estado mais recente prevalece. Fechamento exige prova proporcional ao escopo e regressão concreta, não apenas CI verde; sem criar bloqueios editoriais arbitrários.

@@ -82,3 +82,15 @@ def test_legible_reviewed_window_is_preferred_without_rejecting_other_windows():
     assert not ordered[0]['selecao']['prova_de_acao']
     rows[1]['decisao']['revisao_id']='wrong'
     assert D.selecionar_revisados(rows,fato_id='f',preferir_legibilidade=True)[0]['ordem']==0
+
+
+def test_invalid_observation_preserved_for_diagnosis_without_approval():
+    _,windows=A.preparar_lote(midia(3),need(),frame)
+    raw=response(False)
+    raw['pontos'][1]['observacao']='curto'
+    def ask(prompt,images):
+        assert 'pelo menos 12 caracteres' in prompt
+        return {'janelas':[{'janela':0,'resposta':raw}]}
+    row=D.revisar_janelas_lote(windows,ask,evidencia_visual='movimento')['janelas'][0]
+    assert row['falha']=='ValueError:D-REV-OBSERVACAO'
+    assert row['resposta_invalida']==raw and 'revisao' not in row

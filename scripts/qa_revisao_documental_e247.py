@@ -28,6 +28,7 @@ def main():
     if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
+    if any(n['evidencia_visual']=='movimento' for n in tri):Q.verificar_dependencias_video()
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     from src.v4.formatos import reuso_documental as RE
     raw_needs={n['id']:n for n in case['necessidades']}
@@ -256,7 +257,8 @@ def main():
             eligible=[]
             for (pack,frames),row in zip(windows,batch['janelas']):
                 if 'falha' in row:
-                    c['janelas'].append({'pacote':pack,'falha':row['falha']})
+                    c['janelas'].append({'pacote':pack,'falha':row['falha'],
+                        **({'resposta_invalida':row['resposta_invalida']} if 'resposta_invalida' in row else {})})
                     boards.append((c,frames,'FALHA_FORMATO_VISAO'));continue
                 history['vistos'].add(round(pack['inicio_s'],4))
                 q={**row['revisao'],'sha256_origem':meta['sha256'],'necessidade_id':n['id']}
@@ -368,7 +370,7 @@ def main():
                         pode_buscar=lambda:(nid not in local_checked) or (phase>=0 and not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
                         pode_inspecionar=lambda:replay or (nid not in reserved and phase>=0 and calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
-                        pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
+                        pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3',priorizar_novos=phase==1 and n['evidencia_visual']=='movimento')
                     results_by_id[nid]=row
             budget=total_budget
             t.max_http,t.max_bytes=global_http,global_bytes

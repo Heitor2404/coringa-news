@@ -165,7 +165,15 @@ def ordenar_variantes_video(choices,min_video_px):
     return sorted(choices,key=rank)
 
 
+def verificar_dependencias_video():
+    """Local environment errors must be found before any source download."""
+    import shutil
+    missing=[x for x in ('ffmpeg','ffprobe') if not shutil.which(x)]
+    if missing:raise RuntimeError('AMBIENTE_VIDEO_DEPENDENCIA_AUSENTE:'+','.join(missing))
+
+
 def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
+    if c.get('tipo')=='video':verificar_dependencias_video()
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte'] in ('nasa','nasa_video'):
         choices=nasa_receipt(c,t,progressivo=progressivo,min_video_px=min_video_px);hosts={'images-assets.nasa.gov'}

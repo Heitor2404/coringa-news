@@ -455,6 +455,7 @@ def revisar_janelas_lote(janelas,chamar,*,evidencia_visual,exigir_evidencia_dire
     prompt=("Revise TODAS as janelas separadamente. Cada janela tem tres imagens na ordem indicada; "
             "indices internos 0,1,2 nunca se referem a outra janela. Nao combine quadros de janelas diferentes. "
             "As regras do revisor abaixo valem para cada janela, substituindo os tempos pelos do grupo. "
+            "Para cada um dos tres pontos escreva uma frase concreta com pelo menos 12 caracteres, inclusive para respostas negativas; nunca use reticencias ou texto vazio. A inspecao deve ter pelo menos 35 caracteres. "
             "Retorne somente JSON com chave janelas, lista de objetos {janela: inteiro, resposta: objeto completo "
             "do revisor}. Inclua resposta negativa quando nao houver evidencia. Nao omita janelas. Grupos: "
             +json.dumps(groups,ensure_ascii=False)+"\nREGRAS POR JANELA:\n"+reqs[0]['prompt'])
@@ -472,5 +473,6 @@ def revisar_janelas_lote(janelas,chamar,*,evidencia_visual,exigir_evidencia_dire
             q=revisar_janela_visao(p,ims,lambda _prompt,_images:by[i],**args)
             out.append({'revisao':{**q,'chamadas_logicas':0,'provedor':'gemini_visao_lote','janela_lote':i}})
         except (ValueError,TypeError,KeyError,AttributeError) as e:
-            out.append({'falha':type(e).__name__+':'+str(e)[:120]})
+            out.append({'falha':type(e).__name__+':'+str(e)[:120],
+                        'resposta_invalida':by[i]})
     return {'janelas':out,'chamadas_logicas':1,'imagens_enviadas':len(janelas)*3,'publicar':False}

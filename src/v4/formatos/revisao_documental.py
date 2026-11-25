@@ -257,7 +257,7 @@ def ordenar_candidatos(necessidade,candidatos):
     return first+repeated
 
 
-def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None,pode_candidato=None):
+def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None,pode_candidato=None,priorizar_novos=False):
     """Use the existing discovery result; continue after refusal or failed download.
     Inspection callback owns actual network/vision budgets. A success is private.
     No template or topic-specific ranking.
@@ -267,7 +267,10 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
     ev=necessidade.get('evidencia_visual')
     vistos=set() if vistos is None else vistos
     trace=[];n=0
-    for c in ordenar_candidatos(necessidade,candidatos):
+    ordered=ordenar_candidatos(necessidade,candidatos)
+    if priorizar_novos:
+        ordered.sort(key=lambda c:bool(c.get('revisao_adicional_possivel') and c.get('fonte')!='biblioteca_v3'))
+    for c in ordered:
         if ev=='movimento' and c.get('tipo')!='video':continue
         key=(c.get('fonte'),c.get('source_id') or c.get('url'))
         if key in vistos:continue
@@ -371,7 +374,7 @@ def reabrir_pendentes(st):
         if c not in pending:pending.insert(0,c)
 
 def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_inspecionar,
-                           max_buscas,passo_buscas=4,max_tentativas=24,estado=None,pode_reusar=None):
+                           max_buscas,passo_buscas=4,max_tentativas=24,estado=None,pode_reusar=None,priorizar_novos=False):
     """Bounded progressive scheduler. Discovery and inspection have distinct
     budgets. The caller can resume the same queue without repeating queries."""
     if necessidade['necessidade']=='territorio':
@@ -389,10 +392,18 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
     tentativas=sum(r['cobertura']['tentativas'] for r in rounds)
     buscas=sum(len(r['pesquisa']['buscas']) for r in rounds)
     parada='ORCAMENTO_ESGOTADO'
+    explored_before_retry=False
     while tentativas<max_tentativas:
         available=pode_inspecionar()
         reusable=[c for c in pending if pode_reusar is not None and pode_reusar(c)]
-        if pending and (available or reusable):
+        # Spend at most one existing discovery batch before repeating a
+        # remote clip whose previous windows lacked the requested action.
+        # Local cache remains first. If no alternative exists, retry remains.
+        defer_retry=(priorizar_novos and available and bool(pending) and not reusable
+            and all(c.get('revisao_adicional_possivel') for c in pending)
+            and not explored_before_retry and buscas<max_buscas and pode_buscar())
+        if defer_retry:explored_before_retry=True
+        if pending and (available or reusable) and not defer_retry:
             # A cache-only inspection does not spend vision. Never pass a remote
             # candidate through the cache-only path, even if it ranks higher.
             # Eligibility can change *inside* the batch when a fresh
@@ -402,7 +413,7 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
             def eligible(c):
                 return pode_inspecionar() or (pode_reusar is not None and pode_reusar(c))
             result=fila_cobertura(necessidade,pending,inspecionar,
-                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_candidato=eligible)
+                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_candidato=eligible,priorizar_novos=priorizar_novos)
             rounds.append({'rodada':len(rounds)+1,'pesquisa':{'id':necessidade['id'],'buscas':[],'candidatos':pending.copy()},'cobertura':result})
             tentativas+=result['tentativas']
             pending[:]=[c for c in pending if (c.get('fonte'),c.get('source_id') or c.get('url')) not in seen]
@@ -421,6 +432,7 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
         report=pesquisar(n,min(passo_buscas,max_buscas-buscas),attempted)
         if report['id']!=necessidade['id']:raise ValueError('E258-VINCULO')
         if not report['buscas'] and not report['candidatos']:
+            if defer_retry:continue
             parada='CONSULTAS_DISPONIVEIS_ESGOTADAS';break
         buscas+=len(report['buscas'])
         keys={(c.get('fonte'),c.get('source_id') or c.get('url')) for c in pending}|seen

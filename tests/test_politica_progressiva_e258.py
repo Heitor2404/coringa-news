@@ -305,3 +305,41 @@ def test_specific_context_outweighs_single_token_homonym_and_keeps_fallback():
     calls=[]
     A.pesquisar_cobertura(n,fontes=lambda t:[('primary',lambda q:calls.append(q) or []),('secondary',lambda q:calls.append(q) or [])],max_buscas=4,progressivo=True)
     assert 'Saturno' not in calls and len(calls)==4
+
+
+def test_video_preflight_fails_before_any_provider_or_download(monkeypatch,tmp_path):
+    import shutil
+    from scripts.qa_pesquisa_documental_e246 import sample
+    monkeypatch.setattr(shutil,'which',lambda x:None if x=='ffprobe' else '/bin/ffmpeg')
+    class NoNetwork:
+        def get(self,*args):pytest.fail('download attempted without decoder')
+    with pytest.raises(RuntimeError,match='AMBIENTE_VIDEO_DEPENDENCIA_AUSENTE:ffprobe'):
+        sample({'tipo':'video','fonte':'nasa_video'},tmp_path,NoNetwork(),progressivo=True)
+
+
+def test_retry_after_negative_windows_offers_unseen_video_first():
+    first={**candidate(1),'revisao_adicional_possivel':True}
+    st={'pendentes':[first]}
+    calls=[]
+    def search(n,l,seen):
+        calls.append('search')
+        return {'id':'n','buscas':[{'consulta':'alternative'}],'candidatos':[candidate(2)]}
+    def inspect(c,n):
+        calls.append(c['source_id'])
+        return accepted()
+    result=R.cobertura_progressiva(need(),search,inspect,pode_buscar=lambda:True,pode_inspecionar=lambda:True,max_buscas=4,estado=st,priorizar_novos=True)
+    assert calls==['search',2] and result['estado']=='CANDIDATO_PRIVADO_REVISADO'
+    assert result['selecionado']==('test',2)
+
+
+def test_retry_stays_available_when_no_new_video_is_found():
+    st={'pendentes':[{**candidate(1),'revisao_adicional_possivel':True}]}
+    calls=[]
+    def search(n,l,seen):
+        calls.append('search')
+        return {'id':'n','buscas':[],'candidatos':[]}
+    def inspect(c,n):
+        calls.append(c['source_id'])
+        return accepted()
+    result=R.cobertura_progressiva(need(),search,inspect,pode_buscar=lambda:True,pode_inspecionar=lambda:True,max_buscas=4,estado=st,priorizar_novos=True)
+    assert calls==['search',1] and result['estado']=='CANDIDATO_PRIVADO_REVISADO'

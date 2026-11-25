@@ -250,3 +250,14 @@ def test_repeated_series_titles_do_not_crowd_out_other_candidates():
     other={**candidate(9),'titulo':'planet surface'}
     ordered=R.ordenar_candidatos(n,rows+[other])
     assert [c['source_id'] for c in ordered]==[1,9,2,3]
+
+def test_explicit_metadata_mismatch_is_soft_and_scope_sensitive():
+    from src.v4.formatos import revisao_documental as R
+    n={'necessidade':'registro','mostrar':'sharp mountain peak','evidencia_visual':'estatica','pesquisa':{'consultas_en':['mountain peak']}}
+    bad={'fonte':'commons','tipo':'foto','source_id':1,'titulo':'Topographic map of mountain peak'}
+    good={'fonte':'commons','tipo':'foto','source_id':2,'titulo':'Mountain landscape'}
+    assert R.ordenar_candidatos(n,[bad,good])==[good,bad]
+    assert not R.incompatibilidade_metadados({**n,'mostrar':'historical map of mountain peak'},bad)
+    assert not R.incompatibilidade_metadados({**n,'necessidade':'territorio'},bad)
+    assert not R.incompatibilidade_metadados(n,{**bad,'fonte':'biblioteca_v3'})
+    assert R.incompatibilidade_metadados(n,{**bad,'titulo':'Mountain panorama distorted'})

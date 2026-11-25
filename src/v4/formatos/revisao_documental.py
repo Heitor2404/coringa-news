@@ -156,6 +156,17 @@ def relevancia_textual(necessidade,candidato):
     return {'cobertura':coverage,'titulo':title_coverage,'proximidade':prox,'prova_visual':False}
 
 
+def incompatibilidade_metadados(necessidade,c):
+    """Soft title-level mismatch, not visual evidence or a global refusal."""
+    if necessidade.get('necessidade')!='registro' or c.get('fonte')=='biblioteca_v3':return False
+    title=str(c.get('titulo') or '').casefold()
+    query=necessidade.get('pesquisa') or {}
+    wanted=' '.join([str(necessidade.get('mostrar') or ''),str(necessidade.get('sujeito') or ''),*(query.get('consultas_en') or []),*(query.get('consultas') or [])]).casefold()
+    maps=r'\b(topographic map|geological map|historical map|street map|mapa topogr[aá]fico|mapa geol[oó]gico|cartographic map)\b'
+    map_wanted=r'\b(map|maps|mapa|mapas|cartograph\w*|cartograf\w*)\b'
+    if re.search(maps,title) and not re.search(map_wanted,wanted):return True
+    return bool(re.search(r'\b(pano distorted|distorted panorama|panorama distorcido)\b',title.replace('_',' ')) and not re.search(r'\b(distortion|distor[cç][aã]o|distorted)\b',wanted))
+
 def ordenar_candidatos(necessidade,candidatos):
     ev=necessidade.get('evidencia_visual')
     def rank(c):
@@ -164,6 +175,7 @@ def ordenar_candidatos(necessidade,candidatos):
         captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed|camera views?|views? from cameras?|recorded (by|with)|filmed (by|with))\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_revisao_mesmo_escopo') is True),
+                incompatibilidade_metadados(necessidade,c),
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),

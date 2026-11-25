@@ -49,9 +49,10 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
         if r not in result:result.append(r)
     return sorted(result,key=lambda r:r['inicio_s'])
 
-def preparar_lote(midia,necessidade,extrair):
-    exploration=explorar(midia,extrair)
-    selected=selecionar(exploration,priorizar_movimento=necessidade.get('evidencia_visual')=='movimento')
+def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=()):
+    exploration=exploracao if exploracao is not None else explorar(midia,extrair)
+    remaining={**exploration,'janelas':[x for x in exploration['janelas'] if round(x['inicio_s'],4) not in excluir]}
+    selected=selecionar(remaining,priorizar_movimento=necessidade.get('evidencia_visual')=='movimento')
     windows=[]
     for x in selected:
         a=x['inicio_s'];span=x['duracao_s']

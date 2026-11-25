@@ -49,3 +49,6 @@ E276 45628962634 SUCCESS (35 testes, 6/6 prévias, 6 HTTP, 1.372.670 bytes, zero
 
 ### E278 — pertinência e aquisição orientada por observações
 Implementado ranking contextual soft antes da fração de correspondência, fallback sujeito isolado adiado, diversidade de prévias dentro de faixas de pertinência. Contrato genérico de escolhas observadas ligado ao E272; seis folhas E276 revisadas, duas pistas priorizadas, duas inadequadas, uma alternativa e uma contextual condicional. Prova conjunta sem visão/voz em execução; não considerar seleção autônoma comprovada. Após CI, conferir folhas novas e originais, diagnosticar sem nova integração paralela. Ver §320.
+
+### E278.1 — observação por lote, integração experimental
+E278 f420aeb: [prova](https://github.com/Heitor2404/coringa-news/actions/runs/45631143175), [regressão](https://github.com/Heitor2404/coringa-news/actions/runs/45631143043) em execução na consulta. Opção --revisar-previas usa o saldo existente de ask, gera observações vinculadas para aquisição E272; sem saldo, pendente. Testes controlados, nenhuma visão real nova. Não considerar autonomia de seleção homologada até prova com pixels e orçamento autorizado. Ver §321.

@@ -20,6 +20,9 @@ def main():
     preview_pending='--pretriagem-pendente' in sys.argv[4:]
     if preview_pending and (not progressive or replay or revisar_acervo):raise ValueError('E275-PRETRIAGEM-ESCOPO')
     preview_report=[]
+    review_previews='--revisar-previas' in sys.argv[4:]
+    if review_previews and not preview_pending:raise ValueError('E278.1-PRETRIAGEM')
+    preview_observations=[];preview_review_status=[];preview_vision=0
     if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
@@ -370,6 +373,21 @@ def main():
                     return {'necessidade_id':n['id'],'mostrar':n['mostrar'],'pagina':c['pagina'],'source_id':c.get('source_id'),'consulta_origem':c.get('consulta_origem'),'preview_url':v['url'],'preview_sha256':digest,'folha':name,'estado':'PRETRIAGEM_PENDENTE','publicar':False}
                 try:preview_report=coletar_fila(queues,t,preview_board)
                 finally:t.max_http,t.max_bytes=old_http,old_bytes
+                if review_previews:
+                    from src.v4.pretriagem_documental import revisar_folhas_lote
+                    needs_by_id={n['id']:n for n in tri}
+                    before_preview_calls=calls
+                    for row in preview_report:
+                        n=needs_by_id[row['id']]
+                        if not row['amostras'] or n['necessidade']!='registro':continue
+                        if calls>=budget:
+                            preview_review_status.append({'id':n['id'],'estado':'ORCAMENTO_PENDENTE'});continue
+                        try:
+                            observations=revisar_folhas_lote(n,row['amostras'],out,ask)
+                            preview_observations.extend(observations)
+                            preview_review_status.append({'id':n['id'],'estado':'PISTAS_OBSERVADAS'})
+                        except Exception as e:preview_review_status.append({'id':n['id'],'estado':'REVISAO_PENDENTE','motivo':str(e)[:160]})
+                    preview_vision=calls-before_preview_calls
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:
             reports=[];consulted=set()
@@ -421,6 +439,7 @@ def main():
                 except Exception as e:checkpoint_rows.append({'id':mid,'estado':'FALHA_CHECKPOINT','motivo':type(e).__name__+':'+str(e)[:160]})
         lib.fechar()
     if preview_pending:Q.write(out/'pretriagem-pendente.json',{'publicar':False,'direitos_aprovados':False,'visao':0,'cobertura_nova':0,'necessidades':preview_report})
+    if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
         'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})

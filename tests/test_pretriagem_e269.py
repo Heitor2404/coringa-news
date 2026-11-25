@@ -105,3 +105,26 @@ def test_diversity_never_promotes_homonym_above_contextually_matching_previews()
           {**base,'pagina':'c','source_id':3,'titulo':'Saturno Meletti, 1946','descricao':'Black and white portrait photograph of baritone Saturno Meletti','consulta_origem':'Saturno'}]
     assert [x[0]['pagina'] for x in candidatos(n,rows)]==['a','b','c']
     assert len(candidatos(n,rows))==3
+
+
+def test_motor_preview_batch_scopes_and_validates_observations_without_approval(tmp_path):
+    import pytest
+    from PIL import Image
+    from src.v4.pretriagem_documental import revisar_folhas_lote
+    n={'id':'x','sujeito':'referente','mostrar':'estrutura','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica'}
+    rows=[]
+    for i in range(2):
+        name=f'{i}.jpg';Image.new('RGB',(300,300),'blue').save(tmp_path/name)
+        rows.append({'necessidade_id':'x','mostrar':'estrutura','pagina':f'p{i}','source_id':i,'preview_sha256':'a'*64,'folha':name,'estado':'PRETRIAGEM_PENDENTE','publicar':False})
+    calls=[]
+    def ask(prompt,images):
+        calls.append(len(images))
+        return {'observacoes':[{'indice':1,'decisao':'PRIORIZAR_AQUISICAO','observacao':'Estrutura visivel.'},{'indice':0,'decisao':'NAO_PRIORIZAR','observacao':'Sem estrutura.'}]}
+    out=revisar_folhas_lote(n,rows,tmp_path,ask)
+    assert calls==[2] and out[1]['source_id']==1 and out[1]['origem']=='VISAO_MOTOR' and not out[1]['publicar']
+    assert all(o['escopo']==n for o in out)
+    assert not revisar_folhas_lote(n,[],tmp_path,ask) and calls==[2]
+    with pytest.raises(ValueError,match='E278.1-PRIORIDADE'):
+        revisar_folhas_lote(n,rows,tmp_path,lambda p,i:{'observacoes':[{'indice':k,'decisao':'PRIORIZAR_AQUISICAO','observacao':'x'} for k in (0,1)]})
+    with pytest.raises(ValueError,match='E278.1-RESPOSTA'):
+        revisar_folhas_lote(n,rows,tmp_path,lambda p,i:{'observacoes':[{'indice':0,'decisao':'NAO_PRIORIZAR','observacao':'x'}]*2})

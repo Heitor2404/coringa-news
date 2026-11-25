@@ -1,4 +1,4 @@
-name: E275 - bloco corretivo e regressao de capacidades comprovadas
+name: E278.1 - observacao de previas e regressao conjunta sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

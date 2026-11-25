@@ -103,8 +103,43 @@ def escolhas_observadas(spec,report,observations,folder):
         name=o['folha']
         if Path(name).name!=name or not re.fullmatch(r'[0-9a-f]{64}',str(o.get('folha_sha256',''))) or hashlib.sha256((Path(folder)/name).read_bytes()).hexdigest()!=o['folha_sha256']:raise ValueError('E278-FOLHA')
         verdict=o.get('decisao')
-        if verdict not in ('PRIORIZAR_AQUISICAO','ALTERNATIVA','NAO_PRIORIZAR','CONTEXTO_CONDICIONAL') or o.get('origem') not in ('INSPECAO_ASSISTIDA','CURADORIA_HUMANA') or not isinstance(o.get('observacao'),str) or not o['observacao'].strip() or o.get('publicar') is not False:raise ValueError('E278-PARECER')
+        if verdict not in ('PRIORIZAR_AQUISICAO','ALTERNATIVA','NAO_PRIORIZAR','CONTEXTO_CONDICIONAL') or o.get('origem') not in ('INSPECAO_ASSISTIDA','CURADORIA_HUMANA','VISAO_MOTOR') or not isinstance(o.get('observacao'),str) or not o['observacao'].strip() or o.get('publicar') is not False:raise ValueError('E278-PARECER')
         if verdict=='PRIORIZAR_AQUISICAO':
             if n['id'] in choices:raise ValueError('E278-ESCOLHA-DUPLICADA')
             choices[n['id']]={'id':n['id'],'mostrar':n['mostrar'],'pagina':a['pagina'],'preview_sha256':a['preview_sha256'],'observacao_previa':o}
     return {'case':case['id'],'publicar':False,'direitos_aprovados':False,'selecao':list(choices.values())}
+
+
+def revisar_folhas_lote(n,amostras,folder,ask):
+    """One logical vision call per need, through the caller's budget.
+    No call for an empty batch; no decisions on malformed output."""
+    from pathlib import Path
+    import json
+    from src.v4.formatos import reuso_documental as RE
+    if not amostras:return []
+    if n['necessidade']!='registro' or n['evidencia_visual']=='movimento' or len(amostras)>6:raise ValueError('E278.1-ESCOPO')
+    images=[];bound=[]
+    for i,a in enumerate(amostras):
+        name=a['folha']
+        if Path(name).name!=name or a.get('estado')!='PRETRIAGEM_PENDENTE' or a.get('publicar') is not False or a.get('necessidade_id')!=n['id'] or a.get('mostrar')!=n['mostrar']:raise ValueError('E278.1-VINCULO')
+        raw=(Path(folder)/name).read_bytes()
+        with Image.open(io.BytesIO(raw)) as im:images.append(im.convert('RGB'))
+        bound.append({'indice':i,'id':n['id'],'escopo':RE.escopo(n),'pagina':a['pagina'],'source_id':a['source_id'],'preview_sha256':a['preview_sha256'],'folha':name,'folha_sha256':hashlib.sha256(raw).hexdigest(),'origem':'VISAO_MOTOR','publicar':False})
+    prompt=("Avalie apenas as miniaturas anexadas, na ordem. Objetivo visual: "+json.dumps(RE.escopo(n),ensure_ascii=False)+
+            ". Observe o referente e os componentes visiveis; nao deduza identidade, licenca, movimento ou fatos ausentes. "
+            "Nao trate ilustracao como registro. Se cor artificial, contexto condicional. "
+            "Responda JSON {observacoes:[{indice:0,decisao:...,observacao:...}]} com todos indices exatamente uma vez. "
+            "Decisoes: PRIORIZAR_AQUISICAO, ALTERNATIVA, NAO_PRIORIZAR, CONTEXTO_CONDICIONAL. "
+            "No maximo uma prioridade, ou nenhuma. Isso apenas escolhe qual arquivo adquirir para revisao posterior.")
+    response=ask(prompt,images)
+    rows=response.get('observacoes') if isinstance(response,dict) else None
+    if not isinstance(rows,list) or len(rows)!=len(bound):raise ValueError('E278.1-RESPOSTA')
+    decisions=('PRIORIZAR_AQUISICAO','ALTERNATIVA','NAO_PRIORIZAR','CONTEXTO_CONDICIONAL')
+    seen=set();out=[];positive=0
+    for row in rows:
+        i=row.get('indice') if isinstance(row,dict) else None
+        if type(i) is not int or not 0<=i<len(bound) or i in seen or row.get('decisao') not in decisions or not isinstance(row.get('observacao'),str) or not row['observacao'].strip():raise ValueError('E278.1-RESPOSTA')
+        seen.add(i);positive+=row['decisao']=='PRIORIZAR_AQUISICAO'
+        out.append({**bound[i],'decisao':row['decisao'],'observacao':row['observacao'][:1000]})
+    if positive>1:raise ValueError('E278.1-PRIORIDADE')
+    return sorted(out,key=lambda x:x['indice'])

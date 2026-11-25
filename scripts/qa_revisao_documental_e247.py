@@ -242,7 +242,7 @@ def main():
             if cache_key:
                 previous={x['pacote']['revisao_id']:x for x in (cached or {}).get('janelas',[]) if x.get('pacote',{}).get('revisao_id') and x.get('decisao')}
                 previous.update({x['pacote']['revisao_id']:x for x in history['janelas'] if x.get('decisao')})
-                lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':list(previous.values()),'exploracao':exploration},origem='E258')
+                lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':list(previous.values()),'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m} for p,_,_ in eligible],fato_id=n['fatos'][0])
                 if ranked:

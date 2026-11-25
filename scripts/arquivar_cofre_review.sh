@@ -12,6 +12,8 @@ shift
 for file in "$@"; do
   [[ -f "$file" && -s "$file" ]] || { echo "Arquivo ausente"; exit 1; }
 done
+# A checkpoint without its discovery index is an unusable investment.
+python -m scripts.validar_arquivo_documental "$@"
 if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
   echo "Release de revisão já existe; não sobrescrever"
   exit 1

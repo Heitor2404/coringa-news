@@ -33,12 +33,22 @@ def _consultas(n):
 
 def prioridade_memoria(n,row):
     """Previously observed positives are retrieval hints only. No cache migration."""
-    if row.get('tipo')!='foto' or n.get('evidencia_visual')=='movimento':return 0
+    typ=row.get('tipo')
+    if typ not in ('foto','video') or (typ=='foto' and n.get('evidencia_visual')=='movimento'):return 0
     if n.get('necessidade') not in ('registro','lacuna_explicativa'):return 0
     scores=[]
     for rec in (row.get('analises') or {}).values():
         if not isinstance(rec,dict) or rec.get('publicar') is not False or rec.get('direitos_aprovados') is not False:continue
         q=rec.get('revisao') or {};d=rec.get('decisao') or {};scope=rec.get('escopo_pesquisa') or {}
+        if not isinstance(scope,dict):continue
+        if typ=='video':
+            for window in rec.get('janelas') or []:
+                pk=window.get('pacote') or {};obs=pk.get('revisao_assistida') or {};decision=window.get('decisao') or {}
+                if obs.get('sha256_origem')!=row.get('sha256') or obs.get('necessidade_id')!=scope.get('id') or obs.get('publicar') is not False or decision.get('estado')!='PERTINENTE_PRIVADO' or decision.get('publicar') is not False or decision.get('direitos_aprovados') is not False:continue
+                if not pk.get('revisao_id') or decision.get('revisao_id')!=pk.get('revisao_id'):continue
+                if n.get('evidencia_visual')=='movimento' and (scope.get('evidencia_visual')!='movimento' or decision.get('prova_de_acao_continua') is not True):continue
+                if _tokens(n.get('mostrar')) and _tokens(n.get('mostrar'))==_tokens(scope.get('mostrar')) and _tokens(n.get('sujeito'))==_tokens(scope.get('sujeito')):scores.append(1.8)
+            continue
         if not isinstance(scope,dict) or q.get('sha256_origem')!=row.get('sha256') or q.get('publicar') is not False or d.get('estado')!='PERTINENTE_PRIVADO' or d.get('direitos_aprovados') is not False or d.get('publicar') is not False:continue
         if not q.get('revisao_id') or q.get('revisao_id')!=d.get('revisao_id') or not re.fullmatch('[0-9a-f]{64}',str(q.get('pixels_sha256',''))):continue
         if q.get('necessidade_id')!=scope.get('id') or q.get('mostrar')!=scope.get('mostrar') or scope.get('evidencia_visual')=='movimento':continue

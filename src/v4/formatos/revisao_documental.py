@@ -113,12 +113,25 @@ def cobertura_adaptativa(necessidade,pesquisar,inspecionar,pode_inspecionar):
         if i:
             reasons={t['decisao'].get('motivo') for t in rounds[-1]['cobertura']['trilha']}
             motion=n.get('evidencia_visual')=='movimento'
-            if motion:
-                suffix=' observed behavior video' if 'SEM_JANELA_PERTINENTE_NO_ORCAMENTO' in reasons or 'MUDANCA_NAO_OBSERVADA' in reasons else ' original footage'
+            # Search engines often require ALL words. Broaden instead of
+            # blindly appending generic words; the original obligation is
+            # unchanged and still governs every visual inspection.
+            words=[q.split() for q in originals[:2]]
+            queries=[]
+            if not rounds[-1]['pesquisa']['candidatos'] or motion:
+                for w in words:
+                    candidate=' '.join(w[:max(2,min(3,len(w)-1))])
+                    if len(w)>2 and candidate not in originals and candidate not in queries:queries.append(candidate)
             else:
-                suffix=' original photograph' if reasons & {'REPRESENTACAO_DECLARADA','NATUREZA_INCOMPATIVEL_OU_INCERTA'} else ' archival photograph'
-            # Keep the original subject/action terms intact. No names or URLs added.
-            queries=[q[:180-len(suffix)]+suffix for q in originals[:2]]
+                suffix=' photograph' if reasons & {'REPRESENTACAO_DECLARADA','NATUREZA_INCOMPATIVEL_OU_INCERTA'} else ' photo'
+                for w in words:
+                    candidate=' '.join(w[:2])+suffix
+                    if candidate not in originals and candidate not in queries:queries.append(candidate)
+            # A second query must differ from the first; do not duplicate it
+            # when the original was already short.
+            if not queries:
+                queries=[' '.join(words[0][:1])]
+            queries=queries[:2]
             n['pesquisa']={**base,'consultas_en':queries,'consultas':[]}
         p=pesquisar(n,4)
         if p.get('id')!=necessidade['id']:raise ValueError('E248-PESQUISA-VINCULO')

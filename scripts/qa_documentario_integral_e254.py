@@ -6,14 +6,17 @@ from scripts.qa_documentario_curado_e218 import write,PUBLIC
 
 def main():
     root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
-    case=report['case'];chosen,gate=P.preparar_cobertura(report,case)
+    case=report['case']
+    evidence=root/'entregas_verificadas.json'
+    entregas=json.loads(evidence.read_text()) if evidence.is_file() else {}
+    chosen,gate=P.preparar_cobertura(report,case,atlas=entregas.get('atlas'),progressao=entregas.get('progressao'))
     write(root/'integral.json',gate)
     if not gate['pronto_para_tts']:
         print('E254 COBERTURA INSUFICIENTE',gate,flush=True);return
     # Test the existing structural gate before spending TTS.
     predicted=[];t=0
     for ch in case['chapters']:
-        t+=sum(math.floor(min(3.6,chosen[i]['cap'])*30) for i in ch['needs']);predicted.append(t)
+        t+=sum(round(chosen[i]['cap']*30) if chosen[i].get('min',1.4)==chosen[i]['cap'] else math.floor(min(3.6,chosen[i]['cap'])*30) for i in ch['needs']);predicted.append(t)
     pre=P.plano(case,chosen,predicted);check=F.avaliar(pre)
     write(root/'preflight.json',check)
     if pre['duracao']<60 or not check['pronto']:

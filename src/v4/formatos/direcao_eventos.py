@@ -145,6 +145,23 @@ def ordenar_janelas(candidatos, historico):
     return sorted(candidatos,key=rank)
 
 
+def continuidade_fontes(candidatos, historico):
+    """Prefer new sources or consecutive forward windows over A-B-A.
+    Only rank already eligible windows of the SAME editorial obligation.
+    A necessary revisit remains possible and is explicitly diagnosed.
+    History entries are (source SHA, source start, source end).
+    """
+    last=historico[-1] if historico else None
+    seen={h[0] for h in historico}
+    def key(c):
+        source,start,_=c
+        if source not in seen:return (0,)
+        if last and source==last[0] and start>=last[2]-1e-6:return (1,)
+        if last and source==last[0]:return (2,)
+        return (3,)
+    return sorted(candidatos,key=key)
+
+
 def enquadrar_observacoes(cena,midia,observacoes):
     """Adapt the existing ROI resolver to explicitly reviewed source samples.
     An observer (human/model) must supply real essential regions; no saliency

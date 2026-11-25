@@ -1,0 +1,30 @@
+{
+  "schema": "coringa.atlas.override.v1",
+  "publish": false,
+  "chapters": [
+    {
+      "index": 1,
+      "chapter_title": "Onde aconteceu",
+      "mapa": {
+        "id": "kilauea_regional_e2614",
+        "title": "Kilauea, Havaí",
+        "fonte_localizacao": "https://www.usgs.gov/volcanoes/kilauea/science/2018-lower-east-rift-zone-eruption-and-summit-collapse-kilauea",
+        "delta": 1.6,
+        "atlas": {
+          "roi": [
+            -155.58,
+            19.1,
+            -154.75,
+            19.65
+          ],
+          "label": "Região do Kilauea",
+          "lonlat": [
+            -155.28,
+            19.42
+          ]
+        },
+        "fonte_continua": true
+      }
+    }
+  ]
+}

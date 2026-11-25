@@ -201,9 +201,32 @@ def cortes_medidos(inicio,fim,words):
     cuts.append(fim)
     return cuts
 
+def aplicar_direcao_atlas(spec, override):
+    """A visual-only sourced override, never a change to the authenticated speech."""
+    import copy
+    if override.get('publish') is not False or override.get('schema')!='coringa.atlas.override.v1':
+        raise ValueError('E297-ATLAS-OVERRIDE')
+    result=copy.deepcopy(spec)
+    for entry in override['chapters']:
+        i=entry['index'];ch=result['chapters'][i];q=entry['mapa']
+        if not ch.get('atlas') or entry['chapter_title']!=ch['title']:
+            raise ValueError('E297-ATLAS-CAPITULO')
+        if not q.get('fonte_localizacao','').startswith('https://'):
+            raise ValueError('E297-ATLAS-FONTE')
+        ch['atlas']={**q['atlas'],'multiscale':{'id':q['id'],
+          'fonte_localizacao':q['fonte_localizacao'],'delta':q.get('delta',1.6),
+          'fonte_continua':q.get('fonte_continua',False)}}
+    return result
+
+
 def main():
     spec=read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True);STAGE.mkdir(parents=True,exist_ok=True)
     if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
+    overrides=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--atlas-direcao=')]
+    if len(overrides)>1:raise ValueError('E297-ATLAS-OVERRIDE')
+    if overrides:
+        spec=aplicar_direcao_atlas(spec,read(overrides[0]))
+        write(out/'direcao-atlas.json',{'publish':False,'roteiro_sha256':sha(Path(sys.argv[1])),'override':read(overrides[0])})
     atlas_multiscale={}
     from scripts import qa_atlas_multiscale as G
     for i,ch in enumerate(spec['chapters']):
@@ -212,7 +235,8 @@ def main():
             request=q['multiscale']
             # Explicit, researched location. No model-generated coordinates or rights.
             caso={'id':request['id'],'title':ch['title'],'atlas':q,
-                  'fonte_localizacao':request['fonte_localizacao'],'delta':request.get('delta',1.6)}
+                  'fonte_localizacao':request['fonte_localizacao'],'delta':request.get('delta',1.6),
+                  'fonte_continua':request.get('fonte_continua',False)}
             acquired_geo=G.adquirir_bases(caso)
             atlas_multiscale[i]=(caso,acquired_geo)
             write(out/('raster-multiescala-'+str(i)+'.json'),acquired_geo)
@@ -301,7 +325,7 @@ def main():
         if not sync['ok']:raise ValueError('E289-SINCRONIA: voz preservada para revisão, não renderizar')
     total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
     from src.v4.formatos import direcao_eventos as DE
-    historico_visual=[];selection_report=[]
+    historico_visual=[];selection_report=[];continuity_report=[]
     for i,(ch,(a,b)) in enumerate(zip(spec['chapters'],tempos)):
         end=round(b*30) if i+1<len(tempos) else round(total*30)
         frames=end-start
@@ -323,10 +347,11 @@ def main():
         available=[acquired[r[0]] for r in ch['videos'] if r[0] in acquired]
         modes=spec.get('reviewed_source_modes',{})
         available.sort(key=lambda m:m['id'] not in modes)
+        chapter_history=[]
         for k,(fa,fb) in enumerate(zip(cuts,cuts[1:])):
             s,e=fa/30,fb/30;span=e-s
             if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
-            ordered=available[k%len(available):]+available[:k%len(available)]
+            ordered=available  # stable upstream relevance, not round robin
             selected=None
             if spec.get('perceptual_selection'):
                 candidates=[]
@@ -343,20 +368,31 @@ def main():
                         if sum(c['selection'][0]['id']==m['id'] for c in candidates)>=2:break
                 ranked=DE.ordenar_janelas(candidates,historico_visual[-4:])
                 if ranked:
-                    best=ranked[0];selected=best['selection']
+                    ranked_by_window={(c['selection'][0]['expected_sha256'],c['selection'][1],c['selection'][1]+span):c for c in ranked}
+                    best=ranked_by_window[DE.continuidade_fontes(list(ranked_by_window),chapter_history)[0]]
+                    selected=best['selection']
                     score=max((DE.similaridade_janelas(best['assinatura'],h) for h in historico_visual[-4:]),default=0.)
                     historico_visual.append(best['assinatura'])
                     selection_report.append({'chapter':ch['title'],'source':selected[0]['id'],'t':selected[1],
                         'candidate_count':len(ranked),'similarity_recent':round(score,4),'semantic_review':'PENDING'})
             else:
+                eligible={}
                 for m in ordered:
                     prev=used_windows.get(m['expected_sha256'],[])
                     for t,im in windows(m,span+.1):
                         if all(t+span<=a or t>=b for a,b in prev):
-                            selected=(m,t,im);break
-                    if selected:break
+                            eligible[(m['expected_sha256'],t,t+span)]=(m,t,im)
+                if eligible:
+                    selected=eligible[DE.continuidade_fontes(list(eligible),chapter_history)[0]]
             if not selected:raise ValueError('E219-COBERTURA '+ch['title'])
             m,t,im=selected
+            key=m['expected_sha256'];last=chapter_history[-1] if chapter_history else None
+            revisit=bool(last and last[0]!=key and any(h[0]==key for h in chapter_history))
+            continuity_report.append({'chapter':ch['title'],'shot':f'c{i}-{k}','source':m['id'],
+                'source_sha256':key,'source_in':t,'source_out':t+span,'start':s,'end':e,
+                'revisit':revisit,'decision':'REVISITA_POR_COBERTURA' if revisit else 'CONTINUIDADE',
+                'semantic_review':'PENDING'})
+            chapter_history.append((key,t,t+span))
             used_windows.setdefault(m['expected_sha256'],[]).append((t,t+span))
             mid=m['id'];media[mid]=m;cid=f'c{i}-{k}'
             shot={'id':cid,'type':'video','asset':mid,'start':s,'end':e,
@@ -387,6 +423,7 @@ def main():
     for cid,clip,proof in maps:plan=B.inserir_no_filme(plan,cid,clip,proof)
     write(out/'plano.json',plan)
     if spec.get('perceptual_selection'):write(out/'selecao_perceptiva.json',selection_report)
+    write(out/'continuidade-montagem.json',{'publish':False,'semantic_review':'PENDING','shots':continuity_report})
     result=F.preparar(plan,out/'documental',PUBLIC)
     props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
     groups=[]

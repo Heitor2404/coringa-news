@@ -177,12 +177,15 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 # E246: discovery for the documentary director. No legacy selection fallback.
 def fontes_documentais(tipo):
     from src import acervo, midia
+    from src.v4 import fontes_cientificas as FC
     if tipo=='video':
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True)),
+                ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q)),
                 ('archive_video',lambda q:midia.candidatos_archive(q))]
     if tipo=='foto':
         return [('commons',lambda q:acervo.f_commons([q])),
+                ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),
                 ('met',lambda q:acervo.f_met([q]))]
@@ -216,6 +219,8 @@ def _candidato_documental(c,fonte,tipo):
         p=urlsplit(page)
         if p.scheme=='https' and p.hostname=='commons.wikimedia.org' and p.path.startswith('/wiki/File:') and parsed['uso_comercial']=='sim':
             rights='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA'
+    if fonte=='figshare' and isinstance(c.get('recibo_cientifico'),dict) and parsed['uso_comercial']=='sim':
+        rights='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA'
     if parsed['uso_comercial']=='nao':return None
     return {'fonte':fonte,'tipo':tipo,'titulo':str(c.get('titulo') or c.get('descricao') or '')[:240],
             'descricao':str(c.get('desc') or c.get('descricao') or '')[:400],
@@ -230,6 +235,7 @@ def _candidato_documental(c,fonte,tipo):
             'nasa_secondary_credit':c.get('nasa_secondary_credit'),
             'descricao_integral':c.get('descricao_integral') or '', 'source':c.get('source'),
             'credit':c.get('credit'), 'categories':c.get('categories'),
+            'recibo_cientifico':c.get('recibo_cientifico'),
             'natureza_preliminar':natureza_preliminar(c),
             'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
 

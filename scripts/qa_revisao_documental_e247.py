@@ -21,6 +21,11 @@ def main():
     from src.v4.formatos import reuso_documental as RE
     from src.v3 import pacote_biblioteca as PB
     pack=os.getenv('CORINGA_PACOTE_PRIVADO')
+    discovery=os.getenv('CORINGA_CHECKPOINTS_DESCOBERTOS')
+    if discovery and progressive:
+        packet=json.loads(Path(discovery).read_text())
+        if packet.get('publicar') is not False or packet.get('direitos_aprovados') is not False:raise ValueError('E259-CHECKPOINT-PRIVADO')
+        pack=os.pathsep.join(([pack] if pack else [])+packet['pacotes']) or None
     if replay and not pack:raise ValueError('E259-PACOTE')
     if pack:
         reports_restore=[]
@@ -88,12 +93,20 @@ def main():
                 'legibilidade':n.get('exigir_legibilidade',False),'modelos':list(gemini.MODELOS_LEVES)}
             cache_key='documental:'+hashlib.sha256(json.dumps(scope,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
             cached=lib.analise(meta['sha256'],cache_key)
+            if c.get('fonte')=='biblioteca_v3':
+                # Restore declared attribution from the original receipt, not commercial approval.
+                recs=[json.loads(r[0]) for r in lib.con.execute("SELECT conteudo FROM analises WHERE sha256=? AND tipo LIKE 'documental:recibo:%'",(meta['sha256'],))]
+                for rec in recs:
+                    if rec.get('publicar') is False and rec.get('direitos_aprovados') is False and rec.get('pagina')==c.get('pagina') and (rec.get('aquisicao') or {}).get('sha256')==meta['sha256'] and rec.get('fonte')!='biblioteca_v3':
+                        c['licenca']=rec.get('licenca_declarada') or c.get('licenca')
+                        c['credito']=rec.get('credito_declarado') or c.get('credito')
+                        c['recibo_restaurado']=rec;break
             saved=lib.ingerir(p,{'titulo':c['titulo'],'desc':c.get('descricao',''),
                 'url':meta['url_adquirida'],'pagina':c.get('pagina'),'fonte':c['fonte'],
                 'wh':[meta['width'],meta['height']],'licenca_prova':'Revisao privada; direitos pendentes'})
             saved_ids.add(saved['id'])
             c['biblioteca_id']=saved['id']
-            lib.gravar_analise(meta['sha256'],'documental:recibo:'+hashlib.sha256(str(c.get('pagina') or c.get('source_id')).encode()).hexdigest(),
+            if c.get('fonte')!='biblioteca_v3':lib.gravar_analise(meta['sha256'],'documental:recibo:'+hashlib.sha256(str(c.get('pagina') or c.get('source_id')).encode()).hexdigest(),
                 {'publicar':False,'direitos_aprovados':False,'aquisicao':meta,
                  'fonte':c['fonte'],'pagina':c.get('pagina'),'licenca_declarada':c.get('licenca'),'credito_declarado':c.get('credito'),
                  'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico') if k in c}},origem='E258')

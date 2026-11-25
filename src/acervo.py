@@ -165,6 +165,26 @@ def f_commons(consultas: list[str]) -> list[dict]:
         titulos += _busca_commons(q, 8)
     return _commons_infos(list(dict.fromkeys(titulos))[:60], 'Commons')
 
+def f_commons_documental(consulta: str) -> list[dict]:
+    """Documentary search prioritizes ranked file hits, not the first
+    alphabetical entries in loosely matched categories. Metadata is a
+    retrieval hint, never proof of visual content."""
+    import unicodedata
+    def terms(s):
+        normalized=unicodedata.normalize('NFKD',str(s or '')).encode('ascii','ignore').decode().lower()
+        return set(re.findall(r'[a-z]{3,}',normalized)) - {'photo','photograph','image','video','the','and','with','from'}
+    wanted=terms(consulta)
+    if not wanted:return []
+    files=_busca_commons(consulta,16)
+    categories=_categoria_commons(consulta,n=8)
+    candidates=_commons_infos(list(dict.fromkeys(files+categories))[:32],'Commons')
+    def rank(c):
+        title=terms(c.get('titulo') or c.get('title') or c.get('source_title'))
+        meta=terms(str(c.get('descricao_integral') or '')+' '+str(c.get('categories') or ''))
+        return (len(wanted & title),len(wanted & (title|meta)))
+    return sorted((c for c in candidates if any(rank(c))),key=rank,reverse=True)
+
+
 
 def f_nasa(consultas: list[str]) -> list[dict]:
     """NASA Image Library: espaço, planetas, Terra vista de cima, foguetes (domínio público, sem chave)."""

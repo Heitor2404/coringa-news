@@ -1,0 +1,62 @@
+name: E274 - miniaturas proporcionais e contraste sem IA
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-pretriagem-e274.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_pretriagem_e269.py tests/test_adquirir_pretriagem_e272.py tests/test_politica_progressiva_e258.py
+      - name: Preparar os mesmos contrastes da E273
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('qa_e274');root.mkdir()
+          base=json.loads(Path('benchmarks/e246/necessidades.json').read_text())
+          facts=[];needs=[]
+          for case in base['cases']:
+              if case['id'] not in ('aquedutos','saturno'):continue
+              mapping={f['id']:case['id']+'-'+f['id'] for f in case['fatos']}
+              facts.extend({**f,'id':mapping[f['id']]} for f in case['fatos'])
+              needs.extend({**n,'id':case['id']+'-'+n['id'],'fatos':[mapping[x] for x in n['fatos']]} for n in case['necessidades'])
+          (root/'contrastes.json').write_text(json.dumps({'publish':False,'cases':[{'id':'contrastes','tema':'QA de selecao, historia e astronomia','fatos':facts,'necessidades':needs}]},ensure_ascii=False))
+          (root/'sem-historico.json').write_text(json.dumps({'publicar':False,'necessidades':[{'id':n['id'],'amostras':[]} for n in needs]}))
+          PY
+      - name: Comparar pretriagem com teto identico a E273
+        run: python -m scripts.qa_pretriagem_e269 qa_e274/contrastes.json qa_e274/sem-historico.json qa_e274/previas contrastes
+      - name: Verificar contrato privado e registrar resultados
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('qa_e274/previas/pretriagem.json').read_text())
+          assert r['publicar'] is False and r['direitos_aprovados'] is False and r['visao']==r['cobertura_nova']==0
+          assert r['rede']['http']<=12 and r['rede']['bytes']<=9000000
+          assert all(x['estado']=='PRETRIAGEM_PENDENTE' and x['publicar'] is False for n in r['necessidades'] for x in n['amostras'])
+          print('E274 RESULTADO',[(n['id'],len(n['amostras']),len(n['erros'])) for n in r['necessidades']],r['rede']['http'],r['rede']['bytes'])
+          PY
+      - name: Espelhar evidencias privadas
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(qa_e274/previas/*.json qa_e274/previas/*.jpg)
+          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e274-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

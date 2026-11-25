@@ -36,3 +36,25 @@ def test_round_robin_preview_budget_does_not_starve_later_obligations():
 def test_photo_preview_never_routes_a_motion_or_atlas_obligation():
     assert candidatos({'necessidade':'registro','evidencia_visual':'movimento'},[{}])==[]
     assert candidatos({'necessidade':'territorio','evidencia_visual':'estatica'},[{}])==[]
+
+
+def test_documentary_preview_width_is_requested_from_provider(monkeypatch):
+    from src import acervo
+    calls=[]
+    monkeypatch.setattr(acervo,'_busca_commons',lambda q,n:['File:mountain.jpg'])
+    monkeypatch.setattr(acervo,'_categoria_commons',lambda q,n:[])
+    def get(url,**kwargs):
+        calls.append(kwargs)
+        return {'query':{'pages':[]}}
+    monkeypatch.setattr(acervo,'_get',get)
+    acervo.f_commons_documental('mountain',preview_width=640)
+    acervo.f_commons_documental('mountain')
+    assert [c['iiurlwidth'] for c in calls]==[640,1400]
+
+
+def test_optional_facets_are_not_a_visual_negative():
+    from src.v4.formatos import revisao_documental as R
+    n={'necessidade':'registro','mostrar':'rings','evidencia_visual':'estatica','pesquisa':{'consultas_en':['Saturn rings']}}
+    c={'titulo':'Saturn rings','fonte':'commons','tipo':'foto'}
+    assert R.cobertura_componentes(n,c)==(0,0,0)
+    assert R.relevancia_textual(n,c)['cobertura']>0

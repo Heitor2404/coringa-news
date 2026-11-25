@@ -100,14 +100,14 @@ def _categoria_commons(q: str, n: int = 25) -> list[str]:
         return []
 
 
-def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
+def _commons_infos(titulos: list[str], fonte: str, *, preview_width: int = 1400) -> list[dict]:
     """Metadados no Commons (arquivo que só existe na Wikipédia — uso justo — não aparece aqui: fica de fora)."""
     out = []
     titulos = [t for t in titulos if not LIXO.search(t)]
     for i in range(0, len(titulos), 40):
         try:
             j = _get(COMMONS, action='query', prop='imageinfo', titles='|'.join(titulos[i:i + 40]),
-                     iiprop='url|size|mime|extmetadata', iiurlwidth=1400)
+                     iiprop='url|size|mime|extmetadata', iiurlwidth=preview_width)
         except Exception:
             continue
         pags = {p['title']: p for p in j.get('query', {}).get('pages', [])}
@@ -165,7 +165,7 @@ def f_commons(consultas: list[str]) -> list[dict]:
         titulos += _busca_commons(q, 8)
     return _commons_infos(list(dict.fromkeys(titulos))[:60], 'Commons')
 
-def f_commons_documental(consulta: str) -> list[dict]:
+def f_commons_documental(consulta: str, *, preview_width: int = 1400) -> list[dict]:
     """Documentary search prioritizes ranked file hits, not the first
     alphabetical entries in loosely matched categories. Metadata is a
     retrieval hint, never proof of visual content."""
@@ -177,7 +177,7 @@ def f_commons_documental(consulta: str) -> list[dict]:
     if not wanted:return []
     files=_busca_commons(consulta,16)
     categories=_categoria_commons(consulta,n=8)
-    candidates=_commons_infos(list(dict.fromkeys(files+categories))[:32],'Commons')
+    candidates=_commons_infos(list(dict.fromkeys(files+categories))[:32],'Commons',preview_width=preview_width)
     def rank(c):
         title=terms(c.get('titulo') or c.get('title') or c.get('source_title'))
         meta=terms(str(c.get('descricao_integral') or '')+' '+str(c.get('categories') or ''))

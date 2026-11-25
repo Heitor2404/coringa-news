@@ -41,3 +41,5 @@ E275.1 [run 45628307070](https://github.com/Heitor2404/coringa-news/actions/runs
 
 ### E277 — reaproveitamento temporal
 Corrigida ordem de amostragem cache-only para alcançar janelas com revisão privada já armazenada fora do lote técnico padrão. A identidade continua dependente da regeneração dos pixels e do ID exato. Implementado no caminho E247/E257, teste novo e regressão real em execução; não confundir com melhoria semântica ou ação contínua. E276 em validação no [run 45628962634](https://github.com/Heitor2404/coringa-news/actions/runs/45628962634).
+
+E277 [run 45629080558](https://github.com/Heitor2404/coringa-news/actions/runs/45629080558) e regressão geral [45629080686](https://github.com/Heitor2404/coringa-news/actions/runs/45629080686) em execução, assim como E276. Consultar resultados antes de repetir qualquer trabalho (§318).

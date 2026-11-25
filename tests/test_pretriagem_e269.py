@@ -194,7 +194,7 @@ def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(
     monkeypatch.setattr(E247,'Transporte',Transport)
     calls=[]
     def model(prompt,images,**kw):
-        assert images and all(isinstance(x,bytes) and x.startswith(b'\\xff\\xd8') for x in images)
+        assert images and all(isinstance(x,bytes) and x.startswith(bytes.fromhex('ffd8')) for x in images)
         calls.append(prompt)
         if 'miniaturas anexadas' in prompt:
             return {'observacoes':[{'indice':0,'decisao':'PRIORIZAR_AQUISICAO','observacao':'Controlled preview observation.'}]}
@@ -207,7 +207,7 @@ def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(
     E247.main()
     report=json.loads((out/'revisao.json').read_text())
     obs=json.loads((out/'observacoes-previas.json').read_text())
-    assert downloads==[thumb,original] and len(calls)==2
+    assert downloads==[thumb,original] and len(calls)==2, obs.get('status')
     assert ('foto',True) in widths
     assert report['visao_chamadas_logicas']==report['visao_limite']==2
     row=report['cobertura'][0]

@@ -75,4 +75,7 @@ E279.1 [45632385794](https://github.com/Heitor2404/coringa-news/actions/runs/456
 ### E281 — prova real conjunta (§329)
 E280 45634734946 SUCCESS, 43 testes e 19,2s; demais três runs SUCCESS. E281 corrige interface de bytes JPEG e reserva rede no orçamento existente. Prova real privada em novos temas, até 4 chamadas lógicas/4 operações caixa, USD 0, sem reiniciar geleiras, sem Claude/TTS. Não considerar autonomia, filme integral ou direitos aprovados antes de evidência. Fragmento condicional à cobertura, não substitui >=60s.
 
-E281 commit d1b9d76, [run 45636170163](https://github.com/Heitor2404/coringa-news/actions/runs/45636170163): in_progress/null na consulta. Não duplicar execução real nem ampliar cota. Conferir prova.json, observações, cobertura, folhas e eventual MP4. Não confundir sucesso do workflow com aprovação semântica.
+E281 commit d1b9d76, [run 45636170163](https://github.com/Heitor2404/coringa-news/actions/runs/45636170163): FAILURE, 78 testes passaram e 1 falhou antes de visão real. Não duplicar execução real nem ampliar cota. Conferir prova.json, observações, cobertura, folhas e eventual MP4. Não confundir sucesso do workflow com aprovação semântica.
+
+### E281.1 — correção da validação (§331)
+E281 45636170163 FAILURE, 78 aprovados/1 falha, nenhuma visão real: assinatura JPEG no teste tinha escape duplicado. Corrigido com bytes.fromhex('ffd8'), mantendo a asserção e o teto anterior. Nova execução do mesmo workflow pendente; conferir antes de repetir. Não alterar estados de capacidades comprovadas.

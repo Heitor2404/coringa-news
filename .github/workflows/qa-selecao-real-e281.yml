@@ -1,4 +1,4 @@
-name: E281 - prova real privada de selecao e movimento
+name: E281.1 - prova real privada de selecao e movimento
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

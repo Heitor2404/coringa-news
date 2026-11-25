@@ -165,3 +165,8 @@ E280 runs 45634734946, 45634735022, 45634734897 e 45634735294 SUCCESS. Fragmento
 ## 330. 25/11 — Estado de saída E281
 
 Commit d1b9d76; run 45636170163 in_progress/null na última consulta. Fluxo com limite de quatro operações Gemini classificadas como cota, teto financeiro USD 0; não alterar classificação nem reiniciar cota das geleiras. Até esta consulta execução em setup, nenhuma resposta de visão real ou novo fragmento confirmado. Próxima retomada deve consultar resultados antes de novo commit; corrigir falhas demonstradas, preservar as integrações comprovadas. Pendências materiais: prova de seleção real, composição narrada, aproveitamento automático de complementos, documentários completos contrastantes >=60s; não declarar fase corretiva encerrada. E280 comprovada tecnicamente, limitações estéticas registradas §329. Sem alteração main, publicação ou Claude.
+
+
+## 331. 25/11 — E281.1 corrige falha de fixture antes da execução real
+
+E281 run 45636170163 FAILURE: 78 testes passaram, 1 falhou no teste integrado E279 (antes de qualquer Gemini real). Causa confirmada no código: literal de assinatura JPEG no teste tinha duas barras invertidas por escape, verificando texto literal em vez de bytes FF D8; implementação de envio de bytes JPEG estava presente. Substituído por bytes.fromhex('ffd8'), sem relaxar verificação de tipo ou formato; diagnóstico de falha inclui status de observações. Workflow existente reexecutado por alteração do nome, mesmo caso e teto 4 operações/4 chamadas lógicas, USD 0; execução inicial não consumiu essa cota real. Não é reinício do orçamento das geleiras. E281.1 ainda não comprovada até logs e artefatos. Não declarar fase corretiva concluída nem repetir integrações comprovadas. Sem main/publicação/Claude/TTS.

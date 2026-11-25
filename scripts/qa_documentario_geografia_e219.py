@@ -56,8 +56,9 @@ def acquire(row):
     finally:
         tmp.unlink(missing_ok=True)
 
-def frame(p,t):
-    z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf','scale=240:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)
+def frame(p,t,*,width=240):
+    if type(width) is not int or not 240<=width<=1280:raise ValueError('E244-FRAME-WIDTH')
+    z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf',f'scale={width}:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)
     return Image.open(io.BytesIO(z)).convert('RGB')
 
 def windows(m,span,*,review_technical=False):

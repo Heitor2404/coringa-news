@@ -1,4 +1,4 @@
-name: E268.2 - contrato editorial e rotas explicitas sem IA
+name: E269 - selecao por componentes e fila editorial sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

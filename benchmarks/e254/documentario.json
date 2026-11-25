@@ -459,6 +459,22 @@
             "fjord steep mountain",
             "Geirangerfjord Norway aerial fjord",
             "Nærøyfjord steep mountains"
+          ],
+          "componentes_busca": [
+            [
+              "fjord",
+              "fiord"
+            ],
+            [
+              "aerial",
+              "panorama",
+              "view",
+              "mountains"
+            ]
+          ],
+          "consultas_precisas": [
+            "Geirangerfjord aerial view",
+            "Nærøyfjord aerial view"
           ]
         },
         {
@@ -475,6 +491,23 @@
             "glacial horn mountain",
             "Matterhorn pyramidal peak glacial horn",
             "mountain horn glaciated arête"
+          ],
+          "componentes_busca": [
+            [
+              "Matterhorn",
+              "pyramidal peak",
+              "glacial horn"
+            ],
+            [
+              "summit",
+              "peak",
+              "mountain",
+              "Matterhorn"
+            ]
+          ],
+          "consultas_precisas": [
+            "Matterhorn summit photograph",
+            "Matterhorn pyramidal peak"
           ]
         },
         {
@@ -525,6 +558,23 @@
                 "origem": "inspecao assistida ChatGPT da folha privada; nao e aprovacao humana"
               }
             }
+          ],
+          "componentes_busca": [
+            [
+              "lake",
+              "tarn",
+              "lac"
+            ],
+            [
+              "valley",
+              "mountains",
+              "glacial",
+              "glacier"
+            ]
+          ],
+          "consultas_precisas": [
+            "Lake Louise valley mountains",
+            "Lake Pukaki mountain valley"
           ]
         }
       ],

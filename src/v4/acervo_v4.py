@@ -262,6 +262,8 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     consultas=[]
     for x in (q.get('consultas_en') or [])+(q.get('consultas') or []):
         if isinstance(x,str) and 2<=len(x.strip())<=180 and x.strip() not in consultas:consultas.append(x.strip())
+    precise=[x for x in (q.get('consultas_precisas') or []) if isinstance(x,str) and 2<=len(x.strip())<=180][:6]
+    if progressivo:consultas=list(dict.fromkeys(precise+consultas))
     if not progressivo:consultas=consultas[:2]
     if not consultas:raise ValueError('E246-CONSULTA')
     report={'id':necessidade['id'],'evidencia_visual':ev,'buscas':[],'candidatos':[],

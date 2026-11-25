@@ -165,12 +165,31 @@ def incompatibilidade_metadados(necessidade,c):
     maps=r'\b(topographic map|geological map|historical map|street map|mapa topogr[aá]fico|mapa geol[oó]gico|cartographic map)\b'
     map_wanted=r'\b(map|maps|mapa|mapas|cartograph\w*|cartograf\w*)\b'
     if re.search(maps,title) and not re.search(map_wanted,wanted):return True
-    return bool(re.search(r'\b(pano distorted|distorted panorama|panorama distorcido)\b',title.replace('_',' ')) and not re.search(r'\b(distortion|distor[cç][aã]o|distorted)\b',wanted))
+    return bool(re.search(r'\b(pano distorted|panorama distorted|distorted panorama|panorama distorcido)\b',title.replace('_',' ')) and not re.search(r'\b(distortion|distor[cç][aã]o|distorted)\b',wanted))
+
+def cobertura_componentes(necessidade,c):
+    """Optional search facets supplied by the director, not evidence or a hard filter.
+    Each group is an OR of phrases; separate groups are AND-like ranking signals.
+    Match whole words/phrases, never substrings or title alone as proof.
+    """
+    import unicodedata
+    def norm(x):
+        v=unicodedata.normalize('NFKD',str(x or '').casefold())
+        return ' '+' '.join(re.findall(r'[^\W_]+',''.join(k for k in v if not unicodedata.combining(k))))+' '
+    groups=(necessidade.get('pesquisa') or {}).get('componentes_busca') or []
+    title=norm(c.get('titulo'));desc=' '.join(norm(c.get(k)) for k in ('descricao','descricao_integral'))
+    scores=[]
+    for group in groups:
+        if not isinstance(group,list):continue
+        terms=[norm(t) for t in group if isinstance(t,str) and t.strip()]
+        if terms:scores.append(2 if any(t in title for t in terms) else 1 if any(t in desc for t in terms) else 0)
+    return (sum(x>0 for x in scores),sum(scores),len(scores))
 
 def ordenar_candidatos(necessidade,candidatos):
     ev=necessidade.get('evidencia_visual')
     def rank(c):
         m=relevancia_textual(necessidade,c)
+        facets,facet_quality,_=cobertura_componentes(necessidade,c)
         descricao=' '.join(str(c.get(k) or '') for k in ('titulo','descricao','descricao_integral','source')).lower()
         captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed|camera views?|views? from cameras?|recorded (by|with)|filmed (by|with))\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
@@ -181,7 +200,7 @@ def ordenar_candidatos(necessidade,candidatos):
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
-                -m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
+                -facets,-facet_quality,-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     ordered=sorted(candidatos,key=rank)

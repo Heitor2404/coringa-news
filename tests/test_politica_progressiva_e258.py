@@ -261,3 +261,13 @@ def test_explicit_metadata_mismatch_is_soft_and_scope_sensitive():
     assert not R.incompatibilidade_metadados({**n,'necessidade':'territorio'},bad)
     assert not R.incompatibilidade_metadados(n,{**bad,'fonte':'biblioteca_v3'})
     assert R.incompatibilidade_metadados(n,{**bad,'titulo':'Mountain panorama distorted'})
+
+def test_search_facets_require_distinct_visual_components_in_metadata_ranking():
+    from src.v4.formatos import revisao_documental as R
+    n={'necessidade':'registro','mostrar':'valley and lake','evidencia_visual':'estatica','pesquisa':{'consultas_en':['glacial valley lake'],'componentes_busca':[['lake','tarn'],['valley','mountains']]}}
+    good={'fonte':'commons','tipo':'foto','source_id':1,'titulo':'Mountain landscape','descricao':'Lake in a valley'}
+    bad={'fonte':'commons','tipo':'foto','source_id':2,'titulo':'Glacial valley','descricao':'Landscape'}
+    assert R.ordenar_candidatos(n,[bad,good])==[good,bad]
+    assert R.cobertura_componentes(n,{'titulo':'Lakeside valley'})[0]==1
+    assert R.cobertura_componentes(n,good)[0]==2
+    assert not R.relevancia_textual(n,good)['prova_visual']

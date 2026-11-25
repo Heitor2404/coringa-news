@@ -128,7 +128,7 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
                 not captura,
-                c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte')!='nasa',
+                c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     vistos=set() if vistos is None else vistos
     trace=[];n=0
@@ -203,4 +203,75 @@ def cobertura_adaptativa(necessidade,pesquisar,inspecionar,pode_inspecionar):
         if result['estado']=='CANDIDATO_PRIVADO_REVISADO':
             return {**result,'rodadas':rounds,'tentativas':tentativas}
     return {'estado':'LACUNA_PENDENTE','rodadas':rounds,'tentativas':tentativas,
+            'pronto_para_render':False,'publicar':False}
+
+
+def diagnostico_cobertura(rodadas,parada):
+    """Separate operational exhaustion from the scope of observed evidence."""
+    from collections import Counter
+    counts=Counter()
+    for r in rodadas:
+        for t in r['cobertura']['trilha']:
+            d=t['decisao'];state=d.get('estado');reason=d.get('motivo','')
+            if state=='PERTINENTE_PRIVADO':key='CANDIDATO_PRIVADO'
+            elif state=='FALHA_VISAO':key='FALHA_FORMATO_OU_SERVICO'
+            elif state=='ORCAMENTO' or 'ORCAMENTO' in reason or 'LIMITE' in reason:key='ORCAMENTO_OU_VARIANTE'
+            elif 'PENDENTE' in reason or 'PAGINA' in reason:key='RECIBO_PENDENTE'
+            elif state=='FALHA_AQUISICAO':key='FALHA_AQUISICAO'
+            elif 'AMOSTRAS' in reason or 'JANELA' in reason:key='EVIDENCIA_NAO_OBSERVADA_NAS_AMOSTRAS'
+            else:key='INSUFICIENCIA_NO_ESCOPO_REVISADO'
+            counts[key]+=1
+    return {'parada':parada,'decisoes_por_tipo':dict(counts),
+            'inexistencia_de_midia_comprovada':False,'publicar':False}
+
+def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_inspecionar,
+                           max_buscas,passo_buscas=4,max_tentativas=24,estado=None):
+    """Bounded progressive scheduler. Discovery and inspection have distinct
+    budgets. The caller can resume the same queue without repeating queries."""
+    if necessidade['necessidade']=='territorio':
+        return {'estado':'DELEGAR_ATLAS','rodadas':[],'tentativas':0,'pronto_para_render':False,'publicar':False}
+    if min(max_buscas,passo_buscas,max_tentativas)<=0:raise ValueError('E258-ORCAMENTO')
+    st=estado if estado is not None else {}
+    rounds=st.setdefault('rodadas',[]);seen=st.setdefault('vistos',set())
+    pending=st.setdefault('pendentes',[]);attempted=st.setdefault('buscas_vistas',set())
+    base=necessidade['pesquisa']
+    queries=list(dict.fromkeys(q.strip() for q in (base.get('consultas_en') or [])+(base.get('consultas') or []) if isinstance(q,str) and q.strip()))
+    if not queries:raise ValueError('E258-CONSULTA')
+    # Preserve the action and subject. Alternate supplied queries before trying
+    # lexical variants; do not silently drop the last (often action) token.
+    n={**necessidade,'pesquisa':{**base,'consultas_en':queries,'consultas':[]}}
+    tentativas=sum(r['cobertura']['tentativas'] for r in rounds)
+    buscas=sum(len(r['pesquisa']['buscas']) for r in rounds)
+    parada='ORCAMENTO_ESGOTADO'
+    while tentativas<max_tentativas:
+        available=pode_inspecionar()
+        if pending and available:
+            result=fila_cobertura(necessidade,pending,inspecionar,
+                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_inspecionar=pode_inspecionar)
+            rounds.append({'rodada':len(rounds)+1,'pesquisa':{'id':necessidade['id'],'buscas':[],'candidatos':pending.copy()},'cobertura':result})
+            tentativas+=result['tentativas']
+            pending[:]=[c for c in pending if (c.get('fonte'),c.get('source_id') or c.get('url')) not in seen]
+            if result['estado']=='CANDIDATO_PRIVADO_REVISADO':
+                return {**result,'rodadas':rounds,'tentativas':tentativas,'diagnostico':diagnostico_cobertura(rounds,'EVIDENCIA_REVISADA')}
+            if result['tentativas']==0 and pending and pode_inspecionar():
+                parada='SEM_CANDIDATO_ELEGIVEL';break
+        if buscas>=max_buscas or not pode_buscar():
+            parada='ORCAMENTO_BUSCA_ESGOTADO';break
+        if not pode_inspecionar() and st.get('descoberta_sem_visao'):
+            parada='REVISAO_PENDENTE_ORCAMENTO';break
+        report=pesquisar(n,min(passo_buscas,max_buscas-buscas),attempted)
+        if report['id']!=necessidade['id']:raise ValueError('E258-VINCULO')
+        if not report['buscas'] and not report['candidatos']:
+            parada='CONSULTAS_DISPONIVEIS_ESGOTADAS';break
+        buscas+=len(report['buscas'])
+        keys={(c.get('fonte'),c.get('source_id') or c.get('url')) for c in pending}|seen
+        for c in report['candidatos']:
+            k=(c.get('fonte'),c.get('source_id') or c.get('url'))
+            if k not in keys:pending.append(c);keys.add(k)
+        rounds.append({'rodada':len(rounds)+1,'pesquisa':report,'cobertura':{'estado':'LACUNA_PENDENTE','tentativas':0,'trilha':[]}})
+        if not pode_inspecionar():st['descoberta_sem_visao']=True
+        if not report['buscas'] and not pending:parada='SEM_NOVOS_CANDIDATOS';break
+        if not report['buscas'] and not pode_inspecionar():parada='REVISAO_PENDENTE_ORCAMENTO';break
+    return {'estado':'LACUNA_PENDENTE','rodadas':rounds,'tentativas':tentativas,
+            'diagnostico':diagnostico_cobertura(rounds,parada),'pendentes':len(pending),
             'pronto_para_render':False,'publicar':False}

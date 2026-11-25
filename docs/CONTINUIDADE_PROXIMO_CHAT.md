@@ -315,3 +315,5 @@ E293 commit cd45145, [run 45707773199](https://github.com/Heitor2404/coringa-new
 ## 359. E293.1 — correção de importação do fundo B
 
 Run [45707773199](https://github.com/Heitor2404/coringa-news/actions/runs/45707773199) FAILURE: 57 testes Python passaram; tsc TS2304 em SignatureBackground e signatureHasVisibleArea. Causa confirmada no arquivo: o import foi inserido dentro do comentário inicial /** ... */, portanto não estava ativo. Não houve renderização nem prova de pixels nessa execução. E293.1 move a importação para depois de import React, adiciona regressão que remove comentários antes de verificar import ativo e reexecuta o mesmo workflow completo. Sem alterar desenho B, escopo do fundo, enquadramentos, regras ROI, pisos, ATLAS/CAD, custos de IA/TTS ou main. Validação pendente; só aprovar após execução e inspeção.
+
+E293.1 commit 6e0677e, [run 45708427264](https://github.com/Heitor2404/coringa-news/actions/runs/45708427264) em execução na consulta. Não duplicar; conferir tsc, 20 quadros e prova de pixels. Identidade B inalterada.

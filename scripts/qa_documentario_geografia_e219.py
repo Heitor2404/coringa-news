@@ -60,17 +60,24 @@ def frame(p,t):
     z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf','scale=240:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)
     return Image.open(io.BytesIO(z)).convert('RGB')
 
-def windows(m,span):
+def windows(m,span,*,review_technical=False):
     # Samples verify readable bytes/no near-black or uniform frames only.
     # They do NOT prove the semantic action. Short cuts preserve native time.
     out=[];p=m['local_source'];dur=m['duration_s']
+    from src.v4.formatos import direcao_eventos as DE
+    candidates=[]
     for a in range(2,min(80,int(dur-span-1)),5):
         try:
             ims=[frame(p,a+span*f) for f in (.12,.5,.86)]
             if all(ImageStat.Stat(x.convert('L')).mean[0]>9 and ImageStat.Stat(x.convert('L')).stddev[0]>10 for x in ims):
                 out.append((float(a),ims[1]))
+                if review_technical:
+                    candidates.append({'inicio_s':float(a),'frame':ims[1],
+                                       'diagnostico':DE.diagnosticar_janela(ims)})
         except Exception:continue
         if len(out)>=8:break
+    if review_technical:
+        return [(x['inicio_s'],x['frame']) for x in DE.ordenar_janelas_tecnicas(candidates)]
     return out
 
 def location_title(ch,span):

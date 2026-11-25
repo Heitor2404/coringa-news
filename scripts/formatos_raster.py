@@ -184,3 +184,53 @@ def acabamento(jpg: Path, gama: float = .78, sat: float = 1.18, borda: float = .
     out = jpg.with_suffix('.webp')
     Image.fromarray(rgba, 'RGBA').save(out, 'WEBP', quality=86, method=6)
     return out
+
+
+def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100):
+    """Acquire a parameterized native raster, not an episode-specific template.
+
+    No upsampled resolution claims. Only sources already in the ATLAS
+    attribution manifest; the returned metadata remains a technical candidate.
+    DEM shading is deliberately separate: regional DEM provenance must be
+    checked before combining additional elevation sources.
+    """
+    import re
+    from src.v4.formatos import plano as A, atlas_ref
+    if not isinstance(nome,str) or not re.fullmatch(r'[a-z0-9_]{1,80}',nome):
+        raise ValueError('GEO-NOME')
+    if not isinstance(bbox,(tuple,list)) or len(bbox)!=4 or not all(
+        isinstance(v,(int,float)) and not isinstance(v,bool) and math.isfinite(v) for v in bbox):
+        raise ValueError('GEO-BBOX')
+    o,s,l,n=bbox
+    if not -180<=o<l<180 or not -85<=s<n<=85:
+        raise ValueError('GEO-BBOX: dividir antimeridiano explicitamente')
+    fontes={'bmng':(BMNG_BATI,4,8),'s2_2016':(S2,4,14)}
+    if dataset not in fontes:
+        raise ValueError('GEO-DATASET')
+    modelo,zmin,zmax=fontes[dataset]
+    lic=atlas_ref.datasets().get(dataset,{})
+    if not lic.get('uso_comercial') or not lic.get('atribuicao_exigida') or atlas_ref.proibido(modelo):
+        raise ValueError('GEO-LICENCA')
+    if type(z) is not int or not zmin<=z<=zmax:
+        raise ValueError('GEO-ZOOM')
+    if type(max_tiles) is not int or not 1<=max_tiles<=100:
+        raise ValueError('GEO-ORCAMENTO')
+    x0,y0=tile_xy(o,n,z);x1,y1=tile_xy(l,s,z)
+    count=(int(x1)-int(x0)+1)*(int(y1)-int(y0)+1)
+    if count>max_tiles:raise ValueError('GEO-ORCAMENTO: reduzir região ou zoom')
+    im,cantos=mosaico(modelo,bbox,z,'RGB')
+    if im.width*im.height!=count*256*256:
+        raise ValueError('GEO-MOSAICO')
+    out=Path(saida) if saida is not None else A.RASTER_DIR
+    out.mkdir(parents=True,exist_ok=True)
+    img=out/(nome+'.jpg')
+    im.save(img,quality=94)
+    meta={'nome':nome,'tipo':'satelite','cantos':cantos,'px':list(im.size),
+          'px_por_grau_fonte':256*2**z/360,'arquivo':img.name,'dataset':dataset,
+          'atribuicao':lic['atribuicao_exigida'],
+          'fonte':{'url':modelo,'licenca':lic['licenca'],'zoom_tiles':z,
+                   'bbox_pedido':list(bbox),'tiles':count,
+                   'escopo':'base de referência; não comprova estado histórico'},
+          'sha256':hashlib.sha256(img.read_bytes()).hexdigest()}
+    (out/(nome+'.json')).write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding='utf-8')
+    return meta

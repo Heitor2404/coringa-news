@@ -1,4 +1,4 @@
-name: E275.1 - prova de pretriagem no fluxo progressivo existente
+name: E276 - variantes proporcionais no fluxo progressivo existente
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -54,7 +54,7 @@ jobs:
           assert all(n['estado']=='LACUNA_PENDENTE' for n in r['cobertura'])
           ids={x['necessidade_id'] for x in r['cobertura']}
           assert all(x['id'] in ids and all(a['estado']=='PRETRIAGEM_PENDENTE' and a['publicar'] is False and (root/a['folha']).is_file() for a in x['amostras']) for x in p['necessidades'])
-          print('E275 FLUXO',[(x['id'],len(x['amostras']),len(x['erros'])) for x in p['necessidades']],r['rede_aquisicao']['http'],r['rede_aquisicao']['bytes'])
+          print('E276 FLUXO',[(x['id'],len(x['amostras']),len(x['erros'])) for x in p['necessidades']],r['rede_aquisicao']['http'],r['rede_aquisicao']['bytes'])
           PY
       - name: Espelhar provas privadas
         if: ${{ !cancelled() }}
@@ -65,4 +65,4 @@ jobs:
           files=(stage_documental/e275/revisao.json stage_documental/e275/pretriagem-pendente.json stage_documental/e275/pretriagem-*.jpg)
           valid=()
           for f in "${files[@]}"; do [[ -f "$f" ]] && valid+=("$f"); done
-          if (( ${#valid[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e275-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"; fi
+          if (( ${#valid[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e276-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"; fi

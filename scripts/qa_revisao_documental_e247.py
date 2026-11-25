@@ -314,7 +314,10 @@ def main():
                         rr={'id':n['id'],'buscas':[],'candidatos':pages,'biblioteca':[],'origem':'PAGINAS_CURADAS_PENDENTES','publicar':False,'pronto_para_render':False}
                         reports.append(rr);return rr
                 if replay or revisar_acervo or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
-                r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
+                # The no-vision preview run never acquires a master. Keep normal
+                # resolution variants for any run that can inspect full media.
+                providers=(lambda tipo:A.fontes_documentais(tipo,pretriagem=True)) if preview_pending and budget==0 else None
+                r=A.pesquisar_cobertura(n,biblioteca=lib,fontes=providers,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
             # Second pass: pool all unused budget across unresolved obligations.
@@ -354,7 +357,7 @@ def main():
                 def preview_board(n,c,v,im,digest,index):
                     name='pretriagem-'+hashlib.sha256(n['id'].encode()).hexdigest()[:12]+'-'+str(index)+'.jpg'
                     im.thumbnail((960,720));im.save(out/name,quality=90)
-                    return {'necessidade_id':n['id'],'mostrar':n['mostrar'],'pagina':c['pagina'],'source_id':c.get('source_id'),'preview_url':v['url'],'preview_sha256':digest,'folha':name,'estado':'PRETRIAGEM_PENDENTE','publicar':False}
+                    return {'necessidade_id':n['id'],'mostrar':n['mostrar'],'pagina':c['pagina'],'source_id':c.get('source_id'),'consulta_origem':c.get('consulta_origem'),'preview_url':v['url'],'preview_sha256':digest,'folha':name,'estado':'PRETRIAGEM_PENDENTE','publicar':False}
                 try:preview_report=coletar_fila(queues,t,preview_board)
                 finally:t.max_http,t.max_bytes=old_http,old_bytes
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}

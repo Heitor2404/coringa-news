@@ -77,3 +77,21 @@ def test_preview_diversifies_query_origin_without_discarding_candidates():
     rows=[{**base,'pagina':str(i),'source_id':i+1,'consulta_origem':q} for i,q in enumerate(['mountain one','mountain one','mountain two'])]
     result=candidatos(n,rows)
     assert [x[0]['pagina'] for x in result]==['0','2','1']
+
+
+def test_progressive_provider_preview_width_is_opt_in(monkeypatch):
+    from src import acervo
+    from src.v4 import acervo_v4 as A
+    seen=[]
+    monkeypatch.setattr(acervo,'f_commons_documental',lambda q,preview_width=1400:seen.append(preview_width) or [])
+    dict(A.fontes_documentais('foto',pretriagem=True))['commons']('subject')
+    dict(A.fontes_documentais('foto'))['commons']('subject')
+    assert seen==[640,1400]
+    assert [k for k,_ in A.fontes_documentais('video',pretriagem=True)]==[k for k,_ in A.fontes_documentais('video')]
+
+
+def test_preview_prefers_smaller_declared_variant_without_changing_original():
+    n={'id':'a','necessidade':'registro','mostrar':'mountain','evidencia_visual':'estatica','pesquisa':{'consultas_en':['mountain']}}
+    c={'fonte':'commons','tipo':'foto','direitos':'DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA','titulo':'mountain','pagina':'p','url':'original','variantes':[{'url':'large','width':1920,'height':1080},{'url':'small','width':640,'height':480}]}
+    assert candidatos(n,[c])[0][1]['url']=='small'
+    assert c['url']=='original' and len(c['variantes'])==2

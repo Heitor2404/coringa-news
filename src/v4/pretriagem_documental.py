@@ -13,8 +13,12 @@ def candidatos(n,rows,previous_pages=()):
         if not page or page in seen or c.get('tipo')!='foto' or c.get('fonte')!='commons' or c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':continue
         seen.add(page)
         if R.incompatibilidade_metadados(n,c):continue
-        v=next((v for v in c.get('variantes') or [] if v.get('url') and v['url']!=c.get('url') and all(type(v.get(k)) is int and 240<=v[k]<=2400 for k in ('width','height'))),None)
-        if v:out.append((c,v))
+        variants=[v for v in c.get('variantes') or [] if v.get('url') and v['url']!=c.get('url') and all(type(v.get(k)) is int and 240<=v[k]<=2400 for k in ('width','height'))]
+        if variants:
+            # Prefer a declared preview near the already validated 640px
+            # request, not a guessed URL or a low-resolution master.
+            v=min(variants,key=lambda x:(abs(max(x['width'],x['height'])-640),x['width']*x['height']))
+            out.append((c,v))
     # Keep the most relevant choice first, then prefer another actual query
     # before spending a small preview quota on a single result series.
     # Unknown origin is a single group; no candidate is removed.

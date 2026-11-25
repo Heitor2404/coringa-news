@@ -154,6 +154,17 @@ def usgs_receipt(c,t):
     return choices,hosts
 
 
+def ordenar_variantes_video(choices,min_video_px):
+    """Prefer declared compatible variants; keep unknown and smaller ones
+    as fallbacks because provider metadata is not decoded evidence."""
+    def rank(v):
+        w,h=v.get('width'),v.get('height')
+        if all(type(x) is int and x>0 for x in (w,h)):
+            return 0 if min(w,h)>=min_video_px else 2
+        return 1
+    return sorted(choices,key=rank)
+
+
 def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte'] in ('nasa','nasa_video'):
@@ -177,6 +188,8 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
     failures=[]
     if type(min_video_px) is not int or min_video_px<360:raise ValueError('VIDEO_MIN_PIXELS')
     ordered=choices if progressivo else choices[:3]
+    if progressivo and c['tipo']=='video':
+        ordered=ordenar_variantes_video(ordered,min_video_px)
     # Optional experimental per-candidate allocation, never a universal
     # editorial limit. Caller can revisit with remaining global budget.
     if max_variantes is not None:

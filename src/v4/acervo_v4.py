@@ -175,7 +175,7 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 
 
 # E246: discovery for the documentary director. No legacy selection fallback.
-def fontes_documentais(tipo):
+def fontes_documentais(tipo, *, pretriagem=False):
     from src import acervo, midia
     from src.v4 import fontes_cientificas as FC
     if tipo=='video':
@@ -184,7 +184,7 @@ def fontes_documentais(tipo):
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
                 ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]
     if tipo=='foto':
-        return [('commons',acervo.f_commons_documental),
+        return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),

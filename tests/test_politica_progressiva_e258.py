@@ -284,3 +284,11 @@ def test_candidate_cap_does_not_starve_other_queries_or_providers():
     assert sum(x['retidos'] for x in r['buscas'])==3
     assert r['candidatos_nao_retidos']==57
     assert r['publicar'] is False
+
+
+def test_video_variants_rank_compatible_before_unknown_and_low_but_keep_fallbacks():
+    from scripts.qa_pesquisa_documental_e246 import ordenar_variantes_video
+    choices=[{'url':'small','width':640,'height':360},{'url':'unknown'},{'url':'full','width':1920,'height':1080},{'url':'portrait','width':720,'height':1280}]
+    assert [x['url'] for x in ordenar_variantes_video(choices,700)]==['full','portrait','unknown','small']
+    assert [x['url'] for x in ordenar_variantes_video(choices,360)]==['small','full','portrait','unknown']
+    assert len(choices)==4

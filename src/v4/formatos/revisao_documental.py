@@ -111,6 +111,47 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
 
 
+def relevancia_textual(necessidade,candidato):
+    """Soft metadata ranking only. Match supplied query alternatives separately;
+    never treat a title, word match or missing metadata as visual evidence.
+    Keep numbers and proper names; no topic-specific dictionaries.
+    """
+    import unicodedata
+    def tokens(value):
+        s=unicodedata.normalize('NFKD',str(value or '').casefold())
+        s=''.join(c for c in s if not unicodedata.combining(c))
+        return set(re.findall(r'[^\W_]+',s))-{
+            'the','a','an','of','and','in','on','at','to','for','with','from',
+            'video','footage','real','photo','image','de','da','do','das','dos','e','em','um','uma'}
+    p=necessidade.get('pesquisa') or {}
+    queries=[tokens(q) for q in (p.get('consultas_en') or [])+(p.get('consultas') or [])]
+    title=tokens(candidato.get('titulo'))
+    desc=tokens(' '.join(str(candidato.get(k) or '') for k in ('descricao','descricao_integral')))
+    scores=[]
+    for q in queries:
+        if not q:continue
+        coverage=len(q&(title|desc))/len(q)
+        title_coverage=len(q&title)/len(q)
+        scores.append((coverage,title_coverage))
+    coverage,title_coverage=max(scores,default=(0.,0.))
+    return {'cobertura':coverage,'titulo':title_coverage,'prova_visual':False}
+
+
+def ordenar_candidatos(necessidade,candidatos):
+    ev=necessidade.get('evidencia_visual')
+    def rank(c):
+        m=relevancia_textual(necessidade,c)
+        descricao=' '.join(str(c.get(k) or '') for k in ('descricao','descricao_integral','source')).lower()
+        captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed)\b',descricao))
+        return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
+                ev=='estatica' and c.get('tipo')!='foto',
+                c.get('fonte')!='biblioteca_v3',
+                -m['cobertura'],-m['titulo'],not captura,
+                c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
+                not bool(c.get('source_id')))
+    return sorted(candidatos,key=rank)
+
+
 def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=None,pode_inspecionar=None,pode_candidato=None):
     """Use the existing discovery result; continue after refusal or failed download.
     Inspection callback owns actual network/vision budgets. A success is private.
@@ -119,20 +160,9 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
     if type(max_candidatos) is not int or not 1<=max_candidatos<=12:
         raise ValueError('E247-ORCAMENTO')
     ev=necessidade.get('evidencia_visual')
-    def rank(c):
-        # Prefer stills when static evidence suffices. Prefer provider identity
-        # and descriptions of actual capture, never claim these prove authenticity.
-        descricao=' '.join(str(c.get(k) or '') for k in ('descricao','descricao_integral','source')).lower()
-        captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed)\b',descricao))
-        return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
-                ev=='estatica' and c.get('tipo')!='foto',
-                c.get('fonte')!='biblioteca_v3',
-                not captura,
-                c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
-                not bool(c.get('source_id')))
     vistos=set() if vistos is None else vistos
     trace=[];n=0
-    for c in sorted(candidatos,key=rank):
+    for c in ordenar_candidatos(necessidade,candidatos):
         if ev=='movimento' and c.get('tipo')!='video':continue
         key=(c.get('fonte'),c.get('source_id') or c.get('url'))
         if key in vistos:continue

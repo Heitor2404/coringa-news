@@ -180,3 +180,30 @@ def test_progressive_nasa_prefers_small_declared_video_derivative():
     assert [x['url'] for x in result][:2]==[urls[3],urls[4]]
     assert set(x['url'] for x in result)==set(urls)
     assert c['recibo_nasa']['direitos']=='PENDENTE_AUDITORIA_INDIVIDUAL'
+
+
+def test_metadata_rank_prioritizes_specific_query_without_rejecting_unlabelled():
+    n={**need(),'pesquisa':{'consultas_en':['Apollo 11 moonwalk','lunar surface walking']}}
+    candidates=[
+        {**candidate(1),'titulo':'Unrelated interview','descricao':'Apollo 11 was mentioned. Photographed on Earth.'},
+        {**candidate(2),'titulo':'Apollo 11 Restored Moonwalk','descricao':''},
+        {**candidate(3),'titulo':'KSC-05-S-00286','descricao':''},
+    ]
+    assert [c['source_id'] for c in R.ordenar_candidatos(n,candidates)]==[2,1,3]
+    assert R.relevancia_textual(n,candidates[1])=={'cobertura':1.,'titulo':1.,'prova_visual':False}
+    # No hard metadata veto: later candidate without title can still be reviewed.
+    order=[]
+    def inspect(c,n):
+        order.append(c['source_id'])
+        return accepted() if c['source_id']==3 else {'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'}
+    assert R.fila_cobertura(n,candidates,inspect)['estado']=='CANDIDATO_PRIVADO_REVISADO'
+    assert order==[2,1,3]
+
+
+def test_metadata_rank_retains_local_priority_and_alternative_query():
+    n={**need(),'pesquisa':{'consultas_en':['Earth rotating','planet rotation']}}
+    rows=[{**candidate(1),'titulo':'How Sunlight Pushes Asteroids','descricao':'Near-Earth asteroids'},
+          {**candidate(2),'titulo':'Planet rotation','descricao':''},
+          {**candidate(3),'fonte':'biblioteca_v3','titulo':'Unknown local record'}]
+    assert [c['source_id'] for c in R.ordenar_candidatos(n,rows)]==[3,2,1]
+    assert R.relevancia_textual(n,rows[0])['cobertura']<1

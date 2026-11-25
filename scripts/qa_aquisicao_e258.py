@@ -4,6 +4,7 @@ from pathlib import Path
 from src.v4 import acervo_v4 as A
 from src.v4.aquisicao_documental import Transporte
 from scripts.qa_pesquisa_documental_e246 import sample
+from src.v4.formatos.revisao_documental import ordenar_candidatos,relevancia_textual
 
 def main():
     out=Path(sys.argv[1]);out.mkdir(parents=True,exist_ok=True)
@@ -29,7 +30,8 @@ def main():
         t.max_bytes=t.bytes+(global_bytes-t.bytes)//remaining_cases
         before=t.resumo()
         try:
-            for c in r['candidatos']:
+            r['ordem_prova']=[{'source_id':c.get('source_id'),'pontuacao':relevancia_textual(n,c)} for c in ordenar_candidatos(n,r['candidatos'])]
+            for c in ordenar_candidatos(n,r['candidatos']):
                 if t.http>=t.max_http or t.bytes>=t.max_bytes:break
                 try:
                     m,im,p=sample(c,originals,t,progressivo=True,max_variantes=2)

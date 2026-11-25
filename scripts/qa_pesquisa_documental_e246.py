@@ -71,7 +71,9 @@ def sample(c,out,t):
                 path=out/(sha+ext);path.write_bytes(raw)
                 meta={'width':w,'height':h,'duration_s':None}
             else:
-                path=out/(sha+('.webm' if urlsplit(v['url']).path.lower().endswith('.webm') else '.mov' if c.get('recibo_cientifico',{}).get('file_name','').lower().endswith('.mov') else '.mp4'))
+                filename=(c.get('recibo_cientifico') or {}).get('file_name') or urlsplit(v['url']).path
+                ext=Path(filename).suffix.lower()
+                path=out/(sha+(ext if ext in ('.webm','.mov','.mp4') else '.mp4'))
                 path.write_bytes(raw)
                 w,h,dur=E.probe(path)
                 if min(w,h)<360 or dur<3:raise ValueError('VIDEO_QUALIDADE')

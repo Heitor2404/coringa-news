@@ -54,4 +54,6 @@ jobs:
       - name: Espelhar prova sem copiar originais para Git
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
-        run: python scripts/espelhar_revisao_cofre.py "e250-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" qa_e250/revisao.json qa_e250/pacote/index.json qa_e250/pacote/recibos.json
+        run: |
+          cp qa_e250/pacote/index.json qa_e250/pacote-index.json
+          python scripts/espelhar_revisao_cofre.py "e250-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" qa_e250/revisao.json qa_e250/pacote-index.json qa_e250/pacote/recibos.json

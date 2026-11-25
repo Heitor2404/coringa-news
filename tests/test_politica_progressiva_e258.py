@@ -81,3 +81,27 @@ def test_second_batch_never_repeats_reviewed_starts():
     reviewed={round(p['inicio_s'],4) for p,_ in first}
     _,second=AD.preparar_lote(m,need(),frame,exploracao=e,excluir=reviewed)
     assert first and second and not reviewed & {round(p['inicio_s'],4) for p,_ in second}
+
+
+def test_private_analysis_roundtrip_on_existing_v3_package(tmp_path):
+    from src.v3.biblioteca import Biblioteca
+    from src.v3 import pacote_biblioteca as P
+    b=Biblioteca(tmp_path/'source.db',tmp_path/'source')
+    p=tmp_path/'photo.jpg';Image.new('RGB',(800,600),'blue').save(p)
+    d=b.ingerir(p,{'titulo':'private original'})
+    key='documental:'+'f'*64
+    obs={'publicar':False,'direitos_aprovados':False,'revisao':{'veredito':'insuficiente'}}
+    b.gravar_analise(d['sha256'],key,obs,origem='fixture')
+    b.gravar_analise(d['sha256'],'documental:'+'e'*64,{'publicar':True,'direitos_aprovados':True})
+    dest=tmp_path/'pack'
+    idx=P.exportar(b,[d['id']],dest,incluir_analises_privadas=True);b.fechar()
+    assert 'analises_sha256' in idx
+    c,r=P.restaurar(dest,db=tmp_path/'target.db',armazem=tmp_path/'target',restaurar_analises_privadas=True)
+    try:
+        assert r['analises_restauradas']==1
+        assert c.analise(d['sha256'],key)==obs
+        assert c.obter(d['id'])['uso_comercial']=='indefinido'
+    finally:c.fechar()
+    (dest/'analises-privadas.json').write_text('{}')
+    with pytest.raises(ValueError,match='E258-SHA-ANALISES'):
+        P.restaurar(dest,db=tmp_path/'bad.db',armazem=tmp_path/'bad',restaurar_analises_privadas=True)

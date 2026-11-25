@@ -503,6 +503,14 @@ def pesquisar_triagem(triagem, *, biblioteca_global=None, fontes=None, inspecion
 
 
 
+def revisar_cobertura_documental(necessidade, pesquisa, inspecionar, *, max_candidatos=6):
+    """E247: use the same director obligation and discovery, then review the queue."""
+    from .revisao_documental import fila_cobertura
+    if pesquisa['id']!=necessidade['id']:
+        raise ValueError('E247-PESQUISA-VINCULO')
+    return fila_cobertura(necessidade,pesquisa['candidatos'],inspecionar,max_candidatos=max_candidatos)
+
+
 def selecionar_complemento(necessidade: dict, revisao: dict, referencias: list[dict],
                             *, pesquisar_cad=False, getter_cad=None) -> dict:
     """E217: bridge documentary inspection -> existing evidence/solver route E40.

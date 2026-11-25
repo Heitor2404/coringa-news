@@ -229,7 +229,7 @@ def proteger_fonte_integral(cena:dict, midia:dict, dimensoes:tuple[int,int])->st
 
 
 
-def avaliar(plano: dict) -> dict:
+def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
     # Mesmo preflight para storyboard manual ou gerado do evento:
     # autor/editor não precisam nomear mecanismo nem inventar tempos dos cues.
     from src.v4.formatos import diretor_processos, diretor_roteiro
@@ -263,6 +263,8 @@ def avaliar(plano: dict) -> dict:
         area_segura=qa_area_segura.auditar_plano(plano)
         for erro in area_segura['bloqueios']:
             falha('F-'+erro['codigo'],erro['cena'],erro['motivo'])
+    if fragmento_misto and not (privado and plano.get('publicar') is False):
+        falha('F-FRAGMENTO-PRIVADO','-','preflight de fragmento misto só em revisão privada')
     if not cenas:
         falha('F-SEM-HISTORIA', '-', 'não há cenas')
     if plano.get('tipo') != 'PROVA_VISUAL_PRIVADA':
@@ -466,7 +468,7 @@ def avaliar(plano: dict) -> dict:
                 elif largura>altura:
                     falha('F-ROI-SEM-DIRECAO',cid,
                           'vídeo horizontal final exige região essencial e inspeção do recorte vertical')
-        if (cena.get('progressao_visual') or {}).get('tipo')=='sequencia_amostrada_privada' and not (privado and plano.get('publicar') is False):
+        if isinstance(cena.get('progressao_visual'),dict) and cena['progressao_visual'].get('tipo')=='sequencia_amostrada_privada' and not (privado and plano.get('publicar') is False):
             falha('F-SEQUENCIA-PRIVADA',cid,'amostras não homologam continuidade nem filme final')
         if tipo == 'video' and span > 3.8:
             # Usa o MESMO contrato temporal do áudio natural; não forçar
@@ -635,7 +637,8 @@ def avaliar(plano: dict) -> dict:
             visual.add(mid)
     if cenas and abs(prev_end - plano.get('duracao', -1)) > .05:
         falha('F-DURACAO', '-', 'última cena não alcança a duração do roteiro')
-    if len(momentos) < max(3, round(len(cenas)*.65)):
+    minimo_momentos=min(3,len(cenas)) if fragmento_misto and privado and plano.get('publicar') is False else 3
+    if len(momentos) < max(minimo_momentos, round(len(cenas)*.65)):
         falha('F-POUCO-ACERVO', '-', f'{len(momentos)} acontecimentos visuais diferentes para {len(cenas)} cenas; risco de repetição')
     if any(c.get('type') == 'comparison' for c in cenas) and len(visual) < 4:
         falha('F-COMPARACAO-REPETITIVA', '-', 'comparação deve trazer informação nova')
@@ -662,9 +665,9 @@ def avaliar(plano: dict) -> dict:
                                 else 'NAO_FOI_AVALIADO')}
 
 
-def preparar(plano: dict, destino: Path, public_root: Path, downloader=None) -> dict:
+def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, fragmento_misto=False) -> dict:
     import requests
-    check = avaliar(plano)
+    check = avaliar(plano,fragmento_misto=fragmento_misto)
     destino=Path(destino)
     destino.mkdir(parents=True,exist_ok=True)
     (destino/'contrato.json').write_text(json.dumps(check,ensure_ascii=False,indent=2),encoding='utf-8')

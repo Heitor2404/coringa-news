@@ -21,11 +21,15 @@ def main():
     if pack:
         lib.fechar()
         lib,rest=PB.restaurar(pack,db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
-    t=Transporte(max_http=14,max_bytes=140_000_000,max_wait=30)
+    integral='--integral' in sys.argv[4:]
+    if integral:
+        for n in tri:n['exigir_evidencia_direta']=True
+    t=Transporte(max_http=54 if integral else 14,max_bytes=270_000_000 if integral else 140_000_000,max_wait=30)
     adaptive='--adaptativa' in sys.argv[4:]
     multi='--multicenas' in sys.argv[4:]
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
-    budget=4 if multi else 2
+    if integral and not multi:raise ValueError('E254-MULTICENAS')
+    budget=min(20,len(tri)+2) if integral else 4 if multi else 2
     calls=0;boards=[];results=[];seen_bytes=set();reuses=0;aggregate=None
     def ask(prompt,images):
         nonlocal calls
@@ -45,6 +49,7 @@ def main():
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
+        c['local_source']=str(p)
         if adaptive:
             key=(n['id'],meta['sha256'])
             if key in seen_bytes:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_INSPECIONADOS'}
@@ -74,7 +79,7 @@ def main():
             frames=[E.frame(p,a+span*f,width=min(960,meta['width'])) for f in (0,.5,.9)]
             pack=DE.pacote_observacao(m,a,span,frames,fato_id=n['fatos'][0],necessidade=n['mostrar'],fracoes=(0,.5,.9))
             pack['diagnostico_tecnico']=DE.diagnosticar_janela(frames)
-            try:q=DE.revisar_janela_visao(pack,frames,ask,permitir_chamada=True,evidencia_visual=n['evidencia_visual'])
+            try:q=DE.revisar_janela_visao(pack,frames,ask,permitir_chamada=True,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
             except Exception as e:
                 boards.append((c,frames,'FALHA_VISAO'));c['janelas'].append({'pacote':pack,'falha':type(e).__name__});continue
             q={**q,'sha256_origem':meta['sha256'],'necessidade_id':n['id']}

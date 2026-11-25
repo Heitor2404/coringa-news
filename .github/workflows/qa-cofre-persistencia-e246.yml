@@ -1,0 +1,35 @@
+name: E246.6 - prova pequena de persistencia privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-cofre-persistencia-e246.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Verificar escrita privada com arquivo inofensivo
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p probe
+          printf 'Coringa E246 private persistence probe %s\n' "$GITHUB_RUN_ID" > probe/prova.txt
+          sha256sum probe/prova.txt | cut -d' ' -f1 > probe/sha.txt
+          bash scripts/arquivar_cofre_review.sh "review-e246-probe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" probe/prova.txt probe/sha.txt
+      - name: Recuperar e conferir SHA em outro diretorio
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p recuperado
+          gh release download "review-e246-probe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --repo Heitor2404/coringa-cofre --dir recuperado
+          test "$(sha256sum recuperado/prova.txt | cut -d' ' -f1)" = "$(cat probe/sha.txt)"
+          test "$(cat recuperado/sha.txt)" = "$(cat probe/sha.txt)"
+          echo 'E246 COFRE ROUNDTRIP OK'

@@ -300,7 +300,7 @@ def ordenar_janelas_tecnicas(candidatos):
         c['inicio_s']))
 
 
-def revisar_janela_visao(pacote, frames, chamar=None, *, permitir_chamada=False):
+def revisar_janela_visao(pacote, frames, chamar=None, *, permitir_chamada=False, evidencia_visual=None):
     """One explicit logical vision request; no Claude or automatic fallback.
     Gemini's own client may try its configured models/keys. Caller controls
     logical-call budget; this function is not a provider billing limit.
@@ -330,6 +330,15 @@ Descreva o que realmente vê em cada quadro, sem afirmar movimento contínuo ent
 Se pertinente, descreva cada referente com bbox_xy como OBJETO de quatro campos nomeados: esquerda e direita são X horizontal (0 na borda esquerda, 1 na direita); topo e base são Y vertical (0 no topo, 1 embaixo). Coordenadas de 0 a 1 relativas à imagem INTEIRA, inclusive barras. Não use listas, não inverta eixos. Se não conseguir localizar, elementos vazio. Não invente posições.
 Responda apenas JSON {"veredito":"pertinente|contexto|insuficiente","inspecao":"observação detalhada de pelo menos 35 caracteres","pontos":[{"indice":0,"observacao":"ao menos 12 caracteres","elementos":[{"nome":"referente","bbox_xy":{"esquerda":0.1,"topo":0.6,"direita":0.4,"base":0.8}}]},{"indice":1,"observacao":"...","elementos":[]},{"indice":2,"observacao":"...","elementos":[]}]}.
 Dados: """+contexto
+    if evidencia_visual is not None:
+        if evidencia_visual not in ('movimento','estatica','contexto','indefinida'):
+            raise ValueError('D-REV-EVIDENCIA')
+        prompt+=("\\nCampos adicionais obrigatórios: natureza_visual: registro_compativel|mosaico_observacional|simulacao|ilustracao|hibrido|incerta; "
+                 "mudanca_observada: true/false; indices_mudanca: dois índices distintos em ordem crescente, ou lista vazia; "
+                 "descricao_mudanca: descreva especificamente o que mudou entre esses quadros. "
+                 "Não confunda deslocamento de câmera, movimento não relacionado ou presença do sujeito com a transformação solicitada. "
+                 "Para movimento, pertinente exige mudança diretamente relacionada à necessidade. Não declare autenticidade pela aparência. "
+                 "Tipo de evidência solicitado: "+evidencia_visual)
     r=chamar(prompt,imagens)
     pts=r.get('pontos') if isinstance(r,dict) else None
     if not isinstance(pts,list) or len(pts)!=3 or any(not isinstance(p,dict) or p.get('indice')!=i for i,p in enumerate(pts)):

@@ -22,6 +22,8 @@ def selecionados(spec,report,choices):
         rows=[a for g in report['necessidades'] if g['id']==x['id'] for a in g['amostras'] if a['preview_sha256']==x['preview_sha256'] and a['pagina']==x['pagina'] and a.get('estado')=='PRETRIAGEM_PENDENTE' and a.get('publicar') is False]
         if len(rows)!=1:raise ValueError('E272-PREVIEW-VINCULO')
         a=rows[0];u=urlsplit(a['pagina'])
+        if x.get('observacao_previa'):
+            a={**a,'observacao_previa':x['observacao_previa']}
         if u.scheme!='https' or u.hostname!='commons.wikimedia.org' or u.username or u.password or not u.path.startswith('/wiki/File:'):raise ValueError('E272-PAGINA')
         out.append((n,a))
     return out
@@ -30,6 +32,11 @@ def main():
     spec,report,choices=[json.loads(Path(x).read_text()) for x in sys.argv[1:4]]
     root=Path(sys.argv[4]);root.mkdir(parents=True,exist_ok=False)
     assets=root/'originais';assets.mkdir()
+    if len(sys.argv)>5:
+        if len(sys.argv)!=7 or sys.argv[5]!='--observacoes':raise ValueError('E278-MODO')
+        from src.v4.pretriagem_documental import escolhas_observadas
+        choices=escolhas_observadas(spec,report,choices,Path(sys.argv[6]))
+        Q.write(root/'escolhas-observadas.json',choices)
     selected=selecionados(spec,report,choices)
     t=Transporte(max_http=9,max_bytes=45_000_000,max_wait=25)
     lib,_=restaurar_catalogo(db=root/'biblioteca.sqlite3',armazem=root/'biblioteca');saved=set();results=[]
@@ -51,7 +58,7 @@ def main():
                 scope=RE.escopo(n)
                 key='documental:'+hashlib.sha256(json.dumps({'contrato':'E266.pista','escopo':scope},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
                 hint={'sha256':h,'pagina':c['pagina'],'tipo':'foto','estado':'BYTES_VERIFIED_SEMANTICS_PENDING','publicar':False}
-                lib.gravar_analise(h,key,{'publicar':False,'direitos_aprovados':False,'escopo_pesquisa':scope,'pista_aquisicao_pendente':hint,'pretriagem':{'preview_sha256':a['preview_sha256'],'pagina':a['pagina'],'origem':'INSPECAO_ASSISTIDA_PENDENTE'}},origem='E272')
+                lib.gravar_analise(h,key,{'publicar':False,'direitos_aprovados':False,'escopo_pesquisa':scope,'pista_aquisicao_pendente':hint,'pretriagem':{'preview_sha256':a['preview_sha256'],'pagina':a['pagina'],'origem':'INSPECAO_ASSISTIDA_PENDENTE','observacao_previa':a.get('observacao_previa')}},origem='E272')
                 saved.add(d['id']);im.thumbnail((1000,750));im.save(root/(n['id']+'.jpg'),quality=92)
                 row.update(estado='BYTES_VERIFIED_SEMANTICS_PENDING',aquisicao=meta,id_biblioteca=d['id'],arquivo_master=meta['url_adquirida']==c['url'])
             except Exception as e:row.update(estado='FALHA_AQUISICAO',motivo=str(e)[:200])

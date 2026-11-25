@@ -113,18 +113,40 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
 
 
+def termos_consulta(value):
+    import unicodedata
+    s=unicodedata.normalize('NFKD',str(value or '').casefold())
+    s=''.join(c for c in s if not unicodedata.combining(c))
+    return [word for word in re.findall(r'[^\W_]+',s) if word not in {
+        'the','a','an','of','and','in','on','at','to','for','with','from',
+        'video','footage','real','photo','image','de','da','do','das','dos','e','em','um','uma'}]
+
+
+def forca_contextual(necessidade,c):
+    """Number of distinct matched terms from the SAME supplied query.
+    A singleton homonym must not outrank multi-term contextual matches
+    merely because its fractional coverage is 100%. Ranking only."""
+    p=necessidade.get('pesquisa') or {}
+    title=set(termos_consulta(c.get('titulo')))
+    desc=set(termos_consulta(' '.join(str(c.get(k) or '') for k in ('descricao','descricao_integral'))))
+    queries=(p.get('consultas_precisas') or [])+(p.get('consultas_en') or [])+(p.get('consultas') or [])
+    return max((len(set(termos_consulta(q)) & (title|desc)) for q in queries),default=0)
+
+
+def consultas_contextuais(necessidade,consultas):
+    """Keep the supplied fallback, but defer the bare subject until the
+    contextual alternatives have had their opportunity across providers."""
+    subject=set(termos_consulta(necessidade.get('sujeito')))
+    if not subject:return list(consultas)
+    return sorted(consultas,key=lambda q:set(termos_consulta(q))==subject)
+
+
 def relevancia_textual(necessidade,candidato):
     """Soft metadata ranking only. Match supplied query alternatives separately;
     never treat a title, word match or missing metadata as visual evidence.
     Keep numbers and proper names; no topic-specific dictionaries.
     """
-    import unicodedata
-    def words(value):
-        s=unicodedata.normalize('NFKD',str(value or '').casefold())
-        s=''.join(c for c in s if not unicodedata.combining(c))
-        return [word for word in re.findall(r'[^\W_]+',s) if word not in {
-            'the','a','an','of','and','in','on','at','to','for','with','from',
-            'video','footage','real','photo','image','de','da','do','das','dos','e','em','um','uma'}]
+    words=termos_consulta
     def tokens(value):return set(words(value))
     def proximidade(q,seq):
         if len(q)<2:return 0.
@@ -218,7 +240,7 @@ def ordenar_candidatos(necessidade,candidatos):
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
-                alternate,-context,-facets,-facet_quality,-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
+                alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     ordered=sorted(candidatos,key=rank)

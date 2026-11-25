@@ -46,3 +46,6 @@ E277 [run 45629080558](https://github.com/Heitor2404/coringa-news/actions/runs/4
 
 ### E276/E277 confirmadas — próximo E278
 E276 45628962634 SUCCESS (35 testes, 6/6 prévias, 6 HTTP, 1.372.670 bytes, zero erros). E277 45629080558 SUCCESS (140 testes, 9 revisões reaproveitadas no replay e no fluxo normal); regressão geral 45629080686 SUCCESS (195+11 testes). Não repetir. E276 duas folhas suspeitas vistas: retrato humano na consulta Saturno e gravura sem aqueduto evidente na consulta de Segóvia. Próximo E278: pertinência visual antes da diversidade, preservar identidade/ação/contexto, seleção de prévias vinculada à aquisição e revisão de filmagens existente; não promover miniatura a cobertura, nem reabrir integrações. Ver §319. Fase corretiva aberta.
+
+### E278 — pertinência e aquisição orientada por observações
+Implementado ranking contextual soft antes da fração de correspondência, fallback sujeito isolado adiado, diversidade de prévias dentro de faixas de pertinência. Contrato genérico de escolhas observadas ligado ao E272; seis folhas E276 revisadas, duas pistas priorizadas, duas inadequadas, uma alternativa e uma contextual condicional. Prova conjunta sem visão/voz em execução; não considerar seleção autônoma comprovada. Após CI, conferir folhas novas e originais, diagnosticar sem nova integração paralela. Ver §320.

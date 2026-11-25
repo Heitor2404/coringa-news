@@ -1,4 +1,4 @@
-name: E276 - variantes proporcionais no fluxo progressivo existente
+name: E278 - pertinencia contextual e selecao observada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -54,7 +54,7 @@ jobs:
           assert all(n['estado']=='LACUNA_PENDENTE' for n in r['cobertura'])
           ids={x['necessidade_id'] for x in r['cobertura']}
           assert all(x['id'] in ids and all(a['estado']=='PRETRIAGEM_PENDENTE' and a['publicar'] is False and (root/a['folha']).is_file() for a in x['amostras']) for x in p['necessidades'])
-          print('E276 FLUXO',[(x['id'],len(x['amostras']),len(x['erros'])) for x in p['necessidades']],r['rede_aquisicao']['http'],r['rede_aquisicao']['bytes'])
+          print('E278 FLUXO',[(x['id'],len(x['amostras']),len(x['erros'])) for x in p['necessidades']],r['rede_aquisicao']['http'],r['rede_aquisicao']['bytes'])
           PY
       - name: Espelhar provas privadas
         if: ${{ !cancelled() }}
@@ -65,4 +65,48 @@ jobs:
           files=(stage_documental/e275/revisao.json stage_documental/e275/pretriagem-pendente.json stage_documental/e275/pretriagem-*.jpg)
           valid=()
           for f in "${files[@]}"; do [[ -f "$f" ]] && valid+=("$f"); done
-          if (( ${#valid[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e276-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"; fi
+          if (( ${#valid[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e278-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"; fi
+      - name: Recuperar somente folhas E276 ja inspecionadas
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import base64,hashlib,json
+          from pathlib import Path
+          from scripts.recuperar_checkpoints_documentais import api
+          m=api('');assert m.get('private') is True and m.get('id')==1454059520
+          dest=Path('qa_e278_folhas');dest.mkdir()
+          observations=json.loads(Path('benchmarks/e278/observacoes.json').read_text())
+          for name in ['pretriagem-pendente.json']+[o['folha'] for o in observations['observacoes']]:
+              assert Path(name).name==name
+              j=api('/contents/revisoes/e276-45628962634-1/'+name+'?ref=revisao-privada')
+              raw=base64.b64decode(j['content']);assert len(raw)==j['size']
+              assert hashlib.sha1(('blob '+str(len(raw))+'\0').encode()+raw).hexdigest()==j['sha']
+              (dest/name).write_bytes(raw)
+          PY
+      - name: Adquirir apenas as duas pistas visualmente priorizadas
+        run: python -m scripts.qa_adquirir_pretriagem_e272 qa_e275/contrastes.json qa_e278_folhas/pretriagem-pendente.json benchmarks/e278/observacoes.json qa_e278_aquisicao --observacoes qa_e278_folhas
+      - name: Confirmar handoff privado sem promover cobertura
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('qa_e278_aquisicao')
+          choices=json.loads((root/'escolhas-observadas.json').read_text())
+          r=json.loads((root/'aquisicao.json').read_text())
+          assert len(choices['selecao'])==len(r['resultados'])==2
+          assert r['publicar'] is False and r['direitos_aprovados'] is False and r['visao']==r['cobertura_nova']==0
+          print('E278 AQUISICAO',[(x['id'],x['estado']) for x in r['resultados']])
+          PY
+      - name: Preservar originais e evidencias privadas
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(qa_e278_aquisicao/*.json qa_e278_aquisicao/*.jpg)
+          packets=(qa_e278_aquisicao/checkpoints/*.zip)
+          if (( ${#packets[@]} > 0 )); then
+            bash scripts/arquivar_cofre_review.sh "review-e278-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" qa_e278_aquisicao/manifesto-revisoes.jsonl "${packets[@]}"
+          fi
+          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e278-aquisicao-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

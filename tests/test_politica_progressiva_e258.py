@@ -292,3 +292,16 @@ def test_video_variants_rank_compatible_before_unknown_and_low_but_keep_fallback
     assert [x['url'] for x in ordenar_variantes_video(choices,700)]==['full','portrait','unknown','small']
     assert [x['url'] for x in ordenar_variantes_video(choices,360)]==['small','full','portrait','unknown']
     assert len(choices)==4
+
+
+def test_specific_context_outweighs_single_token_homonym_and_keeps_fallback():
+    n={**need(),'sujeito':'Saturno','pesquisa':{'consultas_en':['Saturn rings Cassini','Saturn rings spacecraft'],'consultas':['Saturno']}}
+    rows=[{**candidate(1),'titulo':'Saturno Meletti, 1946','descricao':'Black and white portrait photograph of baritone Saturno Meletti'},
+          {**candidate(2),'titulo':'Saturn rings PIA06425','descricao':'The varying temperatures of Saturn’s rings are depicted here in this false-color image from the Cassini spacecraft.'}]
+    assert R.forca_contextual(n,rows[0])==1
+    assert R.forca_contextual(n,rows[1])==3
+    assert R.ordenar_candidatos(n,rows)==[rows[1],rows[0]]
+    assert R.consultas_contextuais(n,['Saturno','Saturn rings Cassini','Saturn rings spacecraft'])==['Saturn rings Cassini','Saturn rings spacecraft','Saturno']
+    calls=[]
+    A.pesquisar_cobertura(n,fontes=lambda t:[('primary',lambda q:calls.append(q) or []),('secondary',lambda q:calls.append(q) or [])],max_buscas=4,progressivo=True)
+    assert 'Saturno' not in calls and len(calls)==4

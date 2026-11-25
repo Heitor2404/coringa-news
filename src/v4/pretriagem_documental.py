@@ -22,12 +22,21 @@ def candidatos(n,rows,previous_pages=()):
     # Keep the most relevant choice first, then prefer another actual query
     # before spending a small preview quota on a single result series.
     # Unknown origin is a single group; no candidate is removed.
-    first=[];later=[];queries=set()
-    for item in out:
-        key=str(item[0].get('consulta_origem') or '').strip().casefold()
-        if key in queries:later.append(item)
-        else:queries.add(key);first.append(item)
-    return first+later
+    # Diversity only within contiguous relevance bands. A new query
+    # is not an editorial reason to promote an ambiguous result.
+    from itertools import groupby
+    result=[]
+    def band(item):
+        c=item[0]
+        return (R.contexto_de_busca(n,c),R.cobertura_componentes(n,c),R.forca_contextual(n,c))
+    for _,items in groupby(out,key=band):
+        first=[];later=[];queries=set()
+        for item in items:
+            key=str(item[0].get('consulta_origem') or '').strip().casefold()
+            if key in queries:later.append(item)
+            else:queries.add(key);first.append(item)
+        result.extend(first+later)
+    return result
 
 def coletar_fila(queues,transport,on_sample,*,max_samples=3,max_preview_bytes=1_000_000):
     """Round-robin attempts. No obligation monopolizes the shared budget.
@@ -69,3 +78,33 @@ def pendencias_do_fluxo(necessidades,resultados,estados):
         choices=candidatos(n,pending)
         if choices:queues.append((n,choices))
     return queues
+
+
+def escolhas_observadas(spec,report,observations,folder):
+    """Select only scoped observed preview leads, not semantic coverage.
+    The observer is explicitly named by origin; no model or rights approval
+    is inferred. Verify the exact saved review sheet, not the raw preview
+    hash (which belongs to the provider bytes before recompression)."""
+    from pathlib import Path
+    import re
+    from src.v4.formatos import diretor_visual_e202 as D,reuso_documental as RE
+    if any(x.get('publicar',x.get('publish')) is not False for x in (spec,report,observations)) or observations.get('direitos_aprovados') is not False:raise ValueError('E278-PRIVADO')
+    case=next(c for c in spec['cases'] if c['id']==observations['case'])
+    needs={n['id']:n for n in D.triagem_documental(case['necessidades'],case['fatos'],progressivo=True)}
+    rows={(g['id'],a.get('pagina'),a.get('preview_sha256')):a for g in report['necessidades'] for a in g['amostras']}
+    seen=set();choices={}
+    for o in observations['observacoes']:
+        n=needs[o['id']]
+        k=(o['id'],o['pagina'],o['preview_sha256'])
+        a=rows.get(k)
+        if k in seen or not a or o.get('escopo')!=RE.escopo(n) or n['necessidade']!='registro' or n['evidencia_visual']=='movimento':raise ValueError('E278-ESCOPO')
+        seen.add(k)
+        if a.get('estado')!='PRETRIAGEM_PENDENTE' or a.get('publicar') is not False or o.get('source_id')!=a.get('source_id') or o.get('folha')!=a.get('folha'):raise ValueError('E278-VINCULO')
+        name=o['folha']
+        if Path(name).name!=name or not re.fullmatch(r'[0-9a-f]{64}',str(o.get('folha_sha256',''))) or hashlib.sha256((Path(folder)/name).read_bytes()).hexdigest()!=o['folha_sha256']:raise ValueError('E278-FOLHA')
+        verdict=o.get('decisao')
+        if verdict not in ('PRIORIZAR_AQUISICAO','ALTERNATIVA','NAO_PRIORIZAR','CONTEXTO_CONDICIONAL') or o.get('origem') not in ('INSPECAO_ASSISTIDA','CURADORIA_HUMANA') or not isinstance(o.get('observacao'),str) or not o['observacao'].strip() or o.get('publicar') is not False:raise ValueError('E278-PARECER')
+        if verdict=='PRIORIZAR_AQUISICAO':
+            if n['id'] in choices:raise ValueError('E278-ESCOLHA-DUPLICADA')
+            choices[n['id']]={'id':n['id'],'mostrar':n['mostrar'],'pagina':a['pagina'],'preview_sha256':a['preview_sha256'],'observacao_previa':o}
+    return {'case':case['id'],'publicar':False,'direitos_aprovados':False,'selecao':list(choices.values())}

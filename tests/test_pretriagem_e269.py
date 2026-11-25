@@ -95,3 +95,13 @@ def test_preview_prefers_smaller_declared_variant_without_changing_original():
     c={'fonte':'commons','tipo':'foto','direitos':'DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA','titulo':'mountain','pagina':'p','url':'original','variantes':[{'url':'large','width':1920,'height':1080},{'url':'small','width':640,'height':480}]}
     assert candidatos(n,[c])[0][1]['url']=='small'
     assert c['url']=='original' and len(c['variantes'])==2
+
+
+def test_diversity_never_promotes_homonym_above_contextually_matching_previews():
+    n={'necessidade':'registro','mostrar':'rings','evidencia_visual':'estatica','pesquisa':{'consultas_en':['Saturn rings Cassini','Saturn rings spacecraft'],'consultas':['Saturno']}}
+    base={'fonte':'commons','tipo':'foto','direitos':'DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA','url':'original','variantes':[{'url':'thumb','width':640,'height':480}]}
+    rows=[{**base,'pagina':'a','source_id':1,'titulo':'Top view of the rings of Saturn by Cassini','consulta_origem':'Saturn rings Cassini'},
+          {**base,'pagina':'b','source_id':2,'titulo':'Saturn rings by Cassini','consulta_origem':'Saturn rings Cassini'},
+          {**base,'pagina':'c','source_id':3,'titulo':'Saturno Meletti, 1946','descricao':'Black and white portrait photograph of baritone Saturno Meletti','consulta_origem':'Saturno'}]
+    assert [x[0]['pagina'] for x in candidatos(n,rows)]==['a','b','c']
+    assert len(candidatos(n,rows))==3

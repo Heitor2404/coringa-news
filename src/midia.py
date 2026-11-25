@@ -276,11 +276,23 @@ def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
             terms=re.findall(r'[^\W_]+',busca[:120],flags=re.UNICODE)
             if not terms:return []
             # Keep all supplied search terms, and prioritize individual license declarations.
-            q=' AND '.join('"'+x+'"' for x in terms)+' AND mediatype:movies AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*)'
+            # Restrict matching to descriptive metadata, not unrelated full text.
+            # Every term is preserved; the fields may differ between terms.
+            fields=('title','subject','description')
+            q=' AND '.join('('+' OR '.join(f'{field}:"{term}"' for field in fields)+')' for term in terms)
+            q+=' AND mediatype:movies AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*)'
         r = requests.get('https://archive.org/advancedsearch.php', headers=UA, timeout=30,
-                         params={'q': q, 'fl[]': ['identifier', 'title', 'year'], 'rows': 8, 'output': 'json'})
+                         params={'q': q, 'fl[]': ['identifier', 'title', 'year', 'subject', 'description'] if documental else ['identifier','title','year'], 'rows': 24 if documental else 8, 'output': 'json'})
         r.raise_for_status()
-        for doc in (r.json().get('response') or {}).get('docs') or []:
+        docs=(r.json().get('response') or {}).get('docs') or []
+        if documental:
+            wanted={x.casefold() for x in terms}
+            def rank(doc):
+                title=set(re.findall(r'[^\W_]+',str(doc.get('title') or '').casefold()))
+                subject=set(re.findall(r'[^\W_]+',str(doc.get('subject') or '').casefold()))
+                return (len(wanted & title),len(wanted & subject))
+            docs=sorted(docs,key=rank,reverse=True)
+        for doc in docs:
             ident = doc.get('identifier')
             if not ident:
                 continue
@@ -290,7 +302,8 @@ def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
                 # Resolve item metadata and explicit license in acquisition.
                 out.append({'tipo':'video','url':'https://archive.org/details/'+ident,
                     'pagina':'https://archive.org/details/'+ident,'source_id':ident,
-                    'titulo':doc.get('title',''),'descricao':doc.get('title',''),
+                    'titulo':doc.get('title',''),'descricao':str(doc.get('description') or doc.get('title') or '')[:400],
+                    'descricao_integral':str(doc.get('description') or '')[:8000],
                     'credito':'','licenca':'','variantes':[]})
                 if len(out)>=POR_FONTE:break
                 continue

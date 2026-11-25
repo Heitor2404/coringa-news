@@ -49,8 +49,14 @@ def archive_receipt(c,t):
     import json
     ident=c.get('source_id')
     if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,150}',ident) or ident in ('.','..'):raise ValueError('ARCHIVE_ID')
-    raw=t.get('https://archive.org/metadata/'+ident,{'archive.org'},4_000_000)
-    d=json.loads(raw);m=d.get('metadata') or {}
+    raw=t.get('https://archive.org/metadata/'+ident+'?extended_err=1',{'archive.org'},4_000_000)
+    d=json.loads(raw)
+    if d==[]:raise ValueError('ARCHIVE_METADATA_AUSENTE')
+    if not isinstance(d,dict):raise ValueError('ARCHIVE_METADATA_INVALIDA')
+    if d.get('error'):
+        code=d.get('errcode')
+        raise ValueError('ARCHIVE_METADATA_ERRO_'+str(code) if type(code) is int else 'ARCHIVE_METADATA_ERRO')
+    m=d.get('metadata') or {}
     if m.get('identifier')!=ident or d.get('is_dark') or d.get('nodownload') or m.get('access-restricted-item') in (True,'true','1'):raise ValueError('ARCHIVE_RECIBO_PENDENTE')
     lic=m.get('licenseurl')
     allowed={'https://creativecommons.org/licenses/by/4.0':'CC BY 4.0','https://creativecommons.org/publicdomain/zero/1.0':'CC0 1.0','https://creativecommons.org/publicdomain/mark/1.0':'Public Domain'}
@@ -59,9 +65,11 @@ def archive_receipt(c,t):
     if lic.startswith('http://creativecommons.org/'):lic='https://'+lic[7:]
     if lic not in allowed:raise ValueError('ARCHIVE_LICENCA_PENDENTE')
     directory=d.get('dir')
-    if not isinstance(directory,str) or not re.fullmatch(r'/[0-9]+/items/'+re.escape(ident),directory):raise ValueError('ARCHIVE_LOCAL_PENDENTE')
-    hosts={h for h in (d.get('d1'),d.get('d2')) if isinstance(h,str) and re.fullmatch(r'ia[0-9]+(?:\.us)?\.archive\.org',h)}
-    if not hosts:raise ValueError('ARCHIVE_LOCAL_PENDENTE')
+    if not isinstance(directory,str) or not re.fullmatch(r'/[0-9]+/items/'+re.escape(ident),directory):raise ValueError('ARCHIVE_DIRETORIO_PENDENTE')
+    workable=d.get('workable_servers')
+    declared=[d.get('d1'),d.get('d2'),d.get('server')]+(workable if isinstance(workable,list) else [])
+    hosts={h for h in declared if isinstance(h,str) and re.fullmatch(r'ia[0-9]+(?:\.us)?\.archive\.org',h)}
+    if not hosts:raise ValueError('ARCHIVE_HOST_PENDENTE')
     choices=[]
     for f in d.get('files') or []:
         name=f.get('name');md5=f.get('md5');size=f.get('size')

@@ -125,8 +125,37 @@ def test_archive_documentary_search_keeps_all_terms(monkeypatch):
         def json(self):return {'response':{'docs':[]}}
     def get(url,**kw):
         q=kw['params']['q']
-        assert '"Apollo" AND "11"' in q and 'licenseurl:' in q
+        assert 'title:"Apollo"' in q and 'title:"11"' in q and 'licenseurl:' in q
+        assert 'subject:"Apollo"' in q and 'description:"11"' in q
         assert 'collection:prelinger' not in q
         return Resp()
     monkeypatch.setattr(midia.requests,'get',get)
     assert midia.candidatos_archive('Apollo 11',documental=True)==[]
+
+
+def test_archive_ranks_title_before_incidental_description(monkeypatch):
+    from src import midia
+    class Resp:
+        def raise_for_status(self):pass
+        def json(self):
+            return {'response':{'docs':[
+                {'identifier':'incidental','title':'Unrelated podcast','description':'Apollo 11'},
+                {'identifier':'specific','title':'Apollo 11 mission','description':'Mission footage'}]}}
+    monkeypatch.setattr(midia.requests,'get',lambda *a,**k:Resp())
+    rows=midia.candidatos_archive('Apollo 11',documental=True)
+    assert rows[0]['source_id']=='specific'
+    assert rows[0]['descricao']=='Mission footage' and rows[0]['licenca']==''
+
+def test_archive_receipt_documented_workable_servers_and_error():
+    c={'source_id':'example','tipo':'video'}
+    d={'metadata':{'identifier':'example','licenseurl':'https://creativecommons.org/publicdomain/zero/1.0/'},
+       'dir':'/12/items/example','workable_servers':['ia123.us.archive.org','evil.test'],
+       'files':[{'name':'video.mp4','size':'100','md5':'a'*32}]}
+    variants,hosts=archive_receipt(c,Transport(d))
+    assert hosts=={'ia123.us.archive.org'} and len(variants)==1
+    assert c['recibo_archive']['direitos']=='PENDENTE_AUDITORIA_INDIVIDUAL'
+    with pytest.raises(ValueError,match='ARCHIVE_METADATA_ERRO_102'):
+        archive_receipt(c,Transport({'error':'unavailable','errcode':102}))
+    d['dir']='/12/items/other'
+    with pytest.raises(ValueError,match='ARCHIVE_DIRETORIO_PENDENTE'):
+        archive_receipt(c,Transport(d))

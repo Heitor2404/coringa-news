@@ -9,19 +9,23 @@ def main():
     out=Path(sys.argv[1]);out.mkdir(parents=True,exist_ok=True)
     originals=out/'originais';originals.mkdir(exist_ok=True)
     t=Transporte(max_http=20,max_bytes=100_000_000,max_wait=30)
-    cases=[('nasa_video','volcano eruption lava'),('archive_video','Apollo 11')]
+    # Contrast the previously failing query with a known domain of the NASA catalog.
+    # These are transport probes, not approved editorial footage.
+    cases=[('nasa_video','volcano eruption lava','nasa_volcano'),
+           ('nasa_video','Apollo 11','nasa_control'),
+           ('archive_video','Apollo 11','archive_apollo')]
     rows=[]
-    for provider,q in cases:
-        n={'id':provider,'necessidade':'registro','evidencia_visual':'movimento',
+    for provider,q,case_id in cases:
+        n={'id':case_id,'necessidade':'registro','evidencia_visual':'movimento',
            'pesquisa':{'consultas_en':[q]}}
         def sources(kind):return [(name,fn) for name,fn in A.fontes_documentais(kind) if name==provider]
         r=A.pesquisar_cobertura(n,fontes=sources,max_buscas=1,max_candidatos=64,progressivo=True)
         for c in r['candidatos']:
             if t.http>=t.max_http or t.bytes>=t.max_bytes:break
             try:
-                m,im,p=sample(c,originals,t)
+                m,im,p=sample(c,originals,t,progressivo=True)
                 c['aquisicao']=m
-                im.thumbnail((960,960));im.save(out/(provider+'.jpg'),quality=90)
+                im.thumbnail((960,960));im.save(out/(case_id+'.jpg'),quality=90)
                 break
             except Exception as e:c['falha_aquisicao']=str(e)[:300]
         rows.append(r)

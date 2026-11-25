@@ -43,6 +43,28 @@ def licenca_documental(c,a):
     return asset
 
 
+def duracao_minima_revisada(c,window,cap,framing=None):
+    """Keep the last reviewed sample inside the actual cut, not just inside
+    the acquisition window. Without a matched review do not shorten it.
+    """
+    from . import direcao_eventos as DE
+    rid=window.get('revisao_id')
+    for row in c.get('janelas',[]):
+        pk=row.get('pacote') or {}
+        if pk.get('revisao_id')!=rid or pk.get('sha256_origem')!=(c.get('aquisicao') or {}).get('sha256') or pk.get('inicio_s')!=window.get('source_in_seconds'):continue
+        try:
+            obs=DE.aceitar_observacao(pk,pk['revisao_assistida']['resposta_observada'])
+            if obs['veredito']!='pertinente':continue
+            times=[a['at'] for a in pk['amostras']]
+            if framing:times.extend(pt['at'] for pt in framing['pontos'])
+            if any(type(v) not in (int,float) or not math.isfinite(v) or v<0 for v in times):continue
+            # One whole frame strictly after the last sample.
+            minimum=max(1.4,(math.floor(max(times)*30+1e-6)+1)/30)
+            return minimum if minimum<=cap+1e-6 else None
+        except (ValueError,TypeError,KeyError,AttributeError):continue
+    return cap if cap>=1.4 else None
+
+
 def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
     if report.get('publish') is not False:raise ValueError('E254-PRIVADO')
     tri={n['id']:n for n in report['triagem']}
@@ -86,7 +108,7 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
         if reused and (c.get('tipo')!='video' or video_pages.get(c['pagina'])!=a['sha256'] or a['sha256'] not in video_ranges):
             issues.append({'id':i,'motivo':'REPETICAO'});continue
         kind='photo' if c['tipo']=='foto' else 'video' if c['tipo']=='video' else None
-        if not kind or min(a['width'],a['height'])<(600 if kind=='photo' else 700):
+        if not kind or min(a['width'],a['height'])<(600 if kind=='photo' else F.MIN_VIDEO_COMPOSITION_PX):
             issues.append({'id':i,'motivo':'QUALIDADE_INSUFICIENTE'});continue
         if kind=='photo' and n.get('evidencia_visual')=='movimento':
             issues.append({'id':i,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'});continue
@@ -121,7 +143,11 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
                 if not T.validar_janela_origem(trial,a['duration_s']) and not T.validar_progressao_video(trial,seq['duracao_s'],{'expected_sha256':a['sha256']}):
                     cap=seq['duracao_s'];progression=seq;framing=None
                     window={**window,'source_in_seconds':seq['inicio_s'],'duracao_s':cap}
-        if cap<1.4 or (kind=='video' and p.suffix.lower() not in ('.mp4','.webm')):
+        if kind=='video':
+            cap=math.floor(cap*30+1e-6)/30
+            minimum=cap if progression else duracao_minima_revisada(c,window,cap,framing)
+        else:minimum=1.4
+        if minimum is None or cap<1.4 or (kind=='video' and p.suffix.lower() not in ('.mp4','.webm')):
             issues.append({'id':i,'motivo':'JANELA_INSUFICIENTE'});continue
         if kind=='video':
             ini=window.get('source_in_seconds')
@@ -132,7 +158,7 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
                 issues.append({'id':i,'motivo':'JANELA_REPETIDA_OU_MESMO_FATO'});continue
             ranges.append((ini,ini+cap,n['fatos']));video_pages[c['pagina']]=a['sha256']
         pages.add(c['pagina']);hashes.add(a['sha256'])
-        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression,'framing':framing,'rights':rights}
+        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':minimum,'window':window,'progressao':progression,'framing':framing,'rights':rights}
     capacity=sum(x['cap'] for x in chosen.values())
     if capacity<minimo_s:issues.append({'id':'filme','motivo':'CAPACIDADE_MENOR_MINIMO','segundos':capacity,'minimo_s':minimo_s})
     return chosen,{'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),

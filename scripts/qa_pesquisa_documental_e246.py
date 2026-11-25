@@ -18,7 +18,7 @@ def variants(c):
         seen.add(x['url'])
         yield x
 
-def nasa_receipt(c,t,*,progressivo=False):
+def nasa_receipt(c,t,*,progressivo=False,min_video_px=360):
     # The provider returns the collection of actual file variants. No guessed URL.
     import json
     nid=c.get('source_id')
@@ -42,7 +42,8 @@ def nasa_receipt(c,t,*,progressivo=False):
     # expensive originals. The actual decoded resolution remains mandatory.
     # Photos and the legacy path retain their established ordering.
     if progressivo and c.get('tipo')=='video':
-        ranks={'small':0,'medium':1,'mobile':2,'preview':3,'large':4,'orig':5}
+        ranks=({'medium':0,'large':1,'orig':2,'small':3,'mobile':4,'preview':5} if min_video_px>=700 else
+               {'small':0,'medium':1,'mobile':2,'preview':3,'large':4,'orig':5})
         def rank(u):
             suffix=urlsplit(u).path.rsplit('~',1)[-1].split('.')[0].lower()
             return (ranks.get(suffix,4),u)
@@ -96,10 +97,10 @@ def archive_receipt(c,t):
 def progressive_stop(t):
     return getattr(t,'http',0)>=getattr(t,'max_http',float('inf')) or getattr(t,'bytes',0)>=getattr(t,'max_bytes',float('inf'))
 
-def sample(c,out,t,*,progressivo=False,max_variantes=None):
+def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
     if c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA':raise ValueError('REPRESENTACAO_NAO_E_REGISTRO')
     if c['fonte'] in ('nasa','nasa_video'):
-        choices=nasa_receipt(c,t,progressivo=progressivo);hosts={'images-assets.nasa.gov'}
+        choices=nasa_receipt(c,t,progressivo=progressivo,min_video_px=min_video_px);hosts={'images-assets.nasa.gov'}
     elif c.get('fonte')=='archive_video':
         choices,hosts=archive_receipt(c,t)
     elif c.get('fonte')=='figshare':
@@ -115,6 +116,7 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None):
     else:raise ValueError('PAGINA_PENDENTE')
     cap=26_000_000 if c['tipo']=='foto' else 80_000_000
     failures=[]
+    if type(min_video_px) is not int or min_video_px<360:raise ValueError('VIDEO_MIN_PIXELS')
     ordered=choices if progressivo else choices[:3]
     # Optional experimental per-candidate allocation, never a universal
     # editorial limit. Caller can revisit with remaining global budget.
@@ -146,7 +148,11 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None):
                 path=out/(sha+(ext if ext in ('.webm','.mov','.mp4') else '.mp4'))
                 path.write_bytes(raw)
                 w,h,dur=E.probe(path)
-                if min(w,h)<360 or dur<3:raise ValueError('VIDEO_QUALIDADE')
+                if min(w,h)<min_video_px or dur<3:
+                    c.setdefault('variantes_qualidade_insuficiente',[]).append({
+                        'url':v['url'],'width':w,'height':h,'duration_s':dur,
+                        'min_video_px':min_video_px,'sha256':sha,'bytes':len(raw)})
+                    raise ValueError('VIDEO_QUALIDADE '+str(w)+'x'+str(h)+' minimo='+str(min_video_px))
                 visual=E.frame(path,min(2,dur*.3),width=640)
                 meta={'width':w,'height':h,'duration_s':dur}
             return {**meta,'sha256':sha,'bytes':len(raw),'url_adquirida':v['url'],'status':'BYTES_VERIFIED_SEMANTICS_PENDING'},visual,path

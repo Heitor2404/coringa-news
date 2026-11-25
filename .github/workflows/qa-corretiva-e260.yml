@@ -1,4 +1,4 @@
-name: E261.3 - recibos privados e validacao conjunta
+name: E260.2 - qualidade de aquisicao e preservacao do trecho revisado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

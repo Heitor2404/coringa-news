@@ -55,6 +55,7 @@ def main():
         calls+=1
         from src import gemini
         return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
+    from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE
     def inspect(c,n):
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
@@ -71,12 +72,15 @@ def main():
                 if progressive and identity in acquired:
                     meta,im,p,receipt=acquired[identity];im=im.copy();c.update(receipt);reuses+=1
                 else:
-                    meta,im,p=Q.sample(c,assets,t,progressivo=progressive)
+                    meta,im,p=Q.sample(c,assets,t,progressivo=progressive,min_video_px=FE.MIN_VIDEO_COMPOSITION_PX if integral else 360)
                     if progressive:acquired[identity]=(meta,im.copy(),p,{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','licenca','credito') if k in c})
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
         c['local_source']=str(p)
+        if integral and c['tipo']=='video' and min(meta['width'],meta['height'])<FE.MIN_VIDEO_COMPOSITION_PX:
+            return {'estado':'INSUFICIENTE','motivo':'QUALIDADE_INSUFICIENTE_PARA_COMPOSICAO',
+                    'pixels':[meta['width'],meta['height']],'minimo':FE.MIN_VIDEO_COMPOSITION_PX}
         if integral and c.get('tipo')!='video' and meta['sha256'] in used_sha:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_SELECIONADOS_NO_FILME'}
         if adaptive and not progressive:
             key=(n['id'],meta['sha256'])
@@ -101,6 +105,8 @@ def main():
                         c['licenca']=rec.get('licenca_declarada') or c.get('licenca')
                         c['credito']=rec.get('credito_declarado') or c.get('credito')
                         c['recibo_restaurado']=rec;break
+            if integral and PF.licenca_documental(c,meta) is None:
+                return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_PENDENTE_COMPATIBILIDADE_FILME'}
             saved=lib.ingerir(p,{'titulo':c['titulo'],'desc':c.get('descricao',''),
                 'url':meta['url_adquirida'],'pagina':c.get('pagina'),'fonte':c['fonte'],
                 'wh':[meta['width'],meta['height']],'licenca_prova':'Revisao privada; direitos pendentes'})

@@ -20,6 +20,7 @@ from PIL import Image
 
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
+MIN_VIDEO_COMPOSITION_PX = 700  # existing compositor threshold; review separately with real visual evidence
 TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
 
 
@@ -177,7 +178,7 @@ def resolver_relacao_video(cena:dict, midia:dict, dimensoes:tuple[int,int], *, a
         raise ValueError('F-RELACAO-INSPECAO: falta análise da sequência original')
     w,h=dimensoes
     if (not isinstance(w,int) or not isinstance(h,int)
-        or min(w,h)<700 or w<h):
+        or min(w,h)<MIN_VIDEO_COMPOSITION_PX or w<h):
         raise ValueError('F-RELACAO-DIMENSOES: modo panorâmico exige origem real de boa resolução')
     points=d.get('pontos')
     if not isinstance(points,list) or len(points)<2:
@@ -501,7 +502,8 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
             if contrato_roi is not None:
                 try:
                     if contrato_roi.get('modo')=='relacao_observada':
-                        resolver_relacao_video(cena,origem_enquadramento,(largura,altura))
+                        resolver_relacao_video(cena,origem_enquadramento,(largura,altura),
+                            adaptativo=privado and plano.get('publicar') is False and plano.get('documentary_framing')=='ADAPTIVE_REVIEW_V1')
                     elif contrato_roi.get('modo')=='fonte_integral':
                         proteger_fonte_integral(cena,origem_enquadramento,(largura,altura))
                     else:
@@ -792,7 +794,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             informacao=json.loads(probe.stdout)
             streams=informacao.get('streams') or []
             duracao_origem=float((informacao.get('format') or {}).get('duration') or 0)
-            if not streams or min(streams[0].get('width',0),streams[0].get('height',0))<700:
+            if not streams or min(streams[0].get('width',0),streams[0].get('height',0))<MIN_VIDEO_COMPOSITION_PX:
                 raise ValueError(f'{mid}: vídeo sem qualidade mínima')
             w,h=streams[0]['width'],streams[0]['height']
             ext=src.suffix.lower()

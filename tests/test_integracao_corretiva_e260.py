@@ -62,3 +62,27 @@ def test_progressive_cache_only_does_not_inspect_remote_or_require_vision():
     row=R.cobertura_progressiva(n,search,inspect,pode_buscar=lambda:True,
         pode_inspecionar=lambda:False,max_buscas=4)
     assert row['estado']=='LACUNA_PENDENTE' and seen==[]
+
+
+def test_cut_keeps_last_reviewed_sample_and_framing():
+    from src.v4.formatos import ponte_cobertura_filme as P
+    n,c=candidate()
+    pk=c['janelas'][0]['pacote']
+    win={'revisao_id':pk['revisao_id'],'source_in_seconds':pk['inicio_s'],'duracao_s':pk['duracao_s']}
+    q=pk['revisao_assistida']
+    framing=D.aceitar_observacao(pk,q['resposta_observada'])['video_framing']
+    minimum=P.duracao_minima_revisada(c,win,3.8,framing)
+    assert 3.42<minimum<=3.8
+    assert P.duracao_minima_revisada(c,win,3.0,framing) is None
+    assert P.duracao_minima_revisada(c,{**win,'revisao_id':'other'},3.8)==3.8
+
+def test_integral_nasa_variant_ranking_retains_high_quality_options():
+    from scripts.qa_pesquisa_documental_e246 import nasa_receipt
+    import json
+    urls=['https://images-assets.nasa.gov/video/ID/ID~'+x+'.mp4' for x in ('small','medium','orig','large')]
+    class T:
+        def get(self,*args):
+            return json.dumps({'collection':{'items':[{'href':u} for u in urls]}}).encode()
+    c={'source_id':'ID','tipo':'video'}
+    choices=nasa_receipt(c,T(),progressivo=True,min_video_px=700)
+    assert [x['url'] for x in choices]==[urls[1],urls[3],urls[2],urls[0]]

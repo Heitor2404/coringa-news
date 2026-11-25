@@ -138,3 +138,5 @@ E285 validou código/reuso 9 por identidade, 222/206/35 testes, mas homologaçã
 E287.1 (§342): layout E286.1 renderizado e inspecionado, melhoria vertical e crédito, horizontal e legendas embutidas ainda não aprovados. Preflight E287 falhou por dependência npm ausente, corrigida; novo run pendente.
 
 E288 (§343): alternativa privada de crop foto baseada em bbox explícita e vinculada, fallback integral, checa interferência de textos; prova real pendente, sem ativação automática geral. Havaí preflight 45685353176 em curso.
+
+E289 (§344): E285.1 SUCCESS, E287.1 SUCCESS, 12 originais USGS e 84 janelas técnicas preservadas; prova de acervo inspecionada. Candidato Havaí assistido com voz Charon limitada a 2 operações gratuitas em livro próprio, zero visão, restore por SHA, render e inspeção pendentes. Não publicar automaticamente.

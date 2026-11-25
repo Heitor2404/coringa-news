@@ -1,0 +1,99 @@
+name: E289 - candidato narrado Havai acervo restaurado
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-piloto-integral-e289.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: piloto-e289-havai
+  cancel-in-progress: false
+jobs:
+  pilot:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CAIXA_TETO_USD: '0'
+      CAIXA_MAX_CHAMADAS: '2'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      CORINGA_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+      CORINGA_TTS_AUTORIZACAO: tts-e289-havai
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
+          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Restaurar acervo ja adquirido sem consultar origens de video
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_piloto_e289 review-e287-45685353176-1 qa_e289 stage_documental/e219
+      - name: Confirmar Telegram privado
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -c "from src.v3.previa_telegram import chat_autorizado; chat_autorizado()"
+      - name: Montagem com voz medida (maximo 2 operacoes gratuitas persistentes, zero visao)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CORINGA_ORCAMENTO_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado
+      - name: Renderizar filme privado
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e289/filme.mp4 --props=../qa_e289/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: Verificar MP4 narrado e gerar quadros de cada cena
+        id: qa
+        run: |
+          ffprobe -v error -show_streams -show_format -of json qa_e289/filme.mp4 > qa_e289/probe.json
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          p=Path('qa_e289');props=json.loads((p/'props.json').read_text());q=json.loads((p/'probe.json').read_text())
+          v=next(s for s in q['streams'] if s['codec_type']=='video')
+          assert props['private_review_only'] and props['preview'] and props['duracao']>=60
+          assert set(s['type'] for s in props['shots'])=={'video','atlas_map'}
+          assert (v['width'],v['height'])==(540,960) and any(s['codec_type']=='audio' for s in q['streams'])
+          assert abs(float(q['format']['duration'])-props['duracao'])<.15
+          assert json.loads((p/'sincronia-medida.json').read_text())['ok']
+          def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
+          result={'duration':props['duracao'],'shots':len(props['shots']),'types':sorted(set(s['type'] for s in props['shots'])),
+                  'props_sha256':sha(p/'props.json'),'video_sha256':sha(p/'filme.mp4'),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','direction':'ASSISTED_HISTORICAL'}
+          (p/'qa.json').write_text(json.dumps(result,indent=2));print('E289 MP4',result,flush=True)
+          for i,s in enumerate(props['shots']):
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str((s['start']+s['end'])/2),'-i',str(p/'filme.mp4'),'-frames:v','1','-vf','scale=270:480',str(p/('cena-%02d.jpg'%i))],check=True)
+          PY
+      - name: Entrega privada para avaliacao humana
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m scripts.documentario_telegram qa_e289 --titulo "A erupção que fez o Havaí crescer — candidato E289"
+      - name: Preservar voz e evidencias mesmo se render falhar
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=qa_e289
+          if [[ -s "$root/voz-medida.json" ]]; then
+            files=("$root/voz-medida.json" "$root/narracao48k.wav" "$root/sincronia-medida.json")
+            for f in props.json qa.json probe.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json filme.mp4 fontes-contato.jpg; do
+              [[ ! -s "$root/$f" ]] || files+=("$root/$f")
+            done
+            files+=("$root"/cena-*.jpg)
+            bash scripts/arquivar_cofre_review.sh "review-e289-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            mirror=()
+            for f in "${files[@]}"; do [[ "$f" == *.wav ]] || mirror+=("$f"); done
+            python scripts/espelhar_revisao_cofre.py "e289-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${mirror[@]}"
+          fi

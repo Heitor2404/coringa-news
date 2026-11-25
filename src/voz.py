@@ -69,6 +69,8 @@ def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_
     from google.genai import types
     from .gemini import cliente
     pedido, sistema = pedido_tts(texto, estilo, estilo_separado)
+    if os.getenv('CORINGA_TTS_AUTORIZACAO'):
+        return _tts_autorizada(pedido,sistema,wav,voz)
     erros = []
     from . import gemini as _g
     for ch in range(max(1, len(_g.CHAVES))):          # 2ª chave do Gemini, se a cota da 1ª acabar
@@ -105,6 +107,32 @@ def gemini_tts(texto: str, wav: Path, voz: str = 'Charon', estilo: str = ESTILO_
                         break
     print('  [voz] tentativas do Gemini:\n     ' + '\n     '.join(erros[-6:]))
     raise RuntimeError(erros[-1] if erros else 'sem resposta')
+
+
+def _tts_autorizada(pedido,sistema,wav,voz):
+    """Bounded private free voice, using the existing persistent reservation
+    mechanism with a separate namespace from every vision authorization.
+    One HTTP operation per reservation, no fallback/retry inside the provider.
+    """
+    from . import caixa
+    from .v4 import orcamento_visao as O
+    autorizacao=os.environ['CORINGA_TTS_AUTORIZACAO']
+    if not re.fullmatch(r'tts-[a-z0-9-]{1,60}',autorizacao):
+        raise ValueError('TTS-AUTORIZACAO')
+    if caixa.faturamento('gemini')!='cota' or not os.getenv('GEMINI_API_KEY') or not os.getenv('CORINGA_ORCAMENTO_TOKEN'):
+        raise RuntimeError('TTS-COTA-GRATUITA-OU-LIVRO-NAO-CONFIRMADOS')
+    O.abrir(autorizacao,limite_logico=2,limite_operacoes=2,max_operacoes_por_chamada=1)
+    ticket=O.reservar(autorizacao,'sintese-voz',limite_finalidade=2)
+    ok=False
+    try:
+        pcm=_rest_tts('gemini-3.8-flash-tts',pedido,voz,'antigo',sistema=sistema)
+        with wave.open(str(wav),'wb') as f:
+            f.setnchannels(1);f.setsampwidth(2);f.setframerate(24000);f.writeframes(pcm)
+        ok=True
+        print('TTS autorizada: uma operação na cota configurada',flush=True)
+        return wav
+    finally:
+        print('TTS saldo',O.liquidar(autorizacao,ticket['id'],operacoes=1,ok=ok),flush=True)
 
 
 def _estilo(e: str) -> str:

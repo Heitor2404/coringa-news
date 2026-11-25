@@ -229,12 +229,16 @@ def main():
             print('E219 PREFLIGHT ATLAS OK',ch['title'],flush=True)
     rows=[r for ch in spec['chapters'] for r in ch.get('videos',[])]
     acquired={};errors=[]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
-        jobs={pool.submit(acquire,r):r for r in rows}
-        for job in concurrent.futures.as_completed(jobs):
-            row=jobs[job]
-            try:acquired[row[0]]=job.result()
-            except Exception as e:errors.append({'id':row[0],'error':str(e)[:300]})
+    if '--acervo-restaurado' in sys.argv[3:]:
+        from scripts.restaurar_piloto_e289 import validar_acervo
+        acquired,errors=validar_acervo(read(out/'acervo-restaurado.json'),rows,STAGE)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            jobs={pool.submit(acquire,r):r for r in rows}
+            for job in concurrent.futures.as_completed(jobs):
+                row=jobs[job]
+                try:acquired[row[0]]=job.result()
+                except Exception as e:errors.append({'id':row[0],'error':str(e)[:300]})
     write(out/'acervo.json',{'acquired':acquired,'errors':errors,'publish':False})
     print('E219 ACERVO',len(acquired),'/',len(rows),flush=True)
     if any(not any(r[0] in acquired for r in ch.get('videos',[])) for ch in spec['chapters'] if 'atlas' not in ch):
@@ -269,6 +273,13 @@ def main():
     with wave.open(str(audio),'rb') as f:duration=f.getnframes()/f.getframerate()
     if duration<60 or duration>180 or len(tempos)!=len(spec['chapters']):raise ValueError('E219-DURACAO '+str(duration))
     words=D.palavras_de_caps(caps)
+    if '--acervo-restaurado' in sys.argv[3:]:
+        # Keep measured voice and its exact script before any map or editorial render.
+        write(out/'voz-medida.json',{'publish':False,'script_sha256':sha(Path(sys.argv[1])),
+            'audio_sha256':sha(audio),'duration_s':duration,'words':words,'tempos':tempos})
+        sync=LS.conferir(out/'voz-medida.json',audio,maximo=3)
+        write(out/'sincronia-medida.json',sync)
+        if not sync['ok']:raise ValueError('E289-SINCRONIA: voz preservada para revisão, não renderizar')
     total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
     from src.v4.formatos import direcao_eventos as DE
     historico_visual=[];selection_report=[]
@@ -352,6 +363,8 @@ def main():
         start=end
     plan={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,'titulo':spec['title'],
           'duracao':total,'media':media,'shots':shots}
+    if '--acervo-restaurado' in sys.argv[3:]:
+        plan['documentary_framing']='ADAPTIVE_REVIEW_V1'
     for cid,clip,proof in maps:plan=B.inserir_no_filme(plan,cid,clip,proof)
     write(out/'plano.json',plan)
     if spec.get('perceptual_selection'):write(out/'selecao_perceptiva.json',selection_report)

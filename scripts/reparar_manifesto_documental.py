@@ -17,7 +17,7 @@ def validar_relatorio(r,assets):
         a=assets.get(name)
         if not re.fullmatch(r'cm-[0-9a-f]{12}',mid) or name!=mid+'.zip' or not re.fullmatch('[0-9a-f]{64}',digest) or not a or a.get('digest')!='sha256:'+digest or not 0<a['size']<=P.MAX_TOTAL+10_000_000 or name in out:raise ValueError('E2647-VINCULO')
         out[name]=a
-    if not out or set(out)!={k for k in assets if re.fullmatch(r'cm-[0-9a-f]{12}\\.zip',k)}:raise ValueError('E2647-INCOMPLETO')
+    if not out or set(out)!={k for k in assets if re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k)}:raise ValueError('E2647-INCOMPLETO')
     if sum(a['size'] for a in out.values())>100_000_000:raise ValueError('E2647-ORCAMENTO')
     return out
 

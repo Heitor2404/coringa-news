@@ -1,4 +1,4 @@
-name: E264.7 - recuperar manifesto perdido e pesquisar lacunas apos replay
+name: E264.7 - reparar manifesto e validar replay antes de pesquisa
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

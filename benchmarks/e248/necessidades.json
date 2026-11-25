@@ -1,0 +1,83 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "camuflagem",
+      "tema": "Biologia — camuflagem de polvo",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "polvo",
+          "mostrar": "mudança de aparência ou textura visível em filmagem",
+          "necessidade": "registro",
+          "evidencia_visual": "movimento",
+          "consultas_en": [
+            "octopus camouflage color change",
+            "octopus changing skin texture"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    },
+    {
+      "id": "saturno",
+      "tema": "Astronomia — anéis de Saturno",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "Saturno",
+          "mostrar": "anéis visíveis em registro astronômico",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "Saturn rings Cassini",
+            "Saturn rings NASA spacecraft image"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    },
+    {
+      "id": "geleiras",
+      "tema": "Geografia física — fendas glaciais",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "geleira",
+          "mostrar": "fendas profundas visíveis em uma fotografia de geleira real",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacier crevasses field photograph",
+            "glacial crevasse ice aerial photograph"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    }
+  ]
+}

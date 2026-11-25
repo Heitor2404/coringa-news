@@ -340,7 +340,7 @@ Dados: """+contexto
                  "Para movimento, pertinente exige mudança diretamente relacionada à necessidade. Não declare autenticidade pela aparência. "
                  "Tipo de evidência solicitado: "+evidencia_visual)
     if exigir_evidencia_direta:
-        prompt+='\nExija componente especifico legivel, nao mera associacao tematica. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico visivel que atende ao pedido","bbox":[x0,y0,x1,y1]}. Caixa normalizada de um quadro em que o componente aparece. Use null se nao localizavel; nao infira pelo assunto geral.'
+        prompt+='\nExija componente especifico legivel, nao mera associacao tematica. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico visivel que atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira de um quadro. Nao use lista nem troque eixos. Use null se nao localizavel; nao infira pelo assunto geral.'
     r=chamar(prompt,imagens)
     pts=r.get('pontos') if isinstance(r,dict) else None
     if not isinstance(pts,list) or len(pts)!=3 or any(not isinstance(p,dict) or p.get('indice')!=i for i,p in enumerate(pts)):

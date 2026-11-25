@@ -193,7 +193,7 @@ def plano_entrada_geografica(plano, *, roi_destino, bases, rotulo, lonlat,
     return p,report
 
 
-def pacote_observacao(midia, inicio, duracao, frames, *, fato_id, necessidade):
+def pacote_observacao(midia, inicio, duracao, frames, *, fato_id, necessidade, fracoes=(.12,.5,.86)):
     """Bind inspection to three actual decoded frames and one editorial need.
     Fingerprints authenticate samples, NOT their interpretation.
     """
@@ -206,8 +206,10 @@ def pacote_observacao(midia, inicio, duracao, frames, *, fato_id, necessidade):
         raise ValueError('D-REV-TEMPO')
     if inicio<0 or duracao<1.4 or inicio+duracao>midia['duration_s'] or len(frames)!=3:
         raise ValueError('D-REV-JANELA')
+    if len(fracoes)!=3 or not all(isinstance(v,(int,float)) and not isinstance(v,bool) and math.isfinite(v) for v in fracoes) or not 0<=fracoes[0]<fracoes[1]<fracoes[2]<1:
+        raise ValueError('D-REV-FRACOES')
     amostras=[]
-    for frac,im in zip((.12,.5,.86),frames):
+    for frac,im in zip(fracoes,frames):
         im=im.convert('RGB')
         digest=hashlib.sha256(im.tobytes()).hexdigest()
         amostras.append({'at':round(duracao*frac,6),'fonte_s':round(inicio+duracao*frac,6),
@@ -389,7 +391,7 @@ def candidato_revisado(pacote, midia, *, fato_id):
     if q['video_framing']:
         try:
             result['enquadramento']=enquadrar_observacoes(
-                {'start':0.,'end':span,'source_in_seconds':start},midia,q['video_framing'])
+                {'type':'video','start':0.,'end':span,'source_in_seconds':start},midia,q['video_framing'])
             result['video_framing']=q['video_framing']
         except (ValueError,TypeError,KeyError) as exc:
             result['enquadramento_recusado']=str(exc)[:200]

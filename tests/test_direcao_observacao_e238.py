@@ -65,7 +65,7 @@ def test_selection_requires_matching_fact_and_semantic_observation(monkeypatch):
     monkeypatch.setattr(D,'enquadrar_observacoes',framing)
     q=D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='f1')
     assert len(q)==1 and not q[0]['selecao']['prova_de_acao']
-    assert calls==[{'start':0.,'end':3.8,'source_in_seconds':2}]
+    assert calls==[{'type':'video','start':0.,'end':3.8,'source_in_seconds':2}]
     assert q[0]['selecao']['enquadramento']['layout']=='cena_integral'
     with pytest.raises(ValueError,match='D-SEL-VINCULO'):
         D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='another')
@@ -85,3 +85,20 @@ def test_vision_ambiguous_bbox_preserves_semantics_but_never_crop():
     assert q['diagnostico_bbox']=='FORMATO_RECUSADO'
     assert q['video_framing'] is None
     assert q['resposta_bruta']['pontos'][0]['elementos'][0]['bbox']==[[.709,.443,.857,.738]]
+
+
+def test_detailed_review_uses_actual_start_and_native_framing():
+    m={'id':'synthetic','expected_sha256':'a'*64,'duration_s':20,'width':1920,'height':1080}
+    frames=[Image.new('RGB',(960,540),color=(i*50,10,20)) for i in range(3)]
+    p=D.pacote_observacao(m,2,3.8,frames,fato_id='f1',necessidade='referente visível',fracoes=(0,.5,.9))
+    assert p['amostras'][0]['fonte_s']==2 and p['amostras'][0]['at']==0
+    def reviewer(prompt,jpgs):
+        return {'veredito':'pertinente','inspecao':'Teste sintético de referência localizada em todos os quadros.',
+                'pontos':[{'indice':i,'observacao':'Referente sintético de teste','elementos':[{'nome':'referente','bbox_xy':{'esquerda':.45,'topo':.6,'direita':.55,'base':.8}}]} for i in range(3)]}
+    p['revisao_assistida']=D.revisar_janela_visao(p,frames,reviewer,permitir_chamada=True)
+    q=D.candidato_revisado(p,m,fato_id='f1')
+    assert q['enquadramento']['layout']=='recorte_relacional_seguro'
+    assert q['enquadramento']['framing_positions'][0]['at']==0
+    assert not q['prova_de_acao'] and not q['publicar']
+    with pytest.raises(ValueError,match='D-REV-FRACOES'):
+        D.pacote_observacao(m,2,3.8,frames,fato_id='f1',necessidade='teste',fracoes=(0,.9,1))

@@ -62,3 +62,15 @@ def test_discovery_can_use_previous_review_not_metadata():
     row={'tipo':'foto','titulo':'IMG001','sha256':'a'*64,'analises':{'x':{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':d,'escopo_pesquisa':{**n,'id':'old'}}}}
     assert R.relevances(row,[n])=={'new':1.8}
     assert R.relevances(row,[{**n,'evidencia_visual':'movimento'}])=={}
+
+def test_exact_scope_review_precedes_historical_and_lexical_even_if_not_preferred():
+    from scripts import recuperar_checkpoints_documentais as R
+    rows=[({'a':2},'old',{'name':'old-a'}),({'a':3},'new',{'name':'new-a'}),({'b':2},'old',{'name':'old-b'}),({'a':3},'new',{'name':'alternative-a'})]
+    ordered=R.priorizar(rows)
+    assert [x[2]['name'] for x in ordered][:2]==['new-a','alternative-a']
+    n={'id':'n','sujeito':'ice','mostrar':'glacier surface','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica'}
+    q={'publicar':False,'sha256_origem':'a'*64,'necessidade_id':'n','mostrar':n['mostrar'],'pixels_sha256':'b'*64,'revisao_id':'r'}
+    d={'estado':'PERTINENTE_PRIVADO','publicar':False,'direitos_aprovados':False,'revisao_id':'r'}
+    row={'tipo':'foto','titulo':'IMG001','sha256':'a'*64,'analises':{'x':{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':d,'escopo_pesquisa':n}}}
+    assert R.relevances(row,[n])=={'n':3}
+    assert R.relevances(row,[{**n,'fatos':['changed']}])=={'n':1.8}

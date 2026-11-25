@@ -55,3 +55,10 @@ def test_explicit_thousand_alias_not_ambiguous_scale():
     assert R.normalizar_evidencia_direta(e)['bbox']==[.01,.02,.9,.95]
     for scale in ('600_800','500_500'):
         assert R.normalizar_evidencia_direta({**e,'escala':scale}) is None
+
+def test_same_scope_review_hint_precedes_unreviewed_historical_hint():
+    from src.v4.formatos import revisao_documental as R
+    n={'id':'n','sujeito':'ice','mostrar':'glacier surface','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica','pesquisa':{'consultas_en':['glacier']}}
+    old={'fonte':'biblioteca_v3','tipo':'foto','sha_catalogo':'a'*64,'pista_historica':{'escopo':{k:n[k] for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')},'sha256':'a'*64},'titulo':'glacier'}
+    new={'fonte':'biblioteca_v3','tipo':'foto','sha_catalogo':'b'*64,'pista_revisao_mesmo_escopo':True,'titulo':'IMG001'}
+    assert R.ordenar_candidatos(n,[old,new])[0] is new

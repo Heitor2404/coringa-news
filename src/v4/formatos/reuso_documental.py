@@ -49,13 +49,13 @@ def prioridade_memoria(n,row):
                 if n.get('evidencia_visual')=='movimento':
                     observed=obs.get('resposta_observada') or {};indices=observed.get('indices_mudanca')
                     if scope.get('evidencia_visual')!='movimento' or observed.get('mudanca_observada') is not True or not isinstance(indices,list) or len(indices)!=2 or any(type(i) is not int for i in indices) or not 0<=indices[0]<indices[1]<=2 or len(str(observed.get('descricao_mudanca') or '').strip())<20:continue
-                if _tokens(n.get('mostrar')) and _tokens(n.get('mostrar'))==_tokens(scope.get('mostrar')) and _tokens(n.get('sujeito'))==_tokens(scope.get('sujeito')):scores.append(1.8)
+                if _tokens(n.get('mostrar')) and _tokens(n.get('mostrar'))==_tokens(scope.get('mostrar')) and _tokens(n.get('sujeito'))==_tokens(scope.get('sujeito')):scores.append(3 if escopo(n)==escopo(scope) else 1.8)
             continue
         if not isinstance(scope,dict) or q.get('sha256_origem')!=row.get('sha256') or q.get('publicar') is not False or d.get('estado')!='PERTINENTE_PRIVADO' or d.get('direitos_aprovados') is not False or d.get('publicar') is not False:continue
         if not q.get('revisao_id') or q.get('revisao_id')!=d.get('revisao_id') or not re.fullmatch('[0-9a-f]{64}',str(q.get('pixels_sha256',''))):continue
         if q.get('necessidade_id')!=scope.get('id') or q.get('mostrar')!=scope.get('mostrar') or scope.get('evidencia_visual')=='movimento':continue
         if _tokens(n.get('mostrar')) and _tokens(n.get('mostrar'))==_tokens(scope.get('mostrar')) and _tokens(n.get('sujeito'))==_tokens(scope.get('sujeito')):
-            scores.append(1.8);continue
+            scores.append(3 if escopo(n)==escopo(scope) else 1.8);continue
         for a in _consultas(n):
             aa=_tokens(a)
             for b in scope.get('consultas_en') or []:
@@ -122,7 +122,8 @@ def candidatos(bib,necessidade,limite=4):
             'pagina':d['url_pagina'],'credito':d['atribuicao'],'licenca':d['licenca'],
             'direitos':'QUARENTENA_REVISAO_PRIVADA','sha_catalogo':h,
             'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False,
-            'pista_memoria_semantica':1<score<2,
+            'pista_memoria_semantica':score>=3 or 1<score<2,
+            'pista_revisao_mesmo_escopo':score>=3,
             **({'pista_historica':vinculo_historico(necessidade,d)} if vinculo_historico(necessidade,d) else {})})
         if len(out)>=limite:return out
     return out

@@ -37,7 +37,7 @@ def priorizar(ranked):
         for nid,score in scores.items():
             if nid not in best or score>best[nid][0]:best[nid]=(score,tag,a)
     preferred={(tag,a['name']) for _,tag,a in best.values()}
-    return sorted(ranked,key=lambda x:( (x[1],x[2]['name']) not in preferred, -max(x[0].values())))
+    return sorted(ranked,key=lambda x:(max(x[0].values())<3, (x[1],x[2]['name']) not in preferred, -max(x[0].values())))
 def verified_download(tag,a,root):
     name=a['name'];digest=a.get('digest') or ''
     if not re.fullmatch(r'sha256:[0-9a-f]{64}',digest):raise ValueError('E259-DIGEST')
@@ -59,13 +59,16 @@ def listar_releases(max_releases):
     return rows[:max_releases]
 
 
-def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=None):
+def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=None,max_manifest_bytes=8_000_000):
+    # Separate bounded catalogue traffic from actual media packages. A large
+    # index must not consume the last bytes required to restore reviewed media.
+    if type(max_manifest_bytes) is not int or not 0<max_manifest_bytes<=8_000_000:raise ValueError('E259-LIMITE-MANIFESTOS')
     # Scale the package count with the actual obligations, within the same byte budget.
     if max_packages is None:max_packages=max(6,min(36,2*len(needs)))
     if type(max_packages) is not int or not 1<=max_packages<=100:raise ValueError('E259-LIMITE-PACOTES')
     root=Path(root);meta=api('')
     if meta.get('private') is not True or meta.get('id')!=1454059520:raise ValueError('E259-COFRE')
-    releases=listar_releases(max_releases);ranked=[];events=[];spent=0;manifests=0
+    releases=listar_releases(max_releases);ranked=[];events=[];spent=0;metadata_spent=0;manifests=0
     for rel in releases:
         tag=rel.get('tag_name','')
         if rel.get('draft') is not True or not re.fullmatch(r'review-[a-z0-9-]+',tag):continue
@@ -73,11 +76,11 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
         manifest=assets.get('manifesto-revisoes.jsonl')
         if not manifest and any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):
             events.append({'tag':tag,'motivo':'MANIFESTO_AUSENTE_COM_PACOTES'})
-        if not manifest or not 0<manifest['size']<=8_000_000 or spent+manifest['size']>max_bytes:continue
+        if not manifest or not 0<manifest['size']<=8_000_000 or metadata_spent+manifest['size']>max_manifest_bytes:continue
         if not any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):continue
         folder=root/tag
         try:
-            spent+=manifest['size']
+            metadata_spent+=manifest['size']
             p=verified_download(tag,manifest,folder);manifests+=1
             for line in p.read_text(encoding='utf8').splitlines():
                 row=json.loads(line);mid=row.get('id','');asset=assets.get(mid+'.zip')
@@ -99,7 +102,7 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
             dirs.append(str(dest));seen.add(mid)
             events.append({'id':mid,'tag':tag,'score':max(scores.values()),'prioridades_por_necessidade':scores, 'pista_historica':any(v==2 for v in scores.values()),'estado':'PACOTE_LOCAL_VERIFICADO'})
         except (OSError,ValueError,subprocess.SubprocessError,KeyError) as e:events.append({'id':mid,'motivo':type(e).__name__})
-    return {'pacotes':dirs,'releases_examinadas':len(releases),'limite_releases':max_releases,'manifestos_lidos':manifests,'candidatos_ranqueados':len(ranked),'limite_pacotes':max_packages,'nao_restaurados':skipped,'bytes_reservados':spent,'eventos':events,'publicar':False,'direitos_aprovados':False}
+    return {'pacotes':dirs,'releases_examinadas':len(releases),'limite_releases':max_releases,'manifestos_lidos':manifests,'candidatos_ranqueados':len(ranked),'limite_pacotes':max_packages,'nao_restaurados':skipped,'bytes_reservados':spent+metadata_spent,'bytes_pacotes_reservados':spent,'bytes_manifestos_reservados':metadata_spent,'limite_bytes_pacotes':max_bytes,'limite_bytes_manifestos':max_manifest_bytes,'eventos':events,'publicar':False,'direitos_aprovados':False}
 def main():
     spec=json.loads(Path(sys.argv[1]).read_text());case=next(c for c in spec['cases'] if c['id']==sys.argv[2])
     if spec.get('publish') is not False:raise ValueError('E259-PRIVADO')

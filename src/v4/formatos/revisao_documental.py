@@ -163,6 +163,7 @@ def ordenar_candidatos(necessidade,candidatos):
         descricao=' '.join(str(c.get(k) or '') for k in ('titulo','descricao','descricao_integral','source')).lower()
         captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed|camera views?|views? from cameras?|recorded (by|with)|filmed (by|with))\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
+                not (c.get('fonte')=='biblioteca_v3' and c.get('pista_revisao_mesmo_escopo') is True),
                 ev=='estatica' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),

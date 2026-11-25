@@ -324,7 +324,9 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
             for item in raw:
                 c=_candidato_documental(item,nome,tipo)
                 if not c or c['url'] in vistos:continue
-                vistos.add(c['url']);batch.append(c)
+                vistos.add(c['url'])
+                c['consulta_origem']=consulta
+                batch.append(c)
             row={**row,'estado':'OK' if batch else 'SEM_NOVOS_CANDIDATOS','novos':len(batch),'retidos':0}
             report['buscas'].append(row)
             if batch:

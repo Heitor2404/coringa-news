@@ -27,3 +27,8 @@ Atualização: 25/11/2026. Branch experimental `atlas-direcao-visual-20261118`. 
 - Antes de nova implementação: confrontar registro, código e run; só reabrir integração se regressão específica comprovada. Após mudança: atualizar registro e continuidade com estado implementado/testado/prático separadamente, SHA/run, defeitos e próximo bloco.
 - Trabalhar em blocos relacionados, sem pedir “prossiga” entre microetapas. Feedback consolidado com o que foi comprovado e o que não foi. Não prometer conclusão em segundo plano.
 - Não alterar main/publicar/reiniciar orçamento de 20 chamadas do episódio das geleiras sem autorização; Claude somente para avanço substancial. Sem novos gates arbitrários. Preservar regressões e direitos.
+
+## Último bloco em validação — E275/E275.1
+- Diversidade de descoberta: orçamento de consultas independente do limite de retenção, intercala lotes ranqueados e registra descartes operacionais. Pré-triagem prioriza consultas distintas sem eliminar alternativas. Código integrado no caminho progressivo; aguardando regressões e prova prática.
+- Handoff de prévias: opção privada `--pretriagem-pendente` reutiliza a fila de lacunas do E247, sem nova pesquisa, visão ou promoção de cobertura. Ainda não decide qual original adquirir autonomamente; validar antes de ativar como padrão.
+- E274: seis folhas inspecionadas, aquedutos com alternativas pouco diversas; Saturno dois candidatos quase iguais. Eficiência de transporte aprovada, diversidade/semântica ainda pendentes.

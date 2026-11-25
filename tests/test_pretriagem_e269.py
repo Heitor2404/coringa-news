@@ -69,3 +69,11 @@ def test_existing_progressive_queue_preview_only_unresolved_static_needs():
     states={x['id']:{'pendentes':[c]} for x in needs}
     assert [(x['id'],v[0][0]['pagina']) for x,v in pendencias_do_fluxo(needs,rows,states)]==[('a','p')]
     assert states['a']['pendentes']==[c]
+
+
+def test_preview_diversifies_query_origin_without_discarding_candidates():
+    n={'necessidade':'registro','mostrar':'mountain','evidencia_visual':'estatica','pesquisa':{'consultas_en':['mountain']}}
+    base={'fonte':'commons','tipo':'foto','direitos':'DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA','titulo':'mountain','url':'original','variantes':[{'url':'thumb','width':640,'height':480}]}
+    rows=[{**base,'pagina':str(i),'source_id':i+1,'consulta_origem':q} for i,q in enumerate(['mountain one','mountain one','mountain two'])]
+    result=candidatos(n,rows)
+    assert [x[0]['pagina'] for x in result]==['0','2','1']

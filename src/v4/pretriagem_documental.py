@@ -15,7 +15,15 @@ def candidatos(n,rows,previous_pages=()):
         if R.incompatibilidade_metadados(n,c):continue
         v=next((v for v in c.get('variantes') or [] if v.get('url') and v['url']!=c.get('url') and all(type(v.get(k)) is int and 240<=v[k]<=2400 for k in ('width','height'))),None)
         if v:out.append((c,v))
-    return out
+    # Keep the most relevant choice first, then prefer another actual query
+    # before spending a small preview quota on a single result series.
+    # Unknown origin is a single group; no candidate is removed.
+    first=[];later=[];queries=set()
+    for item in out:
+        key=str(item[0].get('consulta_origem') or '').strip().casefold()
+        if key in queries:later.append(item)
+        else:queries.add(key);first.append(item)
+    return first+later
 
 def coletar_fila(queues,transport,on_sample,*,max_samples=3,max_preview_bytes=1_000_000):
     """Round-robin attempts. No obligation monopolizes the shared budget.

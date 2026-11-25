@@ -29,7 +29,7 @@ def main():
         im.thumbnail((900,620))
         canvas=Image.new('RGB',(960,680),'#101c28');ImageDraw.Draw(canvas).text((12,8),n['id']+' '+digest[:12]+' MINIATURA - NAO APROVADA',fill='white')
         canvas.paste(im,((960-im.width)//2,35));name=n['id']+'-'+str(index)+'.jpg';canvas.save(root/name,quality=90)
-        return {'pagina':c['pagina'],'titulo':c['titulo'],'source_id':c['source_id'],'preview_url':v['url'],'preview_sha256':digest,'folha':name,'componentes':R.cobertura_componentes(n,c),'componentes_declarados':bool(n.get('pesquisa',{}).get('componentes_busca')),'estado':'PRETRIAGEM_PENDENTE','publicar':False}
+        return {'pagina':c['pagina'],'titulo':c['titulo'],'source_id':c['source_id'],'consulta_origem':c.get('consulta_origem'),'preview_url':v['url'],'preview_sha256':digest,'folha':name,'componentes':R.cobertura_componentes(n,c),'componentes_declarados':bool(n.get('pesquisa',{}).get('componentes_busca')),'estado':'PRETRIAGEM_PENDENTE','publicar':False}
     report=coletar_fila(queues,t,board)
     for row in report:row['buscas']=discoveries[row['id']]
     out={'publicar':False,'direitos_aprovados':False,'visao':0,'cobertura_nova':0,'rede':t.resumo(),'necessidades':report}

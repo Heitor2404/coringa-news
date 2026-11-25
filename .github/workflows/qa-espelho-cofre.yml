@@ -1,0 +1,37 @@
+name: QA - espelho privado do cofre
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-espelho-cofre.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: pip install -q requests Pillow
+      - name: Criar amostra sintetica sem dados do projeto
+        run: |
+          mkdir -p prova
+          python - <<'PY'
+          import json
+          from PIL import Image,ImageDraw
+          im=Image.new('RGB',(480,270),'#123049')
+          d=ImageDraw.Draw(im)
+          d.rectangle((30,40,450,230),outline='#ffdb41',width=5)
+          d.text((55,100),'PROVA PRIVADA - COFRE',fill='white')
+          im.save('prova/prova.jpg')
+          open('prova/prova.json','w').write(json.dumps({'kind':'synthetic','publicar':False}))
+          PY
+          ffmpeg -v error -f lavfi -i testsrc2=size=320x180:rate=15 -t 2 -c:v libx264 -pix_fmt yuv420p prova/prova.mp4
+      - name: Espelhar no cofre privado
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python scripts/espelhar_revisao_cofre.py probe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT} prova/prova.json prova/prova.jpg prova/prova.mp4

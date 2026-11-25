@@ -473,8 +473,14 @@
             ]
           ],
           "consultas_precisas": [
-            "Geirangerfjord aerial view",
-            "Nærøyfjord aerial view"
+            "Geirangerfjord",
+            "Nærøyfjord",
+            "Geirangerfjord Norway"
+          ],
+          "contexto_busca": [
+            "Norway",
+            "Geirangerfjord",
+            "Nærøyfjord"
           ]
         },
         {
@@ -495,19 +501,29 @@
           "componentes_busca": [
             [
               "Matterhorn",
-              "pyramidal peak",
               "glacial horn"
             ],
             [
-              "summit",
+              "pyramidal",
               "peak",
               "mountain",
-              "Matterhorn"
+              "summit"
             ]
           ],
           "consultas_precisas": [
-            "Matterhorn summit photograph",
-            "Matterhorn pyramidal peak"
+            "Matterhorn Switzerland Zermatt",
+            "Matterhorn Alps",
+            "Matterhorn from Zermatt"
+          ],
+          "contexto_busca": [
+            "Switzerland",
+            "Zermatt",
+            "Alps",
+            "Cervino",
+            "Valais"
+          ],
+          "contextos_alternativos": [
+            "Nevada"
           ]
         },
         {
@@ -573,8 +589,14 @@
             ]
           ],
           "consultas_precisas": [
-            "Lake Louise valley mountains",
-            "Lake Pukaki mountain valley"
+            "Lake Louise Banff",
+            "Lake Pukaki New Zealand"
+          ],
+          "contexto_busca": [
+            "Banff",
+            "Lake Louise",
+            "Lake Pukaki",
+            "New Zealand"
           ]
         }
       ],

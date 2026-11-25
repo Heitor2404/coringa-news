@@ -1,4 +1,4 @@
-name: E269.1 - pretriagem por miniaturas sem visao paga
+name: E270 - pretriagem contextual com memoria de tentativas
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -35,13 +35,16 @@ jobs:
           j=api('/contents/revisoes/e266-45616312051-1/lacunas.json?ref=revisao-privada')
           raw=base64.b64decode(j['content']);assert len(raw)==j['size']
           Path('lacunas-e266.json').write_bytes(raw)
+          j=api('/contents/revisoes/e269-45618579734-1/pretriagem.json?ref=revisao-privada')
+          raw=base64.b64decode(j['content']);assert len(raw)==j['size']
+          Path('pretriagem-e269.json').write_bytes(raw)
           PY
       - name: Triar miniaturas de alternativas precisas
-        run: python -m scripts.qa_pretriagem_e269 benchmarks/e254/documentario.json lacunas-e266.json qa_e269 gelo_paisagem
+        run: python -m scripts.qa_pretriagem_e269 benchmarks/e254/documentario.json lacunas-e266.json qa_e269 gelo_paisagem pretriagem-e269.json
       - name: Espelhar folhas privadas
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: |
           shopt -s nullglob
           files=(qa_e269/*.json qa_e269/*.jpg)
-          python scripts/espelhar_revisao_cofre.py "e269-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          python scripts/espelhar_revisao_cofre.py "e270-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"

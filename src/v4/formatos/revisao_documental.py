@@ -178,18 +178,36 @@ def cobertura_componentes(necessidade,c):
         return ' '+' '.join(re.findall(r'[^\W_]+',''.join(k for k in v if not unicodedata.combining(k))))+' '
     groups=(necessidade.get('pesquisa') or {}).get('componentes_busca') or []
     title=norm(c.get('titulo'));desc=' '.join(norm(c.get(k)) for k in ('descricao','descricao_integral'))
-    scores=[]
+    scores=[];used=set()
     for group in groups:
         if not isinstance(group,list):continue
         terms=[norm(t) for t in group if isinstance(t,str) and t.strip()]
-        if terms:scores.append(2 if any(t in title for t in terms) else 1 if any(t in desc for t in terms) else 0)
+        if terms:
+            matches=sorted(((2 if t in title else 1 if t in desc else 0,t) for t in terms if t not in used),reverse=True)
+            value,term=next(((v,t) for v,t in matches if v),(0,None))
+            if term:used.add(term)
+            scores.append(value)
     return (sum(x>0 for x in scores),sum(scores),len(scores))
+
+def contexto_de_busca(necessidade,c):
+    """Entity disambiguation hints, independent of visual component groups."""
+    import unicodedata
+    def norm(s):
+        v=unicodedata.normalize('NFKD',str(s or '').casefold())
+        return ' '+' '.join(re.findall(r'[^\W_]+',''.join(k for k in v if not unicodedata.combining(k))))+' '
+    q=necessidade.get('pesquisa') or {}
+    title=norm(c.get('titulo'))
+    text=' '.join([title,*(norm(c.get(k)) for k in ('descricao','descricao_integral','categories'))])
+    pos=[norm(x) for x in q.get('contexto_busca') or [] if isinstance(x,str) and x.strip()]
+    neg=[norm(x) for x in q.get('contextos_alternativos') or [] if isinstance(x,str) and x.strip()]
+    return (any(x in title for x in neg),sum(x in text for x in pos))
 
 def ordenar_candidatos(necessidade,candidatos):
     ev=necessidade.get('evidencia_visual')
     def rank(c):
         m=relevancia_textual(necessidade,c)
         facets,facet_quality,_=cobertura_componentes(necessidade,c)
+        alternate,context=contexto_de_busca(necessidade,c)
         descricao=' '.join(str(c.get(k) or '') for k in ('titulo','descricao','descricao_integral','source')).lower()
         captura=bool(re.search(r'\b(captured|photograph|photographed|taken (by|on|with)|mosaic (of|was made)|imaged|observed|camera views?|views? from cameras?|recorded (by|with)|filmed (by|with))\b',descricao))
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
@@ -200,7 +218,7 @@ def ordenar_candidatos(necessidade,candidatos):
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
-                -facets,-facet_quality,-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
+                alternate,-context,-facets,-facet_quality,-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     ordered=sorted(candidatos,key=rank)

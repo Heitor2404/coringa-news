@@ -21,13 +21,19 @@ def main():
     spec=json.loads(Path(sys.argv[1]).read_text());previous=json.loads(Path(sys.argv[2]).read_text());root=Path(sys.argv[3]);root.mkdir(parents=True,exist_ok=False)
     if spec.get('publish') is not False or previous.get('publicar') is not False:raise ValueError('E269-PRIVADO')
     case=next(c for c in spec['cases'] if c['id']==sys.argv[4]);tri={n['id']:n for n in D.triagem_documental(case['necessidades'],case['fatos'],progressivo=True)}
+    history=json.loads(Path(sys.argv[5]).read_text()) if len(sys.argv)>5 else {'necessidades':[],'publicar':False}
+    if history.get('publicar') is not False:raise ValueError('E270-HISTORICO')
+    previous_previews={x['id']:x for x in history['necessidades']}
     t=Transporte(max_http=12,max_bytes=9_000_000,max_wait=20);report=[]
     for gap in previous['necessidades']:
         n=tri[gap['id']]
-        old={x['pagina'] for x in gap['amostras']}
-        discovery=A.pesquisar_cobertura(n,fontes=lambda typ:[x for x in A.fontes_documentais(typ) if x[0]=='commons'],max_buscas=2,max_candidatos=64,progressivo=True)
+        prior=previous_previews.get(n['id'],{})
+        old={x['pagina'] for x in gap['amostras']+prior.get('amostras',[])}
+        attempted={(q['tipo'],q['fonte'],q['consulta'].casefold()) for q in prior.get('buscas',[]) if q.get('estado') in ('OK','SEM_NOVOS_CANDIDATOS')}
+        discovery=A.pesquisar_cobertura(n,fontes=lambda typ:[x for x in A.fontes_documentais(typ) if x[0]=='commons'],max_buscas=4,max_candidatos=64,progressivo=True,buscas_vistas=attempted)
         choices=candidatos(n,discovery['candidatos'],old);samples=[];errors=[]
         for c,v in choices:
+            if R.contexto_de_busca(n,c)[0]:continue
             if len(samples)>=3 or t.http>=t.max_http or t.bytes>=t.max_bytes:break
             try:
                 raw=t.get(v['url'],{'upload.wikimedia.org','thumb.wikimedia.org'},1_000_000)

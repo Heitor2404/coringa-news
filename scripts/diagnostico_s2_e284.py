@@ -95,9 +95,9 @@ def main(caso_path, mapa, saida):
             png = subprocess.check_output(['ffmpeg', '-v', 'error', '-ss', f'{t:.3f}', '-i', str(mp4), '-frames:v', '1', '-f', 'image2pipe', '-vcodec', 'png', '-'])
             im = Image.open(io.BytesIO(png)).convert('RGB')
             sd, _ = _semdado(np.asarray(im))
-            nome = f'quadro-{k:02d}.jpg'; im.save(saida / nome, quality=90)
+            nome = f"{caso['id']}-quadro-{k:02d}.jpg"; im.save(saida / nome, quality=90)
             rel['quadros'].append({'t': round(t, 3), 'arquivo': nome, 'semdado': round(float(sd.mean()), 4), 'curva': _curvatura(sd)})
-    (saida / 'diagnostico_s2.json').write_text(json.dumps(rel, ensure_ascii=False, indent=1))
+    (saida / f"{caso['id']}-diagnostico_s2.json").write_text(json.dumps(rel, ensure_ascii=False, indent=1))
     print('DIAG_S2', json.dumps([{k: b[k] for k in ('nome', 'dataset', 'zoom', 'tiles_com_semdado', 'bruto_vs_mosaico_mae', 'fronteira_semdado_mosaico')} for b in rel['bases']], ensure_ascii=False))
 
 

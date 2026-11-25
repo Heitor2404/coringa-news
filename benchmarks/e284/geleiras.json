@@ -713,67 +713,78 @@
    "chapters": [
     {
      "title": "O gelo em movimento",
-     "speech": "Uma geleira parece uma montanha imóvel, mas o gelo flui lentamente sob seu próprio peso. Nas encostas, essa deformação abre fendas profundas, formando um labirinto de rachaduras na superfície.",
+     "speech": "Uma geleira parece imóvel, mas o gelo flui lentamente sob o próprio peso. Nas encostas, essa deformação abre fendas profundas, um labirinto de rachaduras na superfície.",
      "needs": [
       "n1",
       "n2",
       "n3"
      ],
-     "source": "https://www.nps.gov/articles/crevasses.htm"
+     "source": "https://www.nps.gov/articles/crevasses.htm",
+     "speech_original": "Uma geleira parece uma montanha imóvel, mas o gelo flui lentamente sob seu próprio peso. Nas encostas, essa deformação abre fendas profundas, formando um labirinto de rachaduras na superfície."
     },
     {
      "title": "Rochas em trânsito",
-     "speech": "Enquanto avança, a geleira incorpora fragmentos de rocha. Esses detritos podem se acumular nas margens ou em faixas escuras no meio do gelo, onde duas geleiras se encontram.",
+     "speech": "Ao avançar, a geleira incorpora fragmentos de rocha. Os detritos se acumulam nas margens ou em faixas escuras no meio do gelo, onde duas geleiras se encontram.",
      "needs": [
       "n4",
       "n5",
       "n6"
      ],
-     "source": "https://www.nps.gov/kefj/learn/nature/glaciers.htm"
+     "source": "https://www.nps.gov/kefj/learn/nature/glaciers.htm",
+     "speech_original": "Enquanto avança, a geleira incorpora fragmentos de rocha. Esses detritos podem se acumular nas margens ou em faixas escuras no meio do gelo, onde duas geleiras se encontram."
     },
     {
      "title": "Abrasão do terreno",
-     "speech": "Os fragmentos presos na base do gelo também funcionam como ferramentas de abrasão. Ao longo do tempo, raspam o leito rochoso, deixam sulcos e transportam blocos para longe do lugar de origem.",
+     "speech": "Presos na base do gelo, esses fragmentos funcionam como ferramentas de abrasão. Com o tempo, raspam o leito rochoso, deixam sulcos e levam blocos para longe da origem.",
      "needs": [
       "n7",
       "n8",
       "n9"
      ],
-     "source": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm"
+     "source": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm",
+     "speech_original": "Os fragmentos presos na base do gelo também funcionam como ferramentas de abrasão. Ao longo do tempo, raspam o leito rochoso, deixam sulcos e transportam blocos para longe do lugar de origem."
     },
     {
      "title": "Vales esculpidos",
-     "speech": "Um rio tende a escavar um vale estreito, em formato de V. Já uma geleira pode alargar e aprofundar o vale, criando paredes íngremes e um fundo mais amplo, em formato de U.",
+     "speech": "Um rio tende a escavar um vale estreito, em forma de V. Já uma geleira pode alargar e aprofundar o vale, criando paredes íngremes e um fundo mais amplo, em forma de U.",
      "needs": [
       "n10",
       "n11",
       "n12"
      ],
-     "source": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm"
+     "source": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm",
+     "speech_original": "Um rio tende a escavar um vale estreito, em formato de V. Já uma geleira pode alargar e aprofundar o vale, criando paredes íngremes e um fundo mais amplo, em formato de U."
     },
     {
      "title": "Marcas deixadas pelo gelo",
-     "speech": "Quando o gelo recua, os detritos podem permanecer no terreno. As morainas marcam antigos limites da geleira, enquanto depressões escavadas nas montanhas podem acumular água e formar pequenos lagos.",
+     "speech": "Quando o gelo recua, os detritos ficam no terreno. Morainas marcam antigos limites da geleira, e depressões nas montanhas podem acumular água em pequenos lagos.",
      "needs": [
       "n13",
       "n14",
       "n15"
      ],
-     "source": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm"
+     "source": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm",
+     "speech_original": "Quando o gelo recua, os detritos podem permanecer no terreno. As morainas marcam antigos limites da geleira, enquanto depressões escavadas nas montanhas podem acumular água e formar pequenos lagos."
     },
     {
      "title": "Paisagem transformada",
-     "speech": "Em regiões costeiras, vales glaciais podem ser inundados pelo mar, formando fiordes. Picos agudos, lagos e grandes vales preservam essas marcas muito depois do recuo do gelo. É assim que geleiras transformam paisagens inteiras.",
+     "speech": "Perto do mar, vales glaciais inundados formam fiordes. Picos agudos, lagos e vales amplos guardam essas marcas muito depois do recuo. Assim as geleiras transformam paisagens.",
      "needs": [
       "n16",
       "n17",
       "n18"
      ],
-     "source": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm"
+     "source": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm",
+     "speech_original": "Em regiões costeiras, vales glaciais podem ser inundados pelo mar, formando fiordes. Picos agudos, lagos e grandes vales preservam essas marcas muito depois do recuo do gelo. É assim que geleiras transformam paisagens inteiras."
     }
    ],
    "autorizacao_visao": "E284-visao-8",
-   "nota_e284": "Mesmas necessidades/escopos do caso gelo_paisagem (análises e checkpoints reaproveitáveis). Orçamentos originais seguem esgotados; o consumo deste caso só ocorre pela autorização persistente E284-visao-8."
+   "nota_e284": "Mesmas necessidades/escopos do caso gelo_paisagem (análises e checkpoints reaproveitáveis). Orçamentos originais seguem esgotados; o consumo deste caso só ocorre pela autorização persistente E284-visao-8.",
+   "roteiro_ajustado": {
+    "tipo": "ASSISTIDO_PELO_DESENVOLVEDOR",
+    "motivo": "fala excedia a evidência verificada (run 45669210644: fator 1,35 no capítulo final); mesmos fatos, frases encurtadas para ~10–11 s por capítulo, sem novos fatos",
+    "afeta_selecao_de_midia": false
+   }
   }
  ]
 }

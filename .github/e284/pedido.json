@@ -1,2 +1,1 @@
-{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false,
- "nota": "Reexecução sem visão: as 18 coberturas (15 antigas + n16/n17/n18 da run 45667613774) vêm dos checkpoints; a voz (Gemini TTS, cota gratuita) é ajustada em ritmo uniforme até 8% para caber na evidência verificada (72,8 s de fala para 68,4 s de evidência)."}
+{"prova": "geleiras", "fase": "visao", "limite_chamadas": 0, "publicar": false, "nota": "Reexecução sem visão com roteiro encurtado (assistido) para caber na evidência verificada: run 45669210644 recusou corretamente acelerar a voz em 35%."}

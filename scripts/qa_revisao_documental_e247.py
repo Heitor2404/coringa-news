@@ -73,6 +73,42 @@ def main():
                 used_sha.add(meta['sha256'])
                 if c.get('pagina'):used_pages.add(c['pagina'])
             return dec
+        if adaptive:
+            from src.v4.formatos import amostragem_documental as AD
+            exploration,windows=AD.preparar_lote(m,n,E.frame)
+            c['exploracao_temporal']=exploration;c['janelas']=[]
+            if not windows:return {'estado':'FALHA_AQUISICAO','motivo':'SEM_AMOSTRAS_DECODIFICADAS'}
+            try:
+                batch=DE.revisar_janelas_lote(windows,ask,evidencia_visual=n['evidencia_visual'],
+                    exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
+            except Exception as e:
+                for pack,frames in windows:boards.append((c,frames,'FALHA_VISAO_LOTE'))
+                return {'estado':'FALHA_VISAO','motivo':type(e).__name__+':'+str(e)[:100]}
+            c['visao_lote']={'chamadas_logicas':batch['chamadas_logicas'],'imagens_enviadas':batch['imagens_enviadas']}
+            eligible=[]
+            for (pack,frames),row in zip(windows,batch['janelas']):
+                if 'falha' in row:
+                    c['janelas'].append({'pacote':pack,'falha':row['falha']})
+                    boards.append((c,frames,'FALHA_FORMATO_VISAO'));continue
+                q={**row['revisao'],'sha256_origem':meta['sha256'],'necessidade_id':n['id']}
+                dec=R.decidir(n,c,q,tipo='video');pack['revisao_assistida']=q
+                c['janelas'].append({'pacote':pack,'decisao':dec})
+                boards.append((c,frames,dec['motivo']))
+                if dec['estado']=='PERTINENTE_PRIVADO':
+                    selection=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
+                    if selection['estado']=='CANDIDATO_PERTINENTE':
+                        eligible.append((pack,selection,dec))
+            if eligible:
+                ranked=DE.selecionar_revisados([{'pacote':p,'midia':m} for p,_,_ in eligible],fato_id=n['fatos'][0])
+                if ranked:
+                    k=ranked[0]['ordem'];c['selecao_janela']=eligible[k][1]
+                    if integral:
+                        used_sha.add(meta['sha256'])
+                        if c.get('pagina'):used_pages.add(c['pagina'])
+                    return eligible[k][2]
+            if all('falha' in r for r in batch['janelas']):
+                return {'estado':'FALHA_VISAO','motivo':'TODAS_RESPOSTAS_INVALIDAS'}
+            return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NAS_AMOSTRAS'}
         span=min(3.8,meta['duration_s']-.15)
         starts=E.windows(m,span,review_technical=True)
         a=starts[0][0] if starts else 0.

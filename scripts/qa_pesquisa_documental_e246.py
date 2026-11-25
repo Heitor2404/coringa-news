@@ -106,7 +106,10 @@ def main():
                             'pagina':c['pagina'],'url':meta['url_adquirida'],'fonte':c['fonte'],'wh':[meta['width'],meta['height']]},
                             tema=case['tema'])
                         c['biblioteca_id']=saved['id']
-                except Exception as e:c['aquisicao']={'status':'REJECTED','tipo':type(e).__name__,'motivo':str(e)[:300]}
+                except Exception as e:
+                    if c.get('aquisicao',{}).get('status')=='BYTES_VERIFIED_SEMANTICS_PENDING':
+                        c['biblioteca_erro']=type(e).__name__
+                    else:c['aquisicao']={'status':'REJECTED','tipo':type(e).__name__,'motivo':str(e)[:300]}
                 if t.http>before:attempts+=1
         lib.exportar_manifesto(out/'manifesto-local.jsonl')
     finally:lib.fechar()

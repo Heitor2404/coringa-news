@@ -1,5 +1,5 @@
 """E247 private pilot, reuse E246 acquisition and E238-E244 video observations."""
-import hashlib,sys,os
+import hashlib,sys,os,json
 from pathlib import Path
 from PIL import Image,ImageDraw
 from scripts import qa_pesquisa_documental_e246 as Q
@@ -28,12 +28,13 @@ def main():
             n['exigir_evidencia_direta']=True
             n['exigir_legibilidade']=True
     t=Transporte(max_http=54 if integral else 14,max_bytes=270_000_000 if integral else 140_000_000,max_wait=30)
-    adaptive='--adaptativa' in sys.argv[4:]
+    progressive='--progressiva' in sys.argv[4:]
+    adaptive='--adaptativa' in sys.argv[4:] or progressive
     multi='--multicenas' in sys.argv[4:]
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
     budget=min(20,len(tri)+2) if integral else 4 if multi else 2
-    calls=0;boards=[];results=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
@@ -44,30 +45,54 @@ def main():
         nonlocal reuses
         if calls>=budget:return {'estado':'ORCAMENTO','motivo':'VISAO_ESGOTADA'}
         if integral and c.get('pagina') in used_pages:return {'estado':'INSUFICIENTE','motivo':'FONTE_JA_SELECIONADA_NO_FILME'}
-        if c.get('fonte') not in ('nasa','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
+        if c.get('fonte') not in ('nasa','nasa_video','archive_video','biblioteca_v3') and (c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' or not list(Q.variants(c))):
             return {'estado':'INSUFICIENTE','motivo':'PROCEDENCIA_OU_VARIANTE_PENDENTE'}
         try:
             if c.get('fonte')=='biblioteca_v3':
                 meta,im,p=RE.amostra(lib,c,probe=E.probe,frame=E.frame);reuses+=1
-            else:meta,im,p=Q.sample(c,assets,t)
+            else:
+                identity=(c.get('fonte'),c.get('source_id') or c.get('url'))
+                if progressive and identity in acquired:
+                    meta,im,p,receipt=acquired[identity];im=im.copy();c.update(receipt);reuses+=1
+                else:
+                    meta,im,p=Q.sample(c,assets,t)
+                    if progressive:acquired[identity]=(meta,im.copy(),p,{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','licenca','credito') if k in c})
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta
         if hashlib.sha256(p.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('E247-SHA')
         c['local_source']=str(p)
         if integral and meta['sha256'] in used_sha:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_SELECIONADOS_NO_FILME'}
-        if adaptive:
+        if adaptive and not progressive:
             key=(n['id'],meta['sha256'])
             if key in seen_bytes:return {'estado':'INSUFICIENTE','motivo':'BYTES_JA_INSPECIONADOS'}
             seen_bytes.add(key)
         m={'id':c.get('source_id') or meta['sha256'],'expected_sha256':meta['sha256'],
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
+        cache_key=None
+        if progressive:
+            from src import gemini
+            scope={'contrato':'E258.v1','mostrar':n['mostrar'],'fatos':n['fatos'],'id':n['id'],
+                'evidencia':n['evidencia_visual'],'direta':n.get('exigir_evidencia_direta',False),
+                'legibilidade':n.get('exigir_legibilidade',False),'modelos':list(gemini.MODELOS_LEVES)}
+            cache_key='documental:'+hashlib.sha256(json.dumps(scope,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+            saved=lib.ingerir(p,{'titulo':c['titulo'],'desc':c.get('descricao',''),
+                'url':meta['url_adquirida'],'pagina':c.get('pagina'),'fonte':c['fonte'],
+                'wh':[meta['width'],meta['height']],'licenca_prova':'Revisao privada; direitos pendentes'})
+            saved_ids.add(saved['id'])
+            c['biblioteca_id']=saved['id']
+            lib.gravar_analise(meta['sha256'],'documental:recibo:'+hashlib.sha256(str(c.get('pagina') or c.get('source_id')).encode()).hexdigest(),
+                {'publicar':False,'direitos_aprovados':False,'aquisicao':meta,
+                 'fonte':c['fonte'],'pagina':c.get('pagina'),'licenca_declarada':c.get('licenca'),'credito_declarado':c.get('credito'),
+                 'recibos':{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico') if k in c}},origem='E258')
         if c['tipo']=='foto':
             im.thumbnail((1280,1280) if qualidade or integral else (960,960))
-            try:q=R.revisar_foto(m,im,n,ask)
+            try:
+                q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
             c['revisao']=q;dec=R.decidir(n,c,q,tipo='foto')
+            if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'revisao':q,'decisao':dec},origem='E258')
             boards.append((c,[im],dec['motivo']))
             if integral and dec['estado']=='PERTINENTE_PRIVADO':
                 used_sha.add(meta['sha256'])
@@ -75,9 +100,12 @@ def main():
             return dec
         if adaptive:
             from src.v4.formatos import amostragem_documental as AD
-            exploration,windows=AD.preparar_lote(m,n,E.frame)
-            c['exploracao_temporal']=exploration;c['janelas']=[]
-            if not windows:return {'estado':'FALHA_AQUISICAO','motivo':'SEM_AMOSTRAS_DECODIFICADAS'}
+            key=(n['id'],meta['sha256'])
+            history=window_history.setdefault(key,{'exploracao':None,'vistos':set(),'janelas':[]}) if progressive else {'exploracao':None,'vistos':set(),'janelas':[]}
+            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'])
+            history['exploracao']=exploration
+            c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
+            if not windows:return {'estado':'INSUFICIENTE' if history['vistos'] else 'FALHA_AQUISICAO','motivo':'SEM_JANELAS_NOVAS' if history['vistos'] else 'SEM_AMOSTRAS_DECODIFICADAS'}
             try:
                 batch=DE.revisar_janelas_lote(windows,ask,evidencia_visual=n['evidencia_visual'],
                     exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
@@ -90,6 +118,7 @@ def main():
                 if 'falha' in row:
                     c['janelas'].append({'pacote':pack,'falha':row['falha']})
                     boards.append((c,frames,'FALHA_FORMATO_VISAO'));continue
+                history['vistos'].add(round(pack['inicio_s'],4))
                 q={**row['revisao'],'sha256_origem':meta['sha256'],'necessidade_id':n['id']}
                 dec=R.decidir(n,c,q,tipo='video');pack['revisao_assistida']=q
                 c['janelas'].append({'pacote':pack,'decisao':dec})
@@ -98,6 +127,7 @@ def main():
                     selection=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
                     if selection['estado']=='CANDIDATO_PERTINENTE':
                         eligible.append((pack,selection,dec))
+            if cache_key:lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':history['janelas'],'exploracao':exploration},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m} for p,_,_ in eligible],fato_id=n['fatos'][0])
                 if ranked:
@@ -106,6 +136,9 @@ def main():
                         used_sha.add(meta['sha256'])
                         if c.get('pagina'):used_pages.add(c['pagina'])
                     return eligible[k][2]
+            if progressive and any(round(x['inicio_s'],4) not in history['vistos'] for x in exploration['janelas'] if 'diagnostico' in x) and any('revisao' in row for row in batch['janelas']):
+                c['revisao_adicional_possivel']=True
+            else:c['revisao_adicional_possivel']=False
             if all('falha' in r for r in batch['janelas']):
                 return {'estado':'FALHA_VISAO','motivo':'TODAS_RESPOSTAS_INVALIDAS'}
             return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NAS_AMOSTRAS'}
@@ -140,7 +173,43 @@ def main():
                 return dec
         return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NO_ORCAMENTO'}
     try:
-        if adaptive:
+        if progressive:
+            from src.v4 import acervo_v4 as A
+            reports=[];states={};results_by_id={};total_search=0
+            search_limit=32 if integral else 16
+            def search_progress(n,limit,attempted):
+                nonlocal total_search
+                r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
+                total_search+=len(r['buscas']);reports.append(r);return r
+            # First pass: one logical review for each obligation if available.
+            # Second pass: pool all unused budget across unresolved obligations.
+            for phase in (0,1):
+                for n in tri:
+                    nid=n['id'];old=results_by_id.get(nid)
+                    if old and old['estado']!='LACUNA_PENDENTE':continue
+                    st=states.setdefault(nid,{})
+                    start=calls
+                    if phase:
+                        st['descoberta_sem_visao']=False
+                        for c in list(st.get('rever',[])):
+                            k=(c.get('fonte'),c.get('source_id') or c.get('url'))
+                            st['vistos'].discard(k)
+                            if c not in st['pendentes']:st['pendentes'].insert(0,c)
+                    def inspect_progress(c,n):
+                        d=inspect(c,n)
+                        if c.get('revisao_adicional_possivel'):
+                            if c not in st.setdefault('rever',[]):st['rever'].append(c)
+                        return d
+                    row=R.cobertura_progressiva(n,search_progress,inspect_progress,
+                        pode_buscar=lambda:total_search<search_limit,
+                        pode_inspecionar=lambda:calls<budget and (phase==1 or calls==start) and t.http<t.max_http and t.bytes<t.max_bytes,
+                        max_buscas=search_limit,estado=st)
+                    results_by_id[nid]=row
+            results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
+            from src.v4.formatos import cobertura_documental as C
+            for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
+            aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
+        elif adaptive:
             reports=[];consulted=set()
             def search(n,limit):
                 local=RE.candidatos(lib,n) if pack else []
@@ -173,10 +242,14 @@ def main():
             reports=D.pesquisar_triagem(tri,biblioteca_global=lib,max_buscas=8)
             for n,r in zip(tri,reports):
                 results.append(D.revisar_cobertura_documental(n,r,inspect,max_candidatos=6))
-    finally:lib.fechar()
+    finally:
+        if progressive:
+            lib.exportar_manifesto(out/'manifesto-revisoes.jsonl')
+            (out/'ids-adquiridos.json').write_text(json.dumps(sorted(saved_ids)))
+        lib.fechar()
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

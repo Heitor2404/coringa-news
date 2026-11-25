@@ -7,6 +7,10 @@ A fase continua aberta. O bloco E282 em `6083a0005197` terminou. O [replay dos c
 
 O commit `65e0f17cd4db8d6a68e15eaf2249002bf7545858` passou no [controle multitemático](https://github.com/Heitor2404/coringa-news/actions/runs/45644894008). O integral progressivo pode usar a reserva de foto automaticamente. Janelas inválidas sobrevivem ao checkpoint como diagnóstico, movimento alegado entre quadros idênticos é recusado e as marcas de fim de palavra chegam ao agrupador. Inspeção local de três vídeos existentes confirmou amostras decodificáveis. Permanecem pendentes a seleção de ação inédita com revisão formal e os três filmes completos. A matriz e o parecer desta missão ficam em `AUDITORIA_FINAL_FASE_CORRETIVA.md`.
 
+## ENCERRAMENTO CONTROLADO — 25/11 16:11
+
+Missão Claude encerrada pelo proprietário; o ChatGPT reassume e incorporará seletivamente após auditoria. Fase corretiva **não concluída**. Branch `claude-consolidacao-corretiva-20261125` preservada (nada integrado); `main` e `atlas-direcao-visual-20261118` inalteradas. Lista das alterações que afetam direção audiovisual, compositor e identidade visual: topo de [AUDITORIA_FINAL_FASE_CORRETIVA.md](AUDITORIA_FINAL_FASE_CORRETIVA.md). Último CI isolado 45681330128 SUCCESS; última execução ATLAS 45678665168 FAILURE documentada (geografia PENDENTE; retry posterior não validado). Saldo da autorização E284-visao-8: 1 lógica.
+
 ## Estado vigente — consolidação final Claude E284, 25/11 (prevalece sobre os blocos abaixo)
 
 Detalhes, matriz e parecer: [AUDITORIA_FINAL_FASE_CORRETIVA.md](AUDITORIA_FINAL_FASE_CORRETIVA.md). Partida `5157189c`; Work e primeira rodada preservados (contrato do replay: as mesmas 9 revisões do código `257ce75d`, CI 45677151177).

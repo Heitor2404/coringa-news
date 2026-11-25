@@ -1,3 +1,38 @@
+# ENCERRAMENTO CONTROLADO — 25/11/2026 16:11 (instrução do proprietário)
+
+Missão encerrada a pedido do proprietário; o desenvolvimento volta ao ChatGPT, que auditará e incorporará seletivamente.
+Nada novo foi implementado, renderizado ou consumido após a instrução. **A fase corretiva NÃO está concluída.**
+
+- HEAD preservado na branch exclusiva: o commit deste encerramento (sobre `c92facb5`). Árvore limpa, tudo no GitHub.
+- `main` = `8d550693…` e `atlas-direcao-visual-20261118` = `257ce75d…` inalteradas (conferido por `git ls-remote`).
+- Workflows: nenhum em execução. Último CI isolado `45681330128` (c92facb5) **SUCCESS**. Última execução ATLAS
+  `45678665168` **FAILURE** documentada (geografia PENDENTE por fonte sem resposta; retry adicionado depois, **não validado
+  em execução**). Este commit de encerramento usa `[skip ci]` para não disparar execuções.
+- Recursos: autorização E284-visao-8 com 7/8 chamadas lógicas e 9/16 operações consumidas, 20.182 tokens, USD 0; saldo
+  1 lógica (finalidade geleiras). Gemini TTS (cota gratuita): 7 sínteses. Orçamentos antigos seguem esgotados.
+
+## Alterações que afetam a direção audiovisual, o compositor e a identidade visual
+
+| Área | Alteração | Commit | Arquivo |
+|---|---|---|---|
+| **Compositor** | Vídeo horizontal integral com legenda usa a caixa das fotos integrais (y 405–1030), legenda fora da evidência | `b954c3c6` (E283) | `motor4/remotion/src/formatos/FilmeEditorial.tsx` |
+| **Compositor / render** | Config do Remotion passa a ser carregada (`motor4/remotion.config.js`): aplica `gl=swangle`, JPEG 92, concorrência 1 e Chrome local em TODOS os renders sem flags explícitas — muda a qualidade de imagem intermediária de renders antigos que dependiam do padrão | `4c7d59bd` (E283) | `motor4/remotion.config.js` |
+| **Compositor (ATLAS)** | Crédito em tela pode incluir Blue Marble quando o raster S2 tem oceano batimétrico (cortesia, só se couber) | `979c36cd` | `motor4/remotion/src/formatos/Palco.tsx`, `src/v4/formatos/plano.py` |
+| **Identidade visual do mapa** | Mosaicos S2 novos do ATLAS multiescala: mar aberto da base Blue Marble com batimetria + máscara Natural Earth 10 m e faixa costeira S2 de 1,5 km (aparência do oceano muda) | `abd207e5` | `scripts/formatos_raster.py`, `scripts/qa_atlas_multiscale.py` |
+| **Fiscal editorial** | Tolerância de 1e-6 s nos limites de duração de plano (quadros inteiros) | `abd207e5` | `src/v4/formatos/filme_editorial.py` |
+| **Direção — ritmo/montagem** | Cortes de imagem até 1,2 s da fronteira da fala (J/L-cut); ritmo uniforme da voz até 8%; pausas da TTS encurtadas a 0,35 s só se necessário; recusa com `FALA_EXCEDE_EVIDENCIA_REPLANEJAR` | `1f03dee3`, `d158dc54`, `9f5bc5a0` | `scripts/qa_documentario_integral_e254.py` |
+| **Legendas** | Início da palavra alinhado à fala medida (≤0,4 s); render exige sincronia medida aprovada | `c0e4acd4` | `src/v4/formatos/legenda_sync.py`, `scripts/qa_documentario_integral_e254.py` |
+| **Direção — seleção de filmagens** | Varredura temporal local, janelas por evento, insistência controlada, adiamento de ângulo com ≥3 negativas, fila prioriza candidatos novos | `6ec76d07`, `e2c8ac03`, `3cb5509d`, `c5fe736e`, `095b64cb`, `2de411b0` | `src/v4/formatos/amostragem_documental.py`, `scripts/qa_revisao_documental_e247.py`, `src/v4/formatos/revisao_documental.py` |
+| **Direção — multimodal/ATLAS** | Necessidade `territorio` recebe mapa ATLAS automático com geografia verificada por Wikidata+OSM; a ponte aceita essa origem além da curadoria | `a9fbc813`, `08b71bc9`, `c92facb5` | `src/v4/formatos/{geografia_verificada,atlas_automatico,ponte_cobertura_filme}.py`, `scripts/qa_documentario_integral_e254.py` |
+| **Roteiro (assistido)** | Falas das geleiras encurtadas pelo desenvolvedor, só no caso `benchmarks/e284/geleiras.json` | `ec2ef217` | benchmark (não é código do motor) |
+
+Sem efeito audiovisual (infraestrutura/validação): orçamento persistente e teto de tentativas (`src/v4/orcamento_visao.py`,
+`src/gemini.py`), contrato do replay e estados de prova, descoberta de checkpoints, workflows exclusivos, scripts de
+prévia/diagnóstico/entrega E284, memória `ERR-085…097`.
+
+Regressões identificadas durante o trabalho (todas corrigidas e cobertas por teste): reuso 9→2 por início arredondado
+(`3cb5509d`); reuso 9→0 por descoberta de checkpoints por recência após rearquivamentos (`f6212921`).
+
 # Auditoria final da fase corretiva — consolidação Claude (25/11/2026, segunda rodada E284)
 
 Branch: `claude-consolidacao-corretiva-20261125`. Partida desta rodada: `5157189c` (aceito pela auditoria). Partida da

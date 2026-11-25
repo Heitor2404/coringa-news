@@ -101,8 +101,15 @@ def main():
                 reports.append(r);return r
             if multi:
                 from src.v4.formatos import cobertura_documental as C
+                from contextlib import contextmanager
+                @contextmanager
+                def limitar(http,bytes_):
+                    old=(t.max_http,t.max_bytes)
+                    t.max_http=min(old[0],http);t.max_bytes=min(old[1],bytes_)
+                    try:yield
+                    finally:t.max_http,t.max_bytes=old
                 aggregate=C.cobrir(tri,search,inspect,lambda:{'visao':calls,'http':t.http,'bytes':t.bytes},
-                    max_visao=budget,max_http=t.max_http,max_bytes=t.max_bytes)
+                    max_visao=budget,max_http=t.max_http,max_bytes=t.max_bytes,limitar_aquisicao=limitar)
                 results=aggregate['cobertura']
             else:
                 for n in tri:

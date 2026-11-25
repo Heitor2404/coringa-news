@@ -220,7 +220,7 @@ def candidatos_pixabay(busca: str) -> list[dict]:
     return out
 
 
-def candidatos_nasa_video(busca: str) -> list[dict]:
+def candidatos_nasa_video(busca: str, *, documental=False) -> list[dict]:
     """Vídeos da NASA (domínio público, sem chave): espaço, foguetes, a Terra vista de cima, laboratório da estação."""
     out = []
     try:
@@ -232,6 +232,23 @@ def candidatos_nasa_video(busca: str) -> list[dict]:
             nid = d.get('nasa_id')
             thumb = next((l.get('href') for l in it.get('links') or [] if l.get('render') == 'image'), None)
             if not nid or not thumb:
+                continue
+            if documental:
+                import re
+                from urllib.parse import urlsplit
+                if not isinstance(nid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',nid):continue
+                u=urlsplit(thumb)
+                if u.scheme not in ('http','https') or u.hostname!='images-assets.nasa.gov' or u.username or u.password or u.port not in (None,443):continue
+                # The asset endpoint resolves actual downloadable variants later.
+                out.append({'tipo':'video','url':thumb.replace('http://','https://',1),
+                    'pagina':'https://images.nasa.gov/details/'+nid,'source_id':nid,
+                    'titulo':d.get('title',''),'descricao':str(d.get('description',''))[:400],
+                    'descricao_integral':str(d.get('description',''))[:8000],
+                    'nasa_center':d.get('center'),'nasa_credit':d.get('photographer'),
+                    'nasa_secondary_credit':d.get('secondary_creator'),
+                    'credito':d.get('photographer') or d.get('center') or 'NASA — crédito individual pendente',
+                    'licenca':'','variantes':[]})
+                if len(out)>=POR_FONTE:break
                 continue
             m = requests.get(f'https://images-api.nasa.gov/asset/{nid}', headers=UA, timeout=30).json()
             hrefs = [x.get('href', '') for x in (m.get('collection') or {}).get('items') or []]
@@ -249,7 +266,7 @@ def candidatos_nasa_video(busca: str) -> list[dict]:
     return out
 
 
-def candidatos_archive(busca: str) -> list[dict]:
+def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
     """Internet Archive: filmes antigos de DOMÍNIO PÚBLICO (coleção Prelinger e afins), sem chave. Só arquivos até ~80 MB."""
     out = []
     try:
@@ -260,6 +277,16 @@ def candidatos_archive(busca: str) -> list[dict]:
         for doc in (r.json().get('response') or {}).get('docs') or []:
             ident = doc.get('identifier')
             if not ident:
+                continue
+            if documental:
+                import re
+                if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,150}',ident) or ident in ('.','..'):continue
+                # Resolve item metadata and explicit license in acquisition.
+                out.append({'tipo':'video','url':'https://archive.org/details/'+ident,
+                    'pagina':'https://archive.org/details/'+ident,'source_id':ident,
+                    'titulo':doc.get('title',''),'descricao':doc.get('title',''),
+                    'credito':'','licenca':'','variantes':[]})
+                if len(out)>=POR_FONTE:break
                 continue
             meta = requests.get(f'https://archive.org/metadata/{ident}', headers=UA, timeout=30).json()
             mp4 = [f for f in meta.get('files') or [] if str(f.get('name', '')).lower().endswith('.mp4')

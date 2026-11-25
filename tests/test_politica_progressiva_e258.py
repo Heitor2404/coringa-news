@@ -16,15 +16,15 @@ def accepted():
             'publicar':False,'direitos_aprovados':False}
 
 def test_progressive_reaches_fourth_candidate_without_discarding_queue():
-    def oldsearch(n,l):return {'id':'n','buscas':[],'candidatos':[candidate(i) for i in range(5)]}
+    def oldsearch(n,l):return {'id':'n','buscas':[],'candidatos':[candidate(i) for i in range(1,6)]}
     def inspector(c,n):
-        return accepted() if c['source_id']==3 else {'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'}
+        return accepted() if c['source_id']==4 else {'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'}
     # Compare fixed first queue (3 candidates) with progressive queue (same candidates).
     assert R.fila_cobertura(need(),oldsearch(None,None)['candidatos'],inspector,max_candidatos=3)['estado']=='LACUNA_PENDENTE'
     calls=[]
     def search(n,l,seen):
         calls.append(l)
-        return {'id':'n','buscas':[{'consulta':'subject change'}],'candidatos':[candidate(i) for i in range(5)]}
+        return {'id':'n','buscas':[{'consulta':'subject change'}],'candidatos':[candidate(i) for i in range(1,6)]}
     r=R.cobertura_progressiva(need(),search,inspector,pode_buscar=lambda:True,pode_inspecionar=lambda:True,max_buscas=4)
     assert r['estado']=='CANDIDATO_PRIVADO_REVISADO' and r['tentativas']==4 and calls==[4]
     assert not r['publicar']

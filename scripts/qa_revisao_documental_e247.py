@@ -47,7 +47,7 @@ def main():
     multi='--multicenas' in sys.argv[4:]
     if multi and not adaptive:raise ValueError('E253-ADAPTATIVA')
     if integral and not multi:raise ValueError('E254-MULTICENAS')
-    budget=0 if replay else min(20,len(tri)+2) if integral else 4 if multi else 2
+    budget=0 if replay or '--visao-zero' in sys.argv[4:] else min(20,len(tri)+2) if integral else 4 if multi else 2
     telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
     def ask(prompt,images):
         nonlocal calls
@@ -123,8 +123,9 @@ def main():
                         q=R.revisar_foto(m,im,n,lambda prompt,images:old['resposta'])
                         cache_hits+=1;c['revisao_reutilizada']=True
                     except (ValueError,KeyError,TypeError):
+                        if calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
-                elif replay:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                elif calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}
@@ -169,10 +170,10 @@ def main():
                             continue
                         except (ValueError,TypeError,KeyError,AttributeError):pass
                     fresh.append((i,pk,frames))
-                if replay and fresh:
+                if calls>=budget and fresh:
                     c['janelas_cache_ausentes']=[pk['revisao_id'] for _,pk,_ in fresh]
                     fresh=[]
-                if replay and not entries:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                if calls>=budget and not entries:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 fresh_result=DE.revisar_janelas_lote([(pk,frames) for _,pk,frames in fresh],ask,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False)) if fresh else {'janelas':[],'chamadas_logicas':0,'imagens_enviadas':0}
                 for (i,_,_),row in zip(fresh,fresh_result['janelas']):entries[i]=row
                 batch={**fresh_result,'janelas':[entries.get(i,{'falha':'CACHE_AUSENTE_SEM_NOVA_IA'}) for i in range(len(windows))]}
@@ -255,7 +256,7 @@ def main():
                     if local:
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
-                if replay:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
+                if replay or total_search>=phase_limit:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
                 r=A.pesquisar_cobertura(n,biblioteca=lib,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
@@ -280,9 +281,10 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:(nid not in local_checked) if replay else total_search<phase_limit,
+                        pode_buscar=lambda:(nid not in local_checked) or (not replay and total_search<phase_limit),
                         pode_inspecionar=lambda:replay or (calls<budget and (phase==1 or calls==start)),
-                        max_buscas=search_limit,estado=st)
+                        max_buscas=search_limit,estado=st,
+                        pode_reusar=lambda c:calls>=budget and c.get('fonte')=='biblioteca_v3')
                     results_by_id[nid]=row
             results=[{**results_by_id[n['id']],'necessidade_id':n['id'],'fatos':n['fatos']} for n in tri]
             from src.v4.formatos import cobertura_documental as C

@@ -32,6 +32,15 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -c 'from src.v3 import previa_telegram as T; T.chat_autorizado()'
+      - name: Recuperar biblioteca privada pertinente antes da pesquisa
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          if python -m scripts.recuperar_checkpoints_documentais benchmarks/e254/documentario.json gelo_paisagem qa_e254_checkpoints; then
+            echo "CORINGA_CHECKPOINTS_DESCOBERTOS=qa_e254_checkpoints/descoberta.json" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Cofre indisponivel; pesquisa externa permanece permitida dentro do teto existente"
+          fi
       - name: Cobertura real das 18 necessidades
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -39,7 +48,7 @@ jobs:
           CAIXA_MAX_CHAMADAS: '20'
           CAIXA_TETO_USD: '0'
           USAR_CLAUDE: '0'
-        run: python -m scripts.qa_revisao_documental_e247 benchmarks/e254/documentario.json stage_documental/e254 gelo_paisagem --adaptativa --multicenas --integral
+        run: python -m scripts.qa_revisao_documental_e247 benchmarks/e254/documentario.json stage_documental/e254 gelo_paisagem --progressiva --multicenas --integral
       - name: Preservar relatorio original no cofre antes do espelho
         if: ${{ !cancelled() }}
         env:
@@ -48,7 +57,10 @@ jobs:
           shopt -s nullglob
           root=stage_documental/e254
           if [[ -s "$root/revisao.json" ]]; then
-            bash scripts/arquivar_cofre_review.sh "review-e254-coverage-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/revisao.json" "$root"/revisao-*.jpg
+            files=("$root/revisao.json" "$root"/revisao-*.jpg "$root"/checkpoints/*.zip)
+            if [[ -s "$root/manifesto-revisoes.jsonl" ]]; then files+=("$root/manifesto-revisoes.jsonl"); fi
+            if [[ -s qa_e254_checkpoints/descoberta.json ]]; then files+=(qa_e254_checkpoints/descoberta.json); fi
+            bash scripts/arquivar_cofre_review.sh "review-e254-coverage-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
           fi
       - name: Preflight e voz somente se houver cobertura
         env:

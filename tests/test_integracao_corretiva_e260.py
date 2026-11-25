@@ -39,3 +39,26 @@ def test_checkpoint_relevance_respects_requested_media():
     assert relevance({'tipo':'video','titulo':'Lava flow in channel'},n)>0
     assert relevance({'tipo':'foto','titulo':'Lava flow in channel'},n)==0
     assert relevance({'tipo':'video','titulo':'Polar bear'},n)==0
+
+
+def test_progressive_cache_only_does_not_inspect_remote_or_require_vision():
+    n={'id':'n','necessidade':'registro','evidencia_visual':'movimento',
+       'pesquisa':{'consultas_en':['lava flow']}}
+    local={'fonte':'biblioteca_v3','source_id':'local','tipo':'video'}
+    remote={'fonte':'remote','source_id':'remote','tipo':'video'}
+    seen=[]
+    def search(*args):
+        return {'id':'n','buscas':[],'candidatos':[remote,local]}
+    def inspect(c,n):
+        seen.append(c['source_id'])
+        return {'estado':'PERTINENTE_PRIVADO','necessidade_id':'n','revisao_id':'verified',
+                'publicar':False,'direitos_aprovados':False}
+    row=R.cobertura_progressiva(n,search,inspect,pode_buscar=lambda:True,
+        pode_inspecionar=lambda:False,max_buscas=4,
+        pode_reusar=lambda c:c['fonte']=='biblioteca_v3')
+    assert row['estado']=='CANDIDATO_PRIVADO_REVISADO'
+    assert seen==['local'] and not row['publicar']
+    seen.clear()
+    row=R.cobertura_progressiva(n,search,inspect,pode_buscar=lambda:True,
+        pode_inspecionar=lambda:False,max_buscas=4)
+    assert row['estado']=='LACUNA_PENDENTE' and seen==[]

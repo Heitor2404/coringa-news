@@ -225,7 +225,7 @@ def diagnostico_cobertura(rodadas,parada):
             'inexistencia_de_midia_comprovada':False,'publicar':False}
 
 def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_inspecionar,
-                           max_buscas,passo_buscas=4,max_tentativas=24,estado=None):
+                           max_buscas,passo_buscas=4,max_tentativas=24,estado=None,pode_reusar=None):
     """Bounded progressive scheduler. Discovery and inspection have distinct
     budgets. The caller can resume the same queue without repeating queries."""
     if necessidade['necessidade']=='territorio':
@@ -245,9 +245,14 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
     parada='ORCAMENTO_ESGOTADO'
     while tentativas<max_tentativas:
         available=pode_inspecionar()
-        if pending and available:
-            result=fila_cobertura(necessidade,pending,inspecionar,
-                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_inspecionar=pode_inspecionar)
+        reusable=[c for c in pending if pode_reusar is not None and pode_reusar(c)]
+        if pending and (available or reusable):
+            # A cache-only inspection does not spend vision. Never pass a remote
+            # candidate through the cache-only path, even if it ranks higher.
+            pool=pending if available else reusable
+            guard=pode_inspecionar if available else lambda: True
+            result=fila_cobertura(necessidade,pool,inspecionar,
+                max_candidatos=min(12,max_tentativas-tentativas),vistos=seen,pode_inspecionar=guard)
             rounds.append({'rodada':len(rounds)+1,'pesquisa':{'id':necessidade['id'],'buscas':[],'candidatos':pending.copy()},'cobertura':result})
             tentativas+=result['tentativas']
             pending[:]=[c for c in pending if (c.get('fonte'),c.get('source_id') or c.get('url')) not in seen]
@@ -271,7 +276,7 @@ def cobertura_progressiva(necessidade,pesquisar,inspecionar,*,pode_buscar,pode_i
         rounds.append({'rodada':len(rounds)+1,'pesquisa':report,'cobertura':{'estado':'LACUNA_PENDENTE','tentativas':0,'trilha':[]}})
         if not pode_inspecionar():st['descoberta_sem_visao']=True
         if not report['buscas'] and not pending:parada='SEM_NOVOS_CANDIDATOS';break
-        if not report['buscas'] and not pode_inspecionar():parada='REVISAO_PENDENTE_ORCAMENTO';break
+        if not report['buscas'] and not pode_inspecionar() and not any(pode_reusar is not None and pode_reusar(c) for c in pending):parada='REVISAO_PENDENTE_ORCAMENTO';break
     return {'estado':'LACUNA_PENDENTE','rodadas':rounds,'tentativas':tentativas,
             'diagnostico':diagnostico_cobertura(rounds,parada),'pendentes':len(pending),
             'pronto_para_render':False,'publicar':False}

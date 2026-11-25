@@ -53,6 +53,23 @@ jobs:
           assert r['publish'] is False
           print('E260 REUSO AUTOMATICO',r['reusos_analises'])
           PY
+      - name: Testar fluxo progressivo normal com visao zero
+        env:
+          CORINGA_CHECKPOINTS_DESCOBERTOS: qa_e260_checkpoints/descoberta.json
+          CAIXA_MAX_CHAMADAS: '0'
+          CAIXA_TETO_USD: '0'
+          USAR_CLAUDE: '0'
+        run: |
+          python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/e260-normal contrastes --progressiva --multicenas --qualidade --visao-zero
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('stage_documental/e260-normal/revisao.json').read_text())
+          assert not r['modo_replay_privado'] and r['visao_chamadas_logicas']==0
+          assert r['reusos_analises']>=6 and r['rede_aquisicao']['http']==0
+          assert [x['estado'] for x in r['cobertura']]==['CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE']
+          print('E260 NORMAL ZERO',r['reusos_analises'])
+          PY
       - name: Repetir prova de aquisicao de provedores sem IA
         id: sources
         if: ${{ !cancelled() }}
@@ -67,6 +84,7 @@ jobs:
           mkdir -p "$root"
           if [[ -s qa_e260_checkpoints/descoberta.json ]]; then cp qa_e260_checkpoints/descoberta.json "$root/descoberta-checkpoints.json"; fi
           if [[ -s qa_e260_fontes/revisao.json ]]; then cp qa_e260_fontes/revisao.json "$root/fontes.json"; fi
+          if [[ -s stage_documental/e260-normal/revisao.json ]]; then cp stage_documental/e260-normal/revisao.json "$root/normal-zero.json"; fi
           files=("$root"/*.json "$root"/*.jpg)
           if (( ${#files[@]} > 0 )); then
             bash scripts/arquivar_cofre_review.sh "review-e260-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"

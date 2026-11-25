@@ -56,7 +56,7 @@ def main():
                 if progressive and identity in acquired:
                     meta,im,p,receipt=acquired[identity];im=im.copy();c.update(receipt);reuses+=1
                 else:
-                    meta,im,p=Q.sample(c,assets,t)
+                    meta,im,p=Q.sample(c,assets,t,progressivo=progressive)
                     if progressive:acquired[identity]=(meta,im.copy(),p,{k:c[k] for k in ('recibo_nasa','recibo_archive','recibo_cientifico','licenca','credito') if k in c})
         except Exception as e:return {'estado':'FALHA_AQUISICAO','motivo':str(e)[:200]}
         c['aquisicao']=meta

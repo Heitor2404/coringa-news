@@ -1,10 +1,10 @@
 /** FILME EDITORIAL — compositor visual-first independente do ATLAS de cartões.
-import {SignatureBackground,signatureHasVisibleArea} from './SignatureBackground';
  * Stage 0: documentação real preenchendo a tela; câmera e revelações de cada assunto.
  * Não há palco-mapa persistente, slots pequenos, nem fluxo de cards como ação.
  * Todos os títulos vêm do roteiro; o compositor não inventa fatos.
  */
 import React from 'react';
+import {SignatureBackground,signatureHasVisibleArea} from './SignatureBackground';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
 import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';

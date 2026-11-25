@@ -1,4 +1,4 @@
-name: E293 - identidade autoral B e preservacao de midia
+name: E293.1 - corrigir import do fundo B e validar render
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

@@ -57,6 +57,10 @@ def test_e293_signature_is_decoration_behind_real_media_only():
     code=(root/'FilmeEditorial.tsx').read_text()
     bg=(root/'SignatureBackground.tsx').read_text()
     assert 'SIGNATURE_B_V1' in bg and 'aria-hidden="true"' in bg
+    # E293.1: source-string assertions alone missed the import inside the opening comment.
+    import re
+    uncommented=re.sub(r'/\*.*?\*/','',code,flags=re.S)
+    assert re.search(r"^import \{SignatureBackground,signatureHasVisibleArea\} from '\./SignatureBackground';$",uncommented,re.M)
     assert 'signatureHasVisibleArea(layout.media)&&<SignatureBackground/>' in code
     segment=code.split('if(mediaFirst&&realMedia(shot)) {',1)[1]
     assert segment.index('<SignatureBackground/>') < segment.index('<Body shot={shot}')

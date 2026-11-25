@@ -358,10 +358,10 @@ def test_qa_overlay_nao_aparece_sem_permissao_explicitamente_informada():
     assert 'quadro_integral' in s and "shot.type==='mechanism'" in s
 
 
-def test_documentary_photo_ambience_does_not_replace_integral_foreground():
+def test_documentary_photo_preserves_integral_foreground_without_rejected_blur():
     code=_script()
-    assert 'data-media-ambience="defocused-non-evidence"' in code
-    assert "filter:'blur(64px) brightness(.42) saturate(.72)'" in code
-    assert "photoHero?DOC_MEDIA.photoHero:DOC_MEDIA.photoIntegral" in code
+    assert 'data-media-ambience="defocused-non-evidence"' not in code
+    assert "blur(64px)" not in code
+    assert 'rectStyle(integralMediaRect(shot))' in code
     assert "objectFit:'contain'" in code
     assert 'data-documentary-credit="full"' in code

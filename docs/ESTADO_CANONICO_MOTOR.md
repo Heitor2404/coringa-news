@@ -129,3 +129,5 @@ E281.2 [45639629861](https://github.com/Heitor2404/coringa-news/actions/runs/456
 
 ### E286 — composição em revisão (§339)
 Remoção do fundo borrado e melhoria da escala por proporção real; crédito discreto, legenda centralizada. Prova privada de layout multiformato sem IA, não filme narrado nem homologação; conferir quadros. E285 multitema 45683486826 SUCCESS, contrato de reuso 45683486814 pendente nesta consulta. 
+
+E286.1 (§340): contrato de área segura histórico exigia blur reprovado; corrigido para preservar imagem integral e impedir retorno. Nova prova pendente. Candidato prioritário Havaí (curadoria assistida histórica, não autonomia inédita).

@@ -1,4 +1,4 @@
-name: E286 - prova de composicao real multiformato sem IA
+name: E286.1 - prova de composicao sem fundo reprovado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

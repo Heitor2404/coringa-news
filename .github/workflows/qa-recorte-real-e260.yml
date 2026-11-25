@@ -1,4 +1,4 @@
-name: E260.3 - comparacao real de recorte e enquadramento privado
+name: E260.4 - comparacao real com contexto e contraste
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           root=stage_documental/e260recorte
-          for name in antes depois; do
+          for name in antes depois contexto; do
             (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root/$name.mp4" --props=../"$root/$name/props.json" --public-dir=remotion/public --codec=h264 --crf=21 --scale=0.5 --concurrency=2 --log=error)
             ffprobe -v error -show_streams -show_format -of json "$root/$name.mp4" > "$root/$name-probe.json"
           done
@@ -56,7 +56,7 @@ jobs:
           from pathlib import Path
           root=Path('stage_documental/e260recorte')
           q=json.loads((root/'comparacao.json').read_text())
-          for name in ('antes','depois'):
+          for name in ('antes','depois','contexto'):
               m=json.loads((root/(name+'-probe.json')).read_text())
               v=next(s for s in m['streams'] if s['codec_type']=='video')
               assert (v['width'],v['height'])==(540,960)
@@ -74,7 +74,7 @@ jobs:
           shopt -s nullglob
           root=stage_documental/e260recorte
           if [[ -s "$root/comparacao.json" ]]; then
-            files=("$root/comparacao.json" "$root"/original-amostra-*.jpg "$root"/antes-final.jpg "$root"/depois-final.jpg "$root"/*.mp4)
+            files=("$root/comparacao.json" "$root"/original-amostra-*.jpg "$root"/antes-final.jpg "$root"/depois-final.jpg "$root"/contexto-final.jpg "$root"/*.mp4)
             valid=()
             for f in "${files[@]}"; do [[ ! -f "$f" ]] || valid+=("$f"); done
             bash scripts/arquivar_cofre_review.sh "review-e260-recorte-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"

@@ -46,13 +46,19 @@ def main():
                 im=frame(x['candidate']['local_source'],pk['inicio_s']+pk['duracao_s']*frac,width=a['px'][0])
             assert hashlib.sha256(im.tobytes()).hexdigest()==a['pixels_sha256']
             im.save(root/f'original-amostra-{i}.jpg',quality=92)
-        for name,plan in (('antes',old),('depois',new)):
+        # Alternative: keep the entire reviewed source, same duration and
+        # composition. No guessing a new bbox from the disputed observation.
+        context=copy.deepcopy(new)
+        context['shots'][0].pop('video_framing',None)
+        context['shots'][0]['video_context_layout']='cena_integral'
+        for name,plan in (('antes',old),('depois',new),('contexto',context)):
             dst=root/name
             F.preparar(plan,dst,PUBLIC,fragmento_misto=True)
         proof={'publicar':False,'revisao_visual_humana':'PENDENTE','voz':False,
                'sha256_origem':x['candidate']['aquisicao']['sha256'],'revisao_id':pk['revisao_id'],
                'inicio_origem':s['source_in_seconds'],'ultimo_quadro_revisado_s':last,
-               'antes_s':oldshot['end'],'depois_s':s['end'],
+               'antes_s':oldshot['end'],'depois_s':s['end'],'contexto_s':s['end'],
+               'contexto_enquadramento':'integral_sem_reduzir_duracao','comparacao_contexto':'alternativa editorial privada; escolher apos inspecionar pixels',
                'ultimo_frame_depois_s':(frames-1)/30,'amostras_sha_confirmadas':3,
                'antes_enquadramento':'integral','depois_enquadramento':'dirigido',
                'comparacao':'corte permitido pela antiga alocacao minima, nao filme anterior',

@@ -912,6 +912,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
            'private_review_only':privado or bool(pendentes) or modo==PA.LEGACY,
            'safe_area_profile':plano.get('safe_area_profile') or qa_area_segura.PERFIL,
            'direitos_pendentes':pendentes}
+    if privado and modo!=PA.LEGACY and plano.get('documentary_framing')=='ADAPTIVE_REVIEW_V1':
+        props['documentary_media_preview']=True
     if modo==PA.LEGACY:
         props['animation_policy_mode']=modo
     (destino/'props.json').write_text(json.dumps(props,ensure_ascii=False,indent=2),encoding='utf-8')

@@ -76,6 +76,7 @@ export type FilmProps = {
   documentary_captions?: {start:number;end:number;words:{w:string;hl?:boolean}[]}[];
   animation_policy_mode?: 'EDITORIAL'|'LEGADO_REJEITADO_SOMENTE_QA';
   documentary_caption_origin?: 'PALAVRAS_MEDIDAS'|'FRASES_MEDIDAS_LAB';
+  documentary_media_preview?: boolean; // silent private QA uses the same documentary composition
 };
 
 const W = 1080, H = 1920;
@@ -553,8 +554,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         fontSize:25,fontWeight:800,letterSpacing:.5,textShadow:'0 1px 4px #000,0 2px 6px #000',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
         {shot.lead.toUpperCase()}
       </div>}
-      <div style={{...rectStyle(DOC_MEDIA.source),color:'#E0E5EB',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:24,lineHeight:1.12,fontWeight:600,overflow:'hidden',textShadow:'0 1px 4px #000,0 2px 6px #000'}}>
+      <div style={{...rectStyle(DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
+        fontSize:24,lineHeight:1.12,fontWeight:600,overflow:'hidden',textShadow:'0 1px 4px #000,0 2px 6px #000',
+        background:'rgba(4,11,20,.80)',padding:'6px 10px',boxSizing:'border-box',borderRadius:6}}>
         {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
       </div>
     </AbsoluteFill>;
@@ -667,10 +669,12 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   </AbsoluteFill>;
 };
 export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
-  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset,documentary_captions,documentary_caption_origin,animation_policy_mode}) => {
+  private_review_only=false,safe_zone_debug=false,subtitle_mode=false,reference_style_preview=false,portrait_experiment=false,cad_narration_asset,scene_narration_asset,documentary_captions,documentary_caption_origin,animation_policy_mode,documentary_media_preview=false}) => {
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
+  if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
+    throw new Error('E260-MEDIA-PREVIEW-PRIVATE');
   if(animation_policy_mode!==undefined&&animation_policy_mode!=='EDITORIAL'&&!legacyQA)
     throw new Error('E211-MODO-INVALIDO');
   if(legacyQA&&(!preview||!private_review_only||documentary_captions?.length||scene_narration_asset||cad_narration_asset))
@@ -714,7 +718,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   return <AbsoluteFill style={{background:'#050A12'}}>
     {cad_narration_asset&&<Audio src={staticFile(cad_narration_asset)}/>}
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
-    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&documentary_captions?.length)}/>}
+    {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
     {docCap&&<div data-safe-role="subtitle" style={{...(realMedia(shots[shot])?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:realMedia(shots[shot])?'flex-start':'center',textAlign:realMedia(shots[shot])?'left':'center',pointerEvents:'none'}}>

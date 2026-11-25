@@ -81,30 +81,38 @@ def test_montagem_sem_escolher_foto_ou_animacao_reusa_catalogos():
     assert p.get('shots') is None
 
 
-def test_bytes_autenticados_somente_apos_verificar_SHA(tmp_path):
-    p=two()
+def test_renderer_reprovado_bloqueia_hibrido_antes_de_download(tmp_path):
     lib,img=catalogo_mock()
-    result=H.preparar(p,tmp_path/'run',tmp_path/'public',downloader=lambda url:img,biblioteca=lib)
-    assert result['pronto'],result
-    prov=json.loads((tmp_path/'run/proveniencia_hibrida.json').read_text('utf8'))
-    assert prov['estado']=='ORIGINAIS_SHA_VERIFICADOS'
-    assert prov['aprovacao_editorial'] is False
-    assert prov['revisao_contextual']=='PENDENTE'
-    assert prov['midias']
+    calls=[]
+    with pytest.raises(ValueError,match='A-ROTA-BLOQUEADA'):
+        H.preparar(two(),tmp_path/'run',tmp_path/'public',
+                   downloader=lambda url:calls.append(url) or img,biblioteca=lib)
+    assert not calls
+    assert not (tmp_path/'run/proveniencia_hibrida.json').exists()
+
+
+def test_bytes_autenticados_somente_apos_verificar_SHA(tmp_path):
+    # The photo's SHA contract is independent of the rejected renderer.
+    from src.v4.formatos import filme_editorial as F
+    img=generate_mock()
+    p=H.planejar(two(),catalogo_mock()[0])['plano']
+    p['shots']=p['shots'][:1]
+    p['duracao']=p['shots'][0]['end']
+    result=F.preparar(p,tmp_path/'run',tmp_path/'public',downloader=lambda url:img,fragmento_misto=True)
+    assert result['pronto']
     props=json.loads((tmp_path/'run/props.json').read_text('utf8'))
-    assert [x['type'] for x in props['shots']]==['photo','mechanism']
-    assert props['shots'][1]['mechanism']=='optical_projection'
-    assert props['shots'][0]['source'].startswith('TSMC Fab 18')
+    assert props['private_review_only'] and [x['type'] for x in props['shots']]==['photo']
     assert len(list((tmp_path/'public/film_editorial').glob('*.jpg')))==1
 
 
 def test_mismatch_bytes_bloqueia_sem_arquivo_aprovado(tmp_path):
+    from src.v4.formatos import filme_editorial as F
     lib,img=catalogo_mock()
-    adulterado=img+b'changed!'
+    p=H.planejar(two(),lib)['plano']
+    p['shots']=p['shots'][:1];p['duracao']=p['shots'][0]['end']
     with pytest.raises(ValueError,match='hash da origem mudou'):
-        H.preparar(two(),tmp_path/'run',tmp_path/'public',
-                   downloader=lambda url:adulterado,biblioteca=lib)
-    assert not (tmp_path/'run/proveniencia_hibrida.json').exists()
+        F.preparar(p,tmp_path/'run',tmp_path/'public',downloader=lambda url:img+b'changed!',fragmento_misto=True)
+    assert not (tmp_path/'run/props.json').exists()
 
 
 def test_filme_integral_nao_inventa_registro_de_terremoto():

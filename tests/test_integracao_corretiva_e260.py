@@ -86,3 +86,11 @@ def test_integral_nasa_variant_ranking_retains_high_quality_options():
     c={'source_id':'ID','tipo':'video'}
     choices=nasa_receipt(c,T(),progressivo=True,min_video_px=700)
     assert [x['url'] for x in choices]==[urls[1],urls[3],urls[2],urls[0]]
+
+
+def test_short_credit_preserves_author_and_license_without_inventing():
+    from src.v4.formatos import ponte_cobertura_filme as P
+    c='Title — USGS Volcanoes (Public domain), Wikimedia Commons'
+    assert P.credito_em_tela(c)=='USGS Volcanoes (Public domain), Wikimedia Commons'
+    assert P.credito_em_tela('Original credit from other provider')=='Original credit from other provider'
+    assert P.credito_em_tela('Title — Author — Other provider')=='Title — Author — Other provider'

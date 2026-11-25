@@ -166,6 +166,18 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
     return chosen,{'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),
                   'capacidade_s':round(capacity,3),'lacunas':issues,'publicar':False}
 
+def credito_em_tela(credito):
+    """Use the actual attribution suffix of the Commons catalogue format
+    (title — author (license), Wikimedia Commons), never truncate the author
+    or invent attribution. Full credit and source page remain in media.
+    """
+    if not isinstance(credito,str):return credito
+    if credito.endswith(', Wikimedia Commons') and ' — ' in credito:
+        title,author=credito.rsplit(' — ',1)
+        if title.strip() and author.strip():return author
+    return credito
+
+
 def plano(case,chosen,tempos):
     shots=[];media={};start=0;maps=[]
     for ch,end in zip(case['chapters'],tempos,strict=True):
@@ -193,7 +205,7 @@ def plano(case,chosen,tempos):
             span=count/30
             shot={'id':i,'type':x['kind'],'asset':mid,'start':start/30,'end':(start+count)/30,
                   'subject':n['sujeito'],'headline':n['sujeito'],'lead':ch['title'] if i==ids[0] else '',
-                  'source_display':c['credito'],'evidence':'representative','focus':[.5,.5],
+                  'source_display':credito_em_tela(c['credito']),'evidence':'representative','focus':[.5,.5],
                   'cues':[{'at':min(1.1,span*.45),'label':n['sujeito']}]}
             if x['kind']=='photo':shot['photo_framing']='integral'
             else:

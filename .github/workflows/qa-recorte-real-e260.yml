@@ -1,4 +1,4 @@
-name: E260.4 - comparacao real com contexto e contraste
+name: E261.4 - recorte corrigido e integracao ATLAS real
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -43,7 +43,7 @@ jobs:
         run: |
           python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/e260recorte contrastes --progressiva --multicenas --qualidade --replay-privado
           python -m scripts.qa_recorte_real_e260 stage_documental/e260recorte
-      - name: Renderizar dois recortes e extrair quadros reais
+      - name: Renderizar tres recortes e extrair quadros reais
         run: |
           set -euo pipefail
           root=stage_documental/e260recorte
@@ -66,6 +66,29 @@ jobs:
               subprocess.run(['ffmpeg','-v','error','-y','-ss',str(at),'-i',str(root/(name+'.mp4')),'-frames:v','1',str(root/(name+'-final.jpg'))],check=True)
           (root/'comparacao.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
           PY
+      - name: Integrar ATLAS multiescala e filmagem restaurada
+        run: |
+          python -m scripts.qa_misto_atlas_e261 stage_documental/e260recorte benchmarks/e2614/kilauea.json
+          root=stage_documental/e260recorte
+          (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root/misto.mp4" --props=../"$root/misto/props.json" --public-dir=remotion/public --codec=h264 --crf=21 --scale=0.5 --concurrency=2 --log=error)
+          ffprobe -v error -show_streams -show_format -of json "$root/misto.mp4" > "$root/misto-probe.json"
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          from src.v4.formatos import qa_area_segura as S
+          root=Path('stage_documental/e260recorte')
+          p=root/'misto.json'
+          q=json.loads(p.read_text())
+          m=json.loads((root/'misto-probe.json').read_text())
+          assert abs(float(m['format']['duration'])-q['duracao_s'])<.07
+          assert not any(s['codec_type']=='audio' for s in m['streams'])
+          for name,at in [('mapa',1.0),('mapa-final',5.3),('registro',6.5),('registro-final',q['duracao_s']-.1)]:
+              out=root/(name+'.jpg')
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str(at),'-i',str(root/'misto.mp4'),'-frames:v','1',str(out)],check=True)
+              S.overlay(out,root/(name+'-safe.jpg'))
+          q['sha256_render']=hashlib.sha256((root/'misto.mp4').read_bytes()).hexdigest()
+          p.write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          PY
       - name: Preservar evidencia privada
         if: ${{ !cancelled() }}
         env:
@@ -74,7 +97,7 @@ jobs:
           shopt -s nullglob
           root=stage_documental/e260recorte
           if [[ -s "$root/comparacao.json" ]]; then
-            files=("$root/comparacao.json" "$root"/original-amostra-*.jpg "$root"/antes-final.jpg "$root"/depois-final.jpg "$root"/contexto-final.jpg "$root"/*.mp4)
+            files=("$root/comparacao.json" "$root"/original-amostra-*.jpg "$root"/antes-final.jpg "$root"/depois-final.jpg "$root"/contexto-final.jpg "$root"/misto.json "$root"/mapa*.jpg "$root"/registro*.jpg "$root"/*.mp4)
             valid=()
             for f in "${files[@]}"; do [[ ! -f "$f" ]] || valid+=("$f"); done
             bash scripts/arquivar_cofre_review.sh "review-e260-recorte-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"

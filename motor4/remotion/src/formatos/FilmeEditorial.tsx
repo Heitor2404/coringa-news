@@ -198,7 +198,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:[72,250,810,300],section:[72,310,810,355],subtitle:[72,1170,850,1330],source:[72,1390,850,1460],integral:[0,395,1080,1255]} as const;
+const DOC_MEDIA={brand:[72,250,810,300],section:[72,310,810,355],subtitle:[72,1170,850,1330],source:[160,1195,760,1240],integral:[0,395,1080,1255]} as const;
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
@@ -555,9 +555,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         {shot.lead.toUpperCase()}
       </div>}
       <div style={{...rectStyle(DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:24,lineHeight:1.12,fontWeight:600,overflow:'hidden',textShadow:'0 1px 4px #000,0 2px 6px #000',
-        background:'rgba(4,11,20,.80)',padding:'6px 10px',boxSizing:'border-box',borderRadius:6}}>
-        {shot.evidence==='representative'?'IMAGEM DE CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
+        fontSize:Math.max(18,Math.min(24,Math.floor(1100/Math.max(1,('FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
+        overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
+        background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>
+        FONTE: {shot.source_display||shot.source}
       </div>
     </AbsoluteFill>;
   }

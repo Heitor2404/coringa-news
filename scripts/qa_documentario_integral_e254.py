@@ -26,6 +26,20 @@ def prever_tempos(case,chosen,*,minimo_s=60):
     return ends
 
 
+FATOR_MAX=1.08
+
+
+def ritmo_necessario(case,chosen,tempos,dur):
+    """Smallest uniform speech-tempo factor so every chapter fits its verified visual capacity (>=1)."""
+    caps=[sum(math.floor(chosen[i]['cap']*30+1e-6) for i in ch['needs'])/30 for ch in case['chapters']]
+    bounds=[b for a,b in tempos[:-1]]+[dur]
+    starts=[0.]+bounds[:-1]
+    f=1.0
+    for (a,b),cap in zip(zip(starts,bounds),caps):
+        f=max(f,(b-a)/max(cap,1e-6))
+    return f
+
+
 def main():
     root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
     case=report['case']
@@ -61,7 +75,20 @@ def main():
     from src import voz
     wav,tempos,caps,dur=voz.narrar([{'fala':ch['speech']} for ch in case['chapters']],root/'voz',exigir_gemini=True)
     audio=root/'narracao48k.wav'
-    subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
+    # E284: measured speech slightly longer than the verified evidence of a chapter. Never stretch, repeat or hold
+    # images beyond their reviewed capacity: if the overflow is small, tighten the narration tempo uniformly
+    # (pitch preserved) and scale every measured word/chapter time by the same factor; otherwise replan the speech.
+    fator=ritmo_necessario(case,chosen,tempos,dur)
+    filtro=['-af',f'atempo={fator:.5f}'] if fator>1.0005 else []
+    if fator>FATOR_MAX:
+        write(root/'integral.json',{**gate,'motivo':'FALA_EXCEDE_EVIDENCIA_REPLANEJAR','fator_necessario':round(fator,4),
+                                    'duracao_voz':dur,'pronto_para_render':False});return
+    if filtro:
+        tempos=[(a/fator,b/fator) for a,b in tempos]
+        caps=[{**bl,'start':bl.get('start',0)/fator if 'start' in bl else bl.get('start'),'end':bl['end']/fator,
+               'words':[{**w,'s':float(w['s'])/fator,**({'e':float(w['e'])/fator} if 'e' in w else {})} for w in bl['words']]} for bl in caps]
+        write(root/'ajuste_ritmo.json',{'fator_atempo':round(fator,5),'duracao_original_s':dur,'motivo':'FALA_LIGEIRAMENTE_MAIOR_QUE_EVIDENCIA','publicar':False})
+    subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),*filtro,'-ar','48000','-ac','1',str(audio)],check=True)
     with wave.open(str(audio)) as f:duration=f.getnframes()/f.getframerate()
     total=math.ceil(duration*30)
     if duration<60 or len(tempos)!=len(case['chapters']):

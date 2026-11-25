@@ -2,6 +2,7 @@
 import hashlib,json,re,subprocess,sys
 from pathlib import Path
 from src.v3 import pacote_biblioteca as P
+from src.v4.formatos import reuso_documental as RE
 
 REPO='Heitor2404/coringa-cofre'
 def api(path):
@@ -14,6 +15,7 @@ def relevances(row,needs):
     scores={}
     for n in needs:
         if n.get('necessidade') not in ('registro','lacuna_explicativa') or (n.get('evidencia_visual')=='movimento' and typ!='video'):continue
+        if RE.vinculo_historico(n,row):scores[n['id']]=2
         for q in n.get('consultas_en') or []:
             qs=tokens(q)
             if qs:
@@ -91,7 +93,7 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
             p=verified_download(tag,a,root/tag)
             dest=P.extrair_checkpoint(p,root/tag/mid,expected_sha256=a['digest'][7:])
             dirs.append(str(dest));seen.add(mid)
-            events.append({'id':mid,'tag':tag,'score':max(scores.values()),'necessidades_lexicais':scores,'estado':'PACOTE_LOCAL_VERIFICADO'})
+            events.append({'id':mid,'tag':tag,'score':max(scores.values()),'prioridades_por_necessidade':scores, 'pista_historica':any(v==2 for v in scores.values()),'estado':'PACOTE_LOCAL_VERIFICADO'})
         except (OSError,ValueError,subprocess.SubprocessError,KeyError) as e:events.append({'id':mid,'motivo':type(e).__name__})
     return {'pacotes':dirs,'releases_examinadas':len(releases),'limite_releases':max_releases,'manifestos_lidos':manifests,'candidatos_ranqueados':len(ranked),'limite_pacotes':max_packages,'nao_restaurados':skipped,'bytes_reservados':spent,'eventos':events,'publicar':False,'direitos_aprovados':False}
 def main():

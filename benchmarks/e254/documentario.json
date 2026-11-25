@@ -17,6 +17,28 @@
           "consultas_en": [
             "mountain glacier tongue aerial",
             "mountain glacier tongue"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n1",
+                "sujeito": "geleira de montanha",
+                "mostrar": "língua de gelo contínua descendo uma encosta",
+                "fatos": [
+                  "f1"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "8c291c9e09cc5c0e134ed33efb3f1b7c85ad83f00ace1eedbd0e011e7dda5583",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_melting_glacier_surface_on_South_Engilchek_Glacier,_Central_Tian_Shan,_Kyrgyzstan.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -31,6 +53,48 @@
           "consultas_en": [
             "glacier crevasses aerial",
             "glacier crevasses aerial"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n2",
+                "sujeito": "fendas glaciais",
+                "mostrar": "rede de fendas claramente visíveis no gelo",
+                "fatos": [
+                  "f2"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "dc0cedb4a51c0179458859dc4fce3f444e129f51d34c3581d59792aad8e2a878",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Taku_Glacier_crevasses,_Juneau_Icefield,_Alaska_(2026).jpg",
+              "tipo": "foto",
+              "relatorio": "e255-45540502903-1",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            },
+            {
+              "escopo": {
+                "id": "n2",
+                "sujeito": "fendas glaciais",
+                "mostrar": "rede de fendas claramente visíveis no gelo",
+                "fatos": [
+                  "f2"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "c98a8172acd047020a9029b8718c1f9d60258bf2c180a9ef0043461e726c4c37",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacier_du_Mont_Mallet_(Glacier_du_G%C3%A9ant)_%26_Mont_Blanc,_2010_July.jpg",
+              "tipo": "foto",
+              "relatorio": "e253-45537221658-1",
+              "necessidade_anterior": "n2",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -45,6 +109,28 @@
           "consultas_en": [
             "deep glacier crevasse photograph",
             "deep glacier crevasse"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n3",
+                "sujeito": "fenda profunda",
+                "mostrar": "abertura profunda com paredes de gelo discerníveis",
+                "fatos": [
+                  "f3"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "6a7db803b262e7248913034d35eae6e84ac8e044e4c8e3d4e6c6028ae73333fa",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Chopicalqui_glacier_crevasses_(6021417330).jpg",
+              "tipo": "foto",
+              "relatorio": "e255-45540502903-1",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -59,6 +145,28 @@
           "consultas_en": [
             "lateral moraine glacier debris",
             "lateral moraine glacier"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n4",
+                "sujeito": "moraina lateral",
+                "mostrar": "faixa de detritos rochosos junto à margem do gelo",
+                "fatos": [
+                  "f4"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "d05677f0776626ee4d2a065bc4e1e8aa2dd9ad27d7c9fa5b6603fa5a41bf2f98",
+              "pagina": "https://commons.wikimedia.org/wiki/File:08IN0519_Durung_Drung_glacier.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n4",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -73,6 +181,28 @@
           "consultas_en": [
             "medial moraine glacier",
             "medial moraine glacier"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n5",
+                "sujeito": "moraina medial",
+                "mostrar": "faixa escura de detritos no centro do gelo",
+                "fatos": [
+                  "f5"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "21c2a2dbf369ce2f6aef43a93128ba6f07532af8fa1b431a528ebde469ab8ea3",
+              "pagina": "https://commons.wikimedia.org/wiki/File:2008-05-24_12_J%C3%B6kulsarl%C3%B3n.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n5",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -101,6 +231,28 @@
           "consultas_en": [
             "glacial striations bedrock close up",
             "glacial striations bedrock"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n7",
+                "sujeito": "estrias glaciais",
+                "mostrar": "sulcos paralelos visíveis em rocha exposta",
+                "fatos": [
+                  "f7"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "3decabc9ff68bb698f4f978dfd95f8cc220d087f4fea0a042ea000f301aaa879",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacial_grooves_on_limestone_(Kelleys_Island,_Lake_Erie,_Ohio,_USA)_194_(48541420656).jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n7",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -115,6 +267,28 @@
           "consultas_en": [
             "glacial polish bedrock",
             "glacial polish bedrock"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n8",
+                "sujeito": "rocha polida",
+                "mostrar": "superfície rochosa polida pela erosão glacial",
+                "fatos": [
+                  "f8"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "59b52ad42fea62e280b9e643fa486094509911b2fddeda9842233eb2c8543c30",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacial_grooves_from_Pleistocene_glaciation_on_Columbus_Limestone_(Middle_Devonian)_(Glacial_Grooves_State_Park,_Kelleys_Island,_Ohio,_Lake_Erie,_USA)_1_(14972543349).jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n8",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -157,6 +331,28 @@
           "consultas_en": [
             "U shaped glacial valley photograph",
             "U shaped glacial"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n11",
+                "sujeito": "vale glacial",
+                "mostrar": "vale de seção em U claramente visível",
+                "fatos": [
+                  "f11"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "cd71184f07950bda98ed5ffd8ea830700c96513e7616bef3f8b58144439ab5fb",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Oolah_Valley_(16089307144).jpg",
+              "tipo": "foto",
+              "relatorio": "e253-45537221658-1",
+              "necessidade_anterior": "n4",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -199,6 +395,28 @@
           "consultas_en": [
             "glacial cirque mountain basin",
             "glacial cirque mountain"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n14",
+                "sujeito": "circo glacial",
+                "mostrar": "depressão em anfiteatro esculpida na montanha",
+                "fatos": [
+                  "f14"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "27766f56e3fa2476c8f870c457b2940b0d579b1bb5c49ffa27770f7782449805",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Cirque_Maudit_T%C3%A9l%C3%A9cabine_Panoramic_Mont-Blanc.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n14",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         },
         {
@@ -255,6 +473,28 @@
           "consultas_en": [
             "glacial landscape valley lake mountains",
             "glacial landscape valley"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n18",
+                "sujeito": "paisagem glacial",
+                "mostrar": "paisagem ampla com vale glacial e lago",
+                "fatos": [
+                  "f18"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "0c53691a4202c8091291565195651bbe71210dee7c36e0b4a059d68c8d449656",
+              "pagina": "https://commons.wikimedia.org/wiki/File:2011-07-25_11-34-12_Switzerland_Graub%C3%BCnden_Rhine_Gorge_6hp.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n18",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
           ]
         }
       ],

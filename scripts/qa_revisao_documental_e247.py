@@ -20,6 +20,9 @@ def main():
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
     lib,rest=restaurar_catalogo(db=out/'biblioteca.sqlite3',armazem=out/'biblioteca')
     from src.v4.formatos import reuso_documental as RE
+    raw_needs={n['id']:n for n in case['necessidades']}
+    for n in tri:
+        n['candidatos_historicos']=RE.historicos({**n,'candidatos_historicos':raw_needs[n['id']].get('candidatos_historicos') or []})
     from src.v3 import pacote_biblioteca as PB
     pack=os.getenv('CORINGA_PACOTE_PRIVADO')
     discovery=os.getenv('CORINGA_CHECKPOINTS_DESCOBERTOS')
@@ -133,7 +136,11 @@ def main():
                     except (ValueError,KeyError,TypeError):
                         if cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
-                elif cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
+                elif cache_only or calls>=budget:
+                    if somente_acervo and c.get('pista_historica'):
+                        c['amostra_pendente']={'necessidade_id':n['id'],'sha256_origem':meta['sha256'],'px':list(im.size),'pixels_sha256':hashlib.sha256(im.convert('RGB').tobytes()).hexdigest(),'publicar':False}
+                        boards.append((c,[im],n['id']+' PISTA HISTORICA - SEM APROVACAO'))
+                    return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                 else:q=R.revisar_foto(m,im,n,ask)
             except Exception as e:
                 boards.append((c,[im],'FALHA_VISAO'));return {'estado':'FALHA_VISAO','motivo':type(e).__name__}

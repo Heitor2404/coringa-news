@@ -52,3 +52,20 @@ def test_metadata_without_bytes_does_not_consume_local_quota(tmp_path):
             if i<5:b.caminho(d['sha256'],'.jpg').unlink()
         assert [c['sha_catalogo'] for c in R.candidatos(b,need(),limite=1)]==[d['sha256']]
     finally:b.fechar()
+
+
+def test_historical_lead_is_local_pending_and_scope_bound(tmp_path):
+    b=Biblioteca(tmp_path/'db',tmp_path/'files')
+    try:
+        f=tmp_path/'a.jpg';Image.new('RGB',(800,600),'blue').save(f)
+        d=b.ingerir(f,{'titulo':'IMG001','pagina':'https://example.org/a'})
+        n=need()
+        n['candidatos_historicos']=[{'escopo':R.escopo(n),'sha256':d['sha256'],'pagina':'https://example.org/a','tipo':'foto','relatorio':'old','necessidade_anterior':'other','estado':'PISTA_HISTORICA_PENDENTE','publicar':False,'direitos_aprovados':False}]
+        c=R.candidatos(b,n)[0]
+        assert c['sha_catalogo']==d['sha256'] and c['pista_historica']['estado']=='PISTA_HISTORICA_PENDENTE'
+        assert V.decidir(n,c,{},tipo='foto')['estado']=='INSUFICIENTE'
+        assert R.candidatos(b,{**n,'mostrar':'different'})==[]
+        assert R.candidatos(b,{**n,'evidencia_visual':'movimento'})==[]
+        b.caminho(d['sha256'],'.jpg').unlink()
+        assert R.candidatos(b,n)==[]
+    finally:b.fechar()

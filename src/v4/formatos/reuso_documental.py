@@ -1,9 +1,27 @@
 """E251: opt-in rehydrated originals for private documentary inspection.
 A catalogue hit is not a semantic verdict. No network fallback inside this adapter.
 """
+import re
 from pathlib import Path
 from PIL import Image
 from src.v3.pacote_biblioteca import sha
+
+def escopo(n):
+    return {k:n.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')}
+
+def historicos(n):
+    """Explicit historical leads, never semantic approvals or a cache."""
+    out=[]
+    for h in n.get('candidatos_historicos') or []:
+        if not isinstance(h,dict) or h.get('escopo')!=escopo(n) or h.get('publicar') is not False or h.get('direitos_aprovados') is not False or h.get('estado')!='PISTA_HISTORICA_PENDENTE':continue
+        if not re.fullmatch('[0-9a-f]{64}',str(h.get('sha256',''))) or not h.get('pagina') or not h.get('relatorio') or not h.get('necessidade_anterior'):continue
+        if h.get('tipo') not in ('foto','video') or (n.get('evidencia_visual')=='movimento' and h['tipo']!='video'):continue
+        if n.get('necessidade') not in ('registro','lacuna_explicativa'):continue
+        out.append(h)
+    return out
+
+def vinculo_historico(n,row):
+    return next((h for h in historicos(n) if h['sha256']==row.get('sha256') and h['pagina']==row.get('url_pagina') and h['tipo']==row.get('tipo')),None)
 
 def candidatos(bib,necessidade,limite=4):
     if necessidade.get('necessidade') not in ('registro','lacuna_explicativa'):return []
@@ -12,6 +30,10 @@ def candidatos(bib,necessidade,limite=4):
     search=necessidade.get('pesquisa') or {}
     queries=(search.get('consultas_en') or [])+(search.get('consultas') or [])
     out=[];seen=set();ranked={}
+    for h in historicos(necessidade):
+        d=bib.obter('cm-'+h['sha256'][:12])
+        if d and not d.get('ia') and vinculo_historico(necessidade,d):
+            ranked[h['sha256']]=(2,d['tipo'],d)
     for q in queries:
         for tipo in tipos:
             # Rank metadata first, but only count verified local files against the review quota.
@@ -30,7 +52,8 @@ def candidatos(bib,necessidade,limite=4):
             'titulo':d['titulo'],'descricao':d['descricao'],'url':d['url_original'],
             'pagina':d['url_pagina'],'credito':d['atribuicao'],'licenca':d['licenca'],
             'direitos':'QUARENTENA_REVISAO_PRIVADA','sha_catalogo':h,
-            'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False})
+            'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False,
+            **({'pista_historica':vinculo_historico(necessidade,d)} if vinculo_historico(necessidade,d) else {})})
         if len(out)>=limite:return out
     return out
 

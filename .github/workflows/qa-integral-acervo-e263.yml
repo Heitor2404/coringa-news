@@ -1,4 +1,4 @@
-name: E264.2 - redescobrir acervo recuperado e medir cobertura sem IA
+name: E264.3 - pistas historicas e amostras privadas sem nova IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -47,9 +47,12 @@ jobs:
           assert r['visao_chamadas_logicas']==r['rede_aquisicao']['http']==r['cobertura_documentario']['consumo']['buscas']==0
           assert not (root/'props.json').exists() and not (root/'narracao48k.wav').exists()
           d=json.loads(Path('qa_e263_acervo/descoberta.json').read_text())
-          print('E264.2 DESCOBERTA', d,flush=True)
-          print('E264.2 RESTAURACAO',r['restauracao'],flush=True)
-          print('E264.2 CAPACIDADE',q,flush=True)
+          print('E264.3 DESCOBERTA', d,flush=True)
+          print('E264.3 RESTAURACAO',r['restauracao'],flush=True)
+          print('E264.3 CAPACIDADE',q,flush=True)
+          leads={c['sha_catalogo'] for p in r['pesquisa'] for c in p['candidatos'] if c.get('amostra_pendente')}
+          print('E264.3 AMOSTRAS PENDENTES',sorted(leads),flush=True)
+          assert len(leads)==11, 'historical candidate retrieval incomplete'
           PY
       - name: Espelhar lacunas reais
         if: ${{ !cancelled() }}
@@ -59,4 +62,4 @@ jobs:
           shopt -s nullglob
           files=(stage_documental/e263-integral/*.json stage_documental/e263-integral/*.jpg)
           if [[ -s qa_e263_acervo/descoberta.json ]]; then files+=(qa_e263_acervo/descoberta.json); fi
-          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e2642-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
+          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e2643-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

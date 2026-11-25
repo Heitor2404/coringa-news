@@ -40,3 +40,16 @@ def test_checkpoint_order_reserves_best_candidate_per_need():
     assert [x[2]['name'] for x in R.priorizar(rows)]==['a1','b1','a2']
     n=[{'id':'a','necessidade':'registro','evidencia_visual':'movimento','consultas_en':['glacier']}, {'id':'b','necessidade':'registro','evidencia_visual':'estatica','consultas_en':['glacier']}]
     assert R.relevances({'tipo':'foto','titulo':'glacier'},n)=={'b':1}
+
+
+def test_historical_lead_without_lexical_overlap_is_only_a_candidate():
+    from scripts import recuperar_checkpoints_documentais as R
+    from src.v4.formatos import reuso_documental as RE
+    n={'id':'n','sujeito':'ice','mostrar':'glacier surface','fatos':['f'],'necessidade':'registro','evidencia_visual':'estatica','consultas_en':['glacier']}
+    h={'escopo':RE.escopo(n),'sha256':'a'*64,'pagina':'https://example.org/a','tipo':'foto','relatorio':'old','necessidade_anterior':'other','estado':'PISTA_HISTORICA_PENDENTE','publicar':False,'direitos_aprovados':False}
+    n['candidatos_historicos']=[h]
+    row={'sha256':'a'*64,'url_pagina':h['pagina'],'tipo':'foto','titulo':'IMG001'}
+    assert R.relevances(row,[n])=={'n':2}
+    assert R.relevances(row,[{**n,'mostrar':'different'}])=={}
+    assert R.relevances({**row,'url_pagina':'https://example.org/b'},[n])=={}
+    assert R.relevances(row,[{**n,'evidencia_visual':'movimento'}])=={}

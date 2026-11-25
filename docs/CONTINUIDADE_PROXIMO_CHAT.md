@@ -221,3 +221,7 @@ E285 run 45683486814: 222 + 206 + 35 testes aprovados, Remotion config aprovada,
 ## 342. E287.1 — preflight do piloto e inspeção E286.1
 
 E286.1 run 45684437122: 35 testes, render e cofre SUCCESS; quatro quadros reais inspecionados em revisoes/e286-45684437122-1. Blur eliminado, vertical ocupa a tela, créditos discretos; horizontais ainda têm metade inferior vazia, foto 3:2 perde largura por limite de altura; vídeo NASA tem legendas inglesas já rasterizadas, não usar como referência editorial positiva. Não homologado. E287 45684864562 falhou antes de rede/acervo: 16 falhas por falta de npm ci (ícones). Corrigida dependência no workflow, sem remover testes. Priorizar inspeção de filmagens e enquadramento por ROI revisada, não crop cego. Sem IA/voz/publicação.
+
+## 343. E288 — alternativa de enquadramento por evidência existente
+
+Inspeção E286.1 mostra horizontal 3:2 perdendo largura na faixa de 630px; ampliada faixa a 730px sem crop cego. Proposta privada opt-in de recorte foto com bbox explícita moderna de revisão formal ligada a SHA/revisão, margem contextual, preservação da região e checagem de interferência de legendas/cabeçalho; fallback integral quando não cabe. Não é homologação semântica ou de publicação, não ativa em produção por padrão. E288 reusa 3 fotos do fragmento E280 apenas para comparar escala real, não episódio inteiro de geleiras, sem nova IA. Filmagens Havaí em preparação run 45685353176; E285.1 run 45684864423 ainda em curso na consulta. Permanecem objetivo do piloto e revisão de tomadas (legendas rasterizadas inadequadas). 

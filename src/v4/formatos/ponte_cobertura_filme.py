@@ -207,7 +207,14 @@ def plano(case,chosen,tempos):
                   'subject':n['sujeito'],'headline':n['sujeito'],'lead':ch['title'] if i==ids[0] else '',
                   'source_display':credito_em_tela(c['credito']),'evidence':'representative','focus':[.5,.5],
                   'cues':[{'at':min(1.1,span*.45),'label':n['sujeito']}]}
-            if x['kind']=='photo':shot['photo_framing']='integral'
+            if x['kind']=='photo':
+                shot['photo_framing']='integral'
+                # Opt-in private comparison; existing replay semantics remain unchanged.
+                if case.get('avaliar_recorte_foto') is True:
+                    decision=c.get('decisao') or {}
+                    roi=decision.get('evidencia_direta_normalizada') or {}
+                    if decision.get('revisao_id') and roi.get('escala_origem') in ('xy_0_1','xy_0_1000'):
+                        shot['photo_roi_candidate']={**roi,'sha256':a['sha256'],'revisao_id':decision['revisao_id']}
             else:
                 shot.update(source_in_seconds=x['window']['source_in_seconds'],video_zoom=1,video_context_layout='cena_integral')
             if x.get('framing') and all(p['at']<span for p in x['framing']['pontos']):

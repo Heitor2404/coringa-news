@@ -50,6 +50,7 @@ export type FilmShot = {
   // O crop é uma escolha de DIREÇÃO: coordenadas normalizadas do objeto central.
   focus?: [number, number];
   photo_framing?: 'integral';
+  photo_crop_preview?: {height:number;position:[number,number];status:string}; // private geometric alternative
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
@@ -204,7 +205,7 @@ const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,11
 // Horizontal originals stay full width; a tall crop requires a separately verified ROI.
 const integralMediaRect=(shot:FilmShot):readonly number[]=>{
   const [w,h]=shot.source_dimensions||[16,9];
-  return w/h<=1.15?[0,0,1080,1920]:[0,400,1080,1030];
+  return w/h<=1.15?[0,0,1080,1920]:[0,300,1080,1030];
 };
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
@@ -321,6 +322,10 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   if(shot.type==='photo'&&shot.photo_framing==='integral'&&!shot.graphic_original){
     // Preserve the complete scientific/archival photograph without inventing
     // borders or cutting essential context. The editorial layers remain separate.
+    const crop=mediaFirst&&shot.photo_crop_preview?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'?shot.photo_crop_preview:null;
+    if(crop&&[1080,1350].includes(crop.height))return <AbsoluteFill style={{background:'#08121E'}}>
+      <Img data-media-layout="photo-roi-private-candidate" src={staticFile(shot.asset||'')} style={{position:'absolute',left:0,top:0,width:1080,height:crop.height,objectFit:'cover',objectPosition:`${crop.position[0]*100}% ${crop.position[1]*100}%`}}/>
+    </AbsoluteFill>;
     return <AbsoluteFill style={{background:'#08121E',overflow:'hidden'}}>
       <Img data-media-layout={mediaFirst?'integral-photo-adaptive':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(integralMediaRect(shot)):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
     </AbsoluteFill>;

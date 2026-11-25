@@ -82,6 +82,46 @@ def recibo_documental_valido(asset:dict)->bool:
     return False
 
 
+def propor_recorte_foto(cena, midia, dimensoes):
+    """Private alternative only: geometry from a direct observation bound to the
+    actual image. It does not certify semantics, context or publication.
+    Keep the complete original if the observed region and surrounding margin
+    cannot fit, or if the crop would cover that region with text.
+    """
+    import math
+    r=cena.get('photo_roi_candidate')
+    if not isinstance(r,dict) or r.get('sha256')!=midia.get('expected_sha256') or not r.get('revisao_id'):
+        return None
+    if r.get('escala_origem') not in ('xy_0_1','xy_0_1000'):
+        return None
+    b=r.get('bbox')
+    if not isinstance(b,list) or len(b)!=4 or any(type(x) not in (int,float) or not math.isfinite(x) for x in b):
+        return None
+    x0,y0,x1,y1=b
+    w,h=dimensoes
+    if not (0<=x0<x1<=1 and 0<=y0<y1<=1 and min(w,h)>=600 and w/h>1.15):
+        return None
+    # Keep at least 12% of the observed region on each side where the source allows.
+    a0,a1=max(0,x0-.12*(x1-x0)),min(1,x1+.12*(x1-x0))
+    b0,b1=max(0,y0-.12*(y1-y0)),min(1,y1+.12*(y1-y0))
+    for height in (1350,1080):
+        scale=max(1080/w,height/h)
+        vw,vh=min(1.,1080/(w*scale)),min(1.,height/(h*scale))
+        if a1-a0>vw+1e-9 or b1-b0>vh+1e-9:continue
+        left=max(0,min(1-vw,(a0+a1-vw)/2))
+        top=max(0,min(1-vh,(b0+b1-vh)/2))
+        if not (left<=a0+1e-9 and left+vw>=a1-1e-9 and top<=b0+1e-9 and top+vh>=b1-1e-9):
+            continue
+        # Keep caption/credit lane clear of the *essential* area. Do not invent
+        # a new UI-safe text position or silently shrink the source.
+        screen=[(x0-left)/vw*1080,(y0-top)/vh*height,(x1-left)/vw*1080,(y1-top)/vh*height]
+        if screen[3]>1040 and screen[0]<760 and screen[2]>160:continue
+        if screen[1]<396 and screen[3]>300 and screen[0]<760 and screen[2]>150:continue
+        return {'height':height,'position':[.5 if vw>=1 else left/(1-vw),.5 if vh>=1 else top/(1-vh)],
+                'status':'PRIVATE_CANDIDATE_REVIEW_PENDING','essential_screen':screen,'revisao_id':r['revisao_id']}
+    return None
+
+
 def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,int], *, viewport: tuple[int,int]=(1080,1920)) -> list[dict]:
     """Converte ROIs inspecionadas em posições CSS de object-fit:cover para 9:16.
 
@@ -913,6 +953,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if c.get('assetB'):
             x['assetB']=medias[c['assetB']]['asset']
             x['sourceB']=medias[c['assetB']]['credit']
+        # Never accept a renderer-ready crop from arbitrary storyboard data.
+        x.pop('photo_crop_preview',None)
+        if privado and c.get('type')=='photo' and not plano['media'][c['asset']].get('original_graphic'):
+            crop=propor_recorte_foto(c,plano['media'][c['asset']],(medias[c['asset']]['width'],medias[c['asset']]['height']))
+            if crop:x['photo_crop_preview']=crop
         if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:
             # Gráfico autoral já comunica dados/etapas dentro dos pixels.
             # Não duplicar título e CTA por cima dele no compositor.

@@ -1,7 +1,7 @@
 """E247: evidence-bound private review for the existing documentary director.
 A model opinion is never a rights clearance or proof of authenticity.
 """
-import hashlib,io,json,re
+import hashlib,io,json,re,math
 from . import direcao_eventos as DE
 
 NATUREZAS={'registro_compativel','mosaico_observacional','simulacao','ilustracao','hibrido','incerta'}
@@ -26,6 +26,8 @@ def revisar_foto(midia,im,necessidade,chamar):
 Não determine identidade, época, local ou autenticidade só pela aparência. Diferencie foto compatível com registro, mosaico observacional, simulação, ilustração, híbrido e incerto. Não trate aparência realista como prova. Não inferir ação de fotografia. 
 Responda JSON: {"veredito":"pertinente|contexto|insuficiente","natureza_visual":"registro_compativel|mosaico_observacional|simulacao|ilustracao|hibrido|incerta","inspecao":"descrição concreta de pelo menos 35 caracteres"}.
 Necessidade: """+json.dumps({'mostrar':necessidade['mostrar'],'sujeito':necessidade.get('sujeito'),'evidencia':necessidade.get('evidencia_visual')},ensure_ascii=False)
+    if necessidade.get('exigir_evidencia_direta'):
+        prompt+='\nDistinga evidencia diretamente legivel da mera associacao tematica. Nao aceite uma paisagem generica, uma colina, um objeto ou uma legenda se o componente solicitado nao for discernivel. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico realmente visivel e como atende ao pedido","bbox":[x0,y0,x1,y1]}. Coordenadas normalizadas da imagem inteira; se nao localizar, use null e classe contextual/incerta.'
     r=chamar(prompt,[_jpeg(im)])
     if not isinstance(r,dict) or r.get('veredito') not in ('pertinente','contexto','insuficiente') or r.get('natureza_visual') not in NATUREZAS or not isinstance(r.get('inspecao'),str) or len(r['inspecao'].strip())<35:
         raise ValueError('E247-RESPOSTA-FOTO')
@@ -46,6 +48,11 @@ def decidir(necessidade,candidato,revisao,*,tipo):
         return {**result,'motivo':'NATUREZA_INCOMPATIVEL_OU_INCERTA'}
     if r.get('veredito')!='pertinente':
         return {**result,'motivo':'SEM_PERTINENCIA'}
+    if necessidade.get('exigir_evidencia_direta'):
+        e=r.get('evidencia_direta') or {}
+        box=e.get('bbox') if isinstance(e,dict) else None
+        if not isinstance(e,dict) or e.get('classe')!='direta' or not isinstance(e.get('detalhe'),str) or len(e['detalhe'].strip())<25 or not isinstance(box,list) or len(box)!=4 or any(type(x) not in (int,float) or not math.isfinite(x) for x in box) or not (0<=box[0]<box[2]<=1 and 0<=box[1]<box[3]<=1):
+            return {**result,'motivo':'EVIDENCIA_DIRETA_NAO_LOCALIZADA'}
     if necessidade.get('evidencia_visual')=='movimento':
         if tipo!='video':return {**result,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'}
         indices=r.get('indices_mudanca')

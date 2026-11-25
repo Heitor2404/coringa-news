@@ -185,7 +185,8 @@ def test_e205_intercala_sem_perder_tempo_e_reusa_preflight(tmp_path, monkeypatch
             'shots': [{'id': 'r', 'type': 'photo', 'start': 0, 'end': 3},
                       {'id': 'm', 'type': 'atlas_map', 'start': 3, 'end': 6}]}
     calls = []
-    def fake_preparar(plano, destino, public_root, downloader=None):
+    def fake_preparar(plano, destino, public_root, downloader=None, *, fragmento_misto=False):
+        assert fragmento_misto is True
         calls.append(plano)
         destino.mkdir(parents=True)
         path = destino / 'props.json'

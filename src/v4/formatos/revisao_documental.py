@@ -274,7 +274,10 @@ def fila_cobertura(necessidade,candidatos,inspecionar,*,max_candidatos=6,vistos=
     trace=[];n=0
     ordered=ordenar_candidatos(necessidade,candidatos)
     if priorizar_novos:
-        ordered.sort(key=lambda c:bool(c.get('revisao_adicional_possivel') and c.get('fonte')!='biblioteca_v3'))
+        # Unexplored candidates first. A file that already needs another look goes after them; a LIBRARY file is
+        # also moved back once >=3 of its reviewed windows for this need were negative (angle likely unsuitable).
+        ordered.sort(key=lambda c:bool(c.get('revisao_adicional_possivel') and
+                                       (c.get('fonte')!='biblioteca_v3' or c.get('negativas_revisadas',0)>=3)))
     for c in ordered:
         if ev=='movimento' and c.get('tipo')!='video':continue
         key=(c.get('fonte'),c.get('source_id') or c.get('url'))

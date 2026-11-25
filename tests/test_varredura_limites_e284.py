@@ -175,3 +175,22 @@ def test_sem_sinal_novo_o_arquivo_nao_e_insistido(plano_unico):
     vistos = {round(r['inicio_s'], 4) for r in rows if toca(r, 40, 50) or toca(r, 120, 130) or toca(r, 150, 180)}
     # Restam só trechos parados sem deriva: preferir outro candidato.
     assert A.ha_janelas_promissoras(e, vistos, priorizar_movimento=True) is False
+
+
+def test_arquivo_da_biblioteca_com_negativas_repetidas_cede_lugar_a_candidato_novo():
+    """E281.2/E284: o clipe Apollo (biblioteca) tinha 3 janelas revisadas sem a decolagem; um candidato novo deve
+    ser inspecionado antes de nova chamada nesse ângulo — sem excluí-lo."""
+    from src.v4.formatos import revisao_documental as R
+    n = {'id': 'n2', 'mostrar': 'foguete se elevando', 'evidencia_visual': 'movimento', 'fatos': ['f']}
+    velho = {'fonte': 'biblioteca_v3', 'source_id': 'apollo', 'tipo': 'video', 'titulo': 'launch',
+             'revisao_adicional_possivel': True, 'negativas_revisadas': 3}
+    novo = {'fonte': 'commons', 'source_id': 'novo', 'tipo': 'video', 'titulo': 'launch'}
+    ordem = []
+    R.fila_cobertura(n, [velho, novo], lambda c, _n: ordem.append(c['source_id']) or {'estado': 'INSUFICIENTE'},
+                     priorizar_novos=True)
+    assert ordem == ['novo', 'apollo']
+    poucos = {**velho, 'negativas_revisadas': 1}
+    ordem.clear()
+    R.fila_cobertura(n, [poucos, novo], lambda c, _n: ordem.append(c['source_id']) or {'estado': 'INSUFICIENTE'},
+                     priorizar_novos=True)
+    assert ordem[0] == 'apollo'

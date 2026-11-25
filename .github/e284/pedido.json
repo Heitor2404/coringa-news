@@ -1,2 +1,2 @@
-{"prova": "acao", "fase": "previa", "limite_chamadas": 0, "publicar": false,
- "nota": "Fase sem visão: replay dos checkpoints da E281, varredura temporal corrigida e folhas das janelas para inspeção antes de consumir a autorização."}
+{"prova": "acao", "fase": "visao", "limite_chamadas": 2, "publicar": false,
+ "nota": "Prévia 45665284919 inspecionada: a varredura do clipe Apollo (câmera E-8 na base) encontrou janelas de atividade (chamas, fumaça, torres), mas o ângulo não mostra o veículo se elevando. O motor agora deixa esse arquivo de biblioteca (3 negativas revisadas) atrás de candidatos novos. Até 2 chamadas da autorização E284-visao-8 (finalidade filmagem_acao)."}

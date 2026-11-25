@@ -307,6 +307,10 @@ def main():
                         eligible.append((pack,selection,dec))
             if cache_key:
                 previous = AD.consolidar_janelas((cached or {}).get('janelas', []), history['janelas'])
+                # Reviewed negatives of THIS file for THIS need (all sessions): an angle that repeatedly fails to show
+                # the referent ranks after unexplored candidates (never excluded; absence is not proven).
+                c['negativas_revisadas']=sum(1 for row in previous if (row.get('decisao') or {}).get('motivo') in
+                    ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA'))
                 lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':previous,'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m,'decisao':dec} for p,_,dec in eligible],fato_id=n['fatos'][0],preferir_legibilidade=bool(n.get('exigir_legibilidade')))

@@ -1,6 +1,10 @@
 # ESTADO CANÔNICO DO MOTOR DOCUMENTAL — Coringa Explica
 Atualização: 25/11/2026. Branch experimental `atlas-direcao-visual-20261118`. Este registro complementa, não substitui, o histórico. Ler primeiro em qualquer retomada; conferir HEAD, código e Actions. Não inferir inexistência a partir de ausência de menção no chat/arquivo recente. Nunca rebaixar capacidade comprovada para não implementada sem apontar regressão concreta com SHA/run e escopo. A validação integral e a qualidade editorial são dimensões distintas da existência de integração.
 
+## PROCEDIMENTO PERMANENTE — ciclos completos de execução e validação
+
+Determinação expressa do proprietário em 25/11/2026: evitar obrigá-lo a enviar “prossiga” a cada microetapa ou enquanto um workflow está em execução. Em cada sessão ativa, conduzir blocos completos: consultar estado e código reais, corrigir de forma agrupada, testar, iniciar o CI necessário, consultar até o resultado terminal quando o tempo da sessão permitir, diagnosticar falhas, corrigir e revalidar, inspecionar as evidências audiovisuais reais e atualizar continuidade/estado canônico. Não disparar render duplicado nem alterar precipitadamente um caminho cujo teste ainda está em curso. Consolidar feedback em resultados úteis e comprovados, ou impedimentos materiais que realmente exijam decisão do proprietário. Se o limite da sessão impedir acompanhar até a conclusão, informar o run e a etapa exata, não prometer monitoramento em segundo plano; na próxima retomada consultar o resultado desse run primeiro, sem repetir trabalho. Não inventar aprovação, inspeção ou sucesso. Nenhuma publicação automática, nenhuma ampliação de orçamento, nenhuma alteração da main. A prioridade é qualidade editorial verificável e primeiro vídeo postável, não contagem de commits.
+
 ## Estado vigente da auditoria corretiva de 25/11
 
 A fase continua aberta. O bloco E282 em `6083a0005197` terminou. O [replay dos checkpoints](https://github.com/Heitor2404/coringa-news/actions/runs/45642199999) e o fluxo progressivo recuperaram nove análises cada, sem visão nova. O [controle multitemático](https://github.com/Heitor2404/coringa-news/actions/runs/45642200671) passou. O [recibo privado da E281.2](https://github.com/Heitor2404/coringa-cofre/blob/revisao-privada/revisoes/e2812-45639629861-1/prova.json) permanece em 1/2, com 3,8 s disponíveis. As referências abaixo a execuções em andamento descrevem o momento histórico indicado.
@@ -148,3 +152,6 @@ E289.1 (§346): run E289 restaurou acervo e ATLAS mas voz HTTP400 por systemInst
 E289.2 (§347): recuperação explícita de gravação bruta por SHA, roteiro e voz; nenhuma nova síntese/fallback no replay. Testes novos pendentes; E289.1 em curso na consulta, não iniciar render paralelo.
 
 E289.3 (§348): voz real 83,04s preservada, TTS 2/2 esgotado; falha 21/216 palavras fora da fala. Recuperação medida e comparação de realinhamento local sem alterar critérios de aceitação, zero IA; render pendente. 
+
+### E289.3 concluída tecnicamente (§349)
+Run 45690032145 SUCCESS: 31 testes, 83,07s, 24 cenas vídeo/ATLAS, sincronização medida 21→0 palavras fora da fala, atraso 0,00s, voz/acervo reutilizados, Telegram entregue privadamente. Revisão editorial e voz PENDING; prévia 540x960, piloto assistido. Procedimento permanente de ciclos completos destacado no início. Sem publicação.

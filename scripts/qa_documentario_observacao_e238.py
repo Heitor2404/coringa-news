@@ -11,6 +11,13 @@ def main():
     spec=E.read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
     if spec.get('publish') is not False:raise ValueError('PRIVATE_ONLY')
     E.STAGE=out/'originais';E.STAGE.mkdir(exist_ok=True)
+    args=sys.argv[3:]
+    budget=0
+    if args:
+        if len(args)!=2 or args[0]!='--vision-budget':raise ValueError('E241-ARGS')
+        budget=int(args[1])
+        if not 1<=budget<=4:raise ValueError('E241-BUDGET')
+    attempted=0
     report=[];rows=[]
     for need in spec['needs']:
         for item in need['sources']:
@@ -23,6 +30,10 @@ def main():
                     packet=D.pacote_observacao(m,t,3.8,samples,fato_id=need['id'],
                         necessidade=need['description']+' | '+item['note'])
                     packet['diagnostico_tecnico']=D.diagnosticar_janela(samples)
+                    if attempted<budget:
+                        attempted+=1
+                        try:packet['revisao_assistida']=D.revisar_janela_visao(packet,samples,permitir_chamada=True)
+                        except Exception as e:packet['revisao_assistida']={'estado':'FALHA','tipo':type(e).__name__}
                     row['windows'].append(packet)
                     rows.append((packet,item,samples))
                 row['status']='SAMPLED' if row['windows'] else 'NO_ELIGIBLE_WINDOW'
@@ -30,7 +41,7 @@ def main():
             except Exception as e:row.update(status='REJECTED',error=str(e)[:200])
             report.append(row)
             print('E238 REVIEW',row['slug'],row['status'],len(row['windows']),flush=True)
-    E.write(out/'review.json',{'publish':False,'records':report,'semantic_review':'PENDING'})
+    E.write(out/'review.json',{'publish':False,'records':report,'semantic_review':'PENDING','vision_logical_budget':budget,'vision_logical_attempts':attempted})
     if not rows:raise ValueError('NO_REVIEW_WINDOWS')
     # One chronological row per window, three unaltered samples at known times.
     # The sheet is a visual aid, not a replacement for full-motion inspection.

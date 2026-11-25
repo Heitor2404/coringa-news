@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import math
+import re
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,53 @@ from PIL import Image
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
+
+
+def recibo_documental_valido(asset:dict)->bool:
+    """Structural binding for private, already acquired provider bytes.
+
+    Provider declarations are not commercial approval. No new remote hosts
+    are enabled by this bridge; the acquisition adapter owns transport.
+    """
+    def valid_sha(x):
+        return isinstance(x,str) and bool(re.fullmatch(r'[0-9a-f]{64}',x))
+    def exact(url,host,path=None):
+        if not isinstance(url,str):return False
+        try:
+            u=urlsplit(url)
+            return (u.scheme=='https' and u.hostname==host and not u.username
+                    and not u.password and u.port in (None,443)
+                    and (path is None or u.path==path) and not u.fragment)
+        except ValueError:return False
+    d=asset.get('documentary_receipt')
+    if not isinstance(d,dict) or asset.get('rights_status')!='REVIEW_PENDING' or d.get('publicar') is not False or d.get('direitos_aprovados') is not False:return False
+    if not valid_sha(asset.get('expected_sha256')) or d.get('sha256_origem')!=asset['expected_sha256']:return False
+    receipt=d.get('recibo');url=d.get('url_adquirida')
+    if not isinstance(receipt,dict) or receipt.get('direitos')!='PENDENTE_AUDITORIA_INDIVIDUAL':return False
+    if d.get('provedor') in ('nasa','nasa_video'):
+        nid=receipt.get('nasa_id')
+        if not isinstance(nid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',nid):return False
+        rows=receipt.get('variantes_declaradas')
+        return (asset.get('license')=='REVIEW_PENDING' and valid_sha(receipt.get('asset_response_sha256'))
+                and exact(asset.get('page'),'images.nasa.gov','/details/'+nid)
+                and exact(url,'images-assets.nasa.gov')
+                and isinstance(rows,list) and any(isinstance(row,dict) and row.get('href_https')==url for row in rows))
+    if d.get('provedor')=='archive_video':
+        ident=receipt.get('identifier')
+        if not isinstance(ident,str) or ident in ('.','..') or not re.fullmatch(r'[A-Za-z0-9_.-]{1,150}',ident):return False
+        licenses={'https://creativecommons.org/licenses/by/4.0':'CC BY 4.0',
+                  'https://creativecommons.org/publicdomain/zero/1.0':'CC0',
+                  'https://creativecommons.org/publicdomain/mark/1.0':'Public domain'}
+        if not valid_sha(receipt.get('metadata_sha256')) or licenses.get(receipt.get('licenca_url'))!=asset.get('license') or not exact(asset.get('page'),'archive.org','/details/'+ident):return False
+        try:host=urlsplit(url).hostname
+        except (ValueError,TypeError,AttributeError):return False
+        if not isinstance(host,str) or not re.fullmatch(r'ia[0-9]+(?:\.us)?\.archive\.org',host) or not exact(url,host):return False
+        rows=receipt.get('variantes')
+        return isinstance(rows,list) and any(isinstance(row,dict) and row.get('url')==url
+            and type(row.get('size')) is int and row['size']==d.get('bytes') and row['size']>0
+            and isinstance(row.get('md5'),str) and bool(re.fullmatch(r'[0-9a-f]{32}',row['md5']))
+            for row in rows)
+    return False
 
 
 def planejar_enquadramento_video(cena: dict, midia: dict, dimensoes: tuple[int,int], *, viewport: tuple[int,int]=(1080,1920)) -> list[dict]:
@@ -592,6 +640,7 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
                     and isinstance(asset.get('expected_sha256'),str)
                     and len(asset['expected_sha256'])==64
                     and (
+                        recibo_documental_valido(asset) or
                         urlsplit(str(asset.get('page') or '')).hostname in (
                             'www.nist.gov','commons.wikimedia.org','earthquake.usgs.gov',
                             'svs.gsfc.nasa.gov','science.nasa.gov', 'www.usgs.gov'
@@ -627,9 +676,13 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
                 and bool(source) and str(source).startswith('stage_documental/')
                 and isinstance(asset.get('expected_sha256'),str)
                 and len(asset['expected_sha256'])==64
-                and urlsplit(str(asset.get('page') or '')).hostname in (
-                    'www.nist.gov','svs.gsfc.nasa.gov','science.nasa.gov')
+                and (recibo_documental_valido(asset) or urlsplit(str(asset.get('page') or '')).hostname in (
+                    'www.nist.gov','svs.gsfc.nasa.gov','science.nasa.gov'))
             )
+            if asset.get('rights_status')=='REVIEW_PENDING' and not (privado and plano.get('publicar') is False):
+                falha('F-DIREITOS-PENDENTES',cid,'declaração de licença não substitui auditoria; somente revisão privada')
+            if asset.get('documentary_receipt') is not None and not recibo_documental_valido(asset):
+                falha('F-RECIBO-DOCUMENTAL',cid,'recibo documental sem vínculo com origem, variante ou SHA')
             if (asset.get('license') not in LICENCAS and not direitos_pendentes
                     or not asset.get('page') or not asset.get('credit')):
                 falha('F-LICENCA', cid, 'mídia precisa de página, autor e licença explícitos; '
@@ -719,6 +772,15 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         sha=hashlib.sha256(data).hexdigest()
         if item.get('expected_sha256') and item['expected_sha256']!=sha:
             raise ValueError(f'{mid}: hash da origem mudou — selecionar/curar novamente')
+        receipt=item.get('documentary_receipt')
+        if receipt is not None:
+            if not recibo_documental_valido(item) or len(data)!=receipt.get('bytes'):
+                raise ValueError(f'{mid}: recibo documental ou tamanho divergente')
+            if receipt['provedor']=='archive_video':
+                variants=receipt['recibo']['variantes']
+                if not any(v.get('url')==receipt['url_adquirida'] and v.get('size')==len(data)
+                           and v.get('md5')==hashlib.md5(data).hexdigest() for v in variants if isinstance(v,dict)):
+                    raise ValueError(f'{mid}: MD5 de arquivo Archive divergente')
         if item.get('media_type') == 'video':
             if not source:
                 raise ValueError(f'{mid}: vídeos de rede exigem ingestão/recorte em etapa separada')
@@ -752,7 +814,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if item.get('media_type')=='video':
             medias[mid]['duration_s']=duracao_origem
         relatorio.append({'id':mid,'sha256':sha,'resolucao':[w,h],
-                          'licenca':item['license'],'pagina':item['page']})
+                          'licenca':item['license'],'pagina':item['page'],
+                          'direitos_status':item.get('rights_status','NAO_DECLARADO_NO_CONTRATO')})
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
@@ -841,7 +904,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             x['graphic_original']=True
         shots.append(x)
     pendentes=[mid for mid,item in plano['media'].items()
-              if item.get('license')=='REVIEW_PENDING']
+              if item.get('license')=='REVIEW_PENDING' or item.get('rights_status')=='REVIEW_PENDING']
     from src.v4.formatos import qa_area_segura
     props={'duracao':plano['duracao'],'shots':shots,'preview':True,
            'private_review_only':privado or bool(pendentes) or modo==PA.LEGACY,

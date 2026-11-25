@@ -115,3 +115,15 @@ def test_filme_final_nao_aceita_contrato_com_fontes_trocadas():
     q=avaliar(p)
     assert "F-PORTAO-FONTE-DIVERGENTE" in {x["codigo"] for x in q["bloqueios"]}
     assert not q["pronto"]
+
+
+def test_declared_license_does_not_hide_pending_rights(tmp_path):
+    p=_plano();mid=next(iter(p['media']))
+    p['media'][mid]['rights_status']='REVIEW_PENDING'
+    p['tipo']='PROVA_VISUAL_PRIVADA';p['publicar']=False
+    im=Image.new('RGB',(820,820),'blue');b=io.BytesIO();im.save(b,'JPEG')
+    r=preparar(p,tmp_path/'saida',tmp_path/'public',downloader=lambda _:b.getvalue())
+    props=json.loads(Path(r['props']).read_text())
+    assert props['private_review_only'] and mid in props['direitos_pendentes']
+    p['tipo']='FILME_FINAL'
+    assert 'F-DIREITOS-PENDENTES' in {e['codigo'] for e in avaliar(p)['bloqueios']}

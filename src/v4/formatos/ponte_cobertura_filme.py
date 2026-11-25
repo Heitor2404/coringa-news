@@ -8,6 +8,41 @@ from pathlib import Path
 from src.v3.pacote_biblioteca import sha
 from src.v4.formatos import filme_editorial as F
 
+def origem_documental(c,a):
+    """Keep acquisition receipts across the existing bridge, including V3 replay."""
+    provider=c.get('fonte')
+    source=c
+    if provider=='biblioteca_v3':
+        source=c.get('recibo_restaurado') or {}
+        if (source.get('aquisicao') or {}).get('sha256')!=a.get('sha256') or source.get('pagina')!=c.get('pagina'):
+            return None
+        provider=source.get('fonte')
+        source=source.get('recibos') or {}
+    key={'nasa':'recibo_nasa','nasa_video':'recibo_nasa','archive_video':'recibo_archive'}.get(provider)
+    if key is None:return None
+    receipt=source.get(key)
+    if not isinstance(receipt,dict):return None
+    return {'provedor':provider,'sha256_origem':a['sha256'],'url_adquirida':a.get('url_adquirida'),
+            'bytes':a.get('bytes'),'recibo':receipt,'publicar':False,'direitos_aprovados':False}
+
+
+def licenca_documental(c,a):
+    lic={'CC0 1.0':'CC0','Public Domain':'Public domain'}.get(c.get('licenca'),c.get('licenca'))
+    receipt=origem_documental(c,a)
+    if receipt and receipt['provedor'] in ('nasa','nasa_video'):lic='REVIEW_PENDING'
+    asset={'license':lic,'page':c.get('pagina'),'credit':c.get('credito'),
+           'expected_sha256':a.get('sha256'),'rights_status':'REVIEW_PENDING'}
+    if receipt:asset['documentary_receipt']=receipt
+    # New provider evidence must arrive with its own receipt. A named
+    # license alone is insufficient for an unfamiliar documentary host.
+    from urllib.parse import urlsplit
+    host=urlsplit(str(c.get('pagina') or '')).hostname
+    if host in ('images.nasa.gov','archive.org') and not F.recibo_documental_valido(asset):return None
+    if lic not in F.LICENCAS and not (receipt and F.recibo_documental_valido(asset)):return None
+    if not asset['page'] or not asset['credit']:return None
+    return asset
+
+
 def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
     if report.get('publish') is not False:raise ValueError('E254-PRIVADO')
     tri={n['id']:n for n in report['triagem']}
@@ -44,7 +79,8 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
         direct=n.get('exigir_evidencia_direta') is True
         if d.get('necessidade_id')!=i or not d.get('revisao_id') or not direct or d.get('publicar') is not False or d.get('direitos_aprovados') is not False or not p.is_file() or p.parts[:1]!=('stage_documental',) or sha(p)!=a.get('sha256'):
             issues.append({'id':i,'motivo':'REVISAO_OU_BYTES_SEM_VINCULO'});continue
-        if c.get('licenca') not in F.LICENCAS or not c.get('pagina') or not c.get('credito'):
+        rights=licenca_documental(c,a)
+        if rights is None:
             issues.append({'id':i,'motivo':'PROCEDENCIA_PENDENTE_COMPATIBILIDADE_FILME'});continue
         reused=c['pagina'] in pages or a['sha256'] in hashes
         if reused and (c.get('tipo')!='video' or video_pages.get(c['pagina'])!=a['sha256'] or a['sha256'] not in video_ranges):
@@ -96,7 +132,7 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
                 issues.append({'id':i,'motivo':'JANELA_REPETIDA_OU_MESMO_FATO'});continue
             ranges.append((ini,ini+cap,n['fatos']));video_pages[c['pagina']]=a['sha256']
         pages.add(c['pagina']);hashes.add(a['sha256'])
-        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression,'framing':framing}
+        chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression,'framing':framing,'rights':rights}
     capacity=sum(x['cap'] for x in chosen.values())
     if capacity<minimo_s:issues.append({'id':'filme','motivo':'CAPACIDADE_MENOR_MINIMO','segundos':capacity,'minimo_s':minimo_s})
     return chosen,{'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),
@@ -125,7 +161,7 @@ def plano(case,chosen,tempos):
             c=x['candidate'];a=c['aquisicao'];mid='m-'+a['sha256'][:12]
             media[mid]={'id':mid,'local_source':c['local_source'],'expected_sha256':a['sha256'],
                         'width':a['width'],'height':a['height'],'duration_s':a['duration_s'],'media_type':x['kind'],
-                        'page':c['pagina'],'credit':c['credito'],'license':c['licenca'],'rights_status':'REVIEW_PENDING'}
+                        **x.get('rights',{'page':c['pagina'],'credit':c['credito'],'license':c['licenca'],'rights_status':'REVIEW_PENDING'})}
             span=count/30
             shot={'id':i,'type':x['kind'],'asset':mid,'start':start/30,'end':(start+count)/30,
                   'subject':n['sujeito'],'headline':n['sujeito'],'lead':ch['title'] if i==ids[0] else '',

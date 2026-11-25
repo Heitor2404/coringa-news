@@ -1,4 +1,4 @@
-name: E260 - validacao conjunta das correcoes
+name: E261.3 - recibos privados e validacao conjunta
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

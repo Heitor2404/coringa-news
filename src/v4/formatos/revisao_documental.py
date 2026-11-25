@@ -27,11 +27,34 @@ Não determine identidade, época, local ou autenticidade só pela aparência. D
 Responda JSON: {"veredito":"pertinente|contexto|insuficiente","natureza_visual":"registro_compativel|mosaico_observacional|simulacao|ilustracao|hibrido|incerta","inspecao":"descrição concreta de pelo menos 35 caracteres"}.
 Necessidade: """+json.dumps({'mostrar':necessidade['mostrar'],'sujeito':necessidade.get('sujeito'),'evidencia':necessidade.get('evidencia_visual')},ensure_ascii=False)
     if necessidade.get('exigir_evidencia_direta'):
-        prompt+='\nDistinga evidencia diretamente legivel da mera associacao tematica. Nao aceite uma paisagem generica, uma colina, um objeto ou uma legenda se o componente solicitado nao for discernivel. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico realmente visivel e como atende ao pedido","bbox":[x0,y0,x1,y1]}. Coordenadas normalizadas da imagem inteira; se nao localizar, use null e classe contextual/incerta.'
+        prompt+='\nDistinga evidencia diretamente legivel da mera associacao tematica. Nao aceite uma paisagem generica, uma colina, um objeto ou uma legenda se o componente solicitado nao for discernivel. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico realmente visivel e como atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira. Nao use lista nem troque os eixos; se nao localizar, use null e classe contextual/incerta.'
     r=chamar(prompt,[_jpeg(im)])
     if not isinstance(r,dict) or r.get('veredito') not in ('pertinente','contexto','insuficiente') or r.get('natureza_visual') not in NATUREZAS or not isinstance(r.get('inspecao'),str) or len(r['inspecao'].strip())<35:
         raise ValueError('E247-RESPOSTA-FOTO')
     return {**base,'revisao_id':rid,'resposta':r,'publicar':False,'revisao_humana':'PENDENTE'}
+
+
+def normalizar_evidencia_direta(e):
+    """Normalize declared XY coordinates; legacy integer 0..1000 is only
+    a compatibility interpretation, never a verified framing instruction."""
+    if not isinstance(e,dict) or e.get('classe')!='direta' or not isinstance(e.get('detalhe'),str) or len(e['detalhe'].strip())<25:return None
+    box=e.get('bbox');scale=e.get('escala')
+    if isinstance(box,dict):
+        keys=('esquerda','topo','direita','base')
+        if set(box)!=set(keys):return None
+        box=[box[k] for k in keys]
+        if scale not in ('xy_0_1','xy_0_1000'):return None
+    elif scale is not None:
+        return None
+    if not isinstance(box,list) or len(box)!=4 or any(type(x) not in (int,float) or not math.isfinite(x) for x in box):return None
+    if scale is None:
+        if all(0<=x<=1 for x in box):scale='legado_xy_0_1'
+        elif all(type(x) is int and 0<=x<=1000 for x in box) and max(box)>1:scale='legado_xy_0_1000'
+        else:return None
+    divisor=1000 if scale.endswith('_1000') else 1
+    x0,y0,x1,y1=[x/divisor for x in box]
+    if not (0<=x0<x1<=1 and 0<=y0<y1<=1):return None
+    return {'bbox':[x0,y0,x1,y1],'escala_origem':scale,'enquadramento_verificado':False}
 
 def decidir(necessidade,candidato,revisao,*,tipo):
     """Only an observed private candidate can stop this pilot; no publication."""
@@ -49,10 +72,10 @@ def decidir(necessidade,candidato,revisao,*,tipo):
     if r.get('veredito')!='pertinente':
         return {**result,'motivo':'SEM_PERTINENCIA'}
     if necessidade.get('exigir_evidencia_direta'):
-        e=r.get('evidencia_direta') or {}
-        box=e.get('bbox') if isinstance(e,dict) else None
-        if not isinstance(e,dict) or e.get('classe')!='direta' or not isinstance(e.get('detalhe'),str) or len(e['detalhe'].strip())<25 or not isinstance(box,list) or len(box)!=4 or any(type(x) not in (int,float) or not math.isfinite(x) for x in box) or not (0<=box[0]<box[2]<=1 and 0<=box[1]<box[3]<=1):
+        e=normalizar_evidencia_direta(r.get('evidencia_direta'))
+        if e is None:
             return {**result,'motivo':'EVIDENCIA_DIRETA_NAO_LOCALIZADA'}
+        result['evidencia_direta_normalizada']=e
     if necessidade.get('evidencia_visual')=='movimento':
         if tipo!='video':return {**result,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'}
         indices=r.get('indices_mudanca')

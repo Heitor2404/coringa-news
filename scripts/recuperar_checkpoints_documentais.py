@@ -71,6 +71,8 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
         if rel.get('draft') is not True or not re.fullmatch(r'review-[a-z0-9-]+',tag):continue
         assets={a['name']:a for a in rel.get('assets',[])}
         manifest=assets.get('manifesto-revisoes.jsonl')
+        if not manifest and any(re.fullmatch(r'cm-[0-9a-f]{12}\\.zip',k) for k in assets):
+            events.append({'tag':tag,'motivo':'MANIFESTO_AUSENTE_COM_PACOTES'})
         if not manifest or not 0<manifest['size']<=8_000_000 or spent+manifest['size']>max_bytes:continue
         if not any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):continue
         folder=root/tag

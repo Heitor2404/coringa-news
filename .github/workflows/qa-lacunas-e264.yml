@@ -1,4 +1,4 @@
-name: E264.6 - pesquisar somente lacunas apos replay comprovado
+name: E264.7 - recuperar manifesto perdido e pesquisar lacunas apos replay
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -35,7 +35,11 @@ jobs:
       - name: Instalar e testar
         run: |
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
-          python -m pytest -q tests/test_reuso_documental_e251.py tests/test_checkpoint_e259.py tests/test_politica_progressiva_e258.py tests/test_documentario_integral_e254.py
+          python -m pytest -q tests/test_reuso_documental_e251.py tests/test_checkpoint_e259.py tests/test_politica_progressiva_e258.py tests/test_documentario_integral_e254.py tests/test_reparar_manifesto_e264.py
+      - name: Reparar somente o manifesto privado ausente
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.reparar_manifesto_documental review-e2644-45610226413-1 qa_e2647_reparo
       - name: Recuperar resultado anterior e calcular saldo
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
@@ -121,8 +125,9 @@ jobs:
           root=stage_documental/e2646
           if [[ -s "$root/revisao.json" ]]; then
             files=("$root"/*.json "$root"/*.jpg)
-            bash scripts/arquivar_cofre_review.sh "review-e2646-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root"/checkpoints/*.zip
-            python scripts/espelhar_revisao_cofre.py "e2646-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            test -s "$root/manifesto-revisoes.jsonl"
+            bash scripts/arquivar_cofre_review.sh "review-e2647-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip
+            python scripts/espelhar_revisao_cofre.py "e2647-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
           elif [[ -s stage_documental/e2646-replay/revisao.json ]]; then
-            python scripts/espelhar_revisao_cofre.py "e2646-replay-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e2646-replay/revisao.json qa_e2646/descoberta.json qa_e2646/anterior.json
+            python scripts/espelhar_revisao_cofre.py "e2647-replay-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e2646-replay/revisao.json qa_e2646/descoberta.json qa_e2646/anterior.json
           fi

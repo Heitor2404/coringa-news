@@ -1,8 +1,5 @@
 name: E264.4 - revisar acervo local e preservar memoria semantica
 on:
-  push:
-    branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-revisao-local-e264.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +52,7 @@ jobs:
           root=stage_documental/e2644
           if [[ -s "$root/revisao.json" ]]; then
             files=("$root"/*.json "$root"/*.jpg)
-            bash scripts/arquivar_cofre_review.sh "review-e2644-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root"/checkpoints/*.zip
+            test -s "$root/manifesto-revisoes.jsonl"
+            bash scripts/arquivar_cofre_review.sh "review-e2644-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip
             python scripts/espelhar_revisao_cofre.py "e2644-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
           fi

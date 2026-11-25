@@ -1,4 +1,4 @@
-name: E295 - testar centro, zoom e coluna esquerda
+name: E295.1 - testar centro e recusa de crop de ROI larga
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

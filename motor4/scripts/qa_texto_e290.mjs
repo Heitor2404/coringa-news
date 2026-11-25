@@ -13,7 +13,7 @@ props.shots.find(s=>s.id==='video_vertical_nasa').lead='REGISTRO DOCUMENTAL DO T
 // claims about the ship's actual action or an approved crop.
 const original=props.shots[0];
 const cases=[['4:5',.39,[.30,.32,.69,.54]],['1:1',.49,[.255,.35,.745,.52]],
-  ['9:16',.20,[.40,.35,.60,.55]],['4:5-collision',.39,[.30,.05,.69,.95]]];
+  ['9:16',.20,[.40,.35,.60,.55]],['4:5-collision',.39,[.03,.05,.97,.95]]];
 for(const [mode,width,bbox] of cases){
   const i=props.shots.length,start=i*3;
   const s={...original,id:'qa-'+mode.replace(':','-'),start,end:start+3,

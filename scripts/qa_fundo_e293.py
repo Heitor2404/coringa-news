@@ -12,7 +12,7 @@ for shot in ('video_horizontal_navio','foto_horizontal_roraima','qa-4-5-collisio
         assert im.size==(1080,1920)
         # Text-free corner and bottom patches, outside actual source media.
         # New background is neutral charcoal, not the legacy blue gradient.
-        vals=[im.getpixel((x,y)) for x in range(40,130,10) for y in range(1350,1490,10)]
+        vals=[im.getpixel((x,y)) for x in range(40,130,10) for y in range(1630,1750,10)]
         neutral=sum(max(v)-min(v)<=9 and max(v)<=65 for v in vals)/len(vals)
         assert neutral>=.95,(shot,neutral)
         # The authored diagonal must be visible near the bottom-right; not just black.

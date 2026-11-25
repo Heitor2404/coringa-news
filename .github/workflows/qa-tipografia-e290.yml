@@ -1,4 +1,4 @@
-name: E293.1 - corrigir import do fundo B e validar render
+name: E295 - testar centro, zoom e coluna esquerda
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

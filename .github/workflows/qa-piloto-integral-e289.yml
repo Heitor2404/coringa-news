@@ -1,4 +1,4 @@
-name: E294 - comparar Havai narrado com identidade B sem nova IA
+name: E295 - previa narrada de composicao centralizada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -49,36 +49,37 @@ jobs:
         run: python -m scripts.restaurar_voz_e289 review-e289-45689022910-1 qa_e289 medida
       - name: Realinhar e montar sem IA
         run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado --voz-medida-restaurada
-      - name: Renderizar filme privado
+      - name: Renderizar trecho privado de abertura
         run: |
           cd motor4
-          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e289/filme.mp4 --props=../qa_e289/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
-      - name: Verificar MP4 narrado e gerar quadros de cada cena
-        id: qa
-        run: |
-          ffprobe -v error -show_streams -show_format -of json qa_e289/filme.mp4 > qa_e289/probe.json
-          python - <<'PY'
-          import json,hashlib,subprocess
-          from pathlib import Path
-          p=Path('qa_e289');props=json.loads((p/'props.json').read_text());q=json.loads((p/'probe.json').read_text())
-          v=next(s for s in q['streams'] if s['codec_type']=='video')
-          assert props['private_review_only'] and props['preview'] and props['duracao']>=60
-          assert set(s['type'] for s in props['shots'])=={'video','atlas_map'}
-          assert (v['width'],v['height'])==(540,960) and any(s['codec_type']=='audio' for s in q['streams'])
-          assert abs(float(q['format']['duration'])-props['duracao'])<.15
-          assert json.loads((p/'sincronia-medida.json').read_text())['ok']
-          def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
-          result={'duration':props['duracao'],'shots':len(props['shots']),'types':sorted(set(s['type'] for s in props['shots'])),
-                  'props_sha256':sha(p/'props.json'),'video_sha256':sha(p/'filme.mp4'),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','direction':'ASSISTED_HISTORICAL','comparison':'E289.3','background':'SIGNATURE_B_V1'}
-          (p/'qa.json').write_text(json.dumps(result,indent=2));print('E289 MP4',result,flush=True)
-          for i,s in enumerate(props['shots']):
-              subprocess.run(['ffmpeg','-v','error','-y','-ss',str((s['start']+s['end'])/2),'-i',str(p/'filme.mp4'),'-frames:v','1','-vf','scale=540:960',str(p/('cena-%02d.jpg'%i))],check=True)
-          PY
-      - name: Entrega privada para avaliacao humana
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e289/filme.mp4 --props=../qa_e289/props.json --frames=0-259 --codec=h264 --crf=20 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: Verificar trecho narrado e entregar somente no Telegram privado
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python -m scripts.documentario_telegram qa_e289 --titulo "A erupção que fez o Havaí crescer — candidato E294 — identidade B"
+        run: |
+          python - <<'PY'
+          import json,subprocess,hashlib
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          from scripts.documentario_telegram import verificar_video
+          p=Path('qa_e289');v=p/'filme.mp4';dur=260/30
+          verificar_video(v,dur)
+          props=json.loads((p/'props.json').read_text())
+          assert props['preview'] and props['private_review_only']
+          assert json.loads((p/'sincronia-medida.json').read_text())['ok']
+          for i,t in enumerate([.6,1.8,3.5,5.2,6.8,8]):
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str(t),'-i',str(v),'-frames:v','1',str(p/f'cena-{i:02d}.jpg')],check=True)
+          q={'duration':dur,'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','kind':'SHORT_LAYOUT_PROBE','video_sha256':hashlib.sha256(v.read_bytes()).hexdigest(),'ui_review':'PENDING'}
+          (p/'qa.json').write_text(json.dumps(q,indent=2))
+          try:
+              chat,_=T.chat_autorizado()
+              envio=T._caber(v);verificar_video(envio,dur)
+              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E295 · TESTE DE ENQUADRAMENTO\n8,67 s · coluna esquerda, palco central, zoom moderado\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
+              if not isinstance(result,dict) or not result.get('message_id'):raise RuntimeError('recibo ausente')
+          except Exception:raise RuntimeError('E295 entrega privada não confirmada') from None
+          print('E295_PREVIA_PRIVADA_ENTREGUE')
+          PY
       - name: Preservar voz e evidencias mesmo se render falhar
         if: ${{ always() }}
         env:

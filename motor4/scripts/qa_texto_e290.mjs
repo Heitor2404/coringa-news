@@ -68,7 +68,7 @@ try {
         if(!row){result.errors.push('MISSING_MEASURE '+shot.id+' '+offset+' '+role);continue;}
         rows.push(row);
         const [x,y,r,b]=row.actual;
-        if(!row.fits||x<149||y<299||r>771||b>1241||row.font<({section:22,subtitle:36,source:24}[role]))
+        if(!row.fits||x<119||y<299||r>771||b>1601||row.font<({section:22,subtitle:36,source:24}[role]))
           result.errors.push('OVERFLOW '+shot.id+' '+offset+' '+role);
         if(row.evidenceCollision)result.errors.push('EVIDENCE_COLLISION '+shot.id+' '+offset+' '+role);
         const [mx,my,mr,mb]=row.media;
@@ -80,7 +80,17 @@ try {
       }
       const modes=new Set(rows.map(x=>x.layout));
       if(modes.size!==1)result.errors.push('LAYOUT_MISMATCH '+shot.id);
-      if(['qa-4-5-collision','qa-portrait-observed-conflict'].includes(shot.id)&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
+      if(shot.id==='qa-portrait-observed-conflict'&&!modes.has('INTEGRAL_PROTECTED'))result.errors.push('FALLBACK_MISSING '+shot.id);
+      if(shot.id==='qa-4-5-collision'&&!modes.has('CENTERED_INTEGRAL'))result.errors.push('LANDSCAPE_FALLBACK_MISSING '+shot.id);
+      if(shot.source_dimensions[0]>shot.source_dimensions[1]){
+        for(const row of rows){
+          const [x,y,r,b]=row.media;
+          if(Math.abs((y+b)/2-960)>.01||!row.layout.startsWith('CENTERED_')||row.rect[0]!==120)
+            result.errors.push('CENTER_OR_ANCHOR '+shot.id+' '+row.role);
+          if(row.centeredFit==='cover'&&(!row.layout.startsWith('CENTERED_CROP')||b-y!==810))
+            result.errors.push('CROP_GEOMETRY '+shot.id);
+        }
+      }
       if(['video_vertical_nasa','foto_vertical_salto_angel'].includes(shot.id)){
         if(!modes.has('PORTRAIT_REVIEW')||rows.some(r=>r.roiStatus!=='UNKNOWN_REVIEW'))
           result.errors.push('NATIVE_PORTRAIT_DEFAULT '+shot.id);
@@ -94,7 +104,7 @@ try {
       }
       if(shot.id==='qa-portrait-observed-free'&&(modes.has('INTEGRAL_PROTECTED')||rows.some(r=>r.roiStatus!=='OBSERVED'||r.media.join(',')!=='0,0,1080,1920')))
         result.errors.push('OBSERVED_PORTRAIT_SHRUNK '+shot.id);
-      if(['qa-4-5','qa-1-1','qa-9-16'].includes(shot.id)&&modes.has('INTEGRAL_PROTECTED'))result.errors.push('UNNECESSARY_FALLBACK '+shot.id);
+      if(['qa-4-5','qa-1-1','qa-9-16'].includes(shot.id)&&!modes.has('CENTERED_CROP_OBSERVED'))result.errors.push('UNNECESSARY_FALLBACK '+shot.id);
       result.frames.push({shot:shot.id,frame,offset,dimensions:shot.source_dimensions,measurements:rows});
       save();
     }

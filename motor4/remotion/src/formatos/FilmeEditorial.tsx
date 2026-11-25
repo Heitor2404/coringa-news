@@ -203,7 +203,10 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:SAFE.brand,section:[160,355,760,405],subtitle:[160,1020,760,1110],source:[160,1118,760,1240]} as const;
+// E295: private editorial composition, NOT a new certified platform-safe profile.
+// Anchor at x120 (largest configured left exclusion), maintain right x760.
+// Lower lanes deliberately need real app UI review; legacy SAFE is unchanged.
+const DOC_MEDIA={brand:[120,300,500,338],section:[120,347,760,397],subtitle:[120,1380,760,1470],source:[120,1478,760,1600]} as const;
 // E290: same conservative text perimeter and same ROI; no new background design.
 // A 16:9 integral source has room for its actual pixels between header and caption.
 // Taller sources retain the previous maximum height (730px), not a blind crop.
@@ -233,13 +236,13 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[]};
+type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
 const stackedDocSlots=(y:number):DocSlots=>({
-  brand:[160,y,500,y+38],section:[160,y+43,760,y+93],
-  subtitle:[160,y+101,760,y+191],source:[160,y+199,760,y+321],
+  brand:[120,y,500,y+38],section:[120,y+43,760,y+93],
+  subtitle:[120,y+101,760,y+191],source:[120,y+199,760,y+321],
 });
 const docRects=(slots:DocSlots)=>[slots.brand,slots.section,slots.subtitle,slots.source,
-  [160,slots.brand[3]+1,290,slots.brand[3]+4]];
+  [slots.brand[0],slots.brand[3]+1,slots.brand[0]+130,slots.brand[3]+4]];
 const normalizedBox=(b:readonly number[])=>b.length===4&&b.every(Number.isFinite)&&
   0<=b[0]&&b[0]<b[2]&&b[2]<=1&&0<=b[1]&&b[1]<b[3]&&b[3]<=1;
 const expandBox=(b:readonly number[],n:number)=>[b[0]-n,b[1]-n,b[2]+n,b[3]+n];
@@ -273,7 +276,36 @@ const documentaryProtected=(shot:FilmShot,media:readonly number[]):number[][]|nu
   // Missing annotation is not proof of collision, nor proof of safety.
   return null;
 };
+const centeredLandscape=(shot:FilmShot):DocLayout|null=>{
+  const dims=shot.source_dimensions;
+  if(!dims||!dims.every(v=>Number.isFinite(v)&&v>0)||dims[0]<=dims[1])return null;
+  // The visual midpoint is always y960. Full-width 16:9 = 607.5px.
+  // 810px maximum (4:3) is a moderate ~1.33x scale on 16:9.
+  const stage=[0,555,1080,1365];
+  const pixels=containPixels(stage,dims);
+  const full:DocLayout={mode:'CENTERED_INTEGRAL',slots:DOC_MEDIA,media:pixels,protected:[pixels],
+    roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stage,centeredFit:'contain'};
+  // Without a pre-existing private crop candidate or observed framing,
+  // there is no authorization to remove source context.
+  const requested=shot.type==='video'&&(Boolean(shot.documentary_viewport)||Boolean(shot.framing_positions?.length));
+  if(!requested||pixels[3]-pixels[1]>=810-1)return full;
+  const observed=documentaryProtected(shot,stage);
+  if(observed){
+    // Sweep all sampled ROI/position combinations; reject a crop that would
+    // remove any protected pixels or place text on them.
+    if(!observed.every(b=>b[0]>=stage[0]&&b[1]>=stage[1]&&b[2]<=stage[2]&&b[3]<=stage[3]&&
+      docRects(DOC_MEDIA).every(r=>!intersects(r,b))))return full;
+    return {...full,mode:'CENTERED_CROP_OBSERVED',media:stage,protected:observed,roiStatus:'OBSERVED',centeredFit:'cover'};
+  }
+  // Historical reviewed crop candidate only, private human review pending.
+  // Less aggressive than the existing square/4:5 crop. Never claim ROI proof.
+  if(shot.documentary_viewport&&shot.video_context_layout==='recorte_relacional_seguro')
+    return {...full,mode:'CENTERED_CROP_REVIEW',media:stage,protected:[],roiStatus:'UNKNOWN_REVIEW',centeredFit:'cover'};
+  return full;
+};
 const documentaryLayout=(shot:FilmShot):DocLayout=>{
+  const centered=centeredLandscape(shot);
+  if(centered)return centered;
   const media=originalDocumentaryPixelRect(shot),observed=documentaryProtected(shot,media);
   // E292: native portrait gets maximum undistorted size by default. Unknown
   // subject location is a semantic REVIEW item, not a reason to miniaturize.
@@ -336,13 +368,13 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground};
+      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
   return <div ref={host} data-safe-role={role} data-documentary-text={role} data-documentary-credit={role==='source'?'full':undefined}
     data-doc-overlay={overlay?'review':'none'} style={{...rectStyle(rect),display:'flex',alignItems:'center',
-      justifyContent:role==='subtitle'?'center':'flex-start',textAlign:role==='subtitle'?'center':'left',pointerEvents:'none'}}>
+      justifyContent:'flex-start',textAlign:'left',pointerEvents:'none'}}>
     <div ref={inner} style={{width:'fit-content',maxWidth:'100%',boxSizing:'border-box',fontFamily:'Inter,Arial,sans-serif',
       fontWeight:role==='subtitle'?850:role==='section'?800:500,fontSize:size[0],lineHeight:role==='source'?1.12:role==='section'?1:1.08,
       color:role==='source'?'#DCE3E9':OFF_WHITE,whiteSpace:'normal',overflowWrap:'anywhere',
@@ -378,7 +410,21 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
         style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
     </Sequence></AbsoluteFill>;
   }
-  const separateStage=mediaFirst&&realMedia(shot)?documentaryLayout(shot).separateStage:undefined;
+  const docLayout=mediaFirst&&realMedia(shot)?documentaryLayout(shot):undefined;
+  if(docLayout?.centeredStage){
+    const position=enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
+    const fit=docLayout.centeredFit||'contain';
+    const style={position:'absolute' as const,inset:0,width:'100%',height:'100%',objectFit:fit,
+      objectPosition:fit==='cover'?`${position[0]*100}% ${position[1]*100}%`:'50% 50%'};
+    return <AbsoluteFill>
+      <div data-media-layout="centered-editorial" data-media-fit={fit} style={{...rectStyle(docLayout.centeredStage),overflow:'hidden'}}>
+        {shot.type==='video'?<Sequence from={Math.round(shot.start*30)} durationInFrames={Math.ceil((shot.end-shot.start)*30)}>
+          <OffthreadVideo src={staticFile(shot.asset||'')} muted startFrom={Math.max(0,Math.round((shot.source_in_seconds||0)*30))} style={style}/>
+        </Sequence>:<Img src={staticFile(shot.asset||'')} style={style}/>}
+      </div>
+    </AbsoluteFill>;
+  }
+  const separateStage=docLayout?.separateStage;
   if(separateStage){
     // Same source/sequence; no crop, no zoom, no duplicate blurred video.
     const stage={...rectStyle(separateStage),overflow:'hidden' as const};
@@ -724,7 +770,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const section=shot.lead?.toUpperCase();
     const layout=documentaryLayout(shot),slots=layout.slots;
     const brandOverlay=documentaryOverlay(shot,slots.brand);
-    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V4" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
+    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',
@@ -734,7 +780,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
-      <div style={{position:'absolute',left:160,top:slots.brand[3]+1,width:130,height:3,background:GOLD}}/>
+      <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+1,width:130,height:3,background:GOLD}}/>
       {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
       <MeasuredDocText role="source" shot={shot} rect={slots.source} text={credit} probe={textProbe}/>
     </AbsoluteFill>;

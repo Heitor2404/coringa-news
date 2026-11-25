@@ -26,16 +26,17 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     code=Path('motor4/remotion/src/formatos/FilmeEditorial.tsx').read_text()
     cfg=json.loads(Path('motor4/remotion/src/formatos/safe-zones-vertical.json').read_text())
     decl=next(x for x in code.splitlines() if x.startswith('const DOC_MEDIA='))
-    boxes=[cfg['slots']['brand']]
-    for role in ('section','subtitle','source'):
+    boxes=[]
+    for role in ('brand','section','subtitle','source'):
         m=re.search(role+r':\[([0-9,]+)\]',decl)
         assert m,role
         boxes.append([int(x) for x in m.group(1).split(',')])
-    uni=cfg['universal']
+    # Private E295 candidate: no relaxation of the canonical safe profile.
+    assert cfg['universal']==[150,300,770,1240]
     for x,y,r,b in boxes:
-        assert uni[0]<=x<r<=uni[2] and uni[1]<=y<b<=uni[3]
+        assert x==120 and x<r<=760 and 300<=y<b<=1600
     assert all(a[3]<=b[1] for a,b in zip(boxes,boxes[1:]))
-    assert boxes[1][3]<=405 and 1015<boxes[2][1]
+    assert boxes[1][3]<555 and 1365<boxes[2][1]
     # E290 failed for a 116px measured four-line credit. Preserve all authors,
     # the readable 24px floor, and full-width 16:9 pixels.
     assert boxes[3][3]-boxes[3][1]>=116
@@ -48,6 +49,9 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     assert 'if(nativePortrait(shot)&&!observed)' in code
     assert 'data-media-layout="native-portrait-full"' in code
     assert 'containPixels([0,0,W,H],shot.source_dimensions!)' in code
+    assert 'const stage=[0,555,1080,1365]' in code
+    assert 'CENTERED_CROP_REVIEW' in code and 'CENTERED_CROP_OBSERVED' in code
+    assert 'const centered=centeredLandscape(shot)' in code
     assert "documentary_text_probe&&(!preview||!private_review_only)" in code
     assert "overflowWrap:'anywhere'" in code
 

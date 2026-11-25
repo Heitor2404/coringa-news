@@ -198,8 +198,8 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240],integral:[0,395,1080,1150],photoIntegral:[0,405,1080,1030]} as const;
-const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false}) => {
+const DOC_MEDIA={brand:SAFE.brand,section:SAFE.section,subtitle:[160,1040,760,1150],source:[160,1155,760,1240],integral:[0,395,1080,1150],photoIntegral:[0,405,1080,1030],photoHero:[0,535,1080,1585],photoTitle:[160,400,760,449],photoCredit:[160,452,760,530]} as const;
+const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
     return <OpticalProjection t={t} events={shot.cues || []} portrait={portrait}/>;
   if(shot.type==='mechanism' && shot.mechanism==='lock_explainer')
@@ -315,7 +315,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
     // Preserve the complete scientific/archival photograph without inventing
     // borders or cutting essential context. The editorial layers remain separate.
     return <AbsoluteFill style={{background:mediaFirst?'linear-gradient(180deg,#112536,#08121E 70%,#050A12)':'#060C15'}}>
-      <Img data-media-layout={mediaFirst?'integral-photo-separated':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(DOC_MEDIA.photoIntegral):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
+      <Img data-media-layout={photoHero?'integral-photo-hero':mediaFirst?'integral-photo-separated':'integral-photo-legacy'} src={staticFile(shot.asset||'')} style={{...(mediaFirst?rectStyle(photoHero?DOC_MEDIA.photoHero:DOC_MEDIA.photoIntegral):{position:'absolute' as const,left:0,top:360,width:1080,height:1110}),objectFit:'contain'}}/>
     </AbsoluteFill>;
   }
   if (shot.type === 'photo' && shot.graphic_original && shot.motion_graphic) {
@@ -540,8 +540,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
   if(mediaFirst&&realMedia(shot)) {
+    const photoHero=shot.type==='photo'&&shot.photo_framing==='integral'&&!subtitleMode;
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V1" style={{background:'#08101A',overflow:'hidden'}}>
-      <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
+      <Body shot={shot} p={p} t={now-shot.start} mediaFirst photoHero={photoHero}/>
       {/* Local text contrast only. Never cover the lower part of the footage. */}
       <div style={{position:'absolute',left:150,top:300,width:620,height:105,pointerEvents:'none',
         background:'linear-gradient(90deg,rgba(3,8,16,.48),rgba(3,8,16,.12),transparent)',borderRadius:12}}/>
@@ -554,8 +555,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         fontSize:25,fontWeight:800,letterSpacing:.5,textShadow:'0 1px 4px #000,0 2px 6px #000',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
         {shot.lead.toUpperCase()}
       </div>}
-      {shot.type==='photo'&&shot.photo_framing==='integral'&&!subtitleMode&&<div style={{...rectStyle(DOC_MEDIA.subtitle),display:'flex',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',fontSize:36,fontWeight:800,lineHeight:1.05,overflowWrap:'anywhere'}}>{shot.headline||shot.subject}</div>}
-      <div style={{...rectStyle(DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
+      {photoHero&&<div style={{...rectStyle(DOC_MEDIA.photoTitle),display:'flex',alignItems:'center',color:OFF_WHITE,fontFamily:'Inter,Arial,sans-serif',fontSize:36,fontWeight:800,lineHeight:1.05,overflowWrap:'anywhere'}}>{shot.headline||shot.subject}</div>}
+      <div style={{...rectStyle(photoHero?DOC_MEDIA.photoCredit:DOC_MEDIA.source),color:'#F5F2EB',fontFamily:'Inter,Arial,sans-serif',
         fontSize:Math.max(18,Math.min(24,Math.floor(1550/Math.max(1,('CONTEXTO · FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
         overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
         background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>

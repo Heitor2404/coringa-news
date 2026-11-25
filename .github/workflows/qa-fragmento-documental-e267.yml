@@ -1,4 +1,4 @@
-name: E271 - comparacao de composicao fotografica com credito separado
+name: E271.1 - foto protagonista com atribuicao no cabecalho
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -87,6 +87,6 @@ jobs:
           root=stage_documental/e267
           if [[ -s "$root/fragmento.json" ]]; then
             files=("$root/fragmento.json" "$root"/*-quadro.jpg "$root"/*-safe.jpg "$root"/fragmento.mp4)
-            bash scripts/arquivar_cofre_review.sh "review-e271-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
-            python scripts/espelhar_revisao_cofre.py "e271-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            bash scripts/arquivar_cofre_review.sh "review-e2711-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e2711-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
           fi

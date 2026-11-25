@@ -267,8 +267,8 @@ def diagnosticar_janela(frames):
             n+=1
         return n
     cols=dark.mean(axis=0);rows=dark.mean(axis=1)
-    l,r=extent(cols,w//3),extent(cols[::-1],w//3)
-    t,b=extent(rows,h//3),extent(rows[::-1],h//3)
+    l,r=extent(cols,int(w*.45)),extent(cols[::-1],int(w*.45))
+    t,b=extent(rows,int(h*.45)),extent(rows[::-1],int(h*.45))
     # Only paired, roughly symmetric bars, with an identifiable interior.
     if min(l,r)<max(3,w*.025) or abs(l-r)>max(3,w*.025):l=r=0
     if min(t,b)<max(3,h*.025) or abs(t-b)>max(3,h*.025):t=b=0

@@ -41,9 +41,18 @@ def normalizar_evidencia_direta(e):
     box=e.get('bbox');scale=e.get('escala')
     if isinstance(box,dict):
         keys=('esquerda','topo','direita','base')
-        if set(box)!=set(keys):return None
-        box=[box[k] for k in keys]
+        extent=('esquerda','topo','delta_x','delta_y')
+        if scale=='0_1000':scale='xy_0_1000'
         if scale not in ('xy_0_1','xy_0_1000'):return None
+        if set(box)==set(keys):
+            box=[box[k] for k in keys]
+        elif set(box)==set(extent):
+            x,y,w,h=[box[k] for k in extent]
+            if any(type(v) not in (int,float) or not math.isfinite(v) for v in (x,y,w,h)):return None
+            if scale=='xy_0_1000' and any(type(v) is not int for v in (x,y,w,h)):return None
+            if w<=0 or h<=0:return None
+            box=[x,y,x+w,y+h]
+        else:return None
     elif scale is not None:
         return None
     if not isinstance(box,list) or len(box)!=4 or any(type(x) not in (int,float) or not math.isfinite(x) for x in box):return None

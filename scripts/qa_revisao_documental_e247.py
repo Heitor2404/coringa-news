@@ -225,7 +225,7 @@ def main():
             from src.v4.formatos import amostragem_documental as AD
             key=(n['id'],meta['sha256'])
             history=window_history.setdefault(key,{'exploracao':None,'vistos':set(),'janelas':[]}) if progressive else {'exploracao':None,'vistos':set(),'janelas':[]}
-            cached_starts=set()
+            cached_starts=set();cached_exact={}
             if progressive and (cache_only or calls>=budget):
                 for old_row in (cached or {}).get('janelas',[]):
                     pk=old_row.get('pacote') or {};old_review=pk.get('revisao_assistida') or {}
@@ -234,10 +234,10 @@ def main():
                             and old_review.get('sha256_origem')==meta['sha256']
                             and old_review.get('necessidade_id')==n['id'] and old_review.get('publicar') is False
                             and isinstance(old_review.get('resposta_bruta'),dict)):
-                        cached_starts.add(round(start,4))
+                        cached_starts.add(round(start,4));cached_exact[round(start,4)]=float(start)
             if progressive and (cache_only or calls >= budget) and not cached_starts:
                 return {'estado': 'ORCAMENTO', 'motivo': 'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
-            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts)
+            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts,inicios_exatos=cached_exact)
             history['exploracao']=exploration
             c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
             if not windows:return {'estado':'INSUFICIENTE' if history['vistos'] else 'FALHA_AQUISICAO','motivo':'SEM_JANELAS_NOVAS' if history['vistos'] else 'SEM_AMOSTRAS_DECODIFICADAS'}

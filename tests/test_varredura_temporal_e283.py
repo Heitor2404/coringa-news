@@ -152,3 +152,18 @@ def test_transicao_gradual_real_nao_vira_varios_planos():
     v = A.varrer('tests/midia/video_horizontal_navio.mp4', 6.0, largura_origem=1280, altura_origem=720)
     assert v['transicoes'] and all(b - a < .8 for a, b in v['transicoes'])
     assert all(b - a >= .8 for a, b in v['planos']) and len(v['planos']) == 2
+
+
+def test_reuso_usa_inicio_exato_do_checkpoint_nao_a_chave_arredondada(video):
+    """Falha reproduzida no CI (replay E260: reuso 9 -> 2): o ID da revisão inclui o início exato;
+    reinserir a janela pela chave arredondada gerava outro ID e perdia a análise privada."""
+    m = _midia(video, varredura_local=False)
+    exato = 50.0 * 7 / 11  # 31.818181..., como as grades antigas end*i/(count-1)
+    frames = [_frame(video, exato + 3.8 * f, width=min(768, W)) for f in (0, .5, .9)]
+    from src.v4.formatos import direcao_eventos as DE
+    esperado = DE.pacote_observacao(m, exato, 3.8, frames, fato_id='f', necessidade=_need()['mostrar'], fracoes=(0, .5, .9))['revisao_id']
+    chave = round(exato, 4)
+    _, w = A.preparar_lote(m, _need(), _frame, priorizar_cache={chave}, inicios_exatos={chave: exato})
+    assert esperado in {p['revisao_id'] for p, _ in w}
+    _, sem_exato = A.preparar_lote(m, _need(), _frame, priorizar_cache={chave})
+    assert esperado not in {p['revisao_id'] for p, _ in sem_exato}

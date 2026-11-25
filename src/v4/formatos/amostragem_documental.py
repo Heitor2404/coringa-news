@@ -245,15 +245,19 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
         if r not in result:result.append(r)
     return sorted(result,key=lambda r:r['inicio_s'])
 
-def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),priorizar_cache=()):
+def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),priorizar_cache=(),inicios_exatos=None):
     exploration=exploracao if exploracao is not None else explorar(midia,extrair)
     if priorizar_cache:
         # Reuse must not depend on the exploration grid: a previously reviewed
         # start absent from the current grid is re-added at its exact time, so
-        # the same pixels regenerate the same revision ID.
+        # the same pixels regenerate the same revision ID. The ID hashes the
+        # EXACT start, so the stored float is used, never its rounded key.
         dur=exploration['duracao_origem_s'];span=min(3.8,dur-.15)
         have={round(x['inicio_s'],4) for x in exploration['janelas']}
-        for a in sorted(set(priorizar_cache)-have):
+        exatos=inicios_exatos or {}
+        for chave in sorted(set(priorizar_cache)-have):
+            a=exatos.get(chave,chave)
+            if round(a,4)!=chave:continue
             if not 0<=a<=dur-span:continue
             try:
                 frames=[extrair(midia['local_source'],a+span*f,width=240) for f in (0,.5,.9)]

@@ -83,8 +83,11 @@ def varrer(caminho,duracao,*,largura_origem=None,altura_origem=None,largura=160,
         if q['corte']:
             planos.append([ini,q['t']]);ini=q['t']
     planos.append([ini,float(duracao)])
-    return {'fps':round(fps,4),'largura':w,'quadros':n,'pares':pares,
-            'planos':[[round(a,3),round(b,3)] for a,b in planos if b-a>.05],
+    # Consecutive cut flags in under ~0.8 s are one gradual transition (dissolve,
+    # wipe, flash), not several shots; they are reported separately.
+    transicoes=[[round(a,3),round(b,3)] for a,b in planos if b-a<.8 and a>0 and b<duracao]
+    planos=[[round(a,3),round(b,3)] for a,b in planos if b-a>=.8 or len(planos)==1]
+    return {'fps':round(fps,4),'largura':w,'quadros':n,'pares':pares,'planos':planos,'transicoes':transicoes,
             'cortes':sum(q['corte'] for q in pares),'prova_semantica':False}
 
 
@@ -196,7 +199,8 @@ def explorar(midia,extrair,*,max_janelas=12,largura=240,varredura=None,marcas=No
          'cobertura_semantica_integral':False,'publicar':False}
     if varredura:
         out['varredura_local']={'fps':varredura['fps'],'quadros':varredura['quadros'],'cortes':varredura['cortes'],
-                                'planos':varredura['planos'][:200],'prova_semantica':False}
+                                'planos':varredura['planos'][:200],'transicoes':varredura.get('transicoes',[])[:100],
+                                'prova_semantica':False}
     if marcas:out['marcas_metadado']=marcas[:20]
     return out
 

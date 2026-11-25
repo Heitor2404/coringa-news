@@ -145,3 +145,10 @@ def test_janela_com_analise_privada_armazenada_continua_alcancavel(video):
     restante = next(round(r['inicio_s'], 4) for r in exp['janelas'] if round(r['inicio_s'], 4) not in vistos)
     assert A.ha_janelas_promissoras(exp, vistos, priorizar_movimento=True) is False
     assert A.ha_janelas_promissoras(exp, vistos, priorizar_movimento=True, gratuitas={restante}) is True
+
+
+def test_transicao_gradual_real_nao_vira_varios_planos():
+    """Clipe real do repositório (Canal do Panamá, timelapse com fusão ~2,6–3,4 s)."""
+    v = A.varrer('tests/midia/video_horizontal_navio.mp4', 6.0, largura_origem=1280, altura_origem=720)
+    assert v['transicoes'] and all(b - a < .8 for a, b in v['transicoes'])
+    assert all(b - a >= .8 for a, b in v['planos']) and len(v['planos']) == 2

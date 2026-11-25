@@ -56,6 +56,42 @@ def acquire(row):
     finally:
         tmp.unlink(missing_ok=True)
 
+
+def acquire_photo(row):
+    """Acquire an individual public-domain USGS photo, with explicit source credit.
+    A photo provides static evidence only, not evidence of movement.
+    """
+    slug,label,credit=row
+    if not re.fullmatch('[a-z0-9-]+',slug) or not credit.strip():raise ValueError('E245-FONTE')
+    page='https://www.usgs.gov/media/images/'+slug
+    raw=get(page,{'www.usgs.gov'},5_000_000)
+    soup=BeautifulSoup(raw,'html.parser');txt=soup.get_text(' ',strip=True)
+    if not re.search(r'Sources/Usage\s+Public Domain\b',txt,re.I):raise ValueError('E245-LICENCA')
+    h=soup.find('h1')
+    if not h:raise ValueError('E245-TITULO')
+    hosts={'d9-wret.s3.us-west-2.amazonaws.com','prd-wret.s3.us-west-2.amazonaws.com'}
+    urls=[]
+    for role in ('original','medium'):
+        for link in soup.find_all('a',href=True):
+            if link.get_text(' ',strip=True).lower()!=role:continue
+            u=urljoin(page,link['href'])
+            if urlsplit(u).scheme=='https' and urlsplit(u).hostname in hosts:urls.append(u)
+    errors=[]
+    for u in list(dict.fromkeys(urls))[:4]:
+        try:
+            data=get(u,hosts,26_000_000)
+            with Image.open(io.BytesIO(data)) as im:
+                if im.format not in ('JPEG','PNG','WEBP') or min(im.size)<600:raise ValueError('E245-RESOLUCAO')
+                w,h_=im.size;ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp'}[im.format]
+                im.verify()
+            checksum=hashlib.sha256(data).hexdigest();path=STAGE/(checksum+ext);path.write_bytes(data)
+            return {'id':slug,'label':label,'subject':h.get_text(' ',strip=True),'page':page,
+                    'url_original':u,'page_sha256':hashlib.sha256(raw).hexdigest(),'credit':credit,
+                    'license':'Public domain','local_source':str(path),'expected_sha256':checksum,
+                    'media_type':'photo','width':w,'height':h_,'evidence_scope':'STATIC_ONLY'}
+        except Exception as e:errors.append(type(e).__name__+': '+str(e)[:120])
+    raise ValueError('E245-SEM-FOTO '+str(errors))
+
 def frame(p,t,*,width=240):
     if type(width) is not int or not 240<=width<=1280:raise ValueError('E244-FRAME-WIDTH')
     z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf',f'scale={width}:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)

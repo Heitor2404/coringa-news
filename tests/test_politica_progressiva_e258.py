@@ -105,3 +105,28 @@ def test_private_analysis_roundtrip_on_existing_v3_package(tmp_path):
     (dest/'analises-privadas.json').write_text('{}')
     with pytest.raises(ValueError,match='E258-SHA-ANALISES'):
         P.restaurar(dest,db=tmp_path/'bad.db',armazem=tmp_path/'bad',restaurar_analises_privadas=True)
+
+
+def test_nasa_documentary_identity_does_not_require_thumbnail(monkeypatch):
+    from src import midia
+    class Resp:
+        def raise_for_status(self):pass
+        def json(self):return {'collection':{'items':[{'data':[{'nasa_id':'VIDEO123','title':'Real record','center':'GSFC'}],'links':[]}]}}
+    monkeypatch.setattr(midia.requests,'get',lambda *args,**kw:Resp())
+    rows=midia.candidatos_nasa_video('test',documental=True)
+    assert len(rows)==1 and rows[0]['source_id']=='VIDEO123'
+    assert rows[0]['url']=='https://images.nasa.gov/details/VIDEO123'
+    assert rows[0]['licenca']=='' and rows[0]['variantes']==[]
+
+def test_archive_documentary_search_keeps_all_terms(monkeypatch):
+    from src import midia
+    class Resp:
+        def raise_for_status(self):pass
+        def json(self):return {'response':{'docs':[]}}
+    def get(url,**kw):
+        q=kw['params']['q']
+        assert '"Apollo" AND "11"' in q and 'licenseurl:' in q
+        assert 'collection:prelinger' not in q
+        return Resp()
+    monkeypatch.setattr(midia.requests,'get',get)
+    assert midia.candidatos_archive('Apollo 11',documental=True)==[]

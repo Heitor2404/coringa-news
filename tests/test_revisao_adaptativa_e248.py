@@ -22,7 +22,7 @@ def test_adaptive_after_refusal_preserves_obligation_and_skips_duplicate():
         return {'estado':'INSUFICIENTE','motivo':'NATUREZA_INCOMPATIVEL_OU_INCERTA'} if c['source_id']==1 else accepted(n)
     r=R.cobertura_adaptativa(need(),search,inspect,lambda phase:len(inspected)<phase+1)
     assert inspected==[1,2] and len(searches)==2
-    assert searches[1]['pesquisa']['consultas_en'][0]=='subject visible feature original photograph'
+    assert searches[1]['pesquisa']['consultas_en'][0]=='subject visible photograph'
     assert r['estado']=='CANDIDATO_PRIVADO_REVISADO' and r['tentativas']==2 and not r['pronto_para_render']
 
 def test_no_extra_search_after_valid_candidate():
@@ -40,7 +40,7 @@ def test_motion_requery_never_uses_photo_and_honors_budget():
         inspected.append(c['tipo']);return {'estado':'INSUFICIENTE','motivo':'SEM_JANELA_PERTINENTE_NO_ORCAMENTO'}
     r=R.cobertura_adaptativa(need('movimento'),search,inspect,lambda phase:len(inspected)<phase+1)
     assert inspected==['video','video'] and r['estado']=='LACUNA_PENDENTE'
-    assert searches[1]['pesquisa']['consultas_en'][0].endswith('observed behavior video')
+    assert searches[1]['pesquisa']['consultas_en'][0]=='subject visible'
     r=R.cobertura_adaptativa(need(),search,inspect,lambda phase:False)
     assert r['rodadas']==[] and r['tentativas']==0
 

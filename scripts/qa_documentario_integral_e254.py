@@ -73,11 +73,13 @@ def main():
     props=json.loads(Path(result['props']).read_text())
     props['private_review_only']=True
     words=D.palavras_de_caps(caps);groups=[]
+    contexto = {'titulo': case.get('tema'), 'narracao': {'fatos': case.get('fatos', [])}}
+    words = LS.destacar_atlas(words, contexto, maximo=3)
     for g in LS.grupos(words,maximo=3):
-        ws=words[g['i0']:g['i0']+g['n']];hi=max(range(len(ws)),key=lambda i:len(ws[i]['w']))
+        ws=words[g['i0']:g['i0']+g['n']]
         a=max(0,g['ini']);b=min(duration,g['fim'])
         if groups:a=max(a,groups[-1]['end'])
-        if b>a:groups.append({'start':a,'end':b,'words':[{'w':w['w'],'hl':i==hi} for i,w in enumerate(ws)]})
+        if b>a:groups.append({'start':a,'end':b,'words':[{'w':w['w'],'hl':w['hl']} for w in ws]})
     h=P.sha(audio);asset='e202/'+h+'.wav'
     (PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(audio,PUBLIC/asset)
     props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')

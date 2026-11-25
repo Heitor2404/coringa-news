@@ -39,7 +39,11 @@ export const Camada: React.FC<CamadaProps> = (P) => {
       for (let i = 0; i < gs.length && gs.length > 1; i++) {
         const g = gs[i];
         if (g[g.length - 1].e - g[0].s >= .35) continue;
-        const viz = [i - 1, i + 1].filter(k => k >= 0 && k < gs.length && gs[k].length + g.length <= max + 1);
+        const viz = [i - 1, i + 1].filter(k => k >= 0 && k < gs.length && gs[k].length + g.length <= max + 1)
+          .filter(k => {
+            const left = gs[Math.min(i, k)], right = gs[Math.max(i, k)];
+            return right[0].s - left[left.length - 1].e < .25 && right[right.length - 1].e - left[0].s <= 1.6;
+          });
         if (!viz.length) continue;
         const k = viz.sort((x, y) => Math.abs((x > i ? gs[x][0].s - g[g.length - 1].e : g[0].s - gs[x][gs[x].length - 1].e)) - Math.abs((y > i ? gs[y][0].s - g[g.length - 1].e : g[0].s - gs[y][gs[y].length - 1].e)))[0];
         if (k > i) { gs[i] = [...g, ...gs[k]]; gs.splice(k, 1); } else { gs[k] = [...gs[k], ...g]; gs.splice(i, 1); }

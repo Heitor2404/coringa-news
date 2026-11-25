@@ -72,6 +72,12 @@ def main():
         if not 1<=limite<=budget:raise ValueError('E264-COTA-LOCAL')
         budget=limite
     from src.v4.pretriagem_documental import reservar_encadeamento
+    # An integral production uses the already validated preview path when
+    # there is surplus for both observation and formal review. Explicit
+    # preview-only modes and archive replay retain their original behavior.
+    auto_chain = integral and progressive and not (replay or revisar_acervo or preview_pending)
+    if auto_chain and reservar_encadeamento(tri, budget):
+        preview_pending = review_previews = chain_previews = True
     total_budget=budget
     reserved=reservar_encadeamento(tri,budget) if chain_previews else set()
     # The normal review path cannot spend the calls reserved for preview +
@@ -222,6 +228,8 @@ def main():
                             and old_review.get('necessidade_id')==n['id'] and old_review.get('publicar') is False
                             and isinstance(old_review.get('resposta_bruta'),dict)):
                         cached_starts.add(round(start,4))
+            if progressive and (cache_only or calls >= budget) and not cached_starts:
+                return {'estado': 'ORCAMENTO', 'motivo': 'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
             exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts)
             history['exploracao']=exploration
             c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
@@ -270,9 +278,8 @@ def main():
                     if selection['estado']=='CANDIDATO_PERTINENTE':
                         eligible.append((pack,selection,dec))
             if cache_key:
-                previous={x['pacote']['revisao_id']:x for x in (cached or {}).get('janelas',[]) if x.get('pacote',{}).get('revisao_id') and x.get('decisao')}
-                previous.update({x['pacote']['revisao_id']:x for x in history['janelas'] if x.get('decisao')})
-                lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':list(previous.values()),'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
+                previous = AD.consolidar_janelas((cached or {}).get('janelas', []), history['janelas'])
+                lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':previous,'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m,'decisao':dec} for p,_,dec in eligible],fato_id=n['fatos'][0],preferir_legibilidade=bool(n.get('exigir_legibilidade')))
                 if ranked:
@@ -437,6 +444,22 @@ def main():
                                 chain_status.append({'id':n['id'],'estado':results[i]['estado'],'publicar':False})
                             except Exception as e:
                                 chain_status.append({'id':n['id'],'estado':'REVISAO_PENDENTE','motivo':str(e)[:160],'publicar':False})
+                        if auto_chain and calls < budget:
+                            # A provider without a thumbnail remains eligible for ordinary review.
+                            # Never retry a thumbnail rejected by the observer as a master here.
+                            for i, n in enumerate(tri):
+                                if n['id'] not in reserved or results[i]['estado'] != 'LACUNA_PENDENTE':
+                                    continue
+                                state = states[n['id']]
+                                observed_pages = {ob['pagina'] for ob in preview_observations if ob['id'] == n['id']}
+                                for candidate in R.ordenar_candidatos(n, state['pendentes']):
+                                    key = (candidate.get('fonte'), candidate.get('source_id') or candidate.get('url'))
+                                    if key in state['vistos'] or candidate.get('pagina') in observed_pages:
+                                        continue
+                                    if calls >= budget or results[i]['estado'] != 'LACUNA_PENDENTE':
+                                        break
+                                    state['vistos'].add(key)
+                                    results[i] = revisar_prioridade(n, results[i], candidate, inspect, lambda: calls < budget)
                         for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:

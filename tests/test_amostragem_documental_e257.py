@@ -94,3 +94,34 @@ def test_invalid_observation_preserved_for_diagnosis_without_approval():
     row=D.revisar_janelas_lote(windows,ask,evidencia_visual='movimento')['janelas'][0]
     assert row['falha']=='ValueError:D-REV-OBSERVACAO'
     assert row['resposta_invalida']==raw and 'revisao' not in row
+
+
+def test_identical_observed_pixels_cannot_support_reported_motion():
+    still = lambda path, t, width: Image.new('RGB', (width, 240), 'navy')
+    media = midia(3)
+    _, windows = A.preparar_lote(media, need(), still)
+    packet, frames = windows[0]
+    review = D.revisar_janela_visao(packet, frames, lambda *_: response(True),
+                                    permitir_chamada=True, evidencia_visual='movimento')
+    decision = R.decidir(need(), {'aquisicao': {'sha256': media['expected_sha256']}},
+                         {**review, 'sha256_origem': media['expected_sha256'], 'necessidade_id': 'n'},
+                         tipo='video')
+    assert decision['motivo'] == 'QUADROS_INDICADOS_IDENTICOS'
+
+
+def test_checkpoint_keeps_invalid_observation_and_prior_valid_decision():
+    packet = {'revisao_id': 'x'}
+    invalid = {'pacote': packet, 'resposta_invalida': {}, 'falha': 'D-REV-OBSERVACAO'}
+    approved = {'pacote': packet, 'decisao': {'estado': 'PERTINENTE_PRIVADO'}}
+    assert A.consolidar_janelas([], [invalid]) == [invalid]
+    assert A.consolidar_janelas([invalid], [approved]) == [approved]
+    assert A.consolidar_janelas([approved], [invalid]) == [approved]
+
+
+def test_single_cut_ranks_after_change_in_both_pairs_but_remains_eligible():
+    cut = {'inicio_s': 0, 'duracao_s': 3, 'contraste_min': 20, 'mudanca_px': 100,
+           'pares_alterados': 1, 'diagnostico': {'quadros_grafismo_suspeito': 0}}
+    gradual = {**cut, 'inicio_s': 4, 'pares_alterados': 2, 'mudanca_px': 3}
+    exploration = {'duracao_origem_s': 20, 'janelas': [cut, gradual]}
+    assert A.selecionar(exploration, limite=1, priorizar_movimento=True) == [gradual]
+    assert cut in A.selecionar(exploration, limite=2, priorizar_movimento=True)

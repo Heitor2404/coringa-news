@@ -2,7 +2,7 @@
 Bounded work, no new AI dependency, no assertion of semantic coverage.
 """
 import math
-from PIL import ImageStat
+from PIL import ImageChops, ImageStat
 from . import direcao_eventos as DE
 
 def explorar(midia,extrair,*,max_janelas=12,largura=240):
@@ -19,11 +19,11 @@ def explorar(midia,extrair,*,max_janelas=12,largura=240):
             frames=[extrair(midia['local_source'],a+span*f,width=largura) for f in (0,.5,.9)]
             diag=DE.diagnosticar_janela(frames)
             # Difference is a hint, not semantic motion (camera and cuts may dominate).
-            from PIL import ImageChops
             diffs=[ImageStat.Stat(ImageChops.difference(x.convert('RGB'),y.convert('RGB'))).mean for x,y in zip(frames,frames[1:])]
             change=sum(sum(d)/3 for d in diffs)/max(1,len(diffs))
             contrast=min(ImageStat.Stat(im.convert('L')).stddev[0] for im in frames)
             rows.append({'inicio_s':a,'duracao_s':span,'diagnostico':diag,
+                         'pares_alterados':sum(any(d) for d in diffs),
                          'mudanca_px':round(change,3),'contraste_min':round(contrast,3)})
         except Exception as e:
             rows.append({'inicio_s':a,'duracao_s':span,'falha':type(e).__name__})
@@ -38,6 +38,7 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
     def rank(r):
         return (r['diagnostico']['quadros_grafismo_suspeito'],
                 r['contraste_min']<5,
+                -r.get('pares_alterados', 0) if priorizar_movimento else 0,
                 -r['mudanca_px'] if priorizar_movimento else -r['contraste_min'])
     result=[]
     dur=exploracao['duracao_origem_s']
@@ -75,3 +76,15 @@ def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),prioriz
             x['falha_amostra_visao']=type(e).__name__
     exploration['selecionadas_s']=[p['inicio_s'] for p,_ in windows]
     return exploration,windows
+
+
+def consolidar_janelas(anteriores, atuais):
+    """Preserve invalid observations across restarts without replacing a decision."""
+    rows = {}
+    for row in (*anteriores, *atuais):
+        key = (row.get('pacote') or {}).get('revisao_id')
+        if not key:
+            continue
+        if row.get('decisao') or ('resposta_invalida' in row and not rows.get(key, {}).get('decisao')):
+            rows[key] = row
+    return list(rows.values())

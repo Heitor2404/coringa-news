@@ -346,7 +346,7 @@ def palavras_de_caps(caps: list[dict]) -> list[dict]:
         ws = bl['words']
         for k, w in enumerate(ws):
             fim = ws[k + 1]['s'] if k + 1 < len(ws) else bl['end']
-            out.append({'w': w['w'], 's': float(w['s']), 'e': round(float(fim), 3)})
+            out.append({'w': w['w'], 's': float(w['s']), 'e': round(float(w.get('e', fim)), 3)})
     return out
 
 

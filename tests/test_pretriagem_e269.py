@@ -1,3 +1,4 @@
+import pytest
 from scripts.qa_pretriagem_e269 import candidatos
 def test_preview_declared_only_no_repeat_no_approval():
     n={'necessidade':'registro','mostrar':'mountain','evidencia_visual':'estatica','pesquisa':{'consultas_en':['mountain']}}
@@ -160,7 +161,8 @@ def test_observed_priority_uses_formal_review_and_preserves_rounds():
     assert result['estado']=='CANDIDATO_PRIVADO_REVISADO' and result['rodadas'][-1]['pesquisa']['candidatos'][0]['decisao']['revisao_id']=='formal'
 
 
-def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(tmp_path,monkeypatch):
+@pytest.mark.parametrize('integral', [False, True])
+def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(tmp_path,monkeypatch,integral):
     import io,json,sys
     from PIL import Image
     from src.v4 import acervo_v4 as A
@@ -198,12 +200,12 @@ def test_e279_full_progressive_path_selects_preview_then_reviews_distinct_bytes(
         calls.append(prompt)
         if 'miniaturas anexadas' in prompt:
             return {'observacoes':[{'indice':0,'decisao':'PRIORIZAR_AQUISICAO','observacao':'Controlled preview observation.'}]}
-        return {'veredito':'pertinente','natureza_visual':'registro_compativel','inspecao':'Controlled formal observation of the acquired image.'}
+        return {'veredito':'pertinente','natureza_visual':'registro_compativel','inspecao':'Controlled formal observation of the acquired image.', 'evidencia_direta':{'classe':'direta','detalhe':'The inspected component fills this test frame.','bbox':[0.1,0.1,0.9,0.9]}}
     monkeypatch.setattr(gemini,'json_visao',model)
     for k in ('CORINGA_PACOTE_PRIVADO','CORINGA_CHECKPOINTS_DESCOBERTOS'):
         monkeypatch.delenv(k,raising=False)
     monkeypatch.setenv('CORINGA_LIMITE_VISAO_DOCUMENTAL','2')
-    monkeypatch.setattr(sys,'argv',['qa',str(spec),str(out),'fixture','--progressiva','--multicenas','--pretriagem-pendente','--revisar-previas','--encadear-previas'])
+    monkeypatch.setattr(sys,'argv',['qa',str(spec),str(out),'fixture','--progressiva','--multicenas',*(['--integral'] if integral else ['--pretriagem-pendente','--revisar-previas','--encadear-previas'])])
     E247.main()
     report=json.loads((out/'revisao.json').read_text())
     obs=json.loads((out/'observacoes-previas.json').read_text())

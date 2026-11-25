@@ -89,3 +89,20 @@ def test_credit_compacts_actual_commons_suffix_without_truncating_attribution():
     from src.v4.formatos.ponte_cobertura_filme import credito_em_tela
     assert credito_em_tela('"Landscape" — Author Name (CC BY 2.0), via Wikimedia Commons')=='Author Name (CC BY 2.0), via Wikimedia Commons'
     assert credito_em_tela('Archive — Full institutional credit')=='Archive — Full institutional credit'
+
+
+def test_caption_groups_respect_a_real_narration_pause():
+    from src.v4.formatos.legenda_sync import grupos
+    words = [{'w': 'Maré.', 's': 0.0, 'e': 0.2}, {'w': 'Depois', 's': 2.0, 'e': 2.55}]
+    groups = grupos(words, maximo=3)
+    assert [group['txt'] for group in groups] == ['Maré.', 'Depois']
+    assert groups[0]['fim'] < 1.0
+
+
+def test_measured_word_end_survives_voice_caption_round_trip():
+    from src import voz
+    from src.v4.formatos.diretor_visual_e202 import palavras_de_caps
+    original = [{'w': 'Maré', 'start': .1, 'end': .34}, {'w': 'alta', 'start': .5, 'end': .86}]
+    restored = palavras_de_caps(voz.legendas(original, set()))
+    assert [word['e'] for word in restored] == [.34, .86]
+    assert palavras_de_caps([{'end': .8, 'words': [{'w': 'MARÉ', 's': .2}]}])[0]['e'] == .8

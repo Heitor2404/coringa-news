@@ -233,6 +233,8 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
             if g[-1]['e'] - g[0]['s'] >= dur_min or len(gs) == 1:
                 continue
             viz = [k for k in (i - 1, i + 1) if 0 <= k < len(gs) and len(gs[k]) + len(g) <= maximo + 1]
+            viz = [k for k in viz if gs[max(i,k)][0]['s'] - gs[min(i,k)][-1]['e'] < pausa
+                   and gs[max(i,k)][-1]['e'] - gs[min(i,k)][0]['s'] <= dur_max]
             if viz:
                 k = min(viz, key=lambda k: abs((gs[k][0]['s'] if k > i else gs[k][-1]['e']) - (g[0]['s'] if k > i else g[-1]['e'])))
                 gs[min(i, k)] = gs[min(i, k)] + gs[max(i, k)] if k > i else gs[k] + g

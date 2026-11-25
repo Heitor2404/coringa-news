@@ -110,6 +110,11 @@ def decidir(necessidade,candidato,revisao,*,tipo):
         indices=r.get('indices_mudanca')
         if r.get('mudanca_observada') is not True or not isinstance(indices,list) or len(indices)!=2 or any(type(i) is not int for i in indices) or not 0<=indices[0]<indices[1]<=2 or not isinstance(r.get('descricao_mudanca'),str) or len(r['descricao_mudanca'].strip())<20:
             return {**result,'motivo':'MUDANCA_NAO_OBSERVADA'}
+        points = (revisao.get('resposta_observada') or {}).get('pontos') or []
+        if len(points) == 3 and all(isinstance(point, dict) for point in points):
+            first, last = (points[index].get('pixels_sha256') for index in indices)
+            if first and first == last:
+                return {**result, 'motivo': 'QUADROS_INDICADOS_IDENTICOS'}
     return {**result,'estado':'PERTINENTE_PRIVADO','motivo':'COMPATIBILIDADE_VISUAL_ASSISTIDA','revisao_id':revisao.get('revisao_id')}
 
 

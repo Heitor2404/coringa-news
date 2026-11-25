@@ -273,7 +273,7 @@ def legendas(palavras, hl: set[str]):
         colado = prox is not None and prox['start'] - g[-1]['end'] <= 0.35
         blocos.append({'start': round(g[0]['start'], 3),
                        'end': round(prox['start'] if colado else g[-1]['end'] + 0.15, 3),
-                       'words': [{'w': x['w'].upper(), 'hl': _norm(x['w']) in hl, 's': round(x['start'], 3)} for x in g]})
+                       'words': [{'w': x['w'].upper(), 'hl': _norm(x['w']) in hl, 's': round(x['start'], 3), 'e': round(x['end'], 3)} for x in g]})
     return blocos
 
 

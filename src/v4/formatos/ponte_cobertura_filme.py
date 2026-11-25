@@ -12,7 +12,7 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
     if report.get('publish') is not False:raise ValueError('E254-PRIVADO')
     tri={n['id']:n for n in report['triagem']}
     rows={r['necessidade_id']:r for r in report['cobertura']}
-    chosen={};issues=[];pages=set();hashes=set()
+    chosen={};issues=[];pages=set();hashes=set();video_ranges={};video_pages={}
     atlas=atlas or {};progressao=progressao or {}
     ids=[i for ch in case['chapters'] for i in ch['needs']]
     if len(ids)!=len(set(ids)) or set(ids)!=set(tri):raise ValueError('E254-NECESSIDADES')
@@ -46,7 +46,8 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
             issues.append({'id':i,'motivo':'REVISAO_OU_BYTES_SEM_VINCULO'});continue
         if c.get('licenca') not in F.LICENCAS or not c.get('pagina') or not c.get('credito'):
             issues.append({'id':i,'motivo':'PROCEDENCIA_PENDENTE_COMPATIBILIDADE_FILME'});continue
-        if c['pagina'] in pages or a['sha256'] in hashes:
+        reused=c['pagina'] in pages or a['sha256'] in hashes
+        if reused and (c.get('tipo')!='video' or video_pages.get(c['pagina'])!=a['sha256'] or a['sha256'] not in video_ranges):
             issues.append({'id':i,'motivo':'REPETICAO'});continue
         kind='photo' if c['tipo']=='foto' else 'video' if c['tipo']=='video' else None
         if not kind or min(a['width'],a['height'])<(600 if kind=='photo' else 700):
@@ -86,6 +87,14 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
                     window={**window,'source_in_seconds':seq['inicio_s'],'duracao_s':cap}
         if cap<1.4 or (kind=='video' and p.suffix.lower() not in ('.mp4','.webm')):
             issues.append({'id':i,'motivo':'JANELA_INSUFICIENTE'});continue
+        if kind=='video':
+            ini=window.get('source_in_seconds')
+            if not isinstance(ini,(int,float)) or not math.isfinite(ini) or ini<0 or ini+cap>a['duration_s']+.001:
+                issues.append({'id':i,'motivo':'JANELA_FORA_ORIGEM'});continue
+            ranges=video_ranges.setdefault(a['sha256'],[])
+            if any(max(ini,b)<min(ini+cap,e)-.001 or set(n['fatos'])&set(facts) for b,e,facts in ranges):
+                issues.append({'id':i,'motivo':'JANELA_REPETIDA_OU_MESMO_FATO'});continue
+            ranges.append((ini,ini+cap,n['fatos']));video_pages[c['pagina']]=a['sha256']
         pages.add(c['pagina']);hashes.add(a['sha256'])
         chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':cap if progression else 1.4,'window':window,'progressao':progression,'framing':framing}
     capacity=sum(x['cap'] for x in chosen.values())

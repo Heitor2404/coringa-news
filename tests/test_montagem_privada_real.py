@@ -55,7 +55,7 @@ def test_montagem_reusa_filme_editorial_gerando_props_reais(tmp_path,monkeypatch
     assert r["pronto"] and r["shots"]==3
     assert r["fontes_com_direitos_pendentes"]==[]
     p=json.loads(Path("saida/props.json").read_text())
-    assert p["preview"] and not p["private_review_only"]
+    assert p["preview"] and p["private_review_only"]
     assert len(p["shots"])==3
     assert all(s["graphic_original"] is True for s in p["shots"])
     assert all(Path("public",s["asset"]).is_file() for s in p["shots"])
@@ -165,7 +165,7 @@ def test_motion_graphics_revelam_dados_existentes_sem_criar_fatos(tmp_path,monke
     assert segundo["graphic_original"] is True and "motion_graphic" not in segundo
     assert terceiro["motion_graphic"]["kind"]=="causal_flow"
     assert terceiro["motion_graphic"]["stages"]==["ORIGEM","MECANISMO","CONSEQUÊNCIA"]
-    assert p["private_review_only"] is False
+    assert p["private_review_only"] is True
 
 
 def test_stat_sem_contexto_nao_gera_motion_engana_ou_numero_falso(tmp_path,monkeypatch):

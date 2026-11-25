@@ -77,7 +77,7 @@ def main():
         for row in reports:
             # Restore actual bytes only from approved hosts and verify the original SHA.
             for b in row['biblioteca'][:2]:
-                if b['origem']!='biblioteca_v3':continue
+                if b['origem']!='biblioteca_v3' or b.get('estado')=='MINIATURA_NAO_E_VIDEO':continue
                 item=lib.obter(b['asset_id'])
                 def recover(url,dest):
                     dest.write_bytes(t.get(url,{'upload.wikimedia.org','images-assets.nasa.gov','assets.science.nasa.gov','d9-wret.s3.us-west-2.amazonaws.com'},26_000_000))

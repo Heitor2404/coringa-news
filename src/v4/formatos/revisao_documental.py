@@ -51,10 +51,23 @@ def normalizar_evidencia_direta(e):
         if all(0<=x<=1 for x in box):scale='legado_xy_0_1'
         elif all(type(x) is int and 0<=x<=1000 for x in box) and max(box)>1:scale='legado_xy_0_1000'
         else:return None
+    if scale=='xy_0_1000' and any(type(x) is not int for x in box):return None
     divisor=1000 if scale.endswith('_1000') else 1
     x0,y0,x1,y1=[x/divisor for x in box]
     if not (0<=x0<x1<=1 and 0<=y0<y1<=1):return None
     return {'bbox':[x0,y0,x1,y1],'escala_origem':scale,'enquadramento_verificado':False}
+
+
+def medir_legibilidade_foto(e,px):
+    """Conservative screening of the model's declared region in inspected
+    pixels, not validation of its content or authorization to crop."""
+    if not isinstance(px,list) or len(px)!=2 or any(type(x) is not int or x<=0 for x in px):return None
+    x0,y0,x1,y1=e['bbox'];w=(x1-x0)*px[0];h=(y1-y0)*px[1]
+    # Keep long narrow features eligible when they span enough pixels;
+    # reject tiny regions and avoid mistaking source resolution for review resolution.
+    return {'largura_px':round(w,2),'altura_px':round(h,2),'area_px':round(w*h,2),
+            'suficiente':min(w,h)>=16 and w*h>=768,'medicao_declarada':True,
+            'enquadramento_verificado':False}
 
 def decidir(necessidade,candidato,revisao,*,tipo):
     """Only an observed private candidate can stop this pilot; no publication."""
@@ -76,6 +89,11 @@ def decidir(necessidade,candidato,revisao,*,tipo):
         if e is None:
             return {**result,'motivo':'EVIDENCIA_DIRETA_NAO_LOCALIZADA'}
         result['evidencia_direta_normalizada']=e
+        if tipo=='foto' and necessidade.get('exigir_legibilidade'):
+            m=medir_legibilidade_foto(e,revisao.get('px'))
+            result['legibilidade_declarada']=m
+            if m is None or not m['suficiente']:
+                return {**result,'motivo':'DETALHE_PEQUENO_NA_AMOSTRA'}
     if necessidade.get('evidencia_visual')=='movimento':
         if tipo!='video':return {**result,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'}
         indices=r.get('indices_mudanca')

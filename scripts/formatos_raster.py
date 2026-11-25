@@ -225,7 +225,7 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     out.mkdir(parents=True,exist_ok=True)
     img=out/(nome+'.jpg')
     im.save(img,quality=94)
-    meta={'nome':nome,'tipo':'satelite','cantos':cantos,'px':list(im.size),
+    meta={'nome':nome,'tipo':'satelite','cantos':[list(p) for p in cantos],'px':list(im.size),
           'px_por_grau_fonte':256*2**z/360,'arquivo':img.name,'dataset':dataset,
           'atribuicao':lic['atribuicao_exigida'],
           'fonte':{'url':modelo,'licenca':lic['licenca'],'zoom_tiles':z,

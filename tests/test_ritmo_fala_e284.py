@@ -29,3 +29,17 @@ def test_cortes_de_imagem_podem_adiantar_ou_atrasar_ate_1_2s_sem_exceder_capacid
     assert out and out[-1] == ends[-1] and abs(out[0] - ends[0]) <= 36 and out[0] <= 342
     assert out[1] - out[0] <= 342
     assert I.ajustar_cortes(case, chosen, [round(14 * 30), round(22 * 30)], round(22 * 30)) is None   # excede 1,2 s
+
+
+def test_compactar_pausas_preserva_fala_e_mapeia_tempos(tmp_path):
+    import numpy as np, wave
+    sr = 16000
+    tom = lambda s: (np.sin(np.arange(int(s * sr)) * 2 * np.pi * 220 / sr) * 8000).astype(np.int16)
+    sil = lambda s: np.zeros(int(s * sr), np.int16)
+    a = np.concatenate([tom(1.0), sil(1.4), tom(1.0), sil(.2), tom(.5)])
+    src = tmp_path / 'v.wav'
+    with wave.open(str(src), 'wb') as f:
+        f.setnchannels(1); f.setsampwidth(2); f.setframerate(sr); f.writeframes(a.tobytes())
+    dur, mapa = I.compactar_pausas(src, tmp_path / 'c.wav')
+    assert abs(dur - (4.1 - (1.4 - I.PAUSA_MAX_S))) < .08          # só a pausa longa foi encurtada
+    assert abs(mapa(2.5) - (2.5 - (1.4 - I.PAUSA_MAX_S))) < .08 and abs(mapa(.5) - .5) < 1e-6

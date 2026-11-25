@@ -55,6 +55,42 @@ def ajustar_cortes(case,chosen,ends,total):
     return out
 
 
+PAUSA_MAX_S=.35
+
+
+def compactar_pausas(wav,saida,*,limiar_db=-38.,minimo_s=.5,manter_s=PAUSA_MAX_S):
+    """Shorten only long silences between phrases (TTS pauses vary run to run). Speech samples are untouched.
+    Returns (duration, mapping) where mapping(t) converts an original time to the compacted timeline."""
+    import numpy as np
+    out=subprocess.run(['ffmpeg','-v','info','-nostats','-i',str(wav),'-af',f'silencedetect=n={limiar_db}dB:d={minimo_s}','-f','null','-'],
+                       capture_output=True,text=True).stderr
+    ini=[float(x.split('silence_start: ')[1].split()[0]) for x in out.splitlines() if 'silence_start: ' in x]
+    fim=[float(x.split('silence_end: ')[1].split()[0]) for x in out.splitlines() if 'silence_end: ' in x]
+    with wave.open(str(wav)) as f:
+        prm=f.getparams();raw=f.readframes(f.getnframes())
+    if prm.sampwidth!=2:
+        shutil.copyfile(wav,saida);return prm.nframes/prm.framerate,(lambda t:t)
+    a=np.frombuffer(raw,np.int16).reshape(-1,prm.nchannels);sr=prm.framerate;dur=len(a)/sr
+    cortes=[]
+    for x,y in zip(ini,fim):
+        if x<=.05 or y>=dur-.05:continue          # keep leading/trailing handling of voz.py
+        if y-x>manter_s:
+            c0=x+manter_s/2;c1=y-manter_s/2;cortes.append((c0,c1))
+    keep=[];pos=0.
+    for c0,c1 in cortes:keep.append(a[int(pos*sr):int(c0*sr)]);pos=c1
+    keep.append(a[int(pos*sr):])
+    b=np.concatenate(keep) if keep else a
+    with wave.open(str(saida),'wb') as f:
+        f.setparams(prm);f.writeframes(b.tobytes())
+    def mapa(t):
+        r=0.
+        for c0,c1 in cortes:
+            if t>=c1:r+=c1-c0
+            elif t>c0:r+=t-c0
+        return t-r
+    return len(b)/sr,mapa
+
+
 def ritmo_necessario(case,chosen,tempos,dur):
     """Smallest uniform speech-tempo factor so every chapter fits its verified visual capacity (>=1)."""
     caps=[sum(math.floor(chosen[i]['cap']*30+1e-6) for i in ch['needs'])/30 for ch in case['chapters']]
@@ -104,9 +140,30 @@ def main():
     # E284: measured speech slightly longer than the verified evidence of a chapter. Never stretch, repeat or hold
     # images beyond their reviewed capacity: if the overflow is small, tighten the narration tempo uniformly
     # (pitch preserved) and scale every measured word/chapter time by the same factor; otherwise replan the speech.
-    fator=ritmo_necessario(case,chosen,tempos,dur)
-    if fator>1.0005 and ajustar_cortes(case,chosen,[round(b*30) for a,b in tempos[:-1]]+[math.ceil(dur*30)],math.ceil(dur*30)):
-        fator=1.0          # boundary shifts alone absorb the overflow: keep the natural voice tempo
+    def buscar_fator(tempos,dur):
+        # Smallest uniform tempo (<=8%) that lets the cut solver fit every chapter and keeps >=60 s; None if none.
+        for k in range(0,int(round((FATOR_MAX-1)*200))+1):
+            f=1+k/200
+            e=[round(b/f*30) for a,b in tempos[:-1]]+[math.ceil(dur/f*30)]
+            if dur/f<60:return None
+            if ajustar_cortes(case,chosen,e,e[-1]):return f
+        return None
+    fator=buscar_fator(tempos,dur)
+    if fator is None:
+        # Only then shorten long TTS pauses (speech untouched), remapping every measured time.
+        compacto=root/'voz_compacta.wav'
+        dur2,mapa=compactar_pausas(wav,compacto)
+        if dur2<dur-.05:
+            t2=[(mapa(a),mapa(b)) for a,b in tempos]
+            f2=buscar_fator(t2,dur2)
+            if f2 is not None:
+                tempos=t2
+                caps=[{**bl,**({'start':mapa(bl['start'])} if 'start' in bl else {}),'end':mapa(bl['end']),
+                       'words':[{**w,'s':mapa(float(w['s'])),**({'e':mapa(float(w['e']))} if 'e' in w else {})} for w in bl['words']]} for bl in caps]
+                write(root/'pausas_compactadas.json',{'duracao_original_s':dur,'duracao_s':dur2,'pausa_max_s':PAUSA_MAX_S,'publicar':False})
+                wav,dur,fator=compacto,dur2,f2
+    if fator is None:
+        fator=max(ritmo_necessario(case,chosen,tempos,dur),FATOR_MAX+1e-3)
     filtro=['-af',f'atempo={fator:.5f}'] if fator>1.0005 else []
     if fator>FATOR_MAX:
         write(root/'integral.json',{**gate,'motivo':'FALA_EXCEDE_EVIDENCIA_REPLANEJAR','fator_necessario':round(fator,4),

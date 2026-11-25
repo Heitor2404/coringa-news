@@ -49,7 +49,7 @@ def verified_download(tag,a,root):
     return p
 def listar_releases(max_releases):
     # Bounded catalogue pagination; count manifests separately from release rows.
-    if type(max_releases) is not int or not 1<=max_releases<=100:raise ValueError('E259-LIMITE-RELEASES')
+    if type(max_releases) is not int or not 1<=max_releases<=300:raise ValueError('E259-LIMITE-RELEASES')
     size=min(20,max_releases);rows=[]
     for page in range(1,(max_releases+size-1)//size+1):
         batch=api('/releases?per_page='+str(size)+'&page='+str(page))
@@ -59,7 +59,7 @@ def listar_releases(max_releases):
     return rows[:max_releases]
 
 
-def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=None,max_manifest_bytes=8_000_000):
+def discover(needs,root,*,max_releases=300,max_bytes=100_000_000,max_packages=None,max_manifest_bytes=8_000_000):
     # Separate bounded catalogue traffic from actual media packages. A large
     # index must not consume the last bytes required to restore reviewed media.
     if type(max_manifest_bytes) is not int or not 0<max_manifest_bytes<=8_000_000:raise ValueError('E259-LIMITE-MANIFESTOS')
@@ -68,7 +68,7 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
     if type(max_packages) is not int or not 1<=max_packages<=100:raise ValueError('E259-LIMITE-PACOTES')
     root=Path(root);meta=api('')
     if meta.get('private') is not True or meta.get('id')!=1454059520:raise ValueError('E259-COFRE')
-    releases=listar_releases(max_releases);ranked=[];events=[];spent=0;metadata_spent=0;manifests=0
+    releases=listar_releases(max_releases);ranked=[];events=[];spent=0;metadata_spent=0;manifests=0;ids_vistos=set()
     for rel in releases:
         tag=rel.get('tag_name','')
         if rel.get('draft') is not True or not re.fullmatch(r'review-[a-z0-9-]+',tag):continue
@@ -76,8 +76,14 @@ def discover(needs,root,*,max_releases=60,max_bytes=100_000_000,max_packages=Non
         manifest=assets.get('manifesto-revisoes.jsonl')
         if not manifest and any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):
             events.append({'tag':tag,'motivo':'MANIFESTO_AUSENTE_COM_PACOTES'})
+        pacotes={k[:-4] for k in assets if re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k)}
+        if not pacotes:continue
+        # E284: re-archived packages (same ids in newer releases) must not consume the manifest budget nor push
+        # older, still-relevant archives out of the bounded window (CI 45675321541: E259 PACOTES 0).
+        if pacotes<=ids_vistos:
+            events.append({'tag':tag,'motivo':'PACOTES_JA_CATALOGADOS'});continue
         if not manifest or not 0<manifest['size']<=8_000_000 or metadata_spent+manifest['size']>max_manifest_bytes:continue
-        if not any(re.fullmatch(r'cm-[0-9a-f]{12}\.zip',k) for k in assets):continue
+        ids_vistos|=pacotes
         folder=root/tag
         try:
             metadata_spent+=manifest['size']

@@ -2162,6 +2162,325 @@
     "legenda",
     "layout"
    ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-085",
+   "titulo": "Config do Remotion nunca carregada (navegador baixado com Chrome instalado)",
+   "sintoma": "Prova geográfica de Corinto: Remotion tentou baixar o Chrome Headless Shell com Chrome configurado; log 'No config file loaded'.",
+   "causa_raiz": "O CLI só lê remotion.config.* da pasta do package.json mais próximo (motor4/); o arquivo estava em motor4/remotion/. REMOTION_CHROME, gl=swangle e JPEG 92 eram ignorados.",
+   "arquivos": [
+    "motor4/remotion.config.js",
+    "motor4/remotion/remotion.config.ts"
+   ],
+   "correcao": "Config movida para motor4/remotion.config.js (JS: .ts exigiria tsconfig na raiz) com Chrome REMOTION_CHROME > CORINGA_CHROME > sistema.",
+   "testes": [
+    "tests/test_remotion_config_raiz.py::test_cli_aplica_config_e_nao_baixa_navegador"
+   ],
+   "tags": [
+    "remotion",
+    "atlas",
+    "ambiente"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-086",
+   "titulo": "Janelas uniformes em filmagens longas (cortes e panorâmicas confundidos com ação)",
+   "sintoma": "E281.2: duas chamadas reais em um clipe de 496 s; janelas 134/268/358 e 89/313/447 sem a ação; segunda rodada insistiu no mesmo arquivo.",
+   "causa_raiz": "Grade uniforme de até 12 janelas, diversidade por terços e ranking por diferença bruta de pixels, sem separar câmera, cortes e movimento do referente.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "Varredura local integral (fluxo óptico + afim RANSAC, cortes por diferença compensada, fusões agrupadas), janelas dentro de planos, marcas temporais de metadados, nova rodada no mesmo arquivo só com plano promissor.",
+   "testes": [
+    "tests/test_varredura_temporal_e283.py::test_lote_de_movimento_alcanca_a_acao_tardia_em_plano_proprio",
+    "tests/test_varredura_temporal_e283.py::test_nao_insistir_no_mesmo_arquivo_sem_plano_promissor"
+   ],
+   "tags": [
+    "filmagem",
+    "selecao",
+    "eficiencia"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-087",
+   "titulo": "Reuso de checkpoint perdido ao reinserir janela por chave arredondada",
+   "sintoma": "CI isolado run 45653082312: replay E260 caiu de 9 para 2 reusos.",
+   "causa_raiz": "revisao_id faz hash do início exato; a janela de checkpoint era reinserida com o início arredondado a 4 casas.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "E247 passa o float armazenado (inicios_exatos); reinserção usa o valor exato.",
+   "testes": [
+    "tests/test_varredura_temporal_e283.py::test_reuso_usa_inicio_exato_do_checkpoint_nao_a_chave_arredondada"
+   ],
+   "tags": [
+    "checkpoint",
+    "reuso"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação corretiva Claude (E283)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-088",
+   "titulo": "Legenda medida sobre a filmagem integral horizontal",
+   "sintoma": "Quadro renderizado: faixa de legenda (y 1040–1150) cobria a parte inferior do vídeo 16:9 integral.",
+   "causa_raiz": "Caixa DOC_MEDIA.integral ia até y 1150, sobrepondo a faixa de legenda documental.",
+   "arquivos": [
+    "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+   ],
+   "correcao": "Com legendas, vídeo integral usa a caixa das fotos integrais (até y 1030), largura total preservada.",
+   "testes": [
+    "tests/test_legenda_fora_da_evidencia_e283.py::test_caixa_integral_legendada_termina_acima_da_legenda"
+   ],
+   "tags": [
+    "legenda",
+    "layout"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-089",
+   "titulo": "Limite de quadros da varredura não garantido e stdout inteiro em memória",
+   "sintoma": "Auditoria independente 3.1: fps=max(.5,…) excedia 720 quadros acima de ~24 min; subprocess.run capturava todo o vídeo bruto.",
+   "causa_raiz": "Piso de fps e leitura não em fluxo.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py"
+   ],
+   "correcao": "Duração real por pacotes/demux; modo contínuo em fluxo com teto rígido; acima disso âncoras hierárquicas sobre o arquivo inteiro com orçamento de tempo; recuperação explícita.",
+   "testes": [
+    "tests/test_varredura_limites_e284.py::test_limite_de_quadros_respeitado_acima_de_24_min_cobrindo_o_arquivo_inteiro",
+    "tests/test_varredura_limites_e284.py::test_metadados_de_duracao_incorretos"
+   ],
+   "tags": [
+    "filmagem",
+    "eficiencia"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-090",
+   "titulo": "Pares de âncora duplicados em fonte de baixa taxa",
+   "sintoma": "Arquivo de 2 fps: pares a 4 fps eram o mesmo quadro duplicado e escondiam o movimento real.",
+   "causa_raiz": "Reamostragem acima da taxa da fonte.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py"
+   ],
+   "correcao": "Pares no ritmo min(4, fps da fonte).",
+   "testes": [
+    "tests/test_varredura_limites_e284.py::test_limite_de_quadros_respeitado_acima_de_24_min_cobrindo_o_arquivo_inteiro"
+   ],
+   "tags": [
+    "filmagem"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-091",
+   "titulo": "Arquivo abandonado só porque o plano já foi visto",
+   "sintoma": "Auditoria 3.2: câmera fixa com vários acontecimentos no mesmo plano era descartada.",
+   "causa_raiz": "Diversidade e insistência decididas por plano.",
+   "arquivos": [
+    "src/v4/formatos/amostragem_documental.py"
+   ],
+   "correcao": "Segmentação por eventos (início de atividade, deriva gradual), câmera acompanhando referente; seleção e insistência por evento.",
+   "testes": [
+    "tests/test_varredura_limites_e284.py::test_eventos_distintos_no_mesmo_plano_continuam_alcancaveis",
+    "tests/test_varredura_limites_e284.py::test_sem_sinal_novo_o_arquivo_nao_e_insistido"
+   ],
+   "tags": [
+    "filmagem",
+    "selecao"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-092",
+   "titulo": "Regressão de reuso aprovava perda de 3 de 9 análises",
+   "sintoma": "Auditoria 3.3: assert reusos_analises>=6.",
+   "causa_raiz": "Contrato por quantidade mínima.",
+   "arquivos": [
+    "scripts/contrato_reuso_replay.py",
+    "benchmarks/e284/contrato_replay_e260.json",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "Contrato congelado por identidade das 9 revisões, estados, seleção, zero visão/HTTP; comparação com o código do Work a cada execução.",
+   "testes": [
+    "tests/test_contrato_validacao_e284.py::test_contrato_detecta_perda_troca_de_identidade_visao_e_download"
+   ],
+   "tags": [
+    "checkpoint",
+    "reuso",
+    "ci"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-093",
+   "titulo": "Workflow verde sem executar prova obrigatória",
+   "sintoma": "Auditoria 3.4: continue-on-error na recuperação de checkpoints e replay condicionado.",
+   "causa_raiz": "Estados de prova implícitos.",
+   "arquivos": [
+    ".github/workflows/qa-consolidacao-claude-20261125.yml",
+    "scripts/estado_prova.sh",
+    "scripts/resumo_provas.py"
+   ],
+   "correcao": "Cada prova registra APROVADA/REPROVADA/BLOQUEADA; ausente = NAO_EXECUTADA; homologação só com todas aprovadas.",
+   "testes": [
+    "tests/test_contrato_validacao_e284.py::test_estados_das_provas_nao_aprovam_prova_ausente_ou_bloqueada"
+   ],
+   "tags": [
+    "ci"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-094",
+   "titulo": "Nova chamada de visão no mesmo ângulo vindo de outra fonte",
+   "sintoma": "Run 45666408862: o clipe Apollo (biblioteca) voltou pelo Commons com o mesmo SHA e recebeu a 2ª chamada; a fila só despriorizava candidatos remotos.",
+   "causa_raiz": "Identidade por fonte e não por bytes/negativas acumuladas.",
+   "arquivos": [
+    "scripts/qa_revisao_documental_e247.py",
+    "src/v4/formatos/revisao_documental.py"
+   ],
+   "correcao": "Arquivo com >=3 negativas revisadas para a necessidade é adiado sem chamada até a última fase e ordenado após candidatos novos.",
+   "testes": [
+    "tests/test_varredura_limites_e284.py::test_arquivo_da_biblioteca_com_negativas_repetidas_cede_lugar_a_candidato_novo",
+    "tests/test_varredura_limites_e284.py::test_mesmos_bytes_de_outra_fonte_nao_ganham_nova_chamada_antes_de_candidatos_novos"
+   ],
+   "tags": [
+    "filmagem",
+    "eficiencia",
+    "orcamento"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-095",
+   "titulo": "Fala maior que a evidência verificada bloqueava sem diagnóstico de ajuste",
+   "sintoma": "Runs 45667613774/45669210644: E254-TEMPO-CAPITULO com 18/18 coberturas.",
+   "causa_raiz": "Nenhum ajuste limitado nem motivo de replanejamento.",
+   "arquivos": [
+    "scripts/qa_documentario_integral_e254.py"
+   ],
+   "correcao": "Ritmo uniforme da voz até 8% com tempos medidos escalados; acima disso FALA_EXCEDE_EVIDENCIA_REPLANEJAR com fator.",
+   "testes": [
+    "tests/test_ritmo_fala_e284.py::test_fator_cobre_o_capitulo_mais_apertado"
+   ],
+   "tags": [
+    "narracao",
+    "legenda"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-096",
+   "titulo": "ATLAS dependia de curadoria geográfica manual",
+   "sintoma": "Ponte exigia CURADORIA_GEOGRAFICA_VERIFICADA; necessidades territoriais ficavam sem mapa.",
+   "causa_raiz": "Sem verificação automática confiável.",
+   "arquivos": [
+    "src/v4/formatos/geografia_verificada.py",
+    "src/v4/formatos/atlas_automatico.py",
+    "src/v4/formatos/ponte_cobertura_filme.py",
+    "scripts/qa_documentario_integral_e254.py"
+   ],
+   "correcao": "Verificação por duas fontes (Wikidata P625 + OSM) concordantes; entrega ATLAS automática pelo caminho existente.",
+   "testes": [
+    "tests/test_geografia_verificada_e284.py::test_duas_fontes_concordantes_geram_caso_atlas",
+    "tests/test_atlas_automatico_e284.py::test_entrega_automatica_usa_caminho_existente"
+   ],
+   "tags": [
+    "atlas",
+    "geografia"
+   ]
+  },
+  {
+   "data": "2026-11-25",
+   "versao": "Consolidação final Claude (E284)",
+   "gravidade": "alta",
+   "estado": "corrigido",
+   "verificavel": true,
+   "referencia": "branch claude-consolidacao-corretiva-20261125",
+   "id": "ERR-097",
+   "titulo": "Autorização de visão sem persistência entre execuções",
+   "sintoma": "Saldos eram variáveis de ambiente por execução; retries do provedor não eram limitados por chamada lógica.",
+   "causa_raiz": "Sem livro persistente.",
+   "arquivos": [
+    "src/v4/orcamento_visao.py",
+    "src/gemini.py",
+    "scripts/qa_revisao_documental_e247.py"
+   ],
+   "correcao": "Livro no cofre com CAS, reserva antes da chamada, liquidação por operações efetivas, reserva órfã no pior caso, teto de tentativas por chamada.",
+   "testes": [
+    "tests/test_orcamento_visao_e284.py::test_saldo_persiste_e_nao_reinicia",
+    "tests/test_orcamento_visao_e284.py::test_teto_de_tentativas_do_provedor"
+   ],
+   "tags": [
+    "orcamento"
+   ]
   }
  ]
 }

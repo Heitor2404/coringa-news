@@ -89,13 +89,34 @@ def main():
     global_http,global_bytes=t.max_http,t.max_bytes
     hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
     t.max_http-=hold_http;t.max_bytes-=hold_bytes
-    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];deferred_angles=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    autorizacao=os.getenv('CORINGA_AUTORIZACAO_VISAO')
+    if autorizacao and not replay and budget>0:
+        # E284: persistent authorization; never more than its remaining logical/operation balance.
+        from src.v4 import orcamento_visao as OV
+        budget=min(budget,max(0,OV.saldo(autorizacao)['saldo_logico']));total_budget=min(total_budget,budget)
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
+        ticket=None
+        if autorizacao:
+            from src.v4 import orcamento_visao as OV
+            try:ticket=OV.reservar(autorizacao,os.getenv('CORINGA_FINALIDADE_VISAO') or 'geral',limite_finalidade=int(os.environ['CORINGA_LIMITE_FINALIDADE_VISAO']) if os.getenv('CORINGA_LIMITE_FINALIDADE_VISAO') else None)
+            except OV.SaldoEsgotado as e:raise RuntimeError('E247-ORCAMENTO-VISAO '+str(e)[:80])
         calls+=1
         from src import gemini
-        return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
+        rows=telemetry if progressive else []
+        before=len(rows)
+        try:
+            out=gemini.json_visao(prompt,images,leve=True,telemetria=rows)
+        except Exception as e:
+            if ticket:OV.liquidar(autorizacao,ticket['id'],operacoes=max(1,len(rows)-before),ok=False,motivo=type(e).__name__)
+            raise
+        if ticket:
+            new_rows=rows[before:]
+            OV.liquidar(autorizacao,ticket['id'],operacoes=max(1,len(new_rows)),ok=True,
+                        tokens=sum(((r.get('tokens') or {}).get('total_token_count') or 0) for r in new_rows))
+        return out
     from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE
     def inspect(c,n,*,cache_only=False):
         nonlocal reuses,cache_hits
@@ -131,6 +152,11 @@ def main():
         m={'id':c.get('source_id') or meta['sha256'],'expected_sha256':meta['sha256'],
            'width':meta['width'],'height':meta['height'],'duration_s':meta['duration_s'],
            'local_source':str(p)}
+        if c.get('tipo')=='video' or meta.get('duration_s'):
+            # Declared metadata (title/description/shot list) feeds the local
+            # temporal scan as ranking hints only; never as proof of the action.
+            m['metadados_texto']='\n'.join(str(c.get(k) or '') for k in ('titulo','descricao','desc') if c.get(k))[:4000]
+            m['termos_necessidade']=[n.get('mostrar') or '',*((n.get('pesquisa') or {}).get('consultas_en') or [])]
         cache_key=None;cached=None
         if progressive:
             from src import gemini
@@ -173,7 +199,7 @@ def main():
                 if cache_key and old.get('publicar') is False and old.get('sha256_origem')==meta['sha256'] and old.get('necessidade_id')==n['id'] and old.get('mostrar')==n['mostrar'] and old.get('px')==list(im.size) and old.get('pixels_sha256')==hashlib.sha256(im.convert('RGB').tobytes()).hexdigest():
                     try:
                         q=R.revisar_foto(m,im,n,lambda prompt,images:old['resposta'])
-                        cache_hits+=1;c['revisao_reutilizada']=True
+                        cache_hits+=1;c['revisao_reutilizada']=True;reuse_ids.append(q.get('revisao_id'))
                     except (ValueError,KeyError,TypeError):
                         if cache_only or calls>=budget:return {'estado':'ORCAMENTO','motivo':'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
                         q=R.revisar_foto(m,im,n,ask)
@@ -220,7 +246,17 @@ def main():
             from src.v4.formatos import amostragem_documental as AD
             key=(n['id'],meta['sha256'])
             history=window_history.setdefault(key,{'exploracao':None,'vistos':set(),'janelas':[]}) if progressive else {'exploracao':None,'vistos':set(),'janelas':[]}
-            cached_starts=set()
+            # E284: the SAME BYTES may come back from another source (library + Commons). Before a NEW call on a file whose
+            # reviewed windows for this need are repeatedly negative (any session/source), defer it while other candidates
+            # may still be explored; the last phase can still return to it. No call, no semantic negative.
+            if progressive and not cache_only and calls<budget and n['evidencia_visual']=='movimento' and phase<1:
+                negs=sum(1 for row in AD.consolidar_janelas((cached or {}).get('janelas',[]),history['janelas'])
+                         if (row.get('decisao') or {}).get('motivo') in ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA'))
+                if negs>=3:
+                    c['negativas_revisadas']=negs;c['revisao_adicional_possivel']=True
+                    deferred_angles.append({'necessidade_id':n['id'],'sha256':meta['sha256'],'negativas':negs,'fonte':c.get('fonte')})
+                    return {'estado':'ORCAMENTO','motivo':'ADIADO_ANGULO_COM_NEGATIVAS_REVISADAS'}
+            cached_starts=set();cached_exact={}
             if progressive and (cache_only or calls>=budget):
                 for old_row in (cached or {}).get('janelas',[]):
                     pk=old_row.get('pacote') or {};old_review=pk.get('revisao_assistida') or {}
@@ -229,10 +265,10 @@ def main():
                             and old_review.get('sha256_origem')==meta['sha256']
                             and old_review.get('necessidade_id')==n['id'] and old_review.get('publicar') is False
                             and isinstance(old_review.get('resposta_bruta'),dict)):
-                        cached_starts.add(round(start,4))
+                        cached_starts.add(round(start,4));cached_exact.setdefault(round(start,4),[]).append(float(start))
             if progressive and (cache_only or calls >= budget) and not cached_starts:
                 return {'estado': 'ORCAMENTO', 'motivo': 'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
-            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts)
+            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts,inicios_exatos=cached_exact)
             history['exploracao']=exploration
             c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
             if not windows:return {'estado':'INSUFICIENTE' if history['vistos'] else 'FALHA_AQUISICAO','motivo':'SEM_JANELAS_NOVAS' if history['vistos'] else 'SEM_AMOSTRAS_DECODIFICADAS'}
@@ -249,7 +285,7 @@ def main():
                         try:
                             q0=DE.revisar_janela_visao(pk,frames,lambda prompt,images:stored[pk['revisao_id']],permitir_chamada=True,evidencia_visual=n['evidencia_visual'],exigir_evidencia_direta=n.get('exigir_evidencia_direta',False))
                             entries[i]={'revisao':{**q0,'chamadas_logicas':0,'provedor':'reuso_privado'},'cache':True}
-                            cache_hits+=1
+                            cache_hits+=1;reuse_ids.append(pk['revisao_id'])
                             continue
                         except (ValueError,TypeError,KeyError,AttributeError):pass
                     fresh.append((i,pk,frames))
@@ -281,6 +317,10 @@ def main():
                         eligible.append((pack,selection,dec))
             if cache_key:
                 previous = AD.consolidar_janelas((cached or {}).get('janelas', []), history['janelas'])
+                # Reviewed negatives of THIS file for THIS need (all sessions): an angle that repeatedly fails to show
+                # the referent ranks after unexplored candidates (never excluded; absence is not proven).
+                c['negativas_revisadas']=sum(1 for row in previous if (row.get('decisao') or {}).get('motivo') in
+                    ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA'))
                 lib.gravar_analise(meta['sha256'],cache_key,{'publicar':False,'direitos_aprovados':False,'janelas':previous,'exploracao':exploration,'escopo_pesquisa':{**RE.escopo(n),'consultas_en':(n.get('pesquisa') or {}).get('consultas_en') or []}},origem='E258')
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m,'decisao':dec} for p,_,dec in eligible],fato_id=n['fatos'][0],preferir_legibilidade=bool(n.get('exigir_legibilidade')))
@@ -290,7 +330,7 @@ def main():
                         used_sha.add(meta['sha256'])
                         if c.get('pagina'):used_pages.add(c['pagina'])
                     return eligible[k][2]
-            if progressive and any(round(x['inicio_s'],4) not in history['vistos'] for x in exploration['janelas'] if 'diagnostico' in x) and any('revisao' in row for row in batch['janelas']):
+            if progressive and AD.ha_janelas_promissoras(exploration,history['vistos'],priorizar_movimento=n.get('evidencia_visual')=='movimento',gratuitas=cached_starts) and any('revisao' in row for row in batch['janelas']):
                 c['revisao_adicional_possivel']=True
             else:c['revisao_adicional_possivel']=False
             if all('falha' in r for r in batch['janelas']):
@@ -517,7 +557,7 @@ def main():
     if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status,'encadeamento':chain_status,'reservadas':sorted(reserved)})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'angulos_adiados':deferred_angles,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

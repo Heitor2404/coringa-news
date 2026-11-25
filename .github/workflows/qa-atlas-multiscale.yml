@@ -1,4 +1,4 @@
-name: E236 - ATLAS multiescala privado
+name: E240 - ATLAS multiescala transicao privada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -33,7 +33,7 @@ jobs:
           fi
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
-          python -m pytest -q tests/test_ponte_mapa_atlas_filme.py tests/test_atlas_base_regional_e235.py tests/test_direcao_e234.py
+          python -m pytest -q tests/test_ponte_mapa_atlas_filme.py tests/test_atlas_base_regional_e235.py tests/test_direcao_e234.py tests/test_atlas_multiscale_e237.py
       - name: Adquirir mapa regional e renderizar no ATLAS original
         run: python -m scripts.qa_atlas_multiscale benchmarks/e236/regioes.json ${{ matrix.case }}
       - name: Enviar prova cartográfica privada
@@ -46,7 +46,7 @@ jobs:
           from src.v3 import previa_telegram as T
           try:
               chat,info=T.chat_autorizado()
-              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · E236. Prova cartográfica ${{ matrix.case }}, 5,5s. Mapa de referência, não episódio. Revisão visual pendente.','supports_streaming':'true'},('video',T._caber(Path('qa_atlas_multiscale/${{ matrix.case }}/mapa.mp4'))))
+              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · E240. Prova cartográfica ${{ matrix.case }}, 5,5s. Mapa de referência, não episódio. Revisão visual pendente.','supports_streaming':'true'},('video',T._caber(Path('qa_atlas_multiscale/${{ matrix.case }}/mapa.mp4'))))
               if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
           except Exception:
               raise SystemExit('Entrega privada não confirmada') from None

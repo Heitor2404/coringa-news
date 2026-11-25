@@ -1,4 +1,4 @@
-name: E264.5 - regressao multitema e cache antes da nova pesquisa
+name: E277 - regressao multitema e acesso ao cache temporal
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

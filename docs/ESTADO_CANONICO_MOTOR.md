@@ -38,3 +38,6 @@ E275, commit 5677893ee08b3f7cca05ba5207c8a54d01730006, [run 45628133696](https:/
 
 ### E276 — bloco de variantes
 E275.1 [run 45628307070](https://github.com/Heitor2404/coringa-news/actions/runs/45628307070) SUCCESS, 32 testes; quatro prévias no fluxo real, 12 HTTP, 2.868.484 bytes, oito erros, zero visão/cobertura. Quatro folhas vistas; melhor pista de aqueduto e alternativas distintas de Saturno, uma de cor artificial não homologada. E276 corrige a resolução pedida apenas no modo opt-in sem visão e ordena variantes declaradas de vídeo sem excluir alternativas; implementação presente, validação pendente. Não alterar status de ATLAS, animações, montagem ou memória.
+
+### E277 — reaproveitamento temporal
+Corrigida ordem de amostragem cache-only para alcançar janelas com revisão privada já armazenada fora do lote técnico padrão. A identidade continua dependente da regeneração dos pixels e do ID exato. Implementado no caminho E247/E257, teste novo e regressão real em execução; não confundir com melhoria semântica ou ação contínua. E276 em validação no [run 45628962634](https://github.com/Heitor2404/coringa-news/actions/runs/45628962634).

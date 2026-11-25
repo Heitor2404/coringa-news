@@ -49,3 +49,18 @@ def test_failed_decode_not_a_semantic_rejection():
     e,w=A.preparar_lote(midia(),need(),fail)
     assert not w and all('falha' in x for x in e['janelas'])
     assert e['cobertura_semantica_integral'] is False
+
+
+def test_cache_only_sampling_reaches_a_previously_reviewed_nondefault_window():
+    m=midia();n=need()
+    e,normal=A.preparar_lote(m,n,frame)
+    default={round(p['inicio_s'],4) for p,_ in normal}
+    late=next(round(x['inicio_s'],4) for x in reversed(e['janelas']) if round(x['inicio_s'],4) not in default)
+    _,selected=A.preparar_lote(m,n,frame,exploracao=e,priorizar_cache={late})
+    assert late in {round(p['inicio_s'],4) for p,_ in selected}
+    assert len(selected)<=3
+    # The same bytes and time produce exactly the same observation ID.
+    _,again=A.preparar_lote(m,n,frame,exploracao=e,priorizar_cache={late})
+    assert [p['revisao_id'] for p,_ in selected]==[p['revisao_id'] for p,_ in again]
+    _,excluded=A.preparar_lote(m,n,frame,exploracao=e,priorizar_cache={late},excluir={late})
+    assert late not in {round(p['inicio_s'],4) for p,_ in excluded}

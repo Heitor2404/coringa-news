@@ -49,10 +49,19 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
         if r not in result:result.append(r)
     return sorted(result,key=lambda r:r['inicio_s'])
 
-def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=()):
+def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),priorizar_cache=()):
     exploration=exploracao if exploracao is not None else explorar(midia,extrair)
     remaining={**exploration,'janelas':[x for x in exploration['janelas'] if round(x['inicio_s'],4) not in excluir]}
     selected=selecionar(remaining,priorizar_movimento=necessidade.get('evidencia_visual')=='movimento')
+    if priorizar_cache:
+        # Cache starts are hints only: the caller must regenerate each
+        # observation and verify the full revision ID and original SHA.
+        preferred=set(priorizar_cache)
+        candidates=[x for x in remaining['janelas'] if 'diagnostico' in x and round(x['inicio_s'],4) in preferred]
+        selected_cached=[x for x in selected if x in candidates]
+        other_cached=[x for x in candidates if x not in selected_cached]
+        selected=(selected_cached+other_cached+[x for x in selected if x not in selected_cached])[:3]
+        selected.sort(key=lambda x:x['inicio_s'])
     windows=[]
     for x in selected:
         a=x['inicio_s'];span=x['duracao_s']

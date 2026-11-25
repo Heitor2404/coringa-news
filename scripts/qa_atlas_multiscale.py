@@ -60,7 +60,8 @@ def adquirir_bases(caso):
     specs=escalas(q['roi'],caso.get('delta',1.6),fonte_continua=caso.get('fonte_continua') is True)
     bases=[]; metas=[]
     for spec in specs:
-        m=R.registrar_base_regional(name+'_z'+str(spec['zoom']),spec['bbox'],spec['zoom'],spec['dataset'])
+        # E284: S2 ocean outside the coastal strip comes from the bathymetric base (raw EOX curved border).
+        m=R.registrar_base_regional(name+'_z'+str(spec['zoom']),spec['bbox'],spec['zoom'],spec['dataset'],oceano='batimetria')
         metas.append(m)
         bases.append({'nome':m['nome'],**({'de':spec['de']} if spec['de'] is not None else {})})
     return {'bases':bases,'metas':metas,'specs':specs}

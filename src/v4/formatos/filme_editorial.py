@@ -494,7 +494,7 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
             if cena.get('reference_asset') or cena.get('reference_from_seconds') is not None:
                 falha('F-PONTE-SEM-PROVA', cid,
                       'demonstração autônoma não pode fingir continuidade com filmagem')
-        if span < 1.4 or span > max_span:
+        if span < 1.4 - 1e-6 or span > max_span + 1e-6:   # spans are whole frames: 114/30 = 3.8000000000000003
             falha('F-PLANO-SEM-DIRECAO', cid, f'{span:.1f}s: sem progressão suficiente para a duração')
         prev_end = end
         tipo = cena.get('type')

@@ -43,3 +43,13 @@ def test_compactar_pausas_preserva_fala_e_mapeia_tempos(tmp_path):
     dur, mapa = I.compactar_pausas(src, tmp_path / 'c.wav')
     assert abs(dur - (4.1 - (1.4 - I.PAUSA_MAX_S))) < .08          # só a pausa longa foi encurtada
     assert abs(mapa(2.5) - (2.5 - (1.4 - I.PAUSA_MAX_S))) < .08 and abs(mapa(.5) - .5) < 1e-6
+
+
+def test_plano_com_foto_na_capacidade_exata_em_quadros_inteiros_nao_e_reprovado():
+    """Run 45674218044: n16 com 114 quadros reprovado como F-PLANO-SEM-DIRECAO porque fim-início em segundos
+    (quadros/30) deu 3.8000000000000043 > 3.8."""
+    from src.v4.formatos import filme_editorial as F
+    import inspect
+    a, b = 1404 / 30, 1518 / 30
+    assert b - a > 3.8 and b - a <= 3.8 + 1e-6
+    assert 'span > max_span + 1e-6' in inspect.getsource(F.avaliar)

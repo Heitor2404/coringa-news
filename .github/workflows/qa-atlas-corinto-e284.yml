@@ -52,6 +52,16 @@ jobs:
           print('MOSAICOS_REUSADOS',len(plan['bases']))
           PY"
           $P diagnostico_s2 python -m scripts.diagnostico_s2_e284 $root/caso.json qa_atlas_multiscale/corinto $root/s2
+          # Caso onde a borda curva S2 foi observada (E261.4, Kilauea, fonte contínua): mesmo caminho, diagnóstico completo.
+          python - <<'PY'
+          import json
+          b=json.load(open('benchmarks/e2614/kilauea.json'))
+          caso={**b['mapa'],'id':'kilauea_s2','fonte_continua':True}
+          json.dump({'publish':False,'cases':[caso]},open('stage_atlas/corinto/kilauea.json','w'),ensure_ascii=False)
+          PY
+          $P render_kilauea bash -c "python -m scripts.qa_atlas_multiscale $root/kilauea.json kilauea_s2 > $root/render_k.log 2>&1; rc=\$?; tail -5 $root/render_k.log; [ \$rc -eq 0 ]"
+          $P diagnostico_s2_kilauea python -m scripts.diagnostico_s2_e284 $root/kilauea.json qa_atlas_multiscale/kilauea_s2 $root/s2k
+          cp qa_atlas_multiscale/kilauea_s2/mapa.mp4 $root/kilauea.mp4 2>/dev/null || true
           cp qa_atlas_multiscale/corinto/mapa.mp4 qa_atlas_multiscale/corinto/planejamento.json $root/ 2>/dev/null || true
           ffmpeg -v error -y -i $root/mapa.mp4 -vf "fps=2,scale=270:480,tile=6x2" -frames:v 1 $root/contato.jpg || true
       - name: Preservar no cofre
@@ -61,7 +71,7 @@ jobs:
         run: |
           shopt -s nullglob
           root=stage_atlas/corinto
-          files=("$root"/*.json "$root"/*.jpg "$root"/s2/*.json "$root"/s2/*.jpg "$root"/*.mp4)
+          files=("$root"/*.json "$root"/*.jpg "$root"/s2/*.json "$root"/s2/*.jpg "$root"/s2k/*.json "$root"/s2k/*.jpg "$root"/*.mp4)
           bash scripts/estado_prova.sh cofre_espelho python scripts/espelhar_revisao_cofre.py "e284-atlas-corinto-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
       - name: Entrega privada (clipe ATLAS sem narracao)
         env:
@@ -82,4 +92,4 @@ jobs:
           PY
       - name: Resumo inequivoco
         if: ${{ always() }}
-        run: python scripts/resumo_provas.py provas testes geografia render reuso_mosaico diagnostico_s2 cofre_espelho telegram
+        run: python scripts/resumo_provas.py provas testes geografia render reuso_mosaico diagnostico_s2 render_kilauea diagnostico_s2_kilauea cofre_espelho telegram

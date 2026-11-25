@@ -71,15 +71,16 @@ def extrair(revisao, db=None):
     }
 
 
-def conferir(atual, contrato):
-    """Lista de violações (vazia = aprovado)."""
+def conferir(atual, contrato, modo='replay'):
+    """Lista de violações (vazia = aprovado). No fluxo normal com visão zero buscas de METADADOS são legítimas;
+    downloads de origem e visão continuam proibidos."""
     erros = []
     for campo in ('reusos_analises', 'reusos_ids', 'reusos_ids_unicos', 'estados', 'selecionados'):
         if json.dumps(atual.get(campo), sort_keys=True) != json.dumps(contrato.get(campo), sort_keys=True):
             erros.append(f'{campo}: esperado {contrato.get(campo)!r}, obtido {atual.get(campo)!r}')
     if atual.get('visao_chamadas_logicas') != 0 or atual.get('telemetria_visao') != 0:
         erros.append('visão nova no replay')
-    for campo in ('http', 'buscas'):
+    for campo in (('http', 'buscas') if modo == 'replay' else ('http',)):
         if atual.get(campo) not in (0, None):
             erros.append(f'{campo} de origem no replay: {atual.get(campo)}')
     if atual.get('rede_aquisicao_http') not in (0, None):
@@ -97,10 +98,13 @@ def main(argv=None):
     if a[:1] == ['extrair'] and len(a) in (2, 3):
         print(json.dumps(extrair(a[1], a[2] if len(a) == 3 else None), ensure_ascii=False, indent=1))
         return 0
+    modo = 'replay'
+    if '--normal' in a:
+        a.remove('--normal'); modo = 'normal'
     if a[:1] == ['conferir'] and len(a) in (3, 4):
         contrato = json.loads(Path(a[2]).read_text(encoding='utf8'))
         atual = extrair(a[1], a[3] if len(a) == 4 else None)
-        erros = conferir(atual, contrato)
+        erros = conferir(atual, contrato, modo)
         print(json.dumps({'estado': 'APROVADA' if not erros else 'REPROVADA', 'erros': erros,
                           'reusos': atual['reusos_analises']}, ensure_ascii=False))
         return 0 if not erros else 1

@@ -48,6 +48,7 @@ def _curvatura(mask):
 
 def main(caso_path, mapa, saida):
     caso = json.loads(Path(caso_path).read_text()); mapa, saida = Path(mapa), Path(saida)
+    caso = caso['cases'][0] if 'cases' in caso else caso
     saida.mkdir(parents=True, exist_ok=True)
     plan = json.loads((mapa / 'planejamento.json').read_text())
     rel = {'caso': caso['id'], 'bases': [], 'quadros': [], 'publicar': False}

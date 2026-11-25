@@ -69,3 +69,15 @@ def test_chaves_arredondadas_em_colisao_restauram_cada_inicio_exato():
     e, w = A.preparar_lote(m, n, frame, priorizar_cache={round(a1, 4)}, inicios_exatos={round(a1, 4): [a1, a2]})
     starts = {x['inicio_s'] for x in e['janelas']}
     assert a1 in starts and a2 in starts
+
+
+def test_fluxo_normal_permite_buscas_de_metadados_mas_nao_download(tmp_path):
+    base = [f'id{i}' for i in range(9)]
+    contrato = C.extrair(_saida(tmp_path, base))
+    p = _saida(tmp_path, base)
+    import json as _j
+    r = _j.loads(p.read_text()); r['cobertura_documentario']['consumo']['buscas'] = 8; p.write_text(_j.dumps(r))
+    assert C.conferir(C.extrair(p), contrato, 'normal') == []
+    assert C.conferir(C.extrair(p), contrato, 'replay')
+    r['rede_aquisicao']['http'] = 1; p.write_text(_j.dumps(r))
+    assert C.conferir(C.extrair(p), contrato, 'normal')

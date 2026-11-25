@@ -50,3 +50,24 @@ def test_vision_opt_in_and_bound_samples():
     with pytest.raises(ValueError,match='D-REV-PIXELS'):
         D.revisar_janela_visao(p,frames,fake,permitir_chamada=True)
     assert len(calls)==1
+
+
+def test_selection_requires_matching_fact_and_semantic_observation(monkeypatch):
+    p,r=fixture()
+    m={'id':'original','expected_sha256':'a'*64,'duration_s':20,'width':1920,'height':1080}
+    p['revisao_assistida']={'resposta_observada':r}
+    calls=[]
+    def framing(cena,midia,obs):
+        calls.append(cena)
+        return {'layout':'cena_integral','framing_positions':[]}
+    monkeypatch.setattr(D,'enquadrar_observacoes',framing)
+    q=D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='f1')
+    assert len(q)==1 and not q[0]['selecao']['prova_de_acao']
+    assert calls==[{'start':0.,'end':3.8,'source_in_seconds':2}]
+    assert q[0]['selecao']['enquadramento']['layout']=='cena_integral'
+    with pytest.raises(ValueError,match='D-SEL-VINCULO'):
+        D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='another')
+    r['veredito']='contexto'
+    assert D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='f1')==[]
+    p.pop('revisao_assistida')
+    assert D.selecionar_revisados([{'pacote':p,'midia':m}],fato_id='f1')==[]

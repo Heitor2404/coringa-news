@@ -1,0 +1,56 @@
+name: E258.1 - politica progressiva e revisao real privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-progressiva-e258.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+      - name: Compilar e validar contratos antes de IA
+        run: |
+          python -m py_compile src/midia.py src/gemini.py src/v4/acervo_v4.py src/v4/formatos/revisao_documental.py src/v4/formatos/amostragem_documental.py src/v3/pacote_biblioteca.py scripts/qa_revisao_documental_e247.py scripts/qa_pesquisa_documental_e246.py
+          python -m pytest -q tests/test_politica_progressiva_e258.py tests/test_acervo_recuperacao_e246.py tests/test_acervo_documental_e246.py tests/test_amostragem_documental_e257.py tests/test_revisao_adaptativa_e248.py tests/test_cobertura_documental_e253.py tests/test_revisao_documental_e247.py tests/test_pacote_biblioteca_e250.py
+      - name: Revisar duas necessidades reais com saldo compartilhado
+        id: review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CAIXA_MAX_CHAMADAS: '4'
+          CAIXA_TETO_USD: '0'
+          USAR_CLAUDE: '0'
+        run: python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/e258 contrastes --progressiva --multicenas --qualidade
+      - name: Preservar checkpoints originais e diagnosticos no cofre privado
+        if: ${{ !cancelled() && steps.review.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e258
+          bash scripts/arquivar_cofre_review.sh "review-e258-progressiva-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/revisao.json" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip "$root"/revisao-*.jpg
+          python scripts/espelhar_revisao_cofre.py "e258-progressiva-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/revisao.json" "$root"/revisao-*.jpg
+      - name: Conferir limites e diagnostico sem presumir aprovacao semantica
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('stage_documental/e258/revisao.json').read_text())
+          assert r['modo_progressivo'] and r['visao_chamadas_logicas']<=4 and r['publish'] is False
+          assert r['cobertura_documentario']['total']==2
+          assert all(x.get('diagnostico') and not x['publicar'] for x in r['cobertura'])
+          print('E258.1',r['cobertura_documentario']['resumo'],r['cobertura_documentario']['consumo'])
+          PY

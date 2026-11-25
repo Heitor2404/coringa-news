@@ -201,7 +201,7 @@ const LockFilling: React.FC<{p:number}> = ({p}) => {
 
 // Private narrated real-media review: the picture is not a text-safe slot.
 const realMedia=(s:FilmShot)=>s.type==='video'||(s.type==='photo'&&!s.graphic_original);
-const DOC_MEDIA={brand:SAFE.brand,section:[160,355,760,405],subtitle:[160,1040,760,1150],source:[160,1155,760,1240]} as const;
+const DOC_MEDIA={brand:SAFE.brand,section:[160,355,760,405],subtitle:[160,1040,760,1130],source:[160,1138,760,1240]} as const;
 // E290: same conservative text perimeter and same ROI; no new background design.
 // A 16:9 integral source has room for its actual pixels between header and caption.
 // Taller sources retain the previous maximum height (730px), not a blind crop.
@@ -242,11 +242,17 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
       if(e.scrollHeight<=h.clientHeight&&e.scrollWidth<=h.clientWidth){fits=true;break;}
     }
     font=Math.max(size[1],font);e.style.fontSize=font+'px';
-    const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight};
+    const range=document.createRange();range.selectNodeContents(e);
+    const hr=h.getBoundingClientRect(),rr=range.getBoundingClientRect();
+    const sx=hr.width/h.clientWidth||1,sy=hr.height/h.clientHeight||1;
+    const actual=[rect[0]+(rr.left-hr.left)/sx,rect[1]+(rr.top-hr.top)/sy,
+      rect[0]+(rr.right-hr.left)/sx,rect[1]+(rr.bottom-hr.top)/sy];
+    fits=fits&&actual[0]>=rect[0]-1&&actual[1]>=rect[1]-1&&actual[2]<=rect[2]+1&&actual[3]<=rect[3]+1;
+    const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
-  return <div ref={host} data-documentary-text={role} data-documentary-credit={role==='source'?'full':undefined}
+  return <div ref={host} data-safe-role={role} data-documentary-text={role} data-documentary-credit={role==='source'?'full':undefined}
     data-doc-overlay={overlay?'review':'none'} style={{...rectStyle(rect),display:'flex',alignItems:'center',
       justifyContent:role==='subtitle'?'center':'flex-start',textAlign:role==='subtitle'?'center':'left',pointerEvents:'none'}}>
     <div ref={inner} style={{width:'100%',boxSizing:'border-box',fontFamily:'Inter,Arial,sans-serif',

@@ -92,3 +92,32 @@ def restaurar(pacote,*,db,armazem,restaurar_analises_privadas=False):
     except Exception:
         bib.fechar()
         raise
+
+
+def extrair_checkpoint(zip_path,destino,*,expected_sha256):
+    """Extract only the flat V3 package contract, never arbitrary ZIP paths."""
+    import zipfile
+    if not re.fullmatch('[0-9a-f]{64}',expected_sha256) or sha(zip_path)!=expected_sha256:
+        raise ValueError('E259-ZIP-SHA')
+    dest=Path(destino)
+    if dest.exists():raise ValueError('E259-ZIP-DESTINO')
+    with zipfile.ZipFile(zip_path) as z:
+        infos=z.infolist();names=[x.filename for x in infos]
+        if len(infos)>MAX_FILES+3 or len(set(names))!=len(names) or not {'index.json','manifesto.jsonl'}<=set(names):
+            raise ValueError('E259-ZIP-INDICE')
+        for x in infos:
+            if x.is_dir() or not (x.filename in ('index.json','manifesto.jsonl','analises-privadas.json') or re.fullmatch(r'[0-9a-f]{64}\.(?:jpg|jpeg|png|webp|mp4|webm|mov)',x.filename)):
+                raise ValueError('E259-ZIP-NOME')
+            if x.file_size>MAX_TOTAL or x.flag_bits&1 or ((x.external_attr>>16)&0o170000)==0o120000:
+                raise ValueError('E259-ZIP-ARQUIVO')
+        if sum(x.file_size for x in infos)>MAX_TOTAL+10_000_000:
+            raise ValueError('E259-ZIP-LIMITE')
+        dest.mkdir(parents=True)
+        try:
+            for x in infos:
+                with z.open(x) as src,(dest/x.filename).open('xb') as out:
+                    shutil.copyfileobj(src,out)
+        except Exception:
+            shutil.rmtree(dest)
+            raise
+    return dest

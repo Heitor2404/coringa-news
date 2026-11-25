@@ -116,7 +116,7 @@ def propor_recorte_foto(cena, midia, dimensoes):
         # a new UI-safe text position or silently shrink the source.
         screen=[(x0-left)/vw*1080,(y0-top)/vh*height,(x1-left)/vw*1080,(y1-top)/vh*height]
         if screen[3]>1040 and screen[0]<760 and screen[2]>160:continue
-        if screen[1]<396 and screen[3]>300 and screen[0]<760 and screen[2]>150:continue
+        if screen[1]<405 and screen[3]>300 and screen[0]<760 and screen[2]>150:continue
         return {'height':height,'position':[.5 if vw>=1 else left/(1-vw),.5 if vh>=1 else top/(1-vh)],
                 'status':'PRIVATE_CANDIDATE_REVIEW_PENDING','essential_screen':screen,'revisao_id':r['revisao_id']}
     return None

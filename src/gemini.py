@@ -48,6 +48,10 @@ def _tentar(fn, modelos=None):
     # sobrecarga: espera pouco e passa para o próximo modelo/chave/serviço (esperar 15+30+60 s em cada modelo comia
     # 15 minutos da execução de 10/11 e o tema ficou sem tempo para ser trocado)
     esperas = [8]
+    # E284: optional hard cap of external attempts per LOGICAL call (retries, keys and models included),
+    # so an authorization cannot be bypassed by repeated provider calls. Unset = historical behaviour.
+    teto_tentativas = int(os.getenv('CORINGA_VISAO_MAX_TENTATIVAS') or 0)
+    tentativas_feitas = 0
     ordem = list(range(_chave, len(CHAVES))) + list(range(0, _chave))
     for ch in ordem:
         _chave = ch
@@ -55,6 +59,9 @@ def _tentar(fn, modelos=None):
             if (ch, modelo) in _esgotado or _lento.get(modelo, 0) > time.time():
                 continue
             for tentativa in range(len(esperas) + 1):
+                if teto_tentativas and tentativas_feitas >= teto_tentativas:
+                    raise RuntimeError(f'Gemini: teto de {teto_tentativas} tentativas externas por chamada atingido: {erro}')
+                tentativas_feitas += 1
                 try:
                     from . import caixa      # trava (Plano Mestre §5): cota grátis → registra; desconhecido/pago → nega
                     from . import custo as _c

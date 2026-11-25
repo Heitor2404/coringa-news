@@ -90,12 +90,33 @@ def main():
     hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
     t.max_http-=hold_http;t.max_bytes-=hold_bytes
     format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    autorizacao=os.getenv('CORINGA_AUTORIZACAO_VISAO')
+    if autorizacao and not replay and budget>0:
+        # E284: persistent authorization; never more than its remaining logical/operation balance.
+        from src.v4 import orcamento_visao as OV
+        budget=min(budget,max(0,OV.saldo(autorizacao)['saldo_logico']));total_budget=min(total_budget,budget)
     def ask(prompt,images):
         nonlocal calls
         if calls>=budget:raise RuntimeError('E247-ORCAMENTO-VISAO')
+        ticket=None
+        if autorizacao:
+            from src.v4 import orcamento_visao as OV
+            try:ticket=OV.reservar(autorizacao,os.getenv('CORINGA_FINALIDADE_VISAO') or 'geral',limite_finalidade=int(os.environ['CORINGA_LIMITE_FINALIDADE_VISAO']) if os.getenv('CORINGA_LIMITE_FINALIDADE_VISAO') else None)
+            except OV.SaldoEsgotado as e:raise RuntimeError('E247-ORCAMENTO-VISAO '+str(e)[:80])
         calls+=1
         from src import gemini
-        return gemini.json_visao(prompt,images,leve=True,telemetria=telemetry if progressive else None)
+        rows=telemetry if progressive else []
+        before=len(rows)
+        try:
+            out=gemini.json_visao(prompt,images,leve=True,telemetria=rows)
+        except Exception as e:
+            if ticket:OV.liquidar(autorizacao,ticket['id'],operacoes=max(1,len(rows)-before),ok=False,motivo=type(e).__name__)
+            raise
+        if ticket:
+            new_rows=rows[before:]
+            OV.liquidar(autorizacao,ticket['id'],operacoes=max(1,len(new_rows)),ok=True,
+                        tokens=sum(((r.get('tokens') or {}).get('total_token_count') or 0) for r in new_rows))
+        return out
     from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE
     def inspect(c,n,*,cache_only=False):
         nonlocal reuses,cache_hits

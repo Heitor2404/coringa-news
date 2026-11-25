@@ -1,0 +1,160 @@
+name: E284 - provas reais com autorizacao persistente de visao (privado, sem publicacao)
+# Exclusivo da branch claude-consolidacao-corretiva-20261125. Disparo: alterar .github/e284/pedido.json.
+# Orcamento: autorizacao E284-visao-8 (8 chamadas logicas, 16 operacoes externas, persistente no cofre).
+# Os orcamentos originais (geleiras 20, E281 4) permanecem esgotados e nao sao reiniciados.
+on:
+  push:
+    branches: [claude-consolidacao-corretiva-20261125]
+    paths: ['.github/e284/pedido.json']
+permissions:
+  contents: read
+concurrency:
+  group: qa-provas-reais-e284
+  cancel-in-progress: false
+env:
+  DO_NOT_TRACK: '1'
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_DISABLE_TELEMETRY: '1'
+  CAIXA_TETO_USD: '0'
+  USAR_CLAUDE: '0'
+  CORINGA_AUTORIZACAO_VISAO: E284-visao-8
+  CORINGA_VISAO_MAX_TENTATIVAS: '2'
+  PROVAS_DIR: provas
+jobs:
+  prova:
+    if: github.ref == 'refs/heads/claude-consolidacao-corretiva-20261125'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias e pedido
+        id: pedido
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest pyyaml
+          npm ci --prefix motor4 --no-audit --no-fund
+          python - <<'PY'
+          import json,os
+          p=json.load(open('.github/e284/pedido.json'))
+          assert p['prova'] in ('acao','geleiras') and p['fase'] in ('previa','visao') and p['publicar'] is False
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write(f"prova={p['prova']}\nfase={p['fase']}\nlimite={int(p.get('limite_chamadas',0))}\n")
+          PY
+      - name: Regressoes antes de consumir cota
+        run: bash scripts/estado_prova.sh regressoes_previas python -m pytest -q tests/test_orcamento_visao_e284.py tests/test_varredura_limites_e284.py tests/test_varredura_temporal_e283.py tests/test_politica_progressiva_e258.py tests/test_amostragem_documental_e257.py tests/test_documentario_integral_e254.py tests/test_area_segura_plataformas.py tests/test_contrato_validacao_e284.py
+      - name: Recuperar checkpoints privados do caso
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          caso=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo contraste_e281 || echo gelo_paisagem)
+          bench=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo benchmarks/e281/contraste.json || echo benchmarks/e254/documentario.json)
+          bash scripts/estado_prova.sh checkpoints bash -c "[ -n \"\$GH_TOKEN\" ] || exit 77; python -m scripts.recuperar_checkpoints_documentais $bench $caso qa_e284_checkpoints || exit 77; test -s qa_e284_checkpoints/descoberta.json"
+          echo "CORINGA_CHECKPOINTS_DESCOBERTOS=$PWD/qa_e284_checkpoints/descoberta.json" >> "$GITHUB_ENV"
+      - name: Abrir/ler autorizacao persistente (nunca reinicia)
+        env:
+          CORINGA_ORCAMENTO_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json
+          from src.v4 import orcamento_visao as OV
+          r=OV.abrir('E284-visao-8',limite_logico=8,limite_operacoes=16,max_operacoes_por_chamada=2)
+          print('ORCAMENTO_ANTES',json.dumps(r,ensure_ascii=False))
+          json.dump(r,open('orcamento_antes.json','w'))
+          PY
+      - name: Previa local sem visao (replay + varredura + folhas)
+        if: steps.pedido.outputs.fase == 'previa'
+        run: |
+          caso=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo contraste_e281 || echo gelo_paisagem)
+          bench=$([ "${{ steps.pedido.outputs.prova }}" = acao ] && echo benchmarks/e284/acao.json || echo benchmarks/e284/geleiras.json)
+          root=stage_documental/e284
+          bash scripts/estado_prova.sh replay_previa python -m scripts.qa_revisao_documental_e247 $bench $root $caso --progressiva --multicenas --qualidade --replay-privado
+          bash scripts/estado_prova.sh folhas_previa python -m scripts.qa_previa_filmagem_e284 $root $root/previa
+      - name: Cobertura real com a autorizacao (limite por finalidade)
+        if: steps.pedido.outputs.fase == 'visao'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CORINGA_ORCAMENTO_TOKEN: ${{ secrets.COFRE_TOKEN }}
+          CAIXA_MAX_CHAMADAS: '16'
+        run: |
+          root=stage_documental/e284
+          if [ "${{ steps.pedido.outputs.prova }}" = acao ]; then
+            export CORINGA_FINALIDADE_VISAO=filmagem_acao CORINGA_LIMITE_FINALIDADE_VISAO=2 CORINGA_LIMITE_VISAO_DOCUMENTAL=${{ steps.pedido.outputs.limite }}
+            bash scripts/estado_prova.sh cobertura python -m scripts.qa_revisao_documental_e247 benchmarks/e284/acao.json $root contraste_e281 --progressiva --multicenas --qualidade
+            bash scripts/estado_prova.sh folhas_previa python -m scripts.qa_previa_filmagem_e284 $root $root/previa
+          else
+            export CORINGA_FINALIDADE_VISAO=geleiras CORINGA_LIMITE_FINALIDADE_VISAO=6 CORINGA_LIMITE_VISAO_DOCUMENTAL=${{ steps.pedido.outputs.limite }}
+            bash scripts/estado_prova.sh cobertura python -m scripts.qa_revisao_documental_e247 benchmarks/e284/geleiras.json $root gelo_paisagem --progressiva --multicenas --integral
+          fi
+      - name: Montagem (fragmento da acao ou documentario integral narrado)
+        if: steps.pedido.outputs.fase == 'visao'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          root=stage_documental/e284
+          if [ "${{ steps.pedido.outputs.prova }}" = acao ]; then
+            bash scripts/estado_prova.sh montagem python -m scripts.qa_fragmento_acao_e284 $root
+          else
+            bash scripts/estado_prova.sh montagem python -m scripts.qa_documentario_integral_e254 $root
+          fi
+      - name: Renderizar somente com props validos
+        if: steps.pedido.outputs.fase == 'visao'
+        run: |
+          root=stage_documental/e284
+          bash scripts/estado_prova.sh render bash -c "
+            set -e
+            props=$root/props.json; [ -f $root/fragmento/props.json ] && props=$root/fragmento/props.json
+            [ -f \$props ] || exit 1
+            (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../$root/filme.mp4 --props=../\$props --codec=h264 --crf=21 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error)
+            ffprobe -v error -show_streams -show_format -of json $root/filme.mp4 > $root/probe.json
+            python -m scripts.qa_filme_e284 $root \$props
+            ffmpeg -v error -y -i $root/filme.mp4 -vf 'fps=1/2,scale=216:384,tile=6x6' -frames:v 1 $root/contato.jpg"
+      - name: Orcamento depois
+        if: ${{ always() }}
+        env:
+          CORINGA_ORCAMENTO_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          mkdir -p stage_documental/e284
+          python -c "import json;from src.v4 import orcamento_visao as OV;r=OV.saldo('E284-visao-8');print('ORCAMENTO_DEPOIS',json.dumps(r,ensure_ascii=False));json.dump(r,open('stage_documental/e284/orcamento.json','w'))"
+      - name: Preservar no cofre (release propria + espelho; nunca sobrescreve)
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e284
+          tag="e284-${{ steps.pedido.outputs.prova }}-${{ steps.pedido.outputs.fase }}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          files=("$root"/*.json "$root"/*.jpg "$root"/previa/*.jpg "$root"/previa/*.json "$root"/*.mp4)
+          packets=("$root"/checkpoints/*.zip)
+          rel=()
+          for f in "$root/revisao.json" "$root/manifesto-revisoes.jsonl" "$root/filme.mp4" "$root/qa.json"; do [ -s "$f" ] && rel+=("$f"); done
+          if (( ${#packets[@]} > 0 || ${#rel[@]} > 0 )); then
+            bash scripts/estado_prova.sh cofre_release bash scripts/arquivar_cofre_review.sh "review-$tag" "${rel[@]}" "${packets[@]}"
+          fi
+          if (( ${#files[@]} > 0 )); then bash scripts/estado_prova.sh cofre_espelho python scripts/espelhar_revisao_cofre.py "$tag" "${files[@]}"; fi
+      - name: Entrega privada pelo Telegram (somente MP4 verificado)
+        if: steps.pedido.outputs.fase == 'visao'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          root=stage_documental/e284
+          [ -f "$root/qa.json" ] || { echo "sem filme verificado"; exit 0; }
+          bash scripts/estado_prova.sh telegram python -m scripts.entregar_prova_e284 "$root" "${{ github.sha }}" "${GITHUB_RUN_ID}" "${{ steps.pedido.outputs.prova }}"
+      - name: Resumo inequivoco
+        if: ${{ always() }}
+        run: |
+          esperadas="regressoes_previas checkpoints"
+          if [ "${{ steps.pedido.outputs.fase }}" = previa ]; then esperadas="$esperadas replay_previa folhas_previa"; else esperadas="$esperadas cobertura montagem render telegram"; fi
+          python scripts/resumo_provas.py provas $esperadas cofre_espelho

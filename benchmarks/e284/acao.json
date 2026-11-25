@@ -1,0 +1,67 @@
+{
+ "publish": false,
+ "cases": [
+  {
+   "id": "contraste_e281",
+   "tema": "Prova de seleção: patrimônio e ação espacial",
+   "fatos": [
+    {
+     "id": "f1",
+     "tipo": "pedido_visual_de_teste"
+    },
+    {
+     "id": "f2",
+     "tipo": "pedido_visual_de_teste"
+    }
+   ],
+   "necessidades": [
+    {
+     "id": "n1",
+     "fatos": [
+      "f1"
+     ],
+     "sujeito": "Coliseu de Roma",
+     "mostrar": "arcos externos reconhecíveis da estrutura em fotografia real",
+     "necessidade": "registro",
+     "evidencia_visual": "estatica",
+     "consultas_en": [
+      "Colosseum Rome exterior arches photograph",
+      "Colosseum amphitheatre exterior arcade"
+     ]
+    },
+    {
+     "id": "n2",
+     "fatos": [
+      "f2"
+     ],
+     "sujeito": "foguete em lançamento",
+     "mostrar": "foguete efetivamente se elevando da plataforma em filmagem real",
+     "necessidade": "registro",
+     "evidencia_visual": "movimento",
+     "consultas_en": [
+      "NASA rocket liftoff launch pad footage",
+      "rocket lifting off launch pad actual footage"
+     ]
+    }
+   ],
+   "chapters": [
+    {
+     "title": "Estrutura",
+     "needs": [
+      "n1"
+     ],
+     "speech": "Os arcos externos."
+    },
+    {
+     "title": "Movimento",
+     "needs": [
+      "n2"
+     ],
+     "speech": "O foguete sobe."
+    }
+   ],
+   "autorizacao_visao": "E284-visao-8",
+   "nota_e284": "Mesmas necessidades/escopos do caso contraste_e281 (análises e checkpoints reaproveitáveis). Orçamentos originais seguem esgotados; o consumo deste caso só ocorre pela autorização persistente E284-visao-8."
+  }
+ ]
+}

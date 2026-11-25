@@ -33,6 +33,18 @@ def evidencia_lacuna(necessidade,row):
         for c in report.get('candidatos',[]):
             sha=(c.get('aquisicao') or {}).get('sha256')
             if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{64}',sha):continue
+            # Stills may be relevant to static explanatory obligations. Do not
+            # count a photo as a reviewed negative for a motion requirement.
+            if c.get('tipo')=='foto' and necessidade.get('evidencia_visual')!='movimento':
+                q=c.get('revisao') or {}
+                from . import revisao_documental as R
+                d=R.decidir(necessidade,c,q,tipo='foto')
+                if (q.get('mostrar')==necessidade['mostrar'] and q.get('publicar') is False and
+                    isinstance(q.get('pixels_sha256'),str) and re.fullmatch('[0-9a-f]{64}',q['pixels_sha256']) and
+                    d.get('motivo') in ('SEM_PERTINENCIA','EVIDENCIA_DIRETA_NAO_LOCALIZADA') and
+                    d.get('necessidade_id')==necessidade['id'] and q.get('revisao_id')):
+                    rid=q['revisao_id']
+                    negatives[rid]={'sha256':sha,'revisao_id':rid,'tipo':'foto','motivo':d['motivo']}
             for win in c.get('janelas',[]):
                 pk=win.get('pacote') or {};d=win.get('decisao') or {}
                 obs=pk.get('revisao_assistida') or {}
@@ -51,7 +63,7 @@ def evidencia_lacuna(necessidade,row):
                     'duracao_s':pk['duracao_s'],'motivo':d['motivo']}
     return {'necessidade_id':necessidade['id'],'fatos':necessidade['fatos'],
         'consultas_executadas':queries,'revisoes_negativas':list(negatives.values()),
-        'escopo':'APENAS_JANELAS_INSPECIONADAS','inexistencia_de_midia_comprovada':False,
+        'escopo':'APENAS_JANELAS_INSPECIONADAS','inclui_fotos_inspecionadas':any(x.get('tipo')=='foto' for x in negatives.values()),'inexistencia_de_midia_comprovada':False,
         'publicar':False,'animacao_autorizada':False}
 
 

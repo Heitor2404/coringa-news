@@ -47,3 +47,16 @@ def test_operational_gap_does_not_authorize_animation_or_claim_search():
     assert C.reavaliar_complemento(n,{'estado':'CANDIDATO_PRIVADO_REVISADO'}, {},[])['decisao']=='USAR_MIDIA_REAL'
     with pytest.raises(ValueError,match='REVISAO-INDEPENDENTE'):
         C.reavaliar_complemento(n,row,{'origem':'LLM','motivo':'IMPOSSIVEL_FILMAR'},[])
+
+
+def test_photo_negative_is_scoped_to_static_explanatory_need():
+    from PIL import Image
+    from src.v4.formatos import revisao_documental as R
+    n={**need('a','lacuna_explicativa'),'lacuna':'Detalhe interno'}
+    sha='a'*64
+    q=R.revisar_foto({'expected_sha256':sha},Image.new('RGB',(800,600)),n,
+        lambda *_:{'veredito':'insuficiente','natureza_visual':'registro_compativel','inspecao':'Imagem observada sem o detalhe específico necessário.'})
+    c={'tipo':'foto','aquisicao':{'sha256':sha},'revisao':q}
+    row={'estado':'LACUNA_PENDENTE','rodadas':[{'pesquisa':{'candidatos':[c]}}]}
+    assert C.encaminhar(n,row)['evidencia_lacuna']['inclui_fotos_inspecionadas']
+    assert C.encaminhar({**n,'evidencia_visual':'movimento'},row)['rota']=='REPLANEJAR_REGISTRO'

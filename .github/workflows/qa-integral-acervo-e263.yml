@@ -1,4 +1,4 @@
-name: E263.1 - capacidade integral existente sem IA ou TTS
+name: E264.2 - redescobrir acervo recuperado e medir cobertura sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -26,7 +26,7 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
-          python -m pytest -q tests/test_documentario_integral_e254.py tests/test_integracao_corretiva_e260.py
+          python -m pytest -q tests/test_documentario_integral_e254.py tests/test_integracao_corretiva_e260.py tests/test_checkpoint_e259.py tests/test_reuso_documental_e251.py
       - name: Recuperar somente checkpoints do cofre
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
@@ -46,7 +46,10 @@ jobs:
           assert r['modo_somente_acervo'] and r['publish'] is False
           assert r['visao_chamadas_logicas']==r['rede_aquisicao']['http']==r['cobertura_documentario']['consumo']['buscas']==0
           assert not (root/'props.json').exists() and not (root/'narracao48k.wav').exists()
-          print('E263.1 CAPACIDADE',q,flush=True)
+          d=json.loads(Path('qa_e263_acervo/descoberta.json').read_text())
+          print('E264.2 DESCOBERTA', d,flush=True)
+          print('E264.2 RESTAURACAO',r['restauracao'],flush=True)
+          print('E264.2 CAPACIDADE',q,flush=True)
           PY
       - name: Espelhar lacunas reais
         if: ${{ !cancelled() }}
@@ -56,4 +59,4 @@ jobs:
           shopt -s nullglob
           files=(stage_documental/e263-integral/*.json stage_documental/e263-integral/*.jpg)
           if [[ -s qa_e263_acervo/descoberta.json ]]; then files+=(qa_e263_acervo/descoberta.json); fi
-          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e263-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
+          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e2642-integral-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

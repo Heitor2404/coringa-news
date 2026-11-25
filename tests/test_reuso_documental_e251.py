@@ -41,3 +41,14 @@ def test_explanatory_need_reuses_real_media_before_animation(tmp_path):
         assert R.candidatos(b,{**n,'evidencia_visual':'movimento'})==[]
         assert R.candidatos(b,{**n,'necessidade':'territorio'})==[]
     finally:b.fechar()
+
+
+def test_metadata_without_bytes_does_not_consume_local_quota(tmp_path):
+    b=Biblioteca(tmp_path/'db',tmp_path/'files')
+    try:
+        for i in range(6):
+            f=tmp_path/f'{i}.jpg';Image.new('RGB',(900-i*20,600),(i*30,0,0)).save(f)
+            d=b.ingerir(f,{'titulo':'glacier','url':f'https://example.org/{i}.jpg'})
+            if i<5:b.caminho(d['sha256'],'.jpg').unlink()
+        assert [c['sha_catalogo'] for c in R.candidatos(b,need(),limite=1)]==[d['sha256']]
+    finally:b.fechar()

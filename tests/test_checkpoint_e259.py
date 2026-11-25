@@ -32,3 +32,11 @@ def test_checkpoint_discovery_paginates_past_recent_diagnostics(monkeypatch):
     monkeypatch.setattr(R,'api',api)
     assert R.listar_releases(60)[-1]['tag_name']=='older'
     assert len(calls)==2
+
+
+def test_checkpoint_order_reserves_best_candidate_per_need():
+    from scripts import recuperar_checkpoints_documentais as R
+    rows=[({'a':1},'tag',{'name':'a1'}),({'a':.9},'tag',{'name':'a2'}),({'b':.4},'tag',{'name':'b1'})]
+    assert [x[2]['name'] for x in R.priorizar(rows)]==['a1','b1','a2']
+    n=[{'id':'a','necessidade':'registro','evidencia_visual':'movimento','consultas_en':['glacier']}, {'id':'b','necessidade':'registro','evidencia_visual':'estatica','consultas_en':['glacier']}]
+    assert R.relevances({'tipo':'foto','titulo':'glacier'},n)=={'b':1}

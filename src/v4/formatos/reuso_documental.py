@@ -11,23 +11,27 @@ def candidatos(bib,necessidade,limite=4):
     tipos=('video',) if ev=='movimento' else ('foto','video')
     search=necessidade.get('pesquisa') or {}
     queries=(search.get('consultas_en') or [])+(search.get('consultas') or [])
-    out=[];seen=set()
-    for q in queries[:4]:
+    out=[];seen=set();ranked={}
+    for q in queries:
         for tipo in tipos:
-            for d in bib.buscar(q,tipo=tipo,so_comercial=False,limite=limite):
-                h=d['sha256']
-                if h in seen or d['uso_comercial']=='nao':continue
-                if tipo=='video' and d['ext'] not in ('.mp4','.webm','.mov'):continue
-                if tipo=='foto' and d['ext'] not in ('.jpg','.jpeg','.png','.webp'):continue
-                p=bib.caminho(h,d['ext'])
-                if not p.is_file() or sha(p)!=h:continue
-                seen.add(h)
-                out.append({'fonte':'biblioteca_v3','source_id':d['id'],'tipo':tipo,
-                    'titulo':d['titulo'],'descricao':d['descricao'],'url':d['url_original'],
-                    'pagina':d['url_pagina'],'credito':d['atribuicao'],'licenca':d['licenca'],
-                    'direitos':'QUARENTENA_REVISAO_PRIVADA','sha_catalogo':h,
-                    'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False})
-                if len(out)>=limite:return out
+            # Rank metadata first, but only count verified local files against the review quota.
+            for d in bib.buscar(q,tipo=tipo,so_comercial=False,limite=None):
+                h=d['sha256'];score=d.get('pontos',0)
+                if h not in ranked or score>ranked[h][0]:ranked[h]=(score,tipo,d)
+    for _,tipo,d in sorted(ranked.values(),key=lambda x:-x[0]):
+        h=d['sha256']
+        if h in seen or d['uso_comercial']=='nao':continue
+        if tipo=='video' and d['ext'] not in ('.mp4','.webm','.mov'):continue
+        if tipo=='foto' and d['ext'] not in ('.jpg','.jpeg','.png','.webp'):continue
+        p=bib.caminho(h,d['ext'])
+        if not p.is_file() or sha(p)!=h:continue
+        seen.add(h)
+        out.append({'fonte':'biblioteca_v3','source_id':d['id'],'tipo':tipo,
+            'titulo':d['titulo'],'descricao':d['descricao'],'url':d['url_original'],
+            'pagina':d['url_pagina'],'credito':d['atribuicao'],'licenca':d['licenca'],
+            'direitos':'QUARENTENA_REVISAO_PRIVADA','sha_catalogo':h,
+            'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False})
+        if len(out)>=limite:return out
     return out
 
 def amostra(bib,c,*,probe=None,frame=None):

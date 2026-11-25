@@ -13,7 +13,7 @@ def relevance(row,needs):
     words=tokens(' '.join(str(row.get(k) or '') for k in ('titulo','descricao','mostra')))
     scores=[]
     for n in needs:
-        if n.get('necessidade')!='registro' or (n.get('evidencia_visual')=='movimento' and typ!='video'):continue
+        if n.get('necessidade') not in ('registro','lacuna_explicativa') or (n.get('evidencia_visual')=='movimento' and typ!='video'):continue
         for q in n.get('consultas_en') or []:
             qs=tokens(q)
             if qs:scores.append(len(qs&words)/len(qs))

@@ -34,3 +34,16 @@ def test_success_keeps_binding_and_rights_pending():
     r=C.cobrir([need('a'),need('b')],lambda n,l:{'id':n['id'],'candidatos':[{'fonte':'test','tipo':'foto','source_id':n['id']}]},inspect,lambda:dict(count),max_visao=2,max_http=4,max_bytes=1000)
     assert r['resumo']['CANDIDATO_PRIVADO_REVISADO']==2
     assert r['consumo']['visao']==2 and not r['pronto_para_render']
+
+
+def test_operational_gap_does_not_authorize_animation_or_claim_search():
+    import pytest
+    n={**need('a','lacuna_explicativa'),'lacuna':'Interior não visível'}
+    row={'estado':'LACUNA_PENDENTE','rodadas':[{'pesquisa':{'buscas':[],'candidatos':[]},
+        'cobertura':{'trilha':[{'decisao':{'estado':'FALHA_AQUISICAO','motivo':'ORCAMENTO'}}]}}]}
+    assert C.encaminhar(n,row)['rota']=='REPLANEJAR_REGISTRO'
+    with pytest.raises(ValueError,match='SEM-REVISAO-DE-MIDIA'):
+        C.reavaliar_complemento(n,row,{'origem':'CURADORIA_HUMANA','motivo':'BUSCA_SEM_REGISTRO_ADEQUADO'},[])
+    assert C.reavaliar_complemento(n,{'estado':'CANDIDATO_PRIVADO_REVISADO'}, {},[])['decisao']=='USAR_MIDIA_REAL'
+    with pytest.raises(ValueError,match='REVISAO-INDEPENDENTE'):
+        C.reavaliar_complemento(n,row,{'origem':'LLM','motivo':'IMPOSSIVEL_FILMAR'},[])

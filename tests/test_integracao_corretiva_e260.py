@@ -94,3 +94,26 @@ def test_short_credit_preserves_author_and_license_without_inventing():
     assert P.credito_em_tela(c)=='USGS Volcanoes (Public domain), Wikimedia Commons'
     assert P.credito_em_tela('Original credit from other provider')=='Original credit from other provider'
     assert P.credito_em_tela('Title — Author — Other provider')=='Title — Author — Other provider'
+
+
+def test_checkpoint_relevance_also_for_explanatory_need():
+    n=[{'necessidade':'lacuna_explicativa','evidencia_visual':'movimento','consultas_en':['lava flow channel']}]
+    assert relevance({'tipo':'video','titulo':'Lava flow in channel'},n)>0
+    assert relevance({'tipo':'foto','titulo':'Lava flow in channel'},n)==0
+
+
+def test_reviewed_negative_handoff_is_scoped_and_not_approval():
+    from src.v4.formatos import cobertura_documental as C
+    n,c=candidate()
+    n.update(necessidade='lacuna_explicativa',lacuna='Não está claro o deslocamento')
+    pk=c['janelas'][0]['pacote']
+    q=pk['revisao_assistida']
+    q['resposta_observada']['veredito']='insuficiente'
+    c['janelas'][0]['decisao'].update(estado='INSUFICIENTE',motivo='SEM_PERTINENCIA')
+    row={'estado':'LACUNA_PENDENTE','rodadas':[{'pesquisa':{'buscas':[{'estado':'OK','consulta':'source action'}],
+        'candidatos':[c]},'cobertura':{'trilha':[]}}]}
+    route=C.encaminhar(n,row)
+    assert route['rota']=='REAVALIAR_COMPLEMENTO' and not route['animacao_autorizada']
+    assert route['evidencia_lacuna']['escopo']=='APENAS_JANELAS_INSPECIONADAS'
+    assert len(route['evidencia_lacuna']['revisoes_negativas'])==1
+    assert C.encaminhar({**n,'mostrar':'outra ação'},row)['rota']=='REPLANEJAR_REGISTRO'

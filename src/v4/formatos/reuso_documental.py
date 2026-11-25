@@ -6,7 +6,7 @@ from PIL import Image
 from src.v3.pacote_biblioteca import sha
 
 def candidatos(bib,necessidade,limite=4):
-    if necessidade.get('necessidade')!='registro':return []
+    if necessidade.get('necessidade') not in ('registro','lacuna_explicativa'):return []
     ev=necessidade.get('evidencia_visual')
     tipos=('video',) if ev=='movimento' else ('foto','video')
     search=necessidade.get('pesquisa') or {}

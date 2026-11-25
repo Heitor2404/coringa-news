@@ -28,3 +28,16 @@ def test_library_candidate_is_not_automatic_coverage():
     c={'fonte':'biblioteca_v3','source_id':'cm-x','tipo':'foto'}
     result=V.fila_cobertura(need(),[c],lambda c,n:{'estado':'INSUFICIENTE','motivo':'SEM_PERTINENCIA'})
     assert result['estado']=='LACUNA_PENDENTE'
+
+
+def test_explanatory_need_reuses_real_media_before_animation(tmp_path):
+    b=Biblioteca(tmp_path/'db',tmp_path/'files')
+    f=tmp_path/'a.jpg';Image.new('RGB',(800,600),'blue').save(f)
+    try:
+        d=b.ingerir(f,{'titulo':'glacier','url':'https://example.org/a.jpg'})
+        n={**need(),'necessidade':'lacuna_explicativa','lacuna':'detalhe não mostrado'}
+        c=R.candidatos(b,n)
+        assert c and c[0]['sha_catalogo']==d['sha256'] and c[0]['publicar'] is False
+        assert R.candidatos(b,{**n,'evidencia_visual':'movimento'})==[]
+        assert R.candidatos(b,{**n,'necessidade':'territorio'})==[]
+    finally:b.fechar()

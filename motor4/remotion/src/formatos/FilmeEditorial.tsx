@@ -558,7 +558,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         fontSize:Math.max(18,Math.min(24,Math.floor(1100/Math.max(1,('FONTE: '+(shot.source_display||shot.source)).length)))),lineHeight:1.05,fontWeight:600,
         overflow:'visible',overflowWrap:'anywhere',textShadow:'0 1px 4px #000,0 2px 6px #000',
         background:'rgba(4,11,20,.86)',padding:'3px 6px',boxSizing:'border-box',borderRadius:6,height:'auto',minHeight:45}}>
-        FONTE: {shot.source_display||shot.source}
+        {shot.evidence==='representative'?'CONTEXTO · ':''}FONTE: {shot.source_display||shot.source}
       </div>
     </AbsoluteFill>;
   }

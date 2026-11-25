@@ -7,6 +7,22 @@ A fase continua aberta. O bloco E282 em `6083a0005197` terminou. O [replay dos c
 
 O commit `65e0f17cd4db8d6a68e15eaf2249002bf7545858` passou no [controle multitemático](https://github.com/Heitor2404/coringa-news/actions/runs/45644894008). O integral progressivo pode usar a reserva de foto automaticamente. Janelas inválidas sobrevivem ao checkpoint como diagnóstico, movimento alegado entre quadros idênticos é recusado e as marcas de fim de palavra chegam ao agrupador. Inspeção local de três vídeos existentes confirmou amostras decodificáveis. Permanecem pendentes a seleção de ação inédita com revisão formal e os três filmes completos. A matriz e o parecer desta missão ficam em `AUDITORIA_FINAL_FASE_CORRETIVA.md`.
 
+## Estado vigente — consolidação final Claude E284, 25/11 (prevalece sobre os blocos abaixo)
+
+Detalhes, matriz e parecer: [AUDITORIA_FINAL_FASE_CORRETIVA.md](AUDITORIA_FINAL_FASE_CORRETIVA.md). Partida `5157189c`; Work e primeira rodada preservados (contrato do replay: as mesmas 9 revisões do código `257ce75d`, CI 45677151177).
+
+| Item | Implementação | Validação técnica | Validação prática / autonomia |
+|---|---|---|---|
+| Varredura temporal limitada (fluxo + âncoras hierárquicas) e eventos no mesmo plano | `c5fe736e` | `test_varredura_limites_e284.py` | prévia real Apollo 496 s (run 45665284919) |
+| Contrato exato do reuso + estados de prova inequívocos | `c5fe736e`, `b5023860`, `f6212921` | CI 45677151177 COMPLETA | replay e normal 9/9; detectou regressão real 9→0 (corrigida) |
+| Autorização persistente E284-visao-8 | `a1b13244` | `test_orcamento_visao_e284.py` | 5 execuções; 7/8 lógicas, 9/16 operações, USD 0 |
+| Filmagem de ação | `095b64cb`, `2de411b0` | testes | **reprovada** (run 45666408862); finalidade esgotada |
+| Geleiras 18/18, documentário narrado | `1f03dee3`…`c0e4acd4` | `test_ritmo_fala_e284.py`, `test_legenda_inicio_fala_e284.py` | 63,9 s, sincronia medida aprovada, Telegram (run 45678546446) |
+| ATLAS caminho real + geografia automática | `a9fbc813`, `08b71bc9` | `test_geografia_verificada_e284.py`, `test_atlas_automatico_e284.py` | Corinto (run 45665672046), Telegram |
+| Borda S2 | `abd207e5`, `979c36cd` | `test_oceano_s2_e284.py` | causa no dado EOX; corrigida (run 45675321568) |
+
+**Fase corretiva aberta**: faltam a prova real de filmagem de ação e dois documentários de temas novos (orçamento) e a escala útil de fotos com legenda (código).
+
 ## Estado vigente — consolidação Claude, 25/11 (branch `claude-consolidacao-corretiva-20261125`)
 
 Prevalece sobre os blocos transitórios abaixo. Partida `257ce75d` (Work preservado integralmente). Detalhes, matriz e parecer em [AUDITORIA_FINAL_FASE_CORRETIVA.md](AUDITORIA_FINAL_FASE_CORRETIVA.md).

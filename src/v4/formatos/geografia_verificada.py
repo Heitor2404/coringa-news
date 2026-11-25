@@ -85,12 +85,24 @@ def verificar(nome, contexto='', *, sessao=None, rotulo=None, caso_id=None):
     import requests
     sessao = sessao or requests.Session()
     base = {'nome': nome, 'contexto': contexto, 'publicar': False}
-    try:
-        wd = wikidata(nome, contexto, sessao)
-        time.sleep(1.1)  # política de uso do Nominatim
-        om = osm(nome, contexto, sessao)
-    except Exception as e:
-        return {**base, 'estado': 'PENDENTE', 'motivo': 'FONTE_INDISPONIVEL:' + type(e).__name__}
+    def consultar(fn):
+        # One bounded retry: public endpoints occasionally rate-limit CI runners (run 45678665168: SEM_DUAS_FONTES
+        # after three verified runs). Absence after the retry stays PENDENTE, never a guessed coordinate.
+        erro = None
+        for espera in (0, 3.0):
+            time.sleep(espera)
+            try:
+                r = fn(nome, contexto, sessao)
+                if r:
+                    return r, None
+            except Exception as e:
+                erro = type(e).__name__
+        return None, erro
+    wd, e1 = consultar(wikidata)
+    time.sleep(1.1)  # política de uso do Nominatim
+    om, e2 = consultar(osm)
+    if (e1 and not wd) or (e2 and not om):
+        return {**base, 'estado': 'PENDENTE', 'motivo': 'FONTE_INDISPONIVEL:' + str(e1 or e2), 'wikidata': wd, 'osm': om}
     if not wd or not om:
         return {**base, 'estado': 'PENDENTE', 'motivo': 'SEM_DUAS_FONTES', 'wikidata': wd, 'osm': om}
     w, s, e, n = om['bbox']

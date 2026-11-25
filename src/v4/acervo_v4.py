@@ -172,3 +172,128 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
             c['params']['asset'] = None
     (pasta / 'acervo.json').write_text(json.dumps(acv, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
     return acv, reg
+
+
+# E246: discovery for the documentary director. No legacy selection fallback.
+def fontes_documentais(tipo):
+    from src import acervo, midia
+    if tipo=='video':
+        return [('commons_video',lambda q:midia.candidatos_arquivo(q)),
+                ('nasa_video',lambda q:midia.candidatos_nasa_video(q)),
+                ('archive_video',lambda q:midia.candidatos_archive(q))]
+    if tipo=='foto':
+        return [('commons',lambda q:acervo.f_commons([q])),
+                ('nasa',lambda q:acervo.f_nasa([q])),
+                ('loc',lambda q:acervo.f_loc([q])),
+                ('met',lambda q:acervo.f_met([q]))]
+    raise ValueError('E246-TIPO')
+
+
+def _candidato_documental(c,fonte,tipo):
+    from urllib.parse import urlsplit
+    from src.v3.biblioteca import classificar_licenca
+    if not isinstance(c,dict):return None
+    url=c.get('url_original') or c.get('url')
+    if not isinstance(url,str):return None
+    u=urlsplit(url)
+    if u.scheme!='https' or not u.hostname or u.username or u.password:return None
+    page=c.get('pagina')
+    credit=c.get('credito') or ''
+    # Legacy source labels/guesses are NOT individual license receipts.
+    lic=c.get('licenca') or ''
+    parsed=classificar_licenca({'licenca':lic,'credito':credit})
+    rights='REVISAR_PAGINA_INDIVIDUAL'
+    if fonte in ('commons','commons_video') and lic and credit and isinstance(page,str):
+        p=urlsplit(page)
+        if p.scheme=='https' and p.hostname=='commons.wikimedia.org' and p.path.startswith('/wiki/File:') and parsed['uso_comercial']=='sim':
+            rights='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA'
+    if parsed['uso_comercial']=='nao':return None
+    return {'fonte':fonte,'tipo':tipo,'titulo':str(c.get('titulo') or c.get('descricao') or '')[:240],
+            'descricao':str(c.get('desc') or c.get('descricao') or '')[:400],
+            'url':url,'pagina':page,'credito':credit,'licenca':lic,'direitos':rights,
+            'largura_declarada':c.get('w'),'altura_declarada':c.get('h'),
+            'duracao_declarada':c.get('dur'),'tamanho_declarado':c.get('tamanho_original'),
+            'derivado':c.get('derivado',False),'url_master':c.get('url_master'),
+            'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
+
+
+def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspecionar=None,
+                       max_buscas=6, max_candidatos=12):
+    """Bounded discovery from director needs, not a list of media by topic.
+    A search result or textual match never constitutes verified coverage.
+    Optional inspector receives candidates for this exact obligation; its
+    positive response still means private review only.
+    """
+    if type(max_buscas) is not int or not 1<=max_buscas<=8 or type(max_candidatos) is not int or not 1<=max_candidatos<=20:
+        raise ValueError('E246-ORCAMENTO')
+    if necessidade.get('necessidade')=='territorio':
+        return {'id':necessidade['id'],'estado':'DELEGAR_ATLAS','buscas':[],
+                'candidatos':[],'pronto_para_render':False,'publicar':False}
+    if necessidade.get('necessidade') not in ('registro','lacuna_explicativa'):
+        raise ValueError('E246-NECESSIDADE')
+    ev=necessidade.get('evidencia_visual') or 'indefinida'
+    if ev not in ('movimento','estatica','contexto','indefinida'):raise ValueError('E246-EVIDENCIA')
+    tipos={'movimento':('video',),'estatica':('foto','video'),
+           'contexto':('foto','video'),'indefinida':('video','foto')}[ev]
+    q=necessidade.get('pesquisa',{})
+    consultas=[]
+    for x in (q.get('consultas_en') or [])+(q.get('consultas') or []):
+        if isinstance(x,str) and 2<=len(x.strip())<=180 and x.strip() not in consultas:consultas.append(x.strip())
+    consultas=consultas[:2]
+    if not consultas:raise ValueError('E246-CONSULTA')
+    report={'id':necessidade['id'],'evidencia_visual':ev,'buscas':[],'candidatos':[],
+            'biblioteca':[],'pronto_para_render':False,'publicar':False}
+    vistos=set()
+    # Reuse existing curated catalogue matches first; they are not approvals
+    # for this new event. The global V3 search is optional and read-only.
+    for item in necessidade.get('candidatos') or []:
+        if item.get('natureza') not in tipos:continue
+        report['biblioteca'].append({'origem':'catalogo_comprovado','asset_id':item['asset_id'],
+            'tipo':item['natureza'],'sha256':item.get('sha_catalogo'),'estado':'REIDRATAR_E_INSPECIONAR'})
+    if biblioteca is not None:
+        for tipo in tipos:
+            for item in biblioteca.buscar(consultas[0],tipo=tipo,limite=4):
+                sha=item.get('sha256')
+                if not sha or sha in vistos:continue
+                vistos.add(sha)
+                report['biblioteca'].append({'origem':'biblioteca_v3','asset_id':item['id'],'tipo':tipo,
+                    'sha256':sha,'estado':'REIDRATAR_E_INSPECIONAR'})
+    def analisar(c):
+        if inspecionar is None:return False
+        # A callback can decline; do not treat its opinion as production proof.
+        try:r=inspecionar(c,necessidade)
+        except Exception as e:r={'estado':'FALHA','tipo':type(e).__name__}
+        c['inspecao']=r
+        return isinstance(r,dict) and r.get('estado')=='PERTINENTE_PRIVADO' and r.get('necessidade_id')==necessidade['id']
+    for item in report['biblioteca']:
+        if analisar(item):
+            return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
+    if fontes is None:fontes=fontes_documentais
+    # Interleave evidence types and sources. The second query reformulates
+    # the search only if nothing reviewed has satisfied the obligation.
+    rotas=[(tipo,nome,fn) for tipo in tipos for nome,fn in fontes(tipo)]
+    # Take one source per type before considering a second source.
+    groups=[[x for x in rotas if x[0]==tipo] for tipo in tipos]
+    rotas=[g[i] for i in range(max(map(len,groups),default=0)) for g in groups if i<len(g)]
+    # Reserve a round for the alternative query instead of exhausting budget
+    # on the first query. Without inspection, continue looking for options.
+    por_rodada=max(1,max_buscas//len(consultas))
+    for ri,consulta in enumerate(consultas):
+        for tipo,nome,fn in rotas[:por_rodada]:
+            if len(report['buscas'])>=max_buscas:return {**report,'estado':'LACUNA_NAO_VERIFICADA'}
+            row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            try:raw=fn(consulta) or []
+            except Exception as e:
+                report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+            added=0
+            for item in raw[:12]:
+                c=_candidato_documental(item,nome,tipo)
+                if not c or c['url'] in vistos:continue
+                if len(report['candidatos'])>=max_candidatos:break
+                vistos.add(c['url']);report['candidatos'].append(c);added+=1
+                if analisar(c):
+                    report['buscas'].append({**row,'estado':'OK','novos':added})
+                    return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
+                if added>=2:break
+            report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
+    return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}

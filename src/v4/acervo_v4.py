@@ -269,8 +269,10 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                 sha=item.get('sha256')
                 if not sha or sha in vistos:continue
                 vistos.add(sha)
+                ext=item.get('ext')
+                miniatura_video=tipo=='video' and ext in ('.jpg','.jpeg','.png','.webp')
                 report['biblioteca'].append({'origem':'biblioteca_v3','asset_id':item['id'],'tipo':tipo,
-                    'sha256':sha,'estado':'REIDRATAR_E_INSPECIONAR'})
+                    'sha256':sha,'ext':ext,'estado':'MINIATURA_NAO_E_VIDEO' if miniatura_video else 'REIDRATAR_E_INSPECIONAR'})
     def analisar(c):
         if inspecionar is None:return False
         # A callback can decline; do not treat its opinion as production proof.
@@ -279,6 +281,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         c['inspecao']=r
         return isinstance(r,dict) and r.get('estado')=='PERTINENTE_PRIVADO' and r.get('necessidade_id')==necessidade['id']
     for item in report['biblioteca']:
+        if item.get('estado')=='MINIATURA_NAO_E_VIDEO':continue
         if analisar(item):
             return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
     if fontes is None:fontes=fontes_documentais

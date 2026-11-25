@@ -40,22 +40,42 @@ def escalas(roi, delta=1.6):
                        'tiles':count,'de':None if not result else low-.3})
     return result
 
-def preparar(caso):
+def adquirir_bases(caso):
+    """Acquire once, independently of narration duration; all geometry is sourced.
+    A caller must supply an already researched region, not coordinates invented by AI.
+    """
     name=caso['id']
     if not re.fullmatch(r'[a-z0-9_]{1,40}',name):raise ValueError('GEO-ID')
     q=caso['atlas'];source=caso['fonte_localizacao']
+    if not isinstance(source,str) or not source.startswith('https://'):
+        raise ValueError('GEO-FONTE')
+    if not isinstance(q.get('label'),str) or not q['label'].strip():
+        raise ValueError('GEO-ROTULO')
+    o,s,l,n=q['roi']
+    lon,lat=q['lonlat']
+    if not o<=lon<=l or not s<=lat<=n:
+        raise ValueError('GEO-MARCADOR')
     specs=escalas(q['roi'],caso.get('delta',1.6))
     bases=[]; metas=[]
     for spec in specs:
         m=R.registrar_base_regional(name+'_z'+str(spec['zoom']),spec['bbox'],spec['zoom'],spec['dataset'])
         metas.append(m)
         bases.append({'nome':m['nome'],**({'de':spec['de']} if spec['de'] is not None else {})})
-    # Same plan, bridge, camera and validator as the existing documentary.
+    return {'bases':bases,'metas':metas,'specs':specs}
+
+def resolver(caso, adquirido, span):
+    """Reuse acquired rasters with measured speech duration, no further network."""
+    q=caso['atlas'];bases=adquirido['bases']
     ch={**caso,'atlas':{**q,'raster':bases[0]['nome']}}
-    p,report=DE.plano_entrada_geografica(E.mapplan(ch,5.5),roi_destino=q['roi'],
-        bases=bases,rotulo=q['label'],lonlat=q['lonlat'],fonte_localizacao=source,
+    p,report=DE.plano_entrada_geografica(E.mapplan(ch,span),roi_destino=q['roi'],
+        bases=bases,rotulo=q['label'],lonlat=q['lonlat'],fonte_localizacao=caso['fonte_localizacao'],
         zoom_desejado=caso.get('delta',1.6))
-    return ch,p,report,metas,specs
+    return ch,p,report
+
+def preparar(caso):
+    adquirido=adquirir_bases(caso)
+    ch,p,report=resolver(caso,adquirido,5.5)
+    return ch,p,report,adquirido['metas'],adquirido['specs']
 
 def main():
     import sys

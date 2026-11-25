@@ -31,3 +31,22 @@ def test_reject_wrong_sample():
 def test_context_never_infers_crop():
     p,r=fixture();r['veredito']='contexto'
     assert D.aceitar_observacao(p,r)['video_framing'] is None
+
+
+def test_vision_opt_in_and_bound_samples():
+    p,r=fixture()
+    frames=[Image.new('RGB',(8,8),color=(i*50,10,20)) for i in range(3)]
+    calls=[]
+    def fake(prompt, jpgs):
+        calls.append((prompt,jpgs))
+        return {**r,'pontos':[{**x,'indice':i} for i,x in enumerate(r['pontos'])]}
+    with pytest.raises(RuntimeError,match='D-REV-VISAO-DESLIGADA'):
+        D.revisar_janela_visao(p,frames,fake)
+    assert not calls
+    q=D.revisar_janela_visao(p,frames,fake,permitir_chamada=True)
+    assert len(calls)==1 and len(calls[0][1])==3
+    assert q['chamadas_logicas']==1 and not q['aprovacao_editorial'] and not q['publicar']
+    frames[0]=Image.new('RGB',(8,8),'white')
+    with pytest.raises(ValueError,match='D-REV-PIXELS'):
+        D.revisar_janela_visao(p,frames,fake,permitir_chamada=True)
+    assert len(calls)==1

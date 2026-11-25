@@ -397,7 +397,7 @@ def filme(resultado: dict, caso: dict, duracoes: list[float] | None = None, pala
 
 
 # E205: triagem documental anterior à escolha de renderer.
-def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: dict | None = None) -> list[dict]:
+def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: dict | None = None, *, progressivo=False) -> list[dict]:
     """Recebe necessidades editoriais, não desenhos. Candidatos não são prova de ação.
     Falta de acervo gera pedido de pesquisa, nunca conversão automática em esquema.
     """
@@ -457,7 +457,7 @@ def triagem_documental(necessidades: list[dict], fatos: list[dict], biblioteca: 
                     'candidatos': candidatos, 'lacuna': n.get('lacuna'),
                     **({'solicitacao_atlas': geo} if geo is not None else {}),
                     'pesquisa': {'consultas': [sujeito + ' ' + mostrar, sujeito],
-                                 'consultas_en': [q.strip() for q in (n.get('consultas_en') or [])[:2]
+                                 'consultas_en': [q.strip() for q in (n.get('consultas_en') or [])[:16 if progressivo else 2]
                                                   if isinstance(q, str) and 2 <= len(q.strip()) <= 120],
                                  'verificar_direitos': True, 'inspecionar_conteudo': True},
                     'politica_complemento': 'REAVALIAR_APOS_INSPECAO_DE_MIDIA',

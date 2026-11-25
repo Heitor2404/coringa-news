@@ -64,3 +64,5 @@ Modo opt-in --encadear-previas reserva saldo existente, observa miniaturas e pas
 
 ### E279.1 — aquisição de resolução normal após prévia
 Compartilhado resolvedor E272/E279, preview reduzido nas necessidades reservadas e reconsulta de variantes somente para a escolha. Teste do E247.main com dados controlados, duas chamadas simuladas dentro do teto; validação pendente. Não declarar autonomia real. §325.
+
+E279 [45632218472](https://github.com/Heitor2404/coringa-news/actions/runs/45632218472) SUCCESS, 127 testes. E279.1 [45632385794](https://github.com/Heitor2404/coringa-news/actions/runs/45632385794): in_progress/null. Ver §326 antes de continuar. Nenhuma nova IA real.

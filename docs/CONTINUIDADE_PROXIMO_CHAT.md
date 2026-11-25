@@ -140,3 +140,8 @@ Causa: E278.1 observava prévias apenas após consumo de orçamento normal. E279
 ## 325. 25/11 — E279.1 resolução adequada e teste do caminho integrado
 
 E279 commit 05e4937, run 45632218472 em execução na última consulta. E279.1 usa miniatura 640px também para necessidades reservadas com visão positiva, reidrata metadados de aquisição somente da página/source_id selecionada com resolução normal, por resolver_foto_commons extraído do caminho E272 existente. Sem repetir originais E278, sem URL inventada. Teste do E247.main completo com transporte e visão controlados, duas chamadas no teto existente, miniatura e arquivo final de bytes distintos, seleção formal via rodadas reais, nenhum direito aprovado. Trata-se de prova de encadeamento com fixture, não qualidade visual real/autonomia homologada. Novo workflow sem IA usa regressões e este teste; observar resultados. Sem main/publicação/TTS/Gemini real. Próximo: confirmar CI, execução de visão real em temas novos com saldo explicitamente autorizado e prova de ação filmada; composição segue pendente.
+
+
+## 326. 25/11 — Estado do bloco E279/E279.1
+
+E279 05e4937 run 45632218472 SUCCESS, 127 testes, verificação continuidade OK. E279.1 adb5e7e run 45632385794, estado nesta consulta: in_progress/null. Não duplicar execução nem presumir prova real. Próximo: conferir resultado e corrigir eventual falha do teste integrado, depois prova de visão real com orçamento permitido em temas novos (não reiniciar o das geleiras), filmagens de ação e acabamento. O encadeamento ainda é opt-in e não foi validado em produção; sem prioridade ou saldo mantém lacuna. Nenhuma chamada real Gemini/Claude/TTS nova, publicação ou main. Registro canônico preservado.

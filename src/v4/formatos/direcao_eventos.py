@@ -266,6 +266,30 @@ def aceitar_observacao(pacote, resposta):
     return result
 
 
+def _faixa_grafica(a):
+    """Possible coloured, near-uniform horizontal banner; not text detection."""
+    import numpy as np
+    h,w=a.shape[:2]
+    if min(h,w)<40:return None
+    # Examine central horizontal strips; a banner may contain white text.
+    # Compare adjacent rows to avoid treating a whole flat sky as a graphic.
+    for width in (.42,.55,.68):
+        x0=int(w*(1-width)/2);x1=w-x0
+        for height in (.07,.10,.14):
+            hh=max(4,int(h*height))
+            for y in range(int(h*.22),int(h*.78)-hh,max(2,int(h*.025))):
+                if y-hh<0 or y+2*hh>h:continue
+                block=a[y:y+hh,x0:x1]
+                med=np.median(block.reshape(-1,3),axis=0)
+                if med.max()-med.min()<35:continue
+                flat=(np.abs(block-med).max(axis=2)<=26).mean()
+                if flat<.65:continue
+                above=a[y-hh:y,x0:x1];below=a[y+hh:y+2*hh,x0:x1]
+                adjacent=[(np.abs(z-med).max(axis=2)<=26).mean() for z in (above,below)]
+                if max(adjacent)>.42:continue
+                return (round((y+hh/2)/h,2),tuple(float(x) for x in med))
+    return None
+
 def diagnosticar_janela(frames):
     """Conservative technical hints; not logo recognition or semantic proof.
     Detect near-black uniform edge bars and sparse graphics on flat backgrounds.
@@ -293,9 +317,10 @@ def diagnosticar_janela(frames):
     if min(t,b)<max(3,h*.025) or abs(t-b)>max(3,h*.025):t=b=0
     interior=arrays[0][t:h-b,l:w-r]
     if not interior.size or interior.std()<10:l=r=t=b=0
-    graficos=[]
+    graficos=[];faixas=[]
     for a in arrays:
         a=a[t:h-b,l:w-r].astype(np.float32)
+        faixas.append(_faixa_grafica(a))
         lum=a.mean(axis=2)
         med=np.median(a.reshape(-1,3),axis=0)
         flat=(np.abs(a-med).max(axis=2)<=12).mean()
@@ -303,7 +328,9 @@ def diagnosticar_janela(frames):
         # Sparse high-contrast foreground on a dark flat field. This is
         # evidence of a possible card, not evidence of a specific logo.
         graficos.append(bool(flat>=.78 and .008<=contrast<=.22 and np.median(lum)<35))
-    return {'bbox_conteudo':[l/w,t/h,1-r/w,1-b/h],
+    # Persistence across separate samples is a soft overlay hint, not proof.
+    persist=any(x and y and abs(x[0]-y[0])<=.05 and max(abs(c-d) for c,d in zip(x[1],y[1]))<=30 for i,x in enumerate(faixas) for y in faixas[i+1:])
+    return {'faixa_grafica_persistente_suspeita':bool(persist),'bbox_conteudo':[l/w,t/h,1-r/w,1-b/h],
             'barras_candidatas':bool(l or r or t or b),
             'quadros_grafismo_suspeito':sum(graficos),
             'amostras':len(frames),'revisao_semantica':'PENDENTE',

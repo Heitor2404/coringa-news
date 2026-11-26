@@ -419,12 +419,14 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
             # Subject motion after removing the camera's global motion; a cut or
             # a pure pan/zoom is not the referent's action (pixel change is not semantics).
             return (r['diagnostico']['quadros_grafismo_suspeito'],
+                    bool(r['diagnostico'].get('faixa_grafica_persistente_suspeita')),
                     r['contraste_min']<5,
                     not r.get('marca_metadado'),
                     mv['corte_na_janela'] or (mv['parado'] and mv.get('deriva',0)<.02),
                     mv['camera_dominante'] and not mv.get('acompanhada'),
                     -max(mv['referente'],mv.get('deriva',0)*.5))
         return (r['diagnostico']['quadros_grafismo_suspeito'],
+                    bool(r['diagnostico'].get('faixa_grafica_persistente_suspeita')),
                 r['contraste_min']<5,
                 -r.get('pares_alterados', 0) if priorizar_movimento else 0,
                 -r['mudanca_px'] if priorizar_movimento else -r['contraste_min'])

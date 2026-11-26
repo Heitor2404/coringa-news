@@ -53,6 +53,7 @@ export type FilmShot = {
   photo_framing?: 'integral';
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
+  documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
@@ -359,6 +360,42 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
       return {...base,slots,safeTrialStatus:'CANDIDATE_GEOMETRY'};
   }
   return {...base,safeTrialStatus:'BLOCKED_EVIDENCE'};
+};
+// E309: bracket the observed static detail, never shade or paint its pixels.
+ // Project through the ACTUAL selected photo viewport, including crop fallback.
+const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
+  const d=shot.documentary_detail_roi;
+  if(shot.type!=='photo'||!d||d.status!=='PRIVATE_DETAIL_REVIEW_PENDING'||!normalizedBox(d.bbox)||
+      !/^[a-f0-9]{64}$/.test(d.sha256)||!d.revisao_id)return null;
+  const [x,y,r,b]=layout.media;
+  let ox=x,oy=y,sw=r-x,sh=b-y;
+  if(layout.centeredFit==='cover'){
+    const dims=shot.source_dimensions,crop=shot.photo_crop_preview;
+    if(!dims||!crop||!dims.every(v=>Number.isFinite(v)&&v>0))return null;
+    const scale=Math.max(sw/dims[0],sh/dims[1]);
+    const w=dims[0]*scale,h=dims[1]*scale;
+    ox-=(w-sw)*crop.position[0];oy-=(h-sh)*crop.position[1];sw=w;sh=h;
+  }
+  const q=d.bbox;
+  const inner=[ox+q[0]*sw,oy+q[1]*sh,ox+q[2]*sw,oy+q[3]*sh];
+  const outer=expandBox(inner,14);
+  // Brackets need enough visible pixels and must not meet text or canvas edge.
+  if(inner[2]-inner[0]<36||inner[3]-inner[1]<36||
+    outer[0]-4<x||outer[1]-4<y||outer[2]+4>r||outer[3]+4>b||
+    docRects(layout.slots).some(t=>intersects(t,expandBox(outer,5))))return null;
+  return outer;
+};
+const ObservedDetail:React.FC<{shot:FilmShot;layout:DocLayout;t:number;probe?:boolean}>=({shot,layout,t,probe})=>{
+  const box=detailScreenBox(shot,layout);
+  // Give the establishing view first; short fade-in, no moving target inference.
+  const opacity=Math.min(1,Math.max(0,(t-.3)/.3));
+  if(probe&&t>.65)console.log('E309_DETAIL '+JSON.stringify({shot:shot.id,box,opacity,media:layout.media}));
+  if(!box||opacity<=0)return null;
+  const [x,y,r,b]=box,k=Math.min(32,(r-x)/3,(b-y)/3);
+  const path=`M ${x} ${y+k} V ${y} H ${x+k} M ${r-k} ${y} H ${r} V ${y+k} M ${r} ${b-k} V ${b} H ${r-k} M ${x+k} ${b} H ${x} V ${b-k}`;
+  return <svg data-documentary-detail="observed" viewBox="0 0 1080 1920" style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity,pointerEvents:'none'}}>
+    <path d={path} fill="none" stroke="#121820" strokeWidth={7}/><path d={path} fill="none" stroke={GOLD} strokeWidth={3}/>
+  </svg>;
 };
 const documentaryPixelRect=(shot:FilmShot):readonly number[]=>documentaryLayout(shot).media;
 const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(documentaryPixelRect(shot),rect);
@@ -810,6 +847,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',
         background:'linear-gradient(180deg,rgba(4,11,20,.16) 0%,transparent 35%,transparent 48%,rgba(4,11,20,.48) 65%,rgba(4,11,20,.10) 83%,transparent 100%)'}}/>}
+      <ObservedDetail shot={shot} layout={layout} t={now-shot.start} probe={textProbe}/>
       <div style={{...rectStyle(slots.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
         fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1,
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>

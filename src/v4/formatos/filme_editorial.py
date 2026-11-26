@@ -82,6 +82,23 @@ def recibo_documental_valido(asset:dict)->bool:
     return False
 
 
+def detalhe_fotografico(cena,midia,sha_real):
+    """Private visual pointer, only an existing direct observation of a detail.
+    No automatic event, comparison, geometry or factual claim is inferred."""
+    import math
+    if cena.get('type')!='photo' or cena.get('documentary_detail_intent') is not True or midia.get('original_graphic'):
+        return None
+    r=cena.get('photo_roi_candidate')
+    if not isinstance(r,dict) or r.get('sha256')!=sha_real or sha_real!=midia.get('expected_sha256') or not r.get('revisao_id'):
+        return None
+    if r.get('escala_origem') not in ('xy_0_1','xy_0_1000'):return None
+    b=r.get('bbox')
+    if not isinstance(b,list) or len(b)!=4 or any(type(v) not in (int,float) or not math.isfinite(v) for v in b):return None
+    x,y,z,w=b
+    if not (0<=x<z<=1 and 0<=y<w<=1) or (z-x)*(w-y)>.45:return None
+    return {'bbox':b,'sha256':sha_real,'revisao_id':r['revisao_id'],'status':'PRIVATE_DETAIL_REVIEW_PENDING'}
+
+
 def propor_recorte_foto(cena, midia, dimensoes):
     """Private alternative only: geometry from a direct observation bound to the
     actual image. It does not certify semantics, context or publication.
@@ -874,7 +891,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -984,6 +1001,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if privado and c.get('type')=='photo' and not plano['media'][c['asset']].get('original_graphic'):
             crop=propor_recorte_foto(c,plano['media'][c['asset']],(medias[c['asset']]['width'],medias[c['asset']]['height']))
             if crop:x['photo_crop_preview']=crop
+            detail=detalhe_fotografico(c,plano['media'][c['asset']],medias[c['asset']]['sha256'])
+            if detail:x['documentary_detail_roi']=detail
         if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:
             # Gráfico autoral já comunica dados/etapas dentro dos pixels.
             # Não duplicar título e CTA por cima dele no compositor.

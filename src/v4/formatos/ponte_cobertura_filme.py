@@ -209,6 +209,7 @@ def plano(case,chosen,tempos):
                   'cues':[{'at':min(1.1,span*.45),'label':n['sujeito']}]}
             if x['kind']=='photo':
                 shot['photo_framing']='integral'
+                if n.get('papel_visual')=='detalhe':shot['documentary_detail_intent']=True
                 # Opt-in private comparison; existing replay semantics remain unchanged.
                 if case.get('avaliar_recorte_foto') is not False:
                     decision=c.get('decisao') or {}

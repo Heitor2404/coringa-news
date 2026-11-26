@@ -51,7 +51,7 @@ def run_one(row,ref,releases,root):
     item=api('/contents/revisoes/'+row['folder']+'/revisao.json?ref='+ref)
     check(item['sha']==row['report_blob'] and item['encoding']=='base64' and 0<item['size']<=1_000_000,'E330-RELATORIO')
     raw=base64.b64decode(item['content'])
-    check(len(raw)==item['size'] and hashlib.sha1(('blob '+str(len(raw))+'\\0').encode()+raw).hexdigest()==row['report_blob'],'E330-BLOB')
+    check(len(raw)==item['size'] and hashlib.sha1(('blob '+str(len(raw))).encode()+bytes(1)+raw).hexdigest()==row['report_blob'],'E330-BLOB')
     report=json.loads(raw);check(report['publish'] is False,'E330-PRIVADO')
     n=next(x for x in report['triagem'] if x['id']==row['need'])
     rr=next(x for x in report['cobertura'] if x['necessidade_id']==row['need'])
@@ -65,7 +65,7 @@ def run_one(row,ref,releases,root):
     idx=read(dest/'index.json')
     check(idx['schema']=='coringa.v3.originals.private.v1' and idx['publicar'] is False and idx['direitos_aprovados'] is False and P.sha(dest/'manifesto.jsonl')==idx['manifesto_sha256'],'E330-INDICE')
     m=next(x for x in idx['arquivos'] if x['sha256']==h and x['id']=='cm-'+h[:12])
-    check(re.fullmatch(h+r'\\.(jpg|jpeg|png|webp|mp4|webm)',m['arquivo']) is not None,'E330-NOME')
+    check(re.fullmatch(h+r'[.](jpg|jpeg|png|webp|mp4|webm)',m['arquivo']) is not None,'E330-NOME')
     src=dest/m['arquivo'];check(src.stat().st_size==m['bytes'],'E330-BYTES')
     c={**c,'local_source':str(src)}
     samples=revalidate(n,c,src)

@@ -1,4 +1,4 @@
-name: E330 - replay de revisoes reais multitema na ponte geral
+name: E330.1 - replay de revisoes reais multitema na ponte geral
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: replay-multitema-e330
+  cancel-in-progress: true
 jobs:
   replay:
     runs-on: ubuntu-24.04

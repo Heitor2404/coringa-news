@@ -37,6 +37,18 @@ def gate_sincronia(root,gate,sync,duration):
     return True
 
 
+def gate_direcao_short(root,gate,plan,*,phase):
+    from src.v4.formatos.direcao_short_e306 import diagnosticar
+    diagnostic=diagnosticar(plan)
+    write(root/('direcao-short-'+phase+'.json'),diagnostic)
+    if not diagnostic['pronto_para_analise_visual']:
+        (root/'props.json').unlink(missing_ok=True)
+        write(root/'integral.json',{**gate,'motivo':'REPLANEJAR_DIRECAO_SHORT',
+            'pronto_para_tts':False,'pronto_para_render_privado':False,'publicar':False})
+        return False
+    return True
+
+
 def main():
     root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
     # A retry cannot inherit ready-to-render props from an earlier run.
@@ -59,6 +71,7 @@ def main():
     if pre['duracao']<60 or not check['pronto']:
         write(root/'integral.json',{**gate,'pronto_para_tts':False,'motivo':'PREFLIGHT_FILME','bloqueios':check['bloqueios']})
         return
+    if not gate_direcao_short(root,gate,pre,phase='preflight'):return
     if '--somente-preflight' in sys.argv[2:]:
         write(root/'integral.json',{**gate,'somente_preflight':True,
             'tempo_provisorio_s':pre['duracao'],'pronto_para_render_privado':False,
@@ -82,6 +95,7 @@ def main():
     check=F.avaliar(plan);write(root/'preflight-real.json',check)
     if not check['pronto']:
         write(root/'integral.json',{**gate,'motivo':'PREFLIGHT_REAL','bloqueios':check['bloqueios'],'pronto_para_render':False});return
+    if not gate_direcao_short(root,gate,plan,phase='real'):return
     result=F.preparar(plan,root/'documental',PUBLIC)
     props=json.loads(Path(result['props']).read_text())
     props['private_review_only']=True

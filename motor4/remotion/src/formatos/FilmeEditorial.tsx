@@ -288,9 +288,26 @@ const centeredLandscape=(shot:FilmShot):DocLayout|null=>{
   const pixels=containPixels(stage,dims);
   const full:DocLayout={mode:'CENTERED_INTEGRAL',slots:DOC_MEDIA,media:pixels,protected:[pixels],
     roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stage,centeredFit:'contain'};
-  // Explicit factual full-source contracts always win. Photographs keep
-  // their existing integral treatment. All remaining landscape videos may
-  // propose a centered crop in this PRIVATE review path only.
+  // E306: honor the preflight's observed photo candidate BEFORE the
+  // ordinary landscape contain fallback. Re-evaluate text on the actual stage.
+  const crop=shot.photo_crop_preview;
+  if(shot.type==='photo'&&crop?.status==='PRIVATE_CANDIDATE_REVIEW_PENDING'&&
+      [1080,1350,1920].includes(crop.height)&&crop.position?.length===2&&
+      crop.position.every(v=>Number.isFinite(v)&&v>=0&&v<=1)){
+    const top=Math.max(0,(1920-crop.height)/2-30);
+    const viewport=[0,top,1080,top+crop.height];
+    const box=crop.essential_screen;
+    if(box?.length===4&&box.every(Number.isFinite)&&box[0]>=0&&box[1]>=0&&
+        box[2]<=1080&&box[3]<=crop.height&&box[0]<box[2]&&box[1]<box[3]){
+      const protectedBox=expandBox([box[0],box[1]+top,box[2],box[3]+top],12);
+      if(docRects(DOC_MEDIA).every(r=>!intersects(r,protectedBox)))
+        return {...full,mode:'CENTERED_CROP_OBSERVED',media:viewport,protected:[protectedBox],
+          roiStatus:'OBSERVED',centeredStage:viewport,centeredFit:'cover'};
+    }
+    return full;
+  }
+  // Explicit factual full-source contracts always win. Unobserved photos
+  // remain integral; ordinary landscape videos may propose a private crop.
   if(shot.type!=='video'||shot.documentary_integral_required||shot.video_context_layout==='quadro_integral'||pixels[3]-pixels[1]>=900-1)return full;
   const observed=documentaryProtected(shot,stage);
   if(observed){
@@ -430,7 +447,7 @@ const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFi
   }
   const docLayout=mediaFirst&&realMedia(shot)?documentaryLayout(shot):undefined;
   if(docLayout?.centeredStage){
-    const position=enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
+    const position=shot.type==='photo'&&docLayout.centeredFit==='cover'&&shot.photo_crop_preview?shot.photo_crop_preview.position:enquadramentoNoTempo(shot.framing_positions,t,shot.focus||[.5,.5]);
     const fit=docLayout.centeredFit||'contain';
     const style={position:'absolute' as const,inset:0,width:'100%',height:'100%',objectFit:fit,
       objectPosition:fit==='cover'?`${position[0]*100}% ${position[1]*100}%`:'50% 50%'};

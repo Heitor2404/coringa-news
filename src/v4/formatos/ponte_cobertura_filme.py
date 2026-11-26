@@ -210,7 +210,7 @@ def plano(case,chosen,tempos):
             if x['kind']=='photo':
                 shot['photo_framing']='integral'
                 # Opt-in private comparison; existing replay semantics remain unchanged.
-                if case.get('avaliar_recorte_foto') is True:
+                if case.get('avaliar_recorte_foto') is not False:
                     decision=c.get('decisao') or {}
                     roi=decision.get('evidencia_direta_normalizada') or {}
                     if decision.get('revisao_id') and roi.get('escala_origem') in ('xy_0_1','xy_0_1000'):

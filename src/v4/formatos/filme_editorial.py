@@ -104,7 +104,7 @@ def propor_recorte_foto(cena, midia, dimensoes):
     # Keep at least 12% of the observed region on each side where the source allows.
     a0,a1=max(0,x0-.12*(x1-x0)),min(1,x1+.12*(x1-x0))
     b0,b1=max(0,y0-.12*(y1-y0)),min(1,y1+.12*(y1-y0))
-    for height in (1350,1080):
+    for height in (1920,1350,1080):
         scale=max(1080/w,height/h)
         vw,vh=min(1.,1080/(w*scale)),min(1.,height/(h*scale))
         if a1-a0>vw+1e-9 or b1-b0>vh+1e-9:continue

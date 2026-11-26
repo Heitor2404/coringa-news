@@ -1,4 +1,4 @@
-name: E305 - regressao integral e portao de sincronia sem IA
+name: E306 - regressao integral e triagem editorial antes de TTS
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13', cache: pip}
       - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest
-      - run: python -m pytest -q tests/test_contrato_visual_e254_2.py tests/test_documentario_integral_e254.py tests/test_revisao_documental_e247.py tests/test_direcao_observacao_e239.py tests/test_cobertura_documental_e253.py tests/test_revisao_adaptativa_e248.py tests/test_acervo_documental_e246.py tests/test_acervo_recuperacao_e246.py tests/test_espelho_cofre_e254.py
+      - run: python -m pytest -q tests/test_contrato_visual_e254_2.py tests/test_documentario_integral_e254.py tests/test_revisao_documental_e247.py tests/test_direcao_observacao_e239.py tests/test_cobertura_documental_e253.py tests/test_revisao_adaptativa_e248.py tests/test_acervo_documental_e246.py tests/test_acervo_recuperacao_e246.py tests/test_espelho_cofre_e254.py tests/test_direcao_short_e306.py

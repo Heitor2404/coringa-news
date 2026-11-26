@@ -38,6 +38,14 @@ for(const [id,bbox] of [['portrait-observed-free',[.15,.35,.85,.48]],['portrait-
 const forceStart=props.shots.length*3;
 props.shots.push({...original,id:'qa-explicit-integral',start:forceStart,end:forceStart+3,documentary_integral_required:true});
 props.documentary_captions.push({start:forceStart+.3,end:forceStart+2.8,words:[{w:'CONTEXTO'},{w:'INTEGRAL',hl:true}]});
+// Synthetic observed-region geometry on an actual photo, not a factual ROI.
+const photo=props.shots.find(s=>s.id==='foto_horizontal_roraima');
+for(const [id,box] of [['photo-full-candidate',[420,650,650,840]],['photo-full-conflict',[150,300,760,1500]]]){
+  const start=props.shots.length*3;
+  props.shots.push({...photo,id:'qa-'+id,start,end:start+3,photo_crop_preview:{
+    height:1920,position:[.5,.5],status:'PRIVATE_CANDIDATE_REVIEW_PENDING',essential_screen:box,revisao_id:'synthetic-geometry'}});
+  props.documentary_captions.push({start:start+.3,end:start+2.8,words:[{w:'TESTE'},{w:'FOTO',hl:true}]});
+}
 props.duracao=props.shots.length*3;
 const longWords='O REGISTRO MOSTRA A CENA EM DETALHES'.split(' ');
 props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
@@ -89,7 +97,9 @@ try {
       if(['qa-4-5-collision','qa-explicit-integral'].includes(shot.id)&&!modes.has('CENTERED_INTEGRAL'))result.errors.push('LANDSCAPE_FALLBACK_MISSING '+shot.id);
       if(shot.id==='video_horizontal_navio'&&(!modes.has('CENTERED_CROP_REVIEW')||rows.some(r=>r.roiStatus!=='UNKNOWN_REVIEW')))
         result.errors.push('LANDSCAPE_DEFAULT_NOT_ENLARGED '+shot.id);
-      if(shot.source_dimensions[0]>shot.source_dimensions[1]){
+      if(shot.id==='qa-photo-full-candidate'&&rows.some(r=>r.media.join(',')!=='0,0,1080,1920'||r.layout!=='CENTERED_CROP_OBSERVED'))result.errors.push('PHOTO_FULL_CROP_IGNORED');
+      if(shot.id==='qa-photo-full-conflict'&&!modes.has('CENTERED_INTEGRAL'))result.errors.push('PHOTO_FULL_CONFLICT_NOT_REFUSED');
+      if(shot.source_dimensions[0]>shot.source_dimensions[1]&&shot.id!=='qa-photo-full-candidate'){
         for(const row of rows){
           const [x,y,r,b]=row.media;
           if(Math.abs((y+b)/2-930)>.01||!row.layout.startsWith('CENTERED_')||row.rect[0]!==120)

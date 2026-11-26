@@ -342,6 +342,17 @@ def main():
             raise ValueError('E302-SCHEMA')
         reviewed={c['shot']:c for c in review_config['cuts']}
         if len(reviewed)!=len(review_config['cuts']):raise ValueError('E302-DUPLICADO')
+    from scripts import evidencias_estaticas_e321 as ES
+    static_args=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--evidencias-revisadas=')]
+    static_cuts={};static_acquired={};static_applied=set()
+    if static_args:
+        if len(static_args)!=1 or '--acervo-restaurado' not in sys.argv[3:] or '--voz-medida-restaurada' not in sys.argv[3:]:
+            raise ValueError('E321-ESTATICO-PRIVADO')
+        static_cuts=ES.validate_config(read(static_args[0]))
+        static_data=read(out/'static-restaurado.json')
+        if static_data.get('publish') is not False or set(static_cuts)&set(reviewed):
+            raise ValueError('E321-ESTATICO-ESCOPO')
+        static_acquired=static_data['acquired']
     applied=set()
     reservas_revisadas=reservar_cortes_revisados(reviewed)
     atlas_multiscale={}
@@ -470,7 +481,19 @@ def main():
             if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
             ordered=available  # stable upstream relevance, not round robin
             selected=None
-            binding=reviewed.get(f'c{i}-{k}')
+            cid=f'c{i}-{k}'
+            static_binding=static_cuts.get(cid)
+            if static_binding:
+                m=static_acquired[static_binding['source']]
+                shot=ES.shot_for(static_binding,m,words,ch['title'],s,e)
+                mid=m['id'];media[mid]=m;shots.append(shot)
+                continuity_report.append({'chapter':ch['title'],'shot':cid,'source':mid,'source_sha256':m['expected_sha256'],
+                    'source_in':None,'source_out':None,'start':s,'end':e,'revisit':False,'semantic_review':'STATIC_ASSISTED',
+                    'reviewed_binding':static_binding,'decision':'EVIDENCIA_ESTATICA_REVISADA','kind':'photo'})
+                with Image.open(m['local_source']) as im:pics.append((cid,mid,0,im.convert('RGB')))
+                static_applied.add(cid)
+                continue
+            binding=reviewed.get(cid)
             if binding:
                 m,t=corte_revisado(binding,acquired,words,ch['title'],s,e,used_windows)
                 selected=(m,t,frame(m['local_source'],t+span*.5))
@@ -541,6 +564,7 @@ def main():
         cut_report.append({'chapter':ch['title'],'start':start/30,'end':end/30,'shots':n})
         start=end
     if applied!=set(reviewed):raise ValueError('E302-CORTE-NAO-APLICADO')
+    if static_applied!=set(static_cuts):raise ValueError('E321-ESTATICO-NAO-APLICADO')
     plan={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,'titulo':spec['title'],
           'duracao':total,'media':media,'shots':shots}
     if '--acervo-restaurado' in sys.argv[3:]:
@@ -552,7 +576,7 @@ def main():
     # Report the coverage deficit separately from the continuity heuristic.
     # A chapter with one available source is not semantically certified.
     write(out/'lacunas-montagem.json',{'publish':False,'semantic_review':'PENDING',
-        'chapters':lacunas_montagem(spec,acquired,continuity_report)})
+        'chapters':lacunas_montagem(spec,{**acquired,**static_acquired},continuity_report)})
     write(out/'obrigacoes-visuais.json',{'publish':False,'semantic_review':'PENDING',
         'shots':obrigacoes_visuais(continuity_report,words)})
     result=F.preparar(plan,out/'documental',PUBLIC)

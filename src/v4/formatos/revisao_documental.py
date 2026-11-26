@@ -231,6 +231,7 @@ def contexto_de_busca(necessidade,c):
 
 def ordenar_candidatos(necessidade,candidatos):
     ev=necessidade.get('evidencia_visual')
+    pref=necessidade.get('preferencia_midia')
     def rank(c):
         m=relevancia_textual(necessidade,c)
         facets,facet_quality,_=cobertura_componentes(necessidade,c)
@@ -240,12 +241,13 @@ def ordenar_candidatos(necessidade,candidatos):
         return (c.get('natureza_preliminar')=='REPRESENTACAO_DECLARADA',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_revisao_mesmo_escopo') is True),
                 incompatibilidade_metadados(necessidade,c),
-                ev=='estatica' and c.get('tipo')!='foto',
+                ev=='estatica' and pref!='video_preferencial' and c.get('tipo')!='foto',
                 c.get('fonte')!='biblioteca_v3',
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
-                alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],-m['titulo'],not captura,-m['proximidade'],
+                alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],-m['titulo'],
+                pref=='video_preferencial' and c.get('tipo')!='video',pref=='foto_preferencial' and c.get('tipo')!='foto',not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')))
     ordered=sorted(candidatos,key=rank)

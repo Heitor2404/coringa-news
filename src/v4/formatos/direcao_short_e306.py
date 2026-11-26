@@ -8,6 +8,7 @@ from . import filme_editorial as F
 def diagnosticar(plan):
     shots=plan['shots'];media=plan.get('media',{})
     if not shots:raise ValueError('E306-SEM-CENAS')
+    needs={n['id']:n for n in plan.get('necessidades_direcao',[])}
     rows=[];total=0.;passive=0.;run=0.;longest=0.
     for shot in shots:
         a,b=shot['start'],shot['end'];span=b-a
@@ -24,7 +25,10 @@ def diagnosticar(plan):
             scale=min(1080/w,1920/h)
             potential=round(w*h*scale*scale/(1080*1920),4)
             if static:crop=F.propor_recorte_foto(shot,m,(w,h))
+        n=needs.get(shot['id']) or {}
         rows.append({'id':shot['id'],'start':a,'end':b,'kind':kind,
+            'fatos':n.get('fatos',[]),'mostrar':n.get('mostrar'),'papel_visual':n.get('papel_visual','a_definir'),
+            'evidencia_visual':n.get('evidencia_visual'),'preferencia_midia':n.get('preferencia_midia','adequada_ao_fato'),
             'passive_photo':static,'integral_canvas_fraction':potential,
             'observed_photo_crop_candidate':crop is not None,
             'needs':['BUSCAR_ACAO_OU_DEMONSTRACAO_PERTINENTE','AVALIAR_IMERSAO_SEM_PERDA'] if static else ['VERIFICAR_O_QUE_OS_PIXELS_DEMONSTRAM']})
@@ -33,7 +37,11 @@ def diagnosticar(plan):
     if all_passive:issues.append('SLIDESHOW_PASSIVO_INTEGRAL')
     if longest>8:issues.append('SEQUENCIA_FOTOGRAFICA_LONGA_REVISAR')
     if rows[0]['passive_photo']:issues.append('GANCHO_VISUAL_REVISAR')
-    return {'schema':'coringa.short.triage.v1','publicar':False,
+    tasks=[{'necessidade_id':r['id'],'fatos':r['fatos'],'mostrar':r['mostrar'],
+        'acao':'REVISAR_ALTERNATIVA_REAL_MAIS_EXPLICATIVA' if r['preferencia_midia']=='video_preferencial' else 'REAVALIAR_CONTRIBUICAO_VISUAL_SEM_ALTERAR_FATO',
+        'preservar_evidencia_visual':r['evidencia_visual'],'publicar':False,'autoriza_animacao':False}
+        for r in rows if r['passive_photo'] and r['fatos'] and r['mostrar']]
+    return {'schema':'coringa.short.triage.v1','tarefas_replanejamento':tasks,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),

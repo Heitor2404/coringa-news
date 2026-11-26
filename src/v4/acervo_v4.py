@@ -258,6 +258,9 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
     if ev not in ('movimento','estatica','contexto','indefinida'):raise ValueError('E246-EVIDENCIA')
     tipos={'movimento':('video',),'estatica':('foto','video'),
            'contexto':('foto','video'),'indefinida':('video','foto')}[ev]
+    # Preference orders eligible routes; never relax a motion requirement.
+    if necessidade.get('preferencia_midia')=='video_preferencial' and len(tipos)==2:tipos=('video','foto')
+    if necessidade.get('preferencia_midia')=='foto_preferencial' and len(tipos)==2:tipos=('foto','video')
     q=necessidade.get('pesquisa',{})
     consultas=[]
     for x in (q.get('consultas_en') or [])+(q.get('consultas') or []):

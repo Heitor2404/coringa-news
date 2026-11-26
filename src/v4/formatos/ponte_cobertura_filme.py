@@ -222,7 +222,8 @@ def plano(case,chosen,tempos):
             if x.get('progressao'):shot['progressao_visual']=x['progressao']
             shots.append(shot);start+=count
     result={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,
-            'titulo':case['tema'],'duracao':start/30,'media':media,'shots':shots,'documentary_framing':'ADAPTIVE_REVIEW_V1'}
+            'titulo':case['tema'],'duracao':start/30,'media':media,'shots':shots,'documentary_framing':'ADAPTIVE_REVIEW_V1',
+            'necessidades_direcao':[{'id':i,'fatos':chosen[i]['need']['fatos'],'mostrar':chosen[i]['need']['mostrar'],'papel_visual':chosen[i]['need'].get('papel_visual','a_definir'),'evidencia_visual':chosen[i]['need'].get('evidencia_visual'),'preferencia_midia':chosen[i]['need'].get('preferencia_midia','adequada_ao_fato')} for i in (s['id'] for s in shots)]}
     for i,m in maps:
         result=B.inserir_no_filme(result,i,Path(m['local_source']),Path(m['atlas_proof']),m.get('intencao','localizar'))
     return result

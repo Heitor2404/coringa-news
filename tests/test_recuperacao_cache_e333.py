@@ -66,3 +66,20 @@ def test_reserved_cache_recovery_uses_current_decision_and_rolls_forward_only_wh
         assert calls==['new'] and len(diagnostics)==1
         assert bool(r)==accept
         assert c['decisao']['revisao_id']=='old' and 'recuperacao_amostras' not in c
+
+
+def test_historical_timestamp_precision_is_exactly_six_decimal_tolerance():
+    import pytest
+    for start in (26.2379090909091,29.986181818181823):
+        p={'inicio_s':start,'duracao_s':3.8,'amostras':[{'at':at,'fonte_s':round(start+at,6)} for at in (0,1.9,3.42)]}
+        assert C.tempos_amostras(p)==[x['fonte_s'] for x in p['amostras']]
+        p['amostras'][0]['fonte_s']-=.000002
+        with pytest.raises(ValueError,match='E334-TEMPOS'):C.tempos_amostras(p)
+
+def test_timestamp_order_and_relative_offset_cannot_be_forged():
+    import pytest
+    p={'inicio_s':1.0,'duracao_s':3.8,'amostras':[{'at':at,'fonte_s':1+at} for at in (0,1.9,3.42)]}
+    p['amostras'][2]['at']=3.8
+    with pytest.raises(ValueError,match='E334-TEMPOS'):C.tempos_amostras(p)
+    p['amostras'][2]={'at':1.9,'fonte_s':2.9}
+    with pytest.raises(ValueError,match='E334-TEMPOS'):C.tempos_amostras(p)

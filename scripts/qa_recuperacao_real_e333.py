@@ -55,8 +55,12 @@ def run_one(row,ref,releases,root,*,diagnostic_only=False):
     report=json.loads(raw);check(report['publish'] is False,'E330-PRIVADO')
     n=next(x for x in report['triagem'] if x['id']==row['need'])
     rr=next(x for x in report['cobertura'] if x['necessidade_id']==row['need'])
-    check(rr['estado']=='CANDIDATO_PRIVADO_REVISADO','E330-COBERTURA')
-    c=next(x for x in reversed([x for r in rr['rodadas'] for x in r['pesquisa']['candidatos']]) if [x.get('fonte'),x.get('source_id') or x.get('url')]==rr['selecionado'] and x.get('aquisicao',{}).get('sha256')==h and x.get('decisao',{}).get('estado')=='PERTINENTE_PRIVADO')
+    negative=diagnostic_only and row.get('expected_negative') is True
+    check(rr['estado']==('LACUNA_PENDENTE' if negative else 'CANDIDATO_PRIVADO_REVISADO'),'E330-COBERTURA')
+    if negative:
+        c=next(x for x in reversed([x for r in rr['rodadas'] for x in r['pesquisa']['candidatos']]) if x.get('aquisicao',{}).get('sha256')==h and x.get('janelas'))
+    else:
+        c=next(x for x in reversed([x for r in rr['rodadas'] for x in r['pesquisa']['candidatos']]) if [x.get('fonte'),x.get('source_id') or x.get('url')]==rr['selecionado'] and x.get('aquisicao',{}).get('sha256')==h and x.get('decisao',{}).get('estado')=='PERTINENTE_PRIVADO')
     rel=releases[row['tag']];check(rel['draft'] is True,'E330-RELEASE')
     a=next(x for x in rel['assets'] if x['name']==name)
     check(a['digest']=='sha256:'+row['package_digest'] and 0<a['size']<=25_000_000,'E330-PACOTE')
@@ -68,6 +72,21 @@ def run_one(row,ref,releases,root,*,diagnostic_only=False):
     check(re.fullmatch(h+r'[.](jpg|jpeg|png|webp|mp4|webm)',m['arquivo']) is not None,'E330-NOME')
     src=dest/m['arquivo'];check(src.stat().st_size==m['bytes'],'E330-BYTES')
     c={**c,'local_source':str(src)}
+    from src.v4.formatos import recuperacao_cache_e333 as RC
+    if negative:
+        proof=[]
+        for window in c['janelas']:
+            p=window['pacote'];q=p.get('revisao_assistida') or {}
+            if q.get('veredito')!='insuficiente':continue
+            candidate={**c,'decisao':{'revisao_id':p['revisao_id']},
+                'selecao_janela':{'revisao_id':p['revisao_id'],'source_in_seconds':p['inicio_s'],'duracao_s':p['duracao_s'],'video_framing':q.get('video_framing')}}
+            try:
+                result=RC.revalidar(n,candidate,frame,somente_diagnostico=True);proof.append(result)
+            except Exception as exc:
+                proof.append({'review_id':p['revisao_id'],'status':'REVALIDACAO_PENDENTE','reason':str(exc)[:200]})
+        write(folder/'diagnostic.json',proof)
+        check(len(proof)==row['expected_windows'] and all(x.get('status')=='PIXELS_REVALIDATED' and x.get('decisao_atual')=='INSUFICIENTE' and x.get('veredito_amostral')=='insuficiente' for x in proof),'E335-NEGATIVAS-NAO-PRESERVADAS')
+        return {'id':row['id'],'status':'DIAGNOSTICO_REAL_PRIVADO','amostras':proof,'lacuna_preservada':True,'semantic_approval':False,'publish':False}
     from src.v4.formatos import replanejamento_e308 as RP, reserva_janelas_e313 as RJ
     case={'tema':n['sujeito'],'chapters':[{'title':n['sujeito'],'needs':[n['id']]}],'composicao_documental':'PRIVATE_V2'}
     old={'necessidade_id':n['id'],'estado':rr['estado'],'selecionado':rr['selecionado'],'rodadas':[{'pesquisa':{'candidatos':[c]}}]}
@@ -75,17 +94,17 @@ def run_one(row,ref,releases,root,*,diagnostic_only=False):
     prepare=lambda report:B.preparar_cobertura(report,case,minimo_s=1.4)
     before,gate=prepare(replay)
     check(not before and not gate['pronto_para_tts'] and gate['replanejamento_por_fato'][0]['motivo']=='REVISAR_ACAO_ESPECIFICA','E333-RECUSA')
-    from src.v4.formatos import recuperacao_cache_e333 as RC
     if diagnostic_only:
         proof=[]
         def diagnose(need,candidate):
             try:
                 r=RC.revalidar(need,candidate,frame);proof.append(r);return r
             except Exception as exc:
-                proof.append({'status':'REVALIDACAO_PENDENTE','reason':str(exc)[:200]});return None
+                proof.append({'review_id':candidate['decisao']['revisao_id'],'status':'REVALIDACAO_PENDENTE','reason':str(exc)[:200]});return None
         initial=diagnose(n,c)
         historical=RC.alternativa(n,c,diagnose)
         strict=RC.recuperar_reservada(n,old,frame,lambda *a:False,diagnosticos=proof)
+        write(folder/'diagnostic.json',proof)
         check(initial is not None and historical is not None,'E334-DIAGNOSTICO-REAL')
         check(strict is None,'E334-RESERVA-NAO-AUTORIZADA')
         return {'id':row['id'],'status':'DIAGNOSTICO_REAL_PRIVADO','amostras':proof,'alternativa_historica':historical['rodadas'][0]['pesquisa']['candidatos'][0]['decisao']['revisao_id'],'recuperacao_estrita_sem_reserva':False,'semantic_approval':False,'publish':False}
@@ -127,14 +146,16 @@ def run_one(row,ref,releases,root,*,diagnostic_only=False):
 def main():
     import sys
     diagnostic_only='--diagnostic-only' in sys.argv[1:]
-    cfg=read('benchmarks/e330/replay.json');root=Path('stage_documental/e334' if diagnostic_only else 'stage_documental/e333');root.mkdir(parents=True,exist_ok=False)
+    cfg=read('benchmarks/e335/replay.json' if diagnostic_only else 'benchmarks/e330/replay.json');root=Path('stage_documental/e334' if diagnostic_only else 'stage_documental/e333');root.mkdir(parents=True,exist_ok=False)
     meta=api('');check(meta['private'] is True and meta['id']==1454059520 and cfg['publish'] is False,'E330-COFRE')
     releases={r['tag_name']:r for r in listar_releases(300)}
     result={'publish':False,'new_ai':0,'new_tts':0,'semantic_approval':False,'full_documentary':False,'records':[]}
     for row in cfg['cases']:
-        if row['id']!='lava':continue
+        if not diagnostic_only and row['id']!='lava':continue
         try:result['records'].append(run_one(row,cfg['ref'],releases,root,diagnostic_only=diagnostic_only))
-        except Exception as e:result['records'].append({'id':row['id'],'status':'BLOCKED','reason':str(e)[:1000],'publish':False})
+        except Exception as e:
+            p=root/row['id']/'diagnostic.json'
+            result['records'].append({'id':row['id'],'status':'BLOCKED','reason':str(e)[:1000],'amostras':read(p) if p.is_file() else [],'publish':False})
         write(root/'replay.json',result)
     print('E334' if diagnostic_only else 'E333',[(r['id'],r['status']) for r in result['records']],flush=True)
     if diagnostic_only and (not result['records'] or any(r['status']!='DIAGNOSTICO_REAL_PRIVADO' for r in result['records'])):raise ValueError('E334-PROVA-PENDENTE')

@@ -48,7 +48,21 @@ def selecionado(row):
         if [c.get('fonte'),c.get('source_id') or c.get('url')]==list(selected)
         and c.get('tipo')=='video' and (c.get('decisao') or {}).get('estado')=='PERTINENTE_PRIVADO'),None)
 
-def revalidar(need,candidate,extrair):
+def tempos_amostras(p):
+    """The packet hashes timestamps rounded to six decimals, while the
+    window start keeps its original precision. Do not change hashed values."""
+    import math
+    start=p['inicio_s'];span=p['duracao_s'];samples=p['amostras']
+    if not all(type(x) in (int,float) and math.isfinite(x) for x in (start,span)) or start<0 or span<=0 or len(samples)!=3:
+        raise ValueError('E334-TEMPOS')
+    times=[s['fonte_s'] for s in samples];offsets=[s['at'] for s in samples]
+    if not all(type(t) in (int,float) and math.isfinite(t) for t in times+offsets):
+        raise ValueError('E334-TEMPOS')
+    if not all(0<=at<span and t>=0 and abs(t-(start+at))<=1.000001e-6 for t,at in zip(times,offsets)) or not times[0]<times[1]<times[2] or not offsets[0]<offsets[1]<offsets[2]:
+        raise ValueError('E334-TEMPOS')
+    return times
+
+def revalidar(need,candidate,extrair,*,somente_diagnostico=False):
     """Authenticate exact original and three original decoded samples; diagnostic
     motion is not a semantic verdict. No provider request, no new review."""
     import hashlib,json,math
@@ -76,23 +90,21 @@ def revalidar(need,candidate,extrair):
         raise ValueError('E334-ID')
     samples=p['amostras'];frames=[]
     if len(samples)!=3:raise ValueError('E334-AMOSTRAS')
-    times=[s['fonte_s'] for s in samples]
-    if not all(type(t) in (int,float) and math.isfinite(t) and p['inicio_s']<=t<p['inicio_s']+p['duracao_s'] for t in times) or not times[0]<times[1]<times[2]:
-        raise ValueError('E334-TEMPOS')
+    times=tempos_amostras(p)
     for s in samples:
         im=extrair(src,s['fonte_s'],width=s['px'][0]).convert('RGB')
         if list(im.size)!=s['px'] or hashlib.sha256(im.tobytes()).hexdigest()!=s['pixels_sha256']:
             raise ValueError('E334-PIXELS')
         frames.append(im)
     v=DE.aceitar_observacao(p,q['resposta_observada'])
-    if v['veredito']!='pertinente' or v['video_framing']!=w.get('video_framing'):
+    if (not somente_diagnostico and v['veredito']!='pertinente') or v['video_framing']!=w.get('video_framing'):
         raise ValueError('E334-ENQUADRAMENTO')
     fresh=R.decidir(need,candidate,q,tipo='video')
     diagnostic=DM.diagnosticar(frames,times,v['video_framing'])
     return {'status':'PIXELS_REVALIDATED','sha256':h,'review_id':rid,
             'samples':[s['pixels_sha256'] for s in samples],
             'correspondencia_explicita':correspondencia_explicita(q),
-            'decisao_atual':fresh['estado'],'diagnostico_movimento':diagnostic,
+            'decisao_atual':fresh['estado'],'motivo_atual':fresh.get('motivo'),'veredito_amostral':v['veredito'],'diagnostico_movimento':diagnostic,
             'aprovacao_semantica':False,'publicar':False}
 
 def recuperar_reservada(need,row,extrair,reservar,*,historicas=(),diagnosticos=None):

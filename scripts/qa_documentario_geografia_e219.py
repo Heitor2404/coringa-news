@@ -232,6 +232,23 @@ def corte_revisado(cut, acquired, words, chapter, start, end, used):
     return m,t
 
 
+def proteger_corte_revisado(shot, binding, media):
+    """Propagate explicit observed full-source protection, not a renderer flag.
+    A missing contract leaves the existing private crop proposal unchanged.
+    """
+    if not binding or 'framing' not in binding:
+        return shot
+    contract=binding['framing']
+    if not isinstance(contract,dict) or contract.get('modo')!='fonte_integral' or binding.get('sha256')!=media.get('expected_sha256'):
+        raise ValueError('E319-ENQUADRAMENTO-VINCULO')
+    if shot.get('id')!=binding.get('shot') or shot.get('type')!='video' or shot.get('asset')!=binding.get('source'):
+        raise ValueError('E319-ENQUADRAMENTO-ESCOPO')
+    result={**shot,'video_framing':dict(contract)}
+    result.pop('documentary_viewport',None)
+    result['video_context_layout']=F.proteger_fonte_integral(result,media,(media['width'],media['height']))
+    return result
+
+
 def obrigacoes_visuais(decisions, words):
     """Bind each actual cut to the measured speech it must illustrate.
     An exact speech span is not an observed fact or proof of coverage.
@@ -493,6 +510,7 @@ def main():
                     shot['video_context_layout']='recorte_relacional_seguro'
                     shot['documentary_viewport']=mode
                 shot['focus']=[.5,.5]
+            shot=proteger_corte_revisado(shot,binding,m)
             shots.append(shot)
             pics.append((cid,m['id'],t,im))
         cut_report.append({'chapter':ch['title'],'start':start/30,'end':end/30,'shots':n})

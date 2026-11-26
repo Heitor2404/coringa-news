@@ -1,0 +1,33 @@
+{
+  "publish": false,
+  "ref": "c70a543f75726987afc72ac10c0f29ac35681332",
+  "cases": [
+    {
+      "id": "lava",
+      "folder": "e260-45646284798-1",
+      "report_blob": "1947e1c428303f2c9f11c0dfeb495922b36bacb2",
+      "need": "n1",
+      "sha256": "cc825cc83cab417dc2b316344f488c080b4817dcef2d6e5f49792e3a5605e1fc",
+      "tag": "review-e258-progressiva-45544941326-1",
+      "package_digest": "56119f2ac98fe0875e206c1d2ac01608f3098e9faa475664d1bcf5ccbc55aeea"
+    },
+    {
+      "id": "gelo",
+      "folder": "e2644-45610226413-1",
+      "report_blob": "45af49393029ba6f93bdacc241808f3389e1cf92",
+      "need": "n2",
+      "sha256": "c98a8172acd047020a9029b8718c1f9d60258bf2c180a9ef0043461e726c4c37",
+      "tag": "review-e2644-45610226413-1",
+      "package_digest": "14c191d70ca4d876b5d3700da83f179ebe1592aa668cc916c88289c52189f720"
+    },
+    {
+      "id": "roma",
+      "folder": "e2812-45639629861-1",
+      "report_blob": "d67cbce311053529681948988e6fa3fe9c2f813c",
+      "need": "n1",
+      "sha256": "73e379b720ab08e12fa456d045a02825b93238606b7ec63a81e69de00c61a300",
+      "tag": "review-e2812-45639629861-1",
+      "package_digest": "af0b0dcfddc1df0d04fcf33a6b01b6df913352aeb882cfdf0855ea64de08fc07"
+    }
+  ]
+}

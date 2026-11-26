@@ -2,16 +2,16 @@
 Donor geometry belongs to its bytes; donor semantic review never transfers.
 """
 import copy,math,re
-def edit(props,queue,changes,end):
+def edit(props,queue,changes,end,*,start=0):
     if props.get('private_review_only') is not True or props.get('preview') is not True or queue.get('publish') is not False:
         raise ValueError('E339-PRIVATE')
     if props.get('documentary_caption_origin')!='PALAVRAS_MEDIDAS' or not props.get('documentary_captions'):
         raise ValueError('E339-CAPTIONS')
-    if not isinstance(end,(int,float)) or not 0<end<=20:raise ValueError('E339-DURATION')
+    if not all(type(x) in (int,float) and math.isfinite(x) for x in (start,end)) or not 0<=start<end or end-start>20:raise ValueError('E339-DURATION')
     source={s['id']:s for s in props['shots']};tasks={s['shot']:s for s in queue['tasks']}
     if len(source)!=len(props['shots']) or len(tasks)!=len(queue['tasks']):raise ValueError('E339-DUPLICATE')
-    selected=[s for s in props['shots'] if s['start']<end]
-    if not selected or abs(selected[0]['start'])>1e-6 or abs(selected[-1]['end']-end)>1e-6 or any(abs(a['end']-b['start'])>1e-6 for a,b in zip(selected,selected[1:])):
+    selected=[s for s in props['shots'] if start<=s['start']<end]
+    if not selected or abs(selected[0]['start']-start)>1e-6 or abs(selected[-1]['end']-end)>1e-6 or any(abs(a['end']-b['start'])>1e-6 for a,b in zip(selected,selected[1:])):
         raise ValueError('E339-PASSAGE')
     if not set(changes)<=set(s['id'] for s in selected):raise ValueError('E339-TARGET')
     out=[];report=[]
@@ -43,5 +43,5 @@ def edit(props,queue,changes,end):
             'source_out':s['source_in_seconds']+s['end']-s['start'] if s['type']=='video' else None,
             'donor':change['donor'] if change else None,'prior_observation':donor.get('observed'),'prior_review_ref':donor.get('review_ref'),
             'status':'NOVO_ESCOPO_PENDENTE' if change else 'BASELINE_PRESERVADA','direct_evidence_verified':False,'publicar':False})
-    caps=[{**c,'end':min(c['end'],end)} for c in props['documentary_captions'] if c['start']<end]
+    caps=[{**c,'start':max(c['start'],start),'end':min(c['end'],end)} for c in props['documentary_captions'] if c['start']<end and c['end']>start]
     return {**props,'duracao':end,'shots':out,'documentary_captions':caps,'documentary_text_probe':False},report

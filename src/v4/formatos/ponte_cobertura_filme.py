@@ -232,6 +232,9 @@ def plano(case,chosen,tempos):
                         shot['photo_roi_candidate']={**roi,'sha256':a['sha256'],'revisao_id':decision['revisao_id']}
             else:
                 shot.update(source_in_seconds=x['window']['source_in_seconds'],video_zoom=1,video_context_layout='cena_integral')
+                from . import observacao_temporal_e315 as O
+                observed=O.candidato(n,c,x['window'],span)
+                if observed:shot['observacao_temporal_candidata']=observed
             if x.get('framing') and all(p['at']<span for p in x['framing']['pontos']):
                 shot['video_framing']=x['framing']
             if x.get('progressao'):shot['progressao_visual']=x['progressao']

@@ -1,0 +1,47 @@
+name: E315 - observacao temporal vinculada a filmagem real
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-observacao-e315.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Testes e compilacao
+        run: |
+          python -m pip install -q -r requirements.txt pytest beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_observacao_temporal_e315.py tests/test_direcao_observacao_e239.py tests/test_documentario_integral_e254.py tests/test_filme_editorial.py tests/test_direcao_explicativa_e310.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Restaurar somente original privado autenticado
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e315
+          mkdir -p "$root"
+          gh release download review-e300-45737009519-1 --repo Heitor2404/coringa-cofre --pattern 783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c.mp4 --dir "$root"
+          python -m scripts.qa_observacao_e315
+      - name: Prova real de texto no instante
+        run: cd motor4 && node scripts/qa_observacao_e315.mjs
+      - name: Espelho privado
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e315
+          python scripts/espelhar_revisao_cofre.py "e315-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/review.json" "$root/measures.json" "$root/before.png" "$root/after.png"

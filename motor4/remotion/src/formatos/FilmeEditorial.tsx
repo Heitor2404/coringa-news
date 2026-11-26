@@ -54,6 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
+  documentary_observed_label?: {at:number;label:string;sha256:string;revisao_id:string;status:string};
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
@@ -873,8 +874,13 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   if(mediaFirst&&pairActive(shot,now))return <ComparisonPanel shot={shot} probe={textProbe}/>;
   if(mediaFirst&&realMedia(shot)) {
     const credit=(shot.evidence==='representative'?'Contexto · ':'')+(shot.source_display||shot.source);
-    const section=shot.lead?.toUpperCase();
     const layout=documentaryLayout(shot),slots=layout.slots;
+    const observed=shot.documentary_observed_label;
+    const showObserved=shot.type==='video'&&observed?.status==='PRIVATE_OBSERVATION_PENDING'&&
+      Number.isFinite(observed.at)&&observed.at>=0&&observed.at<duration&&now-shot.start>=observed.at&&
+      typeof observed.label==='string'&&observed.label.length<=34&&/^[a-f0-9]{64}$/.test(observed.sha256)&&
+      /^[a-f0-9]{64}$/.test(observed.revisao_id)&&!documentaryOverlay(shot,slots.section);
+    const section=(showObserved?observed?.label:shot.lead)?.toUpperCase();
     const brandOverlay=documentaryOverlay(shot,slots.brand);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}

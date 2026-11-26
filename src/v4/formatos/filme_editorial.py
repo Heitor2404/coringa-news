@@ -910,7 +910,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if c.get('type')=='animation_clip':
             from . import complemento_integral_e314 as E
             shots.append(E.preparar(c,public_root));continue
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel','documentary_observed_label','observacao_temporal_candidata')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -964,6 +964,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
                     if min(img.size) < 700:
                         raise ValueError('frame de ligação insuficiente')
                 x['reference_asset'] = 'film_editorial/' + frame.name
+        if privado and c['type']=='video':
+            from . import observacao_temporal_e315 as O
+            need=next((n for n in plano.get('necessidades_direcao',[]) if n['id']==c['id']),{})
+            label=O.validar(c,plano['media'][c['asset']],medias[c['asset']]['sha256'],need)
+            if label:x['documentary_observed_label']=label
         if c['type']=='video':
             from src.v4.formatos.tempo_natural import validar_janela_origem
             motivo=validar_janela_origem(c,medias[c['asset']]['duration_s'])

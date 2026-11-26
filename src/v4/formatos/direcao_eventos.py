@@ -356,6 +356,8 @@ Dados: """+contexto
                  "Não confunda deslocamento de câmera, movimento não relacionado ou presença do sujeito com a transformação solicitada. "
                  "Para movimento, pertinente exige mudança diretamente relacionada à necessidade. Não declare autenticidade pela aparência. "
                  "Tipo de evidência solicitado: "+evidencia_visual)
+    if evidencia_visual=='movimento':
+        prompt+='\\nCampo opcional rotulo_mudanca: até 34 caracteres, em português, descrição curta apenas da mudança observada nos índices indicados, sem causa, datas ou identidade inferidas. Omitir se não for possível resumir com fidelidade.'
     if exigir_evidencia_direta:
         prompt+='\nExija componente especifico legivel, nao mera associacao tematica. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico visivel que atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira de um quadro. Nao use lista nem troque eixos. Use null se nao localizavel; nao infira pelo assunto geral.'
     if preparar_requisicao:

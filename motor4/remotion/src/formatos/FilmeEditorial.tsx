@@ -62,6 +62,7 @@ export type FilmShot = {
   documentary_composition_v2?: boolean; // E328 private verified preflight
   documentary_observed_viewport_trial?: boolean; // E337 private exact-viewport comparison
   documentary_balance_trial?: boolean; // E340 private upper-center composition
+  documentary_reported_fact?: {schema:'coringa.reported.fact.private.v1';publish:false;at:number;value:string;scope:string;authority:string;url:string;sha256:string};
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
@@ -469,10 +470,23 @@ const balancedViewportTrial=(shot:FilmShot,base:DocLayout,v3:DocLayout&{safeTria
   candidates.sort((a,b)=>a.score-b.score||a.lane-b.lane||a.top-b.top);
   return candidates[0]?.layout??null;
 };
+const reportedFactLayout=(shot:FilmShot,layout:DocLayout&{safeTrialStatus?:string}): (DocLayout&{safeTrialStatus:string})|null=>{
+  const f=shot.documentary_reported_fact;
+  if(!f||f.schema!=='coringa.reported.fact.private.v1'||f.publish!==false||shot.type!=='video'||!shot.documentary_integral_required||
+      !Number.isFinite(f.at)||f.at<0||f.at>=shot.end-shot.start||!f.value||f.value.length>24||!f.scope||f.scope.length>72||
+      !f.authority||f.authority.length>60||!/^https:\/\//.test(f.url)||!shot.asset?.includes(f.sha256)||!/^[a-f0-9]{64}$/.test(f.sha256))return null;
+  if(layout.roiStatus!=='FULL_SOURCE_PROTECTED'||layout.centeredFit!=='contain')return null;
+  const slots:DocSlots={brand:[150,300,500,332],section:[150,340,760,413],source:[150,420,760,513],subtitle:[150,1128,760,1238]};
+  // Data occupies empty header, not pixels of the original or a subtitle lane.
+  if(!fitsEvidence(slots,[Array.from(layout.media)])||docRects(slots).some((a,i)=>docRects(slots).slice(i+1).some(b=>intersects(a,b))))return null;
+  return {...layout,slots,safeTrialStatus:'E342_REPORTED_FACT_LANE'};
+};
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=baseDocumentaryLayout(shot);
   if(shot.documentary_composition_v2){
     const baseline=compositionV2(shot,base);
+    const fact=reportedFactLayout(shot,baseline);
+    if(fact)return fact;
     const expanded=observedViewportTrial(shot,baseline);
     if(!shot.documentary_balance_trial)return expanded??baseline;
     // Keep a proven balanced expansion if possible; otherwise prefer the
@@ -534,8 +548,9 @@ const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(docu
 const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot;rect:readonly number[];
   text:string;children?:React.ReactNode;probe?:boolean;layoutOverride?:DocLayout&{safeTrialStatus?:string}}>=({role,shot,rect,text,children,probe=false,layoutOverride})=>{
   const host=React.useRef<HTMLDivElement>(null),inner=React.useRef<HTMLDivElement>(null);
-  const size=role==='subtitle'?[52,36]:role==='source'?[30,24]:[30,22];
   const measuredLayout=layoutOverride??documentaryLayout(shot);
+  const fact=role==='section'&&measuredLayout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&text===shot.documentary_reported_fact?.value;
+  const size=role==='subtitle'?[52,36]:role==='source'?[30,24]:fact?[58,38]:[30,22];
   const overlaps=(r:readonly number[])=>layoutOverride?layoutOverride.protected.some(b=>intersects(b,r)):documentaryOverlay(shot,r);
   const overlay=overlaps(rect);
   const signature=rect.join(',')+'|'+measuredLayout.mode;
@@ -581,7 +596,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
       justifyContent:'flex-start',textAlign:'left',pointerEvents:'none'}}>
     <div ref={inner} style={{width:'fit-content',maxWidth:'100%',boxSizing:'border-box',fontFamily:'Inter,Arial,sans-serif',
       fontWeight:role==='subtitle'?850:role==='section'?800:500,fontSize:size[0],lineHeight:role==='source'?1.12:role==='section'?1:1.08,
-      color:role==='source'?'#DCE3E9':OFF_WHITE,whiteSpace:'normal',overflowWrap:'anywhere',
+      color:role==='source'?'#DCE3E9':fact?GOLD:OFF_WHITE,whiteSpace:'normal',overflowWrap:'anywhere',
       padding:overlay?(role==='section'?'2px 8px':'4px 8px'):'0',background:overlay?'rgba(4,11,20,.84)':'transparent',
       borderRadius:overlay?4:0,textShadow:overlay?'0 1px 3px #000':'none'}}>
       {children??text}
@@ -1053,7 +1068,9 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const showStatic=shot.type==='photo'&&reveal?.status==='PRIVATE_STATIC_REVEAL_PENDING'&&
       Number.isFinite(reveal.at)&&now-shot.start>=reveal.at&&reveal.at<duration&&
       typeof reveal.label==='string'&&reveal.label.length<=34&&!documentaryOverlay(shot,slots.section)&&Boolean(detailScreenBox(detailShot,layout));
-    const section=(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
+    const fact=shot.documentary_reported_fact;
+    const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
+    const section=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
     const brandOverlay=documentaryOverlay(shot,slots.brand);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
@@ -1069,7 +1086,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
       <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+1,width:130,height:3,background:GOLD}}/>
       {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
-      <MeasuredDocText role="source" shot={shot} rect={slots.source} text={credit} probe={textProbe}/>
+      <MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>
     </AbsoluteFill>;
   }
   if(shot.type==='scene_graph') {
@@ -1187,7 +1204,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
-  if(shots.some(s=>s.documentary_composition_v2||s.documentary_observed_viewport_trial||s.documentary_balance_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
+  if(shots.some(s=>s.documentary_composition_v2||s.documentary_observed_viewport_trial||s.documentary_balance_trial||s.documentary_reported_fact)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');

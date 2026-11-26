@@ -184,11 +184,27 @@ def smithsonian_identidade(q,*,transport=None,key=None,diagnostico=None):
     a=smithsonian(phrase,transport=t,key=key,diagnostico=first,phrase=True,object_type='Photographs' if photo else None)
     diag['precise']=first
     if any(object_rank(q,c)[0]==-2 and not object_rank(q,c)[1] for c in a):return a
-    second={}
-    try:b=smithsonian(q,transport=t,key=key,diagnostico=second)
-    except Exception as exc:
-        diag['fallback_error']=type(exc).__name__;return a
-    diag['broad']=second
+    # The object-type filter describes the catalogued object, not necessarily
+    # the depicted subject. Retry the exact subject phrase without that
+    # filter before broadening. The existing shared 3-HTTP transport bounds it.
+    gathered=list(a)
+    if photo and phrase.casefold()!=q.strip().casefold():
+        second={}
+        try:
+            b=smithsonian(phrase,transport=t,key=key,diagnostico=second,phrase=True)
+            diag['subject_phrase']=second
+            gathered.extend(b)
+            if any(object_rank(q,c)[0]==-2 and not object_rank(q,c)[1] for c in b):
+                return sorted({c['source_id']:c for c in gathered}.values(),key=lambda c:object_rank(q,c))[:4]
+        except Exception as exc:diag['subject_phrase_error']=type(exc).__name__
+    third={}
+    try:
+        # The requested medium is not a subject word. Retain identity terms
+        # when relaxing phrase matching; rank against the original request.
+        broad=phrase if photo else q
+        gathered.extend(smithsonian(broad,transport=t,key=key,diagnostico=third))
+        diag['broad']=third
+    except Exception as exc:diag['fallback_error']=type(exc).__name__
     unique={}
-    for c in a+b:unique.setdefault(c['source_id'],c)
+    for c in gathered:unique.setdefault(c['source_id'],c)
     return sorted(unique.values(),key=lambda c:object_rank(q,c))[:4]

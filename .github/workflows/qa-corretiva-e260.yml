@@ -3,7 +3,7 @@ name: E285.1 - regressao seletiva e memoria vigente
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-corretiva-e260.yml','src/v4/formatos/amostragem_documental.py','scripts/qa_revisao_documental_e247.py','scripts/recuperar_checkpoints_documentais.py','src/v4/orcamento_visao.py','motor4/remotion.config.js']
+    paths: ['.github/workflows/qa-corretiva-e260.yml','src/v4/formatos/amostragem_documental.py','scripts/qa_revisao_documental_e247.py','src/v4/formatos/replanejamento_e308.py','tests/test_recuperacao_e332.py','scripts/recuperar_checkpoints_documentais.py','src/v4/orcamento_visao.py','motor4/remotion.config.js']
   workflow_dispatch:
 permissions:
   contents: read

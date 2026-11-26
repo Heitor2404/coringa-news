@@ -1,4 +1,4 @@
-name: E317.1 - regressao da fonte integral e continuidade
+name: E317.2 - continuidade sem interromper descoberta
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

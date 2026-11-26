@@ -5,10 +5,10 @@ def test_exact_factual_source_reuses_download_but_not_decision():
     a={'id':'a','fatos':['f1'],'papel_visual':'acao'};b={'id':'b','fatos':['f2'],'papel_visual':'consequencia'}
     case={'fatos':[{'id':'f1','fonte':page},{'id':'f2','fonte':page}]}
     c={'fonte':'commons','source_id':'v','url':page,'pagina':page,'tipo':'video','titulo':'video',
-       'aquisicao':{'sha256':'h'},'decisao':{'estado':'PERTINENTE_PRIVADO','necessidade_id':'a','revisao_id':'r','publicar':False,'direitos_aprovados':False},
+       'aquisicao':{'sha256':'a'*64},'local_source':'stage_documental/v.mp4','decisao':{'estado':'PERTINENTE_PRIVADO','necessidade_id':'a','revisao_id':'r','publicar':False,'direitos_aprovados':False},
        'selecao_janela':{'source_in_seconds':7},'janelas':[1]}
     key=('commons','v');rows={'a':{'estado':'CANDIDATO_PRIVADO_REVISADO','selecionado':key,'rodadas':[{'pesquisa':{'candidatos':[c]}}]}}
-    acq={key:({'sha256':'h'},None,None,{})}
+    acq={key:({'sha256':'a'*64},None,'stage_documental/v.mp4',{})}
     order={'a':0,'b':1}
     result=F.pista(b,case,[a,b],rows,acq,order)
     assert result['pista_fonte_relacionada']=='a'
@@ -16,6 +16,10 @@ def test_exact_factual_source_reuses_download_but_not_decision():
     assert F.pista(b,case,[a,b],rows,{},order) is None
     assert F.pista(b,{'fatos':[{'id':'f1','fonte':page},{'id':'f2','fonte':'other'}]},[a,b],rows,acq,order) is None
     assert F.pista({**b,'papel_visual':'contexto'},case,[a,b],rows,acq,order) is None
+    assert F.pista({**b,'preferencia_midia':'foto_preferencial'},case,[a,b],rows,acq,order) is None
+    assert F.pista(b,case,[a,b],rows,acq,order,estado={'vistos':{key}}) is None
+    assert F.pista(b,case,[a,b],rows,acq,order,estado={'pendentes':[result]}) is None
+    assert F.pista(b,case,[a,b],rows,{key:({'sha256':'a'*64},None,'other.mp4',{})},order) is None
 
 def test_full_source_review_survives_actual_bridge(tmp_path,monkeypatch):
     from pathlib import Path

@@ -397,10 +397,10 @@ def main():
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
                 if phase<0:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
-                if integral and not (replay or revisar_acervo or preview_pending) and calls<budget and n['id'] not in related_checked:
+                if integral and not (replay or revisar_acervo or preview_pending) and calls<budget and (phase,n['id']) not in related_checked:
                     from src.v4.formatos import fonte_relacionada_e317 as FR
-                    related_checked.add(n['id'])
-                    related=FR.pista(n,case,tri,results_by_id,acquired,story_order)
+                    related_checked.add((phase,n['id']))
+                    related=FR.pista(n,case,tri,results_by_id,acquired,story_order,estado=states[n['id']])
                     if related:
                         rr={'id':n['id'],'buscas':[],'candidatos':[related],'biblioteca':[],'origem':'FONTE_RELACIONADA_PENDENTE_NOVA_REVISAO','publicar':False,'pronto_para_render':False}
                         reports.append(rr);return rr
@@ -438,7 +438,7 @@ def main():
                             if c not in st.setdefault('rever',[]):st['rever'].append(c)
                         return d
                     row=R.cobertura_progressiva(n,search_progress,inspect_progress,
-                        pode_buscar=lambda:(nid not in local_checked) or (phase>=0 and not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit)),
+                        pode_buscar=lambda:(nid not in local_checked) or (phase>=0 and not replay and not revisar_acervo and (nid not in pages_checked or total_search<phase_limit or (integral and not preview_pending and calls<budget and n.get('papel_visual')=='consequencia' and (phase,nid) not in related_checked))),
                         pode_inspecionar=lambda:replay or (nid not in reserved and phase>=0 and calls<budget and (phase==1 or calls==start)),
                         max_buscas=search_limit,estado=st,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3',priorizar_novos=phase==1 and n['evidencia_visual']=='movimento')

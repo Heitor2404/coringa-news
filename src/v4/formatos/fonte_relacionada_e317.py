@@ -3,9 +3,11 @@ The new obligation still requires an independent inspection and non-overlapping
 window. Exact factual source page, not merely lexical similarity.
 """
 from copy import deepcopy
+import re
+from urllib.parse import urlsplit
 
-def pista(n,case,tri,rows,acquired,order):
-    if n.get('papel_visual')!='consequencia' or n['id'] not in order:return None
+def pista(n,case,tri,rows,acquired,order,*,estado=None):
+    if n.get('papel_visual')!='consequencia' or n.get('necessidade','registro')!='registro' or n.get('preferencia_midia')=='foto_preferencial' or n['id'] not in order:return None
     previous=next((x for x in tri if order.get(x['id'],-2)==order[n['id']]-1),None)
     if not previous or previous.get('papel_visual') not in ('acao','mecanismo') or set(previous['fatos'])&set(n['fatos']):return None
     facts={f['id']:f.get('fonte') for f in case.get('fatos',[])}
@@ -14,10 +16,14 @@ def pista(n,case,tri,rows,acquired,order):
     if row.get('estado')!='CANDIDATO_PRIVADO_REVISADO':return None
     key=tuple(row.get('selecionado') or ())
     if len(key)!=2 or key not in acquired:return None
+    state=estado or {}
+    if key in state.get('vistos',set()) or key in {(x.get('fonte'),x.get('source_id') or x.get('url')) for x in state.get('pendentes',[])}:return None
     for r in reversed(row.get('rodadas',[])):
         for c in r['pesquisa']['candidatos']:
             if (c.get('fonte'),c.get('source_id') or c.get('url'))!=key or c.get('tipo')!='video' or c.get('pagina') not in common:continue
-            dec=c.get('decisao') or {};meta=acquired[key][0]
+            dec=c.get('decisao') or {};meta,_,path,_=acquired[key]
+            page=urlsplit(c['pagina'])
+            if page.scheme!='https' or not page.hostname or not re.fullmatch('[a-f0-9]{64}',str(meta.get('sha256',''))) or str(path)!=c.get('local_source'):continue
             if (dec.get('estado')!='PERTINENTE_PRIVADO' or dec.get('necessidade_id')!=previous['id'] or not dec.get('revisao_id')
                 or dec.get('publicar') is not False or dec.get('direitos_aprovados') is not False
                 or (c.get('aquisicao') or {}).get('sha256')!=meta.get('sha256')):continue

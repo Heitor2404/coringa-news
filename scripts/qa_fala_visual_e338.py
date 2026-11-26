@@ -4,7 +4,7 @@ from pathlib import Path
 from scripts.recuperar_checkpoints_documentais import api
 from src.v4.formatos.auditoria_fala_visual_e338 import organizar
 REF='d6b3281bb490fabbb41b8284857f5945313b067e'
-FILES={'plano.json':'ac3e9b3bd35818b15c1b87f14e88e9d7d052008a','obrigacoes-visuais.json':'48afda9011e3166067398c08eb3ceb22e0091590'}
+FILES={'plano.json':'ac3e9b3bd35818b15c1b87f14e88e9d7d052008a','obrigacoes-visuais.json':'48afda9011e3166067398c08eb3ceb22e0091590','comprovante_atlas.json':'cd5a9804b45360e298376aea7fae4e27eae03861'}
 def read(name):
     x=api('/contents/revisoes/e326-45870900796-1/'+name+'?ref='+REF)
     raw=base64.b64decode(x['content'])

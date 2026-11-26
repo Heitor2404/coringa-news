@@ -2,7 +2,7 @@ name: E376 - filme integral privado com fundo preto e montagem acumulada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-integral-e376.yml']
+    paths: ['.github/workflows/qa-integral-e376.yml', 'scripts/qa_integral_e376.py', 'tests/test_integral_e379.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,7 +33,7 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
-          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py tests/test_atlas_multiscale_e237.py tests/test_atlas_base_regional_e235.py tests/test_ui_e299.py tests/test_cortes_revisados_e302.py tests/test_evidencias_estaticas_e321.py tests/test_replanejamento_e319.py
+          python -m pytest -q tests/test_integral_e379.py tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py tests/test_atlas_multiscale_e237.py tests/test_atlas_base_regional_e235.py tests/test_ui_e299.py tests/test_cortes_revisados_e302.py tests/test_evidencias_estaticas_e321.py tests/test_replanejamento_e319.py
           ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
       - name: Restaurar acervo ja adquirido sem consultar origens de video
         env:

@@ -57,7 +57,9 @@ def openverse(q,*,transport=None):
 def inaturalist(q,*,transport=None):
     q=_query(q);t=_transport(transport)
     data,digest=_json(t,'https://api.inaturalist.org/v1/observations',{'q':q,'quality_grade':'research','photos':'true','photo_license':'cc0,cc-by,cc-by-sa','per_page':12})
-    out=[]
+    out=[];seen_photos=set()
+    from src.v4.formatos.revisao_documental import termos_consulta
+    wanted=set(termos_consulta(q))
     for obs in data.get('results',[])[:12]:
         if not isinstance(obs,dict) or type(obs.get('id')) is not int or obs.get('quality_grade')!='research':continue
         tax=obs.get('taxon') or {}
@@ -65,7 +67,7 @@ def inaturalist(q,*,transport=None):
             if not isinstance(p,dict):continue
             code=p.get('license_code');author=p.get('attribution');pid=p.get('id');u=p.get('url')
             # The photo licence, not the observation's licence, controls use.
-            if code not in ('cc0','cc-by','cc-by-sa') or not author or type(pid) is not int or not safe(u,INAT_HOSTS):continue
+            if code not in ('cc0','cc-by','cc-by-sa') or not author or type(pid) is not int or pid in seen_photos or not safe(u,INAT_HOSTS):continue
             # iNaturalist documents size tokens; preserve exact host and photo ID.
             path=urlsplit(u).path
             if not re.fullmatch(r'/photos/'+str(pid)+r'/(?:square|small|medium|large|original)\.(?:jpg|jpeg|png|webp)',path,re.I):continue
@@ -74,12 +76,25 @@ def inaturalist(q,*,transport=None):
             # Do not invent the CC version when API supplies only a code.
             # Attribution string and original observation are retained for manual audit.
             page='https://www.inaturalist.org/observations/'+str(obs['id']);sid=str(pid)
-            dims=p.get('original_dimensions') or {}
-            out.append({'titulo':tax.get('preferred_common_name') or tax.get('name') or q,'descricao':tax.get('name') or '',
+            dims=p.get('original_dimensions') or {};seen_photos.add(pid)
+            out.append({'titulo':tax.get('preferred_common_name') or tax.get('name') or 'Observation '+str(obs['id']),'descricao':tax.get('name') or '',
                 'url':original,'pagina':page,'source_id':sid,'credito':str(author),'licenca':code.upper(),
                 'w':dims.get('width'),'h':dims.get('height'),'recibo_fonte':{'provider':'inaturalist','id':sid,'url':original,'page':page,'license_code':code,'metadata_sha256':digest,'author':str(author)}})
-            if len(out)>=4:return out
-    return out
+    # Rank all bounded response rows before truncation. Distinct observations
+    # precede extra photos of the same subject; no metadata veto.
+    def rank(c):
+        terms=set(termos_consulta(c['titulo']+' '+c['descricao']))
+        match=len(wanted&terms)
+        w,h=c.get('w'),c.get('h')
+        px=min(w,h) if type(w) is int and type(h) is int and min(w,h)>0 else 0
+        return (-match,-int(px>=600),-int(px>0 and h>w),-px)
+    ordered=sorted(out,key=rank);first=[];extra=[];pages=set()
+    # Diversity within a relevance tier, not at the expense of a better taxon.
+    for c in ordered:
+        key=(rank(c)[0],c['pagina'])
+        if key in pages:extra.append(c)
+        else:pages.add(key);first.append(c)
+    return sorted(first+extra,key=lambda c:rank(c)[0])[:4]
 
 def usgs(q,kind,*,transport=None):
     q=_query(q);t=_transport(transport)

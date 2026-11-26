@@ -48,13 +48,18 @@ def discover(q,provider,kind,*,transport=None):
             if not _page(u,provider,kind) or u in seen or not title:continue
             # A card can have a separate title, caption and action link.
             # Never use an entire listing as context for a single item.
-            contexts=[title]
+            contexts=[title];card_heading=None
             for node in list(a.parents)[:4]:
                 txt=node.get_text(' ',strip=True)
                 links={urljoin(base,x['href']) for x in node.find_all('a',href=True)
                        if _page(urljoin(base,x['href']),provider,kind)}
                 if len(txt)>1400 or len(links)>1:break
                 if txt:contexts.append(txt)
+                if card_heading is None:
+                    heading=node.find(['h2','h3','h4','h5'])
+                    if heading:
+                        label=heading.get_text(' ',strip=True)
+                        if label and len(label)<=240 and label.casefold() not in ('watch video','view image'):card_heading=label
             description=contexts[-1]
             if provider=='noaa':
                 label=title.lower()
@@ -66,6 +71,7 @@ def discover(q,provider,kind,*,transport=None):
                     other='image' if kind=='video' else 'video'
                     if not re.search(r'\b'+want+r'\b',marker) or re.search(r'\b'+other+r'\b',marker):continue
             if not _matches(terms,title+' '+description+' '+urlsplit(u).path):continue
+            if title.lower() in ('watch video','view image') and card_heading:title=card_heading
             seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,description=description[:500],mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
             if len(out)>=4:break
         return out

@@ -30,3 +30,9 @@ def test_noaa_featured_card_fallback_preserves_type():
     r=G.discover('octopus','noaa','video',transport=t)
     assert r['mode']=='VISIBLE_GALLERY_FALLBACK' and r['candidates'][0]['page'].endswith('/example/')
     assert not G.discover('octopuses','noaa','foto',transport=T(card))['candidates']
+
+
+def test_noaa_title_comes_from_scoped_card():
+    card='<section><h2>Deep sea octopus</h2><p>On the seabed</p><a href="/multimedia/example/">Watch Video</a></section>'
+    rows=G.candidatos('octopus','noaa','video',transport=T(card))
+    assert rows[0]['titulo']=='Deep sea octopus'

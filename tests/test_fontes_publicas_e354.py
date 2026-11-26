@@ -35,3 +35,13 @@ def test_routes_opt_in_progressive():
     assert 'openverse' not in dict(A.fontes_documentais('foto'))
     assert {'openverse','inaturalist','usgs_pagina'}<=set(dict(A.fontes_documentais('foto',expandir=True)))
     assert 'usgs_pagina' in dict(A.fontes_documentais('video',expandir=True))
+
+def test_inaturalist_rank_before_cap_and_no_invented_title():
+    def row(i,name):
+        p=dict(id=i,url=f'https://inaturalist-open-data.s3.amazonaws.com/photos/{i}/square.jpg',license_code='cc0',attribution='Author',original_dimensions={'width':900,'height':1200})
+        return dict(id=i,quality_grade='research',taxon={'preferred_common_name':name} if name else {},photos=[p])
+    rows=[row(i,'House Finch') for i in range(1,5)]+[row(5,'Costa Hummingbird'),row(6,'Anna Hummingbird'),row(7,None)]
+    out=F.inaturalist('hummingbird bird',transport=T({'results':rows}))
+    assert {c['source_id'] for c in out[:2]}=={'5','6'}
+    assert len(out)==4 and len({c['source_id'] for c in out})==4
+    assert F.inaturalist('bird',transport=T({'results':[row(7,None)]}))[0]['titulo']=='Observation 7'

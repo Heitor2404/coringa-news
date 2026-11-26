@@ -1,0 +1,39 @@
+name: E319 - protecao de fonte e replanejamento com acervo real
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-replanejamento-e319.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: e319-replanejamento
+  cancel-in-progress: false
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - name: Validar contratos e regressao
+        run: |
+          python -m pip install -q -r requirements.txt pytest beautifulsoup4
+          python -m pytest -q tests/test_cortes_revisados_e302.py tests/test_replanejamento_e319.py tests/test_fonte_relacionada_e317.py tests/test_documentario_integral_e254.py
+      - name: Examinar alternativas autenticadas sem novas aquisicoes
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_replanejamento_e319
+      - name: Preservar folhas e relatorio privados
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e319
+          python scripts/espelhar_revisao_cofre.py "e319-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/replanejamento.json" "$root"/fonte-*.jpg

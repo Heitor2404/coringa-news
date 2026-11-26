@@ -227,4 +227,6 @@ def plano(case,chosen,tempos):
             'necessidades_direcao':[{'id':i,'fatos':chosen[i]['need']['fatos'],'mostrar':chosen[i]['need']['mostrar'],'papel_visual':chosen[i]['need'].get('papel_visual','a_definir'),'evidencia_visual':chosen[i]['need'].get('evidencia_visual'),'preferencia_midia':chosen[i]['need'].get('preferencia_midia','adequada_ao_fato')} for i in (s['id'] for s in shots)]}
     for i,m in maps:
         result=B.inserir_no_filme(result,i,Path(m['local_source']),Path(m['atlas_proof']),m.get('intencao','localizar'))
+    from . import comparacao_documental_e311 as C
+    result['comparacoes_documentais']=C.aplicar(case,chosen,result)
     return result

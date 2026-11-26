@@ -66,8 +66,9 @@ def diagnosticar(plan):
     if all_passive:issues.append('SLIDESHOW_PASSIVO_INTEGRAL')
     if longest>8:issues.append('SEQUENCIA_FOTOGRAFICA_LONGA_REVISAR')
     if rows[0]['passive_photo']:issues.append('GANCHO_VISUAL_REVISAR')
+    pairs=plan.get('comparacoes_documentais') or []
     tasks=tarefas_replanejamento(rows)
-    return {'schema':'coringa.short.triage.v1','tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'publicar':False,
+    return {'schema':'coringa.short.triage.v1','tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'comparacoes_documentais':pairs,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),

@@ -55,6 +55,7 @@ export type FilmShot = {
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
+  documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
@@ -306,7 +307,7 @@ const centeredLandscape=(shot:FilmShot):DocLayout|null=>{
   // embedded attribution and action before any publication approval.
   return {...full,mode:'CENTERED_CROP_REVIEW',media:stage,protected:[],roiStatus:'UNKNOWN_REVIEW',centeredFit:'cover'};
 };
-const documentaryLayout=(shot:FilmShot):DocLayout=>{
+const baseDocumentaryLayout=(shot:FilmShot):DocLayout=>{
   const centered=centeredLandscape(shot);
   if(centered)return centered;
   const media=originalDocumentaryPixelRect(shot),observed=documentaryProtected(shot,media);
@@ -327,6 +328,20 @@ const documentaryLayout=(shot:FilmShot):DocLayout=>{
   const separateStage=[0,0,1080,900],dims=shot.source_dimensions||[16,9];
   const pixels=containPixels(separateStage,dims.every(v=>Number.isFinite(v)&&v>0)?dims:[16,9]);
   return {mode:'INTEGRAL_PROTECTED',slots:stackedDocSlots(910),media:pixels,protected:[pixels],roiStatus:'FULL_SOURCE_PROTECTED',separateStage};
+};
+// E303: preserve actual media geometry, try conservative text positions only.
+ // Unknown ROI is still an editorial risk, not a verified safe overlay.
+const UI_TRIAL={brand:[150,300,500,338],section:[150,347,760,397],
+  source:[150,402,760,478],subtitle:[150,1128,760,1238]} as const;
+const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
+  const base=baseDocumentaryLayout(shot);
+  if(!shot.documentary_safe_trial)return base;
+  const candidates:DocSlots[]=[UI_TRIAL,{...UI_TRIAL,subtitle:[150,490,760,600]}];
+  for(const slots of candidates){
+    if(docRects(slots).every(r=>base.protected.every(b=>!intersects(r,b))))
+      return {...base,slots,safeTrialStatus:'CANDIDATE_GEOMETRY'};
+  }
+  return {...base,safeTrialStatus:'BLOCKED_EVIDENCE'};
 };
 const documentaryPixelRect=(shot:FilmShot):readonly number[]=>documentaryLayout(shot).media;
 const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(documentaryPixelRect(shot),rect);
@@ -371,7 +386,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null};
+      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
@@ -901,6 +916,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
+  if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');
   if(animation_policy_mode!==undefined&&animation_policy_mode!=='EDITORIAL'&&!legacyQA)

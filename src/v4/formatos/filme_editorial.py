@@ -872,7 +872,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:

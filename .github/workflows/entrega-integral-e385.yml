@@ -1,0 +1,58 @@
+name: E385 - entrega privada do filme integral ja renderizado
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/entrega-integral-e385.yml']
+permissions:
+  contents: read
+concurrency:
+  group: entrega-integral-e385
+  cancel-in-progress: false
+jobs:
+  entrega:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install -q requests
+      - name: Recuperar somente o checkpoint privado autenticado
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          set -euo pipefail
+          repo=Heitor2404/coringa-cofre
+          test "$(gh api "repos/$repo" --jq '.private and (.id == 1454059520)')" = true
+          mkdir -p stage_documental/e385
+          gh release download review-e376-45907502601-1 --repo "$repo" --pattern filme-integral-preto.mp4 --pattern integral-audit.json --pattern props-candidate.json --dir stage_documental/e385
+          cd stage_documental/e385
+          sha256sum -c <<'EOF'
+          e9f961c2d2257aa8946819da44ddc28f1cb52ffa1238eb0e4f77f5ec10ea74bf  filme-integral-preto.mp4
+          dc203b9396162b2de885f59d9f8dc94aafcd57d4ebeb67b32b10687f118def88  integral-audit.json
+          8fbe773cc82a6f0c63ad58c48e90f79deee9d4dfde6d5cec3b9b2dd4b529612e  props-candidate.json
+          EOF
+          mv filme-integral-preto.mp4 filme.mp4
+          mv props-candidate.json props.json
+      - name: Validar contrato privado e identidade do filme
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          from scripts.documentario_telegram import validar
+          p=Path('stage_documental/e385')
+          a=json.loads((p/'integral-audit.json').read_text())
+          assert a['publish'] is False and a['status']=='RENDERED_PRIVATE_FULL' and a['audio_packets_identical'] is True and a['full_documentary'] is True
+          assert a['sha256']==hashlib.sha256((p/'filme.mp4').read_bytes()).hexdigest()
+          q=dict(publish=False,visual_approval='PENDING',voice_approval='PENDING',duration=a['duration_s'],video_sha256=a['sha256'],props_sha256=hashlib.sha256((p/'props.json').read_bytes()).hexdigest())
+          (p/'qa.json').write_text(json.dumps(q))
+          validar(p)
+          PY
+      - name: Entregar no destino privado existente
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m scripts.documentario_telegram stage_documental/e385 --titulo "Kilauea - filme integral de revisao E379"

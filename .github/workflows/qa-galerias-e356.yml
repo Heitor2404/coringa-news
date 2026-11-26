@@ -1,0 +1,28 @@
+name: E356-E357 - galerias NOAA NIST sem IA
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-galerias-e356.yml','src/v4/galerias_oficiais_e356.py','tests/test_galerias_oficiais_e356.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+      - run: python -m pytest -q tests/test_galerias_oficiais_e356.py
+      - run: python -m scripts.qa_galerias_e356
+      - name: Preservar relatorio privado
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          if [[ -s stage_documental/e356/gallery-audit.json ]]; then
+            python scripts/espelhar_revisao_cofre.py "e356-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e356/gallery-audit.json
+          fi

@@ -1,0 +1,29 @@
+{
+  "publish": false,
+  "candidates": [
+    {
+      "need": "fissura_ativa_maio",
+      "slug": "kilauea-east-rift-zone-eruption-may-5-2018",
+      "label": "Fissura em atividade na rua Luana",
+      "scope": "Registro de atividade em 5 de maio, não afirma instante de abertura nem evacuação.",
+      "credit": "USGS Hawaiian Volcano Observatory · University of Hawaii",
+      "type": "video"
+    },
+    {
+      "need": "fragmentos_fissura_maio",
+      "slug": "kilauea-volcano-fissure-8-video-compilation",
+      "label": "Atividade da fissura 8 em 30 de maio",
+      "scope": "Compilação com atividade e material resfriado depositado na rua; revisar janela e não confundir queda de fragmentos com movimento observado.",
+      "credit": "USGS · Hawaiian Volcano Observatory",
+      "type": "video"
+    },
+    {
+      "need": "fonte_lava_contexto",
+      "slug": "kilauea-volcano-fissure-8-lava-fountaining",
+      "label": "Fonte de lava da fissura 8 em junho",
+      "scope": "Registro de 5 de junho: usar apenas como contexto posterior, nunca como prova da abertura em maio.",
+      "credit": "USGS · Hawaiian Volcano Observatory",
+      "type": "video"
+    }
+  ]
+}

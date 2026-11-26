@@ -22,7 +22,16 @@ def probe(p):
     q=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=width,height:format=duration','-of','json',str(p)]))
     v=q['streams'][0];return v['width'],v['height'],float(q['format']['duration'])
 
-def acquire(row):
+def validar_origem_video(w,h,dur,*,min_duration=9.):
+    if not all(isinstance(v,(int,float)) and not isinstance(v,bool) and math.isfinite(v) and v>0 for v in (w,h,dur,min_duration)):
+        raise ValueError('E301-METADADOS')
+    if min(w,h)<F.MIN_VIDEO_COMPOSITION_PX:
+        raise ValueError(f'E219-RESOLUCAO {w}x{h}; duracao={dur:.3f}s; minimo={F.MIN_VIDEO_COMPOSITION_PX}px')
+    if dur<min_duration:
+        raise ValueError(f'E219-DURACAO {dur:.3f}s; resolucao={w}x{h}; minimo={min_duration:.3f}s')
+
+
+def acquire(row,*,min_duration=9.):
     slug,label=row
     if not re.fullmatch('[a-z0-9-]+',slug):raise ValueError('E219-SLUG')
     page='https://www.usgs.gov/media/videos/'+slug
@@ -45,7 +54,7 @@ def acquire(row):
                     if n>250_000_000:raise ValueError('E219-LIMITE')
                     f.write(b)
         w,h_,dur=probe(tmp)
-        if min(w,h_)<700 or dur<9:raise ValueError('E219-RESOLUCAO/DURACAO')
+        validar_origem_video(w,h_,dur,min_duration=min_duration)
         checksum=sha(tmp);path=STAGE/(checksum+'.mp4')
         tmp.replace(path)
         return {'id':slug,'label':label,'subject':h.get_text(' ',strip=True),
@@ -97,13 +106,19 @@ def frame(p,t,*,width=240):
     z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf',f'scale={width}:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)
     return Image.open(io.BytesIO(z)).convert('RGB')
 
-def windows(m,span,*,review_technical=False):
+def windows(m,span,*,review_technical=False,allow_short=False):
     # Samples verify readable bytes/no near-black or uniform frames only.
     # They do NOT prove the semantic action. Short cuts preserve native time.
     out=[];p=m['local_source'];dur=m['duration_s']
     from src.v4.formatos import direcao_eventos as DE
     candidates=[]
-    for a in range(2,min(80,int(dur-span-1)),5):
+    starts=list(range(2,min(80,int(dur-span-1)),5))
+    if allow_short:
+        # Review the start and final feasible native window too. Never loop,
+        # stretch or pad a short clip to simulate additional motion.
+        if dur>=span+.1:
+            starts=sorted(set([0.,*starts,min(79.,max(0.,dur-span-.1))]))
+    for a in starts:
         try:
             ims=[frame(p,a+span*f) for f in (.12,.5,.86)]
             if all(ImageStat.Stat(x.convert('L')).mean[0]>9 and ImageStat.Stat(x.convert('L')).stddev[0]>10 for x in ims):

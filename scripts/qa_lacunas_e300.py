@@ -13,10 +13,10 @@ def main():
     for i,c in enumerate(spec['candidates']):
         r={'candidate':c,'status':'REJECTED','semantic_review':'PENDING','publish':False}
         try:
-            m=E.acquire((c['slug'],c['label']))
+            m=E.acquire((c['slug'],c['label']),min_duration=3.9)
             m['credit']=c['credit']
             r['media']=m
-            ww=E.windows(m,3.8,review_technical=True)[:3]
+            ww=E.windows(m,3.8,review_technical=True,allow_short=True)[:3]
             r['windows']=[]
             if not ww:raise ValueError('E300-SEM-JANELAS')
             board=Image.new('RGB',(960,220*len(ww)),'#161719')

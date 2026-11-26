@@ -59,6 +59,7 @@ export type FilmShot = {
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
+  documentary_composition_v2?: boolean; // E328 private verified preflight
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
@@ -354,8 +355,47 @@ const baseDocumentaryLayout=(shot:FilmShot):DocLayout=>{
  // Unknown ROI is still an editorial risk, not a verified safe overlay.
 const UI_TRIAL={brand:[150,300,500,338],section:[150,347,760,397],
   source:[150,402,760,478],subtitle:[150,1128,760,1238]} as const;
+// E328: resolve geometry and text together. No fabricated evidence or blind
+// cover enlargement. Keep the baseline if the conservative candidate fails.
+const COMPOSITION_V2_SLOTS={brand:[150,300,500,334],section:[150,341,760,385],source:[150,391,760,513],subtitle:[150,1128,760,1238]} as const;
+const V2_LOWER=stackedDocSlots(910);
+const conservativeSlots=(s:DocSlots):DocSlots=>({
+  brand:[150,s.brand[1],500,s.brand[3]],section:[150,s.section[1],760,s.section[3]],
+  subtitle:[150,s.subtitle[1],760,s.subtitle[3]],source:[150,s.source[1],760,s.source[3]]});
+const withinProfile=(r:readonly number[])=>r[0]>=150&&r[1]>=300&&r[2]<=770&&r[3]<=1240;
+const fitsEvidence=(slots:DocSlots,boxes:readonly number[][])=>docRects(slots).every(r=>withinProfile(r)&&boxes.every(b=>!intersects(r,b)));
+const compositionV2=(shot:FilmShot,base:DocLayout):DocLayout&{safeTrialStatus?:string}=>{
+  const dims=shot.source_dimensions;
+  if(!dims||dims.length!==2||!dims.every(v=>Number.isFinite(v)&&v>0))return {...base,safeTrialStatus:'V2_UNKNOWN_DIMENSIONS'};
+  const [w,h]=dims;
+  if(base.centeredFit==='cover'&&base.roiStatus==='OBSERVED'&&!shot.documentary_integral_required){
+    // Keep actual existing crop and camera positions. Try text lanes only.
+    const candidates=[COMPOSITION_V2_SLOTS,conservativeSlots(stackedDocSlots(300)),conservativeSlots(V2_LOWER)];
+    for(const slots of candidates)if(fitsEvidence(slots,base.protected))return {...base,slots,safeTrialStatus:'V2_OBSERVED_CROP'};
+  }
+  if(w>h){
+    // A full-width 16:9 original fits at 607.5px. Panoramas are never
+    // stretched. Taller originals retain the old layout if loss exceeds 10%.
+    const stage=[0,517,1080,1124],pixels=containPixels(stage,dims);
+    const original=containPixels([0,480,1080,1380],dims);
+    const area=(r:readonly number[])=>(r[2]-r[0])*(r[3]-r[1]);
+    if(area(pixels)>=.9*area(original)&&fitsEvidence(COMPOSITION_V2_SLOTS,[pixels]))
+      return {mode:'CENTERED_INTEGRAL',slots:COMPOSITION_V2_SLOTS,media:pixels,protected:[pixels],
+        roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stage,centeredFit:'contain',safeTrialStatus:'V2_INTEGRAL_SAFE'};
+    // Unknown crop is not accepted as the default for the new opt-in.
+    if(base.roiStatus==='UNKNOWN_REVIEW'&&base.centeredFit==='cover')
+      return {...base,mode:'CENTERED_INTEGRAL',media:original,protected:[original],
+        roiStatus:'FULL_SOURCE_PROTECTED',centeredFit:'contain',safeTrialStatus:'V2_INTEGRAL_UI_PENDING'};
+  }
+  if(base.roiStatus==='OBSERVED'){
+    for(const slots of [COMPOSITION_V2_SLOTS,conservativeSlots(stackedDocSlots(300)),conservativeSlots(V2_LOWER)])
+      if(fitsEvidence(slots,base.protected))return {...base,slots,safeTrialStatus:'V2_OBSERVED_TEXT'};
+  }
+  return {...base,safeTrialStatus:'V2_UI_OR_EVIDENCE_PENDING'};
+};
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=baseDocumentaryLayout(shot);
+  if(shot.documentary_composition_v2)return compositionV2(shot,base);
   if(!shot.documentary_safe_trial)return base;
   const candidates:DocSlots[]=[UI_TRIAL,{...UI_TRIAL,subtitle:[150,490,760,600]}];
   for(const slots of candidates){
@@ -447,7 +487,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
       actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
-    if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:documentaryPixelRect(shot),text,...bounds}));
+    if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:layout.media,text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
   return <div ref={host} data-safe-role={role} data-documentary-text={role} data-documentary-credit={role==='source'?'full':undefined}
     data-doc-overlay={overlay?'review':'none'} style={{...rectStyle(rect),display:'flex',alignItems:'center',
@@ -1060,6 +1100,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
+  if(shots.some(s=>s.documentary_composition_v2)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');

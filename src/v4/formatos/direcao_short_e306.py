@@ -61,6 +61,8 @@ def diagnosticar(plan):
             'passive_photo':static,'integral_canvas_fraction':potential,
             'observed_photo_crop_candidate':crop is not None,
             'needs':['BUSCAR_ACAO_OU_DEMONSTRACAO_PERTINENTE','AVALIAR_IMERSAO_SEM_PERDA'] if static else ['VERIFICAR_O_QUE_OS_PIXELS_DEMONSTRAM']})
+    from . import imersao_documental_e328 as I
+    immersion=I.diagnosticar(plan,rows)
     all_passive=all(r['passive_photo'] for r in rows)
     issues=[]
     if all_passive:issues.append('SLIDESHOW_PASSIVO_INTEGRAL')
@@ -68,7 +70,7 @@ def diagnosticar(plan):
     if rows[0]['passive_photo']:issues.append('GANCHO_VISUAL_REVISAR')
     pairs=plan.get('comparacoes_documentais') or []
     tasks=tarefas_replanejamento(rows)
-    return {'schema':'coringa.short.triage.v1','tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'comparacoes_documentais':pairs,'publicar':False,
+    return {'schema':'coringa.short.triage.v1','imersao_documental':immersion,'tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'comparacoes_documentais':pairs,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),

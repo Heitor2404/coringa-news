@@ -8,6 +8,7 @@ on:
       - "src/v4/formatos/diretor_processos.py"
       - "src/v4/formatos/catalogo_mecanismos.py"
       - "src/v4/formatos/filme_editorial.py"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
       - "tests/test_diretor_roteiro_v2.py"
       - "docs/v4/formatos/QA_ROTEIRO_V2_TAIWAN_20261120.json"
       - "docs/v4/formatos/QA_ROTEIRO_V2_OXIDACAO_20261120.json"
@@ -76,12 +77,16 @@ jobs:
           cd motor4
           npm ci --no-audit --no-fund
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      # Legacy EUV was visually rejected. Automatic CI checks the route and
+      # compile; only an explicit dispatch may reproduce the laboratory render.
       - name: Renderizar só o processo com capacidade real disponível
+        if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 9
         run: |
           cd motor4
           npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_roteiro/prova_roteiro.mp4 --props=../qa_roteiro/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
       - name: Inspecionar duração e contato
+        if: github.event_name == 'workflow_dispatch'
         run: |
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
             sudo apt-get update -qq
@@ -104,7 +109,7 @@ jobs:
           (d/'resultado.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
           print(json.dumps(result,ensure_ascii=False))
           PY
-      - name: Guardar relatório e vídeo de laboratório
+      - name: Guardar relatório técnico e vídeo de laboratório se solicitado
         if: always()
         uses: actions/upload-artifact@v4
         with:

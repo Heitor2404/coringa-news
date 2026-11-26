@@ -454,3 +454,6 @@ E311 45839657293 e multitema 45839656924 SUCCESS. Quadros n0/n1 do cofre inspeci
 
 
 E312 d0d108e: regressão compositor 45840728463 acusou TS2339 safeTrialStatus ao combinar layout opcional do painel e layout existente. E312.1 mantém tipo opcional do campo de QA, sem alterar geometria ou regra visual. Reexecuções em consulta; não considerar E312 homologada antes de CI e inspeção do painel.
+
+
+E312.1 2925f94: prova 45840901727 SUCCESS (25 testes, tsc, render de três quadros e tipografia/espelho); quadro paired.jpg inspecionado em e311-45840901727-1 no cofre. Dois detalhes maiores, créditos legíveis, sem escala comum; sete medidas tipográficas aprovadas sem colisão com áreas protegidas. Não é documentário completo nem prova de sincronização de fala, e o painel deve ser seletivo. Regressões TS 45840901834, multitema 45840901893 e legadas 45840901716/45840901811 aprovadas. V2 45840728578 tinha todos os testes/preflight aprovados, falhou apenas em TS2339 e não foi reacionada por alteração .tsx; inclui-se dependência real do compositor no trigger. Mantém todos testes/triagem/preflight/compilação automáticos, render EUV já reprovado somente por workflow_dispatch explícito de laboratório (não repetir automaticamente). E17 e ação filmada em consulta. Sem novos gastos IA/TTS, sem main/publicação.

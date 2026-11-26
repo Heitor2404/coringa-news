@@ -46,6 +46,11 @@ def _pexels(q,session,key):
         if c:out.append(c)
     out.sort(key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))
     return {'status':'LEADS' if out else 'EMPTY','candidates':out[:4]}
+def stock_declarado_sintetico(text):
+    """Declared synthetic/illustrated stock is not real filming.
+    Missing tags remain pending human/visual review, not proof of authenticity."""
+    return bool(re.search(r'\b(?:ai[- _]?generated|generated (?:by|with) ai|artificial intelligence generated|generative ai|cgi|computer[- ]generated|3d render(?:ing)?|animation|animated|synthetic footage|gerad[oa] (?:por|com) ia)\b',str(text or ''),re.I))
+
 def pertinencia_stock(q,c):
     """Only provider tags; ignore format hints, never infer factual coverage."""
     from src.v4.formatos.revisao_documental import termos_consulta
@@ -68,7 +73,7 @@ def _pixabay(q,session,key):
     data=_get('https://pixabay.com/api/videos/',{'key':key,'q':q[:100],'per_page':20,'safesearch':'true','video_type':'film'},UA,session or requests.Session())
     out=[]
     for row in data.get('hits',[])[:20]:
-        if row.get('type') not in (None,'film') or re.search(r'\b(green screen|chroma|template|intro|overlay|countdown)\b',str(row.get('tags','')),re.I):continue
+        if stock_declarado_sintetico(row.get('tags')) or row.get('type') not in (None,'film') or re.search(r'\b(green screen|chroma|template|intro|overlay|countdown)\b',str(row.get('tags','')),re.I):continue
         page=row.get('pageURL');author=row.get('user')
         if not safe(page,PIXABAY_PAGE) or not isinstance(row.get('duration'),(int,float)) or row['duration']<3:continue
         variants=[]
@@ -96,7 +101,11 @@ def pexels(q,*,session=None,key=None,cache=None):
 def pixabay(q,*,session=None,key=None,cache=None):
     result=_cached('pixabay',q,session,key,cache,_pixabay,{'video_type':'film','per_page':20,'safesearch':True,'version':1})
     # Re-rank cached rows locally; don't reset the 24h cache version.
-    return {**result,'candidates':ordenar_stock(q,result.get('candidates') or [])}
+    eligible=[c for c in result.get('candidates') or [] if not stock_declarado_sintetico(c.get('title'))]
+    # Cache remains the original response for the required 24h; never force
+    # another request merely because a cached result was filtered locally.
+    return {**result,'status':('LEADS' if eligible else 'EMPTY') if result['status'] in ('LEADS','EMPTY') else result['status'],
+            'candidates':ordenar_stock(q,eligible),'declared_synthetic_filtered':len(result.get('candidates') or [])-len(eligible)}
 
 def pixabay_retrato(q,*,session=None,key=None,cache=None):
     """At most one alternate text query, never an invented orientation filter."""

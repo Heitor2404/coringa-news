@@ -32,30 +32,54 @@ def _search_form(soup,base,provider):
 def discover(q,provider,kind,*,transport=None):
     q=_query(q);conf=CONFIG[provider];t=transport or Transporte(max_http=4,max_bytes=9_000_000,max_wait=12)
     base='https://'+conf['host']+conf[kind]
-    raw=t.get(base,{conf['host']},3_000_000);soup=_soup(raw);form=_search_form(soup,base,provider)
+    raw=t.get(base,{conf['host']},3_000_000);soup=_soup(raw);initial_raw=raw;initial_soup=soup;form=_search_form(soup,base,provider)
     mode='VISIBLE_GALLERY_ONLY'
     if form:
         target,name=form;sep='&' if urlsplit(target).query else '?'
         raw=t.get(target+sep+urlencode({name:q}),{conf['host']},3_000_000)
         soup=_soup(raw);mode='GET_FORM_QUERY'
-    out=[];seen=set();terms=_tokens(q)
-    for a in soup.find_all('a',href=True):
-        u=urljoin(base,a['href']);title=a.get_text(' ',strip=True)
-        if not _page(u,provider,kind) or u in seen or not title:continue
-        if provider=='noaa':
-            # NOAA shares one path for photos and videos: require a typed card.
-            if title.lower() in ('watch video','view image'):
-                if (title.lower()=='watch video')!=(kind=='video'):continue
-            else:
-                parent=a.parent
-                marker=parent.get_text(' ',strip=True).lower() if parent else ''
-                if not re.search(r'\b'+('video' if kind=='video' else 'image')+r'\b',marker):continue
-        description=a.parent.get_text(' ',strip=True) if a.parent else title
-        # Local title/card overlap is just a bounded discovery hint.
-        if not terms.intersection(_tokens(title+' '+description+' '+urlsplit(u).path)):continue
-        seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
-        if len(out)>=4:break
+    def extract(soup,raw,mode):
+        out=[];seen=set();terms=_tokens(q)
+        for a in soup.find_all('a',href=True):
+            u=urljoin(base,a['href']);title=a.get_text(' ',strip=True)
+            if not _page(u,provider,kind) or u in seen or not title:continue
+            # A card can have a separate title, caption and action link.
+            # Never use an entire listing as context for a single item.
+            contexts=[title]
+            for node in list(a.parents)[:4]:
+                txt=node.get_text(' ',strip=True)
+                links={urljoin(base,x['href']) for x in node.find_all('a',href=True)
+                       if _page(urljoin(base,x['href']),provider,kind)}
+                if len(txt)>1400 or len(links)>1:break
+                if txt:contexts.append(txt)
+            description=contexts[-1]
+            if provider=='noaa':
+                label=title.lower()
+                if label in ('watch video','view image'):
+                    if (label=='watch video')!=(kind=='video'):continue
+                else:
+                    marker=description.lower()
+                    want='video' if kind=='video' else 'image'
+                    other='image' if kind=='video' else 'video'
+                    if not re.search(r'\b'+want+r'\b',marker) or re.search(r'\b'+other+r'\b',marker):continue
+            if not terms.intersection(_tokens(title+' '+description+' '+urlsplit(u).path)):continue
+            seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,description=description[:500],mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
+            if len(out)>=4:break
+        return out
+    out=extract(soup,raw,mode)
+    if not out and form:
+        # The original page is already available; no extra HTTP retry.
+        out=extract(initial_soup,initial_raw,'VISIBLE_GALLERY_FALLBACK')
+        if out:mode='VISIBLE_GALLERY_FALLBACK'
     return {'mode':mode,'status':'LEADS' if out else ('PARTIAL_NO_MATCH' if not form else 'EMPTY_QUERY'),'candidates':out}
+
+def candidatos(q,provider,kind,*,transport=None):
+    report=discover(q,provider,kind,transport=transport)
+    return [{'titulo':x['title'],'descricao':x.get('description') or '',
+             'url':x['page'],'pagina':x['page'],'source_id':x['page'],'credito':'','licenca':'',
+             'recibo_fonte':{'provider':provider+'_pagina','id':x['page'],'page':x['page'],
+                             'metadata_sha256':x['metadata_sha256'],'mode':x['mode']}}
+            for x in report['candidates']]
 def _credit(soup):
     for node in soup.find_all(string=re.compile(r'^\s*Credit\s*:?\s*$',re.I)):
         p=node.parent

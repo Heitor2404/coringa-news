@@ -185,6 +185,14 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
         choices,hosts=archive_receipt(c,t)
     elif c.get('fonte')=='usgs_pagina':
         choices,hosts=usgs_receipt(c,t)
+    elif c.get('fonte') in ('noaa_pagina','nist_pagina'):
+        from src.v4.galerias_oficiais_e356 import receipt,MEDIA
+        provider=c['fonte'].removesuffix('_pagina')
+        if c.get('pagina')!=c.get('source_id') or c.get('url')!=c.get('pagina'):raise ValueError('GALERIA_IDENTIDADE')
+        rec=receipt(c['pagina'],provider,c['tipo'],transport=t)
+        if rec['status']!='PRIVATE_RECEIPT_PENDING':raise ValueError('GALERIA_SEM_VARIANTE')
+        c.update(credito=rec['credit'],recibo_galeria=rec,direitos='REVISAR_PAGINA_INDIVIDUAL')
+        choices,hosts=rec['variants'],MEDIA[provider]
     elif c.get('fonte') in ('openverse','inaturalist'):
         from src.v4.fontes_publicas_e354 import receipt_choices
         choices,hosts=receipt_choices(c)

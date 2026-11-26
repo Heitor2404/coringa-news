@@ -1,0 +1,44 @@
+name: E360-E362 - rotas e aquisicao privada NOAA NIST
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-aquisicao-e361.yml','scripts/qa_aquisicao_e361.py','tests/test_rotas_expandidas_e360.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+      - name: Regressao e contratos de origem
+        run: python -m pytest -q tests/test_rotas_expandidas_e360.py tests/test_galerias_oficiais_e356.py tests/test_fontes_publicas_e354.py tests/test_acervo_documental_e246.py tests/test_fontes_contextuais_e359.py
+      - name: Aquisição privada com decodificacao
+        run: python -m scripts.qa_aquisicao_e361
+      - name: Preservar prova privada
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e361
+          if [[ -s "$root/acquisition.json" ]]; then
+            python scripts/espelhar_revisao_cofre.py "e361-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/acquisition.json" "$root"/*.jpg
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e361-originais-privados
+          path: stage_documental/e361/originais/
+          retention-days: 3
+          if-no-files-found: ignore

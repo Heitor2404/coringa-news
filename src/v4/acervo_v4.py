@@ -179,17 +179,18 @@ def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False, expan
     from src import acervo, midia
     from src.v4 import fontes_cientificas as FC
     from src.v4 import fontes_publicas_e354 as FP
+    from src.v4 import galerias_oficiais_e356 as GO
     if tipo=='video':
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
-                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+([('usgs_pagina',lambda q:FP.usgs(q,'video'))] if expandir else [])
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+([('usgs_pagina',lambda q:FP.usgs(q,'video')),('noaa_pagina',lambda q:GO.candidatos(q,'noaa','video'))] if expandir else [])
     if tipo=='foto':
         return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),
-                ('met',lambda q:acervo.f_met([q]))]+([('usgs_pagina',lambda q:FP.usgs(q,'foto')),('openverse',FP.openverse),('inaturalist',FP.inaturalist)] if expandir else [])
+                ('met',lambda q:acervo.f_met([q]))]+([('usgs_pagina',lambda q:FP.usgs(q,'foto')),('openverse',FP.openverse),('inaturalist',FP.inaturalist),('nist_pagina',lambda q:GO.candidatos(q,'nist','foto'))] if expandir else [])
     raise ValueError('E246-TIPO')
 
 
@@ -300,6 +301,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         if item.get('estado')=='MINIATURA_NAO_E_VIDEO':continue
         if analisar(item):
             return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
+    default_routes=fontes is None
     if fontes is None:
         fontes=lambda tipo:fontes_documentais(tipo,preferir_vertical=necessidade.get('preferir_imersao_vertical') is True,expandir=progressivo)
     # Interleave evidence types and sources. The second query reformulates
@@ -323,7 +325,15 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         # Discovery calls have a global budget independent of the retained
         # candidate cap. A crowded response must not suppress other routes.
         batches=[]
-        for _,_,_,ri,qi in schedule:
+        while schedule:
+            # Reserve one diversity opportunity after a weak start. Do not
+            # increase the existing search budget or change injected fixtures.
+            index=0
+            if default_routes and len(report['buscas'])>=2 and sum(x.get('novos',0) for x in report['buscas'])<2:
+                expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina'}
+                if not any(x['fonte'] in expanded for x in report['buscas']):
+                    index=next((i for i,(_,_,_,ri,qi) in enumerate(schedule) if qi==0 and rotas[ri][1] in expanded and (rotas[ri][0],rotas[ri][1],consultas[qi].casefold()) not in attempted),0)
+            _,_,_,ri,qi=schedule.pop(index)
             consulta=consultas[qi];tipo,nome,fn=rotas[ri]
             key=(tipo,nome,consulta.casefold())
             if key in attempted:continue

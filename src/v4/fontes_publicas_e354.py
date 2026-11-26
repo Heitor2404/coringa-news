@@ -11,7 +11,7 @@ LICENSES={'by':'CC BY','by-sa':'CC BY-SA','cc0':'CC0','pdm':'Public domain mark'
 def safe(url, hosts):
     try:
         u=urlsplit(url)
-        return isinstance(url,str) and u.scheme=='https' and u.hostname in hosts and not u.username and not u.password and u.port in (None,443) and not u.fragment
+        return isinstance(url,str) and u.scheme=='https' and bool(u.hostname) and u.hostname in hosts and not u.username and not u.password and u.port in (None,443) and not u.fragment
     except (TypeError,ValueError,AttributeError):return False
 
 def _query(q):
@@ -44,7 +44,10 @@ def openverse(q,*,transport=None):
         lic=_lic(row.get('license'),row.get('license_version'),row.get('license_url'))
         url=row.get('url');page=row.get('foreign_landing_url');author=row.get('creator');sid=row.get('id')
         # Restrict download origins, preserve the upstream landing page, not a thumbnail.
-        if not lic or not safe(url,OPENVERSE_HOSTS) or not isinstance(page,str) or not safe(page,{urlsplit(page).hostname}) or not author or not sid:continue
+        if not lic or not safe(url,OPENVERSE_HOSTS) or not isinstance(page,str) or not author or not sid:continue
+        try:
+            if not safe(page,{urlsplit(page).hostname}):continue
+        except ValueError:continue
         out.append({'titulo':row.get('title') or str(sid),'descricao':' '.join(str(x.get('name','')) for x in (row.get('tags') or [])[:8] if isinstance(x,dict)),
             'url':url,'pagina':page,'source_id':str(sid),'credito':str(author)+' ('+lic[0]+')','licenca':lic[0],'licenca_url':lic[1],
             'w':row.get('width'),'h':row.get('height'),'recibo_fonte':{'provider':'openverse','id':str(sid),'url':url,'page':page,'license_url':lic[1],'metadata_sha256':digest,'author':str(author)}})

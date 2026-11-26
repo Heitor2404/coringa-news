@@ -88,9 +88,13 @@ def quadro_do_meio(clipe: Path) -> bytes | None:
 
 
 # ───────────────────────── candidatos de cada fonte ─────────────────────────
-def _commons(busca: str, video: bool) -> list[dict]:
+def _commons(busca: str, video: bool, *, portrait_search=False) -> list[dict]:
     params = {'action': 'query', 'format': 'json', 'formatversion': 2, 'generator': 'search', 'gsrnamespace': 6,
               'gsrlimit': 15, 'gsrsearch': f'{busca} filetype:{"video" if video else "bitmap"}'}
+    if portrait_search and video:
+        # CirrusSearch file dimensions, a targeted subset of portrait formats.
+        # The original broad search remains independent and available.
+        params['gsrsearch']+=' filew:720,1080 fileh:>1280'
     filtro = 'LicenseShortName|LicenseUrl|Artist|Credit|Restrictions|AttributionRequired|ImageDescription|Source|Categories|DateTimeOriginal|DateTime'
     if video:
         params.update(prop='videoinfo', viprop='url|size|mime|extmetadata|derivatives', viurlwidth=640,
@@ -160,24 +164,29 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
     return out
 
 
-def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False) -> list[dict]:
+def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False, pesquisa_retrato=False) -> list[dict]:
     out = []
     try:
-        for p in _commons(busca, video=True):
+        for p in (_commons(busca, video=True, portrait_search=True) if pesquisa_retrato else _commons(busca, video=True)):
             info = (p.get('videoinfo') or [{}])[0]
             meta = info.get('extmetadata') or {}
             lic = _txt(meta, 'LicenseShortName')
             if not _relevante(p.get('title', ''), busca) or not _licenca_ok(lic):
                 continue
-            ders = [d for d in info.get('derivatives') or [] if d.get('src') and 360 <= (d.get('height') or 0) <= 1080]
-            ders.sort(key=lambda d: (-(d.get('height') or 0), 'webm' not in d.get('type', '')))   # a maior até 1080p
+            if preferir_vertical:
+                ders=[d for d in info.get('derivatives') or [] if d.get('src') and type(d.get('width')) is int and type(d.get('height')) is int and 360<=min(d['width'],d['height'])<=1080 and max(d['width'],d['height'])<=2560]
+                ders.sort(key=lambda d:(-min(d['width'],d['height']),'webm' not in d.get('type','')))
+            else:
+                ders = [d for d in info.get('derivatives') or [] if d.get('src') and 360 <= (d.get('height') or 0) <= 1080]
+                ders.sort(key=lambda d: (-(d.get('height') or 0), 'webm' not in d.get('type', '')))
             url = ders[0]['src'] if ders else info.get('url')
             if not url or (not ders and (info.get('size') or 0) > 150_000_000):
                 continue
             titulo = p['title'].removeprefix('File:').rsplit('.', 1)[0]
             alt = (ders[0].get('height') if ders else info.get('height')) or 0
             larg = (ders[0].get('width') if ders else info.get('width')) or 0
-            out.append({'tipo': 'video', 'url': url, 'thumb': info.get('thumburl'), 'descricao': titulo,
+            if pesquisa_retrato and not (alt>larg>=360):continue
+            out.append({'tipo': 'video', 'url': url, 'thumb': info.get('thumburl'), 'titulo': titulo,
                         'w': larg, 'h': alt, 'dur': float(info.get('duration') or 0), 'ano': _ano(meta),
                         'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
                         'pagina': info.get('descriptionurl'), 'licenca': lic,

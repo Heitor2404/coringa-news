@@ -183,7 +183,7 @@ def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False, expan
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
-                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+(rotas_publicas(tipo) if expandir else [])
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+(rotas_publicas(tipo) if expandir else [])+([('commons_video_retrato',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True,pesquisa_retrato=True))] if expandir and preferir_vertical else [])
     if tipo=='foto':
         return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
@@ -342,16 +342,18 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         def collect(row,raw):
             batch=[]
             for item in raw:
-                c=_candidato_documental(item,row['fonte'],row['tipo'])
+                c=_candidato_documental(item,'commons_video' if row['fonte']=='commons_video_retrato' else row['fonte'],row['tipo'])
                 if not c or c['url'] in vistos:continue
                 vistos.add(c['url']);c['consulta_origem']=row['consulta'];batch.append(c)
             row.update(estado='OK' if batch else 'SEM_NOVOS_CANDIDATOS',novos=len(batch),retidos=0,
-                       promissores=sum(candidato_promissor(necessidade,c) for c in batch))
+                       promissores=sum(candidato_promissor(necessidade,c) for c in batch),
+                       retrato_promissor=sum(candidato_promissor(necessidade,c) and c['tipo']=='video' and type(c.get('largura_declarada')) is int and type(c.get('altura_declarada')) is int and c['altura_declarada']>c['largura_declarada']>=360 for c in batch))
             report['buscas'].append(row)
             if batch:
                 from src.v4.formatos.revisao_documental import ordenar_candidatos
                 batches.append((row,iter(ordenar_candidatos(necessidade,batch))))
-        documental_budget=max_buscas-int(stock_context)
+        stock_context=stock_context and ('video','pixabay_contexto',consultas[0].casefold()) not in attempted
+        documental_budget=max_buscas-int(stock_context);portrait_used=False
         while schedule and len(report['buscas'])<documental_budget:
             index=0
             # Weak initial coverage: reserve a diversity opportunity without
@@ -376,6 +378,12 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                     if strength:options.append((-strength,i))
                 if options:
                     _,index=min(options);specialty_used=True;reason='AFINIDADE_FONTE'
+            if default_routes and necessidade.get('preferir_imersao_vertical') is True and not portrait_used and len(report['buscas'])>=2 and not weak and reason is None:
+                # Reserve one explicit portrait search only if broad results
+                # have not offered a usable portrait and budget still exists.
+                if not any(x.get('retrato_promissor',0) for x in report['buscas']):
+                    pi=next((i for i,x in enumerate(schedule) if x[-1]==0 and route_info(x)[1]=='commons_video_retrato' and route_info(x)[4] not in attempted),None)
+                    if pi is not None:index=pi;portrait_used=True;reason='ALTERNATIVA_RETRATO'
             entry=schedule.pop(index)
             tipo,nome,fn,consulta,key=route_info(entry)
             if key in attempted:continue

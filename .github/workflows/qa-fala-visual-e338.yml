@@ -1,0 +1,37 @@
+name: E338 - fila real de revisao do filme completo
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-fala-visual-e338.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - name: Testar vinculos e estados
+        run: |
+          python -m pip install -q pytest pillow requests
+          python -m pytest -q tests/test_auditoria_fala_visual_e338.py
+      - name: Organizar lacunas de filme existente
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_fala_visual_e338
+      - name: Espelhar fila privada
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          if [[ -s stage_documental/e338/queue.json ]]; then
+            python scripts/espelhar_revisao_cofre.py "e338-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e338/queue.json
+          fi

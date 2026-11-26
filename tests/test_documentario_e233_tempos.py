@@ -2,6 +2,13 @@
 import pytest
 from scripts import qa_documentario_geografia_e219 as E
 
+def test_e299_measured_obligation_is_not_semantic_approval():
+    shots=[dict(shot='a',chapter='A',start=0,end=2,source='x',source_sha256='s',source_in=7,source_out=9)]
+    rows=E.obrigacoes_visuais(shots,[dict(w='primeiro',s=0,e=1),dict(w='segundo',s=1,e=2),dict(w='fora',s=2,e=3)])
+    assert rows[0]['speech']=='primeiro segundo'
+    assert rows[0]['direct_evidence_verified'] is False
+
+
 def test_e298_coverage_gap_is_not_semantic_approval():
     spec={'chapters':[{'title':'A','videos':[['one','x'],['two','y']]},{'title':'Map','atlas':{}}]}
     report=E.lacunas_montagem(spec,{'one':{}},[{'chapter':'A','source':'one','revisit':False}])

@@ -7,7 +7,9 @@ def test_documentary_media_no_blurred_duplicate_and_adapts_source_aspect():
     assert 'rectStyle(integralMediaRect(shot))' in p
     assert "role==='source'?[30,24]" in p
     assert "getBoundingClientRect()" in p and "OVERFLOW_REVIEW" in p
-    assert "justifyContent:'center',textAlign:'center'" in p
+    # E298: legacy remains centered; authenticated private ATLAS aligns left.
+    assert "documentary_atlas_layout&&preview&&private_review_only?'flex-start':'center'" in p
+    assert "documentary_atlas_layout&&preview&&private_review_only?'left':'center'" in p
     assert "objectFit:'contain'" in p
 
 def test_photo_crop_uses_observed_region_not_theme_or_blind_center():

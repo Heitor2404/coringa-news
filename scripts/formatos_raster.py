@@ -186,7 +186,67 @@ def acabamento(jpg: Path, gama: float = .78, sat: float = 1.18, borda: float = .
     return out
 
 
-def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100):
+NE_LAND = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_land.geojson'
+
+
+def _terras_ne(bbox, cache_dir):
+    """Natural Earth 10 m land polygons (public domain) intersecting bbox; cached file outside Git."""
+    cache = Path(cache_dir) / '_ne_10m_land.geojson'
+    if not cache.is_file():
+        r = requests.get(NE_LAND, headers=UA, timeout=120); r.raise_for_status(); cache.write_bytes(r.content)
+    o, s, l, n = bbox
+    out = []
+    for f in json.loads(cache.read_text())['features']:
+        g = f['geometry']
+        polys = g['coordinates'] if g['type'] == 'MultiPolygon' else [g['coordinates']]
+        for poly in polys:
+            ring = poly[0]
+            xs = [c[0] for c in ring]; ys = [c[1] for c in ring]
+            if max(xs) >= o and min(xs) <= l and max(ys) >= s and min(ys) <= n:
+                out.append(ring)
+    return out
+
+
+def compor_oceano(s2, tile0, z, aneis, oceano, *, lat_ref, buffer_m=1500.):
+    """Keep Sentinel-2 over land + a coastal buffer; elsewhere use the bathymetric ocean base.
+
+    E284 diagnosis (Kilauea, raw EOX tiles): s2cloudless only images a coastal strip of ocean; beyond it EOX
+    composites a different dark ocean, which shows as a CURVED border (and swath seams) in the raw tiles themselves.
+    The bathymetric Blue Marble base already used at lower ATLAS zooms is the geographically consistent ocean.
+    `tile0` = (x0, y0) integer tile origin of the mosaic; rings are lon/lat land polygons (Natural Earth 10 m).
+    """
+    from PIL import ImageDraw
+    w, h = s2.size
+    mask = Image.new('L', (w, h), 0); d = ImageDraw.Draw(mask)
+    for ring in aneis:
+        pts = []
+        for lon, lat in ring:
+            lat = max(-85.0, min(85.0, lat))
+            x, y = tile_xy(lon, lat, z)
+            pts.append(((x - tile0[0]) * 256, (y - tile0[1]) * 256))
+        if len(pts) >= 3:
+            d.polygon(pts, fill=255)
+    mpp = 156543.03392 * math.cos(math.radians(lat_ref)) / 2 ** z
+    raio = max(1.0, buffer_m / mpp)
+    dil = np.asarray(mask.filter(ImageFilter.GaussianBlur(raio)), np.float32) > 4      # coastal buffer
+    alfa = Image.fromarray((dil * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(max(1.0, raio / 2)))
+    a = (np.asarray(alfa, np.float32) / 255)[..., None]
+    out = np.asarray(s2.convert('RGB'), np.float32) * a + np.asarray(oceano.convert('RGB').resize((w, h), Image.BICUBIC), np.float32) * (1 - a)
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)), float((np.asarray(mask) > 0).mean())
+
+
+def _oceano_bmng(bbox_tiles, z):
+    """Bathymetric Blue Marble (max z8) covering exactly the S2 mosaic extent."""
+    zb = min(8, z)
+    nw, se = bbox_tiles
+    img, cantos = mosaico(BMNG_BATI, [nw[0], se[1], se[0], nw[1]], zb, 'RGB')
+    bx0, by0 = tile_xy(cantos[0][0], cantos[0][1], zb)
+    ax, ay = tile_xy(nw[0], nw[1], zb); bx, by = tile_xy(se[0], se[1], zb)
+    box = ((ax - bx0) * 256, (ay - by0) * 256, (bx - bx0) * 256, (by - by0) * 256)
+    return img.crop(tuple(int(round(v)) for v in box))
+
+
+def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100, oceano=None):
     """Acquire a parameterized native raster, not an episode-specific template.
 
     No upsampled resolution claims. Only sources already in the ATLAS
@@ -226,9 +286,11 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     nw = tile_lonlat(int(x0), int(y0), z)
     se = tile_lonlat(int(x1) + 1, int(y1) + 1, z)
     corners = [list(nw), [se[0], nw[1]], list(se), [nw[0], se[1]]]
+    composicao = (oceano == 'batimetria' and dataset == 's2_2016')
     meta = {'nome': nome, 'tipo': 'satelite', 'cantos': corners, 'px': px,
+            **({'oceano': 'bmng_batimetria+ne_10m_land', 'buffer_costeiro_m': 1500} if composicao else {}),
             'px_por_grau_fonte': 256*2**z/360, 'arquivo': img.name, 'dataset': dataset,
-            'atribuicao': lic['atribuicao_exigida'],
+            'atribuicao': lic['atribuicao_exigida'] + (' · ' + atlas_ref.datasets()['bmng']['atribuicao_exigida'] + ' · Natural Earth' if composicao else ''),
             'fonte': {'url': modelo, 'licenca': lic['licenca'], 'zoom_tiles': z,
                       'bbox_pedido': list(bbox), 'tiles': count,
                       'escopo': 'base de referência; não comprova estado histórico'}}
@@ -246,6 +308,11 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     im, observed = mosaico(modelo, bbox, z, 'RGB')
     if list(im.size) != px or [list(point) for point in observed] != corners:
         raise ValueError('GEO-MOSAICO')
+    if composicao:
+        aneis = _terras_ne(bbox, out)
+        mar = _oceano_bmng((nw, se), z)
+        im, fracao_terra = compor_oceano(im, (int(x0), int(y0)), z, aneis, mar, lat_ref=(nw[1] + se[1]) / 2)
+        meta['fracao_terra'] = round(fracao_terra, 4)
     from tempfile import NamedTemporaryFile
     with NamedTemporaryFile(dir=out, suffix='.jpg', delete=False) as temp:
         pending = Path(temp.name)

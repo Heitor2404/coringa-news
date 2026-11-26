@@ -15,7 +15,7 @@ def test_plan_and_acquire_once(caso,monkeypatch):
     assert all(p['dataset']==('bmng' if p['zoom']<=8 else 's2_2016') for p in plans)
     assert any(p['dataset']=='s2_2016' for p in plans)
     calls=[]
-    def acquire(name,bbox,z,dataset):
+    def acquire(name,bbox,z,dataset,**kw):  # E284: aceita oceano=batimetria (composição do mar); finalidade preservada
         calls.append((name,z,dataset))
         return {'nome':name,'dataset':dataset}
     monkeypatch.setattr(G.R,'registrar_base_regional',acquire)

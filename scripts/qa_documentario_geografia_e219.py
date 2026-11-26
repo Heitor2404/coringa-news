@@ -201,6 +201,23 @@ def cortes_medidos(inicio,fim,words):
     cuts.append(fim)
     return cuts
 
+def obrigacoes_visuais(decisions, words):
+    """Bind each actual cut to the measured speech it must illustrate.
+    An exact speech span is not an observed fact or proof of coverage.
+    No unreviewed source may be marked as directly evidencing this span.
+    """
+    result=[]
+    for d in decisions:
+        a,b=d['start'],d['end']
+        relevant=[w for w in words if w['s']<b and w['e']>a]
+        result.append({'shot':d['shot'],'chapter':d['chapter'],'start':a,'end':b,
+            'speech':' '.join(w['w'] for w in relevant),
+            'source':d['source'],'source_sha256':d['source_sha256'],
+            'source_in':d['source_in'],'source_out':d['source_out'],
+            'status':'REVISAR_EVIDENCIA_POR_FALA','direct_evidence_verified':False})
+    return result
+
+
 def lacunas_montagem(spec, acquired, decisions):
     report=[]
     for ch in spec['chapters']:
@@ -444,6 +461,8 @@ def main():
     # A chapter with one available source is not semantically certified.
     write(out/'lacunas-montagem.json',{'publish':False,'semantic_review':'PENDING',
         'chapters':lacunas_montagem(spec,acquired,continuity_report)})
+    write(out/'obrigacoes-visuais.json',{'publish':False,'semantic_review':'PENDING',
+        'shots':obrigacoes_visuais(continuity_report,words)})
     result=F.preparar(plan,out/'documental',PUBLIC)
     props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
     groups=[]

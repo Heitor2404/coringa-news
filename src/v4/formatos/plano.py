@@ -1253,7 +1253,9 @@ def props(plano: dict, tokens: dict, geo: dict | None, imagens: dict) -> dict:
     for r in plano.get('rasters') or []:
         m = raster_info(r['nome'])
         rasters.append({'dataset': m.get('dataset'), 'nome': r['nome'], 'src': f"_formato/raster/{m.get('arquivo') or r['nome'] + '.jpg'}", 'cantos': m['cantos'], 'de': r.get('de'), 'ate': r.get('ate'),
-                        'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': m.get('ajuste') or {}})
+                        'atribuicao': m['atribuicao'], 'tipo': m.get('tipo', 'fisico'), 'ajuste': m.get('ajuste') or {},
+                        # E284: S2 mosaics with bathymetric ocean also credit Blue Marble (and NE land mask)
+                        **({'datasets_extra': ['bmng']} if m.get('oceano') else {})})
     return {'duracao': plano['duracao'], 'formato': plano['formato'], 'tokens': tokens, 'geo': geo, 'palco': plano['palco'], 'rasters': rasters,
             'composicoes': {k: {'quadro': v.get('quadro'), 'veu': v.get('veu')} for k, v in COMP.items()},
             'creditos': _creditos(plano), 'tecnico': plano.get('tecnico') or {}, 'seguro': seguro(plano.get('formato')),

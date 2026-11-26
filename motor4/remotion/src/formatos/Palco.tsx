@@ -248,7 +248,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const CR = P.creditos?.datasets || {};
   const rotaVis = (P.rotas || []).some((r: any) => !r.arco && t >= r.t0 && (r.some == null || t < r.some + .4));   // só o trajeto OSM exige ODbL
   const vis_ds = new Set<string>(['ne_vetor']);
-  rasters.forEach(r => { if (rampa(c.zoom, r.de, r.ate) > .02 && (r as any).dataset) { vis_ds.add((r as any).dataset); if ((r as any).dataset === 's2_2016') vis_ds.add('terrain_tiles'); } });
+  rasters.forEach(r => { if (rampa(c.zoom, r.de, r.ate) > .02 && (r as any).dataset) { vis_ds.add((r as any).dataset); if ((r as any).dataset === 's2_2016') vis_ds.add('terrain_tiles'); ((r as any).datasets_extra || []).forEach((d: string) => vis_ds.add(d)); } });
   if (rotaVis) vis_ds.add('osm_rota');
   // obrigatórias (licença) sempre; cortesia (domínio público) só se couber em 2 linhas da faixa própria
   const cx0 = P.creditos?.caixa || [72, 1174, 936, 46], pxc = (P.creditos as any)?.px || 18, lnc = (P.creditos as any)?.linha || 22;

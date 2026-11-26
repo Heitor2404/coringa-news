@@ -1,0 +1,59 @@
+{
+  "publish": false,
+  "entries": [
+    {
+      "publish": false,
+      "shot": "c5-0",
+      "donor": "c5-3",
+      "speech": "ENQUANTO ISSO NO TOPO DO KILAUEA O RESERVATÓRIO DE MAGMA PERDIA",
+      "sha256": "f593c35a9b0124a64329fb7cc7d4c992e9d2f11738eeb350304a9987b870d8d2",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-03.jpg",
+      "bbox": [
+        0,
+        0,
+        0.49,
+        0.448
+      ],
+      "kind": "SCHEME",
+      "label": "PAINEL A · ANTES DO COLAPSO",
+      "anchor": "TOPO",
+      "observation": "Painel A completo, com cabeçalho original e reservatório vermelho antes do colapso. Recorte inclui o texto original e todo o desenho; não mede volume."
+    },
+    {
+      "publish": false,
+      "shot": "c5-3",
+      "donor": "c5-3",
+      "speech": "E O COLAPSO NO TOPO FAZIAM PARTE DO MESMO PROCESSO",
+      "sha256": "f593c35a9b0124a64329fb7cc7d4c992e9d2f11738eeb350304a9987b870d8d2",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-03.jpg",
+      "bbox": [
+        0.51,
+        0,
+        1,
+        0.448
+      ],
+      "kind": "SCHEME",
+      "label": "PAINEL B · APÓS O COLAPSO",
+      "anchor": "FAZIAM",
+      "observation": "Painel B completo, com cabeçalho original e blocos rebaixados e espaços vazios acima do reservatório. Não é animação nem escala real."
+    },
+    {
+      "publish": false,
+      "shot": "c6-0",
+      "donor": "c6-0",
+      "speech": "NO TOTAL A LAVA COBRIU TRINTA E CINCO QUILÔMETROS QUADRADOS E MEIO",
+      "sha256": "b6ebc2d171849a048e5b514b56364ac725f7d57860e8b85fc59791519de961ff",
+      "review_ref": "revisoes/e320-45860199613-1/evidencia-00.jpg",
+      "bbox": [
+        0.58,
+        0.824,
+        0.766,
+        0.975
+      ],
+      "kind": "MAP",
+      "label": "35,5 KM² · QUADRO DO MAPA",
+      "anchor": "TRINTA",
+      "observation": "Quadro de dados já revisado em E325 informa a área dos fluxos e delta; recorte preserva o texto integral. Não é nova medição."
+    }
+  ]
+}

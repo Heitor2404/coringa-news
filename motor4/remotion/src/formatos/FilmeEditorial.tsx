@@ -54,7 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
-  documentary_static_reveal?: {at:number;label:string;bbox:number[];sha256:string;revisao_id:string;status:string;detail_zoom?:boolean;detail_gain?:number;overview_gain?:number};
+  documentary_static_reveal?: {at:number;label:string;bbox:number[];sha256:string;revisao_id:string;status:string;detail_zoom?:boolean;detail_gain?:number;overview_gain?:number;panel_focus?:boolean;panel_kind?:'SCHEME'|'MAP'};
   documentary_observed_label?: {at:number;label:string;sha256:string;revisao_id:string;status:string};
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
@@ -645,6 +645,17 @@ const detailZoomGeometry=(shot:FilmShot)=>{
     !Number.isFinite(p.at)||p.at<.8||p.at>shot.end-shot.start-.8||
     typeof p.label!=='string'||p.label.length>34)throw new Error('E325-DETAIL-CONTRACT');
   const [x,y,r,b]=p.bbox,[w,h]=dims,dw=(r-x)*w,dh=(b-y)*h;
+  // E346: exact source panel after a full-image introduction. No new pixels,
+  // no invented motion, no comparable-scale claim.
+  if(p.panel_focus===true){
+    if(!['SCHEME','MAP'].includes(p.panel_kind||'')||p.at<.8||(r-x)*(b-y)>.45)throw Error('E346-PANEL-CONTRACT');
+    const detail=containPixels([0,450,1080,1116],[dw,dh]);
+    const scale=(detail[2]-detail[0])/dw,previousScale=Math.min(1080/w,900/h);
+    if(scale/previousScale<1.4||Math.min(detail[2]-detail[0],detail[3]-detail[1])<300||
+       Math.abs(scale/previousScale-(p.detail_gain??0))>.001)throw Error('E346-PANEL-GAIN');
+    const layout:DocLayout={mode:'DETAIL_ZOOM_REVIEW',slots:DETAIL_ZOOM_SLOTS,media:detail,protected:[detail],roiStatus:'OBSERVED'};
+    return {overview:containPixels([0,450,1080,800],dims),detail,scale,layout};
+  }
   const overview=containPixels([0,450,1080,800],dims);
   const detail=containPixels([150,840,770,1120],[dw,dh]);
   const scale=(detail[2]-detail[0])/dw,previousScale=Math.min(1080/w,900/h);
@@ -657,6 +668,15 @@ const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>
   const p=shot.documentary_static_reveal!,dims=shot.source_dimensions!,{overview,detail,scale,layout}=detailZoomGeometry(shot);
   const [x,y,r,b]=p.bbox,[w,h]=dims;
   const ow=overview[2]-overview[0],oh=overview[3]-overview[1];
+  if(p.panel_focus===true)return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#08101A'}}>
+    <SignatureBackground/>
+    <div style={{...rectStyle(DETAIL_ZOOM_SLOTS.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
+    <MeasuredDocText role="section" shot={shot} rect={DETAIL_ZOOM_SLOTS.section} text={p.label} layoutOverride={layout} probe={probe}/>
+    <MeasuredDocText role="source" shot={shot} rect={DETAIL_ZOOM_SLOTS.source} text={(p.panel_kind==='SCHEME'?'Recorte do esquema · sem escala · ':'Recorte do mapa · ')+(shot.source_display||shot.source)} layoutOverride={layout} probe={probe}/>
+    <div data-detail-zoom="source-panel" style={{...rectStyle(detail),overflow:'hidden'}}>
+      <Img src={staticFile(shot.asset!)} style={{position:'absolute',left:-x*w*scale,top:-y*h*scale,width:w*scale,height:h*scale}}/>
+    </div>
+  </AbsoluteFill>;
   return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#08101A'}}>
     <SignatureBackground/>
     <div style={{...rectStyle(DETAIL_ZOOM_SLOTS.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>

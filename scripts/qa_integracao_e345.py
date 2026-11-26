@@ -79,7 +79,7 @@ def finish():
         batch=rows[i:i+3];board=Image.new('RGB',(810,504),'#111111');d=ImageDraw.Draw(board)
         for k,(sid,t,im) in enumerate(batch):board.paste(im,(270*k,24));d.text((270*k+5,5),f'{sid} {t:.1f}s',fill='white')
         board.save(ROOT/f'filme-contato-{i//3:02d}.jpg',quality=88)
-    times=[.5,2.2,3.6,34.5,56.7,66.3,73.53]
+    times=proof.get('comparison_times',[.5,2.2,3.6,34.5,56.7,66.3,73.53])
     for i,t in enumerate(times):
         board=Image.new('RGB',(540,504),'#111111');d=ImageDraw.Draw(board)
         for k,f in enumerate((base,dest)):board.paste(A.frame(f,t,width=270),(270*k,24));d.text((270*k+5,5),f'{"base" if k==0 else "novo"} {t:.2f}s',fill='white')

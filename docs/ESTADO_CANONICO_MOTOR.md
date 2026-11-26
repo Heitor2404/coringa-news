@@ -343,3 +343,6 @@ Rota E254: pacote opcional comparacoes_revisadas com par adjacente no mesmo cap�
 ## 382. E311 confirmada; E312 — comparação visual simultânea fundamentada
 
 E311 45839657293 e multitema 45839656924 SUCCESS. Quadros n0/n1 do cofre inspecionados: tecnicamente legíveis, porém apenas duas fotografias com títulos; não é ganho editorial suficiente. E312 mantém as duas vistas originais e acrescenta painel opcional na segunda metade da segunda cena, somente com regiões observadas explicitamente e vinculadas às revisões/SHA, crops independentes com margem, sem escala comum. Se região muito pequena, incompatível ou tempo insuficiente para ver as duas fases, manter montagem E311. Sem usar wipe antes/depois nem fazer animação decorativa. Reaproveita compositor FilmeEditorial, faixa de legenda e medição tipográfica. Prova privada com as mesmas fotos reais e caixas assistidas observadas nas escarpas e parede do Salto Ángel. Sem novas chamadas IA/TTS, sem main/publicação. CI e inspeção do painel pendentes; não é decisão autônoma de comparação.
+
+
+E312 d0d108e: regressão compositor 45840728463 acusou TS2339 safeTrialStatus ao combinar layout opcional do painel e layout existente. E312.1 mantém tipo opcional do campo de QA, sem alterar geometria ou regra visual. Reexecuções em consulta; não considerar E312 homologada antes de CI e inspeção do painel.

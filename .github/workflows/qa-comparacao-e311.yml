@@ -1,4 +1,4 @@
-name: E312 - painel observado de comparacao sem escala comum
+name: E312.1 - corrigir tipo do layout e validar comparacao
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

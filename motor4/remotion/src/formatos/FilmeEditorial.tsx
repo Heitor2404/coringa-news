@@ -403,7 +403,7 @@ const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(docu
 // Use the actual browser font metrics and wrapping, not character-count estimates.
 // Overflow at the readable floor is a diagnostic for editorial review, never silent ellipsis.
 const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot;rect:readonly number[];
-  text:string;children?:React.ReactNode;probe?:boolean;layoutOverride?:DocLayout}>=({role,shot,rect,text,children,probe=false,layoutOverride})=>{
+  text:string;children?:React.ReactNode;probe?:boolean;layoutOverride?:DocLayout&{safeTrialStatus?:string}}>=({role,shot,rect,text,children,probe=false,layoutOverride})=>{
   const host=React.useRef<HTMLDivElement>(null),inner=React.useRef<HTMLDivElement>(null);
   const size=role==='subtitle'?[52,36]:role==='source'?[30,24]:[30,22];
   const measuredLayout=layoutOverride??documentaryLayout(shot);

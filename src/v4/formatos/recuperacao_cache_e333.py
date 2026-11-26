@@ -22,6 +22,7 @@ def alternativa(need,candidate,validate,*,estrita=False):
             if s['estado']!='CANDIDATO_PERTINENTE':continue
             eligible.append({'pacote':p,'midia':media,'decisao':d,'selection':s})
         except (ValueError,KeyError,TypeError,AttributeError):continue
+    if not eligible:return None
     for ranked in DE.selecionar_revisados(eligible,fato_id=need['fatos'][0],preferir_legibilidade=bool(need.get('exigir_legibilidade'))):
         x=eligible[ranked['ordem']]
         c={**deepcopy(candidate),'decisao':x['decisao'],'selecao_janela':x['selection']}

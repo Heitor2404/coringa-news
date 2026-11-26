@@ -1,4 +1,4 @@
-name: E334 - recuperacao local estrita e diagnostico temporal
+name: E334.1 - recuperacao local estrita e diagnostico temporal
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

@@ -119,6 +119,12 @@ def main():
         return out
     from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE,reserva_janelas_e313 as RJ
     story_order={nid:i for i,nid in enumerate(nid for ch in case.get('chapters',[]) for nid in ch['needs'])}
+    def cache_documental(n):
+        from src import gemini
+        scope={'contrato':'E258.v1','sujeito':n.get('sujeito'),'mostrar':n['mostrar'],'fatos':n['fatos'],'id':n['id'],
+            'evidencia':n['evidencia_visual'],'direta':n.get('exigir_evidencia_direta',False),
+            'legibilidade':n.get('exigir_legibilidade',False),'modelos':list(gemini.MODELOS_LEVES)}
+        return 'documental:'+hashlib.sha256(json.dumps(scope,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     def inspect(c,n,*,cache_only=False):
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
@@ -160,11 +166,7 @@ def main():
             m['termos_necessidade']=[n.get('mostrar') or '',*((n.get('pesquisa') or {}).get('consultas_en') or [])]
         cache_key=None;cached=None
         if progressive:
-            from src import gemini
-            scope={'contrato':'E258.v1','sujeito':n.get('sujeito'),'mostrar':n['mostrar'],'fatos':n['fatos'],'id':n['id'],
-                'evidencia':n['evidencia_visual'],'direta':n.get('exigir_evidencia_direta',False),
-                'legibilidade':n.get('exigir_legibilidade',False),'modelos':list(gemini.MODELOS_LEVES)}
-            cache_key='documental:'+hashlib.sha256(json.dumps(scope,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+            cache_key=cache_documental(n)
             cached=lib.analise(meta['sha256'],cache_key)
             if c.get('fonte')=='biblioteca_v3':
                 # Restore declared attribution from the original receipt, not commercial approval.
@@ -530,12 +532,26 @@ def main():
             if integral and not (replay or revisar_acervo) and (not preview_pending or auto_chain):
                 from src.v4.formatos import replanejamento_e308 as RP
                 report={'case':case,'triagem':tri,'cobertura':results,'publish':False}
-                snapshots=[]
+                snapshots=[];recovery_diagnostics=[]
+                from src.v4.formatos import recuperacao_cache_e333 as RC
                 def alternative(n):
                     snapshots.append((used_pages.copy(),used_sha.copy(),video_reservations.copy()))
                     nid=n['id']
                     if n.get('evidencia_visual')=='movimento':
                         RJ.liberar_reserva_individual(nid,video_reservations,used_pages,used_sha)
+                        old=next((row for row in results if row['necessidade_id']==nid),{})
+                        candidate=RC.selecionado(old)
+                        if candidate:
+                            h=candidate['aquisicao']['sha256']
+                            cached=lib.analise(h,cache_documental(n)) or {}
+                            def reserve(need,c):
+                                res=RJ.propor(need,c,c['selecao_janela'],c['decisao'])
+                                if not RJ.compativel(res,video_reservations,pages=used_pages,hashes=used_sha):return False
+                                video_reservations[nid]=res
+                                used_sha.add(res['sha256']);used_pages.add(res['pagina'])
+                                return True
+                            recovered=RC.recuperar_reservada(n,old,E.frame,reserve,historicas=cached.get('janelas',[]),diagnosticos=recovery_diagnostics)
+                            if recovered:return recovered
                     return RP.fila_alternativa(n,states[nid],
                         lambda need,limit,attempted:search_progress(need,limit,attempted,somente_video=True),
                         lambda c,need:inspect(c,need,cache_only=calls>=budget),
@@ -551,6 +567,8 @@ def main():
                 # Recover exact-action refusals before optional photo upgrades.
                 # Same queue, shared remaining budgets, transactional reservations.
                 replanejamento=RP.reparar_acoes(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish)
+                if recovery_diagnostics:
+                    replanejamento.append({'estado':'DIAGNOSTICO_RECUPERACAO_LOCAL','tentativas':recovery_diagnostics,'publicar':False,'aprovacao_editorial':False})
                 if any(n.get('preferencia_midia')=='video_preferencial' for n in tri):
                     replanejamento.extend(RP.replanejar(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish))
                 for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)

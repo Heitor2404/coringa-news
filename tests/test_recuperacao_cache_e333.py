@@ -27,3 +27,22 @@ def test_alternative_requires_pixel_callback_and_preserves_original(monkeypatch)
     assert row['origem']=='JANELA_HISTORICA_REVALIDADA'
     assert row['rodadas'][0]['pesquisa']['candidatos'][0]['decisao']['revisao_id']=='new'
     assert c['decisao']['revisao_id']=='old' and not row['publicar']
+
+
+def test_strict_recovery_requires_same_explicit_correspondence(monkeypatch):
+    n,c,p=setup()
+    monkeypatch.setattr(C.R,'decidir',lambda *a,**k:{'estado':'PERTINENTE_PRIVADO','revisao_id':'new'})
+    monkeypatch.setattr(C.DE,'candidato_revisado',lambda *a,**k:{'estado':'CANDIDATO_PERTINENTE','revisao_id':'new'})
+    monkeypatch.setattr(C.DE,'selecionar_revisados',lambda *a,**k:[{'ordem':0}])
+    def forbidden(*a):raise AssertionError('legacy must not be promoted')
+    assert C.alternativa(n,c,forbidden,estrita=True) is None
+    statement={'estado':'direta','referente':'A visible object in the sample','mudanca':'A specific observed displacement','referencia_estavel':'Stable features in the background'}
+    q=p['revisao_assistida'];q['resposta_bruta']={'correspondencia_acao':statement};q['resposta_observada']={'correspondencia_acao':{**statement,'estado':'incerta'}}
+    assert C.alternativa(n,c,forbidden,estrita=True) is None
+    q['resposta_observada']['correspondencia_acao']=statement
+    assert C.alternativa(n,c,lambda *a:True,estrita=True)['origem']=='JANELA_HISTORICA_REVALIDADA'
+
+def test_selected_row_uses_latest_matching_video_only():
+    n,c,p=setup();c['decisao']['estado']='PERTINENTE_PRIVADO'
+    row={'selecionado':['commons','v'],'rodadas':[{'pesquisa':{'candidatos':[c,{**c,'source_id':'wrong'}]}}]}
+    assert C.selecionado(row) is c

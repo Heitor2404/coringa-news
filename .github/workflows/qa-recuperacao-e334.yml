@@ -1,0 +1,39 @@
+name: E334 - recuperacao local estrita e diagnostico temporal
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-recuperacao-e334.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - name: Regressoes agrupadas sem IA
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_diagnostico_movimento_e334.py tests/test_recuperacao_cache_e333.py tests/test_recuperacao_e332.py tests/test_replanejamento_e308.py tests/test_reserva_janelas_e313.py tests/test_especificidade_movimento_e331.py tests/test_pretriagem_e269.py tests/test_revisao_documental_e247.py tests/test_documentario_integral_e254.py
+      - name: Diagnostico real sem render nem nova visao
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_recuperacao_real_e333 --diagnostic-only
+      - name: Preservar diagnostico privado
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e334
+          if [[ -s "$root/replay.json" ]]; then
+            python scripts/espelhar_revisao_cofre.py "e334-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/replay.json"
+          fi

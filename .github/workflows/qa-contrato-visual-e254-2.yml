@@ -1,4 +1,4 @@
-name: E308 - replanejamento editorial dentro do orcamento existente
+name: E308.1 - reserva integral e regressao da ponte real
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

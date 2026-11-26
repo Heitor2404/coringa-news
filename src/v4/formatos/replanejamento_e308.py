@@ -42,10 +42,12 @@ def replanejar(report,preparar,buscar_alternativa,finalizar):
         index=next(i for i,r in enumerate(rows) if r['necessidade_id']==nid)
         old=rows[index]
         need=chosen[nid]['need']
-        alternative=buscar_alternativa(need)
+        alternative=None
         accept=False
+        error=None
         status='SEM_ALTERNATIVA_REVISADA'
         try:
+            alternative=buscar_alternativa(need)
             if alternative and alternative.get('estado')=='CANDIDATO_PRIVADO_REVISADO':
                 replacement={**alternative,'necessidade_id':nid,'fatos':need['fatos']}
                 trial=rows.copy();trial[index]=replacement
@@ -59,8 +61,14 @@ def replanejar(report,preparar,buscar_alternativa,finalizar):
                 if accept:
                     rows[index]=replacement
                     chosen,gate=next_chosen,next_gate
+        except Exception as exc:
+            # Optional editorial improvement cannot invalidate the existing
+            # coverage. Keep the error visible for targeted correction.
+            status='FALHA_REPLANEJAMENTO_RESERVA_PRESERVADA'
+            error=type(exc).__name__+':'+str(exc)[:160]
         finally:
             finalizar(accept)
         logs.append({**task,'estado':status,'reserva_foto':old.get('selecionado'),
-                     'alternativa':alternative,'publicar':False,'aprovacao_editorial':False})
+                     'cobertura_reserva':old,'alternativa':alternative,'erro':error,
+                     'publicar':False,'aprovacao_editorial':False})
     return logs

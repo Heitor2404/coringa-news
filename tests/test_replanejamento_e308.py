@@ -53,3 +53,43 @@ def test_preferred_photo_not_replaced():
     def forbidden(*a):raise AssertionError('unexpected call')
     logs=E.replanejar(report,lambda r:({'n':{'need':n,'kind':'photo'}},{'capacidade_s':3.8,'pronto_para_tts':False}),forbidden,forbidden)
     assert logs[0]['estado']=='REVISAO_EXPLICATIVA_PENDENTE'
+
+def test_optional_discovery_failure_preserves_full_original_receipt():
+    old={'necessidade_id':'n','selecionado':['commons','p'],'estado':'CANDIDATO_PRIVADO_REVISADO',
+         'rodadas':[{'receipt':'original scope'}]}
+    report={'cobertura':[old]};finished=[]
+    def fail(n):raise RuntimeError('provider unavailable')
+    logs=E.replanejar(report,lambda r:({'n':{'need':need(),'kind':'photo'}},{'capacidade_s':3.8,'pronto_para_tts':False}),fail,finished.append)
+    assert report['cobertura']==[old] and finished==[False]
+    assert logs[0]['estado']=='FALHA_REPLANEJAMENTO_RESERVA_PRESERVADA'
+    assert logs[0]['cobertura_reserva']==old and 'provider unavailable' in logs[0]['erro']
+
+def test_e308_actual_bridge_rechecks_hash_and_duration(tmp_path,monkeypatch):
+    # Synthetic review receipts/bytes: tests the real bridge, not media semantics.
+    from pathlib import Path
+    from hashlib import sha256
+    from src.v4.formatos import ponte_cobertura_filme as P
+    monkeypatch.chdir(tmp_path)
+    Path('stage_documental').mkdir()
+    n={**need(),'exigir_evidencia_direta':True}
+    def row(kind,bad=False):
+        name='p.jpg' if kind=='foto' else 'v.mp4'
+        path=Path('stage_documental')/name
+        path.write_bytes(name.encode())
+        h=sha256(path.read_bytes()).hexdigest()
+        c={'fonte':'commons','source_id':name,'tipo':kind,'pagina':'https://commons.wikimedia.org/wiki/File:'+name,
+           'credito':'Test fixture','licenca':'CC0','local_source':str(path),
+           'aquisicao':{'sha256':'0'*64 if bad else h,'width':1920,'height':1080,'duration_s':10},
+           'decisao':{'estado':'PERTINENTE_PRIVADO','necessidade_id':'n','revisao_id':'r','publicar':False,'direitos_aprovados':False}}
+        if kind=='video':c['selecao_janela']={'source_in_seconds':0,'duracao_s':3.8}
+        return {'necessidade_id':'n','estado':'CANDIDATO_PRIVADO_REVISADO','selecionado':['commons',name],
+                'rodadas':[{'pesquisa':{'candidatos':[c]}}]}
+    case={'chapters':[{'needs':['n']}]}
+    for bad in (False,True):
+        old=row('foto')
+        report={'publish':False,'triagem':[n],'cobertura':[old]}
+        finished=[]
+        logs=E.replanejar(report,lambda r:P.preparar_cobertura(r,case),lambda n:row('video',bad),finished.append)
+        assert finished==[not bad]
+        assert report['cobertura'][0]['selecionado'][1]==('p.jpg' if bad else 'v.mp4')
+        assert logs[0]['cobertura_reserva']==old

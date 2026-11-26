@@ -63,8 +63,9 @@ def object_hint(query,title,types):
         'model':r'\b(model|models|miniature|miniatures|scale model)\b',
         'coin':r'\b(coin|coins|medal|medals)\b',
         'sculpture':r'\b(sculpture|sculptures|maquette|maquettes|statuette|statuettes)\b',
+        'decorative':r'\b(bandbox|bandboxes|wall ?coverings?|wallpaper|wallpapers)\b',
     }
-    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints','painting','paintings'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'},'sculpture':{'sculpture','sculptures','maquette','maquettes','statuette','statuettes'}}
+    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints','painting','paintings'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'},'sculpture':{'sculpture','sculptures','maquette','maquettes','statuette','statuettes'},'decorative':{'bandbox','bandboxes','wall','covering','coverings','wallcovering','wallcoverings','wallpaper','wallpapers'}}
     # Do not infer physical size, authenticity, or referent from an absent type.
     for key,pattern in forms.items():
         matched=(bool(re.search(pattern,typed)) or bool(re.search(r'\b(scale model|miniature|miniatures)\b',title,re.I))) if key=='model' else bool(re.search(pattern,text))

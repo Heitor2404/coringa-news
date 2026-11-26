@@ -11,3 +11,10 @@ def test_reject_unrelated_or_unsafe_ark(guid):
 def test_maquette_is_a_representation_unless_requested():
     assert C.object_hint('steam engine photograph','Governor for Steam Engines',['Sculpture-Maquette'])=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
     assert C.object_hint('steam engine sculpture','Governor for Steam Engines',['Sculpture-Maquette'])=='SEM_INCOMPATIBILIDADE_DECLARADA'
+
+
+def test_decorative_object_soft_mismatch_without_rejecting_intended_subject():
+    types=['Bandboxes (containers)','Wall coverings']
+    assert C.object_hint('steam locomotive photograph','Steam Locomotive',types)=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
+    assert C.object_hint('bandbox steam locomotive','Steam Locomotive',types)=='SEM_INCOMPATIBILIDADE_DECLARADA'
+    assert C.object_hint('steam locomotive photograph','Cumberland Valley Railroad Steam Locomotive',['locomotive, full size'])=='SEM_INCOMPATIBILIDADE_DECLARADA'

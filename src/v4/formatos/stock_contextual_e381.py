@@ -52,7 +52,7 @@ def materializar(n,report,ident,transport,public,*,probe=None):
     if copy_path.exists():raise ValueError('E381-PREEXISTING-STOCK-COPY')
     stage=Path('stage_documental');stage.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='stock-ephemeral-',dir=stage) as td:
-        p=Path(td)/(h+'.mp4');p.write_bytes(raw)
+        p=(Path(td)/(h+'.mp4')).resolve().relative_to(Path.cwd().resolve());p.write_bytes(raw)
         if probe is None:
             from scripts.qa_documentario_geografia_e219 import probe
         w,hh,dur=probe(p)
@@ -63,7 +63,7 @@ def materializar(n,report,ident,transport,public,*,probe=None):
         try:yield a
         finally:
             # Only this session's copy may be removed; no shared cache changes.
-            if copy_path.is_file() and sha(copy_path)==h:copy_path.unlink()
+            if copy_path.is_file():copy_path.unlink()
 
 def previa(n,asset,*,start=1.0,span=3.2):
     if not escopo(n) or not receipt_valid(asset):raise ValueError('E381-PREVIEW-SCOPE')

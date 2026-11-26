@@ -22,7 +22,7 @@ def test_ephemeral_private_receipt_and_cleanup(tmp_path,monkeypatch):
         plan=S.previa(n,a)
         assert plan['shots'][0]['source_display'].startswith(S.LABEL)
         assert plan['shots'][0]['evidence']=='representative'
-        path=Path(a['local_source']);assert path.is_file()
+        path=Path(a['local_source']);assert path.is_file() and not path.is_absolute() and path.parts[0]=='stage_documental'
         copy=public/'film_editorial'/(a['expected_sha256']+'.mp4');copy.write_bytes(raw)
         bad={**n,'exigir_evidencia_direta':True}
         with pytest.raises(ValueError,match='E381'):S.previa(bad,a)
@@ -37,3 +37,15 @@ def test_synthetic_rejected():
     n,r,c,t,raw=fixture()
     c['title']='AI generated rain'
     with pytest.raises(ValueError,match='E381-CANDIDATE'):S.candidate_for(n,r,c['id'])
+
+
+def test_ephemeral_cleanup_on_render_error(tmp_path,monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    n,r,c,t,raw=fixture()
+    public=Path('public');(public/'film_editorial').mkdir(parents=True)
+    with pytest.raises(RuntimeError,match='render'):
+        with S.materializar(n,r,c['id'],t,public,probe=lambda p:(720,1280,10)) as a:
+            path=Path(a['local_source'])
+            copy=public/'film_editorial'/(a['expected_sha256']+'.mp4');copy.write_bytes(b'partial copy')
+            raise RuntimeError('render')
+    assert not path.exists() and not copy.exists()

@@ -108,6 +108,13 @@ def decidir(necessidade,candidato,revisao,*,tipo):
             if m is None or not m['suficiente']:
                 return {**result,'motivo':'DETALHE_PEQUENO_NA_AMOSTRA'}
     if necessidade.get('evidencia_visual')=='movimento':
+        from . import especificidade_movimento_e331 as M
+        fb=M.feedback(necessidade,sha,revisao['revisao_id'])
+        if fb:return {**result,'motivo':'REVISAR_ACAO_ESPECIFICA','feedback':fb}
+        specificity=M.avaliar(r)
+        result['correspondencia_acao']=specificity
+        if specificity['estado'] in ('FORMATO_INVALIDO','REVISAR_ACAO_ESPECIFICA'):
+            return {**result,'motivo':specificity['estado'] if specificity['estado']=='REVISAR_ACAO_ESPECIFICA' else 'FORMATO_CORRESPONDENCIA_ACAO_INVALIDO'}
         if tipo!='video':return {**result,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'}
         indices=r.get('indices_mudanca')
         if r.get('mudanca_observada') is not True or not isinstance(indices,list) or len(indices)!=2 or any(type(i) is not int for i in indices) or not 0<=indices[0]<indices[1]<=2 or not isinstance(r.get('descricao_mudanca'),str) or len(r['descricao_mudanca'].strip())<20:

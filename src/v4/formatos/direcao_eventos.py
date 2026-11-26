@@ -357,6 +357,7 @@ Dados: """+contexto
                  "Para movimento, pertinente exige mudança diretamente relacionada à necessidade. Não declare autenticidade pela aparência. "
                  "Tipo de evidência solicitado: "+evidencia_visual)
     if evidencia_visual=='movimento':
+        prompt+='\\nCorrespondencia_acao: use a chave correspondencia_acao com estado direta|parcial|incerta|nao_corresponde, referente, mudanca e referencia_estavel (frases concretas). Direta somente se a MESMA ação solicitada estiver discernível nos quadros e houver referência visual estável para separar mudança do sujeito de movimento da câmera. Uma ação diferente do mesmo sujeito é parcial, não direta. Se não houver referência estável, não invente; use incerta. Não confundir mudança amostrada com prova contínua.'
         prompt+='\\nCampo opcional rotulo_mudanca: até 34 caracteres, em português, descrição curta apenas da mudança observada nos índices indicados, sem causa, datas ou identidade inferidas. Omitir se não for possível resumir com fidelidade.'
     if exigir_evidencia_direta:
         prompt+='\nExija componente especifico legivel, nao mera associacao tematica. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico visivel que atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira de um quadro. Nao use lista nem troque eixos. Use null se nao localizavel; nao infira pelo assunto geral.'

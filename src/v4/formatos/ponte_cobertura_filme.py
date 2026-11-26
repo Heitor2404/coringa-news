@@ -125,6 +125,18 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,animacoes=None,m
         if kind=='photo' and n.get('evidencia_visual')=='movimento':
             issues.append({'id':i,'motivo':'FOTO_NAO_PROVA_MOVIMENTO'});continue
         window=c.get('selecao_janela') or {}
+        if kind=='video':
+            from . import especificidade_movimento_e331 as M
+            fb=M.feedback(n,a['sha256'],d['revisao_id'],window.get('source_in_seconds'))
+            if fb:
+                issues.append({'id':i,'motivo':'REVISAR_ACAO_ESPECIFICA','feedback':fb});continue
+            # Recheck explicitly declared correspondence when a historical
+            # selection was assembled before this contract existed.
+            q=next((x['pacote'].get('revisao_assistida',{}) for x in c.get('janelas',[])
+                if x.get('pacote',{}).get('revisao_id')==d['revisao_id']),{})
+            sp=M.avaliar(q.get('resposta_observada') or q.get('resposta') or {})
+            if n.get('evidencia_visual')=='movimento' and sp['estado'] in ('FORMATO_INVALIDO','REVISAR_ACAO_ESPECIFICA'):
+                issues.append({'id':i,'motivo':'REVISAR_ACAO_ESPECIFICA'});continue
         cap=3.8 if kind=='photo' else min(3.8,float(window.get('duracao_s') or 0))
         framing=None
         if kind=='video' and window.get('revisao_id')==d.get('revisao_id') and window.get('video_framing'):
@@ -176,7 +188,8 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,animacoes=None,m
         chosen[i]={'need':n,'candidate':c,'kind':kind,'cap':cap,'min':minimum,'window':window,'progressao':progression,'framing':framing,'rights':rights}
     capacity=sum(x['cap'] for x in chosen.values())
     if capacity<minimo_s:issues.append({'id':'filme','motivo':'CAPACIDADE_MENOR_MINIMO','segundos':capacity,'minimo_s':minimo_s})
-    return chosen,{'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),
+    from . import especificidade_movimento_e331 as M
+    return chosen,{'replanejamento_por_fato':M.fila([tri[i] for i in ids],issues),'pronto_para_tts':not issues,'total':len(ids),'cobertos':len(chosen),
                   'capacidade_s':round(capacity,3),'lacunas':issues,'publicar':False}
 
 def credito_em_tela(credito):

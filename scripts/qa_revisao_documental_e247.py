@@ -252,7 +252,7 @@ def main():
             # may still be explored; the last phase can still return to it. No call, no semantic negative.
             if progressive and not cache_only and calls<budget and n['evidencia_visual']=='movimento' and phase<1:
                 negs=sum(1 for row in AD.consolidar_janelas((cached or {}).get('janelas',[]),history['janelas'])
-                         if (row.get('decisao') or {}).get('motivo') in ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA'))
+                         if (row.get('decisao') or {}).get('motivo') in ('SEM_PERTINENCIA','MUDANCA_NAO_OBSERVADA','EVIDENCIA_DIRETA_NAO_LOCALIZADA','REVISAR_ACAO_ESPECIFICA'))
                 if negs>=3:
                     c['negativas_revisadas']=negs;c['revisao_adicional_possivel']=True
                     deferred_angles.append({'necessidade_id':n['id'],'sha256':meta['sha256'],'negativas':negs,'fonte':c.get('fonte')})

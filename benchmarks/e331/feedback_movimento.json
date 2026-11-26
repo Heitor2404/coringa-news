@@ -1,0 +1,23 @@
+{
+  "schema": "coringa.motion.feedback.private.v1",
+  "publish": false,
+  "records": [
+    {
+      "sha256": "cc825cc83cab417dc2b316344f488c080b4817dcef2d6e5f49792e3a5605e1fc",
+      "review_id": "d94ec580e6b94559223181e12fc39a6f610fa9527114d62ef542bbb4ce8d572f",
+      "necessidade_id": "n1",
+      "fatos": [
+        "f1"
+      ],
+      "mostrar": "lava incandescente deslocando-se em um canal, com mudança observável da posição do fluxo",
+      "source_in_seconds": 26.2379090909091,
+      "estado": "REVISAR_ACAO_ESPECIFICA",
+      "observacao": "Nos dois quadros do replay há fonte de lava e plumas com mudança de enquadramento; não fica demonstrado o deslocamento da frente do fluxo em relação ao canal. A tomada pode ser útil para outro fato; não afirmar ausência de fluxo no vídeo completo.",
+      "evidencias": [
+        "revisoes/e330-45876299427-1/lava-0.8.jpg",
+        "revisoes/e330-45876299427-1/lava-2.7.jpg"
+      ],
+      "publicar": false
+    }
+  ]
+}

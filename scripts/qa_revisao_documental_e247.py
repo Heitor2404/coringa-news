@@ -383,7 +383,7 @@ def main():
     try:
         if progressive:
             from src.v4 import acervo_v4 as A
-            reports=[];states={};results_by_id={};total_search=0;local_checked=set();pages_checked=set()
+            reports=[];states={};results_by_id={};total_search=0;local_checked=set();pages_checked=set();related_checked=set()
             curated=case.get('paginas_oficiais_curadas') or []
             if not isinstance(curated,list) or any(not isinstance(x,dict) or x.get('necessidade_id') not in {n['id'] for n in tri} for x in curated):raise ValueError('E263-CURADORIA')
             search_limit=32 if integral else 16
@@ -397,6 +397,13 @@ def main():
                         r={'id':n['id'],'buscas':[],'candidatos':local,'biblioteca':[],'publicar':False,'pronto_para_render':False}
                         reports.append(r);return r
                 if phase<0:return {'id':n['id'],'buscas':[],'candidatos':[],'biblioteca':[]}
+                if integral and not (replay or revisar_acervo or preview_pending) and calls<budget and n['id'] not in related_checked:
+                    from src.v4.formatos import fonte_relacionada_e317 as FR
+                    related_checked.add(n['id'])
+                    related=FR.pista(n,case,tri,results_by_id,acquired,story_order)
+                    if related:
+                        rr={'id':n['id'],'buscas':[],'candidatos':[related],'biblioteca':[],'origem':'FONTE_RELACIONADA_PENDENTE_NOVA_REVISAO','publicar':False,'pronto_para_render':False}
+                        reports.append(rr);return rr
                 if not replay and not revisar_acervo and n['id'] not in pages_checked:
                     pages_checked.add(n['id'])
                     pages=[Q.candidato_pagina_usgs(x,n) for x in curated if x['necessidade_id']==n['id']]

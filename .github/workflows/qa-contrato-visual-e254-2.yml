@@ -1,4 +1,4 @@
-name: E316.1 - evitar revisar janelas reservadas
+name: E317 - reaproveitar fonte factual para consequencia
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13', cache: pip}
       - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest
-      - run: python -m pytest -q tests/test_contrato_visual_e254_2.py tests/test_documentario_integral_e254.py tests/test_revisao_documental_e247.py tests/test_direcao_observacao_e239.py tests/test_cobertura_documental_e253.py tests/test_revisao_adaptativa_e248.py tests/test_acervo_documental_e246.py tests/test_acervo_recuperacao_e246.py tests/test_espelho_cofre_e254.py tests/test_direcao_short_e306.py tests/test_direcao_short_e307.py tests/test_replanejamento_e308.py tests/test_detalhe_e309.py tests/test_direcao_explicativa_e310.py tests/test_reserva_janelas_e313.py tests/test_relacao_e316.py
+      - run: python -m pytest -q tests/test_contrato_visual_e254_2.py tests/test_documentario_integral_e254.py tests/test_revisao_documental_e247.py tests/test_direcao_observacao_e239.py tests/test_cobertura_documental_e253.py tests/test_revisao_adaptativa_e248.py tests/test_acervo_documental_e246.py tests/test_acervo_recuperacao_e246.py tests/test_espelho_cofre_e254.py tests/test_direcao_short_e306.py tests/test_direcao_short_e307.py tests/test_replanejamento_e308.py tests/test_detalhe_e309.py tests/test_direcao_explicativa_e310.py tests/test_reserva_janelas_e313.py tests/test_relacao_e316.py tests/test_fonte_relacionada_e317.py

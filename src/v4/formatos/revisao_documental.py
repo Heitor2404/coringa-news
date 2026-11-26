@@ -256,7 +256,8 @@ def ordenar_candidatos(necessidade,candidatos):
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_aquisicao_mesmo_escopo') is True),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_historica') and c['pista_historica'].get('escopo')=={k:necessidade.get(k) for k in ('id','sujeito','mostrar','fatos','necessidade','evidencia_visual')} and c['pista_historica'].get('sha256')==c.get('sha_catalogo')),
                 not (c.get('fonte')=='biblioteca_v3' and c.get('pista_memoria_semantica') is True),
-                alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],-m['titulo'],
+                alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],
+                c.get('pista_objeto')=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE',-m['titulo'],
                 pref=='video_preferencial' and c.get('tipo')!='video',pref=='foto_preferencial' and c.get('tipo')!='foto',not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
                 not bool(c.get('source_id')),desempate_vertical(necessidade,c))

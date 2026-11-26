@@ -29,3 +29,10 @@ def test_noaa_generic_label_uses_explicitly_marked_slug():
     raw=b'<section><p>Octopus</p><a href="/multimedia/deep-sea-octopus/">Watch Video</a></section>'
     c=candidatos('octopus','noaa','video',transport=T(raw))[0]
     assert c['titulo']=='deep sea octopus' and c['recibo_fonte']['title_origin']=='PAGE_SLUG_NOT_OFFICIAL_TITLE'
+
+def test_subject_match_beats_unrelated_compatible_object_and_model_name():
+    rows=[item(1,'John Stevens','Painting'),item(2,'Woman walking','Photograph'),item(3,'Steam locomotive postage stamp','Stamp'),item(4,'Steam locomotive photograph','Photograph')]
+    out=smithsonian('steam locomotive photograph',transport=T({'response':{'rows':rows}}),key='fixture')
+    assert [c['titulo'] for c in out[:2]]==['Steam locomotive photograph','Steam locomotive postage stamp']
+    assert object_hint('Ford automobile','Ford Model T',['Automobile'])=='SEM_INCOMPATIBILIDADE_DECLARADA'
+    assert object_hint('steam locomotive','Portrait of engineer',['Painting'])=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'

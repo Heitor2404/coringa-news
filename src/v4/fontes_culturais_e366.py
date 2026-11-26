@@ -36,18 +36,32 @@ def object_hint(query,title,types):
     import re
     wanted=set(termos_consulta(query))
     text=' '.join(types+[title]).casefold()
+    typed=' '.join(types).casefold()
     forms={
         'stamp':r'\b(stamp|stamps|philatelic|postage|selos?)\b',
-        'drawing':r'\b(drawing|drawings|engraving|engravings|illustration|illustrations|print|prints)\b',
+        'drawing':r'\b(drawing|drawings|engraving|engravings|illustration|illustrations|print|prints|painting|paintings)\b',
         'model':r'\b(model|models|miniature|miniatures|scale model)\b',
         'coin':r'\b(coin|coins|medal|medals)\b',
     }
-    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'}}
+    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints','painting','paintings'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'}}
     # Do not infer physical size, authenticity, or referent from an absent type.
     for key,pattern in forms.items():
-        if re.search(pattern,text) and not (wanted&intended[key]):
+        matched=(bool(re.search(pattern,typed)) or bool(re.search(r'\b(scale model|miniature|miniatures)\b',title,re.I))) if key=='model' else bool(re.search(pattern,text))
+        if matched and not (wanted&intended[key]):
             return 'POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
     return 'SEM_INCOMPATIBILIDADE_DECLARADA'
+
+def object_rank(query,c):
+    from src.v4.formatos.revisao_documental import termos_consulta
+    # Requested format is a separate clue, not the subject itself.
+    forms={'photograph','photographs','photography','photo','photos','image','images','picture','pictures','record','archive','historical'}
+    wanted=set(termos_consulta(query))-forms
+    title=set(termos_consulta(c.get('titulo')))
+    desc=set(termos_consulta(c.get('descricao')))
+    coverage=len(wanted&(title|desc))/max(1,len(wanted))
+    tier=2 if coverage>=.6 else 1 if coverage>0 else 0
+    mismatch=c.get('pista_objeto')=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
+    return (-tier,mismatch,-coverage,-len(wanted&title))
 
 def smithsonian(q,*,transport=None,key=None,diagnostico=None):
     q=_query(q);key=key or os.getenv('DATA_GOV_API_KEY')
@@ -95,16 +109,13 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
                 recibo_fonte=dict(provider='smithsonian',id=sid,record_id=rid,media_id=mid,url=url,page=page,media_access='CC0',
                     metadata_sha256=digest,institution=institution,object_types=types,object_hint=hint,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
     from src.v4.formatos.revisao_documental import termos_consulta
-    wanted=set(termos_consulta(q))
-    def rank(c):
-        words=set(termos_consulta(c['titulo']+' '+c['descricao']))
-        return (c['pista_objeto']=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE',-len(wanted&words))
+    def rank(c):return object_rank(q,c)
     ordered=sorted(out,key=rank);first=[];extra=[];seen=set()
     for c in ordered:
         rid=c['recibo_fonte']['record_id']
         if rid in seen:extra.append(c)
         else:seen.add(rid);first.append(c)
-    result=sorted(first+extra,key=lambda c:rank(c)[0])[:4]
+    result=sorted(first+extra,key=rank)[:4]
     diag['eligible_media']=len(out);diag['retained']=len(result)
     diag['retained_possible_mismatch']=sum(c['pista_objeto']=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE' for c in result)
     return result

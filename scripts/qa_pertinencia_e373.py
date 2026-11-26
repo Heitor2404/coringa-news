@@ -1,7 +1,7 @@
 """Limited real follow-up, metadata only, no new stock queries or downloads."""
 import json
 from pathlib import Path
-from src.v4.fontes_culturais_e366 import smithsonian
+from src.v4.fontes_culturais_e366 import smithsonian,object_rank
 from src.v4.fontes_publicas_e354 import inaturalist,usgs
 from src.v4.galerias_oficiais_e356 import candidatos
 from src.v4.aquisicao_documental import Transporte
@@ -17,7 +17,7 @@ def main():
             cs=fn(q,transport=t)
             row.update(status='LEADS' if cs else 'EMPTY',count=len(cs),candidates=[
                 dict(title=c['titulo'],page=c['pagina'],object_types=c.get('tipo_objeto_declarado'),object_hint=c.get('pista_objeto'),
-                     title_origin=(c.get('recibo_fonte') or {}).get('title_origin')) for c in cs])
+                     title_origin=(c.get('recibo_fonte') or {}).get('title_origin'),object_rank=object_rank(q,c) if name=='smithsonian' else None) for c in cs])
         except Exception as e:row.update(status='ERROR',error=type(e).__name__)
         rows.append(row)
     proof=dict(publish=False,semantic_approval=False,metadata_only=True,new_ai=0,transport=t.resumo(),rows=rows)

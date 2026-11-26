@@ -325,7 +325,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         # candidate cap. A crowded response must not suppress other routes.
         from src.v4.descoberta_paralela_e363 import RotaPublica,onda
         batches=[];suspended=set();wave_used=False
-        expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina'}
+        expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina','smithsonian'}
         def route_info(entry):
             _,_,_,ri,qi=entry
             tipo,nome,fn=rotas[ri];consulta=consultas[qi]

@@ -1,6 +1,8 @@
-"""Optional stock discovery; contextual only, no download or permanent cache."""
+"""Optional stock discovery; contextual only, 24h metadata cache, no media cache."""
 import json
 import os
+import re
+from src.v4.cache_stock_e365 import CacheStock
 from urllib.parse import urlsplit
 import requests
 from src.v4.aquisicao_documental import UA
@@ -28,9 +30,7 @@ def _candidate(provider,row,variants,page,author,license_url,title):
     return dict(provider=provider,id=str(row['id']),page=page,author=author,license_url=license_url,
                 title=title,variant=v,variants=variants,kind='video',editorial_scope='CONTEXTO_APENAS',
                 rights='REVISAR_PAGINA_INDIVIDUAL',publish=False,semantic_approval=False,permanent_cache=False)
-def pexels(q,*,session=None,key=None):
-    q=_query(q);key=key or os.getenv('PEXELS_API_KEY')
-    if not key:return {'status':'CHAVE_AUSENTE','candidates':[]}
+def _pexels(q,session,key):
     data=_get('https://api.pexels.com/v1/videos/search',{'query':q,'orientation':'portrait','per_page':12},
               {**UA,'Authorization':key},session or requests.Session())
     out=[]
@@ -41,29 +41,45 @@ def pexels(q,*,session=None,key=None):
         for v in row.get('video_files',[])[:20]:
             w,h=v.get('width'),v.get('height');url=v.get('link')
             if v.get('file_type')!='video/mp4' or not safe(url,PEXELS_MEDIA) or not all(type(x) is int and x>=360 for x in (w,h)):continue
-            variants.append(dict(url=url,w=w,h=h))
+            variants.append(dict(url=url,w=w,h=h,size=v.get('size') if type(v.get('size')) is int and v['size']>0 else None))
         c=_candidate('pexels',row,variants,page,author,'https://www.pexels.com/license/',q)
         if c:out.append(c)
-        if len(out)>=4:break
-    return {'status':'LEADS' if out else 'EMPTY','candidates':out}
-def pixabay(q,*,session=None,key=None):
-    q=_query(q);key=key or os.getenv('PIXABAY_API_KEY')
-    if not key:return {'status':'CHAVE_AUSENTE','candidates':[]}
-    data=_get('https://pixabay.com/api/videos/',{'key':key,'q':q[:100],'per_page':12,'safesearch':'true'},UA,session or requests.Session())
+    out.sort(key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))
+    return {'status':'LEADS' if out else 'EMPTY','candidates':out[:4]}
+def _pixabay(q,session,key):
+    data=_get('https://pixabay.com/api/videos/',{'key':key,'q':q[:100],'per_page':20,'safesearch':'true','video_type':'film'},UA,session or requests.Session())
     out=[]
-    for row in data.get('hits',[])[:12]:
+    for row in data.get('hits',[])[:20]:
+        if row.get('type') not in (None,'film') or re.search(r'\b(green screen|chroma|template|intro|overlay|countdown)\b',str(row.get('tags','')),re.I):continue
         page=row.get('pageURL');author=row.get('user')
         if not safe(page,PIXABAY_PAGE) or not isinstance(row.get('duration'),(int,float)) or row['duration']<3:continue
         variants=[]
         for v in (row.get('videos') or {}).values():
             w,h=v.get('width'),v.get('height');url=v.get('url')
             if not safe(url,PIXABAY_MEDIA) or not all(type(x) is int and x>=360 for x in (w,h)):continue
-            variants.append(dict(url=url,w=w,h=h))
+            variants.append(dict(url=url,w=w,h=h,size=v.get('size') if type(v.get('size')) is int and v['size']>0 else None))
         c=_candidate('pixabay',row,variants,page,author,'https://pixabay.com/service/license-summary/',str(row.get('tags') or q))
         if c:out.append(c)
-        if len(out)>=4:break
-    return {'status':'LEADS' if out else 'EMPTY','candidates':out}
+    out.sort(key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))
+    return {'status':'LEADS' if out else 'EMPTY','candidates':out[:4]}
+
+def _cached(provider,q,session,key,cache,load,params):
+    q=_query(q);key=key or os.getenv(provider.upper()+'_API_KEY')
+    if not key:return {'status':'CHAVE_AUSENTE','candidates':[]}
+    if cache is None:
+        path=os.getenv('CORINGA_STOCK_CACHE_DB')
+        if not path:return {'status':'CACHE_24H_AUSENTE','candidates':[]}
+        cache=CacheStock(path)
+    return cache.fetch(provider,{'q':q if provider=='pexels' else q[:100],**params},lambda:load(q,session,key))
+
+def pexels(q,*,session=None,key=None,cache=None):
+    return _cached('pexels',q,session,key,cache,_pexels,{'orientation':'portrait','per_page':12,'version':1})
+
+def pixabay(q,*,session=None,key=None,cache=None):
+    return _cached('pixabay',q,session,key,cache,_pixabay,{'video_type':'film','per_page':20,'safesearch':True,'version':1})
+
 def pesquisar(q,*,necessidade):
     # Never treat stock search as event-specific evidence or factual action.
     if necessidade.get('evidencia_visual')!='contexto':return {'status':'ESCOPO_NAO_CONTEXTUAL','candidates':[]}
+    if os.getenv('CORINGA_STOCK_CONTEXT_ENABLED')!='1':return {'status':'STOCK_OPT_IN_DESATIVADO','candidates':[]}
     return {name:fn(q) for name,fn in [('pexels',pexels),('pixabay',pixabay)]}

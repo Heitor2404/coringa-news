@@ -211,6 +211,9 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
         if rec['status']!='PRIVATE_RECEIPT_PENDING':raise ValueError('GALERIA_SEM_VARIANTE')
         c.update(credito=rec['credit'],recibo_galeria=rec,direitos='REVISAR_PAGINA_INDIVIDUAL')
         choices,hosts=rec['variants'],MEDIA[provider]
+    elif c.get('fonte')=='smithsonian':
+        from src.v4.fontes_culturais_e366 import smithsonian_choices
+        choices,hosts=smithsonian_choices(c)
     elif c.get('fonte') in ('openverse','inaturalist'):
         from src.v4.fontes_publicas_e354 import receipt_choices
         choices,hosts=receipt_choices(c)

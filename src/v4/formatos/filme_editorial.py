@@ -21,7 +21,7 @@ from PIL import Image
 LICENCAS = {'CC BY 2.0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 2.0', 'CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0', 'NASA PD', 'Public domain', 'Natural Earth PD'}
 ORIGENS = {'upload.wikimedia.org', 'thumb.wikimedia.org'}
 MIN_VIDEO_COMPOSITION_PX = 700  # existing compositor threshold; review separately with real visual evidence
-TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map'}
+TIPOS = {'photo', 'video', 'comparison', 'mechanism', 'atlas_map', 'animation_clip'}
 
 
 def recibo_documental_valido(asset:dict)->bool:
@@ -469,6 +469,20 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
         if abs(start - prev_end) > .05:
             falha('F-LACUNA', cid, f'intervalo vazio ou sobreposição: {prev_end}→{start}')
         span = end - start
+        if cena.get('type')=='animation_clip':
+            prev_end=end
+            if not (privado and plano.get('publicar') is False):
+                falha('F-ANIMACAO-PRIVADA',cid,'candidato E213 somente privado');continue
+            from . import complemento_integral_e314 as E
+            try:
+                proof=E.validar(cena)
+                need=next(n for n in plano.get('necessidades_direcao',[]) if n['id']==cid)
+                if need['fatos']!=cena['animation_review']['fatos'] or need['mostrar']!=proof['acao']:
+                    raise ValueError('E314-FATO')
+                momentos.add(('animation_clip',proof['sha256']))
+            except (ValueError,KeyError,TypeError,OSError,StopIteration) as exc:
+                falha('F-ANIMACAO-SEM-PROVA',cid,str(exc)[:200])
+            continue
         # Mecanismo com acontecimentos reais pode durar mais do que fotografia
         # parada. O corte é dirigido pela ação, não por uma duração fixa.
         eh_causal = cena.get('type') == 'mechanism' and cena.get('mechanism') == 'lock_causal'
@@ -893,6 +907,9 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     comparison_panels=COMPAR.preparar_paineis(plano,medias)
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
+        if c.get('type')=='animation_clip':
+            from . import complemento_integral_e314 as E
+            shots.append(E.preparar(c,public_root));continue
         x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)

@@ -82,11 +82,15 @@ def extrair(plano: dict) -> list[dict]:
             tipo = s.get('type')
             verbo = {'comparison': 'COMPARAR', 'mechanism': 'DEMONSTRAR',
                      'photo': 'MOSTRAR', 'video': 'MOSTRAR',
-                     'atlas_map': 'LOCALIZAR'}.get(tipo, '')
+                     'atlas_map': 'LOCALIZAR','animation_clip':'DEMONSTRAR'}.get(tipo, '')
             evid = []
             if tipo == 'mechanism':
                 if s.get('mechanism') and s.get('evidence') == 'explainer':
                     evid.append('mecanismo.ilustrativo')
+            elif tipo == 'animation_clip':
+                from . import politica_animacao as PA
+                if plano.get('tipo')=='PROVA_VISUAL_PRIVADA' and plano.get('publicar') is False and PA.avaliar([s],privado=True)['permitido']:
+                    evid.append('animation_clip:'+s['animation_proof']['sha256'])
             elif tipo == 'scene_graph':
                 # E202: cena declarativa compilada a partir de fatos com fonte; prova = ids de fatos citados
                 # pelo diretor e checados no compilador (não é prova de imagem nem de exatidão)

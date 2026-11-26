@@ -67,12 +67,12 @@ def duracao_minima_revisada(c,window,cap,framing=None):
     return cap if cap>=1.4 else None
 
 
-def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
+def preparar_cobertura(report,case,*,atlas=None,progressao=None,animacoes=None,minimo_s=60):
     if report.get('publish') is not False:raise ValueError('E254-PRIVADO')
     tri={n['id']:n for n in report['triagem']}
     rows={r['necessidade_id']:r for r in report['cobertura']}
     chosen={};issues=[];pages=set();hashes=set();video_ranges={};video_pages={}
-    atlas=atlas or {};progressao=progressao or {}
+    atlas=atlas or {};progressao=progressao or {};animacoes=animacoes or {}
     ids=[i for ch in case['chapters'] for i in ch['needs']]
     if len(ids)!=len(set(ids)) or set(ids)!=set(tri):raise ValueError('E254-NECESSIDADES')
     for i in ids:
@@ -91,6 +91,16 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,minimo_s=60):
             hashes.add(m['expected_sha256'])
             chosen[i]={'need':n,'kind':'atlas_map','cap':round(span*30)/30,'min':round(span*30)/30,'atlas':m}
             continue
+        if r.get('estado')=='LACUNA_PENDENTE' and i in animacoes:
+            from . import complemento_integral_e314 as E
+            try:
+                clip=E.entrega(n,r,animacoes[i]);digest=clip['animation_proof']['sha256']
+                if digest in hashes:raise ValueError('E314-REPETICAO')
+                hashes.add(digest);span=clip['end']
+                chosen[i]={'need':n,'kind':'animation_clip','cap':span,'min':span,'clip':clip}
+                continue
+            except (ValueError,KeyError,TypeError,OSError) as exc:
+                issues.append({'id':i,'motivo':'COMPLEMENTO_NAO_VALIDADO','erro':str(exc)[:200]});continue
         selected=r.get('selecionado')
         if r.get('estado')!='CANDIDATO_PRIVADO_REVISADO' or not selected:
             issues.append({'id':i,'motivo':r.get('estado','SEM_COBERTURA')});continue
@@ -192,6 +202,10 @@ def plano(case,chosen,tempos):
             frames[j]+=1
         for i,count in zip(ids,frames):
             x=chosen[i];n=x['need']
+            if x['kind']=='animation_clip':
+                clip={**x['clip'],'start':start/30,'end':(start+count)/30}
+                if count!=round(x['cap']*30):raise ValueError('E314-SEM-RETIMAR')
+                shots.append(clip);start+=count;continue
             if x['kind']=='atlas_map':
                 m=x['atlas'];span=count/30
                 shots.append({'id':i,'type':'atlas_map','start':start/30,'end':(start+count)/30,

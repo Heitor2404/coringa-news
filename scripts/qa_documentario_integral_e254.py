@@ -56,7 +56,7 @@ def main():
     case=report['case']
     evidence=root/'entregas_verificadas.json'
     entregas=json.loads(evidence.read_text()) if evidence.is_file() else {}
-    chosen,gate=P.preparar_cobertura(report,case,atlas=entregas.get('atlas'),progressao=entregas.get('progressao'))
+    chosen,gate=P.preparar_cobertura(report,case,atlas=entregas.get('atlas'),progressao=entregas.get('progressao'),animacoes=entregas.get('animacoes'))
     write(root/'integral.json',{**gate,'pronto_para_render_privado':False,'publicar':False})
     if not gate['pronto_para_tts']:
         print('E254 COBERTURA INSUFICIENTE',gate,flush=True);return

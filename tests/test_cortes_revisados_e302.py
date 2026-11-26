@@ -34,3 +34,27 @@ def test_explicit_full_source_binding_preserves_original_through_preflight():
         E.proteger_corte_revisado(shot,{**binding,'shot':'s2'},m)
     with pytest.raises(ValueError):
         E.proteger_corte_revisado({**shot,'video_zoom':1.2},binding,m)
+
+def test_reviewed_windows_reserved_before_heuristic_selection():
+    cuts={'a':{'sha256':'h','window_start':10,'window_duration':3.8},
+          'b':{'sha256':'h','window_start':20,'window_duration':3.8}}
+    assert E.reservar_cortes_revisados(cuts)=={'h':[(10,13.8),(20,23.8)]}
+    with pytest.raises(ValueError,match='RESERVA'):
+        E.reservar_cortes_revisados({**cuts,'c':{'sha256':'h','window_start':12,'window_duration':3.8}})
+
+def test_restored_review_samples_must_be_inside_actual_cut_and_match_pixels(monkeypatch):
+    from PIL import Image
+    import hashlib
+    im=Image.new('RGB',(320,180),'red')
+    h=hashlib.sha256(im.tobytes()).hexdigest()
+    monkeypatch.setattr(E,'frame',lambda *a,**k:im)
+    cut=dict(chapter='A',speech='FRAGMENTOS',source='s',label='fonte',sha256='h',
+             window_start=7,window_duration=3.8,observed='sample',review_ref='sheet',acervo_existente=True,
+             samples=[{'time':t,'size':[320,180],'pixels_sha256':h} for t in (7.5,8,8.5)])
+    media={'s':dict(label='fonte',expected_sha256='h',duration_s=30,local_source='s.mp4')}
+    words=[dict(w='FRAGMENTOS',s=0,e=2)]
+    assert E.corte_revisado(cut,media,words,'A',0,2,{})==(media['s'],7)
+    with pytest.raises(ValueError,match='TEMPO-AMOSTRA'):
+        E.corte_revisado(cut,media,words,'A',0,1.4,{})
+    with pytest.raises(ValueError,match='PIXELS'):
+        E.corte_revisado({**cut,'samples':[dict(s,pixels_sha256='x') for s in cut['samples']]},media,words,'A',0,2,{})

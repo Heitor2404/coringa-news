@@ -27,7 +27,14 @@ def restore(config,out,root):
     receipt=json.loads(download('coverage.json',out,2_000_000).read_text())
     if receipt.get('publish') is not False:raise ValueError('E302-PRIVADO')
     extra={}
+    base=json.loads((out/'acervo-restaurado.json').read_text())
+    if base.get('publish') is not False:raise ValueError('E321-PRIVADO')
     for cut in config['cuts']:
+        if cut.get('acervo_existente') is True:
+            m=base['acquired'].get(cut['source'])
+            if not m or m.get('expected_sha256')!=cut['sha256'] or m.get('label')!=cut['label'] or not cut.get('samples'):
+                raise ValueError('E321-ACERVO-OU-AMOSTRAS')
+            continue
         row=next(r for r in receipt['records'] if r['status']=='BYTES_AND_WINDOWS_VERIFIED' and r['media']['id']==cut['source'])
         m=row['media'];h=cut['sha256']
         if m['expected_sha256']!=h or m['label']!=cut['label'] or not re.fullmatch('[a-f0-9]{64}',h):

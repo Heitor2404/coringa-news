@@ -229,7 +229,31 @@ def corte_revisado(cut, acquired, words, chapter, start, end, used):
         raise ValueError('E302-VINCULO')
     if not 0<=t or not 1.4<=span<=review_span or t+review_span>m['duration_s'] or any(t+span>a and t<b for a,b in used.get(cut['sha256'],[])):
         raise ValueError('E302-JANELA-OU-REPETICAO')
+    if cut.get('acervo_existente') is True:
+        samples=cut.get('samples')
+        if not isinstance(samples,list) or len(samples)!=3:
+            raise ValueError('E321-AMOSTRAS')
+        previous=t-1
+        for sample in samples:
+            at=sample.get('time')
+            if type(at) not in (int,float) or not t<=at<t+span or at<=previous:
+                raise ValueError('E321-TEMPO-AMOSTRA')
+            im=frame(m['local_source'],at,width=320)
+            if list(im.size)!=sample.get('size') or hashlib.sha256(im.tobytes()).hexdigest()!=sample.get('pixels_sha256'):
+                raise ValueError('E321-PIXELS')
+            previous=at
     return m,t
+
+
+def reservar_cortes_revisados(reviewed):
+    """Prevent an earlier heuristic cut from taking a later reviewed window."""
+    result={}
+    for cut in reviewed.values():
+        h=cut['sha256'];a=cut['window_start'];b=a+cut['window_duration']
+        spans=result.setdefault(h,[])
+        if any(a<d and b>c for c,d in spans):raise ValueError('E321-RESERVA-REPETIDA')
+        spans.append((a,b))
+    return result
 
 
 def proteger_corte_revisado(shot, binding, media):
@@ -319,6 +343,7 @@ def main():
         reviewed={c['shot']:c for c in review_config['cuts']}
         if len(reviewed)!=len(review_config['cuts']):raise ValueError('E302-DUPLICADO')
     applied=set()
+    reservas_revisadas=reservar_cortes_revisados(reviewed)
     atlas_multiscale={}
     from scripts import qa_atlas_multiscale as G
     for i,ch in enumerate(spec['chapters']):
@@ -453,7 +478,7 @@ def main():
             elif spec.get('perceptual_selection'):
                 candidates=[]
                 for m in ordered:
-                    prev=used_windows.get(m['expected_sha256'],[])
+                    prev=used_windows.get(m['expected_sha256'],[])+reservas_revisadas.get(m['expected_sha256'],[])
                     for t,im in windows(m,span+.1):
                         if not all(t+span<=a or t>=b for a,b in prev):continue
                         try:
@@ -475,7 +500,7 @@ def main():
             else:
                 eligible={}
                 for m in ordered:
-                    prev=used_windows.get(m['expected_sha256'],[])
+                    prev=used_windows.get(m['expected_sha256'],[])+reservas_revisadas.get(m['expected_sha256'],[])
                     for t,im in windows(m,span+.1):
                         if all(t+span<=a or t>=b for a,b in prev):
                             eligible[(m['expected_sha256'],t,t+span)]=(m,t,im)

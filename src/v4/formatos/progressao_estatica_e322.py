@@ -29,4 +29,18 @@ def validar(shot,media,sha,*,private):
         raise ValueError('E322-REGIAO-ILEGIVEL')
     if not any(c.get('label')==label and c.get('at')==at for c in shot.get('cues',[])):
         raise ValueError('E322-MARCO-SEM-CUE')
-    return {'at':at,'label':label,'bbox':b,'sha256':sha,'revisao_id':p['review_ref'],'status':'PRIVATE_STATIC_REVEAL_PENDING'}
+    result={'at':at,'label':label,'bbox':b,'sha256':sha,'revisao_id':p['review_ref'],'status':'PRIVATE_STATIC_REVEAL_PENDING'}
+    if 'detail_zoom' in p:
+        if p['detail_zoom'] is not True:raise ValueError('E325-DETAIL-FLAG')
+        # Genuine detail magnification vs the established full-image stage,
+        # not merely vs a reduced overview. Same two contain rectangles as TS.
+        dw,dh=(r-x)*w,(d-y)*h
+        detail_scale=min(620/dw,340/dh)
+        overview_scale=min(620/w,290/h)
+        gain=detail_scale/scale
+        if gain<1.1 or min(dw*detail_scale,dh*detail_scale)<100:
+            raise ValueError('E325-DETAIL-SEM-GANHO')
+        result['detail_zoom']=True
+        result['detail_gain']=round(gain,3)
+        result['overview_gain']=round(detail_scale/overview_scale,3)
+    return result

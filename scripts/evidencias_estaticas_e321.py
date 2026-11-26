@@ -49,6 +49,7 @@ def shot_for(cut,m,words,chapter,start,end):
         shot['static_fact_reveal']={'schema':'coringa.static.reveal.private.v1','publicar':False,
             'shot':cut['shot'],'sha256':cut['sha256'],'review_ref':cut['review_ref'],
             'at':at,'label':reveal['label'],'bbox':reveal['bbox'],'observation':reveal['observation']}
+        if 'detail_zoom' in reveal:shot['static_fact_reveal']['detail_zoom']=reveal['detail_zoom']
         shot['cues'].append({'at':at,'label':reveal['label']})
         R.validar(shot,m,m['expected_sha256'],private=True)
     return shot

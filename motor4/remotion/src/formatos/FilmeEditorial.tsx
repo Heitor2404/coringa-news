@@ -54,7 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
-  documentary_static_reveal?: {at:number;label:string;bbox:number[];sha256:string;revisao_id:string;status:string};
+  documentary_static_reveal?: {at:number;label:string;bbox:number[];sha256:string;revisao_id:string;status:string;detail_zoom?:boolean;detail_gain?:number;overview_gain?:number};
   documentary_observed_label?: {at:number;label:string;sha256:string;revisao_id:string;status:string};
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
@@ -243,7 +243,7 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
+type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW'|'DETAIL_ZOOM_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
 const stackedDocSlots=(y:number):DocSlots=>({
   brand:[120,y,500,y+38],section:[120,y+43,760,y+93],
   subtitle:[120,y+101,760,y+191],source:[120,y+199,760,y+321],
@@ -489,6 +489,45 @@ const ComparisonPanel:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
         <MeasuredDocText role="source" shot={shot} rect={[120,rect[3]+37,760,Math.min(rect[3]+91,1386)]} text={p.credit} layoutOverride={pairLayout} probe={probe}/>
       </React.Fragment>;
     })}
+  </AbsoluteFill>;
+};
+// E325: source-linked documentary detail; original remains visible, no invented pixels.
+const DETAIL_ZOOM_SLOTS={brand:[150,280,500,312],section:[150,320,760,365],source:[150,370,760,435],subtitle:[150,1128,760,1238]} as const;
+const detailZoomActive=(shot:FilmShot,t:number)=>Boolean(shot.type==='photo'&&shot.documentary_static_reveal?.detail_zoom===true&&t-shot.start>=shot.documentary_static_reveal.at);
+const detailZoomGeometry=(shot:FilmShot)=>{
+  const p=shot.documentary_static_reveal,dims=shot.source_dimensions;
+  if(!p||p.detail_zoom!==true||p.status!=='PRIVATE_STATIC_REVEAL_PENDING'||!normalizedBox(p.bbox)||
+    !dims||dims.length!==2||!dims.every(v=>Number.isFinite(v)&&v>=600)||
+    !/^[a-f0-9]{64}$/.test(p.sha256)||!['.jpg','.png','.webp'].some(e=>shot.asset==='film_editorial/'+p.sha256+e)||
+    shot.photo_framing!=='integral'||shot.photo_crop_preview||!p.revisao_id||
+    !Number.isFinite(p.at)||p.at<.8||p.at>shot.end-shot.start-.8||
+    typeof p.label!=='string'||p.label.length>34)throw new Error('E325-DETAIL-CONTRACT');
+  const [x,y,r,b]=p.bbox,[w,h]=dims,dw=(r-x)*w,dh=(b-y)*h;
+  const overview=containPixels([150,445,770,735],dims);
+  const detail=containPixels([150,780,770,1120],[dw,dh]);
+  const scale=(detail[2]-detail[0])/dw,previousScale=Math.min(1080/w,900/h);
+  if(scale/previousScale<1.1||Math.min(detail[2]-detail[0],detail[3]-detail[1])<100||
+     Math.abs(scale/previousScale-(p.detail_gain??0))>.001)throw new Error('E325-DETAIL-GAIN');
+  const layout:DocLayout={mode:'DETAIL_ZOOM_REVIEW',slots:DETAIL_ZOOM_SLOTS,media:[150,445,770,1120],protected:[overview,detail],roiStatus:'OBSERVED'};
+  return {overview,detail,scale,layout};
+};
+const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
+  const p=shot.documentary_static_reveal!,dims=shot.source_dimensions!,{overview,detail,scale,layout}=detailZoomGeometry(shot);
+  const [x,y,r,b]=p.bbox,[w,h]=dims;
+  const ow=overview[2]-overview[0],oh=overview[3]-overview[1];
+  return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#08101A'}}>
+    <SignatureBackground/>
+    <div style={{...rectStyle(DETAIL_ZOOM_SLOTS.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
+    <MeasuredDocText role="section" shot={shot} rect={DETAIL_ZOOM_SLOTS.section} text={p.label} layoutOverride={layout} probe={probe}/>
+    <MeasuredDocText role="source" shot={shot} rect={DETAIL_ZOOM_SLOTS.source} text={'Contexto · '+(shot.source_display||shot.source)} layoutOverride={layout} probe={probe}/>
+    <div data-detail-overview="full-original" style={{...rectStyle(overview),overflow:'hidden'}}>
+      <Img src={staticFile(shot.asset!)} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
+      <div style={{position:'absolute',left:x*ow,top:y*oh,width:(r-x)*ow,height:(b-y)*oh,border:'3px solid #E9B949',boxSizing:'border-box'}}/>
+    </div>
+    <MeasuredDocText role="section" shot={shot} rect={[150,741,760,774]} text="DETALHE AMPLIADO DA FONTE" layoutOverride={layout} probe={probe}/>
+    <div data-detail-zoom="source-pixels" style={{...rectStyle(detail),overflow:'hidden'}}>
+      <Img src={staticFile(shot.asset!)} style={{position:'absolute',left:-x*w*scale,top:-y*h*scale,width:w*scale,height:h*scale}}/>
+    </div>
   </AbsoluteFill>;
 };
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
@@ -873,6 +912,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
   if(mediaFirst&&pairActive(shot,now))return <ComparisonPanel shot={shot} probe={textProbe}/>;
+  if(mediaFirst&&detailZoomActive(shot,now))return <StaticDetailZoom shot={shot} probe={textProbe}/>;
   if(mediaFirst&&realMedia(shot)) {
     const credit=(shot.evidence==='representative'?'Contexto · ':'')+(shot.source_display||shot.source);
     const layout=documentaryLayout(shot),slots=layout.slots;
@@ -1018,6 +1058,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
+  if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
@@ -1067,8 +1108,8 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))} textProbe={documentary_text_probe}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
-    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={pairActive(shots[shot],t)?DOC_MEDIA.subtitle:documentaryLayout(shots[shot]).slots.subtitle}
-      text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={pairActive(shots[shot],t)?pairLayout:undefined}>
+    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={detailZoomActive(shots[shot],t)?DETAIL_ZOOM_SLOTS.subtitle:pairActive(shots[shot],t)?DOC_MEDIA.subtitle:documentaryLayout(shots[shot]).slots.subtitle}
+      text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={detailZoomActive(shots[shot],t)?detailZoomGeometry(shots[shot]).layout:pairActive(shots[shot],t)?pairLayout:undefined}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
     {docCap&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',

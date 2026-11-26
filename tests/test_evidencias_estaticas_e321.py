@@ -39,3 +39,19 @@ def test_static_reveal_is_real_distinct_timed_information(monkeypatch,tmp_path):
     with pytest.raises(ValueError,match='MARCO'):R.validar({**shot,'lead':'35,5 KM²'},m,h,private=True)
     with pytest.raises(ValueError,match='CUE'):R.validar({**shot,'cues':[]},m,h,private=True)
     with pytest.raises(ValueError,match='REGIAO'):R.validar({**shot,'static_fact_reveal':{**shot['static_fact_reveal'],'bbox':[0,.3,.6,.7]}},m,h,private=True)
+
+def test_e325_detail_gain_is_real_and_rejects_oversized_region():
+    from src.v4.formatos import progressao_estatica_e322 as R
+    h='a'*64
+    m={'expected_sha256':h,'width':3300,'height':2550}
+    p={'schema':'coringa.static.reveal.private.v1','publicar':False,'shot':'s','sha256':h,
+       'review_ref':'review','at':1.5,'label':'35,5 KM²','bbox':[.58,.84,.76,.93],
+       'observation':'O quadro de dados do mapa original comprova esta medida.','detail_zoom':True}
+    s={'id':'s','type':'photo','photo_framing':'integral','start':0,'end':3.7,'lead':'AREA',
+       'cues':[{'at':1.5,'label':p['label']}],'static_fact_reveal':p}
+    out=R.validar(s,m,h,private=True)
+    assert out['detail_zoom'] is True and out['detail_gain']>3
+    with pytest.raises(ValueError,match='SEM-GANHO'):
+        R.validar({**s,'static_fact_reveal':{**p,'bbox':[.1,.2,.9,.7]}},m,h,private=True)
+    with pytest.raises(ValueError,match='FLAG'):
+        R.validar({**s,'static_fact_reveal':{**p,'detail_zoom':False}},m,h,private=True)

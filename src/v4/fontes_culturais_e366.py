@@ -16,6 +16,26 @@ def _smith_page(u):
     if not isinstance(u,str):return None
     if u.startswith('http://'):u='https://'+u[7:]
     return u if safe(u,SMITH_PAGES) else None
+def smithsonian_record_page(dnr):
+    """Keep the institutional record link first. The provider-declared
+    Smithsonian ARK is a persistent alternative for missing/legacy links.
+    Never construct a locator or expand the media transport allowlist."""
+    import re
+    primary=_smith_page(dnr.get('record_link'))
+    if primary:return primary,'record_link'
+    guid=_smith_page(dnr.get('guid'))
+    if guid:
+        u=urlsplit(guid)
+        if u.hostname=='n2t.net' and not u.query and re.fullmatch(r'/ark:/65665/[A-Za-z0-9-]{6,120}',u.path):
+            return guid,'guid'
+    return None,None
+
+def _page_host(value):
+    try:
+        u=urlsplit(value)
+        return u.hostname or 'MISSING_OR_INVALID'
+    except (TypeError,ValueError,AttributeError):return 'MISSING_OR_INVALID'
+
 def _txt(x):
     return x if isinstance(x,str) else ''
 def object_types(content):
@@ -42,8 +62,9 @@ def object_hint(query,title,types):
         'drawing':r'\b(drawing|drawings|engraving|engravings|illustration|illustrations|print|prints|painting|paintings)\b',
         'model':r'\b(model|models|miniature|miniatures|scale model)\b',
         'coin':r'\b(coin|coins|medal|medals)\b',
+        'sculpture':r'\b(sculpture|sculptures|maquette|maquettes|statuette|statuettes)\b',
     }
-    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints','painting','paintings'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'}}
+    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints','painting','paintings'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'},'sculpture':{'sculpture','sculptures','maquette','maquettes','statuette','statuettes'}}
     # Do not infer physical size, authenticity, or referent from an absent type.
     for key,pattern in forms.items():
         matched=(bool(re.search(pattern,typed)) or bool(re.search(r'\b(scale model|miniature|miniatures)\b',title,re.I))) if key=='model' else bool(re.search(pattern,text))
@@ -82,10 +103,15 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None,phrase=False,object
     for row in rows[:25]:
         if not isinstance(row,dict):continue
         content=row.get('content') or {};dnr=content.get('descriptiveNonRepeating') or {}
-        rid=_txt(row.get('id') or dnr.get('record_ID'));page=_smith_page(dnr.get('record_link'))
+        rid=_txt(row.get('id') or dnr.get('record_ID'));page,page_field=smithsonian_record_page(dnr)
         institution=_txt(dnr.get('data_source') or dnr.get('unit_code') or row.get('unitCode'))
         if not rid:reject('NO_RECORD_ID');continue
-        if not page:reject('PAGE_UNSUPPORTED');continue
+        if not page:
+            reject('PAGE_UNSUPPORTED')
+            rejected=diag.setdefault('page_rejected',[])
+            if len(rejected)<25:rejected.append(dict(title=_txt(row.get('title'))[:160],record_link_host=_page_host(dnr.get('record_link')),guid_host=_page_host(dnr.get('guid'))))
+            continue
+        if page_field=='guid':diag['guid_fallback']=diag.get('guid_fallback',0)+1
         if not institution:reject('NO_INSTITUTION');continue
         types=object_types(content)
         title=_txt(row.get('title')) or rid
@@ -112,7 +138,7 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None,phrase=False,object
                 tipo_objeto_declarado=types,pista_objeto=hint,
                 source_id=sid,credito=credit,licenca='CC0 1.0',licenca_url='https://creativecommons.org/publicdomain/zero/1.0/',
                 recibo_fonte=dict(provider='smithsonian',id=sid,record_id=rid,media_id=mid,url=url,page=page,media_access='CC0',
-                    metadata_sha256=digest,institution=institution,object_types=types,object_hint=hint,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
+                    metadata_sha256=digest,institution=institution,page_field=page_field,object_types=types,object_hint=hint,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
     from src.v4.formatos.revisao_documental import termos_consulta
     def rank(c):return object_rank(q,c)
     ordered=sorted(out,key=rank);first=[];extra=[];seen=set()

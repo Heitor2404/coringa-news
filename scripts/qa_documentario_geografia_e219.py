@@ -201,6 +201,22 @@ def cortes_medidos(inicio,fim,words):
     cuts.append(fim)
     return cuts
 
+def lacunas_montagem(spec, acquired, decisions):
+    report=[]
+    for ch in spec['chapters']:
+        if 'atlas' in ch:continue
+        expected=[r[0] for r in ch['videos']]
+        available=[s for s in expected if s in acquired]
+        selected=[r for r in decisions if r['chapter']==ch['title']]
+        used=list(dict.fromkeys(r['source'] for r in selected))
+        report.append({'chapter':ch['title'],'requested':expected,'available':available,
+            'unavailable':[s for s in expected if s not in acquired],'used':used,
+            'revisits':sum(bool(r['revisit']) for r in selected),
+            'status':'SEM_ACERVO' if not available else 'FONTE_UNICA_REVISAR_COBERTURA' if len(available)==1 else 'REVISAR_POR_FATO',
+            'semantic_approval':False})
+    return report
+
+
 def aplicar_direcao_atlas(spec, override):
     """A visual-only sourced override, never a change to the authenticated speech."""
     import copy
@@ -336,7 +352,7 @@ def main():
             if i in atlas_multiscale:
                 map_ch,p,report=G.resolver(*atlas_multiscale[i],span)
                 write(out/('camera-multiescala-'+str(i)+'.json'),report)
-                clip,proof=mapclip(map_ch,span,plano_resolvido=p)
+                clip,proof=mapclip(map_ch,span,plano_resolvido=p,documentary_layout=True)
             else:
                 clip,proof=mapclip(ch,span)
             shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':ch['atlas']['label'],
@@ -424,6 +440,10 @@ def main():
     write(out/'plano.json',plan)
     if spec.get('perceptual_selection'):write(out/'selecao_perceptiva.json',selection_report)
     write(out/'continuidade-montagem.json',{'publish':False,'semantic_review':'PENDING','shots':continuity_report})
+    # Report the coverage deficit separately from the continuity heuristic.
+    # A chapter with one available source is not semantically certified.
+    write(out/'lacunas-montagem.json',{'publish':False,'semantic_review':'PENDING',
+        'chapters':lacunas_montagem(spec,acquired,continuity_report)})
     result=F.preparar(plan,out/'documental',PUBLIC)
     props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
     groups=[]

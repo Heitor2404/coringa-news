@@ -2,6 +2,14 @@
 import pytest
 from scripts import qa_documentario_geografia_e219 as E
 
+def test_e298_coverage_gap_is_not_semantic_approval():
+    spec={'chapters':[{'title':'A','videos':[['one','x'],['two','y']]},{'title':'Map','atlas':{}}]}
+    report=E.lacunas_montagem(spec,{'one':{}},[{'chapter':'A','source':'one','revisit':False}])
+    assert len(report)==1 and report[0]['unavailable']==['two']
+    assert report[0]['status']=='FONTE_UNICA_REVISAR_COBERTURA'
+    assert report[0]['semantic_approval'] is False
+
+
 def test_e297_continuity_prefers_forward_source_to_unjustified_return():
     from src.v4.formatos.direcao_eventos import continuidade_fontes
     history=[('A',0,3),('B',7,10)]

@@ -1,4 +1,4 @@
-name: E297 - previa narrada de continuidade e ATLAS multiescala
+name: E298 - alinhar legenda ATLAS e diagnosticar lacunas de cobertura
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -75,10 +75,10 @@ jobs:
           try:
               chat,_=T.chat_autorizado()
               envio=T._caber(v);verificar_video(envio,dur)
-              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E297 · TESTE DE MONTAGEM E ATLAS\n26,87 s · continuidade de fontes e aproximação regional\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
+              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E298 · TESTE DE MONTAGEM E ATLAS\n26,87 s · legenda alinhada e aproximação regional\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
               if not isinstance(result,dict) or not result.get('message_id'):raise RuntimeError('recibo ausente')
           except Exception:raise RuntimeError('E295 entrega privada não confirmada') from None
-          print('E297_PREVIA_PRIVADA_ENTREGUE')
+          print('E298_PREVIA_PRIVADA_ENTREGUE')
           PY
       - name: Preservar voz e evidencias mesmo se render falhar
         if: ${{ always() }}
@@ -88,7 +88,7 @@ jobs:
           shopt -s nullglob
           root=qa_e289
           files=()
-          for f in voz-original.json realinhamento.json voz-medida.json narracao48k.wav sincronia-medida.json props.json qa.json probe.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json continuidade-montagem.json direcao-atlas.json camera-multiescala-1.json raster-multiescala-1.json filme.mp4 fontes-contato.jpg; do
+          for f in voz-original.json realinhamento.json voz-medida.json narracao48k.wav sincronia-medida.json props.json qa.json probe.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json continuidade-montagem.json lacunas-montagem.json direcao-atlas.json camera-multiescala-1.json raster-multiescala-1.json filme.mp4 fontes-contato.jpg; do
             [[ ! -s "$root/$f" ]] || files+=("$root/$f")
           done
           for f in "$root"/voz/gemini[0-9].json "$root"/voz/gemini[0-9].wav "$root"/cena-*.jpg; do

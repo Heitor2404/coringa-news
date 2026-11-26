@@ -54,6 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_integral_required?: boolean; // preflight explicit context protection
+  documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
   lead: string;
@@ -951,8 +952,9 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
-    {docCap&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...safeSlot('subtitle'),display:'flex',alignItems:'center',
-        justifyContent:'center',textAlign:'center',pointerEvents:'none'}}>
+    {docCap&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
+        justifyContent:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'flex-start':'center',
+        textAlign:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'left':'center',pointerEvents:'none'}}>
       <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:44,lineHeight:1.08,color:OFF_WHITE,
         padding:'8px 14px',background:'rgba(4,11,20,.74)',borderRadius:8,textShadow:'0 2px 8px #000'}}>
         {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}

@@ -872,7 +872,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
     shots=[]
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -883,6 +883,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             x['source']=medias[c['asset']]['credit']
             if c['type'] in ('photo','video'):
                 x['source_dimensions']=[medias[c['asset']]['width'],medias[c['asset']]['height']]
+            if privado and c['type']=='atlas_map':
+                # Proof already validated by the ATLAS bridge before preparing media.
+                proof=json.loads(Path(plano['media'][c['asset']]['atlas_proof']).read_text(encoding='utf-8'))
+                if proof.get('documentary_layout') is True:
+                    x['documentary_atlas_layout']=True
         else:
             # Fonte descritiva, sem fingir que o desenho é filmagem.
             # Preserva a legenda das eclusas legadas (não mudar outros vídeos).

@@ -1,4 +1,4 @@
-name: E314 - integrar candidato E213 ao tempo integral
+name: E314.1 - corrigir vinculo editorial no preflight
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

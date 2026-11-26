@@ -477,7 +477,7 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
             try:
                 proof=E.validar(cena)
                 need=next(n for n in plano.get('necessidades_direcao',[]) if n['id']==cid)
-                if need['fatos']!=cena['animation_review']['fatos'] or need['mostrar']!=proof['acao']:
+                if need['fatos']!=cena['animation_review']['fatos'] or need['mostrar']!=cena['animation_proof']['acao']:
                     raise ValueError('E314-FATO')
                 momentos.add(('animation_clip',proof['sha256']))
             except (ValueError,KeyError,TypeError,OSError,StopIteration) as exc:

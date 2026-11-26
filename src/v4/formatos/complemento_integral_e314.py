@@ -50,7 +50,7 @@ def validar(shot):
     PA.exigir([shot],privado=True)
     p=shot['animation_proof'];r=shot['animation_review']
     if (r.get('necessidade_id')!=shot['id'] or r.get('acao')!=p['acao'] or r.get('lacuna')!=p['lacuna'] or
-        r.get('sha256')!=p['sha256'] or r.get('renderer')!=p['renderer'] or r.get('referencia')!=p['source'] or
+        r.get('motivo_lacuna')!=p['motivo_lacuna'] or r.get('sha256')!=p['sha256'] or r.get('renderer')!=p['renderer'] or r.get('referencia')!=p['source'] or
         r.get('local_source')!=shot.get('animation_local_source') or r.get('publicar') is not False or
         r.get('direitos_aprovados') is not False or r.get('midia_adequada') is not False or
         r.get('origem') not in ('CURADORIA_HUMANA','INSPECAO_ASSISTIDA_PRIVADA') or

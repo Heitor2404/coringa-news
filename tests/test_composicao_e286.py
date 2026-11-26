@@ -60,11 +60,14 @@ def test_e290_documentary_text_slots_are_distinct_and_within_existing_safe_zone(
     assert "overflowWrap:'anywhere'" in code
 
 
-def test_e293_signature_is_decoration_behind_real_media_only():
+def test_e349_black_background_is_behind_real_media_only():
     root=Path('motor4/remotion/src/formatos')
     code=(root/'FilmeEditorial.tsx').read_text()
     bg=(root/'SignatureBackground.tsx').read_text()
-    assert 'SIGNATURE_B_V1' in bg and 'aria-hidden="true"' in bg
+    assert 'BLACK_SOLID_V1' in bg and 'aria-hidden="true"' in bg
+    assert "background:'#000000'" in bg
+    assert 'SIGNATURE_B_V1' not in bg and 'gradient' not in bg.lower()
+    assert '<svg' not in bg.lower() and '<canvas' not in bg.lower()
     # E293.1: source-string assertions alone missed the import inside the opening comment.
     import re
     uncommented=re.sub(r'/\*.*?\*/','',code,flags=re.S)

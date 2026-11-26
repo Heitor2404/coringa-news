@@ -325,3 +325,8 @@ Auditoria confirmou que as caixas E254/E291/E306 serviam principalmente ao enqua
 
 
 E309 commit 9ed4cfe, run 45837391587 em andamento. E309.1 corrige prova A/B: barra global da composição varia com o tempo, portanto renderizar cada alternativa como cena única de 3s, mesmo frame 36, mesma duração, sem excluir regiões da verificação. O workflow de prova usa concurrency sem cancelamento, a segunda execução aguarda a primeira; não é novo render integral. Regressões E309 em consulta. Sem mudanças adicionais no compositor, sem IA/TTS.
+
+
+## 380. E309.1 confirmada; E310 — integração do detalhe e diagnóstico de função explicativa
+
+E309 45837391587 falhou exclusivamente na comparação de pixels em tempos globais diferentes; E309.1 45837482468 SUCCESS (51 testes, TypeScript, três renders, verificação de pixels e espelho privado 8b462661). Outras 11 regressões do commit 9ed4cfe SUCCESS. Inspeção visual direta do quadro no cofre: marcador amarelo localiza coluna de água, não encobre interior; foto continua estática; é recurso pontual, não solução de explicação por si só. Medidas: região de alteração [511,705,623,1014], interior idêntico e conflito idêntico ao baseline. E310 acrescenta diagnóstico por papel visual sem nova quota/bloqueio e teste da rota real P.preparar_cobertura→P.plano→F.preparar com foto real inspecionada, verificação de SHA, prop derivada e recusa de prop inventada. Não autoriza pares/causas/mecanismos só pelo rótulo; esses permanecem revisão pendente. CI E310 pendente. Sem nova aquisição, visão, TTS, render redundante ou publicação.

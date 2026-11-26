@@ -3,7 +3,7 @@ No proxy, credential rotation, blind redirects or license inference.
 """
 from datetime import datetime,timezone
 from email.utils import parsedate_to_datetime
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,urljoin
 import time
 import random
 import requests
@@ -31,7 +31,7 @@ class Transporte:
         self.sleep=sleep;self.clock=clock
         self.max_http=max_http;self.max_bytes=max_bytes;self.max_wait=max_wait
         self.http=0;self.bytes=0;self.waited=0.;self.events=[];self.blocked=set()
-    def get(self,url,hosts,lim):
+    def get(self,url,hosts,lim,*,redirect_policy=None,_redirects=0):
         u=urlsplit(url)
         if u.scheme!='https' or u.hostname not in hosts or u.username or u.password or u.port not in (None,443):
             raise AquisiçãoErro('ORIGEM_NAO_AUTORIZADA')
@@ -60,6 +60,24 @@ class Transporte:
                                 raise AquisiçãoErro('LIMITE_BYTES')
                             data.extend(chunk)
                         return bytes(data)
+                    if code in (301,302,303,307,308):
+                        location=r.headers.get('Location')
+                        if not location:raise AquisiçãoErro('REDIRECT_SEM_LOCATION')
+                        try:
+                            target=urljoin(url,location);dest=urlsplit(target)
+                            event['redirect_host']=dest.hostname
+                            # Never log a signed URL, query parameters or API credentials.
+                            permitted=(redirect_policy is not None and _redirects<2 and
+                                dest.scheme=='https' and dest.hostname in hosts and not dest.username
+                                and not dest.password and dest.port in (None,443) and not dest.fragment
+                                and redirect_policy(url,target))
+                        except (ValueError,TypeError):permitted=False
+                        event['redirect_permitido']=bool(permitted)
+                        if not permitted:raise AquisiçãoErro('REDIRECT_PENDENTE_'+str(code))
+                        # Explicitly release the previous response before making
+                        # the next budget-accounted GET, never send API keys.
+                        r.close()
+                        return self.get(target,hosts,lim,redirect_policy=redirect_policy,_redirects=_redirects+1)
                     if code not in (429,502,503,504):raise AquisiçãoErro('HTTP '+str(code))
                     delay=retry_after(r.headers.get('Retry-After'))
                     reason='HTTP '+str(code)

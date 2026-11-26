@@ -324,7 +324,8 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         # Discovery calls have a global budget independent of the retained
         # candidate cap. A crowded response must not suppress other routes.
         from src.v4.descoberta_paralela_e363 import RotaPublica,onda
-        batches=[];suspended=set();wave_used=False
+        from src.v4.prioridade_fontes_e369 import afinidade,candidato_promissor
+        batches=[];suspended=set();wave_used=False;specialty_used=False
         expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina','smithsonian'}
         def route_info(entry):
             _,_,_,ri,qi=entry
@@ -336,7 +337,8 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                 c=_candidato_documental(item,row['fonte'],row['tipo'])
                 if not c or c['url'] in vistos:continue
                 vistos.add(c['url']);c['consulta_origem']=row['consulta'];batch.append(c)
-            row.update(estado='OK' if batch else 'SEM_NOVOS_CANDIDATOS',novos=len(batch),retidos=0)
+            row.update(estado='OK' if batch else 'SEM_NOVOS_CANDIDATOS',novos=len(batch),retidos=0,
+                       promissores=sum(candidato_promissor(necessidade,c) for c in batch))
             report['buscas'].append(row)
             if batch:
                 from src.v4.formatos.revisao_documental import ordenar_candidatos
@@ -346,16 +348,31 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
             # Weak initial coverage: reserve a diversity opportunity without
             # enlarging max_buscas or altering explicitly injected test routes.
             weak=(default_routes and len(report['buscas'])>=2 and
-                sum(x.get('novos',0) for x in report['buscas'])<2 and
+                sum(x.get('promissores',x.get('novos',0)) for x in report['buscas'])<2 and
                 not any(x['fonte'] in expanded for x in report['buscas']))
             if weak:
                 index=next((i for i,x in enumerate(schedule) if x[-1]==0 and
                     route_info(x)[1] in expanded and route_info(x)[4] not in attempted),0)
+            # After the broad first call, reserve one opportunity for a
+            # specialist when metadata and the declared context match. Keep
+            # injected sources and historical mock origins deterministic.
+            reason=None
+            if default_routes and not specialty_used and report['buscas'] and not weak:
+                real_hosts={'www.usgs.gov','oceanexplorer.noaa.gov','api.inaturalist.org','www.nist.gov','api.si.edu'}
+                options=[]
+                for i,x in enumerate(schedule):
+                    tp,nm,rt,query,k=route_info(x)
+                    if x[-1]!=0 or k in attempted or not isinstance(rt,RotaPublica) or rt.origem not in real_hosts:continue
+                    strength=afinidade(necessidade,query,nm)
+                    if strength:options.append((-strength,i))
+                if options:
+                    _,index=min(options);specialty_used=True;reason='AFINIDADE_FONTE'
             entry=schedule.pop(index)
             tipo,nome,fn,consulta,key=route_info(entry)
             if key in attempted:continue
             attempted.add(key)
             row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            if reason:row['prioridade']=reason
             if isinstance(fn,RotaPublica) and default_routes:
                 if fn.origem in suspended:
                     report['buscas'].append({**row,'estado':'FONTE_SUSPENSA','novos':0,'retidos':0})

@@ -245,7 +245,10 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
         if (v.get('size') or 0)>min(cap,remaining):
             failures.append('LIMITE_DECLARADO_ANTES_HTTP');continue
         try:
-            raw=t.get(v['url'],hosts,cap)
+            if c.get('fonte')=='smithsonian':
+                from src.v4.fontes_culturais_e366 import smithsonian_redirect
+                raw=t.get(v['url'],hosts,cap,redirect_policy=smithsonian_redirect)
+            else:raw=t.get(v['url'],hosts,cap)
             if c.get('fonte')=='figshare':
                 rec=c['recibo_cientifico']
                 if len(raw)!=rec.get('bytes') or hashlib.md5(raw).hexdigest()!=rec.get('md5_declarado'):raise ValueError('FIGSHARE_INTEGRIDADE')

@@ -60,6 +60,18 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
             if len(out)>=4:return out
     return out
 
+def smithsonian_redirect(source,target):
+    """Permit only delivery-service paths at the original institutional host."""
+    from urllib.parse import unquote
+    a,b=urlsplit(source),urlsplit(target)
+    def path_ok(u):
+        path=unquote(u.path)
+        return (u.scheme=='https' and u.hostname=='ids.si.edu' and not u.username and not u.password
+                and u.port in (None,443) and not u.fragment and '..' not in path.split('/')
+                and '\\' not in path and (path=='/ids/deliveryService' or
+                path.startswith('/ids/deliveryService/') or path=='/ids/download' or path.startswith('/ids/download/')))
+    return path_ok(a) and path_ok(b) and source!=target
+
 def smithsonian_choices(c):
     r=c.get('recibo_fonte') or {}
     if r.get('provider')!='smithsonian' or r.get('id')!=c.get('source_id') or r.get('url')!=c.get('url') or r.get('page')!=c.get('pagina') or r.get('media_access')!='CC0' or not r.get('record_id') or not r.get('media_id') or not r.get('institution') or c.get('licenca')!='CC0 1.0' or not safe(c.get('url'),SMITH_MEDIA):raise ValueError('SMITHSONIAN_RECIBO')

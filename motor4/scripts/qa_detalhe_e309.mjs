@@ -10,8 +10,10 @@ const composition=await selectComposition({serveUrl,id:'FilmeEditorial',inputPro
 const result={publish:false,visual_approval:'PENDING',rows:[]};
 for(const shot of props.shots){
   const logs=[];
-  await renderStill({serveUrl,composition,inputProps:props,browserExecutable,
-    frame:Math.round((shot.start+1.2)*composition.fps),output:resolve(root,'detail-'+shot.id+'.png'),logLevel:'info',
+  const identicalTimeProps={...props,shots:[{...shot,start:0,end:3}],duracao:3};
+  const sameComposition=await selectComposition({serveUrl,id:'FilmeEditorial',inputProps:identicalTimeProps,browserExecutable});
+  await renderStill({serveUrl,composition:sameComposition,inputProps:identicalTimeProps,browserExecutable,
+    frame:Math.round(1.2*composition.fps),output:resolve(root,'detail-'+shot.id+'.png'),logLevel:'info',
     onBrowserLog:log=>{const t=String(log.text||'');const i=t.indexOf('E309_DETAIL ');if(i>=0)logs.push(JSON.parse(t.slice(i+12)));}});
   const row=logs.filter(x=>x.shot===shot.id).at(-1);
   if(!row)throw new Error('E309 missing measure '+shot.id);

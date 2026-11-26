@@ -1,4 +1,4 @@
-name: E309 - detalhe observado com prova de pixels
+name: E309.1 - comparacao de pixels no mesmo instante
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

@@ -64,3 +64,12 @@ def test_pixabay_alternate_portrait_without_dropping_original(tmp_path):
     assert [c['id'] for c in r['candidates']]==['2','1'] and len(session.calls)==2
     again=F.pixabay_retrato('street pedestrian',session=session,key='test',cache=cache)
     assert again['cache_hits']==[True,True] and len(session.calls)==2
+
+def test_context_tags_before_unrelated_high_resolution_or_portrait():
+    rows=[dict(id='irrelevant',title='basketball sports',variant={'w':2160,'h':3840}),
+          dict(id='street',title='street pedestrian city',variant={'w':1920,'h':1080}),
+          dict(id='portrait',title='street pedestrian urban',variant={'w':720,'h':1280})]
+    result=F.ordenar_stock('vertical street pedestrian',rows)
+    assert [x['id'] for x in result]==['portrait','street','irrelevant']
+    assert F.pertinencia_stock('vertical street pedestrian',rows[1])==1
+    assert len(result)==len(rows)

@@ -46,6 +46,24 @@ def _pexels(q,session,key):
         if c:out.append(c)
     out.sort(key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))
     return {'status':'LEADS' if out else 'EMPTY','candidates':out[:4]}
+def pertinencia_stock(q,c):
+    """Only provider tags; ignore format hints, never infer factual coverage."""
+    from src.v4.formatos.revisao_documental import termos_consulta
+    words=set(termos_consulta(q))-{'vertical','portrait','horizontal','landscape','video','footage','clip','film','4k','hd'}
+    tags=set(termos_consulta(c.get('title')))
+    if not words:return 0.
+    return len(words&tags)/len(words)
+
+def ordenar_stock(q,candidates):
+    def rank(c):
+        score=pertinencia_stock(q,c)
+        v=c['variant']
+        # A relevant portrait beats a similarly relevant landscape, but an
+        # unrelated portrait cannot beat a highly relevant landscape.
+        tier=2 if score>=.6 else 1 if score>0 else 0
+        return (-tier,v['h']<=v['w'],-score,-min(v['w'],v['h']))
+    return sorted(candidates,key=rank)
+
 def _pixabay(q,session,key):
     data=_get('https://pixabay.com/api/videos/',{'key':key,'q':q[:100],'per_page':20,'safesearch':'true','video_type':'film'},UA,session or requests.Session())
     out=[]
@@ -60,7 +78,7 @@ def _pixabay(q,session,key):
             variants.append(dict(url=url,w=w,h=h,size=v.get('size') if type(v.get('size')) is int and v['size']>0 else None))
         c=_candidate('pixabay',row,variants,page,author,'https://pixabay.com/service/license-summary/',str(row.get('tags') or q))
         if c:out.append(c)
-    out.sort(key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))
+    out=ordenar_stock(q,out)
     return {'status':'LEADS' if out else 'EMPTY','candidates':out[:4]}
 
 def _cached(provider,q,session,key,cache,load,params):
@@ -76,14 +94,16 @@ def pexels(q,*,session=None,key=None,cache=None):
     return _cached('pexels',q,session,key,cache,_pexels,{'orientation':'portrait','per_page':12,'version':1})
 
 def pixabay(q,*,session=None,key=None,cache=None):
-    return _cached('pixabay',q,session,key,cache,_pixabay,{'video_type':'film','per_page':20,'safesearch':True,'version':1})
+    result=_cached('pixabay',q,session,key,cache,_pixabay,{'video_type':'film','per_page':20,'safesearch':True,'version':1})
+    # Re-rank cached rows locally; don't reset the 24h cache version.
+    return {**result,'candidates':ordenar_stock(q,result.get('candidates') or [])}
 
 def pixabay_retrato(q,*,session=None,key=None,cache=None):
     """At most one alternate text query, never an invented orientation filter."""
     q=_query(q);first=pixabay(q,session=session,key=key,cache=cache)
     if first['status'] not in ('LEADS','EMPTY'):return first
     original=first.get('candidates') or []
-    if any(c['variant']['h']>c['variant']['w'] for c in original) or re.search(r'\b(?:vertical|portrait)\b',q,re.I):
+    if any(c['variant']['h']>c['variant']['w'] and pertinencia_stock(q,c)>=.6 for c in original) or re.search(r'\b(?:vertical|portrait)\b',q,re.I):
         return {**first,'consultas':[q],'retrato_pista':False}
     alt=('vertical '+q)[:100].strip()
     second=pixabay(alt,session=session,key=key,cache=cache)
@@ -91,7 +111,7 @@ def pixabay_retrato(q,*,session=None,key=None,cache=None):
         return {**first,'consultas':[q,alt],'alternativa_status':second['status'],'retrato_pista':True}
     unique={}
     for c in original+(second.get('candidates') or []):unique.setdefault(c['id'],c)
-    candidates=sorted(unique.values(),key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))[:4]
+    candidates=ordenar_stock(q,unique.values())[:4]
     return {'status':'LEADS' if candidates else 'EMPTY','candidates':candidates,'consultas':[q,alt],
             'cache_hits':[first.get('cache_hit'),second.get('cache_hit')],'retrato_pista':True}
 

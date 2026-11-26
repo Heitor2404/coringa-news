@@ -1,0 +1,33 @@
+name: E371 - busca multitema no diretor e ranking stock
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-busca-e371.yml','scripts/qa_busca_e371.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+      - run: python -m pytest -q tests/test_fontes_contextuais_e359.py tests/test_prioridade_e369.py
+      - name: Quatro consultas tematicas com duas rotas cada
+        run: python -m scripts.qa_busca_e371
+      - name: Preservar relatório privado
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          if [[ -s stage_documental/e371/proof.json ]]; then
+            python scripts/espelhar_revisao_cofre.py "e371-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e371/proof.json
+          fi

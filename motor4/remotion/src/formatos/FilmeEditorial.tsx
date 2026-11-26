@@ -382,6 +382,13 @@ const compositionV2=(shot:FilmShot,base:DocLayout):DocLayout&{safeTrialStatus?:s
     if(area(pixels)>=.9*area(original)&&fitsEvidence(COMPOSITION_V2_SLOTS,[pixels]))
       return {mode:'CENTERED_INTEGRAL',slots:COMPOSITION_V2_SLOTS,media:pixels,protected:[pixels],
         roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stage,centeredFit:'contain',safeTrialStatus:'V2_INTEGRAL_SAFE'};
+    // E329: keep a wider 3:2 or near-square original without cutting it.
+    const stack=conservativeSlots(stackedDocSlots(300));
+    const height=Math.min(900,1080*h/w),stageStack=[0,625,1080,625+height];
+    const stackedPixels=containPixels(stageStack,dims);
+    if(area(stackedPixels)>=.999*area(original)&&fitsEvidence(stack,[stackedPixels]))
+      return {mode:'CENTERED_INTEGRAL',slots:stack,media:stackedPixels,protected:[stackedPixels],
+        roiStatus:'FULL_SOURCE_PROTECTED',centeredStage:stageStack,centeredFit:'contain',safeTrialStatus:'V2_INTEGRAL_STACKED'};
     // Unknown crop is not accepted as the default for the new opt-in.
     if(base.roiStatus==='UNKNOWN_REVIEW'&&base.centeredFit==='cover')
       return {...base,mode:'CENTERED_INTEGRAL',media:original,protected:[original],
@@ -391,6 +398,9 @@ const compositionV2=(shot:FilmShot,base:DocLayout):DocLayout&{safeTrialStatus?:s
     for(const slots of [COMPOSITION_V2_SLOTS,conservativeSlots(stackedDocSlots(300)),conservativeSlots(V2_LOWER)])
       if(fitsEvidence(slots,base.protected))return {...base,slots,safeTrialStatus:'V2_OBSERVED_TEXT'};
   }
+  // Preserve native portrait area. Overlay safety remains UNKNOWN.
+  if(base.mode==='PORTRAIT_REVIEW'&&base.roiStatus==='UNKNOWN_REVIEW'&&docRects(COMPOSITION_V2_SLOTS).every(withinProfile))
+    return {...base,slots:COMPOSITION_V2_SLOTS,safeTrialStatus:'V2_PORTRAIT_OVERLAY_PENDING'};
   return {...base,safeTrialStatus:'V2_UI_OR_EVIDENCE_PENDING'};
 };
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
@@ -485,7 +495,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null};
+      actualOverlay,evidenceCollision,unknownEvidenceOverlay:actualOverlay&&layout.roiStatus==='UNKNOWN_REVIEW',layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:layout.media,text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);

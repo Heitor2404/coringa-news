@@ -51,6 +51,11 @@ jobs:
           path: stage_documental/nasa_curiosity_broca_pedra.mp4
           key: nasa-svs-original-ec6f31a988fff2a54f69ee9e04efbc77557138a63590a338c6cf4e16d9ca8d40
         id: nasa_cache
+      - name: Registrar bloqueio de origem sem repetir requisicao automatica
+        if: github.event_name == 'push' && steps.nasa_cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::error::ORIGEM_NASA_BLOQUEADA_HTTP403: cache exato ausente; prova real pendente. Nenhuma nova requisicao automatica. Somente workflow_dispatch pode tentar recuperar a origem."
+          exit 1
       - name: Recuperar original oficial NASA com SHA256 previamente fixado
         timeout-minutes: 8
         run: |

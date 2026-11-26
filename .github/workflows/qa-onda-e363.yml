@@ -2,7 +2,7 @@ name: E363 - onda paralela publica e atribuicao
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-onda-e363.yml','src/v4/descoberta_paralela_e363.py','tests/test_descoberta_paralela_e363.py']
+    paths: ['.github/workflows/qa-onda-e363.yml','src/v4/descoberta_paralela_e363.py','tests/test_descoberta_paralela_e363.py', '.github/actions/setup-ffmpeg/action.yml']
   workflow_dispatch:
 permissions:
   contents: read

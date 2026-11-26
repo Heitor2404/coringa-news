@@ -1,0 +1,48 @@
+name: E367 - replay temporal de videos NOAA USGS sem IA
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-temporal-e367.yml','scripts/qa_temporal_e367.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: python -m pip install -q -r requirements.txt beautifulsoup4 pytest opencv-python-headless
+      - uses: actions/download-artifact@v4
+        with:
+          name: e361-originais-privados
+          path: stage_documental/e367/inputs/e361
+          run-id: 45901583451
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e362-originais-privados
+          path: stage_documental/e367/inputs/e362
+          run-id: 45901703993
+          github-token: ${{ github.token }}
+      - name: Selecao temporal com originais autenticados
+        run: python -m scripts.qa_temporal_e367
+      - name: Preservar prova privada
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e367/proof
+          if [[ -s "$root/temporal.json" ]]; then
+            python scripts/espelhar_revisao_cofre.py "e367-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/temporal.json" "$root"/*.jpg
+          fi

@@ -44,3 +44,17 @@ def escolher(need,candidate,eligible,ranked,reservas,ordem,*,pages=(),hashes=())
     if not options:return None
     _,_,k,reservation=min(options,key=lambda x:x[:2])
     return k,reservation
+
+
+def janela_elegivel(need,sha,pagina,window,reservas):
+    """Cheap structural prefilter before paid review, matching E254 reserved capacity.
+    No inferred visual relation; never mark an excluded window semantically negative."""
+    import math
+    start=window.get('inicio_s');duration=window.get('duracao_s')
+    if not all(type(v) in (int,float) and math.isfinite(v) for v in (start,duration)) or start<0 or duration<1.4:return False
+    end=start+math.floor(min(3.8,duration)*30+1e-6)/30
+    for x in reservas.values():
+        if x['id']==need['id'] or (x['sha256']!=sha and x['pagina']!=pagina):continue
+        if x['sha256']!=sha or x['pagina']!=pagina or set(x['fatos'])&set(need['fatos']):return False
+        if max(start,x['inicio'])<min(end,x['fim'])-.001:return False
+    return True

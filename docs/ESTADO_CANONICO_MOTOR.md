@@ -387,3 +387,6 @@ Commit 154f8a4: 12/12 workflows SUCCESS, IDs 45845684770, 45845684916, 458456848
 ## 389. E316 — prova de consequência, inspeção inicial
 
 Fonte oficial USGS https://www.usgs.gov/media/videos/kilauea-volcano-fissure-8-video-compilation (30/05/2018) descreve a fonte da fissura 8 e um segundo registro de rocha resfriada caída na rua Kupono. A relação é documentada pela fonte, não inferida de duas filmagens. E316 inicia varredura privada do original E300 SHA 783f... de 23–61s em passos de 2s para localizar o segundo registro; nenhuma seleção sem inspeção efetiva. Sem chamadas IA/TTS, sem main/publicação. Próximo no mesmo bloco: vincular ação/consequência a janelas distintas e reaproveitar aquisição, não criar mais rótulos decorativos.
+
+
+E316.1: scan 45847402912 FAILURE por requests ausente no espelho privado, depois de SHA confirmado; adicionada dependência, sem alterar amostras. Filtro E313 deslocado também para preparar_lote: janelas incompatíveis com reservas do filme não chegam à visão, inclusive cache restaurado, sem registrar negativo semântico ou remover exploração; rollback permite reabertura. Rota não integral inalterada. Testes estruturais e de amostragem. Prova de consequência ainda exige inspeção da folha; não declarar causalidade a partir de hashes. CI pendente.

@@ -1,4 +1,4 @@
-name: E316 - inspecao de consequencia no original USGS
+name: E316.1 - inspecao de consequencia no original USGS
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -20,7 +20,7 @@ jobs:
         with: {python-version: '3.13'}
       - name: Restaurar original e amostrar trecho final
         run: |
-          python -m pip install -q pillow
+          python -m pip install -q pillow requests
           root=stage_documental/e316
           mkdir -p "$root"
           h=783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c

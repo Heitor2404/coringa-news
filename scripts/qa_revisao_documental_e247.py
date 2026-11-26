@@ -269,7 +269,10 @@ def main():
                         cached_starts.add(round(start,4));cached_exact.setdefault(round(start,4),[]).append(float(start))
             if progressive and (cache_only or calls >= budget) and not cached_starts:
                 return {'estado': 'ORCAMENTO', 'motivo': 'ANALISE_COMPATIVEL_NAO_DISPONIVEL'}
-            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts,inicios_exatos=cached_exact)
+            # Only exclude actual conflicting intervals in the integral edit.
+            # Keep exploration/cached negatives intact; a rollback can reopen them.
+            admissivel=(lambda w:RJ.janela_elegivel(n,meta['sha256'],c.get('pagina'),w,video_reservations)) if integral else None
+            exploration,windows=AD.preparar_lote(m,n,E.frame,exploracao=history['exploracao'],excluir=history['vistos'],priorizar_cache=cached_starts,inicios_exatos=cached_exact,janela_elegivel=admissivel)
             history['exploracao']=exploration
             c['exploracao_temporal']=exploration;c['janelas']=history['janelas']
             if not windows:return {'estado':'INSUFICIENTE' if history['vistos'] else 'FALHA_AQUISICAO','motivo':'SEM_JANELAS_NOVAS' if history['vistos'] else 'SEM_AMOSTRAS_DECODIFICADAS'}

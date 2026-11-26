@@ -448,7 +448,7 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
         if r not in result:result.append(r)
     return sorted(result,key=lambda r:r['inicio_s'])
 
-def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),priorizar_cache=(),inicios_exatos=None):
+def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),priorizar_cache=(),inicios_exatos=None,janela_elegivel=None):
     exploration=exploracao if exploracao is not None else explorar(midia,extrair)
     if priorizar_cache:
         # Reuse must not depend on the exploration grid: a previously reviewed
@@ -476,7 +476,7 @@ def preparar_lote(midia,necessidade,extrair,*,exploracao=None,excluir=(),prioriz
             except Exception as e:
                 exploration['janelas'].append({'inicio_s':a,'duracao_s':span,'falha':type(e).__name__,'origem':'checkpoint'})
         exploration['janelas'].sort(key=lambda x:x['inicio_s'])
-    remaining={**exploration,'janelas':[x for x in exploration['janelas'] if round(x['inicio_s'],4) not in excluir]}
+    remaining={**exploration,'janelas':[x for x in exploration['janelas'] if round(x['inicio_s'],4) not in excluir and (janela_elegivel is None or janela_elegivel(x))]}
     selected=selecionar(remaining,priorizar_movimento=necessidade.get('evidencia_visual')=='movimento')
     if priorizar_cache:
         # Cache starts are hints only: the caller must regenerate each

@@ -37,13 +37,18 @@ def diagnosticar(plan):
     if all_passive:issues.append('SLIDESHOW_PASSIVO_INTEGRAL')
     if longest>8:issues.append('SEQUENCIA_FOTOGRAFICA_LONGA_REVISAR')
     if rows[0]['passive_photo']:issues.append('GANCHO_VISUAL_REVISAR')
-    tasks=[{'necessidade_id':r['id'],'fatos':r['fatos'],'mostrar':r['mostrar'],
-        'acao':'REVISAR_ALTERNATIVA_REAL_MAIS_EXPLICATIVA' if r['preferencia_midia']=='video_preferencial' else 'REAVALIAR_CONTRIBUICAO_VISUAL_SEM_ALTERAR_FATO',
-        'preservar_evidencia_visual':r['evidencia_visual'],'publicar':False,'autoriza_animacao':False}
-        for r in rows if r['passive_photo'] and r['fatos'] and r['mostrar']]
+    tasks=tarefas_replanejamento(rows)
     return {'schema':'coringa.short.triage.v1','tarefas_replanejamento':tasks,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),
         'longest_passive_s':round(longest,3),'issues':issues,'shots':rows,
         'remediation':'Priorizar filmagem pertinente, comparação real, mapa ou explicação visual vinculada ao fato; não adicionar movimento decorativo para cumprir quota.'}
+
+def tarefas_replanejamento(rows):
+    """Same factual obligations before and after the film preflight."""
+    tasks=[{'necessidade_id':r['id'],'fatos':r['fatos'],'mostrar':r['mostrar'],
+        'acao':'REVISAR_ALTERNATIVA_REAL_MAIS_EXPLICATIVA' if r['preferencia_midia']=='video_preferencial' else 'REAVALIAR_CONTRIBUICAO_VISUAL_SEM_ALTERAR_FATO',
+        'preservar_evidencia_visual':r['evidencia_visual'],'publicar':False,'autoriza_animacao':False}
+        for r in rows if r['passive_photo'] and r['fatos'] and r['mostrar']]
+    return tasks

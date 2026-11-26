@@ -24,7 +24,7 @@ def main():
     if review_previews and not preview_pending:raise ValueError('E278.1-PRETRIAGEM')
     chain_previews='--encadear-previas' in sys.argv[4:]
     if chain_previews and not review_previews:raise ValueError('E279-REVISAO-PREVIAS')
-    preview_observations=[];preview_review_status=[];preview_vision=0;chain_status=[]
+    preview_observations=[];preview_review_status=[];preview_vision=0;chain_status=[];replanejamento=[]
     if revisar_acervo and (not progressive or replay):raise ValueError('E264-REVISAO-LOCAL')
     if replay and not progressive:raise ValueError('E259-PROGRESSIVA')
     tri=D.triagem_documental(case['necessidades'],case['fatos'],progressivo=progressive)
@@ -373,7 +373,7 @@ def main():
             curated=case.get('paginas_oficiais_curadas') or []
             if not isinstance(curated,list) or any(not isinstance(x,dict) or x.get('necessidade_id') not in {n['id'] for n in tri} for x in curated):raise ValueError('E263-CURADORIA')
             search_limit=32 if integral else 16
-            def search_progress(n,limit,attempted):
+            def search_progress(n,limit,attempted,*,somente_video=False):
                 nonlocal total_search
                 if n['id'] not in local_checked:
                     local_checked.add(n['id'])
@@ -393,6 +393,7 @@ def main():
                 # The no-vision preview run never acquires a master. Keep normal
                 # resolution variants for any run that can inspect full media.
                 providers=(lambda tipo:A.fontes_documentais(tipo,pretriagem=True)) if preview_pending and (budget==0 or n['id'] in reserved) else None
+                if somente_video:providers=lambda tipo:A.fontes_documentais(tipo) if tipo=='video' else []
                 r=A.pesquisar_cobertura(n,biblioteca=lib,fontes=providers,max_buscas=min(limit,search_limit-total_search,phase_limit-total_search),max_candidatos=64,progressivo=True,buscas_vistas=attempted)
                 total_search+=len(r['buscas']);reports.append(r);return r
             # First pass: one logical review for each obligation if available.
@@ -503,6 +504,29 @@ def main():
                                     state['vistos'].add(key)
                                     results[i] = revisar_prioridade(n, results[i], candidate, inspect, lambda: calls < budget)
                         for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
+            # E308: a structurally approved photo can still be an editorial
+            # fallback. Reuse the same queue, receipts, counters and authorization.
+            if integral and not (replay or revisar_acervo) and (not preview_pending or auto_chain):
+                from src.v4.formatos import replanejamento_e308 as RP
+                report={'case':case,'triagem':tri,'cobertura':results,'publish':False}
+                snapshots=[]
+                def alternative(n):
+                    snapshots.append((used_pages.copy(),used_sha.copy()))
+                    nid=n['id']
+                    return RP.fila_alternativa(n,states[nid],
+                        lambda need,limit,attempted:search_progress(need,limit,attempted,somente_video=True),
+                        lambda c,need:inspect(c,need,cache_only=calls>=budget),
+                        pode_buscar=lambda:total_search<search_limit and calls<budget,
+                        pode_inspecionar=lambda:calls<budget,
+                        pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
+                def finish(accept):
+                    pages,hashes=snapshots.pop()
+                    if not accept:
+                        used_pages.clear();used_pages.update(pages)
+                        used_sha.clear();used_sha.update(hashes)
+                if any(n.get('preferencia_midia')=='video_preferencial' for n in tri):
+                    replanejamento=RP.replanejar(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish)
+                    for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:
             reports=[];consulted=set()
@@ -557,7 +581,7 @@ def main():
     if review_previews:Q.write(out/'observacoes-previas.json',{'case':caseid,'publicar':False,'direitos_aprovados':False,'observacoes':preview_observations,'visao':preview_vision,'cobertura_nova':0,'status':preview_review_status,'encadeamento':chain_status,'reservadas':sorted(reserved)})
     Q.write(out/'revisao.json',{'case':case,'triagem':tri,'pesquisa':reports,'cobertura':results,
         'restauracao':rest,'rede_aquisicao':t.resumo(),'visao_chamadas_logicas':calls,
-        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'angulos_adiados':deferred_angles,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
+        'visao_limite':budget,'telemetria_visao':telemetry,'reusos_analises':cache_hits,'reusos_ids':reuse_ids,'angulos_adiados':deferred_angles,'checkpoints':checkpoint_rows,'modo_adaptativo':adaptive,'modo_progressivo':progressive,'modo_replay_privado':replay,'modo_somente_acervo':somente_acervo,'modo_revisar_acervo':revisar_acervo,'modo_multicenas':multi,'modo_qualidade':qualidade,'replanejamento_editorial':replanejamento,'cobertura_documentario':aggregate,'reuso_bytes_validado':reuses>0,'reusos_bytes':reuses,'publish':False,'pronto_para_render':False})
     for i,(c,ims,verdict) in enumerate(boards):
         board=Image.new('RGB',(1080,380*len(ims)+45),'#101c28');d=ImageDraw.Draw(board)
         d.text((12,10),verdict+' | '+c['aquisicao']['sha256'][:12],fill='white')

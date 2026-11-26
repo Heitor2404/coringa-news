@@ -1,0 +1,19 @@
+name: E359 - contratos opcionais de stock contextual
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-fontes-e359.yml','src/v4/fontes_contextuais_e359.py','tests/test_fontes_contextuais_e359.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install -q requests pytest
+      - run: python -m pytest -q tests/test_fontes_contextuais_e359.py

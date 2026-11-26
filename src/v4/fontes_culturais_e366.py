@@ -29,7 +29,6 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
     out=[]
     for row in rows[:25]:
         if not isinstance(row,dict):continue
-        counts['rows']+=1
         content=row.get('content') or {};dnr=content.get('descriptiveNonRepeating') or {}
         rid=_txt(row.get('id') or dnr.get('record_ID'));page=_smith_page(dnr.get('record_link'))
         institution=_txt(dnr.get('data_source') or dnr.get('unit_code') or row.get('unitCode'))
@@ -58,7 +57,6 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
                 source_id=sid,credito=credit,licenca='CC0 1.0',licenca_url='https://creativecommons.org/publicdomain/zero/1.0/',
                 recibo_fonte=dict(provider='smithsonian',id=sid,record_id=rid,media_id=mid,url=url,page=page,media_access='CC0',
                     metadata_sha256=digest,institution=institution,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
-            counts['retained']+=1
             if len(out)>=4:return out
     return out
 

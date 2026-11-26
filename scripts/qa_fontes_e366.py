@@ -14,7 +14,7 @@ def main():
     cache=CacheStock(os.environ['CORINGA_STOCK_CACHE_DB'])
     t=Transporte(max_http=7,max_bytes=48_000_000,max_wait=18)
     rows=[]
-    q='vertical city street'
+    q='city street pedestrian'
     try:
         r=pixabay(q,cache=cache);replay=pixabay(q,cache=cache)
         cands=r.get('candidates') or []
@@ -29,7 +29,7 @@ def main():
                 vs=sorted(c['variants'],key=lambda v:(v['h']<=v['w'],-min(v['w'],v['h'])))
                 v=next((v for v in vs if type(v.get('size')) is int and v['size']<=24_000_000),None)
                 if v:pick=(c,v);break
-            if pick and not r.get('cache_hit') and pick[1]['h']>pick[1]['w']:
+            if pick:
                 import hashlib
                 from src.v4.fontes_contextuais_e359 import PIXABAY_MEDIA
                 c,v=pick;raw=t.get(v['url'],PIXABAY_MEDIA,24_000_000)
@@ -43,10 +43,9 @@ def main():
         rows.append(row)
     except Exception as e:rows.append(dict(provider='pixabay',status='ERROR',reason=type(e).__name__))
     try:
-        diag={}
-        raw=smithsonian('steam locomotive',transport=t,diagnostico=diag)
+        raw=smithsonian('steam locomotive',transport=t)
         cands=[c for x in raw if (c:=_candidato_documental(x,'smithsonian','foto'))]
-        row=dict(provider='smithsonian',status='LEADS' if cands else 'EMPTY',count=len(cands),diagnostic=diag,
+        row=dict(provider='smithsonian',status='LEADS' if cands else 'EMPTY',count=len(cands),
                  candidates=[dict(title=c['titulo'],page=c['pagina'],credit=c['credito']) for c in cands])
         if cands:
             c=cands[0]

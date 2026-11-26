@@ -89,7 +89,7 @@ def main():
     global_http,global_bytes=t.max_http,t.max_bytes
     hold_http,hold_bytes=reserva_rede_encadeamento(global_http,global_bytes,len(reserved))
     t.max_http-=hold_http;t.max_bytes-=hold_bytes
-    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];deferred_angles=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set()
+    format_repairs=set();telemetry=[];calls=0;boards=[];results=[];acquired={};window_history={};saved_ids=set();cache_hits=0;reuse_ids=[];deferred_angles=[];checkpoint_rows=[];seen_bytes=set();reuses=0;aggregate=None;used_pages=set();used_sha=set();video_reservations={}
     autorizacao=os.getenv('CORINGA_AUTORIZACAO_VISAO')
     if autorizacao and not replay and budget>0:
         # E284: persistent authorization; never more than its remaining logical/operation balance.
@@ -117,7 +117,8 @@ def main():
             OV.liquidar(autorizacao,ticket['id'],operacoes=max(1,len(new_rows)),ok=True,
                         tokens=sum(((r.get('tokens') or {}).get('total_token_count') or 0) for r in new_rows))
         return out
-    from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE
+    from src.v4.formatos import ponte_cobertura_filme as PF,filme_editorial as FE,reserva_janelas_e313 as RJ
+    story_order={nid:i for i,nid in enumerate(nid for ch in case.get('chapters',[]) for nid in ch['needs'])}
     def inspect(c,n,*,cache_only=False):
         nonlocal reuses,cache_hits
         c['revisao_adicional_possivel']=False
@@ -325,11 +326,16 @@ def main():
             if eligible:
                 ranked=DE.selecionar_revisados([{'pacote':p,'midia':m,'decisao':dec} for p,_,dec in eligible],fato_id=n['fatos'][0],preferir_legibilidade=bool(n.get('exigir_legibilidade')))
                 if ranked:
-                    k=ranked[0]['ordem'];c['selecao_janela']=eligible[k][1]
-                    if integral:
-                        used_sha.add(meta['sha256'])
-                        if c.get('pagina'):used_pages.add(c['pagina'])
-                    return eligible[k][2]
+                    k=ranked[0]['ordem']
+                    selected=RJ.escolher(n,c,eligible,ranked,video_reservations,story_order,pages=used_pages,hashes=used_sha) if integral else None
+                    if not integral or selected is not None:
+                        if integral:k,reservation=selected;video_reservations[n['id']]=reservation
+                        c['selecao_janela']=eligible[k][1]
+                        if integral:
+                            used_sha.add(meta['sha256'])
+                            if c.get('pagina'):used_pages.add(c['pagina'])
+                        return eligible[k][2]
+                    c['janelas_pertinentes_incompativeis_com_montagem']=True
             if progressive and AD.ha_janelas_promissoras(exploration,history['vistos'],priorizar_movimento=n.get('evidencia_visual')=='movimento',gratuitas=cached_starts) and any('revisao' in row for row in batch['janelas']):
                 c['revisao_adicional_possivel']=True
             else:c['revisao_adicional_possivel']=False
@@ -360,7 +366,12 @@ def main():
             c['janelas'].append({'pacote':pack,'decisao':dec})
             boards.append((c,frames,dec['motivo']))
             if dec['estado']=='PERTINENTE_PRIVADO':
-                c['selecao_janela']=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
+                selection=DE.candidato_revisado(pack,m,fato_id=n['fatos'][0])
+                if integral:
+                    reservation=RJ.propor(n,c,selection,dec)
+                    if not RJ.compativel(reservation,video_reservations,pages=used_pages,hashes=used_sha):continue
+                    video_reservations[n['id']]=reservation
+                c['selecao_janela']=selection
                 if integral:
                     used_sha.add(meta['sha256'])
                     if c.get('pagina'):used_pages.add(c['pagina'])
@@ -511,7 +522,7 @@ def main():
                 report={'case':case,'triagem':tri,'cobertura':results,'publish':False}
                 snapshots=[]
                 def alternative(n):
-                    snapshots.append((used_pages.copy(),used_sha.copy()))
+                    snapshots.append((used_pages.copy(),used_sha.copy(),video_reservations.copy()))
                     nid=n['id']
                     return RP.fila_alternativa(n,states[nid],
                         lambda need,limit,attempted:search_progress(need,limit,attempted,somente_video=True),
@@ -520,10 +531,11 @@ def main():
                         pode_inspecionar=lambda:calls<budget,
                         pode_reusar=lambda c:c.get('fonte')=='biblioteca_v3')
                 def finish(accept):
-                    pages,hashes=snapshots.pop()
+                    pages,hashes,reservations=snapshots.pop()
                     if not accept:
                         used_pages.clear();used_pages.update(pages)
                         used_sha.clear();used_sha.update(hashes)
+                        video_reservations.clear();video_reservations.update(reservations)
                 if any(n.get('preferencia_midia')=='video_preferencial' for n in tri):
                     replanejamento=RP.replanejar(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish)
                     for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)

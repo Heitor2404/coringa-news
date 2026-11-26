@@ -21,7 +21,7 @@ def main():
         exploration=A.explorar(midia,E.frame,max_janelas=12,largura=240)
         selected=A.selecionar(exploration,limite=3,priorizar_movimento=True)
         # Compare ranking with the same windows and the new hint disabled.
-        baseline={**exploration,'janelas':[dict(j,diagnostico={**j['diagnostico'],'faixa_grafica_persistente_suspeita':False}) if 'diagnostico' in j else j for j in exploration['janelas']]}
+        baseline={**exploration,'janelas':[dict(j,diagnostico={**j['diagnostico'],'faixa_grafica_persistente_suspeita':False,'quadros_faixa_grafica_suspeita':0}) if 'diagnostico' in j else j for j in exploration['janelas']]}
         old=A.selecionar(baseline,limite=3,priorizar_movimento=True)
         if not selected:raise ValueError('E370_SEM_JANELAS_'+name)
         # Compare the original early sample against three existing selector windows.
@@ -39,7 +39,7 @@ def main():
                 samples.append(dict(label=label,t=t,pixel_sha256=hashlib.sha256(im.tobytes()).hexdigest()))
         preview=out/(name+'-temporal.jpg');sheet.save(preview,quality=91)
         rows.append(dict(provider=name,sha256=sha,width=w,height=h,duration_s=dur,selected=selected,
-            exploration=exploration,baseline_starts=[j['inicio_s'] for j in old],suspect_starts=[j['inicio_s'] for j in exploration['janelas'] if j.get('diagnostico',{}).get('faixa_grafica_persistente_suspeita')],samples=samples,preview=preview.name,semantic_review='PENDING',publish=False))
+            exploration=exploration,baseline_starts=[j['inicio_s'] for j in old],suspect_starts=[j['inicio_s'] for j in exploration['janelas'] if j.get('diagnostico',{}).get('quadros_faixa_grafica_suspeita')],samples=samples,preview=preview.name,semantic_review='PENDING',publish=False))
     (out/'temporal.json').write_text(json.dumps(dict(publish=False,semantic_approval=False,new_ai=0,new_source_http=0,rows=rows),ensure_ascii=False,indent=2))
     print('E370_TEMPORAL',[(r['provider'],len(r['exploration']['janelas']),[round(x['inicio_s'],2) for x in r['selected']]) for r in rows])
 if __name__=='__main__':main()

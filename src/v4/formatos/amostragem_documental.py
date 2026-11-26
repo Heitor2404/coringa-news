@@ -413,6 +413,10 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
     # Prefer one candidate per temporal region, not three nearby early windows.
     # Dark/quiet real footage remains eligible; motion is only a ranking hint.
     local=all('movimento_local' in r for r in rows)
+    # Relative contrast is a weak quality signal only for actual scanned
+    # motion windows. Dark events remain available in later batches.
+    from statistics import median
+    contrast_ref=median([r['contraste_min'] for r in rows])
     def rank(r):
         if local and priorizar_movimento:
             mv=r['movimento_local']
@@ -420,13 +424,16 @@ def selecionar(exploracao,*,limite=3,priorizar_movimento=False):
             # a pure pan/zoom is not the referent's action (pixel change is not semantics).
             return (r['diagnostico']['quadros_grafismo_suspeito'],
                     bool(r['diagnostico'].get('faixa_grafica_persistente_suspeita')),
+                    r['diagnostico'].get('quadros_faixa_grafica_suspeita',0),
                     r['contraste_min']<5,
                     not r.get('marca_metadado'),
+                    r['contraste_min']<.65*contrast_ref,
                     mv['corte_na_janela'] or (mv['parado'] and mv.get('deriva',0)<.02),
                     mv['camera_dominante'] and not mv.get('acompanhada'),
                     -max(mv['referente'],mv.get('deriva',0)*.5))
         return (r['diagnostico']['quadros_grafismo_suspeito'],
                     bool(r['diagnostico'].get('faixa_grafica_persistente_suspeita')),
+                    r['diagnostico'].get('quadros_faixa_grafica_suspeita',0),
                 r['contraste_min']<5,
                 -r.get('pares_alterados', 0) if priorizar_movimento else 0,
                 -r['mudanca_px'] if priorizar_movimento else -r['contraste_min'])

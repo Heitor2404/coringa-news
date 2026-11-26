@@ -26,3 +26,9 @@ def test_persistent_banner_is_hint_not_veto():
 def test_flat_sky_not_persistent_banner():
     im=Image.new('RGB',(240,136),'#0089c9')
     assert not diagnosticar_janela([im,im,im])['faixa_grafica_persistente_suspeita']
+
+def test_transient_banner_counts_without_persistence():
+    d=diagnosticar_janela([frame(),frame(False),frame(False)])
+    assert d['quadros_faixa_grafica_suspeita']==1
+    assert not d['faixa_grafica_persistente_suspeita']
+    assert not d['recorte_automatico_autorizado']

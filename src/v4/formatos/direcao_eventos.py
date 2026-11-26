@@ -269,6 +269,8 @@ def aceitar_observacao(pacote, resposta):
 def _faixa_grafica(a):
     """Possible coloured, near-uniform horizontal banner; not text detection."""
     import numpy as np
+    stride=max(1,(max(a.shape[:2])+239)//240)
+    a=a[::stride,::stride]
     h,w=a.shape[:2]
     if min(h,w)<40:return None
     # Examine central horizontal strips; a banner may contain white text.
@@ -330,7 +332,7 @@ def diagnosticar_janela(frames):
         graficos.append(bool(flat>=.78 and .008<=contrast<=.22 and np.median(lum)<35))
     # Persistence across separate samples is a soft overlay hint, not proof.
     persist=any(x and y and abs(x[0]-y[0])<=.05 and max(abs(c-d) for c,d in zip(x[1],y[1]))<=30 for i,x in enumerate(faixas) for y in faixas[i+1:])
-    return {'faixa_grafica_persistente_suspeita':bool(persist),'bbox_conteudo':[l/w,t/h,1-r/w,1-b/h],
+    return {'faixa_grafica_persistente_suspeita':bool(persist),'quadros_faixa_grafica_suspeita':sum(x is not None for x in faixas),'bbox_conteudo':[l/w,t/h,1-r/w,1-b/h],
             'barras_candidatas':bool(l or r or t or b),
             'quadros_grafismo_suspeito':sum(graficos),
             'amostras':len(frames),'revisao_semantica':'PENDENTE',

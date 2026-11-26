@@ -1034,6 +1034,8 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             detail=detalhe_fotografico(c,plano['media'][c['asset']],medias[c['asset']]['sha256'])
             if detail:x['documentary_detail_roi']=detail
             from . import progressao_estatica_e322 as R322
+            if c.get('static_fact_reveal') and [plano['media'][c['asset']].get(k) for k in ('width','height')]!=[medias[c['asset']][k] for k in ('width','height')]:
+                raise ValueError('E327-DIMENSOES-REAIS')
             reveal=R322.validar(c,plano['media'][c['asset']],medias[c['asset']]['sha256'],private=True)
             if reveal:x['documentary_static_reveal']=reveal
         if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:

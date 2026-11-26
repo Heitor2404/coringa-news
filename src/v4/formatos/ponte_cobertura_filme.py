@@ -249,4 +249,6 @@ def plano(case,chosen,tempos):
         result=B.inserir_no_filme(result,i,Path(m['local_source']),Path(m['atlas_proof']),m.get('intencao','localizar'))
     from . import comparacao_documental_e311 as C
     result['comparacoes_documentais']=C.aplicar(case,chosen,result)
+    from . import revelacao_documental_e327 as R327
+    result['revelacoes_documentais']=R327.aplicar(case,chosen,result)
     return result

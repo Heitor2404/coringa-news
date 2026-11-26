@@ -28,6 +28,8 @@ Responda JSON: {"veredito":"pertinente|contexto|insuficiente","natureza_visual":
 Necessidade: """+json.dumps({'mostrar':necessidade['mostrar'],'sujeito':necessidade.get('sujeito'),'evidencia':necessidade.get('evidencia_visual')},ensure_ascii=False)
     if necessidade.get('exigir_evidencia_direta'):
         prompt+='\nDistinga evidencia diretamente legivel da mera associacao tematica. Nao aceite uma paisagem generica, uma colina, um objeto ou uma legenda se o componente solicitado nao for discernivel. Acrescente evidencia_direta: {"classe":"direta|contextual|incerta","detalhe":"componente especifico realmente visivel e como atende ao pedido","escala":"xy_0_1000","bbox":{"esquerda":100,"topo":200,"direita":800,"base":900}}. Use inteiros de 0 a 1000, X horizontal, Y vertical, relativos a imagem inteira. Nao use lista nem troque os eixos; se nao localizar, use null e classe contextual/incerta.'
+    if necessidade.get('exigir_evidencia_direta') and necessidade.get('papel_visual') in ('detalhe','estrutura','mecanismo','consequencia') and necessidade.get('evidencia_visual')=='estatica':
+        prompt+='\\nOpcional: rotulo_detalhe (3–34 caracteres), apenas nome do detalhe diretamente legível dentro da mesma bbox. Não invente medidas, relações, movimento, datas ou causalidade; se não houver informação específica distinta do sujeito, use null.'
     r=chamar(prompt,[_jpeg(im)])
     if not isinstance(r,dict) or r.get('veredito') not in ('pertinente','contexto','insuficiente') or r.get('natureza_visual') not in NATUREZAS or not isinstance(r.get('inspecao'),str) or len(r['inspecao'].strip())<35:
         raise ValueError('E247-RESPOSTA-FOTO')

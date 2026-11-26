@@ -8,7 +8,7 @@ permissions:
   contents: read
 concurrency:
   group: integral-e324-havai
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   pilot:
     if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
@@ -41,7 +41,7 @@ jobs:
       - name: Restaurar registros causais verificados E323
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
-        run: python -m scripts.restaurar_evidencias_causais_e324 benchmarks/e299/cortes_revisados_e324.json qa_e289 stage_documental/e324 review-e323-45864804065-1
+        run: python -m scripts.restaurar_evidencias_causais_e324 benchmarks/e299/cortes_revisados_e324.json qa_e289 stage_documental/e219 review-e323-45864804065-1
       - name: Restaurar janela adicional revisada sem novas aquisicoes
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}

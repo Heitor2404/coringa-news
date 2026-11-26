@@ -116,8 +116,13 @@ def usgs(q,kind,*,transport=None):
         title=a.get_text(' ',strip=True)
         if not title or not wanted.intersection(terms(title+' '+u.rsplit('/',1)[-1])):continue
         seen.add(u)
-        out.append({'titulo':title,'url':u,'pagina':u,'source_id':u,'credito':'','licenca':'',
-            'recibo_fonte':{'provider':'usgs_pagina','id':u,'page':u,'metadata_sha256':hashlib.sha256(raw).hexdigest(),'credit_pending':True}})
+        # Gallery link often names the thumbnail, not the source video. Keep
+        # the label and the observed URL slug separately as discovery hints.
+        slug=u.rsplit('/',1)[-1].replace('-',' ')
+        alt_label=title
+        if kind=='video' and re.match(r'^(?:color |black and white )?(?:photo(?:graph)?|image)\b',title,re.I):title=slug
+        out.append({'titulo':title,'descricao':alt_label if title!=alt_label else slug,'url':u,'pagina':u,'source_id':u,'credito':'','licenca':'',
+            'recibo_fonte':{'provider':'usgs_pagina','id':u,'page':u,'metadata_sha256':hashlib.sha256(raw).hexdigest(),'credit_pending':True,'title_origin':'PAGE_SLUG_NOT_OFFICIAL_TITLE' if title!=alt_label else 'LINK_TEXT'}})
         if len(out)>=4:break
     return out
 

@@ -71,8 +71,13 @@ def discover(q,provider,kind,*,transport=None):
                     other='image' if kind=='video' else 'video'
                     if not re.search(r'\b'+want+r'\b',marker) or re.search(r'\b'+other+r'\b',marker):continue
             if not _matches(terms,title+' '+description+' '+urlsplit(u).path):continue
-            if title.lower() in ('watch video','view image') and card_heading:title=card_heading
-            seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,description=description[:500],mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
+            title_origin='LINK_TEXT'
+            if title.lower() in ('watch video','view image'):
+                if card_heading:title=card_heading;title_origin='SCOPED_HEADING'
+                else:
+                    title=urlsplit(u).path.strip('/').rsplit('/',1)[-1].replace('-',' ')
+                    title_origin='PAGE_SLUG_NOT_OFFICIAL_TITLE'
+            seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,description=description[:500],title_origin=title_origin,mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
             if len(out)>=4:break
         return out
     out=extract(soup,raw,mode)
@@ -87,7 +92,7 @@ def candidatos(q,provider,kind,*,transport=None):
     return [{'titulo':x['title'],'descricao':x.get('description') or '',
              'url':x['page'],'pagina':x['page'],'source_id':x['page'],'credito':'','licenca':'',
              'recibo_fonte':{'provider':provider+'_pagina','id':x['page'],'page':x['page'],
-                             'metadata_sha256':x['metadata_sha256'],'mode':x['mode']}}
+                             'metadata_sha256':x['metadata_sha256'],'mode':x['mode'],'title_origin':x['title_origin']}}
             for x in report['candidates']]
 def _credit(soup):
     for node in soup.find_all(string=re.compile(r'^\s*Credit\s*:?\s*$',re.I)):

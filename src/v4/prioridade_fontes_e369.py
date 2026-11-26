@@ -22,4 +22,5 @@ def candidato_promissor(need,c):
     # Text is a signal for scheduling, never a gate or a proof of coverage.
     score=relevancia_textual(need,c)
     return (score['cobertura']>=.6 and score['titulo']>=.25 and
-            not incompatibilidade_metadados(need,c) and c.get('natureza_preliminar')!='REPRESENTACAO_DECLARADA')
+            not incompatibilidade_metadados(need,c) and c.get('natureza_preliminar')!='REPRESENTACAO_DECLARADA' and
+            c.get('pista_objeto')!='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE')

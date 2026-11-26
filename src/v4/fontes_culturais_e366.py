@@ -18,6 +18,37 @@ def _smith_page(u):
     return u if safe(u,SMITH_PAGES) else None
 def _txt(x):
     return x if isinstance(x,str) else ''
+def object_types(content):
+    """Only object-level classifications from Smithsonian structured metadata."""
+    indexed=content.get('indexedStructured') or {}
+    freetext=content.get('freetext') or {}
+    values=[]
+    for x in indexed.get('object_type') or []:
+        if isinstance(x,str):values.append(x)
+    for x in freetext.get('objectType') or []:
+        if isinstance(x,dict) and isinstance(x.get('content'),str):values.append(x['content'])
+    return list(dict.fromkeys(x.strip()[:160] for x in values if x.strip()))[:12]
+
+def object_hint(query,title,types):
+    """A photograph of an illustration is still a record of that object.
+    This is a soft mismatch hint, never a license or semantic decision."""
+    from src.v4.formatos.revisao_documental import termos_consulta
+    import re
+    wanted=set(termos_consulta(query))
+    text=' '.join(types+[title]).casefold()
+    forms={
+        'stamp':r'\b(stamp|stamps|philatelic|postage|selos?)\b',
+        'drawing':r'\b(drawing|drawings|engraving|engravings|illustration|illustrations|print|prints)\b',
+        'model':r'\b(model|models|miniature|miniatures|scale model)\b',
+        'coin':r'\b(coin|coins|medal|medals)\b',
+    }
+    intended={'stamp':{'stamp','stamps','postage','philatelic','selo','selos'},'drawing':{'drawing','drawings','engraving','illustration','print','prints'},'model':{'model','models','miniature','miniatures'},'coin':{'coin','coins','medal','medals'}}
+    # Do not infer physical size, authenticity, or referent from an absent type.
+    for key,pattern in forms.items():
+        if re.search(pattern,text) and not (wanted&intended[key]):
+            return 'POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
+    return 'SEM_INCOMPATIBILIDADE_DECLARADA'
+
 def smithsonian(q,*,transport=None,key=None,diagnostico=None):
     q=_query(q);key=key or os.getenv('DATA_GOV_API_KEY')
     if not key:return []
@@ -37,6 +68,9 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
         if not rid:reject('NO_RECORD_ID');continue
         if not page:reject('PAGE_UNSUPPORTED');continue
         if not institution:reject('NO_INSTITUTION');continue
+        types=object_types(content)
+        title=_txt(row.get('title')) or rid
+        hint=object_hint(q,title,types)
         medias=(dnr.get('online_media') or {}).get('media') or []
         if not medias:reject('NO_MEDIA')
         for media in medias[:8]:
@@ -55,12 +89,25 @@ def smithsonian(q,*,transport=None,key=None,diagnostico=None):
             sid=rid+':'+mid
             credit=institution+' · Smithsonian Institution (CC0 1.0)'
             if institution=='Smithsonian Institution':credit=institution+' (CC0 1.0)'
-            out.append(dict(titulo=_txt(row.get('title')) or rid,descricao=_txt(dnr.get('title')),url=url,pagina=page,
+            out.append(dict(titulo=title,descricao=' · '.join(filter(None,[_txt(dnr.get('title')),*types])),url=url,pagina=page,
+                tipo_objeto_declarado=types,pista_objeto=hint,
                 source_id=sid,credito=credit,licenca='CC0 1.0',licenca_url='https://creativecommons.org/publicdomain/zero/1.0/',
                 recibo_fonte=dict(provider='smithsonian',id=sid,record_id=rid,media_id=mid,url=url,page=page,media_access='CC0',
-                    metadata_sha256=digest,institution=institution,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
-            if len(out)>=4:return out
-    return out
+                    metadata_sha256=digest,institution=institution,object_types=types,object_hint=hint,media_sha256=hashlib.sha256(json.dumps(media,sort_keys=True).encode()).hexdigest())))
+    from src.v4.formatos.revisao_documental import termos_consulta
+    wanted=set(termos_consulta(q))
+    def rank(c):
+        words=set(termos_consulta(c['titulo']+' '+c['descricao']))
+        return (c['pista_objeto']=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE',-len(wanted&words))
+    ordered=sorted(out,key=rank);first=[];extra=[];seen=set()
+    for c in ordered:
+        rid=c['recibo_fonte']['record_id']
+        if rid in seen:extra.append(c)
+        else:seen.add(rid);first.append(c)
+    result=sorted(first+extra,key=lambda c:rank(c)[0])[:4]
+    diag['eligible_media']=len(out);diag['retained']=len(result)
+    diag['retained_possible_mismatch']=sum(c['pista_objeto']=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE' for c in result)
+    return result
 
 def smithsonian_redirect(source,target):
     """Permit only delivery-service paths at the original institutional host."""

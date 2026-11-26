@@ -237,6 +237,7 @@ def _candidato_documental(c,fonte,tipo):
             'descricao_integral':c.get('descricao_integral') or '', 'source':c.get('source'),
             'credit':c.get('credit'), 'categories':c.get('categories'),
             'recibo_cientifico':c.get('recibo_cientifico'),'recibo_fonte':c.get('recibo_fonte'),
+            'tipo_objeto_declarado':c.get('tipo_objeto_declarado'),'pista_objeto':c.get('pista_objeto'),
             'natureza_preliminar':natureza_preliminar(c),
             'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
 

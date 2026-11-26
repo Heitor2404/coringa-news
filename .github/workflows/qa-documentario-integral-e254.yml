@@ -76,6 +76,7 @@ jobs:
           root=stage_documental/e254
           ready=$(jq -r 'if .publicar == false then (.pronto_para_render_privado == true) else error("relatorio privado invalido") end' "$root/integral.json")
           if [[ "$ready" != true ]]; then echo "E254 sem filme: consultar integral.json"; exit 0; fi
+          jq -e '.ok == true' "$root/sincronia-medida.json" >/dev/null
           (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root"/filme.mp4 --props=../"$root"/props.json --codec=h264 --crf=21 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error)
           ffprobe -v error -show_streams -show_format -of json "$root/filme.mp4" > "$root/probe.json"
           python - <<'PY'

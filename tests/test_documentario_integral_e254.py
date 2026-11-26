@@ -106,3 +106,18 @@ def test_measured_word_end_survives_voice_caption_round_trip():
     restored = palavras_de_caps(voz.legendas(original, set()))
     assert [word['e'] for word in restored] == [.34, .86]
     assert palavras_de_caps([{'end': .8, 'words': [{'w': 'MARÉ', 's': .2}]}])[0]['e'] == .8
+
+
+def test_e305_sync_failure_never_leaves_renderable_props(tmp_path):
+    import json
+    from scripts.qa_documentario_integral_e254 import gate_sincronia
+    gate={'pronto_para_tts':True,'pronto_para_render_privado':True}
+    for sync in ({'ok':False},{},{'ok':'true'}):
+        (tmp_path/'props.json').write_text('{}')
+        assert not gate_sincronia(tmp_path,gate,sync,64)
+        assert not (tmp_path/'props.json').exists()
+        data=json.loads((tmp_path/'integral.json').read_text())
+        assert data['pronto_para_render_privado'] is False and data['publicar'] is False
+        assert data['motivo']=='SINCRONIA_MEDIDA_REPROVADA'
+    assert gate_sincronia(tmp_path,gate,{'ok':True},64)
+    assert json.loads((tmp_path/'sincronia-medida.json').read_text())['ok'] is True

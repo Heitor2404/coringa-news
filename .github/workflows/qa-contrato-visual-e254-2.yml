@@ -1,4 +1,4 @@
-name: E254.2 - regressao contrato visual sem IA
+name: E305 - regressao integral e portao de sincronia sem IA
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

@@ -11,7 +11,7 @@ try{
  for(const r of prep.records.filter(r=>r.status==='READY_PRIVATE_FRAGMENT')){
   const props=JSON.parse(readFileSync(resolve(root,r.id,'props.json'),'utf8'));
   const composition=await selectComposition({serveUrl,id:'FilmeEditorial',inputProps:props,browserExecutable});
-  for(const t of [0,1.9,3.42]){
+  for(const t of [.3,1.9,3.42]){
    const logs=[];const name=r.id+'-'+t+'.png';
    await renderStill({serveUrl,composition,inputProps:props,browserExecutable,frame:Math.round(t*composition.fps),output:resolve(root,name),logLevel:'info',
     onBrowserLog:log=>{const text=String(log.text||'');const i=text.indexOf('E290_TEXT ');if(i>=0){try{logs.push(JSON.parse(text.slice(i+10)))}catch{out.errors.push('PARSE')}}}});

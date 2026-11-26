@@ -1,4 +1,4 @@
-name: E333 - recuperacao real de janela historica recusada
+name: E333.1 - recuperacao real de janela historica recusada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -33,6 +33,7 @@ jobs:
         run: |
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_recuperacao_cache_e333.py tests/test_recuperacao_e332.py tests/test_especificidade_movimento_e331.py
           python -m scripts.qa_recuperacao_real_e333
       - name: Provas focais de revisoes reais sem nova voz
         run: cd motor4 && node scripts/qa_recuperacao_real_e333.mjs

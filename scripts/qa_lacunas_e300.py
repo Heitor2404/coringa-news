@@ -1,10 +1,11 @@
 """Acquire candidates for explicit visual obligations; review remains pending."""
-import sys
+import sys,shutil
 from pathlib import Path
 from PIL import Image,ImageDraw
 from scripts import qa_documentario_geografia_e219 as E
 
 def main():
+    if not all(shutil.which(b) for b in ('ffmpeg','ffprobe')):raise RuntimeError('E300-INFRA-MEDIA-TOOLS')
     spec=E.read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=False)
     if spec.get('publish') is not False or not 1<=len(spec['candidates'])<=3:raise ValueError('E300-SCOPE')
     E.STAGE=out/'originais';E.STAGE.mkdir()

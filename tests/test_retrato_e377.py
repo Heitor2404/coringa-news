@@ -25,3 +25,16 @@ def test_portrait_route_budget_and_canonical_source(monkeypatch):
     assert calls==['commons_video','figshare','commons_video_retrato']
     assert r['buscas'][-1]['prioridade']=='ALTERNATIVA_RETRATO' and len(r['buscas'])==3
     assert any(c['fonte']=='commons_video' and c['altura_declarada']==1920 for c in r['candidatos'])
+
+
+def test_native_original_rescues_608px_derivative(monkeypatch):
+    p={'title':'File:Train.webm','pageid':1,'videoinfo':[{'url':'https://upload.wikimedia.org/native.webm','width':1080,'height':1920,'size':7000000,'duration':8,'descriptionurl':'https://commons.wikimedia.org/wiki/File:Train.webm','extmetadata':{'LicenseShortName':{'value':'CC BY 4.0'}},'derivatives':[{'src':'https://upload.wikimedia.org/low.webm','width':608,'height':1080,'size':1000000}]}]}
+    monkeypatch.setattr(midia,'_commons',lambda *a,**kw:[p])
+    monkeypatch.setattr(midia,'_relevante',lambda *a:True)
+    monkeypatch.setattr(midia,'_licenca_ok',lambda *a:True)
+    c=midia.candidatos_arquivo('train',estrito=True,preferir_vertical=True,pesquisa_retrato=True)[0]
+    assert (c['w'],c['h'])==(1080,1920) and not c['derivado']
+    assert c['variantes'][0]['size']==7000000 and c['variantes'][1]['width']==608
+    p['videoinfo'][0]['size']=80000001
+    c=midia.candidatos_arquivo('train',estrito=True,preferir_vertical=True,pesquisa_retrato=True)[0]
+    assert c['w']==608 and c['derivado']

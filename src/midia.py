@@ -179,6 +179,17 @@ def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False, pe
             else:
                 ders = [d for d in info.get('derivatives') or [] if d.get('src') and 360 <= (d.get('height') or 0) <= 1080]
                 ders.sort(key=lambda d: (-(d.get('height') or 0), 'webm' not in d.get('type', '')))
+            if preferir_vertical and ders:
+                # A native original can be usable even when the best available
+                # transcoded portrait is only 608px wide. Keep the same file
+                # identity and the declared byte ceiling; do not upscale.
+                from src.v4.formatos.filme_editorial import MIN_VIDEO_COMPOSITION_PX
+                w0,h0,size0=info.get('width'),info.get('height'),info.get('size')
+                if (min(ders[0]['width'],ders[0]['height'])<MIN_VIDEO_COMPOSITION_PX and
+                    type(w0) is int and type(h0) is int and h0>w0>=MIN_VIDEO_COMPOSITION_PX and
+                    type(size0) is int and 0<size0<=80_000_000 and info.get('url') and
+                    all(d['src']!=info['url'] for d in ders)):
+                    ders.insert(0,{'src':info['url'],'width':w0,'height':h0,'size':size0})
             url = ders[0]['src'] if ders else info.get('url')
             if not url or (not ders and (info.get('size') or 0) > 150_000_000):
                 continue
@@ -190,7 +201,7 @@ def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False, pe
                         'w': larg, 'h': alt, 'dur': float(info.get('duration') or 0), 'ano': _ano(meta),
                         'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
                         'pagina': info.get('descriptionurl'), 'licenca': lic,
-                        'url_master': info.get('url'), 'derivado': bool(ders),
+                        'url_master': info.get('url'), 'derivado': url!=info.get('url'),
                         'source_id': p.get('pageid'), 'source_title':p.get('title'),
                         'licenca_url':_txt(meta,'LicenseUrl'), 'restricoes':_txt(meta,'Restrictions'),
                         'descricao':_txt(meta,'ImageDescription') or titulo,

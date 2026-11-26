@@ -270,6 +270,11 @@ def proteger_corte_revisado(shot, binding, media):
     result={**shot,'video_framing':dict(contract)}
     result.pop('documentary_viewport',None)
     result['video_context_layout']=F.proteger_fonte_integral(result,media,(media['width'],media['height']))
+    if binding.get('lead') is not None:
+        label=binding['lead']
+        if not isinstance(label,str) or not 3<=len(label)<=34 or not label.isprintable() or not binding.get('review_ref') or not binding.get('observed'):
+            raise ValueError('E324-ROTULO')
+        result['lead']=label
     return result
 
 

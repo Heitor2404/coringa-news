@@ -54,28 +54,30 @@ def shot_for(cut,m,words,chapter,start,end):
     return shot
 
 def restore(cfg,out,root):
-    cuts=validate_config(cfg);tag=cfg['release']
-    if not re.fullmatch(r'review-e320-\d+-\d+',tag):raise ValueError('E321-ESTATICO-RELEASE')
+    cuts=validate_config(cfg)
+    tags={c.get('release',cfg['release']) for c in cuts.values()}
+    if any(not re.fullmatch(r'review-e(?:320|323)-\d+-\d+',tag) for tag in tags):raise ValueError('E321-ESTATICO-RELEASE')
     meta=api('')
     if meta.get('private') is not True or meta.get('id')!=1454059520:raise ValueError('E321-ESTATICO-COFRE')
-    rel=next(r for r in listar_releases(100) if r['tag_name']==tag and r.get('draft') is True)
-    assets={a['name']:a for a in rel['assets']}
+    releases={r['tag_name']:r for r in listar_releases(100) if r.get('draft') is True}
     root=Path(root);root.mkdir(parents=True,exist_ok=True);out=Path(out)
-    def download(name,limit):
-        a=assets[name];p=root/name
+    def download(tag,name,limit):
+        a=next(a for a in releases[tag]['assets'] if a['name']==name)
+        folder=root/tag;folder.mkdir(exist_ok=True);p=folder/name
         if not 0<a['size']<=limit:raise ValueError('E321-ESTATICO-LIMITE')
         if not p.exists():
-            subprocess.run(['gh','release','download',tag,'--repo',REPO,'--pattern',name,'--dir',str(root)],check=True,timeout=120)
+            subprocess.run(['gh','release','download',tag,'--repo',REPO,'--pattern',name,'--dir',str(folder)],check=True,timeout=120)
         if p.stat().st_size!=a['size'] or a.get('digest')!='sha256:'+sha(p):raise ValueError('E321-ESTATICO-SHA')
         return p
-    receipt=read(download('evidencias.json',2_000_000))
-    if receipt.get('publish') is not False:raise ValueError('E321-ESTATICO-PRIVADO')
+    receipts={tag:read(download(tag,'evidencias.json',2_000_000)) for tag in tags}
+    if any(r.get('publish') is not False for r in receipts.values()):raise ValueError('E321-ESTATICO-PRIVADO')
     result={}
     for c in cuts.values():
-        m=next(r['media'] for r in receipt['records'] if r['status']=='BYTES_VERIFIED' and r['media']['id']==c['source'])
+        tag=c.get('release',cfg['release'])
+        m=next(r['media'] for r in receipts[tag]['records'] if r['status']=='BYTES_VERIFIED' and r['media']['id']==c['source'])
         filename=Path(m['local_source']).name
         if not re.fullmatch(c['sha256']+r'\.(jpg|png|webp)',filename):raise ValueError('E321-ESTATICO-NOME')
-        m={**m,'local_source':str(download(filename,26_000_000))}
+        m={**m,'local_source':str(download(tag,filename,26_000_000))}
         result[m['id']]=validate_media(m,c)
     (out/'static-restaurado.json').write_text(json.dumps({'publish':False,'acquired':result},ensure_ascii=False,indent=2))
 if __name__=='__main__':restore(read(sys.argv[1]),sys.argv[2],sys.argv[3])

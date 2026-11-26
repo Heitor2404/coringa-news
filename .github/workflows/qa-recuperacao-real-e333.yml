@@ -1,0 +1,51 @@
+name: E333 - recuperacao real de janela historica recusada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-recuperacao-real-e333.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: recuperacao-real-e333
+  cancel-in-progress: true
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias e restauracao limitada de originais autenticados
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m scripts.qa_recuperacao_real_e333
+      - name: Provas focais de revisoes reais sem nova voz
+        run: cd motor4 && node scripts/qa_recuperacao_real_e333.mjs
+      - name: Preservar resultados e quadros mesmo em falha
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e333
+          if [[ -s "$root/replay.json" ]]; then
+            files=("$root/replay.json" "$root"/*.png)
+            [[ ! -s "$root/lava/recovery.json" ]] || files+=("$root/lava/recovery.json")
+            [[ ! -s "$root/frames.json" ]] || files+=("$root/frames.json")
+            python scripts/espelhar_revisao_cofre.py "e333-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          fi

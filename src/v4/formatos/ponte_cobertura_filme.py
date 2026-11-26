@@ -264,5 +264,5 @@ def plano(case,chosen,tempos):
     result['comparacoes_documentais']=C.aplicar(case,chosen,result)
     from . import revelacao_documental_e327 as R327
     result['revelacoes_documentais']=R327.aplicar(case,chosen,result)
-    if case.get('composicao_documental')=='PRIVATE_V2':result['composicao_documental']='PRIVATE_V2'
+    if case.get('composicao_documental') in ('PRIVATE_V2','PRIVATE_V3'):result['composicao_documental']=case['composicao_documental']
     return result

@@ -45,7 +45,7 @@ def revalidate(n,c,src):
     check(fresh['estado']=='PERTINENTE_PRIVADO' and fresh['revisao_id']==rid and fresh.get('evidencia_direta_normalizada')==d.get('evidencia_direta_normalizada'),'E330-REVISAO-INCOMPATIVEL')
     return samples
 
-def run_one(row,ref,releases,root):
+def run_one(row,ref,releases,root,*,composition='PRIVATE_V2'):
     folder=root/row['id'];folder.mkdir()
     h=row['sha256'];name='cm-'+h[:12]+'.zip'
     item=api('/contents/revisoes/'+row['folder']+'/revisao.json?ref='+ref)
@@ -71,7 +71,7 @@ def run_one(row,ref,releases,root):
     samples=revalidate(n,c,src)
     # Keep the exact original obligation and reviewed source; only create a
     # one-scene technical replay, never claim this is a complete documentary.
-    case={'tema':n['sujeito'],'chapters':[{'title':n['sujeito'],'needs':[n['id']]}],'composicao_documental':'PRIVATE_V2'}
+    case={'tema':n['sujeito'],'chapters':[{'title':n['sujeito'],'needs':[n['id']]}],'composicao_documental':composition}
     replay={'publish':False,'triagem':[n],'cobertura':[{'necessidade_id':n['id'],'estado':rr['estado'],'selecionado':rr['selecionado'],'rodadas':[{'pesquisa':{'candidatos':[c]}}]}]}
     chosen,gate=B.preparar_cobertura(replay,case,minimo_s=1.4)
     check(gate['pronto_para_tts'],'E330-PONTE '+str(gate['lacunas']))

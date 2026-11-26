@@ -60,6 +60,7 @@ export type FilmShot = {
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
   documentary_composition_v2?: boolean; // E328 private verified preflight
+  documentary_observed_viewport_trial?: boolean; // E337 private exact-viewport comparison
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
@@ -403,9 +404,42 @@ const compositionV2=(shot:FilmShot,base:DocLayout):DocLayout&{safeTrialStatus?:s
     return {...base,slots:COMPOSITION_V2_SLOTS,safeTrialStatus:'V2_PORTRAIT_OVERLAY_PENDING'};
   return {...base,safeTrialStatus:'V2_UI_OR_EVIDENCE_PENDING'};
 };
+// E337: project the already validated positions through their EXACT viewport,
+// not through a different 900px stage. Never manufacture a crop or use a
+// position calibrated for another aspect ratio. Compare only in private QA.
+const observedViewportTrial=(shot:FilmShot,baseline:DocLayout): (DocLayout&{safeTrialStatus:string})|null=>{
+  if(!shot.documentary_observed_viewport_trial||!shot.documentary_composition_v2||
+      shot.type!=='video'||shot.documentary_integral_required||shot.video_context_layout==='quadro_integral'||
+      !shot.documentary_roi_points?.length||!shot.framing_positions?.length)return null;
+  const dims=shot.source_dimensions;
+  if(!dims||dims.length!==2||!dims.every(v=>Number.isFinite(v)&&v>0)||dims[0]<=dims[1])return null;
+  if(shot.documentary_viewport&&!['4:5','1:1'].includes(shot.documentary_viewport))return null;
+  const height=shot.documentary_viewport==='4:5'?1350:shot.documentary_viewport==='1:1'?1080:1920;
+  const center=(H-height)/2;
+  const area=(r:readonly number[])=>(r[2]-r[0])*(r[3]-r[1]);
+  // Material gain over current layout. Preserve center when possible, limit
+  // vertical offset to 180px (9.4% of canvas) and report the actual geometry.
+  if(W*height<1.15*area(baseline.media))return null;
+  const offsets=[0,-30,30,-60,60,-90,90,-120,120,-150,150,-180,180];
+  for(const offset of offsets){
+    const top=center+offset;
+    if(top<0||top+height>H)continue;
+    const stage=[0,top,W,top+height],boxes=documentaryProtected(shot,stage);
+    if(!boxes||!boxes.length||!boxes.every(b=>b[0]>=stage[0]&&b[1]>=stage[1]&&b[2]<=stage[2]&&b[3]<=stage[3]))continue;
+    for(const slots of [COMPOSITION_V2_SLOTS,conservativeSlots(stackedDocSlots(300)),conservativeSlots(V2_LOWER)]){
+      if(!fitsEvidence(slots,boxes))continue;
+      return {mode:'CENTERED_CROP_OBSERVED',slots,media:stage,protected:boxes,roiStatus:'OBSERVED',
+        centeredStage:stage,centeredFit:'cover',safeTrialStatus:'V3_OBSERVED_VIEWPORT'};
+    }
+  }
+  return null;
+};
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=baseDocumentaryLayout(shot);
-  if(shot.documentary_composition_v2)return compositionV2(shot,base);
+  if(shot.documentary_composition_v2){
+    const baseline=compositionV2(shot,base);
+    return observedViewportTrial(shot,baseline)??baseline;
+  }
   if(!shot.documentary_safe_trial)return base;
   const candidates:DocSlots[]=[UI_TRIAL,{...UI_TRIAL,subtitle:[150,490,760,600]}];
   for(const slots of candidates){
@@ -1110,7 +1144,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
-  if(shots.some(s=>s.documentary_composition_v2)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
+  if(shots.some(s=>s.documentary_composition_v2||s.documentary_observed_viewport_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');

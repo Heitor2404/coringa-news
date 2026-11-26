@@ -916,7 +916,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if c.get('type')=='animation_clip':
             from . import complemento_integral_e314 as E
             shots.append(E.preparar(c,public_root));continue
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_composition_v2','documentary_detail_roi','documentary_comparison_panel','documentary_observed_label','observacao_temporal_candidata','static_fact_reveal','documentary_static_reveal')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_composition_v2','documentary_observed_viewport_trial','documentary_detail_roi','documentary_comparison_panel','documentary_observed_label','observacao_temporal_candidata','static_fact_reveal','documentary_static_reveal')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -1038,8 +1038,10 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
                 raise ValueError('E327-DIMENSOES-REAIS')
             reveal=R322.validar(c,plano['media'][c['asset']],medias[c['asset']]['sha256'],private=True)
             if reveal:x['documentary_static_reveal']=reveal
-        if privado and plano.get('documentary_framing')=='ADAPTIVE_REVIEW_V1' and plano.get('composicao_documental')=='PRIVATE_V2' and c['type'] in ('photo','video'):
+        if privado and plano.get('documentary_framing')=='ADAPTIVE_REVIEW_V1' and plano.get('composicao_documental') in ('PRIVATE_V2','PRIVATE_V3') and c['type'] in ('photo','video'):
             x['documentary_composition_v2']=True
+            if plano.get('composicao_documental')=='PRIVATE_V3' and c['type']=='video' and x.get('documentary_roi_points') and x.get('framing_positions') and not x.get('documentary_integral_required'):
+                x['documentary_observed_viewport_trial']=True
         if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:
             # Gráfico autoral já comunica dados/etapas dentro dos pixels.
             # Não duplicar título e CTA por cima dele no compositor.

@@ -45,7 +45,7 @@ def revalidate(n,c,src):
     check(fresh['estado']=='PERTINENTE_PRIVADO' and fresh['revisao_id']==rid and fresh.get('evidencia_direta_normalizada')==d.get('evidencia_direta_normalizada'),'E330-REVISAO-INCOMPATIVEL')
     return samples
 
-def run_one(row,ref,releases,root,*,diagnostic_only=False):
+def run_one(row,ref,releases,root,*,diagnostic_only=False,composition='PRIVATE_V2'):
     folder=root/row['id'];folder.mkdir()
     h=row['sha256'];name='cm-'+h[:12]+'.zip'
     item=api('/contents/revisoes/'+row['folder']+'/revisao.json?ref='+ref)
@@ -88,7 +88,7 @@ def run_one(row,ref,releases,root,*,diagnostic_only=False):
         check(len(proof)==row['expected_windows'] and all(x.get('status')=='PIXELS_REVALIDATED' and x.get('decisao_atual')=='INSUFICIENTE' and x.get('veredito_amostral')=='insuficiente' for x in proof),'E335-NEGATIVAS-NAO-PRESERVADAS')
         return {'id':row['id'],'status':'DIAGNOSTICO_REAL_PRIVADO','amostras':proof,'lacuna_preservada':True,'semantic_approval':False,'publish':False}
     from src.v4.formatos import replanejamento_e308 as RP, reserva_janelas_e313 as RJ
-    case={'tema':n['sujeito'],'chapters':[{'title':n['sujeito'],'needs':[n['id']]}],'composicao_documental':'PRIVATE_V2'}
+    case={'tema':n['sujeito'],'chapters':[{'title':n['sujeito'],'needs':[n['id']]}],'composicao_documental':composition}
     old={'necessidade_id':n['id'],'estado':rr['estado'],'selecionado':rr['selecionado'],'rodadas':[{'pesquisa':{'candidatos':[c]}}]}
     replay={'publish':False,'triagem':[n],'cobertura':[old]}
     prepare=lambda report:B.preparar_cobertura(report,case,minimo_s=1.4)

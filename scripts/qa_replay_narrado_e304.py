@@ -53,7 +53,7 @@ def main():
     subprocess.run(['gh','release','download',tag,'--repo',REPO,'--pattern','filme.mp4','--dir',str(old)],check=True,timeout=180)
     if film.stat().st_size!=a['size'] or P.sha(film)!=qa['sha256']:raise ValueError('E304-MP4-SHA')
     # Restore only exact originals needed by this previously prepared plan.
-    packages=root/'pacotes';packages.mkdir()
+    packages=Path('stage_documental/e304')/root.name/'pacotes';packages.mkdir(parents=True,exist_ok=False)
     names={f"cm-{m['expected_sha256'][:12]}.zip" for m in plan['media'].values()}
     if sum(assets[n]['size'] for n in names)>300_000_000:raise ValueError('E304-LIMITE')
     receipts=[]

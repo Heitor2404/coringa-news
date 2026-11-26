@@ -1,4 +1,4 @@
-name: E304 - replay integral narrado de outro tema sem IA
+name: E304.1 - replay integral com originais na pasta autorizada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

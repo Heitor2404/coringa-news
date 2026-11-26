@@ -127,3 +127,15 @@ def test_declared_license_does_not_hide_pending_rights(tmp_path):
     assert props['private_review_only'] and mid in props['direitos_pendentes']
     p['tipo']='FILME_FINAL'
     assert 'F-DIREITOS-PENDENTES' in {e['codigo'] for e in avaliar(p)['bloqueios']}
+
+
+def test_frame_aligned_duration_boundary_does_not_reject_float_noise():
+    p=_plano()
+    shot=next(s for s in p['shots'] if s['type']=='photo')
+    shot['start']=52.53333333333333
+    shot['end']=56.333333333333336
+    def has_duration_error():
+        return any(e['codigo']=='F-PLANO-SEM-DIRECAO' and e['cena']==shot['id'] for e in avaliar(p)['bloqueios'])
+    assert not has_duration_error()
+    shot['end']+=1/30
+    assert has_duration_error()

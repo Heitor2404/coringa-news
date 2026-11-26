@@ -784,6 +784,12 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
     from src.v4.formatos import direcao_eventos
     for item in direcao_eventos.verificar(cenas):
         falha(item['codigo'], item['cena'], item['motivo'])
+    from src.v4.formatos import progressao_estatica_e322 as R322
+    for cena in cenas:
+        if cena.get('static_fact_reveal') is not None:
+            origem=(plano.get('media') or {}).get(cena.get('asset')) or {}
+            try:R322.validar(cena,origem,origem.get('expected_sha256'),private=privado and plano.get('publicar') is False)
+            except (ValueError,TypeError,KeyError) as exc:falha('F-STATIC-REVEAL',str(cena.get('id')),str(exc))
     from src.v4.formatos import fiscal_progressao
     for item in fiscal_progressao.verificar(cenas, plano.get('media') or {}):
         falha(item['codigo'], item['cena'], item['motivo'])
@@ -910,7 +916,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
         if c.get('type')=='animation_clip':
             from . import complemento_integral_e314 as E
             shots.append(E.preparar(c,public_root));continue
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel','documentary_observed_label','observacao_temporal_candidata')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel','documentary_observed_label','observacao_temporal_candidata','static_fact_reveal','documentary_static_reveal')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -1027,6 +1033,9 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             if crop:x['photo_crop_preview']=crop
             detail=detalhe_fotografico(c,plano['media'][c['asset']],medias[c['asset']]['sha256'])
             if detail:x['documentary_detail_roi']=detail
+            from . import progressao_estatica_e322 as R322
+            reveal=R322.validar(c,plano['media'][c['asset']],medias[c['asset']]['sha256'],private=True)
+            if reveal:x['documentary_static_reveal']=reveal
         if c.get('type')=='photo' and plano['media'][c['asset']].get('original_graphic') is True:
             # Gráfico autoral já comunica dados/etapas dentro dos pixels.
             # Não duplicar título e CTA por cima dele no compositor.

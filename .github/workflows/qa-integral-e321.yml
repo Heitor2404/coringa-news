@@ -1,4 +1,4 @@
-name: E321 - documentario integral corrigido por evidencias reais
+name: E322 - progressao factual visivel no documentario integral
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -70,6 +70,7 @@ jobs:
           assert sync['ok'] is True and diagnostic['pronto_para_analise_visual'] and plan['duracao']>=60
           assert any(s['type']=='video' for s in plan['shots']) and any(s['type']=='atlas_map' for s in plan['shots'])
           assert {s['id'] for s in plan['shots'] if s['type']=='photo'}=={'c4-3','c6-0'}
+          assert {s['id'] for s in props['shots'] if s.get('documentary_static_reveal')}=={'c4-3','c6-0'}
           assert all(s.get('documentary_integral_required') for s in props['shots'] if s['id'] in {'c2-1','c3-3','c4-2','c6-1','c6-2','c6-3'})
           PY
       - name: Renderizar filme privado completo
@@ -113,7 +114,7 @@ jobs:
               board.save(p/f'contato-{i//3:02d}.jpg',quality=86)
           q={'duration':dur,'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','kind':'FULL_ASSISTED_INTEGRATION_REVIEW','semantic_review':'PENDING','ui_review':'PENDING','video_sha256':hashlib.sha256(v.read_bytes()).hexdigest(),'shots':rows,'route':'E219 assisted; not E254 autonomous acquisition','new_vision_calls':0,'new_tts_calls':0}
           (p/'qa.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
-          print('E321_INTEGRAL_RENDER_VALIDADO',dur,len(rows),flush=True)
+          print('E322_INTEGRAL_RENDER_VALIDADO',dur,len(rows),flush=True)
           PY
       - name: Preservar evidencias privadas inclusive em falha
         if: ${{ always() }}
@@ -134,6 +135,6 @@ jobs:
             files+=("$f");mirror+=("$f")
           done
           if (( ${#files[@]} )); then
-            bash scripts/arquivar_cofre_review.sh "review-e321-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
-            python scripts/espelhar_revisao_cofre.py "e321-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${mirror[@]}"
+            bash scripts/arquivar_cofre_review.sh "review-e322-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e322-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${mirror[@]}"
           fi

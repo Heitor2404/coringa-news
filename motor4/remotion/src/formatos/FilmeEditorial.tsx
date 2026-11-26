@@ -54,6 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
+  documentary_static_reveal?: {at:number;label:string;bbox:number[];sha256:string;revisao_id:string;status:string};
   documentary_observed_label?: {at:number;label:string;sha256:string;revisao_id:string;status:string};
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
@@ -880,14 +881,20 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       Number.isFinite(observed.at)&&observed.at>=0&&observed.at<duration&&now-shot.start>=observed.at&&
       typeof observed.label==='string'&&observed.label.length<=34&&/^[a-f0-9]{64}$/.test(observed.sha256)&&
       /^[a-f0-9]{64}$/.test(observed.revisao_id)&&!documentaryOverlay(shot,slots.section);
-    const section=(showObserved?observed?.label:shot.lead)?.toUpperCase();
+    const reveal=shot.documentary_static_reveal;
+    const detailShot:FilmShot=reveal?{...shot,documentary_detail_roi:{bbox:reveal.bbox,sha256:reveal.sha256,revisao_id:reveal.revisao_id,status:'PRIVATE_DETAIL_REVIEW_PENDING'}}:shot;
+    const showStatic=shot.type==='photo'&&reveal?.status==='PRIVATE_STATIC_REVEAL_PENDING'&&
+      Number.isFinite(reveal.at)&&now-shot.start>=reveal.at&&reveal.at<duration&&
+      typeof reveal.label==='string'&&reveal.label.length<=34&&!documentaryOverlay(shot,slots.section)&&Boolean(detailScreenBox(detailShot,layout));
+    const section=(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
     const brandOverlay=documentaryOverlay(shot,slots.brand);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',
         background:'linear-gradient(180deg,rgba(4,11,20,.16) 0%,transparent 35%,transparent 48%,rgba(4,11,20,.48) 65%,rgba(4,11,20,.10) 83%,transparent 100%)'}}/>}
-      <ObservedDetail shot={shot} layout={layout} t={now-shot.start} probe={textProbe}/>
+      {reveal?(showStatic&&<ObservedDetail shot={detailShot} layout={layout} t={now-shot.start-reveal.at+.3} probe={textProbe}/>):<ObservedDetail shot={shot} layout={layout} t={now-shot.start} probe={textProbe}/>}
+      {showStatic&&<div data-static-fact-reveal={reveal?.label} style={{display:'none'}}/>}
       <div style={{...rectStyle(slots.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
         fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1,
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>

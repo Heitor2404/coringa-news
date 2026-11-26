@@ -36,9 +36,22 @@ def shot_for(cut,m,words,chapter,start,end):
         or not cut.get('review_ref') or not cut.get('observed') or not cut.get('lead') or not 1.4-1e-6<=end-start<=3.8+1e-6):
         raise ValueError('E321-ESTATICO-FALA')
     validate_media(m,cut)
-    return {'id':cut['shot'],'type':'photo','asset':m['id'],'start':start,'end':end,
+    shot={'id':cut['shot'],'type':'photo','asset':m['id'],'start':start,'end':end,
             'photo_framing':'integral','lead':cut['lead'],'headline':m['label'],'subject':m['subject'],
             'source_display':m['credit'],'evidence':'representative','cues':[{'at':.2,'label':cut['lead']}]}
+    if cut.get('reveal') is not None:
+        import math
+        from src.v4.formatos import progressao_estatica_e322 as R
+        reveal=cut['reveal']
+        anchors=[w for w in words if start<=w['s']<end and w['w']==reveal['anchor_word']]
+        if len(anchors)!=1:raise ValueError('E322-ANCORA-FALA')
+        at=math.ceil((anchors[0]['s']-start)*30-1e-6)/30
+        shot['static_fact_reveal']={'schema':'coringa.static.reveal.private.v1','publicar':False,
+            'shot':cut['shot'],'sha256':cut['sha256'],'review_ref':cut['review_ref'],
+            'at':at,'label':reveal['label'],'bbox':reveal['bbox'],'observation':reveal['observation']}
+        shot['cues'].append({'at':at,'label':reveal['label']})
+        R.validar(shot,m,m['expected_sha256'],private=True)
+    return shot
 
 def restore(cfg,out,root):
     cuts=validate_config(cfg);tag=cfg['release']

@@ -42,3 +42,16 @@ def test_redirect_budget_and_explicit_host():
 def test_other_sources_do_not_follow_redirects():
     t=Transporte(session=S(R(307,'https://ids.si.edu/ids/deliveryService/id/123')))
     with pytest.raises(AquisiçãoErro):t.get('https://ids.si.edu/ids/deliveryService?id=123',{'ids.si.edu'},100)
+
+def test_smithsonian_official_open_access_bucket_only():
+    from src.v4.fontes_culturais_e366 import SMITH_DELIVERY_HOSTS
+    start='https://ids.si.edu/ids/deliveryService?id=123'
+    target='https://smithsonian-open-access.s3-us-west-2.amazonaws.com/media/nmah/123.jpg'
+    assert smithsonian_redirect(start,target)
+    session=S(R(307,target),R(200));transport=Transporte(session=session,max_http=2)
+    assert transport.get(start,SMITH_DELIVERY_HOSTS,100,redirect_policy=smithsonian_redirect)==b'abc'
+    assert transport.http==2
+    for bad in ('https://evil.s3-us-west-2.amazonaws.com/media/nmah/123.jpg',
+                'https://smithsonian-open-access.s3-us-west-2.amazonaws.com/metadata/123.jpg',
+                'https://smithsonian-open-access.s3-us-west-2.amazonaws.com/media/../123.jpg'):
+        assert not smithsonian_redirect(start,bad)

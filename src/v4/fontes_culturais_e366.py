@@ -5,6 +5,8 @@ from src.v4.aquisicao_documental import Transporte
 from src.v4.fontes_publicas_e354 import safe,_query
 
 SMITH_MEDIA={'ids.si.edu'}
+# Registry of Open Data on AWS and Smithsonian/OpenAccess confirm this exact bucket.
+SMITH_DELIVERY_HOSTS=SMITH_MEDIA|{'smithsonian-open-access.s3-us-west-2.amazonaws.com'}
 SMITH_PAGES={'n2t.net','www.si.edu','collections.si.edu','airandspace.si.edu','americanhistory.si.edu','naturalhistory.si.edu','npg.si.edu','americanart.si.edu','www.americanart.si.edu','asia.si.edu','africa.si.edu','nmaahc.si.edu','postalmuseum.si.edu'}
 EU_PAGES={'www.europeana.eu','europeana.eu'}
 def _metadata(t,url,params):
@@ -70,12 +72,21 @@ def smithsonian_redirect(source,target):
                 and u.port in (None,443) and not u.fragment and '..' not in path.split('/')
                 and '\\' not in path and (path=='/ids/deliveryService' or
                 path.startswith('/ids/deliveryService/') or path=='/ids/download' or path.startswith('/ids/download/')))
-    return path_ok(a) and path_ok(b) and source!=target
+    if not path_ok(a) or source==target:return False
+    if path_ok(b):return True
+    # Accept only the observed public Open Access bucket from the institutional
+    # delivery endpoint; no arbitrary S3 buckets, listing, or private paths.
+    path=unquote(b.path)
+    return (b.scheme=='https' and b.hostname=='smithsonian-open-access.s3-us-west-2.amazonaws.com'
+            and not b.username and not b.password and b.port in (None,443)
+            and not b.fragment and not b.query and path.startswith('/media/')
+            and '..' not in path.split('/') and '\\' not in path
+            and path.lower().endswith(('.jpg','.jpeg','.png','.webp','.tif','.tiff')))
 
 def smithsonian_choices(c):
     r=c.get('recibo_fonte') or {}
     if r.get('provider')!='smithsonian' or r.get('id')!=c.get('source_id') or r.get('url')!=c.get('url') or r.get('page')!=c.get('pagina') or r.get('media_access')!='CC0' or not r.get('record_id') or not r.get('media_id') or not r.get('institution') or c.get('licenca')!='CC0 1.0' or not safe(c.get('url'),SMITH_MEDIA):raise ValueError('SMITHSONIAN_RECIBO')
-    return [{'url':c['url']}],SMITH_MEDIA
+    return [{'url':c['url']}],SMITH_DELIVERY_HOSTS
 
 def europeana(q,kind,*,transport=None,key=None):
     """Search results are page leads only; resource-level rights not inferred."""

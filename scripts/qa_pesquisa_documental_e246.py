@@ -145,6 +145,10 @@ def usgs_receipt(c,t):
             except ValueError:continue
             if not any(v['url']==u for v in choices):choices.append({'url':u,'rotulo':text})
     if not choices:raise ValueError('USGS-SEM-VARIANTE')
+    if not c.get('credito'):
+        # Automatically discovered pages have no curator-confirmed credit yet.
+        # Retain the source page and explicit licence; do not guess an author.
+        raise ValueError('USGS_CREDITO_INDIVIDUAL_PENDENTE')
     c.update(titulo=h.get_text(' ',strip=True),licenca='Public domain',
              direitos='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA',
              recibo_usgs={'pagina':page,'page_sha256':hashlib.sha256(raw).hexdigest(),
@@ -181,6 +185,9 @@ def sample(c,out,t,*,progressivo=False,max_variantes=None,min_video_px=360):
         choices,hosts=archive_receipt(c,t)
     elif c.get('fonte')=='usgs_pagina':
         choices,hosts=usgs_receipt(c,t)
+    elif c.get('fonte') in ('openverse','inaturalist'):
+        from src.v4.fontes_publicas_e354 import receipt_choices
+        choices,hosts=receipt_choices(c)
     elif c.get('fonte')=='figshare':
         from src.v4.fontes_cientificas import HOSTS,safe_url
         rec=c.get('recibo_cientifico') or {}

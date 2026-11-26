@@ -175,20 +175,21 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 
 
 # E246: discovery for the documentary director. No legacy selection fallback.
-def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False):
+def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False, expandir=False):
     from src import acervo, midia
     from src.v4 import fontes_cientificas as FC
+    from src.v4 import fontes_publicas_e354 as FP
     if tipo=='video':
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
-                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+([('usgs_pagina',lambda q:FP.usgs(q,'video'))] if expandir else [])
     if tipo=='foto':
         return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),
-                ('met',lambda q:acervo.f_met([q]))]
+                ('met',lambda q:acervo.f_met([q]))]+([('usgs_pagina',lambda q:FP.usgs(q,'foto')),('openverse',FP.openverse),('inaturalist',FP.inaturalist)] if expandir else [])
     raise ValueError('E246-TIPO')
 
 
@@ -235,7 +236,7 @@ def _candidato_documental(c,fonte,tipo):
             'nasa_secondary_credit':c.get('nasa_secondary_credit'),
             'descricao_integral':c.get('descricao_integral') or '', 'source':c.get('source'),
             'credit':c.get('credit'), 'categories':c.get('categories'),
-            'recibo_cientifico':c.get('recibo_cientifico'),
+            'recibo_cientifico':c.get('recibo_cientifico'),'recibo_fonte':c.get('recibo_fonte'),
             'natureza_preliminar':natureza_preliminar(c),
             'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
 
@@ -300,7 +301,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         if analisar(item):
             return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
     if fontes is None:
-        fontes=(lambda tipo:fontes_documentais(tipo,preferir_vertical=True)) if necessidade.get('preferir_imersao_vertical') is True else fontes_documentais
+        fontes=lambda tipo:fontes_documentais(tipo,preferir_vertical=necessidade.get('preferir_imersao_vertical') is True,expandir=progressivo)
     # Interleave evidence types and sources. The second query reformulates
     # the search only if nothing reviewed has satisfied the obligation.
     rotas=[(tipo,nome,fn) for tipo in tipos for nome,fn in fontes(tipo)]

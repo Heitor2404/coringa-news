@@ -35,8 +35,8 @@ def validar(shot,media,sha,*,private):
         # Genuine detail magnification vs the established full-image stage,
         # not merely vs a reduced overview. Same two contain rectangles as TS.
         dw,dh=(r-x)*w,(d-y)*h
-        detail_scale=min(620/dw,340/dh)
-        overview_scale=min(620/w,290/h)
+        detail_scale=min(620/dw,280/dh)
+        overview_scale=min(1080/w,350/h)
         gain=detail_scale/scale
         if gain<1.1 or min(dw*detail_scale,dh*detail_scale)<100:
             raise ValueError('E325-DETAIL-SEM-GANHO')

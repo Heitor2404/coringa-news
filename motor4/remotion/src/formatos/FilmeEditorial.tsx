@@ -492,7 +492,7 @@ const ComparisonPanel:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
   </AbsoluteFill>;
 };
 // E325: source-linked documentary detail; original remains visible, no invented pixels.
-const DETAIL_ZOOM_SLOTS={brand:[150,280,500,312],section:[150,320,760,365],source:[150,370,760,435],subtitle:[150,1128,760,1238]} as const;
+const DETAIL_ZOOM_SLOTS={brand:[150,300,500,332],section:[150,335,760,375],source:[150,380,760,445],subtitle:[150,1128,760,1238]} as const;
 const detailZoomActive=(shot:FilmShot,t:number)=>Boolean(shot.type==='photo'&&shot.documentary_static_reveal?.detail_zoom===true&&t-shot.start>=shot.documentary_static_reveal.at);
 const detailZoomGeometry=(shot:FilmShot)=>{
   const p=shot.documentary_static_reveal,dims=shot.source_dimensions;
@@ -503,12 +503,12 @@ const detailZoomGeometry=(shot:FilmShot)=>{
     !Number.isFinite(p.at)||p.at<.8||p.at>shot.end-shot.start-.8||
     typeof p.label!=='string'||p.label.length>34)throw new Error('E325-DETAIL-CONTRACT');
   const [x,y,r,b]=p.bbox,[w,h]=dims,dw=(r-x)*w,dh=(b-y)*h;
-  const overview=containPixels([150,445,770,735],dims);
-  const detail=containPixels([150,780,770,1120],[dw,dh]);
+  const overview=containPixels([0,450,1080,800],dims);
+  const detail=containPixels([150,840,770,1120],[dw,dh]);
   const scale=(detail[2]-detail[0])/dw,previousScale=Math.min(1080/w,900/h);
   if(scale/previousScale<1.1||Math.min(detail[2]-detail[0],detail[3]-detail[1])<100||
      Math.abs(scale/previousScale-(p.detail_gain??0))>.001)throw new Error('E325-DETAIL-GAIN');
-  const layout:DocLayout={mode:'DETAIL_ZOOM_REVIEW',slots:DETAIL_ZOOM_SLOTS,media:[150,445,770,1120],protected:[overview,detail],roiStatus:'OBSERVED'};
+  const layout:DocLayout={mode:'DETAIL_ZOOM_REVIEW',slots:DETAIL_ZOOM_SLOTS,media:[0,450,1080,1120],protected:[overview,detail],roiStatus:'OBSERVED'};
   return {overview,detail,scale,layout};
 };
 const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
@@ -524,7 +524,7 @@ const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>
       <Img src={staticFile(shot.asset!)} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>
       <div style={{position:'absolute',left:x*ow,top:y*oh,width:(r-x)*ow,height:(b-y)*oh,border:'3px solid #E9B949',boxSizing:'border-box'}}/>
     </div>
-    <MeasuredDocText role="section" shot={shot} rect={[150,741,760,774]} text="DETALHE AMPLIADO DA FONTE" layoutOverride={layout} probe={probe}/>
+    <MeasuredDocText role="section" shot={shot} rect={[150,804,760,836]} text="DETALHE AMPLIADO DA FONTE" layoutOverride={layout} probe={probe}/>
     <div data-detail-zoom="source-pixels" style={{...rectStyle(detail),overflow:'hidden'}}>
       <Img src={staticFile(shot.asset!)} style={{position:'absolute',left:-x*w*scale,top:-y*h*scale,width:w*scale,height:h*scale}}/>
     </div>

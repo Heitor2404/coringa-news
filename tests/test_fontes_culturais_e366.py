@@ -27,3 +27,12 @@ def test_keys_absent_no_network(monkeypatch):
     t=T({})
     assert F.smithsonian('engine',transport=t)==[] and F.europeana('engine','video',transport=t)==[]
     assert not t.calls
+
+def test_smithsonian_search_filter_and_rejection_counts():
+    from urllib.parse import parse_qs,urlsplit
+    dnr=dict(record_link='http://n2t.net/ark:/65665/record',data_source='Museum',online_media={'media':[dict(type='Images',content='https://ids.si.edu/ids/deliveryService/id/abc',usage={'access':'Usage conditions apply'})]})
+    t=T({'response':{'rows':[dict(id='record',content={'descriptiveNonRepeating':dnr})]}})
+    diag={}
+    assert F.smithsonian('steam locomotive',transport=t,key='test',diagnostico=diag)==[]
+    assert 'online_media_type:"Images"' in parse_qs(urlsplit(t.calls[0][0]).query)['q'][0]
+    assert diag['counts']['non_cc0_or_non_image']==1 and diag['counts']['retained']==0

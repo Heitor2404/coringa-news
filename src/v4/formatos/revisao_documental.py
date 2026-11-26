@@ -239,6 +239,7 @@ def contexto_de_busca(necessidade,c):
     return (any(x in title for x in neg),sum(x in text for x in pos))
 
 def ordenar_candidatos(necessidade,candidatos):
+    from .imersao_documental_e328 import desempate_vertical
     ev=necessidade.get('evidencia_visual')
     pref=necessidade.get('preferencia_midia')
     def rank(c):
@@ -258,7 +259,7 @@ def ordenar_candidatos(necessidade,candidatos):
                 alternate,-context,-facets,-facet_quality,-forca_contextual(necessidade,c),-m['cobertura'],-m['titulo'],
                 pref=='video_preferencial' and c.get('tipo')!='video',pref=='foto_preferencial' and c.get('tipo')!='foto',not captura,-m['proximidade'],
                 c.get('direitos')!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' and c.get('fonte') not in ('nasa','nasa_video','archive_video'),
-                not bool(c.get('source_id')))
+                not bool(c.get('source_id')),desempate_vertical(necessidade,c))
     ordered=sorted(candidatos,key=rank)
     # Exact repeated provider titles often represent a single photo series.
     # Offer independent subjects first, without deleting alternatives.

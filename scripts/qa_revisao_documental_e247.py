@@ -57,6 +57,8 @@ def main():
         for n in tri:
             n['exigir_evidencia_direta']=True
             n['exigir_legibilidade']=True
+    if integral and not (replay or revisar_acervo):
+        for n in tri:n['preferir_imersao_vertical']=True
     t=Transporte(max_http=54 if integral else 14,max_bytes=270_000_000 if integral else 140_000_000,max_wait=30)
     adaptive='--adaptativa' in sys.argv[4:] or progressive
     multi='--multicenas' in sys.argv[4:]

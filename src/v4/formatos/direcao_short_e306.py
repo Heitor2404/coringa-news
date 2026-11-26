@@ -36,6 +36,7 @@ def direcao_explicativa(shot,need,media):
 def diagnosticar(plan):
     shots=plan['shots'];media=plan.get('media',{})
     if not shots:raise ValueError('E306-SEM-CENAS')
+    from . import imersao_documental_e328 as I
     needs={n['id']:n for n in plan.get('necessidades_direcao',[])}
     rows=[];explanation=[];total=0.;passive=0.;run=0.;longest=0.
     for shot in shots:
@@ -50,8 +51,7 @@ def diagnosticar(plan):
         total+=span
         w,h=m.get('width'),m.get('height');potential=None;crop=None
         if type(w) is int and type(h) is int and min(w,h)>0 and kind in ('photo','video'):
-            scale=min(1080/w,1920/h)
-            potential=round(w*h*scale*scale/(1080*1920),4)
+            potential=I.fracao_integral(w,h)
             if static:crop=F.propor_recorte_foto(shot,m,(w,h))
         n=needs.get(shot['id']) or {}
         explanation.append(direcao_explicativa(shot,n,m))
@@ -60,8 +60,8 @@ def diagnosticar(plan):
             'evidencia_visual':n.get('evidencia_visual'),'preferencia_midia':n.get('preferencia_midia','adequada_ao_fato'),
             'passive_photo':static,'integral_canvas_fraction':potential,
             'observed_photo_crop_candidate':crop is not None,
+            'observed_crop_candidate_fraction':I.potencial_recorte(shot,m,crop),
             'needs':['BUSCAR_ACAO_OU_DEMONSTRACAO_PERTINENTE','AVALIAR_IMERSAO_SEM_PERDA'] if static else ['VERIFICAR_O_QUE_OS_PIXELS_DEMONSTRAM']})
-    from . import imersao_documental_e328 as I
     immersion=I.diagnosticar(plan,rows)
     all_passive=all(r['passive_photo'] for r in rows)
     issues=[]

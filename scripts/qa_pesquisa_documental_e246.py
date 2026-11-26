@@ -117,6 +117,23 @@ def candidato_pagina_usgs(row,necessidade):
             'natureza_preliminar':'NATUREZA_PENDENTE_INSPECAO','publicar':False}
 
 
+def usgs_byline(soup,h,page):
+    """Recover the explicit institutional/person byline, never a guessed credit."""
+    from urllib.parse import urljoin,urlsplit
+    for link in h.find_all_next('a',href=True,limit=10):
+        label=link.get_text(' ',strip=True)
+        if not label or len(label)>160:continue
+        try:u=urlsplit(urljoin(page,link['href']))
+        except ValueError:continue
+        if u.scheme!='https' or u.hostname!='www.usgs.gov' or u.username or u.password or u.port not in (None,443):continue
+        if not re.match(r'^/(observatories|staff-profiles|centers|programs|science-centers)/',u.path):continue
+        for parent in list(link.parents)[:3]:
+            txt=parent.get_text(' ',strip=True)
+            if len(txt)<=240 and re.match(r'^By\s+',txt,re.I) and label in txt:
+                return {'nome':label,'url':u.geturl(),'rotulo':txt}
+    return None
+
+
 def usgs_receipt(c,t):
     from bs4 import BeautifulSoup
     from urllib.parse import urljoin
@@ -148,12 +165,13 @@ def usgs_receipt(c,t):
     credit_curated=bool(c.get('credito')) and not (c.get('recibo_fonte') or {}).get('credit_pending')
     # A public-domain declaration permits a private acquisition proof; it does
     # not supply an individual author or a publication approval.
-    if not credit_curated:c['credito']='USGS · crédito individual pendente'
+    byline=usgs_byline(soup,h,page)
+    if not credit_curated:c['credito']='USGS · '+byline['nome'] if byline else 'USGS · crédito individual pendente'
     c.update(titulo=h.get_text(' ',strip=True),licenca='Public domain',
              direitos='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' if credit_curated else 'REVISAR_PAGINA_INDIVIDUAL',
              recibo_usgs={'pagina':page,'page_sha256':hashlib.sha256(raw).hexdigest(),
                           'tipo':kind,'licenca_declarada':'Public Domain',
-                          'credito_curado':c['credito'] if credit_curated else None,'credito_status':'CURADO' if credit_curated else 'PENDENTE','variantes':choices,
+                          'credito_curado':c['credito'] if credit_curated else None,'credito_status':'CURADO' if credit_curated else 'DECLARADO_NA_PAGINA' if byline else 'PENDENTE','byline':byline,'variantes':choices,
                           'direitos':'PENDENTE_AUDITORIA_INDIVIDUAL'})
     return choices,hosts
 

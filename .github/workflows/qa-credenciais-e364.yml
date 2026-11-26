@@ -1,0 +1,25 @@
+name: E364 - disponibilidade de credenciais de fontes
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-credenciais-e364.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Informar somente presença, sem API externa
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+          EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          for name in ('PEXELS_API_KEY','PIXABAY_API_KEY','DATA_GOV_API_KEY','EUROPEANA_API_KEY'):
+              print(name + '=' + ('CONFIGURADA' if os.environ.get(name) else 'AUSENTE'))
+          PY

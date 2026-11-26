@@ -178,19 +178,18 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False, expandir=False):
     from src import acervo, midia
     from src.v4 import fontes_cientificas as FC
-    from src.v4 import fontes_publicas_e354 as FP
-    from src.v4 import galerias_oficiais_e356 as GO
+    from src.v4.descoberta_paralela_e363 import rotas_publicas
     if tipo=='video':
         return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
-                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+([('usgs_pagina',lambda q:FP.usgs(q,'video')),('noaa_pagina',lambda q:GO.candidatos(q,'noaa','video'))] if expandir else [])
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+(rotas_publicas(tipo) if expandir else [])
     if tipo=='foto':
         return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
                 ('figshare',lambda q:FC.candidatos(q,'foto')),
                 ('nasa',lambda q:acervo.f_nasa([q])),
                 ('loc',lambda q:acervo.f_loc([q])),
-                ('met',lambda q:acervo.f_met([q]))]+([('usgs_pagina',lambda q:FP.usgs(q,'foto')),('openverse',FP.openverse),('inaturalist',FP.inaturalist),('nist_pagina',lambda q:GO.candidatos(q,'nist','foto'))] if expandir else [])
+                ('met',lambda q:acervo.f_met([q]))]+(rotas_publicas(tipo) if expandir else [])
     raise ValueError('E246-TIPO')
 
 
@@ -324,36 +323,73 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         )
         # Discovery calls have a global budget independent of the retained
         # candidate cap. A crowded response must not suppress other routes.
-        batches=[]
-        while schedule:
-            # Reserve one diversity opportunity after a weak start. Do not
-            # increase the existing search budget or change injected fixtures.
-            index=0
-            if default_routes and len(report['buscas'])>=2 and sum(x.get('novos',0) for x in report['buscas'])<2:
-                expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina'}
-                if not any(x['fonte'] in expanded for x in report['buscas']):
-                    index=next((i for i,(_,_,_,ri,qi) in enumerate(schedule) if qi==0 and rotas[ri][1] in expanded and (rotas[ri][0],rotas[ri][1],consultas[qi].casefold()) not in attempted),0)
-            _,_,_,ri,qi=schedule.pop(index)
-            consulta=consultas[qi];tipo,nome,fn=rotas[ri]
-            key=(tipo,nome,consulta.casefold())
-            if key in attempted:continue
-            if len(report['buscas'])>=max_buscas:break
-            attempted.add(key);row={'consulta':consulta,'tipo':tipo,'fonte':nome}
-            try:raw=fn(consulta) or []
-            except Exception as e:
-                report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+        from src.v4.descoberta_paralela_e363 import RotaPublica,onda
+        batches=[];suspended=set();wave_used=False
+        expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina'}
+        def route_info(entry):
+            _,_,_,ri,qi=entry
+            tipo,nome,fn=rotas[ri];consulta=consultas[qi]
+            return tipo,nome,fn,consulta,(tipo,nome,consulta.casefold())
+        def collect(row,raw):
             batch=[]
             for item in raw:
-                c=_candidato_documental(item,nome,tipo)
+                c=_candidato_documental(item,row['fonte'],row['tipo'])
                 if not c or c['url'] in vistos:continue
-                vistos.add(c['url'])
-                c['consulta_origem']=consulta
-                batch.append(c)
-            row={**row,'estado':'OK' if batch else 'SEM_NOVOS_CANDIDATOS','novos':len(batch),'retidos':0}
+                vistos.add(c['url']);c['consulta_origem']=row['consulta'];batch.append(c)
+            row.update(estado='OK' if batch else 'SEM_NOVOS_CANDIDATOS',novos=len(batch),retidos=0)
             report['buscas'].append(row)
             if batch:
                 from src.v4.formatos.revisao_documental import ordenar_candidatos
                 batches.append((row,iter(ordenar_candidatos(necessidade,batch))))
+        while schedule and len(report['buscas'])<max_buscas:
+            index=0
+            # Weak initial coverage: reserve a diversity opportunity without
+            # enlarging max_buscas or altering explicitly injected test routes.
+            weak=(default_routes and len(report['buscas'])>=2 and
+                sum(x.get('novos',0) for x in report['buscas'])<2 and
+                not any(x['fonte'] in expanded for x in report['buscas']))
+            if weak:
+                index=next((i for i,x in enumerate(schedule) if x[-1]==0 and
+                    route_info(x)[1] in expanded and route_info(x)[4] not in attempted),0)
+            entry=schedule.pop(index)
+            tipo,nome,fn,consulta,key=route_info(entry)
+            if key in attempted:continue
+            attempted.add(key)
+            row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            if isinstance(fn,RotaPublica) and default_routes:
+                if fn.origem in suspended:
+                    report['buscas'].append({**row,'estado':'FONTE_SUSPENSA','novos':0,'retidos':0})
+                    continue
+                selected=[(row,fn,consulta)]
+                # A single concurrent wave per invocation, only distinct
+                # hosts and only when both calls fit the remaining budget.
+                if weak and not wave_used and max_buscas-len(report['buscas'])>=2:
+                    second=next((i for i,x in enumerate(schedule) if x[-1]==entry[-1]
+                        and isinstance(route_info(x)[2],RotaPublica)
+                        and route_info(x)[2].origem not in suspended|{fn.origem}
+                        and route_info(x)[4] not in attempted),None)
+                    if second is not None:
+                        t2,n2,f2,q2,k2=route_info(schedule.pop(second))
+                        attempted.add(k2);selected.append(({'consulta':q2,'tipo':t2,'fonte':n2},f2,q2))
+                        wave_used=True
+                results=onda([(f,q) for _,f,q in selected])
+                if len(selected)>1:
+                    report.setdefault('ondas_publicas',[]).append({
+                        'fontes':[r['fonte'] for r,f,q in selected],
+                        'consultas':len(selected),'http':sum(x['rede']['http'] for x in results),
+                        'bytes':sum(x['rede']['bytes'] for x in results),
+                        'sobreposicao_s':round(max(0,min(x['fim_monotonic'] for x in results)-max(x['inicio_monotonic'] for x in results)),3)})
+                for (r,f,q),result in zip(selected,results):
+                    r['rede']=result['rede']
+                    suspended.update(result['rede'].get('fontes_suspensas',[]))
+                    if result['error']:
+                        report['buscas'].append({**r,'estado':'FALHA','tipo_erro':result['error'],'novos':0,'retidos':0})
+                    else:collect(r,result['raw'])
+            else:
+                try:raw=fn(consulta) or []
+                except Exception as e:
+                    report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+                collect(row,raw)
         # Interleave ranked query batches before enforcing the global cap.
         # Unretained candidates are counted, never called semantic negatives.
         while batches and len(report['candidatos'])<max_candidatos:

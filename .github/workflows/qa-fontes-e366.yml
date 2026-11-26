@@ -1,8 +1,5 @@
 name: E365-E366 - cache stock e fontes culturais existentes
 on:
-  push:
-    branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-fontes-e366.yml','src/v4/fontes_culturais_e366.py','src/v4/cache_stock_e365.py','tests/test_fontes_culturais_e366.py']
   workflow_dispatch:
 permissions:
   contents: read

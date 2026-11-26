@@ -78,8 +78,25 @@ def pexels(q,*,session=None,key=None,cache=None):
 def pixabay(q,*,session=None,key=None,cache=None):
     return _cached('pixabay',q,session,key,cache,_pixabay,{'video_type':'film','per_page':20,'safesearch':True,'version':1})
 
+def pixabay_retrato(q,*,session=None,key=None,cache=None):
+    """At most one alternate text query, never an invented orientation filter."""
+    q=_query(q);first=pixabay(q,session=session,key=key,cache=cache)
+    if first['status'] not in ('LEADS','EMPTY'):return first
+    original=first.get('candidates') or []
+    if any(c['variant']['h']>c['variant']['w'] for c in original) or re.search(r'\b(?:vertical|portrait)\b',q,re.I):
+        return {**first,'consultas':[q],'retrato_pista':False}
+    alt=('vertical '+q)[:100].strip()
+    second=pixabay(alt,session=session,key=key,cache=cache)
+    if second['status'] not in ('LEADS','EMPTY'):
+        return {**first,'consultas':[q,alt],'alternativa_status':second['status'],'retrato_pista':True}
+    unique={}
+    for c in original+(second.get('candidates') or []):unique.setdefault(c['id'],c)
+    candidates=sorted(unique.values(),key=lambda c:(c['variant']['h']<=c['variant']['w'],-min(c['variant']['w'],c['variant']['h'])))[:4]
+    return {'status':'LEADS' if candidates else 'EMPTY','candidates':candidates,'consultas':[q,alt],
+            'cache_hits':[first.get('cache_hit'),second.get('cache_hit')],'retrato_pista':True}
+
 def pesquisar(q,*,necessidade):
     # Never treat stock search as event-specific evidence or factual action.
     if necessidade.get('evidencia_visual')!='contexto':return {'status':'ESCOPO_NAO_CONTEXTUAL','candidates':[]}
     if os.getenv('CORINGA_STOCK_CONTEXT_ENABLED')!='1':return {'status':'STOCK_OPT_IN_DESATIVADO','candidates':[]}
-    return {name:fn(q) for name,fn in [('pexels',pexels),('pixabay',pixabay)]}
+    return {name:fn(q) for name,fn in [('pexels',pexels),('pixabay',pixabay_retrato)]}

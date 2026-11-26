@@ -16,24 +16,34 @@ def _smith_page(u):
     return u if safe(u,SMITH_PAGES) else None
 def _txt(x):
     return x if isinstance(x,str) else ''
-def smithsonian(q,*,transport=None,key=None):
+def smithsonian(q,*,transport=None,key=None,diagnostico=None):
     q=_query(q);key=key or os.getenv('DATA_GOV_API_KEY')
     if not key:return []
     t=transport or Transporte(max_http=3,max_bytes=6_000_000,max_wait=12)
-    data,digest=_metadata(t,'https://api.si.edu/openaccess/api/v1.0/search',{'q':q[:100],'rows':25,'api_key':key})
+    query='('+q[:100]+') AND online_media_type:"Images" AND media_usage:CC0'
+    data,digest=_metadata(t,'https://api.si.edu/openaccess/api/v1.0/search',{'q':query,'rows':25,'api_key':key})
+    response=data.get('response') or {};rows=response.get('rows') or []
+    diag=diagnostico if diagnostico is not None else {}
+    diag.update(rows=len(rows),reasons={},total=response.get('rowCount'),metadata_sha256=digest)
+    def reject(reason):diag['reasons'][reason]=diag['reasons'].get(reason,0)+1
     out=[]
-    for row in (data.get('response') or {}).get('rows',[])[:25]:
+    for row in rows[:25]:
         if not isinstance(row,dict):continue
         content=row.get('content') or {};dnr=content.get('descriptiveNonRepeating') or {}
         rid=_txt(row.get('id') or dnr.get('record_ID'));page=_smith_page(dnr.get('record_link'))
         institution=_txt(dnr.get('data_source') or dnr.get('unit_code') or row.get('unitCode'))
-        if not rid or not page or not institution:continue
-        for media in ((dnr.get('online_media') or {}).get('media') or [])[:8]:
+        if not rid:reject('NO_RECORD_ID');continue
+        if not page:reject('PAGE_UNSUPPORTED');continue
+        if not institution:reject('NO_INSTITUTION');continue
+        medias=(dnr.get('online_media') or {}).get('media') or []
+        if not medias:reject('NO_MEDIA')
+        for media in medias[:8]:
             if not isinstance(media,dict):continue
             # Object metadata CC0 alone is explicitly insufficient.
-            if (media.get('usage') or {}).get('access')!='CC0' or str(media.get('type','')).lower() not in ('image','images'):continue
+            if (media.get('usage') or {}).get('access')!='CC0':reject('MEDIA_RIGHTS_NOT_CC0');continue
+            if str(media.get('type','')).lower() not in ('image','images'):reject('NOT_IMAGE');continue
             url=media.get('content')
-            if not safe(url,SMITH_MEDIA):continue
+            if not safe(url,SMITH_MEDIA):reject('MEDIA_HOST_UNSUPPORTED');continue
             # Prefer explicit full image resource if it is labelled as such.
             for r in media.get('resources') or []:
                 label=str(r.get('label') or '').lower()

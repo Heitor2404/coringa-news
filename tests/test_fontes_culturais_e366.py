@@ -8,7 +8,10 @@ def test_smithsonian_media_not_metadata_license():
     dnr=dict(record_link='http://n2t.net/ark:/65665/record',data_source='National Air and Space Museum',
              metadata_usage={'access':'CC0'},online_media={'media':[dict(media,usage={'access':'Usage conditions apply'}),media]})
     t=T({'response':{'rows':[dict(id='record',title='engine',content={'descriptiveNonRepeating':dnr})]}})
-    raw=F.smithsonian('engine',transport=t,key='test')
+    diagnostico={}
+    raw=F.smithsonian('engine',transport=t,key='test',diagnostico=diagnostico)
+    assert diagnostico['reasons']=={'MEDIA_RIGHTS_NOT_CC0':1}
+    assert 'media_usage%3ACC0' in t.calls[0][0]
     assert len(raw)==1 and raw[0]['recibo_fonte']['media_access']=='CC0'
     c=A._candidato_documental(raw[0],'smithsonian','foto')
     assert c['direitos']=='REVISAR_PAGINA_INDIVIDUAL' and not c['publicar']

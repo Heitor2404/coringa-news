@@ -51,3 +51,16 @@ def test_required_cache_and_24h_replay(tmp_path,monkeypatch):
 def test_disabled_context_no_network(monkeypatch):
     monkeypatch.delenv('CORINGA_STOCK_CONTEXT_ENABLED',raising=False)
     assert F.pesquisar('factory',necessidade={'evidencia_visual':'contexto'})['status']=='STOCK_OPT_IN_DESATIVADO'
+
+def test_pixabay_alternate_portrait_without_dropping_original(tmp_path):
+    def row(id,w,h):return dict(id=id,pageURL=f'https://pixabay.com/videos/id-{id}/',user='B',duration=7,
+        tags='street pedestrian',type='film',videos={'large':dict(url=f'https://cdn.pixabay.com/video/{id}.mp4',width=w,height=h)})
+    class Replies(S):
+        def get(self,url,**kw):
+            self.calls.append((url,kw))
+            return R({'hits':[row(1,1920,1080)] if not kw['params']['q'].startswith('vertical') else [row(2,720,1280),row(1,1920,1080)]})
+    session=Replies({});cache=CacheStock(tmp_path/'stock.db')
+    r=F.pixabay_retrato('street pedestrian',session=session,key='test',cache=cache)
+    assert [c['id'] for c in r['candidates']]==['2','1'] and len(session.calls)==2
+    again=F.pixabay_retrato('street pedestrian',session=session,key='test',cache=cache)
+    assert again['cache_hits']==[True,True] and len(session.calls)==2

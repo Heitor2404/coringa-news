@@ -45,6 +45,9 @@ def recibo_documental_valido(asset:dict)->bool:
     if not valid_sha(asset.get('expected_sha256')) or d.get('sha256_origem')!=asset['expected_sha256']:return False
     receipt=d.get('recibo');url=d.get('url_adquirida')
     if not isinstance(receipt,dict) or receipt.get('direitos')!='PENDENTE_AUDITORIA_INDIVIDUAL':return False
+    if d.get('provedor')=='pixabay_contextual':
+        from .stock_contextual_e381 import receipt_valid
+        return receipt_valid(asset)
     if d.get('provedor') in ('nasa','nasa_video'):
         nid=receipt.get('nasa_id')
         if not isinstance(nid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',nid):return False
@@ -687,6 +690,13 @@ def avaliar(plano: dict, *, fragmento_misto=False) -> dict:
                 falha('F-MIDIA-SEM-CATALOGO', cid, f'{mid} não consta na curadoria')
                 continue
             asset = plano['media'][mid]
+            if (asset.get('documentary_receipt') or {}).get('provedor')=='pixabay_contextual':
+                from .stock_contextual_e381 import escopo,LABEL
+                needs=[n for n in plano.get('necessidades_direcao',[]) if n.get('id')==cid]
+                if (not (privado and plano.get('publicar') is False) or len(needs)!=1 or not escopo(needs[0])
+                        or tipo!='video' or cena.get('evidence')!='representative' or cena.get('literal_identity')
+                        or not str(cena.get('source_display') or '').startswith(LABEL)):
+                    falha('F-STOCK-CONTEXTO-ESCOPO',cid,'stock somente em necessidade contextual explícita e identificada, jamais evidência factual')
             if (tipo=='photo' and asset.get('original_graphic') is True
                     and cena.get('evidence')=='literal'):
                 falha('F-GRAFICO-COMO-REGISTRO',cid,

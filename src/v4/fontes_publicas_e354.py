@@ -54,15 +54,21 @@ def openverse(q,*,transport=None):
         if len(out)>=4:break
     return out
 
-def inaturalist(q,*,transport=None):
+def inaturalist(q,*,transport=None,taxon_id=None):
     q=_query(q);t=_transport(transport)
-    data,digest=_json(t,'https://api.inaturalist.org/v1/observations',{'q':q,'quality_grade':'research','photos':'true','photo_license':'cc0,cc-by,cc-by-sa','per_page':12})
+    params={'quality_grade':'research','photos':'true','photo_license':'cc0,cc-by,cc-by-sa','per_page':12}
+    if taxon_id is not None:
+        if type(taxon_id) is not int or taxon_id<=0:raise ValueError('INAT_TAXON_ID')
+        params['taxon_id']=taxon_id
+    else:params['q']=q
+    data,digest=_json(t,'https://api.inaturalist.org/v1/observations',params)
     out=[];seen_photos=set()
     from src.v4.formatos.revisao_documental import termos_consulta
     wanted=set(termos_consulta(q))
     for obs in data.get('results',[])[:12]:
         if not isinstance(obs,dict) or type(obs.get('id')) is not int or obs.get('quality_grade')!='research':continue
         tax=obs.get('taxon') or {}
+        if taxon_id is not None and tax.get('id')!=taxon_id and taxon_id not in (tax.get('ancestor_ids') or []):continue
         for p in (obs.get('photos') or [])[:3]:
             if not isinstance(p,dict):continue
             code=p.get('license_code');author=p.get('attribution');pid=p.get('id');u=p.get('url')
@@ -79,7 +85,7 @@ def inaturalist(q,*,transport=None):
             dims=p.get('original_dimensions') or {};seen_photos.add(pid)
             out.append({'titulo':tax.get('preferred_common_name') or tax.get('name') or 'Observation '+str(obs['id']),'descricao':tax.get('name') or '',
                 'url':original,'pagina':page,'source_id':sid,'credito':str(author),'licenca':code.upper(),
-                'w':dims.get('width'),'h':dims.get('height'),'recibo_fonte':{'provider':'inaturalist','id':sid,'url':original,'page':page,'license_code':code,'metadata_sha256':digest,'author':str(author)}})
+                'w':dims.get('width'),'h':dims.get('height'),'recibo_fonte':{'provider':'inaturalist','id':sid,'url':original,'page':page,'license_code':code,'metadata_sha256':digest,'author':str(author),'taxon_id':tax.get('id'),'requested_taxon_id':taxon_id}})
     # Rank all bounded response rows before truncation. Distinct observations
     # precede extra photos of the same subject; no metadata veto.
     def rank(c):
@@ -134,3 +140,23 @@ def receipt_choices(c):
     if p=='openverse' and r.get('license_url')!=c.get('licenca_url'):raise ValueError('FONTE_LICENCA')
     if p=='inaturalist' and r.get('license_code') not in ('cc0','cc-by','cc-by-sa'):raise ValueError('FONTE_LICENCA')
     return [{'url':c['url']}],hosts
+
+def inaturalist_identidade(q,*,transport=None):
+    """Use taxon_id only if an exact active species name is unambiguous.
+    Free-text query remains fallback. No species inferred from action words."""
+    t=transport or Transporte(max_http=3,max_bytes=8_000_000,max_wait=12)
+    q=_query(q)
+    import re
+    # Exact names of two or three words are eligible. Long action phrases stay textual.
+    if not re.fullmatch(r"[^\W\d_]+(?:[ '\u2019-][^\W\d_]+){1,3}",q):return inaturalist(q,transport=t)
+    def norm(x):return ' '.join(str(x or '').casefold().replace('\u2019',"'").split())
+    try:
+        data,_=_json(t,'https://api.inaturalist.org/v1/taxa/autocomplete',{'q':q,'per_page':10})
+        exact={r['id'] for r in data.get('results',[])[:10] if isinstance(r,dict) and type(r.get('id')) is int
+            and r.get('is_active') is True and r.get('rank')=='species'
+            and norm(q) in (norm(r.get('name')),norm(r.get('preferred_common_name')))}
+    except Exception:
+        exact=set()
+    if len(exact)==1:
+        return inaturalist(q,transport=t,taxon_id=next(iter(exact)))
+    return inaturalist(q,transport=t)

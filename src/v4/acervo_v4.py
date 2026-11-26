@@ -302,6 +302,13 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         if analisar(item):
             return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
     default_routes=fontes is None
+    # Optional stock is context-only, a separate lane that cannot satisfy the
+    # existing factual evidence queue. Reserve one logical search slot.
+    import os
+    stock_context=(default_routes and progressivo and ev=='contexto' and
+        necessidade.get('exigir_evidencia_direta') is not True and max_buscas>=2 and
+        os.getenv('CORINGA_STOCK_CONTEXT_ENABLED')=='1' and bool(os.getenv('PIXABAY_API_KEY')) and
+        bool(os.getenv('CORINGA_STOCK_CACHE_DB')))
     if fontes is None:
         fontes=lambda tipo:fontes_documentais(tipo,preferir_vertical=necessidade.get('preferir_imersao_vertical') is True,expandir=progressivo)
     # Interleave evidence types and sources. The second query reformulates
@@ -344,7 +351,8 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
             if batch:
                 from src.v4.formatos.revisao_documental import ordenar_candidatos
                 batches.append((row,iter(ordenar_candidatos(necessidade,batch))))
-        while schedule and len(report['buscas'])<max_buscas:
+        documental_budget=max_buscas-int(stock_context)
+        while schedule and len(report['buscas'])<documental_budget:
             index=0
             # Weak initial coverage: reserve a diversity opportunity without
             # enlarging max_buscas or altering explicitly injected test routes.
@@ -381,7 +389,7 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                 selected=[(row,fn,consulta)]
                 # A single concurrent wave per invocation, only distinct
                 # hosts and only when both calls fit the remaining budget.
-                if weak and not wave_used and max_buscas-len(report['buscas'])>=2:
+                if weak and not wave_used and documental_budget-len(report['buscas'])>=2:
                     second=next((i for i,x in enumerate(schedule) if x[-1]==entry[-1]
                         and isinstance(route_info(x)[2],RotaPublica)
                         and route_info(x)[2].origem not in suspended|{fn.origem}
@@ -420,6 +428,20 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
                 next_round.append((row,it))
             batches=next_round
         report['candidatos_nao_retidos']=sum(x.get('novos',0)-x.get('retidos',0) for x in report['buscas'])
+        if stock_context:
+            from src.v4.fontes_contextuais_e359 import pixabay
+            q=consultas[0];key=('video','pixabay_contexto',q.casefold())
+            if key not in attempted:
+                attempted.add(key)
+                # Single provider query here, no hidden alternate request.
+                try:
+                    result=pixabay(q)
+                    report['stock_contextual']={'estado':result['status'],'consulta':q,'candidatos':result.get('candidates',[]),
+                        'cache_hit':result.get('cache_hit'),'publicar':False,'prova_factual':False}
+                    report['buscas'].append({'fonte':'pixabay_contexto','tipo':'video','consulta':q,'estado':result['status'],'novos':0,'retidos':0,'escopo':'CONTEXTO_APENAS'})
+                except Exception as e:
+                    report['stock_contextual']={'estado':'FALHA','tipo_erro':type(e).__name__,'candidatos':[],'publicar':False,'prova_factual':False}
+                    report['buscas'].append({'fonte':'pixabay_contexto','tipo':'video','consulta':q,'estado':'FALHA','novos':0,'retidos':0,'escopo':'CONTEXTO_APENAS'})
         return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
     # Reserve a round for the alternative query instead of exhausting budget
     # on the first query. Without inspection, continue looking for options.

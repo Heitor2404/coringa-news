@@ -63,15 +63,20 @@ def object_rank(query,c):
     mismatch=c.get('pista_objeto')=='POSSIVEL_REPRESENTACAO_DE_OUTRO_REFERENTE'
     return (-tier,mismatch,-coverage,-len(wanted&title))
 
-def smithsonian(q,*,transport=None,key=None,diagnostico=None):
+def smithsonian(q,*,transport=None,key=None,diagnostico=None,phrase=False,object_type=None):
     q=_query(q);key=key or os.getenv('DATA_GOV_API_KEY')
     if not key:return []
     t=transport or Transporte(max_http=3,max_bytes=6_000_000,max_wait=12)
-    query='('+q[:100]+') AND online_media_type:"Images" AND media_usage:CC0'
+    import re
+    clean=' '.join(re.findall(r'[^\W_]+',q[:100]))
+    if not clean:raise ValueError('SMITH_QUERY')
+    if object_type not in (None,'Photographs'):raise ValueError('SMITH_OBJECT_TYPE')
+    query=('"'+clean+'"' if phrase else '('+clean+')')+' AND online_media_type:"Images" AND media_usage:CC0'
+    if object_type:query+=' AND object_type:"'+object_type+'"'
     data,digest=_metadata(t,'https://api.si.edu/openaccess/api/v1.0/search',{'q':query,'rows':25,'api_key':key})
     response=data.get('response') or {};rows=response.get('rows') or []
     diag=diagnostico if diagnostico is not None else {}
-    diag.update(rows=len(rows),reasons={},total=response.get('rowCount'),metadata_sha256=digest)
+    diag.update(rows=len(rows),reasons={},total=response.get('rowCount'),metadata_sha256=digest,phrase=phrase,object_type=object_type)
     def reject(reason):diag['reasons'][reason]=diag['reasons'].get(reason,0)+1
     out=[]
     for row in rows[:25]:
@@ -163,3 +168,27 @@ def europeana(q,kind,*,transport=None,key=None):
             recibo_fonte=dict(provider='europeana',id=rid,page=page,metadata_sha256=digest,record_rights=rights,media_urls=media[:4],resource_rights='PENDENTE')))
         if len(out)>=4:break
     return out
+
+def smithsonian_identidade(q,*,transport=None,key=None,diagnostico=None):
+    """One phrase attempt then broad fallback, bounded by the same transport.
+    A format request is not part of the identity phrase."""
+    import re
+    t=transport or Transporte(max_http=3,max_bytes=8_000_000,max_wait=12)
+    diag=diagnostico if diagnostico is not None else {}
+    # Do not force photographs when user is researching an artefact.
+    photo=bool(re.search(r'\b(?:photograph|photographs|photography|photo|photos)\b',q,re.I))
+    phrase=re.sub(r'\b(?:photograph|photographs|photography|photo|photos)\b',' ',q,flags=re.I)
+    phrase=' '.join(phrase.split())
+    if len(phrase)<2:phrase=q
+    first={}
+    a=smithsonian(phrase,transport=t,key=key,diagnostico=first,phrase=True,object_type='Photographs' if photo else None)
+    diag['precise']=first
+    if any(object_rank(q,c)[0]==-2 and not object_rank(q,c)[1] for c in a):return a
+    second={}
+    try:b=smithsonian(q,transport=t,key=key,diagnostico=second)
+    except Exception as exc:
+        diag['fallback_error']=type(exc).__name__;return a
+    diag['broad']=second
+    unique={}
+    for c in a+b:unique.setdefault(c['source_id'],c)
+    return sorted(unique.values(),key=lambda c:object_rank(q,c))[:4]

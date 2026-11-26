@@ -57,6 +57,6 @@ def rotas_publicas(tipo):
     if tipo=='foto':
         return [('usgs_pagina',RotaPublica('www.usgs.gov',lambda q,transport:F.usgs(q,'foto',transport=transport))),
                 ('openverse',RotaPublica('api.openverse.org',F.openverse)),
-                ('inaturalist',RotaPublica('api.inaturalist.org',F.inaturalist)),
-                ('nist_pagina',RotaPublica('www.nist.gov',lambda q,transport:G.candidatos(q,'nist','foto',transport=transport),4,9_000_000))]+([('smithsonian',RotaPublica('api.si.edu',C.smithsonian,3,6_000_000))] if os.getenv('DATA_GOV_API_KEY') else [])
+                ('inaturalist',RotaPublica('api.inaturalist.org',F.inaturalist_identidade,3,8_000_000)),
+                ('nist_pagina',RotaPublica('www.nist.gov',lambda q,transport:G.candidatos(q,'nist','foto',transport=transport),4,9_000_000))]+([('smithsonian',RotaPublica('api.si.edu',C.smithsonian_identidade,3,8_000_000))] if os.getenv('DATA_GOV_API_KEY') else [])
     raise ValueError('TIPO_PUBLICO')

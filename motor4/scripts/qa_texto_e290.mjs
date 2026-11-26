@@ -54,7 +54,7 @@ props.documentary_captions=props.documentary_captions.flatMap((cap,i)=>[
 ]);
 const dest=resolve(root,'e290');mkdirSync(dest,{recursive:true});
 const result={publish:false,visual_approval:'PENDING',narration:false,
-  kind:'REAL_MEDIA_LAYOUT_PROBE_SYNTHETIC_CAPTIONS',background:'SIGNATURE_B_V1',resolution:[1080,1920],frames:[],errors:[]};
+  kind:'REAL_MEDIA_LAYOUT_PROBE_SYNTHETIC_CAPTIONS',background:'BLACK_SOLID_V1',resolution:[1080,1920],frames:[],errors:[]};
 const save=()=>writeFileSync(resolve(dest,'medidas.json'),JSON.stringify(result,null,2));
 try {
   const serveUrl=await bundle({entryPoint:resolve('remotion/src/index.ts'),publicDir:resolve('remotion/public')});
@@ -86,7 +86,7 @@ try {
         if(row.evidenceCollision)result.errors.push('EVIDENCE_COLLISION '+shot.id+' '+offset+' '+role);
         const [mx,my,mr,mb]=row.media;
         const hasGap=mx>.5||my>.5||mr<1079.5||mb<1919.5;
-        if(row.signatureBackground!==(hasGap?'SIGNATURE_B_V1':null))
+        if(row.signatureBackground!==(hasGap?'BLACK_SOLID_V1':null))
           result.errors.push('SIGNATURE_SCOPE '+shot.id+' '+offset+' '+role);
         if(shot.video_context_layout==='cena_integral'&&shot.source_dimensions[0]/shot.source_dimensions[1]>=1080/610&&row.actualOverlay)
           result.errors.push('PANORAMIC_OVERLAP '+shot.id+' '+offset+' '+role);

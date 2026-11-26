@@ -175,11 +175,11 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
 
 
 # E246: discovery for the documentary director. No legacy selection fallback.
-def fontes_documentais(tipo, *, pretriagem=False):
+def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False):
     from src import acervo, midia
     from src.v4 import fontes_cientificas as FC
     if tipo=='video':
-        return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True)),
+        return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
                 ('figshare',lambda q:FC.candidatos(q,'video')),
                 ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
                 ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]
@@ -299,7 +299,8 @@ def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspeciona
         if item.get('estado')=='MINIATURA_NAO_E_VIDEO':continue
         if analisar(item):
             return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
-    if fontes is None:fontes=fontes_documentais
+    if fontes is None:
+        fontes=(lambda tipo:fontes_documentais(tipo,preferir_vertical=True)) if necessidade.get('preferir_imersao_vertical') is True else fontes_documentais
     # Interleave evidence types and sources. The second query reformulates
     # the search only if nothing reviewed has satisfied the obligation.
     rotas=[(tipo,nome,fn) for tipo in tipos for nome,fn in fontes(tipo)]

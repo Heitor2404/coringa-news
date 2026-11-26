@@ -7,6 +7,9 @@ def diagnosticar(plan,rows):
         span=r['end']-r['start'];m=plan.get('media',{}).get(s.get('asset'),{})
         digest=m.get('expected_sha256') or s.get('asset')
         fraction=r['integral_canvas_fraction'];crop=r.get('observed_crop_candidate_fraction');tasks=[]
+        fill=classificar_ocupacao(fraction,crop)
+        if r['kind'] in ('video','photo') and fill['estado']=='ALTERNATIVA_PRIORITARIA':
+            tasks.append('PRIORIZAR_FONTE_MAIS_IMERSIVA_SEM_PERDER_EVIDENCIA')
         if crop is not None and fraction is not None and crop>fraction+.05:
             tasks.append('COMPARAR_RECORTE_OBSERVADO_COM_FONTE_INTEGRAL')
         if r['kind'] in ('video','photo') and fraction is not None and fraction<.28:
@@ -26,7 +29,7 @@ def diagnosticar(plan,rows):
             tasks.append('CONFERIR_EVIDENCIA_DO_GANCHO')
         if tasks:
             out.append({'id':s['id'],'fatos':r['fatos'],'mostrar':r['mostrar'],
-                'integral_canvas_fraction':fraction,'observed_crop_candidate_fraction':crop,'tarefas':tasks,'prioridade':('GANCHO' if s is shots[0] else 'EVIDENCIA' if r['evidencia_visual']=='movimento' or r['papel_visual'] in ('mecanismo','consequencia') else 'COMPOSICAO'),'publicar':False})
+                'integral_canvas_fraction':fraction,'observed_crop_candidate_fraction':crop,'ocupacao':fill,'tarefas':tasks,'prioridade':('GANCHO' if s is shots[0] else 'EVIDENCIA' if r['evidencia_visual']=='movimento' or r['papel_visual'] in ('mecanismo','consequencia') else 'COMPOSICAO'),'publicar':False})
         prev=digest
     return {'schema':'coringa.immersion.triage.v1','low_integral_fraction_s':round(low,3),
         'adjacent_same_source_video_s':round(repeated,3),'moderate_integral_fraction_s':round(horizontal,3),'unknown_portrait_s':round(unknown_portrait,3),'tasks':out,'publish':False,
@@ -71,3 +74,12 @@ def potencial_recorte(shot,media,photo_crop=None):
             return 1.0
     except (ValueError,KeyError,TypeError,AttributeError):return None
     return None
+
+def classificar_ocupacao(integral,observado=None):
+    """Editorial estimate, not an automatic hard rejection. A unique wide
+    historical/technical source may be essential. Never infer an unreviewed crop."""
+    import math
+    vals=[v for v in (integral,observado) if type(v) in (int,float) and math.isfinite(v) and 0<v<=1]
+    f=max(vals,default=None)
+    state='DIMENSAO_PENDENTE' if f is None else 'PREFERENCIAL' if f>=.60 else 'ACEITAVEL_CANDIDATA' if f>=.50 else 'ALTERNATIVA_PRIORITARIA'
+    return {'estado':state,'fracao_potencial':f,'excluir_automaticamente':False,'actual_render_verified':False,'publicar':False}

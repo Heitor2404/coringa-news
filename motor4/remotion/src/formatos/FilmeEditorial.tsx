@@ -614,7 +614,7 @@ const ComparisonPanel:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
       !/^[a-f0-9]{64}$/.test(p.sha256)||p.dimensions.length!==2||!p.dimensions.every(v=>Number.isFinite(v)&&v>0)||
       Math.abs((p.crop[2]-p.crop[0])*p.dimensions[0]/((p.crop[3]-p.crop[1])*p.dimensions[1])-2.7)>.001))
     throw new Error('E312-PAIR-CONTRACT');
-  return <AbsoluteFill data-layout-review="PAIR_REVIEW" style={{background:'#08101A'}}>
+  return <AbsoluteFill data-layout-review="PAIR_REVIEW" style={{background:'#000000'}}>
     <SignatureBackground/>
     <div style={{...rectStyle(DOC_MEDIA.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1}}>
       CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
@@ -668,7 +668,7 @@ const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>
   const p=shot.documentary_static_reveal!,dims=shot.source_dimensions!,{overview,detail,scale,layout}=detailZoomGeometry(shot);
   const [x,y,r,b]=p.bbox,[w,h]=dims;
   const ow=overview[2]-overview[0],oh=overview[3]-overview[1];
-  if(p.panel_focus===true)return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#08101A'}}>
+  if(p.panel_focus===true)return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#000000'}}>
     <SignatureBackground/>
     <div style={{...rectStyle(DETAIL_ZOOM_SLOTS.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
     <MeasuredDocText role="section" shot={shot} rect={DETAIL_ZOOM_SLOTS.section} text={p.label} layoutOverride={layout} probe={probe}/>
@@ -677,7 +677,7 @@ const StaticDetailZoom:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>
       <Img src={staticFile(shot.asset!)} style={{position:'absolute',left:-x*w*scale,top:-y*h*scale,width:w*scale,height:h*scale}}/>
     </div>
   </AbsoluteFill>;
-  return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#08101A'}}>
+  return <AbsoluteFill data-layout-review="DETAIL_ZOOM_REVIEW" style={{background:'#000000'}}>
     <SignatureBackground/>
     <div style={{...rectStyle(DETAIL_ZOOM_SLOTS.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
     <MeasuredDocText role="section" shot={shot} rect={DETAIL_ZOOM_SLOTS.section} text={p.label} layoutOverride={layout} probe={probe}/>
@@ -1092,7 +1092,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
     const section=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
     const brandOverlay=documentaryOverlay(shot,slots.brand);
-    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#08101A',overflow:'hidden'}}>
+    return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#000000',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
       {layout.mode==='PORTRAIT_REVIEW'&&<div aria-hidden="true" style={{position:'absolute',inset:0,pointerEvents:'none',

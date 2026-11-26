@@ -160,7 +160,7 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
     return out
 
 
-def candidatos_arquivo(busca: str, *, estrito=False) -> list[dict]:
+def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False) -> list[dict]:
     out = []
     try:
         for p in _commons(busca, video=True):
@@ -189,12 +189,27 @@ def candidatos_arquivo(busca: str, *, estrito=False) -> list[dict]:
                         'credit':_txt(meta,'Credit')[:4000], 'categories':_txt(meta,'Categories')[:4000],
                         'variantes':[{'url':x['src'],'width':x.get('width'),'height':x.get('height'),'size':x.get('size')} for x in ders],
                         'tamanho_original':info.get('size') if not ders else None})
-            if len(out) >= POR_FONTE:
+            if len(out) >= POR_FONTE and not preferir_vertical:
                 break
     except Exception as e:
         if estrito:raise
         print(f'  [mídia/arquivo] {busca!r} falhou: {str(e)[:120]}')
-    return out
+    return reter_video_vertical(out,POR_FONTE) if preferir_vertical else out
+
+def reter_video_vertical(rows,limit):
+    """Keep the strongest provider leads, reserve one slot for a usable native
+    portrait already in the SAME response; no new HTTP or license inference."""
+    if limit<2 or len(rows)<=limit:return rows[:limit]
+    from src.v4.formatos.imersao_documental_e328 import fracao_integral
+    from src.v4.formatos.filme_editorial import MIN_VIDEO_COMPOSITION_PX
+    def score(c):
+        w,h=c.get('w'),c.get('h');f=fracao_integral(w,h)
+        return f if f is not None and h>w and min(w,h)>=MIN_VIDEO_COMPOSITION_PX and f>=.60 else 0
+    kept=rows[:limit]
+    if any(score(c) for c in kept):return kept
+    best=max(rows[limit:],key=score,default={})
+    if score(best):return kept[:-1]+[best]
+    return kept
 
 
 def candidatos_pixabay(busca: str) -> list[dict]:

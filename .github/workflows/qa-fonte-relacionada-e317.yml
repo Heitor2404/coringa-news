@@ -1,4 +1,4 @@
-name: E317 - prova real de acao e consequencia
+name: E317.1 - prova real com fonte integral preservada
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

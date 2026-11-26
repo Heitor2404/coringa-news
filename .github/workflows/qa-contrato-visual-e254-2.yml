@@ -1,4 +1,4 @@
-name: E317 - reaproveitar fonte factual para consequencia
+name: E317.1 - regressao da fonte integral e continuidade
 on:
   push:
     branches: [atlas-direcao-visual-20261118]

@@ -130,7 +130,10 @@ def preparar_cobertura(report,case,*,atlas=None,progressao=None,animacoes=None,m
         if kind=='video' and window.get('revisao_id')==d.get('revisao_id') and window.get('video_framing'):
             trial={'type':'video','start':0,'end':cap,'source_in_seconds':window.get('source_in_seconds'),'video_zoom':1,'video_framing':window['video_framing']}
             try:
-                F.resolver_relacao_video(trial,{'expected_sha256':a['sha256']},(a['width'],a['height']),adaptativo=True)
+                if window['video_framing'].get('modo')=='fonte_integral':
+                    F.proteger_fonte_integral(trial,{'expected_sha256':a['sha256']},(a['width'],a['height']))
+                else:
+                    F.resolver_relacao_video(trial,{'expected_sha256':a['sha256']},(a['width'],a['height']),adaptativo=True)
                 framing=window['video_framing']
             except (ValueError,TypeError,KeyError):pass
         progression=None
@@ -235,7 +238,7 @@ def plano(case,chosen,tempos):
                 from . import observacao_temporal_e315 as O
                 observed=O.candidato(n,c,x['window'],span)
                 if observed:shot['observacao_temporal_candidata']=observed
-            if x.get('framing') and all(p['at']<span for p in x['framing']['pontos']):
+            if x.get('framing') and (x['framing'].get('modo')=='fonte_integral' or all(p['at']<span for p in x['framing']['pontos'])):
                 shot['video_framing']=x['framing']
             if x.get('progressao'):shot['progressao_visual']=x['progressao']
             shots.append(shot);start+=count

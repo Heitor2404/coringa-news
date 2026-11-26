@@ -26,7 +26,9 @@ def preparar(root,public):
         needs.append(need)
         members.append({'necessidade_id':nid,'fatos':need['fatos'],'mostrar':label,'sha256':h,
             'revisao_id':rid,'rotulo':label,'criterio_observado':'Paredes rochosas'})
-    pair={'id':'qualitative','tipo':'qualitativa','origem':'INSPECAO_ASSISTIDA_PRIVADA','criterio':'Paredes rochosas',
+    for m,box in zip(members,([.35,.20,.83,.30],[.27,.19,.76,.34])):
+        m['roi_observada']={'sha256':m['sha256'],'revisao_id':m['revisao_id'],'origem':'OBSERVACAO_PRIVADA','bbox':box}
+    pair={'apresentacao':'painel_observado','id':'qualitative','tipo':'qualitativa','origem':'INSPECAO_ASSISTIDA_PRIVADA','criterio':'Paredes rochosas',
         'membros':members,'escala_comparavel':False,'inferir_causalidade':False,'inferir_cronologia':False,
         'publicar':False,'direitos_aprovados':False}
     case={'tema':'Relevo em duas vistas','chapters':[{'title':'Relevo','needs':['n0','n1']}],
@@ -37,6 +39,9 @@ def preparar(root,public):
     assert p['comparacoes_documentais'][0]['estado']=='PAR_QUALITATIVO_MONTADO_PRIVADO'
     assert [s['lead'] for s in p['shots']]==['Paredes rochosas · Escarpas à distância','Paredes rochosas · Parede de perto']
     F.preparar(p,root,Path(public),fragmento_misto=True)
+    props=json.loads((root/'props.json').read_text())
+    assert not props['shots'][0].get('documentary_comparison_panel')
+    assert props['shots'][1]['documentary_comparison_panel']['scale_comparable'] is False
     (root/'comparison.json').write_text(json.dumps({'publish':False,'visual_approval':'PENDING','packet':pair,'result':p['comparacoes_documentais'],
         'note':'Duas vistas de referentes distintos, não antes/depois nem escala comum.'},ensure_ascii=False))
     return case,chosen,p

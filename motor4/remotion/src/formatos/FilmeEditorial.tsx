@@ -54,6 +54,7 @@ export type FilmShot = {
   photo_crop_preview?: {height:number;position:[number,number];status:string;essential_screen?:number[]}; // private geometric alternative
   documentary_roi_points?: {at:number;bbox:number[]}[]; // preflight validated source observations only
   documentary_detail_roi?: {bbox:number[];sha256:string;revisao_id:string;status:string};
+  documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
@@ -240,7 +241,7 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
+type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
 const stackedDocSlots=(y:number):DocSlots=>({
   brand:[120,y,500,y+38],section:[120,y+43,760,y+93],
   subtitle:[120,y+101,760,y+191],source:[120,y+199,760,y+321],
@@ -402,11 +403,13 @@ const documentaryOverlay=(shot:FilmShot,rect:readonly number[])=>intersects(docu
 // Use the actual browser font metrics and wrapping, not character-count estimates.
 // Overflow at the readable floor is a diagnostic for editorial review, never silent ellipsis.
 const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot;rect:readonly number[];
-  text:string;children?:React.ReactNode;probe?:boolean}>=({role,shot,rect,text,children,probe=false})=>{
+  text:string;children?:React.ReactNode;probe?:boolean;layoutOverride?:DocLayout}>=({role,shot,rect,text,children,probe=false,layoutOverride})=>{
   const host=React.useRef<HTMLDivElement>(null),inner=React.useRef<HTMLDivElement>(null);
   const size=role==='subtitle'?[52,36]:role==='source'?[30,24]:[30,22];
-  const overlay=documentaryOverlay(shot,rect);
-  const signature=rect.join(',');
+  const measuredLayout=layoutOverride??documentaryLayout(shot);
+  const overlaps=(r:readonly number[])=>layoutOverride?layoutOverride.protected.some(b=>intersects(b,r)):documentaryOverlay(shot,r);
+  const overlay=overlaps(rect);
+  const signature=rect.join(',')+'|'+measuredLayout.mode;
   React.useLayoutEffect(()=>{
     const h=host.current,e=inner.current;if(!h||!e)return;
     const range=document.createRange();range.selectNodeContents(e);
@@ -428,8 +431,8 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     const er=e.getBoundingClientRect();
     const painted=[rect[0]+(er.left-hr.left)/sx,rect[1]+(er.top-hr.top)/sy,
       rect[0]+(er.right-hr.left)/sx,rect[1]+(er.bottom-hr.top)/sy];
-    const actualOverlay=documentaryOverlay(shot,painted);
-    const layout=documentaryLayout(shot);
+    const actualOverlay=overlaps(painted);
+    const layout=measuredLayout;
     const signatureBackground=document.querySelector('[data-layout-review] [data-documentary-background]')?.getAttribute('data-documentary-background')??null;
     // Soft local contrast for full-height portrait, without a full-width
     // opaque panel; stronger local contrast stays for other layouts.
@@ -455,6 +458,36 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
       {children??text}
     </div>
   </div>;
+};
+const pairRects=[[0,405,1080,805],[0,900,1080,1300]];
+const pairLayout:DocLayout={mode:'PAIR_REVIEW',slots:DOC_MEDIA,media:[0,405,1080,1300],protected:pairRects,roiStatus:'OBSERVED'};
+const pairActive=(shot:FilmShot,t:number)=>Boolean(shot.documentary_comparison_panel&&t-shot.start>=shot.documentary_comparison_panel.at);
+const ComparisonPanel:React.FC<{shot:FilmShot;probe?:boolean}>=({shot,probe})=>{
+  const pair=shot.documentary_comparison_panel!;
+  if(shot.type!=='photo'||pair.schema!=='coringa.comparison.panel.private.v1'||pair.publish!==false||pair.scale_comparable!==false||
+      pair.panels.length!==2||pair.panels[0].sha256===pair.panels[1].sha256||pair.panels.some(p=>!normalizedBox(p.crop)||
+      !['.jpg','.png','.webp'].some(e=>p.asset==='film_editorial/'+p.sha256+e)||
+      !/^[a-f0-9]{64}$/.test(p.sha256)||p.dimensions.length!==2||!p.dimensions.every(v=>Number.isFinite(v)&&v>0)||
+      Math.abs((p.crop[2]-p.crop[0])*p.dimensions[0]/((p.crop[3]-p.crop[1])*p.dimensions[1])-2.7)>.001))
+    throw new Error('E312-PAIR-CONTRACT');
+  return <AbsoluteFill data-layout-review="PAIR_REVIEW" style={{background:'#08101A'}}>
+    <SignatureBackground/>
+    <div style={{...rectStyle(DOC_MEDIA.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1}}>
+      CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
+    </div>
+    <div style={{position:'absolute',left:120,top:339,width:130,height:3,background:GOLD}}/>
+    <MeasuredDocText role="section" shot={shot} rect={DOC_MEDIA.section} text={(pair.criterion+' · SEM ESCALA COMUM').toUpperCase()} layoutOverride={pairLayout} probe={probe}/>
+    {pair.panels.map((p,i)=>{
+      const [x,y,r,b]=p.crop,w=1080/(r-x),h=400/(b-y),rect=pairRects[i];
+      return <React.Fragment key={p.sha256}>
+        <div data-pair-panel={i} style={{...rectStyle(rect),overflow:'hidden'}}>
+          <Img src={staticFile(p.asset)} style={{position:'absolute',left:-x*w,top:-y*h,width:w,height:h}}/>
+        </div>
+        <MeasuredDocText role="section" shot={shot} rect={[120,rect[3]+3,760,rect[3]+36]} text={p.label.toUpperCase()} layoutOverride={pairLayout} probe={probe}/>
+        <MeasuredDocText role="source" shot={shot} rect={[120,rect[3]+37,760,Math.min(rect[3]+91,1386)]} text={p.credit} layoutOverride={pairLayout} probe={probe}/>
+      </React.Fragment>;
+    })}
+  </AbsoluteFill>;
 };
 const Body: React.FC<{shot: FilmShot;p:number;t:number;portrait?:boolean;mediaFirst?:boolean;photoHero?:boolean}> = ({shot,p,t,portrait=false,mediaFirst=false,photoHero=false}) => {
   if(shot.type==='mechanism' && shot.mechanism==='optical_projection')
@@ -837,6 +870,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   }
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
+  if(mediaFirst&&pairActive(shot,now))return <ComparisonPanel shot={shot} probe={textProbe}/>;
   if(mediaFirst&&realMedia(shot)) {
     const credit=(shot.evidence==='representative'?'Contexto · ':'')+(shot.source_display||shot.source);
     const section=shot.lead?.toUpperCase();
@@ -971,6 +1005,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
+  if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');
@@ -1019,8 +1054,8 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))} textProbe={documentary_text_probe}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
-    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={documentaryLayout(shots[shot]).slots.subtitle}
-      text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe}>
+    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={pairActive(shots[shot],t)?DOC_MEDIA.subtitle:documentaryLayout(shots[shot]).slots.subtitle}
+      text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={pairActive(shots[shot],t)?pairLayout:undefined}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
     {docCap&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',

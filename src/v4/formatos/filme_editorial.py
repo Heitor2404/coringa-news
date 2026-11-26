@@ -889,9 +889,11 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
                           'licenca':item['license'],'pagina':item['page'],
                           'direitos_status':item.get('rights_status','NAO_DECLARADO_NO_CONTRATO')})
     shots=[]
+    from src.v4.formatos import comparacao_documental_e311 as COMPAR
+    comparison_panels=COMPAR.preparar_paineis(plano,medias)
     from src.v4.formatos import catalogo_mecanismos
     for c in plano['shots']:
-        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi')}
+        x={k:v for k,v in c.items() if k not in ('literal_identity','notes','documentary_roi_points','documentary_integral_required','documentary_atlas_layout','documentary_safe_trial','documentary_detail_roi','documentary_comparison_panel')}
         if c.get('mechanism') == 'auto':
             resolved, issues = catalogo_mecanismos.decidir(c)
             if issues or not resolved:
@@ -1007,6 +1009,7 @@ def preparar(plano: dict, destino: Path, public_root: Path, downloader=None, *, 
             # Gráfico autoral já comunica dados/etapas dentro dos pixels.
             # Não duplicar título e CTA por cima dele no compositor.
             x['graphic_original']=True
+        if c['id'] in comparison_panels:x['documentary_comparison_panel']=comparison_panels[c['id']]
         shots.append(x)
     pendentes=[mid for mid,item in plano['media'].items()
               if item.get('license')=='REVIEW_PENDING' or item.get('rights_status')=='REVIEW_PENDING']

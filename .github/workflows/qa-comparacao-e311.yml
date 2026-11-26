@@ -1,4 +1,4 @@
-name: E311 - comparacao qualitativa por registros reais
+name: E312 - painel observado de comparacao sem escala comum
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -29,6 +29,7 @@ jobs:
           python -m pip install -q -r requirements.txt pytest beautifulsoup4
           npm ci --prefix motor4 --no-audit --no-fund
           python -m pytest -q tests/test_comparacao_e311.py tests/test_direcao_explicativa_e310.py tests/test_replanejamento_e308.py tests/test_direcao_short_e306.py tests/test_filme_editorial.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
           python -m scripts.qa_comparacao_e311
       - name: Renderizar registros e medir tipografia
         run: cd motor4 && node scripts/qa_comparacao_e311.mjs
@@ -37,4 +38,4 @@ jobs:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: |
           root=stage_documental/e311
-          python scripts/espelhar_revisao_cofre.py "e311-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/comparison.json" "$root/comparison-measures.json" "$root/n0.png" "$root/n1.png"
+          python scripts/espelhar_revisao_cofre.py "e311-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/comparison.json" "$root/comparison-measures.json" "$root/n0.png" "$root/n1.png" "$root/paired.png"

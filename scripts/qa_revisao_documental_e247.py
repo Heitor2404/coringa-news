@@ -534,6 +534,8 @@ def main():
                 def alternative(n):
                     snapshots.append((used_pages.copy(),used_sha.copy(),video_reservations.copy()))
                     nid=n['id']
+                    if n.get('evidencia_visual')=='movimento':
+                        RJ.liberar_reserva_individual(nid,video_reservations,used_pages,used_sha)
                     return RP.fila_alternativa(n,states[nid],
                         lambda need,limit,attempted:search_progress(need,limit,attempted,somente_video=True),
                         lambda c,need:inspect(c,need,cache_only=calls>=budget),
@@ -546,9 +548,12 @@ def main():
                         used_pages.clear();used_pages.update(pages)
                         used_sha.clear();used_sha.update(hashes)
                         video_reservations.clear();video_reservations.update(reservations)
+                # Recover exact-action refusals before optional photo upgrades.
+                # Same queue, shared remaining budgets, transactional reservations.
+                replanejamento=RP.reparar_acoes(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish)
                 if any(n.get('preferencia_midia')=='video_preferencial' for n in tri):
-                    replanejamento=RP.replanejar(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish)
-                    for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
+                    replanejamento.extend(RP.replanejar(report,lambda r:PF.preparar_cobertura(r,case),alternative,finish))
+                for n,row in zip(tri,results):row['encaminhamento']=C.encaminhar(n,row)
             aggregate={'cobertura':results,'total':len(results),'resumo':{k:sum(x['estado']==k for x in results) for k in ('CANDIDATO_PRIVADO_REVISADO','LACUNA_PENDENTE','DELEGAR_ATLAS')},'consumo':{'visao':calls,'http':t.http,'bytes':t.bytes,'buscas':total_search},'publicar':False,'pronto_para_render':False}
         elif adaptive:
             reports=[];consulted=set()

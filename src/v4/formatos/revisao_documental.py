@@ -377,6 +377,7 @@ def diagnostico_cobertura(rodadas,parada):
             elif state=='ORCAMENTO' or 'ORCAMENTO' in reason or 'LIMITE' in reason:key='ORCAMENTO_OU_VARIANTE'
             elif 'PENDENTE' in reason or 'PAGINA' in reason:key='RECIBO_PENDENTE'
             elif state=='FALHA_AQUISICAO':key='FALHA_AQUISICAO'
+            elif reason=='REVISAR_ACAO_ESPECIFICA':key='ACAO_ESPECIFICA_NAO_DEMONSTRADA'
             elif 'AMOSTRAS' in reason or 'JANELA' in reason:key='EVIDENCIA_NAO_OBSERVADA_NAS_AMOSTRAS'
             else:key='INSUFICIENCIA_NO_ESCOPO_REVISADO'
             counts[key]+=1

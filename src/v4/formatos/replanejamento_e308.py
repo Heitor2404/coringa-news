@@ -15,7 +15,7 @@ def tarefas(chosen):
 
 def fila_alternativa(need,state,pesquisar,inspecionar,*,pode_buscar,pode_inspecionar,pode_reusar):
     """Resume untried video leads only; do not mutate the historical photo queue."""
-    if need.get('preferencia_midia')!='video_preferencial':
+    if need.get('preferencia_midia')!='video_preferencial' and need.get('evidencia_visual')!='movimento':
         raise ValueError('E308-PREFERENCIA')
     st={'vistos':set(state.get('vistos',set())),
         'buscas_vistas':set(state.get('buscas_vistas',set())),
@@ -71,4 +71,38 @@ def replanejar(report,preparar,buscar_alternativa,finalizar):
         logs.append({**task,'estado':status,'reserva_foto':old.get('selecionado'),
                      'cobertura_reserva':old,'alternativa':alternative,'erro':error,
                      'publicar':False,'aprovacao_editorial':False})
+    return logs
+
+def reparar_acoes(report,preparar,buscar_alternativa,finalizar):
+    """Recover only a selection refused by the bridge for exact action.
+    Existing gaps already use the progressive scheduler. Never repeat all
+    searches, exceed shared budgets, or sacrifice compatible coverage."""
+    rows=report['cobertura'];chosen,gate=preparar(report);logs=[]
+    needs={n['id']:n for n in report['triagem']}
+    for task in gate.get('replanejamento_por_fato',[]):
+        nid=task['necessidade_id']
+        if task['motivo']!='REVISAR_ACAO_ESPECIFICA' or task['evidencia_visual']!='movimento':continue
+        index=next((i for i,row in enumerate(rows) if row['necessidade_id']==nid),None)
+        if index is None or rows[index].get('estado')!='CANDIDATO_PRIVADO_REVISADO':continue
+        old=rows[index];n=needs[nid];accept=False;alternative=None;error=None
+        status='ACAO_EXATA_PENDENTE'
+        try:
+            alternative=buscar_alternativa(n)
+            if alternative and alternative.get('estado')=='CANDIDATO_PRIVADO_REVISADO':
+                replacement={**alternative,'necessidade_id':nid,'fatos':n['fatos']}
+                trial=rows.copy();trial[index]=replacement
+                new,new_gate=preparar({**report,'cobertura':trial})
+                accept=(nid in new and new[nid]['kind']=='video' and set(chosen)<=set(new)
+                        and new_gate['capacidade_s']+1e-6>=gate['capacidade_s']
+                        and (not gate['pronto_para_tts'] or new_gate['pronto_para_tts']))
+                status='ACAO_REVISADA_COMPATIVEL' if accept else 'ALTERNATIVA_INCOMPATIVEL_COM_FILME'
+                if accept:
+                    rows[index]=replacement;chosen,gate=new,new_gate
+        except Exception as exc:
+            error=type(exc).__name__+':'+str(exc)[:160]
+            status='FALHA_RECUPERACAO_ACAO'
+        finally:
+            finalizar(accept)
+        logs.append({**task,'estado':status,'cobertura_recusada':old,'alternativa':alternative,
+                     'erro':error,'publicar':False,'aprovacao_editorial':False})
     return logs

@@ -58,3 +58,11 @@ def janela_elegivel(need,sha,pagina,window,reservas):
         if x['sha256']!=sha or x['pagina']!=pagina or set(x['fatos'])&set(need['fatos']):return False
         if max(start,x['inicio'])<min(end,x['fim'])-.001:return False
     return True
+
+def liberar_reserva_individual(nid,reservas,pages,hashes):
+    """Release only the rejected obligation's reservation. A shared source
+    stays reserved for other facts. Caller owns the rollback snapshot."""
+    old=reservas.pop(nid,None)
+    if old is None:return
+    if not any(x['pagina']==old['pagina'] for x in reservas.values()):pages.discard(old['pagina'])
+    if not any(x['sha256']==old['sha256'] for x in reservas.values()):hashes.discard(old['sha256'])

@@ -1,4 +1,4 @@
-name: E299 - ATLAS oceano corrigido e diagnosticos de fala e UI
+name: E302 - montagem por fato com janela revisada e acervo privado
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -32,12 +32,16 @@ jobs:
           python -m pip install -q -r requirements.txt beautifulsoup4 pytest
           npm ci --prefix motor4 --no-audit --no-fund
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
-          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py tests/test_atlas_multiscale_e237.py tests/test_atlas_base_regional_e235.py tests/test_ui_e299.py
+          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py tests/test_atlas_multiscale_e237.py tests/test_atlas_base_regional_e235.py tests/test_ui_e299.py tests/test_cortes_revisados_e302.py
           ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
       - name: Restaurar acervo ja adquirido sem consultar origens de video
         env:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: python -m scripts.restaurar_piloto_e289 review-e287-45685353176-1 qa_e289 stage_documental/e219
+      - name: Restaurar janela adicional revisada sem novas aquisicoes
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_cortes_revisados_e302 benchmarks/e299/cortes_revisados_e302.json qa_e289 stage_documental/e219
       - name: Confirmar Telegram privado
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -48,7 +52,7 @@ jobs:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: python -m scripts.restaurar_voz_e289 review-e289-45689022910-1 qa_e289 medida
       - name: Realinhar e montar sem IA
-        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado --voz-medida-restaurada --atlas-direcao=benchmarks/e219/direcao_atlas_e297.json
+        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado --voz-medida-restaurada --atlas-direcao=benchmarks/e219/direcao_atlas_e297.json --cortes-revisados=benchmarks/e299/cortes_revisados_e302.json
       - name: Diagnosticar faixas editoriais contra as tres plataformas
         run: python -m scripts.qa_ui_e299 qa_e289/ui-diagnostico.json
       - name: Renderizar trecho privado de abertura
@@ -70,17 +74,19 @@ jobs:
           props=json.loads((p/'props.json').read_text())
           assert props['preview'] and props['private_review_only']
           assert json.loads((p/'sincronia-medida.json').read_text())['ok']
-          for i,t in enumerate([.6,3.5,6.8,8.9,10.2,11.6,13.8,15.2,19,24.5]):
+          decisions=json.loads((p/'continuidade-montagem.json').read_text())['shots']
+          assert any(d['shot']=='c2-1' and d.get('reviewed_binding') for d in decisions)
+          for i,t in enumerate([.6,3.5,6.8,8.9,10.2,11.6,13.8,15.2,18.5,19.5,24.5]):
               subprocess.run(['ffmpeg','-v','error','-y','-ss',str(t),'-i',str(v),'-frames:v','1',str(p/f'cena-{i:02d}.jpg')],check=True)
           q={'duration':dur,'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','kind':'SHORT_LAYOUT_PROBE','video_sha256':hashlib.sha256(v.read_bytes()).hexdigest(),'ui_review':'PENDING'}
           (p/'qa.json').write_text(json.dumps(q,indent=2))
           try:
               chat,_=T.chat_autorizado()
               envio=T._caber(v);verificar_video(envio,dur)
-              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E299 · TESTE DE MONTAGEM E ATLAS\n26,87 s · legenda alinhada e aproximação regional\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
+              result=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E302 · TESTE DE EVIDÊNCIA POR FATO\n26,87 s · novo registro de fragmentos incandescentes\nPRIVADO · NÃO PUBLICAR · UI PENDENTE','supports_streaming':'true'},('video',envio))
               if not isinstance(result,dict) or not result.get('message_id'):raise RuntimeError('recibo ausente')
           except Exception:raise RuntimeError('E295 entrega privada não confirmada') from None
-          print('E299_PREVIA_PRIVADA_ENTREGUE')
+          print('E302_PREVIA_PRIVADA_ENTREGUE')
           PY
       - name: Preservar voz e evidencias mesmo se render falhar
         if: ${{ always() }}

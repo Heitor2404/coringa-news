@@ -216,6 +216,22 @@ def cortes_medidos(inicio,fim,words):
     cuts.append(fim)
     return cuts
 
+def corte_revisado(cut, acquired, words, chapter, start, end, used):
+    """A private explicit fact-to-window binding, before continuity ranking.
+    Exact measured speech, original SHA, reviewed time and overlap must agree.
+    No missing proof silently falls back to a different reviewed claim.
+    """
+    speech=' '.join(w['w'] for w in words if w['s']<end and w['e']>start)
+    if cut['chapter']!=chapter or speech!=cut['speech'] or not cut.get('observed') or not cut.get('review_ref'):
+        raise ValueError('E302-FALA-OU-REVISAO')
+    m=acquired[cut['source']];t=cut['window_start'];span=end-start;review_span=cut['window_duration']
+    if m['expected_sha256']!=cut['sha256'] or m['label']!=cut['label']:
+        raise ValueError('E302-VINCULO')
+    if not 0<=t or not 1.4<=span<=review_span or t+review_span>m['duration_s'] or any(t+span>a and t<b for a,b in used.get(cut['sha256'],[])):
+        raise ValueError('E302-JANELA-OU-REPETICAO')
+    return m,t
+
+
 def obrigacoes_visuais(decisions, words):
     """Bind each actual cut to the measured speech it must illustrate.
     An exact speech span is not an observed fact or proof of coverage.
@@ -229,7 +245,7 @@ def obrigacoes_visuais(decisions, words):
             'speech':' '.join(w['w'] for w in relevant),
             'source':d['source'],'source_sha256':d['source_sha256'],
             'source_in':d['source_in'],'source_out':d['source_out'],
-            'status':'REVISAR_EVIDENCIA_POR_FALA','direct_evidence_verified':False})
+            'status':'AMOSTRAS_REVISADAS_PERTINENTES' if d.get('reviewed_binding') else 'REVISAR_EVIDENCIA_POR_FALA','direct_evidence_verified':False,**({'reviewed_binding':d['reviewed_binding']} if d.get('reviewed_binding') else {})})
     return result
 
 
@@ -237,7 +253,7 @@ def lacunas_montagem(spec, acquired, decisions):
     report=[]
     for ch in spec['chapters']:
         if 'atlas' in ch:continue
-        expected=[r[0] for r in ch['videos']]
+        expected=list(dict.fromkeys([r[0] for r in ch['videos']]+[r['source'] for r in decisions if r['chapter']==ch['title'] and r.get('reviewed_binding')]))
         available=[s for s in expected if s in acquired]
         selected=[r for r in decisions if r['chapter']==ch['title']]
         used=list(dict.fromkeys(r['source'] for r in selected))
@@ -275,6 +291,17 @@ def main():
     if overrides:
         spec=aplicar_direcao_atlas(spec,read(overrides[0]))
         write(out/'direcao-atlas.json',{'publish':False,'roteiro_sha256':sha(Path(sys.argv[1])),'override':read(overrides[0])})
+    reviewed_args=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--cortes-revisados=')]
+    reviewed={}
+    if reviewed_args:
+        if len(reviewed_args)!=1 or '--acervo-restaurado' not in sys.argv[3:] or '--voz-medida-restaurada' not in sys.argv[3:]:
+            raise ValueError('E302-PRIVADO')
+        review_config=read(reviewed_args[0])
+        if review_config.get('schema')!='coringa.reviewed-cut.private.v1' or review_config.get('publish') is not False:
+            raise ValueError('E302-SCHEMA')
+        reviewed={c['shot']:c for c in review_config['cuts']}
+        if len(reviewed)!=len(review_config['cuts']):raise ValueError('E302-DUPLICADO')
+    applied=set()
     atlas_multiscale={}
     from scripts import qa_atlas_multiscale as G
     for i,ch in enumerate(spec['chapters']):
@@ -303,7 +330,7 @@ def main():
     acquired={};errors=[]
     if '--acervo-restaurado' in sys.argv[3:]:
         from scripts.restaurar_piloto_e289 import validar_acervo
-        acquired,errors=validar_acervo(read(out/'acervo-restaurado.json'),rows,STAGE)
+        acquired,errors=validar_acervo(read(out/'acervo-restaurado.json'),rows+[[c['source'],c['label']] for c in reviewed.values()],STAGE)
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
             jobs={pool.submit(acquire,r):r for r in rows}
@@ -401,7 +428,12 @@ def main():
             if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
             ordered=available  # stable upstream relevance, not round robin
             selected=None
-            if spec.get('perceptual_selection'):
+            binding=reviewed.get(f'c{i}-{k}')
+            if binding:
+                m,t=corte_revisado(binding,acquired,words,ch['title'],s,e,used_windows)
+                selected=(m,t,frame(m['local_source'],t+span*.5))
+                applied.add(f'c{i}-{k}')
+            elif spec.get('perceptual_selection'):
                 candidates=[]
                 for m in ordered:
                     prev=used_windows.get(m['expected_sha256'],[])
@@ -439,7 +471,8 @@ def main():
             continuity_report.append({'chapter':ch['title'],'shot':f'c{i}-{k}','source':m['id'],
                 'source_sha256':key,'source_in':t,'source_out':t+span,'start':s,'end':e,
                 'revisit':revisit,'decision':'REVISITA_POR_COBERTURA' if revisit else 'CONTINUIDADE',
-                'semantic_review':'PENDING'})
+                'semantic_review':'SAMPLED_ASSISTED' if binding else 'PENDING',
+                **({'reviewed_binding':binding,'decision':'FATO_REVISADO_AMOSTRAS'} if binding else {})})
             chapter_history.append((key,t,t+span))
             used_windows.setdefault(m['expected_sha256'],[]).append((t,t+span))
             mid=m['id'];media[mid]=m;cid=f'c{i}-{k}'
@@ -464,6 +497,7 @@ def main():
             pics.append((cid,m['id'],t,im))
         cut_report.append({'chapter':ch['title'],'start':start/30,'end':end/30,'shots':n})
         start=end
+    if applied!=set(reviewed):raise ValueError('E302-CORTE-NAO-APLICADO')
     plan={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,'titulo':spec['title'],
           'duracao':total,'media':media,'shots':shots}
     if '--acervo-restaurado' in sys.argv[3:]:

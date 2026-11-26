@@ -61,6 +61,7 @@ export type FilmShot = {
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
   documentary_composition_v2?: boolean; // E328 private verified preflight
   documentary_observed_viewport_trial?: boolean; // E337 private exact-viewport comparison
+  documentary_balance_trial?: boolean; // E340 private upper-center composition
   documentary_safe_trial?: boolean; // E303 browser QA only, never a production option
   source_dimensions?: [number,number]; // actual decoded dimensions; no assumed aspect ratio
   focusB?: [number, number];
@@ -434,11 +435,53 @@ const observedViewportTrial=(shot:FilmShot,baseline:DocLayout): (DocLayout&{safe
   }
   return null;
 };
+// E340: compare a bounded upper-center target instead of accepting the
+// first legal offset. No new crop or change of scale, source or camera.
+const balancedViewportTrial=(shot:FilmShot,base:DocLayout,v3:DocLayout&{safeTrialStatus?:string}): (DocLayout&{safeTrialStatus:string})|null=>{
+  if(!shot.documentary_balance_trial||v3.safeTrialStatus!=='V3_OBSERVED_VIEWPORT'||!v3.centeredStage)return null;
+  const height=v3.centeredStage[3]-v3.centeredStage[1],oldCenter=(v3.media[1]+v3.media[3])/2;
+  const desired=930; // upper-center by 30px; never a universal aesthetic proof
+  const compact:DocSlots={brand:[150,300,442,332],section:[452,300,760,337],
+    source:[150,341,760,421],subtitle:[150,425,760,493]};
+  const compactStack:DocSlots={brand:[150,300,500,332],section:[150,339,760,376],
+    subtitle:[150,380,760,452],source:[150,456,760,536]};
+  const lanes=[COMPOSITION_V2_SLOTS,conservativeSlots(stackedDocSlots(300)),conservativeSlots(V2_LOWER),compact,compactStack];
+  // Compact title is a private candidate, not permission to truncate.
+  // Keep its full text and existing font floors; QA measures real glyphs.
+  const title=(shot.lead||'').trim();
+  const candidates:{layout:DocLayout&{safeTrialStatus:string};score:number;lane:number;top:number}[]=[];
+  const center=(H-height)/2;
+  for(let offset=-180;offset<=180;offset+=15){
+    const top=center+offset,mid=top+height/2;
+    if(top<0||top+height>H||mid>1080||oldCenter-mid<60)continue;
+    const stage=[0,top,W,top+height],boxes=documentaryProtected(shot,stage);
+    if(!boxes?.length||!boxes.every(b=>b[0]>=stage[0]&&b[1]>=stage[1]&&b[2]<=stage[2]&&b[3]<=stage[3]))continue;
+    for(const [lane,slots] of lanes.entries()){
+      if(lane===3&&title.length>20)continue;
+      if(!fitsEvidence(slots,boxes))continue;
+      const rects=docRects(slots);
+      if(rects.some((a,i)=>rects.slice(i+1).some(b=>intersects(a,b))))continue;
+      const score=Math.abs(mid-desired)+(lane>=3?15:0);
+      candidates.push({score,lane,top,layout:{...v3,slots,media:stage,protected:boxes,
+        centeredStage:stage,safeTrialStatus:'V4_BALANCED_VIEWPORT'}});
+    }
+  }
+  candidates.sort((a,b)=>a.score-b.score||a.lane-b.lane||a.top-b.top);
+  return candidates[0]?.layout??null;
+};
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=baseDocumentaryLayout(shot);
   if(shot.documentary_composition_v2){
     const baseline=compositionV2(shot,base);
-    return observedViewportTrial(shot,baseline)??baseline;
+    const expanded=observedViewportTrial(shot,baseline);
+    if(!shot.documentary_balance_trial)return expanded??baseline;
+    // Keep a proven balanced expansion if possible; otherwise prefer the
+    // integral baseline rather than silently accepting a low candidate.
+    if(expanded){
+      if((expanded.media[1]+expanded.media[3])/2<=990)return expanded;
+      return balancedViewportTrial(shot,baseline,expanded)??baseline;
+    }
+    return baseline;
   }
   if(!shot.documentary_safe_trial)return base;
   const candidates:DocSlots[]=[UI_TRIAL,{...UI_TRIAL,subtitle:[150,490,760,600]}];
@@ -1144,7 +1187,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');
-  if(shots.some(s=>s.documentary_composition_v2||s.documentary_observed_viewport_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
+  if(shots.some(s=>s.documentary_composition_v2||s.documentary_observed_viewport_trial||s.documentary_balance_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E328-PRIVATE');
   if(shots.some(s=>s.documentary_safe_trial)&&(!preview||!private_review_only||!documentary_text_probe||!documentary_media_preview))throw new Error('E303-UI-TRIAL-PRIVATE-QA');
   if(documentary_media_preview&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))
     throw new Error('E260-MEDIA-PREVIEW-PRIVATE');

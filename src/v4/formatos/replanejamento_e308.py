@@ -77,6 +77,10 @@ def reparar_acoes(report,preparar,buscar_alternativa,finalizar):
     """Recover only a selection refused by the bridge for exact action.
     Existing gaps already use the progressive scheduler. Never repeat all
     searches, exceed shared budgets, or sacrifice compatible coverage."""
+    # Acquisition-only static cases have no action to repair and need not
+    # declare a film chapter plan. Do not call the film bridge for them.
+    if not any(n.get('evidencia_visual')=='movimento' for n in report['triagem']):
+        return []
     rows=report['cobertura'];chosen,gate=preparar(report);logs=[]
     needs={n['id']:n for n in report['triagem']}
     for task in gate.get('replanejamento_por_fato',[]):

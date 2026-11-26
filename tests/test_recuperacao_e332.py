@@ -51,3 +51,12 @@ def test_failed_alternative_preserves_rejected_receipt_and_rolls_back():
     final=[]
     logs=R.reparar_acoes(report,lambda r:({}, {'replanejamento_por_fato':[task()],'capacidade_s':0,'pronto_para_tts':False}),fail,final.append)
     assert final==[False] and report['cobertura']==[old] and logs[0]['estado']=='FALHA_RECUPERACAO_ACAO'
+
+
+def test_static_acquisition_without_chapters_does_not_invoke_film_bridge():
+    n={**need(),'evidencia_visual':'estatica'}
+    old={'necessidade_id':'a','estado':'CANDIDATO_PRIVADO_REVISADO'}
+    report={'case':{'necessidades':[n]},'triagem':[n],'cobertura':[old]}
+    def forbidden(*args):raise AssertionError('static acquisition cannot invoke action repair')
+    assert R.reparar_acoes(report,forbidden,forbidden,forbidden)==[]
+    assert report['cobertura'][0] is old

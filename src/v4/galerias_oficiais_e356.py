@@ -16,6 +16,9 @@ def _path(provider,kind):
 def _page(url,provider,kind):
     return safe(url,{CONFIG[provider]['host']}) and bool(re.fullmatch(_path(provider,kind),urlsplit(url).path)) and not urlsplit(url).query
 def _tokens(s):return set(re.findall(r'[a-z0-9]{3,}',str(s).casefold()))-{'the','and','for','with','from','video','image','photo'}
+def _matches(terms,text):
+    tokens=_tokens(text)
+    return any(a==b or (len(a)>=4 and b in (a+'s',a+'es')) or (len(b)>=4 and a in (b+'s',b+'es')) for a in terms for b in tokens)
 def _search_form(soup,base,provider):
     """Use actual GET form names; no guessed CMS query parameter."""
     for form in soup.find_all('form'):
@@ -62,7 +65,7 @@ def discover(q,provider,kind,*,transport=None):
                     want='video' if kind=='video' else 'image'
                     other='image' if kind=='video' else 'video'
                     if not re.search(r'\b'+want+r'\b',marker) or re.search(r'\b'+other+r'\b',marker):continue
-            if not terms.intersection(_tokens(title+' '+description+' '+urlsplit(u).path)):continue
+            if not _matches(terms,title+' '+description+' '+urlsplit(u).path):continue
             seen.add(u);out.append(dict(provider=provider,kind=kind,page=u,title=title,description=description[:500],mode=mode,metadata_sha256=hashlib.sha256(raw).hexdigest(),status='PAGE_LEAD',publish=False))
             if len(out)>=4:break
         return out

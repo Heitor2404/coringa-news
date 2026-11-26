@@ -85,14 +85,22 @@ def usgs(q,kind,*,transport=None):
     q=_query(q);t=_transport(transport)
     from bs4 import BeautifulSoup
     role={'video':'videos','foto':'images'}[kind]
-    base='https://www.usgs.gov/search?'+urlencode({'keywords':q})
+    bundle='video' if kind=='video' else 'image'
+    # The public multimedia gallery exposes both filters in its GET URL.
+    base='https://www.usgs.gov/products/multimedia-gallery/all-multimedia?'+urlencode({'media_bundle['+bundle+']':bundle,'search_api_fulltext':q})
     raw=t.get(base,{'www.usgs.gov'},3_000_000)
     soup=BeautifulSoup(raw,'html.parser');out=[];seen=set()
+    import unicodedata
+    def terms(s):
+        norm=''.join(x for x in unicodedata.normalize('NFKD',s.casefold()) if not unicodedata.combining(x))
+        return set(re.findall(r'[a-z0-9]{3,}',norm))-{'the','and','for','video','photo','image'}
+    wanted=terms(q)
     for a in soup.find_all('a',href=True):
         u=urljoin(base,a['href'])
         if not re.fullmatch(r'https://www\.usgs\.gov/media/'+role+r'/[a-z0-9-]+',u) or u in seen:continue
-        seen.add(u);title=a.get_text(' ',strip=True)
-        if not title:continue
+        title=a.get_text(' ',strip=True)
+        if not title or not wanted.intersection(terms(title+' '+u.rsplit('/',1)[-1])):continue
+        seen.add(u)
         out.append({'titulo':title,'url':u,'pagina':u,'source_id':u,'credito':'','licenca':'',
             'recibo_fonte':{'provider':'usgs_pagina','id':u,'page':u,'metadata_sha256':hashlib.sha256(raw).hexdigest(),'credit_pending':True}})
         if len(out)>=4:break

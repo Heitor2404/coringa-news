@@ -27,6 +27,6 @@ def test_noaa_featured_card_fallback_preserves_type():
     form='<form method="get"><input name="keyword" placeholder="Search Keyword"></form>'
     card='<section><h2>Changing colors</h2><p>Two octopuses in the deep ocean</p><a href="/multimedia/example/">Watch Video</a></section>'
     t=T(form+card,'<p>no matching results</p>')
-    r=G.discover('octopuses','noaa','video',transport=t)
+    r=G.discover('octopus','noaa','video',transport=t)
     assert r['mode']=='VISIBLE_GALLERY_FALLBACK' and r['candidates'][0]['page'].endswith('/example/')
     assert not G.discover('octopuses','noaa','foto',transport=T(card))['candidates']

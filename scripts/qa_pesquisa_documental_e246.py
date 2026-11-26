@@ -145,15 +145,15 @@ def usgs_receipt(c,t):
             except ValueError:continue
             if not any(v['url']==u for v in choices):choices.append({'url':u,'rotulo':text})
     if not choices:raise ValueError('USGS-SEM-VARIANTE')
-    if not c.get('credito'):
-        # Automatically discovered pages have no curator-confirmed credit yet.
-        # Retain the source page and explicit licence; do not guess an author.
-        raise ValueError('USGS_CREDITO_INDIVIDUAL_PENDENTE')
+    credit_curated=bool(c.get('credito')) and not (c.get('recibo_fonte') or {}).get('credit_pending')
+    # A public-domain declaration permits a private acquisition proof; it does
+    # not supply an individual author or a publication approval.
+    if not credit_curated:c['credito']='USGS · crédito individual pendente'
     c.update(titulo=h.get_text(' ',strip=True),licenca='Public domain',
-             direitos='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA',
+             direitos='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA' if credit_curated else 'REVISAR_PAGINA_INDIVIDUAL',
              recibo_usgs={'pagina':page,'page_sha256':hashlib.sha256(raw).hexdigest(),
                           'tipo':kind,'licenca_declarada':'Public Domain',
-                          'credito_curado':c['credito'],'variantes':choices,
+                          'credito_curado':c['credito'] if credit_curated else None,'credito_status':'CURADO' if credit_curated else 'PENDENTE','variantes':choices,
                           'direitos':'PENDENTE_AUDITORIA_INDIVIDUAL'})
     return choices,hosts
 

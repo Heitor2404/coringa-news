@@ -26,9 +26,10 @@ def test_inaturalist_photo_licence_not_observation():
     assert c and F.receipt_choices(c)
     assert c['direitos']=='REVISAR_PAGINA_INDIVIDUAL'
 def test_usgs_only_real_item_pages():
-    t=T(b'<a href="/media/videos/example">Example</a><a href="/media/videos/example">duplicate</a><a href="https://evil.test/media/videos/other">bad</a><a href="/media/images/test">photo</a>')
+    t=T(b'<a href="/media/videos/example">Lava example</a><a href="/media/videos/example">duplicate</a><a href="https://evil.test/media/videos/other">bad</a><a href="/media/images/test">photo</a>')
     out=F.usgs('lava','video',transport=t)
     assert len(out)==1 and out[0]['credito']=='' and out[0]['licenca']==''
+    assert 'search_api_fulltext=lava' in t.calls[0][0]
     assert A._candidato_documental(out[0],'usgs_pagina','video')['direitos']=='REVISAR_PAGINA_INDIVIDUAL'
 def test_routes_opt_in_progressive():
     assert 'openverse' not in dict(A.fontes_documentais('foto'))

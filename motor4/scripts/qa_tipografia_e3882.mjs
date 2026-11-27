@@ -19,11 +19,28 @@ try{
   await renderStill({serveUrl,composition,inputProps:probe,browserExecutable,frame:Math.round(at*composition.fps),output:resolve(root,'motion-'+id+'.png'),logLevel:'info',onBrowserLog:log});
   const sub=logs.filter(x=>x.shot===id&&x.role==='subtitle').at(-1),stat=stats.at(-1);
   if(!sub||sub.safeTrialStatus!=='E3881_TAIWAN_FACT_PENDING'||!sub.fits||sub.evidenceCollision||sub.rect[0]!==66||sub.rect[1]!==1190||sub.font>60||logs.some(x=>x.role==='source')||!stat?.taiwan||!stat.fit||stat.rect[0]!==66||stat.value!==f.value||stat.scope!==f.scope)out.errors.push('TAIWAN_CONTRACT '+id);
-  // Before the speech anchor there must be no number or old source line.
-  const preLogs=logs.length,preStats=stats.length;
-  await renderStill({serveUrl,composition,inputProps:probe,browserExecutable,frame:0,output:resolve(root,'motion-'+id+'-before.png'),logLevel:'info',onBrowserLog:log});
-  if(!logs.slice(preLogs).some(x=>x.role==='subtitle')||logs.slice(preLogs).some(x=>x.role==='source')||stats.length!==preStats)out.errors.push('BEFORE_ANCHOR '+id);
-  out.motion.push({id,value:f.value,scope:f.scope,at:f.at,hold:s.end-f.at,subtitle:sub,stat,uiRisks:stat?risks(stat.rect,profiles.ativos_seguros):[],visual_review:'PENDING'});save();
+  // Silence is legitimate: compare the frame clock to the measured captions.
+  // Also test an actual spoken pre-anchor frame if frame zero is silent, so
+  // absence of logs alone cannot pass the whole pre-anchor check.
+  const preChecks=[];
+  const capAt=frame=>props.documentary_captions.find(g=>frame/composition.fps>=g.start&&frame/composition.fps<g.end);
+  const samples=[{frame:0,suffix:'before'}];
+  if(!capAt(0)){
+    const first=props.documentary_captions.find(g=>g.start<f.at&&Math.ceil(g.start*composition.fps)/composition.fps<Math.min(g.end,f.at));
+    if(!first)out.errors.push('NO_SPOKEN_PRE_ANCHOR '+id);
+    else samples.push({frame:Math.ceil(first.start*composition.fps),suffix:'before-speech'});
+  }
+  for(const {frame,suffix} of samples){
+    const preLogs=logs.length,preStats=stats.length,expected=capAt(frame);
+    const file='motion-'+id+'-'+suffix+'.png';
+    await renderStill({serveUrl,composition,inputProps:probe,browserExecutable,frame,output:resolve(root,file),logLevel:'info',onBrowserLog:log});
+    const fresh=logs.slice(preLogs),before=fresh.filter(x=>x.shot===id&&x.role==='subtitle').at(-1);
+    const ok=frame/composition.fps<f.at&&stats.length===preStats&&!fresh.some(x=>x.role==='source')&&
+      (expected?Boolean(before&&before.text===expected.words.map(w=>w.w).join(' ')&&before.fits&&!before.evidenceCollision&&before.safeTrialStatus==='E3881_TAIWAN_FACT_PENDING'):!before);
+    if(!ok)out.errors.push('BEFORE_ANCHOR '+id+' '+suffix);
+    preChecks.push({frame,time:frame/composition.fps,file,expected:expected?.words.map(w=>w.w).join(' ')??null,observed:before?.text??null,statLogs:stats.length-preStats,ok});
+  }
+  out.motion.push({id,value:f.value,scope:f.scope,at:f.at,hold:s.end-f.at,subtitle:sub,stat,preChecks,uiRisks:stat?risks(stat.rect,profiles.ativos_seguros):[],visual_review:'PENDING'});save();
 
  }
 }catch(e){out.errors.push(String(e))}

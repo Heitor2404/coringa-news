@@ -11,7 +11,7 @@ PRIOR={
 def main():
     if not ROOT.exists():raise RuntimeError('E3882 NO OUTPUT')
     out=[];path=ROOT/'delivery.json'
-    def save(complete=False):path.write_text(json.dumps(dict(publish=False,prior_run=45920278987,prior_video_messages=[580,581],items=out,complete=complete),indent=2))
+    def save(complete=False):path.write_text(json.dumps(dict(publish=False,prior_run=45920278987,qa_retry_of=45920829388,prior_video_messages=[580,581],items=out,complete=complete),indent=2))
     try:
         for f in sorted(ROOT.glob('motion-*.png')):
             h=hashlib.sha256(f.read_bytes()).hexdigest()
@@ -23,8 +23,8 @@ def main():
                 if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError('RECEIPT')
                 row.update(status='DELIVERED',message_id=r['message_id'])
             out.append(row);save()
-        save(len(out)==4)
-        if len(out)!=4:raise RuntimeError('MISSING FRAMES')
+        save(len(out)==5)
+        if len(out)!=5:raise RuntimeError('MISSING FRAMES')
     except Exception:
         save();raise RuntimeError('E3882 DELIVERY INCOMPLETE') from None
 if __name__=='__main__':main()

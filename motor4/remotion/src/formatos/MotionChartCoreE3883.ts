@@ -53,3 +53,15 @@ export function valueText(c:Claim):string{
  if(k==='range')return qualifier(c)+num(v[0].value)+'–'+num(v[1].value)+' '+c.unit;
  return (qualifier(c)+num(v[0].value)+' '+c.unit).trim();
 }
+
+/** E388.6: shared area geometry, explicit documented inclusion, not a map.
+ * Both claims remain independently sourced. No automatic inference from units. */
+export type AreaRelation={schema:'coringa.motion.area_relation.private.v1';publish:false;kind:'included_area';group:string;role:'total'|'part';total:Claim;part:Claim;inclusion_statement:string};
+export function areaRelation(c:Claim,r:AreaRelation){
+ if(!r||r.schema!=='coringa.motion.area_relation.private.v1'||r.publish!==false||r.kind!=='included_area'||!label(r.group,80)||!label(r.inclusion_statement,500)||!['total','part'].includes(r.role))fail('AREA_RELATION');
+ if(selectChart(r.total)!=='area'||selectChart(r.part)!=='area'||r.total.fixture||r.part.fixture||r.total.source?.url!==r.part.source?.url||r.total.source?.date!==r.part.source?.date||!r.total.source||!r.part.source)fail('AREA_RELATION_SOURCE');
+ const total=r.total.values[0].value,part=r.part.values[0].value;
+ if(!(part<total)||selectChart(c)!=='area'||JSON.stringify(c)!==JSON.stringify(r.role==='total'?r.total:r.part))fail('AREA_RELATION_BIND');
+ return {total,part,ratio:part/total,sideRatio:Math.sqrt(part/total)};
+}
+export const areaSideLabel=(value:number)=>'≈ '+new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(Math.sqrt(value))+' km';

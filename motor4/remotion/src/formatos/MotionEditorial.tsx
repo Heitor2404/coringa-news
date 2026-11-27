@@ -5,7 +5,7 @@
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {progresso} from './TempoVisualE200';
-import {selectChart,num,qualifier,valueText,type Claim} from './MotionChartCoreE3883';
+import {selectChart,num,qualifier,valueText,areaRelation,areaSideLabel,type AreaRelation,type Claim} from './MotionChartCoreE3883';
 
 export type MotionEditorialData =
   | {kind:'stat_reveal'; eyebrow:string; value:string; line1:string; line2:string; fraction?:number}
@@ -123,8 +123,9 @@ export const AttributedStat:React.FC<{value:string;scope:string;elapsed:number;r
 const CW=839, CH=540;
 const ease=(p:number,at:number,len:number)=>1-(1-Math.max(0,Math.min(1,(p-at)/len)))**3;
 const fitFont=(s:string,n:number,w:number)=>Math.min(n,Math.floor(w/(Math.max(1,s.length)*.59)));
-export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({claim:c,p,probe})=>{
+export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean;relation?:AreaRelation;opacity?:number}>=({claim:c,p,probe,relation,opacity=1})=>{
  const k=selectChart(c),v=c.values,q=qualifier(c),value=valueText(c);
+ const shared=relation?areaRelation(c,relation):undefined;
  const ref=React.useRef<HTMLDivElement>(null);
  React.useLayoutEffect(()=>{
    if(!probe||!ref.current)return;
@@ -140,14 +141,15 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
    });
    const ink=svg.querySelector<SVGGElement>('[data-chart-ink]')!.getBBox();
    const contentHeight=host.scrollHeight;
-   console.log('E3883_CHART '+JSON.stringify({kind:k,title:c.title,fixture:c.fixture,fit:rows.every(r=>r.fit)&&contentHeight<=host.clientHeight+1&&scale>0,rows,ink:{x:ink.x,y:ink.y,w:ink.width,h:ink.height},rect:[66,505,905,1170],contentHeight}));
- },[c,k,probe,p]);
+   const boxes=Array.from(svg.querySelectorAll<SVGRectElement>('[data-area-box]')).map(e=>({role:e.dataset.areaBox,x:Number(e.getAttribute('x')),y:Number(e.getAttribute('y')),w:Number(e.getAttribute('width')),h:Number(e.getAttribute('height'))}));
+   console.log('E3883_CHART '+JSON.stringify({kind:k,title:c.title,fixture:c.fixture,fit:rows.every(r=>r.fit)&&contentHeight<=host.clientHeight+1&&scale>0,rows,ink:{x:ink.x,y:ink.y,w:ink.width,h:ink.height},rect:[66,505,905,1170],contentHeight,boxes,relation:relation?.role,opacity}));
+ },[c,k,probe,p,relation,opacity]);
  const t=(s:string,x:number,y:number,n:number,w:number,fill=WHITE,anchor:'start'|'middle'|'end'='start',weight=800)=>
    <text data-chart-text x={x} y={y} fontSize={fitFont(s,n,w)} fill={fill} textAnchor={anchor} fontWeight={weight}>{s}</text>;
  const main=(s:string,y=125,n=136)=>t(s,CW/2,y,n,CW-24,GOLD,'middle',900);
  const a=ease(p,.02,.28),b=ease(p,.14,.34);
  const track=(x:number,y:number,w:number,h:number)=> <rect x={x} y={y} width={w} height={h} rx="7" fill="#292929"/>;
- return <div ref={ref} data-editorial-chart={k} style={{position:'absolute',left:66,top:505,width:CW,height:665,color:WHITE,fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>
+ return <div ref={ref} data-editorial-chart={k} style={{position:'absolute',left:66,top:505,width:CW,height:665,opacity,color:WHITE,fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>
   <svg width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`} style={{display:'block'}}>
    <g data-chart-ink>
    {k==='range'&&(()=>{
@@ -184,7 +186,22 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
        {bound&&t('Hachura: parcela não determinada',CW/2,520,30,790,WHITE,'middle')}
       </>;
    })()}
-   {k==='area'&&(()=>{
+   {k==='area'&&shared&&relation&&(()=>{
+      const size=420,x=32,y=65,small=size*shared.sideRatio,part=relation.role==='part';
+      const reveal=ease(p,.14,.42),detail=ease(p,.45,.35);
+      return <>
+       <rect data-area-box="total" x={x} y={y} width={size} height={size} fill={GOLD} fillOpacity={part?.07:.14+.18*a} stroke={GOLD} strokeWidth="5"/>
+       {Array.from({length:4},(_,j)=><path key={j} d={`M ${x+(j+1)*size/5} ${y} V ${y+size} M ${x} ${y+(j+1)*size/5} H ${x+size}`} stroke={GOLD} strokeOpacity=".16" strokeWidth="1.5"/>)}
+       {part&&<rect data-area-box="part" x={x} y={y+size-small} width={small} height={small} fill={GOLD} fillOpacity={.15+.8*reveal} stroke={GOLD} strokeWidth="4"/>}
+       {t(valueText(relation.total),480,110,78,338,part?WHITE:GOLD)}
+       {t('ÁREA TOTAL',480,155,30,338)}
+       {!part&&<g opacity={.35+.65*reveal}>{t(areaSideLabel(shared.total),480,275,57,338,GOLD)}{t('de cada lado',480,321,33,338)}</g>}
+       {part&&<g opacity={.35+.65*reveal}>{t(valueText(relation.part),480,260,80,338,GOLD)}{t('TERRA NOVA',480,306,30,338)}</g>}
+       {part&&<g opacity={detail}>{t('≈ '+num(Math.round(100*shared.ratio))+'%',480,406,69,338,GOLD)}{t('da área total',480,448,34,338)}</g>}
+       {t('Escala de área comum · não é um mapa',32,527,32,775)}
+      </>;
+   })()}
+   {k==='area'&&!shared&&(()=>{
       const side=Math.sqrt(v[0].value),size=350,x=36,y=178,scale=size/side;
       return <>
        {main(value,137,130)}
@@ -192,7 +209,7 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
        {side<=10&&Array.from({length:Math.floor(side)},(_,j)=><path key={j} d={`M ${x+(j+1)*scale} ${y} V ${y+size} M ${x} ${y+(j+1)*scale} H ${x+size}`} stroke={GOLD} strokeOpacity=".5" strokeWidth="2"/>)}
        {/* Leave clearance under numeric descenders; the square border already encodes its extent. */}
        {t('ÁREA EQUIVALENTE',438,244,34,380)}
-       {t('≈ '+num(side)+' km',438,310,55,380,GOLD)}
+       {t(areaSideLabel(v[0].value),438,310,55,380,GOLD)}
        {t('de cada lado',438,358,39,380)}
        {t('Quadrado ilustrativo',438,445,31,380)}
        {t('Não é um mapa',438,486,31,380)}

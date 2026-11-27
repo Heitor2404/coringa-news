@@ -1007,3 +1007,8 @@ Retomada 26/11: commit 0d685a3ca3f2cc03fdacd5cd0b8b532b4517b71d, run 45925229521
 ## 472. E388.3.2 — correção focal e núcleo de decisão E388.4
 
 Ajuste de baseline e tamanho de área (134→130px) e porcentagem (180→174px), sem relaxar fit ou mudar outras famílias. Núcleo privado motion_direcao_e3884 seleciona candidato por necessidade quantitativa explícita, propósito compatível, claim estruturada vinculada ao recibo e proteção de evidência; não extrai números nem substitui filmagem obrigatória. Testes de seleção e recusas incorporados ao workflow E38832, que renderiza seis famílias e entrega Telegram. CI/render/entrega pendentes. E388.4 ainda não integrado ao fluxo real; E388.5 prova narrada e 35,5 km² pendentes. Sem IA paga/TTS/main/publicação.
+
+
+## 473. E388.3.2 comprovada; E388.5 prova narrada privada
+
+E388.3.2 run 45927991356 SUCCESS, proof.json seis famílias fit=true sem erros; área ink y19 e proporção y11 (antes -1/-9), folha inspecionada, recibos Telegram 587/588 complete=true. Regressões 45927991195/45927991173 SUCCESS. Não repetir. E388.5 aceita âncora privada de palavra/caption medida, oculta valor até o instante, anima representação e mede legenda Taiwan 60px adaptativa. Seletor E388.4 consumido no preparo de duas alternativas narradas c3-2 e c6-1, com claims conferidas contra E342 e áudio/captions recortados de E379 autenticado. Original e filmagens preservados; intenção quantitativa fornecida no fixture, não inferida do roteiro. Workflow independente sem IA/TTS, amostras antes/depois e grupos medidos, dois trechos e entrega Telegram, arquivo cofre. CI/render/entrega pendentes. Não equivale a seleção automática no fluxo geral, prova de múltiplos temas narrados ou filme final; 35,5 km² e E389 pendentes. Sem main/publicação.

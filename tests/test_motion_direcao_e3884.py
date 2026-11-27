@@ -1,6 +1,6 @@
 import copy,json
 from pathlib import Path
-from src.v4.formatos.motion_direcao_e3884 import decidir
+from src.v4.formatos.motion_direcao_e3884 import decidir,ancorar
 CLAIMS=[s['documentary_chart_trial'] for s in json.loads(Path('benchmarks/e3883/props.json').read_text())['shots']]
 def inputs(i=0):
     c=copy.deepcopy(CLAIMS[i]);n={'fact_id':'fact','role':'quantitative_explainer','purpose':['magnitude','magnitude','proportion','comparison','chronology','magnitude'][i],'requires_direct_evidence':False}
@@ -22,3 +22,11 @@ def test_reject_wrong_intent_and_fixture():
     n,c,r=inputs();n['purpose']='chronology'
     assert decidir(n,c,r)['status']=='KEEP_EXISTING'
     assert decidir(*inputs(3))['status']=='KEEP_EXISTING'
+
+def test_measured_anchor():
+    import pytest
+    d=decidir(*inputs());s={'id':'fact','start':0,'end':4};r={'shot':'fact','sha256':'a'*64,'source_url':'https://example.org','value':'20','scope':'here','anchor':'VINTE','publish':False};f={'sha256':r['sha256'],'url':r['source_url'],'value':'20','scope':'here','at':1,'publish':False};caps=[{'start':.8,'end':1.4,'words':[{'w':'VINTE'}]}]
+    assert ancorar(d,s,f,r,caps)['at']==1
+    with pytest.raises(ValueError):ancorar(d,s,f,r,[])
+    with pytest.raises(ValueError):ancorar(d,s,{**f,'at':3},r,caps)
+    with pytest.raises(ValueError):ancorar(d,s,{**f,'value':'21'},r,caps)

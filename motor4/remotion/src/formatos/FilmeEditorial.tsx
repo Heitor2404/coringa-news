@@ -40,6 +40,7 @@ export type FilmShot = {
   framing_positions?: {at:number; position:[number,number]}[];
   graphic_original?: boolean; // Infografia autoral com dados embutidos, sem título duplicado
   documentary_chart_trial?: Claim; // E388.3 private graphic-original scene
+  documentary_chart_anchor?: {schema:'coringa.motion.anchor.private.v1';at:number;word:string;publish:false};
   motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
@@ -570,7 +571,7 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
     return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
   return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
 };
-const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING','E3881_TAIWAN_FACT_PENDING'].includes(layout.safeTrialStatus||'');
+const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING','E3881_TAIWAN_FACT_PENDING','E3885_TAIWAN_CHART_PENDING'].includes(layout.safeTrialStatus||'');
 // E309: bracket the observed static detail, never shade or paint its pixels.
  // Project through the ACTUAL selected photo viewport, including crop fallback.
 const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
@@ -1148,7 +1149,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <div style={{...rectStyle(CLEAN_TEXT.brand),display:'flex',alignItems:'center',fontSize:28,fontWeight:800,color:OFF_WHITE,letterSpacing:2.1}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
       <div style={{position:'absolute',left:66,top:346,width:140,height:5,background:GOLD}}/>
       <div style={{position:'absolute',left:66,top:410,maxWidth:839,fontSize:39,fontWeight:900,color:OFF_WHITE,borderLeft:'6px solid '+GOLD,padding:'9px 16px',background:'#161616',lineHeight:1.1}}>{claim.title}</div>
-      <EditorialChart claim={claim} p={p} probe={textProbe}/>
+      {shot.documentary_chart_anchor&&now-shot.start<shot.documentary_chart_anchor.at? <div style={{position:'absolute',left:66,top:715,width:839,color:OFF_WHITE,fontSize:49,fontWeight:700,lineHeight:1.16}}>{claim.scope}</div>:<EditorialChart claim={claim} p={shot.documentary_chart_anchor?Math.max(0,Math.min(1,(now-shot.start-shot.documentary_chart_anchor.at)/Math.min(1.5,shot.end-shot.start-shot.documentary_chart_anchor.at))):p} probe={textProbe}/>}
       {!subtitleMode&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontSize:60,lineHeight:1.08,fontWeight:900,color:OFF_WHITE,letterSpacing:-1.5}}>{shot.headline}</div>}
     </AbsoluteFill>;
   }
@@ -1309,7 +1310,10 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
        s.type!=='photo'||s.graphic_original!==true||s.evidence!=='explainer'||s.asset||s.motion_graphic||
        s.end-s.start<3.5||s.headline.length>65)throw new Error('E3883-PRIVATE-GRAPHIC');
     selectChart(s.documentary_chart_trial!);
+    const a=s.documentary_chart_anchor;
+    if(a&&(a.schema!=='coringa.motion.anchor.private.v1'||a.publish!==false||!Number.isFinite(a.at)||a.at<0||s.end-s.start-a.at<1.4||!a.word||!scene_narration_asset||documentary_caption_origin!=='PALAVRAS_MEDIDAS'||!documentary_captions?.some(g=>g.start<=s.start+a.at+.034&&g.end>s.start+a.at&&g.words.some(w=>w.w===a.word))||s.documentary_chart_trial!.fixture))throw new Error('E3885-ANCHOR');
   }
+  if(shots.some(s=>s.documentary_chart_anchor&&!s.documentary_chart_trial))throw new Error('E3885-ORPHAN-ANCHOR');
   if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
   for(const s of shots.filter(s=>s.documentary_overlay_trial!==undefined)){
     if(!s.documentary_clean_credit||![60,63].includes(s.documentary_overlay_trial!))throw new Error('E388-OVERLAY-CONTRACT');
@@ -1384,7 +1388,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={detailZoomActive(shots[shot],t)?detailZoomGeometry(shots[shot]).layout:pairActive(shots[shot],t)?pairLayout:undefined}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
-    {docCap&&shots[shot].documentary_chart_trial&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:60,fontWeight:900,lineHeight:1.08,letterSpacing:-1.5,color:OFF_WHITE}}><div>{docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}</div></div>}
+    {docCap&&shots[shot].documentary_chart_trial&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={CLEAN_TEXT.subtitle} text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={{mode:'STANDARD',slots:CLEAN_TEXT,media:[66,505,905,1170],protected:[],roiStatus:'OBSERVED',subtitleFont:60,safeTrialStatus:'E3885_TAIWAN_CHART_PENDING'}}>{docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}</MeasuredDocText>}
     {docCap&&!shots[shot].documentary_chart_trial&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'flex-start':'center',
         textAlign:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'left':'center',pointerEvents:'none'}}>

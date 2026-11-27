@@ -20,3 +20,23 @@ def ancorar(decision, shot, fact, receipt, captions):
     if type(a) not in (int,float) or not math.isfinite(a) or a<0 or duration-a<1.4 or not word:raise ValueError('E3885-TIME')
     if not any(g['start']<=a+.034 and g['end']>a and any(w['w']==word for w in g['words']) for g in captions):raise ValueError('E3885-CAPTION')
     return {'schema':'coringa.motion.anchor.private.v1','at':a,'word':word,'publish':False}
+
+def fila_plano(plan):
+    """Opt-in handoff in the existing short director. Never mutates shots.
+    The claim must be linked to an existing factual obligation, not just a
+    numeric token. Direct or unspecified evidence is preserved by default."""
+    packets=plan.get('motion_claims') or []
+    if not packets:return []
+    if plan.get('publicar') is not False:raise ValueError('E3884-PRIVATE-PLAN')
+    needs={n['id']:n for n in plan.get('necessidades_direcao',[])}
+    shots={s['id']:s for s in plan.get('shots',[])}
+    seen=set();out=[]
+    for p in packets:
+        i=p.get('need_id');fact=p.get('fact_id');n=needs.get(i);shot=shots.get(i)
+        if not n or not shot or not fact or fact not in n.get('fatos',[]) or (i,fact) in seen:
+            out.append({'need_id':i,'fact_id':fact,'status':'KEEP_EXISTING','reason':'UNBOUND_OR_DUPLICATE_OBLIGATION','publish':False});continue
+        seen.add((i,fact))
+        need={'fact_id':fact,'role':n.get('motion_role'),'purpose':n.get('motion_purpose'),'requires_direct_evidence':n.get('exigir_evidencia_direta') is not False or n.get('evidencia_visual')=='movimento' or shot.get('type') not in ('photo','video') or bool(shot.get('documentary_static_reveal'))}
+        d=decidir(need,p.get('claim'),p.get('receipt'))
+        out.append({**d,'need_id':i,'fact_id':fact,'original_shot_preserved':True,'render_authorized':False})
+    return out

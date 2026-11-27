@@ -70,7 +70,9 @@ def diagnosticar(plan):
     if rows[0]['passive_photo']:issues.append('GANCHO_VISUAL_REVISAR')
     pairs=plan.get('comparacoes_documentais') or []
     tasks=tarefas_replanejamento(rows)
-    return {'schema':'coringa.short.triage.v1','imersao_documental':immersion,'tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'comparacoes_documentais':pairs,'publicar':False,
+    from .motion_direcao_e3884 import fila_plano
+    motion_candidates=fila_plano(plan)
+    return {'schema':'coringa.short.triage.v1','imersao_documental':immersion,'tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'motion_candidates':motion_candidates,'comparacoes_documentais':pairs,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),

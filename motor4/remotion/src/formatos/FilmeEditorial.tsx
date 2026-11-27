@@ -41,6 +41,7 @@ export type FilmShot = {
   graphic_original?: boolean; // Infografia autoral com dados embutidos, sem título duplicado
   documentary_chart_trial?: Claim; // E388.3 private graphic-original scene
   documentary_chart_anchor?: {schema:'coringa.motion.anchor.private.v1';at:number;word:string;publish:false};
+  documentary_chart_context?: {schema:'coringa.motion.context.private.v1';publish:false;asset:string;sha256:string;kind:'photo'|'video';sourceIn:number;credit:string};
   motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
@@ -1149,7 +1150,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       <div style={{...rectStyle(CLEAN_TEXT.brand),display:'flex',alignItems:'center',fontSize:28,fontWeight:800,color:OFF_WHITE,letterSpacing:2.1}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
       <div style={{position:'absolute',left:66,top:346,width:140,height:5,background:GOLD}}/>
       <div style={{position:'absolute',left:66,top:410,maxWidth:839,fontSize:39,fontWeight:900,color:OFF_WHITE,borderLeft:'6px solid '+GOLD,padding:'9px 16px',background:'#161616',lineHeight:1.1}}>{claim.title}</div>
-      {shot.documentary_chart_anchor&&now-shot.start<shot.documentary_chart_anchor.at? <div style={{position:'absolute',left:66,top:715,width:839,color:OFF_WHITE,fontSize:49,fontWeight:700,lineHeight:1.16}}>{claim.scope}</div>:<EditorialChart claim={claim} p={shot.documentary_chart_anchor?Math.max(0,Math.min(1,(now-shot.start-shot.documentary_chart_anchor.at)/Math.min(1.5,shot.end-shot.start-shot.documentary_chart_anchor.at))):p} probe={textProbe}/>}
+      {shot.documentary_chart_anchor&&now-shot.start<shot.documentary_chart_anchor.at? (shot.documentary_chart_context?(()=>{const c=shot.documentary_chart_context;if(textProbe)console.log('E38851_CONTEXT '+JSON.stringify({shot:shot.id,asset:c.asset,kind:c.kind}));return <div style={{position:'absolute',left:0,top:505,width:1080,height:665,overflow:'hidden'}}>{c.kind==='video'?<Sequence from={Math.round(shot.start*fps)}><OffthreadVideo src={staticFile(c.asset)} muted startFrom={Math.round(c.sourceIn*fps)} style={{width:'100%',height:'100%',objectFit:'contain'}}/></Sequence>:<Img src={staticFile(c.asset)} style={{width:'100%',height:'100%',objectFit:'contain'}}/>}</div>})():<div style={{position:'absolute',left:66,top:715,width:839,color:OFF_WHITE,fontSize:49,fontWeight:700,lineHeight:1.16}}>{claim.scope}</div>):<EditorialChart claim={claim} p={shot.documentary_chart_anchor?Math.max(0,Math.min(1,(now-shot.start-shot.documentary_chart_anchor.at)/Math.min(1.5,shot.end-shot.start-shot.documentary_chart_anchor.at))):p} probe={textProbe}/>}
       {!subtitleMode&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontSize:60,lineHeight:1.08,fontWeight:900,color:OFF_WHITE,letterSpacing:-1.5}}>{shot.headline}</div>}
     </AbsoluteFill>;
   }
@@ -1312,8 +1313,10 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     selectChart(s.documentary_chart_trial!);
     const a=s.documentary_chart_anchor;
     if(a&&(a.schema!=='coringa.motion.anchor.private.v1'||a.publish!==false||!Number.isFinite(a.at)||a.at<0||s.end-s.start-a.at<1.4||!a.word||!scene_narration_asset||documentary_caption_origin!=='PALAVRAS_MEDIDAS'||!documentary_captions?.some(g=>g.start<=s.start+a.at+.034&&g.end>s.start+a.at&&g.words.some(w=>w.w===a.word))||s.documentary_chart_trial!.fixture))throw new Error('E3885-ANCHOR');
+    const c=s.documentary_chart_context;
+    if(c&&(!a||c.schema!=='coringa.motion.context.private.v1'||c.publish!==false||!/^[a-f0-9]{64}$/.test(c.sha256)||!['photo','video'].includes(c.kind)||c.asset!=='film_editorial/'+c.sha256+(c.kind==='photo'?'.jpg':'.mp4')||!Number.isFinite(c.sourceIn)||c.sourceIn<0||!c.credit||c.credit.length>200))throw new Error('E38851-CONTEXT');
   }
-  if(shots.some(s=>s.documentary_chart_anchor&&!s.documentary_chart_trial))throw new Error('E3885-ORPHAN-ANCHOR');
+  if(shots.some(s=>(s.documentary_chart_anchor||s.documentary_chart_context)&&!s.documentary_chart_trial))throw new Error('E3885-ORPHAN-ANCHOR');
   if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
   for(const s of shots.filter(s=>s.documentary_overlay_trial!==undefined)){
     if(!s.documentary_clean_credit||![60,63].includes(s.documentary_overlay_trial!))throw new Error('E388-OVERLAY-CONTRACT');

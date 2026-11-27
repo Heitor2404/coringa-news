@@ -30,3 +30,16 @@ def test_measured_anchor():
     with pytest.raises(ValueError):ancorar(d,s,f,r,[])
     with pytest.raises(ValueError):ancorar(d,s,{**f,'at':3},r,caps)
     with pytest.raises(ValueError):ancorar(d,s,{**f,'value':'21'},r,caps)
+
+def test_director_handoff_preserves_original():
+    from src.v4.formatos.motion_direcao_e3884 import fila_plano
+    n,c,r=inputs()
+    plan={'publicar':False,'shots':[{'id':'s','type':'photo'}],'necessidades_direcao':[{'id':'s','fatos':['fact'],'motion_role':n['role'],'motion_purpose':n['purpose'],'exigir_evidencia_direta':False}],'motion_claims':[{'need_id':'s','fact_id':'fact','claim':c,'receipt':r}]}
+    original=copy.deepcopy(plan)
+    assert fila_plano(plan)[0]['status']=='CHART_CANDIDATE'
+    assert fila_plano(plan)[0]['render_authorized'] is False
+    assert plan==original
+    plan['necessidades_direcao'][0]['exigir_evidencia_direta']=True
+    assert fila_plano(plan)[0]['status']=='KEEP_EXISTING'
+    plan['necessidades_direcao'][0]['fatos']=['other']
+    assert fila_plano(plan)[0]['reason']=='UNBOUND_OR_DUPLICATE_OBLIGATION'

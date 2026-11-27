@@ -185,12 +185,12 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
       </>;
    })()}
    {k==='area'&&(()=>{
-      const side=Math.sqrt(v[0].value),size=365,x=36,y=164,scale=size/side;
+      const side=Math.sqrt(v[0].value),size=350,x=36,y=178,scale=size/side;
       return <>
        {main(value,137,130)}
        <rect x={x} y={y} width={size} height={size} fill={GOLD} fillOpacity={.13+.25*b} stroke={GOLD} strokeWidth="5"/>
        {side<=10&&Array.from({length:Math.floor(side)},(_,j)=><path key={j} d={`M ${x+(j+1)*scale} ${y} V ${y+size} M ${x} ${y+(j+1)*scale} H ${x+size}`} stroke={GOLD} strokeOpacity=".5" strokeWidth="2"/>)}
-       <path d={`M${x} ${y-11}H${x+size}`} stroke={GOLD} strokeWidth="3"/>
+       {/* Leave clearance under numeric descenders; the square border already encodes its extent. */}
        {t('ÁREA EQUIVALENTE',438,244,34,380)}
        {t('≈ '+num(side)+' km',438,310,55,380,GOLD)}
        {t('de cada lado',438,358,39,380)}

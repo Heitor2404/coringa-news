@@ -1,8 +1,8 @@
-name: E392 - storyboard com grafo e biblioteca existentes
+name: E392B - revisao de arte do storyboard
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-motion-e392.yml','motor4/scripts/qa_storyboard_e392.mjs']
+    paths: ['.github/workflows/qa-motion-e392.yml','motor4/scripts/qa_storyboard_e392.mjs','motor4/remotion/src/formatos/CalderaCutawayE392.tsx']
   workflow_dispatch:
 permissions:
   contents: read

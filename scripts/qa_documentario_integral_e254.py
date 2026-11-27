@@ -53,6 +53,8 @@ def main():
     root=Path(sys.argv[1]);report=json.loads((root/'revisao.json').read_text())
     # A retry cannot inherit ready-to-render props from an earlier run.
     (root/'props.json').unlink(missing_ok=True)
+    (root/'motion-alternative-props.json').unlink(missing_ok=True)
+    (root/'motion-postvoice.json').unlink(missing_ok=True)
     case=report['case']
     evidence=root/'entregas_verificadas.json'
     entregas=json.loads(evidence.read_text()) if evidence.is_file() else {}
@@ -116,6 +118,13 @@ def main():
     asset='e202/'+h+'.wav'
     (PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(audio,PUBLIC/asset)
     props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
+    # Optional, separate candidate artifact after authenticated voice alignment.
+    # Never replace canonical props or change the existing readiness gate.
+    if case.get('motion_private_alternatives') is True:
+        from src.v4.formatos.motion_postvoice_e3889 import preparar_alternativa
+        alternative,motion_report=preparar_alternativa(case,plan,props,words,sync,PUBLIC)
+        write(root/'motion-postvoice.json',motion_report)
+        if alternative is not None:write(root/'motion-alternative-props.json',alternative)
     write(root/'props.json',props)
     write(root/'integral.json',{**gate,'pronto_para_render_privado':True,'duracao_voz':duration,'sincronia_medida_ok':True,'publicar':False})
 if __name__=='__main__':main()

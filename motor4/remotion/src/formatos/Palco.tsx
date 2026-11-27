@@ -117,7 +117,7 @@ function arcoContinuo(a: number[], b: number[], n = 120) {
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, e396e=global && P.neo_e396e===true, e396f=e396e && P.neo_e396f===true, vw=neo?width:W, vh=neo?height:H;
+  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, e396e=global && P.neo_e396e===true, e396f=e396e && P.neo_e396f===true, e396g=e396f && P.neo_e396g===true, vw=neo?width:W, vh=neo?height:H;
   const t = frame / fps;
   const T = P.tokens.palco.mapa;
   const ref = useRef<HTMLDivElement>(null);
@@ -140,6 +140,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   // 'foco' = território em foco da referência A: preenchimento OPACO, contorno fino escuro, sem brilho
   const foco = (d: any) => d.cor === 'foco';
   const rasters = P.rasters || [];
+  const opacityRaster=(z:number,de?:number|null,ate?:number|null)=>{const v=rampa(z,de,ate);return e396g?v*v*(3-2*v):v;};
   const terrain=e396e?P.neo_terrain:undefined;
   const pitch=terrain?terrain.pitch*cruise((t-terrain.start)/(terrain.end-terrain.start)):0;
   const bearing=terrain?terrain.bearing*cruise((t-terrain.start)/(terrain.end-terrain.start)):0;
@@ -200,12 +201,14 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   // Same clock and geometry as lineSliceAlong: no invented vessel position.
   const routeAhead = routeHead ? turf.along(rota,Math.min(km,km*routeProgress+.3),{units:'kilometers'}).geometry.coordinates : null;
   const routeBehind = routeHead ? turf.along(rota,Math.max(0,km*routeProgress-.3),{units:'kilometers'}).geometry.coordinates : null;
-  const heading = routeAhead && routeBehind ? (global ? smoothAngle([-1.8,-.9,0,.9,1.8].map(offset=>{
+  const heading = routeAhead && routeBehind ? (global ? smoothAngle((e396g?[-3,-2,-1,0,1,2,3]:[-1.8,-.9,0,.9,1.8]).map(offset=>{
     const at=Math.min(km,Math.max(0,km*routeProgress+offset));
-    return turf.bearing(turf.along(rota,Math.max(0,at-1.1),{units:'kilometers'}),turf.along(rota,Math.min(km,at+1.1),{units:'kilometers'}));
+    return turf.bearing(turf.along(rota,Math.max(0,at-(e396g?1.6:1.1)),{units:'kilometers'}),turf.along(rota,Math.min(km,at+(e396g?1.6:1.1)),{units:'kilometers'}));
   })) : turf.bearing(routeBehind,routeAhead)) : 0;
   const blend = follow ? progresso(t,follow.start,follow.start+(e396f?1.1:global?2.2:1.25),'easeIO') : 0;
-  const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,travel)} : baseCamera;
+  const trackingCamera = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,travel)} : baseCamera;
+  const returnToOverview=follow?.overview_end!=null?cruise((t-follow.end)/(follow.overview_end-follow.end)):0;
+  const c=returnToOverview>0?{...trackingCamera,centro:[lerp(trackingCamera.centro[0],baseCamera.centro[0],returnToOverview),lerp(trackingCamera.centro[1],baseCamera.centro[1],returnToOverview)] as [number,number],zoom:lerp(trackingCamera.zoom,baseCamera.zoom,returnToOverview)}:trackingCamera;
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
   const [pronto, setPronto] = useState(-1);
   const pend = useRef<number | null>(null);
@@ -225,7 +228,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       map.setTerrain(null);map.removeSource('neo_dem');terrainEnabled.current=false;
     }
     map.jumpTo({ center: c.centro, zoom: c.zoom, ...(terrain?{pitch,bearing}:{}) });
-    rasters.forEach(r => map.setPaintProperty(`r_${r.nome}`, 'raster-opacity', rampa(c.zoom, r.de, r.ate)));
+    rasters.forEach(r => map.setPaintProperty(`r_${r.nome}`, 'raster-opacity', opacityRaster(c.zoom, r.de, r.ate)));
     map.setPaintProperty('grat', 'line-opacity', neo ? 0 : .09 * clamp((7.6 - c.zoom) / 1.2));
     (P.destaques || []).forEach((d, i) => {
       const v = vis(t, d.t0, d.t1, .6, .5);
@@ -306,8 +309,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
         </div>)}
       {/* atribuição obrigatória (CC BY / ODbL): inteira, legível, faixa própria acima da legenda; muda com as camadas visíveis */}
       {(!e396f || atrib.length>0) && <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
-        display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
-        textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>}
+        display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: e396g?'rgba(255,255,255,.93)':'rgba(255,255,255,.82)',
+        textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%',textAlign:e396g?'right':'left',overflowWrap:e396g?'anywhere':undefined }}>{atrib.join(' · ')}</span></div>}
       {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={e396f?28:e396e?24:global?20:26} height={e396f?44:e396e?38:global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(e396f?14:e396e?12:global?10:13),top:proj(routeHead).y-(e396f?22:e396e?19:global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
       {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:e396e?((P as any).seguro?.esq??24):24,top:e396e?((P as any).seguro?.topo??30):30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>{e396e?'TRAVESSIA ILUSTRATIVA':global?'PERCURSO ILUSTRATIVO · TRECHO':'TRAVESSIA ILUSTRATIVA'}</div>}
       {e396e && P.neo_connections_until && t<P.neo_connections_until && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:17,color:'#fff',textShadow:'0 1px 5px #000'}}>CONEXÕES GEOGRÁFICAS · NÃO ROTAS REAIS</div>}

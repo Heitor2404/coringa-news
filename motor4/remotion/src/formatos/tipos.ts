@@ -35,7 +35,8 @@ export type FormatoProps = {
   composicoes?: Record<string, { quadro: [number, number, number, number] | null; veu?: string }>;
   creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
   tecnico?: { pais?: string };
-  neo_follow?: {start:number;end:number;zoom:number;ship?:boolean;from?:number;to?:number}; // illustrative route, opt-in private benchmark
+  neo_follow?: {start:number;end:number;zoom:number;ship?:boolean;from?:number;to?:number;overview_end?:number}; // illustrative route, opt-in private benchmark
+  neo_e396g?: boolean;
   neo_e396f?: boolean;
   neo_e396e?: boolean;
   neo_connections_until?: number;

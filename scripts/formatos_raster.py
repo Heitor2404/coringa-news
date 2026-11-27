@@ -207,7 +207,7 @@ def _terras_ne(bbox, cache_dir):
     return out
 
 
-def compor_oceano(s2, tile0, z, aneis, oceano, *, lat_ref, buffer_m=1500.):
+def compor_oceano(s2, tile0, z, aneis, oceano, *, lat_ref, buffer_m=1500., borda_suave=False):
     """Keep Sentinel-2 over land + a coastal buffer; elsewhere use the bathymetric ocean base.
 
     E284 diagnosis (Kilauea, raw EOX tiles): s2cloudless only images a coastal strip of ocean; beyond it EOX
@@ -229,7 +229,7 @@ def compor_oceano(s2, tile0, z, aneis, oceano, *, lat_ref, buffer_m=1500.):
     mpp = 156543.03392 * math.cos(math.radians(lat_ref)) / 2 ** z
     raio = max(1.0, buffer_m / mpp)
     dil = np.asarray(mask.filter(ImageFilter.GaussianBlur(raio)), np.float32) > 4      # coastal buffer
-    alfa = Image.fromarray((dil * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(max(1.0, raio / 2)))
+    alfa = (mask.filter(ImageFilter.GaussianBlur(.8)) if borda_suave else Image.fromarray((dil * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(max(1.0, raio / 2))))
     a = (np.asarray(alfa, np.float32) / 255)[..., None]
     out = np.asarray(s2.convert('RGB'), np.float32) * a + np.asarray(oceano.convert('RGB').resize((w, h), Image.BICUBIC), np.float32) * (1 - a)
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)), float((np.asarray(mask) > 0).mean())
@@ -286,10 +286,10 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     nw = tile_lonlat(int(x0), int(y0), z)
     se = tile_lonlat(int(x1) + 1, int(y1) + 1, z)
     corners = [list(nw), [se[0], nw[1]], list(se), [nw[0], se[1]]]
-    composicao = (oceano in ('batimetria','batimetria_costeira') and dataset == 's2_2016')
-    buffer_m = 300 if oceano == 'batimetria_costeira' else 1500
+    composicao = (oceano in ('batimetria','batimetria_costeira','batimetria_borda_suave') and dataset == 's2_2016')
+    buffer_m = 0 if oceano == 'batimetria_borda_suave' else 300 if oceano == 'batimetria_costeira' else 1500
     meta = {'nome': nome, 'tipo': 'satelite', 'cantos': corners, 'px': px,
-            **({'oceano': 'bmng_batimetria+ne_10m_land', 'buffer_costeiro_m': buffer_m} if composicao else {}),
+            **({'oceano': 'bmng_batimetria+ne_10m_land', 'buffer_costeiro_m': buffer_m, **({'mascara':'borda_suave_0.8px'} if oceano=='batimetria_borda_suave' else {})} if composicao else {}),
             'px_por_grau_fonte': 256*2**z/360, 'arquivo': img.name, 'dataset': dataset,
             'atribuicao': lic['atribuicao_exigida'] + (' · ' + atlas_ref.datasets()['bmng']['atribuicao_exigida'] + ' · Natural Earth' if composicao else ''),
             'fonte': {'url': modelo, 'licenca': lic['licenca'], 'zoom_tiles': z,
@@ -312,7 +312,7 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     if composicao:
         aneis = _terras_ne(bbox, out)
         mar = _oceano_bmng((nw, se), z)
-        im, fracao_terra = compor_oceano(im, (int(x0), int(y0)), z, aneis, mar, lat_ref=(nw[1] + se[1]) / 2, buffer_m=buffer_m)
+        im, fracao_terra = compor_oceano(im, (int(x0), int(y0)), z, aneis, mar, lat_ref=(nw[1] + se[1]) / 2, buffer_m=buffer_m,borda_suave=oceano=='batimetria_borda_suave')
         meta['fracao_terra'] = round(fracao_terra, 4)
     from tempfile import NamedTemporaryFile
     with NamedTemporaryFile(dir=out, suffix='.jpg', delete=False) as temp:

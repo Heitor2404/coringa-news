@@ -1,0 +1,4 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const C=require('/tmp/e391-test/Causal2DCoreE391.js'),c=JSON.parse(fs.readFileSync('benchmarks/e391/sequence.json','utf8'));
+test('reviewed geometry changes rather than just highlighting',()=>{C.validateCausalSequence(c,14.2667);for(const s of c.states.slice(1)){const a=C.causalFrame(c,s.at),b=C.causalFrame(c,s.at+s.transition/2),z=C.causalFrame(c,s.at+s.transition);assert.notDeepEqual(a.layers,b.layers);assert.notDeepEqual(b.layers,z.layers);assert.ok(Math.abs(b.progress-.5)<1e-8);}});
+test('reject invalid states and physical scale claims',()=>{for(const change of [x=>x.publish=true,x=>x.scale='physical',x=>x.states[1].at=0,x=>x.states[2].layers[0].points.pop(),x=>x.states[1].layers[0].points[0]=[-1,0],x=>x.states[1].transition=9]){const x=structuredClone(c);change(x);assert.throws(()=>C.validateCausalSequence(x,14.2667),/E391/);}});

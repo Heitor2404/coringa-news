@@ -59,3 +59,13 @@ export const ACutawayMaterial:React.FC<{id:string;d:string;tone:'rock'|'hot'|'sh
   <path d={d} fill={`url(#${id}-surface)`} stroke={tone==='hot'?'#F5A36C':'#BAA38F'} strokeWidth="1.4" strokeLinejoin="round"/>
  </g>;
 };
+
+/** Opt-in illustrated material overlays. Fixed-seed procedural marks are authored
+ * texture, not microscopy or measured physical surface detail. */
+export const ASurfaceGrain:React.FC<{id:string;d:string;kind:'rock'|'hot'|'metal';opacity?:number}>=({id,d,kind,opacity=.24})=>{
+ const warm=kind==='hot',metal=kind==='metal';
+ return <g pointerEvents="none"><defs>
+ <pattern id={id+'-grain'} width={metal?9:29} height={metal?31:27} patternUnits="userSpaceOnUse" patternTransform={metal?'rotate(-24)':undefined}>
+ {Array.from({length:metal?9:29},(_,i)=>{const x=(i*13.31)%29,y=(i*7.13)%27;return metal?<path key={i} d={`M${i} 0 V31`} stroke={i%3?'#fff':'#111'} strokeOpacity={i%3?.11:.27} strokeWidth=".55"/>:<path key={i} d={`M${x} ${y} l${1+i%4} ${(i%3)-1}`} stroke={i%3?(warm?'#FEC06C':'#D9C8AA'):'#140F0C'} strokeOpacity={i%3?.55:.8} strokeWidth={i%4===0?1.1:.5}/>;})}
+ </pattern></defs><path d={d} fill={`url(#${id}-grain)`} opacity={opacity}/></g>;
+};

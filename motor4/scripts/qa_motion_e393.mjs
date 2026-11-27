@@ -1,5 +1,5 @@
 import {bundle} from '@remotion/bundler';import {selectComposition,renderStill,renderMedia} from '@remotion/renderer';import {readFileSync,writeFileSync} from 'node:fs';import {resolve} from 'node:path';
-const root=resolve('../stage_documental/e393'),p=JSON.parse(readFileSync(resolve(root,'variant.json'),'utf8')),out={publish:false,visual_approval:'PENDING',rows:[],gearRows:[],errors:[]};
+const root=resolve('../stage_documental/e393'),p={...JSON.parse(readFileSync(resolve(root,'variant.json'),'utf8')),visualRevision:'E395'},out={publish:false,visual_approval:'PENDING',rows:[],gearRows:[],errors:[]};
 const save=()=>writeFileSync(resolve(root,'comparison.json'),JSON.stringify(out,null,2));
 try{
  const serveUrl=await bundle({entryPoint:resolve('remotion/src/e393-index.tsx'),publicDir:resolve('remotion/public')});const browserExecutable=process.env.REMOTION_CHROME,input={...p,probe:true},composition=await selectComposition({serveUrl,id:'CausalCutawayE393',inputProps:input,browserExecutable}),fps=30;
@@ -13,12 +13,16 @@ try{
   out.rows.push({frame,t,row});save();
  }
  for(let i=0;i<3;i++){const mid=out.rows.filter(x=>x.row?.progress[i]>0&&x.row.progress[i]<1);if(mid.length<2||i<2&&new Set(mid.map(x=>i===0?x.row.magma:x.row.top)).size<2)out.errors.push('NO_CAUSAL_MOTION '+i);}
+ for(const frame of [54,120,210,365])await renderStill({serveUrl,composition,inputProps:{...p,visualRevision:undefined,probe:false},browserExecutable,frame,output:resolve(root,'motion-baselinecaldera-'+frame+'.png'),logLevel:'error'});
+ if(!out.rows.some(x=>x.row?.detail?.id==='reservoir')||!out.rows.some(x=>x.row?.detail?.id==='roof'))out.errors.push('E395-DETAIL-MISSING');
  if(!out.errors.length)await renderMedia({serveUrl,composition,inputProps:p,browserExecutable,codec:'h264',outputLocation:resolve(root,'motion-causal-2d.mp4'),scale:.75,concurrency:2,logLevel:'error'});
- const gearInput={private_review_only:true,probe:true},gear=await selectComposition({serveUrl,id:'GearMotionE394',inputProps:gearInput,browserExecutable});
+ const gearInput={private_review_only:true,probe:true,visualRevision:'E395'},gear=await selectComposition({serveUrl,id:'GearMotionE394',inputProps:gearInput,browserExecutable});
  for(const frame of [0,35,70,100,135,175,220,251]){
  const logs=[];await renderStill({serveUrl,composition:gear,inputProps:gearInput,browserExecutable,frame,output:resolve(root,'motion-gears-'+frame+'.png'),logLevel:'info',onBrowserLog:l=>{const v=String(l.text||''),i=v.indexOf('E394_GEAR ');if(i>=0)logs.push(JSON.parse(v.slice(i+10)))}});
  const row=logs.at(-1);if(!row?.fit||!row.opaque||Math.abs(row.output+row.rotation*12/20)>1e-6||row.camera.scale<1||row.camera.scale>1.27001)out.errors.push('GEAR '+frame);out.gearRows.push({frame,row});save();}
+ for(const frame of [35,100,135,220])await renderStill({serveUrl,composition:gear,inputProps:{private_review_only:true},browserExecutable,frame,output:resolve(root,'motion-baselinegears-'+frame+'.png'),logLevel:'error'});
+ if(!out.gearRows.some(x=>x.row?.detail?.id==='mesh'))out.errors.push('E395-GEAR-DETAIL-MISSING');
  if(!out.gearRows.some(x=>Math.abs(x.row?.rotation??0)>100))out.errors.push('GEAR_MOTION');
- if(!out.errors.length)await renderMedia({serveUrl,composition:gear,inputProps:{private_review_only:true},browserExecutable,codec:'h264',outputLocation:resolve(root,'motion-gears-2d.mp4'),scale:.75,concurrency:2,logLevel:'error'});
+ if(!out.errors.length)await renderMedia({serveUrl,composition:gear,inputProps:{private_review_only:true,visualRevision:'E395'},browserExecutable,codec:'h264',outputLocation:resolve(root,'motion-gears-2d.mp4'),scale:.75,concurrency:2,logLevel:'error'});
 }catch(e){out.errors.push(String(e));console.error('E393_RENDER',String(e))}
 save();if(out.errors.length||out.rows.length<12)process.exitCode=1;

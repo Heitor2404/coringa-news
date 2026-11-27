@@ -5,6 +5,7 @@
 import React from 'react';
 import {useCurrentFrame,useVideoConfig} from 'remotion';
 import probes from './mechanisms2d-probes.json';
+import {ASurfaceGrain} from './AtlasAArtKit';
 import {PAPER,PaperLayout} from './Mechanism2DPaperStudio';
 import {smooth,eventAt,eventTime,type MechanismEvent} from './Mechanism2DCore';
 
@@ -169,11 +170,13 @@ export const gearState=(t:number)=>{
 };
 export const Gear:React.FC<{
   x:number;y:number;r:number;teeth:number;angle:number;fill:string;
-  highlight:string;opacity:number;spokes?:number;
-}>=({x,y,r,teeth,angle,fill,highlight,opacity,spokes=5})=><g opacity={opacity}>
+  highlight:string;opacity:number;spokes?:number;cinematic?:boolean;
+}>=({x,y,r,teeth,angle,fill,highlight,opacity,spokes=5,cinematic=false})=><g opacity={opacity}>
   <g transform={'rotate('+angle+' '+x+' '+y+')'}>
+    {cinematic&&Array.from({length:8},(_,i)=><path key={i} d={gearOutline(x,y,r,teeth)} transform={`translate(${(8-i)*1.8} ${(8-i)*2.1})`} fill="#293239" stroke={i%2?'#667782':'#3B444B'} strokeWidth="1.8"/>)}
     <path d={gearOutline(x,y,r,teeth)} fill={fill}
       stroke={highlight} strokeWidth="6" strokeLinejoin="round"/>
+    {cinematic&&<ASurfaceGrain id={'gear-grain-'+teeth} d={gearOutline(x,y,r,teeth)} kind="metal" opacity={.65}/>}
     <circle cx={x} cy={y} r={r*.74} fill="none"
       stroke={highlight} strokeWidth="4" opacity=".55"/>
     <circle cx={x} cy={y} r={r*.61} fill="none"

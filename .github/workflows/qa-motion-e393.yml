@@ -63,7 +63,7 @@ jobs:
         run: |
           shopt -s nullglob
           root=stage_documental/e393
-          files=("$root"/*.json "$root"/*.jpg "$root"/contact-*.jpg)
+          files=("$root"/*.json "$root"/*.jpg)
           if (( ${#files[@]} )); then python scripts/espelhar_revisao_cofre.py "e393-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
   alert:
     needs: qa

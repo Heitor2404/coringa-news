@@ -34,3 +34,5 @@ Após E394 o proprietário reafirmou que a qualidade visual é prioridade. CI ve
 ## Referência concreta antes de novo design — 27/11/2026
 
 E395 reprovada esteticamente pelo proprietário. Adotar engenharia reversa visual por trechos efetivamente observados, com fonte/timecodes, composição, escala, progressão, materiais e ritmo documentados. Comparar arte própria lado a lado com referência; sem quadros disponíveis, registrar lacuna e não inventar decupagem. Primeiro alcançar qualidade comparável numa cena, depois generalizar; preservar identidade Taiwan e não reutilizar ativos, áudio ou marca de terceiros sem licença. Suspender refinamentos incrementais no vulcão até referência concreta. Ver §495.
+
+Adendo §496: não usar estética artesanal/massinha nem simplicidade de diagramas exclusivamente mecânicos como referência visual principal. A curadoria deve priorizar animação digital documental sofisticada e multitemática; referências técnicas podem auxiliar a física sem definir acabamento.

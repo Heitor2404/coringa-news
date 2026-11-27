@@ -23,11 +23,13 @@ def main():
             r=T._api('sendDocument',{'chat_id':chat,'caption':'E388.10 · '+f.stem+' · quadros diagnósticos · revisão privada · NÃO PUBLICAR'},('document',f))
             if not isinstance(r,dict) or not r.get('message_id'):raise ValueError('receipt missing')
             items.append(dict(file=f.name,sha256=hashlib.sha256(f.read_bytes()).hexdigest(),message_id=r['message_id']));save()
-        for f in sorted(ROOT.glob('motion-*.mp4')):
-            r=T._api('sendVideo',{'chat_id':chat,'caption':'E388.10 · '+f.stem+' · trecho narrado original · revisão privada · NÃO PUBLICAR','supports_streaming':'true'},('video',T._caber(f)))
+        videos=[ROOT/name for name in ('motion-c6-0.mp4','motion-integral.mp4') if (ROOT/name).is_file()]
+        for f in videos:
+            sent=T._caber(f)
+            r=T._api('sendVideo',{'chat_id':chat,'caption':'E388.10 · '+f.stem+' · trecho narrado original · revisão privada · NÃO PUBLICAR','supports_streaming':'true'},('video',sent))
             if not isinstance(r,dict) or not r.get('message_id'):raise ValueError('receipt missing')
-            items.append(dict(file=f.name,sha256=hashlib.sha256(f.read_bytes()).hexdigest(),message_id=r['message_id']));save()
-        complete=len(list(ROOT.glob('motion-*.mp4')))==2 and len(items)==(len(frames)+7)//8+2 and len(p.get('rows',[]))==1 and p.get('audio_packets_identical') is True and p.get('original_outside_patch_frames_identical') is True
+            items.append(dict(file=f.name,sha256=hashlib.sha256(f.read_bytes()).hexdigest(),sent_file=sent.name,sent_sha256=hashlib.sha256(sent.read_bytes()).hexdigest(),message_id=r['message_id']));save()
+        complete=len(videos)==2 and len(items)==(len(frames)+7)//8+2 and len(p.get('rows',[]))==1 and p.get('audio_packets_identical') is True and p.get('original_outside_patch_frames_identical') is True
         receipt.write_text(json.dumps(dict(publish=False,items=items,complete=complete),indent=2))
         if not complete:raise ValueError('E388.10 incomplete evidence')
     except Exception:

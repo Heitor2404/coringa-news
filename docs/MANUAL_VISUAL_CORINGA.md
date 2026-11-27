@@ -22,3 +22,7 @@ Esta regra prevalece sobre a exigência experimental E387 de não sobrepor qualq
 ## Ordem
 
 E388: sobreposição controlada + motion graphics. E389: explicações causais 2D. E390: inteligência editorial, pertinência e composição adaptativa. E391: novo Kilauea completo e verificação em outros temas. A numeração é proposta de trabalho, não prova de implementação.
+
+## Regra de consistência — 26/11/2026
+
+Toda prova destinada à aprovação estética deve usar a identidade Taiwan limpa em todas as cenas relevantes, inclusive dados, mapas e esquemas. Teste técnico isolado com layout histórico deve ser explicitamente identificado e não usado para pedir homologação estética. A adaptação de componentes especiais não deve remover atribuições exigidas nem alterar evidência ou geometria sem justificativa.

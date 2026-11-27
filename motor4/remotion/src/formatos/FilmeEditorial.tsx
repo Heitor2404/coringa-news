@@ -514,10 +514,20 @@ const TAIWAN_TEXT:DocSlots={brand:[64,300,520,342],section:[64,370,1008,440],
   subtitle:[64,1190,906,1340],source:[64,1350,906,1438]};
 const CLEAN_TEXT:DocSlots={brand:[66,300,520,342],section:[66,370,1008,440],
   subtitle:[66,1190,905,1340],source:[66,1350,905,1438]};
+const TAIWAN_STAT_RECT=[66,370,905,507] as const;
 const cleanCredit=(shot:FilmShot)=>Boolean(shot.documentary_clean_credit);
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=existingDocumentaryLayout(shot);
   if(!shot.documentary_taiwan_typography_trial)return base;
+  // E388.1: the attributed numeric lane must share the approved typography.
+  // Keep the full-source evidence protection and exact media geometry.
+  if(shot.documentary_fact_motion_trial&&shot.documentary_reported_fact&&cleanCredit(shot)){
+    if(base.safeTrialStatus!=='E342_REPORTED_FACT_LANE'||
+      [CLEAN_TEXT.brand,[66,346,206,351],Array.from(TAIWAN_STAT_RECT),CLEAN_TEXT.subtitle].some(r=>base.protected.some(q=>intersects(r,q))))
+      throw new Error('E3881-FACT-TAIWAN-GEOMETRY '+shot.id);
+    return {...base,slots:CLEAN_TEXT,subtitleFont:shot.documentary_overlay_trial??60,
+      safeTrialStatus:'E3881_TAIWAN_FACT_PENDING'};
+  }
   if(shot.documentary_reported_fact||shot.documentary_static_reveal?.detail_zoom||shot.documentary_comparison_panel)
     return {...base,taiwanTrialBlocked:'SPECIALIZED_LANE'};
   if(cleanCredit(shot)&&shot.documentary_overlay_trial){
@@ -558,7 +568,7 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
     return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
   return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
 };
-const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING'].includes(layout.safeTrialStatus||'');
+const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING','E3881_TAIWAN_FACT_PENDING'].includes(layout.safeTrialStatus||'');
 // E309: bracket the observed static detail, never shade or paint its pixels.
  // Project through the ACTUAL selected photo viewport, including crop fallback.
 const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
@@ -1146,8 +1156,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       Number.isFinite(reveal.at)&&now-shot.start>=reveal.at&&reveal.at<duration&&
       typeof reveal.label==='string'&&reveal.label.length<=34&&!documentaryOverlay(shot,slots.section)&&Boolean(detailScreenBox(detailShot,layout));
     const fact=shot.documentary_reported_fact;
-    const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
-    const clean=['E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING'].includes(layout.safeTrialStatus||'');
+    const showFact=['E342_REPORTED_FACT_LANE','E3881_TAIWAN_FACT_PENDING'].includes(layout.safeTrialStatus||'')&&fact&&now-shot.start>=fact.at;
+    const clean=['E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING','E3881_TAIWAN_FACT_PENDING'].includes(layout.safeTrialStatus||'');
     const motion=Boolean(shot.documentary_fact_motion_trial&&showFact&&fact);
     const subjectSection=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
     const section=clean&&shot.documentary_clean_credit?.context_label?
@@ -1166,7 +1176,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
       <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+(taiwan?4:1),width:taiwan?140:130,height:taiwan?5:3,background:GOLD}}/>
-      {motion&&fact?<AttributedStat value={fact.value} scope={fact.scope} elapsed={now-shot.start-fact.at} rect={[150,340,760,513]}/>:section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
+      {motion&&fact?<AttributedStat value={fact.value} scope={fact.scope} elapsed={now-shot.start-fact.at} rect={taiwan?TAIWAN_STAT_RECT:[150,340,760,513]} taiwan={taiwan} probe={textProbe}/>:section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
       {!clean&&!motion&&<MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>}
     </AbsoluteFill>;
   }
@@ -1287,15 +1297,16 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     if(!s.documentary_clean_credit||![60,63].includes(s.documentary_overlay_trial!))throw new Error('E388-OVERLAY-CONTRACT');
   }
   for(const s of shots.filter(s=>s.documentary_fact_motion_trial)){
-    if(!preview||!private_review_only||!documentary_media_preview||s.documentary_clean_credit||
-       !s.documentary_reported_fact||existingDocumentaryLayout(s).safeTrialStatus!=='E342_REPORTED_FACT_LANE')
+    if(!preview||!private_review_only||!documentary_media_preview||
+       !s.documentary_reported_fact||existingDocumentaryLayout(s).safeTrialStatus!=='E342_REPORTED_FACT_LANE'||
+       (s.documentary_clean_credit&&(!s.documentary_taiwan_typography_trial||documentaryLayout(s).safeTrialStatus!=='E3881_TAIWAN_FACT_PENDING')))
       throw new Error('E388-FACT-CONTRACT');
   }
   for(const s of shots.filter(s=>s.documentary_clean_credit)){
     const d=s.documentary_clean_credit!;
     if(!preview||!private_review_only||!documentary_media_preview||!s.documentary_taiwan_typography_trial||
        !realMedia(s)||d.private_only!==true||d.placement!=='POST_DESCRIPTION'||!d.credit||
-       d.credit!==(s.source_display||s.source)||s.documentary_reported_fact||s.documentary_static_reveal||s.documentary_comparison_panel||
+       d.credit!==(s.source_display||s.source)||(s.documentary_reported_fact&&!s.documentary_fact_motion_trial)||s.documentary_static_reveal||s.documentary_comparison_panel||
        (s.evidence==='representative'&&!d.context_label))
       throw new Error('E387-CREDIT-CONTRACT');
   }

@@ -359,35 +359,35 @@
       "height": 960,
       "bounds": [
         36,
-        265,
+        248,
         450,
-        575
+        604
       ],
       "viewport": [
         33,
-        250,
+        242,
         453,
-        580
+        610
       ],
       "subida_base_px": 0,
       "zoom_max": 1,
       "politica_camera": "plano_geral_travado",
       "roles": {
         "reservoir": [
-          133,
-          397,
-          354,
-          575
+          125,
+          391,
+          360,
+          596
         ],
         "roof": [
           108,
-          282,
+          265,
           380,
-          466
+          480
         ],
         "crater": [
           108,
-          265,
+          248,
           380,
           390
         ]

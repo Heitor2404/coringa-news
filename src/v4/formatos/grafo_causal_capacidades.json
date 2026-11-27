@@ -1273,7 +1273,7 @@
     "relacoes": [
       {
         "from": "roof",
-        "type": "rests_on",
+        "type": "affected_by",
         "to": "reservoir"
       },
       {
@@ -1348,6 +1348,6 @@
       }
     ],
     "fontes_visuais": "USGS_E323_A_B_QUALITATIVE_REVIEW_ONLY",
-    "renderer": "PRIVATE_STORYBOARD_PENDING"
+    "renderer": "PRIVATE_E392_STORYBOARD_ONLY"
   }
 }

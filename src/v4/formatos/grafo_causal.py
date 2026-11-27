@@ -15,7 +15,7 @@ OPERADORES = frozenset(('emit','reflect','project','expose','translate','open',
                         'close','fill','flow','equalize','compress','ignite','drain','reveal'))
 CAMERAS = frozenset(('show_context','follow_actor','show_connection','show_consequence'))
 RELACOES = frozenset(('illuminates','reflects_to','projects_to','rests_on','floats_on',
-                      'inside','connected_to','controls','feeds','shapes'))
+                      'inside','connected_to','controls','feeds','shapes','affected_by'))
 FAMILIAS = frozenset(('optics','semiconductor','hydraulic','vessel','mechanics','combustion','compressed_air','geology'))
 
 

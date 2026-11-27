@@ -36,6 +36,9 @@ export type FormatoProps = {
   creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
   tecnico?: { pais?: string };
   neo_follow?: {start:number;end:number;zoom:number;ship?:boolean;from?:number;to?:number}; // illustrative route, opt-in private benchmark
+  neo_e396e?: boolean;
+  neo_connections_until?: number;
+  neo_terrain?: {src:string;zoom:number;bounds:[number,number,number,number];start:number;end:number;pitch:number;bearing:number;exaggeration:number};
   neo_global_style?: boolean;
   neo_route_overview?: boolean;
   neo_benchmark?: boolean; // private native viewport; not a production preset

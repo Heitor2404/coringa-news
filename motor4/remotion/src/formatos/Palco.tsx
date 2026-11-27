@@ -117,7 +117,7 @@ function arcoContinuo(a: number[], b: number[], n = 120) {
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, vw=neo?width:W, vh=neo?height:H;
+  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, e396e=global && P.neo_e396e===true, vw=neo?width:W, vh=neo?height:H;
   const t = frame / fps;
   const T = P.tokens.palco.mapa;
   const ref = useRef<HTMLDivElement>(null);
@@ -140,6 +140,10 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   // 'foco' = território em foco da referência A: preenchimento OPACO, contorno fino escuro, sem brilho
   const foco = (d: any) => d.cor === 'foco';
   const rasters = P.rasters || [];
+  const terrain=e396e?P.neo_terrain:undefined;
+  const pitch=terrain?terrain.pitch*cruise((t-terrain.start)/(terrain.end-terrain.start)):0;
+  const bearing=terrain?terrain.bearing*cruise((t-terrain.start)/(terrain.end-terrain.start)):0;
+  const terrainEnabled=useRef(false);
 
   useEffect(() => {
     const c0 = cameraEm(P.palco, 0, vw, vh);
@@ -214,13 +218,19 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     if (!map) return;
     const h = delayRender(`palco mapa ${frame}`);
     pend.current = h;
-    map.jumpTo({ center: c.centro, zoom: c.zoom });
+    if(terrain && t>=terrain.start && !terrainEnabled.current){
+      map.addSource('neo_dem',{type:'raster-dem',tiles:[staticFile(terrain.src)+'/{z}/{x}/{y}.png'],tileSize:256,encoding:'terrarium',minzoom:terrain.zoom,maxzoom:terrain.zoom,bounds:terrain.bounds});
+      map.setTerrain({source:'neo_dem',exaggeration:terrain.exaggeration});terrainEnabled.current=true;
+    } else if(terrain && t<terrain.start && terrainEnabled.current){
+      map.setTerrain(null);map.removeSource('neo_dem');terrainEnabled.current=false;
+    }
+    map.jumpTo({ center: c.centro, zoom: c.zoom, ...(terrain?{pitch,bearing}:{}) });
     rasters.forEach(r => map.setPaintProperty(`r_${r.nome}`, 'raster-opacity', rampa(c.zoom, r.de, r.ate)));
     map.setPaintProperty('grat', 'line-opacity', neo ? 0 : .09 * clamp((7.6 - c.zoom) / 1.2));
     (P.destaques || []).forEach((d, i) => {
       const v = vis(t, d.t0, d.t1, .6, .5);
-      map.setPaintProperty(`dest_${i}`, 'fill-opacity', (foco(d) ? ((T as any).pais_opacidade ?? .9) : d.fonte === 'lagos' ? .38 : .26) * v);
-      map.setPaintProperty(`destg_${i}`, 'line-opacity', foco(d) ? 0 : .55 * v);
+      map.setPaintProperty(`dest_${i}`, 'fill-opacity', (e396e ? .10 : foco(d) ? ((T as any).pais_opacidade ?? .9) : d.fonte === 'lagos' ? .38 : .26) * v);
+      map.setPaintProperty(`destg_${i}`, 'line-opacity', e396e || foco(d) ? 0 : .55 * v);
       map.setPaintProperty(`destl_${i}`, 'line-opacity', v);
     });
     (P.rotas || []).forEach((r, i) => {
@@ -240,7 +250,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       const active=routeHead && to-from>.00001?turf.featureCollection([turf.lineSliceAlong(rota,km*from,km*to,{units:'kilometers'})]):turf.featureCollection([]);
       (map.getSource('rota_ativa') as ML.GeoJSONSource).setData(active as any);
     }
-    map.once('idle', () => setPronto(frame));
+    map.once('idle', () => {if(terrain&&t>=terrain.end){const z=map.queryTerrainElevation(c.centro);if(z==null||!Number.isFinite(z))throw Error('E396E-DEM-NOT-LOADED');}setPronto(frame);});
     map.triggerRepaint();
   }, [map, frame]);
 
@@ -250,9 +260,9 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const veuA = VEUS[ka.veu || 'nenhum'], veuB = kb ? VEUS[kb.veu || 'nenhum'] : null;
   const desfoque = ((ka.veu === 'documento' ? kv : 0) + (kb?.veu === 'documento' ? 1 - kv : 0)) * 5;
 
-  const proj = (ll: [number, number]) => global ? {x:vw/2+(mercX(ll[0])-mercX(c.centro[0]))*512*2**c.zoom,y:vh/2+(mercY(ll[1])-mercY(c.centro[1]))*512*2**c.zoom} : (map ? map.project(ll) : { x: -999, y: -999 });
+  const proj = (ll: [number, number]) => global && !terrain ? {x:vw/2+(mercX(ll[0])-mercX(c.centro[0]))*512*2**c.zoom,y:vh/2+(mercY(ll[1])-mercY(c.centro[1]))*512*2**c.zoom} : (map ? map.project(ll) : { x: -999, y: -999 });
   const rots = (P.rotulos || []).filter(r => {if(vis(t,r.t0,r.t1)<=0)return false;if(!neo)return true;const p=proj(r.lonlat);return p.x>65&&p.x<vw-65&&p.y>65&&p.y<vh-100;});
-  const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = neo ? 20 : r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
+  const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = e396e ? 22 : neo ? 20 : r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
     return r.estilo === 'ponto' ? { x: p.x + 30, y: p.y - 28, w, h: 56 } : { x: p.x - w / 2, y: p.y - 24, w, h: 48 }; });
   // rótulos do mapa dentro da área segura das plataformas (topo, margem, coluna de ícones, faixa da legenda)
   const S = (P as any).seguro;
@@ -298,18 +308,20 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
         display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
         textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
-      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={global?20:26} height={global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(global?10:13),top:proj(routeHead).y-(global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
-      {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:24,top:30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>{global?'PERCURSO ILUSTRATIVO · TRECHO':'TRAVESSIA ILUSTRATIVA'}</div>}
+      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={e396e?24:global?20:26} height={e396e?38:global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(e396e?12:global?10:13),top:proj(routeHead).y-(e396e?19:global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
+      {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:e396e?((P as any).seguro?.esq??24):24,top:e396e?((P as any).seguro?.topo??30):30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>{e396e?'TRAVESSIA ILUSTRATIVA':global?'PERCURSO ILUSTRATIVO · TRECHO':'TRAVESSIA ILUSTRATIVA'}</div>}
+      {e396e && P.neo_connections_until && t<P.neo_connections_until && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:17,color:'#fff',textShadow:'0 1px 5px #000'}}>CONEXÕES GEOGRÁFICAS · NÃO ROTAS REAIS</div>}
+      {terrain && t>=terrain.start && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:16,color:'#fff',textShadow:'0 1px 5px #000'}}>RELEVO REAL · TERRAIN TILES / USGS</div>}
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>
           <div style={{ position: 'absolute', left: p.x - 12, top: p.y - 12, width: 24, height: 24, borderRadius: 12, background: P.tokens.cores.destaque,
             border: '4px solid #0B0F17', boxShadow: '0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,.6)', opacity: v, transform: `scale(${.5 + .5 * v})` }} />
           <div data-rotulo="ponto" style={{ position: 'absolute', left: q.x, top: q.y, opacity: v, padding: '7px 16px', background: '#0B0F17',
-            borderLeft: `6px solid ${P.tokens.cores.destaque}`, fontFamily: P.tokens.fontes.titulo, fontWeight: 900, fontSize: 30, color: '#fff',
+            borderLeft: `6px solid ${P.tokens.cores.destaque}`, fontFamily: P.tokens.fontes.titulo, fontWeight: 900, fontSize: e396e ? 22 : 30, color: '#fff',
             textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 18px rgba(0,0,0,.5)' }}>{r.nome}</div></React.Fragment>);
         return <div key={i} data-rotulo="area" style={{ position: 'absolute', left: q.x, top: q.y, width: q.w, textAlign: 'center', opacity: v,
-          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: global ? 700 : 800, fontSize: neo ? 20 : r.estilo === 'oceano' ? 30 : 32,
+          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: global ? 700 : 800, fontSize: e396e ? 22 : neo ? 20 : r.estilo === 'oceano' ? 30 : 32,
           letterSpacing: neo ? 1.2 : r.estilo === 'oceano' ? 7 : 2, color: r.estilo === 'lago' ? '#E6F7FF' : '#F4F1EA', textTransform: 'uppercase',
           textShadow: '0 0 10px rgba(0,0,0,.9), 0 2px 14px rgba(0,0,0,.95)', whiteSpace: 'nowrap', fontStyle: r.estilo === 'oceano' ? 'italic' : undefined }}>{r.nome}</div>;
       })}

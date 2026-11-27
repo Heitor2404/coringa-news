@@ -48,3 +48,6 @@ Prioridade Shorts/Reels/TikTok: enviar ao Telegram **somente vídeo vertical**, 
 
 ### Regra permanente — E396F
 Entrega Telegram: um MP4 vertical por prova via sendVideo, faixa AAC silenciosa em provas sem narração, validar retorno video e não animation; sem GIF, documentos, duplicatas ou horizontais no chat. Câmera e travessia dinâmicas sem enrolação: velocidade de zoom proporcional, rota completa quando solicitada, duração editorial ajustada (preset de teste 5,5–8s), suavidade e leitura prevalecem. Remover créditos opcionais e poluição, preservar atribuição obrigatória embutida quando exigida pelo fornecedor (EOX/OSM), proveniência completa no manifesto. Não tratar prévia privada como dispensa automática de licença.
+
+### Regra de créditos — E396G
+Proprietário prefere crédito obrigatório fixo e discreto no canto inferior direito do vertical, base em ~91–92% da altura, alinhado à direita, sem caixa ou animação, mantendo texto completo e legível. Não trocar fontes cartográficas apenas para evitar crédito neste ciclo; não suprimir atribuição legal. Verificar sobreposição por UI e legibilidade em Reels/Shorts/TikTok antes de publicação; se houver conflito, reposicionar minimamente para área legível. Preservar ritmo E396F, um MP4 vertical via Telegram.

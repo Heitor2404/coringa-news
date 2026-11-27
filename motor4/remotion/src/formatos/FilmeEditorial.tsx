@@ -1,3 +1,5 @@
+import {SourceStageView} from './SourceStageE389';
+import {validateSourceStage} from './SourceStageCoreE389';
 /** FILME EDITORIAL — compositor visual-first independente do ATLAS de cartões.
  * Stage 0: documentação real preenchendo a tela; câmera e revelações de cada assunto.
  * Não há palco-mapa persistente, slots pequenos, nem fluxo de cards como ação.
@@ -41,6 +43,7 @@ export type FilmShot = {
   graphic_original?: boolean; // Infografia autoral com dados embutidos, sem título duplicado
   documentary_chart_trial?: Claim; // E388.3 private graphic-original scene
   documentary_chart_anchor?: {schema:'coringa.motion.anchor.private.v1';at:number;word:string;publish:false};
+  documentary_causal_stage?: import('./SourceStageCoreE389').SourceStage;
   documentary_chart_relation?: AreaRelation;
   documentary_chart_context?: {schema:'coringa.motion.context.private.v1';publish:false;asset:string;sha256:string;kind:'photo'|'video';sourceIn:number;credit:string};
   motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
@@ -1145,6 +1148,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   }
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
+  if(shot.documentary_causal_stage)return <SourceStageView stage={shot.documentary_causal_stage} asset={shot.asset!} dimensions={shot.source_dimensions!} elapsed={now-shot.start} duration={duration} probe={textProbe}/>;
   if(shot.documentary_chart_trial){
     const claim=shot.documentary_chart_trial;
     const elapsed=shot.documentary_chart_anchor?now-shot.start-shot.documentary_chart_anchor.at:0;
@@ -1313,6 +1317,14 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
+  for(const s of shots.filter(s=>s.documentary_causal_stage)){
+    const p=s.documentary_causal_stage!;
+    if(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||s.type!=='photo'||s.evidence!=='representative'||s.documentary_chart_trial||s.documentary_static_reveal||s.documentary_comparison_panel||s.photo_crop_preview||!scene_narration_asset||documentary_caption_origin!=='PALAVRAS_MEDIDAS')throw new Error('E389-PRIVATE');
+    validateSourceStage(p,s.end-s.start,s.asset!,s.source_dimensions!);
+    const peers=shots.filter(x=>x.documentary_causal_stage?.group===p.group);
+    if(peers.length!==p.count||peers.some((x,i)=>x.documentary_causal_stage!.stage!==i||x.documentary_causal_stage!.count!==p.count||x.documentary_causal_stage!.sourceSha!==p.sourceSha||x.documentary_causal_stage!.review!==p.review))throw new Error('E389-SEQUENCE');
+    if(p.highlights.some(h=>!documentary_captions?.some(g=>g.start<=s.start+h.at+.034&&g.end>s.start+h.at&&g.words.some(w=>w.w===h.anchorWord))))throw new Error('E389-CAPTION');
+  }
   for(const s of shots.filter(s=>s.documentary_chart_trial)){
     if(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||
        s.type!=='photo'||s.graphic_original!==true||s.evidence!=='explainer'||s.asset||s.motion_graphic||
@@ -1400,11 +1412,11 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
     {scene_narration_asset&&<Audio src={staticFile(scene_narration_asset)}/>}
     {shot>=0&&<FilmShotView shot={shots[shot]} total={duracao} index={shot} subtitleMode={subtitle_mode||Boolean(documentary_captions?.length&&shots[shot].type!=='scene_graph')} legacyVisualPreview={Boolean(preview&&private_review_only&&reference_style_preview)} portraitExperiment={Boolean(preview&&private_review_only&&portrait_experiment)} mediaFirst={Boolean(preview&&private_review_only&&(documentary_captions?.length||documentary_media_preview))} textProbe={documentary_text_probe}/>}
     {docCap&&shots[shot].type==='animation_clip'&&(()=>{throw new Error('E213-LEGENDA-NAO-RECERTIFICADA')})()}
-    {docCap&&realMedia(shots[shot])&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={detailZoomActive(shots[shot],t)?DETAIL_ZOOM_SLOTS.subtitle:pairActive(shots[shot],t)?DOC_MEDIA.subtitle:documentaryLayout(shots[shot]).slots.subtitle}
+    {docCap&&realMedia(shots[shot])&&!shots[shot].documentary_causal_stage&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={detailZoomActive(shots[shot],t)?DETAIL_ZOOM_SLOTS.subtitle:pairActive(shots[shot],t)?DOC_MEDIA.subtitle:documentaryLayout(shots[shot]).slots.subtitle}
       text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={detailZoomActive(shots[shot],t)?detailZoomGeometry(shots[shot]).layout:pairActive(shots[shot],t)?pairLayout:undefined}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
-    {docCap&&shots[shot].documentary_chart_trial&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={CLEAN_TEXT.subtitle} text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={{mode:'STANDARD',slots:CLEAN_TEXT,media:[66,505,905,1170],protected:[],roiStatus:'OBSERVED',subtitleFont:60,safeTrialStatus:'E3885_TAIWAN_CHART_PENDING'}}>{docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}</MeasuredDocText>}
+    {docCap&&(shots[shot].documentary_chart_trial||shots[shot].documentary_causal_stage)&&<MeasuredDocText role="subtitle" shot={shots[shot]} rect={CLEAN_TEXT.subtitle} text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={{mode:'STANDARD',slots:CLEAN_TEXT,media:[66,505,905,1170],protected:[],roiStatus:'OBSERVED',subtitleFont:60,safeTrialStatus:'E3885_TAIWAN_CHART_PENDING'}}>{docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}</MeasuredDocText>}
     {docCap&&!shots[shot].documentary_chart_trial&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'flex-start':'center',
         textAlign:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'left':'center',pointerEvents:'none'}}>

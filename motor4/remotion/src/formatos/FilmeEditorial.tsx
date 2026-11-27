@@ -7,7 +7,7 @@ import React from 'react';
 import {SignatureBackground,signatureHasVisibleArea} from './SignatureBackground';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
-import {MotionEditorial, type MotionEditorialData} from './MotionEditorial';
+import {MotionEditorial, AttributedStat, type MotionEditorialData} from './MotionEditorial';
 import {SceneGraphE201, type SceneData, type SceneDataV2} from './SceneGraphE201';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
@@ -59,6 +59,8 @@ export type FilmShot = {
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
+  documentary_overlay_trial?: 60|63; // E388 private, existing media geometry only
+  documentary_fact_motion_trial?: true; // E388 reuses E342 exact attributed fact
   documentary_clean_credit?: {placement:'POST_DESCRIPTION';private_only:true;credit:string;context_label?:string}; // E387
   documentary_taiwan_typography_trial?: boolean; // E386 private A/B only
   documentary_composition_v2?: boolean; // E328 private verified preflight
@@ -249,7 +251,7 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={taiwanTrialBlocked?:'SPECIALIZED_LANE'|'PROTECTED_REGION';slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW'|'DETAIL_ZOOM_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
+type DocLayout={ordinaryOverlayReview?:boolean;subtitleFont?:number;taiwanTrialBlocked?:'SPECIALIZED_LANE'|'PROTECTED_REGION';slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW'|'DETAIL_ZOOM_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
 const stackedDocSlots=(y:number):DocSlots=>({
   brand:[120,y,500,y+38],section:[120,y+43,760,y+93],
   subtitle:[120,y+101,760,y+191],source:[120,y+199,760,y+321],
@@ -518,6 +520,17 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   if(!shot.documentary_taiwan_typography_trial)return base;
   if(shot.documentary_reported_fact||shot.documentary_static_reveal?.detail_zoom||shot.documentary_comparison_panel)
     return {...base,taiwanTrialBlocked:'SPECIALIZED_LANE'};
+  if(cleanCredit(shot)&&shot.documentary_overlay_trial){
+    // No geometry change. A whole-image protection envelope is not an
+    // observed critical ROI. Preserve observed boxes and flag unknown action.
+    const critical=base.roiStatus==='OBSERVED'?base.protected:[];
+    const options:DocSlots[]=[CLEAN_TEXT,{...CLEAN_TEXT,subtitle:[66,1345,905,1495]},
+      {...CLEAN_TEXT,subtitle:[66,1100,905,1250]}];
+    const slots=options.find(s=>[s.brand,s.section,s.subtitle,[66,346,206,351]].every(r=>critical.every(q=>!intersects(r,q))));
+    if(!slots)return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
+    return {...base,slots,ordinaryOverlayReview:true,subtitleFont:shot.documentary_overlay_trial,
+      safeTrialStatus:'E388_TAIWAN_OVERLAY_PENDING'};
+  }
   if(cleanCredit(shot)){
     const slots=CLEAN_TEXT;
     const rects=[slots.brand,slots.section,slots.subtitle,[66,346,206,351]];
@@ -545,7 +558,7 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
     return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
   return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
 };
-const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING'].includes(layout.safeTrialStatus||'');
+const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING'].includes(layout.safeTrialStatus||'');
 // E309: bracket the observed static detail, never shade or paint its pixels.
  // Project through the ACTUAL selected photo viewport, including crop fallback.
 const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
@@ -592,7 +605,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
   const measuredLayout=layoutOverride??documentaryLayout(shot);
   const fact=role==='section'&&measuredLayout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&text===shot.documentary_reported_fact?.value;
   const taiwan=taiwanText(measuredLayout);
-  const size=taiwan?(role==='subtitle'?[63,46]:role==='source'?[21,19]:[37,28]):role==='subtitle'?[52,36]:role==='source'?[30,24]:fact?[58,38]:[30,22];
+  const size=taiwan?(role==='subtitle'?[measuredLayout.subtitleFont??63,46]:role==='source'?[21,19]:[37,28]):role==='subtitle'?[52,36]:role==='source'?[30,24]:fact?[58,38]:[30,22];
   const overlaps=(r:readonly number[])=>layoutOverride?layoutOverride.protected.some(b=>intersects(b,r)):documentaryOverlay(shot,r);
   const overlay=overlaps(rect);
   const signature=rect.join(',')+'|'+measuredLayout.mode;
@@ -627,9 +640,9 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     e.style.textShadow=actualOverlay?'0 1px 3px #000':'none';
     h.dataset.docOverlay=actualOverlay?'review':'none';
     h.dataset.roiStatus=layout.roiStatus;
-    const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
+    const evidenceCollision=(!layout.ordinaryOverlayReview||layout.roiStatus==='OBSERVED')&&layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,unknownEvidenceOverlay:actualOverlay&&layout.roiStatus==='UNKNOWN_REVIEW',layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null,taiwanTrialBlocked:layout.taiwanTrialBlocked??null};
+      actualOverlay,evidenceCollision,unknownEvidenceOverlay:actualOverlay&&(layout.roiStatus==='UNKNOWN_REVIEW'||Boolean(layout.ordinaryOverlayReview&&layout.roiStatus!=='OBSERVED')),layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null,taiwanTrialBlocked:layout.taiwanTrialBlocked??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:layout.media,text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);
@@ -1134,7 +1147,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       typeof reveal.label==='string'&&reveal.label.length<=34&&!documentaryOverlay(shot,slots.section)&&Boolean(detailScreenBox(detailShot,layout));
     const fact=shot.documentary_reported_fact;
     const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
-    const clean=layout.safeTrialStatus==='E387_TAIWAN_CLEAN_PENDING';
+    const clean=['E387_TAIWAN_CLEAN_PENDING','E388_TAIWAN_OVERLAY_PENDING'].includes(layout.safeTrialStatus||'');
+    const motion=Boolean(shot.documentary_fact_motion_trial&&showFact&&fact);
     const subjectSection=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
     const section=clean&&shot.documentary_clean_credit?.context_label?
       [subjectSection,shot.documentary_clean_credit.context_label].filter(Boolean).join(' · '):subjectSection;
@@ -1152,8 +1166,8 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
       <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+(taiwan?4:1),width:taiwan?140:130,height:taiwan?5:3,background:GOLD}}/>
-      {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
-      {!clean&&<MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>}
+      {motion&&fact?<AttributedStat value={fact.value} scope={fact.scope} elapsed={now-shot.start-fact.at} rect={[150,340,760,513]}/>:section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
+      {!clean&&!motion&&<MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>}
     </AbsoluteFill>;
   }
   if(shot.type==='scene_graph') {
@@ -1269,6 +1283,14 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
   if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
+  for(const s of shots.filter(s=>s.documentary_overlay_trial!==undefined)){
+    if(!s.documentary_clean_credit||![60,63].includes(s.documentary_overlay_trial!))throw new Error('E388-OVERLAY-CONTRACT');
+  }
+  for(const s of shots.filter(s=>s.documentary_fact_motion_trial)){
+    if(!preview||!private_review_only||!documentary_media_preview||s.documentary_clean_credit||
+       !s.documentary_reported_fact||existingDocumentaryLayout(s).safeTrialStatus!=='E342_REPORTED_FACT_LANE')
+      throw new Error('E388-FACT-CONTRACT');
+  }
   for(const s of shots.filter(s=>s.documentary_clean_credit)){
     const d=s.documentary_clean_credit!;
     if(!preview||!private_review_only||!documentary_media_preview||!s.documentary_taiwan_typography_trial||

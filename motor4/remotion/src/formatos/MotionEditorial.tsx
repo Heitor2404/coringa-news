@@ -88,3 +88,23 @@ export const MotionEditorial:React.FC<{data:MotionEditorialData;p:number}>=({dat
     </>}
   </AbsoluteFill>;
 };
+
+/** E388: speech-anchored reported value in an existing reserved lane.
+ * No numeric interpolation, simulated instrument, or claim of pixel measurement.
+ * Keep the value stable; animate only entrance and underline. */
+export const AttributedStat:React.FC<{value:string;scope:string;elapsed:number;rect:readonly number[]}>=({value,scope,elapsed,rect})=>{
+  const [x,y,r,b]=rect;
+  const host=React.useRef<HTMLDivElement>(null),num=React.useRef<HTMLDivElement>(null);
+  React.useLayoutEffect(()=>{
+    const h=host.current,e=num.current;if(!h||!e)return;
+    for(let n=96;n>=54;n--){e.style.fontSize=n+'px';if(e.scrollWidth<=h.clientWidth)break;}
+  },[value,r,x]);
+  const p=Math.min(1,Math.max(0,elapsed/.22));
+  return <div ref={host} data-reported-motion="E388" style={{position:'absolute',left:x,top:y,width:r-x,height:b-y,
+    fontFamily:'Inter,Arial,sans-serif',color:WHITE,pointerEvents:'none',overflow:'hidden'}}>
+    <div ref={num} style={{fontSize:96,fontWeight:900,letterSpacing:-3,lineHeight:1.02,color:GOLD,whiteSpace:'nowrap',
+      opacity:.65+.35*p,transform:`translateY(${(1-p)*7}px)`}}>{value}</div>
+    <div style={{height:4,width:`${p*100}%`,background:GOLD,margin:'5px 0 8px'}}/>
+    <div style={{fontSize:26,fontWeight:650,lineHeight:1.12,color:WHITE}}>{scope}</div>
+  </div>;
+};

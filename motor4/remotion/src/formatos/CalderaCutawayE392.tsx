@@ -3,6 +3,7 @@ import {AbsoluteFill} from 'remotion';
 import {ACutawayMaterial} from './AtlasAArtKit';
 import {fitCaptionLines} from './CaptionFitE392';
 import {morphPath} from './CausalTimelineE393';
+import {solidShift} from './EditorialMotionE394';
 type Board={id:string;index:number;time:number;state:Record<string,string>;camera:{scale:number;tx:number;ty:number};focus:string[];caption:{w:string;hl:boolean}[]};
 const gold='#E9B949',white='#F5F5F5';
 // Original stylized cross sections: reviewed USGS A/B establish topology,
@@ -25,7 +26,7 @@ export const CalderaCutawayE392:React.FC<{board:Board;private_review_only:boolea
  const magma=collapse>0?morphPath(lossMagma,finalMagma,collapse,true,[217,584]):morphPath(initialMagma,lossMagma,drain,true,[217,584]);
  const moving=!!motion;
  const settled=!moving||[drain,collapse,reveal].every(p=>p===0||p===1);
- React.useLayoutEffect(()=>{if(!probe||!ref.current)return;const rows=Array.from(ref.current.querySelectorAll<SVGGraphicsElement>('[data-safe-text]')).map(e=>{const q=e.getBBox(),role=e.getAttribute('data-safe-text');return {role,text:e.textContent,x:q.x,y:q.y,w:q.width,h:q.height,fit:q.x>=32&&q.x+q.width<=454&&q.y>=145&&q.y+q.height<=690}});const cap=rows.filter(r=>r.role==='caption').map(r=>r.text).join(' ');const labels=rows.filter(r=>r.role==='label');const collisions=rows.some((r,i)=>rows.slice(i+1).some(s=>r.x<s.x+s.w&&s.x<r.x+r.w&&r.y<s.y+s.h&&s.y<r.y+r.h));console.log('E392_BOARD '+JSON.stringify({index:b.index,state:b.state,focus:b.focus,rows,caption:cap,fit:rows.every(r=>r.fit)&&!collisions&&cap===b.caption.map(w=>w.w).join(' '),collisions,labels,progress:[drain,collapse,reveal],magma,top:ref.current.querySelector('[data-e393-top]')?.getAttribute('d'),blockShift:moving?-85*(1-collapse):0}));},[b,probe,motion]);
+ React.useLayoutEffect(()=>{if(!probe||!ref.current)return;const rows=Array.from(ref.current.querySelectorAll<SVGGraphicsElement>('[data-safe-text]')).map(e=>{const q=e.getBBox(),role=e.getAttribute('data-safe-text'),c=role==='label'&&moving?b.camera:{scale:1,tx:0,ty:0};const x=q.x*c.scale+c.tx,y=q.y*c.scale+c.ty,w=q.width*c.scale,h=q.height*c.scale;return {role,text:e.textContent,x,y,w,h,fit:x>=32&&x+w<=454&&y>=145&&y+h<=690}});const cap=rows.filter(r=>r.role==='caption').map(r=>r.text).join(' ');const labels=rows.filter(r=>r.role==='label');const collisions=rows.some((r,i)=>rows.slice(i+1).some(s=>r.x<s.x+s.w&&s.x<r.x+r.w&&r.y<s.y+s.h&&s.y<r.y+r.h));console.log('E392_BOARD '+JSON.stringify({index:b.index,state:b.state,focus:b.focus,rows,caption:cap,fit:rows.every(r=>r.fit)&&!collisions&&cap===b.caption.map(w=>w.w).join(' '),collisions,labels,progress:[drain,collapse,reveal],magma,top:ref.current.querySelector('[data-e393-top]')?.getAttribute('d'),blockShift:moving?solidShift(collapse,85):0,camera:b.camera,solidBlocks:Array.from(ref.current.querySelectorAll('[data-solid-block]')).map(e=>({opacity:e.getAttribute('opacity'),transform:e.getAttribute('transform')}))}));},[b,probe,motion]);
  const text=(s:string,x:number,y:number,size:number,color=white,weight=700,role='title')=><text data-safe-text={role} x={x} y={y} fontSize={size} fill={color} fontWeight={weight}>{s}</text>;
  // Measure the actual typeface at the rendered size, not character count.
  // Leave a small margin for SVG glyph overhang; the existing bbox gate is unchanged.
@@ -42,7 +43,7 @@ export const CalderaCutawayE392:React.FC<{board:Board;private_review_only:boolea
   <clipPath id="magmaclip"><path d={magma}/></clipPath>
   <linearGradient id="wall" x1="0" x2=".3" y1="0" y2="1"><stop stopColor="#A28A70"/><stop offset=".34" stopColor="#766051"/><stop offset="1" stopColor="#302925"/></linearGradient>
   <linearGradient id="void" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#110E0D"/><stop offset="1" stopColor="#32221D"/></linearGradient>
-  <radialGradient id="heat"><stop stopColor="#FFF1AD" stopOpacity={moving ? .48 : .92}/><stop offset=".35" stopColor="#FF9F45" stopOpacity=".68"/><stop offset="1" stopColor="#D9431E" stopOpacity="0"/></radialGradient>
+  <radialGradient id="heat"><stop stopColor="#FFF1AD" stopOpacity={moving ? .30 : .92}/><stop offset=".35" stopColor="#FF9F45" stopOpacity={moving ? .33 : .68}/><stop offset="1" stopColor="#D9431E" stopOpacity="0"/></radialGradient>
  </defs>
  {text('CORINGA',33,163,14,white,800)}{text('EXPLICA',108,163,14,gold,800)}
  <rect x="33" y="173" width="70" height="2.5" fill={gold}/>
@@ -53,12 +54,12 @@ export const CalderaCutawayE392:React.FC<{board:Board;private_review_only:boolea
   <path d={shape} fill="url(#wall)" stroke="#987C64" strokeWidth="1.2"/>
   <g clipPath="url(#rockclip)">
    {strata.map((c,i)=>{const y=275+i*40;return <path key={i} d={`M30 ${y} L69 ${y-5} 109 ${y+7} 149 ${y+4} 187 ${y+18} 224 ${y+14} 270 ${y+3} 308 ${y-3} 354 ${y+6} 404 ${y+5} 455 ${y+14} L455 ${y+38} 404 ${y+29} 354 ${y+26} 308 ${y+21} 270 ${y+29} 224 ${y+41} 187 ${y+44} 149 ${y+30} 109 ${y+31} 69 ${y+20} 30 ${y+24} Z`} fill={c} stroke="#241D1A" strokeOpacity=".34" strokeWidth="1.3"/>;})}
-   {Array.from({length:65},(_,i)=>{const x=39+(i*97)%405,y=276+(i*53)%303;return <path key={i} d={`M${x} ${y} l${3+i%8} -${2+i%4} l${4+i%5} 2`} fill="none" stroke={i%2?'#E3C4A1':'#1B1614'} strokeOpacity={i%2?.19:.32} strokeWidth="1.1"/>;})}
-   {collapse>0&&<path opacity={collapse} d={cavity} fill="url(#void)" stroke="#AE9278" strokeWidth="1.4"/>}
-   {drain>0&&collapse<1&&<path opacity={drain*(1-collapse)} d={initialMagma} fill="#211813" stroke="#CE9D6C" strokeDasharray="5 4" strokeWidth="1.2"/>}
+   {Array.from({length:moving?160:65},(_,i)=>{const x=39+(i*97)%405,y=276+(i*53)%303;return <path key={i} d={`M${x} ${y} l${3+i%8} -${2+i%4} l${4+i%5} 2`} fill="none" stroke={i%2?'#E3C4A1':'#1B1614'} strokeOpacity={i%2?.19:.32} strokeWidth={moving ? .7 : 1.1}/>;})}
+   {collapse>0&&<path opacity="1" d={morphPath("M100 269 L120 269 152 281 179 281 197 269 223 269 244 269 269 255 294 252 307 260 L296 270 274 275 250 280 236 285 210 286 182 287 162 289 140 284 121 279 106 275 Z",cavity,collapse,true,[100,269])} fill="url(#void)" stroke="#AE9278" strokeWidth="1.4"/>}
+   {drain>0&&collapse<1&&<path opacity={1-collapse} d={initialMagma} fill="#211813" stroke="#CE9D6C" strokeDasharray="5 4" strokeWidth="1.2"/>}
    <ACutawayMaterial id="magma" d={magma} tone="hot" offset={2}/>
    <g clipPath="url(#magmaclip)"><ellipse cx={moving?216+5*Math.sin((motion?.time??0)*1.7):216} cy={421+72*drain} rx="89" ry="100" fill="url(#heat)"/>{Array.from({length:14},(_,i)=><path key={i} d={`M${145+(i*19)%134} ${397+(i*23)%164} q13 -6 25 2`} stroke="#FFE1A0" strokeOpacity=".19" strokeWidth="1.6" fill="none"/>)}</g>
-   {collapse>0&&pieces.map((d,i)=><g key={i} opacity={Math.min(1,collapse*3)} transform={`translate(0 ${moving?-(85+i*5)*(1-collapse):0})`}><ACutawayMaterial id={'block-'+i} d={d} tone="rock" offset={moving?4:2}/></g>)}
+   {collapse>0&&pieces.map((d,i)=><g key={i} data-solid-block="true" opacity="1" transform={`translate(0 ${moving?solidShift(collapse,85+i*5):0})`}><ACutawayMaterial id={'block-'+i} d={d} tone="rock" offset={moving?4:2}/></g>)}
   </g>
   <path data-e393-top="true" d={top} stroke="#BCA386" strokeWidth="3" strokeLinejoin="round" fill="none"/>
   {b.index===2&&<g opacity={moving?Math.min(1,collapse*3):1} stroke={gold} strokeWidth="2.8" fill="none"><path d="M168 279 V323 m-6 -8 l6 8 6 -8"/><path d="M222 262 V302 m-6 -8 l6 8 6 -8"/></g>}
@@ -66,10 +67,12 @@ export const CalderaCutawayE392:React.FC<{board:Board;private_review_only:boolea
  </g>
  {/* Leader endpoints are selected separately for each reviewed state.
      The loss arrow denotes transfer out of the reservoir, NOT a mapped conduit. */}
+ <g transform={moving?`translate(${b.camera.tx} ${b.camera.ty}) scale(${b.camera.scale})`:undefined}>
  {b.index===0&&<g><path d="M107 420 H127 L171 435" stroke={gold} fill="none" strokeWidth="1.4"/><circle cx="171" cy="435" r="2.5" fill={gold}/>{text('MAGMA',38,415,13,gold,800,'label')}</g>}
  {b.index===1&&settled&&<g><path d="M112 521 H151 L204 510" stroke={gold} fill="none" strokeWidth="1.4"/><circle cx="204" cy="510" r="2.5" fill={gold}/>{text('MAGMA',38,516,13,gold,800,'label')}<path d="M297 497 H355 m-9 -6 l9 6 -9 6" stroke={gold} fill="none" strokeWidth="2.2"/>{text('SAÍDA',362,493,13,gold,800,'label')}{text('DE MAGMA',362,508,11.5,gold,700,'label')}{text('SENTIDO SIMBÓLICO',315,526,8.5,'#D9B976',600,'label')}</g>}
  {b.index===2&&settled&&<g><path d="M110 374 H133 L160 371" stroke={gold} fill="none" strokeWidth="1.4"/><circle cx="160" cy="371" r="2.5" fill={gold}/>{text('BLOCOS',38,368,13,gold,800,'label')}</g>}
  {final&&settled&&<g><path d="M310 254 H338" stroke={gold} fill="none" strokeWidth="1.4"/>{text('NÍVEL',343,246,12,gold,800,'label')}{text('ANTERIOR',343,260,12,gold,800,'label')}<path d="M194 280 V331 m-5 -7 l5 7 5 -7" stroke={gold} strokeWidth="1.7" fill="none"/>{text('CRATERA',38,359,13,gold,800,'label')}<path d="M104 355 H123 L150 330" stroke={gold} fill="none" strokeWidth="1.4"/></g>}
+ </g>
  {lines.filter(line=>line.length).map((line,i)=><text key={i} data-safe-text="caption" x="33" y={625+i*33} fontSize="29" fontWeight="900" fill={white}>{line.map((w,j)=><tspan key={j} fill={w.hl?gold:white}>{w.w}{j<line.length-1?' ':''}</tspan>)}</text>)}
  <text x="33" y="900" fill="#999" fontSize="10">{moving?'ANIMAÇÃO ILUSTRATIVA · NÃO PUBLICAR':'STORYBOARD PRIVADO · NÃO PUBLICAR'}</text>
  </svg></AbsoluteFill>;

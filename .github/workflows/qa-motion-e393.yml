@@ -1,4 +1,4 @@
-name: E393 - animacao causal narrada do corte 2D
+name: E394 - direcao de movimento em duas familias
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -36,6 +36,8 @@ jobs:
           node --test motor4/remotion/tests/caption-fit-e392.test.cjs
           motor4/node_modules/.bin/tsc motor4/remotion/src/formatos/CausalTimelineE393.ts --target ES2022 --module commonjs --skipLibCheck --outDir /tmp/e393
           node --test motor4/remotion/tests/causal-timeline-e393.test.cjs
+          motor4/node_modules/.bin/tsc motor4/remotion/src/formatos/EditorialMotionE394.ts --target ES2022 --module commonjs --skipLibCheck --outDir /tmp/e394
+          node --test motor4/remotion/tests/editorial-motion-e394.test.cjs
           (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
       - name: Preparar fonte e grafo autenticados
         env:
@@ -49,7 +51,9 @@ jobs:
           GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
         run: |
           root=stage_documental/e393
-          if [[ -f "$root/motion-causal-2d.mp4" ]]; then bash scripts/arquivar_cofre_review.sh "review-e393-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/motion-causal-2d.mp4" "$root/motion-attribution.json" "$root/comparison.json"; fi
+          shopt -s nullglob
+          videos=("$root"/motion-*.mp4)
+          if (( ${#videos[@]} )); then bash scripts/arquivar_cofre_review.sh "review-e394-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${videos[@]}" "$root/motion-attribution.json" "$root/comparison.json"; fi
       - name: Entregar animacao privada Telegram
         if: ${{ always() && !cancelled() }}
         env:
@@ -64,7 +68,7 @@ jobs:
           shopt -s nullglob
           root=stage_documental/e393
           files=("$root"/*.json "$root"/*.jpg)
-          if (( ${#files[@]} )); then python scripts/espelhar_revisao_cofre.py "e393-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
+          if (( ${#files[@]} )); then python scripts/espelhar_revisao_cofre.py "e394-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi
   alert:
     needs: qa
     if: ${{ always() && (needs.qa.result == 'failure' || needs.qa.result == 'cancelled') }}

@@ -167,7 +167,7 @@ export const gearState=(t:number)=>{
  return {assembly,showTeeth,rotation,outputRotation,showRatio,showResult,
    current:eventAt(t,cues,cues[0]),cues,ratio:g.drivenTeeth/g.driverTeeth};
 };
-const Gear:React.FC<{
+export const Gear:React.FC<{
   x:number;y:number;r:number;teeth:number;angle:number;fill:string;
   highlight:string;opacity:number;spokes?:number;
 }>=({x,y,r,teeth,angle,fill,highlight,opacity,spokes=5})=><g opacity={opacity}>

@@ -173,7 +173,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
           paint: { 'line-color': foco(d) ? 'rgba(70,16,10,.85)' : cor(d.cor), 'line-width': foco(d) ? 1.6 : 4.5, 'line-opacity': 0 } }]),
       ...(P.rotas || []).flatMap((r, i) => [
         { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': neo ? 5 : 24, 'line-opacity': neo ? 0 : .5, 'line-blur': 8 } },
-        { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': neo ? 5 : 15 } },
+        { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': neo ? (P.neo_route_overview ? 8 : 5) : 15 } },
         { id: `rota_l_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': cor(r.cor), 'line-width': (r as any).largura ?? 9 } }]),
     ];
     carregarML().then(ml => {
@@ -190,6 +190,9 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const routeProgress = follow ? progresso(t,follow.start,follow.end,'easeIO') : 0;
   const routeHead = follow && rota && km>0 && t>=follow.start ? turf.along(rota,km*routeProgress,{units:'kilometers'}).geometry.coordinates as [number,number] : null;
   // Same clock and geometry as lineSliceAlong: no invented vessel position.
+  const routeAhead = routeHead ? turf.along(rota,Math.min(km,km*routeProgress+.3),{units:'kilometers'}).geometry.coordinates : null;
+  const routeBehind = routeHead ? turf.along(rota,Math.max(0,km*routeProgress-.3),{units:'kilometers'}).geometry.coordinates : null;
+  const heading = routeAhead && routeBehind ? turf.bearing(routeBehind,routeAhead) : 0;
   const blend = follow ? progresso(t,follow.start,follow.start+1.25,'easeIO') : 0;
   const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,routeProgress)} : baseCamera;
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
@@ -283,7 +286,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
         display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
         textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
-      {routeHead && <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>}
+      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width="26" height="42" viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-13,top:proj(routeHead).y-21,transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
+      {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:24,top:30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>TRAVESSIA ILUSTRATIVA</div>}
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>

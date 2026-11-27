@@ -34,7 +34,8 @@ export type FormatoProps = {
   composicoes?: Record<string, { quadro: [number, number, number, number] | null; veu?: string }>;
   creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
   tecnico?: { pais?: string };
-  neo_follow?: {start:number;end:number;zoom:number}; // illustrative route, opt-in private benchmark
+  neo_follow?: {start:number;end:number;zoom:number;ship?:boolean}; // illustrative route, opt-in private benchmark
+  neo_route_overview?: boolean;
   neo_benchmark?: boolean; // private native viewport; not a production preset
   documentary_layout?: boolean;      // private native map bridge, no crop
   medir?: boolean;                   // registra no console a geometria REAL do quadro (validação sobre quadros renderizados)

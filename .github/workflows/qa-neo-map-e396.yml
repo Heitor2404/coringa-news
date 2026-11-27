@@ -1,4 +1,4 @@
-name: E396B - cartografia continua sem emendas e camera de rota
+name: E396C - cartografia acabamento e travessia ilustrativa
 on:
   push:
     branches: [atlas-direcao-visual-20261118]
@@ -54,11 +54,11 @@ jobs:
           shopt -s nullglob
           root=qa_neo_map_e396
           videos=("$root"/*.mp4)
-          if (( ${#videos[@]} )); then bash scripts/arquivar_cofre_review.sh "review-e396b-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${videos[@]}" "$root/manifest.json"; fi
-          files=("$root"/manifest.json "$root"/qa.json "$root"/delivery.json "$root"/*.jpg)
+          if (( ${#videos[@]} )); then bash scripts/arquivar_cofre_review.sh "review-e396c-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${videos[@]}" "$root/manifest.json"; fi
+          files=("$root"/manifest.json "$root"/qa.json "$root"/delivery.json "$root"/detail-discovery.json "$root"/*.jpg)
           existing=()
           for f in "${files[@]}"; do if [[ -f "$f" ]]; then existing+=("$f"); fi; done
-          if (( ${#existing[@]} )); then python scripts/espelhar_revisao_cofre.py "e396b-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${existing[@]}"; fi
+          if (( ${#existing[@]} )); then python scripts/espelhar_revisao_cofre.py "e396c-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${existing[@]}"; fi
   alert:
     needs: qa
     if: ${{ always() && (needs.qa.result == 'failure' || needs.qa.result == 'cancelled') }}

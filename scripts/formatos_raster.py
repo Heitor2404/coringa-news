@@ -286,9 +286,10 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     nw = tile_lonlat(int(x0), int(y0), z)
     se = tile_lonlat(int(x1) + 1, int(y1) + 1, z)
     corners = [list(nw), [se[0], nw[1]], list(se), [nw[0], se[1]]]
-    composicao = (oceano == 'batimetria' and dataset == 's2_2016')
+    composicao = (oceano in ('batimetria','batimetria_costeira') and dataset == 's2_2016')
+    buffer_m = 300 if oceano == 'batimetria_costeira' else 1500
     meta = {'nome': nome, 'tipo': 'satelite', 'cantos': corners, 'px': px,
-            **({'oceano': 'bmng_batimetria+ne_10m_land', 'buffer_costeiro_m': 1500} if composicao else {}),
+            **({'oceano': 'bmng_batimetria+ne_10m_land', 'buffer_costeiro_m': buffer_m} if composicao else {}),
             'px_por_grau_fonte': 256*2**z/360, 'arquivo': img.name, 'dataset': dataset,
             'atribuicao': lic['atribuicao_exigida'] + (' · ' + atlas_ref.datasets()['bmng']['atribuicao_exigida'] + ' · Natural Earth' if composicao else ''),
             'fonte': {'url': modelo, 'licenca': lic['licenca'], 'zoom_tiles': z,
@@ -311,7 +312,7 @@ def registrar_base_regional(nome, bbox, z, dataset, *, saida=None, max_tiles=100
     if composicao:
         aneis = _terras_ne(bbox, out)
         mar = _oceano_bmng((nw, se), z)
-        im, fracao_terra = compor_oceano(im, (int(x0), int(y0)), z, aneis, mar, lat_ref=(nw[1] + se[1]) / 2)
+        im, fracao_terra = compor_oceano(im, (int(x0), int(y0)), z, aneis, mar, lat_ref=(nw[1] + se[1]) / 2, buffer_m=buffer_m)
         meta['fracao_terra'] = round(fracao_terra, 4)
     from tempfile import NamedTemporaryFile
     with NamedTemporaryFile(dir=out, suffix='.jpg', delete=False) as temp:

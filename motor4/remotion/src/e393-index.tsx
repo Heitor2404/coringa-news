@@ -1,0 +1,2 @@
+import React from 'react';import {Composition,registerRoot} from 'remotion';import {CausalCutawayE393} from './formatos/CausalCutawayE393';
+registerRoot(()=> <Composition id="CausalCutawayE393" component={CausalCutawayE393 as any} width={1080} height={1920} fps={30} durationInFrames={428} calculateMetadata={({props}:any)=>({durationInFrames:Math.round(props.duracao*30)})} defaultProps={{duracao:428/30,private_review_only:true} as any}/>);

@@ -1,8 +1,5 @@
 name: E392B.1 - revisao de arte e legenda medida
 on:
-  push:
-    branches: [atlas-direcao-visual-20261118]
-    paths: ['.github/workflows/qa-motion-e392.yml','motor4/scripts/qa_storyboard_e392.mjs','motor4/remotion/src/formatos/CalderaCutawayE392.tsx','motor4/remotion/src/formatos/CaptionFitE392.ts','motor4/remotion/tests/caption-fit-e392.test.cjs','scripts/entrega_storyboard_e392.py']
   workflow_dispatch:
 permissions:
   contents: read

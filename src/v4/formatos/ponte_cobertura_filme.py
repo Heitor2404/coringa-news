@@ -265,4 +265,5 @@ def plano(case,chosen,tempos):
     from . import revelacao_documental_e327 as R327
     result['revelacoes_documentais']=R327.aplicar(case,chosen,result)
     if case.get('composicao_documental') in ('PRIVATE_V2','PRIVATE_V3','PRIVATE_V4'):result['composicao_documental']=case['composicao_documental']
-    return result
+    from .motion_intake_e3888 import integrar
+    return integrar(case,result)

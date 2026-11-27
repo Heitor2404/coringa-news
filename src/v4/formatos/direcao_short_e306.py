@@ -72,7 +72,7 @@ def diagnosticar(plan):
     tasks=tarefas_replanejamento(rows)
     from .motion_direcao_e3884 import fila_plano,relacoes_plano
     motion_candidates=fila_plano(plan)
-    return {'schema':'coringa.short.triage.v1','imersao_documental':immersion,'tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'motion_candidates':motion_candidates,'motion_relations':relacoes_plano(plan,motion_candidates),'comparacoes_documentais':pairs,'publicar':False,
+    return {'schema':'coringa.short.triage.v1','imersao_documental':immersion,'tarefas_replanejamento':tasks,'direcao_explicativa':explanation,'motion_intake':plan.get('motion_intake'),'motion_candidates':motion_candidates,'motion_relations':relacoes_plano(plan,motion_candidates),'comparacoes_documentais':pairs,'publicar':False,
         'pronto_para_analise_visual':not all_passive,'editorial_approval':False,
         'rendered_coverage_verified':False,'status':'REPLANEJAR' if all_passive else 'REVISAR',
         'duration_s':round(total,3),'passive_photo_s':round(passive,3),

@@ -185,7 +185,13 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     return () => { m && m.remove(); };
   }, []);
 
-  const c = cameraEm(P.palco, t, vw, vh);
+  const baseCamera = cameraEm(P.palco, t, vw, vh);
+  const follow = neo ? P.neo_follow : undefined;
+  const routeProgress = follow ? progresso(t,follow.start,follow.end,'easeIO') : 0;
+  const routeHead = follow && rota && km>0 && t>=follow.start ? turf.along(rota,km*routeProgress,{units:'kilometers'}).geometry.coordinates as [number,number] : null;
+  // Same clock and geometry as lineSliceAlong: no invented vessel position.
+  const blend = follow ? progresso(t,follow.start,follow.start+1.25,'easeIO') : 0;
+  const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,routeProgress)} : baseCamera;
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
   const [pronto, setPronto] = useState(-1);
   const pend = useRef<number | null>(null);
@@ -277,6 +283,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
         display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
         textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
+      {routeHead && <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>}
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>

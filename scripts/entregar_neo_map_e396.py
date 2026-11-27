@@ -8,7 +8,7 @@ def main():
     chat,_=T.chat_autorizado();items=[]
     for f in files:
         video=f.suffix=='.mp4';field='video' if video else 'document'
-        args={'chat_id':chat,'caption':'E396 · cartografia premium · '+f.name+' · prova privada, sem voz, sem publicação'}
+        args={'chat_id':chat,'caption':'E396B · cartografia e acompanhamento da rota · '+f.name+' · prova privada, sem voz, sem publicação'}
         if video:args['supports_streaming']='true'
         r=T._api('sendVideo' if video else 'sendDocument',args,(field,T._caber(f) if video else f))
         if not isinstance(r,dict) or not r.get('message_id'):raise ValueError('E396-DELIVERY')

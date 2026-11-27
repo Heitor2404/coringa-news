@@ -26,3 +26,7 @@ E388: sobreposição controlada + motion graphics. E389: explicações causais 2
 ## Regra de consistência — 26/11/2026
 
 Toda prova destinada à aprovação estética deve usar a identidade Taiwan limpa em todas as cenas relevantes, inclusive dados, mapas e esquemas. Teste técnico isolado com layout histórico deve ser explicitamente identificado e não usado para pedir homologação estética. A adaptação de componentes especiais não deve remover atribuições exigidas nem alterar evidência ou geometria sem justificativa.
+
+## Prioridade artística — 27/11/2026
+
+Após E394 o proprietário reafirmou que a qualidade visual é prioridade. CI verde, cinemática correta ou câmera em movimento não bastam. Provas 2D devem mostrar o mecanismo como protagonista, com composição ampla, materiais coerentes, oclusão, foco e significado progressivo sincronizado à ação; planos de detalhe devem manter contexto ou retornar explicitamente ao geral. Não usar efeitos decorativos para mascarar falta de conteúdo. Preservar identidade Taiwan e fundo preto fora da mídia, evidência e ROI. Comparar renders reais antes de promover; qualidade artística e validação técnica são gates separados. Almejar salto perceptível de qualidade, não sucessão de retoques marginais. Ver continuidade §493.

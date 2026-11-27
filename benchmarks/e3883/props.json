@@ -1,0 +1,217 @@
+{
+  "duracao": 30,
+  "preview": true,
+  "private_review_only": true,
+  "documentary_media_preview": true,
+  "animation_policy_mode": "EDITORIAL",
+  "shots": [
+    {
+      "id": "chart-0",
+      "start": 0,
+      "end": 5,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "https://www.usgs.gov/media/videos/july-14-2018-kilauea-fissure-8-video-captured-uas",
+      "subject": "Saída do cone · 14 jul 2018",
+      "lead": "VELOCIDADE DA LAVA",
+      "headline": "A VELOCIDADE VARIA",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "interval",
+        "title": "VELOCIDADE DA LAVA",
+        "scope": "Saída do cone · 14 jul 2018",
+        "unit": "km/h",
+        "values": [
+          {
+            "label": "Mínimo aproximado",
+            "value": 21
+          },
+          {
+            "label": "Máximo aproximado",
+            "value": 26
+          }
+        ],
+        "relation": "approx",
+        "source": {
+          "url": "https://www.usgs.gov/media/videos/july-14-2018-kilauea-fissure-8-video-captured-uas",
+          "date": "2018-07-14",
+          "statement": "E342: 13–16 mph na saída do cone, convertidos e arredondados para aproximadamente 21–26 km/h."
+        },
+        "fixture": false
+      }
+    },
+    {
+      "id": "chart-1",
+      "start": 5,
+      "end": 10,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "https://www.usgs.gov/media/images/map-kilauea-volcanos-lower-east-rift-zone",
+      "subject": "Kilauea · mapa de agosto de 2018",
+      "lead": "TERRA NOVA",
+      "headline": "UMA ÁREA EQUIVALENTE",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "area",
+        "title": "TERRA NOVA",
+        "scope": "Kilauea · mapa de agosto de 2018",
+        "unit": "km²",
+        "values": [
+          {
+            "label": "Terra nova",
+            "value": 3.54
+          }
+        ],
+        "relation": "approx",
+        "source": {
+          "url": "https://www.usgs.gov/media/images/map-kilauea-volcanos-lower-east-rift-zone",
+          "date": "2018-08",
+          "statement": "E342: aproximadamente 875 acres de terra nova, equivalentes a 3,54 km²."
+        },
+        "fixture": false
+      }
+    },
+    {
+      "id": "chart-2",
+      "start": 10,
+      "end": 15,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000036/a20240404.htm",
+      "subject": "TSMC · comunicado de 4 abr 2024",
+      "lead": "RECUPERAÇÃO APÓS SISMO",
+      "headline": "MAIS DE OITENTA POR CENTO",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "part",
+        "title": "RECUPERAÇÃO APÓS SISMO",
+        "scope": "TSMC · comunicado de 4 abr 2024",
+        "unit": "%",
+        "values": [
+          {
+            "label": "Equipamentos recuperados",
+            "value": 80
+          }
+        ],
+        "denominator": 100,
+        "relation": "lower",
+        "source": {
+          "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000036/a20240404.htm",
+          "date": "2024-04-04",
+          "statement": "Demo histórico 19/11: mais de 80% dos equipamentos recuperados; limiar, não percentual exato. Revalidar documento antes de produção."
+        },
+        "fixture": false
+      }
+    },
+    {
+      "id": "chart-3",
+      "start": 15,
+      "end": 20,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "FIXTURE",
+      "subject": "Exemplo de engenharia · medidas fictícias",
+      "lead": "COMPARAÇÃO DE ESCALA",
+      "headline": "ESCALAS COMPARÁVEIS",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "comparison",
+        "title": "COMPARAÇÃO DE ESCALA",
+        "scope": "Exemplo de engenharia · medidas fictícias",
+        "unit": "m",
+        "values": [
+          {
+            "label": "Estrutura A",
+            "value": 24
+          },
+          {
+            "label": "Estrutura B",
+            "value": 48
+          },
+          {
+            "label": "Estrutura C",
+            "value": 72
+          }
+        ],
+        "comparable": true,
+        "relation": "exact",
+        "source": null,
+        "fixture": true
+      }
+    },
+    {
+      "id": "chart-4",
+      "start": 20,
+      "end": 25,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "FIXTURE",
+      "subject": "Exemplo histórico fictício · ordem, não duração",
+      "lead": "LINHA DO TEMPO",
+      "headline": "EVENTOS EM SEQUÊNCIA",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "timeline",
+        "title": "LINHA DO TEMPO",
+        "scope": "Exemplo histórico fictício · ordem, não duração",
+        "unit": "",
+        "values": [],
+        "events": [
+          {
+            "date": "1900-01-01",
+            "label": "Primeira etapa"
+          },
+          {
+            "date": "1910-01-01",
+            "label": "Expansão"
+          },
+          {
+            "date": "1940-01-01",
+            "label": "Conclusão"
+          }
+        ],
+        "source": null,
+        "fixture": true
+      }
+    },
+    {
+      "id": "chart-5",
+      "start": 25,
+      "end": 30,
+      "type": "photo",
+      "graphic_original": true,
+      "evidence": "explainer",
+      "source": "FIXTURE",
+      "subject": "Exemplo científico · valor fictício",
+      "lead": "NÚMERO EM DESTAQUE",
+      "headline": "UM VALOR DE REFERÊNCIA",
+      "documentary_chart_trial": {
+        "schema": "coringa.motion.claim.private.v1",
+        "publish": false,
+        "shape": "scalar",
+        "title": "NÚMERO EM DESTAQUE",
+        "scope": "Exemplo científico · valor fictício",
+        "unit": "°C",
+        "values": [
+          {
+            "label": "Temperatura de referência",
+            "value": 450
+          }
+        ],
+        "relation": "approx",
+        "source": null,
+        "fixture": true
+      }
+    }
+  ]
+}

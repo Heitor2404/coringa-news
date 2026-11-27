@@ -7,7 +7,8 @@ import React from 'react';
 import {SignatureBackground,signatureHasVisibleArea} from './SignatureBackground';
 import {LockCausal} from './LockCausal';
 import {LockCausalCycle} from './LockCausalCycle';
-import {MotionEditorial, AttributedStat, type MotionEditorialData} from './MotionEditorial';
+import {MotionEditorial, AttributedStat, EditorialChart, type MotionEditorialData} from './MotionEditorial';
+import {selectChart,type Claim} from './MotionChartCoreE3883';
 import {SceneGraphE201, type SceneData, type SceneDataV2} from './SceneGraphE201';
 import {OpticalProjection} from './OpticalProjection';
 import safety from './safe-zones-vertical.json';
@@ -38,6 +39,7 @@ export type FilmShot = {
   // Posições normais CSS object-position, não pixels falsamente interpolados.
   framing_positions?: {at:number; position:[number,number]}[];
   graphic_original?: boolean; // Infografia autoral com dados embutidos, sem título duplicado
+  documentary_chart_trial?: Claim; // E388.3 private graphic-original scene
   motion_graphic?: MotionEditorialData; // Dados editoriais animados; não cria fatos
   compareLabels?: [string, string]; // story-specific, never hard-code Taiwan into engine
   source: string;
@@ -1140,6 +1142,16 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
   }
   // Restore the media-led documentary grammar for narrated footage/photos.
   // Keep the existing protected laboratory layout for mechanisms and graphics.
+  if(shot.documentary_chart_trial){
+    const claim=shot.documentary_chart_trial;
+    return <AbsoluteFill data-layout-review="E3883_TAIWAN_CHART_PENDING" style={{background:'#000',overflow:'hidden',fontFamily:'Inter,Arial,sans-serif'}}>
+      <div style={{...rectStyle(CLEAN_TEXT.brand),display:'flex',alignItems:'center',fontSize:28,fontWeight:800,color:OFF_WHITE,letterSpacing:2.1}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
+      <div style={{position:'absolute',left:66,top:346,width:140,height:5,background:GOLD}}/>
+      <div style={{position:'absolute',left:66,top:370,maxWidth:839,fontSize:34,fontWeight:900,color:OFF_WHITE,borderLeft:'6px solid '+GOLD,padding:'9px 16px',background:'#161616',lineHeight:1.1}}>{claim.title}</div>
+      <EditorialChart claim={claim} p={p} probe={textProbe}/>
+      {!subtitleMode&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontSize:60,lineHeight:1.08,fontWeight:900,color:OFF_WHITE,letterSpacing:-1.5}}>{shot.headline}</div>}
+    </AbsoluteFill>;
+  }
   if(mediaFirst&&pairActive(shot,now))return <ComparisonPanel shot={shot} probe={textProbe}/>;
   if(mediaFirst&&detailZoomActive(shot,now))return <StaticDetailZoom shot={shot} probe={textProbe}/>;
   if(mediaFirst&&realMedia(shot)) {
@@ -1292,6 +1304,12 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
+  for(const s of shots.filter(s=>s.documentary_chart_trial)){
+    if(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||
+       s.type!=='photo'||s.graphic_original!==true||s.evidence!=='explainer'||s.asset||s.motion_graphic||
+       s.end-s.start<3.5||s.headline.length>65)throw new Error('E3883-PRIVATE-GRAPHIC');
+    selectChart(s.documentary_chart_trial!);
+  }
   if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
   for(const s of shots.filter(s=>s.documentary_overlay_trial!==undefined)){
     if(!s.documentary_clean_credit||![60,63].includes(s.documentary_overlay_trial!))throw new Error('E388-OVERLAY-CONTRACT');
@@ -1366,7 +1384,8 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
       text={docCap.words.map(w=>w.w).join(' ')} probe={documentary_text_probe} layoutOverride={detailZoomActive(shots[shot],t)?detailZoomGeometry(shots[shot]).layout:pairActive(shots[shot],t)?pairLayout:undefined}>
       {docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}
     </MeasuredDocText>}
-    {docCap&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
+    {docCap&&shots[shot].documentary_chart_trial&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',fontSize:60,fontWeight:900,lineHeight:1.08,letterSpacing:-1.5,color:OFF_WHITE}}><div>{docCap.words.map((w,i)=><span key={i} style={{color:w.hl?GOLD:OFF_WHITE}}>{w.w}{i<docCap.words.length-1?' ':''}</span>)}</div></div>}
+    {docCap&&!shots[shot].documentary_chart_trial&&!realMedia(shots[shot])&&<div data-safe-role="subtitle" style={{...(shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?rectStyle(DOC_MEDIA.subtitle):safeSlot('subtitle')),display:'flex',alignItems:'center',
         justifyContent:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'flex-start':'center',
         textAlign:shots[shot].type==='atlas_map'&&shots[shot].documentary_atlas_layout&&preview&&private_review_only?'left':'center',pointerEvents:'none'}}>
       <div style={{fontFamily:'Inter,Arial,sans-serif',fontWeight:900,fontSize:44,lineHeight:1.08,color:OFF_WHITE,

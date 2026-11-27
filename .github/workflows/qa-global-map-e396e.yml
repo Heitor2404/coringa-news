@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        case: [panama, taiwan, grand_canyon, japao]
+        case: ${{ fromJSON(contains(github.event.head_commit.message || '', '[canyon-only]') && '["grand_canyon"]' || '["panama","taiwan","grand_canyon","japao"]') }}
     env:
       MAP_CASE: ${{ matrix.case }}
       REMOTION_CHROME: /usr/bin/google-chrome

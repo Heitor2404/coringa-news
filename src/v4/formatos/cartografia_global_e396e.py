@@ -135,7 +135,7 @@ def terrain_tiles(case,p):
     a,b=R.tile_xy(bbox[0],bbox[3],z);c,d=R.tile_xy(bbox[2],bbox[1],z)
     # One tile halo for DEM mesh stitching. Fail instead of using remote tiles.
     xs=range(max(0,int(a)-1),min(2**z,int(c)+2));ys=range(max(0,int(b)-1),min(2**z,int(d)+2))
-    if len(xs)*len(ys)>100:raise ValueError('TERRAIN-BUDGET')
+    if len(xs)*len(ys)>144:raise ValueError('TERRAIN-BUDGET')  # separate bounded DEM halo (max 12×12)
     root=PUBLIC.parent/'terrain'/case['id'];records=[];lo=float('inf');hi=-float('inf')
     for x in xs:
         for y in ys:

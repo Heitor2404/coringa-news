@@ -49,10 +49,13 @@ jobs:
               data=request(f"https://api.github.com/repos/{repo}/actions/runs/{run}/attempts/{attempt}/jobs?per_page=100",
                            headers={'Authorization':'Bearer '+e['GH_TOKEN'],'Accept':'application/vnd.github+json'})
               for job in data.get('jobs',[]):
-                  if job.get('name')!=e['FAILED_JOB']:continue
+                  name=job.get('name','')
+                  base=e['FAILED_JOB']
+                  if not (name==base or name.startswith(base+' (') or name.startswith(base+' / ')):continue
+                  if job.get('conclusion') not in ('failure','cancelled'):continue
                   for step in job.get('steps',[]):
                       if step.get('conclusion') in ('failure','cancelled'):
-                          stages.append(step['name'])
+                          stages.append(name+' — '+step['name'])
                       if 'telegram' in step.get('name','').lower() and ('enviar' in step['name'].lower() or 'entregar' in step['name'].lower()):
                           delivery.append(step.get('conclusion'))
           except Exception:
@@ -61,7 +64,7 @@ jobs:
           detail='; '.join(stages)[:400] if stages else 'Etapa não identificada; conferir execução.'
           message=f"CORINGA · {label}\n{e['GITHUB_WORKFLOW']}\nEtapa: {detail}\n"
           if 'success' in delivery:
-              message+='O material visual já foi entregue; houve falha posterior.\n'
+              message+='A etapa de envio retornou sucesso; confirme o recibo, pois ausência de arquivo também pode encerrar a etapa.\n'
           elif delivery:
               message+='Entrega do material visual não confirmada; consulte o recibo.\n'
           message+=f"Execução: {url}\nNenhuma publicação em redes."

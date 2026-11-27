@@ -117,7 +117,7 @@ function arcoContinuo(a: number[], b: number[], n = 120) {
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, e396e=global && P.neo_e396e===true, vw=neo?width:W, vh=neo?height:H;
+  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, e396e=global && P.neo_e396e===true, e396f=e396e && P.neo_e396f===true, vw=neo?width:W, vh=neo?height:H;
   const t = frame / fps;
   const T = P.tokens.palco.mapa;
   const ref = useRef<HTMLDivElement>(null);
@@ -204,7 +204,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     const at=Math.min(km,Math.max(0,km*routeProgress+offset));
     return turf.bearing(turf.along(rota,Math.max(0,at-1.1),{units:'kilometers'}),turf.along(rota,Math.min(km,at+1.1),{units:'kilometers'}));
   })) : turf.bearing(routeBehind,routeAhead)) : 0;
-  const blend = follow ? progresso(t,follow.start,follow.start+(global?2.2:1.25),'easeIO') : 0;
+  const blend = follow ? progresso(t,follow.start,follow.start+(e396f?1.1:global?2.2:1.25),'easeIO') : 0;
   const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,travel)} : baseCamera;
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
   const [pronto, setPronto] = useState(-1);
@@ -291,7 +291,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   // créditos de FOTO de pinos visíveis (estilo da referência: tudo na faixa de créditos) — obrigatórios (CC BY-SA)
   const extras = (((P.creditos as any)?.extras || []) as any[]).filter(e => t >= e.t0 && t <= e.t1 + .3).map(e => e.txt);
   atrib = [...new Set([...extras, ...atrib])];
-  for (const d of [...vis_ds].filter(d => CR[d] && !obrig.has(d))) { const tent = [CR[d], ...atrib.filter(x => x !== CR[d])]; if (!atrib.includes(CR[d]) && cabe(tent)) atrib = tent; }
+  for (const d of [...vis_ds].filter(d => !e396f && CR[d] && !obrig.has(d))) { const tent = [CR[d], ...atrib.filter(x => x !== CR[d])]; if (!atrib.includes(CR[d]) && cabe(tent)) atrib = tent; }
   return (
     <div style={{ position: 'absolute', inset: 0, opacity: opac }}>
       <div ref={ref} style={{ position: 'absolute', width: vw, height: vh, filter: desfoque > .05 ? `blur(${desfoque}px)` : undefined }} />
@@ -305,13 +305,13 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
           <div style={{ position: 'absolute', right: 0, top: -28, fontFamily: P.tokens.fontes.dado, fontWeight: 700, fontSize: 20, color: '#fff', textShadow: '0 1px 6px #000', whiteSpace: 'nowrap' }}>{esc.txt}</div>
         </div>)}
       {/* atribuição obrigatória (CC BY / ODbL): inteira, legível, faixa própria acima da legenda; muda com as camadas visíveis */}
-      <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
+      {(!e396f || atrib.length>0) && <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
         display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
-        textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
-      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={e396e?24:global?20:26} height={e396e?38:global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(e396e?12:global?10:13),top:proj(routeHead).y-(e396e?19:global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
+        textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>}
+      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={e396f?28:e396e?24:global?20:26} height={e396f?44:e396e?38:global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(e396f?14:e396e?12:global?10:13),top:proj(routeHead).y-(e396f?22:e396e?19:global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
       {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:e396e?((P as any).seguro?.esq??24):24,top:e396e?((P as any).seguro?.topo??30):30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>{e396e?'TRAVESSIA ILUSTRATIVA':global?'PERCURSO ILUSTRATIVO · TRECHO':'TRAVESSIA ILUSTRATIVA'}</div>}
       {e396e && P.neo_connections_until && t<P.neo_connections_until && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:17,color:'#fff',textShadow:'0 1px 5px #000'}}>CONEXÕES GEOGRÁFICAS · NÃO ROTAS REAIS</div>}
-      {terrain && t>=terrain.start && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:16,color:'#fff',textShadow:'0 1px 5px #000'}}>RELEVO REAL · TERRAIN TILES / USGS</div>}
+      {terrain && !e396f && t>=terrain.start && <div style={{position:'absolute',left:(P as any).seguro?.esq??24,top:(P as any).seguro?.topo??30,fontFamily:P.tokens.fontes.dado,fontSize:16,color:'#fff',textShadow:'0 1px 5px #000'}}>RELEVO REAL · TERRAIN TILES / USGS</div>}
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>

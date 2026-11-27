@@ -1251,5 +1251,103 @@
         }
       }
     ]
+  },
+  "caldera_collapse_qualitative": {
+    "atores": [
+      {
+        "id": "reservoir",
+        "tipo": "magma_reservoir",
+        "asset_family": "geology"
+      },
+      {
+        "id": "roof",
+        "tipo": "rock_blocks",
+        "asset_family": "geology"
+      },
+      {
+        "id": "crater",
+        "tipo": "depression",
+        "asset_family": "geology"
+      }
+    ],
+    "relacoes": [
+      {
+        "from": "roof",
+        "type": "rests_on",
+        "to": "reservoir"
+      },
+      {
+        "from": "roof",
+        "type": "shapes",
+        "to": "crater"
+      }
+    ],
+    "estado_inicial": {
+      "reservoir.material": "initial",
+      "roof.position": "initial",
+      "crater.depth": "initial"
+    },
+    "eventos": [
+      {
+        "acao": "loss",
+        "operador": "drain",
+        "atores": [
+          "reservoir"
+        ],
+        "foco": [
+          "reservoir",
+          "roof"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "reservoir.material": "initial"
+        },
+        "altera": {
+          "reservoir.material": "reduced"
+        }
+      },
+      {
+        "acao": "collapse",
+        "operador": "translate",
+        "atores": [
+          "roof"
+        ],
+        "foco": [
+          "reservoir",
+          "roof",
+          "crater"
+        ],
+        "camera": "show_connection",
+        "requer": {
+          "reservoir.material": "reduced",
+          "roof.position": "initial"
+        },
+        "altera": {
+          "roof.position": "lowered",
+          "crater.depth": "deepening"
+        }
+      },
+      {
+        "acao": "result",
+        "operador": "reveal",
+        "atores": [
+          "crater"
+        ],
+        "foco": [
+          "roof",
+          "crater"
+        ],
+        "camera": "show_consequence",
+        "requer": {
+          "roof.position": "lowered",
+          "crater.depth": "deepening"
+        },
+        "altera": {
+          "crater.depth": "deeper"
+        }
+      }
+    ],
+    "fontes_visuais": "USGS_E323_A_B_QUALITATIVE_REVIEW_ONLY",
+    "renderer": "PRIVATE_STORYBOARD_PENDING"
   }
 }

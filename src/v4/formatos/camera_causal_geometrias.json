@@ -353,6 +353,45 @@
           664
         ]
       }
+    },
+    "caldera_collapse_qualitative": {
+      "width": 540,
+      "height": 960,
+      "bounds": [
+        36,
+        265,
+        450,
+        575
+      ],
+      "viewport": [
+        33,
+        250,
+        453,
+        580
+      ],
+      "subida_base_px": 0,
+      "zoom_max": 1,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "reservoir": [
+          133,
+          397,
+          354,
+          575
+        ],
+        "roof": [
+          108,
+          282,
+          380,
+          466
+        ],
+        "crater": [
+          108,
+          265,
+          380,
+          390
+        ]
+      }
     }
   }
 }

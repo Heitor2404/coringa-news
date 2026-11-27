@@ -48,3 +48,14 @@ export const AJoint:React.FC<{
   <path d={`M${x-r*.45} ${y-r*.46} Q${x} ${y-r*.78} ${x+r*.47} ${y-r*.47}`}
     stroke="#D4FAE9" strokeWidth="4" fill="none" opacity=".7"/>
 </g>;
+
+/** Shared cutaway material treatment for authored silhouettes. 2.5D shading
+ * is illustrative, not measured depth. Does not change existing components. */
+export const ACutawayMaterial:React.FC<{id:string;d:string;tone:'rock'|'hot'|'shadow';offset?:number}>=({id,d,tone,offset=5})=>{
+ const shades={rock:['#AD9278','#6A5144','#342B29'],hot:['#FFD176','#E56B32','#9A241D'],shadow:['#51453E','#292522','#151313']}[tone];
+ return <g>
+  <defs><linearGradient id={id+'-surface'} x1="0" y1="0" x2=".35" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stopColor={shades[0]}/><stop offset=".48" stopColor={shades[1]}/><stop offset="1" stopColor={shades[2]}/></linearGradient></defs>
+  <path d={d} transform={`translate(${offset} ${offset})`} fill={shades[2]} stroke="#191515" strokeWidth="2"/>
+  <path d={d} fill={`url(#${id}-surface)`} stroke={tone==='hot'?'#F5A36C':'#BAA38F'} strokeWidth="1.4" strokeLinejoin="round"/>
+ </g>;
+};

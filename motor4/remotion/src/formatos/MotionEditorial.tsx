@@ -187,17 +187,17 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean;relati
       </>;
    })()}
    {k==='area'&&shared&&relation&&(()=>{
-      const size=420,x=32,y=65,small=size*shared.sideRatio,part=relation.role==='part';
-      const reveal=ease(p,.14,.42),detail=ease(p,.45,.35);
+      const size=450,x=12,y=32,small=size*shared.sideRatio,part=relation.role==='part';
+      const reveal=ease(p,.14,.42),detail=ease(p,.68,.26);
       return <>
        <rect data-area-box="total" x={x} y={y} width={size} height={size} fill={GOLD} fillOpacity={part?.07:.14+.18*a} stroke={GOLD} strokeWidth="5"/>
        {Array.from({length:4},(_,j)=><path key={j} d={`M ${x+(j+1)*size/5} ${y} V ${y+size} M ${x} ${y+(j+1)*size/5} H ${x+size}`} stroke={GOLD} strokeOpacity=".16" strokeWidth="1.5"/>)}
        {part&&<rect data-area-box="part" x={x} y={y+size-small} width={small} height={small} fill={GOLD} fillOpacity={.15+.8*reveal} stroke={GOLD} strokeWidth="4"/>}
-       {t(valueText(relation.total),480,110,78,338,part?WHITE:GOLD)}
-       {t('ÁREA TOTAL',480,155,30,338)}
-       {!part&&<g opacity={.35+.65*reveal}>{t(areaSideLabel(shared.total),480,275,57,338,GOLD)}{t('de cada lado',480,321,33,338)}</g>}
-       {part&&<g opacity={.35+.65*reveal}>{t(valueText(relation.part),480,260,80,338,GOLD)}{t('TERRA NOVA',480,306,30,338)}</g>}
-       {part&&<g opacity={detail}>{t('≈ '+num(Math.round(100*shared.ratio))+'%',480,406,69,338,GOLD)}{t('da área total',480,448,34,338)}</g>}
+       {t(valueText(relation.total),480,105,88,359,part?WHITE:GOLD)}
+       {t('ÁREA TOTAL',480,155,36,359)}
+       {!part&&<g opacity={.35+.65*reveal}>{t(areaSideLabel(shared.total),480,275,65,359,GOLD)}{t('de cada lado',480,321,38,359)}</g>}
+       {part&&<g opacity={.35+.65*reveal}>{t(valueText(relation.part),480,260,90,359,GOLD)}{t(relation.part.values[0].label.toUpperCase(),480,306,36,359)}</g>}
+       {part&&p>=.68&&<g opacity={detail}>{t('≈ '+num(Math.round(100*shared.ratio))+'%',480,406,80,359,GOLD)}{t('da área total',480,454,38,359)}</g>}
        {t('Escala de área comum · não é um mapa',32,527,32,775)}
       </>;
    })()}

@@ -40,3 +40,39 @@ def fila_plano(plan):
         d=decidir(need,p.get('claim'),p.get('receipt'))
         out.append({**d,'need_id':i,'fact_id':fact,'original_shot_preserved':True,'render_authorized':False})
     return out
+
+def relacoes_plano(plan, candidates=None):
+    """Auto-pair adjacent eligible quantitative obligations using explicit
+    source-reviewed inclusion receipts. Never infer inclusion from same unit,
+    page, smaller value or topic. Returns proposals only; no scene mutation."""
+    cs=fila_plano(plan) if candidates is None else candidates
+    allowed={(x['need_id'],x['fact_id']):x for x in cs if x.get('status')=='CHART_CANDIDATE'}
+    shots={s['id']:s for s in plan.get('shots',[])}
+    packets=plan.get('motion_relation_receipts') or []
+    if packets and plan.get('publicar') is not False:raise ValueError('E3887-PRIVATE')
+    out=[];seen=set()
+    for r in packets:
+        def reject(reason):return {'status':'KEEP_EXISTING','reason':reason,'publish':False}
+        if not isinstance(r,dict) or r.get('schema')!='coringa.motion.inclusion.receipt.private.v1' or r.get('publish') is not False or r.get('relation')!='included_area' or r.get('reviewed') is not True:
+            out.append(reject('NO_REVIEWED_INCLUSION'));continue
+        keys=[(r.get(k+'_need'),r.get(k+'_fact')) for k in ('total','part')]
+        if any(k not in allowed for k in keys) or keys[0]==keys[1] or any(k in seen for k in keys):
+            out.append(reject('UNBOUND_OR_PROTECTED_OBLIGATION'));continue
+        a,z=[allowed[k]['claim'] for k in keys]
+        s,t=[shots[k[0]] for k in keys]
+        source=a.get('source') or {};other=z.get('source') or {}
+        if any(c.get('shape')!='area' or c.get('unit')!='km²' or c.get('fixture') is not False or c.get('relation') not in (None,'approx','exact') or len(c.get('values') or [])!=1 for c in (a,z)):
+            out.append(reject('INCOMPATIBLE_QUANTITIES'));continue
+        if r.get('source_url')!=source.get('url') or r.get('source_url')!=other.get('url') or r.get('source_date')!=source.get('date') or r.get('source_date')!=other.get('date') or not isinstance(r.get('statement'),str) or not 0<len(r['statement'])<=500 or r.get('total_claim')!=a or r.get('part_claim')!=z:
+            out.append(reject('UNBOUND_INCLUSION_SOURCE'));continue
+        av,zv=a['values'][0].get('value'),z['values'][0].get('value')
+        if not all(type(v) in (int,float) and math.isfinite(v) and 0<v<=10000 for v in (av,zv)) or zv>=av:
+            out.append(reject('INVALID_INCLUSION_MAGNITUDE'));continue
+        if not all(type(v) in (int,float) and math.isfinite(v) for v in (s.get('start'),s.get('end'),t.get('start'),t.get('end'))) or abs(s['end']-t['start'])>1e-6 or min(s['end']-s['start'],t['end']-t['start'])<2.4:
+            out.append(reject('NONCONTIGUOUS_OR_INSUFFICIENT_TIME'));continue
+        group='area-'+keys[0][0]+'-'+keys[1][0]
+        if len(group)>80:out.append(reject('INVALID_GROUP'));continue
+        base={'schema':'coringa.motion.area_relation.private.v1','publish':False,'kind':'included_area','group':group,'total':copy.deepcopy(a),'part':copy.deepcopy(z),'inclusion_statement':r['statement']}
+        seen.update(keys)
+        out.append({'status':'RELATION_CANDIDATE','total_need':keys[0][0],'part_need':keys[1][0],'ratio':zv/av,'relations':[dict(base,role='total'),dict(base,role='part')],'render_authorized':False,'publish':False})
+    return out

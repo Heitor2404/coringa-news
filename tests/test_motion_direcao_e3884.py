@@ -43,3 +43,31 @@ def test_director_handoff_preserves_original():
     assert fila_plano(plan)[0]['status']=='KEEP_EXISTING'
     plan['necessidades_direcao'][0]['fatos']=['other']
     assert fila_plano(plan)[0]['reason']=='UNBOUND_OR_DUPLICATE_OBLIGATION'
+
+def test_inclusion_pair_other_theme():
+    # Source reviewed 27 Nov 2026: Census 2010 table, Delaware row.
+    # Source excerpt is transcribed, not a claimed original byte hash.
+    from src.v4.formatos.motion_direcao_e3884 import relacoes_plano
+    url='https://www.census.gov/geographies/reference-files/2010/geo/state-area.html.html'
+    source={'url':url,'date':'2010','statement':'Delaware: total 6446 km²; land 5047 km²; water 1399 km².'}
+    def claim(label,value):
+        return {'schema':'coringa.motion.claim.private.v1','publish':False,'fixture':False,'shape':'area','unit':'km²','title':label,'scope':'Delaware · Censo 2010','values':[{'label':label,'value':value}],'relation':'exact','source':source}
+    a,z=claim('Área total',6446),claim('Área aquática',1399)
+    # Test-only candidate decisions: no fabricated original source checksum.
+    plan={'publicar':False,'shots':[{'id':'a','start':0,'end':4},{'id':'b','start':4,'end':8}]}
+    cs=[{'status':'CHART_CANDIDATE','need_id':i,'fact_id':i,'claim':c} for i,c in [('a',a),('b',z)]]
+    r={'schema':'coringa.motion.inclusion.receipt.private.v1','publish':False,'reviewed':True,'relation':'included_area','total_need':'a','total_fact':'a','part_need':'b','part_fact':'b','source_url':url,'source_date':'2010','statement':'Table separates total area into land and water area.','total_claim':a,'part_claim':z}
+    assert relacoes_plano(plan,cs)==[]
+    plan['motion_relation_receipts']=[r]
+    got=relacoes_plano(plan,cs)[0]
+    assert got['status']=='RELATION_CANDIDATE' and abs(got['ratio']-1399/6446)<1e-12 and got['render_authorized'] is False
+    assert got['relations'][1]['part']['values'][0]['label']=='Área aquática'
+    assert relacoes_plano(plan,cs[:1])[0]['status']=='KEEP_EXISTING'
+    r['reviewed']=False
+    assert relacoes_plano(plan,cs)[0]['reason']=='NO_REVIEWED_INCLUSION'
+    r['reviewed']=True
+    r['source_date']='2020'
+    assert relacoes_plano(plan,cs)[0]['reason']=='UNBOUND_INCLUSION_SOURCE'
+    r['source_date']='2010'
+    plan['shots'][1]['start']=5
+    assert relacoes_plano(plan,cs)[0]['reason']=='NONCONTIGUOUS_OR_INSUFFICIENT_TIME'

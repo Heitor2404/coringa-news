@@ -15,6 +15,7 @@ import { carregarML, arrumar } from '../MapaRota';
 import { W, H, clamp, easeIO, lerp } from '../ident';
 import type { FormatoProps, PalcoKey } from './tipos';
 import { progresso, progressoMarcos } from './TempoVisualE200';
+import { cruise, smoothAngle } from './GlobalMapMotionE396D';
 
 export const palcoEm = (pk: PalcoKey[], t: number) => {
   let i = 0;
@@ -38,7 +39,7 @@ export function cameraEm(pk: PalcoKey[], t: number, w=W, h=H): { centro: [number
   const i = ks.indexOf(a), ca = cam(a.camera,w,h), d = a.dur_camera ?? 1.2;
   let fx: number, fy: number, anc: [number, number], z: number;
   if (i > 0 && d > 0 && t < a.t + d) {
-    const cb = cam(ks[i - 1].camera,w,h), e = easeIO(clamp((t - a.t) / d));
+    const cb = cam(ks[i - 1].camera,w,h), e = a.camera_curve==='cruise' ? cruise((t-a.t)/d) : easeIO(clamp((t - a.t) / d));
     z = lerp(cb.zoom, ca.zoom, e);
     const u = Math.abs(ca.zoom - cb.zoom) < 1e-3 ? e : (2 ** -cb.zoom - 2 ** -z) / (2 ** -cb.zoom - 2 ** -ca.zoom);
     fx = lerp(mercX(cb.foco[0]), mercX(ca.foco[0]), u); fy = lerp(mercY(cb.foco[1]), mercY(ca.foco[1]), u);
@@ -116,7 +117,7 @@ function arcoContinuo(a: number[], b: number[], n = 120) {
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const neo = P.neo_benchmark === true, vw=neo?width:W, vh=neo?height:H;
+  const neo = P.neo_benchmark === true, global = neo && P.neo_global_style===true, vw=neo?width:W, vh=neo?height:H;
   const t = frame / fps;
   const T = P.tokens.palco.mapa;
   const ref = useRef<HTMLDivElement>(null);
@@ -146,6 +147,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     const sources: any = Object.fromEntries(Object.entries(fc).map(([k, v]) => [k, { type: 'geojson', data: v }]));
     rasters.forEach(r => { sources[`r_${r.nome}`] = { type: 'image', url: staticFile(r.src), coordinates: r.cantos }; });
     (P.rotas || []).forEach((_, i) => { sources[`rota_${i}`] = { type: 'geojson', data: turf.featureCollection([]) }; });
+    if(global && P.neo_follow) sources.rota_ativa={type:'geojson',data:turf.featureCollection([])};
     const grat: any[] = [];
     // gratícula da região do arquivo (Panamá: 1°; mundo: 10°)
     const rg = (P.geo?.meta as any)?.regiao || [-100, -10, -60, 30], passoG = rg[2] - rg[0] > 90 ? 10 : 1;
@@ -175,6 +177,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
         { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': neo ? 5 : 24, 'line-opacity': neo ? 0 : .5, 'line-blur': 8 } },
         { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': neo ? (P.neo_route_overview ? 8 : 5) : 15 } },
         { id: `rota_l_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': cor(r.cor), 'line-width': (r as any).largura ?? 9 } }]),
+      ...(global && P.neo_follow ? [{id:'rota_ativa',type:'line',source:'rota_ativa',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#FFD56A','line-width':7}}] : []),
     ];
     carregarML().then(ml => {
       m = new ml.Map({ container: ref.current!, style: { version: 8, sources, layers } as any, center: c0.centro, zoom: c0.zoom, interactive: false,
@@ -187,14 +190,18 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
 
   const baseCamera = cameraEm(P.palco, t, vw, vh);
   const follow = neo ? P.neo_follow : undefined;
-  const routeProgress = follow ? progresso(t,follow.start,follow.end,'easeIO') : 0;
+  const travel = follow ? (global ? cruise((t-follow.start)/(follow.end-follow.start)) : progresso(t,follow.start,follow.end,'easeIO')) : 0;
+  const routeProgress = follow ? lerp(follow.from??0,follow.to??1,travel) : 0;
   const routeHead = follow && rota && km>0 && t>=follow.start ? turf.along(rota,km*routeProgress,{units:'kilometers'}).geometry.coordinates as [number,number] : null;
   // Same clock and geometry as lineSliceAlong: no invented vessel position.
   const routeAhead = routeHead ? turf.along(rota,Math.min(km,km*routeProgress+.3),{units:'kilometers'}).geometry.coordinates : null;
   const routeBehind = routeHead ? turf.along(rota,Math.max(0,km*routeProgress-.3),{units:'kilometers'}).geometry.coordinates : null;
-  const heading = routeAhead && routeBehind ? turf.bearing(routeBehind,routeAhead) : 0;
-  const blend = follow ? progresso(t,follow.start,follow.start+1.25,'easeIO') : 0;
-  const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,routeProgress)} : baseCamera;
+  const heading = routeAhead && routeBehind ? (global ? smoothAngle([-1.8,-.9,0,.9,1.8].map(offset=>{
+    const at=Math.min(km,Math.max(0,km*routeProgress+offset));
+    return turf.bearing(turf.along(rota,Math.max(0,at-1.1),{units:'kilometers'}),turf.along(rota,Math.min(km,at+1.1),{units:'kilometers'}));
+  })) : turf.bearing(routeBehind,routeAhead)) : 0;
+  const blend = follow ? progresso(t,follow.start,follow.start+(global?2.2:1.25),'easeIO') : 0;
+  const c = routeHead && follow ? {...baseCamera,centro:[lerp(baseCamera.centro[0],routeHead[0],blend),lerp(baseCamera.centro[1],routeHead[1],blend)] as [number,number],zoom:lerp(baseCamera.zoom,follow.zoom,travel)} : baseCamera;
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
   const [pronto, setPronto] = useState(-1);
   const pend = useRef<number | null>(null);
@@ -228,6 +235,11 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       ['rota_l_', 'rota_c_'].forEach(id => map.setPaintProperty(`${id}${i}`, 'line-opacity', some));
       map.setPaintProperty(`rota_s_${i}`, 'line-opacity', neo ? 0 : .5 * some);
     });
+    if(global && follow && rota && km>0){
+      const from=follow.from??0, to=routeProgress;
+      const active=routeHead && to-from>.00001?turf.featureCollection([turf.lineSliceAlong(rota,km*from,km*to,{units:'kilometers'})]):turf.featureCollection([]);
+      (map.getSource('rota_ativa') as ML.GeoJSONSource).setData(active as any);
+    }
     map.once('idle', () => setPronto(frame));
     map.triggerRepaint();
   }, [map, frame]);
@@ -238,7 +250,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const veuA = VEUS[ka.veu || 'nenhum'], veuB = kb ? VEUS[kb.veu || 'nenhum'] : null;
   const desfoque = ((ka.veu === 'documento' ? kv : 0) + (kb?.veu === 'documento' ? 1 - kv : 0)) * 5;
 
-  const proj = (ll: [number, number]) => (map ? map.project(ll) : { x: -999, y: -999 });
+  const proj = (ll: [number, number]) => global ? {x:vw/2+(mercX(ll[0])-mercX(c.centro[0]))*512*2**c.zoom,y:vh/2+(mercY(ll[1])-mercY(c.centro[1]))*512*2**c.zoom} : (map ? map.project(ll) : { x: -999, y: -999 });
   const rots = (P.rotulos || []).filter(r => {if(vis(t,r.t0,r.t1)<=0)return false;if(!neo)return true;const p=proj(r.lonlat);return p.x>65&&p.x<vw-65&&p.y>65&&p.y<vh-100;});
   const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = neo ? 20 : r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
     return r.estilo === 'ponto' ? { x: p.x + 30, y: p.y - 28, w, h: 56 } : { x: p.x - w / 2, y: p.y - 24, w, h: 48 }; });
@@ -286,8 +298,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       <div data-atribuicao={[...vis_ds].sort().join(',')} data-meta="atribuicao" style={{ position: 'absolute', left: cx0[0], top: cx0[1], width: cx0[2], height: cx0[3],
         display: 'flex', alignItems: 'flex-end', fontFamily: P.tokens.fontes.dado, fontSize: pxc, lineHeight: `${lnc}px`, color: 'rgba(255,255,255,.82)',
         textShadow: '0 1px 3px #000, 0 0 8px rgba(0,0,0,.9)' }}><span style={{ display: 'block', width: '100%' }}>{atrib.join(' · ')}</span></div>
-      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width="26" height="42" viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-13,top:proj(routeHead).y-21,transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
-      {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:24,top:30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>TRAVESSIA ILUSTRATIVA</div>}
+      {routeHead && (follow?.ship ? <svg aria-label="Embarcação ilustrativa" width={global?20:26} height={global?32:42} viewBox="0 0 26 42" style={{position:'absolute',left:proj(routeHead).x-(global?10:13),top:proj(routeHead).y-(global?16:21),transform:`rotate(${heading}deg)`,filter:'drop-shadow(0 2px 3px #111)',pointerEvents:'none'}}><path d="M13 1 L23 12 V36 Q13 42 3 36 V12 Z" fill="#EDE8DE" stroke="#1D2326" strokeWidth="1.7"/><path d="M7 14 H19 V30 H7Z" fill="#D4473F"/><path d="M7 19 H19 M7 24 H19 M13 14 V30" stroke="#F5B7A9" strokeWidth=".8"/><rect x="7" y="32" width="12" height="4" fill="#545C61"/></svg> : <div style={{position:'absolute',left:proj(routeHead).x-5,top:proj(routeHead).y-5,width:10,height:10,borderRadius:'50%',background:'#F6E9DC',border:'2px solid #D4473F',boxShadow:'0 0 4px #000',pointerEvents:'none'}}/>)}
+      {neo && follow?.ship && routeHead && <div style={{position:'absolute',left:24,top:30,fontFamily:P.tokens.fontes.dado,fontSize:18,fontWeight:700,color:'#fff',textShadow:'0 1px 4px #000'}}>{global?'PERCURSO ILUSTRATIVO · TRECHO':'TRAVESSIA ILUSTRATIVA'}</div>}
       {rots.map((r, i) => {
         const v = vis(t, r.t0, r.t1), p = proj(r.lonlat), q = pos[i];
         if (r.estilo === 'ponto') return (<React.Fragment key={i}>
@@ -297,7 +309,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
             borderLeft: `6px solid ${P.tokens.cores.destaque}`, fontFamily: P.tokens.fontes.titulo, fontWeight: 900, fontSize: 30, color: '#fff',
             textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 18px rgba(0,0,0,.5)' }}>{r.nome}</div></React.Fragment>);
         return <div key={i} data-rotulo="area" style={{ position: 'absolute', left: q.x, top: q.y, width: q.w, textAlign: 'center', opacity: v,
-          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: 800, fontSize: neo ? 20 : r.estilo === 'oceano' ? 30 : 32,
+          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: global ? 700 : 800, fontSize: neo ? 20 : r.estilo === 'oceano' ? 30 : 32,
           letterSpacing: neo ? 1.2 : r.estilo === 'oceano' ? 7 : 2, color: r.estilo === 'lago' ? '#E6F7FF' : '#F4F1EA', textTransform: 'uppercase',
           textShadow: '0 0 10px rgba(0,0,0,.9), 0 2px 14px rgba(0,0,0,.95)', whiteSpace: 'nowrap', fontStyle: r.estilo === 'oceano' ? 'italic' : undefined }}>{r.nome}</div>;
       })}

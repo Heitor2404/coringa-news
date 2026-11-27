@@ -13,6 +13,7 @@ export type PalcoKey = {
   t: number;                         // a partir deste instante (s)
   tipo: 'mapa' | 'tecnico' | 'mesa' | 'prova';
   camera?: { centro: [number, number]; zoom: number } | { foco: [number, number]; ancora: [number, number]; zoom: number };
+  camera_curve?: 'cruise'; // opt-in continuous editorial movement
   dur_camera?: number;               // tempo da mudança de escala (s); 0 = corte
   deriva?: number;                   // zoom/s durante o beat (movimento lento e contínuo)
   veu?: string;                      // véu da composição (legibilidade sem cobrir o território)
@@ -34,7 +35,8 @@ export type FormatoProps = {
   composicoes?: Record<string, { quadro: [number, number, number, number] | null; veu?: string }>;
   creditos?: { datasets: Record<string, string>; caixa: [number, number, number, number] };
   tecnico?: { pais?: string };
-  neo_follow?: {start:number;end:number;zoom:number;ship?:boolean}; // illustrative route, opt-in private benchmark
+  neo_follow?: {start:number;end:number;zoom:number;ship?:boolean;from?:number;to?:number}; // illustrative route, opt-in private benchmark
+  neo_global_style?: boolean;
   neo_route_overview?: boolean;
   neo_benchmark?: boolean; // private native viewport; not a production preset
   documentary_layout?: boolean;      // private native map bridge, no crop

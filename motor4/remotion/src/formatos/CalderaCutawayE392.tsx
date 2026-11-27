@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {ACutawayMaterial} from './AtlasAArtKit';
+import {fitCaptionLines} from './CaptionFitE392';
 type Board={id:string;index:number;time:number;state:Record<string,string>;camera:{scale:number;tx:number;ty:number};focus:string[];caption:{w:string;hl:boolean}[]};
 const gold='#E9B949',white='#F5F5F5';
 // Original stylized cross sections: reviewed USGS A/B establish topology,
@@ -21,9 +22,12 @@ export const CalderaCutawayE392:React.FC<{board:Board;private_review_only:boolea
  const ref=React.useRef<SVGSVGElement>(null);
  React.useLayoutEffect(()=>{if(!probe||!ref.current)return;const rows=Array.from(ref.current.querySelectorAll<SVGGraphicsElement>('[data-safe-text]')).map(e=>{const q=e.getBBox(),role=e.getAttribute('data-safe-text');return {role,text:e.textContent,x:q.x,y:q.y,w:q.width,h:q.height,fit:q.x>=32&&q.x+q.width<=454&&q.y>=145&&q.y+q.height<=690}});const cap=rows.filter(r=>r.role==='caption').map(r=>r.text).join(' ');const labels=rows.filter(r=>r.role==='label');const collisions=rows.some((r,i)=>rows.slice(i+1).some(s=>r.x<s.x+s.w&&s.x<r.x+r.w&&r.y<s.y+s.h&&s.y<r.y+r.h));console.log('E392_BOARD '+JSON.stringify({index:b.index,state:b.state,focus:b.focus,rows,caption:cap,fit:rows.every(r=>r.fit)&&!collisions&&cap===b.caption.map(w=>w.w).join(' '),collisions,labels}));},[b,probe]);
  const text=(s:string,x:number,y:number,size:number,color=white,weight=700,role='title')=><text data-safe-text={role} x={x} y={y} fontSize={size} fill={color} fontWeight={weight}>{s}</text>;
- // Keep the measured words, balance a two-line group rather than orphaning
- // its last short word. The browser measures actual painted bounds.
- let lines=[b.caption];if(b.caption.map(w=>w.w).join(' ').length>22&&b.caption.length>1){let k=1,best=1e9;for(let i=1;i<b.caption.length;i++){const a=b.caption.slice(0,i).map(w=>w.w).join(' ').length,z=b.caption.slice(i).map(w=>w.w).join(' ').length,cost=Math.max(a,z)+Math.abs(a-z)*.35;if(cost<best){best=cost;k=i;}}lines=[b.caption.slice(0,k),b.caption.slice(k)];}
+ // Measure the actual typeface at the rendered size, not character count.
+ // Leave a small margin for SVG glyph overhang; the existing bbox gate is unchanged.
+ const ctx=typeof document==='undefined'?null:document.createElement('canvas').getContext('2d');
+ if(ctx)ctx.font='900 29px Inter,Arial,sans-serif';
+ const width=(s:string)=>ctx?ctx.measureText(s).width:s.length*29;
+ const lines=fitCaptionLines(b.caption,width,410);
  const top=lowered?post:pre,shape=rock(top);
  const strata=['#827360','#5C5146','#9F8669','#51443B','#71604F','#483B35','#866B53','#392F2B'];
  return <AbsoluteFill style={{background:'#000'}}>

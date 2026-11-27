@@ -61,9 +61,9 @@ jobs:
           detail='; '.join(stages)[:400] if stages else 'Etapa não identificada; conferir execução.'
           message=f"CORINGA · {label}\n{e['GITHUB_WORKFLOW']}\nEtapa: {detail}\n"
           if 'success' in delivery:
-              message+='O vídeo já foi entregue; houve falha posterior.\n'
+              message+='O material visual já foi entregue; houve falha posterior.\n'
           elif delivery:
-              message+='Entrega do vídeo não confirmada.\n'
+              message+='Entrega do material visual não confirmada; consulte o recibo.\n'
           message+=f"Execução: {url}\nNenhuma publicação em redes."
           try:
               token=e.get('TELEGRAM_BOT_TOKEN','')

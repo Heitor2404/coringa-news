@@ -1,0 +1,63 @@
+{
+  "schema": "coringa.causal.source_panels.private.v1",
+  "status": "PREPARATION_PENDING_RENDER",
+  "publish": false,
+  "source": {
+    "provider": "USGS Hawaiian Volcano Observatory",
+    "sha256": "f593c35a9b0124a64329fb7cc7d4c992e9d2f11738eeb350304a9987b870d8d2",
+    "review": "revisoes/e323-45864804065-1/fonte-03.jpg",
+    "observed": "Painéis A e B representam antes e imediatamente depois do colapso de 2018. C e D são fases posteriores e ficam fora da explicação."
+  },
+  "identity": "TAIWAN_CLEAN",
+  "source_scale": "illustrative_not_to_scale",
+  "timing": "original measured captions; retain real footage between panels",
+  "stages": [
+    {
+      "id": "before",
+      "panel": "A",
+      "bbox": [
+        0,
+        0,
+        0.49,
+        0.448
+      ],
+      "start": 53.86666666666667,
+      "end": 57.233333333333334,
+      "label": "ANTES DO COLAPSO",
+      "focus": "reservatório de magma",
+      "speech_anchor": 56.014,
+      "method": "single enlarged source panel; progressive highlight, no geometry morph"
+    },
+    {
+      "id": "collapse_record",
+      "start": 57.233333333333334,
+      "end": 64.53333333333333,
+      "method": "preserve original real footage; review relevance and size"
+    },
+    {
+      "id": "after",
+      "panel": "B",
+      "bbox": [
+        0.51,
+        0,
+        1,
+        0.448
+      ],
+      "start": 64.53333333333333,
+      "end": 68.13333333333334,
+      "label": "APÓS O COLAPSO",
+      "focus": "blocos rebaixados e espaço vazio",
+      "speech_anchor": 64.603,
+      "method": "single enlarged source panel, highlight and Portuguese explanatory labels; no invented dynamics"
+    }
+  ],
+  "constraints": [
+    "No inferred time scale or reservoir volume",
+    "No invented geometry or mechanical simulation",
+    "No crop of explanatory source labels without preserving meaning",
+    "Preserve source rights and manifest",
+    "Portuguese labels, fixed Taiwan lower captions",
+    "All visual proof to private Telegram"
+  ],
+  "next": "Implement generic source-backed staged diagram in existing compositor; compare actual render, not just storyboard. Consider continuous sequence around 56–62s only after verifying placement of real evidence and narration."
+}

@@ -59,6 +59,7 @@ export type FilmShot = {
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
+  documentary_clean_credit?: {placement:'POST_DESCRIPTION';private_only:true;credit:string;context_label?:string}; // E387
   documentary_taiwan_typography_trial?: boolean; // E386 private A/B only
   documentary_composition_v2?: boolean; // E328 private verified preflight
   documentary_observed_viewport_trial?: boolean; // E337 private exact-viewport comparison
@@ -509,17 +510,42 @@ const existingDocumentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:stri
 // E386: typography only, no change to source geometry or published safety profile.
 const TAIWAN_TEXT:DocSlots={brand:[64,300,520,342],section:[64,370,1008,440],
   subtitle:[64,1190,906,1340],source:[64,1350,906,1438]};
+const CLEAN_TEXT:DocSlots={brand:[66,300,520,342],section:[66,370,1008,440],
+  subtitle:[66,1190,905,1340],source:[66,1350,905,1438]};
+const cleanCredit=(shot:FilmShot)=>Boolean(shot.documentary_clean_credit);
 const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=existingDocumentaryLayout(shot);
   if(!shot.documentary_taiwan_typography_trial)return base;
   if(shot.documentary_reported_fact||shot.documentary_static_reveal?.detail_zoom||shot.documentary_comparison_panel)
     return {...base,taiwanTrialBlocked:'SPECIALIZED_LANE'};
+  if(cleanCredit(shot)){
+    const slots=CLEAN_TEXT;
+    const rects=[slots.brand,slots.section,slots.subtitle,[66,346,206,351]];
+    const dims=shot.source_dimensions;
+    // Reflow entire landscape source between header and subtitle, no crop.
+    // For unknown review crops restore all source pixels; observed crop
+    // stays intact only when its protected region and viewport fit.
+    if(dims&&dims.every(v=>Number.isFinite(v)&&v>0)&&dims[0]>dims[1]){
+      if(base.centeredFit==='cover'&&base.roiStatus==='OBSERVED'){
+        if(rects.some(r=>intersects(r,base.media)))return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
+        return {...base,slots,safeTrialStatus:'E387_TAIWAN_CLEAN_PENDING'};
+      }
+      const height=Math.min(724,1080*dims[1]/dims[0]);
+      const stage=[0,454,1080,454+height];
+      const media=containPixels(stage,dims);
+      if(rects.some(r=>intersects(r,media)))throw new Error('E387-LANDSCAPE-GEOMETRY');
+      return {...base,mode:'CENTERED_INTEGRAL',slots,media,protected:[media],roiStatus:'FULL_SOURCE_PROTECTED',
+        separateStage:undefined,centeredStage:stage,centeredFit:'contain',safeTrialStatus:'E387_TAIWAN_CLEAN_PENDING'};
+    }
+    if(rects.some(r=>base.protected.some(b=>intersects(r,b))))return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
+    return {...base,slots,safeTrialStatus:'E387_TAIWAN_CLEAN_PENDING'};
+  }
   const rects=[TAIWAN_TEXT.brand,TAIWAN_TEXT.section,TAIWAN_TEXT.subtitle,TAIWAN_TEXT.source,[64,346,204,351]];
   if(rects.some(r=>base.protected.some(b=>intersects(r,b))))
     return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
   return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
 };
-const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>layout.safeTrialStatus==='E386_TAIWAN_UI_REVIEW_PENDING';
+const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>['E386_TAIWAN_UI_REVIEW_PENDING','E387_TAIWAN_CLEAN_PENDING'].includes(layout.safeTrialStatus||'');
 // E309: bracket the observed static detail, never shade or paint its pixels.
  // Project through the ACTUAL selected photo viewport, including crop fallback.
 const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
@@ -1108,7 +1134,10 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       typeof reveal.label==='string'&&reveal.label.length<=34&&!documentaryOverlay(shot,slots.section)&&Boolean(detailScreenBox(detailShot,layout));
     const fact=shot.documentary_reported_fact;
     const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
-    const section=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
+    const clean=layout.safeTrialStatus==='E387_TAIWAN_CLEAN_PENDING';
+    const subjectSection=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
+    const section=clean&&shot.documentary_clean_credit?.context_label?
+      [subjectSection,shot.documentary_clean_credit.context_label].filter(Boolean).join(' · '):subjectSection;
     const brandOverlay=documentaryOverlay(shot,slots.brand),taiwan=taiwanText(layout);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#000000',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
@@ -1124,7 +1153,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       </div>
       <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+(taiwan?4:1),width:taiwan?140:130,height:taiwan?5:3,background:GOLD}}/>
       {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
-      <MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>
+      {!clean&&<MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>}
     </AbsoluteFill>;
   }
   if(shot.type==='scene_graph') {
@@ -1240,6 +1269,14 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
   if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
+  for(const s of shots.filter(s=>s.documentary_clean_credit)){
+    const d=s.documentary_clean_credit!;
+    if(!preview||!private_review_only||!documentary_media_preview||!s.documentary_taiwan_typography_trial||
+       !realMedia(s)||d.private_only!==true||d.placement!=='POST_DESCRIPTION'||!d.credit||
+       d.credit!==(s.source_display||s.source)||s.documentary_reported_fact||s.documentary_static_reveal||s.documentary_comparison_panel||
+       (s.evidence==='representative'&&!d.context_label))
+      throw new Error('E387-CREDIT-CONTRACT');
+  }
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');

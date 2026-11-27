@@ -59,6 +59,7 @@ export type FilmShot = {
   documentary_comparison_panel?: {schema:string;publish:boolean;criterion:string;scale_comparable:boolean;at:number;panels:{asset:string;sha256:string;crop:number[];label:string;credit:string;dimensions:number[]}[]};
   documentary_integral_required?: boolean; // preflight explicit context protection
   documentary_atlas_layout?: boolean; // private ATLAS proof of native editorial reflow
+  documentary_taiwan_typography_trial?: boolean; // E386 private A/B only
   documentary_composition_v2?: boolean; // E328 private verified preflight
   documentary_observed_viewport_trial?: boolean; // E337 private exact-viewport comparison
   documentary_balance_trial?: boolean; // E340 private upper-center composition
@@ -481,7 +482,7 @@ const reportedFactLayout=(shot:FilmShot,layout:DocLayout&{safeTrialStatus?:strin
   if(!fitsEvidence(slots,[Array.from(layout.media)])||docRects(slots).some((a,i)=>docRects(slots).slice(i+1).some(b=>intersects(a,b))))return null;
   return {...layout,slots,safeTrialStatus:'E342_REPORTED_FACT_LANE'};
 };
-const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
+const existingDocumentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=baseDocumentaryLayout(shot);
   if(shot.documentary_composition_v2){
     const baseline=compositionV2(shot,base);
@@ -505,6 +506,20 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   }
   return {...base,safeTrialStatus:'BLOCKED_EVIDENCE'};
 };
+// E386: typography only, no change to source geometry or published safety profile.
+const TAIWAN_TEXT:DocSlots={brand:[64,300,520,342],section:[64,370,1008,440],
+  subtitle:[64,1190,906,1340],source:[64,1350,906,1438]};
+const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
+  const base=existingDocumentaryLayout(shot);
+  if(!shot.documentary_taiwan_typography_trial)return base;
+  if(shot.documentary_reported_fact||shot.documentary_static_reveal?.detail_zoom||shot.documentary_comparison_panel)
+    return {...base,safeTrialStatus:'E386_SPECIALIZED_LANE_PENDING'};
+  const rects=[TAIWAN_TEXT.brand,TAIWAN_TEXT.section,TAIWAN_TEXT.subtitle,TAIWAN_TEXT.source,[64,346,204,351]];
+  if(rects.some(r=>base.protected.some(b=>intersects(r,b))))
+    return {...base,safeTrialStatus:'E386_PROTECTED_REGION_PENDING'};
+  return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
+};
+const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>layout.safeTrialStatus==='E386_TAIWAN_UI_REVIEW_PENDING';
 // E309: bracket the observed static detail, never shade or paint its pixels.
  // Project through the ACTUAL selected photo viewport, including crop fallback.
 const detailScreenBox=(shot:FilmShot,layout:DocLayout):number[]|null=>{
@@ -550,7 +565,8 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
   const host=React.useRef<HTMLDivElement>(null),inner=React.useRef<HTMLDivElement>(null);
   const measuredLayout=layoutOverride??documentaryLayout(shot);
   const fact=role==='section'&&measuredLayout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&text===shot.documentary_reported_fact?.value;
-  const size=role==='subtitle'?[52,36]:role==='source'?[30,24]:fact?[58,38]:[30,22];
+  const taiwan=taiwanText(measuredLayout);
+  const size=taiwan?(role==='subtitle'?[63,46]:role==='source'?[21,19]:[37,28]):role==='subtitle'?[52,36]:role==='source'?[30,24]:fact?[58,38]:[30,22];
   const overlaps=(r:readonly number[])=>layoutOverride?layoutOverride.protected.some(b=>intersects(b,r)):documentaryOverlay(shot,r);
   const overlay=overlaps(rect);
   const signature=rect.join(',')+'|'+measuredLayout.mode;
@@ -581,7 +597,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     // Soft local contrast for full-height portrait, without a full-width
     // opaque panel; stronger local contrast stays for other layouts.
     const portraitReview=layout.mode==='PORTRAIT_REVIEW';
-    e.style.background=actualOverlay?(portraitReview?'linear-gradient(90deg,rgba(4,11,20,.78),rgba(4,11,20,.62))':'rgba(4,11,20,.84)'):'transparent';
+    e.style.background=taiwan&&role==='section'?'rgba(6,12,22,.84)':actualOverlay?(portraitReview?'linear-gradient(90deg,rgba(4,11,20,.78),rgba(4,11,20,.62))':'rgba(4,11,20,.84)'):'transparent';
     e.style.textShadow=actualOverlay?'0 1px 3px #000':'none';
     h.dataset.docOverlay=actualOverlay?'review':'none';
     h.dataset.roiStatus=layout.roiStatus;
@@ -595,9 +611,11 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     data-doc-overlay={overlay?'review':'none'} style={{...rectStyle(rect),display:'flex',alignItems:'center',
       justifyContent:'flex-start',textAlign:'left',pointerEvents:'none'}}>
     <div ref={inner} style={{width:'fit-content',maxWidth:'100%',boxSizing:'border-box',fontFamily:'Inter,Arial,sans-serif',
-      fontWeight:role==='subtitle'?850:role==='section'?800:500,fontSize:size[0],lineHeight:role==='source'?1.12:role==='section'?1:1.08,
+      fontWeight:role==='subtitle'?(taiwan?900:850):role==='section'?(taiwan?900:800):500,fontSize:size[0],lineHeight:role==='source'?1.12:role==='section'?1:1.08,
+      letterSpacing:taiwan&&role==='subtitle'?-1.5:undefined,
+      borderLeft:taiwan&&role==='section'?'6px solid '+GOLD:undefined,
       color:role==='source'?'#DCE3E9':fact?GOLD:OFF_WHITE,whiteSpace:'normal',overflowWrap:'anywhere',
-      padding:overlay?(role==='section'?'2px 8px':'4px 8px'):'0',background:overlay?'rgba(4,11,20,.84)':'transparent',
+      padding:taiwan&&role==='section'?'10px 17px':overlay?(role==='section'?'2px 8px':'4px 8px'):'0',background:taiwan&&role==='section'?'rgba(6,12,22,.84)':overlay?'rgba(4,11,20,.84)':'transparent',
       borderRadius:overlay?4:0,textShadow:overlay?'0 1px 3px #000':'none'}}>
       {children??text}
     </div>
@@ -1091,7 +1109,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     const fact=shot.documentary_reported_fact;
     const showFact=layout.safeTrialStatus==='E342_REPORTED_FACT_LANE'&&fact&&now-shot.start>=fact.at;
     const section=showFact?fact.value:(showStatic?reveal?.label:showObserved?observed?.label:shot.lead)?.toUpperCase();
-    const brandOverlay=documentaryOverlay(shot,slots.brand);
+    const brandOverlay=documentaryOverlay(shot,slots.brand),taiwan=taiwanText(layout);
     return <AbsoluteFill data-layout-review="MEDIA_FIRST_REVIEW_V5" data-documentary-layout={layout.mode} data-roi-status={layout.roiStatus} style={{background:'#000000',overflow:'hidden'}}>
       {signatureHasVisibleArea(layout.media)&&<SignatureBackground/>}
       <Body shot={shot} p={p} t={now-shot.start} mediaFirst/>
@@ -1100,11 +1118,11 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
       {reveal?(showStatic&&<ObservedDetail shot={detailShot} layout={layout} t={now-shot.start-reveal.at+.3} probe={textProbe}/>):<ObservedDetail shot={shot} layout={layout} t={now-shot.start} probe={textProbe}/>}
       {showStatic&&<div data-static-fact-reveal={reveal?.label} style={{display:'none'}}/>}
       <div style={{...rectStyle(slots.brand),display:'flex',alignItems:'center',fontFamily:'Inter,Arial,sans-serif',
-        fontSize:30,fontWeight:850,color:OFF_WHITE,letterSpacing:1,
+        fontSize:taiwan?28:30,fontWeight:taiwan?800:850,color:OFF_WHITE,letterSpacing:taiwan?2.1:1,
         background:brandOverlay?'rgba(4,11,20,.84)':'transparent'}}>
         CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span>
       </div>
-      <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+1,width:130,height:3,background:GOLD}}/>
+      <div style={{position:'absolute',left:slots.brand[0],top:slots.brand[3]+(taiwan?4:1),width:taiwan?140:130,height:taiwan?5:3,background:GOLD}}/>
       {section&&<MeasuredDocText role="section" shot={shot} rect={slots.section} text={section} probe={textProbe}/>}
       <MeasuredDocText role="source" shot={shot} rect={slots.source} text={showFact?credit+" · Dado: "+fact.authority+" · "+fact.scope:credit} probe={textProbe}/>
     </AbsoluteFill>;
@@ -1221,6 +1239,7 @@ export const FilmeEditorial: React.FC<FilmProps> = ({shots,duracao,preview=true,
   const frame=useCurrentFrame(),fps=useVideoConfig().fps,t=frame/fps;
   // E211: check actual resolved renderer on every input, including cached or manually authored props.
   const legacyQA=animation_policy_mode===animationPolicy.legacy_mode;
+  if(shots.some(s=>s.documentary_taiwan_typography_trial)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA||reference_style_preview||portrait_experiment||shots.some(s=>s.documentary_taiwan_typography_trial&&!realMedia(s))))throw new Error('E386-PRIVATE-REAL-MEDIA');
   if(documentary_text_probe&&(!preview||!private_review_only))throw new Error('E290-TEXT-PROBE-PRIVATE');
   if(shots.some(s=>s.documentary_static_reveal?.detail_zoom)&&(!preview||!private_review_only||legacyQA||reference_style_preview||portrait_experiment))throw new Error('E325-DETAIL-PRIVATE');
   if(shots.some(s=>s.documentary_comparison_panel)&&(!preview||!private_review_only||!documentary_media_preview||legacyQA))throw new Error('E312-PRIVATE-PAIR');

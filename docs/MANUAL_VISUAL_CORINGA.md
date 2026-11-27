@@ -38,3 +38,5 @@ E395 reprovada esteticamente pelo proprietário. Adotar engenharia reversa visua
 Adendo §496: não usar estética artesanal/massinha nem simplicidade de diagramas exclusivamente mecânicos como referência visual principal. A curadoria deve priorizar animação digital documental sofisticada e multitemática; referências técnicas podem auxiliar a física sem definir acabamento.
 
 Adendo §497: proprietário aprovou neo / How One Ship Caused a Global Traffic Jam como excelente referência e rejeitou nova seleção Vox. Neo é referência artística prioritária da E396; buscar composição documental imersiva e continuidade espacial com recursos próprios, sem copiar ativos/áudio/branding. Preservar identidade Taiwan e adequação vertical. Medir referência real antes de novo render.
+
+Adendo §498: Neo é referência de técnicas e qualidade, não único padrão multitemático. Benchmark visual neutro com arte/dados próprios antes de adaptar a identidade Taiwan; depois reflow vertical, não crop cego. Priorizar mapa multiescala nítido, cenário dominante, câmera espacial, máscaras de prova real, motion semântico e montagem híbrida. Ver AUDITORIA_NEO_E396_20261127.md.

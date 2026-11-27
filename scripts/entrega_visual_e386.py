@@ -11,7 +11,7 @@ def main():
     def save():receipt.write_text(json.dumps(dict(publish=False,items=items,complete=False),indent=2))
     try:
         chat,_=T.chat_autorizado()
-        for id in sorted(set(x['id'] for x in p['frames'])):
+        for id in sorted({f.stem.removesuffix('-baseline').removesuffix('-taiwan') for f in ROOT.glob('*.png') if f.stem.endswith(('-baseline','-taiwan'))}):
             files=[ROOT/(id+s+'.png') for s in ('-baseline','-taiwan')];available=[f for f in files if f.exists()]
             if not available:continue
             sheet=Image.new('RGB',(540*len(available),1000),'#000000');d=ImageDraw.Draw(sheet)
@@ -26,8 +26,9 @@ def main():
             r=T._api('sendVideo',{'chat_id':chat,'caption':'E386 · '+f.stem+' · trecho narrado original · revisão privada · NÃO PUBLICAR','supports_streaming':'true'},('video',T._caber(f)))
             if not isinstance(r,dict) or not r.get('message_id'):raise ValueError('receipt missing')
             items.append(dict(file=f.name,sha256=hashlib.sha256(f.read_bytes()).hexdigest(),message_id=r['message_id']));save()
-        receipt.write_text(json.dumps(dict(publish=False,items=items,complete=len(items)==7),indent=2))
-        if len(items)!=7:raise ValueError('E386 incomplete evidence')
+        complete=len(items)==7 and len(p['frames'])==10 and not p['errors']
+        receipt.write_text(json.dumps(dict(publish=False,items=items,complete=complete),indent=2))
+        if not complete:raise ValueError('E386 incomplete evidence')
     except Exception:
         save();raise RuntimeError('E386 Telegram: entrega incompleta, conferir recibos antes de reenviar') from None
 if __name__=='__main__':main()

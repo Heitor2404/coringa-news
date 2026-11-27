@@ -248,7 +248,7 @@ const originalDocumentaryPixelRect=(shot:FilmShot):readonly number[]=>{
 };
 const intersects=(a:readonly number[],b:readonly number[])=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 type DocSlots={brand:readonly number[];section:readonly number[];subtitle:readonly number[];source:readonly number[]};
-type DocLayout={slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW'|'DETAIL_ZOOM_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
+type DocLayout={taiwanTrialBlocked?:'SPECIALIZED_LANE'|'PROTECTED_REGION';slots:DocSlots;mode:'STANDARD'|'UPPER_TEXT'|'LOWER_TEXT'|'MIDDLE_TEXT'|'PORTRAIT_REVIEW'|'INTEGRAL_PROTECTED'|'CENTERED_INTEGRAL'|'CENTERED_CROP_REVIEW'|'CENTERED_CROP_OBSERVED'|'PAIR_REVIEW'|'DETAIL_ZOOM_REVIEW';media:readonly number[];protected:readonly number[][];roiStatus:'OBSERVED'|'FULL_SOURCE_PROTECTED'|'UNKNOWN_REVIEW';separateStage?:readonly number[];centeredStage?:readonly number[];centeredFit?:'contain'|'cover'};
 const stackedDocSlots=(y:number):DocSlots=>({
   brand:[120,y,500,y+38],section:[120,y+43,760,y+93],
   subtitle:[120,y+101,760,y+191],source:[120,y+199,760,y+321],
@@ -513,10 +513,10 @@ const documentaryLayout=(shot:FilmShot):DocLayout&{safeTrialStatus?:string}=>{
   const base=existingDocumentaryLayout(shot);
   if(!shot.documentary_taiwan_typography_trial)return base;
   if(shot.documentary_reported_fact||shot.documentary_static_reveal?.detail_zoom||shot.documentary_comparison_panel)
-    return {...base,safeTrialStatus:'E386_SPECIALIZED_LANE_PENDING'};
+    return {...base,taiwanTrialBlocked:'SPECIALIZED_LANE'};
   const rects=[TAIWAN_TEXT.brand,TAIWAN_TEXT.section,TAIWAN_TEXT.subtitle,TAIWAN_TEXT.source,[64,346,204,351]];
   if(rects.some(r=>base.protected.some(b=>intersects(r,b))))
-    return {...base,safeTrialStatus:'E386_PROTECTED_REGION_PENDING'};
+    return {...base,taiwanTrialBlocked:'PROTECTED_REGION'};
   return {...base,slots:TAIWAN_TEXT,safeTrialStatus:'E386_TAIWAN_UI_REVIEW_PENDING'};
 };
 const taiwanText=(layout:DocLayout&{safeTrialStatus?:string})=>layout.safeTrialStatus==='E386_TAIWAN_UI_REVIEW_PENDING';
@@ -603,7 +603,7 @@ const MeasuredDocText:React.FC<{role:'section'|'subtitle'|'source';shot:FilmShot
     h.dataset.roiStatus=layout.roiStatus;
     const evidenceCollision=layout.protected.some(b=>intersects(painted,b));
     const bounds={width:e.scrollWidth,height:e.scrollHeight,slotWidth:h.clientWidth,slotHeight:h.clientHeight,actual,painted,
-      actualOverlay,evidenceCollision,unknownEvidenceOverlay:actualOverlay&&layout.roiStatus==='UNKNOWN_REVIEW',layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null};
+      actualOverlay,evidenceCollision,unknownEvidenceOverlay:actualOverlay&&layout.roiStatus==='UNKNOWN_REVIEW',layout:layout.mode,roiStatus:layout.roiStatus,protected:layout.protected,signatureBackground,centeredFit:layout.centeredFit??null,safeTrialStatus:layout.safeTrialStatus??null,taiwanTrialBlocked:layout.taiwanTrialBlocked??null};
     h.dataset.docFit=fits?'FIT':'OVERFLOW_REVIEW';h.dataset.docFont=String(font);
     if(probe)console.log('E290_TEXT '+JSON.stringify({shot:shot.id,role,font,fits,overlay,rect,media:layout.media,text,...bounds}));
   },[text,role,signature,overlay,shot.id,probe]);

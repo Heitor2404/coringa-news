@@ -51,3 +51,6 @@ Entrega Telegram: um MP4 vertical por prova via sendVideo, faixa AAC silenciosa 
 
 ### Regra de créditos — E396G
 Proprietário prefere crédito obrigatório fixo e discreto no canto inferior direito do vertical, base em ~91–92% da altura, alinhado à direita, sem caixa ou animação, mantendo texto completo e legível. Não trocar fontes cartográficas apenas para evitar crédito neste ciclo; não suprimir atribuição legal. Verificar sobreposição por UI e legibilidade em Reels/Shorts/TikTok antes de publicação; se houver conflito, reposicionar minimamente para área legível. Preservar ritmo E396F, um MP4 vertical via Telegram.
+
+### E397–E400 — animações explicativas
+Qualidade visual e clareza primeiro; complexidade só quando acrescenta valor. Benchmark neutro com técnicas de referência e ativos próprios/licenciados, marca Coringa depois do aceite. Neo: reconstrução espacial; Real Engineering: 2D/2.5D blueprint e mecanismos; Kurzgesagt: orgânico (auditoria de arquivo pendente); Vox: montagem/dados. Evitar modelagem industrial arbitrária neste ciclo. Validar em famílias diferentes, formato vertical, uma prova MP4 por caso, sem apagar capacidades existentes.

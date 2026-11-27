@@ -117,69 +117,123 @@ export const AttributedStat:React.FC<{value:string;scope:string;elapsed:number;r
   </div>;
 };
 
-/** E388.3: data-driven graphics inside FilmeEditorial's Taiwan shell.
- * Animation reveals geometry; it never changes the reported values. */
+/** E388.3.1: editorial pacing and full-size chart geometry, same Taiwan shell.
+ * Actual values remain fixed. Animation reveals known geometry, not measurements.
+ */
+const CW=839, CH=540;
+const ease=(p:number,at:number,len:number)=>1-(1-Math.max(0,Math.min(1,(p-at)/len)))**3;
+const fitFont=(s:string,n:number,w:number)=>Math.min(n,Math.floor(w/(Math.max(1,s.length)*.59)));
 export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({claim:c,p,probe})=>{
  const k=selectChart(c),v=c.values,q=qualifier(c),value=valueText(c);
- const progress=Math.min(1,Math.max(0,p*3)),reveal=1-(1-progress)**3;
  const ref=React.useRef<HTMLDivElement>(null);
  React.useLayoutEffect(()=>{
    if(!probe||!ref.current)return;
    const host=ref.current;
-   const rows=Array.from(host.querySelectorAll<HTMLElement>('[data-chart-text]')).map(e=>({text:e.textContent,fit:e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1}));
-   console.log('E3883_CHART '+JSON.stringify({kind:k,title:c.title,fixture:c.fixture,fit:rows.every(r=>r.fit),rows,rect:[66,454,905,1138]}));
- },[c,k,probe]);
- const line=(text:string,size:number,style:React.CSSProperties={})=><div data-chart-text style={{fontSize:size,lineHeight:1.15,fontWeight:800,overflowWrap:'break-word',...style}}>{text}</div>;
- const track=(f:number,rangeStart=0)=><div style={{height:28,position:'relative',background:'#292929',marginTop:24}}>
-   <div style={{position:'absolute',left:rangeStart*100+'%',width:(f-rangeStart)*100*reveal+'%',height:'100%',background:GOLD}}/>
- </div>;
- return <div ref={ref} data-editorial-chart={k} style={{position:'absolute',left:66,top:454,width:839,height:684,color:WHITE,fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>
-   {value&&line(value,value.length>14?68: value.length>10?90:130,{color:GOLD,letterSpacing:-3,marginBottom:28})}
-   {k==='range'&&<>
-     {line('INTERVALO DOCUMENTADO',30,{color:WHITE})}
-     {track(1,v[0].value/v[1].value)}
-     <div style={{display:'flex',justifyContent:'space-between',marginTop:18}}>{line('0',28)}{line(num(v[0].value),32,{color:GOLD})}{line(num(v[1].value)+' '+c.unit,32,{color:GOLD})}</div>
-     {line('Faixa aproximada, não medição em tempo real.',30,{marginTop:45,color:WHITE})}
-   </>}
-   {k==='proportion'&&<>
-     {line(c.relation==='lower'?'LIMITE INFERIOR':c.relation==='upper'?'LIMITE SUPERIOR':'PARCELA DO TOTAL',30)}
-     {track(v[0].value/c.denominator!)}
-     <div style={{display:'flex',justifyContent:'space-between',marginTop:18}}>{line('0%',28)}{line('100%',28)}</div>
-     {line(v[0].label,42,{marginTop:44})}
-   </>}
-   {k==='area'&&(()=>{
-     const a=v[0].value;
-     // Square with equal sides; reference grid only when it remains readable.
-     // Not an outline of the real territory.
-     const side=Math.sqrt(a),scale=350/Math.max(1,side);
-     const size=side*scale;
+   const svg=host.querySelector('svg')!;
+   const bounds=svg.getBoundingClientRect(),scale=bounds.width/CW;
+   const rows=Array.from(host.querySelectorAll<HTMLElement|SVGTextElement>('[data-chart-text]')).map(e=>{
+     if(e instanceof SVGTextElement){
+       const a=e.getBBox();
+       return {text:e.textContent,fit:a.x>=-.5&&a.y>=-.5&&a.x+a.width<=CW+.5&&a.y+a.height<=CH+.5,font:parseFloat(getComputedStyle(e).fontSize)};
+     }
+     return {text:e.textContent,fit:e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1,font:parseFloat(getComputedStyle(e).fontSize)};
+   });
+   const ink=svg.querySelector<SVGGElement>('[data-chart-ink]')!.getBBox();
+   const contentHeight=host.scrollHeight;
+   console.log('E3883_CHART '+JSON.stringify({kind:k,title:c.title,fixture:c.fixture,fit:rows.every(r=>r.fit)&&contentHeight<=host.clientHeight+1&&scale>0,rows,ink:{x:ink.x,y:ink.y,w:ink.width,h:ink.height},rect:[66,505,905,1170],contentHeight}));
+ },[c,k,probe,p]);
+ const t=(s:string,x:number,y:number,n:number,w:number,fill=WHITE,anchor:'start'|'middle'|'end'='start',weight=800)=>
+   <text data-chart-text x={x} y={y} fontSize={fitFont(s,n,w)} fill={fill} textAnchor={anchor} fontWeight={weight}>{s}</text>;
+ const main=(s:string,y=125,n=136)=>t(s,CW/2,y,n,CW-24,GOLD,'middle',900);
+ const a=ease(p,.02,.28),b=ease(p,.14,.34);
+ const track=(x:number,y:number,w:number,h:number)=> <rect x={x} y={y} width={w} height={h} rx="7" fill="#292929"/>;
+ return <div ref={ref} data-editorial-chart={k} style={{position:'absolute',left:66,top:505,width:CW,height:665,color:WHITE,fontFamily:'Inter,Arial,sans-serif',overflow:'hidden'}}>
+  <svg width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`} style={{display:'block'}}>
+   <g data-chart-ink>
+   {k==='range'&&(()=>{
+     const lo=v[0].value,hi=v[1].value;
+     const power=10**Math.floor(Math.log10(hi)),step=power/2;
+     const max=Math.ceil((hi*1.12)/step)*step;
+     const x=32,w=775,pos=(n:number)=>x+w*n/max,yy=320;
      return <>
-      <svg width="839" height="370" viewBox="0 0 839 370">
-       <rect x="12" y="8" width={size} height={size} fill={GOLD} fillOpacity={.18+.25*reveal} stroke={GOLD} strokeWidth="4"/>
-       {side<=10&&Array.from({length:Math.floor(side)},(_,i)=><React.Fragment key={i}><path d={`M ${12+(i+1)*scale} 8 V ${8+size} M 12 ${8+(i+1)*scale} H ${12+size}`} stroke={GOLD} strokeOpacity=".65" strokeWidth="2"/></React.Fragment>)}
-       <text x={Math.max(396,size+32)} y="72" fill={WHITE} fontSize="30" fontWeight="800">ÁREA EQUIVALENTE</text>
-       <text x={Math.max(396,size+32)} y="122" fill={GOLD} fontSize="42" fontWeight="900">{'≈ '+num(side)+' km'}</text>
-       <text x={Math.max(396,size+32)} y="160" fill={WHITE} fontSize="26">de cada lado</text>
-       <text x={Math.max(396,size+32)} y="228" fill={WHITE} fontSize="24">Quadrado de referência</text>
-       <text x={Math.max(396,size+32)} y="260" fill={WHITE} fontSize="24">Não é mapa geográfico</text>
-      </svg>
+      {main(value,132,133)}
+      {t('FAIXA DOCUMENTADA',CW/2,212,37,CW-40,WHITE,'middle')}
+      {track(x,yy,w,40)}
+      <rect x={pos(lo)} y={yy} width={Math.max(0,(pos(hi)-pos(lo))*b)} height="40" rx="3" fill={GOLD}/>
+      {[lo,hi].map((n,i)=><g key={i}><path d={`M ${pos(n)} ${yy-8} V ${yy+56}`} stroke={GOLD} strokeWidth="4"/></g>)}
+      {t(num(lo),pos(lo)-10,yy-24,49,Math.max(110,pos(lo)-x),GOLD,'end')}
+      {t(num(hi),Math.min(805,pos(hi)+10),yy+109,49,155,GOLD,'end')}
+      {t('0',x,yy+103,32,110,WHITE)}
+      {t(num(max)+' '+c.unit,807,yy+162,29,210,WHITE,'end')}
+      {t('Intervalo aproximado · não é medição ao vivo',32,515,30,775,WHITE)}
      </>;
    })()}
-   {k==='bars'&&v.map((item,i)=><div key={i} style={{marginBottom:24}}>
-     <div style={{display:'flex',justifyContent:'space-between',gap:12}}>{line(item.label,32,{maxWidth:560})}{line(q+num(item.value)+' '+c.unit,36,{color:GOLD})}</div>
-     {track(item.value/Math.max(...v.map(x=>x.value)))}
-   </div>)}
-   {k==='timeline'&&<>
-     {line('ORDEM CRONOLÓGICA',28)}
-     <div style={{borderLeft:'4px solid '+GOLD,margin:'36px 0 18px 14px',paddingLeft:28}}>
-      {c.events!.map((e,i)=><div key={e.date} style={{marginBottom:26,opacity:.6+.4*reveal}}>
-       {line(e.date.split('-').reverse().join('/'),36,{color:GOLD})}{line(e.label,40)}
-      </div>)}
-     </div>
-     {line('Espaçamento esquemático, não proporcional ao tempo.',26)}
+   {k==='proportion'&&(()=>{
+      const ratio=v[0].value/c.denominator!,x=32,w=775,y=270;
+      const bound=c.relation==='lower'||c.relation==='upper';
+      return <>
+       {main(value,154,180)}
+       {t(c.relation==='lower'?'LIMITE INFERIOR':c.relation==='upper'?'LIMITE SUPERIOR':'PARCELA DO TOTAL',CW/2,218,38,790,WHITE,'middle')}
+       {track(x,y,w,82)}
+       <defs><pattern id="e3883-bound" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M-4 4L4 -4M0 18L18 0M14 22L22 14" stroke={GOLD} strokeOpacity=".48" strokeWidth="3"/></pattern></defs>
+       {c.relation!=='upper'&&<rect x={x} y={y} width={w*ratio*b} height="82" rx="5" fill={GOLD}/>}
+       {bound&&<rect x={c.relation==='lower'?x+w*ratio:x} y={y} width={w*(c.relation==='lower'?1-ratio:ratio)} height="82" fill="url(#e3883-bound)" opacity={a}/>}
+       {bound&&<path d={`M${x+w*ratio} ${y-12}V${y+94}`} stroke={GOLD} strokeWidth="4"/>}
+       {t('0%',x,397,32,110)}{t('100%',807,397,32,125,WHITE,'end')}
+       {t(v[0].label, CW/2,470,48,790,WHITE,'middle')}
+       {bound&&t('Hachura: parcela não determinada',CW/2,520,30,790,WHITE,'middle')}
+      </>;
+   })()}
+   {k==='area'&&(()=>{
+      const side=Math.sqrt(v[0].value),size=365,x=36,y=164,scale=size/side;
+      return <>
+       {main(value,120,134)}
+       <rect x={x} y={y} width={size} height={size} fill={GOLD} fillOpacity={.13+.25*b} stroke={GOLD} strokeWidth="5"/>
+       {side<=10&&Array.from({length:Math.floor(side)},(_,j)=><path key={j} d={`M ${x+(j+1)*scale} ${y} V ${y+size} M ${x} ${y+(j+1)*scale} H ${x+size}`} stroke={GOLD} strokeOpacity=".5" strokeWidth="2"/>)}
+       <path d={`M${x} ${y-11}H${x+size}`} stroke={GOLD} strokeWidth="3"/>
+       {t('ÁREA EQUIVALENTE',438,244,34,380)}
+       {t('≈ '+num(side)+' km',438,310,55,380,GOLD)}
+       {t('de cada lado',438,358,39,380)}
+       {t('Quadrado ilustrativo',438,445,31,380)}
+       {t('Não é um mapa',438,486,31,380)}
+      </>;
+   })()}
+   {k==='bars'&&v.map((item,j)=>{
+     const gap=v.length===2?235:172,y=24+j*gap,w=775,ratio=item.value/Math.max(...v.map(z=>z.value));
+     const draw=ease(p,.04+j*.12,.32);
+     return <g key={j}>
+      {t(item.label,32,y+51,53,510)}
+      {t(q+num(item.value)+' '+c.unit,807,y+51,57,258,GOLD,'end',900)}
+      {track(32,y+82,w,51)}
+      <rect x="32" y={y+82} width={w*ratio*draw} height="51" rx="6" fill={GOLD}/>
+     </g>;
+   })}
+   {k==='timeline'&&(()=>{
+      const ev=c.events!,spacing=ev.length===2?235:164;
+      return <>
+       <path d={`M66 66 V${66+(ev.length-1)*spacing}`} stroke="#414141" strokeWidth="5"/>
+       <path d={`M66 66 V${66+(ev.length-1)*spacing*ease(p,.06,.58)}`} stroke={GOLD} strokeWidth="7"/>
+       {ev.map((e,j)=>{
+        const y=66+j*spacing,show=ease(p,.02+j*.18,.22);
+        return <g key={e.date} opacity={.38+.62*show}>
+         <circle cx="66" cy={y} r="22" fill="#000" stroke={GOLD} strokeWidth="6"/>
+         <circle cx="66" cy={y} r="10" fill={GOLD}/>
+         {t(e.date.split('-').reverse().join('/'),126,y+12,58,690,GOLD)}
+         {t(e.label,126,y+77,62,690)}
+        </g>;
+       })}
+       {t('Ordem dos eventos · sem escala de duração',32,527,30,775)}
+      </>;
+   })()}
+   {k==='number'&&<>
+      <path d="M32 66H807 M32 458H807" stroke="#333" strokeWidth="2"/>
+      <g opacity={.72+.28*a} transform={`translate(0 ${(1-a)*18})`}>{main(value,265,195)}</g>
+      <rect x={CW/2-120*b} y="309" width={240*b} height="7" fill={GOLD}/>
+      {t(v[0].label,CW/2,403,54,790,WHITE,'middle')}
    </>}
-   {k==='number'&&line(v[0].label,48)}
-   {line(c.scope,30,{marginTop:22,color:'#D1D1D1',fontWeight:600})}
-   {c.fixture&&line('DADOS FICTÍCIOS · TESTE VISUAL',24,{marginTop:12,color:GOLD})}
+   </g>
+  </svg>
+  <div data-chart-text style={{fontSize:30,lineHeight:1.12,fontWeight:600,color:'#D1D1D1',marginTop:14,overflowWrap:'break-word'}}>{c.scope}</div>
+  {c.fixture&&<div data-chart-text style={{fontSize:25,lineHeight:1.12,fontWeight:800,marginTop:8,color:GOLD}}>DADOS FICTÍCIOS · TESTE VISUAL</div>}
  </div>;
 };

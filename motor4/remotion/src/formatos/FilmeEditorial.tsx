@@ -1147,7 +1147,7 @@ const FilmShotView: React.FC<{shot:FilmShot;total:number;index:number;subtitleMo
     return <AbsoluteFill data-layout-review="E3883_TAIWAN_CHART_PENDING" style={{background:'#000',overflow:'hidden',fontFamily:'Inter,Arial,sans-serif'}}>
       <div style={{...rectStyle(CLEAN_TEXT.brand),display:'flex',alignItems:'center',fontSize:28,fontWeight:800,color:OFF_WHITE,letterSpacing:2.1}}>CORINGA <span style={{color:GOLD,marginLeft:7}}>EXPLICA</span></div>
       <div style={{position:'absolute',left:66,top:346,width:140,height:5,background:GOLD}}/>
-      <div style={{position:'absolute',left:66,top:370,maxWidth:839,fontSize:34,fontWeight:900,color:OFF_WHITE,borderLeft:'6px solid '+GOLD,padding:'9px 16px',background:'#161616',lineHeight:1.1}}>{claim.title}</div>
+      <div style={{position:'absolute',left:66,top:410,maxWidth:839,fontSize:39,fontWeight:900,color:OFF_WHITE,borderLeft:'6px solid '+GOLD,padding:'9px 16px',background:'#161616',lineHeight:1.1}}>{claim.title}</div>
       <EditorialChart claim={claim} p={p} probe={textProbe}/>
       {!subtitleMode&&<div style={{...rectStyle(CLEAN_TEXT.subtitle),display:'flex',alignItems:'center',fontSize:60,lineHeight:1.08,fontWeight:900,color:OFF_WHITE,letterSpacing:-1.5}}>{shot.headline}</div>}
     </AbsoluteFill>;

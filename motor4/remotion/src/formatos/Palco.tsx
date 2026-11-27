@@ -28,17 +28,17 @@ export const mercY = (lat: number) => { const s = Math.sin((Math.max(-85, Math.m
 const lonDe = (x: number) => x * 360 - 180;
 const latDe = (y: number) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
 type Cam = { foco: [number, number]; ancora: [number, number]; zoom: number };
-const cam = (c: any): Cam => (c.foco ? c : { foco: c.centro, ancora: [W / 2, H / 2], zoom: c.zoom });
+const cam = (c: any, w=W, h=H): Cam => (c.foco ? c : { foco: c.centro, ancora: [w / 2, h / 2], zoom: c.zoom });
 
-export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number]; zoom: number; fx: number; fy: number; ancora: [number, number] } {
+export function cameraEm(pk: PalcoKey[], t: number, w=W, h=H): { centro: [number, number]; zoom: number; fx: number; fy: number; ancora: [number, number] } {
   const ks = pk.filter(k => k.camera);
-  if (!ks.length) return { centro: [0, 0], zoom: 2, fx: .5, fy: .5, ancora: [W / 2, H / 2] };
+  if (!ks.length) return { centro: [0, 0], zoom: 2, fx: .5, fy: .5, ancora: [w / 2, h / 2] };
   let a = ks[0];
   for (const k of ks) if (t >= k.t) a = k;
-  const i = ks.indexOf(a), ca = cam(a.camera), d = a.dur_camera ?? 1.2;
+  const i = ks.indexOf(a), ca = cam(a.camera,w,h), d = a.dur_camera ?? 1.2;
   let fx: number, fy: number, anc: [number, number], z: number;
   if (i > 0 && d > 0 && t < a.t + d) {
-    const cb = cam(ks[i - 1].camera), e = easeIO(clamp((t - a.t) / d));
+    const cb = cam(ks[i - 1].camera,w,h), e = easeIO(clamp((t - a.t) / d));
     z = lerp(cb.zoom, ca.zoom, e);
     const u = Math.abs(ca.zoom - cb.zoom) < 1e-3 ? e : (2 ** -cb.zoom - 2 ** -z) / (2 ** -cb.zoom - 2 ** -ca.zoom);
     fx = lerp(mercX(cb.foco[0]), mercX(ca.foco[0]), u); fy = lerp(mercY(cb.foco[1]), mercY(ca.foco[1]), u);
@@ -56,13 +56,13 @@ export function cameraEm(pk: PalcoKey[], t: number): { centro: [number, number];
       fx = gx - (S[0] - anc[0]) / w1; fy = gy - (S[1] - anc[1]) / w1;
     }
   }
-  // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(H/512) e centro vertical dentro do mundo
-  z = Math.max(z, Math.log2(H / 512));
+  // MESMA restrição do MapLibre (plano._restringir): zoom ≥ log2(h/512) e centro vertical dentro do mundo
+  z = Math.max(z, Math.log2(h / 512));
   const ws = 512 * 2 ** z;
-  let cy = fy - (anc[1] - H / 2) / ws;
-  cy = Math.min(Math.max(cy, H / 2 / ws), 1 - H / 2 / ws);
-  fy = cy + (anc[1] - H / 2) / ws;
-  const cx = fx - (anc[0] - W / 2) / ws;
+  let cy = fy - (anc[1] - h / 2) / ws;
+  cy = Math.min(Math.max(cy, h / 2 / ws), 1 - h / 2 / ws);
+  fy = cy + (anc[1] - h / 2) / ws;
+  const cx = fx - (anc[0] - w / 2) / ws;
   return { centro: [lonDe(cx), latDe(cy)], zoom: z, fx, fy, ancora: anc };
 }
 
@@ -115,7 +115,8 @@ function arcoContinuo(a: number[], b: number[], n = 120) {
 
 export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
+  const neo = P.neo_benchmark === true, vw=neo?width:W, vh=neo?height:H;
   const t = frame / fps;
   const T = P.tokens.palco.mapa;
   const ref = useRef<HTMLDivElement>(null);
@@ -140,7 +141,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const rasters = P.rasters || [];
 
   useEffect(() => {
-    const c0 = cameraEm(P.palco, 0);
+    const c0 = cameraEm(P.palco, 0, vw, vh);
     let m: ML.Map | null = null;
     const sources: any = Object.fromEntries(Object.entries(fc).map(([k, v]) => [k, { type: 'geojson', data: v }]));
     rasters.forEach(r => { sources[`r_${r.nome}`] = { type: 'image', url: staticFile(r.src), coordinates: r.cantos }; });
@@ -164,15 +165,15 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       { id: 'grat', type: 'line', source: 'grat', paint: { 'line-color': '#DCE8FF', 'line-width': 1, 'line-opacity': 0 } },
       ...(P.destaques || []).map((d, i) => ({ id: `dest_${i}`, type: 'fill', source: d.fonte, filter: ['==', ['get', 'name'], d.nome],
         paint: { 'fill-color': cor(d.cor), 'fill-opacity': 0 } })),
-      { id: 'borda', type: 'line', source: 'paises', paint: { 'line-color': temRaster ? '#F4F1EA' : T.borda, 'line-width': 1.6, 'line-opacity': temRaster ? ((T as any).fronteira_opacidade ?? .42) : .8, 'line-dasharray': temRaster ? [3, 2] : [1, 0] } },
+      { id: 'borda', type: 'line', source: 'paises', paint: { 'line-color': temRaster ? '#F4F1EA' : T.borda, 'line-width': 1.6, 'line-opacity': neo ? 0 : temRaster ? ((T as any).fronteira_opacidade ?? .42) : .8, 'line-dasharray': temRaster ? [3, 2] : [1, 0] } },
       ...(temRaster ? [] : [{ id: 'lagos', type: 'fill', source: 'lagos', paint: { 'fill-color': T.agua, 'fill-opacity': .9 } }]),
       ...(P.destaques || []).flatMap((d, i) => [
         { id: `destg_${i}`, type: 'line', source: d.fonte, filter: ['==', ['get', 'name'], d.nome], paint: { 'line-color': cor(d.cor), 'line-width': 16, 'line-blur': 12, 'line-opacity': 0 } },
         { id: `destl_${i}`, type: 'line', source: d.fonte, filter: ['==', ['get', 'name'], d.nome], layout: { 'line-join': 'round' },
           paint: { 'line-color': foco(d) ? 'rgba(70,16,10,.85)' : cor(d.cor), 'line-width': foco(d) ? 1.6 : 4.5, 'line-opacity': 0 } }]),
       ...(P.rotas || []).flatMap((r, i) => [
-        { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': 24, 'line-opacity': .5, 'line-blur': 8 } },
-        { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': 15 } },
+        { id: `rota_s_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#000', 'line-width': neo ? 5 : 24, 'line-opacity': neo ? 0 : .5, 'line-blur': 8 } },
+        { id: `rota_c_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0B0F17', 'line-width': neo ? 5 : 15 } },
         { id: `rota_l_${i}`, type: 'line', source: `rota_${i}`, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': cor(r.cor), 'line-width': (r as any).largura ?? 9 } }]),
     ];
     carregarML().then(ml => {
@@ -184,7 +185,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     return () => { m && m.remove(); };
   }, []);
 
-  const c = cameraEm(P.palco, t);
+  const c = cameraEm(P.palco, t, vw, vh);
   // o quadro só é liberado DEPOIS que rótulos/território foram recalculados com a câmera deste quadro (sem atraso de 1 quadro)
   const [pronto, setPronto] = useState(-1);
   const pend = useRef<number | null>(null);
@@ -199,7 +200,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
     pend.current = h;
     map.jumpTo({ center: c.centro, zoom: c.zoom });
     rasters.forEach(r => map.setPaintProperty(`r_${r.nome}`, 'raster-opacity', rampa(c.zoom, r.de, r.ate)));
-    map.setPaintProperty('grat', 'line-opacity', .09 * clamp((7.6 - c.zoom) / 1.2));
+    map.setPaintProperty('grat', 'line-opacity', neo ? 0 : .09 * clamp((7.6 - c.zoom) / 1.2));
     (P.destaques || []).forEach((d, i) => {
       const v = vis(t, d.t0, d.t1, .6, .5);
       map.setPaintProperty(`dest_${i}`, 'fill-opacity', (foco(d) ? ((T as any).pais_opacidade ?? .9) : d.fonte === 'lagos' ? .38 : .26) * v);
@@ -216,7 +217,7 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
       const parte = !lr || k <= 0 || some <= 0 || a1 - a0 < 1e-4 ? turf.featureCollection([]) : turf.featureCollection([turf.lineSliceAlong(lr, kr * a0, Math.max(kr * a0 + .01, kr * a1), { units: 'kilometers' })]);
       (map.getSource(`rota_${i}`) as ML.GeoJSONSource).setData(parte as any);
       ['rota_l_', 'rota_c_'].forEach(id => map.setPaintProperty(`${id}${i}`, 'line-opacity', some));
-      map.setPaintProperty(`rota_s_${i}`, 'line-opacity', .5 * some);
+      map.setPaintProperty(`rota_s_${i}`, 'line-opacity', neo ? 0 : .5 * some);
     });
     map.once('idle', () => setPronto(frame));
     map.triggerRepaint();
@@ -229,8 +230,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   const desfoque = ((ka.veu === 'documento' ? kv : 0) + (kb?.veu === 'documento' ? 1 - kv : 0)) * 5;
 
   const proj = (ll: [number, number]) => (map ? map.project(ll) : { x: -999, y: -999 });
-  const rots = (P.rotulos || []).filter(r => vis(t, r.t0, r.t1) > 0);
-  const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
+  const rots = (P.rotulos || []).filter(r => {if(vis(t,r.t0,r.t1)<=0)return false;if(!neo)return true;const p=proj(r.lonlat);return p.x>65&&p.x<vw-65&&p.y>65&&p.y<vh-100;});
+  const caixas = rots.map(r => { const p = proj(r.lonlat); const fs = neo ? 20 : r.estilo === 'oceano' ? 30 : 32; const w = r.nome.length * fs * .68 + 44;
     return r.estilo === 'ponto' ? { x: p.x + 30, y: p.y - 28, w, h: 56 } : { x: p.x - w / 2, y: p.y - 24, w, h: 48 }; });
   // rótulos do mapa dentro da área segura das plataformas (topo, margem, coluna de ícones, faixa da legenda)
   const S = (P as any).seguro;
@@ -262,12 +263,12 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
   for (const d of [...vis_ds].filter(d => CR[d] && !obrig.has(d))) { const tent = [CR[d], ...atrib.filter(x => x !== CR[d])]; if (!atrib.includes(CR[d]) && cabe(tent)) atrib = tent; }
   return (
     <div style={{ position: 'absolute', inset: 0, opacity: opac }}>
-      <div ref={ref} style={{ position: 'absolute', width: W, height: H, filter: desfoque > .05 ? `blur(${desfoque}px)` : undefined }} />
+      <div ref={ref} style={{ position: 'absolute', width: vw, height: vh, filter: desfoque > .05 ? `blur(${desfoque}px)` : undefined }} />
       {veuB && <div style={{ position: 'absolute', inset: 0, background: veuB, opacity: 1 - kv }} />}
       <div style={{ position: 'absolute', inset: 0, background: veuA, opacity: kb ? kv : 1 }} />
       {roi && <div data-roi="1" style={{ position: 'absolute', left: roi.x, top: roi.y, width: roi.w, height: roi.h, pointerEvents: 'none' }} />}
       {/* escala gráfica: o espectador lê a distância (direção de arte: "escala legível") */}
-      {c.zoom >= 6.5 && ka.veu !== 'documento' && (
+      {!neo && c.zoom >= 6.5 && ka.veu !== 'documento' && (
         <div data-meta="escala" style={{ position: 'absolute', left: (P.documentary_layout ? ((P as any).seguro?.dir_max ?? 770)-10 : 1008) - esc.px, top: P.documentary_layout ? 540 : 318, width: esc.px, opacity: .92 }}>
           <div style={{ height: 8, borderLeft: '3px solid #fff', borderRight: '3px solid #fff', borderBottom: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,.7)' }} />
           <div style={{ position: 'absolute', right: 0, top: -28, fontFamily: P.tokens.fontes.dado, fontWeight: 700, fontSize: 20, color: '#fff', textShadow: '0 1px 6px #000', whiteSpace: 'nowrap' }}>{esc.txt}</div>
@@ -285,8 +286,8 @@ export const PalcoMapa: React.FC<{ P: FormatoProps; opac: number }> = ({ P, opac
             borderLeft: `6px solid ${P.tokens.cores.destaque}`, fontFamily: P.tokens.fontes.titulo, fontWeight: 900, fontSize: 30, color: '#fff',
             textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 18px rgba(0,0,0,.5)' }}>{r.nome}</div></React.Fragment>);
         return <div key={i} data-rotulo="area" style={{ position: 'absolute', left: q.x, top: q.y, width: q.w, textAlign: 'center', opacity: v,
-          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: 800, fontSize: r.estilo === 'oceano' ? 30 : 32,
-          letterSpacing: r.estilo === 'oceano' ? 7 : 2, color: r.estilo === 'lago' ? '#E6F7FF' : '#F4F1EA', textTransform: 'uppercase',
+          fontFamily: r.estilo === 'oceano' ? P.tokens.fontes.dado : P.tokens.fontes.titulo, fontWeight: 800, fontSize: neo ? 20 : r.estilo === 'oceano' ? 30 : 32,
+          letterSpacing: neo ? 1.2 : r.estilo === 'oceano' ? 7 : 2, color: r.estilo === 'lago' ? '#E6F7FF' : '#F4F1EA', textTransform: 'uppercase',
           textShadow: '0 0 10px rgba(0,0,0,.9), 0 2px 14px rgba(0,0,0,.95)', whiteSpace: 'nowrap', fontStyle: r.estilo === 'oceano' ? 'italic' : undefined }}>{r.nome}</div>;
       })}
     </div>

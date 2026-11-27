@@ -172,7 +172,7 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
       const ratio=v[0].value/c.denominator!,x=32,w=775,y=270;
       const bound=c.relation==='lower'||c.relation==='upper';
       return <>
-       {main(value,154,180)}
+       {main(value,169,174)}
        {t(c.relation==='lower'?'LIMITE INFERIOR':c.relation==='upper'?'LIMITE SUPERIOR':'PARCELA DO TOTAL',CW/2,218,38,790,WHITE,'middle')}
        {track(x,y,w,82)}
        <defs><pattern id="e3883-bound" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M-4 4L4 -4M0 18L18 0M14 22L22 14" stroke={GOLD} strokeOpacity=".48" strokeWidth="3"/></pattern></defs>
@@ -187,7 +187,7 @@ export const EditorialChart:React.FC<{claim:Claim;p:number;probe?:boolean}>=({cl
    {k==='area'&&(()=>{
       const side=Math.sqrt(v[0].value),size=365,x=36,y=164,scale=size/side;
       return <>
-       {main(value,120,134)}
+       {main(value,137,130)}
        <rect x={x} y={y} width={size} height={size} fill={GOLD} fillOpacity={.13+.25*b} stroke={GOLD} strokeWidth="5"/>
        {side<=10&&Array.from({length:Math.floor(side)},(_,j)=><path key={j} d={`M ${x+(j+1)*scale} ${y} V ${y+size} M ${x} ${y+(j+1)*scale} H ${x+size}`} stroke={GOLD} strokeOpacity=".5" strokeWidth="2"/>)}
        <path d={`M${x} ${y-11}H${x+size}`} stroke={GOLD} strokeWidth="3"/>

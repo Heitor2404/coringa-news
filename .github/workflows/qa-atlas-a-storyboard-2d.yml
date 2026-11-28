@@ -1,0 +1,158 @@
+name: "QA — Coringa direcao A original (eclusa + EUV)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-atlas-a-storyboard-2d.yml"
+      - "motor4/remotion/src/Root.tsx"
+      - "motor4/remotion/src/formatos/AtlasAStudio.tsx"
+      - "motor4/remotion/src/formatos/AtlasAProof.tsx"
+      - "motor4/remotion/src/formatos/AtlasAArtKit.tsx"
+      - "motor4/remotion/src/formatos/atlas-a-proof.json"
+      - "tests/test_atlas_a_visual_lab.py"
+      - "tests/test_atlas_a_artkit.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-atlas-a-storyboard
+  cancel-in-progress: true
+jobs:
+  dois_assuntos:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias do renderizador
+        run: |
+          python -m pip install -q pytest pillow
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Estados, fisica, direitos e area segura
+        run: |
+          python -m pytest -q tests/test_atlas_a_visual_lab.py tests/test_atlas_a_artkit.py
+      - name: Gerar duas props isoladas
+        run: |
+          mkdir -p qa_a/frames
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('motor4/remotion/src/formatos/atlas-a-proof.json').read_text('utf8'))
+          assert d['qa']['publish'] is False and d['qa']['telegram'] is False
+          for kind in ('lock','euv'):
+              (Path('qa_a')/('props-'+kind+'.json')).write_text(
+                 json.dumps({'kind':kind,'duracao':d['duration'],
+                            'private_review_only':True},indent=2)+'\n')
+          PY
+      - name: Renderizar eclusa ilustrada A
+        timeout-minutes: 8
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaA-Eclusa ../qa_a/eclusa_A_PRIVADA.mp4 --props=../qa_a/props-lock.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
+      - name: Renderizar EUV ilustrado A
+        timeout-minutes: 8
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts ProvaA-EUV ../qa_a/euv_A_PRIVADA.mp4 --props=../qa_a/props-euv.json --public-dir=remotion/public --codec=h264 --crf=22 --scale=0.5 --concurrency=2 --log=error
+      - name: Folha de estados A e sobreposicoes visuais de tres plataformas
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageDraw
+          d=Path('qa_a'); frame_dir=d/'frames'
+          dconfig=json.loads(Path('motor4/remotion/src/formatos/atlas-a-proof.json').read_text('utf8'))
+          profiles=json.loads(Path('src/v4/formatos/plataformas.json').read_text('utf8'))
+          videos={'lock':d/'eclusa_A_PRIVADA.mp4','euv':d/'euv_A_PRIVADA.mp4'}
+          points=[.4,1.6,3.1,4.7,6.6]
+          sheet=Image.new('RGB',(5*235,2*465),(236,237,234))
+          sd=ImageDraw.Draw(sheet)
+          overlay=Image.new('RGB',(3*283,2*590),(235,235,235))
+          od=ImageDraw.Draw(overlay)
+          sha={}
+          for row,(kind,video) in enumerate(videos.items()):
+              assert video.exists() and video.stat().st_size>25000
+              meta=json.loads(subprocess.check_output([
+                  'ffprobe','-v','error','-show_entries',
+                  'format=duration:stream=codec_type,width,height',
+                  '-of','json',str(video)]))
+              ss=[s for s in meta['streams'] if s['codec_type']=='video']
+              assert len(ss)==1 and ss[0]['width']==540 and ss[0]['height']==960
+              assert not any(s['codec_type']=='audio' for s in meta['streams'])
+              assert abs(float(meta['format']['duration'])-dconfig['duration'])<.04
+              sha[kind]=hashlib.sha256(video.read_bytes()).hexdigest()
+              for col,t in enumerate(points):
+                  fn=frame_dir/f'{kind}_{str(t).replace(".","_")}.png'
+                  subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                      '-y','-ss',str(t),'-i',str(video),'-frames:v','1',str(fn)])
+                  im=Image.open(fn).convert('RGB')
+                  im.thumbnail((221,398))
+                  x=col*235+7;y=row*465+41
+                  sheet.paste(im,(x,y))
+                  sd.text((x,y-27),f'{kind}  {t:.1f}s',fill=(14,29,40))
+              # Avaliação relativa das UIs no mesmo tempo da ação principal.
+              still=Image.open(frame_dir/f'{kind}_4_7.png').convert('RGB')
+              for col,pname in enumerate(profiles['ativos_seguros']):
+                  p=profiles['perfis'][pname]
+                  im=still.resize((270,480)).convert('RGBA')
+                  mask=Image.new('RGBA',im.size,(0,0,0,0))
+                  md=ImageDraw.Draw(mask,'RGBA')
+                  sc=im.width/1080
+                  md.rectangle((0,0,im.width,p['topo']*sc),
+                      fill=(208,40,48,66))
+                  md.rectangle((0,(1920-p['base'])*sc,im.width,im.height),
+                      fill=(208,40,48,77))
+                  right=p['direita']
+                  md.rectangle(((1080-right['largura'])*sc,
+                      right['de_y']*sc,im.width,
+                      min(1920,right['ate_y'])*sc),fill=(208,40,48,81))
+                  im=Image.alpha_composite(im,mask).convert('RGB')
+                  x=col*283+5;y=row*590+42
+                  overlay.paste(im,(x,y))
+                  od.text((x,y-26),kind+' / '+p['nome'][:23],fill=(15,27,39))
+          # Mudança no próprio palco físico: um gancho estático deve falhar.
+          # Não confundir esse portão grosseiro com aprovação estética.
+          from PIL import ImageChops,ImageStat
+          motion={}
+          crops={'lock':(75,300,480,560),'euv':(65,300,470,560)}
+          for kind in videos:
+              a=Image.open(frame_dir/f'{kind}_0_4.png').convert('RGB')
+              b=Image.open(frame_dir/f'{kind}_1_6.png').convert('RGB')
+              crop=crops[kind]
+              diff=ImageChops.difference(a.crop(crop),b.crop(crop))
+              mean=sum(ImageStat.Stat(diff).mean)/3
+              motion[kind]=round(mean,2)
+              assert mean>2.1,(kind,'gancho visual estatico',mean)
+          sheet.save(d/'contato_10_quadros_A.jpg',quality=90)
+          overlay.save(d/'interfaces_3_redes_A.jpg',quality=90)
+          (d/'resultado.json').write_text(json.dumps({
+              'status':'QA_ESTRUTURAL_PASSA_SE_CI_VERDE_VISUAL_HUMANO_PENDENTE',
+              'subject':['eclusa','euv'],'duration':dconfig['duration'],
+              'water':'same state drives sea level and floating boat',
+              'optics':'reflective mask -> reflective mirrors -> exposure in photoresist',
+              'publicar':False,'telegram':False,'narracao':False,
+              'device_interface':'SIMULADA','direcao':'A autorizada como referencia estetica',
+              'frames':'10 estados; Reels/TikTok/Shorts em 4.7s',
+              'motion_delta_first_second':motion,'sha256':sha
+          },indent=2,ensure_ascii=False)+'\n',encoding='utf8')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-atlas-a-visual-privada
+          path: qa_a/
+          retention-days: 5
+          if-no-files-found: warn

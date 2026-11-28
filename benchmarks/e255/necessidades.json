@@ -1,0 +1,85 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "contrastes",
+      "tema": "Regressão contrastante de modalidades; não é roteiro",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "fendas glaciais",
+          "mostrar": "rede de fendas visíveis na superfície de uma geleira",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacier crevasses aerial",
+            "crevasse field glacier"
+          ]
+        },
+        {
+          "id": "n2",
+          "fatos": [
+            "f2"
+          ],
+          "sujeito": "Saturno",
+          "mostrar": "anéis visíveis em registro astronômico",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "Saturn rings Cassini",
+            "Saturn ring system spacecraft photograph"
+          ]
+        },
+        {
+          "id": "n3",
+          "fatos": [
+            "f3"
+          ],
+          "sujeito": "polvo",
+          "mostrar": "mudança de aparência ou textura visível em filmagem",
+          "necessidade": "registro",
+          "evidencia_visual": "movimento",
+          "consultas_en": [
+            "octopus camouflage color change",
+            "octopus changing skin texture"
+          ]
+        },
+        {
+          "id": "n4",
+          "fatos": [
+            "f4"
+          ],
+          "sujeito": "Havaí",
+          "mostrar": "localização do arquipélago em relação ao Pacífico",
+          "necessidade": "territorio",
+          "objetivo_geografico": "localizacao",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "Hawaii Pacific map"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f2",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f3",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f4",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    }
+  ]
+}

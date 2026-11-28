@@ -1,0 +1,19 @@
+{
+  "schema": "coringa-e3-mechanism-evidence-binding-v1",
+  "source_id": "biela_cinematica_parcial",
+  "body_roles": {
+    "crank": "crank",
+    "rod": "rod",
+    "piston": "slider",
+    "chamber": "ground"
+  },
+  "joint_claims": [
+    {
+      "joint_index": 3,
+      "edge_id": "piston_slide_b3"
+    }
+  ],
+  "spec_authorship": "manual_prototype",
+  "numbers_from_source": false,
+  "publish": false
+}

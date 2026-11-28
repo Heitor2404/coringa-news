@@ -1,0 +1,44 @@
+name: E323 - evidencias do mecanismo e consequencia do documentario
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-evidencia-causal-e323.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: e323-causal
+  cancel-in-progress: false
+jobs:
+  evidence:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - name: Obter registros e esquemas oficiais para as lacunas reais
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4
+          python -m scripts.qa_evidencia_causal_e323
+      - name: Arquivar originais e amostras privadas
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e323
+          if [[ ! -s "$root/evidencias.json" ]]; then exit 0; fi
+          shopt -s nullglob
+          originals=()
+          for f in "$root"/*; do
+            if [[ "$(basename "$f")" =~ ^[0-9a-f]{64}\.(jpg|png|webp|mp4)$ ]]; then originals+=("$f"); fi
+          done
+          bash scripts/arquivar_cofre_review.sh "review-e323-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/evidencias.json" "${originals[@]}"
+          python scripts/espelhar_revisao_cofre.py "e323-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/evidencias.json" "$root"/fonte-*.jpg

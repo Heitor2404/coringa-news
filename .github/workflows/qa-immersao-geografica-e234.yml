@@ -1,0 +1,81 @@
+name: E234 - imersao geografica privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['scripts/qa_immersao_geografica_e234.py','.github/workflows/qa-immersao-geografica-e234.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias e tipos
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          cd motor4
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Regressão geométrica multitema
+        run: python -m pytest -q tests/test_video_framing_multitema.py tests/test_direcao_e234.py tests/test_ponte_mapa_atlas_filme.py
+      - name: Preparar ATLAS com aproximacao e fontes reais sem TTS
+        run: python -m scripts.qa_immersao_geografica_e234
+      - name: Render da entrada geografica no compositor existente
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_immersao/amostra.mp4 --props=../qa_immersao/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=2 --public-dir=remotion/public --log=info
+      - name: Validar MP4 da amostra
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          p=json.load(open('qa_immersao/props.json'))
+          dur=p['duracao']
+          q=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json','qa_immersao/amostra.mp4']))
+          v=next(s for s in q['streams'] if s['codec_type']=='video')
+          assert (v['width'],v['height'])==(540,960) and int(v['nb_frames'])==round(dur*30)
+          assert abs(float(q['format']['duration'])-dur)<.15
+          PY
+          ffmpeg -v error -xerror -i qa_immersao/amostra.mp4 -map 0:v:0 -f null -
+      - name: Enviar somente amostra privada identificada ao Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          try:
+              chat,info=T.chat_autorizado()
+              r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA · E234. Imersão geográfica de 12,5s sem narração. Mapa regional com aproximação e corte para registro real da mesma ilha. Não é voo óptico contínuo. Revisão visual pendente.','supports_streaming':'true'},('video',Path('qa_immersao/amostra.mp4')))
+              if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError()
+          except Exception:
+              raise SystemExit('Envio privado não confirmado') from None
+          print('AMOSTRA PRIVADA ENTREGUE')
+          PY
+  avisar_falha:
+    needs: visual
+    if: ${{ always() && (needs.visual.result == 'failure' || needs.visual.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.visual.result }}
+      job_name: visual
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

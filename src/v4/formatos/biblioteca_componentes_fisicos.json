@@ -1,0 +1,386 @@
+{
+  "schema": "coringa-physical-components-v1",
+  "published": false,
+  "visual_approval": false,
+  "policy": "SOURCE_TECHNICAL_NOT_VISUAL_LICENSE; ONLY EXISTING_HANDCRAFTED_2D; NO_AUTOMATIC_UNKNOWN_MECHANISM",
+  "evidence_sources": {
+    "atlas_copco_piston": {
+      "url": "https://www.atlascopco.com/en-ca/compressors/wiki/compressed-air-articles/piston-compressors",
+      "entity": "Atlas Copco",
+      "kind": "explicacao_publica_de_principio_fisico",
+      "supports": [
+        "reciprocating_piston",
+        "crankshaft",
+        "inlet_valve",
+        "outlet_valve",
+        "compression_cycle"
+      ],
+      "does_not_establish": [
+        "industrial_belt_layout_exact",
+        "receiver_shape_exact",
+        "source_visual_rights",
+        "license_for_illustrations"
+      ]
+    },
+    "doe_otto_4tempos": {
+      "url": "https://www.energy.gov/cmei/vehicles/articles/internal-combustion-engine-basics",
+      "entity": "US Department of Energy",
+      "kind": "explicacao_publica_de_principio_fisico",
+      "supports": [
+        "intake",
+        "compression",
+        "ignition_power",
+        "exhaust",
+        "piston_crankshaft"
+      ],
+      "does_not_establish": [
+        "reference_gif_redistribution",
+        "rig_3d",
+        "geometry_exact"
+      ]
+    },
+    "usace_lock_operation": {
+      "url": "https://www.swl.usace.army.mil/Missions/Water-Management/Water-Management-FAQ/",
+      "entity": "US Army Corps of Engineers",
+      "kind": "explicacao_publica_de_principio_fisico",
+      "supports": [
+        "locks_fill_from_upper_pool",
+        "culvert_valves",
+        "floating_ship",
+        "gate_sequence",
+        "gravity"
+      ],
+      "does_not_establish": [
+        "specific_canal_dimensions",
+        "gate_3d_geometry",
+        "license_for_media",
+        "pixels_reproduction"
+      ]
+    }
+  },
+  "primitive_types": {
+    "rotor": {
+      "mechanism": "giro",
+      "needs": "rotary_axis"
+    },
+    "transmission": {
+      "mechanism": "transmissao_mecanica",
+      "needs": "connectivity"
+    },
+    "piston": {
+      "mechanism": "translacao_alternada",
+      "needs": "stroke"
+    },
+    "chamber": {
+      "mechanism": "confinamento",
+      "needs": "volume_bounds"
+    },
+    "filter": {
+      "mechanism": "filtragem",
+      "needs": "inlet"
+    },
+    "valve": {
+      "mechanism": "controle_abertura",
+      "needs": "open_closed"
+    },
+    "conduit": {
+      "mechanism": "fluxo_em_trajeto",
+      "needs": "path"
+    },
+    "reservoir": {
+      "mechanism": "armazenamento_pressurizado",
+      "needs": "pressure"
+    },
+    "fluid_body": {
+      "mechanism": "nivel_ou_mistura",
+      "needs": "fluid_state"
+    },
+    "igniter": {
+      "mechanism": "ignicao",
+      "needs": "spark_state"
+    },
+    "channel": {
+      "mechanism": "reservatorio_aberto",
+      "needs": "level"
+    },
+    "gate": {
+      "mechanism": "barreira_abre_fecha",
+      "needs": "open_closed"
+    },
+    "floating_vessel": {
+      "mechanism": "flutuacao",
+      "needs": "level_coupling"
+    }
+  },
+  "families": {
+    "compressor_oficina_pv": {
+      "renderer": "render_compressor_conjunto_2d.py",
+      "config": "compressor_de_oficina_correia_tanque_horizontal",
+      "identity_reference": "docs/v4/formatos/reference_first/identidade_compressor_oficina_tanque_horizontal.json",
+      "identity_status": "PROTOTIPO_GRAFICO_MANUAL_NAO_IDENTIDADE_FOTOGRAFICA",
+      "technical_source": "atlas_copco_piston",
+      "rights": {
+        "source_pixel_copied": false,
+        "source_page_is_media_license": false,
+        "republication_approved": false
+      },
+      "actor_role_mapping": [
+        {
+          "id": "electric_motor",
+          "primitive": "rotor",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "drive_belt",
+          "primitive": "transmission",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "pump_flywheel",
+          "primitive": "rotor",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "piston_cutaway",
+          "primitive": "piston",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "finned_cylinder",
+          "primitive": "chamber",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "compressor_head",
+          "primitive": "chamber",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "intake_filter",
+          "primitive": "filter",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "suction_valve",
+          "primitive": "valve",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "discharge_valve",
+          "primitive": "valve",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "discharge_pipe",
+          "primitive": "conduit",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "receiver_horizontal",
+          "primitive": "reservoir",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        }
+      ],
+      "event_ids": [
+        "REEXPANSAO_RESIDUAL",
+        "ADMISSAO_AR",
+        "COMPRESSAO_AR",
+        "DESCARGA_PRESSURIZADA"
+      ],
+      "event_visual_evidence": "NAO_VALIDADA_AUTOMATICAMENTE_POR_PIXELS"
+    },
+    "otto_4t_reference": {
+      "renderer": "render_reconstrucao_causal_2d.py",
+      "config": "motor_otto_quatro_tempos_em_corte",
+      "identity_reference": "docs/v4/formatos/reference_first/otto_48f_causal_reviewed_scene.json",
+      "identity_status": "MOVIMENTO_MEDIDO_EM_REFERENCIA_MAS_GEOMETRIA_AUTORAL",
+      "technical_source": "doe_otto_4tempos",
+      "rights": {
+        "source_pixel_copied": false,
+        "source_page_is_media_license": false,
+        "republication_approved": false
+      },
+      "actor_role_mapping": [
+        {
+          "id": "cylinder",
+          "primitive": "chamber",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "chamber",
+          "primitive": "fluid_body",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "piston",
+          "primitive": "piston",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "crankshaft",
+          "primitive": "rotor",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "inlet_valve",
+          "primitive": "valve",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "outlet_valve",
+          "primitive": "valve",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "sparkplug",
+          "primitive": "igniter",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "intake_flow",
+          "primitive": "conduit",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "exhaust_flow",
+          "primitive": "conduit",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        }
+      ],
+      "event_ids": [
+        "admissao_mistura",
+        "compressao_mistura",
+        "ignicao_expansao",
+        "escape_gases"
+      ],
+      "event_visual_evidence": "NAO_VALIDADA_AUTOMATICAMENTE_POR_PIXELS"
+    },
+    "lock_cycle_standalone": {
+      "renderer": "render_eclusa_hidraulica_2d.py",
+      "config": "eclusa_com_gravidade_e_nivel_duplo",
+      "identity_reference": "docs/v4/formatos/F4_TERCEIRA_FAMILIA_ECLUSA_MODERNA_20261123.md",
+      "identity_status": "ILUSTRACAO_DIDATICA_NAO_ECLUSA_REAL_ESPECIFICA",
+      "technical_source": "usace_lock_operation",
+      "rights": {
+        "source_pixel_copied": false,
+        "source_page_is_media_license": false,
+        "republication_approved": false
+      },
+      "actor_role_mapping": [
+        {
+          "id": "lower_channel",
+          "primitive": "channel",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "upper_channel",
+          "primitive": "channel",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "chamber",
+          "primitive": "chamber",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "inlet_gate",
+          "primitive": "gate",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "outlet_gate",
+          "primitive": "gate",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "valve",
+          "primitive": "valve",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "conduit",
+          "primitive": "conduit",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "water",
+          "primitive": "fluid_body",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        },
+        {
+          "id": "ship",
+          "primitive": "floating_vessel",
+          "bbox_source": "camera_causal_geometrias.json",
+          "evidence": "GEOMETRIA_CURADA_NO_RENDERER",
+          "bitmap_identity_verified": false
+        }
+      ],
+      "event_ids": [
+        "enter",
+        "seal",
+        "valves",
+        "rise",
+        "equalize",
+        "open",
+        "exit"
+      ],
+      "event_visual_evidence": "NAO_VALIDADA_AUTOMATICAMENTE_POR_PIXELS"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+name: E266.1 - bloco de aquisicao das lacunas sem nova visao
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-lacunas-sem-visao-e266.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gaps:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_politica_progressiva_e258.py tests/test_reuso_documental_e251.py tests/test_checkpoint_e259.py tests/test_validar_arquivo_documental.py tests/test_revisao_documental_e247.py
+      - name: Recuperar relatorio privado sem nova pesquisa anterior
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from scripts.recuperar_checkpoints_documentais import api,listar_releases
+          meta=api('');assert meta.get('private') is True and meta.get('id')==1454059520
+          tag='review-e2648-45613384343-1'
+          rel=next(r for r in listar_releases(60) if r['tag_name']==tag and r['draft'] is True)
+          a=next(a for a in rel['assets'] if a['name']=='revisao.json')
+          assert 0<a['size']<=12_000_000
+          root=Path('qa_e266');root.mkdir()
+          subprocess.run(['gh','release','download',tag,'--repo','Heitor2404/coringa-cofre','--pattern','revisao.json','--dir',str(root)],check=True,timeout=120)
+          raw=(root/'revisao.json').read_bytes()
+          assert len(raw)==a['size'] and 'sha256:'+hashlib.sha256(raw).hexdigest()==a['digest']
+          PY
+      - name: Adquirir amostras novas somente das lacunas
+        run: python -m scripts.qa_lacunas_sem_visao_e266 qa_e266/revisao.json benchmarks/e254/documentario.json stage_documental/e266
+      - name: Arquivar originais e espelhar amostras
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e266
+          if [[ -s "$root/lacunas.json" ]]; then
+            files=("$root/lacunas.json" "$root"/*.jpg)
+            bash scripts/arquivar_cofre_review.sh "review-e266-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip
+            python scripts/espelhar_revisao_cofre.py "e266-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          fi

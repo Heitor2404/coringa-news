@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const C=require('/tmp/e389-test/SourceStageCoreE389.js');
+const h='a'.repeat(64),stage={schema:'coringa.causal.stage.private.v1',publish:false,group:'source',stage:0,count:2,sourceSha:h,review:'review/fixture',panel:[0,0,.5,.5],title:'Antes',credit:'Source',scale:'illustrative_not_to_scale',highlights:[{at:1,box:[.1,.2,.5,.8],label:'Elemento',anchorWord:'ELEMENTO'}]};
+test('generic stage preserves source aspect and panel bounds',()=>{C.validateSourceStage(stage,4,'film_editorial/'+h+'.png',[2128,2089]);const g=C.panelGeometry(stage.panel,[2128,2089]);assert.ok(Math.abs(g.width/g.height-2128/2089)<1e-9);assert.ok(g.y+g.height<=1092.001);});
+for(const mut of [s=>s.publish=true,s=>s.scale='physical',s=>s.panel=[0,0,2,.5],s=>s.highlights[0].at=3.8,s=>s.highlights[0].box=[0,0,0,.8],s=>s.sourceSha='bad'])test('rejects malformed source stage '+mut.toString(),()=>{const s=structuredClone(stage);mut(s);assert.throws(()=>C.validateSourceStage(s,4,'film_editorial/'+h+'.png',[2128,2089]),/E389/);});

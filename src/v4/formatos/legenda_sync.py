@@ -233,6 +233,8 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
             if g[-1]['e'] - g[0]['s'] >= dur_min or len(gs) == 1:
                 continue
             viz = [k for k in (i - 1, i + 1) if 0 <= k < len(gs) and len(gs[k]) + len(g) <= maximo + 1]
+            viz = [k for k in viz if gs[max(i,k)][0]['s'] - gs[min(i,k)][-1]['e'] < pausa
+                   and gs[max(i,k)][-1]['e'] - gs[min(i,k)][0]['s'] <= dur_max]
             if viz:
                 k = min(viz, key=lambda k: abs((gs[k][0]['s'] if k > i else gs[k][-1]['e']) - (g[0]['s'] if k > i else g[-1]['e'])))
                 gs[min(i, k)] = gs[min(i, k)] + gs[max(i, k)] if k > i else gs[k] + g
@@ -247,8 +249,15 @@ def grupos(palavras: list[dict], maximo: int = 4, pausa: float = .25, dur_max: f
 
 def conferir(narracao: Path, wav: Path, maximo: int = 4) -> dict:
     meta = json.loads(Path(narracao).read_text())
-    pal = meta['palavras']
-    fala = mascara_fala(energia(wav))
+    pal = meta['palavras'] if 'palavras' in meta else meta['words']
+    return conferir_palavras(pal, mascara_fala(energia(wav)), maximo)
+
+def conferir_palavras(pal, fala, maximo=4):
+    # Same acceptance criteria for all alignment candidates; no threshold relaxation.
+    if not pal or not len(fala) or not fala.any():
+        raise ValueError('SINCRONIA-SEM-FALA')
+    if any(not (0<=w['s']<w['e']<=len(fala)*PASSO+.05) for w in pal):
+        raise ValueError('SINCRONIA-TEMPO-INVALIDO')
     marc = np.zeros_like(fala)
     for w in pal:
         marc[int(w['s'] / PASSO): int(w['e'] / PASSO) + 1] = True
@@ -278,6 +287,57 @@ def conferir(narracao: Path, wav: Path, maximo: int = 4) -> dict:
     return {'ok': ok, 'atraso_s': round(atraso, 2), 'palavras': len(pal), 'palavras_sem_fala': fora[:12], 'n_palavras_sem_fala': len(fora),
             'fala_sem_legenda': sem_leg, 'grupos': len(gs), 'trocas_bruscas': [{'txt': g['txt'], 'dur': round(g['fim'] - g['ini'], 2)} for g in flashes]}
 
+
+def alinhar_documental(palavras, wav, maximo=3):
+    """Compare the original with the existing pause aligner, then a conservative
+    local repair. No change to audio, words, or acceptance thresholds.
+    Return the best *candidate*, never a false approval.
+    """
+    f=mascara_fala(energia(wav))
+    base=[dict(w) for w in palavras]
+    def avaliar(p):
+        return conferir_palavras(p,f,maximo)
+    orig=avaliar(base)
+    if orig['ok']:return base,{'escolhido':'original','original':orig,'final':orig}
+    candidatos=[('original',base,orig)]
+    try:
+        p=realinhar(base,wav)
+        if all(a['w']==b['w'] and abs(a['s']-b['s'])<=.85 and abs(a['e']-b['e'])<=.85 for a,b in zip(base,p,strict=True)) and all(a['e']<=b['s']+.005 for a,b in zip(p,p[1:])):
+            candidatos.append(('pausas_existente',p,avaliar(p)))
+    except (ValueError,IndexError):pass
+    # Only repair groups of consecutive words whose timestamps overlap an
+    # actual quiet interval. Anchor the first word at the next measured speech
+    # onset, while respecting neighbouring words and a bounded displacement.
+    # No word identity can be inferred from energy alone: human review remains.
+    p=[dict(w) for w in base]
+    for a,b in pausas(f,.15):
+        ids=[i for i,w in enumerate(p) if a-.02<=w['s']<b-.12]
+        if not ids:continue
+        first,last=ids[0],ids[-1]
+        if ids!=list(range(first,last+1)):continue
+        if b-p[first]['s']>.85:continue
+        limite=p[last+1]['s'] if last+1<len(p) else len(f)*PASSO
+        if limite-b<.05*len(ids):continue
+        old=[p[i] for i in ids]
+        span=min(limite-b,max(.05*len(ids),old[-1]['e']-old[0]['s']))
+        weights=[max(.05,w['e']-w['s']) for w in old]
+        if first and p[first-1]['e']>b:continue
+        cur=b;temp=[]
+        for w,weight in zip(old,weights):
+            end=cur+span*weight/sum(weights)
+            temp.append({**w,'s':round(cur,3),'e':round(end,3)})
+            cur=end
+        if any(abs(x['s']-y['s'])>.85 or abs(x['e']-y['e'])>.85 for x,y in zip(old,temp)):continue
+        for i,w in zip(ids,temp):p[i]=w
+    try:
+        if all(a['e']<=b['s']+.005 for a,b in zip(p,p[1:])):
+            candidatos.append(('pausas_locais',p,avaliar(p)))
+    except ValueError:pass
+    def nota(row):
+        r=row[2]
+        return (not r['ok'],len(r['fala_sem_legenda']),r['n_palavras_sem_fala'],len(r['trocas_bruscas']),abs(r['atraso_s']))
+    nome,words,final=min(candidatos,key=nota)
+    return words,{'escolhido':nome,'original':orig,'final':final,'alternativas':{n:r for n,_,r in candidatos}}
 
 if __name__ == '__main__':
     import sys

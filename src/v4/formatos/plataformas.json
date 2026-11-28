@@ -1,5 +1,5 @@
 {
-  "_nota": "Perfis de área segura (master 1080×1920). APROXIMAÇÕES configuráveis — a interface muda com versão do app, idioma e tamanho da descrição. Fontes de referência em 'fontes'. O motor valida contra a UNIÃO dos perfis ativos e posiciona legenda, créditos e slots dentro dela; perfis podem ser ligados/desligados ou ajustados aqui sem tocar no código.",
+  "_nota": "ATLAS de arquivo usa perfis históricos em 'ativos' (não retroativamente homologados), para reproduzir materiais legados. Filmes novos devem usar 'ativos_seguros' (tiktok/reels/shorts multiplaforma). Áreas aproximadas, dependentes de UI, descrição e versão. A produção com safe_area_profile exige perfis conservadores e aprovação de pixels. Não confundir testes antigos verdes com publicação segura.",
   "ativos": [
     "tiktok",
     "instagram_reels",
@@ -57,10 +57,62 @@
       "fontes": [
         "https://www.aicarousels.com/free-tools/youtube-safe-zone-checker"
       ]
+    },
+    "tiktok_multiplataforma": {
+      "nome": "TikTok · perfil seguro v1",
+      "topo": 240,
+      "base": 660,
+      "esquerda": 120,
+      "direita": {
+        "largura": 300,
+        "de_y": 840,
+        "ate_y": 1920,
+        "icones": 5
+      },
+      "fontes": [
+        "https://moda.app/tools/story-safe-zone-checker",
+        "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
+      ]
+    },
+    "instagram_reels_multiplataforma": {
+      "nome": "Instagram Reels · perfil seguro v1",
+      "topo": 270,
+      "base": 672,
+      "esquerda": 70,
+      "direita": {
+        "largura": 300,
+        "de_y": 840,
+        "ate_y": 1920,
+        "icones": 4
+      },
+      "recorte_feed": {
+        "topo": 285,
+        "base": 285,
+        "nota": "prévia 4:5 no feed/grade corta ~285 px em cima e embaixo"
+      },
+      "fontes": [
+        "https://www.admakeai.com/blog/vertical-video-dimensions-2026",
+        "https://wildandfreetools.com/blog/vertical-video-safe-zones-guide-2026/"
+      ]
+    },
+    "youtube_shorts_multiplataforma": {
+      "nome": "YouTube Shorts · perfil seguro v1",
+      "topo": 280,
+      "base": 660,
+      "esquerda": 110,
+      "direita": {
+        "largura": 300,
+        "de_y": 840,
+        "ate_y": 1920,
+        "icones": 5
+      },
+      "fontes": [
+        "https://www.aicarousels.com/free-tools/youtube-safe-zone-checker"
+      ]
     }
   },
   "faixa_inferior": {
-    "_nota": "hierarquia inferior inspirada na referência (território → número → legenda → créditos), com cada faixa PRÓPRIA e dentro da área visível de todas as plataformas ativas",
+    "_nota": "LEGADO ATLAS: preservar legenda e créditos em faixas separadas NA INTERSEÇÃO segura Reels/TikTok/Shorts. Com base de 672px, fonte/legenda sobem; slots de conteúdo também recuam. Requer folha de contato e revisão de impactos nos mapas/cartões.",
     "atlas_creditos_margem_base": 160,
     "creditos_altura": 46,
     "creditos_px": 18,
@@ -70,9 +122,27 @@
     "margem_minima": 72,
     "conteudo_topo": 280,
     "marca_y": 300,
-    "_nota_topo": "Marca ajustada para permanecer visivel no recorte 4:5 de feed Reels (y>=285), antes da area de conteudo; erro recorrente da execucao 44221167260.",
+    "_nota_topo": "Marca ATLAS false; selo/legendas ficam acima do topo conservador. Reels feed crop 4:5 também exige revisão da capa.",
     "marca_atlas": false,
     "_nota_marca": "ATLAS sem marca fixa sobre os quadros; a marca cortada 40/40 e ao realocar colidiu com composicoes. Em DOSSIÊ, marca preservada. A identidade visual ATLAS vem dos tokens, nao de overlay fixo.",
     "_nota_creditos": "ATLAS V1: banda exclusiva de 2 linhas de 22px, mantendo slots de mapa, cards e legenda intocados. Medir altura REAL das atribuicoes; se texto nao couber, bloquear no fiscal e revisar atribuicao/diagrama, nunca sobrepor legenda nem cortar licenca."
-  }
+  },
+  "duracao_editorial": {
+    "modo_padrao_novos_episodios": "narrativa",
+    "duracao_maxima_editorial_s": null,
+    "piso_preferencial_tiktok_creator_rewards_s": 65,
+    "requisito_tiktok_creator_rewards_acima_de_s": 60,
+    "youtube_shorts_limite_s": 180,
+    "nota": "A historia define o master; nao esticar para bater 65 s e nao cortar para caber em Shorts. Acima de 180 s exige outra modalidade/versao no YouTube. Duracao isolada nunca garante monetizacao, que depende de conta, originalidade e regras de cada programa.",
+    "fontes": {
+      "tiktok": "https://support.tiktok.com/en/business-and-creator/creator-rewards-program/how-is-the-creator-rewards-program-different-from-the-tiktok-creator-fund",
+      "youtube": "https://support.google.com/youtube/answer/15424877",
+      "instagram": "https://about.fb.com/news/2023/11/giving-creators-more-ways-to-earn-money-on-facebook-and-instagram/"
+    }
+  },
+  "ativos_seguros": [
+    "tiktok_multiplataforma",
+    "instagram_reels_multiplataforma",
+    "youtube_shorts_multiplataforma"
+  ]
 }

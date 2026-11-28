@@ -1,0 +1,142 @@
+{
+  "schema": "coringa-mechanism-spec-planar-v0",
+  "units": "m",
+  "ground": {
+    "id": "ground",
+    "pose": [
+      0,
+      0,
+      0
+    ]
+  },
+  "duration_s": 6,
+  "publish": false,
+  "visual_approved": false,
+  "bodies": [
+    {
+      "id": "crank",
+      "seed": [
+        0,
+        0,
+        -0.35
+      ],
+      "shapes": [
+        {
+          "kind": "segment",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            0.7,
+            0
+          ],
+          "thickness": 0.07
+        }
+      ]
+    },
+    {
+      "id": "coupler",
+      "seed": [
+        0.6575608989931652,
+        -0.24002846521881593,
+        1.0880991931961514
+      ],
+      "shapes": [
+        {
+          "kind": "segment",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            2,
+            0
+          ],
+          "thickness": 0.07
+        }
+      ]
+    },
+    {
+      "id": "rocker",
+      "seed": [
+        2.2,
+        0,
+        1.9521545611611761
+      ],
+      "shapes": [
+        {
+          "kind": "segment",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            1.65,
+            0
+          ],
+          "thickness": 0.07
+        }
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "kind": "pin",
+      "a": "ground",
+      "b": "crank",
+      "pa": [
+        0,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "pin",
+      "a": "crank",
+      "b": "coupler",
+      "pa": [
+        0.7,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "pin",
+      "a": "coupler",
+      "b": "rocker",
+      "pa": [
+        2,
+        0
+      ],
+      "pb": [
+        1.65,
+        0
+      ]
+    },
+    {
+      "kind": "pin",
+      "a": "ground",
+      "b": "rocker",
+      "pa": [
+        2.2,
+        0
+      ],
+      "pb": [
+        0,
+        0
+      ]
+    }
+  ],
+  "driver": {
+    "body": "crank",
+    "theta0": -0.35,
+    "speed": 1.0471975511965976
+  }
+}

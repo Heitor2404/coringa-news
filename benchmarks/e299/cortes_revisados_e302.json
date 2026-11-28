@@ -1,0 +1,25 @@
+{
+  "schema": "coringa.reviewed-cut.private.v1",
+  "publish": false,
+  "release": "review-e300-45737009519-1",
+  "cuts": [
+    {
+      "shot": "c2-1",
+      "chapter": "Fissuras no solo",
+      "speech": "MAGMA CHEGOU À SUPERFÍCIE LANÇANDO FRAGMENTOS INCANDESCENTES",
+      "source": "kilauea-volcano-fissure-8-video-compilation",
+      "label": "Atividade da fissura 8 em 30 de maio",
+      "sha256": "783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c",
+      "window_start": 7,
+      "window_duration": 3.8,
+      "observed": "Três amostras 7,456/8,9/10,268 s mostram fonte vermelha e fragmentos projetados; revisão visual assistida da folha candidato-1.jpg; não certifica movimento contínuo nem abertura inicial.",
+      "review_ref": "revisoes/e300-coverage-45737009519-1/candidato-1.jpg",
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c",
+        "inspecao": "Revisão assistida E317 da mesma origem USGS registra contexto espacial e marca original; preservar a largura da fonte.",
+        "motivo": "Preservar contexto da projeção de fragmentos e atribuição original."
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "movimento",
+      "tema": "Regressão de movimento real E256/E257",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "polvo",
+          "mostrar": "mudança de coloração do polvo diretamente observável em quadros do mesmo intervalo",
+          "necessidade": "registro",
+          "evidencia_visual": "movimento",
+          "consultas_en": [
+            "octopus camouflage",
+            "octopus color change"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    }
+  ]
+}

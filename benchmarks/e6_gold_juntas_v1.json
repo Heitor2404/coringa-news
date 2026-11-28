@@ -1,0 +1,87 @@
+{
+  "schema": "coringa-e6-joint-evidence-gold-v1",
+  "frozen_at": "2026-11-23",
+  "target": "A cited sentence directly describes one of three narrowly specified mechanical contact/kinematic relation classes: pin_in_slot, sliding_in_guide, rack_engages_pinion. Only explicitly evidenced relations count. It does not establish coordinates, mounting details, body-instance bindings, or simulator compatibility.",
+  "annotation_provenance": "Manual review of real E6 API corpus; labeled before E6 extractor implementation by same development session. Independent engineering annotation NOT performed.",
+  "annotation_independently_verified": false,
+  "gold_frozen": true,
+  "allow_label_changes_for_metric": false,
+  "source_snapshot": "GitHub Actions run 45236864266 artifact 14849132292; page revisions and extract SHA",
+  "source_selection": "e5",
+  "pages": [
+    {
+      "title": "Geneva drive",
+      "pageid": 827100,
+      "revid": 1380681811,
+      "text_sha256": "46cfbe116dcae430ac14c0efbda5b41bdc49977e51f0e56687f4371dc16abda8",
+      "count": 15,
+      "split": "development",
+      "positive_types": {
+        "s2": "pin_in_slot",
+        "s14": "pin_in_slot"
+      }
+    },
+    {
+      "title": "Cam follower",
+      "pageid": 23682291,
+      "revid": 1220864107,
+      "text_sha256": "119bdeff65f83bb86c517d0d4538aadc22ef9b6160c3d0d55bc6ad529ddf8d33",
+      "count": 11,
+      "split": "development",
+      "positive_types": {}
+    },
+    {
+      "title": "Slider-crank linkage",
+      "pageid": 56858642,
+      "revid": 1380705380,
+      "text_sha256": "5d5b30b58f7a732840d704da638ebe5aa15bb006511202f233a573b6f756c6c9",
+      "count": 40,
+      "split": "development",
+      "positive_types": {
+        "s3": "sliding_in_guide"
+      }
+    },
+    {
+      "title": "Universal joint",
+      "pageid": 144948,
+      "revid": 1374673293,
+      "text_sha256": "90fada2bd42e736e75dcf5e2c510873d0dec68e75a6c367c5a6b6433ebe99e28",
+      "count": 40,
+      "split": "heldout",
+      "positive_types": {}
+    },
+    {
+      "title": "Rack and pinion",
+      "pageid": 263745,
+      "revid": 1386696260,
+      "text_sha256": "6b3dfe03463534db0bdab3df170dceb8bfc142c176e87f7f11a697f4881123e3",
+      "count": 23,
+      "split": "heldout",
+      "positive_types": {
+        "s1": "rack_engages_pinion",
+        "s4": "rack_engages_pinion"
+      }
+    }
+  ],
+  "dimension_gold": {
+    "pageid": 56858642,
+    "sentence_id": "s18",
+    "quoted_values": [
+      {
+        "component": "rod",
+        "property": "length",
+        "value": 6,
+        "unit": "inch"
+      },
+      {
+        "component": "crank",
+        "property": "radius",
+        "value": 2,
+        "unit": "inch"
+      }
+    ],
+    "context": "illustrative_numerical_example_not_real_machine_measurements",
+    "permission_to_fill_spec": false
+  },
+  "notice": "Do not alter source revisions, split, labels or dimension annotations after evaluating E6. New independently reviewed corpus must use another version."
+}

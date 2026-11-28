@@ -1,0 +1,27 @@
+{
+  "publish": false,
+  "necessidade_id": "n1",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Fissure_fountains_feed_lava_flows,_as_shown_in_this_overflight_video_of_the_F....webm",
+  "sha256": "cc825cc83cab417dc2b316344f488c080b4817dcef2d6e5f49792e3a5605e1fc",
+  "fonte_identidade": "https://www.usgs.gov/media/videos/kilauea-volcano-overflight-fissure-20-complex",
+  "mostrar_mapa": "Localização regional do Kilauea no sudeste da ilha do Havaí",
+  "mapa": {
+    "id": "kilauea_regional_e2614",
+    "title": "Kilauea, Havaí",
+    "fonte_localizacao": "https://www.usgs.gov/volcanoes/kilauea/science/2018-lower-east-rift-zone-eruption-and-summit-collapse-kilauea",
+    "delta": 1.6,
+    "atlas": {
+      "roi": [
+        -155.58,
+        19.1,
+        -154.75,
+        19.65
+      ],
+      "label": "Região do Kilauea",
+      "lonlat": [
+        -155.28,
+        19.42
+      ]
+    }
+  }
+}

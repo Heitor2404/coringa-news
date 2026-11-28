@@ -1,0 +1,97 @@
+{
+  "publicar": false,
+  "originais": [
+    {
+      "fonte": "commons",
+      "tipo": "foto",
+      "titulo": "Aerial view of Taku Glacier crevasses, Juneau Icefield, Alaska (2026)",
+      "descricao": "Wide aerial view of the Taku Glacier sweeping around a rocky ridge in the Juneau Icefield, Southeast Alaska, showing curving bands of crevasses along the direction of ice flow. Photographed by the Z &amp; X Family Founda",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Taku_Glacier_crevasses,_Juneau_Icefield,_Alaska_(2026).jpg",
+      "credito": "\"Aerial view of Taku Glacier crevasses, Juneau Icef\" — Z &amp; X Family Foundation (CC BY-SA 4.0), via Wikimedia Commons",
+      "licenca": "CC BY-SA 4.0",
+      "direitos": "DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA",
+      "aquisicao": {
+        "width": 5712,
+        "height": 4284,
+        "duration_s": null,
+        "sha256": "dc0cedb4a51c0179458859dc4fce3f444e129f51d34c3581d59792aad8e2a878",
+        "bytes": 8733421,
+        "url_adquirida": "https://upload.wikimedia.org/wikipedia/commons/4/49/Aerial_view_of_Taku_Glacier_crevasses%2C_Juneau_Icefield%2C_Alaska_%282026%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "status": "BYTES_VERIFIED_SEMANTICS_PENDING"
+      },
+      "relatorio": "e255-45540502903-1",
+      "necessidade_anterior": "n1",
+      "publicar": false,
+      "direitos_aprovados": false
+    },
+    {
+      "fonte": "commons",
+      "tipo": "foto",
+      "titulo": "Chopicalqui glacier crevasses (6021417330)",
+      "descricao": "Chopicalqui glacier crevasses",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Chopicalqui_glacier_crevasses_(6021417330).jpg",
+      "credito": "\"Chopicalqui glacier crevasses (6021417330)\" — sergejf (CC BY-SA 2.0), via Wikimedia Commons",
+      "licenca": "CC BY-SA 2.0",
+      "direitos": "DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA",
+      "aquisicao": {
+        "width": 3648,
+        "height": 2736,
+        "duration_s": null,
+        "sha256": "6a7db803b262e7248913034d35eae6e84ac8e044e4c8e3d4e6c6028ae73333fa",
+        "bytes": 4587244,
+        "url_adquirida": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Chopicalqui_glacier_crevasses_%286021417330%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "status": "BYTES_VERIFIED_SEMANTICS_PENDING"
+      },
+      "relatorio": "e255-45540502903-1",
+      "necessidade_anterior": "n1",
+      "publicar": false,
+      "direitos_aprovados": false
+    },
+    {
+      "fonte": "commons",
+      "tipo": "foto",
+      "titulo": "Glacier du Mont Mallet (Glacier du Géant) & Mont Blanc, 2010 July",
+      "descricao": "Glacier du Géant and Mont Blanc in the background in the end of 2010 July.",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Glacier_du_Mont_Mallet_(Glacier_du_G%C3%A9ant)_%26_Mont_Blanc,_2010_July.jpg",
+      "credito": "\"Glacier du Mont Mallet (Glacier du Géant) & Mont B\" — Ximonic, Simo Räsänen (CC BY-SA 3.0), via Wikimedia Commons",
+      "licenca": "CC BY-SA 3.0",
+      "direitos": "DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA",
+      "aquisicao": {
+        "width": 2400,
+        "height": 1600,
+        "duration_s": null,
+        "sha256": "c98a8172acd047020a9029b8718c1f9d60258bf2c180a9ef0043461e726c4c37",
+        "bytes": 2787181,
+        "url_adquirida": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Glacier_du_Mont_Mallet_%28Glacier_du_G%C3%A9ant%29_%26_Mont_Blanc%2C_2010_July.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "status": "BYTES_VERIFIED_SEMANTICS_PENDING"
+      },
+      "relatorio": "e253-45537221658-1",
+      "necessidade_anterior": "n2",
+      "publicar": false,
+      "direitos_aprovados": false
+    },
+    {
+      "fonte": "commons",
+      "tipo": "foto",
+      "titulo": "Oolah Valley (16089307144)",
+      "descricao": "Small tarn in a hidden valley in the Itkillik Preserve, sometimes called the Yosemite of the Arctic. Gates of the Arctic National Park and Preserve. NPS Photo/Cadence Cook",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Oolah_Valley_(16089307144).jpg",
+      "credito": "\"Oolah Valley (16089307144)\" — National Park Service, Alaska Region (Public domain), via Wikimedia Commons",
+      "licenca": "Public domain",
+      "direitos": "DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA",
+      "aquisicao": {
+        "width": 4288,
+        "height": 2848,
+        "duration_s": null,
+        "sha256": "cd71184f07950bda98ed5ffd8ea830700c96513e7616bef3f8b58144439ab5fb",
+        "bytes": 5805978,
+        "url_adquirida": "https://upload.wikimedia.org/wikipedia/commons/6/63/Oolah_Valley_%2816089307144%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "status": "BYTES_VERIFIED_SEMANTICS_PENDING"
+      },
+      "relatorio": "e253-45537221658-1",
+      "necessidade_anterior": "n4",
+      "publicar": false,
+      "direitos_aprovados": false
+    }
+  ]
+}

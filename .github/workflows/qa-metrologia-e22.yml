@@ -1,0 +1,24 @@
+name: E22 metrologia de superficies
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-metrologia-e22.yml"
+      - "src/v4/formatos/metrologia_e22.py"
+      - "src/v4/formatos/filme_e18.py"
+      - "tests/test_metrologia_e22.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  metrologia:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install --only-binary=:all: numpy
+      - run: python -m unittest discover -s tests -p test_metrologia_e22.py -v
+      - run: python -m py_compile src/v4/formatos/filme_e18.py src/v4/formatos/metrologia_e22.py

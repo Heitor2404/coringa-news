@@ -1,0 +1,33 @@
+name: E34 descoberta publica CAD - candidatos sem credenciais
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-pesquisa-cad-e34.yml"
+      - "src/v4/formatos/pesquisa_cad_e34.py"
+      - "tests/test_pesquisa_cad_e34.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pesquisa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m unittest discover -s tests -p test_pesquisa_cad_e34.py -v
+      - name: Consultas reais sem URLs de resposta predefinidas
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p qa_e34
+          python -m src.v4.formatos.pesquisa_cad_e34 "geneva mechanism CAD" qa_e34/lote.json --also "cycloidal drive CAD" --limit 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e34-candidatos-cad
+          path: qa_e34/
+          retention-days: 7

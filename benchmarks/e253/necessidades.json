@@ -1,0 +1,85 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "paisagens_glaciais",
+      "tema": "Como o gelo transforma paisagens",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "Alpes",
+          "mostrar": "localização regional dos Alpes",
+          "necessidade": "territorio",
+          "objetivo_geografico": "localizacao",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "Alps map"
+          ]
+        },
+        {
+          "id": "n2",
+          "fatos": [
+            "f2"
+          ],
+          "sujeito": "geleira",
+          "mostrar": "fendas visíveis na superfície da geleira",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacier crevasses photograph",
+            "glacier crevasse aerial"
+          ]
+        },
+        {
+          "id": "n3",
+          "fatos": [
+            "f3"
+          ],
+          "sujeito": "moraina glacial",
+          "mostrar": "depósito de sedimentos rochosos em moraina",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial moraine rocks photograph",
+            "terminal moraine glacier"
+          ]
+        },
+        {
+          "id": "n4",
+          "fatos": [
+            "f4"
+          ],
+          "sujeito": "vale glacial",
+          "mostrar": "forma transversal em U de um vale glacial",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "U shaped glacial valley photograph",
+            "glacial trough valley"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f2",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f3",
+          "tipo": "pedido_visual_de_teste"
+        },
+        {
+          "id": "f4",
+          "tipo": "pedido_visual_de_teste"
+        }
+      ]
+    }
+  ]
+}

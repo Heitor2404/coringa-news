@@ -1,0 +1,87 @@
+name: QA — contrato visual compartilhado (3 assuntos, SEM render)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/multitema.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-visual-multitema-contrato
+  cancel-in-progress: true
+jobs:
+  regressao:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependências leves sem IA e sem render
+        run: |
+          python -m pip install -q pytest pillow requests
+      - name: "Regressões: regras ATLAS + FILME + revisão semântica"
+        run: |
+          python -m pytest -q \
+            tests/test_contrato_visual_multitema.py \
+            tests/test_atlas_triagem_editorial.py \
+            tests/test_atlas_revisao_visual.py \
+            tests/test_filme_editorial.py \
+            tests/test_filme_panama_ciclo_19s.py
+      - name: Verificar contrato real de 3 temas, sem aprovar estética
+        run: |
+          mkdir -p qa_multitema
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import contrato_visual_comum as C
+          from src.v4.formatos import triagem_editorial, filme_editorial
+          root=Path('.')
+          plans={
+            'panama':root/'docs/v4/formatos/filme_panama_ciclo_19s.json',
+            'taiwan_filme':root/'docs/v4/formatos/filme_taiwan_prova.json',
+            'taiwan_atlas_legado':root/'src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json',
+          }
+          result={}
+          for tema,arq in plans.items():
+            p=json.loads(arq.read_text(encoding='utf-8'))
+            r=C.auditar(p)
+            specific=(triagem_editorial.avaliar(p) if p['formato']=='atlas'
+                      else filme_editorial.avaliar(p))
+            result[tema]={'formato':p['formato'],'estrutura_comum':r['estrutura_declarada_ok'],
+                          'provas_declaradas_resolvidas':r['provas_resolvidas_no_plano'],
+                          'compromissos':r['total_compromissos'],
+                          'acoes_com_expectativa':r['acoes_com_expectativa_declarada'],
+                          'acoes_programadas_em_ordem':r['acoes_programadas_em_ordem'],
+                          'revisao_visual':r['prova_visual'],
+                          'gate_especializado':specific['pronto'],
+                          'aprovacao_humana':r['aprovacao_humana']}
+          h=json.loads((root/'tests/evidencia/generalizacao_v2.json').read_text(encoding='utf-8'))
+          d=h['dominios']['dirigivel_hindenburg']
+          casos=d['casos']
+          assert any(x['esperado']=='INCOMPATIVEL' for x in casos)
+          result['hindenburg_regra']={
+            'tipo':'GABARITO_SINTETICO',
+            'cenarios':len(casos),
+            'nao_sao_midias_reais':all(i.get('imagem_hipotetica') is True
+                                      for i in d['imagens'].values()),
+            'video_real_avaliado':False,'aprovacao_humana':'PENDENTE'}
+          assert result['panama']['estrutura_comum'] and result['panama']['acoes_programadas_em_ordem']==1
+          assert result['taiwan_filme']['estrutura_comum']
+          assert not result['taiwan_atlas_legado']['gate_especializado']
+          assert not result['hindenburg_regra']['video_real_avaliado']
+          for r in result.values():
+            assert r['aprovacao_humana']=='PENDENTE'
+          Path('qa_multitema/relatorio_contratos.json').write_text(
+            json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+      - name: Evidências de teste, não publicação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-contrato-visual-compartilhado-tres-temas
+          path: qa_multitema/relatorio_contratos.json
+          retention-days: 7
+          if-no-files-found: warn

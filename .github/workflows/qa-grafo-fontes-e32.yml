@@ -1,0 +1,68 @@
+name: E32 grafo cinemático de fontes STEP e URDF reais
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-grafo-fontes-e32.yml"
+      - "src/v4/formatos/prova_grafo_fontes_e32.py"
+      - "tests/test_prova_grafo_e32.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  step:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      OPENBLAS_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m pip install -q cadquery==2.7.0 scipy pytest
+      - run: python -m pytest -q tests/test_grafo_cinematica_e30.py tests/test_prova_grafo_e32.py
+      - name: Fonte autorizada e verificada no E17
+        run: |
+          mkdir -p source_e32
+          curl -fsS --retry 2 --max-time 30 https://xemstudio.com/mcp \
+            -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_free_files","arguments":{"object":"print-in-place-crank-slider"}}}' \
+            -o "$RUNNER_TEMP/xem-free-files.json"
+          step_url=$(jq -er '.result.structuredContent.files[] | select(.name=="print-in-place-crank-slider-assembly") | .step' "$RUNNER_TEMP/xem-free-files.json")
+          case "$step_url" in https://xemstudio.com/files/*) ;; *) exit 1 ;; esac
+          curl -fsS --retry 2 --max-time 60 "$step_url" -o source_e32/loop.step
+          curl -fsSL --retry 2 --max-time 60 "$(jq -r .files.license[0] benchmarks/e17_closed_step.json)" -o source_e32/LICENSE.md
+      - name: Grafo real sem render
+        run: python -m src.v4.formatos.prova_grafo_fontes_e32 step benchmarks/e17_closed_step.json source_e32 E32_STEP.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e32-step-grafo
+          path: E32_STEP.json
+          retention-days: 7
+  urdf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      OPENBLAS_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest
+          python -m pytest -q tests/test_grafo_cinematica_e30.py tests/test_prova_grafo_e32.py
+      - name: Fonte fixada por commit e hash
+        run: |
+          commit=$(jq -er .fonte.commit benchmarks/e19_urdf_unificado.json)
+          repo=$(jq -er .fonte.repositorio benchmarks/e19_urdf_unificado.json)
+          git init -q fonte_e32
+          git -C fonte_e32 fetch -q --depth 1 "$repo" "$commit"
+          git -C fonte_e32 checkout -q FETCH_HEAD
+          test "$(git -C fonte_e32 rev-parse HEAD)" = "$commit"
+      - name: Grafo real sem render
+        run: python -m src.v4.formatos.prova_grafo_fontes_e32 urdf benchmarks/e19_urdf_unificado.json fonte_e32 E32_URDF.json --id source_robotics_ssg48
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e32-urdf-grafo
+          path: E32_URDF.json
+          retention-days: 7

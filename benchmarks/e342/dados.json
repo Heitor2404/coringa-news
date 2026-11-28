@@ -1,0 +1,31 @@
+{
+  "publish": false,
+  "entries": [
+    {
+      "shot": "c3-2",
+      "speech": "MAIS DE VINTE QUILÔMETROS POR HORA EM TRECHOS PRÓXIMOS À SAÍDA",
+      "sha256": "6a84f19c3d158de35a4cece3794f2a610e91e9c2f5d097e2eaaa990cb7644839",
+      "publish": false,
+      "anchor": "VINTE",
+      "value": "≈ 21–26 km/h",
+      "scope": "Saída do cone · 14 jul 2018",
+      "authority": "USGS",
+      "source_url": "https://www.usgs.gov/media/videos/july-14-2018-kilauea-fissure-8-video-captured-uas",
+      "source_date": "2018-07-14",
+      "source_statement": "Velocidade aproximada de 13–16 mph ao sair do cone, convertida para km/h e arredondada; não é medida de toda a extensão ou dos pixels."
+    },
+    {
+      "shot": "c6-1",
+      "speech": "MAIS DE TRÊS QUILÔMETROS QUADRADOS E MEIO DE TERRA FORAM ACRESCENTADOS",
+      "sha256": "fcfcb2bc842e214228eb710c61c0f032170135507e0aa74821c12cacbceeffb4",
+      "publish": false,
+      "anchor": "TRÊS",
+      "value": "≈ 3,54 km²",
+      "scope": "Terra nova · mapa de ago 2018",
+      "authority": "USGS",
+      "source_url": "https://www.usgs.gov/media/images/map-kilauea-volcanos-lower-east-rift-zone",
+      "source_date": "2018-08",
+      "source_statement": "Mapa de agosto informa cerca de 875 acres de terra nova, equivalentes a aproximadamente 3,54 km². Não somar aos 35,5 km² sem esclarecer o escopo; filmagem não mede área."
+    }
+  ]
+}

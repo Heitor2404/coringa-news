@@ -1,0 +1,135 @@
+{
+  "status": "PRIVATE_MOTION_PROOF_NOT_PUBLIC",
+  "duration": 8.4,
+  "fps": 30,
+  "resolution": [
+    1080,
+    1920
+  ],
+  "qa": {
+    "publish": false,
+    "telegram": false,
+    "narration": false,
+    "deviceUI": "SIMULATED",
+    "visualApproval": "PENDING"
+  },
+  "models": {
+    "motor": {
+      "id": "motor",
+      "title": [
+        "O PISTÃO",
+        "FAZ O EIXO GIRAR"
+      ],
+      "subtitle": "Expansão → movimento → rotação",
+      "section": "MOTOR A COMBUSTÃO · TEMPO DE EXPANSÃO",
+      "driver": "pressure",
+      "ports": false,
+      "accent": "#F9AC45",
+      "geometry": {
+        "centerX": 498,
+        "centerY": 1002,
+        "radius": 88,
+        "rodLength": 222,
+        "pistonWidth": 214,
+        "pistonHeight": 114
+      },
+      "steps": [
+        {
+          "at": 0,
+          "label": "GÁS EM EXPANSÃO",
+          "detail": "O gás empurra o pistão para baixo.",
+          "focus": "piston"
+        },
+        {
+          "at": 1.65,
+          "label": "PISTÃO DESCE",
+          "detail": "A força chega à biela articulada.",
+          "focus": "piston"
+        },
+        {
+          "at": 3.45,
+          "label": "BIELA TRANSMITE",
+          "detail": "Ela empurra o pino do virabrequim.",
+          "focus": "rod"
+        },
+        {
+          "at": 5.35,
+          "label": "O EIXO GIRA",
+          "detail": "O movimento vira rotação contínua.",
+          "focus": "crank"
+        }
+      ],
+      "footer": "Modelo didático · apenas transmissão mecânica"
+    },
+    "compressor": {
+      "id": "compressor",
+      "title": [
+        "COMO O COMPRESSOR",
+        "COMPRIME O AR"
+      ],
+      "subtitle": "Rotação → pistão → pressão",
+      "section": "COMPRESSOR DE PISTÃO · CICLO SIMPLIFICADO",
+      "driver": "shaft",
+      "ports": true,
+      "accent": "#5DE2DE",
+      "geometry": {
+        "centerX": 498,
+        "centerY": 1002,
+        "radius": 80,
+        "rodLength": 230,
+        "pistonWidth": 214,
+        "pistonHeight": 114
+      },
+      "steps": [
+        {
+          "at": 0,
+          "label": "O EIXO GIRA",
+          "detail": "O virabrequim movimenta a biela.",
+          "focus": "crank"
+        },
+        {
+          "at": 1.65,
+          "label": "ENTRA AR",
+          "detail": "Ao descer, o pistão aumenta o volume.",
+          "focus": "intake"
+        },
+        {
+          "at": 4.15,
+          "label": "O AR É COMPRIMIDO",
+          "detail": "Ao subir, o pistão reduz o volume.",
+          "focus": "piston"
+        },
+        {
+          "at": 7.02,
+          "label": "SAÍDA PRESSURIZADA",
+          "detail": "A válvula de saída libera o ar.",
+          "focus": "outlet"
+        }
+      ],
+      "footer": "Modelo didático · válvulas simplificadas"
+    }
+  },
+  "camera": {
+    "machineBounds": {
+      "left": 245,
+      "top": 520,
+      "right": 755,
+      "bottom": 1165
+    },
+    "introViewport": {
+      "left": 105,
+      "top": 500,
+      "right": 784,
+      "bottom": 1168
+    },
+    "detailViewport": {
+      "left": 105,
+      "top": 358,
+      "right": 784,
+      "bottom": 1168
+    },
+    "maxScale": 1.16,
+    "zoomStart": 1.65,
+    "zoomSeconds": 0.95
+  }
+}

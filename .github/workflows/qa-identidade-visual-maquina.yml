@@ -1,0 +1,50 @@
+name: "QA — identidade visual de mecanismo (não basta a física)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-identidade-visual-maquina.yml"
+      - "src/v4/formatos/identidade_visual_maquina.py"
+      - "tests/test_identidade_visual_maquina.py"
+      - "docs/v4/formatos/reference_first/identidade_compressor_oficina_tanque_horizontal.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  negar_mecanismo_generico_rotulado_compressor:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -q pytest
+      - name: Gate de topologia, peças e configuração específica
+        run: |
+          python -m pytest -q tests/test_identidade_visual_maquina.py
+      - name: Emitir parecer sem certificar pixels ou arte
+        run: |
+          mkdir -p qa_identidade_visual
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.identidade_visual_maquina import verificar
+          source=Path("docs/v4/formatos/reference_first/identidade_compressor_oficina_tanque_horizontal.json")
+          result=verificar(json.loads(source.read_text("utf8")))
+          assert result["gate"]=="ESTRUTURA_DECLARADA_OK_VISUAL_NAO_CERTIFICADO"
+          assert result["validacao_por_pixels"]=="NAO_REALIZADA"
+          assert not result["publicar"]
+          (Path("qa_identidade_visual")/"resultado.json").write_text(json.dumps({
+              "estado":"MONTAGEM_DECLARADA_NAO_APROVACAO_ARTISTICA",
+              "prova":result,
+              "documentacao":"Conjunto elétrico com tanque horizontal, não compressor genérico de qualquer subtipo",
+              "fonte_externa_licenciada_usada":False,
+              "publicar":False
+          },ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qa-identidade-visual-compressor-privado
+          path: qa_identidade_visual/
+          retention-days: 5

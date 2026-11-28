@@ -1,0 +1,86 @@
+name: E304.1 - replay integral com originais na pasta autorizada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-replay-narrado-e304.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-replay-narrado-e304
+  cancel-in-progress: false
+jobs:
+  replay:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install -q -r requirements.txt pytest beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_filme_editorial.py tests/test_composicao_e286.py tests/test_alinhamento_e289.py tests/test_documentario_integral_e254.py tests/test_cortes_revisados_e302.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Restaurar originais e audio historico com hash
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_replay_narrado_e304 benchmarks/e304/replay_geleiras.json qa_e304
+      - name: Renderizar documentario integral privado
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e304/filme.mp4 --props=../qa_e304/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: Validar filme e amostrar cada cena
+        run: |
+          python - <<'PY'
+          import json,subprocess,hashlib
+          from pathlib import Path
+          from scripts.documentario_telegram import verificar_video
+          root=Path('qa_e304');p=json.loads((root/'props.json').read_text());v=root/'filme.mp4'
+          assert p['private_review_only'] and p['preview'] and p['duracao']>=60
+          assert json.loads((root/'sincronia-medida.json').read_text())['ok']
+          verificar_video(v,p['duracao'])
+          for i,s in enumerate(p['shots']):
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str((s['start']+s['end'])/2),'-i',str(v),'-frames:v','1',str(root/f'cena-{i:02d}.jpg')],check=True)
+          (root/'qa.json').write_text(json.dumps({'duration':p['duracao'],'shots':len(p['shots']),'types':sorted(set(s['type'] for s in p['shots'])),'sha256':hashlib.sha256(v.read_bytes()).hexdigest(),'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','kind':'HISTORICAL_REPLAY','ui_review':'PENDING'},indent=2))
+          PY
+      - name: Entregar somente no Telegram privado
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v3 import previa_telegram as T
+          from scripts.documentario_telegram import verificar_video
+          p=Path('qa_e304');q=json.loads((p/'qa.json').read_text());chat,_=T.chat_autorizado()
+          envio=T._caber(p/'filme.mp4');verificar_video(envio,q['duration'])
+          r=T._api('sendVideo',{'chat_id':chat,'caption':'CORINGA EXPLICA · E304 · GELEIRAS · replay integral com compositor atual e áudio recuperado · PRIVADO, NÃO PUBLICAR','supports_streaming':'true'},('video',envio))
+          if not isinstance(r,dict) or not r.get('message_id'):raise RuntimeError('E304 entrega não confirmada')
+          PY
+      - name: Preservar provas inclusive se falhar
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=qa_e304
+          files=("$root"/*.json "$root"/*.jpg)
+          [[ ! -s "$root/documental/contrato.json" ]] || files+=("$root/documental/contrato.json")
+          if [[ -s "$root/qa.json" && -s "$root/filme.mp4" ]]; then files+=("$root/filme.mp4"); fi
+          if (( ${#files[@]} )); then
+            bash scripts/arquivar_cofre_review.sh "review-e304-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e304-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          fi

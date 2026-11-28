@@ -1,0 +1,66 @@
+{
+  "schema": "palco-vertical-lab-v1",
+  "familia": "eclusa_hidraulica_ciclo",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "caixa_conservadora": {
+    "left": 61,
+    "top": 608,
+    "right": 1018,
+    "bottom": 1500
+  },
+  "editorial_termina_y": 435,
+  "rodape_comeca_y": 1394,
+  "folga_superior": 18,
+  "folga_inferior": 30,
+  "subida_px": 155,
+  "tipografia": {
+    "kicker_y": 254,
+    "title_y": 331,
+    "linha_separadora_y": 362,
+    "rotulos_cotas_y": 410,
+    "rodape_subida_px": 120
+  },
+  "duracao_s": 17.5,
+  "eventos": [
+    {
+      "at": 0,
+      "action": "enter",
+      "label": "O NAVIO ENTRA NA CÂMARA"
+    },
+    {
+      "at": 2.6,
+      "action": "seal",
+      "label": "O PORTÃO DE ENTRADA FECHA"
+    },
+    {
+      "at": 4.6,
+      "action": "valves",
+      "label": "AS VÁLVULAS LIBERAM A ÁGUA"
+    },
+    {
+      "at": 6.1,
+      "action": "rise",
+      "label": "A ÁGUA SOBE. O NAVIO TAMBÉM."
+    },
+    {
+      "at": 12.2,
+      "action": "equalize",
+      "label": "OS DOIS NÍVEIS FICAM IGUAIS"
+    },
+    {
+      "at": 14,
+      "action": "open",
+      "label": "PORTÃO DE SAÍDA SE ABRE"
+    },
+    {
+      "at": 15.6,
+      "action": "exit",
+      "label": "O NAVIO SEGUE NO NÍVEL ALTO"
+    }
+  ],
+  "estado": "PROVA_PRIVADA_GEOMETRIA_DECLARADA_NAO_AUTOMATICA",
+  "publicar": false
+}

@@ -1,0 +1,130 @@
+name: "LAB F11 — correia reutilizada em dois rigs + auditoria de UI vertical"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-transmissao-multirrig-f11.yml"
+      - "src/v4/formatos/compositor_cinematico_parametrico_2d.py"
+      - "src/v4/formatos/qa_svg_mobile_f11.py"
+      - "tests/test_qa_svg_mobile_f11.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-f11-correa-duas-maquinas-mobile
+  cancel-in-progress: true
+jobs:
+  qa_f11:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependencias dos modulos existentes SVG e FFmpeg
+        run: |
+          python -m pip install -q pytest cairosvg pillow numpy scipy opencv-python-headless
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testar F11, F10, F7 e camera de maquinas
+        run: |
+          python -m pytest -q \
+            tests/test_qa_svg_mobile_f11.py \
+            tests/test_transmissao_parametrica_f10.py \
+            tests/test_mecanica_parametrica_f7.py \
+            tests/test_camera_causal_svg.py
+      - name: Renderizar as mesmas DUAS cenas F7 com movimento F11 privado
+        timeout-minutes: 10
+        run: |
+          mkdir -p qa_f11/
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f11/BIELA_CURTO_F11_CORREIA.mp4 --transmissao-animada
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_longo.json \
+            qa_f11/BIELA_LONGO_F11_CORREIA.mp4 --transmissao-animada
+          python -m src.v4.formatos.compositor_cinematico_parametrico_2d \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json \
+            qa_f11/BIELA_CURTO_F7_BASELINE.mp4
+      - name: Medir overlap por pixels dos papeis e gerar mascaras de tres plataformas
+        run: |
+          python -m src.v4.formatos.qa_svg_mobile_f11 \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_curto.json qa_f11 > /dev/null
+          python -m src.v4.formatos.qa_svg_mobile_f11 \
+            src/v4/formatos/cenas_parametricas/biela_manivela_curso_longo.json qa_f11 > /dev/null
+      - name: Auditar tres videos reais, hashes, fases e diferenca localizada
+        run: |
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageChops,ImageStat
+          root=Path('qa_f11')
+          files=['BIELA_CURTO_F7_BASELINE.mp4','BIELA_CURTO_F11_CORREIA.mp4',
+                 'BIELA_LONGO_F11_CORREIA.mp4']
+          board=Image.new('RGB',(4*270,3*480),'#e4eef3')
+          movies={}
+          frames={}
+          for row,name in enumerate(files):
+              path=root/name
+              info=json.loads(subprocess.check_output(['ffprobe','-v','error',
+                  '-show_entries','format=duration:stream=codec_type,width,height,r_frame_rate',
+                  '-of','json',str(path)]))
+              stream=next(s for s in info['streams'] if s['codec_type']=='video')
+              assert (stream['width'],stream['height'])==(540,960)
+              assert stream['r_frame_rate']=='24/1'
+              assert abs(float(info['format']['duration'])-9)<.05
+              assert not any(s['codec_type']=='audio' for s in info['streams'])
+              render=json.loads(path.with_suffix('.json').read_text('utf8'))
+              assert render['sha256']==hashlib.sha256(path.read_bytes()).hexdigest()
+              animated='_F11_' in name
+              assert render['belt_animation_f11'] is animated
+              assert render['camera_fixed'] and render['publish'] is False
+              movies[name]={'sha256':render['sha256'],'animated':animated}
+              frames[name]=[]
+              for col,sec in enumerate((.5,2.3,4.5,6.8)):
+                  dest=root/f'{path.stem}_{col}.png'
+                  subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                      '-y','-ss',str(sec),'-i',str(path),'-frames:v','1',str(dest)])
+                  img=Image.open(dest).convert('RGB')
+                  frames[name].append(img)
+                  board.paste(img.resize((270,480)),(col*270,row*480))
+          for i in range(4):
+              a,b=frames[files[0]][i],frames[files[1]][i]
+              diff=ImageChops.difference(a.crop((48,585,403,830)),
+                                         b.crop((48,585,403,830)))
+              change=sum(ImageStat.Stat(diff).mean)/3
+              assert change>0.025,(i,change)
+          board.save(root/'COMPARATIVO_F7_VS_F11_TRES_RIGS_12_QUADROS.jpg',quality=92)
+          audits={}
+          for suffix in ('curso_curto','curso_longo'):
+              name='biela_manivela_'+suffix+'_F11_AUDITORIA.json'
+              a=json.loads((root/name).read_text('utf8'))
+              assert a['publish'] is False
+              assert a['status']=='INSPECAO_UI_HUMANA_PENDENTE'
+              assert a['mask_measurement']=='DELTAS_RASTER_SVG_SEM_CODEC'
+              assert a['automatically_shrink_machine'] is False
+              audits[suffix]={'worst_overlap_fraction':a['worst_observed_overlap_fraction'],
+                  'manual_review_required':True}
+          report={
+              'schema':'coringa-f11-multirig-qa-v1',
+              'status':'TECNICO_VALIDO_ESTETICA_NAO_APROVADA',
+              'rig_count':2,'compositor_count':1,
+              'same_belt_primitive_used_by_f10_compressor':True,
+              'platform_UI_masks_conservative_not_official':True,
+              'mobile_published_approval':False,
+              'industrial_reference_verified':False,
+              'videos':movies,'mobile_audits':audits
+          }
+          (root/'QA_F11.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f11-correia-multirrig-mascaras-mobile-privado
+          path: qa_f11/
+          retention-days: 5
+          if-no-files-found: warn

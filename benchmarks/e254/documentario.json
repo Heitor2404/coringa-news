@@ -1,0 +1,778 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "gelo_paisagem",
+      "visao_esgotada": true,
+      "tema": "Como as geleiras esculpem paisagens",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "geleira de montanha",
+          "mostrar": "língua de gelo contínua descendo uma encosta",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "mountain glacier tongue aerial",
+            "mountain glacier tongue"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n1",
+                "sujeito": "geleira de montanha",
+                "mostrar": "língua de gelo contínua descendo uma encosta",
+                "fatos": [
+                  "f1"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "8c291c9e09cc5c0e134ed33efb3f1b7c85ad83f00ace1eedbd0e011e7dda5583",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_melting_glacier_surface_on_South_Engilchek_Glacier,_Central_Tian_Shan,_Kyrgyzstan.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n2",
+          "fatos": [
+            "f2"
+          ],
+          "sujeito": "fendas glaciais",
+          "mostrar": "rede de fendas claramente visíveis no gelo",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacier crevasses aerial",
+            "glacier crevasses aerial"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n2",
+                "sujeito": "fendas glaciais",
+                "mostrar": "rede de fendas claramente visíveis no gelo",
+                "fatos": [
+                  "f2"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "dc0cedb4a51c0179458859dc4fce3f444e129f51d34c3581d59792aad8e2a878",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Taku_Glacier_crevasses,_Juneau_Icefield,_Alaska_(2026).jpg",
+              "tipo": "foto",
+              "relatorio": "e255-45540502903-1",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            },
+            {
+              "escopo": {
+                "id": "n2",
+                "sujeito": "fendas glaciais",
+                "mostrar": "rede de fendas claramente visíveis no gelo",
+                "fatos": [
+                  "f2"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "c98a8172acd047020a9029b8718c1f9d60258bf2c180a9ef0043461e726c4c37",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacier_du_Mont_Mallet_(Glacier_du_G%C3%A9ant)_%26_Mont_Blanc,_2010_July.jpg",
+              "tipo": "foto",
+              "relatorio": "e253-45537221658-1",
+              "necessidade_anterior": "n2",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n3",
+          "fatos": [
+            "f3"
+          ],
+          "sujeito": "fenda profunda",
+          "mostrar": "abertura profunda com paredes de gelo discerníveis",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "deep glacier crevasse photograph",
+            "deep glacier crevasse"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n3",
+                "sujeito": "fenda profunda",
+                "mostrar": "abertura profunda com paredes de gelo discerníveis",
+                "fatos": [
+                  "f3"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "6a7db803b262e7248913034d35eae6e84ac8e044e4c8e3d4e6c6028ae73333fa",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Chopicalqui_glacier_crevasses_(6021417330).jpg",
+              "tipo": "foto",
+              "relatorio": "e255-45540502903-1",
+              "necessidade_anterior": "n1",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n4",
+          "fatos": [
+            "f4"
+          ],
+          "sujeito": "moraina lateral",
+          "mostrar": "faixa de detritos rochosos junto à margem do gelo",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "lateral moraine glacier debris",
+            "lateral moraine glacier"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n4",
+                "sujeito": "moraina lateral",
+                "mostrar": "faixa de detritos rochosos junto à margem do gelo",
+                "fatos": [
+                  "f4"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "d05677f0776626ee4d2a065bc4e1e8aa2dd9ad27d7c9fa5b6603fa5a41bf2f98",
+              "pagina": "https://commons.wikimedia.org/wiki/File:08IN0519_Durung_Drung_glacier.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n4",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n5",
+          "fatos": [
+            "f5"
+          ],
+          "sujeito": "moraina medial",
+          "mostrar": "faixa escura de detritos no centro do gelo",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "medial moraine glacier",
+            "medial moraine glacier"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n5",
+                "sujeito": "moraina medial",
+                "mostrar": "faixa escura de detritos no centro do gelo",
+                "fatos": [
+                  "f5"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "21c2a2dbf369ce2f6aef43a93128ba6f07532af8fa1b431a528ebde469ab8ea3",
+              "pagina": "https://commons.wikimedia.org/wiki/File:2008-05-24_12_J%C3%B6kulsarl%C3%B3n.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n5",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false,
+              "observacao_visual": {
+                "px": [
+                  1280,
+                  306
+                ],
+                "pixels_sha256": "2465bc64426ad112e278800e07132ae887dfb5acad56ae31afa635efdbd3ee7f",
+                "motivo": "Amostra mostra icebergs em lago e margem; nao mostra faixa escura de detritos no centro de uma lingua de gelo.",
+                "relatorio_amostra": "e2643-integral-45609313784-1/revisao-6.jpg",
+                "estado": "INCOMPATIVEL_NA_AMOSTRA",
+                "publicar": false,
+                "origem": "inspecao assistida ChatGPT da folha privada; nao e aprovacao humana"
+              }
+            }
+          ]
+        },
+        {
+          "id": "n6",
+          "fatos": [
+            "f6"
+          ],
+          "sujeito": "confluência glacial",
+          "mostrar": "encontro de duas línguas de gelo com faixa de detritos",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacier confluence medial moraine",
+            "glacier confluence medial"
+          ]
+        },
+        {
+          "id": "n7",
+          "fatos": [
+            "f7"
+          ],
+          "sujeito": "estrias glaciais",
+          "mostrar": "sulcos paralelos visíveis em rocha exposta",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial striations bedrock close up",
+            "glacial striations bedrock"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n7",
+                "sujeito": "estrias glaciais",
+                "mostrar": "sulcos paralelos visíveis em rocha exposta",
+                "fatos": [
+                  "f7"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "3decabc9ff68bb698f4f978dfd95f8cc220d087f4fea0a042ea000f301aaa879",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacial_grooves_on_limestone_(Kelleys_Island,_Lake_Erie,_Ohio,_USA)_194_(48541420656).jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n7",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n8",
+          "fatos": [
+            "f8"
+          ],
+          "sujeito": "rocha polida",
+          "mostrar": "superfície rochosa polida pela erosão glacial",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial polish bedrock",
+            "glacial polish bedrock"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n8",
+                "sujeito": "rocha polida",
+                "mostrar": "superfície rochosa polida pela erosão glacial",
+                "fatos": [
+                  "f8"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "59b52ad42fea62e280b9e643fa486094509911b2fddeda9842233eb2c8543c30",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Glacial_grooves_from_Pleistocene_glaciation_on_Columbus_Limestone_(Middle_Devonian)_(Glacial_Grooves_State_Park,_Kelleys_Island,_Ohio,_Lake_Erie,_USA)_1_(14972543349).jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n8",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n9",
+          "fatos": [
+            "f9"
+          ],
+          "sujeito": "bloco errático",
+          "mostrar": "grande bloco isolado depositado em terreno diferente",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial erratic boulder",
+            "glacial erratic boulder"
+          ]
+        },
+        {
+          "id": "n10",
+          "fatos": [
+            "f10"
+          ],
+          "sujeito": "vale fluvial",
+          "mostrar": "vale estreito de seção em V",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "V shaped river valley photograph",
+            "V shaped river"
+          ]
+        },
+        {
+          "id": "n11",
+          "fatos": [
+            "f11"
+          ],
+          "sujeito": "vale glacial",
+          "mostrar": "vale de seção em U claramente visível",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "U shaped glacial valley photograph",
+            "U shaped glacial"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n11",
+                "sujeito": "vale glacial",
+                "mostrar": "vale de seção em U claramente visível",
+                "fatos": [
+                  "f11"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "cd71184f07950bda98ed5ffd8ea830700c96513e7616bef3f8b58144439ab5fb",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Oolah_Valley_(16089307144).jpg",
+              "tipo": "foto",
+              "relatorio": "e253-45537221658-1",
+              "necessidade_anterior": "n4",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n12",
+          "fatos": [
+            "f12"
+          ],
+          "sujeito": "vale suspenso",
+          "mostrar": "vale tributário elevado em relação ao vale principal",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial hanging valley waterfall",
+            "glacial hanging valley"
+          ]
+        },
+        {
+          "id": "n13",
+          "fatos": [
+            "f13"
+          ],
+          "sujeito": "moraina terminal",
+          "mostrar": "crista de detritos rochosos diante de uma geleira ou antiga frente",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "terminal moraine glacial debris ridge",
+            "terminal moraine glacial"
+          ]
+        },
+        {
+          "id": "n14",
+          "fatos": [
+            "f14"
+          ],
+          "sujeito": "circo glacial",
+          "mostrar": "depressão em anfiteatro esculpida na montanha",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial cirque mountain basin",
+            "glacial cirque mountain"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n14",
+                "sujeito": "circo glacial",
+                "mostrar": "depressão em anfiteatro esculpida na montanha",
+                "fatos": [
+                  "f14"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "27766f56e3fa2476c8f870c457b2940b0d579b1bb5c49ffa27770f7782449805",
+              "pagina": "https://commons.wikimedia.org/wiki/File:Cirque_Maudit_T%C3%A9l%C3%A9cabine_Panoramic_Mont-Blanc.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n14",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false
+            }
+          ]
+        },
+        {
+          "id": "n15",
+          "fatos": [
+            "f15"
+          ],
+          "sujeito": "lago de circo",
+          "mostrar": "lago dentro de depressão glacial entre montanhas",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial cirque tarn lake",
+            "glacial cirque tarn"
+          ]
+        },
+        {
+          "id": "n16",
+          "fatos": [
+            "f16"
+          ],
+          "sujeito": "fiorde",
+          "mostrar": "braço de mar estreito entre encostas montanhosas",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "fjord steep mountain valley aerial",
+            "fjord steep mountain",
+            "Geirangerfjord Norway aerial fjord",
+            "Nærøyfjord steep mountains"
+          ],
+          "componentes_busca": [
+            [
+              "fjord",
+              "fiord"
+            ],
+            [
+              "aerial",
+              "panorama",
+              "view",
+              "mountains"
+            ]
+          ],
+          "consultas_precisas": [
+            "Geirangerfjord",
+            "Nærøyfjord",
+            "Geirangerfjord Norway"
+          ],
+          "contexto_busca": [
+            "Norway",
+            "Geirangerfjord",
+            "Nærøyfjord"
+          ]
+        },
+        {
+          "id": "n17",
+          "fatos": [
+            "f17"
+          ],
+          "sujeito": "pico glacial",
+          "mostrar": "pico agudo com encostas esculpidas por glaciação",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial horn mountain peak",
+            "glacial horn mountain",
+            "Matterhorn pyramidal peak glacial horn",
+            "mountain horn glaciated arête"
+          ],
+          "componentes_busca": [
+            [
+              "Matterhorn",
+              "glacial horn"
+            ],
+            [
+              "pyramidal",
+              "peak",
+              "mountain",
+              "summit"
+            ]
+          ],
+          "consultas_precisas": [
+            "Matterhorn Switzerland Zermatt",
+            "Matterhorn Alps",
+            "Matterhorn from Zermatt"
+          ],
+          "contexto_busca": [
+            "Switzerland",
+            "Zermatt",
+            "Alps",
+            "Cervino",
+            "Valais"
+          ],
+          "contextos_alternativos": [
+            "Nevada"
+          ]
+        },
+        {
+          "id": "n18",
+          "fatos": [
+            "f18"
+          ],
+          "sujeito": "paisagem glacial",
+          "mostrar": "paisagem ampla com vale glacial e lago",
+          "necessidade": "registro",
+          "evidencia_visual": "estatica",
+          "consultas_en": [
+            "glacial landscape valley lake mountains",
+            "glacial landscape valley",
+            "Lake Louise glacial valley mountains aerial",
+            "Lake Pukaki glacial valley landscape"
+          ],
+          "candidatos_historicos": [
+            {
+              "escopo": {
+                "id": "n18",
+                "sujeito": "paisagem glacial",
+                "mostrar": "paisagem ampla com vale glacial e lago",
+                "fatos": [
+                  "f18"
+                ],
+                "necessidade": "registro",
+                "evidencia_visual": "estatica"
+              },
+              "sha256": "0c53691a4202c8091291565195651bbe71210dee7c36e0b4a059d68c8d449656",
+              "pagina": "https://commons.wikimedia.org/wiki/File:2011-07-25_11-34-12_Switzerland_Graub%C3%BCnden_Rhine_Gorge_6hp.jpg",
+              "tipo": "foto",
+              "relatorio": "E254/revisao 3.json; 19f7f557e23dd32965a2a36bfc05bfed36abc3e04a4eb8dff072c53073ea72e0 (hash historico registrado na continuidade)",
+              "necessidade_anterior": "n18",
+              "estado": "PISTA_HISTORICA_PENDENTE",
+              "publicar": false,
+              "direitos_aprovados": false,
+              "observacao_visual": {
+                "px": [
+                  585,
+                  1280
+                ],
+                "pixels_sha256": "c955141883203e4fb61d6027855da0fa58e8909d910b4e879c9783ace11ab98b",
+                "motivo": "Amostra mostra desfiladeiro com curso de rio sinuoso; lago glacial nao visivel.",
+                "relatorio_amostra": "e2643-integral-45609313784-1/revisao-11.jpg",
+                "estado": "INCOMPATIVEL_NA_AMOSTRA",
+                "publicar": false,
+                "origem": "inspecao assistida ChatGPT da folha privada; nao e aprovacao humana"
+              }
+            }
+          ],
+          "componentes_busca": [
+            [
+              "lake",
+              "tarn",
+              "lac"
+            ],
+            [
+              "valley",
+              "mountains",
+              "glacial",
+              "glacier"
+            ]
+          ],
+          "consultas_precisas": [
+            "Lake Louise Banff",
+            "Lake Pukaki New Zealand"
+          ],
+          "contexto_busca": [
+            "Banff",
+            "Lake Louise",
+            "Lake Pukaki",
+            "New Zealand"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/crevasses.htm",
+          "descricao": "língua de gelo contínua descendo uma encosta"
+        },
+        {
+          "id": "f2",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/crevasses.htm",
+          "descricao": "rede de fendas claramente visíveis no gelo"
+        },
+        {
+          "id": "f3",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/crevasses.htm",
+          "descricao": "abertura profunda com paredes de gelo discerníveis"
+        },
+        {
+          "id": "f4",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/kefj/learn/nature/glaciers.htm",
+          "descricao": "faixa de detritos rochosos junto à margem do gelo"
+        },
+        {
+          "id": "f5",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/kefj/learn/nature/glaciers.htm",
+          "descricao": "faixa escura de detritos no centro do gelo"
+        },
+        {
+          "id": "f6",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/kefj/learn/nature/glaciers.htm",
+          "descricao": "encontro de duas línguas de gelo com faixa de detritos"
+        },
+        {
+          "id": "f7",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm",
+          "descricao": "sulcos paralelos visíveis em rocha exposta"
+        },
+        {
+          "id": "f8",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm",
+          "descricao": "superfície rochosa polida pela erosão glacial"
+        },
+        {
+          "id": "f9",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm",
+          "descricao": "grande bloco isolado depositado em terreno diferente"
+        },
+        {
+          "id": "f10",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm",
+          "descricao": "vale estreito de seção em V"
+        },
+        {
+          "id": "f11",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm",
+          "descricao": "vale de seção em U claramente visível"
+        },
+        {
+          "id": "f12",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm",
+          "descricao": "vale tributário elevado em relação ao vale principal"
+        },
+        {
+          "id": "f13",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm",
+          "descricao": "crista de detritos rochosos diante de uma geleira ou antiga frente"
+        },
+        {
+          "id": "f14",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm",
+          "descricao": "depressão em anfiteatro esculpida na montanha"
+        },
+        {
+          "id": "f15",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm",
+          "descricao": "lago dentro de depressão glacial entre montanhas"
+        },
+        {
+          "id": "f16",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm",
+          "descricao": "braço de mar estreito entre encostas montanhosas"
+        },
+        {
+          "id": "f17",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm",
+          "descricao": "pico agudo com encostas esculpidas por glaciação"
+        },
+        {
+          "id": "f18",
+          "tipo": "necessidade_visual_do_roteiro",
+          "fonte": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm",
+          "descricao": "paisagem ampla com vale glacial e lago"
+        }
+      ],
+      "chapters": [
+        {
+          "title": "O gelo em movimento",
+          "speech": "Uma geleira parece uma montanha imóvel, mas o gelo flui lentamente sob seu próprio peso. Nas encostas, essa deformação abre fendas profundas, formando um labirinto de rachaduras na superfície.",
+          "needs": [
+            "n1",
+            "n2",
+            "n3"
+          ],
+          "source": "https://www.nps.gov/articles/crevasses.htm"
+        },
+        {
+          "title": "Rochas em trânsito",
+          "speech": "Enquanto avança, a geleira incorpora fragmentos de rocha. Esses detritos podem se acumular nas margens ou em faixas escuras no meio do gelo, onde duas geleiras se encontram.",
+          "needs": [
+            "n4",
+            "n5",
+            "n6"
+          ],
+          "source": "https://www.nps.gov/kefj/learn/nature/glaciers.htm"
+        },
+        {
+          "title": "Abrasão do terreno",
+          "speech": "Os fragmentos presos na base do gelo também funcionam como ferramentas de abrasão. Ao longo do tempo, raspam o leito rochoso, deixam sulcos e transportam blocos para longe do lugar de origem.",
+          "needs": [
+            "n7",
+            "n8",
+            "n9"
+          ],
+          "source": "https://home.nps.gov/glba/learn/nature/anatomy-of-a-glacier.htm"
+        },
+        {
+          "title": "Vales esculpidos",
+          "speech": "Um rio tende a escavar um vale estreito, em formato de V. Já uma geleira pode alargar e aprofundar o vale, criando paredes íngremes e um fundo mais amplo, em formato de U.",
+          "needs": [
+            "n10",
+            "n11",
+            "n12"
+          ],
+          "source": "https://www.nps.gov/articles/ushapedvalleysfjordshangingvalleys.htm"
+        },
+        {
+          "title": "Marcas deixadas pelo gelo",
+          "speech": "Quando o gelo recua, os detritos podem permanecer no terreno. As morainas marcam antigos limites da geleira, enquanto depressões escavadas nas montanhas podem acumular água e formar pequenos lagos.",
+          "needs": [
+            "n13",
+            "n14",
+            "n15"
+          ],
+          "source": "https://www.nps.gov/glac/learn/nature/glacial-geology.htm"
+        },
+        {
+          "title": "Paisagem transformada",
+          "speech": "Em regiões costeiras, vales glaciais podem ser inundados pelo mar, formando fiordes. Picos agudos, lagos e grandes vales preservam essas marcas muito depois do recuo do gelo. É assim que geleiras transformam paisagens inteiras.",
+          "needs": [
+            "n16",
+            "n17",
+            "n18"
+          ],
+          "source": "https://www.nps.gov/glba/learn/kidsyouth/geology-of-glacier-bay-national-park.htm"
+        }
+      ]
+    }
+  ]
+}

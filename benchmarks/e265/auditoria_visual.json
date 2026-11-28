@@ -1,0 +1,62 @@
+{
+  "publicar": false,
+  "origem": "Inspeção assistida de folhas privadas E264.8; não homologação humana",
+  "observacoes": [
+    {
+      "id": "n1",
+      "sha256": "8c291c9e09cc5c0e134ed33efb3f1b7c85ad83f00ace1eedbd0e011e7dda5583",
+      "mostrar": "língua de gelo contínua descendo uma encosta",
+      "folha": 1,
+      "motivo": "Gelo coberto de detritos pouco evidente.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n6",
+      "sha256": "cfe4f67fc1b762e235d0303c034ca7b0632f5af132e1caf6f2fb3dc74247f020",
+      "mostrar": "encontro de duas línguas de gelo com faixa de detritos",
+      "folha": 14,
+      "motivo": "Confluência e faixa não inequívocas na folha reduzida.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n8",
+      "sha256": "59b52ad42fea62e280b9e643fa486094509911b2fddeda9842233eb2c8543c30",
+      "mostrar": "superfície rochosa polida pela erosão glacial",
+      "folha": 7,
+      "motivo": "Sulcos visíveis; polimento não inequívoco.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n12",
+      "sha256": "a1063b78bf3564137b3ff2f269de250b1db1b7d39715e1b998c7b5136cfa09aa",
+      "mostrar": "vale tributário elevado em relação ao vale principal",
+      "folha": 17,
+      "motivo": "Orientação e relação entre os vales precisam ficar legíveis.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n13",
+      "sha256": "e1ae0ac84503ca77dbea48c8b1f08bcc4e301fbe8bed9861e43074b03f6282e7",
+      "mostrar": "crista de detritos rochosos diante de uma geleira ou antiga frente",
+      "folha": 18,
+      "motivo": "Crista frontal não se distingue claramente.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n14",
+      "sha256": "27766f56e3fa2476c8f870c457b2940b0d579b1bb5c49ffa27770f7782449805",
+      "mostrar": "depressão em anfiteatro esculpida na montanha",
+      "folha": 9,
+      "motivo": "Geometria do anfiteatro requer enquadramento.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    },
+    {
+      "id": "n15",
+      "sha256": "3de3d4cd8c94c2c0e70e4f4d2c8e0cd8ff26b99df632ae11f98b667d881b11f2",
+      "mostrar": "lago dentro de depressão glacial entre montanhas",
+      "folha": 19,
+      "motivo": "Lago pequeno; verificar legibilidade vertical.",
+      "estado": "REVISAR_COMPOSICAO_OU_ALTERNATIVA"
+    }
+  ]
+}

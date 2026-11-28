@@ -1,0 +1,108 @@
+{
+  "schema": "coringa-parametric-mechanism-scene-v1",
+  "version": 1,
+  "id": "vasos_iguais",
+  "family": "vasos_comunicantes",
+  "title": "VASOS COMUNICANTES",
+  "subtitle": "DOIS RESERVATÓRIOS DE MESMA SEÇÃO",
+  "duration_s": 12,
+  "fps": 24,
+  "video": [
+    540,
+    960
+  ],
+  "publish": false,
+  "source": "https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure",
+  "source_scope": "PRINCIPIO_HIDROSTATICO_NAO_LICENCA_DE_PIXELS",
+  "geometry_status": "AUTORAL_ESCHEMATICO_2D",
+  "camera": "plano_geral_travado",
+  "timeline": [
+    {
+      "acao": "isolar",
+      "start": 0,
+      "end": 2.3,
+      "title": "NÍVEIS DIFERENTES",
+      "subtitle": "Válvula fechada: a água permanece separada."
+    },
+    {
+      "acao": "abrir",
+      "start": 2.3,
+      "end": 4.2,
+      "title": "ABRINDO A VÁLVULA",
+      "subtitle": "O conduto liga os dois reservatórios."
+    },
+    {
+      "acao": "transferir",
+      "start": 4.2,
+      "end": 9.8,
+      "title": "A ÁGUA SE EQUILIBRA",
+      "subtitle": "A pressão faz a água passar de um lado ao outro."
+    },
+    {
+      "acao": "equilibrio",
+      "start": 9.8,
+      "end": 12,
+      "title": "MESMO NÍVEL",
+      "subtitle": "As superfícies ficam na mesma altura."
+    }
+  ],
+  "physics": {
+    "solver": "equalizacao_2_reservatorios_sem_inercia",
+    "initial_left_y": 425,
+    "initial_right_y": 637,
+    "opening_from_s": 3.1,
+    "opening_to_s": 4.16,
+    "flow_from_s": 4.2,
+    "flow_to_s": 9.8,
+    "explanatory_time_not_measured": true,
+    "initial_pressure_difference": "rho*g*delta_h",
+    "volume_conservation": true
+  },
+  "components": [
+    {
+      "id": "left_tank",
+      "primitive": "reservoir",
+      "x": 34,
+      "y": 337,
+      "width": 190,
+      "height": 427,
+      "label": "A"
+    },
+    {
+      "id": "right_tank",
+      "primitive": "reservoir",
+      "x": 318,
+      "y": 337,
+      "width": 188,
+      "height": 427,
+      "label": "B"
+    },
+    {
+      "id": "left_water",
+      "primitive": "fluid_body",
+      "container": "left_tank"
+    },
+    {
+      "id": "right_water",
+      "primitive": "fluid_body",
+      "container": "right_tank"
+    },
+    {
+      "id": "link_pipe",
+      "primitive": "conduit",
+      "path": "M 211 714 H 331",
+      "y": 714
+    },
+    {
+      "id": "control_valve",
+      "primitive": "valve",
+      "x": 270,
+      "y": 714
+    }
+  ],
+  "identity_approval": false,
+  "rights": {
+    "external_pixels_copied": false,
+    "source_is_license": false
+  }
+}

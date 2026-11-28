@@ -209,7 +209,7 @@
   "clipes": [
     {
       "t0": 31.49,
-      "t1": 40.91,
+      "t1": 50.4,
       "componente": "mecanismo.eclusa",
       "fatos": [
         "f3",
@@ -224,13 +224,35 @@
         "degraus": 1,
         "etapas": [
           "Navio entra, comporta fecha",
-          "Válvula abre: água do lago entra",
-          "Níveis iguais: o navio subiu"
+          "Água do lago entra pelos aquedutos e eleva o navio",
+          "Níveis iguais: a comporta pode abrir"
         ],
         "tempos": [
           0.11,
           5.31,
-          7.81
+          16.01
+        ],
+        "destaques_fluxo": [
+          {
+            "t": 9.81,
+            "alvo": "lago",
+            "rotulo": "ÁGUA DO LAGO"
+          },
+          {
+            "t": 13.01,
+            "alvo": "aqueduto",
+            "rotulo": "AQUEDUTOS"
+          },
+          {
+            "t": 15.91,
+            "alvo": "paredes",
+            "rotulo": "PAREDES DA ECLUSA"
+          },
+          {
+            "t": 17.51,
+            "alvo": "piso",
+            "rotulo": "ABERTURAS NO PISO"
+          }
         ]
       }
     }
@@ -566,55 +588,8 @@
       "id": "b6-gravidade",
       "composicao": "atlas.tecnica",
       "t": 40.99,
-      "prova": "caminho da água sobre a planta técnica do território: lago → aquedutos → paredes → piso; zero bombas",
-      "camadas": [
-        {
-          "id": "zero",
-          "componente": "editorial.statCard",
-          "slot": "etiqueta",
-          "t0": 41,
-          "t1": 50.4,
-          "p": {
-            "estilo": "pilula",
-            "valor": 0,
-            "unidade": "BOMBAS",
-            "rotulo": "SÓ GRAVIDADE"
-          }
-        },
-        {
-          "id": "fluxo",
-          "componente": "editorial.flowConnections",
-          "slot": "corpo",
-          "t0": 42.3,
-          "t1": 50.4,
-          "p": {
-            "fluxo": true,
-            "nos": [
-              {
-                "rotulo": "Lago Gatún",
-                "sub": "nível alto",
-                "t": 42.4
-              },
-              {
-                "rotulo": "Aquedutos",
-                "sub": "≈ 5,5 m de diâmetro",
-                "t": 44.5,
-                "seta": "desce"
-              },
-              {
-                "rotulo": "Paredes da eclusa",
-                "t": 47.4
-              },
-              {
-                "rotulo": "Piso da câmara",
-                "sub": "aberturas",
-                "t": 49.3,
-                "destaque": true
-              }
-            ]
-          }
-        }
-      ],
+      "prova": "Continuidade da eclusa em movimento: a água do lago desce pelos aquedutos nas paredes, alcança o piso e levanta o casco; destaques ancorados na narração, sem substituição por caixas.",
+      "camadas": [],
       "funcao": "mecanismo"
     },
     {
@@ -871,5 +846,15 @@
   "cta": true,
   "_estilo_no_episodio": [],
   "cta_decisao": "sem CTA: só 1.0 s depois da revelação final (mín. 1.2 s)",
-  "_resolvido": true
+  "_resolvido": true,
+  "explicacoes": [
+    {
+      "id": "eclusa-e-caminho-da-agua",
+      "tipo": "mecanismo",
+      "t0": 31.49,
+      "t1": 50.4,
+      "recurso": "mecanismo.eclusa",
+      "prova": "navio e nível da água + trajeto do lago aos aquedutos, paredes e piso"
+    }
+  ]
 }

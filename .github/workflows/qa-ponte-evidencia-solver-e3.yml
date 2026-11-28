@@ -1,0 +1,118 @@
+name: "LAB E3 — evidencias por junta, fonte viva e bloqueio de especulacoes"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-ponte-evidencia-solver-e3.yml"
+      - "src/v4/formatos/ponte_evidencia_solver_e3.py"
+      - "src/v4/formatos/ingestao_evidencias_f16.py"
+      - "src/v4/formatos/relacoes_com_evidencia_f17.py"
+      - "benchmarks/bindings_e3/**"
+      - "tests/test_ponte_evidencia_solver_e3.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e3-evidence-to-joint-gate
+  cancel-in-progress: true
+jobs:
+  provenance_gate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install existing numeric/test dependencies (no paid APIs)
+        run: python -m pip install -q pytest numpy scipy cairosvg pillow
+      - name: Test F16/F17 provenance and E3 source-to-solver contract; regressions E1/E2
+        run: |
+          python -m pytest -q \
+            tests/test_ingestao_evidencias_f16.py \
+            tests/test_relacoes_com_evidencia_f17.py \
+            tests/test_ponte_evidencia_solver_e3.py \
+            tests/test_solver_generico_e1.py \
+            tests/test_solver_generico_e2.py
+      - name: Live fetch F16 allowlist + F17 proof per edge and E3 fail-closed
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_e3
+          python -m src.v4.formatos.ponte_evidencia_solver_e3 \
+            src/v4/formatos/evidencias_f16/biela_cinematica_parcial.json \
+            benchmarks/specs_genericas_e1/oraculo_biela_e1.json \
+            benchmarks/bindings_e3/biela_parcial_f17_e3.json \
+            qa_e3 --live
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import relacoes_com_evidencia_f17 as F17
+          from src.v4.formatos import ponte_evidencia_solver_e3 as E3
+          root=Path("src/v4/formatos/evidencias_f16")
+          out=Path("qa_e3")
+          results=[]
+          for name in ("par_engrenagens_educacional",
+                       "plataforma_tesoura_fonte_alternativa"):
+              result=F17.run(root/(name+".json"),out,live=True)
+              row={"source_id":name,
+                   "source_live_verified":result.get("source_live_verified") is True,
+                   "status":result["status"],
+                   "complete_mechanism_spec_generated":False,
+                   "render_allowed":False,"publication_allowed":False,
+                   "source_joint_suggestions":[]}
+              if result.get("graph"):
+                  row["source_joint_suggestions"]=E3.joint_candidates(result["graph"])
+              results.append(row)
+          b=json.loads((out/"biela_cinematica_parcial_E3_AUDIT.json").read_text("utf8"))
+          assert b["render_allowed"] is False and b["publish"] is False
+          assert b["source_to_complete_spec_automatic"] is False
+          assert all(r["render_allowed"] is False for r in results)
+          summary={
+              "schema":"coringa-e3-lab-source-grounding-v1",
+              "live_source_tries":3,
+              "live_sources_confirmed":sum(int(r["source_live_verified"]) for r in results)
+                  +int(b["source_live_verified"]),
+              "slider_crank_joint_claims_supported_if_live":b.get("joint_claims_supported",0),
+              "slider_crank_total_joints":4,
+              "manual_geometry_used":True,
+              "autonomous_complete_specs_created":0,
+              "mechanisms_new_attempted":0,
+              "renderer_invoked":False,
+              "production_enabled":False,"publish":False,
+              "manual_source_binding":True,
+              "fixed_lexical_extractor":True,
+              "unknown_connections_blocked":True,
+              "source_failures_are_not_counted_as_physics_failures":True,
+              "source_cases":[
+                  {"source_id":"biela_cinematica_parcial",
+                   "source_live_verified":b["source_live_verified"],
+                   "status":b["status"],
+                   "joint_claims_supported":b.get("joint_claims_supported",0)},
+                  *results
+              ]
+          }
+          (out/"QA_E3_SOURCES.json").write_text(
+              json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps(summary,ensure_ascii=False))
+          PY
+      - name: Verify no artificial green when source is unavailable
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          report=json.loads(Path("qa_e3/QA_E3_SOURCES.json").read_text("utf8"))
+          assert report["autonomous_complete_specs_created"]==0
+          assert report["renderer_invoked"] is False
+          assert report["manual_geometry_used"] is True
+          for row in report["source_cases"]:
+              if not row["source_live_verified"]:
+                  assert row["status"].startswith("BLOCKED"),row
+          print("E3 source provenance gate OK — never reports unsourced automation")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e3-relacoes-fonte-viva-e-contraprovas-privado
+          path: qa_e3/
+          retention-days: 5
+          if-no-files-found: warn

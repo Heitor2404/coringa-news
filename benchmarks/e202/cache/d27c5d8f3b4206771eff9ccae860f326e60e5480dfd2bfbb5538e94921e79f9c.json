@@ -1,0 +1,250 @@
+{
+ "pedido_sha256": "d27c5d8f3b4206771eff9ccae860f326e60e5480dfd2bfbb5538e94921e79f9c",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 12.9,
+ "data": "2026-11-24T15:06:47Z",
+ "caracteres_pedido": 30741,
+ "caracteres_resposta": 3712,
+ "json": {
+  "titulo": "Por que a Islândia se afasta?",
+  "acontecimento_central": "A Islândia sobre a Dorsal Mesoatlântica: duas placas se afastam em direções opostas e o vão é preenchido por nova crosta formada de magma.",
+  "referencias_visuais": [
+   "corte esquemático com blocos de placas",
+   "afastamento de blocos com preenchimento de magma",
+   "contorno geo real apenas para localizar",
+   "câmera que parte do detalhe e termina em plano geral"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "Dois blocos de placa sob a Islândia se afastam e o espaço entre eles é preenchido por nova crosta de magma.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Registro real, mapa ATLAS e CAD estão indisponíveis; o contorno geo real localiza a ilha e o esquema declarativo mostra o afastamento das placas sem inventar limites geográficos.",
+    "atores": [
+     {
+      "id": "a_islandia",
+      "rotulo": "Islândia",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "geo",
+       "nome_en": "Iceland"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_na",
+      "rotulo": "Placa norte-americana",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#C9A36B"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_eu",
+      "rotulo": "Placa eurasiática",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#8FA7C9"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_dorsal",
+      "rotulo": "Dorsal Mesoatlântica",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#5A4A42"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_magma",
+      "rotulo": "Magma",
+      "papel": "produto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "fluido",
+       "cor": "#E8461E"
+      },
+      "fatos": [
+       "g2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "sobre",
+      "a": "a_islandia",
+      "b": "a_dorsal"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_placa_na",
+      "b": "a_dorsal"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_placa_eu",
+      "b": "a_dorsal"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_placa_na",
+      "b": "a_placa_eu"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "A Islândia parece inteira, mas está sobre algo que não para quieto.",
+      "etapa": "Gancho",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_islandia",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_islandia",
+        "interior": "a_dorsal",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_islandia",
+       "enquadramento": "medio",
+       "motivo": "Protagonista em quadro, com a pergunta já levantada, e o interior revelando a dorsal."
+      }
+     },
+     {
+      "fala": "Ali embaixo, duas placas: a norte-americana de um lado, a eurasiática do outro.",
+      "etapa": "Duas placas",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_na",
+        "inicio": 0.0,
+        "fim": 0.4
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_eu",
+        "inicio": 0.0,
+        "fim": 0.4
+       },
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.15,
+        "inicio": 0.4,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_dorsal",
+       "enquadramento": "detalhe",
+       "motivo": "Aproxima do encontro das placas, onde elas começam a se puxar em sentidos opostos."
+      }
+     },
+     {
+      "fala": "Elas se afastam, e o magma sobe e preenche o vão com crosta nova.",
+      "etapa": "Magma preenche",
+      "fatos": [
+       "g1",
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.2,
+        "preencher_com": {
+         "rotulo": "Nova crosta",
+         "cor": "#E8461E"
+        },
+        "inicio": 0.0,
+        "fim": 0.8
+       },
+       {
+        "verbo": "tingir",
+        "alvo": "a_magma",
+        "para_cor": "#3A2F2B",
+        "intensidade": 0.8,
+        "inicio": 0.6,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_placa_na",
+       "enquadramento": "medio",
+       "motivo": "Mostra a placa se afastando e o vão sendo preenchido por magma que vira crosta."
+      }
+     },
+     {
+      "fala": "É por isso que a Islândia se afasta nas duas direções: ela cresce no meio.",
+      "etapa": "Payoff",
+      "fatos": [
+       "g1",
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.25,
+        "preencher_com": {
+         "rotulo": "Nova crosta",
+         "cor": "#3A2F2B"
+        },
+        "inicio": 0.0,
+        "fim": 0.7
+       },
+       {
+        "verbo": "destacar",
+        "alvo": "a_islandia",
+        "inicio": 0.7,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_islandia",
+       "enquadramento": "geral",
+       "motivo": "Plano geral do payoff: ilha no centro, placas indo para lados opostos e crosta nova no meio."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45420134949 (job 138537103175)"
+}

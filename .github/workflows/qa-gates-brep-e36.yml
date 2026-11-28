@@ -1,0 +1,29 @@
+name: E36 contrato angular e gate B-rep
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-gates-brep-e36.yml"
+      - "src/v4/formatos/eventos_trajetoria_e27.py"
+      - "src/v4/formatos/gates_qualidade_e21.py"
+      - "tests/test_gates_brep_e36.py"
+      - "src/v4/formatos/fontes_e35.py"
+      - "tests/test_fontes_seguras_e37.py"
+      - "src/v4/formatos/repouso_e39.py"
+      - "tests/test_repouso_e39.py"
+      - "src/v4/formatos/rota_explicativa_e40.py"
+      - "tests/test_rota_explicativa_e40.py"
+      - "src/v4/formatos/ponte_cad_editorial_e28.py"
+permissions:
+  contents: read
+jobs:
+  contratos:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m pip install numpy pytest
+      - run: python -m pytest -q tests/test_rota_explicativa_e40.py tests/test_repouso_e39.py tests/test_fontes_seguras_e37.py tests/test_gates_brep_e36.py tests/test_eventos_trajetoria_e27.py tests/test_ponte_cad_editorial_e28.py
+      - run: python -m py_compile src/v4/formatos/pipeline_e35.py src/v4/formatos/filme_e18.py

@@ -172,3 +172,327 @@ def montar(ep: dict, pasta: Path) -> tuple[dict, list[dict]]:
             c['params']['asset'] = None
     (pasta / 'acervo.json').write_text(json.dumps(acv, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
     return acv, reg
+
+
+# E246: discovery for the documentary director. No legacy selection fallback.
+def fontes_documentais(tipo, *, pretriagem=False, preferir_vertical=False, expandir=False):
+    from src import acervo, midia
+    from src.v4 import fontes_cientificas as FC
+    from src.v4.descoberta_paralela_e363 import rotas_publicas
+    if tipo=='video':
+        return [('commons_video',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True) if preferir_vertical else midia.candidatos_arquivo(q,estrito=True)),
+                ('figshare',lambda q:FC.candidatos(q,'video')),
+                ('nasa_video',lambda q:midia.candidatos_nasa_video(q,documental=True)),
+                ('archive_video',lambda q:midia.candidatos_archive(q,documental=True))]+(rotas_publicas(tipo) if expandir else [])+([('commons_video_retrato',lambda q:midia.candidatos_arquivo(q,estrito=True,preferir_vertical=True,pesquisa_retrato=True))] if expandir and preferir_vertical else [])
+    if tipo=='foto':
+        return [('commons',(lambda q:acervo.f_commons_documental(q,preview_width=640)) if pretriagem else acervo.f_commons_documental),
+                ('figshare',lambda q:FC.candidatos(q,'foto')),
+                ('nasa',lambda q:acervo.f_nasa([q])),
+                ('loc',lambda q:acervo.f_loc([q])),
+                ('met',lambda q:acervo.f_met([q]))]+(rotas_publicas(tipo) if expandir else [])
+    raise ValueError('E246-TIPO')
+
+
+def natureza_preliminar(c):
+    from src.v4.formatos.revisao_documental import natureza_declarada
+    if natureza_declarada(c)=='REPRESENTACAO_DECLARADA':return 'REPRESENTACAO_DECLARADA'
+    text=' '.join(str(c.get(k) or '') for k in ('titulo','desc','descricao')).lower()
+    if re.search(r'\b(rendered|rendering|cgi|computer.generated|artist.s (impression|concept)|artistic (impression|render)|simulation|simulação|illustration)\b|autodesk maya',text):
+        return 'REPRESENTACAO_DECLARADA'
+    return 'NATUREZA_PENDENTE_INSPECAO'
+
+
+def _candidato_documental(c,fonte,tipo):
+    from urllib.parse import urlsplit
+    from src.v3.biblioteca import classificar_licenca
+    if not isinstance(c,dict):return None
+    url=c.get('url_original') or c.get('url')
+    if not isinstance(url,str):return None
+    u=urlsplit(url)
+    if u.scheme!='https' or not u.hostname or u.username or u.password:return None
+    page=c.get('pagina')
+    credit=c.get('credito') or ''
+    # Legacy source labels/guesses are NOT individual license receipts.
+    lic=c.get('licenca') or ''
+    parsed=classificar_licenca({'licenca':lic,'credito':credit})
+    rights='REVISAR_PAGINA_INDIVIDUAL'
+    if fonte in ('commons','commons_video') and lic and credit and isinstance(page,str):
+        p=urlsplit(page)
+        if p.scheme=='https' and p.hostname=='commons.wikimedia.org' and p.path.startswith('/wiki/File:') and parsed['uso_comercial']=='sim':
+            rights='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA'
+    if fonte=='figshare' and isinstance(c.get('recibo_cientifico'),dict) and parsed['uso_comercial']=='sim':
+        rights='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA'
+    if parsed['uso_comercial']=='nao':return None
+    return {'fonte':fonte,'tipo':tipo,'titulo':str(c.get('titulo') or c.get('descricao') or '')[:240],
+            'descricao':str(c.get('desc') or c.get('descricao') or '')[:400],
+            'url':url,'pagina':page,'credito':credit,'licenca':lic,'direitos':rights,
+            'largura_declarada':c.get('w'),'altura_declarada':c.get('h'),
+            'duracao_declarada':c.get('dur'),'tamanho_declarado':c.get('tamanho_original'),
+            'derivado':c.get('derivado',False),'url_master':c.get('url_master') or c.get('url_original'),
+            'source_id':c.get('source_id'),'source_title':c.get('source_title'),
+            'licenca_url':c.get('licenca_url'),'restricoes':c.get('restricoes'),
+            'variantes':c.get('variantes') or [],'nasa_collection':c.get('nasa_collection'),
+            'nasa_center':c.get('nasa_center'),'nasa_credit':c.get('nasa_credit'),
+            'nasa_secondary_credit':c.get('nasa_secondary_credit'),
+            'descricao_integral':c.get('descricao_integral') or '', 'source':c.get('source'),
+            'credit':c.get('credit'), 'categories':c.get('categories'),
+            'recibo_cientifico':c.get('recibo_cientifico'),'recibo_fonte':c.get('recibo_fonte'),
+            'tipo_objeto_declarado':c.get('tipo_objeto_declarado'),'pista_objeto':c.get('pista_objeto'),
+            'natureza_preliminar':natureza_preliminar(c),
+            'estado':'CANDIDATO_NAO_INSPECIONADO','publicar':False}
+
+
+def pesquisar_cobertura(necessidade, *, biblioteca=None, fontes=None, inspecionar=None,
+                       max_buscas=6, max_candidatos=12, progressivo=False, buscas_vistas=None):
+    """Bounded discovery from director needs, not a list of media by topic.
+    A search result or textual match never constitutes verified coverage.
+    Optional inspector receives candidates for this exact obligation; its
+    positive response still means private review only.
+    """
+    if type(max_buscas) is not int or not 1<=max_buscas<=(64 if progressivo else 8) or type(max_candidatos) is not int or not 1<=max_candidatos<=(128 if progressivo else 20):
+        raise ValueError('E246-ORCAMENTO')
+    if necessidade.get('necessidade')=='territorio':
+        return {'id':necessidade['id'],'estado':'DELEGAR_ATLAS','buscas':[],
+                'candidatos':[],'pronto_para_render':False,'publicar':False}
+    if necessidade.get('necessidade') not in ('registro','lacuna_explicativa'):
+        raise ValueError('E246-NECESSIDADE')
+    ev=necessidade.get('evidencia_visual') or 'indefinida'
+    if ev not in ('movimento','estatica','contexto','indefinida'):raise ValueError('E246-EVIDENCIA')
+    tipos={'movimento':('video',),'estatica':('foto','video'),
+           'contexto':('foto','video'),'indefinida':('video','foto')}[ev]
+    # Preference orders eligible routes; never relax a motion requirement.
+    if necessidade.get('preferencia_midia')=='video_preferencial' and len(tipos)==2:tipos=('video','foto')
+    if necessidade.get('preferencia_midia')=='foto_preferencial' and len(tipos)==2:tipos=('foto','video')
+    q=necessidade.get('pesquisa',{})
+    consultas=[]
+    for x in (q.get('consultas_en') or [])+(q.get('consultas') or []):
+        if isinstance(x,str) and 2<=len(x.strip())<=180 and x.strip() not in consultas:consultas.append(x.strip())
+    precise=[x for x in (q.get('consultas_precisas') or []) if isinstance(x,str) and 2<=len(x.strip())<=180][:6]
+    if progressivo:consultas=list(dict.fromkeys(precise+consultas))
+    if not progressivo:consultas=consultas[:2]
+    if not consultas:raise ValueError('E246-CONSULTA')
+    report={'id':necessidade['id'],'evidencia_visual':ev,'buscas':[],'candidatos':[],
+            'biblioteca':[],'pronto_para_render':False,'publicar':False}
+    vistos=set()
+    # Reuse existing curated catalogue matches first; they are not approvals
+    # for this new event. The global V3 search is optional and read-only.
+    for item in necessidade.get('candidatos') or []:
+        if item.get('natureza') not in tipos:continue
+        report['biblioteca'].append({'origem':'catalogo_comprovado','asset_id':item['asset_id'],
+            'tipo':item['natureza'],'sha256':item.get('sha_catalogo'),'estado':'REIDRATAR_E_INSPECIONAR'})
+    if biblioteca is not None:
+        for tipo in tipos:
+            for item in biblioteca.buscar(consultas[0],tipo=tipo,limite=4):
+                sha=item.get('sha256')
+                if not sha or sha in vistos:continue
+                vistos.add(sha)
+                ext=item.get('ext')
+                miniatura_video=tipo=='video' and ext in ('.jpg','.jpeg','.png','.webp')
+                report['biblioteca'].append({'origem':'biblioteca_v3','asset_id':item['id'],'tipo':tipo,
+                    'sha256':sha,'ext':ext,'estado':'MINIATURA_NAO_E_VIDEO' if miniatura_video else 'REIDRATAR_E_INSPECIONAR'})
+    def analisar(c):
+        if inspecionar is None:return False
+        # A callback can decline; do not treat its opinion as production proof.
+        try:r=inspecionar(c,necessidade)
+        except Exception as e:r={'estado':'FALHA','tipo':type(e).__name__}
+        c['inspecao']=r
+        return isinstance(r,dict) and r.get('estado')=='PERTINENTE_PRIVADO' and r.get('necessidade_id')==necessidade['id']
+    for item in report['biblioteca']:
+        if item.get('estado')=='MINIATURA_NAO_E_VIDEO':continue
+        if analisar(item):
+            return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
+    default_routes=fontes is None
+    # Optional stock is context-only, a separate lane that cannot satisfy the
+    # existing factual evidence queue. Reserve one logical search slot.
+    import os
+    stock_context=(default_routes and progressivo and ev=='contexto' and
+        necessidade.get('exigir_evidencia_direta') is not True and max_buscas>=2 and
+        os.getenv('CORINGA_STOCK_CONTEXT_ENABLED')=='1' and bool(os.getenv('PIXABAY_API_KEY')) and
+        bool(os.getenv('CORINGA_STOCK_CACHE_DB')))
+    if fontes is None:
+        fontes=lambda tipo:fontes_documentais(tipo,preferir_vertical=necessidade.get('preferir_imersao_vertical') is True,expandir=progressivo)
+    # Interleave evidence types and sources. The second query reformulates
+    # the search only if nothing reviewed has satisfied the obligation.
+    rotas=[(tipo,nome,fn) for tipo in tipos for nome,fn in fontes(tipo)]
+    # Take one source per type before considering a second source.
+    groups=[[x for x in rotas if x[0]==tipo] for tipo in tipos]
+    rotas=[g[i] for i in range(max(map(len,groups),default=0)) for g in groups if i<len(g)]
+    if progressivo:
+        attempted=buscas_vistas if buscas_vistas is not None else set()
+        # Diagonal schedule: try alternate wording on strong providers early
+        # while still visiting every provider/query pair if budget permits.
+        from src.v4.formatos.revisao_documental import termos_consulta,consultas_contextuais
+        consultas=consultas_contextuais(necessidade,consultas)
+        subject=set(termos_consulta(necessidade.get('sujeito')))
+        schedule = sorted(
+            (bool(subject and set(termos_consulta(consultas[qi])) == subject),
+             not (qi == 0 or (ri == 0 and qi == 1)), qi + ri, ri, qi)
+            for qi in range(len(consultas)) for ri in range(len(rotas))
+        )
+        # Discovery calls have a global budget independent of the retained
+        # candidate cap. A crowded response must not suppress other routes.
+        from src.v4.descoberta_paralela_e363 import RotaPublica,onda
+        from src.v4.prioridade_fontes_e369 import afinidade,candidato_promissor
+        batches=[];suspended=set();wave_used=False;specialty_used=False
+        expanded={'usgs_pagina','noaa_pagina','openverse','inaturalist','nist_pagina','smithsonian'}
+        def route_info(entry):
+            _,_,_,ri,qi=entry
+            tipo,nome,fn=rotas[ri];consulta=consultas[qi]
+            return tipo,nome,fn,consulta,(tipo,nome,consulta.casefold())
+        def collect(row,raw):
+            batch=[]
+            for item in raw:
+                c=_candidato_documental(item,'commons_video' if row['fonte']=='commons_video_retrato' else row['fonte'],row['tipo'])
+                if not c or c['url'] in vistos:continue
+                vistos.add(c['url']);c['consulta_origem']=row['consulta'];batch.append(c)
+            row.update(estado='OK' if batch else 'SEM_NOVOS_CANDIDATOS',novos=len(batch),retidos=0,
+                       promissores=sum(candidato_promissor(necessidade,c) for c in batch),
+                       retrato_promissor=sum(candidato_promissor(necessidade,c) and c['tipo']=='video' and type(c.get('largura_declarada')) is int and type(c.get('altura_declarada')) is int and c['altura_declarada']>c['largura_declarada']>=360 for c in batch))
+            report['buscas'].append(row)
+            if batch:
+                from src.v4.formatos.revisao_documental import ordenar_candidatos
+                batches.append((row,iter(ordenar_candidatos(necessidade,batch))))
+        stock_context=stock_context and ('video','pixabay_contexto',consultas[0].casefold()) not in attempted
+        documental_budget=max_buscas-int(stock_context);portrait_used=False
+        while schedule and len(report['buscas'])<documental_budget:
+            index=0
+            # Weak initial coverage: reserve a diversity opportunity without
+            # enlarging max_buscas or altering explicitly injected test routes.
+            weak=(default_routes and len(report['buscas'])>=2 and
+                sum(x.get('promissores',x.get('novos',0)) for x in report['buscas'])<2 and
+                not any(x['fonte'] in expanded for x in report['buscas']))
+            if weak:
+                index=next((i for i,x in enumerate(schedule) if x[-1]==0 and
+                    route_info(x)[1] in expanded and route_info(x)[4] not in attempted),0)
+            # After the broad first call, reserve one opportunity for a
+            # specialist when metadata and the declared context match. Keep
+            # injected sources and historical mock origins deterministic.
+            reason=None
+            if default_routes and not specialty_used and report['buscas'] and not weak:
+                real_hosts={'www.usgs.gov','oceanexplorer.noaa.gov','api.inaturalist.org','www.nist.gov','api.si.edu'}
+                options=[]
+                for i,x in enumerate(schedule):
+                    tp,nm,rt,query,k=route_info(x)
+                    if x[-1]!=0 or k in attempted or not isinstance(rt,RotaPublica) or rt.origem not in real_hosts:continue
+                    strength=afinidade(necessidade,query,nm)
+                    if strength:options.append((-strength,i))
+                if options:
+                    _,index=min(options);specialty_used=True;reason='AFINIDADE_FONTE'
+            if default_routes and necessidade.get('preferir_imersao_vertical') is True and not portrait_used and len(report['buscas'])>=2 and not weak and reason is None:
+                # Reserve one explicit portrait search only if broad results
+                # have not offered a usable portrait and budget still exists.
+                if not any(x.get('retrato_promissor',0) for x in report['buscas']):
+                    pi=next((i for i,x in enumerate(schedule) if x[-1]==0 and route_info(x)[1]=='commons_video_retrato' and route_info(x)[4] not in attempted),None)
+                    if pi is not None:index=pi;portrait_used=True;reason='ALTERNATIVA_RETRATO'
+            entry=schedule.pop(index)
+            tipo,nome,fn,consulta,key=route_info(entry)
+            if key in attempted:continue
+            attempted.add(key)
+            row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            if reason:row['prioridade']=reason
+            if isinstance(fn,RotaPublica) and default_routes:
+                if fn.origem in suspended:
+                    report['buscas'].append({**row,'estado':'FONTE_SUSPENSA','novos':0,'retidos':0})
+                    continue
+                selected=[(row,fn,consulta)]
+                # A single concurrent wave per invocation, only distinct
+                # hosts and only when both calls fit the remaining budget.
+                if weak and not wave_used and documental_budget-len(report['buscas'])>=2:
+                    second=next((i for i,x in enumerate(schedule) if x[-1]==entry[-1]
+                        and isinstance(route_info(x)[2],RotaPublica)
+                        and route_info(x)[2].origem not in suspended|{fn.origem}
+                        and route_info(x)[4] not in attempted),None)
+                    if second is not None:
+                        t2,n2,f2,q2,k2=route_info(schedule.pop(second))
+                        attempted.add(k2);selected.append(({'consulta':q2,'tipo':t2,'fonte':n2},f2,q2))
+                        wave_used=True
+                results=onda([(f,q) for _,f,q in selected])
+                if len(selected)>1:
+                    report.setdefault('ondas_publicas',[]).append({
+                        'fontes':[r['fonte'] for r,f,q in selected],
+                        'consultas':len(selected),'http':sum(x['rede']['http'] for x in results),
+                        'bytes':sum(x['rede']['bytes'] for x in results),
+                        'sobreposicao_s':round(max(0,min(x['fim_monotonic'] for x in results)-max(x['inicio_monotonic'] for x in results)),3)})
+                for (r,f,q),result in zip(selected,results):
+                    r['rede']=result['rede']
+                    suspended.update(result['rede'].get('fontes_suspensas',[]))
+                    if result['error']:
+                        report['buscas'].append({**r,'estado':'FALHA','tipo_erro':result['error'],'novos':0,'retidos':0})
+                    else:collect(r,result['raw'])
+            else:
+                try:raw=fn(consulta) or []
+                except Exception as e:
+                    report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+                collect(row,raw)
+        # Interleave ranked query batches before enforcing the global cap.
+        # Unretained candidates are counted, never called semantic negatives.
+        while batches and len(report['candidatos'])<max_candidatos:
+            next_round=[]
+            for row,it in batches:
+                if len(report['candidatos'])>=max_candidatos:break
+                c=next(it,None)
+                if c is None:continue
+                report['candidatos'].append(c);row['retidos']+=1
+                next_round.append((row,it))
+            batches=next_round
+        report['candidatos_nao_retidos']=sum(x.get('novos',0)-x.get('retidos',0) for x in report['buscas'])
+        if stock_context:
+            from src.v4.fontes_contextuais_e359 import pixabay
+            q=consultas[0];key=('video','pixabay_contexto',q.casefold())
+            if key not in attempted:
+                attempted.add(key)
+                # Single provider query here, no hidden alternate request.
+                try:
+                    result=pixabay(q)
+                    report['stock_contextual']={'estado':result['status'],'consulta':q,'candidatos':result.get('candidates',[]),
+                        'cache_hit':result.get('cache_hit'),'publicar':False,'prova_factual':False}
+                    report['buscas'].append({'fonte':'pixabay_contexto','tipo':'video','consulta':q,'estado':result['status'],'novos':0,'retidos':0,'escopo':'CONTEXTO_APENAS'})
+                except Exception as e:
+                    report['stock_contextual']={'estado':'FALHA','tipo_erro':type(e).__name__,'candidatos':[],'publicar':False,'prova_factual':False}
+                    report['buscas'].append({'fonte':'pixabay_contexto','tipo':'video','consulta':q,'estado':'FALHA','novos':0,'retidos':0,'escopo':'CONTEXTO_APENAS'})
+        return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
+    # Reserve a round for the alternative query instead of exhausting budget
+    # on the first query. Without inspection, continue looking for options.
+    por_rodada=max(1,max_buscas//len(consultas))
+    for ri,consulta in enumerate(consultas):
+        ordem=(rotas[ri*por_rodada:]+rotas[:ri*por_rodada])[:por_rodada] if len(rotas)>por_rodada else rotas
+        # For action evidence, use the primary video source for both queries.
+        # Otherwise the alternative wording may only reach unrelated providers.
+        if ev=='movimento' and ri and rotas and por_rodada>=2:
+            ordem=[rotas[0]]+[x for x in ordem if x[:2]!=rotas[0][:2]]
+            ordem=ordem[:por_rodada]
+        for tipo,nome,fn in ordem:
+            if len(report['buscas'])>=max_buscas:return {**report,'estado':'LACUNA_NAO_VERIFICADA'}
+            row={'consulta':consulta,'tipo':tipo,'fonte':nome}
+            try:raw=fn(consulta) or []
+            except Exception as e:
+                report['buscas'].append({**row,'estado':'FALHA','tipo_erro':type(e).__name__});continue
+            added=0
+            for item in raw[:12]:
+                c=_candidato_documental(item,nome,tipo)
+                if not c or c['url'] in vistos:continue
+                if len(report['candidatos'])>=max_candidatos:break
+                vistos.add(c['url']);report['candidatos'].append(c);added+=1
+                if analisar(c):
+                    report['buscas'].append({**row,'estado':'OK','novos':added})
+                    return {**report,'estado':'CANDIDATO_PRIVADO_REVISADO'}
+                if added>=2:break
+            report['buscas'].append({**row,'estado':'OK' if added else 'SEM_NOVOS_CANDIDATOS','novos':added})
+    return {**report,'estado':'REVISAR_CANDIDATOS' if report['candidatos'] or report['biblioteca'] else 'LACUNA_NAO_VERIFICADA'}
+
+
+def resolver_foto_commons(pagina,source_id):
+    """Refresh the declared full-size variants of a selected provider item.
+    Existing E272 contract, shared with the in-process E279 handoff."""
+    from urllib.parse import urlsplit,unquote
+    from src import acervo
+    u=urlsplit(pagina)
+    if u.scheme!='https' or u.hostname!='commons.wikimedia.org' or u.username or u.password or not u.path.startswith('/wiki/File:'):
+        raise ValueError('E272-PAGINA')
+    title=unquote(u.path.removeprefix('/wiki/')).replace('_',' ')
+    hits=acervo._commons_infos([title],'Commons')
+    raw=next((v for v in hits if v.get('source_id')==source_id and v.get('pagina')==pagina),None)
+    c=_candidato_documental(raw,'commons','foto')
+    if not c or c['direitos']!='DECLARACAO_INDIVIDUAL_PENDENTE_AUDITORIA':
+        raise ValueError('E272-DIREITOS_OU_IDENTIDADE')
+    return c

@@ -10,6 +10,7 @@
     "@hyperframes/producer": "0.9.58",
     "@hyperframes/player": "0.9.58",
     "@hyperframes/studio": "0.9.58",
+    "@iconify-json/fluent-emoji-flat": "1.2.6",
     "remotion": "4.0.544",
     "@remotion/cli": "4.0.544",
     "@remotion/renderer": "4.0.544",

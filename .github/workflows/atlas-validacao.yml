@@ -2,7 +2,7 @@ name: ATLAS - testes isolados (sem Claude e sem render)
 # Disparo separado da produção: não chama modelo, não gera vídeo e não publica.
 on:
   push:
-    branches: [motor-integral-v4]
+    branches: [motor-integral-v4, atlas-direcao-visual-20261118]
     paths:
       - ".github/atlas/validacao.txt"
   workflow_dispatch:
@@ -15,8 +15,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validar:
+  # Smoke do BLOQUEIO real: roda sem FFmpeg, pacotes externos ou TTS,
+  # antes dos testes completos que dependem de apt/PyPI. Não substitui o full CI.
+  ritmo_real:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Reproduzir o bloqueio de 0.6–3.8s com a voz Gemini registrada
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P
+          base=Path("src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json")
+          dados=Path("tests/dados/atlas_chips_v2_tts_real_run_44447705090.json")
+          pl=json.loads(base.read_text(encoding="utf-8"))
+          voz=json.loads(dados.read_text(encoding="utf-8"))
+          p=P.resolver_tempos(pl,voz["palavras"],duracao_audio=voz["duracao_audio"])
+          foto=next(l for b in p["beats"] for l in b["camadas"] if l["id"]=="fab18-real-dominante")
+          assert foto["p"]["rotulo_t"]==0.63 and foto["p"]["rotulo2_t"]==2.65
+          assert foto["p"]["rotulo2"]=="FAB 18 · TAIWAN"
+          assert P.REGRAS["progressao_max_s"]==3
+          erros=[v for v in P.validar(p) if v["gravidade"]=="erro" and v["regra"] in ("F-SEM-PROGRESSAO","F-TEMPO")]
+          assert not erros, erros
+          print("ATLAS_V2_TTS_REAL_OK 61 palavras; sem F-SEM-PROGRESSAO/F-TEMPO")
+          PY
+      - name: Validar piso de 2.5s com fala rápida REAL e fala lenta anterior
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P
+          raiz=Path("tests/dados")
+          plano=json.loads(Path("src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json").read_text())
+          for run in (44450584008,44447705090):
+              voz=json.loads((raiz/f"atlas_chips_v2_tts_real_run_{run}.json").read_text())
+              p=P.resolver_tempos(plano,voz["palavras"],duracao_audio=voz["duracao_audio"])
+              foto=p["beats"][0]["camadas"][0]
+              assert foto["t1"] >= 2.5 and foto["t1"] == p["beats"][1]["t"],(run,foto["t1"],p["beats"][1]["t"])
+              erros=[v for v in P.validar(p) if v["gravidade"]=="erro"]
+              assert not erros,(run,erros)
+              print(f"ATLAS_PROVA_REAL_OK {run} final_foto={foto['t1']}s")
+          PY
+  validar:
+    # Runner estável: ubuntu-latest virou 26.04 e apt-get update expirou (run 44451262176).
+    # Mesmo ambiente 22.04 do workflow da prévia privada; não depende de setup-ffmpeg externo.
+    runs-on: ubuntu-22.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -24,17 +72,22 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-      - name: FFmpeg (necessario para testes de audio e preflight)
+      - name: FFmpeg do runner (sem release externo instavel)
+        timeout-minutes: 4
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 110 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 100 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
       - name: Instalar dependencias Python de teste
         run: |
-          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt beautifulsoup4
       - name: Verificar sintaxe e testes ATLAS (sem API de IA)
         run: |
-          python -m py_compile src/v4/formatos/diretor.py src/v4/formatos/plano.py tests/test_formatos.py
-          python -m pytest -q -ra tests/test_formatos.py
+          python -m py_compile src/v4/formatos/roteiro_visual_curado.py tests/test_atlas_roteiro_visual_curado.py src/v4/formatos/animatic.py tests/test_atlas_animatic.py src/v4/formatos/garimpo_visual.py tests/test_atlas_garimpo_visual.py src/v4/formatos/autocorrecao.py tests/test_atlas_autocorrecao.py src/v4/formatos/revisao_visual.py tests/test_atlas_revisao_visual.py src/v4/formatos/triagem_editorial.py tests/test_atlas_triagem_editorial.py src/voz.py src/v4/formatos/estado.py src/v4/formatos/__main__.py src/v4/formatos/diretor.py src/v4/formatos/plano.py src/v4/formatos/produzir.py src/v4/formatos/ponte_biblioteca.py scripts/atlas_previa_curta.py tests/test_formatos.py tests/test_atlas_integracao_p0.py tests/test_atlas_integracao_p1.py tests/test_atlas_ponte_v3.py tests/test_atlas_abertura_prova_real.py tests/test_atlas_previa_chips_v2.py tests/test_atlas_triagem_editorial.py tests/test_atlas_revisao_visual.py tests/test_atlas_autocorrecao.py tests/test_atlas_garimpo_visual.py tests/test_atlas_animatic.py tests/test_atlas_roteiro_visual_curado.py
+          python -m pytest -q -ra tests/test_formatos.py tests/test_atlas_integracao_p0.py tests/test_atlas_integracao_p1.py tests/test_atlas_ponte_v3.py tests/test_atlas_abertura_prova_real.py tests/test_atlas_previa_chips_v2.py tests/test_atlas_triagem_editorial.py tests/test_atlas_revisao_visual.py tests/test_atlas_autocorrecao.py tests/test_atlas_garimpo_visual.py tests/test_atlas_animatic.py tests/test_atlas_roteiro_visual_curado.py
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -44,4 +97,10 @@ jobs:
         working-directory: motor4
         run: |
           npm ci --no-audit --no-fund
+          node --version
+          node --check ../src/render/v2/comp/mecanismos.js
+          node --check ../src/render/v2/nucleo.js
+          node ../tests/test_clareza_v2.js
           npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Regressões de bases regionais e aproximação E235
+        run: python -m pytest -q tests/test_atlas_base_regional_e235.py tests/test_direcao_e234.py tests/test_ponte_mapa_atlas_filme.py tests/test_atlas_multiscale_e237.py tests/test_e202_diretor_visual.py

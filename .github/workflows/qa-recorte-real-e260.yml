@@ -1,0 +1,105 @@
+name: E261.8 - continuidade cartografica e zonas seguras documentais
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-recorte-real-e260.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      CORINGA_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pytest -q tests/test_integracao_corretiva_e260.py tests/test_atlas_multiscale_e237.py tests/test_ponte_mapa_atlas_filme.py tests/test_area_segura_plataformas.py
+      - name: Restaurar materiais e analises sem IA
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.recuperar_checkpoints_documentais benchmarks/e258/necessidades.json contrastes qa_recorte_checkpoints
+      - name: Preparar comparacao com o compositor existente
+        env:
+          CORINGA_CHECKPOINTS_DESCOBERTOS: qa_recorte_checkpoints/descoberta.json
+        run: |
+          python -m scripts.qa_revisao_documental_e247 benchmarks/e258/necessidades.json stage_documental/e260recorte contrastes --progressiva --multicenas --qualidade --replay-privado
+          python -m scripts.qa_recorte_real_e260 stage_documental/e260recorte
+      - name: Renderizar tres recortes e extrair quadros reais
+        run: |
+          set -euo pipefail
+          root=stage_documental/e260recorte
+          for name in antes depois contexto; do
+            (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root/$name.mp4" --props=../"$root/$name/props.json" --public-dir=remotion/public --codec=h264 --crf=21 --scale=0.5 --concurrency=2 --log=error)
+            ffprobe -v error -show_streams -show_format -of json "$root/$name.mp4" > "$root/$name-probe.json"
+          done
+          python - <<'PY'
+          import json,subprocess,hashlib
+          from pathlib import Path
+          root=Path('stage_documental/e260recorte')
+          q=json.loads((root/'comparacao.json').read_text())
+          for name in ('antes','depois','contexto'):
+              m=json.loads((root/(name+'-probe.json')).read_text())
+              v=next(s for s in m['streams'] if s['codec_type']=='video')
+              assert (v['width'],v['height'])==(540,960)
+              assert abs(float(m['format']['duration'])-q[name+'_s'])<.07
+              q[name+'_sha256']=hashlib.sha256((root/(name+'.mp4')).read_bytes()).hexdigest()
+              at=max(0,q[name+'_s']-.1)
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str(at),'-i',str(root/(name+'.mp4')),'-frames:v','1',str(root/(name+'-final.jpg'))],check=True)
+          (root/'comparacao.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          PY
+      - name: Integrar ATLAS multiescala e filmagem restaurada
+        run: |
+          python -m scripts.qa_misto_atlas_e261 stage_documental/e260recorte benchmarks/e2614/kilauea.json
+          root=stage_documental/e260recorte
+          (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root/misto.mp4" --props=../"$root/misto/props.json" --public-dir=remotion/public --codec=h264 --crf=21 --scale=0.5 --concurrency=2 --log=error)
+          ffprobe -v error -show_streams -show_format -of json "$root/misto.mp4" > "$root/misto-probe.json"
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          from src.v4.formatos import qa_area_segura as S
+          root=Path('stage_documental/e260recorte')
+          p=root/'misto.json'
+          q=json.loads(p.read_text())
+          m=json.loads((root/'misto-probe.json').read_text())
+          assert abs(float(m['format']['duration'])-q['duracao_s'])<.07
+          assert not any(s['codec_type']=='audio' for s in m['streams'])
+          for name,at in [('mapa',1.0),('mapa-final',5.3),('registro',6.5),('registro-final',q['duracao_s']-.1)]:
+              out=root/(name+'.jpg')
+              subprocess.run(['ffmpeg','-v','error','-y','-ss',str(at),'-i',str(root/'misto.mp4'),'-frames:v','1',str(out)],check=True)
+              S.overlay(out,root/(name+'-safe.jpg'))
+          q['sha256_render']=hashlib.sha256((root/'misto.mp4').read_bytes()).hexdigest()
+          p.write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          PY
+      - name: Preservar evidencia privada
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e260recorte
+          if [[ -s "$root/comparacao.json" ]]; then
+            files=("$root/comparacao.json" "$root"/original-amostra-*.jpg "$root"/antes-final.jpg "$root"/depois-final.jpg "$root"/contexto-final.jpg "$root"/misto.json "$root"/mapa*.jpg "$root"/registro*.jpg "$root"/*.mp4)
+            valid=()
+            for f in "${files[@]}"; do [[ ! -f "$f" ]] || valid+=("$f"); done
+            bash scripts/arquivar_cofre_review.sh "review-e260-recorte-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"
+            python scripts/espelhar_revisao_cofre.py "e260-recorte-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${valid[@]}"
+          fi

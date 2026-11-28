@@ -1,0 +1,106 @@
+name: "LAB — Compressor completo 2D com QA dos pixels reais"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-compressor-conjunto-2d.yml"
+      - "src/v4/formatos/render_compressor_conjunto_2d.py"
+      - "src/v4/formatos/compressor_pv_core.py"
+      - "src/v4/formatos/identidade_visual_maquina.py"
+      - "docs/v4/formatos/reference_first/identidade_compressor_oficina_tanque_horizontal.json"
+      - "tests/test_compressor_conjunto_2d.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-compressor-conjunto-2d
+  cancel-in-progress: true
+jobs:
+  prova_privada:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar renderizador e testes
+        run: |
+          python -m pip install -q pillow cairosvg pytest
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          fi
+      - name: QA de peças por PÍXEIS e física P-V
+        run: |
+          python -m pytest -q tests/test_compressor_conjunto_2d.py tests/test_identidade_visual_maquina.py
+      - name: Renderizar MP4 COMPLETO (privado) com mesmo código do GitHub
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_conjunto_compressor/frames
+          python -m src.v4.formatos.render_compressor_conjunto_2d \
+            qa_conjunto_compressor/COMPRESSOR_CONJUNTO_2D_PRIVADO.mp4
+      - name: Conferir oito frames verdadeiros e produzir prancha visual
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          from PIL import Image,ImageChops,ImageStat
+          root=Path('qa_conjunto_compressor')
+          path=root/'COMPRESSOR_CONJUNTO_2D_PRIVADO.mp4'
+          meta=json.loads(subprocess.check_output([
+              'ffprobe','-v','error','-show_entries',
+              'format=duration:stream=codec_type,width,height,r_frame_rate',
+              '-of','json',str(path)]))
+          video=next(x for x in meta['streams'] if x['codec_type']=='video')
+          assert (video['width'],video['height'])==(540,960)
+          assert video['r_frame_rate']=='24/1'
+          assert abs(float(meta['format']['duration'])-8.) < .06
+          assert not any(s['codec_type']=='audio' for s in meta['streams'])
+          progress=[.03,.16,.24,.41,.61,.74,.91,.97]
+          frames=[]
+          board=Image.new('RGB',(4*270,2*490),'#EFF6FA')
+          for i,t in enumerate(progress):
+              filename=root/'frames'/f'frame_{i:02d}.png'
+              subprocess.check_call(['ffmpeg','-v','error','-y',
+                  '-ss',f'{t*8:.3f}','-i',str(path),'-frames:v','1',str(filename)])
+              im=Image.open(filename).convert('RGB')
+              frames.append(im)
+              board.paste(im.resize((270,480)),((i%4)*270,(i//4)*490+10))
+          board.save(root/'CONTATO_8_FASES_COMPRESSOR_COMPLETO.jpg',quality=89)
+          def delta(a,b,box):
+              stat=ImageStat.Stat(ImageChops.difference(a.crop(box),b.crop(box)))
+              return round(sum(stat.mean)/3,3)
+          report=json.loads(path.with_suffix('.json').read_text('utf8'))
+          lift=round(report['layout']['conjunto_subida_px'])
+          def lifted(box):
+              x1,y1,x2,y2=box
+              return (x1,y1-lift,x2,y2-lift)
+          tests={
+            'pistao_mexe':delta(frames[0],frames[3],lifted((245,490,342,660))),
+            'pressao_muda':delta(frames[2],frames[5],lifted((241,461,343,640))),
+            'fluxo_muda':delta(frames[5],frames[7],lifted((418,442,460,805))),
+          }
+          assert tests['pistao_mexe']>5,tests
+          assert tests['pressao_muda']>5,tests
+          assert tests['fluxo_muda']>.1,tests
+          assert report['layout']['cabecalho_altura_px'] == 202
+          assert not report['publicar']
+          assert not report['identidade_por_pixels_aprovada']
+          (root/'QA_IMAGENS_E_INTEGRIDADE.json').write_text(json.dumps({
+              'resultado':'RENDER_EXECUTADO_E_FRAMES_ANALISADOS',
+              'medidas_delta_pixels':tests,
+              'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+              'duracao':float(meta['format']['duration']),
+              'fases_revisao':'PROCESSO_PV_PROGRAMADO_NAO_VLM',
+              'publicar':False,
+              'identidade_automatica':'NAO_HA_CLASSIFICADOR_INDEPENDENTE'
+          },ensure_ascii=False,indent=2))
+          print(tests)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compressor-oficina-completo-2d-qa-real-privado
+          path: qa_conjunto_compressor/
+          retention-days: 5
+          if-no-files-found: warn

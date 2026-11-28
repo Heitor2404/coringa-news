@@ -1,0 +1,3 @@
+import React from 'react';import {AbsoluteFill,Composition,registerRoot} from 'remotion';import {PalcoMapa} from './formatos/Palco';import type {FormatoProps} from './formatos/tipos';
+const Preview:React.FC<{map:FormatoProps}>=({map})=>{if(!map.neo_benchmark)throw Error('E396-PRIVATE');return <AbsoluteFill style={{background:'#000'}}><PalcoMapa P={map} opac={1}/></AbsoluteFill>};
+registerRoot(()=> <><Composition id="NeoMapWide" component={Preview} width={1280} height={640} fps={30} durationInFrames={540} defaultProps={{map:{} as FormatoProps}}/><Composition id="NeoMapPortrait" component={Preview} width={720} height={1280} fps={30} durationInFrames={540} defaultProps={{map:{} as FormatoProps}}/></>);

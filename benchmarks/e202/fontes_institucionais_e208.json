@@ -1,0 +1,28 @@
+{
+  "schema": "fontes-institucionais-e208",
+  "nota": "Recibos de pesquisa manual, não autoria IA ou homologação. Páginas FWS verificadas em 24/11/2026; arquivos ainda não baixados pelo motor.",
+  "cases": {
+    "biologia": {
+      "registro": [
+        {
+          "pagina": "https://www.fws.gov/media/flamingos",
+          "url": "https://www.fws.gov/sites/default/files/images/2024-03-2/4426.jpg",
+          "autor": "Jesse Achtenberg",
+          "titulo": "Flamingos",
+          "mostra": "Flamingos alimentando-se na água",
+          "licenca": "PUBLIC DOMAIN",
+          "evidencia_licenca": "Media Usage Rights/License — Public Domain; página individual e crédito. Fotografia, não sequência de ação."
+        },
+        {
+          "pagina": "https://www.fws.gov/media/american-flamingo",
+          "url": "https://www.fws.gov/sites/default/files/images/2024-03/american-flamingo-lisa-cox-usfws.jpg",
+          "autor": "Lisa Cox/USFWS",
+          "titulo": "American flamingo",
+          "mostra": "Flamingo adulto na água",
+          "licenca": "PUBLIC DOMAIN",
+          "evidencia_licenca": "Media Usage Rights/License — Public Domain; página individual e crédito."
+        }
+      ]
+    }
+  }
+}

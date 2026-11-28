@@ -1,0 +1,152 @@
+name: ATLAS V2 — prova audiovisual Chips (Telegram privado, sem publicação)
+
+# Execução privada e supervisionada: 2 fotos Commons comprovadas + mapa semântico.
+# Zero Claude. TTS Gemini pode tentar modelos e repetir em caso de falha de fala; SEM fallback Edge. Nenhum upload público do MP4.
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/chips_v2_preview.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-v2-chips-prova-privada
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  PLANO: src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json
+  SAIDA: saida_chips_v2_privada
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+
+jobs:
+  previa:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 140
+    steps:
+      - uses: actions/checkout@v4
+      # Sem contrato visual, o episódio não deve sequer gastar cota/tempo com TTS.
+      - name: Portão editorial pré-produção — prova antes da voz
+        run: python -m src.v4.formatos.triagem_editorial "$PLANO" "$SAIDA"
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Sistema — FFmpeg e fontes
+        timeout-minutes: 8
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version | head -1
+          google-chrome --version
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+      - name: Dependências de teste/rendereização (versões do repositório)
+        timeout-minutes: 22
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Verificar escopo, base visual e voz sem fallback
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json").read_text())
+          c=json.loads(pathlib.Path("src/v4/formatos/canais/coringa.json").read_text())
+          b=json.loads(pathlib.Path("src/v4/biblioteca_comprovada.json").read_text())
+          assert p["formato"]=="atlas" and p["canal"]=="coringa"
+          assert p["abertura_tipo"]=="prova_real"
+          # Composição/quantidade de cenas sai da direção visual; não impor um piloto ruim como padrão.
+          assert c["narrador"]["motor"]=="gemini" and c["narrador"]["voz"]=="Charon"
+          assert c["narrador"]["fallback"]=="bloquear"
+          aprovados={x["id"] for x in b["itens"] if x.get("sha256_origem") and (x.get("prova") or {}).get("midia_corresponde")}
+          usados={L["p"]["asset"] for q in p["beats"] for L in q["camadas"] if L.get("componente")=="atlas.provaVisual"}
+          assert usados<=aprovados
+          # Mídia insuficiente bloqueia na triagem; jamais limitar a exatamente duas fotos.
+          # Nem número de clipes nem tamanho de roteiro ficam hardcoded; a direção prova necessidade.
+          print("PILOTO_PRIVADO_ATLAS_V2 validado; ninguém autorizou publicação em redes")
+          PY
+      - name: Narração Gemini/Charon protegida — sem Edge, retries registrados
+        timeout-minutes: 12
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::GEMINI_API_KEY ausente; não trocarei para Edge"; exit 1
+          fi
+          python -m src.v4.formatos narrar "$PLANO" "$SAIDA"
+      - name: Reutilizar mídia comprovada (hash e fonte)
+        timeout-minutes: 15
+        run: python -m src.v4.formatos ativos "$PLANO" "$SAIDA"
+      - name: Preflight completo (nenhuma publicação)
+        timeout-minutes: 12
+        run: python -m src.v4.formatos preflight "$PLANO" "$SAIDA"
+      - name: Quadros e legibilidade nas plataformas
+        timeout-minutes: 25
+        run: python -m src.v4.formatos quadros "$PLANO" "$SAIDA"
+      - name: Revisor visual INDEPENDENTE — prova, enquadramento e compreensão por beat
+        timeout-minutes: 12
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Não mascarar falha: salva o diagnóstico para tentar uma correção dirigida.
+          python -m src.v4.formatos.revisao_visual "$SAIDA" || test -s "$SAIDA/revisao_visual.json"
+      - name: Uma autocorreção dirigida + NOVA revisão de quadros
+        timeout-minutes: 30
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.v4.formatos.autocorrecao "$PLANO" "$SAIDA"
+      - name: Renderizar MP4 completo com portões
+        timeout-minutes: 65
+        run: python -m src.v4.formatos render "$PLANO" "$SAIDA"
+      - name: Folhas e fiscal
+        if: always()
+        timeout-minutes: 12
+        run: |
+          if [ -s "$SAIDA/resultado.json" ]; then
+            python -m src.v4.formatos folhas "$PLANO" "$SAIDA"
+          fi
+      - name: Entregar APENAS no Telegram privado como DIAGNÓSTICO
+        if: always()
+        timeout-minutes: 10
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # O Telegram também recebe BLOQUEIOS de preflight sem MP4. Nunca deixar
+          # o dono sem diagnóstico só porque o vídeo não pôde ser renderizado.
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            python -m src.v4.formatos telegram "$PLANO" "$SAIDA"
+          else
+            echo "::error::Telegram privado sem configuração; falha explícita, sem publicação"
+            exit 1
+          fi
+      - name: Portão editorial (job vermelho em BLOQUEADO)
+        if: always()
+        run: python -m src.v4.formatos gate "$PLANO" "$SAIDA"
+      - name: Guardar APENAS relatórios sem mídia no artefato privado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-v2-chips-relatorios-sem-mp4
+          path: |
+            saida_chips_v2_privada/triagem_editorial.json
+            saida_chips_v2_privada/preflight.json
+            saida_chips_v2_privada/quadros/relatorio.json
+            saida_chips_v2_privada/revisao_visual.json
+            saida_chips_v2_privada/autocorrecao.json
+            saida_chips_v2_privada/resultado.json
+            saida_chips_v2_privada/estado_editorial.json
+          if-no-files-found: warn
+          retention-days: 7

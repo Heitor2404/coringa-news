@@ -1,0 +1,29 @@
+{
+  "publish": false,
+  "candidates": [
+    {
+      "need": "fissura_abertura",
+      "slug": "kilauea-east-rift-zone-eruption-may-3-2018",
+      "label": "Fissura aberta em Leilani Estates",
+      "scope": "Registro da fissura em 3 de maio",
+      "type": "video",
+      "credit": "USGS · Hawaiian Volcano Observatory"
+    },
+    {
+      "need": "fragmentos_incandescentes",
+      "slug": "kilauea-east-rift-zone-eruption-may-7-2018",
+      "label": "Projeção de fragmentos na fissura 12",
+      "scope": "Fragmentos de lava lançados por bolhas de gás",
+      "type": "video",
+      "credit": "USGS · Hawaiian Volcano Observatory"
+    },
+    {
+      "need": "avanco_lava",
+      "slug": "kilauea-east-rift-zone-eruption-may-6-2018",
+      "label": "Fissura 8 em Leilani Estates",
+      "scope": "Contexto da fissura e avanço; não comprova evacuação",
+      "type": "video",
+      "credit": "USGS · Hawaiian Volcano Observatory"
+    }
+  ]
+}

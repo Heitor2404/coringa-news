@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict');const {detailAt}=require('/tmp/e395/CinematicDirectorE395.js');const {fitsFrame}=require('/tmp/e395/MechanismCamera2D.js');
+test('explicit detail window preserves the reviewed detail ROI and returns to full view',()=>{const roi={left:100,top:200,right:220,bottom:340},v={left:30,top:240,right:330,bottom:580},shots=[{id:'detail',start:2,end:4,roi}];assert.equal(detailAt(1.99,shots,v,2),null);const d=detailAt(2,shots,v,2);assert.ok(fitsFrame(d.camera,roi,v));assert.equal(detailAt(4,shots,v,2),null);});

@@ -1,0 +1,3 @@
+# Envio único do render causal 7,8s concluído em run 44532194366.
+# Telegram privado, sem render, TTS, IA ou postagem em redes.
+# A partir da próxima prévia, entrega automática também está no workflow de render.

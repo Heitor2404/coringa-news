@@ -1,0 +1,84 @@
+{
+  "schema": "coringa-parametric-slider-crank-v1",
+  "family": "slider_crank_parametrico",
+  "version": 1,
+  "id": "biela_manivela_curso_longo",
+  "title": "BIELA E MANIVELA",
+  "subtitle": "CURSO LONGO · MESMO COMPOSITOR",
+  "duration_s": 9,
+  "fps": 24,
+  "video": [
+    540,
+    960
+  ],
+  "camera": "plano_geral_travado",
+  "publish": false,
+  "visual_approval": false,
+  "physics": {
+    "kernel": "crank_slider_exact",
+    "units": "pixels_didaticos",
+    "cycles": 1,
+    "rigid_rod": true,
+    "ideal_belt_no_slip": true
+  },
+  "source": {
+    "kind": "equacao_geometrica_interna",
+    "verified_core": "cinematica_biela_manivela.py",
+    "external_pixels_copied": false,
+    "external_license_inferred": false
+  },
+  "actors": [
+    "motor_pulley",
+    "drive_belt",
+    "flywheel",
+    "connecting_rod",
+    "piston",
+    "cylinder"
+  ],
+  "crank": {
+    "cx": 304,
+    "cy": 720,
+    "radius": 64,
+    "rod": 186,
+    "wheel": 80
+  },
+  "motor": {
+    "cx": 94,
+    "cy": 720,
+    "pulley": 27
+  },
+  "cylinder": {
+    "x": 233,
+    "y": 355,
+    "width": 143,
+    "height": 299
+  },
+  "piston": {
+    "width": 117,
+    "height": 88
+  },
+  "palette": {
+    "primary": "#638AB9",
+    "accent": "#FFC46F"
+  },
+  "phases": [
+    {
+      "action": "curso_descendente",
+      "start": 0,
+      "end": 4.5,
+      "title": "PISTÃO DESCE",
+      "detail": "A manivela transforma giro em movimento linear."
+    },
+    {
+      "action": "curso_ascendente",
+      "start": 4.5,
+      "end": 9,
+      "title": "PISTÃO SOBE",
+      "detail": "A biela mantém as duas articulações conectadas."
+    }
+  ],
+  "legal": {
+    "publish_permission": false,
+    "external_media_used": false
+  }
+}

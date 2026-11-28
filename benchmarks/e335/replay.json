@@ -1,0 +1,26 @@
+{
+  "publish": false,
+  "ref": "c70a543f75726987afc72ac10c0f29ac35681332",
+  "cases": [
+    {
+      "id": "lava",
+      "folder": "e260-45646284798-1",
+      "report_blob": "1947e1c428303f2c9f11c0dfeb495922b36bacb2",
+      "need": "n1",
+      "sha256": "cc825cc83cab417dc2b316344f488c080b4817dcef2d6e5f49792e3a5605e1fc",
+      "tag": "review-e258-progressiva-45544941326-1",
+      "package_digest": "56119f2ac98fe0875e206c1d2ac01608f3098e9faa475664d1bcf5ccbc55aeea"
+    },
+    {
+      "id": "polvo",
+      "folder": "e260-45646284798-1",
+      "report_blob": "1947e1c428303f2c9f11c0dfeb495922b36bacb2",
+      "need": "n2",
+      "sha256": "5881a94f434d6a42d2363e1f0a06a2c97b47b554955b1eafb95f035bf2e8267b",
+      "tag": "review-e258-progressiva-45544941326-1",
+      "package_digest": "551b3585abba15a0cd8631301c68d3e1ef61475a17cd616018cff00b1848b6ea",
+      "expected_negative": true,
+      "expected_windows": 6
+    }
+  ]
+}

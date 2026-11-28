@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "etapa": "CURADORIA_PRIVADA_SEM_PROMOCAO",
+  "workflows": [
+    "44604866932",
+    "44605644074"
+  ],
+  "artifact_ultima_rodada": 14570323000,
+  "retencao_dias": 3,
+  "uso_comercial": "VERIFICAR_CONDICOES_MIDIA_ESPECIFICA",
+  "direitos_contexto": "https://www.nist.gov/copyrights-disclaimers",
+  "fontes": [
+    {
+      "id": "nist_deposicao_2023",
+      "origem": "NIST Nanofab",
+      "pagina": "https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science",
+      "kaltura": "kaltura:684682:1_k2iydnt5",
+      "arquivo": "nist_deposicao.mp4",
+      "sha256": "9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854",
+      "bytes": 9725710,
+      "dimensoes": [
+        720,
+        1280
+      ],
+      "duracao_s": 11.833333,
+      "amostras_frames": 24,
+      "intervalos_inspecao": [
+        {
+          "de": 0,
+          "ate": 4.7,
+          "conteudo": "pesquisadora diante do equipamento, pouca novidade visual"
+        },
+        {
+          "de": 5,
+          "ate": 8,
+          "conteudo": "abertura da camara e revelacao do interior"
+        },
+        {
+          "de": 8,
+          "ate": 11.833,
+          "conteudo": "plataformas internas, sem deposicao visivel comprovada"
+        }
+      ],
+      "texto_embutido": true,
+      "prova_processo": false,
+      "uso_proposto": "contexto de equipamento NIST, nao prova filmada de deposicao",
+      "status": "CANDIDATO_VISUAL_SEM_PROMOCAO"
+    },
+    {
+      "id": "nist_ebeam_2017",
+      "origem": "NIST Boulder",
+      "pagina": "https://www.nist.gov/video/visit-e-beam-machine",
+      "kaltura": "kaltura:684682:0_hhh6rc8o",
+      "arquivo": "nist_ebeam.mp4",
+      "sha256": "738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a",
+      "bytes": 22208501,
+      "dimensoes": [
+        1280,
+        720
+      ],
+      "duracao_s": 123.67,
+      "amostras_frames": 47,
+      "intervalos_inspecao": [
+        {
+          "de": 37,
+          "ate": 42,
+          "conteudo": "ANIMACAO de feixe de eletrons sobre wafer, nao filmagem EUV"
+        },
+        {
+          "de": 47,
+          "ate": 55,
+          "conteudo": "profissional com luvas manipula suporte/peça na maquina"
+        },
+        {
+          "de": 57,
+          "ate": 67,
+          "conteudo": "maos com luvas exibem wafer e manipulam materiais no laboratorio"
+        },
+        {
+          "de": 69,
+          "ate": 81,
+          "conteudo": "operador manipula dispositivo e plataforma do equipamento"
+        },
+        {
+          "de": 105,
+          "ate": 116,
+          "conteudo": "micrografias com escala, ilustrativas, nao prova de fabricacao Taiwan"
+        }
+      ],
+      "texto_embutido": "alguns trechos",
+      "prova_processo": false,
+      "uso_proposto": "b-roll de manipulacao de wafer e laboratorio de litografia e-beam; e-beam difere de EUV",
+      "status": "CANDIDATO_VISUAL_SEM_PROMOCAO"
+    }
+  ],
+  "bloqueios": [
+    "origem nao é TSMC",
+    "sem aprovacao editorial humana",
+    "licenca particular de eventuais trechos de terceiros pendente",
+    "clipes ainda nao estao no catalogo V3/V4 para render"
+  ],
+  "narracao": "NAO_PRODUZIDA",
+  "publicado": false,
+  "telegram": false
+}

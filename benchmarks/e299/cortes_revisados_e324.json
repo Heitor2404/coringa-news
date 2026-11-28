@@ -1,0 +1,388 @@
+{
+  "schema": "coringa.reviewed-cut.private.v1",
+  "publish": false,
+  "release": "review-e300-45737009519-1",
+  "cuts": [
+    {
+      "shot": "c2-1",
+      "chapter": "Fissuras no solo",
+      "speech": "MAGMA CHEGOU À SUPERFÍCIE LANÇANDO FRAGMENTOS INCANDESCENTES",
+      "source": "kilauea-volcano-fissure-8-video-compilation",
+      "label": "Atividade da fissura 8 em 30 de maio",
+      "sha256": "783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c",
+      "window_start": 7,
+      "window_duration": 3.8,
+      "observed": "Três amostras 7,456/8,9/10,268 s mostram fonte vermelha e fragmentos projetados; revisão visual assistida da folha candidato-1.jpg; não certifica movimento contínuo nem abertura inicial.",
+      "review_ref": "revisoes/e300-coverage-45737009519-1/candidato-1.jpg",
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c",
+        "inspecao": "Revisão assistida E317 da mesma origem USGS registra contexto espacial e marca original; preservar a largura da fonte.",
+        "motivo": "Preservar contexto da projeção de fragmentos e atribuição original."
+      }
+    },
+    {
+      "shot": "c3-3",
+      "chapter": "Um rio de lava",
+      "speech": "DRONES AJUDAVAM A ACOMPANHAR ESSE MOVIMENTO",
+      "source": "july-14-2018-kilauea-fissure-8-video-captured-uas",
+      "label": "Canal da fissura oito",
+      "sha256": "e1baf175aa79450aa69d1e00a83012fb49a0673443d68f7cf0f3a5d36ec5d8ee",
+      "window_start": 86.9,
+      "window_duration": 3.8,
+      "observed": "Registro aéreo UAS identificado na cartela do mesmo original, com vista superior do canal de lava; não afirma que o drone aparece na imagem nem mede velocidade.",
+      "review_ref": "revisoes/e319-45859994782-1/fonte-05.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 87.35600000000001,
+          "pixels_sha256": "e1ce8b8ece109c2592428496110a85d99bce723f0afe62e3d63644265b0cff05",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 88.80000000000001,
+          "pixels_sha256": "110928e232a8f107661b3ee57fcac9addf18346148cf9069894ae306bd626445",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 90.168,
+          "pixels_sha256": "069b501ba6fa67596e471be9aa4b937dabcd85193fe84b1b0f7e67e0a6285859",
+          "size": [
+            320,
+            180
+          ]
+        }
+      ],
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "e1baf175aa79450aa69d1e00a83012fb49a0673443d68f7cf0f3a5d36ec5d8ee",
+        "inspecao": "A folha de contato mostra marca original USGS no canto e contexto espacial dos elementos; conservar largura do registro.",
+        "motivo": "Preservar atribuição original e relação espacial visível."
+      }
+    },
+    {
+      "shot": "c4-2",
+      "chapter": "O litoral mudou",
+      "speech": "ÁGUA PARTE DO MATERIAL ESFRIAVA E SE SOLIDIFICAVA COM O",
+      "source": "kilauea-volcano-kapoho-bay",
+      "label": "Formação de um delta de lava",
+      "sha256": "48f931d61566b169f3ec6987e9b4c832fc58fe847c23936990d128b46f9dc377",
+      "window_start": 48.29,
+      "window_duration": 3.8,
+      "observed": "Amostras mostram lava incandescente, frente escura e água com vapor; contexto do resfriamento, não prova contínua de solidificação.",
+      "review_ref": "revisoes/e319-45859994782-1/fonte-00.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 48.746,
+          "pixels_sha256": "b52e22a65e315e5ef34c4de1b3504d2ba674a82cbf4bb5348f591ca40be1337a",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 50.19,
+          "pixels_sha256": "97a1a4a9d3f7b763e818c08b4ad2f07bbc85a040ad45c0f33b8898b6d3ebdcfc",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 51.558,
+          "pixels_sha256": "2f5319b3b005860b7e6f0e58a2c48fecdcf77b14ac8adc6764adee21d9d98049",
+          "size": [
+            320,
+            180
+          ]
+        }
+      ],
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "48f931d61566b169f3ec6987e9b4c832fc58fe847c23936990d128b46f9dc377",
+        "inspecao": "A folha de contato mostra marca original USGS no canto e contexto espacial dos elementos; conservar largura do registro.",
+        "motivo": "Preservar atribuição original e relação espacial visível."
+      }
+    },
+    {
+      "shot": "c6-2",
+      "chapter": "O tamanho da transformação",
+      "speech": "ACRESCENTADOS AO LITORAL A ERUPÇÃO MOSTRA COMO UM VULCÃO PODE DESTRUIR",
+      "source": "kilauea-volcano-video-compilation-lower-east-rift-zone",
+      "label": "O caminho da lava em junho",
+      "sha256": "62919fab12e7c5db8b5216737c3949ac92d5eab6c9671029e3b063871adf910f",
+      "window_start": 102.03,
+      "window_duration": 3.8,
+      "observed": "Vista aérea da lava atravessando terreno com vegetação e estruturas próximas; contexto da transformação, sem afirmar destruição específica de casas.",
+      "review_ref": "revisoes/e319-45859994782-1/fonte-02.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 102.486,
+          "pixels_sha256": "dc8efb0863968a8a25f27f39aa4eb7b5100ce6b3786f6eed3d4f95430a3f6eb9",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 103.93,
+          "pixels_sha256": "e3b5fba25d6fb02683a5d7a30bd3286ab9f7c28aa81d13e0947540030d67adee",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 105.298,
+          "pixels_sha256": "0dc74ffc291385b4dc539c05872f879a2af31985286e8208abf44c518334fefe",
+          "size": [
+            320,
+            180
+          ]
+        }
+      ],
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "62919fab12e7c5db8b5216737c3949ac92d5eab6c9671029e3b063871adf910f",
+        "inspecao": "A folha de contato mostra marca original USGS no canto e contexto espacial dos elementos; conservar largura do registro.",
+        "motivo": "Preservar atribuição original e relação espacial visível."
+      }
+    },
+    {
+      "shot": "c6-3",
+      "chapter": "O tamanho da transformação",
+      "speech": "DESTRUIR PAISAGENS E CONSTRUIR OUTRAS AO MESMO TEMPO",
+      "source": "kilauea-volcano-video-compilation-kapoho-bay-ocean-entry",
+      "label": "Lava entrando em Kapoho",
+      "sha256": "88cbcc19a7ef17b3c79716c5dd3912a30eef2356a705d772bcae1a9cfbf91847",
+      "window_start": 45.16,
+      "window_duration": 3.8,
+      "observed": "Amostras aéreas mostram costa, mar, pluma e área habitada adjacente; contexto do efeito costeiro, não prova por si só a área de terra nova.",
+      "review_ref": "revisoes/e319-45859994782-1/fonte-01.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 45.616,
+          "pixels_sha256": "4193a11ad8669c3f010ae4e83f52390d2f53a2ddad4943e20ea278d5c5195964",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 47.059999999999995,
+          "pixels_sha256": "29ce70b91456b40c4371233cbf63c7737686f952b9dad1655020626e1ad23843",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 48.428,
+          "pixels_sha256": "e82af5e5acde3ca7e6cab7f1d98982f7d7d72db1b6aae7ec2a19faa32c23c904",
+          "size": [
+            320,
+            180
+          ]
+        }
+      ],
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "88cbcc19a7ef17b3c79716c5dd3912a30eef2356a705d772bcae1a9cfbf91847",
+        "inspecao": "A folha de contato mostra marca original USGS no canto e contexto espacial dos elementos; conservar largura do registro.",
+        "motivo": "Preservar atribuição original e relação espacial visível."
+      }
+    },
+    {
+      "shot": "c6-1",
+      "chapter": "O tamanho da transformação",
+      "speech": "MAIS DE TRÊS QUILÔMETROS QUADRADOS E MEIO DE TERRA FORAM ACRESCENTADOS",
+      "source": "kilauea-volcano-ocean-entry-kapoho-bay",
+      "label": "Encontro entre lava e oceano",
+      "sha256": "fcfcb2bc842e214228eb710c61c0f032170135507e0aa74821c12cacbceeffb4",
+      "window_start": 31.37,
+      "window_duration": 3.8,
+      "observed": "Vista da costa do delta em 6 de junho com água, rocha escura e vapor. Contexto visual do acréscimo de terra; medida total fundamentada pelo mapa anterior, não deduzida desta filmagem.",
+      "review_ref": "revisoes/e319-45859994782-1/fonte-04.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 31.826,
+          "pixels_sha256": "f447d1cf2f946119d1a4cd4c13fcbfc0a58a17ed5bc200197181a37fb365c482",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 33.27,
+          "pixels_sha256": "3029d93d1f3898f51c194ccb30077d63fb3678cc69e40130366e52e323ebac40",
+          "size": [
+            320,
+            180
+          ]
+        },
+        {
+          "time": 34.638,
+          "pixels_sha256": "7b96c526f2df403a2e578ae74fd4eb62b7642902aa73bd76147f4ba127f73ab8",
+          "size": [
+            320,
+            180
+          ]
+        }
+      ],
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "fcfcb2bc842e214228eb710c61c0f032170135507e0aa74821c12cacbceeffb4",
+        "inspecao": "Amostras incluem a marca USGS original e a relação entre o mar e a nova costa.",
+        "motivo": "Preservar contexto costeiro e atribuição original."
+      }
+    },
+    {
+      "shot": "c2-3",
+      "chapter": "Fissuras no solo",
+      "speech": "OBRIGANDO MORADORES A ABANDONAR SUAS CASAS",
+      "source": "kilauea-volcano-uas-mission-aid-rescue",
+      "label": "Operação de monitoramento e resgate",
+      "sha256": "ce21c515b7947f530ad070debd06d3b4f0f5509dc4e7857f5258cc5dc6e377ca",
+      "window_start": 57.23,
+      "window_duration": 3.8,
+      "observed": "Amostras noturnas mostram área habitada, frente luminosa e pontos de luz. Página/cartela USGS/DOI descrevem busca e resgate de morador; não se identifica diretamente pessoa saindo de casa nem se atribui identidade aos pontos.",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-02.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 57.686,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "dac2d731c08f32bb2263ea8d70af892978ddf3c4c78367b6f5460ca8877c2391"
+        },
+        {
+          "time": 59.129999999999995,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "73df8f015b90db1ae1d72849100b2fed38262a5e947eec656d5e78357b53268f"
+        },
+        {
+          "time": 60.498,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "533649fc264b0d444d2c24f3c0a97755c299af7e15af3f171cefbfbf671d216e"
+        }
+      ],
+      "lead": "RESGATE COM DRONES",
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "ce21c515b7947f530ad070debd06d3b4f0f5509dc4e7857f5258cc5dc6e377ca",
+        "inspecao": "Amostras exibem o contexto espacial e a atribuição ou datas do registro original; preservar todos os pixels.",
+        "motivo": "Preservar contexto, data ou marca original da filmagem."
+      }
+    },
+    {
+      "shot": "c5-1",
+      "chapter": "O topo também mudou",
+      "speech": "PERDIA MATERIAL A ESTRUTURA ACIMA DELE DESABOU REPETIDAMENTE",
+      "source": "july-5-2018-collapse-event-kilauea-volcanos-summit",
+      "label": "Registro de colapso de 5 de julho",
+      "sha256": "eb8bade17f1a8b4c9eb6a3c5e88f6011c4d0324aa72050802b54e507e4e518ac",
+      "window_start": 36.33,
+      "window_duration": 3.8,
+      "observed": "Amostras mostram a caldeira e poeira distante à direita no registro oficial de um evento de colapso. Não se distingue o bloco desabando quadro a quadro.",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-00.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 36.786,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "83ddd92fa6ce7c1f820e67bd674852fedff4a0b9fd4ccc2fc95e3b9db176f23c"
+        },
+        {
+          "time": 38.23,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "d78b9389b736c998f868b8eeba3dd8d7a0168776afd88f4bf0311e1b30fadb3b"
+        },
+        {
+          "time": 39.598,
+          "size": [
+            320,
+            180
+          ],
+          "pixels_sha256": "204faa00c909f72e980e7e61931585b4ad0f12dde68a2d298482521ab7a84ce5"
+        }
+      ],
+      "lead": "COLAPSO · 5 JUL 2018",
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "eb8bade17f1a8b4c9eb6a3c5e88f6011c4d0324aa72050802b54e507e4e518ac",
+        "inspecao": "Amostras exibem o contexto espacial e a atribuição ou datas do registro original; preservar todos os pixels.",
+        "motivo": "Preservar contexto, data ou marca original da filmagem."
+      }
+    },
+    {
+      "shot": "c5-2",
+      "chapter": "O topo também mudou",
+      "speech": "REPETIDAMENTE APROFUNDANDO A CRATERA A ERUPÇÃO NA COSTA E",
+      "source": "kilauea-summit-0",
+      "label": "Timelapse documentado de abril a agosto",
+      "sha256": "3f9d71ee6ad3b1385687e330dc3ba6a211d958514fad4b0c0259b33fd372cb63",
+      "window_start": 19.94,
+      "window_duration": 3.8,
+      "observed": "Série temporal oficial registrada por câmera fixa, com datas originais e alterações na borda da cratera entre amostras; o tempo real é comprimido na própria fonte.",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-01.jpg",
+      "acervo_existente": true,
+      "samples": [
+        {
+          "time": 20.396,
+          "size": [
+            320,
+            120
+          ],
+          "pixels_sha256": "0452ae27cc806e65c70be0eceed6a4b6b4de7cc5706efea275b9292da2cba376"
+        },
+        {
+          "time": 21.84,
+          "size": [
+            320,
+            120
+          ],
+          "pixels_sha256": "bf33c1665b3479b85109776f99814781c9c881284dd1dff3b3a9b9249c57ba97"
+        },
+        {
+          "time": 23.208000000000002,
+          "size": [
+            320,
+            120
+          ],
+          "pixels_sha256": "73821491ed49e5fe2656f4134441dbd9af890bfc79380f95427e76afdbc970c5"
+        }
+      ],
+      "lead": "TIMELAPSE · ABR–AGO 2018",
+      "framing": {
+        "modo": "fonte_integral",
+        "sha256_origem": "3f9d71ee6ad3b1385687e330dc3ba6a211d958514fad4b0c0259b33fd372cb63",
+        "inspecao": "Amostras exibem o contexto espacial e a atribuição ou datas do registro original; preservar todos os pixels.",
+        "motivo": "Preservar contexto, data ou marca original da filmagem."
+      }
+    }
+  ]
+}

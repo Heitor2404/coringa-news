@@ -1,0 +1,55 @@
+name: E348 - paineis fonte e filme integral incremental
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-integracao-e348.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Testes agrupados e compilacao
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_paineis_fonte_e346.py tests/test_integracao_incremental_e343.py tests/test_reedicao_fala_e339.py tests/test_dados_atribuidos_e342.py tests/test_auditoria_fala_visual_e338.py tests/test_imersao_e328.py tests/test_composicao_e286.py tests/test_documentario_integral_e254.py tests/test_evidencias_estaticas_e321.py tests/test_area_segura_plataformas.py
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Restaurar filme base e fontes das mudancas
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.qa_integracao_e348
+      - name: Renderizar somente intervalos modificados
+        run: cd motor4 && node scripts/qa_integracao_e348.mjs
+      - name: Recompor e conferir frames e audio
+        run: python -m scripts.qa_integracao_e348 --finish
+      - name: Preservar prova privada
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e348
+          if [[ -s "$root/proof.json" ]]; then
+            files=("$root/proof.json" "$root"/pair-*.jpg "$root"/filme-contato-*.jpg "$root"/*-panel.png)
+            [[ ! -s "$root/panel-review.json" ]] || files+=("$root/panel-review.json")
+            python scripts/espelhar_revisao_cofre.py "e348-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            if [[ -s "$root/filme-integrado.mp4" ]]; then
+              bash scripts/arquivar_cofre_review.sh "review-e348-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/proof.json" "$root/props-candidate.json" "$root/filme-integrado.mp4"
+            fi
+          fi

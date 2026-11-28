@@ -1,0 +1,140 @@
+{
+  "case": "contrastes",
+  "publicar": false,
+  "direitos_aprovados": false,
+  "origem_relatorio": "e276-45628962634-1",
+  "observacoes": [
+    {
+      "id": "aquedutos-n1",
+      "escopo": {
+        "id": "aquedutos-n1",
+        "sujeito": "aqueduto romano",
+        "mostrar": "estrutura e arcos de aqueduto existente",
+        "fatos": [
+          "aquedutos-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Aqueduto_romano_de_Con%C3%ADmbriga.jpg",
+      "source_id": 16704198,
+      "preview_sha256": "eb46ed869784de78f76a380f24abcbdcaf8b493813a108e44df692a845c8a9f3",
+      "folha": "pretriagem-8bc3309cb52a-1.jpg",
+      "folha_sha256": "d8e3126aed9cd514478edb1bf31136b7c87d9cb5bee54169dd80595e72b01008",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "ALTERNATIVA",
+      "observacao": "Arco de pedra e ruínas legíveis, menos contexto da estrutura completa."
+    },
+    {
+      "id": "aquedutos-n1",
+      "escopo": {
+        "id": "aquedutos-n1",
+        "sujeito": "aqueduto romano",
+        "mostrar": "estrutura e arcos de aqueduto existente",
+        "fatos": [
+          "aquedutos-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Pont_du_Gard_2017.jpg",
+      "source_id": 64355761,
+      "preview_sha256": "5122eaca0ef6dc71161c962d864ae823c8b280f065238387ffe363cfe3b1e8ad",
+      "folha": "pretriagem-8bc3309cb52a-2.jpg",
+      "folha_sha256": "da517020187480d4acd049dc8e0272486acfa85c20cc09884e6caf9e7452524a",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "PRIORIZAR_AQUISICAO",
+      "observacao": "Estrutura extensa com vários níveis de arcos claramente visíveis; identidade e direitos do arquivo final ainda pendentes."
+    },
+    {
+      "id": "aquedutos-n1",
+      "escopo": {
+        "id": "aquedutos-n1",
+        "sujeito": "aqueduto romano",
+        "mostrar": "estrutura e arcos de aqueduto existente",
+        "fatos": [
+          "aquedutos-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Rambles_in_sunny_Spain_(1889)_(14756704116).jpg",
+      "source_id": 42084496,
+      "preview_sha256": "06e8e3dc668606d2992f24c11159933f13cf66fa51c2dfd44780eb9bd8fd8de9",
+      "folha": "pretriagem-8bc3309cb52a-3.jpg",
+      "folha_sha256": "89d56bfb2629119a06e77355e8c74d8646d9e9b8011b455e33d55dba02c89719",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "NAO_PRIORIZAR",
+      "observacao": "Gravura de edifícios e caminho, sem arcos de aqueduto discerníveis na amostra."
+    },
+    {
+      "id": "saturno-n1",
+      "escopo": {
+        "id": "saturno-n1",
+        "sujeito": "Saturno",
+        "mostrar": "anéis visíveis em registro astronômico",
+        "fatos": [
+          "saturno-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Top_view_of_the_rings_of_Saturn_by_Cassini_-_October_10,_2013.jpg",
+      "source_id": 29232326,
+      "preview_sha256": "70eb9f8b30afcd67083a90fe730b06b28caaf86d83934cd08933b4729f1fac81",
+      "folha": "pretriagem-e69b6ba791de-1.jpg",
+      "folha_sha256": "e95e795249a01ec1cf8535d7a0520af6c1418abcecd926a621560b1690cd5dbe",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "PRIORIZAR_AQUISICAO",
+      "observacao": "Planeta e anéis claramente discerníveis, vista superior; metadados declaram mosaico observacional em cor natural, verificar original."
+    },
+    {
+      "id": "saturno-n1",
+      "escopo": {
+        "id": "saturno-n1",
+        "sujeito": "Saturno",
+        "mostrar": "anéis visíveis em registro astronômico",
+        "fatos": [
+          "saturno-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Saturno_Meletti,_1946_-_collezione_Tino_Barindelli.tif",
+      "source_id": 181931698,
+      "preview_sha256": "c09b2b4c29c476cdc2d43c1972ac7c64e80139dec17b4935aefdaeda1edd4956",
+      "folha": "pretriagem-e69b6ba791de-2.jpg",
+      "folha_sha256": "3b247baaa239b8ba7210e2cf2a3a308298acc60416cd4e9dbf23000f487e190e",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "NAO_PRIORIZAR",
+      "observacao": "Retrato humano em preto e branco; não mostra planeta ou anéis."
+    },
+    {
+      "id": "saturno-n1",
+      "escopo": {
+        "id": "saturno-n1",
+        "sujeito": "Saturno",
+        "mostrar": "anéis visíveis em registro astronômico",
+        "fatos": [
+          "saturno-f1"
+        ],
+        "necessidade": "registro",
+        "evidencia_visual": "estatica"
+      },
+      "pagina": "https://commons.wikimedia.org/wiki/File:Saturn_rings_PIA06425.jpg",
+      "source_id": 9588270,
+      "preview_sha256": "a657d0d0c9ca459dc1e5beeb0d0c304db1a53321c15a90f84853faa6b97da0e1",
+      "folha": "pretriagem-e69b6ba791de-3.jpg",
+      "folha_sha256": "85e63f77812f4c5540811448db61a3efd7ada48775bdd92fa98006d715bc1f41",
+      "origem": "INSPECAO_ASSISTIDA",
+      "publicar": false,
+      "decisao": "CONTEXTO_CONDICIONAL",
+      "observacao": "Anéis visíveis em cores artificiais; metadados descrevem imagem em falsa cor de temperaturas. Só usar com contextualização adequada."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+name: E223 - testes entrega documental privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['scripts/documentario_telegram.py','tests/test_documentario_telegram.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - run: python -m pip install pytest requests
+      - run: python -m pytest -q tests/test_documentario_telegram.py
+  avisar_falha:
+    needs: test
+    if: ${{ always() && (needs.test.result == 'failure' || needs.test.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.test.result }}
+      job_name: test
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

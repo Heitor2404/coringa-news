@@ -1,0 +1,68 @@
+name: E200 prova cartográfica real ATLAS - progressão editorial
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-atlas-rota-e200.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DO_NOT_TRACK: "1"
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+jobs:
+  prova:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install pillow requests pytest numpy pyyaml cryptography
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Preparar trecho real do Canal do Panamá
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import plano as P, ponte_mapa_atlas as B
+          p=json.loads(Path("tests/dados/formatos_atlas_resolvido.json").read_text())
+          r=p["rotas"][0]
+          t0,t1=r["t0"],r["t1"]
+          r["interpolacao"]="linear_ilustrativa"
+          r["marcos_progresso"]=[dict(t=t0,fracao=0,fonte="roteiro QA privado: início da apresentação da rota"),
+              dict(t=round(t0+.72*(t1-t0),3),fracao=.4,fonte="roteiro QA privado: marco de apresentação, não posição de navio observada"),
+              dict(t=t1,fracao=1,fonte="roteiro QA privado: fim da apresentação da rota")]
+          p=P.resolver_tempos(p,[])
+          prep=B.preparar(p,8,4.4,Path("qa_e200"),Path("motor4/remotion/public"))
+          assert prep["mapeamento"]["rasters_ativos"]
+          props=json.loads(Path("qa_e200/props_atlas_formato.json").read_text())
+          assert props["rotas"][0]["marcos_progresso"]==r["marcos_progresso"]
+          assert props["rotas"][0]["interpolacao"]=="linear_ilustrativa"
+          print("E200-PREPARADO",json.dumps(prep,ensure_ascii=False))
+          PY
+      - name: Renderizar mapa original, sem recriar geografia
+        run: |
+          RANGE=$(python -c 'import json;d=json.load(open("qa_e200/preparo_atlas.json"));print(str(d["frame_inicio"])+"-"+str(d["frame_fim_inclusivo"]))')
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts Formato ../qa_e200/mapa.mp4 --props=../qa_e200/props_atlas_formato.json --frames="$RANGE" --codec=h264 --crf=20 --concurrency=1 --public-dir=remotion/public --log=error
+      - name: Verificar vídeo nativo
+        run: |
+          python -m src.v4.formatos.ponte_mapa_atlas confirm qa_e200 qa_e200/mapa.mp4
+          ffmpeg -v error -y -i qa_e200/mapa.mp4 -vf "fps=1,scale=270:480,tile=5x1" -frames:v 1 qa_e200/contato.jpg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e200-atlas-rota-privado
+          path: qa_e200/
+          retention-days: 14

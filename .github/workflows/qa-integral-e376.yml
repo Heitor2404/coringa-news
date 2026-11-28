@@ -1,0 +1,12 @@
+name: E376 - RETIRADO da producao (historico somente)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  retired:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Modelo visual antigo retirado. Use qa-integral-e390.yml para a versao consolidada.'
+          exit 1

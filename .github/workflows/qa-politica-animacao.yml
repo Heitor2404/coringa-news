@@ -1,0 +1,27 @@
+name: E211 - politica de animacao e regressao editorial
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-politica-animacao.yml','tests/test_politica_animacao.py','src/v4/formatos/politica_animacao.py','motor4/remotion/src/formatos/animation-policy.json','tests/test_mecanismos_explicativos.py','tests/test_atlas_filme_telegram.py','scripts/atlas_filme_telegram.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contrato:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Instalar dependencias do renderer antes dos testes Python
+        run: npm ci --prefix motor4 --no-audit --no-fund
+      - name: Regressao de politica e montagem existente
+        run: |
+          python -m pip install -q -r requirements.txt pytest
+          python -m pytest -q tests/test_politica_animacao.py tests/test_e202_diretor_visual.py tests/test_e206_documental.py tests/test_filme_editorial.py tests/test_diretor_capacidades.py tests/test_mecanismos_explicativos.py tests/test_atlas_filme_telegram.py
+      - name: Tipagem do compositor
+        run: ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit

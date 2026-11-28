@@ -1,0 +1,86 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "titulo": "Experimento causal 7,8s: portões reais → corte hidráulico → liberação didática",
+  "duracao": 7.8,
+  "media": {
+    "eclusa-hero-hd": {
+      "local_source": "stage_hero/comfort-2018-meio.mp4",
+      "media_type": "video",
+      "expected_sha256": "3d21204dc0ff2b45298b341b102f0175f32a8c4838dbed7de4efb24cece5b38d",
+      "page": "https://www.dvidshub.net/video/634226/usns-comfort-transits-panama-canal",
+      "credit": "U.S. Navy / J. Keith Wilson · DVIDS 634226 (2018)",
+      "license": "Public domain"
+    }
+  },
+  "shots": [
+    {
+      "id": "01-portoes-reais",
+      "start": 0,
+      "end": 1.65,
+      "type": "video",
+      "asset": "eclusa-hero-hd",
+      "source_in_seconds": 4.8,
+      "video_zoom": 1.1,
+      "focus": [
+        0.5,
+        0.48
+      ],
+      "evidence": "literal",
+      "literal_identity": "USNS Comfort transitando pelas eclusas do Canal do Panamá, 2018; DVIDS 634226",
+      "subject": "Portões reais filmados do USNS Comfort em 2018",
+      "lead": "01 · PORTÕES REAIS",
+      "headline": "COMO A ECLUSA\nFAZ O NAVIO SUBIR?",
+      "highlight": "SUBIR?",
+      "cues": [
+        {
+          "at": 0.45,
+          "label": "PORTÕES DA ECLUSA",
+          "x": 0.51,
+          "y": 0.38
+        }
+      ]
+    },
+    {
+      "id": "02-interior-causal",
+      "start": 1.65,
+      "end": 7.8,
+      "type": "mechanism",
+      "mechanism": "lock_causal",
+      "evidence": "explainer",
+      "subject": "Esquema didático de eclusa: níveis e comportas representados de maneira simplificada",
+      "lead": "02 · O PRINCÍPIO",
+      "headline": "ÁGUA ENTRA → NAVIO SOBE → NÍVEL IGUALA",
+      "cues": [
+        {
+          "at": 0,
+          "action": "closed",
+          "label": "A CÂMARA FICA FECHADA"
+        },
+        {
+          "at": 0.95,
+          "action": "water_enter",
+          "label": "A ÁGUA ENTRA POR BAIXO"
+        },
+        {
+          "at": 1.85,
+          "action": "rise",
+          "label": "O NAVIO SOBE COM A ÁGUA"
+        },
+        {
+          "at": 3.85,
+          "action": "equalize",
+          "label": "O NÍVEL FICA IGUAL"
+        },
+        {
+          "at": 4.95,
+          "action": "release",
+          "label": "O PORTÃO PODE ABRIR"
+        }
+      ],
+      "reference_asset": "eclusa-hero-hd",
+      "reference_from_seconds": 6.45
+    }
+  ],
+  "observacao": "Não representa elevação realmente comprovada na filmagem de 2018; filmagem é contexto visual, esquema ilustra princípio físico. Sem foto histórica, sem Gemini/Claude, sem TTS, não publicar. V3: vídeo de origem encerra ANTES do corte interno do fornecedor; a ponte usa o último quadro real congelado no mesmo master, sem salto."
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "coringa-dynamic-role-bbox-v1",
+  "publication_approved": false,
+  "scope": "DIAGNOSTICO_DE_COMPONENTE_NAO_IDENTIDADE_FOTOGRAFICA",
+  "tracked": {
+    "compressor_oficina_pv": {
+      "piston_cutaway": {
+        "stage": "machine-assembly",
+        "method": "first_svg_rect",
+        "margin": 4,
+        "scope": "CABECOTE_VISUAL_APENAS_NAO_BIELA"
+      }
+    },
+    "otto_4t_reference": {
+      "piston": {
+        "stage": "mechanical-stage",
+        "method": "first_svg_rect",
+        "margin": 4,
+        "scope": "PISTAO_VISUAL"
+      }
+    },
+    "lock_cycle_standalone": {
+      "ship": {
+        "stage": "machine-stage",
+        "method": "group_local_bbox",
+        "local_bbox": [
+          -69,
+          -90,
+          70,
+          27
+        ],
+        "margin": 0,
+        "scope": "EMBARCACAO_VISUAL_INTEIRA_ENVELOPE_CURADO"
+      }
+    }
+  }
+}

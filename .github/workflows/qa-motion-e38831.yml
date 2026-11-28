@@ -1,0 +1,59 @@
+name: E388.3.1 - biblioteca motion ampliada e ritmo editorial
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-motion-e38831.yml','motor4/scripts/qa_motion_e38831.mjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Contrato e regressoes
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_dados_atribuidos_e342.py tests/test_composicao_e286.py tests/test_documentario_integral_e254.py
+          motor4/node_modules/.bin/tsc motor4/remotion/src/formatos/MotionChartCoreE3883.ts --target ES2022 --module commonjs --skipLibCheck --outDir /tmp/e3883-test
+          node --test motor4/remotion/tests/motion-e3883.test.cjs
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Renderizar biblioteca no mesmo FilmeEditorial
+        run: cd motor4 && node scripts/qa_motion_e38831.mjs
+      - name: Arquivar prova privada
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e38831
+          if [[ -s "$root/motion-library.mp4" ]]; then bash scripts/arquivar_cofre_review.sh "review-e38831-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/motion-library.mp4" "$root/proof.json" benchmarks/e3883/props.json; fi
+      - name: Entregar todas as provas privadas
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m scripts.entrega_visual_e38831
+      - name: Preservar diagnostico e recibo
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e38831
+          files=("$root"/*.json "$root"/*.jpg "$root"/chart-*.png)
+          if (( ${#files[@]} )); then python scripts/espelhar_revisao_cofre.py "e38831-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

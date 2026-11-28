@@ -1,0 +1,41 @@
+name: E48 descoberta CAD do episódio grua
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['benchmarks/e48/grua_pesquisa.json','.github/workflows/qa-pesquisa-episodio-e48.yml']
+permissions:
+  contents: read
+jobs:
+  pesquisa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m unittest discover -s tests -p test_pesquisa_cad_e34.py -v
+      - name: Descoberta automática sem URLs fixadas
+        run: |
+          mkdir -p qa_e48
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.pesquisa_cad_e34 import discover_many
+          p=json.load(open("benchmarks/e48/grua_pesquisa.json"))
+          assert p["publish"] is False
+          assert p["minimo_s"]>=60
+          assert p["cenas"][0]["ini"]==0 and p["cenas"][-1]["fim"]==p["duracao_alvo_s"]
+          assert all(a["fim"]==b["ini"] for a,b in zip(p["cenas"],p["cenas"][1:]))
+          assert all(set(c["fontes"])<={f["id"] for f in p["fontes"]} for c in p["cenas"])
+          r=discover_many(["tower crane","towercrane","crane CAD","climbing crane"],limit=4)
+          Path("qa_e48/pesquisa.json").write_text(json.dumps(r,ensure_ascii=False,indent=2))
+          print("E48-PESQUISA",json.dumps(r,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e48-pesquisa-grua
+          path: qa_e48/
+          retention-days: 14

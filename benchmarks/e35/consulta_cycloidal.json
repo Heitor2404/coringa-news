@@ -1,0 +1,27 @@
+{
+  "consulta": "cycloidal drive CAD",
+  "registro": "Consulta pré-registrada na E34 (seção 171). Candidatos na ordem de descoberta; nenhum é preferido pelo código.",
+  "candidatos": [
+    {
+      "url": "https://github.com/promakina/cycloidal-compound",
+      "origem_descoberta": "E34 GitHub REST (run 45324430374)",
+      "commit": "496281b04dd2e55a8d7b4c16530884a31906d906"
+    },
+    {
+      "url": "https://github.com/geez0x1/2023-cycloidal-drive-nonpinwheel",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "841a92efa222cc1516e224704f9dd6606b64f9c7"
+    },
+    {
+      "url": "https://github.com/SakethGG/Cycloidal-Drive-Design",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "18eb0f8a8beda49073a4095637e2bcf1fa4ae4ea"
+    },
+    {
+      "url": "https://github.com/kamrajx/cycloidal-gearbox",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "24f53772505a673558e7dee0b929478773867fbd"
+    }
+  ],
+  "congelado_em": "2026-11-24"
+}

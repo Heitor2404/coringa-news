@@ -1,0 +1,73 @@
+name: QA — 3 vídeos reais (Panamá, NASA, Hindenburg) sem publicar
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/qualidade/fontes_3_videos.txt"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-3-videos-reais
+  cancel-in-progress: true
+jobs:
+  fontes:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Dependências e sonda FFmpeg
+        run: |
+          python -m pip install -q pytest pillow requests
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            timeout 120 sudo apt-get update -qq
+            timeout 180 sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -1
+      - name: Verificar que o controle de provas e substituições não foi enfraquecido
+        run: |
+          python -m pytest -q tests/test_qa_video_fontes.py \
+            tests/test_contrato_visual_multitema.py \
+            tests/test_atlas_triagem_editorial.py tests/test_filme_editorial.py
+      - name: Baixar SÓ arquivo histórico original licenciado e registrar integridade
+        timeout-minutes: 5
+        run: |
+          mkdir -p qa_fontes
+          curl --fail --location --silent --show-error --retry 3 --max-time 150 \
+            -A "CoringaExplica/4.0 (source QA only)" \
+            "https://upload.wikimedia.org/wikipedia/commons/7/78/Hindenburg_Explodes_%28audio_extracted%29.webm" \
+            -o qa_fontes/hindenburg_1937.webm
+          echo "e7cc658e36f1d801d51a43cadfe4ae4f19e599e1  qa_fontes/hindenburg_1937.webm" | sha1sum -c -
+          file qa_fontes/hindenburg_1937.webm
+      - name: Criar folha de contato, SHA256 e diagnósticos de 3 DOMÍNIOS
+        timeout-minutes: 6
+        run: |
+          python -m src.v4.formatos.qa_video_fontes \
+            docs/v4/formatos/qa_fontes_tres_videos.json \
+            qa_fontes/saida \
+            --root .
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('qa_fontes/saida/qa_fontes_reais.json').read_text())
+          assert d['arquivos_inspecionados']==3
+          assert d['aprovacao_humana']=='PENDENTE' and d['publicado'] is False
+          assert all(x['checagem_de_uso']['prova_do_fato'] is False
+                     for x in d['assuntos'])
+          assert len({x['sha256_real'] for x in d['assuntos']})==3
+          print('QA_FONTES_REAL',json.dumps(
+            [{k:x[k] for k in ('id','largura','altura','duracao','risco_ampliacao_no_celular','variacao_pixels')}
+             for x in d['assuntos']],ensure_ascii=False))
+          PY
+      - name: Guardar só QA e JPEG privado; não republicar mídia de terceiros
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-3-videos-reais-fonte-e-contato
+          path: |
+            qa_fontes/saida/qa_fontes_reais.json
+            qa_fontes/saida/contato_3_dominios.jpg
+          retention-days: 7
+          if-no-files-found: warn

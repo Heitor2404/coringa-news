@@ -1,0 +1,38 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "Teste de limitação real — oxidação do ferro",
+  "roteiro": {
+    "cenas": [
+      {
+        "id": "oxidacao",
+        "duracao_s": 9,
+        "fala": "O ferro reage com oxigênio e água, formando ferrugem sobre a superfície.",
+        "acontecimento": {
+          "id": "corrosao_do_ferro",
+          "tipo": "transformacao",
+          "sujeito": "ferro",
+          "acao": "oxida",
+          "estado_inicial": "ferro metálico",
+          "estado_final": "ferrugem",
+          "mostrar": "mostrar ferro antes e depois da oxidação",
+          "fonte": "https://example.org/curadoria-pendente",
+          "dados": {
+            "acoes_necessarias": [
+              "metal",
+              "oxygen",
+              "oxidize",
+              "rust"
+            ],
+            "fases_necessarias": [
+              "origem",
+              "transformacao",
+              "resultado"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

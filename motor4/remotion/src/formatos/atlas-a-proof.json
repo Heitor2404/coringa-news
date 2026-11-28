@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "status": "LAB_PRIVADO_NAO_PUBLICAR",
+  "direction": "A_2_5D_VOLUMETRICO",
+  "duration": 7.8,
+  "resolution": [
+    1080,
+    1920
+  ],
+  "roles": {
+    "critical_text_zone": [
+      140,
+      300,
+      770,
+      1240
+    ],
+    "main_stage": [
+      100,
+      510,
+      910,
+      1110
+    ],
+    "side_ui_from_y": 840,
+    "note": "Cue compacto acima da cena física, ambiente/estrutura full-bleed; fonte central separada; objetos sem colisão em laboratório"
+  },
+  "subjects": {
+    "lock": {
+      "title": [
+        "COMO A ÁGUA FAZ",
+        "UM NAVIO SUBIR?"
+      ],
+      "category": "ENGENHARIA · ECLUSA",
+      "source": "ESQUEMA ILUSTRATIVO · PRINCÍPIO HIDRÁULICO",
+      "events": [
+        {
+          "at": 0,
+          "action": "hook",
+          "label": "A ÁGUA JÁ MOVE O NAVIO"
+        },
+        {
+          "at": 1.25,
+          "action": "context",
+          "label": "DOIS NÍVEIS DE ÁGUA"
+        },
+        {
+          "at": 2.35,
+          "action": "inlet",
+          "label": "O FLUXO VEM DO FUNDO"
+        },
+        {
+          "at": 3.7,
+          "action": "rise",
+          "label": "ÁGUA E NAVIO SOBEM JUNTOS"
+        },
+        {
+          "at": 5.65,
+          "action": "release",
+          "label": "OS NÍVEIS SE IGUALAM"
+        }
+      ]
+    },
+    "euv": {
+      "title": [
+        "COMO A LUZ DESENHA",
+        "PADRÕES NO WAFER?"
+      ],
+      "category": "TECNOLOGIA · LITOGRAFIA EUV",
+      "source": "ESQUEMA ILUSTRATIVO · PRINCÍPIO EUV / ASML",
+      "events": [
+        {
+          "at": 0,
+          "action": "hook",
+          "label": "A LUZ COMEÇA O PERCURSO"
+        },
+        {
+          "at": 1.15,
+          "action": "source",
+          "label": "A FONTE PRODUZ LUZ EUV"
+        },
+        {
+          "at": 2.45,
+          "action": "reticle",
+          "label": "A MÁSCARA REFLETE O PADRÃO"
+        },
+        {
+          "at": 3.65,
+          "action": "mirrors",
+          "label": "ESPELHOS DIRIGEM A PROJEÇÃO"
+        },
+        {
+          "at": 5.1,
+          "action": "wafer",
+          "label": "A RESINA RECEBE A EXPOSIÇÃO"
+        }
+      ]
+    }
+  },
+  "qa": {
+    "publish": false,
+    "telegram": false,
+    "narration": false,
+    "deviceUI": "NOT_VERIFIED",
+    "figureAssets": "SVG_ORIGINAL",
+    "referencePolicy": "style principles, not copying still frames"
+  },
+  "visual_layout": {
+    "title": [
+      145,
+      386,
+      770,
+      108
+    ],
+    "cue": [
+      145,
+      505,
+      710,
+      57
+    ],
+    "source": [
+      148,
+      1210,
+      600,
+      28
+    ],
+    "labels": {
+      "lock": [
+        [
+          85,
+          737,
+          148,
+          40
+        ]
+      ],
+      "euv": [
+        [
+          310,
+          1145,
+          410,
+          41
+        ]
+      ]
+    },
+    "optics_bbox": [
+      170,
+      578,
+      907,
+      1140
+    ],
+    "note": "Caixas semânticas estimadas em unidades 1080x1920. Testar render e overlays; não substituem aferição de pixels/app."
+  }
+}

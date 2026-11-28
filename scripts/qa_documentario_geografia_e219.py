@@ -1,0 +1,615 @@
+"""E219 private documentary: measured narration, USGS footage and native ATLAS.
+Data-driven editorial fixture, not an autonomous source/semantic approval.
+No footage synthesized; no fallback to mechanical drawings.
+"""
+import concurrent.futures, hashlib, json, math, re, shutil, subprocess, sys, wave
+from pathlib import Path
+from urllib.parse import urlsplit,urljoin
+import requests
+from bs4 import BeautifulSoup
+from PIL import Image,ImageStat,ImageDraw
+import io
+from scripts.qa_documentario_curado_e218 import get,write,HEADERS,PUBLIC
+from src.v4.formatos import filme_editorial as F, diretor_visual_e202 as D, legenda_sync as LS, ponte_mapa_atlas as B, plano as A
+from src import voz
+
+STAGE=Path('stage_documental/e219')
+MAP=Path('stage_atlas/e219')
+HOSTS={'usgs-ocapsv2-public-input-media.s3.us-west-2.amazonaws.com','www.usgs.gov','prd-wret.s3.us-west-2.amazonaws.com'}
+def read(p):return json.loads(Path(p).read_text())
+def sha(p):return B.sha256(p)
+def probe(p):
+    q=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=width,height:format=duration','-of','json',str(p)]))
+    v=q['streams'][0];return v['width'],v['height'],float(q['format']['duration'])
+
+def validar_origem_video(w,h,dur,*,min_duration=9.):
+    if not all(isinstance(v,(int,float)) and not isinstance(v,bool) and math.isfinite(v) and v>0 for v in (w,h,dur,min_duration)):
+        raise ValueError('E301-METADADOS')
+    if min(w,h)<F.MIN_VIDEO_COMPOSITION_PX:
+        raise ValueError(f'E219-RESOLUCAO {w}x{h}; duracao={dur:.3f}s; minimo={F.MIN_VIDEO_COMPOSITION_PX}px')
+    if dur<min_duration:
+        raise ValueError(f'E219-DURACAO {dur:.3f}s; resolucao={w}x{h}; minimo={min_duration:.3f}s')
+
+
+def acquire(row,*,min_duration=9.):
+    slug,label=row
+    if not re.fullmatch('[a-z0-9-]+',slug):raise ValueError('E219-SLUG')
+    page='https://www.usgs.gov/media/videos/'+slug
+    html=get(page,{'www.usgs.gov'},5_000_000)
+    soup=BeautifulSoup(html,'html.parser');txt=soup.get_text(' ',strip=True)
+    if not re.search(r'Sources/Usage\s+Public Domain\b',txt,re.I):raise ValueError('E219-LICENCA')
+    h=soup.find('h1')
+    if not h:raise ValueError('E219-TITULO')
+    urls=[urljoin(page,a['href']) for a in soup.find_all('a',href=True) if 'download video' in a.get_text(' ',strip=True).lower()]
+    urls=[u for u in dict.fromkeys(urls) if urlsplit(u).scheme=='https' and urlsplit(u).hostname in HOSTS]
+    if not urls:raise ValueError('E219-ORIGINAL')
+    u=urls[0];tmp=STAGE/(slug+'.part')
+    try:
+        with requests.get(u,headers=HEADERS,stream=True,allow_redirects=False,timeout=(15,45)) as r:
+            if r.status_code!=200:raise ValueError('HTTP '+str(r.status_code))
+            n=0
+            with tmp.open('wb') as f:
+                for b in r.iter_content(1<<20):
+                    n+=len(b)
+                    if n>250_000_000:raise ValueError('E219-LIMITE')
+                    f.write(b)
+        w,h_,dur=probe(tmp)
+        validar_origem_video(w,h_,dur,min_duration=min_duration)
+        checksum=sha(tmp);path=STAGE/(checksum+'.mp4')
+        tmp.replace(path)
+        return {'id':slug,'label':label,'subject':h.get_text(' ',strip=True),
+                'page':page,'url_original':u,'page_sha256':hashlib.sha256(html).hexdigest(),
+                'credit':'USGS · Hawaiian Volcano Observatory','license':'Public domain',
+                'local_source':str(path),'expected_sha256':checksum,'media_type':'video',
+                'width':w,'height':h_,'duration_s':dur}
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def acquire_photo(row):
+    """Acquire an individual public-domain USGS photo, with explicit source credit.
+    A photo provides static evidence only, not evidence of movement.
+    """
+    slug,label,credit=row
+    if not re.fullmatch('[a-z0-9-]+',slug) or not credit.strip():raise ValueError('E245-FONTE')
+    page='https://www.usgs.gov/media/images/'+slug
+    raw=get(page,{'www.usgs.gov'},5_000_000)
+    soup=BeautifulSoup(raw,'html.parser');txt=soup.get_text(' ',strip=True)
+    if not re.search(r'Sources/Usage\s+Public Domain\b',txt,re.I):raise ValueError('E245-LICENCA')
+    h=soup.find('h1')
+    if not h:raise ValueError('E245-TITULO')
+    hosts={'d9-wret.s3.us-west-2.amazonaws.com','prd-wret.s3.us-west-2.amazonaws.com'}
+    urls=[]
+    for role in ('original','medium'):
+        for link in soup.find_all('a',href=True):
+            if link.get_text(' ',strip=True).lower()!=role:continue
+            u=urljoin(page,link['href'])
+            if urlsplit(u).scheme=='https' and urlsplit(u).hostname in hosts:urls.append(u)
+    errors=[]
+    for u in list(dict.fromkeys(urls))[:4]:
+        try:
+            data=get(u,hosts,26_000_000)
+            with Image.open(io.BytesIO(data)) as im:
+                if im.format not in ('JPEG','PNG','WEBP') or min(im.size)<600:raise ValueError('E245-RESOLUCAO')
+                w,h_=im.size;ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp'}[im.format]
+                im.verify()
+            checksum=hashlib.sha256(data).hexdigest();path=STAGE/(checksum+ext);path.write_bytes(data)
+            return {'id':slug,'label':label,'subject':h.get_text(' ',strip=True),'page':page,
+                    'url_original':u,'page_sha256':hashlib.sha256(raw).hexdigest(),'credit':credit,
+                    'license':'Public domain','local_source':str(path),'expected_sha256':checksum,
+                    'media_type':'photo','width':w,'height':h_,'evidence_scope':'STATIC_ONLY'}
+        except Exception as e:errors.append(type(e).__name__+': '+str(e)[:120])
+    raise ValueError('E245-SEM-FOTO '+str(errors))
+
+def frame(p,t,*,width=240):
+    if type(width) is not int or not 240<=width<=1280:raise ValueError('E244-FRAME-WIDTH')
+    z=subprocess.check_output(['ffmpeg','-v','error','-ss',str(t),'-i',str(p),'-frames:v','1','-vf',f'scale={width}:-2','-f','image2pipe','-vcodec','png','pipe:1'],timeout=30)
+    return Image.open(io.BytesIO(z)).convert('RGB')
+
+def windows(m,span,*,review_technical=False,allow_short=False):
+    # Samples verify readable bytes/no near-black or uniform frames only.
+    # They do NOT prove the semantic action. Short cuts preserve native time.
+    out=[];p=m['local_source'];dur=m['duration_s']
+    from src.v4.formatos import direcao_eventos as DE
+    candidates=[]
+    starts=list(range(2,min(80,int(dur-span-1)),5))
+    if allow_short:
+        # Review the start and final feasible native window too. Never loop,
+        # stretch or pad a short clip to simulate additional motion.
+        if dur>=span+.1:
+            starts=sorted(set([0.,*starts,min(79.,max(0.,dur-span-.1))]))
+    for a in starts:
+        try:
+            ims=[frame(p,a+span*f) for f in (.12,.5,.86)]
+            if all(ImageStat.Stat(x.convert('L')).mean[0]>9 and ImageStat.Stat(x.convert('L')).stddev[0]>10 for x in ims):
+                out.append((float(a),ims[1]))
+                if review_technical:
+                    candidates.append({'inicio_s':float(a),'frame':ims[1],
+                                       'diagnostico':DE.diagnosticar_janela(ims)})
+        except Exception:continue
+        if len(out)>=8:break
+    if review_technical:
+        return [(x['inicio_s'],x['frame']) for x in DE.ordenar_janelas_tecnicas(candidates)]
+    return out
+
+def location_title(ch,span):
+    """Preserve every word of the geographic label; use channel fonts, never per-episode sizes."""
+    q=ch['atlas']
+    words=q['label'].upper().split()
+    if not words:raise ValueError('E219-MAPA-ROTULO-VAZIO')
+    slot=A.caixa({'slot':'pergunta'},'atlas.abertura')
+    tokens=A.canal('coringa')['titulo']['pergunta']
+    # The same conservative width estimator as the original ATLAS fiscal.
+    def wrap(text,size):
+        lines=[]
+        for word in text.split():
+            if A._largura(word,size)>slot['w']:
+                raise ValueError('E219-MAPA-PALAVRA-NAO-CABE '+word)
+            if lines and A._largura(lines[-1]+' '+word,size)<=slot['w']:
+                lines[-1]+=' '+word
+            else:
+                lines.append(word)
+        return lines
+    # Reveal a complete first phrase and then the highlighted place name.
+    # Single-word places use the chapter's actual title as context.
+    prefix=' '.join(words[:-1]) or ch['title'].upper()
+    normal=wrap(prefix,tokens['normal'])
+    focus=wrap(words[-1],tokens['destaque'])
+    if len(normal)+len(focus)>A.REGRAS['titulo_max_linhas']:
+        raise ValueError('E219-MAPA-TITULO-LONGO: revisar texto sem reduzir a fonte')
+    return ([{'texto':line,'t':.3} for line in normal]+
+            [{'texto':line,'t':span/3,'destaque':True} for line in focus])
+
+def marker_time(span):
+    # Reveal early for short clips, but preserve actual informational cadence
+    # for longer map holds. No artificial event or validator bypass.
+    gap=float(A.REGRAS['progressao_max_s'])
+    t=max(span*.60,span-gap+.05)
+    if t-span/3>gap or span-t>gap:
+        raise ValueError('E219-MAPA-PROGRESSAO: dividir conteúdo geográfico')
+    return t
+
+def mapplan(ch,span):
+    q=ch['atlas']
+    p={'formato':'atlas','canal':'coringa','video_id':'e219-location','titulo':ch['title'],'geo':'motor4/formatos/dados/mundo.topo.json',
+       'duracao':span,'camera':'roi','rasters':[{'nome':q['raster']}],
+       'narracao':{'fatos':[]},'destaques':[],'rotas':[],'clipes':[],
+       'rotulos':[{'nome':q['label'],'lonlat':q['lonlat'],'t0':marker_time(span),'t1':span,'estilo':'ponto'}],
+       'beats':[{'id':'local','composicao':'atlas.abertura','t':0,'roi':q['roi'],'movimento':'fixo',
+                 'prova':'Localização em base cartográfica licenciada; não representa a costa histórica de um evento.',
+                 'camadas':[{'id':'local-title','componente':'editorial.titleOrPayoff','slot':'pergunta',
+                             't0':.3,'t1':span,'p':{'linhas':location_title(ch,span)}}]}], 'cta':False}
+    return A.resolver_tempos(p,[])
+
+def mapclip(ch,span,*,plano_resolvido=None,documentary_layout=False):
+    MAP.mkdir(parents=True,exist_ok=True)
+    p=plano_resolvido if plano_resolvido is not None else mapplan(ch,span)
+    prep=B.preparar(p,0,span,MAP,PUBLIC,documentary_layout=documentary_layout)
+    clip=MAP/'mapa.mp4'
+    subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
+                    '--props='+str((MAP/'props_atlas_formato.json').resolve()),
+                    '--frames=0-'+str(prep['frame_fim_inclusivo']),'--codec=h264','--crf=22','--concurrency=1','--public-dir=remotion/public','--log=error'],cwd='motor4',check=True,timeout=420)
+    print('E219 MAPA BINARIO',clip.exists(),clip.stat().st_size if clip.exists() else None,flush=True)
+    proof=B.confirmar(prep,clip,MAP)
+    print('E219 MAPA VALIDADO',proof['duracao_s'],proof['quadros_decodificados'],flush=True)
+    return clip,MAP/'comprovante_atlas.json'
+
+def cortes_medidos(inicio,fim,words):
+    """Prefer speech boundaries, keeping the existing unverified-action gate.
+    Longer shots need real action annotations, never fabricated here.
+    """
+    minimum,maximum=42,113
+    length=fim-inicio
+    if length<minimum:raise ValueError('E219-CORTE-CURTO')
+    n=math.ceil(length/maximum)
+    if length<n*minimum:raise ValueError('E219-CADENCIA-INVIAVEL')
+    cuts=[inicio]
+    boundaries=sorted({round(w['e']*30) for w in words if inicio<w['e']*30<fim})
+    for remaining in range(n-1,0,-1):
+        left=cuts[-1]
+        lo=max(left+minimum,fim-remaining*maximum)
+        hi=min(left+maximum,fim-remaining*minimum)
+        target=left+(fim-left)/(remaining+1)
+        valid=[b for b in boundaries if lo<=b<=hi]
+        chosen=min(valid,key=lambda b:abs(b-target)) if valid else max(lo,min(hi,round(target)))
+        cuts.append(chosen)
+    cuts.append(fim)
+    return cuts
+
+def corte_revisado(cut, acquired, words, chapter, start, end, used):
+    """A private explicit fact-to-window binding, before continuity ranking.
+    Exact measured speech, original SHA, reviewed time and overlap must agree.
+    No missing proof silently falls back to a different reviewed claim.
+    """
+    speech=' '.join(w['w'] for w in words if w['s']<end and w['e']>start)
+    if cut['chapter']!=chapter or speech!=cut['speech'] or not cut.get('observed') or not cut.get('review_ref'):
+        raise ValueError('E302-FALA-OU-REVISAO')
+    m=acquired[cut['source']];t=cut['window_start'];span=end-start;review_span=cut['window_duration']
+    if m['expected_sha256']!=cut['sha256'] or m['label']!=cut['label']:
+        raise ValueError('E302-VINCULO')
+    if not 0<=t or not 1.4<=span<=review_span or t+review_span>m['duration_s'] or any(t+span>a and t<b for a,b in used.get(cut['sha256'],[])):
+        raise ValueError('E302-JANELA-OU-REPETICAO')
+    if cut.get('acervo_existente') is True:
+        samples=cut.get('samples')
+        if not isinstance(samples,list) or len(samples)!=3:
+            raise ValueError('E321-AMOSTRAS')
+        previous=t-1
+        for sample in samples:
+            at=sample.get('time')
+            if type(at) not in (int,float) or not t<=at<t+span or at<=previous:
+                raise ValueError('E321-TEMPO-AMOSTRA')
+            im=frame(m['local_source'],at,width=320)
+            if list(im.size)!=sample.get('size') or hashlib.sha256(im.tobytes()).hexdigest()!=sample.get('pixels_sha256'):
+                raise ValueError('E321-PIXELS')
+            previous=at
+    return m,t
+
+
+def reservar_cortes_revisados(reviewed):
+    """Prevent an earlier heuristic cut from taking a later reviewed window."""
+    result={}
+    for cut in reviewed.values():
+        h=cut['sha256'];a=cut['window_start'];b=a+cut['window_duration']
+        spans=result.setdefault(h,[])
+        if any(a<d and b>c for c,d in spans):raise ValueError('E321-RESERVA-REPETIDA')
+        spans.append((a,b))
+    return result
+
+
+def proteger_corte_revisado(shot, binding, media):
+    """Propagate explicit observed full-source protection, not a renderer flag.
+    A missing contract leaves the existing private crop proposal unchanged.
+    """
+    if not binding or 'framing' not in binding:
+        return shot
+    contract=binding['framing']
+    if not isinstance(contract,dict) or contract.get('modo')!='fonte_integral' or binding.get('sha256')!=media.get('expected_sha256'):
+        raise ValueError('E319-ENQUADRAMENTO-VINCULO')
+    if shot.get('id')!=binding.get('shot') or shot.get('type')!='video' or shot.get('asset')!=binding.get('source'):
+        raise ValueError('E319-ENQUADRAMENTO-ESCOPO')
+    result={**shot,'video_framing':dict(contract)}
+    result.pop('documentary_viewport',None)
+    result['video_context_layout']=F.proteger_fonte_integral(result,media,(media['width'],media['height']))
+    if binding.get('lead') is not None:
+        label=binding['lead']
+        if not isinstance(label,str) or not 3<=len(label)<=34 or not label.isprintable() or not binding.get('review_ref') or not binding.get('observed'):
+            raise ValueError('E324-ROTULO')
+        result['lead']=label
+    return result
+
+
+def obrigacoes_visuais(decisions, words):
+    """Bind each actual cut to the measured speech it must illustrate.
+    An exact speech span is not an observed fact or proof of coverage.
+    No unreviewed source may be marked as directly evidencing this span.
+    """
+    result=[]
+    for d in decisions:
+        a,b=d['start'],d['end']
+        relevant=[w for w in words if w['s']<b and w['e']>a]
+        result.append({'shot':d['shot'],'chapter':d['chapter'],'start':a,'end':b,
+            'speech':' '.join(w['w'] for w in relevant),
+            'source':d['source'],'source_sha256':d['source_sha256'],
+            'source_in':d['source_in'],'source_out':d['source_out'],
+            'status':'AMOSTRAS_REVISADAS_PERTINENTES' if d.get('reviewed_binding') else 'REVISAR_EVIDENCIA_POR_FALA','direct_evidence_verified':False,**({'reviewed_binding':d['reviewed_binding']} if d.get('reviewed_binding') else {})})
+    return result
+
+
+def lacunas_montagem(spec, acquired, decisions):
+    report=[]
+    for ch in spec['chapters']:
+        if 'atlas' in ch:continue
+        expected=list(dict.fromkeys([r[0] for r in ch['videos']]+[r['source'] for r in decisions if r['chapter']==ch['title'] and r.get('reviewed_binding')]))
+        available=[s for s in expected if s in acquired]
+        selected=[r for r in decisions if r['chapter']==ch['title']]
+        used=list(dict.fromkeys(r['source'] for r in selected))
+        report.append({'chapter':ch['title'],'requested':expected,'available':available,
+            'unavailable':[s for s in expected if s not in acquired],'used':used,
+            'revisits':sum(bool(r['revisit']) for r in selected),
+            'status':'SEM_ACERVO' if not available else 'FONTE_UNICA_REVISAR_COBERTURA' if len(available)==1 else 'REVISAR_POR_FATO',
+            'semantic_approval':False})
+    return report
+
+
+def aplicar_direcao_atlas(spec, override):
+    """A visual-only sourced override, never a change to the authenticated speech."""
+    import copy
+    if override.get('publish') is not False or override.get('schema')!='coringa.atlas.override.v1':
+        raise ValueError('E297-ATLAS-OVERRIDE')
+    result=copy.deepcopy(spec)
+    for entry in override['chapters']:
+        i=entry['index'];ch=result['chapters'][i];q=entry['mapa']
+        if not ch.get('atlas') or entry['chapter_title']!=ch['title']:
+            raise ValueError('E297-ATLAS-CAPITULO')
+        if not q.get('fonte_localizacao','').startswith('https://'):
+            raise ValueError('E297-ATLAS-FONTE')
+        ch['atlas']={**q['atlas'],'multiscale':{'id':q['id'],
+          'fonte_localizacao':q['fonte_localizacao'],'delta':q.get('delta',1.6),
+          'fonte_continua':q.get('fonte_continua',False)}}
+    return result
+
+
+def main():
+    spec=read(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True);STAGE.mkdir(parents=True,exist_ok=True)
+    if spec.get('publish') is not False:raise ValueError('E219-PRIVADO')
+    overrides=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--atlas-direcao=')]
+    if len(overrides)>1:raise ValueError('E297-ATLAS-OVERRIDE')
+    if overrides:
+        spec=aplicar_direcao_atlas(spec,read(overrides[0]))
+        write(out/'direcao-atlas.json',{'publish':False,'roteiro_sha256':sha(Path(sys.argv[1])),'override':read(overrides[0])})
+    reviewed_args=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--cortes-revisados=')]
+    reviewed={}
+    if reviewed_args:
+        if len(reviewed_args)!=1 or '--acervo-restaurado' not in sys.argv[3:] or '--voz-medida-restaurada' not in sys.argv[3:]:
+            raise ValueError('E302-PRIVADO')
+        review_config=read(reviewed_args[0])
+        if review_config.get('schema')!='coringa.reviewed-cut.private.v1' or review_config.get('publish') is not False:
+            raise ValueError('E302-SCHEMA')
+        reviewed={c['shot']:c for c in review_config['cuts']}
+        if len(reviewed)!=len(review_config['cuts']):raise ValueError('E302-DUPLICADO')
+    from scripts import evidencias_estaticas_e321 as ES
+    static_args=[v.split('=',1)[1] for v in sys.argv[3:] if v.startswith('--evidencias-revisadas=')]
+    static_cuts={};static_acquired={};static_applied=set()
+    if static_args:
+        if len(static_args)!=1 or '--acervo-restaurado' not in sys.argv[3:] or '--voz-medida-restaurada' not in sys.argv[3:]:
+            raise ValueError('E321-ESTATICO-PRIVADO')
+        static_cuts=ES.validate_config(read(static_args[0]))
+        static_data=read(out/'static-restaurado.json')
+        if static_data.get('publish') is not False or set(static_cuts)&set(reviewed):
+            raise ValueError('E321-ESTATICO-ESCOPO')
+        static_acquired=static_data['acquired']
+    applied=set()
+    reservas_revisadas=reservar_cortes_revisados(reviewed)
+    atlas_multiscale={}
+    from scripts import qa_atlas_multiscale as G
+    for i,ch in enumerate(spec['chapters']):
+        q=ch.get('atlas') or {}
+        if q.get('multiscale'):
+            request=q['multiscale']
+            # Explicit, researched location. No model-generated coordinates or rights.
+            caso={'id':request['id'],'title':ch['title'],'atlas':q,
+                  'fonte_localizacao':request['fonte_localizacao'],'delta':request.get('delta',1.6),
+                  'fonte_continua':request.get('fonte_continua',False)}
+            acquired_geo=G.adquirir_bases(caso)
+            atlas_multiscale[i]=(caso,acquired_geo)
+            write(out/('raster-multiescala-'+str(i)+'.json'),acquired_geo)
+        elif q.get('regional_base'):
+            from scripts.qa_atlas_regional import regional_base
+            meta=regional_base(q['raster'],q['regional_base']['bbox'],q['regional_base']['zoom'])
+            write(out/'raster-regional.json',meta)
+    # Catch structural cartographic errors before spending a voice request.
+    for i,ch in enumerate(spec['chapters']):
+        if 'atlas' in ch:
+            for span in (1.4,3.0,5.5,8.0):
+                p=G.resolver(*atlas_multiscale[i],span)[1] if i in atlas_multiscale else mapplan(ch,span)
+                B.verificar_plano(p,0,span)
+            print('E219 PREFLIGHT ATLAS OK',ch['title'],flush=True)
+    rows=[r for ch in spec['chapters'] for r in ch.get('videos',[])]
+    acquired={};errors=[]
+    if '--acervo-restaurado' in sys.argv[3:]:
+        from scripts.restaurar_piloto_e289 import validar_acervo
+        acquired,errors=validar_acervo(read(out/'acervo-restaurado.json'),rows+[[c['source'],c['label']] for c in reviewed.values()],STAGE)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            jobs={pool.submit(acquire,r):r for r in rows}
+            for job in concurrent.futures.as_completed(jobs):
+                row=jobs[job]
+                try:acquired[row[0]]=job.result()
+                except Exception as e:errors.append({'id':row[0],'error':str(e)[:300]})
+    write(out/'acervo.json',{'acquired':acquired,'errors':errors,'publish':False})
+    print('E219 ACERVO',len(acquired),'/',len(rows),flush=True)
+    if any(not any(r[0] in acquired for r in ch.get('videos',[])) for ch in spec['chapters'] if 'atlas' not in ch):
+        raise ValueError('E219-SEM-REGISTRO-POR-CAPITULO')
+    if '--somente-acervo' in sys.argv[3:]:
+        # Real sources and candidate windows before voice. This is assisted pilot prep, not semantic approval.
+        counts=[];samples=[];rows=[]
+        for i,ch in enumerate(spec['chapters']):
+            if 'atlas' in ch:
+                counts.append({'chapter':ch['title'],'type':'atlas_map','preflight':True})
+                continue
+            found=[]
+            for slug,label in ch.get('videos',[]):
+                m=acquired.get(slug)
+                if not m:continue
+                ww=windows(m,3.8,review_technical=True)
+                found.append({'id':slug,'windows':[t for t,_ in ww],'license':m['license']})
+                if ww:
+                    samples.append(ww[0][1]);rows.append((slug,ww[0][0]))
+            counts.append({'chapter':ch['title'],'type':'video','sources':found,'windows':sum(len(f['windows']) for f in found)})
+        if samples:
+            board=Image.new('RGB',(960,math.ceil(len(samples)/4)*172),'#101c28');draw=ImageDraw.Draw(board)
+            for i,im in enumerate(samples):
+                im.thumbnail((236,140));x=(i%4)*240;y=(i//4)*172;board.paste(im,(x,y));draw.text((x+4,y+142),rows[i][0][:30],fill='white')
+            board.save(out/'fontes-contato.jpg')
+        write(out/'preflight-piloto.json',{'publish':False,'narration':False,'semantic_review':'PENDING','direction':'ASSISTED_HISTORICAL','chapters':counts,'sources':len(acquired),'errors':errors})
+        if any(x.get('type')=='video' and x['windows']==0 for x in counts):raise ValueError('PILOTO-SEM-JANELAS')
+        return
+    audio=out/'narracao48k.wav'
+    if '--voz-medida-restaurada' in sys.argv[3:]:
+        meta=read(out/'voz-original.json')
+        if meta.get('publish') is not False or meta.get('script_sha256')!=sha(Path(sys.argv[1])) or meta.get('audio_sha256')!=sha(audio):
+            raise ValueError('E289-VOZ-MEDIDA-VINCULO')
+        tempos,words=meta['tempos'],meta['words']
+    else:
+        wav,tempos,caps,dur=voz.narrar([{'fala':c['speech']} for c in spec['chapters']],out/'voz',exigir_gemini=True)
+        subprocess.run(['ffmpeg','-v','error','-y','-i',str(wav),'-ar','48000','-ac','1',str(audio)],check=True)
+        words=D.palavras_de_caps(caps)
+    with wave.open(str(audio),'rb') as f:duration=f.getnframes()/f.getframerate()
+    if duration<60 or duration>180 or len(tempos)!=len(spec['chapters']):raise ValueError('E219-DURACAO '+str(duration))
+    if '--acervo-restaurado' in sys.argv[3:]:
+        # Keep measured voice and its exact script before any map or editorial render.
+        write(out/'voz-medida.json',{'publish':False,'script_sha256':sha(Path(sys.argv[1])),
+            'audio_sha256':sha(audio),'duration_s':duration,'words':words,'tempos':tempos})
+        words,alignment=LS.alinhar_documental(words,audio,maximo=3)
+        write(out/'realinhamento.json',alignment)
+        # Keep chapter cuts anchored to the same word indices, not a new reading.
+        if '--voz-medida-restaurada' in sys.argv[3:]:
+            original=meta['words']
+            starts=[0.]
+            for a,_ in tempos[1:]:
+                i=min(range(len(original)),key=lambda i:abs(original[i]['s']-(a+.12)))
+                starts.append(max(starts[-1],words[i]['s']-.12))
+            tempos=list(zip(starts,starts[1:]+[duration]))
+        write(out/'voz-medida.json',{'publish':False,'script_sha256':sha(Path(sys.argv[1])),
+            'audio_sha256':sha(audio),'duration_s':duration,'words':words,'tempos':tempos})
+        sync=LS.conferir(out/'voz-medida.json',audio,maximo=3)
+        write(out/'sincronia-medida.json',sync)
+        print('E289 SINCRONIA',alignment,flush=True)
+        if not sync['ok']:raise ValueError('E289-SINCRONIA: voz preservada para revisão, não renderizar')
+    total=math.ceil(duration*30)/30;start=0;shots=[];media={};maps=[];pics=[];cut_report=[];used_windows={}
+    from src.v4.formatos import direcao_eventos as DE
+    historico_visual=[];selection_report=[];continuity_report=[]
+    for i,(ch,(a,b)) in enumerate(zip(spec['chapters'],tempos)):
+        end=round(b*30) if i+1<len(tempos) else round(total*30)
+        frames=end-start
+        if 'atlas' in ch:
+            span=frames/30
+            if not 1.4<=span<=8:raise ValueError('E219-MAPA-DURACAO '+str(span))
+            cid='mapa-'+str(i)
+            if i in atlas_multiscale:
+                map_ch,p,report=G.resolver(*atlas_multiscale[i],span)
+                write(out/('camera-multiescala-'+str(i)+'.json'),report)
+                clip,proof=mapclip(map_ch,span,plano_resolvido=p,documentary_layout=True)
+            else:
+                clip,proof=mapclip(ch,span)
+            shots.append({'id':cid,'type':'atlas_map','start':start/30,'end':end/30,'headline':ch['atlas']['label'],
+                          'lead':ch['title'],'subject':ch['title'],'evidence':'explainer','cues':[{'at':.2,'label':ch['atlas']['label']}]})
+            maps.append((cid,clip,proof));start=end;continue
+        cuts=cortes_medidos(start,end,words)
+        n=len(cuts)-1
+        available=[acquired[r[0]] for r in ch['videos'] if r[0] in acquired]
+        modes=spec.get('reviewed_source_modes',{})
+        available.sort(key=lambda m:m['id'] not in modes)
+        chapter_history=[]
+        for k,(fa,fb) in enumerate(zip(cuts,cuts[1:])):
+            s,e=fa/30,fb/30;span=e-s
+            if fb-fa<42:raise ValueError('E219-CORTE-CURTO')
+            ordered=available  # stable upstream relevance, not round robin
+            selected=None
+            cid=f'c{i}-{k}'
+            static_binding=static_cuts.get(cid)
+            if static_binding:
+                m=static_acquired[static_binding['source']]
+                shot=ES.shot_for(static_binding,m,words,ch['title'],s,e)
+                mid=m['id'];media[mid]=m;shots.append(shot)
+                continuity_report.append({'chapter':ch['title'],'shot':cid,'source':mid,'source_sha256':m['expected_sha256'],
+                    'source_in':None,'source_out':None,'start':s,'end':e,'revisit':False,'semantic_review':'STATIC_ASSISTED',
+                    'reviewed_binding':static_binding,'decision':'EVIDENCIA_ESTATICA_REVISADA','kind':'photo'})
+                with Image.open(m['local_source']) as im:pics.append((cid,mid,0,im.convert('RGB')))
+                static_applied.add(cid)
+                continue
+            binding=reviewed.get(cid)
+            if binding:
+                m,t=corte_revisado(binding,acquired,words,ch['title'],s,e,used_windows)
+                selected=(m,t,frame(m['local_source'],t+span*.5))
+                applied.add(f'c{i}-{k}')
+            elif spec.get('perceptual_selection'):
+                candidates=[]
+                for m in ordered:
+                    prev=used_windows.get(m['expected_sha256'],[])+reservas_revisadas.get(m['expected_sha256'],[])
+                    for t,im in windows(m,span+.1):
+                        if not all(t+span<=a or t>=b for a,b in prev):continue
+                        try:
+                            samples=[frame(m['local_source'],t+span*f) for f in (.12,.5,.86)]
+                            signature=DE.assinatura_janela(samples)
+                        except Exception:continue
+                        candidates.append({'ordem':len(candidates),'assinatura':signature,'selection':(m,t,im)})
+                        # Bound extra decoding; retain two eligible alternatives per source.
+                        if sum(c['selection'][0]['id']==m['id'] for c in candidates)>=2:break
+                ranked=DE.ordenar_janelas(candidates,historico_visual[-4:])
+                if ranked:
+                    ranked_by_window={(c['selection'][0]['expected_sha256'],c['selection'][1],c['selection'][1]+span):c for c in ranked}
+                    best=ranked_by_window[DE.continuidade_fontes(list(ranked_by_window),chapter_history)[0]]
+                    selected=best['selection']
+                    score=max((DE.similaridade_janelas(best['assinatura'],h) for h in historico_visual[-4:]),default=0.)
+                    historico_visual.append(best['assinatura'])
+                    selection_report.append({'chapter':ch['title'],'source':selected[0]['id'],'t':selected[1],
+                        'candidate_count':len(ranked),'similarity_recent':round(score,4),'semantic_review':'PENDING'})
+            else:
+                eligible={}
+                for m in ordered:
+                    prev=used_windows.get(m['expected_sha256'],[])+reservas_revisadas.get(m['expected_sha256'],[])
+                    for t,im in windows(m,span+.1):
+                        if all(t+span<=a or t>=b for a,b in prev):
+                            eligible[(m['expected_sha256'],t,t+span)]=(m,t,im)
+                if eligible:
+                    selected=eligible[DE.continuidade_fontes(list(eligible),chapter_history)[0]]
+            if not selected:raise ValueError('E219-COBERTURA '+ch['title'])
+            m,t,im=selected
+            key=m['expected_sha256'];last=chapter_history[-1] if chapter_history else None
+            revisit=bool(last and last[0]!=key and any(h[0]==key for h in chapter_history))
+            continuity_report.append({'chapter':ch['title'],'shot':f'c{i}-{k}','source':m['id'],
+                'source_sha256':key,'source_in':t,'source_out':t+span,'start':s,'end':e,
+                'revisit':revisit,'decision':'REVISITA_POR_COBERTURA' if revisit else 'CONTINUIDADE',
+                'semantic_review':'SAMPLED_ASSISTED' if binding else 'PENDING',
+                **({'reviewed_binding':binding,'decision':'FATO_REVISADO_AMOSTRAS'} if binding else {})})
+            chapter_history.append((key,t,t+span))
+            used_windows.setdefault(m['expected_sha256'],[]).append((t,t+span))
+            mid=m['id'];media[mid]=m;cid=f'c{i}-{k}'
+            shot={'id':cid,'type':'video','asset':mid,'start':s,'end':e,
+                  'source_in_seconds':t,'video_zoom':1,'video_context_layout':'cena_integral',
+                  'lead':ch['title'] if k==0 else '', 'headline':m['label'],'subject':m['subject'],
+                  'source_display':m['credit'],'evidence':'literal','literal_identity':m['subject'],
+                  'cues':[{'at':.2,'label':m['label']}]}
+            # Reuse the candidate visual grammar of the reviewed source, only
+            # for the opening window within the length of the previous proof.
+            # This is still private review, NOT observed ROI certification.
+            mode=modes.get(mid)
+            reference=windows(m,4.6) if mode else []
+            if reference and abs(t-reference[0][0])<.01 and span<=4.5:
+                if mode=='imersivo':
+                    shot.pop('video_context_layout')
+                elif mode in ('4:5','1:1'):
+                    shot['video_context_layout']='recorte_relacional_seguro'
+                    shot['documentary_viewport']=mode
+                shot['focus']=[.5,.5]
+            shot=proteger_corte_revisado(shot,binding,m)
+            shots.append(shot)
+            pics.append((cid,m['id'],t,im))
+        cut_report.append({'chapter':ch['title'],'start':start/30,'end':end/30,'shots':n})
+        start=end
+    if applied!=set(reviewed):raise ValueError('E302-CORTE-NAO-APLICADO')
+    if static_applied!=set(static_cuts):raise ValueError('E321-ESTATICO-NAO-APLICADO')
+    plan={'formato':'filme_editorial','tipo':'PROVA_VISUAL_PRIVADA','publicar':False,'titulo':spec['title'],
+          'duracao':total,'media':media,'shots':shots}
+    if '--acervo-restaurado' in sys.argv[3:]:
+        plan['documentary_framing']='ADAPTIVE_REVIEW_V1'
+    for cid,clip,proof in maps:plan=B.inserir_no_filme(plan,cid,clip,proof)
+    write(out/'plano.json',plan)
+    if spec.get('perceptual_selection'):write(out/'selecao_perceptiva.json',selection_report)
+    write(out/'continuidade-montagem.json',{'publish':False,'semantic_review':'PENDING','shots':continuity_report})
+    # Report the coverage deficit separately from the continuity heuristic.
+    # A chapter with one available source is not semantically certified.
+    write(out/'lacunas-montagem.json',{'publish':False,'semantic_review':'PENDING',
+        'chapters':lacunas_montagem(spec,{**acquired,**static_acquired},continuity_report)})
+    write(out/'obrigacoes-visuais.json',{'publish':False,'semantic_review':'PENDING',
+        'shots':obrigacoes_visuais(continuity_report,words)})
+    result=F.preparar(plan,out/'documental',PUBLIC)
+    props=read(result['props']);props['private_review_only']=True;props.pop('safe_area_profile',None)
+    groups=[]
+    for g in LS.grupos(words,maximo=3):
+        ws=words[g['i0']:g['i0']+g['n']];hi=max(range(len(ws)),key=lambda i:len(ws[i]['w']))
+        a=max(0,g['ini']);b=min(duration,g['fim'])
+        if groups:a=max(a,groups[-1]['end'])
+        if b>a:groups.append({'start':a,'end':b,'words':[{'w':w['w'],'hl':i==hi} for i,w in enumerate(ws)]})
+    original_sha=sha(audio)
+    track=Path('assets/musica/explica/infinite-wonder.mp3')
+    if spec.get('review_music'):
+        mixed=out/'narracao-com-trilha.wav'
+        subprocess.run(['ffmpeg','-v','error','-y','-i',str(audio),'-stream_loop','-1','-i',str(track),
+            '-filter_complex',f'[0:a]volume=0.92[v];[1:a]volume=0.055,afade=t=in:d=0.5,afade=t=out:st={max(0,duration-2)}:d=2[m];[v][m]amix=inputs=2:duration=first:normalize=0[a]',
+            '-map','[a]','-ar','48000','-ac','1',str(mixed)],check=True,timeout=90)
+        write(out/'trilha.json',{'track':str(track),'sha256':sha(track),'voice_sha256':original_sha,'mix_sha256':sha(mixed),'gain_music':.055,'license_manifest':'assets/musica/LEIAME.txt','review':'PENDING'})
+        audio=mixed
+    h=sha(audio);asset='e202/'+h+'.wav'
+    (PUBLIC/'e202').mkdir(exist_ok=True);shutil.copyfile(audio,PUBLIC/asset)
+    props=D.anexar_audio_documental(props,asset,groups,PUBLIC,'PALAVRAS_MEDIDAS')
+    write(out/'props.json',props);write(out/'narracao.json',{'audio_sha256':h,'voice_sha256':original_sha,'duration_s':duration,'words':words,'chapters':cut_report,'publish':False})
+    board=Image.new('RGB',(960,math.ceil(len(pics)/4)*172),'#101c28');draw=ImageDraw.Draw(board)
+    for i,(cid,mid,t,im) in enumerate(pics):
+        im.thumbnail((236,140));x=(i%4)*240;y=(i//4)*172;board.paste(im,(x,y))
+        draw.text((x+4,y+141),cid+' '+str(t)+'s '+mid[:15],fill='white')
+    board.save(out/'fontes-contato.jpg')
+    for _,clip,proof in maps:shutil.copyfile(proof,out/'comprovante_atlas.json')
+    print('E219 PREPARADO',total,len(shots),len(maps),'mapas, Gemini',flush=True)
+if __name__=='__main__':main()

@@ -1,0 +1,88 @@
+name: Notificar falha documental privada
+on:
+  workflow_call:
+    inputs:
+      result:
+        required: true
+        type: string
+      job_name:
+        required: true
+        type: string
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      TELEGRAM_CHAT_ID:
+        required: true
+permissions:
+  actions: read
+  contents: none
+jobs:
+  alert:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Aviso privado independente do render
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          FAILED_RESULT: ${{ inputs.result }}
+          FAILED_JOB: ${{ inputs.job_name }}
+        run: |
+          python3 - <<'PY'
+          import json,os,urllib.request,urllib.parse
+          e=os.environ
+          run=e['GITHUB_RUN_ID']
+          attempt=e['GITHUB_RUN_ATTEMPT']
+          repo=e['GITHUB_REPOSITORY']
+          url=f"https://github.com/{repo}/actions/runs/{run}"
+          status=e['FAILED_RESULT']
+          if status not in ('failure','cancelled'):
+              raise SystemExit('Estado inesperado; nenhum aviso enviado')
+          def request(url,params=None,headers=None):
+              data=urllib.parse.urlencode(params).encode() if params is not None else None
+              with urllib.request.urlopen(urllib.request.Request(url,data=data,headers=headers or {}),timeout=20) as r:
+                  return json.load(r)
+          stages=[]
+          delivery=[]
+          try:
+              data=request(f"https://api.github.com/repos/{repo}/actions/runs/{run}/attempts/{attempt}/jobs?per_page=100",
+                           headers={'Authorization':'Bearer '+e['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              for job in data.get('jobs',[]):
+                  name=job.get('name','')
+                  base=e['FAILED_JOB']
+                  if not (name==base or name.startswith(base+' (') or name.startswith(base+' / ')):continue
+                  if job.get('conclusion') not in ('failure','cancelled'):continue
+                  for step in job.get('steps',[]):
+                      if step.get('conclusion') in ('failure','cancelled'):
+                          stages.append(name+' — '+step['name'])
+                      if 'telegram' in step.get('name','').lower() and ('enviar' in step['name'].lower() or 'entregar' in step['name'].lower()):
+                          delivery.append(step.get('conclusion'))
+          except Exception:
+              pass # alert still works if jobs API is unavailable
+          label='FALHA' if status=='failure' else 'CANCELADO'
+          detail='; '.join(stages)[:400] if stages else 'Etapa não identificada; conferir execução.'
+          message=f"CORINGA · {label}\n{e['GITHUB_WORKFLOW']}\nEtapa: {detail}\n"
+          if 'success' in delivery:
+              message+='A etapa de envio retornou sucesso; confirme o recibo, pois ausência de arquivo também pode encerrar a etapa.\n'
+          elif delivery:
+              message+='Entrega do material visual não confirmada; consulte o recibo.\n'
+          message+=f"Execução: {url}\nNenhuma publicação em redes."
+          try:
+              token=e.get('TELEGRAM_BOT_TOKEN','')
+              chat=e.get('TELEGRAM_CHAT_ID','').strip()
+              if not token or not chat.lstrip('-').isdigit():raise ValueError()
+              def api(method,params):
+                  result=request('https://api.telegram.org/bot'+token+'/'+method,params)
+                  if not result.get('ok'):raise ValueError()
+                  return result.get('result')
+              info=api('getChat',{'chat_id':chat})
+              typ=info.get('type')
+              if typ not in ('private','group','supergroup','channel'):raise ValueError()
+              if typ!='private' and (info.get('username') or not 0<int(api('getChatMemberCount',{'chat_id':chat}))<=5):raise ValueError()
+              sent=api('sendMessage',{'chat_id':chat,'text':message})
+              if not isinstance(sent,dict) or not sent.get('message_id'):raise ValueError()
+          except Exception:
+              raise SystemExit('Falha no próprio aviso Telegram; nenhuma credencial exibida. Consulte Actions.') from None
+          print('AVISO PRIVADO CONFIRMADO')
+          PY

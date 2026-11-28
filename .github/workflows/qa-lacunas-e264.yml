@@ -1,0 +1,133 @@
+name: E264.8 - reproduzir pixels exatos e revisar somente lacunas
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-lacunas-e264.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gaps:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - name: Confirmar a execucao local anterior sem disparar outra
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/45610226413" --jq '.status')
+            if [[ "$status" == completed ]]; then
+              test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/45610226413" --jq '.conclusion')" = success
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "E264.4 nao terminou dentro do limite; nenhuma revisao nova iniciada"
+          exit 1
+      - name: Instalar e testar
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_reuso_documental_e251.py tests/test_checkpoint_e259.py tests/test_politica_progressiva_e258.py tests/test_documentario_integral_e254.py tests/test_reparar_manifesto_e264.py tests/test_revisao_documental_e247.py
+      - name: Reparar somente o manifesto privado ausente
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.reparar_manifesto_documental review-e2644-45610226413-1 qa_e2647_reparo
+      - name: Recuperar resultado anterior e calcular saldo
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          from scripts.recuperar_checkpoints_documentais import api,listar_releases,discover
+          meta=api('')
+          assert meta.get('private') is True and meta.get('id')==1454059520
+          tag='review-e2644-45610226413-1'
+          rel=next(r for r in listar_releases(60) if r['tag_name']==tag and r['draft'] is True)
+          asset=next(a for a in rel['assets'] if a['name']=='revisao.json')
+          assert 0<asset['size']<=12_000_000 and asset['digest'].startswith('sha256:')
+          root=Path('qa_e2646');root.mkdir()
+          subprocess.run(['gh','release','download',tag,'--repo','Heitor2404/coringa-cofre','--pattern','revisao.json','--dir',str(root)],check=True,timeout=120)
+          raw=(root/'revisao.json').read_bytes()
+          assert len(raw)==asset['size'] and 'sha256:'+hashlib.sha256(raw).hexdigest()==asset['digest']
+          r=json.loads(raw)
+          assert r['publish'] is False and r['case']['id']=='gelo_paisagem' and r['modo_revisar_acervo']
+          calls=r['visao_chamadas_logicas']
+          assert type(calls) is int and 0<=calls<=9
+          assert r['rede_aquisicao']['http']==r['cobertura_documentario']['consumo']['buscas']==0
+          # The overall previous E254 QA ceiling was 20 logical calls.
+          saldo=min(11,20-calls)
+          (root/'anterior.json').write_text(json.dumps({'cobertos':[x['necessidade_id'] for x in r['cobertura'] if x['estado']=='CANDIDATO_PRIVADO_REVISADO'],'chamadas_anteriores':calls,'saldo':saldo,'publicar':False}))
+          spec=json.loads(Path('benchmarks/e254/documentario.json').read_text())
+          case=next(c for c in spec['cases'] if c['id']=='gelo_paisagem')
+          d=discover(case['necessidades'],root/'acervo')
+          (root/'descoberta.json').write_text(json.dumps(d,ensure_ascii=False))
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('CORINGA_CHECKPOINTS_DESCOBERTOS=qa_e2646/descoberta.json\n')
+              f.write('CORINGA_LIMITE_VISAO_DOCUMENTAL='+str(saldo)+'\n')
+          print('E264.6 SALDO',saldo,'cobertura anterior',json.loads((root/'anterior.json').read_text()),flush=True)
+          PY
+      - name: Provar replay antes de gastar novamente
+        env:
+          CAIXA_MAX_CHAMADAS: '0'
+          CAIXA_TETO_USD: '0'
+          USAR_CLAUDE: '0'
+        run: |
+          CORINGA_LIMITE_VISAO_DOCUMENTAL=0 python -m scripts.qa_revisao_documental_e247 benchmarks/e254/documentario.json stage_documental/e2646-replay gelo_paisagem --progressiva --multicenas --integral --somente-acervo
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('qa_e2646/anterior.json').read_text())
+          r=json.loads(Path('stage_documental/e2646-replay/revisao.json').read_text())
+          assert r['visao_chamadas_logicas']==r['rede_aquisicao']['http']==r['cobertura_documentario']['consumo']['buscas']==0
+          covered={x['necessidade_id'] for x in r['cobertura'] if x['estado']=='CANDIDATO_PRIVADO_REVISADO'}
+          assert set(a['cobertos'])<=covered, 'E264.6 perdeu cobertura anterior; nao gastar nova visao'
+          print('E264.6 REPLAY',sorted(covered),flush=True)
+          PY
+      - name: Pesquisar lacunas com saldo restante
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CAIXA_MAX_CHAMADAS: '11'
+          CAIXA_TETO_USD: '0'
+          USAR_CLAUDE: '0'
+        run: |
+          python -m scripts.qa_revisao_documental_e247 benchmarks/e254/documentario.json stage_documental/e2646 gelo_paisagem --progressiva --multicenas --integral
+          python -m scripts.qa_documentario_integral_e254 stage_documental/e2646 --somente-preflight
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('stage_documental/e2646')
+          a=json.loads(Path('qa_e2646/anterior.json').read_text())
+          r=json.loads((root/'revisao.json').read_text())
+          q=json.loads((root/'integral.json').read_text())
+          assert r['publish'] is False and r['visao_chamadas_logicas']<=a['saldo']
+          assert a['chamadas_anteriores']+r['visao_chamadas_logicas']<=20
+          covered={x['necessidade_id'] for x in r['cobertura'] if x['estado']=='CANDIDATO_PRIVADO_REVISADO'}
+          assert set(a['cobertos'])<=covered, 'E264.6 perdeu cobertura anterior'
+          assert not (root/'props.json').exists() and not (root/'narracao48k.wav').exists()
+          print('E264.6 RESULTADO',q,'novas chamadas',r['visao_chamadas_logicas'],flush=True)
+          PY
+      - name: Preservar resultados e diagnosticos
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e2646
+          if [[ -s "$root/revisao.json" ]]; then
+            files=("$root"/*.json "$root"/*.jpg)
+            test -s "$root/manifesto-revisoes.jsonl"
+            bash scripts/arquivar_cofre_review.sh "review-e2648-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root/manifesto-revisoes.jsonl" "$root"/checkpoints/*.zip
+            python scripts/espelhar_revisao_cofre.py "e2648-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+          elif [[ -s stage_documental/e2646-replay/revisao.json ]]; then
+            python scripts/espelhar_revisao_cofre.py "e2648-replay-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" stage_documental/e2646-replay/revisao.json qa_e2646/descoberta.json qa_e2646/anterior.json
+          fi

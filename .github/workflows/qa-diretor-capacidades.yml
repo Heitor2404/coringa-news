@@ -1,0 +1,88 @@
+name: "QA técnico — capacidades LEGADAS (sem render visual reprovado)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-diretor-capacidades.yml"
+      - "src/v4/formatos/catalogo_mecanismos.py"
+      - "src/v4/formatos/filme_editorial.py"
+      - "motor4/remotion/src/formatos/LockCausalCycle.tsx"
+      - "motor4/remotion/src/formatos/AreaSeguraMovimento.ts"
+      - "motor4/tests/area-segura-movimento.test.mjs"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "docs/v4/formatos/DEMO_DIRETOR_CAPACIDADES_20261120.json"
+      - "tests/test_diretor_capacidades.py"
+      - "tests/test_diretor_processos.py"
+      - "src/v4/formatos/diretor_processos.py"
+      - "docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-diretor-capacidades
+  cancel-in-progress: true
+jobs:
+  contrato_sem_video_legado:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Verificar seleção por ações em diferentes domínios e regressões
+        run: |
+          python -m pip install -q pillow requests numpy pyyaml cryptography pytest
+          python -m pytest -q tests/test_diretor_processos.py tests/test_diretor_capacidades.py tests/test_mecanismos_explicativos.py tests/test_filme_panama_ciclo_19s.py
+      - name: Preparar composição sem forçar nome de renderer no storyboard
+        run: |
+          python -m src.v4.formatos.filme_editorial docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json prova_diretor motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('prova_diretor/props.json').read_text())
+          assert [x['mechanism'] for x in p['shots']]==['optical_projection','lock_cycle_standalone']
+          assert all(x['evidence']=='explainer' and not x.get('reference_asset') for x in p['shots'])
+          assert all(len(x['cues'])>=4 for x in p['shots'])
+          assert p['duracao']==24.4
+          print('CATALOGO_RESOLVEU_DUAS_CAPACIDADES_COM_ACOES')
+          PY
+      - name: Compilar compositor compartilhado
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+          node --experimental-strip-types --test tests/area-segura-movimento.test.mjs
+      - name: Registrar resultado SEM renderizar modelo visual rejeitado
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pasta=Path('prova_diretor')
+          p=json.loads((pasta/'props.json').read_text('utf8'))
+          contrato=json.loads(Path('docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json').read_text('utf8'))
+          assert contrato['perfil_visual']=='LEGADO_REJEITADO_SOMENTE_QA'
+          assert all(c['processo_visual']['grafo_causal_requerido'] for c in p['shots'])
+          assert not list(pasta.glob('*.mp4'))
+          rel={'status':'CONTRATO_TECNICO_OK_ESTETICA_REJEITADA',
+               'render_mp4_executado':False,
+               'motivo':'componentes OpticalProjection e LockCausalCycle LEGADOS, já rejeitados',
+               'componentes':[c['mechanism'] for c in p['shots']],
+               'revisao_estetica':'REPROVADO_ESTILO_LEGADO',
+               'publicar':False,'telegram':False}
+          (pasta/'resultado.json').write_text(json.dumps(rel,ensure_ascii=False,indent=2))
+          print(json.dumps(rel,ensure_ascii=False))
+          PY
+      - name: Guardar prova temporária privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contrato-diretor-legado-sem-mp4
+          path: prova_diretor/
+          retention-days: 5
+          if-no-files-found: warn

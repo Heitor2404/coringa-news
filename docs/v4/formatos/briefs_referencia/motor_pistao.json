@@ -1,0 +1,20 @@
+{
+  "id": "motor_pistao",
+  "pergunta": "Como o pistao transforma a expansao de gases em movimento de rotacao?",
+  "consultas_en": [
+    "four stroke piston engine cutaway animation",
+    "crankshaft piston mechanism 3D animation"
+  ],
+  "acoes_necessarias": [
+    "intake",
+    "compression",
+    "combustion",
+    "exhaust"
+  ],
+  "fases_necessarias": [
+    "entrada",
+    "compressao",
+    "expansao",
+    "saida"
+  ]
+}

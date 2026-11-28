@@ -1,0 +1,138 @@
+{
+  "schema": "coringa-emphasis-paths-v1",
+  "publicar": false,
+  "familias": {
+    "compressor_oficina_pv": {
+      "REEXPANSAO_RESIDUAL": {
+        "kind": "outline",
+        "edge": [
+          "piston_cutaway",
+          "inside",
+          "finned_cylinder"
+        ],
+        "dynamic": "piston_cutaway",
+        "color": "#5FBDD2"
+      },
+      "ADMISSAO_AR": {
+        "kind": "flow",
+        "edge": [
+          "intake_filter",
+          "feeds",
+          "suction_valve"
+        ],
+        "path": "M 183 398 H 230 Q 240 397 264 418",
+        "bounds": [
+          183,
+          397,
+          264,
+          418
+        ],
+        "color": "#1FBDBB"
+      },
+      "COMPRESSAO_AR": {
+        "kind": "outline",
+        "edge": [
+          "piston_cutaway",
+          "inside",
+          "finned_cylinder"
+        ],
+        "dynamic": "piston_cutaway",
+        "color": "#E9A84C"
+      },
+      "DESCARGA_PRESSURIZADA": {
+        "kind": "flow",
+        "edge": [
+          "discharge_pipe",
+          "feeds",
+          "receiver_horizontal"
+        ],
+        "path": "M 345 404 H 441 V 778",
+        "bounds": [
+          345,
+          404,
+          441,
+          778
+        ],
+        "color": "#EE9158"
+      }
+    },
+    "otto_4t_reference": {
+      "admissao_mistura": {
+        "kind": "flow",
+        "edge": [
+          "intake_flow",
+          "feeds",
+          "inlet_valve"
+        ],
+        "path": "M 76 312 H 163 Q 190 312 200 341 L 209 392",
+        "bounds": [
+          76,
+          312,
+          209,
+          392
+        ],
+        "color": "#22AEB5"
+      },
+      "compressao_mistura": {
+        "kind": "outline",
+        "edge": [
+          "piston",
+          "inside",
+          "cylinder"
+        ],
+        "dynamic": "piston",
+        "color": "#E9A84C"
+      },
+      "escape_gases": {
+        "kind": "flow",
+        "edge": [
+          "outlet_valve",
+          "feeds",
+          "exhaust_flow"
+        ],
+        "path": "M 323 393 L 340 331 Q 346 309 375 309 H 485",
+        "bounds": [
+          323,
+          309,
+          485,
+          393
+        ],
+        "color": "#EC9058"
+      }
+    },
+    "lock_cycle_standalone": {
+      "valves": {
+        "kind": "flow",
+        "edge": [
+          "valve",
+          "controls",
+          "conduit"
+        ],
+        "path": "M 461 566 V 809 H 314 V 754",
+        "bounds": [
+          314,
+          566,
+          461,
+          809
+        ],
+        "color": "#5FCAD6"
+      },
+      "rise": {
+        "kind": "flow",
+        "edge": [
+          "conduit",
+          "feeds",
+          "chamber"
+        ],
+        "path": "M 461 566 V 809 H 314 V 754",
+        "bounds": [
+          314,
+          566,
+          461,
+          809
+        ],
+        "color": "#5FCAD6"
+      }
+    }
+  }
+}

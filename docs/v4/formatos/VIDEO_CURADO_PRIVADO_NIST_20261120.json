@@ -1,0 +1,98 @@
+{
+  "versao": 1,
+  "videos": [
+    {
+      "modo": "CONTEXTO_PRIVADO_SEM_LICENCA",
+      "publicar": false,
+      "fonte_id": "nist_nanofab_users_2017",
+      "sujeito": "NIST NanoFab",
+      "pagina": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes",
+      "credit": "NIST · The CNST NanoFab: Through the Users' Eyes (2017) · EUA",
+      "licenca": "REVIEW_PENDING",
+      "sha256_origem": "582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474",
+      "arquivo": "stage_documental/nist_nanofab_users_2017.mp4",
+      "width": 1360,
+      "height": 720,
+      "source_duration_s": 105.05,
+      "inspecao": "8 quadros originais 58,31–60,81s: operador à direita e estação/monitor à esquerda são DOIS referentes necessários; juntos, não cabem no recorte central 9:16. Não mostra litografia EUV ou instalação TSMC.",
+      "comprova_acao": false,
+      "janela": {
+        "inicio_s": 58.15,
+        "duracao_s": 2.6,
+        "roi": [
+          {
+            "at": 0,
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.35,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
+            ]
+          },
+          {
+            "at": 1.15,
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.35,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
+            ]
+          },
+          {
+            "at": 2.3,
+            "elementos": [
+              {
+                "nome": "pesquisador",
+                "bbox": [
+                  0.34,
+                  0.07,
+                  0.63,
+                  0.95
+                ]
+              },
+              {
+                "nome": "estacao_com_monitor",
+                "bbox": [
+                  0.06,
+                  0.17,
+                  0.38,
+                  0.84
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "provedor": "nist_kaltura",
+      "comprova_outro_evento": false
+    }
+  ]
+}

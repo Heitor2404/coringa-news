@@ -1,0 +1,62 @@
+name: "LAB E6 — corpus novo de juntas tipadas e geometria"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/workflows/lab-e6-coleta-corpus.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source_harvest:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - name: Install dependency chain for source retrieval
+        run: python -m pip install -q numpy scipy cairosvg pillow
+      - name: Search source pages then verify identity by second GET
+        run: |
+          mkdir -p qa_e6_harvest
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          from src.v4.formatos import descoberta_fontes_e4 as E4
+          from src.v4.formatos import extrator_relacoes_e5 as E5
+          queries=("Geneva drive","universal joint","cam follower",
+                   "slider crank mechanism","rack and pinion")
+          pages=[];seen=set()
+          for query in queries:
+              hits=E4.search(query)
+              if not hits:continue
+              page=E4.fetch_page(hits[0])
+              if page["pageid"] in seen:continue
+              seen.add(page["pageid"])
+              rows=E5.selected_e5(page["plain_text"])
+              pages.append({
+                  "query":query,"title":page["title"],
+                  "pageid":page["pageid"],"revid":page["revid"],
+                  "source_url":page["source_url"],"text_sha256":page["text_sha256"],
+                  "selection":"e5","sentences":rows,
+                  "count":len(rows),"page_verified_via_api":True,
+              })
+          assert len(pages)>=4,("INSUFFICIENT_PAGES",len(pages))
+          (Path("qa_e6_harvest")/"E6_SOURCE_SENTENCES.json").write_text(
+              json.dumps({"schema":"coringa-e6-harvest-v0",
+                  "source_queries_selected_manually":True,
+                  "article_urls_discovered_by_api":True,
+                  "gold_labels_present":False,
+                  "typified_joints_validated":0,
+                  "render_allowed":False,"publish":False,"pages":pages},
+                  ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps([{"query":p["query"],"title":p["title"],
+              "pageid":p["pageid"],"revid":p["revid"],
+              "count":p["count"]} for p in pages],ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e6-novas-fontes-revisionadas-sem-rotulos
+          path: qa_e6_harvest/
+          retention-days: 5

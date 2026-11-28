@@ -1,0 +1,21 @@
+name: E30 evidencias de conectividade cinematica
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-grafo-cinematica-e30.yml"
+      - "src/v4/formatos/grafo_cinematica_e30.py"
+      - "tests/test_grafo_cinematica_e30.py"
+permissions:
+  contents: read
+jobs:
+  grafos:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install --only-binary=:all: numpy pytest
+      - run: python -m pytest -q tests/test_grafo_cinematica_e30.py tests/test_eventos_trajetoria_e27.py tests/test_ponte_cad_editorial_e28.py tests/test_ponte_cad_qa_e29.py

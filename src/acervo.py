@@ -34,10 +34,13 @@ def _get(url: str, **params):
         time.sleep(espera or 0.4)
         try:
             r = requests.get(url, params=params, headers=UA, timeout=40)
-            if r.status_code == 429:
+            if r.status_code == 429 and espera != 15:
                 continue
             r.raise_for_status()
-            return r.json()
+            body = r.json()
+            if 'error' in body:
+                raise ValueError('MEDIAWIKI_API:' + str(body['error'].get('code', 'unknown')))
+            return body
         except requests.RequestException:
             if espera == 15:
                 raise
@@ -79,15 +82,17 @@ def _artigo(nome: str, lang: str = 'en') -> str | None:
         return None
 
 
-def _busca_commons(q: str, n: int = 12) -> list[str]:
+def _busca_commons(q: str, n: int = 12, *, estrito=False) -> list[str]:
     try:
         j = _get(COMMONS, action='query', list='search', srsearch=f'{q} filetype:bitmap', srnamespace=6, srlimit=n)
         return [h['title'] for h in j.get('query', {}).get('search', [])]
     except Exception:
+        if estrito:
+            raise
         return []
 
 
-def _categoria_commons(q: str, n: int = 25) -> list[str]:
+def _categoria_commons(q: str, n: int = 25, *, estrito=False) -> list[str]:
     """Categorias do Commons são montadas por pessoas: 'Theft of the Mona Lisa', 'Formicidae', 'Mars'... ouro puro."""
     try:
         j = _get(COMMONS, action='query', list='search', srsearch=q, srnamespace=14, srlimit=2)
@@ -97,18 +102,22 @@ def _categoria_commons(q: str, n: int = 25) -> list[str]:
             out += [x['title'] for x in m.get('query', {}).get('categorymembers', [])]
         return out
     except Exception:
+        if estrito:
+            raise
         return []
 
 
-def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
+def _commons_infos(titulos: list[str], fonte: str, *, preview_width: int = 1400, estrito=False) -> list[dict]:
     """Metadados no Commons (arquivo que só existe na Wikipédia — uso justo — não aparece aqui: fica de fora)."""
     out = []
     titulos = [t for t in titulos if not LIXO.search(t)]
     for i in range(0, len(titulos), 40):
         try:
             j = _get(COMMONS, action='query', prop='imageinfo', titles='|'.join(titulos[i:i + 40]),
-                     iiprop='url|size|mime|extmetadata', iiurlwidth=1400)
+                     iiprop='url|size|mime|extmetadata', iiurlwidth=preview_width)
         except Exception:
+            if estrito:
+                raise
             continue
         pags = {p['title']: p for p in j.get('query', {}).get('pages', [])}
         for t in titulos[i:i + 40]:          # mantém a ordem original (a 1ª imagem do artigo é a mais importante)
@@ -129,6 +138,15 @@ def _commons_infos(titulos: list[str], fonte: str) -> list[dict]:
             out.append(_cand(titulo, _txt(meta, 'ImageDescription') or _txt(meta, 'ObjectName'), _ano(meta),
                              info.get('thumburl') or info['url'], f'"{titulo[:50]}" — {autor} ({lic}), via Wikimedia Commons',
                              fonte, info.get('width'), info.get('height')))
+            out[-1].update(pagina=info.get('descriptionurl'), url_original=info['url'],
+                           licenca=lic, tamanho_original=info.get('size'), autor=autor,
+                           source_id=p.get('pageid'), source_title=p.get('title'),
+                           licenca_url=_txt(meta,'LicenseUrl'), restricoes=_txt(meta,'Restrictions'),
+                           descricao_integral=_txt(meta,'ImageDescription')[:8000],
+                           source=_txt(meta,'Source')[:4000], credit=_txt(meta,'Credit')[:4000],
+                           categories=_txt(meta,'Categories')[:4000],
+                           variantes=[{'url':info['thumburl'],'width':info.get('thumbwidth'),
+                                       'height':info.get('thumbheight'),'size':None}] if info.get('thumburl') else [])
     return out
 
 
@@ -156,6 +174,34 @@ def f_commons(consultas: list[str]) -> list[dict]:
         titulos += _busca_commons(q, 8)
     return _commons_infos(list(dict.fromkeys(titulos))[:60], 'Commons')
 
+def f_commons_documental(consulta: str, *, preview_width: int = 1400) -> list[dict]:
+    """Documentary search prioritizes ranked file hits, not the first
+    alphabetical entries in loosely matched categories. Metadata is a
+    retrieval hint, never proof of visual content."""
+    import unicodedata
+    def terms(s):
+        normalized=unicodedata.normalize('NFKD',str(s or '')).encode('ascii','ignore').decode().lower()
+        return set(re.findall(r'[a-z]{3,}',normalized)) - {'photo','photograph','image','video','the','and','with','from'}
+    wanted=terms(consulta)
+    if not wanted:return []
+    titles = []
+    failure = None
+    for search, limit in ((_busca_commons, 16), (_categoria_commons, 8)):
+        try:
+            titles.extend(search(consulta, limit, estrito=True))
+        except (requests.RequestException, ValueError, KeyError) as exc:
+            failure = exc
+    if not titles and failure is not None:
+        raise failure
+    candidates = _commons_infos(list(dict.fromkeys(titles))[:32], 'Commons',
+                                preview_width=preview_width, estrito=True)
+    def rank(c):
+        title=terms(c.get('titulo') or c.get('title') or c.get('source_title'))
+        meta=terms(str(c.get('descricao_integral') or '')+' '+str(c.get('categories') or ''))
+        return (len(wanted & title),len(wanted & (title|meta)))
+    return sorted((c for c in candidates if any(rank(c))),key=rank,reverse=True)
+
+
 
 def f_nasa(consultas: list[str]) -> list[dict]:
     """NASA Image Library: espaço, planetas, Terra vista de cima, foguetes (domínio público, sem chave)."""
@@ -172,6 +218,9 @@ def f_nasa(consultas: list[str]) -> list[dict]:
                 url = link.replace('~thumb', '~medium')
                 out.append(_cand(d.get('title'), d.get('description'), _ano_txt(d.get('date_created')), url,
                                  f"{d.get('title', 'imagem')[:50]} — NASA ({d.get('center') or 'domínio público'})", 'NASA'))
+                out[-1].update(source_id=d.get('nasa_id'), nasa_collection=it.get('href'),
+                               nasa_center=d.get('center'), nasa_credit=d.get('photographer'),
+                               nasa_secondary_credit=d.get('secondary_creator'))
         except Exception as e:
             print(f'  [acervo/nasa] {q!r}: {str(e)[:60]}')
     return out
@@ -578,7 +627,7 @@ def _baixar_item(x: dict, arq: Path) -> dict:
                         r = requests.get(url, headers=cab, timeout=40)
                         if r.status_code != 429:
                             break
-                    if r.status_code == 429:
+                    if r.status_code == 429 and espera != 15:
                         _LOC_BLOQ.append(1)
             else:
                 r = requests.get(url, headers=cab, timeout=60)

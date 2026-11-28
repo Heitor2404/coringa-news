@@ -21,7 +21,7 @@
    "uso_comercial": true,
    "url_origem": "https://cloudless.eox.at",
    "termos": "https://cloudless.eox.at/documentation/faq",
-   "atribuicao_exigida": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)",
+   "atribuicao_exigida": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)",
    "arquivos": [
     "raster/s2_panama_canal.json",
     "raster/s2_miraflores_eclusas.json",

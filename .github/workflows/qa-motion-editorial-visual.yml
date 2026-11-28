@@ -1,0 +1,106 @@
+name: "QA visual — motion graphics explicativos multitema"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/qualidade/motion_editorial_qa.txt"
+      - ".github/workflows/qa-motion-editorial-visual.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-motion-editorial-visual
+  cancel-in-progress: true
+
+jobs:
+  render_prova:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+
+      - name: Preparar dois tipos de grafico no MESMO FilmeEditorial
+        run: |
+          python -m pip install -q pillow requests numpy pyyaml cryptography
+          python -m src.v4.formatos.montagem_privada_real \
+            docs/v4/formatos/DEMO_MOTION_MULTITEMA_20261119.json \
+            demo_motion motor4/remotion/public
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          props=json.loads(Path('demo_motion/props.json').read_text())
+          assert len(props['shots'])==3
+          kinds=[shot['motion_graphic']['kind'] for shot in props['shots']]
+          assert kinds==['causal_flow','stat_reveal','causal_flow'],kinds
+          assert all(shot['graphic_original'] for shot in props['shots'])
+          assert props.get('preview') is True
+          assert not props.get('private_review_only')
+          print('MOTION_PROPS_AUTENTICOS',kinds)
+          PY
+
+      - name: Compilar mesmo Remotion já existente
+        run: |
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+
+      - name: Render privado sem Charon ou rede de acervo
+        timeout-minutes: 15
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../demo_motion/motion_qa.mp4 \
+            --props=../demo_motion/props.json --public-dir=remotion/public \
+            --codec=h264 --crf=23 --scale=0.5 --concurrency=2 --log=error
+
+      - name: Instalar FFmpeg para inspeção de frames e metadados
+        timeout-minutes: 6
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version | head -n 1
+      - name: Conferir MP4 e extrair 9 quadros de fases diferentes
+        run: |
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,width,height \
+            -of json demo_motion/motion_qa.mp4 > demo_motion/video_metadados.json
+          ffmpeg -hide_banner -loglevel error -y -i demo_motion/motion_qa.mp4 \
+            -vf "fps=0.81,scale=270:480,tile=3x3" -frames:v 1 \
+            demo_motion/contato_motion.jpg
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('demo_motion/motion_qa.mp4')
+          m=json.loads(Path('demo_motion/video_metadados.json').read_text())
+          assert 10.5<float(m['format']['duration'])<11.7
+          videos=[s for s in m['streams'] if s['codec_type']=='video']
+          assert videos and videos[0]['width']==540 and videos[0]['height']==960
+          assert not any(s['codec_type']=='audio' for s in m['streams'])
+          resumo={'status':'RENDER_MOTION_TECNICO_SEM_APROVACAO_ESTETICA',
+                  'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+                  'duracao_s':m['format']['duration'],'bytes':p.stat().st_size,
+                  'telegram':False,'voz':False,'publicacao':False,
+                  'aprovacao_humana':'PENDENTE'}
+          Path('demo_motion/resultado.json').write_text(json.dumps(resumo,indent=2))
+          print('MOTION_DEMO_RENDER_VALIDADO',json.dumps(resumo))
+          PY
+
+      - name: Guardar apenas prova privada de movimento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-motion-editorial-3-cenas
+          path: demo_motion/
+          retention-days: 5
+          if-no-files-found: warn

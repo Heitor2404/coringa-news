@@ -1,0 +1,25 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "kilauea_topo_e299",
+      "title": "Topo do Kilauea",
+      "fonte_localizacao": "https://www.usgs.gov/volcanoes/kilauea/",
+      "delta": 1.6,
+      "fonte_continua": true,
+      "atlas": {
+        "roi": [
+          -155.337,
+          19.381,
+          -155.237,
+          19.461
+        ],
+        "label": "Topo do Kilauea",
+        "lonlat": [
+          -155.287,
+          19.421
+        ]
+      }
+    }
+  ]
+}

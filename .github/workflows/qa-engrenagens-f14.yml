@@ -1,0 +1,121 @@
+name: "LAB F14 — familia inédita de engrenagens 2D com dentes e cinemática"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-engrenagens-f14.yml"
+      - "src/v4/formatos/engrenagens_parametricas_f14.py"
+      - "src/v4/formatos/compositor_engrenagens_f14.py"
+      - "src/v4/formatos/cenas_parametricas/redutor_engrenagens_*.json"
+      - "tests/test_engrenagens_f14.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-f14-pares-engr-generico
+  cancel-in-progress: true
+jobs:
+  validate_two_ratio_gear_pairs:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Ambiente existente, sem IA ou API paga
+        run: |
+          python -m pip install -q pytest cairosvg pillow numpy scipy opencv-python-headless
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testar geometria involuta, proporcoes fisicas e regressao F7
+        run: |
+          python -m pytest -q \
+            tests/test_engrenagens_f14.py \
+            tests/test_mecanica_parametrica_f7.py \
+            tests/test_qa_svg_mobile_f11.py
+      - name: Produzir dois MP4s REAIS 9:16 da MESMA implementacao
+        timeout-minutes: 11
+        run: |
+          mkdir -p qa_f14
+          python -m src.v4.formatos.compositor_engrenagens_f14 \
+            src/v4/formatos/cenas_parametricas/redutor_engrenagens_18x36.json \
+            qa_f14/REDUTOR_F14_18X36.mp4
+          python -m src.v4.formatos.compositor_engrenagens_f14 \
+            src/v4/formatos/cenas_parametricas/redutor_engrenagens_24x36.json \
+            qa_f14/REDUTOR_F14_24X36.mp4
+      - name: Validar vídeo, movimento, atores, zonas aproximadas e prancha
+        run: |
+          python - <<'PY'
+          import hashlib,json,math,subprocess,io
+          from pathlib import Path
+          from PIL import Image,ImageDraw,ImageChops
+          from src.v4.formatos import compositor_engrenagens_f14 as M
+          from src.v4.formatos import qa_ui_organico_f13 as U
+          from src.v4.formatos import qa_svg_mobile_f11 as Q
+          root=Path('qa_f14')
+          files=[
+             ('redutor_engrenagens_18x36.json','REDUTOR_F14_18X36.mp4',2.0),
+             ('redutor_engrenagens_24x36.json','REDUTOR_F14_24X36.mp4',1.5)]
+          board=Image.new('RGB',(4*270,2*480),'#eaf3f7')
+          report={'schema':'coringa-f14-gear-pairs-qa-v1',
+             'status':'GEOMETRIA_E_VIDEO_TESTADOS_VISUAL_INDUSTRIAL_PENDENTE',
+             'family':M.FAMILY,'source_technical_only':M.SOURCE,
+             'same_compositor_for_both_ratios':True,'camera_pan':False,
+             'original_svg_no_third_party_pixels':True,
+             'industrial_identity_homologated':False,'device_ui_verified':False,
+             'publish':False,'variants':[]}
+          for row,(scene_file,mp4_name,ratio) in enumerate(files):
+              scene=M.load(Path('src/v4/formatos/cenas_parametricas')/scene_file)
+              path=root/mp4_name
+              info=json.loads(subprocess.check_output(['ffprobe','-v','error',
+                 '-show_entries','stream=codec_type,width,height,r_frame_rate:format=duration',
+                 '-of','json',str(path)]))
+              stream=next(s for s in info['streams'] if s['codec_type']=='video')
+              assert (stream['width'],stream['height'])==(540,960)
+              assert stream['r_frame_rate']=='24/1'
+              assert abs(float(info['format']['duration'])-9)<.05
+              assert not any(s['codec_type']=='audio' for s in info['streams'])
+              record=json.loads(path.with_suffix('.json').read_text('utf8'))
+              assert record['sha256']==hashlib.sha256(path.read_bytes()).hexdigest()
+              assert record['ratio']==ratio and record['publish'] is False
+              assert record['industrial_identity_verified'] is False
+              gear_overlaps={}
+              for t in (1.1,3.6,6.7):
+                  svg=M.frame(scene,t)
+                  risks=Q.medir(svg,roles=('input_gear','output_gear'))
+                  for role,entry in risks.items():
+                      for u in U._profiles():
+                          a=Q._root(svg)
+                          image=Q._raster(svg)
+                          removed=Q._no_role(a,role)
+                          pix=Q._threshold_difference(image,Q._raster(removed))
+                          overlay=ImageChops.multiply(pix,U.mask(u))
+                          v=round(Q._count(overlay)/Q._count(pix),4)
+                          gear_overlaps.setdefault(role,{}).setdefault(u['id'],[]).append(v)
+              for col,t in enumerate((.5,2.3,4.5,6.8)):
+                  out=root/(path.stem+f'_{col}.png')
+                  subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                       '-y','-ss',str(t),'-i',str(path),'-frames:v','1',str(out)])
+                  im=Image.open(out).convert('RGB')
+                  board.paste(im.resize((270,480)),(col*270,row*480))
+              profile_worst={role:{key:max(vals) for key,vals in rows.items()}
+                             for role,rows in gear_overlaps.items()}
+              report['variants'].append({
+                  'id':scene['id'],'sha256':record['sha256'],
+                  'teeth':record['teeth'],'ratio':ratio,
+                  'pitch_distance_px':record['center_distance_px'],
+                  'profile_worst_overlap_estimates':profile_worst})
+          board.save(root/'COMPARATIVO_F14_2_REDUCOES_8_QUADROS.jpg',quality=92)
+          (root/'QA_F14.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f14-redutores-2-configs-8-quadros-privados
+          path: qa_f14/
+          retention-days: 5
+          if-no-files-found: warn

@@ -1,0 +1,9 @@
+# R2: regressão de montagem com arquivo local original e acervo conservado em artefato.
+# Três domínios: indústria/chips, geografia/Venezuela, história/Ever Given.
+# Sem novos downloads Wikimedia; 12 cenas, 3 narrações, revisão humana pendente.
+
+# R3: CC BY-SA 4.0 aceito estritamente para QA privada; nenhuma licença de publicação concedida.
+
+# R4: JPEGs curados são derivados e têm SHA próprios; fonte original permanece documentada.
+
+# R3: whitelist CC BY-SA 4.0 com atribuição sem bypass especial.

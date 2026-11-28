@@ -12,6 +12,7 @@ export type CamadaProps = {
   combinar_ms?: number;
   legenda_topo?: number;            // por formato (ATLAS: mais baixa, perto da referência, dentro da área segura)
   legenda_caixa?: [number, number, number, number];   // faixa PRÓPRIA da legenda (layout.faixa_inferior): ancorada pela BASE
+  credito_caixa?: [number, number, number, number];   // faixa ATLAS de atribuição para registros MP4 (abaixo da legenda)
   marca_y?: number;                 // posição da marca quando ativa
   marca_visivel?: boolean;          // ATLAS: false para não competir com a geografia e documentos
   medir?: boolean;                  // registra a caixa real da legenda e da marca (validação nos quadros)
@@ -38,7 +39,11 @@ export const Camada: React.FC<CamadaProps> = (P) => {
       for (let i = 0; i < gs.length && gs.length > 1; i++) {
         const g = gs[i];
         if (g[g.length - 1].e - g[0].s >= .35) continue;
-        const viz = [i - 1, i + 1].filter(k => k >= 0 && k < gs.length && gs[k].length + g.length <= max + 1);
+        const viz = [i - 1, i + 1].filter(k => k >= 0 && k < gs.length && gs[k].length + g.length <= max + 1)
+          .filter(k => {
+            const left = gs[Math.min(i, k)], right = gs[Math.max(i, k)];
+            return right[0].s - left[left.length - 1].e < .25 && right[right.length - 1].e - left[0].s <= 1.6;
+          });
         if (!viz.length) continue;
         const k = viz.sort((x, y) => Math.abs((x > i ? gs[x][0].s - g[g.length - 1].e : g[0].s - gs[x][gs[x].length - 1].e)) - Math.abs((y > i ? gs[y][0].s - g[g.length - 1].e : g[0].s - gs[y][gs[y].length - 1].e)))[0];
         if (k > i) { gs[i] = [...g, ...gs[k]]; gs.splice(k, 1); } else { gs[k] = [...gs[k], ...g]; gs.splice(i, 1); }
@@ -87,7 +92,9 @@ export const Camada: React.FC<CamadaProps> = (P) => {
         <i style={{ width: 14, height: 14, background: C.amarelo, transform: 'rotate(45deg)', display: 'inline-block' }} />{IDT.marca.texto}</div>}
       {cena && cena.selo && <div style={{ position: 'absolute', left: 72, top: IDT.selo.y, opacity: sv, fontFamily: FD, fontWeight: 700, fontSize: IDT.selo.tamanho,
         letterSpacing: 3, color: '#fff', padding: '4px 12px', border: '2px solid rgba(255,255,255,.75)', background: 'rgba(0,0,0,.35)', textTransform: 'uppercase' }}>{cena.selo}</div>}
-      {cena && cena.credito && <div style={{ position: 'absolute', right: 160, top: IDT.credito.y, maxWidth: 760, textAlign: 'right', opacity: sv,
+      {cena && cena.credito && <div data-credito-video="1" style={P.credito_caixa ? { position: 'absolute', left: P.credito_caixa[0], top: P.credito_caixa[1], width: P.credito_caixa[2], height: P.credito_caixa[3],
+        textAlign: 'center', opacity: sv, fontFamily: FD, fontSize: 18, lineHeight: '22px', color: '#F2EDE3',
+        textShadow: '0 1px 6px #000', overflow: 'hidden' } : { position: 'absolute', right: 160, top: IDT.credito.y, maxWidth: 760, textAlign: 'right', opacity: sv,
         fontFamily: FD, fontSize: IDT.credito.tamanho, lineHeight: 1.2, color: IDT.credito.cor, textShadow: '0 1px 6px #000' }}>{cena.credito}</div>}
       {g && cena?.legenda !== false && <div data-legenda="1" style={LC ? { position: 'absolute', left: LC[0], width: LC[2], top: LC[1], height: LC[3], display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }
         : { position: 'absolute', left: 150, right: 150, top: P.legenda_topo ?? IDT.areas_seguras.legenda_topo, display: 'flex', justifyContent: 'center' }}>

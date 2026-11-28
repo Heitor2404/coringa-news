@@ -3,7 +3,7 @@
  * navio sobe junto com o nível (régua em metros), comporta da frente abre, navio sai. Sentido 'descer' = o inverso.
  * evento.impacto: explosão/impacto/onda de choque em esquema com anéis de alcance em escala.                      */
 (function () {
-  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt } = V2.U;
+  const { esc, hl, clamp, lerp, eo, eo5, eio, back, aparece, caber, fmt, cameraDidatica, planejarRotulos, limitarZoom } = V2.U;
 
   /* 18. mecanismo.eclusa — V2.1: corte lateral em ESCALA DE CELULAR, com direção de câmera (planos A–F) e física coerente:
    *  - a água entra/sai pelo TÚNEL com válvula (sistema hidráulico desenhado), nunca atravessando comporta fechada;
@@ -19,10 +19,12 @@
     params: { sentido: "'subir' | 'descer'", desnivel_m: 'desnível em metros (dos fatos)', lago: 'nome do nível alto ≤ 18', mar: 'nome do nível baixo ≤ 18',
       etapas: '3 textos ≤ 40 (entra/fecha · enche/esvazia · iguala/sai)', tempos: '3 segundos (na cena) em que cada etapa começa, alinhados à fala',
       planos: 'bool (padrão true): câmera dirigida A–F; false = só visão geral', kicker: '≤ 26',
+      destaques_fluxo: 'opcional (legado), tempos locais: [{t, alvo:lago|aqueduto|paredes|piso, rotulo}]; preferir focos para outros mecanismos',
+      focos: 'sequência semântica genérica [{t, alvo, rotulo}] ancorada na fala; o mecanismo define os alvos físicos e a câmera calcula o foco',
       degraus: 'nº de câmaras REAIS em sequência que somam o desnível (ex.: 3 em Gatún). > 1 = aviso explícito + escada com o navio subindo todos os degraus' },
     fundo: 'próprio (prancheta técnica)', layout: 'cabeçalho 340–440 (etapa atual, 3 marcadores); corte esquemático 450–1210 em tela cheia; rótulos de estado (comportas, válvula, níveis) em HTML de tamanho fixo que acompanham a câmera',
     paleta: 'água ciano; concreto azul-acinzentado com textura; comportas amarelas; navio branco/vermelho; GRAVIDADE e Δh em amarelo', animacao: 'navio desloca → comporta fecha (plano B) → válvula abre, fluxo no túnel (plano C) → água e navio sobem juntos (plano D) → níveis iguais, comporta abre (plano E) → navio sai (plano F)',
-    duracao: [5, 9, 16], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
+    duracao: [5, 9, 21], limites: { etapa: 40, nome: 18 }, legenda: 'livre',
     area_segura: 'cabeçalho e rótulos dentro de x 72–930; desenho em tela cheia (pode encostar nas bordas)', legibilidade: 'etapa 52 px 900; rótulos de estado 30 px; nível 40 px mono',
     rejeicao: ['desnível que não está nos fatos', 'sentido (subir/descer) que contradiz a fala (fiscal_v2 S3)', 'cena de mecanismo trocada por foto parada (fiscal_v2 B2)'],
     problemas_conhecidos: ['corte lateral simplificado: as comportas aparecem como de levantar (no Panamá são de duas folhas que giram) e o túnel aparece sob a câmara (no Panamá corre dentro das paredes) — rotulado como ESQUEMA ILUSTRATIVO'],
@@ -31,6 +33,7 @@
       fala: 'O navio entra e a comporta fecha. A água do lago desce por gravidade e enche a câmara. O navio sobe vinte e seis metros e segue.' },
   }, (p, ctx) => {
     const subir = p.sentido !== 'descer', D = +p.desnivel_m || 26;
+    const DV = p.v4 ? (p.direcao_visual || {}) : {};
     // TEMA (V4/formatos): linguagem técnica do canal (params.tema). Sem tema = aparência V2 original (pilotos antigos iguais).
     const TM = Object.assign({ fundo: null, etapa: 'var(--ciano)', progresso: 'rgba(127,227,240,.25)', progresso_on: 'var(--ciano)', agua_topo: '#4fd8e8', agua_fundo: '#0c6676',
       superficie: '#d6fbff', jato: '#e8fdff', concreto: '#34495b', concreto_hachura: '#3e566a', rocha: '#1d2a33', rocha_ponto: '#26353f', tunel: '#08171d',
@@ -76,6 +79,7 @@
         ${PORTAS.map(x => `<rect x="${x - 16}" y="${FUNDO - 4}" width="32" height="${TUN - FUNDO + 4}" fill="${TM.tunel}"/>`).join('')}
         <path class="fl fl-enche" d="${TUN_ENCHE}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
         <path class="fl fl-esvazia" d="${TUN_ESVAZIA}" fill="none" stroke="${TM.fluxo}" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 34" opacity="0"/>
+        <circle class="foco-fluxo" cx="0" cy="0" r="64" fill="none" stroke="#FFD21F" stroke-width="10" stroke-dasharray="18 9" opacity="0"/>
         <!-- águas -->
         <rect x="-300" y="${YL}" width="${C0 - PAR + 300}" height="${FUNDO - YL}" fill="url(#ag${ctx.i})"/>
         <rect x="${C1 + PAR}" y="${YH}" width="${MW + 300 - C1 - PAR}" height="${SOLEIRA - YH}" fill="url(#ag${ctx.i})"/>
@@ -104,6 +108,7 @@
         <div class="abs re r-cpE" data-g="r-cpE"></div><div class="abs re r-cpD" data-g="r-cpD"></div>
         <div class="abs re r-val" data-g="r-val">VÁLVULA ABERTA</div>
         <div class="abs re r-grav" data-g="r-grav" style="background:#FFD21F;color:#0b0f17">${subir ? 'DESCE DO LAGO POR GRAVIDADE' : 'ESCOA PARA O MAR POR GRAVIDADE'}</div>
+        <div class="abs re r-foco-fluxo" data-g="r-foco-fluxo" style="background:#FFD21F;color:#0b0f17;opacity:0"></div>
         <div class="abs re r-nivel" data-g="r-nivel" style="font-size:40px;padding:4px 14px;background:#0b0f17;border-left:8px solid #FFD21F"></div>
         <div class="abs re r-delta" data-g="r-delta" style="color:#FFD21F;background:rgba(5,20,26,.9)"></div>
       </div>
@@ -118,7 +123,7 @@
             <circle class="dg-navio" r="9" fill="#FFD21F" stroke="#0b0f17" stroke-width="3"/></svg>
           <div style="font-family:var(--f-dado);font-weight:700;font-size:26px;line-height:1.3;color:rgba(255,255,255,.85)">ESQUEMA: 1 CÂMARA PARA OS ${esc(String(D))} m<br><span style="color:#FFD21F">NO CANAL: ${+p.degraus} CÂMARAS EM SEQUÊNCIA</span></div></div>`
         : `<div class="abs" data-g="aviso" data-opcional="1" style="right:${V4 ? 72 : 160}px;top:${V4 ? 1180 : 1176}px;font-family:var(--f-dado);font-size:26px;color:rgba(255,255,255,.6)">ESQUEMA ILUSTRATIVO · FORA DE ESCALA</div>`}
-      <style>.re{font-family:var(--f-dado);font-weight:700;font-size:30px;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:4px 12px;white-space:nowrap;letter-spacing:1px}</style>`;
+      <style>.re{font-family:var(--f-dado);font-weight:800;font-size:${V4 ? (DV.fonte_rotulo_px || 34) : 30}px;line-height:1.12;color:${TM.rotulo_texto};background:${TM.rotulo_fundo};padding:6px 12px;max-width:360px;white-space:${V4 ? "normal" : "nowrap"};overflow-wrap:break-word;letter-spacing:.3px;box-sizing:border-box}</style>`;
 
     // ---- linha do tempo física ----
     function tempos(d) {
@@ -191,11 +196,68 @@
         const seq = p.planos === false ? [['A', 0]] : [['A', 0], ['B', fecha[0] - .5], ['C', valv - .1], ['D', enche[0] + (enche[1] - enche[0]) * .3], ['E', enche[1] - .3], ['F', abre[1] + .2]];
         let r = plano(seq[0][0], est);
         for (let q = 1; q < seq.length; q++) { if (tl < seq[q][1]) break; const kq = eio((tl - seq[q][1]) / .8); const r1 = plano(seq[q][0], est); r = [lerp(r[0], r1[0], kq), lerp(r[1], r1[1], kq), lerp(r[2], r1[2], kq)]; }
+        // Mesmo nos planos intermediários, não usar zoom que recorta o conjunto causal.
+        if (V4) r = limitarZoom(r, ASP, DV.largura_minima || 1250);
+        // Direção da explicação contínua: preserva o corte da câmara,
+        // sem trocar por cards, e destaca a peça citada na narração.
+        const marcas = p.focos || p.destaques_fluxo || [], alvos = {
+          lago: [1280, 420], aqueduto: [920, TUN], paredes: [C1, 730], piso: [720, FUNDO]
+        };
+        let marca = null;
+        for (const m of marcas) if (tl >= Number(m.t) && alvos[m.alvo]) marca = m;
+        if (marca) {
+          const alvoFoco = alvos[marca.alvo];
+          if (V4) {
+            // Foco semântico com transição determinística entre peças,
+            // preservando a câmera ANTERIOR no instante da nova palavra.
+            const i = marcas.indexOf(marca), contexto = [(C0 + C1) / 2, 700];
+            const largura = DV.largura_contextual || 1240;
+            const protagonista = [nx, ny];
+            if (i > 0 && alvos[marcas[i-1].alvo]) {
+              r = cameraDidatica(r, alvos[marcas[i-1].alvo], contexto, ASP, 1, largura, protagonista);
+            }
+            r = cameraDidatica(r, alvoFoco, contexto, ASP,
+              clamp((tl - Number(marca.t)) / (DV.transicao_foco_s || .7)), largura, protagonista);
+          } else {
+            const kf = eio(clamp((tl - Number(marcas[0].t)) / .65));
+            const geral = rect(810, 690, 1380);
+            r = [lerp(r[0], geral[0], kf), lerp(r[1], geral[1], kf), lerp(r[2], geral[2], kf)];
+          }
+        }
+        // Clímax físico: antes de a peça móvel sair, recuperar visão geral.
+        // O alvo narrado pode continuar marcado, mas não esconder o resultado.
+        if (V4 && tl >= sai[0] - .45) {
+          const kSaida = eio(clamp((tl - (sai[0] - .45)) / (DV.transicao_saida_s || .65)));
+          const geral = rect(MW / 2 + (subir ? 150 : -150), 605, MW + 350);
+          r = [lerp(r[0], geral[0], kSaida),
+               lerp(r[1], geral[1], kSaida),
+               lerp(r[2], geral[2], kSaida)];
+        }
         const svg = el.querySelector('.cv'); svg.setAttribute('viewBox', `${r[0]} ${r[1]} ${r[2]} ${r[2] / ASP}`);
+        const foco = el.querySelector('.foco-fluxo');
+        const alvo = marca ? alvos[marca.alvo] : null;
+        if (alvo) {
+          foco.setAttribute('cx', alvo[0]); foco.setAttribute('cy', alvo[1]);
+          foco.setAttribute('r', String(62 + 5 * Math.sin(tl * 4)));
+          foco.setAttribute('opacity', '.94');
+        } else foco.setAttribute('opacity', '0');
         const P = (x, y) => [(x - r[0]) / r[2] * SW, SY + (y - r[1]) / (r[2] / ASP) * SH];
-        const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => { const e = el.querySelector(sel); if (txt !== undefined) e.textContent = txt;
-          const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight; const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, 926 - w), Tt = py + (ay < 0 ? -h - 10 : 10);
-          const dentro = Tt > SY + 10 && Tt + h < SY + SH - 40 && px > 30 && px < 1050; /* âncora fora do quadro: rótulo some */ e.style.left = L + 'px'; e.style.top = Tt + 'px'; e.style.opacity = vis && dentro ? 1 : 0; };
+        const candidatos = [];
+        const pesos = { '.r-foco-fluxo': 100, '.r-nivel': 75, '.r-delta': 68, '.r-val': 55,
+          '.r-grav': 50, '.r-cpE': 40, '.r-cpD': 38, '.r-lago': 22, '.r-mar': 20 };
+        const poe = (sel, x, y, txt, vis = true, ax = 0, ay = -1) => {
+          const e = el.querySelector(sel);
+          if (txt !== undefined) e.textContent = txt;
+          const [px, py] = P(x, y), w = e.offsetWidth, h = e.offsetHeight;
+          const L = clamp(px - w * (ax === 0 ? .5 : ax < 0 ? 1 : 0), 76, Math.max(76, 926 - w));
+          const Tt = py + (ay < 0 ? -h - 10 : 10);
+          const dentro = Tt > SY + 10 && Tt + h < SY + SH - 40 && px > 30 && px < 1050;
+          e.style.left = L + 'px'; e.style.top = Tt + 'px';
+          if (!V4) { e.style.opacity = vis && dentro ? 1 : 0; return; }
+          e.style.opacity = 0;
+          candidatos.push({ id: sel, x: L, y: Tt, w, h, visivel: !!(vis && dentro),
+            prioridade: pesos[sel] || 0, ordem: candidatos.length });
+        };
         poe('.r-mar', 150, YL, undefined, true);
         poe('.r-lago', 1300, YH, undefined, true);
         poe('.r-cpE', C0 - PAR / 2, TOPO - 10, (subir ? fechada : (tl < abre[0] ? 1 : 1 - aberta)) > .9 ? 'COMPORTA FECHADA' : 'COMPORTA ABERTA', true);
@@ -205,20 +267,34 @@
         const m = D * (YL - nivel) / (YL - YH);
         poe('.r-nivel', C0 + 80, nivel, `${fmt(m, 0)} m`, tl > entra[1] - .3, 1, -1);
         poe('.r-delta', C1 - 80, (nivel + sai_) / 2, delta > .3 ? `FALTAM ${fmt(delta, 0)} m` : 'NÍVEIS IGUAIS ✓', tl > fecha[0] && tl < abre[1] + .4, -1, 1);
-        // rótulos não se cobrem: na ordem de prioridade, o que bater num já posto desce uma linha; se ainda bater, some
-        const postos = [];
-        for (const sel of ['.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
-          const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
-          const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
-          const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);
-          let b = caixa(); if (bate(b)) { e.style.top = (parseFloat(e.style.top) + (b[3] - b[1]) + 6) + 'px'; b = caixa(); if (bate(b) || b[3] > SY + SH - 40) { e.style.opacity = 0; continue; } }
-          postos.push(b);
+        poe('.r-foco-fluxo', alvo ? alvo[0] : 0, alvo ? alvo[1] : 0, marca ? marca.rotulo : '', !!marca, 0, -1);
+        if (V4) {
+          // Controle de densidade global do componente: um assunto narrado
+          // + no máximo um estado físico. Nunca esconder o assunto prioritário.
+          const visiveis = planejarRotulos(candidatos,
+            { esq: 76, dir: 930, topo: SY + 16, base: SY + SH - 42 },
+            marca ? (DV.rotulos_em_foco || 2) : (DV.rotulos_sem_foco || 3), 12);
+          for (const q of visiveis) {
+            const e = el.querySelector(q.id);
+            e.style.left = q.x + 'px'; e.style.top = q.y + 'px'; e.style.opacity = 1;
+          }
+        } else {
+          const postos = [];
+          for (const sel of ['.r-foco-fluxo', '.r-nivel', '.r-delta', '.r-grav', '.r-cpE', '.r-cpD', '.r-val', '.r-lago', '.r-mar']) {
+            const e = el.querySelector(sel); if (+e.style.opacity < .5) continue;
+            const caixa = () => { const b = e.getBoundingClientRect(); return [b.left - 6, b.top - 4, b.right + 6, b.bottom + 4]; };
+            const bate = b => postos.some(q => b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]);
+            let b = caixa();
+            if (bate(b)) { e.style.top = (parseFloat(e.style.top) + (b[3] - b[1]) + 6) + 'px'; b = caixa(); if (bate(b) || b[3] > SY + SH - 40) { e.style.opacity = 0; continue; } }
+            postos.push(b);
+          }
         }
         // cabeçalho
         const f = tl < T[1] ? 0 : tl < T[2] ? 1 : 2;
         el.querySelectorAll('.et').forEach((e, i) => { e.style.opacity = i === f ? eo5((tl - (i ? T[i] : 0)) / .35) : 0; e.style.transform = `translateY(${i === f ? (1 - eo5((tl - (i ? T[i] : 0)) / .35)) * 16 : 0}px)`; });
         el.querySelectorAll('.pd').forEach((e, i) => e.style.background = i <= f ? TM.progresso_on : TM.progresso);
-        c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada, navio_x: nx, linha_dagua: superficie };
+        c.estadoFisico = { nivel_m: m, delta_m: delta, comporta_frente_aberta: aberta, comporta_tras_fechada: fechada,
+          navio_x: nx, linha_dagua: superficie, progresso_saida: ks, acao_concluida: delta < .3 && aberta > .99 && ks > .99 };
         // escada dos degraus reais: o navio percorre TODAS as câmaras na proporção do nível do esquema
         const dgn = el.querySelector('.dg-navio');
         if (dgn) { const N = +p.degraus, fr = clamp(subir ? m / D : 1 - m / D), w = 190 / N, h = 96 / N, i = Math.min(N - 1, Math.floor(fr * N)), ff = fr * N - i;

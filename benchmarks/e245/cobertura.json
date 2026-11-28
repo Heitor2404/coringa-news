@@ -1,0 +1,37 @@
+{
+  "publish": false,
+  "candidates": [
+    {
+      "need": "juvenil",
+      "type": "video",
+      "slug": "underwater-views-common-fish-inhabiting-eelgrass-meadows-skagit-bay-washington-ad",
+      "label": "Skagit Bay — versão com audiodescrição",
+      "credit": "Chelsea Hurtado, Steve Rubin e Eric Grossman · USGS",
+      "scope": "Identificar trecho do Chinook juvenil; arquivo alternativo oficial, tamanho não confirmado."
+    },
+    {
+      "need": "juvenil",
+      "type": "photo",
+      "slug": "chinook-salmon-fry",
+      "label": "Chinook juvenil",
+      "credit": "Roger Tabor · U.S. Fish and Wildlife Service",
+      "scope": "Aparência de juvenil; não comprova movimento ou migração."
+    },
+    {
+      "need": "reproducao",
+      "type": "photo",
+      "slug": "adult-sockeye-salmon",
+      "label": "Adultos em área de desova",
+      "credit": "USGS",
+      "scope": "Contexto estático da área de reprodução; não comprova postura."
+    },
+    {
+      "need": "ovos",
+      "type": "photo",
+      "slug": "salmon-eggs",
+      "label": "Ovos de salmão",
+      "credit": "Gael Kurath · USGS",
+      "scope": "Aparência dos ovos em recipiente; não afirmar ninho natural."
+    }
+  ]
+}

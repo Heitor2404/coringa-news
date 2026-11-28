@@ -1,0 +1,50 @@
+name: E40 prova de alternativas com fontes reais
+on:
+  workflow_dispatch:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-rotas-e40.yml"
+      - "src/v4/formatos/prova_rotas_e40.py"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  fontes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: e35-aquisicao-privado
+          run-id: 45328128306
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_e40
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Validar relatório histórico com o gate atual
+        run: |
+          python -m pip install --only-binary=:all: numpy scipy pytest cairosvg pillow
+          python -m pytest -q tests/test_rota_explicativa_e40.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos.gates_qualidade_e21 import classificar
+          p=Path("fonte_e40/qa_e35_geneva/E35_relatorio.json")
+          r=json.loads(p.read_text())
+          q=classificar(dict(residuo_max=r["solver"]["residuo_max"],
+            verificacao_video=r["render"]["verificacao_video"],interferencia_brep=r["interferencia_brep"]))
+          assert q["estado"]=="REPROVADO_INTERFERENCIA_BREP"
+          r["gates"]={k:q[k] for k in ("estado","verificacao_contato")}
+          Path("E35_com_gate.json").write_text(json.dumps(r))
+          PY
+          python -m src.v4.formatos.prova_rotas_e40 E35_com_gate.json benchmarks/e12_independent_planar_json_v1.json E40_REAL.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e40-rotas-evidencia
+          path: E40_REAL.json
+          retention-days: 14

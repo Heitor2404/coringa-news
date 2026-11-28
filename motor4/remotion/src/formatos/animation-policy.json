@@ -1,0 +1,80 @@
+{
+  "schema": "coringa.animation-policy.v1",
+  "editorial": "MEDIA_FIRST",
+  "legacy_mode": "LEGADO_REJEITADO_SOMENTE_QA",
+  "renderers": {
+    "mechanism:lock_filling": {
+      "status": "REPROVADO",
+      "reason": "V5 19/11 e E207 reprovadas"
+    },
+    "mechanism:lock_causal": {
+      "status": "REPROVADO",
+      "reason": "família de apresentação legada"
+    },
+    "mechanism:lock_cycle": {
+      "status": "REPROVADO",
+      "reason": "família de apresentação legada"
+    },
+    "mechanism:lock_cycle_standalone": {
+      "status": "REPROVADO",
+      "reason": "§108"
+    },
+    "mechanism:lock_explainer": {
+      "status": "REPROVADO",
+      "reason": "§108"
+    },
+    "mechanism:optical_projection": {
+      "status": "REPROVADO",
+      "reason": "§108"
+    },
+    "scene_graph:coringa.scene_graph.private.v1": {
+      "status": "LABORATORIO",
+      "reason": "prova E201, não homologada"
+    },
+    "scene_graph:coringa.scene_graph.private.v2": {
+      "status": "CANDIDATO",
+      "reason": "E202–E204, qualidade pendente"
+    },
+    "cad_preview": {
+      "status": "CANDIDATO",
+      "reason": "CAD privado, homologação pendente"
+    },
+    "animation_clip:coringa.animation.clip.private.v1": {
+      "status": "CANDIDATO",
+      "reason": "ponte privada de artefatos registrados, sem homologação estética"
+    }
+  },
+  "external_candidates": {
+    "render_eclusa_hidraulica_2d.py": {
+      "status": "CANDIDATO",
+      "reference_run": 45110717183,
+      "reference_sha256": "f15498d7b6b86834ccd0e186bf4796314a193ade0b46700c886406a67858e322",
+      "frames": 302,
+      "fps": 24,
+      "dimensions": [
+        540,
+        960
+      ],
+      "credit": "Ilustração própria · referência ACP",
+      "source": "https://pancanal.com/en/design-of-the-locks/"
+    },
+    "render_compressor_conjunto_2d.py": {
+      "status": "CANDIDATO",
+      "reference_run": 45122774333,
+      "reference_sha256": "2ab986d07f4c6e9008c172f7f4582b4002ed23a14e1d2c99ae9e347eb3b97e4c",
+      "frames": 192,
+      "fps": 24,
+      "dimensions": [
+        540,
+        960
+      ],
+      "credit": "Ilustração própria · modelo didático P–V",
+      "source": "Modelo didático do laboratório F10; não reprodução de máquina industrial"
+    }
+  },
+  "rules": [
+    "Registros reais primeiro; animação complementa funcionamento ou ação não demonstrada por mídia adequada, após busca ou impossibilidade justificada.",
+    "Ausência de asset não autoriza desenho ruim. Replanejar com mídia real/contexto identificado ou declarar lacuna.",
+    "Candidato não equivale a aprovado. Sem publicação automática."
+  ]
+}

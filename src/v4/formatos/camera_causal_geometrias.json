@@ -1,0 +1,397 @@
+{
+  "schema": "coringa-camera-causal-svg-v1",
+  "status": "LAB_NAO_ESTETICA_APROVADA",
+  "publicar": false,
+  "familias": {
+    "compressor_oficina_pv": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 100,
+      "bounds": [
+        51,
+        342,
+        492,
+        900
+      ],
+      "viewport": [
+        12,
+        239,
+        528,
+        885
+      ],
+      "zoom_max": 1.08,
+      "roles": {
+        "electric_motor": [
+          66,
+          590,
+          198,
+          744
+        ],
+        "drive_belt": [
+          128,
+          634,
+          362,
+          783
+        ],
+        "pump_flywheel": [
+          227,
+          638,
+          360,
+          772
+        ],
+        "piston_cutaway": [
+          245,
+          465,
+          342,
+          615
+        ],
+        "finned_cylinder": [
+          216,
+          434,
+          375,
+          622
+        ],
+        "compressor_head": [
+          229,
+          368,
+          352,
+          437
+        ],
+        "intake_filter": [
+          149,
+          345,
+          243,
+          427
+        ],
+        "suction_valve": [
+          250,
+          388,
+          277,
+          436
+        ],
+        "discharge_valve": [
+          306,
+          386,
+          335,
+          435
+        ],
+        "discharge_pipe": [
+          333,
+          374,
+          459,
+          789
+        ],
+        "receiver_horizontal": [
+          53,
+          771,
+          487,
+          901
+        ]
+      },
+      "politica_camera": "plano_geral_travado"
+    },
+    "otto_4t_reference": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 28,
+      "bounds": [
+        16,
+        273,
+        524,
+        888
+      ],
+      "viewport": [
+        7,
+        245,
+        533,
+        916
+      ],
+      "zoom_max": 1.025,
+      "roles": {
+        "cylinder": [
+          108,
+          332,
+          435,
+          871
+        ],
+        "chamber": [
+          184,
+          394,
+          355,
+          690
+        ],
+        "piston": [
+          184,
+          386,
+          351,
+          691
+        ],
+        "crankshaft": [
+          172,
+          673,
+          360,
+          890
+        ],
+        "inlet_valve": [
+          185,
+          275,
+          239,
+          402
+        ],
+        "outlet_valve": [
+          308,
+          275,
+          357,
+          402
+        ],
+        "sparkplug": [
+          254,
+          300,
+          280,
+          394
+        ],
+        "intake_flow": [
+          16,
+          291,
+          235,
+          406
+        ],
+        "exhaust_flow": [
+          313,
+          291,
+          524,
+          406
+        ]
+      },
+      "politica_camera": "plano_geral_travado"
+    },
+    "lock_cycle_standalone": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        14,
+        338,
+        533,
+        844
+      ],
+      "viewport": [
+        2,
+        257,
+        538,
+        898
+      ],
+      "zoom_max": 1.018,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "lower_channel": [
+          16,
+          575,
+          141,
+          783
+        ],
+        "upper_channel": [
+          405,
+          417,
+          528,
+          780
+        ],
+        "chamber": [
+          149,
+          407,
+          396,
+          777
+        ],
+        "inlet_gate": [
+          138,
+          414,
+          157,
+          775
+        ],
+        "outlet_gate": [
+          389,
+          414,
+          409,
+          775
+        ],
+        "valve": [
+          448,
+          779,
+          480,
+          823
+        ],
+        "conduit": [
+          303,
+          541,
+          474,
+          829
+        ],
+        "water": [
+          16,
+          424,
+          527,
+          782
+        ],
+        "ship": [
+          20,
+          338,
+          531,
+          630
+        ]
+      }
+    },
+    "vasos_comunicantes": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        25,
+        323,
+        520,
+        800
+      ],
+      "viewport": [
+        8,
+        255,
+        532,
+        877
+      ],
+      "zoom_max": 1.025,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "left_tank": [
+          27,
+          330,
+          260,
+          765
+        ],
+        "right_tank": [
+          312,
+          330,
+          519,
+          765
+        ],
+        "left_water": [
+          42,
+          412,
+          252,
+          757
+        ],
+        "right_water": [
+          323,
+          412,
+          510,
+          757
+        ],
+        "link_pipe": [
+          185,
+          677,
+          386,
+          755
+        ],
+        "control_valve": [
+          250,
+          680,
+          319,
+          743
+        ]
+      }
+    },
+    "slider_crank_parametrico": {
+      "width": 540,
+      "height": 960,
+      "subida_base_px": 0,
+      "bounds": [
+        55,
+        339,
+        413,
+        834
+      ],
+      "viewport": [
+        8,
+        253,
+        532,
+        893
+      ],
+      "zoom_max": 1.18,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "motor_pulley": [
+          60,
+          656,
+          153,
+          781
+        ],
+        "drive_belt": [
+          60,
+          621,
+          398,
+          815
+        ],
+        "flywheel": [
+          216,
+          627,
+          396,
+          816
+        ],
+        "connecting_rod": [
+          222,
+          414,
+          378,
+          806
+        ],
+        "piston": [
+          221,
+          418,
+          382,
+          661
+        ],
+        "cylinder": [
+          221,
+          348,
+          387,
+          664
+        ]
+      }
+    },
+    "caldera_collapse_qualitative": {
+      "width": 540,
+      "height": 960,
+      "bounds": [
+        33,
+        232,
+        453,
+        594
+      ],
+      "viewport": [
+        32,
+        230,
+        454,
+        596
+      ],
+      "subida_base_px": 0,
+      "zoom_max": 1,
+      "politica_camera": "plano_geral_travado",
+      "roles": {
+        "reservoir": [
+          125,
+          365,
+          360,
+          588
+        ],
+        "roof": [
+          90,
+          245,
+          390,
+          490
+        ],
+        "crater": [
+          90,
+          232,
+          390,
+          400
+        ]
+      }
+    }
+  }
+}

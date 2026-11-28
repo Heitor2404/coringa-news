@@ -88,10 +88,14 @@ def quadro_do_meio(clipe: Path) -> bytes | None:
 
 
 # ───────────────────────── candidatos de cada fonte ─────────────────────────
-def _commons(busca: str, video: bool) -> list[dict]:
+def _commons(busca: str, video: bool, *, portrait_search=False) -> list[dict]:
     params = {'action': 'query', 'format': 'json', 'formatversion': 2, 'generator': 'search', 'gsrnamespace': 6,
               'gsrlimit': 15, 'gsrsearch': f'{busca} filetype:{"video" if video else "bitmap"}'}
-    filtro = 'LicenseShortName|Artist|DateTimeOriginal|DateTime'
+    if portrait_search and video:
+        # CirrusSearch file dimensions, a targeted subset of portrait formats.
+        # The original broad search remains independent and available.
+        params['gsrsearch']+=' filew:720,1080 fileh:>1280'
+    filtro = 'LicenseShortName|LicenseUrl|Artist|Credit|Restrictions|AttributionRequired|ImageDescription|Source|Categories|DateTimeOriginal|DateTime'
     if video:
         params.update(prop='videoinfo', viprop='url|size|mime|extmetadata|derivatives', viurlwidth=640,
                       viextmetadatafilter=filtro)
@@ -99,7 +103,10 @@ def _commons(busca: str, video: bool) -> list[dict]:
         params.update(prop='imageinfo', iiprop='url|size|mime|extmetadata', iiurlwidth=1400, iiextmetadatafilter=filtro)
     r = requests.get(COMMONS, params=params, headers=UA, timeout=30)
     r.raise_for_status()
-    return sorted(r.json().get('query', {}).get('pages', []), key=lambda p: p.get('index', 99))
+    body = r.json()
+    if 'error' in body:
+        raise ValueError('MEDIAWIKI_API:' + str(body['error'].get('code', 'unknown')))
+    return sorted(body.get('query', {}).get('pages', []), key=lambda p: p.get('index', 99))
 
 
 def _limite(ano_max) -> int | None:
@@ -147,7 +154,9 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
             url = info.get('thumburl') or info.get('url')
             out.append({'tipo': 'foto', 'historica': True, 'url': url, 'thumb': url, 'descricao': titulo,
                         'legenda': _legenda(titulo, ano),
-                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons"})
+                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
+                        'pagina': info.get('descriptionurl'), 'licenca': lic,
+                        'url_master': info.get('url'), 'derivado': url != info.get('url')})
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
@@ -155,31 +164,72 @@ def candidatos_foto(busca: str, ano_max=None) -> list[dict]:
     return out
 
 
-def candidatos_arquivo(busca: str) -> list[dict]:
+def candidatos_arquivo(busca: str, *, estrito=False, preferir_vertical=False, pesquisa_retrato=False) -> list[dict]:
     out = []
     try:
-        for p in _commons(busca, video=True):
+        for p in (_commons(busca, video=True, portrait_search=True) if pesquisa_retrato else _commons(busca, video=True)):
             info = (p.get('videoinfo') or [{}])[0]
             meta = info.get('extmetadata') or {}
             lic = _txt(meta, 'LicenseShortName')
             if not _relevante(p.get('title', ''), busca) or not _licenca_ok(lic):
                 continue
-            ders = [d for d in info.get('derivatives') or [] if d.get('src') and 360 <= (d.get('height') or 0) <= 1080]
-            ders.sort(key=lambda d: (-(d.get('height') or 0), 'webm' not in d.get('type', '')))   # a maior até 1080p
+            if preferir_vertical:
+                ders=[d for d in info.get('derivatives') or [] if d.get('src') and type(d.get('width')) is int and type(d.get('height')) is int and 360<=min(d['width'],d['height'])<=1080 and max(d['width'],d['height'])<=2560]
+                ders.sort(key=lambda d:(-min(d['width'],d['height']),'webm' not in d.get('type','')))
+            else:
+                ders = [d for d in info.get('derivatives') or [] if d.get('src') and 360 <= (d.get('height') or 0) <= 1080]
+                ders.sort(key=lambda d: (-(d.get('height') or 0), 'webm' not in d.get('type', '')))
+            if preferir_vertical and ders:
+                # A native original can be usable even when the best available
+                # transcoded portrait is only 608px wide. Keep the same file
+                # identity and the declared byte ceiling; do not upscale.
+                from src.v4.formatos.filme_editorial import MIN_VIDEO_COMPOSITION_PX
+                w0,h0,size0=info.get('width'),info.get('height'),info.get('size')
+                if (min(ders[0]['width'],ders[0]['height'])<MIN_VIDEO_COMPOSITION_PX and
+                    type(w0) is int and type(h0) is int and h0>w0>=MIN_VIDEO_COMPOSITION_PX and
+                    type(size0) is int and 0<size0<=80_000_000 and info.get('url') and
+                    all(d['src']!=info['url'] for d in ders)):
+                    ders.insert(0,{'src':info['url'],'width':w0,'height':h0,'size':size0})
             url = ders[0]['src'] if ders else info.get('url')
             if not url or (not ders and (info.get('size') or 0) > 150_000_000):
                 continue
             titulo = p['title'].removeprefix('File:').rsplit('.', 1)[0]
             alt = (ders[0].get('height') if ders else info.get('height')) or 0
             larg = (ders[0].get('width') if ders else info.get('width')) or 0
-            out.append({'tipo': 'video', 'url': url, 'thumb': info.get('thumburl'), 'descricao': titulo,
+            if pesquisa_retrato and not (alt>larg>=360):continue
+            out.append({'tipo': 'video', 'url': url, 'thumb': info.get('thumburl'), 'titulo': titulo,
                         'w': larg, 'h': alt, 'dur': float(info.get('duration') or 0), 'ano': _ano(meta),
-                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons"})
-            if len(out) >= POR_FONTE:
+                        'credito': f"{titulo} — {_txt(meta, 'Artist')[:60] or 'autor desconhecido'} ({lic}), Wikimedia Commons",
+                        'pagina': info.get('descriptionurl'), 'licenca': lic,
+                        'url_master': info.get('url'), 'derivado': url!=info.get('url'),
+                        'source_id': p.get('pageid'), 'source_title':p.get('title'),
+                        'licenca_url':_txt(meta,'LicenseUrl'), 'restricoes':_txt(meta,'Restrictions'),
+                        'descricao':_txt(meta,'ImageDescription') or titulo,
+                        'descricao_integral':_txt(meta,'ImageDescription')[:8000], 'source':_txt(meta,'Source')[:4000],
+                        'credit':_txt(meta,'Credit')[:4000], 'categories':_txt(meta,'Categories')[:4000],
+                        'variantes':[{'url':x['src'],'width':x.get('width'),'height':x.get('height'),'size':x.get('size')} for x in ders],
+                        'tamanho_original':info.get('size') if not ders else None})
+            if len(out) >= POR_FONTE and not preferir_vertical:
                 break
     except Exception as e:
+        if estrito:raise
         print(f'  [mídia/arquivo] {busca!r} falhou: {str(e)[:120]}')
-    return out
+    return reter_video_vertical(out,POR_FONTE) if preferir_vertical else out
+
+def reter_video_vertical(rows,limit):
+    """Keep the strongest provider leads, reserve one slot for a usable native
+    portrait already in the SAME response; no new HTTP or license inference."""
+    if limit<2 or len(rows)<=limit:return rows[:limit]
+    from src.v4.formatos.imersao_documental_e328 import fracao_integral
+    from src.v4.formatos.filme_editorial import MIN_VIDEO_COMPOSITION_PX
+    def score(c):
+        w,h=c.get('w'),c.get('h');f=fracao_integral(w,h)
+        return f if f is not None and h>w and min(w,h)>=MIN_VIDEO_COMPOSITION_PX and f>=.60 else 0
+    kept=rows[:limit]
+    if any(score(c) for c in kept):return kept
+    best=max(rows[limit:],key=score,default={})
+    if score(best):return kept[:-1]+[best]
+    return kept
 
 
 def candidatos_pixabay(busca: str) -> list[dict]:
@@ -208,7 +258,7 @@ def candidatos_pixabay(busca: str) -> list[dict]:
     return out
 
 
-def candidatos_nasa_video(busca: str) -> list[dict]:
+def candidatos_nasa_video(busca: str, *, documental=False) -> list[dict]:
     """Vídeos da NASA (domínio público, sem chave): espaço, foguetes, a Terra vista de cima, laboratório da estação."""
     out = []
     try:
@@ -219,7 +269,22 @@ def candidatos_nasa_video(busca: str) -> list[dict]:
             d = (it.get('data') or [{}])[0]
             nid = d.get('nasa_id')
             thumb = next((l.get('href') for l in it.get('links') or [] if l.get('render') == 'image'), None)
-            if not nid or not thumb:
+            if not nid or (not documental and not thumb):
+                continue
+            if documental:
+                import re
+                from urllib.parse import urlsplit
+                if not isinstance(nid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',nid):continue
+                # A preview is optional; the official item ID is the discovery identity.
+                # The asset endpoint resolves actual downloadable variants later.
+                out.append({'tipo':'video','url':'https://images.nasa.gov/details/'+nid,
+                    'pagina':'https://images.nasa.gov/details/'+nid,'source_id':nid,
+                    'titulo':d.get('title',''),'descricao':str(d.get('description',''))[:400],
+                    'descricao_integral':str(d.get('description',''))[:8000],
+                    'nasa_center':d.get('center'),'nasa_credit':d.get('photographer'),
+                    'nasa_secondary_credit':d.get('secondary_creator'),
+                    'credito':d.get('photographer') or d.get('center') or 'NASA — crédito individual pendente',
+                    'licenca':'','variantes':[]})
                 continue
             m = requests.get(f'https://images-api.nasa.gov/asset/{nid}', headers=UA, timeout=30).json()
             hrefs = [x.get('href', '') for x in (m.get('collection') or {}).get('items') or []]
@@ -233,21 +298,50 @@ def candidatos_nasa_video(busca: str) -> list[dict]:
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
+        if documental:raise
         print(f'  [mídia/nasa] {busca!r} falhou: {str(e)[:120]}')
     return out
 
 
-def candidatos_archive(busca: str) -> list[dict]:
+def candidatos_archive(busca: str, *, documental=False) -> list[dict]:
     """Internet Archive: filmes antigos de DOMÍNIO PÚBLICO (coleção Prelinger e afins), sem chave. Só arquivos até ~80 MB."""
     out = []
     try:
         q = (f'({busca[:80]}) AND mediatype:movies AND (collection:prelinger OR licenseurl:*publicdomain*)')
+        if documental:
+            import re
+            terms=re.findall(r'[^\W_]+',busca[:120],flags=re.UNICODE)
+            if not terms:return []
+            # Keep all supplied search terms, and prioritize individual license declarations.
+            # Restrict matching to descriptive metadata, not unrelated full text.
+            # Every term is preserved; the fields may differ between terms.
+            fields=('title','subject','description')
+            q=' AND '.join('('+' OR '.join(f'{field}:"{term}"' for field in fields)+')' for term in terms)
+            q+=' AND mediatype:movies AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*)'
         r = requests.get('https://archive.org/advancedsearch.php', headers=UA, timeout=30,
-                         params={'q': q, 'fl[]': ['identifier', 'title', 'year'], 'rows': 8, 'output': 'json'})
+                         params={'q': q, 'fl[]': ['identifier', 'title', 'year', 'subject', 'description'] if documental else ['identifier','title','year'], 'rows': 24 if documental else 8, 'output': 'json'})
         r.raise_for_status()
-        for doc in (r.json().get('response') or {}).get('docs') or []:
+        docs=(r.json().get('response') or {}).get('docs') or []
+        if documental:
+            wanted={x.casefold() for x in terms}
+            def rank(doc):
+                title=set(re.findall(r'[^\W_]+',str(doc.get('title') or '').casefold()))
+                subject=set(re.findall(r'[^\W_]+',str(doc.get('subject') or '').casefold()))
+                return (len(wanted & title),len(wanted & subject))
+            docs=sorted(docs,key=rank,reverse=True)
+        for doc in docs:
             ident = doc.get('identifier')
             if not ident:
+                continue
+            if documental:
+                import re
+                if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,150}',ident) or ident in ('.','..'):continue
+                # Resolve item metadata and explicit license in acquisition.
+                out.append({'tipo':'video','url':'https://archive.org/details/'+ident,
+                    'pagina':'https://archive.org/details/'+ident,'source_id':ident,
+                    'titulo':doc.get('title',''),'descricao':str(doc.get('description') or doc.get('title') or '')[:400],
+                    'descricao_integral':str(doc.get('description') or '')[:8000],
+                    'credito':'','licenca':'','variantes':[]})
                 continue
             meta = requests.get(f'https://archive.org/metadata/{ident}', headers=UA, timeout=30).json()
             mp4 = [f for f in meta.get('files') or [] if str(f.get('name', '')).lower().endswith('.mp4')
@@ -264,6 +358,7 @@ def candidatos_archive(busca: str) -> list[dict]:
             if len(out) >= POR_FONTE:
                 break
     except Exception as e:
+        if documental:raise
         print(f'  [mídia/archive] {busca!r} falhou: {str(e)[:120]}')
     return out
 

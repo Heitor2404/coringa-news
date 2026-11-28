@@ -1,0 +1,117 @@
+name: E281.2 - corrigir ambiente e retomar somente cobertura pendente
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-selecao-real-e281.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proof:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CAIXA_MAX_CHAMADAS: '2'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      CORINGA_LIMITE_VISAO_DOCUMENTAL: '2'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Regressao antes de consumir cota
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          ffprobe -version
+          ffmpeg -version
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          python -m pytest -q tests/test_pretriagem_e269.py tests/test_adquirir_pretriagem_e272.py tests/test_politica_progressiva_e258.py tests/test_amostragem_documental_e257.py tests/test_documentario_integral_e254.py tests/test_area_segura_plataformas.py
+      - name: Restaurar exatamente o checkpoint aprovado da E281.1
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from src.v3 import pacote_biblioteca as P
+          from scripts.recuperar_checkpoints_documentais import api,verified_download,listar_releases
+          assert api('')['private'] is True and api('')['id']==1454059520
+          tag='review-e281-45638969866-1'
+          rel=next(r for r in listar_releases(60) if r['tag_name']==tag and r['draft'] is True)
+          asset=next(a for a in rel['assets'] if a['name']=='cm-73e379b720ab.zip')
+          digest='d7d7c6a62b93996cce7b42623472e747cb1ba68fa746031be663396a268d7869'
+          assert asset['digest']=='sha256:'+digest and asset['size']==1028274
+          p=verified_download(tag,asset,Path('qa_e281_restore'))
+          P.extrair_checkpoint(p,Path('qa_e281_restore/coliseu'),expected_sha256=digest)
+          PY
+      - name: Provar replay do Coliseu antes de usar saldo de visao
+        env:
+          CORINGA_PACOTE_PRIVADO: qa_e281_restore/coliseu
+          CORINGA_LIMITE_VISAO_DOCUMENTAL: '0'
+        run: |
+          python -m scripts.qa_revisao_documental_e247 benchmarks/e281/contraste.json qa_e281_replay contraste_e281 --progressiva --multicenas --qualidade --replay-privado
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('qa_e281_replay/revisao.json').read_text())
+          assert r['visao_chamadas_logicas']==0 and r['rede_aquisicao']['http']==0
+          assert r['reusos_analises']>=1
+          assert next(n for n in r['cobertura'] if n['necessidade_id']=='n1')['estado']=='CANDIDATO_PRIVADO_REVISADO'
+          PY
+      - name: Retomar cobertura pendente com o saldo anterior
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          CORINGA_PACOTE_PRIVADO: qa_e281_restore/coliseu
+        run: python -m scripts.qa_revisao_documental_e247 benchmarks/e281/contraste.json stage_documental/e281 contraste_e281 --progressiva --multicenas --qualidade
+      - name: Verificar resultados reais e preparar somente se houver cobertura
+        run: |
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          from src.v4.formatos import ponte_cobertura_filme as P,filme_editorial as F
+          from scripts.qa_documentario_curado_e218 import PUBLIC
+          root=Path('stage_documental/e281')
+          r=json.loads((root/'revisao.json').read_text())
+          assert r['publish'] is False and r['visao_chamadas_logicas']<=2 and r['reusos_analises']>=1
+          chosen,gate=P.preparar_cobertura(r,r['case'],minimo_s=1.4)
+          summary={'publicar':False,'tipo':'PROVA_CURTA_NAO_DOCUMENTARIO','visao':r['visao_chamadas_logicas'],'gate':gate,'voz':False}
+          print('E281 RESULTADO',[(x['necessidade_id'],x['estado']) for x in r['cobertura']],summary)
+          if gate['pronto_para_tts']:
+              ends=[];end=0
+              for ch in r['case']['chapters']:
+                  end+=sum(math.floor(chosen[i]['cap']*30+1e-6) for i in ch['needs']);ends.append(end)
+              plan=P.plano(r['case'],chosen,ends)
+              F.preparar(plan,root/'fragmento',PUBLIC,fragmento_misto=True)
+              summary['duracao_s']=plan['duracao']
+          (root/'prova.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          PY
+      - name: Renderizar fragmento real quando o gate permitir
+        run: |
+          root=stage_documental/e281
+          if [[ -f "$root/fragmento/props.json" ]]; then
+            npm ci --prefix motor4 --no-audit --no-fund
+            (cd motor4 && npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../"$root/fragmento.mp4" --props=../"$root/fragmento/props.json" --public-dir=remotion/public --codec=h264 --crf=21 --scale=0.5 --concurrency=3 --log=error)
+            ffprobe -v error -show_streams -show_format -of json "$root/fragmento.mp4" > "$root/probe.json"
+          fi
+      - name: Preservar evidencias e arquivos privados
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e281
+          files=("$root"/*.json "$root"/*.jpg "$root"/*.mp4)
+          packets=("$root"/checkpoints/*.zip)
+          if (( ${#packets[@]} > 0 )); then
+            bash scripts/arquivar_cofre_review.sh "review-e2812-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}" "$root/manifesto-revisoes.jsonl" "${packets[@]}"
+          fi
+          if (( ${#files[@]} > 0 )); then python scripts/espelhar_revisao_cofre.py "e2812-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"; fi

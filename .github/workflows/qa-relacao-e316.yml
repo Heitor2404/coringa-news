@@ -1,0 +1,30 @@
+name: E316.1 - inspecao de consequencia no original USGS
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-relacao-e316.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Restaurar original e amostrar trecho final
+        run: |
+          python -m pip install -q pillow requests
+          root=stage_documental/e316
+          mkdir -p "$root"
+          h=783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c
+          gh release download review-e300-45737009519-1 --repo Heitor2404/coringa-cofre --pattern "$h.mp4" --dir "$root"
+          echo "$h  $root/$h.mp4" | sha256sum --check
+          python -m scripts.qa_scan_e316
+          python scripts/espelhar_revisao_cofre.py "e316-scan-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/scan.json" "$root/scan.jpg"

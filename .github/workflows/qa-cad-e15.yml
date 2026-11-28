@@ -1,0 +1,47 @@
+name: E15 CAD licenciado por corpo
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-cad-e15.yml"
+      - "src/v4/formatos/*e15.py"
+      - "src/v4/formatos/solver_restricoes_e1.py"
+      - "benchmarks/e15_cad_sources.json"
+      - "tests/test_cad_urdf_e15.py"
+permissions:
+  contents: read
+jobs:
+  cad:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      E15_CAD_ROOT: upstream
+      OPENBLAS_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Source-Robotics/robot_descriptions
+          ref: a626564c30119b8493a8e0d5e48d7294382cbae2
+          path: upstream
+          sparse-checkout: |
+            urdf/msg_description
+            urdf/ssg48_description
+            urdf/parol6_description
+            source/jaws/ssg48_pinch
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+          python -m pip install -q cadquery==2.6.1 pillow scipy pytest cairosvg
+      - run: |
+          python -m pytest -q tests/test_cad_urdf_e15.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py tests/test_renderer_mecanico_e9_e10.py tests/test_importador_geometria_e7.py tests/test_triagem_fontes_geometria_e8.py
+          python -m src.v4.formatos.render_cad_e15 upstream qa_e15
+          python -m src.v4.formatos.qa_cad_e15 upstream qa_e15
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e15-cad-por-corpo
+          path: qa_e15/
+          retention-days: 14

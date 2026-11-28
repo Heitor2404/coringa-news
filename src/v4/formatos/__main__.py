@@ -1,4 +1,4 @@
-"""python -m src.v4.formatos {validar|narrar|ativos|preflight|quadros|render|folhas|telegram} <plano.json> [saida]
+"""python -m src.v4.formatos {validar|narrar|ativos|preflight|quadros|render|folhas|telegram|gate} <plano.json> [saida]
 
 Ordem no Actions: narrar → ativos → preflight → quadros (styleframes + colisões nos quadros renderizados) → render →
 folhas (contato + antes/depois) → telegram. Para no primeiro vermelho. Nenhum passo repete chamada de IA.
@@ -45,6 +45,13 @@ def main(a):
     elif cmd == 'render':
         r = produzir.render(saida)
         print(json.dumps({k: r[k] for k in ('video_id', 'estado', 'duracao', 'audio')}, ensure_ascii=False))
+    elif cmd == 'gate':
+        from src.v3 import estado_final
+        from src.v4.formatos import estado
+        r = estado.conferir(saida)
+        print('ATLAS_GATE ' + json.dumps(r, ensure_ascii=False))
+        # É sucesso apenas de integridade, nunca APROVADO ou PUBLICÁVEL.
+        sys.exit(0 if r['estado'] == estado_final.AGUARDANDO else 1)
 
 
 if __name__ == '__main__':

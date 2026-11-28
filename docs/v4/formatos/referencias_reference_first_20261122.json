@@ -1,0 +1,62 @@
+{
+  "version": "candidate-references-2026-11-22",
+  "publication_approved": false,
+  "selection_state": "METADADOS_VERIFICADOS_ARQUIVOS_NAO_ANALISADOS",
+  "notice": "A fonte e a licenca citada nao provam que o GIF seja animado ou que mostre as etapas. A analise final exige fonte real/hash, quadros e revisao independente.",
+  "candidates": [
+    {
+      "id": "commons-pd-compressor",
+      "requested_process": "compressor_alternativo",
+      "page": "https://commons.wikimedia.org/wiki/File:Compresor_alt_frig1.gif",
+      "original_media": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Compresor_alt_frig1.gif",
+      "declared_license": "Public domain (PD-self)",
+      "licensor": "Miguel Rodriguez Sanmartin",
+      "file_type": "gif",
+      "declared_dimensions": [
+        486,
+        374
+      ],
+      "declared_bytes": 17251,
+      "frames_verified": false,
+      "visually_inspected": false,
+      "usable_for_publication": false
+    },
+    {
+      "id": "commons-by-sa-otto",
+      "requested_process": "motor_otto_4t",
+      "page": "https://commons.wikimedia.org/wiki/File:4-Stroke-Engine-with-airflows.gif",
+      "original_media": "https://upload.wikimedia.org/wikipedia/commons/d/d7/4-Stroke-Engine-with-airflows.gif",
+      "declared_license": "CC BY-SA 3.0 / GFDL (derivative contributions)",
+      "licensor": "UtzOnBike, Cuddlyable3, Jahobr and others as Commons page",
+      "file_type": "gif",
+      "declared_dimensions": [
+        265,
+        369
+      ],
+      "frames_verified": false,
+      "visually_inspected": false,
+      "usable_for_publication": false,
+      "license_obligation": "requires checking exact attributions and share-alike before reusing pixels",
+      "declared_frames": 48,
+      "declared_bytes": 874000
+    },
+    {
+      "id": "commons-by-sa-diesel-negative",
+      "requested_process": "motor_otto_4t",
+      "page": "https://commons.wikimedia.org/wiki/File:Four_stroke_diesel_engine_animation.gif",
+      "original_media": "https://upload.wikimedia.org/wikipedia/commons/9/98/Four_stroke_diesel_engine_animation.gif",
+      "declared_license": "CC BY-SA 3.0",
+      "licensor": "Alexanderathomas",
+      "file_type": "gif",
+      "declared_dimensions": [
+        800,
+        600
+      ],
+      "declared_frames": 16,
+      "frames_verified": false,
+      "visually_inspected": false,
+      "usable_for_publication": false,
+      "negative_control": "Diesel four stroke is NOT Otto spark-ignition 4T and must be rejected if model claims ignition"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+name: ATLAS — NOVO storyboard visual Chips, privado, sem TTS nem MP4
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/chips_animatic.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: atlas-chips-animatic-privado
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_MODO_PREVIA_PRIVADA: "1"
+  # APENAS NO ANIMATIC: cache de JPG derivado de original verificado no garimpo.
+  # NÃO é comprovante de SHA do original e NÃO pode chegar ao MP4/publicação.
+  CORINGA_DEV: "1"
+  CORINGA_MIDIA_LOCAL: saida_garimpo_visual/cache_derivado_so_quadros
+  CORINGA_ATLAS_CURADORIA_PRIVADA: saida_garimpo_visual/catalogo.json
+  PLANO: plano_chips_objetos.json
+  SAIDA: saida_chips_animatic
+
+jobs:
+  animatic:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Recuperar mídia REAL comprovada do garimpo privado (não é vídeo)
+        uses: actions/download-artifact@v4
+        with:
+          name: atlas-garimpo-visual-provisorio
+          run-id: 44459570262
+          github-token: ${{ github.token }}
+          path: saida_garimpo_visual
+      - name: FFmpeg, Chrome e fontes versionadas
+        timeout-minutes: 8
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            timeout 150 sudo apt-get update -qq -o Acquire::Retries=1
+            timeout 180 sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          google-chrome --version
+          mkdir -p ~/.fonts
+          cp motor4/identidade/ttf/*.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+      - name: Dependências exatas de quadros Remotion
+        timeout-minutes: 18
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt -r requirements-dev.txt
+          (cd motor4 && npm ci --no-audit --no-fund)
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Preparar cópias derivadas da curadoria para ANIMATIC (não para MP4)
+        run: |
+          python - <<'PY'
+          import json, hashlib, os, shutil
+          from pathlib import Path
+          from PIL import Image
+          from src.v4.formatos.produzir import nome_publico
+          d=json.loads(Path(os.environ['CORINGA_ATLAS_CURADORIA_PRIVADA']).read_text())
+          assert d.get('uso') == 'PREVIA_PRIVADA_APENAS'
+          cache=Path(os.environ['CORINGA_MIDIA_LOCAL'])
+          cache.mkdir(parents=True, exist_ok=True)
+          for it in d['itens']:
+              assert it['uso_provisorio_previa'] is True and len(it['sha256_origem'])==64
+              src=Path('saida_garimpo_visual/imagens')/(it['id'].replace(':','_')+'.jpg')
+              assert src.is_file(),it['id']
+              with Image.open(src) as im: im.verify()
+              dst=cache/(nome_publico(it['id'])+'.jpg')
+              shutil.copyfile(src,dst)
+              print('ATLAS_DERIVADO_APENAS_ANIMATIC',it['id'],'sha_derivado='+hashlib.sha256(dst.read_bytes()).hexdigest()[:16],
+                    'sha_original_decl='+it['sha256_origem'][:16])
+          PY
+      - name: Construir novo storyboard por objetos e provas REAIS
+        run: python -m src.v4.formatos.roteiro_visual_curado "$CORINGA_ATLAS_CURADORIA_PRIVADA" "$PLANO"
+      - name: Renderizar somente quadros REAIS sem voz e sem MP4
+        timeout-minutes: 28
+        run: python -m src.v4.formatos.animatic "$PLANO" "$SAIDA"
+      - name: Crítico independente — observar quadros e reprovar feiúra
+        timeout-minutes: 15
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.v4.formatos.revisao_visual "$SAIDA"
+      - name: Entregar PRÉVIA VISUAL + análise no Telegram privado
+        if: always()
+        timeout-minutes: 10
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from src.v3 import previa_telegram as t
+          S=Path(os.environ['SAIDA'])
+          ch,_=t.chat_autorizado()
+          linhas=['ATLAS CHIPS — NOVO STORYBOARD VISUAL PRIVADO',
+                  'NÃO É MP4 FINAL; SEM TTS; NÃO PUBLICADO.']
+          a=S/'animatic.json'
+          if a.exists():
+              d=json.loads(a.read_text())
+              linhas.append(f"ANIMATIC: {d.get('etapa')} · pronto={d.get('pronto')}")
+              for x in (d.get('bloqueios') or [])[:4]:
+                  linhas.append('— '+str(x)[:250])
+          else:
+              linhas.append('ANIMATIC NÃO GERADO: consultar logs do workflow')
+          q=S/'quadros'/'styleframes.jpg'
+          if q.exists():
+              t._api('sendPhoto', {'chat_id':ch,'caption':'NOVO ATLAS — quadros reais da edição, antes de gastar TTS (privado)'}, ('photo',q))
+          m=S/'quadros'/'amostragem.jpg'
+          if m.exists():
+              t._api('sendPhoto', {'chat_id':ch,'caption':'ATLAS — amostragem temporal: enquadramento/ritmo sem voz (privado)'}, ('photo',m))
+          rv=S/'revisao_visual.json'
+          if rv.exists():
+              d=json.loads(rv.read_text())
+              linhas.append(f"CRÍTICO INDEPENDENTE: {'PASSOU' if d.get('pronto') else 'REPROVOU'} · {d.get('chamadas')} análises")
+              for x in (d.get('bloqueios') or [])[:5]:
+                  linhas.append(str(x.get('beat'))+': '+'; '.join(x.get('problemas') or [])[:200])
+          linhas.append('Não segue para voz nem vídeo completo sem avaliação de qualidade.')
+          t._api('sendMessage', {'chat_id':ch,'text':'\n'.join(linhas)[:3900]})
+          PY
+      - name: Guardar diagnósticos e quadros sem mídia alheia permanente
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-chips-novo-storyboard-privado
+          path: |
+            plano_chips_objetos.json
+            saida_chips_animatic/animatic.json
+            saida_chips_animatic/triagem_editorial.json
+            saida_chips_animatic/quadros/styleframes.jpg
+            saida_chips_animatic/quadros/amostragem.jpg
+            saida_chips_animatic/quadros/relatorio.json
+            saida_chips_animatic/revisao_visual.json
+          retention-days: 7
+          if-no-files-found: warn

@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "resolution": [
+    1080,
+    1920
+  ],
+  "profile": "MULTIPLATAFORMA_CONSERVADOR_V1",
+  "notes": "Fonte: src/v4/formatos/plataformas.json. Dois modos EXCLUSIVOS: sem legenda cue/headline/subject/source; com legenda subtitle/source; faixa real da Camada em layout.py. UI orgânica é variável, QA visual obrigatório.",
+  "universal": [
+    150,
+    300,
+    770,
+    1240
+  ],
+  "slots": {
+    "brand": [
+      160,
+      312,
+      500,
+      350
+    ],
+    "section": [
+      160,
+      363,
+      760,
+      396
+    ],
+    "visual": [
+      150,
+      410,
+      770,
+      1010
+    ],
+    "cue": [
+      160,
+      1016,
+      760,
+      1056
+    ],
+    "headline": [
+      160,
+      1062,
+      760,
+      1150
+    ],
+    "subject": [
+      160,
+      1155,
+      760,
+      1187
+    ],
+    "source": [
+      160,
+      1195,
+      760,
+      1235
+    ],
+    "subtitle": [
+      160,
+      1040,
+      760,
+      1190
+    ]
+  },
+  "nonessential": [
+    "background",
+    "decorative_progress",
+    "private_qa_watermark"
+  ],
+  "source_safe_modes": [
+    "photo",
+    "video",
+    "mechanism",
+    "motion_graphic"
+  ],
+  "unverified": [
+    "atlas_map_embedded_credits",
+    "original_graphic_with_unmapped_text",
+    "comparison_with_embedded_labels"
+  ],
+  "derivado_de": "src/v4/formatos/plataformas.json (perfis TikTok, Instagram Reels, YouTube Shorts). O CI de qa_area_segura compara a interseção e impede divergência entre motor ATLAS/Camada e FilmeEditorial.",
+  "source_of_truth": "src/v4/formatos/plataformas.json",
+  "mechanism_layout": {
+    "note": "Dois mecanismos homologados para reflow vertical 620x682 sem crop; outros permanecem na rota legado protegida. Cena possui titulo editorial numa faixa sem colisoes, etapa e fonte individuais. Perfis conservadores nao sao prova de UX em apps.",
+    "visual": [
+      150,
+      479,
+      770,
+      1092
+    ],
+    "step": [
+      160,
+      1102,
+      760,
+      1187
+    ],
+    "transition_seconds": 0.36,
+    "default_bounds": [
+      80,
+      650,
+      1030,
+      1510
+    ],
+    "focus": {
+      "optical_projection": {
+        "default": [
+          65,
+          655,
+          1045,
+          1475
+        ],
+        "source": [
+          70,
+          660,
+          1040,
+          1475
+        ],
+        "reticle": [
+          70,
+          670,
+          1045,
+          1475
+        ],
+        "projection": [
+          65,
+          675,
+          1040,
+          1475
+        ],
+        "wafer": [
+          65,
+          675,
+          1040,
+          1475
+        ]
+      },
+      "lock_explainer": {
+        "default": [
+          70,
+          665,
+          1045,
+          1495
+        ],
+        "closed": [
+          75,
+          675,
+          1040,
+          1490
+        ],
+        "water_enter": [
+          70,
+          675,
+          1040,
+          1490
+        ],
+        "rise": [
+          75,
+          680,
+          1040,
+          1490
+        ],
+        "equalize": [
+          75,
+          680,
+          1040,
+          1490
+        ],
+        "release": [
+          70,
+          685,
+          1040,
+          1490
+        ]
+      },
+      "lock_filling": {
+        "default": [
+          100,
+          570,
+          980,
+          1260
+        ]
+      },
+      "lock_causal": {
+        "default": [
+          90,
+          675,
+          1040,
+          1510
+        ]
+      },
+      "lock_cycle": {
+        "default": [
+          70,
+          645,
+          1035,
+          1500
+        ]
+      },
+      "lock_cycle_standalone": {
+        "default": [
+          70,
+          645,
+          1035,
+          1500
+        ]
+      }
+    },
+    "essential_bounds": {
+      "optical_projection": [
+        95,
+        695,
+        1025,
+        1455
+      ],
+      "lock_explainer": [
+        100,
+        700,
+        1030,
+        1455
+      ]
+    },
+    "editorial_exclusion": {
+      "optical_projection": {
+        "header_bottom": 610,
+        "footer_top": 1480
+      },
+      "lock_explainer": {
+        "header_bottom": 650,
+        "footer_top": 1500
+      }
+    },
+    "native_portrait": [
+      "optical_projection",
+      "lock_explainer"
+    ],
+    "headline": [
+      160,
+      385,
+      760,
+      478
+    ],
+    "native_dimensions": [
+      620,
+      682
+    ],
+    "wide_hero": [
+      120,
+      485,
+      960,
+      830
+    ],
+    "wide_support": [
+      150,
+      845,
+      770,
+      1092
+    ],
+    "wide_note": "Faixa superior 485..830 termina ANTES de de_y=840 dos botoes laterais conservadores. Verificar intersecao por intervalo contra src/v4/formatos/plataformas.json; nao ampliar bloco inferior ou textos.",
+    "mechanism_section": [
+      160,
+      355,
+      760,
+      380
+    ]
+  },
+  "cad_hero_private": {
+    "viewport": [
+      20,
+      100,
+      1060,
+      1070
+    ],
+    "brand": [
+      160,
+      1074,
+      360,
+      1100
+    ],
+    "section": [
+      365,
+      1074,
+      760,
+      1100
+    ],
+    "step": [
+      160,
+      1102,
+      760,
+      1187
+    ],
+    "source": [
+      160,
+      1195,
+      760,
+      1235
+    ],
+    "max_motion_ui_fraction": 0.4,
+    "notes": "Experimental: preserve entire visible foreground, text in conservative lanes; motion risk is a pixel proxy, not semantic certification."
+  },
+  "cad_hero_balanced_private": {
+    "viewport": [
+      20,
+      465,
+      1060,
+      1435
+    ],
+    "brand": [
+      160,
+      300,
+      360,
+      330
+    ],
+    "section": [
+      365,
+      300,
+      760,
+      330
+    ],
+    "step": [
+      160,
+      333,
+      760,
+      414
+    ],
+    "source": [
+      160,
+      418,
+      760,
+      458
+    ],
+    "target_center": [
+      500,
+      950
+    ],
+    "center_y_range": [
+      900,
+      1000
+    ],
+    "max_motion_ui_fraction": 0.4,
+    "notes": "Private visual balance based on inspected compressor reference; text in header, large mechanism centered, UI exposure is proxy."
+  }
+}

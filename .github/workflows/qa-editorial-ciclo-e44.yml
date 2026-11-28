@@ -1,0 +1,87 @@
+name: E44 compositor documental com transmissão E41
+# Revalidar com o compositor corrigido; o push só reage a este próprio arquivo.
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-editorial-ciclo-e44.yml']
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Run E41 concluído com QA E42 e palco
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  editorial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DO_NOT_TRACK: "1"
+      REMOTION_DISABLE_TELEMETRY: "1"
+      CORINGA_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: e41-suporte-privado
+          run-id: ${{ inputs.run_id || '45383874036' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_e44
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Reutilizar QA e palco da transmissão sem simular novamente
+        run: |
+          python -m pip install --only-binary=:all: numpy imageio-ffmpeg pytest
+          python -m pytest -q tests/test_editorial_e42.py tests/test_ponte_cad_editorial_e28.py tests/test_reflow_cad_e31.py
+          python -m src.v4.formatos.ponte_cad_editorial_e28 fonte_e44/QA.json motor4/remotion/public qa_e44
+          python -m src.v4.formatos.reflow_cad_e31 qa_e44/props.json motor4/remotion/public qa_e44/REFLOW.json
+          python - <<'PY'
+          import json
+          q=json.load(open("fonte_e44/QA.json"))
+          p=json.load(open("qa_e44/props.json"))
+          assert q["estado"]=="REPROVADO_INTERFERENCIA_BREP"
+          assert q["liberado_para_publicacao"] is False
+          assert p["private_review_only"] is True
+          assert "INTERFERÊNCIA DETECTADA" in p["shots"][0]["cad_warning"]
+          assert any("11,0:1" in c["label"] for c in p["shots"][0]["cues"])
+          PY
+      - name: Renderizar o compositor real
+        run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../qa_e44/editorial_cad.mp4 --props=../qa_e44/props.json \
+            --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Decodificar e conferir saída
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          from src.v4.formatos.ponte_cad_editorial_e28 import verificar_video,ffmpeg,sha
+          root=Path("qa_e44")
+          p=json.loads((root/"props.json").read_text())
+          movie=root/"editorial_cad.mp4"
+          r=verificar_video(movie,round(p["duracao"]*30))
+          r.update(sha256=sha(movie),publish=False,visual_approved=False,
+                   gate_fisico="REPROVADO_INTERFERENCIA_BREP")
+          (root/"QA_EDITORIAL.json").write_text(json.dumps(r,indent=2))
+          subprocess.check_call([ffmpeg(),"-v","error","-y","-i",str(movie),"-vf",
+              "fps=1,scale=270:480,tile=4x2","-frames:v","1",str(root/"contato.jpg")])
+          print("E44-EDITORIAL",json.dumps(r))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e44-editorial-ciclo-privado
+          path: qa_e44/
+          retention-days: 14

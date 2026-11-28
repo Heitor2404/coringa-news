@@ -1,0 +1,55 @@
+{
+  "publish": false,
+  "cases": [
+    {
+      "id": "contrastes",
+      "tema": "Regressão audiovisual de movimento em biologia e geologia, não episódio",
+      "necessidades": [
+        {
+          "id": "n1",
+          "fatos": [
+            "f1"
+          ],
+          "sujeito": "lava vulcânica",
+          "mostrar": "lava incandescente deslocando-se em um canal, com mudança observável da posição do fluxo",
+          "necessidade": "registro",
+          "evidencia_visual": "movimento",
+          "consultas_en": [
+            "lava flow channel",
+            "lava flowing volcano",
+            "volcanic lava flow aerial",
+            "lava movement real footage"
+          ]
+        },
+        {
+          "id": "n2",
+          "fatos": [
+            "f2"
+          ],
+          "sujeito": "polvo",
+          "mostrar": "mudança de coloração do mesmo polvo diretamente observável em quadros do mesmo intervalo",
+          "necessidade": "registro",
+          "evidencia_visual": "movimento",
+          "consultas_en": [
+            "octopus color change",
+            "octopus camouflage transformation",
+            "octopus changing color underwater",
+            "cephalopod chromatophore color change"
+          ]
+        }
+      ],
+      "fatos": [
+        {
+          "id": "f1",
+          "tipo": "pedido_visual_de_teste",
+          "descricao": "lava incandescente deslocando-se em um canal, com mudança observável da posição do fluxo"
+        },
+        {
+          "id": "f2",
+          "tipo": "pedido_visual_de_teste",
+          "descricao": "mudança de coloração do mesmo polvo diretamente observável em quadros do mesmo intervalo"
+        }
+      ]
+    }
+  ]
+}

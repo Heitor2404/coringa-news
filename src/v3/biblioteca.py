@@ -478,3 +478,35 @@ def _cli(argv=None):
 
 if __name__ == '__main__':
     _cli()
+
+
+def restaurar_catalogo(manifesto=None, *, db=None, armazem=None):
+    """Rehydrate the existing catalogue on ephemeral runners, without network.
+    Metadata restoration does not attest that the original bytes exist.
+    Validate the entire portable input before importing it.
+    """
+    path=Path(manifesto or RAIZ/'data/biblioteca/manifesto.jsonl')
+    rows=[json.loads(line) for line in path.read_text(encoding='utf8').splitlines() if line.strip()]
+    if not rows or rows[0].get('_manifesto')!='biblioteca-coringa':
+        raise ValueError('BIB-MANIFESTO')
+    if type(rows[0].get('versao_esquema')) is not int or not 1<=rows[0]['versao_esquema']<=len(MIGRACOES):
+        raise ValueError('BIB-ESQUEMA')
+    ids=set();hashes=set()
+    for r in rows[1:]:
+        sha=r.get('sha256','');mid=r.get('id')
+        if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{64}',sha) or mid!='cm-'+sha[:12] or mid in ids or sha in hashes:
+            raise ValueError('BIB-IDENTIDADE')
+        if r.get('ext') not in ('.jpg','.jpeg','.png','.webp','.mp4','.webm','.mov','.ogg','.mp3','.wav','.m4a','.svg','.pdf','.tif','.tiff'):
+            raise ValueError('BIB-EXTENSAO')
+        if r.get('uso_comercial') not in ('sim','nao','indefinido'):
+            raise ValueError('BIB-DIREITOS')
+        ids.add(mid);hashes.add(sha)
+    bib=Biblioteca(db,armazem)
+    try:
+        novos=bib.importar_manifesto(path)
+        return bib,{'manifesto':str(path),'registros_manifesto':len(ids),'importados':novos,
+                   'registros_db':bib.con.execute('SELECT COUNT(*) FROM midia').fetchone()[0],
+                   'direitos_revalidados':False}
+    except Exception:
+        bib.fechar()
+        raise

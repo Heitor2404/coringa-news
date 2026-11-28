@@ -1,0 +1,72 @@
+{
+ "reusos_analises": 9,
+ "reusos_ids": [
+  [
+   "08f0a634c4085d5f436ca318c05dde81ac2c5816945b04afb14cb82f54f502f2",
+   1
+  ],
+  [
+   "514f192619b1f566030266bf5d9b5b12767d74de9b5b9de38a46f2937ed2e1b0",
+   1
+  ],
+  [
+   "597cd29803a1dabbdfaf7e92c5db00b6681a15902c7021c67d6a67cfbb180e8d",
+   1
+  ],
+  [
+   "711748a668148f7503f75ad9cce6757a77756fd23cbc13fed39c0ba442925ad6",
+   1
+  ],
+  [
+   "7eff8b60bf8b2e7311598a35b611d2bb5aa4bc79dde33fa5067e7edfa6d8e6f4",
+   1
+  ],
+  [
+   "8251c0625a4af602ba1a3e39083b36c0826aa4fae1de725887c6f8f3ac792f02",
+   1
+  ],
+  [
+   "8f39804afe8713fc95fca809367996bbe3e36e5ac221455a489756470d2f4e38",
+   1
+  ],
+  [
+   "9f34e650f63abf1a1184f7e073d8a8de49977150df68e924a47754321cda95f7",
+   1
+  ],
+  [
+   "d94ec580e6b94559223181e12fc39a6f610fa9527114d62ef542bbb4ce8d572f",
+   1
+  ]
+ ],
+ "reusos_ids_unicos": [
+  "08f0a634c4085d5f436ca318c05dde81ac2c5816945b04afb14cb82f54f502f2",
+  "514f192619b1f566030266bf5d9b5b12767d74de9b5b9de38a46f2937ed2e1b0",
+  "597cd29803a1dabbdfaf7e92c5db00b6681a15902c7021c67d6a67cfbb180e8d",
+  "711748a668148f7503f75ad9cce6757a77756fd23cbc13fed39c0ba442925ad6",
+  "7eff8b60bf8b2e7311598a35b611d2bb5aa4bc79dde33fa5067e7edfa6d8e6f4",
+  "8251c0625a4af602ba1a3e39083b36c0826aa4fae1de725887c6f8f3ac792f02",
+  "8f39804afe8713fc95fca809367996bbe3e36e5ac221455a489756470d2f4e38",
+  "9f34e650f63abf1a1184f7e073d8a8de49977150df68e924a47754321cda95f7",
+  "d94ec580e6b94559223181e12fc39a6f610fa9527114d62ef542bbb4ce8d572f"
+ ],
+ "estados": [
+  "CANDIDATO_PRIVADO_REVISADO",
+  "LACUNA_PENDENTE"
+ ],
+ "selecionados": [
+  [
+   "biblioteca_v3",
+   "cm-cc825cc83cab"
+  ],
+  null
+ ],
+ "visao_chamadas_logicas": 0,
+ "telemetria_visao": 0,
+ "http": 0,
+ "buscas": 0,
+ "rede_aquisicao_http": 0,
+ "respostas_invalidas_preservadas": 0,
+ "publish": false,
+ "_justificativa": "Congelado do run 45663056591 (commit c5fe736e) sobre a mesma coleção de checkpoints do run do Work 45646284798 (E259 PACOTES 2, 9 reusos, mesmos estados). A identidade também é comparada a cada execução com o código do Work (prova igual_ao_work). respostas_invalidas_preservadas=0: esta coleção (lava/polvo E258) não contém respostas inválidas; as da E281.2 são verificadas na prova E284.",
+ "_mudanca_exige": "justificativa técnica e evidência de que não houve perda de capacidade"
+}

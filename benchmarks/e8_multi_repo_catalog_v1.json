@@ -1,0 +1,47 @@
+{
+  "schema": "coringa-e8-multi-repo-source-registry-v1",
+  "frozen_at": "2026-11-23",
+  "scope": "bounded_catalog_not_open_world_github_discovery",
+  "last_user_query": "mecanismos mecanicos 2D e geometria para animacoes",
+  "report_license_only_after_exact_blob_verification": true,
+  "attach_license_and_attribution_to_public_derivatives": true,
+  "no_third_party_images_or_animations_copied": true,
+  "sources": [
+    {
+      "id": "linkage_design",
+      "repository": "jackhale98/linkage_design",
+      "commit": "c1ae13b040213b55ece567418bc14e4d2c8d1b0f",
+      "license_path": "LICENSE",
+      "license_blob_sha1": "c9582739f2438eacbc6984f8002e3289e3b1f9db",
+      "samples": [
+        {
+          "path": "src/examples/shaper.csv",
+          "blob_sha1": "1b512e27856fae3c29627e78c9c807a85b2b4ec0"
+        },
+        {
+          "path": "src/examples/hoekens.csv",
+          "blob_sha1": "ade535db9afb9758cd89ac0395394be8b01d8f5c"
+        }
+      ]
+    },
+    {
+      "id": "sketch_mechanisms",
+      "repository": "MasoudMiM/sketch-mechanisms",
+      "commit": "46d41163a23a112e599bda808b2ef8a66981a8fc",
+      "license_path": "LICENSE",
+      "license_blob_sha1": "1fb6be5dcab13512aa3f0370888d5ef7f17ba7c1",
+      "samples": [
+        {
+          "path": "README.md",
+          "blob_sha1": "a997c3793cdd571362344c5af24bc558c8886aeb"
+        },
+        {
+          "path": "reference.json",
+          "blob_sha1": "6570448d774b1cc5abf1c71cef9b0f1b000c0195"
+        }
+      ]
+    }
+  ],
+  "freeze_notice": "Source metadata and candidate status must not be altered to make gate green; review new source version as V2.",
+  "publish": false
+}

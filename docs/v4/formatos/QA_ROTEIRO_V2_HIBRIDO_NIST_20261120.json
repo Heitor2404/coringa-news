@@ -1,0 +1,66 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "QA do diretor multimídia V2 | Fab 18 → NIST independente → esquema EUV",
+  "roteiro": {
+    "cenas": [
+      {
+        "id": "fab_contexto",
+        "duracao_s": 3,
+        "fala": "Esta é uma imagem real da Fab 18 da TSMC em Taiwan.",
+        "acontecimento": {
+          "id": "fab18_contexto",
+          "tipo": "lugar",
+          "sujeito": "TSMC Fab 18",
+          "acao": "fica em Taiwan",
+          "mostrar": "identificar a fachada real sem alegar que mostra a produção",
+          "fonte": "https://commons.wikimedia.org/wiki/File:TSMC_Fab_18_May_2025.jpg"
+        }
+      },
+      {
+        "id": "nist_contexto",
+        "duracao_s": 2.6,
+        "fala": "Estas imagens são de um laboratório do NIST nos Estados Unidos, não da TSMC.",
+        "acontecimento": {
+          "id": "laboratorio_nist_independente",
+          "tipo": "lugar",
+          "sujeito": "NIST NanoFab",
+          "acao": "reúne pesquisadores e instrumentos no laboratório",
+          "mostrar": "identificar laboratório independente; não atribuir processo EUV específico",
+          "fonte": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes"
+        }
+      },
+      {
+        "id": "euv_mecanismo",
+        "duracao_s": 6.9,
+        "fala": "Num esquema óptico simplificado, uma fonte de luz, uma máscara e espelhos ajudam a projetar um padrão sobre um wafer.",
+        "acontecimento": {
+          "id": "principio_optico_euv_comum",
+          "tipo": "mecanismo",
+          "sujeito": "projeção óptica EUV",
+          "acao": "expõe camada fotossensível sobre o wafer",
+          "estado_inicial": "resist não exposto",
+          "estado_final": "resist exposto",
+          "mostrar": "ilustrar fonte, máscara, espelhos e resist, sem dizer que a gravação NIST mostra a máquina",
+          "fonte": "https://www.asml.com/en/technology/lithography-principles",
+          "dados": {
+            "acoes_necessarias": [
+              "source",
+              "reticle",
+              "projection",
+              "wafer"
+            ],
+            "fases_necessarias": [
+              "origem",
+              "transformacao",
+              "resultado"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "perfil_visual": "LEGADO_REJEITADO_SOMENTE_QA",
+  "observacao": "TESTE TÉCNICO DO PIPELINE, ESTÉTICA LEGADA REJEITADA, NÃO É DIREÇÃO DE ARTE."
+}

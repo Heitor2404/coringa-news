@@ -1,0 +1,249 @@
+{
+  "schema": "coringa.documentario.curado.v1",
+  "id": "aneis_saturno",
+  "title": "Os anéis de Saturno não são sólidos",
+  "publish": false,
+  "rights_policy": "https://www.jpl.nasa.gov/jpl-image-use-policy/",
+  "chapters": [
+    {
+      "title": "O planeta dos anéis",
+      "speech": "Parece que Saturno está cercado por um disco sólido. Mas essa imagem esconde uma das estruturas mais surpreendentes do sistema solar. A sonda Cassini passou treze anos estudando o planeta e seus anéis de perto.",
+      "facts": [
+        "https://science.nasa.gov/saturn/facts/",
+        "https://science.nasa.gov/mission/cassini/faq/"
+      ],
+      "photos": [
+        [
+          "the-greatest-saturn-portrait-yet",
+          "Retrato de Saturno"
+        ],
+        [
+          "rings-and-shadows",
+          "Sombras sobre o planeta"
+        ],
+        [
+          "arc-and-crescent",
+          "Saturno em crescente"
+        ],
+        [
+          "on-the-final-frontier",
+          "Mosaico dos anéis"
+        ],
+        [
+          "saturn-in-color",
+          "Saturno em cores naturais"
+        ],
+        [
+          "jewel-of-the-solar-system",
+          "Saturno visto de cima"
+        ],
+        [
+          "shadow-and-shade",
+          "Planeta e anéis iluminados"
+        ]
+      ]
+    },
+    {
+      "title": "Bilhões de fragmentos",
+      "speech": "Os anéis são feitos principalmente de gelo de água, com poeira e rochas misturadas. Há grãos minúsculos e pedaços muito maiores. Cada partícula percorre sua própria órbita ao redor do planeta. Não existe uma superfície rígida ligando tudo.",
+      "facts": [
+        "https://science.nasa.gov/saturn/facts/",
+        "https://science.nasa.gov/mission/cassini/faq/"
+      ],
+      "photos": [
+        [
+          "rings-and-moons",
+          "Faixas e luas"
+        ],
+        [
+          "sidelong-view",
+          "Estrutura dos anéis"
+        ],
+        [
+          "inside-out-rings-over-the-limb",
+          "Anéis vistos de dentro"
+        ],
+        [
+          "inside-out-rings-view-from-beneath",
+          "Vista por baixo"
+        ],
+        [
+          "mosaic-of-saturns-rings",
+          "Divisão de Cassini"
+        ],
+        [
+          "ringscape-in-color",
+          "Estrutura dos anéis"
+        ],
+        [
+          "panoramic-rings",
+          "Faixas em cores naturais"
+        ],
+        [
+          "pastel-rings",
+          "Transparência das faixas"
+        ]
+      ]
+    },
+    {
+      "title": "Uma estrutura finíssima",
+      "speech": "O mais impressionante é a proporção. Embora o sistema se estenda por centenas de milhares de quilômetros, em muitas regiões sua espessura é de cerca de dez metros. Quando visto de lado, o disco quase desaparece, como uma linha no espaço.",
+      "facts": [
+        "https://science.nasa.gov/resource/translucent-arcs/",
+        "https://science.nasa.gov/photojournal/thin-line-broad-shadows/"
+      ],
+      "photos": [
+        [
+          "thin-line-broad-shadows",
+          "Anéis de perfil"
+        ],
+        [
+          "slender-rings",
+          "Uma faixa estreita"
+        ],
+        [
+          "crescent-at-equinox",
+          "Equinócio"
+        ],
+        [
+          "narrow-band",
+          "Anéis quase de lado"
+        ],
+        [
+          "narrow-shadow",
+          "Sombra estreita"
+        ],
+        [
+          "narrowing-ring-shadow",
+          "Sombra perto do equinócio"
+        ],
+        [
+          "on-the-edge",
+          "Vista próxima do plano dos anéis"
+        ]
+      ]
+    },
+    {
+      "title": "Luas que deixam ondas",
+      "speech": "As faixas também não são uniformes. Algumas luas pequenas orbitam dentro de espaços vazios dos anéis. Dáfnis, por exemplo, perturba o material ao passar pela divisão de Keeler. A gravidade dessa lua cria ondas nas bordas, registradas nas imagens da Cassini.",
+      "facts": [
+        "https://science.nasa.gov/photojournal/the-realm-of-daphnis/",
+        "https://science.nasa.gov/photojournal/new-heights-for-edge-waves/"
+      ],
+      "photos": [
+        [
+          "the-realm-of-daphnis",
+          "Dáfnis e as ondas"
+        ],
+        [
+          "daphnis-disturbances",
+          "Perturbações no anel A"
+        ],
+        [
+          "rings-and-waves",
+          "Ondas nas faixas"
+        ],
+        [
+          "new-heights-for-edge-waves",
+          "Sombras das ondulações"
+        ],
+        [
+          "moons-signature",
+          "Marcas de Dáfnis"
+        ],
+        [
+          "waves-from-daphnis",
+          "Ondas na divisão de Keeler"
+        ],
+        [
+          "daphnis-waves",
+          "Ondulações provocadas pela lua"
+        ],
+        [
+          "among-the-waves",
+          "Dáfnis entre ondulações"
+        ]
+      ]
+    },
+    {
+      "title": "Uma lua alimenta um anel",
+      "speech": "Existe ainda uma lua que fornece material para um dos anéis. Encélado lança jatos de partículas de gelo a partir da região do seu polo sul. Parte desse material escapa da lua e alimenta o tênue anel E de Saturno.",
+      "facts": [
+        "https://science.nasa.gov/mission/cassini/science/rings/",
+        "https://science.nasa.gov/photojournal/eyeing-the-e-ring/"
+      ],
+      "photos": [
+        [
+          "plumes-and-a-crescent",
+          "Jatos de Encélado"
+        ],
+        [
+          "high-phase-plumes",
+          "Plumas iluminadas"
+        ],
+        [
+          "casting-a-shadow",
+          "Gelo e sombra"
+        ],
+        [
+          "eyeing-the-e-ring",
+          "O anel E"
+        ],
+        [
+          "all-aglow",
+          "Encélado diante dos anéis"
+        ],
+        [
+          "ice-fountains",
+          "Fontes de gelo"
+        ],
+        [
+          "jets-from-a-distance",
+          "Jatos vistos de longe"
+        ],
+        [
+          "plumewatch",
+          "Pluma iluminada"
+        ]
+      ]
+    },
+    {
+      "title": "O legado da Cassini",
+      "speech": "Em dois mil e dezessete, a missão terminou com o mergulho da Cassini na atmosfera de Saturno. Mas suas fotografias mostram que os anéis são muito mais do que um enfeite: são um sistema de partículas, luas e gravidade em constante transformação.",
+      "facts": [
+        "https://science.nasa.gov/mission/cassini/faq/",
+        "https://science.nasa.gov/photojournal/a-farewell-to-saturn/"
+      ],
+      "photos": [
+        [
+          "finale-ringscape",
+          "Últimas vistas dos anéis"
+        ],
+        [
+          "impact-site-cassinis-final-image",
+          "Última imagem da Cassini"
+        ],
+        [
+          "a-farewell-to-saturn",
+          "Despedida de Saturno"
+        ],
+        [
+          "focus-on-enceladus",
+          "A lua e as sombras"
+        ],
+        [
+          "barely-bisected-rings",
+          "Sombra nos anéis em 2015"
+        ],
+        [
+          "sun-striped-saturn",
+          "Retrato da missão Cassini"
+        ],
+        [
+          "saturnscape-after-equinox",
+          "Saturno após o equinócio"
+        ]
+      ]
+    }
+  ]
+}

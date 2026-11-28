@@ -1,0 +1,82 @@
+name: E219 - mapa real isolado sem TTS
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['src/v4/formatos/ponte_mapa_atlas.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_CHROME: /usr/bin/google-chrome
+  CORINGA_CHROME: /usr/bin/google-chrome
+  REMOTION_DISABLE_TELEMETRY: "1"
+jobs:
+  map:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Dependencias
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+      - name: Regressao da ponte
+        run: python -m pytest -q tests/test_ponte_mapa_atlas_filme.py
+      - name: Render real de localizacao sem voz
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          from scripts import qa_documentario_geografia_e219 as E
+          ch=next(c for c in E.read('benchmarks/e219/kilauea_2018.json')['chapters'] if 'atlas' in c)
+          for frames in (42,165,240):
+              span=frames/30
+              E.MAP=Path('stage_atlas/e219-isolated')/str(frames)
+              E.MAP.mkdir(parents=True,exist_ok=True)
+              p=E.mapplan(ch,span)
+              prep=E.B.preparar(p,0,span,E.MAP,E.PUBLIC)
+              clip=E.MAP/'mapa.mp4'
+              subprocess.run(['npx','--no-install','remotion','render','remotion/src/index.ts','Formato',str(clip.resolve()),
+                  '--props='+str((E.MAP/'props_atlas_formato.json').resolve()),'--frames=0-'+str(frames-1),
+                  '--codec=h264','--crf=22','--concurrency=1','--public-dir=remotion/public','--log=info'],cwd='motor4',check=True,timeout=420)
+              print('MAPA BINARIO',frames,clip.exists(),clip.stat().st_size if clip.exists() else None,flush=True)
+              report=E.B.confirmar(prep,clip,E.MAP)
+              print('MAPA VALIDADO',json.dumps({k:report[k] for k in ('video_bytes','quadros_decodificados','duracao_s','quadros_reais')}),flush=True)
+              subprocess.run(['ffmpeg','-v','error','-i',str(clip),'-vf','fps=1,scale=270:480,tile=4x2','-frames:v','1',str(E.MAP/'contato.jpg')],check=True)
+          PY
+      - name: Cifrar diagnostico e mapas privados
+        if: always()
+        run: |
+          mkdir -p entrega stage_atlas/e219-isolated
+          export GNUPGHOME=$(mktemp -d)
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          gpg --batch --quiet --import .github/piloto/chave_publica.asc
+          original=$(gpg --list-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          test -n "$original"
+          tar -czf /tmp/mapas.tgz stage_atlas/e219-isolated
+          gpg --batch --yes --trust-model always --encrypt -r "$original" -o entrega/mapas.tgz.gpg /tmp/mapas.tgz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mapas-localizacao-cifrados, path: entrega/, retention-days: 7, if-no-files-found: error}
+  avisar_falha:
+    needs: map
+    if: ${{ always() && (needs.map.result == 'failure' || needs.map.result == 'cancelled') }}
+    permissions:
+      actions: read
+      contents: none
+    uses: ./.github/workflows/notificar-falha-documental.yml
+    with:
+      result: ${{ needs.map.result }}
+      job_name: map
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

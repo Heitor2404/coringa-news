@@ -1,0 +1,255 @@
+{
+ "pedido_sha256": "6f58e40aeeb046cf59ea4c8cc7ea9ca21e4410b05cebc8a924de1c1e2d55eb38",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 12.9,
+ "data": "2026-11-24T14:48:48Z",
+ "caracteres_pedido": 25705,
+ "caracteres_resposta": 3680,
+ "json": {
+  "titulo": "Por que a Islândia se afasta?",
+  "acontecimento_central": "Duas placas se afastam em direções opostas sob a Islândia, e o vão entre elas é preenchido por magma que vira crosta nova.",
+  "referencias_visuais": [
+   "corte esquemático em blocos",
+   "afastamento de placas com preenchimento de magma",
+   "fluxo de partículas de magma subindo",
+   "contorno geográfico real apenas para localizar",
+   "esquema ilustrativo sem limite georreferenciado"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "A Islândia, localizada sobre a dorsal, vê as duas placas se afastarem e o vão ser preenchido por magma que forma crosta nova.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há mídia real nem ATLAS disponíveis; o esquema declarativo mostra o afastamento das placas sem inventar limites geográficos precisos.",
+    "atores": [
+     {
+      "id": "a_ilha",
+      "rotulo": "Islândia",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "geo",
+       "nome_en": "Iceland"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_na",
+      "rotulo": "Placa norte-americana",
+      "papel": "contexto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#C98B4B"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_eu",
+      "rotulo": "Placa eurasiática",
+      "papel": "contexto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#6FA3C7"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_magma",
+      "rotulo": "Magma",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "fluido",
+       "cor": "#E8451E"
+      },
+      "fatos": [
+       "g2"
+      ]
+     },
+     {
+      "id": "a_crosta",
+      "rotulo": "Crosta nova",
+      "papel": "produto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#5B4638"
+      },
+      "fatos": [
+       "g2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "sobre",
+      "a": "a_ilha",
+      "b": "a_placa_na"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_ilha",
+      "b": "a_placa_eu"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_placa_na",
+      "b": "a_placa_eu"
+     },
+     {
+      "tipo": "dentro",
+      "a": "a_magma",
+      "b": "a_crosta"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "A Islândia está parada sobre duas placas. Mas por que ela é puxada para os dois lados?",
+      "etapa": "Ilha sobre a dorsal",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_ilha",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_na",
+        "inicio": 0.2,
+        "fim": 0.5
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_eu",
+        "inicio": 0.2,
+        "fim": 0.5
+       },
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_ilha",
+        "interior": "a_placa_na",
+        "inicio": 0.5,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_ilha",
+       "enquadramento": "medio",
+       "motivo": "Colocar a ilha em quadro já sobre as duas placas, no gancho."
+      }
+     },
+     {
+      "fala": "Ela fica na Dorsal Mesoatlântica, onde a placa norte-americana e a eurasiática se afastam.",
+      "etapa": "Placas se afastam",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "mover",
+        "alvo": "a_placa_na",
+        "para": "esquerda",
+        "inicio": 0.0,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_placa_eu",
+        "para": "direita",
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_placa_na",
+       "enquadramento": "detalhe",
+       "motivo": "Mostrar as placas indo em sentidos opostos, sem velocidade medida."
+      }
+     },
+     {
+      "fala": "Conforme elas se afastam, o magma sobe e preenche o vão.",
+      "etapa": "Magma preenche o vão",
+      "fatos": [
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.3,
+        "preencher_com": {
+         "rotulo": "Magma",
+         "cor": "#E8451E",
+         "forma": "fluido"
+        },
+        "inicio": 0.0,
+        "fim": 0.6
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_magma",
+        "para": "a_crosta",
+        "item": {
+         "rotulo": "Magma",
+         "cor": "#E8451E"
+        },
+        "quantidade": 8,
+        "inicio": 0.4,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_magma",
+       "enquadramento": "detalhe",
+       "motivo": "Mostrar o magma enchendo o espaço aberto entre as placas."
+      }
+     },
+     {
+      "fala": "O magma esfria e vira crosta nova. É assim que o afastamento das placas cria terra.",
+      "etapa": "Magma vira crosta",
+      "fatos": [
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "transformar",
+        "de": "a_magma",
+        "para": "a_crosta",
+        "inicio": 0.0,
+        "fim": 0.7
+       },
+       {
+        "verbo": "destacar",
+        "alvo": "a_crosta",
+        "inicio": 0.7,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_ilha",
+       "enquadramento": "geral",
+       "motivo": "Fechar com a visão geral: placas afastadas e crosta nova entre elas."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45417598655 (job 138527978286)"
+}

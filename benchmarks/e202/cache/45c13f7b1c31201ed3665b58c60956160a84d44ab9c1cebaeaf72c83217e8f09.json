@@ -1,0 +1,267 @@
+{
+ "pedido_sha256": "45c13f7b1c31201ed3665b58c60956160a84d44ab9c1cebaeaf72c83217e8f09",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: None)"
+ ],
+ "segundos": 11.0,
+ "data": "2026-11-24T15:58:01Z",
+ "caracteres_pedido": 32284,
+ "caracteres_resposta": 3900,
+ "json": {
+  "titulo": "Por que a Islândia se afasta?",
+  "acontecimento_central": "A Islândia está sobre a Dorsal Mesoatlântica: as duas placas se afastam em sentidos opostos e o magma preenche o vão com nova crosta.",
+  "referencias_visuais": [
+   "corte esquemático com blocos de placas lado a lado na mesma altura",
+   "afastamento de blocos com preenchimento de magma",
+   "contorno geo real apenas para localizar, sem desenhar limite geográfico",
+   "câmera que parte do detalhe e termina em plano geral"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "Duas placas lado a lado sob a Islândia se afastam em sentidos opostos, e o magma preenche o vão com nova crosta.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Registro real, mapa ATLAS e CAD estão indisponíveis; o contorno geo real localiza a ilha e o esquema declarativo mostra o afastamento das placas sem inventar limites geográficos.",
+    "atores": [
+     {
+      "id": "a_islandia",
+      "rotulo": "Islândia",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "geo",
+       "nome_en": "Iceland"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_dorsal",
+      "rotulo": "Dorsal Mesoatlântica",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#5A4A42"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_na",
+      "rotulo": "Placa norte-americana",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#C9A36B"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_placa_eu",
+      "rotulo": "Placa eurasiática",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "bloco",
+       "cor": "#8FA7C9"
+      },
+      "fatos": [
+       "g1"
+      ]
+     },
+     {
+      "id": "a_magma",
+      "rotulo": "Magma",
+      "papel": "produto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "fluido",
+       "cor": "#E8461E"
+      },
+      "fatos": [
+       "g2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "sobre",
+      "a": "a_islandia",
+      "b": "a_dorsal"
+     },
+     {
+      "tipo": "dentro",
+      "a": "a_dorsal",
+      "b": "a_islandia"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_placa_na",
+      "b": "a_dorsal"
+     },
+     {
+      "tipo": "ao_lado",
+      "a": "a_dorsal",
+      "b": "a_placa_eu"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_placa_na",
+      "b": "a_magma"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_placa_eu",
+      "b": "a_magma"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "A Islândia parece parada, mas ela está sobre a Dorsal Mesoatlântica.",
+      "etapa": "Gancho",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_islandia",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_islandia",
+        "interior": "a_dorsal",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_islandia",
+       "enquadramento": "medio",
+       "motivo": "Islândia grande e centralizada, com a dorsal visível dentro dela, atravessando a ilha."
+      }
+     },
+     {
+      "fala": "Dos dois lados dela, duas placas: a norte-americana e a eurasiática.",
+      "etapa": "Duas placas",
+      "fatos": [
+       "g1"
+      ],
+      "acoes": [
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_na",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_placa_eu",
+        "inicio": 0.0,
+        "fim": 0.3
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_placa_na",
+        "para": "esquerda",
+        "inicio": 0.3,
+        "fim": 1.0
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_placa_eu",
+        "para": "direita",
+        "inicio": 0.3,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_dorsal",
+       "enquadramento": "medio",
+       "motivo": "Placas na mesma altura, uma de cada lado da dorsal, começando a se puxar em sentidos opostos."
+      }
+     },
+     {
+      "fala": "Quando elas se afastam, o magma sobe e preenche o vão.",
+      "etapa": "Magma sobe",
+      "fatos": [
+       "g1",
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.3,
+        "preencher_com": {
+         "rotulo": "Magma",
+         "cor": "#E8461E"
+        },
+        "inicio": 0.0,
+        "fim": 0.7
+       },
+       {
+        "verbo": "mover",
+        "alvo": "a_magma",
+        "para": "cima",
+        "inicio": 0.0,
+        "fim": 0.7
+       }
+      ],
+      "camera": {
+       "foco": "a_placa_na",
+       "enquadramento": "medio",
+       "motivo": "Mostra a placa se afastando enquanto o magma sobe pelo vão aberto."
+      }
+     },
+     {
+      "fala": "O magma vira crosta nova, e a Islândia se afasta nas duas direções.",
+      "etapa": "Payoff",
+      "fatos": [
+       "g1",
+       "g2"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_magma",
+        "para_cor": "#3A2F2B",
+        "intensidade": 0.8,
+        "inicio": 0.0,
+        "fim": 0.5
+       },
+       {
+        "verbo": "afastar",
+        "a": "a_placa_na",
+        "b": "a_placa_eu",
+        "distancia": 0.4,
+        "preencher_com": {
+         "rotulo": "Nova crosta",
+         "cor": "#3A2F2B"
+        },
+        "inicio": 0.2,
+        "fim": 0.9
+       }
+      ],
+      "camera": {
+       "foco": "a_placa_eu",
+       "enquadramento": "geral",
+       "motivo": "Plano geral: ilha sobre a faixa central, placas indo para lados opostos e crosta nova no meio."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45430485122"
+}

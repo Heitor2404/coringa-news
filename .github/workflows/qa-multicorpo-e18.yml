@@ -1,0 +1,102 @@
+name: E18 núcleo multicorpo 3D multi-fornecedor
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-multicorpo-e18.yml"
+      - "src/v4/formatos/*_e18.py"
+      - "src/v4/formatos/metrologia_e22.py"
+      - "src/v4/formatos/camera_e24.py"
+      - "src/v4/formatos/visibilidade_e26.py"
+      - "tests/test_visibilidade_e26.py"
+      - "tests/test_camera_e24.py"
+      - "tests/test_metrologia_e22.py"
+      - "src/v4/formatos/solver_restricoes_e1.py"
+      - "benchmarks/e18_*.json"
+      - "benchmarks/e19_*.json"
+      - "tests/test_multicorpo_e18.py"
+permissions:
+  contents: read
+jobs:
+  multicorpo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: 1
+      E18_MENAGERIE: ${{ github.workspace }}/fonte_e18
+      E19_FONTE: ${{ github.workspace }}/fonte_e19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python
+        timeout-minutes: 8
+        run: |
+          python -m pip install --progress-bar off --only-binary=:all: mujoco-core==4.0.1 python-fcl==0.7.0.11 numba scipy pillow pytest cairosvg imageio-ffmpeg
+          python -c "import mujoco, fcl, numba, imageio_ffmpeg; print(mujoco.__version__, numba.__version__, imageio_ffmpeg.get_ffmpeg_exe())"
+          # Espelho do apt lento (24/11): ffmpeg estático do wheel, sem apt.
+          echo "FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+      - name: Fontes nos commits fixados (somente no runner; nada é copiado para o repositório ou artifact)
+        run: |
+          buscar() {  # manifesto destino
+            commit=$(jq -er .fonte.commit "$1"); repo=$(jq -er .fonte.repositorio "$1")
+            git init -q "$2"
+            git -C "$2" fetch -q --depth 1 "$repo" "$commit"
+            git -C "$2" checkout -q FETCH_HEAD
+            test "$(git -C "$2" rev-parse HEAD)" = "$commit"
+          }
+          buscar benchmarks/e18_multifornecedor.json fonte_e18
+          buscar benchmarks/e19_urdf_unificado.json fonte_e19
+      - name: Testes E18 (sintéticos + fonte real) e regressões do solver comum
+        run: python -m pytest -q tests/test_multicorpo_e18.py tests/test_metrologia_e22.py tests/test_camera_e24.py tests/test_visibilidade_e26.py tests/test_solver_generico_e1.py tests/test_solver_generico_e2.py tests/test_importador_juntas_e12.py
+      - name: Filmes privados, oráculos e auditoria
+        run: |
+          python -m src.v4.formatos.filme_e18 gerar benchmarks/e18_multifornecedor.json "$E18_MENAGERIE" qa_e18 > qa_e18_log.jsonl
+          python -m src.v4.formatos.filme_e18 gerar benchmarks/e19_urdf_unificado.json "$E19_FONTE" qa_e19 > qa_e19_log.jsonl
+          python - <<'EOF'
+          import json
+          modelos = json.load(open("qa_e18/QA.json"))["modelos"] + json.load(open("qa_e19/QA.json"))["modelos"]
+          falhas = 0
+          oraculos_reprovados = 0
+          for m in modelos:
+              o = m.get("oraculo_fabricante", {})
+              print("E18-RESUMO", json.dumps(dict(
+                  id=m["id"], estado=m["estado"], motivo=m.get("motivo"), quadros=m.get("quadros"),
+                  modos=m.get("modos"), mobilidade_max=m.get("mobilidade_max"), residuo_max=m.get("residuo_max"),
+                  fk_mujoco=m.get("oraculo_mujoco_cinematica"), dinamica=m.get("oraculo_mujoco_dinamica"),
+                  interferencias=m.get("interferencias"), abaixo_base_mm=m.get("abaixo_do_plano_da_base_mm"),
+                  sobreposicao_referencia=m.get("sobreposicao_na_referencia_da_fonte"), cortes_contato=m.get("cortes_por_contato_novo"),
+                  pares_corte=m.get("pares_que_cortaram_o_curso"), ociosos_max=m.get("ociosos_max"), legenda=m.get("legenda"),
+                  medida=m.get("medida"), metrologia=m.get("metrologia_e22"), fabricante=dict(valor=o.get("valor_mm"), medido=o.get("medido_mm"),
+                  erro_dh_max_mm=o.get("erro_max_mm"), dentro=o.get("dentro_da_tolerancia")),
+                  camera=m.get("camera"), video=m.get("verificacao_video"),
+                  sha256_mp4=m.get("sha256_mp4"), sha256_quadros_rgb=m.get("sha256_quadros_rgb"),
+                  publish=m.get("publish")), ensure_ascii=False, default=float))
+              # E21: sucesso do solver nao equivale a conformidade com o
+              # fabricante. O CI de conformidade deve FALHAR na xArm ate que
+              # a origem da divergencia esteja comprovada e corrigida.
+              falhas += m.get("estado_execucao") != "PASS"
+              falhas += m.get("validacao_externa") in ("REPROVADO", "INDETERMINADO")
+              oraculos_reprovados += m.get("validacao_externa") == "REPROVADO"
+              falhas += any(v for v in (m.get("interferencias") or {}).values())
+              falhas += m.get("liberado_para_publicacao") is not False
+          print("E21-QUALIDADE-EXTERNA", json.dumps({
+              "oraculos_reprovados":oraculos_reprovados,
+              "falhas_conformidade":falhas,
+              "status":"REPROVADO" if falhas else "SEM_FALHAS_DETECTADAS",
+              "aprovacao_visual":False,"publish":False}, ensure_ascii=False))
+          raise SystemExit(1 if falhas else 0)
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e18-multicorpo-privado
+          path: |
+            qa_e18/*.mp4
+            qa_e18/*_folha.jpg
+            qa_e18/QA.json
+            qa_e19/*.mp4
+            qa_e19/*_folha.jpg
+            qa_e19/QA.json
+          retention-days: 14

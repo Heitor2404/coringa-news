@@ -1,0 +1,29 @@
+{
+  "schema": "coringa-documentary-evidence-f16-v1",
+  "id": "plataforma_tesoura_fonte_alternativa",
+  "url": "https://hydraproducts.co.uk/hydraulic-power-packs/power-pack-applications/commercial-systems/scissor-lift/",
+  "kind": "supplier_technical_article",
+  "quoted_spans": [
+    {
+      "id": "h1",
+      "locator": "Hydraulic Power Pack",
+      "text": "motor runs the hydraulic pump"
+    },
+    {
+      "id": "h2",
+      "locator": "Hydraulic Power Pack",
+      "text": "pumping hydraulic oil into the hydraulci ram"
+    },
+    {
+      "id": "h3",
+      "locator": "Principle of operation",
+      "text": "ram extends the scissors open"
+    }
+  ],
+  "claim_scope": "same hydraulic scissors class, quote uses source spelling 'hydraulci'; no dimensions or linkage-rig extracted",
+  "checked_by": "manual_public_web_inspection_2026-11-23",
+  "original_media_used": false,
+  "image_license_claimed": false,
+  "publication_allowed": false,
+  "extraction_requires_live_anchor_check": true
+}

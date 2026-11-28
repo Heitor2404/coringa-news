@@ -1,0 +1,229 @@
+{
+  "versao": 1,
+  "id": "taiwan_26s_reedicao_candidata_v2",
+  "formato": "filme_editorial",
+  "tipo": "PRE_PRODUCAO_PRIVADA",
+  "titulo": "Por que Taiwan importa para os chips? — revisão visual candidata NIST",
+  "duracao_planejada_s": 27.445,
+  "base_narracao": {
+    "motor": "gemini",
+    "voz": "Charon",
+    "fallback": "bloquear",
+    "referencia_temporal": "tests/dados/atlas_chips_v2_tts_real_run_44450584008.json",
+    "arquivo_wav": null,
+    "texto_fonte": "src/v4/formatos/planos/reuso/atlas_chips_v2_prova_25s.json",
+    "status": "SEM_AUDIO_REUTILIZAVEL_VERIFICADO",
+    "nota": "Tempos preservados permitem decupagem; não constituem arquivo de áudio nem autorizam afirmar reutilização da voz."
+  },
+  "rubrica_editorial": {
+    "min_videos_reais_independentes": 2,
+    "max_fracao_fotos_estaticas": 0.4,
+    "max_foto_individual_s": 3.8,
+    "mapa_evidencia_real_obrigatorio": true,
+    "nao_aceitar_lancamento_sem_inspecao_humana": true
+  },
+  "cenas": [
+    {
+      "id": "01_fab18",
+      "inicio": 0,
+      "fim": 2.5,
+      "acao": "MOSTRAR",
+      "promessa": "A fábrica Fab 18 existe em Taiwan",
+      "midia": {
+        "tipo": "foto",
+        "asset_id": "commons:TSMC_Fab_18_May_2025.jpg",
+        "identidade": "literal",
+        "rotulo": "TSMC Fab 18 · Taiwan"
+      },
+      "estado": "CATALOGO_VERIFICAR"
+    },
+    {
+      "id": "02_taiwan_mapa",
+      "inicio": 2.5,
+      "fim": 5.1,
+      "acao": "LOCALIZAR",
+      "promessa": "Situar a fábrica e Taiwan na Ásia",
+      "midia": {
+        "tipo": "atlas_map",
+        "identidade": "explicativa",
+        "clipe": "stage_atlas/taiwan/mapa.mp4",
+        "prova": "stage_atlas/taiwan/comprovante_atlas.json",
+        "rotulo": "Taiwan · mapa ATLAS",
+        "sha256": "c0c6e8895f1d0305b791a8d66581be5695abb2026b9ca91c752a6b5eb5b9c794"
+      },
+      "estado": "ARTEFATO_ATLAS_AUTENTICADO_SOMENTE_QUANDO_MP4_E_SIDECAR_NO_RUNNER"
+    },
+    {
+      "id": "03_chip_fisico",
+      "inicio": 5.1,
+      "fim": 7.8,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar o objeto físico real em movimento, sem fingir fabricação",
+      "midia": {
+        "tipo": "video",
+        "asset_id": "candidato:mixkit_microchip_1140",
+        "identidade": "representativa",
+        "rotulo": "Chip em placa · vídeo ilustrativo",
+        "pagina": "https://mixkit.co/free-stock-video/microchip-technology-close-up-1140/",
+        "licenca_anunciada": "Mixkit Stock Video Free License"
+      },
+      "estado": "CANDIDATO_NAO_INGESTADO"
+    },
+    {
+      "id": "04_wafer",
+      "inicio": 7.8,
+      "fim": 11,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar um wafer real e explicar que recebe circuitos",
+      "midia": {
+        "tipo": "foto",
+        "asset_id": "commons:Silicon_wafer_close_view.jpg",
+        "identidade": "representativa",
+        "rotulo": "Wafer real · exemplo sem origem TSMC"
+      },
+      "estado": "CATALOGO_VERIFICAR"
+    },
+    {
+      "id": "05_processamento",
+      "inicio": 11,
+      "fim": 14.8,
+      "acao": "MOSTRAR",
+      "promessa": "Mostrar o interior de uma máquina real de deposição de metais em laboratório NIST, como contexto técnico e não como filmagem da TSMC",
+      "midia": {
+        "tipo": "video",
+        "asset_id": "v3:cm-9d5d908e11af",
+        "identidade": "representativa",
+        "rotulo": "NIST · interior de equipamento",
+        "pagina": "https://www.nist.gov/video/inside-instrument-nist-center-nanoscale-science",
+        "conteudo_confirmado": "Abertura de câmara e interior do equipamento; deposição química em andamento NÃO comprovada",
+        "original_sha256": "9d5d908e11af8af44c45c151db7abc67930c786e81f3e81fed9956d1f1200854",
+        "janela_candidata_s": [
+          5.2,
+          11.2
+        ]
+      },
+      "estado": "CANDIDATO_V3_SEM_LICENCA_INDIVIDUAL_APROVADA"
+    },
+    {
+      "id": "06_fabricacao_real",
+      "inicio": 14.8,
+      "fim": 18.7,
+      "acao": "DEMONSTRAR",
+      "promessa": "Demonstrar tecnicamente o manuseio e posicionamento de wafer em laboratório, sem alegar que é EUV ou fábrica TSMC",
+      "midia": {
+        "tipo": "video",
+        "asset_id": "v3:cm-738665b9e6bf",
+        "identidade": "representativa",
+        "rotulo": "NIST · laboratório e-beam",
+        "pagina": "https://www.nist.gov/video/visit-e-beam-machine",
+        "original_sha256": "738665b9e6bf3706f2d954acde73dc9737740452a6cc161c241eaeb189c6d64a",
+        "janela_candidata_s": [
+          59.5,
+          65
+        ],
+        "substituicao": {
+          "acontecimento": "Etapa física de manuseio de wafers na fabricação de semicondutores",
+          "evento_da_midia": "Laboratório NIST Boulder",
+          "uso": "demonstracao",
+          "cena_especifica": true,
+          "rotulo": "NIST · litografia e-beam",
+          "origem_verificada": true,
+          "licenca_verificada": false,
+          "representacao": {
+            "tipo": "processo_equivalente",
+            "processo_narrado": "manuseio_de_wafer_em_sala_limpa",
+            "processo_midia": "manuseio_de_wafer_em_sala_limpa",
+            "compatibilidade_tecnica_verificada": true,
+            "evidencia_inspecao": "quadros de 59 a 65 segundos mostram técnico com luvas manuseando wafer; não comprovam EUV ou TSMC",
+            "fala_atribui_registro": false,
+            "origem_no_credito": "Laboratório NIST Boulder · vídeo de Jennifer Lauren Lee/NIST"
+          }
+        }
+      },
+      "estado": "CANDIDATO_V3_VERIFICAR_DIREITOS_ESPECIFICOS_E_FRAMES"
+    },
+    {
+      "id": "07_elo_equipamento",
+      "inicio": 18.7,
+      "fim": 22.3,
+      "acao": "CONECTAR",
+      "promessa": "Mostrar relação verificável entre equipamentos europeus e a produção em Taiwan",
+      "midia": {
+        "tipo": "comparison",
+        "asset_id": null,
+        "identidade": "explicativa",
+        "rotulo": "Equipamentos ≠ fábrica, relação documentada"
+      },
+      "estado": "SEM_MEDIA_PARA_RELACAO_ASML_TSMC"
+    },
+    {
+      "id": "08_consequencia",
+      "inicio": 22.3,
+      "fim": 27.445,
+      "acao": "REVELAR",
+      "promessa": "Mostrar consequência concreta da dependência internacional, não slogan vazio",
+      "midia": {
+        "tipo": "video",
+        "asset_id": null,
+        "identidade": "literal",
+        "rotulo": "Consequência documentada"
+      },
+      "estado": "SEM_PAYOFF_FATUAL_E_MEDIA"
+    }
+  ],
+  "candidatos_nao_autorizados_automaticamente": [
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:How_ST_designs_and_manufactures_semiconductor_devices.webm",
+      "problema": "License review needed (video). Não incorporar sem documentação de licença e inspeção."
+    },
+    {
+      "url": "https://commons.wikimedia.org/wiki/File:How_EUV_lithography_works.webm",
+      "problema": "License review needed (video). Bloqueado."
+    },
+    {
+      "url": "https://mixkit.co/free-stock-video/microchip-technology-close-up-1140/",
+      "problema": "Free License indicada, mas sem ingestão de bytes, SHA e avaliação visual."
+    }
+  ],
+  "politica": {
+    "publicar": false,
+    "telegram": "NÃO_ENVIAR_SE_BLOQUEADO",
+    "autorizar_tts_apos_portao_visual": true
+  },
+  "nota_de_estado": "RASCUNHO DE 27,445 s para revisar imagens, NAO E UM EPISODIO MONETIZAVEL para TikTok Creator Rewards. A futura versao sera reescrita conforme fatos, acontecimentos demonstrados e narração natural; 65s é preferência, não licença para enchimento. Faltam vídeos curados, relação factual e consequência. Não autoriza TTS, render, Telegram ou publicação.",
+  "politica_duracao": {
+    "modo": "narrativa",
+    "alvo_preferencial_tiktok_creator_rewards_s": 65,
+    "acima_de_60_para_creator_rewards": true,
+    "limite_short_youtube_s": 180,
+    "teto_editorial_s": null,
+    "nao_adicionar_enchimento": true
+  },
+  "compromissos_para_episodio_integral": [
+    {
+      "etapa": "gancho",
+      "pergunta": "Qual é a dependência concreta que o vídeo provará?",
+      "evidencia": "fato com fonte específica + imagem que torne a pergunta intrigante"
+    },
+    {
+      "etapa": "contexto",
+      "pergunta": "Qual papel Taiwan e a TSMC desempenham neste caso?",
+      "evidencia": "fontes verificadas, fab real identificada, mapa ATLAS original"
+    },
+    {
+      "etapa": "processo",
+      "pergunta": "Como o chip é fabricado, sem confundir deposição, e-beam e EUV?",
+      "evidencia": "laboratório NIST apenas como representação quando tecnicamente equivalente, com checagem do processo"
+    },
+    {
+      "etapa": "elo",
+      "pergunta": "Quais conexões internacionais são realmente demonstráveis?",
+      "evidencia": "fontes factuais + objetos e fluxo; não apenas etiquetas geográficas"
+    },
+    {
+      "etapa": "consequencia",
+      "pergunta": "O que acontece se uma etapa relevante da cadeia falha?",
+      "evidencia": "consequência documentada e filmagem ilustrativa compatível, nunca ocorrência inventada"
+    }
+  ]
+}

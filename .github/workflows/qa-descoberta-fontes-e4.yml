@@ -1,0 +1,100 @@
+name: "LAB E4 — descoberta publica por consulta e prova por revisao"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-descoberta-fontes-e4.yml"
+      - "src/v4/formatos/descoberta_fontes_e4.py"
+      - "tests/test_descoberta_fontes_e4.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e4-discovery-public-evidence
+  cancel-in-progress: true
+jobs:
+  discover_and_audit:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test deps reused from F17 (no paid provider)
+        run: python -m pip install -q pytest numpy scipy cairosvg pillow
+      - name: Test source provenance and false positives without internet
+        run: |
+          python -m pytest -q \
+            tests/test_descoberta_fontes_e4.py \
+            tests/test_relacoes_com_evidencia_f17.py \
+            tests/test_ponte_evidencia_solver_e3.py
+      - name: Attempt live discovery of two search terms (not fixed page URLs)
+        timeout-minutes: 5
+        run: |
+          mkdir -p qa_e4
+          python -m src.v4.formatos.descoberta_fontes_e4 \
+            "Whitworth quick return" qa_e4 --live
+          python -m src.v4.formatos.descoberta_fontes_e4 \
+            "four bar linkage" qa_e4 --live
+      - name: Audit real search/page boundaries, export measurable results
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("qa_e4")
+          records=[json.loads(x.read_text("utf8")) for x in sorted(root.glob("E4_*.json"))]
+          assert len(records)==2
+          source_pages=[page for x in records for page in x["pages"]]
+          assert all("pageid" in p and "revid" in p and len(p["text_sha256"])==64 for p in source_pages)
+          assert all(p["human_review_required"] and p["publish"] is False
+                     and p["mechanism_spec_generated"] is False for p in source_pages)
+          assert all(x["render_allowed"] is False and x["publish"] is False for x in records)
+          for record in records:
+              if record["real_network_verified"]:
+                  assert record["status"]=="DISCOVERY_VERIFIED_TEXT_ONLY"
+                  assert len(record["pages"])>=1
+                  assert all(p["source_live_verified"] is True for p in record["pages"])
+              else:
+                  assert record["status"].startswith("BLOCKED")
+          evidence=[
+              {"query":r["query"],"status":r["status"],
+               "search_results":len(r["search_hits"]),
+               "verified_pages":len(r["pages"]) if r["real_network_verified"] else 0,
+               "source_revision_ids":[p["revid"] for p in r["pages"]],
+               "verified_excerpts":sum(p["excerpt_count"] for p in r["pages"]),
+               "candidate_relations":sum(len(p["candidate_relations"]) for p in r["pages"]),
+               "quantity_candidates_not_usable":sum(len(p["candidate_quantities"]) for p in r["pages"]),
+               "structural_count_candidates_not_instantiable":sum(
+                   len(p["candidate_structural_counts"]) for p in r["pages"]),
+               "failures":r["blocked_pages"]} for r in records]
+          total=sum(x["verified_pages"] for x in evidence)
+          unique_revisions={(p["pageid"],p["revid"]) for p in source_pages}
+          report={
+            "schema":"coringa-e4-source-discovery-qa-v1",
+            "query_count":2,
+            "verified_page_fetches":total,
+            "verified_unique_pages":len(unique_revisions),
+            "source_pages_auto_discovered":len(unique_revisions),
+            "technical_reference_completeness_proven":False,
+            "new_mechanism_solved":False,
+            "complete_specs_from_source":0,
+            "holdout_solver_attempts":0,
+            "new_paid_api_calls":0,
+            "media_rights_proven":False,
+            "revisions_logged":True,
+            "manual_review_required":True,
+            "visual_approved":False,
+            "render_allowed":False,"publish":False,
+            "records":evidence
+          }
+          (root/"QA_E4_DISCOVERY.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e4-public-search-provenance-no-publish
+          path: qa_e4/
+          retention-days: 5
+          if-no-files-found: warn

@@ -1,0 +1,23 @@
+{
+  "versao": 1,
+  "modo": "INSPECAO_PRIVADA_NAO_APROVADA",
+  "publicar": false,
+  "fonte_id": "nist_nanofab_users_2017",
+  "sha256_esperado": "582ee5ea387fae4b424ac08c85a33840fd8a44bc681f136ebbe1f76b8723c474",
+  "pagina": "https://www.nist.gov/video/cnst-nanofab-through-users-eyes",
+  "direitos": "REVIEW_PENDING",
+  "janelas": [
+    {
+      "id": "operador_contexto",
+      "inicio_s": 58,
+      "duracao_s": 5,
+      "alegacao": "contexto de estação com operador, não ação técnica específica"
+    },
+    {
+      "id": "laboratorio_contexto",
+      "inicio_s": 75,
+      "duracao_s": 6,
+      "alegacao": "laboratório com pesquisadores e instrumentos, não fabricação TSMC"
+    }
+  ]
+}

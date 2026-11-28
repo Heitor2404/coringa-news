@@ -1,0 +1,80 @@
+name: "QA — SceneGraph causal com atores, relações e eventos (sem IA)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-scenegraph-causal.yml"
+      - "src/v4/formatos/grafo_causal.py"
+      - "src/v4/formatos/grafo_causal_capacidades.json"
+      - "src/v4/formatos/catalogo_mecanismos.py"
+      - "src/v4/formatos/diretor_processos.py"
+      - "tests/test_grafo_causal.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-scenegraph-causal
+  cancel-in-progress: true
+jobs:
+  grafo_e_preflight:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar QA sem modelo de IA ou render caro
+        run: |
+          python -m pip install -q pytest requests pillow pyyaml cryptography
+      - name: Validar scenegraph e regressões de planejamento de roteiro
+        run: |
+          python -m pytest -q tests/test_grafo_causal.py tests/test_diretor_processos.py tests/test_diretor_capacidades.py tests/test_filme_panama_ciclo_19s.py
+      - name: Gerar evidência declarativa de três físicas e um caso sem capacidade
+        run: |
+          mkdir -p qa_scenegraph
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import grafo_causal as G,catalogo_mecanismos as C,diretor_processos as D,filme_editorial as F
+          folder=Path('qa_scenegraph')
+          raw=json.loads(Path('docs/v4/formatos/DEMO_DIRETOR_EVENTOS_20261120.json').read_text('utf8'))
+          extended=D.expandir(raw)
+          approved=F.avaliar(raw)
+          assert approved['pronto'],approved['bloqueios']
+          graph_descriptions={}
+          for id in ('optical_projection','lock_cycle_standalone','lock_explainer'):
+            cap=C.CAPACIDADES[id]
+            graph=G.montar(id,cap.acoes,momentos=cap.tempos_referencia)
+            graph_descriptions[id]={
+             'atores':len(graph['atores']),'relacoes':len(graph['relacoes']),
+             'eventos':len(graph['eventos']),
+             'estado_final':graph['estado_final'],
+             'camera_semantica':[e['camera']['intencao'] for e in graph['eventos']],
+             'revisao_pixels':'PENDENTE'}
+          missing=None
+          try:
+            G.montar('turbina_sem_capacidade',('rotate',))
+          except G.GrafoInvalido as exc:
+            missing=exc.codigo
+          assert missing=='F-GRAFO-SEM-FICHA'
+          out={'status':'ESTRUTURA_CAUSAL_VALIDADA_SEM_PROVA_VISUAL',
+               'source_type':'EVENTOS_ESTRUTURADOS_NAO_TEXTO_LIVRE',
+               'planejamento_integrado':['optical_projection','lock_cycle_standalone'],
+               'provas_por_familia':graph_descriptions,
+               'caso_desconhecido':{'renderer':None,'bloqueio':missing},
+               'revisao_humana':'PENDENTE','publicar':False,
+               'reconstrucao_visual_automatica':False,
+               'planos_ja_preparaveis':approved['pronto']}
+          (folder/'QA_GRAFO_CAUSAL_3_FAMILIAS.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf8')
+          (folder/'PLANO_CAUSAL_2_CENAS.json').write_text(json.dumps(
+             extended,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prova-scenegraph-causal-tres-processos-privada
+          path: qa_scenegraph/
+          retention-days: 7
+          if-no-files-found: warn

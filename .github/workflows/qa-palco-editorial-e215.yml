@@ -1,0 +1,40 @@
+name: E215 E216 - palco editorial comum privado
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-palco-editorial-e215.yml','src/v4/formatos/palco_editorial_render.py','src/v4/formatos/perfil_palco_editorial.json','tests/test_palco_editorial_e215.py','scripts/qa_e215_palco_editorial.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - name: Dependencias
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+          python -m pip install -q -r requirements.txt pytest cairosvg pillow
+      - name: Testes e render real sem IA
+        run: |
+          python -m pytest -q tests/test_palco_editorial_e215.py tests/test_palco_vertical_multifamilia.py tests/test_compositor_parametrico_2d.py
+          python -m scripts.qa_e215_palco_editorial
+      - name: Quadros para inspecao
+        run: |
+          for tema in compressor vasos; do
+            ffprobe -v error -show_streams -show_format -of json qa_e215/$tema.mp4 > qa_e215/$tema-probe.json
+            ffmpeg -v error -y -i qa_e215/$tema.mp4 -vf "fps=1/2,scale=270:480,tile=3x2" -frames:v 1 qa_e215/$tema-contato.jpg
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e215-palco-editorial-privado
+          path: qa_e215/
+          retention-days: 7
+          if-no-files-found: warn

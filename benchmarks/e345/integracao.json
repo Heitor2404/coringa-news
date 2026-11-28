@@ -1,0 +1,47 @@
+{
+  "publish": false,
+  "passages": [
+    {
+      "start": 0,
+      "end": 8.666666666666666,
+      "changes": {
+        "c0-0": {
+          "donor": "c4-2",
+          "lead": "LAVA E OCEANO"
+        },
+        "c0-1": {
+          "donor": "c4-3",
+          "lead": "BAÍA DE KAPOHO"
+        }
+      }
+    },
+    {
+      "start": 53.86666666666667,
+      "end": 57.233333333333334,
+      "changes": {
+        "c5-0": {
+          "donor": "c5-3",
+          "lead": "ESQUEMA · ANTES DO COLAPSO"
+        }
+      }
+    }
+  ],
+  "static_reveals": [
+    {
+      "shot": "c5-0",
+      "donor": "c5-3",
+      "speech": "ENQUANTO ISSO NO TOPO DO KILAUEA O RESERVATÓRIO DE MAGMA PERDIA",
+      "sha256": "f593c35a9b0124a64329fb7cc7d4c992e9d2f11738eeb350304a9987b870d8d2",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-03.jpg",
+      "anchor": "RESERVATÓRIO",
+      "label": "RESERVATÓRIO ANTES DO COLAPSO",
+      "bbox": [
+        0.105,
+        0.23,
+        0.29,
+        0.443
+      ],
+      "observation": "Painel A do esquema oficial mostra reservatório vermelho antes do colapso; painel B posterior mostra espaço vazio e blocos rebaixados. A caixa identifica o reservatório, não uma medição nem fluxo animado."
+    }
+  ]
+}

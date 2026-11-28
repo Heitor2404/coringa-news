@@ -1,0 +1,80 @@
+name: E201 prova real conjunta - ATLAS biologia atividade humana
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-multitema-e201.yml','benchmarks/e201/cenas.json','motor4/remotion/src/formatos/SceneGraph*','motor4/remotion/tests/scene-graph-e201.test.cjs']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  filme:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e200-atlas-rota-privado
+          run-id: "45409576578"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_e200
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install pillow requests pytest numpy pyyaml cryptography
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+          ./motor4/node_modules/.bin/tsc motor4/remotion/src/formatos/SceneGraphCoreE201.ts --module commonjs --target ES2020 --skipLibCheck --outDir /tmp/e201-test
+          node --test motor4/remotion/tests/scene-graph-e201.test.cjs
+      - name: Verificar mapa original e montar os três temas
+        run: |
+          python -m src.v4.formatos.ponte_mapa_atlas confirm fonte_e200 fonte_e200/mapa.mp4
+          mkdir -p qa_e201 motor4/remotion/public/e201
+          python - <<'PY'
+          import json,shutil
+          from pathlib import Path
+          from src.v4.formatos.ponte_mapa_atlas import sha256
+          p=json.load(open("benchmarks/e201/cenas.json"))
+          q=json.load(open("fonte_e200/preparo_atlas.json"))
+          assert abs(q["duracao_s"]-4.4)<1e-8
+          src=Path("fonte_e200/mapa.mp4"); h=sha256(src)
+          asset="e201/"+h+".mp4"; shutil.copyfile(src,Path("motor4/remotion/public")/asset)
+          for s in p["shots"]:
+              s["start"]+=4.4;s["end"]+=4.4
+          p["shots"].insert(0,dict(id="geo",start=0,end=4.4,type="atlas_map",asset=asset,evidence="explainer",subject="Canal do Panamá",lead="Geografia",headline="Canal do Panamá",source="ATLAS / fonte original",source_display="ATLAS"))
+          p["duracao"]=20.4
+          Path("qa_e201/props.json").write_text(json.dumps(p,ensure_ascii=False))
+          shutil.copyfile("fonte_e200/comprovante_atlas.json","qa_e201/comprovante_atlas.json")
+          PY
+      - name: Render integrado no compositor existente
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e201/multitema.mp4 --props=../qa_e201/props.json --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Conferir duração, quadros e movimento por cena
+        run: |
+          ffprobe -v error -show_streams -show_format -of json qa_e201/multitema.mp4 > qa_e201/PROBE.json
+          python - <<'PY'
+          import json,subprocess,numpy as np
+          p=json.load(open("qa_e201/PROBE.json"))
+          v=next(s for s in p["streams"] if s["codec_type"]=="video")
+          assert int(v["nb_frames"])==612 and (v["width"],v["height"])==(1080,1920)
+          raw=subprocess.check_output(["ffmpeg","-v","error","-i","qa_e201/multitema.mp4","-vf","scale=270:480","-f","rawvideo","-pix_fmt","rgb24","-"])
+          a=np.frombuffer(raw,np.uint8).reshape(612,480,270,3)
+          report=[]
+          for i,j in [(0,132),(132,372),(372,612)]:
+              b=a[i:j,135:335,10:240].astype(np.int16)
+              n=int((np.max(np.abs(b[1:]-b[:-1]),axis=(0,3))>12).sum())
+              assert n>50,n
+              report.append(n)
+          print("E201-MOVIMENTO",report)
+          open("qa_e201/MOVIMENTO.json","w").write(json.dumps(report))
+          PY
+          ffmpeg -v error -y -i qa_e201/multitema.mp4 -vf "fps=1/2,scale=270:480,tile=5x2" -frames:v 1 qa_e201/contato.jpg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: e201-multitema-privado, path: qa_e201/, retention-days: 14}

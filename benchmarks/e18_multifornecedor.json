@@ -1,0 +1,372 @@
+{
+  "esquema": "coringa-e18-cad-articulado-v1",
+  "fonte": {
+    "repositorio": "https://github.com/google-deepmind/mujoco_menagerie",
+    "commit": "370c43965323c0944b433b202aac5058b5f907a9",
+    "observacao": "Descrições simplificadas (MJCF) derivadas de URDFs públicos dos fabricantes; licença por pasta de modelo. Nenhum arquivo é copiado para este repositório nem para artifacts."
+  },
+  "nota_tolerancias": "Tolerâncias de 5% da ficha (garras) e 2 mm (DH) fixadas DEPOIS de uma medição exploratória local em 23/11/2026; não foram alteradas depois disso. Stretch 3: tolerância de 10 mm (≈2% de 520 mm) fixada em 23/11/2026 ANTES da primeira medição.",
+  "modelos": [
+    {
+      "id": "robotiq_2f85",
+      "titulo": "Robotiq 2F-85",
+      "xml": "robotiq_2f85/2f85.xml",
+      "licenca_arquivo": "robotiq_2f85/LICENSE",
+      "licenca": "BSD-2-Clause (ROS-Industrial)",
+      "credito": "Modelo: MuJoCo Menagerie · Robotiq 2F-85 · BSD-2-Clause",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "fingers_actuator",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "folga",
+        "a": "left_pad",
+        "b": "right_pad",
+        "rotulo": "Abertura entre as pontas"
+      },
+      "oraculo": {
+        "tipo": "medida_maxima_mm",
+        "valor_mm": 85,
+        "tolerancia_mm": 4.25,
+        "fonte": "https://blog.robotiq.com/hubfs/Product-sheets/Adaptive Grippers/Product-sheet-Adaptive-Grippers-EN.pdf",
+        "texto": "Stroke (adjustable) 85 mm"
+      },
+      "sha256": {
+        "robotiq_2f85/2f85.xml": "d48aca5f9151798ffd38111ce4e8b2081f3ec2d4f525161b33643451580010de",
+        "robotiq_2f85/LICENSE": "3d5edd18d1e22a17666e9bb84270171ed5ac90b192d24e0177fd171708ea2316",
+        "robotiq_2f85/assets/base.stl": "1c7b9f2bd92d705fc4e897c94e905973a3c05f406845e942229433deb7041453",
+        "robotiq_2f85/assets/base_mount.stl": "87971dfdd6e5311b5a723e7b73c4701ebf5c2364df671500f30dfc1c53c8e61a",
+        "robotiq_2f85/assets/coupler.stl": "d5ee95e62f8415bf5b6e503c831a958f5fc1990bf9b2865329ec38a28932727c",
+        "robotiq_2f85/assets/driver.stl": "bbd6e868b1778bead60d2516c7ede581d7ad4e431744b1828757d6ea5129c112",
+        "robotiq_2f85/assets/follower.stl": "633793332c081641ce200df27a40643cc293b29956e3cb5cb29cb811c33ef1c7",
+        "robotiq_2f85/assets/pad.stl": "4af1fa8d9bb285abecbf5dfc88e74cb30f059a7a074c2030dc35e9ee4316019d",
+        "robotiq_2f85/assets/silicone_pad.stl": "ca20c0fa61e6d3ce7b04bed25360e048e31dfd88ace04187aa6d9e8f4ca3fd0f",
+        "robotiq_2f85/assets/spring_link.stl": "4fb74a8a0d76c0e471cf19fd48bc676fd5b19123798e7a39eb6aa56869354283"
+      }
+    },
+    {
+      "id": "ufactory_xarm_gripper",
+      "titulo": "UFACTORY xArm Gripper",
+      "xml": "ufactory_xarm7/hand.xml",
+      "licenca_arquivo": "ufactory_xarm7/LICENSE",
+      "licenca": "BSD-3-Clause (UFACTORY)",
+      "credito": "Modelo: MuJoCo Menagerie · UFACTORY xArm7 hand · BSD-3-Clause",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "fingers_actuator",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "folga",
+        "a": "left_finger",
+        "b": "right_finger",
+        "rotulo": "Abertura entre os dedos"
+      },
+      "oraculo": {
+        "tipo": "medida_maxima_mm",
+        "valor_mm": 84,
+        "tolerancia_mm": 4.2,
+        "fonte": "https://www.ufactory.cc/wp-content/uploads/2023/11/xArm-Gripper-User-Manual-V2.2.0.pdf",
+        "texto": "Working Range 0-84mm (manual V2.2.0); revendedores antigos citam 86 mm"
+      },
+      "sha256": {
+        "ufactory_xarm7/LICENSE": "4fe659325706d0fc41592c8743d085a0bdf778056249f2a108943d22be916fb2",
+        "ufactory_xarm7/assets/base_link.stl": "cdaa4cff22f7c9cff05c6a8ed32f94fd2b11a69d37dd97a159ccee2d8dd32f13",
+        "ufactory_xarm7/assets/left_finger.stl": "a44756eb72f9c214cb37e61dc209cd7073fdff3e4271a7423476ef6fd090d2d4",
+        "ufactory_xarm7/assets/left_inner_knuckle.stl": "e8e48692ad26837bb3d6a97582c89784d09948fc09bfe4e5a59017859ff04dac",
+        "ufactory_xarm7/assets/left_outer_knuckle.stl": "501665812b08d67e764390db781e839adc6896a9540301d60adf606f57648921",
+        "ufactory_xarm7/assets/right_finger.stl": "c5dee87c7f37baf554b8456ebfe0b3e8ed0b22b8938bd1add6505c2ad6d32c7d",
+        "ufactory_xarm7/assets/right_inner_knuckle.stl": "b41dd2c2c550281bf78d7cc6fa117b14786700e5c453560a0cb5fd6dfa0ffb3e",
+        "ufactory_xarm7/assets/right_outer_knuckle.stl": "75ca1107d0a42a0f03802a9a49cab48419b31851ee8935f8f1ca06be1c1c91e8",
+        "ufactory_xarm7/hand.xml": "2b404c4470c7998003f573cfc90c4fb513ef1b4d34b2fddccecbd3ef4a0e91a2"
+      }
+    },
+    {
+      "id": "franka_hand",
+      "titulo": "Franka Hand",
+      "xml": "franka_emika_panda/hand.xml",
+      "licenca_arquivo": "franka_emika_panda/LICENSE",
+      "licenca": "Apache-2.0 (Franka Robotics)",
+      "credito": "Modelo: MuJoCo Menagerie · Franka Hand · Apache-2.0",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "actuator8",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "folga",
+        "a": "left_finger",
+        "b": "right_finger",
+        "rotulo": "Abertura entre os dedos"
+      },
+      "oraculo": {
+        "tipo": "medida_maxima_mm",
+        "valor_mm": 80,
+        "tolerancia_mm": 4.0,
+        "fonte": "https://franka.de/hubfs/Product%20Manual%20Franka%20Hand_R50010_1.2_EN.pdf",
+        "texto": "Travel Range [mm] 80"
+      },
+      "sha256": {
+        "franka_emika_panda/LICENSE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "franka_emika_panda/assets/finger_0.obj": "215098c0fcdf7192f6c503a37cf49e3efecf8a9e1320f02b17c5584d89cc5b2c",
+        "franka_emika_panda/assets/finger_1.obj": "cf239e9aca26bba09dbbf1c544c47d87cfc9a2f0637c8bb786af750b6d4eca44",
+        "franka_emika_panda/assets/hand.stl": "94493e94f30fe940f2c8ca2f155c3bbe67bbff406d3edf5e261670d2f0f6e2ed",
+        "franka_emika_panda/assets/hand_0.obj": "b94aab901086f85df04c019b30f43bf9aa23a7ad0443ec80a8c14662a41cabd2",
+        "franka_emika_panda/assets/hand_1.obj": "cd76f7494bb314406a1819c46eb826ee254894f87235714f604a470653d9badb",
+        "franka_emika_panda/assets/hand_2.obj": "e0f44a71712afa5b98eb20355eff17763d3e2e19f459b2bef19abed3727e64b3",
+        "franka_emika_panda/assets/hand_3.obj": "a431a06d99e88a1b322b3122a01424ee7704daeaad0bc343b90b9604f014ad0c",
+        "franka_emika_panda/assets/hand_4.obj": "21f96ef6a8de082e41b1ea9834f1043de359e5d60305541bcb63539581f53bff",
+        "franka_emika_panda/hand.xml": "d2a6539d0fd7c55c75c14f11c78f04505ee33f31d93e6112e3ad7120e5ee786a"
+      }
+    },
+    {
+      "id": "universal_robots_ur5e",
+      "titulo": "Universal Robots UR5e",
+      "xml": "universal_robots_ur5e/ur5e.xml",
+      "licenca_arquivo": "universal_robots_ur5e/LICENSE",
+      "licenca": "BSD-3-Clause (ROS-Industrial)",
+      "credito": "Modelo: MuJoCo Menagerie · UR5e · BSD-3-Clause",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "poses_chave",
+        "chaves": [
+          "qpos0",
+          "home",
+          "qpos0"
+        ],
+        "duracao_s": 8.0
+      },
+      "medida": {
+        "tipo": "distancia",
+        "a": "base",
+        "b": "wrist_3_link",
+        "ponto_b": [
+          0,
+          0.1,
+          0
+        ],
+        "rotulo": "Base até o flange da ferramenta"
+      },
+      "oraculo": {
+        "tipo": "dh",
+        "corpo": "wrist_3_link",
+        "ponto": [
+          0,
+          0.1,
+          0
+        ],
+        "d": [
+          0.1625,
+          0,
+          0,
+          0.1333,
+          0.0997,
+          0.0996
+        ],
+        "a": [
+          0,
+          -0.425,
+          -0.3922,
+          0,
+          0,
+          0
+        ],
+        "alpha": [
+          1.5707963267948966,
+          0,
+          0,
+          1.5707963267948966,
+          -1.5707963267948966,
+          0
+        ],
+        "tolerancia_mm": 2.0,
+        "fonte": "https://www.universal-robots.com/articles/ur/parameters-for-calculations-of-kinematics-and-dynamics/",
+        "texto": "Tabela DH oficial UR5e: d1 0.1625, a2 -0.425, a3 -0.3922, d4 0.1333, d5 0.0997, d6 0.0996"
+      },
+      "sha256": {
+        "universal_robots_ur5e/LICENSE": "5ec71ccf66c8d03261448f2441a586765b97f2248c860a1ae19689fb1c45cee6",
+        "universal_robots_ur5e/assets/base_0.obj": "9a3b21f1524baef6af8a52d7af90b6e94b79f7e3c2b04a0f6581f74d22291b0b",
+        "universal_robots_ur5e/assets/base_1.obj": "cf7d54691a2c1eeda280955ebd6bd83c2dbecfc46fb53c10198f05d107511b50",
+        "universal_robots_ur5e/assets/forearm_0.obj": "64c049a55149c2ab355594d52302b53d3e34da3677ceaa1917c427cde7743146",
+        "universal_robots_ur5e/assets/forearm_1.obj": "a96fe203015cf532b193f414cd01268c7c36795e51a837dd33afd122334f81f2",
+        "universal_robots_ur5e/assets/forearm_2.obj": "05b436505fc595aeab26675590c2b56b88a65b2d52d6352096fed9f07cb4c4ca",
+        "universal_robots_ur5e/assets/forearm_3.obj": "fa31af19cfad7a765b62e8a2d5931cb014b88de84195a7850b4e5ee902112e9a",
+        "universal_robots_ur5e/assets/shoulder_0.obj": "477387a7e7312782a6040484a3c2c2fcee33f40109f419076e31b6f6e1692c68",
+        "universal_robots_ur5e/assets/shoulder_1.obj": "8537bba02804640ddf6e260f79fe66e895b3229ed3d44298a95e8e027eb5d435",
+        "universal_robots_ur5e/assets/shoulder_2.obj": "291714518416bb8f0bafbf123867db011ecbf5146a05245ca5893ee8c57d4e21",
+        "universal_robots_ur5e/assets/upperarm_0.obj": "14143d4f1175a7dbacc8e2f2f98f1cac5a2b2e238cd46cd03654d31f2610eb53",
+        "universal_robots_ur5e/assets/upperarm_1.obj": "272899e927f4a32b7c25e34560ec70654c0346cc8ed1c616c0555f3f53b32d14",
+        "universal_robots_ur5e/assets/upperarm_2.obj": "86c05350d60eb0e7e28a81b544267478b7db997baba41cef19088ebbeffecfa1",
+        "universal_robots_ur5e/assets/upperarm_3.obj": "b257dab441e6fab64ea03b4b87029d8a96554ad1a513cce944d56acba0ad948a",
+        "universal_robots_ur5e/assets/wrist1_0.obj": "7ef0c59b5c5d56a9902435c9a058b27d2a38c85fe2bae02d00a9284dd1f4d519",
+        "universal_robots_ur5e/assets/wrist1_1.obj": "ee6d5c562e6becef94109b0543329080d285d1aef521a01ed98e18a5bf1e8684",
+        "universal_robots_ur5e/assets/wrist1_2.obj": "88c66dc64f15391287147d50add37729a3f41dadd80b1f859cf2cb6d45daf32a",
+        "universal_robots_ur5e/assets/wrist2_0.obj": "2ac2e2e39d8f7005bc3b3ab26cd61634be2e14930074615da5318b9ee7c569a8",
+        "universal_robots_ur5e/assets/wrist2_1.obj": "a721d06dc61d3b3a8ec58c035c9e3358ed30d6991a72e077d8abf3c3c203b633",
+        "universal_robots_ur5e/assets/wrist2_2.obj": "6df4335c8bd5e881fda2c224f770115ffe9ddd0cd321ebe3c0a4a310796f0987",
+        "universal_robots_ur5e/assets/wrist3.obj": "0e51748f9c93bd66604360a5cf7e2e8a6e754550be64076333ff4fc19ec90c61",
+        "universal_robots_ur5e/ur5e.xml": "2311486b7d013caa5db76d0abe46b5b235642c7baf3b91fbb7dbd93048774fa5"
+      }
+    },
+    {
+      "id": "agility_cassie_perna",
+      "titulo": "Agility Robotics Cassie — perna",
+      "xml": "agility_cassie/cassie.xml",
+      "licenca_arquivo": "agility_cassie/LICENSE",
+      "licenca": "MIT (Agility Robotics)",
+      "credito": "Modelo: MuJoCo Menagerie · Agility Cassie · MIT",
+      "natureza": "Malhas de descrição pública simplificada, não CAD de fabricação",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "left-knee",
+        "chave_inicial": "home",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "distancia",
+        "a": "left-hip-pitch",
+        "b": "left-foot",
+        "rotulo": "Quadril até o pé (perna esquerda)"
+      },
+      "sha256": {
+        "agility_cassie/LICENSE": "66a031b71b6164c91683ccf2929faef82b3df5e51844322807fd7dc5cf238c38",
+        "agility_cassie/assets/achilles-rod.obj": "8bbf95148db0a3b0df1ca9014f7ef2aa800a2947d44601a56c50632da4df39bb",
+        "agility_cassie/assets/foot-crank.obj": "21588e4ea034c26e7eb69df2824cb5007dfa6d36cebbed4df9fea8ea56d0a03f",
+        "agility_cassie/assets/foot.obj": "a8df9e6ff35de70a94fa9942cb76729b0e6d6ab7c7f2273ceac092f812b8a010",
+        "agility_cassie/assets/heel-spring.obj": "d9d30ee356544d9ace1cb57e84d0971c6a82f6d441607a9f053c7ab649e51e85",
+        "agility_cassie/assets/hip-pitch.obj": "19bec989a3f966843708496e0670b64d44e3b3811ced179444d5e5e3f7d06f21",
+        "agility_cassie/assets/hip-roll.obj": "d1d33d949bdae781cf15406cdec8ebc7318729d2410ce87030ae986cd9c8011c",
+        "agility_cassie/assets/hip-yaw.obj": "cd8f0fb370f8f5cf271e96438a00b1d4aed81bf31b075295ca299e0ad7ae1d2f",
+        "agility_cassie/assets/knee-spring.obj": "918d42bfc6991982a9de9c41748bb1cdb4c153a4f354b8f4a2bc527f72e6af55",
+        "agility_cassie/assets/knee.obj": "286d950322265b0e79e70d2e59df735d45272990dfd91138b3672f890cdda707",
+        "agility_cassie/assets/pelvis.obj": "ddb1dac51a06931562482f13d87c8906f4c682175b2f435350e5c40cf8fab8ab",
+        "agility_cassie/assets/plantar-rod.obj": "c2d5c15c1c1232ab15554fcdfd8e0d8f4682f83f6f42789db4748fab1b3c70af",
+        "agility_cassie/assets/shin.obj": "b896cab8f5606b16ceec2ae949a5aafb4514e3eba545981241746ccf430de27f",
+        "agility_cassie/assets/tarsus.obj": "97fdde6c725cdee595dd6dc4bc224b27b62a190c8ba5def2fdecb37f113d6cf9",
+        "agility_cassie/cassie.xml": "ee650a1f643b3aaee11f8ee31e4abf4765d2488f9e5d7bf4dc2c59b5aab0ddcd"
+      }
+    },
+    {
+      "id": "hello_robot_stretch3_braco",
+      "titulo": "Hello Robot Stretch 3 — braço telescópico",
+      "xml": "hello_robot_stretch_3/stretch.xml",
+      "licenca_arquivo": "hello_robot_stretch_3/LICENSE",
+      "licenca": "Apache-2.0 (Hello Robot)",
+      "credito": "Modelo: MuJoCo Menagerie · Hello Robot Stretch 3 · Apache-2.0",
+      "natureza": "Descrição do fabricante no Menagerie, malhas simplificadas, não CAD",
+      "movimento": {
+        "tipo": "varredura_atuador",
+        "atuador": "arm",
+        "chave_inicial": "home",
+        "duracao_s": 6.0
+      },
+      "medida": {
+        "tipo": "deslocamento",
+        "a": "link_lift",
+        "b": "link_arm_l0",
+        "rotulo": "Extensão do braço"
+      },
+      "oraculo": {
+        "tipo": "curso_mm",
+        "valor_mm": 520,
+        "tolerancia_mm": 10,
+        "fonte": "https://docs-arch.hello-robot.com/0.3/hardware/hardware_guide_stretch_3/",
+        "texto": "Stretch 3 Hardware Guide: arm Reach 0.52m",
+        "independencia": "Parcial: os 4 estágios têm curso de 0,13 m no próprio modelo; o confronto prova o acoplamento entre estágios, não a geometria."
+      },
+      "sha256": {
+        "hello_robot_stretch_3/LICENSE": "7cef5f31f3e039ed1064bfcbf8a700bfcd93074b4cd3315b8b9619fa68913b56",
+        "hello_robot_stretch_3/assets/base_link_0.obj": "9d3a1643fa7890b33f955242089fe127f7e192e32d858524db5c7da26c5122b4",
+        "hello_robot_stretch_3/assets/base_link_2.obj": "59ddb2d2a81b7a2f00fb8f74d0e6711f04c9f404691d8dac442788ea36dab870",
+        "hello_robot_stretch_3/assets/base_link_3.obj": "f4929a1511adfa84b91a4912e839a05d21f5715b930260dd81fb677b501b4a46",
+        "hello_robot_stretch_3/assets/base_link_4.obj": "5fb87192b939bbc69614454be52ac3211cc42c39410f9a6f72d3cf366125d414",
+        "hello_robot_stretch_3/assets/base_link_5.obj": "523f308172b2e910ed8990aa7d2f19bb98e81100335e6b8eef7867938676f302",
+        "hello_robot_stretch_3/assets/base_link_6.obj": "ac3ecf44cdc94e163478e8f491f9a8e511d9eaef605671905284df1202a6f6dd",
+        "hello_robot_stretch_3/assets/base_link_7.obj": "dfbaf9645fc6d2a9b3ee5e66e25c48f9ca135c42fb1333a516bf2e2d17bb0aa3",
+        "hello_robot_stretch_3/assets/base_link_8.obj": "24c7ed85eb63097d8f647c168c718194249b74d98eba7463ada1dd64faed9932",
+        "hello_robot_stretch_3/assets/base_link_casterless.stl": "d2d5bd2dc9f1d4ffde2321efd2067debeaabb2172f000b036f2ab6b5d043fac8",
+        "hello_robot_stretch_3/assets/laser.obj": "febe15452ffde5d069943fa51fb08426079ad4419c983a84b3a47d822d87c8a9",
+        "hello_robot_stretch_3/assets/link_DW3_wrist_pitch.stl": "9fb47ba958d9ce65d8020d3aa328aa62bc47d4bbb01fd30e3b632a6b25238b5c",
+        "hello_robot_stretch_3/assets/link_DW3_wrist_quick_connect.stl": "f5df1f4dd28dd975340e68d2601f66c52a457cace5192585a22f6c14685ea2f5",
+        "hello_robot_stretch_3/assets/link_DW3_wrist_yaw_bottom.stl": "e6e7052e8334f01edc3b8d03e698c06bc03d27289f9568e20baed562d6a36cab",
+        "hello_robot_stretch_3/assets/link_SE3_head_nav_cam.stl": "be4645b82f4b4912b257a7f675176504d83377c3d5c7e9528efd2aa8e6d5623d",
+        "hello_robot_stretch_3/assets/link_SG3_aruco_d405.obj": "2aadcfd5f6e46e86bcf73d293fb57613c07e903ccbffb92118a9c416d8f6caa0",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_body.obj": "5466636c8e3ba98e30180b6f1d42212b419effce3950baacfb4c7480910cf008",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_inner_finger.stl": "3bee8ab82e230fe1132f5703dbf5b18982cc51398d8c45cba9aa2e31347bb6a0",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_left_finger_0.obj": "bcb4a0582627a66a4aafef60fa1e910fd146783886aff936e22cc236c1aeef96",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_left_finger_1.obj": "89ac9b72e2ab70b3ee49068e313d1a42a4d81d712e882f0780d8805010142ae1",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_left_finger_aruco.obj": "19ceeca8956d2e845a2a53c08ab015c79cdded2873dd282d1e764a8e193db491",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_left_fingertip.stl": "bb4ac16a6b9ff712cf4b2c4051ca498547c687ab1a985c51fad484c5d426aefa",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_left_inner_finger.stl": "2021148766fd93c1fae24723eb5f65ec981cd1889fbc6be6f8458793207df383",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_right_finger_0.obj": "00ccb8872e968a19a554856db8df722c859f3797b27e11630011fe759a8dc70c",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_right_finger_1.obj": "cb645c4489319532006bcf2fc53762593152b184f1dae7af83953c57db3aa5b4",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_right_finger_aruco.obj": "f5555f3a3cd025c7ed1f45fda2b5d5813eba0a079ca05cbe46834220682e1154",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_right_fingertip.stl": "c9a680cb46f39fa53dba46e4bff7e537346a4f5caa04f3b41e551cd63d885d4d",
+        "hello_robot_stretch_3/assets/link_SG3_gripper_right_inner_finger.stl": "9b5becd4ccf93151e4599f038a9be3f7123656fe910462977a0f4a16eada941c",
+        "hello_robot_stretch_3/assets/link_arm_l0_0.obj": "ebc8bbc182891fa029c677a8f1e32e3ed53f11a986b68a28defb8daa9b714a37",
+        "hello_robot_stretch_3/assets/link_arm_l0_1.obj": "0ff60709a54b06ab24330c769c50ba677fd95459eaf0439f15579ab8042346a4",
+        "hello_robot_stretch_3/assets/link_arm_l0_2.obj": "bc8bda8c3321fb5f64ebb0294bb8c3191e65ac51e619384f19f0133f362e888d",
+        "hello_robot_stretch_3/assets/link_arm_l1_0.obj": "0ebb391b8bfa377332034341ff1c0193c8ca494ff6beb7a593cccbb09aeb0ec8",
+        "hello_robot_stretch_3/assets/link_arm_l1_1.obj": "4ef086e1abfbcdea46a546a96ab8b602574f1f0aa1668c95a336c6534700c3eb",
+        "hello_robot_stretch_3/assets/link_arm_l2_0.obj": "e5c7bdce8e28efa3360202623fe01c35dd0bdd404318766d500920d139662500",
+        "hello_robot_stretch_3/assets/link_arm_l2_1.obj": "6b0ed71768eb30301a2109bd4375b24137bccaee7529b110fdad7b0e0b5076e4",
+        "hello_robot_stretch_3/assets/link_arm_l3_0.obj": "44b748d6c32ff8898d55ea8c92ea177c43ab31fb2a20af4e1069d3d149d6f044",
+        "hello_robot_stretch_3/assets/link_arm_l3_1.obj": "f32e67a44270312b51f1af8aa8458a29bf8714f9b7d3d4b892e579056414c4fa",
+        "hello_robot_stretch_3/assets/link_arm_l4_0.obj": "f81406eb8b4efa49df82044b5075078a600e44514cd90129e6ddd6136cf22e8f",
+        "hello_robot_stretch_3/assets/link_arm_l4_1.obj": "1fb20913eca87594ca504642a48b1b1004f8f594b19cbc45ea709b76375666f5",
+        "hello_robot_stretch_3/assets/link_aruco_inner_wrist.obj": "2cba33928cc667457e3b7fb60359c05687688f4923bc7bb6f965a8aae446dbf9",
+        "hello_robot_stretch_3/assets/link_aruco_left_base.obj": "7f0e7f41b9fe29c2091f39ff18a3b6742cfbe9c65434c60c51cde856db55d73b",
+        "hello_robot_stretch_3/assets/link_aruco_right_base.obj": "7f0e7f41b9fe29c2091f39ff18a3b6742cfbe9c65434c60c51cde856db55d73b",
+        "hello_robot_stretch_3/assets/link_aruco_shoulder.obj": "6a9ace409ff326eec456770a96d2aec9e1e100aa9fcd6afe9b320eb03d62164f",
+        "hello_robot_stretch_3/assets/link_aruco_top_wrist.obj": "514f4515903781d69729fe4130396e8b2ae301a4356024c2b5beba9888036074",
+        "hello_robot_stretch_3/assets/link_d405.stl": "0ab47dd3a933d54a9b4630a629700708fa63bd88f5475a2bdc3b8dfc222ee35a",
+        "hello_robot_stretch_3/assets/link_d405_front_plate.stl": "20d6fa80713951301393a3d9d4d96c1b8ae8b05a9eab64da76d54445d568a2ee",
+        "hello_robot_stretch_3/assets/link_d405_lens.stl": "967f212d148ce40295b3a97f3a006e15943fa48a118fbd3350172faf3818a246",
+        "hello_robot_stretch_3/assets/link_gripper_0.obj": "5feed27dc9f0febc1fc15fcef98c9a47bbe64c451e33197460d4abb7c11b9279",
+        "hello_robot_stretch_3/assets/link_gripper_1.obj": "5fa25ae6ee8653098dade84361e5c24385abb56773d261c47602a2e742254a78",
+        "hello_robot_stretch_3/assets/link_gripper_finger_left_0.obj": "7a886141e5501877f9b776b204f2694537994ebccfdf7715c6771c6406234002",
+        "hello_robot_stretch_3/assets/link_gripper_finger_left_1.obj": "16291341862cd7aa35ff767c6868252cb695d4222459a55ed1bf8c32cecb9615",
+        "hello_robot_stretch_3/assets/link_gripper_finger_right_0.obj": "b5e8d67538153b0f37939f0bcc9c850f80446578a2d1f9cfc78adc3737b480cb",
+        "hello_robot_stretch_3/assets/link_gripper_finger_right_1.obj": "37159f986750a6d18f4d7904051fd32f77297660a9aeec2d8751c08ce3aa2575",
+        "hello_robot_stretch_3/assets/link_head_0.obj": "601b3ad3cf1d024cb0ef9f96e5e3a7cc671fc18d4d26140f3f14317765da1d00",
+        "hello_robot_stretch_3/assets/link_head_1.obj": "ecc74a0b02815df93883f35ccbf56e312c707b088d087fb3e18ec780a78f41af",
+        "hello_robot_stretch_3/assets/link_head_10.obj": "f07adce0e40cd224bfd8dc49ff95bedd33cdf615406b627cba77449349a44ba0",
+        "hello_robot_stretch_3/assets/link_head_11.obj": "90754a150e6a6c8bf97f188888c0ce87ff2e49c58b1074fd9f45b38f1d1a278d",
+        "hello_robot_stretch_3/assets/link_head_2.obj": "c81d8441cd7e5dc8fd74b9462783c61c5fda0f02eeaa0f87ed4f6addf3b195c0",
+        "hello_robot_stretch_3/assets/link_head_3.obj": "d7e69ff8ae36d1c74ea5a0a941a48eb19c33f8d19d8d4e631545e96e8655f615",
+        "hello_robot_stretch_3/assets/link_head_4.obj": "bdbb7bc5b816a9b55dcda9b9863f36e650e3c64ed9357897c7a11ba1e043f88f",
+        "hello_robot_stretch_3/assets/link_head_5.obj": "243616144e0e7579582f9fc30573a489d08d33cbad25d714042ad01e7f8fb307",
+        "hello_robot_stretch_3/assets/link_head_6.obj": "35eb02b748cb53695622b431c94c2beab837990713d30c163f98ee967f9e4b4a",
+        "hello_robot_stretch_3/assets/link_head_7.obj": "7f2e724404d6034b0e893575ec920083dd77fb7e2f89e0964b74b4f23da01ab7",
+        "hello_robot_stretch_3/assets/link_head_8.obj": "458e7850c870b35968f3c511d0cb64898c212575e1cea0c83110f70b1c713e81",
+        "hello_robot_stretch_3/assets/link_head_9.obj": "e230e0ba13bc8e22abe74326e888cf8295b9546c6b67cc6ac5844253e52b2c92",
+        "hello_robot_stretch_3/assets/link_head_pan_0.obj": "b1436e3f2c22d6d08b662deff47405673334839cd563c19b90bad351e2d0ae8b",
+        "hello_robot_stretch_3/assets/link_head_pan_1.obj": "54370f2201f4ce69910bb61a902d0c07c167e90f4921882ebeb9432cc152f90a",
+        "hello_robot_stretch_3/assets/link_head_tilt_0.obj": "c0330bea8f0c4bee0b35b4366e9e3d3cd5ca1023a121a3d5f0c65dc5f393e03f",
+        "hello_robot_stretch_3/assets/link_head_tilt_1.obj": "4d1cb6f2207d6986e45f99428c8eece8fa6a24fba6fb1d3475c5f774df7545eb",
+        "hello_robot_stretch_3/assets/link_left_wheel_0.obj": "32a02f8d4fa8b6f4c8174965365b7c386104e5bcbead3e1d06daa455411eecdf",
+        "hello_robot_stretch_3/assets/link_left_wheel_1.obj": "1d38982dc60a8c05c64120b6b05ceba7f40c98bde0904c5385b097d9bf07fc91",
+        "hello_robot_stretch_3/assets/link_lift_0.obj": "ad629cb6eaeafec45a814365102c758b3b131df35534fc3215c373c9c34d066f",
+        "hello_robot_stretch_3/assets/link_lift_1.obj": "3c4f265261ac9db81af975204c1120dad88c9b41e4869b0f2202ab0bc669b344",
+        "hello_robot_stretch_3/assets/link_lift_2.obj": "9cc0064b7e8add7e401a891f9a2cb7b6c11f66fe91007023e449f3eb903ea227",
+        "hello_robot_stretch_3/assets/link_lift_3.obj": "0a3e16d2b30bff8a529efa9778e4c2b3f2eeb052bd29e5c414c0da6d7e72ea41",
+        "hello_robot_stretch_3/assets/link_lift_4.obj": "9755b22de6e30c44b883fe6720e09e6c608981fe1e3572bd22e81d82eff08288",
+        "hello_robot_stretch_3/assets/link_lift_5.obj": "ed85f90c8aa70761c5322f57d7d3245bef1d560711512a995ec1e669815acb65",
+        "hello_robot_stretch_3/assets/link_lift_6.obj": "f3811817e908e890ddebd011c733de5b407cd781b537a1e281dccd247da0eb70",
+        "hello_robot_stretch_3/assets/link_lift_7.obj": "65122e665930affc87dffc2ce790fdc326e7b988522101ed7f10d4ab6cba8cd7",
+        "hello_robot_stretch_3/assets/link_lift_8.obj": "0b67a66d5c8c4ce1067dba66b2cbf7b8539bf905a414a232e1b722e42d4acdf2",
+        "hello_robot_stretch_3/assets/link_lift_9.obj": "5eaf46cb89705c2c9910a6453f70d63b2d407c2a86e0fc60caec6abf857ddd35",
+        "hello_robot_stretch_3/assets/link_mast.obj": "dd28da988909e7f4dda26c296a3a54ba9a84c516c2f7d7059aa36fbc056d98c6",
+        "hello_robot_stretch_3/assets/link_right_wheel_0.obj": "f2b821eb94f5437ccfdc5efb2b9bdf10c4fd584aa54f45f306e051a4ca04ccbb",
+        "hello_robot_stretch_3/assets/link_right_wheel_1.obj": "695bca8ae8e307e1c9e56505b33b293f2806b872254966e4d06a1c36e56b102e",
+        "hello_robot_stretch_3/assets/link_wrist_yaw.obj": "53fcc361ab7a3b82326b8344bcb2654d61d0b2d06b8e9ab9566f75d9fc266bd4",
+        "hello_robot_stretch_3/assets/respeaker_base.obj": "70acc76cf2a54fa419dc6d509919ae46a06d8f0f4bcdc46e88ba916de3a5c79a",
+        "hello_robot_stretch_3/stretch.xml": "154088989df3b3d01a184b8e2df7cb82481efcd532f2498719acf1d77f001a6d"
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+name: E381 - previa contextual efemera no FilmeEditorial
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-contextual-e381.yml','scripts/qa_contextual_e381.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      CORINGA_STOCK_CACHE_DB: stage_stock_cache/cache.sqlite3
+      CORINGA_STOCK_CONTEXT_ENABLED: '1'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      CORINGA_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_contextual_e381.py tests/test_documentario_integral_e254.py tests/test_composicao_e286.py tests/test_stock_real_e378.py
+      - uses: actions/cache/restore@v4
+        with:
+          path: stage_stock_cache/
+          key: coringa-stock-meta-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: coringa-stock-meta-v1-
+      - name: Previa privada a partir de cache existente
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python -m scripts.qa_contextual_e381
+      - name: Preservar apenas diagnostico e quadros compostos
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=stage_documental/e381
+          if [[ -s "$root/proof.json" ]]; then
+            python scripts/espelhar_revisao_cofre.py "e381-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/proof.json" "$root"/*.jpg
+          fi

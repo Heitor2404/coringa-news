@@ -1,0 +1,81 @@
+name: Filme editorial — PROVA VISUAL independente (sem voz / sem publicar)
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: [".github/atlas/filme_editorial_prova.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: filme-editorial-prova-visual
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  REMOTION_DISABLE_TELEMETRY: "1"
+  DISABLE_TELEMETRY: "true"
+  CORINGA_CHROME: /usr/bin/google-chrome
+
+jobs:
+  proof:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Testar compositor editorial isolado
+        run: |
+          python -m pip install -q pillow requests pytest
+          python -m pytest -q tests/test_filme_editorial.py
+      - name: Instalar renderizador Remotion já versionado
+        timeout-minutes: 13
+        run: |
+          (cd motor4 && npm ci --no-audit --no-fund)
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)
+      - name: Baixar arquivos REAIS, registrar origem/licença/hash e gerar props
+        timeout-minutes: 12
+        run: |
+          python -m src.v4.formatos.filme_editorial \
+            docs/v4/formatos/filme_taiwan_prova.json \
+            saida_filme_editorial motor4/remotion/public
+      - name: Renderizar amostra CINEMATOGRÁFICA sem TTS ou publicação
+        timeout-minutes: 19
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+            ../saida_filme_editorial/prova_visual.mp4 \
+            --props=../saida_filme_editorial/props.json \
+            --codec=h264 --crf=22 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Extrair quadros para auditoria humana
+        if: success()
+        timeout-minutes: 4
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -i saida_filme_editorial/prova_visual.mp4 \
+            -vf "fps=1/2.65,scale=360:640,tile=3x2" -frames:v 1 \
+            saida_filme_editorial/contato.jpg
+          ffprobe -v error -show_entries format=duration,size \
+            -of json saida_filme_editorial/prova_visual.mp4 > saida_filme_editorial/metadata.json
+      - name: Conservar prova VISUAL, procedência e diagnóstico; nenhuma publicação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filme-editorial-compositor-independente
+          path: |
+            saida_filme_editorial/props.json
+            saida_filme_editorial/contrato.json
+            saida_filme_editorial/midias.json
+            saida_filme_editorial/metadata.json
+            saida_filme_editorial/contato.jpg
+            saida_filme_editorial/prova_visual.mp4
+          retention-days: 7
+          if-no-files-found: warn

@@ -1,0 +1,30 @@
+name: E327 - integrar revelacao factual na rota documental geral
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-revelacao-documental-e327.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Instalar dependencias e validar integracao sem IA
+        run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_revelacao_documental_e327.py tests/test_evidencias_estaticas_e321.py tests/test_documentario_integral_e254.py tests/test_direcao_short_e306.py tests/test_comparacao_e311.py tests/test_revisao_documental_e247.py tests/test_observacao_temporal_e315.py tests/test_fonte_relacionada_e317.py
+          (cd motor4 && npx --no-install tsc -p remotion/tsconfig.json --noEmit)

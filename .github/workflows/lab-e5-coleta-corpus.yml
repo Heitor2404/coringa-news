@@ -1,0 +1,76 @@
+name: "LAB E5 — coleta de sentencas reais para benchmark de relacoes"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/lab-e5-coleta-corpus.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e5-corpus-collection
+  cancel-in-progress: true
+jobs:
+  collect:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install existing E4 dependencies
+        run: python -m pip install -q numpy scipy cairosvg pillow
+      - name: Fetch three independently discovered source articles
+        run: |
+          mkdir -p qa_e5_collect
+          python - <<'PY'
+          import hashlib,json,re
+          from pathlib import Path
+          from src.v4.formatos import descoberta_fontes_e4 as E4
+          # Topic queries chosen in advance; page URLs and passages are NOT
+          # supplied by the engineer, and are not allowed as source claims
+          # unless returned by the public API with pageid and revision.
+          queries=("Scotch yoke","connecting rod","crankpin")
+          rows=[]
+          vocab=("connect","attach","pin","joint","hinge","engag","slot",
+                 "piston","crank","coupl","slide","sliding","rotat",
+                 "bearing","gear","shaft","rod","engine")
+          for query in queries:
+              hits=E4.search(query)
+              assert hits,("NO_SEARCH_RESULT",query)
+              page=E4.fetch_page(hits[0])
+              text=page["plain_text"]
+              sentences=re.split(r"(?<=[.!?])\s+|\s*\n+\s*",text)
+              relevant=[]
+              for raw in sentences:
+                  s=" ".join(raw.split())
+                  if 34<=len(s)<=260 and any(x in s.casefold() for x in vocab):
+                      relevant.append({"sentence_id":"s"+str(len(relevant)+1),
+                         "text":s,"text_sha256":hashlib.sha256(s.encode()).hexdigest()})
+                  if len(relevant)>=40:break
+              assert len(relevant)>=8,("INSUFFICIENT_REAL_SENTENCES",query)
+              rows.append({"query":query,"pageid":page["pageid"],
+                "title":page["title"],"revid":page["revid"],
+                "source_url":page["source_url"],
+                "full_text_sha256":page["text_sha256"],
+                "selection":"first_40_34_260_chars_generic_vocabulary",
+                "sentences":relevant})
+          (Path("qa_e5_collect")/"E5_LIVE_RAW_SENTENCES.json").write_text(
+              json.dumps({"schema":"coringa-e5-live-sentences-v0",
+                 "live_api_fetches":len(rows),"manual_source_queries":True,
+                 "urls_pre_supplied":False,"no_automatic_gold_labels":True,
+                 "human_annotation_pending":True,
+                 "source_to_spec_complete":False,"render_allowed":False,
+                 "publish":False,"pages":rows},ensure_ascii=False,indent=2),encoding="utf8")
+          print(json.dumps([{"query":r["query"],"pageid":r["pageid"],
+              "title":r["title"],"revid":r["revid"],
+              "sentence_count":len(r["sentences"])} for r in rows]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e5-live-raw-sentences-revisioned
+          path: qa_e5_collect/
+          retention-days: 5
+          if-no-files-found: warn

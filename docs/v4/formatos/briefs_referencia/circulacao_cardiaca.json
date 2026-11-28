@@ -1,0 +1,19 @@
+{
+  "id": "circulacao_cardiaca",
+  "pergunta": "Como o coracao faz o sangue percorrer as camaras e valvulas?",
+  "consultas_en": [
+    "heart valves blood flow 3d animation",
+    "heart blood circulation educational animation"
+  ],
+  "acoes_necessarias": [
+    "fill",
+    "close_valve",
+    "pump",
+    "eject"
+  ],
+  "fases_necessarias": [
+    "entrada",
+    "bombeamento",
+    "saida"
+  ]
+}

@@ -1,0 +1,81 @@
+name: E47 sincronização de frases reais CAD privada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - 'src/v4/formatos/narracao_cad_e47.py'
+      - 'tests/test_narracao_cad_e47.py'
+      - '.github/workflows/qa-narracao-cad-e47.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prova:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - uses: actions/download-artifact@v4
+        with:
+          name: e41-suporte-privado
+          run-id: "45383874036"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_e47
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng ffmpeg
+          python -m pip install numpy pytest
+          python -m pytest -q tests/test_narracao_cad_e47.py
+      - name: Voz de laboratório sem API e fatos medidos E42
+        run: |
+          python -m src.v4.formatos.ponte_cad_editorial_e28 fonte_e47/QA.json motor4/remotion/public qa_base
+          python -m src.v4.formatos.hero_cad_e46d qa_base/props.json motor4/remotion/public qa_base/REFLOW.json --balanced
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          from src.v4.formatos.ponte_cad_editorial_e28 import sha
+          p=json.load(open("qa_base/props.json"))
+          s=p["shots"][0]
+          assert s["cad_transmissao"]["razao"]=="11,0:1"
+          assert s["cad_transmissao"]["entrada"]=="3,0 voltas"
+          assert s["cad_transmissao"]["saida"]=="-98,2°"
+          phrases=["Neste modelo, a entrada faz três voltas.","A saída gira no sentido oposto."]
+          root=Path("qa_base")
+          plan=[]
+          for j,t in enumerate(phrases):
+              w=root/f"frase{j}.wav"
+              subprocess.check_call(["espeak-ng","-v","pt-br","-s","170","-w",str(w),t])
+              plan.append(dict(text=t,wav=w.name,sha256=sha(w)))
+          (root/"plan.json").write_text(json.dumps({s["id"]:plan},ensure_ascii=False))
+          PY
+          python -m src.v4.formatos.narracao_cad_e47 qa_base/props.json qa_base/plan.json motor4/remotion/public qa_e47
+      - name: Render com áudio e legendas reais
+        run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e47/editorial.mp4 --props=../qa_e47/props.json --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+      - name: Conferir áudio, duração e quadros
+        run: |
+          ffprobe -v error -show_streams -show_format -of json qa_e47/editorial.mp4 > qa_e47/PROBE.json
+          python - <<'PY'
+          import json
+          p=json.load(open("qa_e47/PROBE.json"))
+          v=[x for x in p["streams"] if x["codec_type"]=="video"]
+          a=[x for x in p["streams"] if x["codec_type"]=="audio"]
+          assert len(v)==len(a)==1 and int(v[0]["nb_frames"])==240
+          assert abs(float(p["format"]["duration"])-8)<.1
+          print("E47-PROBE", json.dumps(dict(video=v[0]["nb_frames"],audio=a[0]["codec_name"],duration=p["format"]["duration"])))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e47-voz-laboratorio-privado
+          path: qa_e47/
+          retention-days: 14

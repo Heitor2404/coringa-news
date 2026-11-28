@@ -1,0 +1,18 @@
+PREVIA PRIVADA — ATLAS V2 Guerra dos Chips — 2026-11-19
+Autorização do usuário nesta conversa: "Vamos continuar".
+Escopo: SOMENTE GitHub Actions experimental, Gemini/Charon conforme preset, fotos Commons comprovadas e relatório; envio Telegram privado quando disponível.
+NÃO publicar vídeo em redes, NÃO fazer merge, NÃO alterar NTC/DOSSIÊ/main.
+CI estrutural aprovado: 44437330601 (127 testes Python + TypeScript).
+FALHAR FECHADO se chave da voz ausente, mídia sem hash ou portão vermelho. Nada de fallback Edge.
+
+REEXECUCAO: 2026-11-19 — corrigido @fim/CTA pelo WAV real e progressao no gancho; Telegram avisa BLOQUEADO sem MP4.
+CI anterior a este disparo: https://github.com/Heitor2404/coringa-news/actions/runs/44447485283 — 130 testes Python e TypeScript verdes.
+MP4 somente Telegram privado e aprovação humana; nenhuma publicação automática.
+
+RETRY 2026-11-19: corrigido F-SEM-PROGRESSAO 0.6-3.8s com segundo rotulo factual FAB18->TAIWAN em @taiwan, sem baixar portao 3s.
+CI aprovado: https://github.com/Heitor2404/coringa-news/actions/runs/44448821495 — 131 testes e TypeScript verdes.
+Smoke com as 61 palavras da voz real 44447705090 aprovado no job ritmo_real da validação 44449070038.
+Continua prévia privada sem publicacao; erros devem ser avisados por mensagem no Telegram mesmo sem MP4.
+# 2026-11-19 nova prévia privada apos rotulos provaVisual legiveis a 30 px e diagnostico Telegram completo dos quadros (CI 44450404274 success)
+# 2026-11-19 retry TTS variable: 2.5 s minimum real photo; duration and map transition synced to utterance; CI 44452013618 green. Private only, never publish.
+# 2026-11-19 nova prévia privada Chips V2: 135 testes + TypeScript verdes CI 44452013618; gancho prova >=2.5 e titulo espera camera; nao publicar

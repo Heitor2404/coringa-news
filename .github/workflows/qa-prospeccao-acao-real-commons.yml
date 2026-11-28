@@ -1,0 +1,58 @@
+name: "QA — filmagens reais em ação: dois processos Commons"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-prospeccao-acao-real-commons.yml"
+      - "src/v4/formatos/prospeccao_video_acao.py"
+      - "docs/v4/formatos/CANDIDATOS_VIDEO_ACAO_REAL_20261120.json"
+      - "tests/test_prospeccao_video_acao.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-prospeccao-acao-real
+  cancel-in-progress: true
+jobs:
+  originais_sem_publicacao:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Instalar dependências e ferramentas de inspeção
+        run: |
+          python -m pip install -q pillow requests pytest
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Testar não promoção de licença, hashes e origem
+        run: |
+          python -m pytest -q tests/test_prospeccao_video_acao.py
+      - name: Baixar originais Wikimedia de dois assuntos, validar SHA1 e inspecionar as janelas
+        if: github.event_name == 'workflow_dispatch'
+        timeout-minutes: 10
+        run: |
+          python -m src.v4.formatos.prospeccao_video_acao             docs/v4/formatos/CANDIDATOS_VIDEO_ACAO_REAL_20261120.json             stage_documental/prospeccao             qa_prospeccao_acao
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out=json.loads(Path('qa_prospeccao_acao/relatorio_prospeccao.json').read_text())
+          assert out['originais_conferidos']==2 and out['acoes_comprovadas']==0
+          assert len(out['fontes'])==2
+          assert all(row['inspecao']['processo_visivel_confirmado'] is False for row in out['fontes'])
+          assert all(row['original']['sha256'] for row in out['fontes'])
+          assert all(row['publicar'] is False for row in out['fontes'])
+          print('FONTES INDEPENDENTES ÍNTEGRAS, INSPEÇÃO VISUAL AINDA PENDENTE')
+          PY
+      - name: Guardar somente quadros e comprovantes, não os dois masters
+        if: github.event_name == 'workflow_dispatch' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-originais-commons-processos-sem-aprovacao
+          path: qa_prospeccao_acao/
+          retention-days: 5
+          if-no-files-found: warn

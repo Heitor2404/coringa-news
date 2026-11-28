@@ -1,0 +1,375 @@
+{
+  "schema": "coringa-f15-structural-probes-v1",
+  "source": "independent_expert_manual_topology_probes_not_text_extraction",
+  "notes": "Minimal probes to measure admission/refusal only. Not complete industrial CAD, validated dimensional models or source-extracted specs.",
+  "probes": {
+    "quatro_barras": {
+      "nodes": [
+        {
+          "id": "entrada",
+          "kind": "rotor"
+        },
+        {
+          "id": "acoplador",
+          "kind": "rod"
+        },
+        {
+          "id": "balancim",
+          "kind": "rod"
+        },
+        {
+          "id": "base",
+          "kind": "rotor"
+        }
+      ],
+      "edges": [
+        {
+          "from": "entrada",
+          "to": "acoplador",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "acoplador",
+          "to": "balancim",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "balancim",
+          "to": "base",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "base",
+          "to": "entrada",
+          "joint": "hinged_to"
+        }
+      ]
+    },
+    "scotch_yoke": {
+      "nodes": [
+        {
+          "id": "crank",
+          "kind": "rotor"
+        },
+        {
+          "id": "cursor",
+          "kind": "piston"
+        },
+        {
+          "id": "frame",
+          "kind": "chamber"
+        }
+      ],
+      "edges": [
+        {
+          "from": "crank",
+          "to": "cursor",
+          "joint": "pin_in_slot"
+        },
+        {
+          "from": "cursor",
+          "to": "frame",
+          "joint": "slides_in"
+        }
+      ]
+    },
+    "came_seguidor": {
+      "nodes": [
+        {
+          "id": "cam",
+          "kind": "cam"
+        },
+        {
+          "id": "follower",
+          "kind": "piston"
+        },
+        {
+          "id": "frame",
+          "kind": "chamber"
+        }
+      ],
+      "edges": [
+        {
+          "from": "cam",
+          "to": "follower",
+          "joint": "contact"
+        },
+        {
+          "from": "follower",
+          "to": "frame",
+          "joint": "slides_in"
+        }
+      ]
+    },
+    "pinhao_cremalheira": {
+      "nodes": [
+        {
+          "id": "pinion",
+          "kind": "spur_gear"
+        },
+        {
+          "id": "rack",
+          "kind": "rack"
+        },
+        {
+          "id": "frame",
+          "kind": "chamber"
+        }
+      ],
+      "edges": [
+        {
+          "from": "pinion",
+          "to": "rack",
+          "joint": "meshes_with"
+        },
+        {
+          "from": "rack",
+          "to": "frame",
+          "joint": "slides_in"
+        }
+      ]
+    },
+    "planetaria": {
+      "nodes": [
+        {
+          "id": "sun",
+          "kind": "spur_gear"
+        },
+        {
+          "id": "planet",
+          "kind": "spur_gear"
+        },
+        {
+          "id": "ring",
+          "kind": "ring_gear"
+        },
+        {
+          "id": "carrier",
+          "kind": "rotor"
+        }
+      ],
+      "edges": [
+        {
+          "from": "sun",
+          "to": "planet",
+          "joint": "meshes_with"
+        },
+        {
+          "from": "planet",
+          "to": "ring",
+          "joint": "meshes_with"
+        },
+        {
+          "from": "planet",
+          "to": "carrier",
+          "joint": "hinged_to"
+        }
+      ]
+    },
+    "cruz_malta": {
+      "nodes": [
+        {
+          "id": "crank",
+          "kind": "rotor"
+        },
+        {
+          "id": "wheel",
+          "kind": "geneva_wheel"
+        },
+        {
+          "id": "pin",
+          "kind": "rod"
+        }
+      ],
+      "edges": [
+        {
+          "from": "crank",
+          "to": "pin",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "pin",
+          "to": "wheel",
+          "joint": "intermittent_contact"
+        }
+      ]
+    },
+    "coroa_sem_fim": {
+      "nodes": [
+        {
+          "id": "worm",
+          "kind": "worm_gear"
+        },
+        {
+          "id": "wheel",
+          "kind": "spur_gear"
+        }
+      ],
+      "edges": [
+        {
+          "from": "worm",
+          "to": "wheel",
+          "joint": "spatial_mesh"
+        }
+      ]
+    },
+    "catraca": {
+      "nodes": [
+        {
+          "id": "ratchet",
+          "kind": "spur_gear"
+        },
+        {
+          "id": "pawl",
+          "kind": "rod"
+        }
+      ],
+      "edges": [
+        {
+          "from": "ratchet",
+          "to": "pawl",
+          "joint": "one_way_contact"
+        }
+      ]
+    },
+    "whitworth": {
+      "nodes": [
+        {
+          "id": "crank",
+          "kind": "rotor"
+        },
+        {
+          "id": "slotted_arm",
+          "kind": "rod"
+        },
+        {
+          "id": "slider",
+          "kind": "piston"
+        },
+        {
+          "id": "frame",
+          "kind": "chamber"
+        }
+      ],
+      "edges": [
+        {
+          "from": "crank",
+          "to": "slotted_arm",
+          "joint": "pin_in_slot"
+        },
+        {
+          "from": "slotted_arm",
+          "to": "slider",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "slider",
+          "to": "frame",
+          "joint": "slides_in"
+        }
+      ]
+    },
+    "limpador_para_brisa": {
+      "nodes": [
+        {
+          "id": "motor",
+          "kind": "rotor"
+        },
+        {
+          "id": "link_a",
+          "kind": "rod"
+        },
+        {
+          "id": "link_b",
+          "kind": "rod"
+        },
+        {
+          "id": "wiper",
+          "kind": "rotor"
+        }
+      ],
+      "edges": [
+        {
+          "from": "motor",
+          "to": "link_a",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "link_a",
+          "to": "link_b",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "link_b",
+          "to": "wiper",
+          "joint": "hinged_to"
+        }
+      ]
+    },
+    "corrente_bicicleta": {
+      "nodes": [
+        {
+          "id": "sprocket_in",
+          "kind": "spur_gear"
+        },
+        {
+          "id": "chain",
+          "kind": "chain"
+        },
+        {
+          "id": "sprocket_out",
+          "kind": "spur_gear"
+        }
+      ],
+      "edges": [
+        {
+          "from": "sprocket_in",
+          "to": "chain",
+          "joint": "engages"
+        },
+        {
+          "from": "chain",
+          "to": "sprocket_out",
+          "joint": "engages"
+        }
+      ]
+    },
+    "tesoura_hidraulica": {
+      "nodes": [
+        {
+          "id": "arm_a",
+          "kind": "rod"
+        },
+        {
+          "id": "arm_b",
+          "kind": "rod"
+        },
+        {
+          "id": "actuator",
+          "kind": "piston"
+        },
+        {
+          "id": "frame",
+          "kind": "chamber"
+        }
+      ],
+      "edges": [
+        {
+          "from": "arm_a",
+          "to": "arm_b",
+          "joint": "hinged_to"
+        },
+        {
+          "from": "actuator",
+          "to": "arm_a",
+          "joint": "pushes"
+        },
+        {
+          "from": "actuator",
+          "to": "frame",
+          "joint": "slides_in"
+        }
+      ]
+    }
+  }
+}

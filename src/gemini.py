@@ -48,6 +48,10 @@ def _tentar(fn, modelos=None):
     # sobrecarga: espera pouco e passa para o próximo modelo/chave/serviço (esperar 15+30+60 s em cada modelo comia
     # 15 minutos da execução de 10/11 e o tema ficou sem tempo para ser trocado)
     esperas = [8]
+    # E284: optional hard cap of external attempts per LOGICAL call (retries, keys and models included),
+    # so an authorization cannot be bypassed by repeated provider calls. Unset = historical behaviour.
+    teto_tentativas = int(os.getenv('CORINGA_VISAO_MAX_TENTATIVAS') or 0)
+    tentativas_feitas = 0
     ordem = list(range(_chave, len(CHAVES))) + list(range(0, _chave))
     for ch in ordem:
         _chave = ch
@@ -55,6 +59,9 @@ def _tentar(fn, modelos=None):
             if (ch, modelo) in _esgotado or _lento.get(modelo, 0) > time.time():
                 continue
             for tentativa in range(len(esperas) + 1):
+                if teto_tentativas and tentativas_feitas >= teto_tentativas:
+                    raise RuntimeError(f'Gemini: teto de {teto_tentativas} tentativas externas por chamada atingido: {erro}')
+                tentativas_feitas += 1
                 try:
                     from . import caixa      # trava (Plano Mestre §5): cota grátis → registra; desconhecido/pago → nega
                     from . import custo as _c
@@ -269,7 +276,7 @@ def _reserva(prompt: str, json_mode: bool, erro_gemini, so_cloudflare: bool = Fa
     raise RuntimeError(f'nenhuma IA disponível (Gemini: {str(erro_gemini)[:120]})')
 
 
-def json_visao(prompt: str, imagens: list[bytes], leve: bool = True):
+def json_visao(prompt: str, imagens: list[bytes], leve: bool = True, telemetria=None):
     """Mostra imagens ao Gemini (que enxerga) e pede uma resposta em JSON. Sem reserva: se falhar, quem chamou decide."""
     from google.genai import types
     partes = []
@@ -278,10 +285,16 @@ def json_visao(prompt: str, imagens: list[bytes], leve: bool = True):
     partes.append(prompt)
 
     def f(modelo):
+        row={'modelo':str(modelo),'imagens':len(imagens),'bytes_imagens':sum(len(x) for x in imagens),'estado':'TENTATIVA'}
+        if telemetria is not None:telemetria.append(row)
         r = cliente().models.generate_content(
             model=modelo, contents=partes,
             config=types.GenerateContentConfig(response_mime_type='application/json', temperature=0.2))
-        return extrair_json(r.text)
+        usage=getattr(r,'usage_metadata',None)
+        row.update(estado='RESPOSTA',tokens={k:getattr(usage,k,None) for k in ('prompt_token_count','candidates_token_count','total_token_count','thoughts_token_count')})
+        out=extrair_json(r.text)
+        row['estado']='JSON_VALIDO'
+        return out
     if leve:
         return _tentar(f, MODELOS_LEVES)
     try:                                   # olhar imagens: principal (todas as chaves) → lite (todas as chaves)

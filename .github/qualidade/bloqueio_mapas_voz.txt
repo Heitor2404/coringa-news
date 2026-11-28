@@ -1,0 +1,4 @@
+# PROIBIDO renderizar mapa vetorial elementar em qualquer prova ATLAS/FILME.
+# Mapas legítimos: ATLAS PalcoMapa com MapLibre, satélite/relevo e geometria licenciada.
+# Edge apenas para teste; voz final Gemini Charon com fallback bloqueado e revisão humana.
+# Testar sem render e sem Telegram.

@@ -66,7 +66,7 @@ def test_mesma_midia_duas_vezes_no_mesmo_plano():
 def test_foto_ou_texto_parado_sem_informacao_nova():
     """foto longa sem informação nova (c4/c9 de 43972774128); cena estática mascarada pela legenda"""
     pl = copy.deepcopy(ATLAS)
-    pl['beats'] = [b for b in pl['beats'] if b['id'] != 'b6-gravidade']   # 41–50 s só com o palco técnico
+    pl['clipes'] = []   # retirar a animação contínua expõe falta de demonstração no trecho técnico
     assert 'F-SEM-PROGRESSAO' in _regras(pl)
 
 
@@ -180,8 +180,7 @@ def test_componentes_registrados_no_remotion():
 def test_camada_na_zona_da_marca_ou_da_legenda_e_erro():
     """17/11 (ensaio DOSSIÊ): datas da linha do tempo encostavam na marca 'CORINGA EXPLICA' (y 292)"""
     pl = copy.deepcopy(ATLAS)
-    _camada(pl, 'km')['caixa'] = [72, 300, 936, 28]          # zona da marca ATLAS: y 294–338, dentro do feed Reels
-    _camada(pl, 'zero')['caixa'] = [72, 1250, 936, 80]
+    _camada(pl, 'km')['caixa'] = [72, 1250, 936, 80]  # ocupa a faixa da legenda protegida, não a antiga marca fixa
     r = P.validar(P.resolver_tempos(pl, []))
     assert sum(v['regra'] == 'F-ZONA-IDENTIDADE' for v in r) == 1  # ATLAS sem marca sobreposta; legenda continua protegida
     for x, y, w, h in P.SLOTS.values():
@@ -797,10 +796,14 @@ def test_previa_curta_atlas_nao_renderiza_episodio_inteiro():
     for nome, a, b in A.JANELAS:
         assert 0 <= a < b <= pl['duracao'], nome
         assert b - a <= 3.0, nome
-        if nome == 'eclusa_subindo':
+        if nome.startswith('eclusa_'):
             c, = pl['clipes']
             assert c['componente'] == 'mecanismo.eclusa'
-            assert c['t0'] <= a < c['t0'] + c['params']['tempos'][1] < b <= c['t1']
+            assert c['t0'] <= a < b <= c['t1']
+            if nome == 'eclusa_subindo':
+                assert a < c['t0'] + c['params']['tempos'][1] < b
+            elif nome == 'eclusa_fluxo':
+                assert a >= 41 and c['params']['destaques_fluxo']
         else:
             assert all(b <= c['t0'] or a >= c['t1'] for c in pl['clipes']), nome
         total += b - a
@@ -860,10 +863,10 @@ def test_montagem_previa_confere_mp4_com_relogios_distintos(tmp_path):
     janelas = [{"nome": "cartao", "inicio_original_s": 0, "frames_renderizados": 30},
                {"nome": "eclusa_subindo", "inicio_original_s": 1, "frames_renderizados": 30}]
     montar([cartao, eclusa], voz, janelas, destino)
-    conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+    conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 1)
     montar([cartao, cartao], voz, janelas, destino)
     with pytest.raises(RuntimeError, match="diverge do corte eclusa"):
-        conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 0)
+        conferir_montagem(destino, [cartao, eclusa], janelas, eclusa, 1)
 
 
 def test_chave_base_ignora_arquivos_gerados_e_reage_ao_tema(tmp_path, monkeypatch):
@@ -901,5 +904,223 @@ def test_previa_continua_inclui_eclusa_inteira_sem_lacuna(monkeypatch):
     j = A.janelas(ATLAS, {"palavras": []})
     c = ATLAS["clipes"][0]
     assert j[0][2] == j[1][1] == c["t0"]
-    assert j[1][2] == j[2][1] == c["t1"]
-    assert j[0][1] < c["t0"] and j[2][2] > c["t1"]
+    assert j[1][2] == j[2][1] and j[2][2] == j[3][1] == c["t1"]
+    assert j[0][1] < c["t0"] and j[3][2] > c["t1"]
+    assert all(b-a <= 12 for _, a, b in j[1:-1])
+
+
+def test_atlas_diretor_demonstracao_somente_durante_explicacao():
+    prompt = diretor.prompt(
+        [{"id": "f", "texto": "Uma eclusa enche por gravidade"}],
+        "atlas", None, "vídeo real e desenho técnico aprovados")
+    assert 'não use animação técnica de mecanismo no gancho' in prompt
+    assert 'explicacoes' in prompt and 'mecanismo' in prompt
+    assert 'Não substitua o mecanismo por cards soltos' in prompt
+    dossie = diretor.prompt([{"id": "f", "texto": "Um documento histórico"}], "dossie", None, "documento comprovado")
+    assert 'DIREÇÃO NARRATIVA REUTILIZÁVEL DO ATLAS' not in dossie
+    assert 'explicacoes' not in dossie
+
+
+def test_atlas_continuidade_mecanismo_panama_31_50s():
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    assert c['t0'] > 3 and c['t0'] == 31.49 and c['t1'] == 50.4
+    assert [x['alvo'] for x in c['params']['destaques_fluxo']] == ['lago', 'aqueduto', 'paredes', 'piso']
+    assert not any(L['componente'] == 'editorial.flowConnections'
+                   for b in pl['beats'] if b['id'] == 'b6-gravidade' for L in b['camadas'])
+    assert 'F-MECANISMO-SEM-CONTINUIDADE' not in _regras(pl)
+    c['t1'] = 40.91
+    assert 'F-MECANISMO-SEM-CONTINUIDADE' in _regras(pl)
+
+
+def test_atlas_resolucao_de_tempos_do_fluxo_no_clipe():
+    from src.v4.formatos import plano
+    orig = copy.deepcopy(ATLAS)  # forçar resolução das âncoras brutas neste teste
+    orig.pop('_resolvido', None)
+    orig['clipes'][0]['params']['tempos'] = [31.6, 36.8, 47.5]
+    orig['clipes'][0]['params']['destaques_fluxo'] = copy.deepcopy(ATLAS_BRUTO['clipes'][0]['params']['destaques_fluxo'])
+    pl = plano.resolver_tempos(orig, [])
+    c, = pl['clipes']
+    assert c['params']['destaques_fluxo'][0]['t'] == 9.81
+    assert c['params']['destaques_fluxo'][-1]['t'] == 17.51
+    assert pl['explicacoes'][0]['t1'] == 50.4
+
+
+def test_fiscal_mostra_todos_os_motivos_sem_liberar_status():
+    portas = {
+        'preto_ou_congelado': [{'de': 20, 'ate': 24, 'problemas': ['CONGELADO']}],
+        'audio_ok': True, 'ritmo_ok': False, 'legenda_ok': True
+    }
+    m = produzir.motivos_bloqueio(portas, {'sem_camera': {'maior_trecho_parado_s': 4}})
+    assert any('G-MP4-JANELA' in x for x in m)
+    assert any('G-RITMO' in x and '4 s' in x for x in m)
+    assert produzir.motivos_bloqueio(
+        {**portas, 'preto_ou_congelado': [], 'ritmo_ok': True},
+        {'sem_camera': {'maior_trecho_parado_s': 0}}) == []
+
+
+def test_eclusa_tem_destaques_fisicos_sem_troca_por_cards():
+    js = (RAIZ / 'src/render/v2/comp/mecanismos.js').read_text()
+    for alvo in ('lago', 'aqueduto', 'paredes', 'piso'):
+        assert alvo in js
+    assert "'.foco-fluxo'" in js and "'.r-foco-fluxo'" in js
+
+
+def test_fiscal_ritmo_capta_grafico_pequeno_sem_aceitar_ruido_global():
+    import numpy as np
+    from src.v4.formatos.ritmo import mudanca_local_alinhada
+    d = np.zeros((170, 180, 3), dtype=np.float32)
+    # Quatro pequenas áreas do gráfico mudam, mas a média da tela continua < 0,5.
+    for y in (0, 34):
+        for x in (0, 36):
+            d[y:y+30, x:x+30] = 4
+    assert d.mean() < .5
+    assert mudanca_local_alinhada(d) > .5
+    # Variação fraca espalhada por toda a tela não vira progresso.
+    ruido = np.full_like(d, .2)
+    assert mudanca_local_alinhada(ruido) < .5
+
+
+def test_ritmo_local_so_atlas_outros_formatos_preservados():
+    from src.v4.formatos import ritmo
+    import inspect
+    assert inspect.signature(ritmo.medir_completo).parameters['usar_local'].default is False
+    renderer = (RAIZ / 'src/v4/formatos/produzir.py').read_text()
+    assert "usar_local=(pl['formato'] == 'atlas')" in renderer
+
+
+def test_atlas_falha_500_telegram_reenvia_mesmo_mp4_como_documento(tmp_path, monkeypatch):
+    from scripts import atlas_previa_curta as A
+    from src.v3 import previa_telegram
+    saida = tmp_path
+    (saida / "atlas_identidade_v1_amostra_curta.mp4").write_bytes(b"mp4-validado")
+    (saida / "atlas_amostra_relatorio.json").write_text(json.dumps({
+        "tipo": "trecho contínuo",
+        "janelas": [{"inicio_original_s": 28.9, "fim_original_s": 31.49},
+                    {"inicio_original_s": 31.49, "fim_original_s": 50.4}],
+        "quadros_finais_conferidos": True
+    }))
+    monkeypatch.setattr(previa_telegram, "chat_autorizado", lambda: ("-123456", {}))
+    chamadas = []
+    def fake_api(metodo, data, arquivo=None):
+        chamadas.append((metodo, arquivo))
+        if metodo == "sendVideo":
+            raise previa_telegram.EnvioRecusado("sendVideo: 500 Internal Server Error")
+        return {}
+    monkeypatch.setattr(previa_telegram, "_api", fake_api)
+    A.enviar(saida)
+    assert chamadas[0][0] == "sendVideo"
+    assert chamadas[1][0] == "sendDocument"
+    assert chamadas[0][1][1] == chamadas[1][1][1]
+
+
+def test_atlas_contrato_visual_obrigatorio_para_todo_clipe_mecanico():
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-EXPLICACAO-SEM-CONTRATO' not in _regras(pl)
+    pl.pop('explicacoes')
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    pl['explicacoes'][0]['recurso'] = 'mecanismo.qualquer_outro'
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    pl['explicacoes'][0]['t1'] = pl['clipes'][0]['t1'] + 1
+    assert 'F-EXPLICACAO-SEM-CONTRATO' in _regras(pl)
+
+    # O contrato nunca interfere no formato DOSSIÊ.
+    assert 'F-EXPLICACAO-SEM-CONTRATO' not in _regras(DOSSIE, _pal(DOSSIE['narracao']['texto']))
+
+
+def test_atlas_clareza_densidade_e_focos_sao_regras_globais():
+    """Regras de legibilidade e câmera independem de nome, segundos e assunto."""
+    pl = copy.deepcopy(ATLAS)
+    assert not ({'F-POLUICAO-VISUAL', 'F-FOCO-SEM-ALVO', 'F-ROTULO-ILEGIVEL',
+                 'F-FOCO-RAPIDO', 'F-FOCO-TEMPO'} & _regras(pl))
+    # Mais cartões de texto que o limite do canal, ainda que a composição comporte camadas.
+    pl = copy.deepcopy(ATLAS)
+    tit = _camada(pl, 'pergunta')
+    for i in range(2):
+        novo = copy.deepcopy(tit)
+        novo['id'] = f'cartao-sobreposto-{i}'
+        pl['beats'][0]['camadas'].append(novo)
+    assert 'F-POLUICAO-VISUAL' in _regras(pl)
+
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    c['params']['focos'] = [{'t': 10, 'alvo': 'parte_desconhecida', 'rotulo': 'PEÇA NOVA'}]
+    assert 'F-FOCO-SEM-ALVO' in _regras(pl)
+    c['params']['focos'] = [{'t': 10, 'alvo': 'lago', 'rotulo': 'NOME MUITO EXTENSO E IMPOSSÍVEL DE LER'}]
+    assert 'F-ROTULO-ILEGIVEL' in _regras(pl)
+    c['params']['focos'] = [{'t': 10, 'alvo': 'lago', 'rotulo': 'LAGO'},
+                           {'t': 10.3, 'alvo': 'aqueduto', 'rotulo': 'AQUEDUTO'}]
+    assert 'F-FOCO-RAPIDO' in _regras(pl)
+    c['params']['focos'] = [{'t': c['t1'] - c['t0'] + 1, 'alvo': 'lago', 'rotulo': 'LAGO'}]
+    assert 'F-FOCO-TEMPO' in _regras(pl)
+    assert not ({'F-POLUICAO-VISUAL', 'F-FOCO-SEM-ALVO'} &
+                _regras(DOSSIE, _pal(DOSSIE['narracao']['texto'])))
+
+
+def test_atlas_clareza_vem_do_canal_nao_do_panama():
+    from src.v4.formatos import produzir
+    can = P.canal('coringa')
+    pl = copy.deepcopy(ATLAS)
+    c, = pl['clipes']
+    params = produzir.params_clipe(c, can)
+    cfg = {k: v for k, v in can['direcao_visual'].items() if not k.startswith('_')}
+    assert params['direcao_visual'] == cfg
+    assert cfg['rotulos_em_foco'] <= cfg['rotulos_sem_foco']
+    assert cfg['fonte_rotulo_px'] >= 32
+    assert 'direcao_visual' not in c['params']
+    assert 'alvos_componentes' in P.CFG['formatos']['atlas']
+
+
+def test_focos_e_tempos_do_mecanismo_idempotentes_em_plano_resolvido():
+    clip0 = ATLAS['clipes'][0]['params']
+    clip1 = P.resolver_tempos(copy.deepcopy(ATLAS), [])['clipes'][0]['params']
+    assert clip1['tempos'] == clip0['tempos']
+    assert clip1['destaques_fluxo'] == clip0['destaques_fluxo']
+
+    pl = copy.deepcopy(ATLAS)
+    pl['clipes'][0]['params']['focos'] = [
+        {'t': 12.0, 'alvo': 'lago', 'rotulo': 'ÁGUA DO LAGO'}
+    ]
+    assert P.resolver_tempos(pl, [])['clipes'][0]['params']['focos'][0]['t'] == 12
+
+    bruto = copy.deepcopy(ATLAS)
+    bruto.pop('_resolvido', None)
+    bruto['clipes'][0]['params']['tempos'] = [31.6, 36.8, 47.5]
+    bruto['clipes'][0]['params']['destaques_fluxo'] = []
+    bruto['clipes'][0]['params']['focos'] = [
+        {'t': 43.49, 'alvo': 'lago', 'rotulo': 'ÁGUA DO LAGO'}
+    ]
+    novo = P.resolver_tempos(bruto, [])['clipes'][0]['params']
+    assert novo['focos'][0]['t'] == 12.0
+    assert novo['tempos'] == [.11, 5.31, 16.01]
+
+
+def test_atlas_fiscal_exige_desfecho_fisico_completo_para_qualquer_clipe_aprovado():
+    """O motor não pode cortar após abrir a comporta, sem mostrar a saída."""
+    pl = copy.deepcopy(ATLAS)
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(pl)
+    clip, = pl['clipes']
+    final = P.CFG['formatos']['atlas']['contratos_movimento']['mecanismo.eclusa']
+    assert final['janela_final_min_s'] > 2
+    assert clip['t1'] - clip['t0'] - clip['params']['tempos'][final['marco_acao_final']] >= final['janela_final_min_s']
+
+    clip['params']['tempos'][2] = (clip['t1'] - clip['t0']) - .8
+    assert 'F-ACAO-FINAL-TRUNCADA' in _regras(pl)
+    clip['params']['tempos'] = []
+    assert 'F-ACAO-FINAL-SEM-MARCO' in _regras(pl)
+
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(DOSSIE, _pal(DOSSIE['narracao']['texto']))
+
+
+def test_atlas_garantia_da_saida_nao_altera_abertura_ou_mecanismos_ausentes():
+    pl = copy.deepcopy(ATLAS)
+    assert pl['clipes'][0]['t0'] > 3
+    assert not any(c['componente'].startswith('mecanismo.') and c['t0'] < 3 for c in pl['clipes'])
+    p = copy.deepcopy(ATLAS)
+    p['clipes'] = []
+    p['explicacoes'] = []
+    assert 'F-ACAO-FINAL-TRUNCADA' not in _regras(p)

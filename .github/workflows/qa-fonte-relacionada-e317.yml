@@ -1,0 +1,60 @@
+name: E317.1 - prova real com fonte integral preservada
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-fonte-relacionada-e317.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CAIXA_MAX_CHAMADAS: '0'
+      CAIXA_TETO_USD: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - name: Testes e preparar janelas reais
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python -m pip install -q -r requirements.txt pytest beautifulsoup4
+          npm ci --prefix motor4 --no-audit --no-fund
+          python -m pytest -q tests/test_fonte_relacionada_e317.py tests/test_relacao_e316.py tests/test_reserva_janelas_e313.py tests/test_documentario_integral_e254.py
+          root=stage_documental/e317
+          mkdir -p "$root"
+          gh release download review-e300-45737009519-1 --repo Heitor2404/coringa-cofre --pattern 783f746a234d1378158d7ca3b74ed63ab0e0526664bc72c73c5222a22315b25c.mp4 --dir "$root"
+          python -m scripts.qa_fonte_relacionada_e317
+      - name: Renderizar sequencia privada
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../stage_documental/e317/proof.mp4 --props=../stage_documental/e317/props.json --public-dir=remotion/public --codec=h264 --crf=23 --scale=0.5 --concurrency=4 --log=error
+      - name: Verificar e espelhar prova
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          root=stage_documental/e317
+          ffprobe -v error -show_streams -show_format -of json "$root/proof.mp4" > "$root/probe.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('stage_documental/e317/probe.json').read_text())
+          v=next(s for s in p['streams'] if s['codec_type']=='video')
+          assert (v['width'],v['height'],int(v['nb_frames']))==(540,960,228)
+          PY
+          python scripts/espelhar_revisao_cofre.py "e317-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/proof.json" "$root/source-samples.jpg" "$root/probe.json" "$root/proof.mp4"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e317-prova-privada
+          path: stage_documental/e317/proof.mp4
+          retention-days: 5

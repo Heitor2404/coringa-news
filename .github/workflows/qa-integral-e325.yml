@@ -1,0 +1,145 @@
+name: E325 - detalhe documental ampliado com fonte integral
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/qa-integral-e325.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: integral-e325-havai
+  cancel-in-progress: true
+jobs:
+  pilot:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CAIXA_TETO_USD: '0'
+      CAIXA_MAX_CHAMADAS: '0'
+      USAR_CLAUDE: '0'
+      REMOTION_CHROME: /usr/bin/google-chrome
+      CORINGA_CHROME: /usr/bin/google-chrome
+      REMOTION_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13', cache: pip}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: motor4/package-lock.json}
+      - run: |
+          python -m pip install -q -r requirements.txt beautifulsoup4 pytest
+          npm ci --prefix motor4 --no-audit --no-fund
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg; fi
+          python -m pytest -q tests/test_composicao_e286.py tests/test_video_framing_multitema.py tests/test_documentario_e233_tempos.py tests/test_orcamento_visao_e284.py tests/test_tts_autorizada_e289.py tests/test_alinhamento_e289.py tests/test_atlas_multiscale_e237.py tests/test_atlas_base_regional_e235.py tests/test_ui_e299.py tests/test_cortes_revisados_e302.py tests/test_evidencias_estaticas_e321.py tests/test_replanejamento_e319.py
+          ./motor4/node_modules/.bin/tsc -p motor4/remotion/tsconfig.json --noEmit
+      - name: Restaurar acervo ja adquirido sem consultar origens de video
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_piloto_e289 review-e287-45685353176-1 qa_e289 stage_documental/e219
+      - name: Restaurar registros causais verificados E323
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_evidencias_causais_e324 benchmarks/e299/cortes_revisados_e324.json qa_e289 stage_documental/e219 review-e323-45864804065-1
+      - name: Restaurar janela adicional revisada sem novas aquisicoes
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_cortes_revisados_e302 benchmarks/e299/cortes_revisados_e324.json qa_e289 stage_documental/e219
+      - name: Recuperar evidencias estaticas autenticadas
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.evidencias_estaticas_e321 benchmarks/e299/evidencias_estaticas_e325.json qa_e289 stage_documental/e321
+      - name: Recuperar voz medida autenticada
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: python -m scripts.restaurar_voz_e289 review-e289-45689022910-1 qa_e289 medida
+      - name: Realinhar e montar sem IA
+        run: python -m scripts.qa_documentario_geografia_e219 benchmarks/e219/kilauea_review_e232.json qa_e289 --acervo-restaurado --voz-medida-restaurada --atlas-direcao=benchmarks/e219/direcao_atlas_e297.json --cortes-revisados=benchmarks/e299/cortes_revisados_e324.json --evidencias-revisadas=benchmarks/e299/evidencias_estaticas_e325.json
+      - name: Diagnosticar faixas editoriais contra as tres plataformas
+        run: python -m scripts.qa_ui_e299 qa_e289/ui-diagnostico.json
+      - name: Triagem integral antes do render
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import direcao_short_e306 as D
+          p=Path('qa_e289')
+          plan=json.loads((p/'plano.json').read_text())
+          props=json.loads((p/'props.json').read_text())
+          sync=json.loads((p/'sincronia-medida.json').read_text())
+          diagnostic=D.diagnosticar(plan)
+          (p/'direcao-integral.json').write_text(json.dumps(diagnostic,ensure_ascii=False,indent=2))
+          assert plan['publicar'] is False and props['private_review_only'] is True and props['preview'] is True
+          assert sync['ok'] is True and diagnostic['pronto_para_analise_visual'] and plan['duracao']>=60
+          assert any(s['type']=='video' for s in plan['shots']) and any(s['type']=='atlas_map' for s in plan['shots'])
+          assert {s['id'] for s in plan['shots'] if s['type']=='photo'}=={'c4-3','c5-3','c6-0'}
+          assert {s['id'] for s in props['shots'] if s.get('documentary_static_reveal')}=={'c4-3','c5-3','c6-0'}
+          assert {s['id'] for s in props['shots'] if (s.get('documentary_static_reveal') or {}).get('detail_zoom')}=={'c5-3','c6-0'}
+          assert all(s.get('documentary_integral_required') for s in props['shots'] if s['id'] in {'c2-1','c2-3','c3-3','c4-2','c5-1','c5-2','c6-1','c6-2','c6-3'})
+          PY
+      - name: Renderizar filme privado completo
+        run: |
+          cd motor4
+          npx --no-install remotion render remotion/src/index.ts FilmeEditorial ../qa_e289/filme.mp4 --props=../qa_e289/props.json --codec=h264 --crf=20 --scale=0.5 --concurrency=4 --public-dir=remotion/public --log=error
+      - name: Validar filme narrado e preparar amostras por cena
+        run: |
+          python - <<'PY'
+          import json,subprocess,hashlib
+          from pathlib import Path
+          from PIL import Image,ImageDraw
+          from scripts.documentario_telegram import verificar_video
+          p=Path('qa_e289');v=p/'filme.mp4'
+          plan=json.loads((p/'plano.json').read_text());props=json.loads((p/'props.json').read_text())
+          dur=float(plan['duracao'])
+          verificar_video(v,dur)
+          assert dur>=60 and abs(float(props['duracao'])-dur)<.1
+          assert json.loads((p/'sincronia-medida.json').read_text())['ok'] is True
+          decisions=json.loads((p/'continuidade-montagem.json').read_text())['shots']
+          assert {d['shot'] for d in decisions if d.get('reviewed_binding')}=={'c2-1','c2-3','c3-3','c4-2','c4-3','c5-1','c5-2','c5-3','c6-0','c6-1','c6-2','c6-3'}
+          cuts=plan['shots'];rows=[]
+          for i,s in enumerate(cuts):
+              a,b=s['start'],s['end']
+              assert b>a and (i==0 and abs(a)<.04 or i>0 and abs(a-cuts[i-1]['end'])<.04)
+              rows.append({'id':s['id'],'start':a,'end':b,'type':s['type'],'asset':s.get('asset'),'samples':[]})
+              for j,f in enumerate((.18,.5,.82)):
+                  t=a+(b-a)*f
+                  dst=p/f'cena-{i:02d}-{j}.jpg'
+                  subprocess.run(['ffmpeg','-v','error','-y','-ss',str(t),'-i',str(v),'-frames:v','1',str(dst)],check=True)
+                  assert dst.stat().st_size>0
+                  rows[-1]['samples'].append({'time':t,'file':dst.name})
+          assert abs(cuts[-1]['end']-dur)<.04
+          for i in range(0,len(rows),3):
+              batch=rows[i:i+3];board=Image.new('RGB',(810,510*len(batch)),'#181818');draw=ImageDraw.Draw(board)
+              for k,row in enumerate(batch):
+                  for j,sample in enumerate(row['samples']):
+                      with Image.open(p/sample['file']) as im:
+                          im.thumbnail((270,480));board.paste(im,(270*j,510*k+22))
+                      draw.text((270*j+5,510*k+4),f"{row['id']}  {sample['time']:.2f}s",fill='white')
+              board.save(p/f'contato-{i//3:02d}.jpg',quality=86)
+          q={'duration':dur,'publish':False,'visual_approval':'PENDING','voice_approval':'PENDING','kind':'FULL_ASSISTED_INTEGRATION_REVIEW','semantic_review':'PENDING','ui_review':'PENDING','video_sha256':hashlib.sha256(v.read_bytes()).hexdigest(),'shots':rows,'route':'E219 assisted; not E254 autonomous acquisition','new_vision_calls':0,'new_tts_calls':0}
+          (p/'qa.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          print('E325_INTEGRAL_RENDER_VALIDADO',dur,len(rows),flush=True)
+          PY
+      - name: Preservar evidencias privadas inclusive em falha
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          shopt -s nullglob
+          root=qa_e289
+          files=()
+          mirror=()
+          for f in voz-original.json realinhamento.json voz-medida.json narracao48k.wav sincronia-medida.json props.json qa.json acervo.json plano.json narracao.json trilha.json comprovante_atlas.json continuidade-montagem.json lacunas-montagem.json obrigacoes-visuais.json ui-diagnostico.json direcao-integral.json direcao-atlas.json camera-multiescala-1.json raster-multiescala-1.json filme.mp4 fontes-contato.jpg; do
+            if [[ -s "$root/$f" ]]; then
+              files+=("$root/$f")
+              [[ "$f" == *.wav || "$f" == *.mp4 ]] || mirror+=("$root/$f")
+            fi
+          done
+          for f in "$root"/contato-*.jpg "$root"/cena-*-1.jpg; do
+            files+=("$f");mirror+=("$f")
+          done
+          if (( ${#files[@]} )); then
+            bash scripts/arquivar_cofre_review.sh "review-e325-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${files[@]}"
+            python scripts/espelhar_revisao_cofre.py "e325-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${mirror[@]}"
+          fi

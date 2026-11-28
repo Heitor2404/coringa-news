@@ -1,0 +1,83 @@
+name: E31 reflow visual privado em dois palcos verificados
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-reflow-cad-e31.yml"
+      - "src/v4/formatos/reflow_cad_e31.py"
+      - "tests/test_reflow_cad_e31.py"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reflow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DO_NOT_TRACK: "1"
+      REMOTION_DISABLE_TELEMETRY: "1"
+      CORINGA_CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: e17-volta-step-verificada
+          run-id: 45321450413
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_step
+      - uses: actions/download-artifact@v4
+        with:
+          name: e29-urdf-editorial-privado
+          run-id: 45321559459
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: fonte_urdf
+      - name: Validar e calcular reflow pelo movimento dos dois MP4s reais
+        run: |
+          python -m pip install --only-binary=:all: numpy pytest imageio-ffmpeg
+          python -m pytest -q tests/test_reflow_cad_e31.py
+          python -m src.v4.formatos.ponte_cad_editorial_e28 fonte_step/qa_e25/QA.json motor4/remotion/public qa_e31_step
+          python -m src.v4.formatos.ponte_cad_qa_e29 fonte_urdf/qa_e29/QA.json source_robotics_ssg48 motor4/remotion/public qa_e31_urdf
+          python -m src.v4.formatos.reflow_cad_e31 qa_e31_step/props.json motor4/remotion/public qa_e31_step/REFLOW.json
+          python -m src.v4.formatos.reflow_cad_e31 qa_e31_urdf/props.json motor4/remotion/public qa_e31_urdf/REFLOW.json
+      - name: Compositor documental existente - duas provas
+        run: |
+          npm ci --prefix motor4 --no-audit --no-fund
+          ./motor4/node_modules/.bin/tsc --project motor4/remotion/tsconfig.json --noEmit
+          cd motor4
+          for model in step urdf; do
+            npx --no-install remotion render remotion/src/index.ts FilmeEditorial \
+              ../qa_e31_$model/editorial_cad.mp4 --props=../qa_e31_$model/props.json \
+              --codec=h264 --crf=20 --concurrency=2 --public-dir=remotion/public --log=error
+          done
+      - name: Auditar MP4s decodificados
+        run: |
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          from src.v4.formatos.ponte_cad_editorial_e28 import verificar_video,ffmpeg,sha
+          for model in ("step","urdf"):
+              root=Path("qa_e31_"+model)
+              p=json.loads((root/"props.json").read_text())
+              movie=root/"editorial_cad.mp4"
+              qa=verificar_video(movie,round(p["duracao"]*30))
+              qa.update(sha256=sha(movie),publish=False,visual_approved=False)
+              (root/"QA_EDITORIAL.json").write_text(json.dumps(qa,indent=2))
+              subprocess.check_call([ffmpeg(),"-v","error","-y","-i",str(movie),"-vf",
+                  "fps=2,scale=270:480,tile=4x2","-frames:v","1",str(root/"contato.jpg")])
+              print("E31-EDITORIAL",model,json.dumps(qa))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e31-reflow-cad-privado
+          path: |
+            qa_e31_step/
+            qa_e31_urdf/
+          retention-days: 7

@@ -49,7 +49,62 @@
     while ((el.scrollWidth > L + 1 || el.offsetHeight > A) && f > min) { f -= passo; el.style.fontSize = f + 'px'; }
     return f;
   }
-  V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber };
+  /* DIREÇÃO VISUAL DIDÁTICA — geometria e prioridades reutilizáveis por QUALQUER mecanismo.
+     Recebe posição semântica e contexto do componente, nunca nome, assunto ou coordenadas de episódio. */
+  function cameraDidatica(base, alvo, contexto, aspecto, progresso = 1, largura = 1240, protagonista = null) {
+    if (!alvo || !contexto || !base || !(aspecto > 0)) return base;
+    const k = eo(progresso);
+    // Caso o processo tenha protagonista (navio, peça móvel, personagem),
+    // enquadrar AO MESMO TEMPO ele inteiro, o fluxo explicado e o contexto.
+    // Geometria declarada no componente; o episódio só aponta o alvo semântico.
+    let cx = .35 * alvo[0] + .65 * contexto[0], cy = .35 * alvo[1] + .65 * contexto[1];
+    let w = Math.max(900, largura);
+    if (protagonista) {
+      const x0 = Math.min(alvo[0] - 75, protagonista[0] - 245, contexto[0] - 80);
+      const x1 = Math.max(alvo[0] + 75, protagonista[0] + 245, contexto[0] + 80);
+      const y0 = Math.min(alvo[1] - 75, protagonista[1] - 185, contexto[1] - 80);
+      const y1 = Math.max(alvo[1] + 75, protagonista[1] + 80, contexto[1] + 80);
+      cx = (x0 + x1) / 2; cy = (y0 + y1) / 2;
+      w = Math.max(w, x1 - x0 + 130, (y1 - y0 + 130) * aspecto);
+    }
+    const chegada = [cx - w / 2, cy - w / aspecto / 2, w];
+    return base.map((v, i) => lerp(v, chegada[i], k));
+  }
+  function limitarZoom(rect, aspecto, larguraMin) {
+    if (!rect || !(aspecto > 0) || rect[2] >= larguraMin) return rect;
+    const cx = rect[0] + rect[2] / 2;
+    const cy = rect[1] + rect[2] / aspecto / 2;
+    return [cx - larguraMin / 2, cy - larguraMin / aspecto / 2, larguraMin];
+  }
+  function planejarRotulos(candidatos, zona, limite = 2, folga = 10) {
+    // Ordenação estável: assunto narrado prevalece sobre números de estado e etiquetas secundárias.
+    const validos = candidatos.filter(c => c.visivel && c.w > 0 && c.h > 0 && c.w <= zona.dir - zona.esq)
+      .sort((a, b) => (b.prioridade || 0) - (a.prioridade || 0) || (a.ordem || 0) - (b.ordem || 0));
+    const usados = [], resultado = [];
+    for (const c of validos) {
+      if (resultado.length >= limite) break;
+      const xs = [c.x, c.x - c.w / 2, c.x - c.w, zona.esq + (zona.dir - zona.esq - c.w) / 2];
+      const ys = [c.y, c.y + c.h + 3 * folga, c.y - c.h - 3 * folga,
+        zona.topo, zona.base - c.h];
+      let escolhido = null;
+      for (const y0 of ys) {
+        for (const x0 of xs) {
+          const x = clamp(x0, zona.esq, zona.dir - c.w);
+          const y = clamp(y0, zona.topo, zona.base - c.h);
+          const caixa = [x - folga, y - folga, x + c.w + folga, y + c.h + folga];
+          if (usados.some(q => caixa[0] < q[2] && q[0] < caixa[2] && caixa[1] < q[3] && q[1] < caixa[3])) continue;
+          escolhido = { id: c.id, x, y };
+          usados.push(caixa);
+          break;
+        }
+        if (escolhido) break;
+      }
+      if (escolhido) resultado.push(escolhido);
+    }
+    return resultado;
+  }
+  V2.U = { clamp, lerp, eo, eo5, ei, eio, back, P, esc, hl, limpo, fmt, decs, num, palavras, revelar, aparece, caber,
+    cameraDidatica, planejarRotulos, limitarZoom };
 
   /* tokens da identidade (os mesmos de estilo.css): uma escala tipográfica, um ritmo, uma espessura de linha */
   V2.T = {

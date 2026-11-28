@@ -1,0 +1,55 @@
+name: "QA — regressão negativa de mecanismos físicos reprovados"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-mecanismos-fisicos.yml"
+      - "motor4/remotion/src/formatos/OpticalProjection.tsx"
+      - "motor4/remotion/src/formatos/LockCausal.tsx"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+      - "src/v4/formatos/filme_editorial.py"
+      - "docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json"
+      - "tests/test_mecanismos_explicativos.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: qa-mecanismos-fisicos
+  cancel-in-progress: true
+
+jobs:
+  render_mecanismos:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+
+      - name: Testar contrato multitema e impedir fatos fictícios
+        run: |
+          python -m pip install -q pillow requests numpy pyyaml cryptography pytest
+          python -m pytest -q tests/test_mecanismos_explicativos.py
+
+      - name: Impedir retorno dos dois renderers reprovados
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import filme_editorial as F
+          p=json.loads(Path('docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json').read_text())
+          try:
+              F.preparar(p,Path('qa_bloqueio'),Path('motor4/remotion/public'))
+          except ValueError as e:
+              assert 'A-ROTA-BLOQUEADA' in str(e) and 'euv_exposicao' in str(e) and 'eclusa_nivel' in str(e)
+          else:
+              raise AssertionError('renderer reprovado voltou ao caminho editorial')
+          assert not Path('qa_bloqueio/props.json').exists()
+          PY

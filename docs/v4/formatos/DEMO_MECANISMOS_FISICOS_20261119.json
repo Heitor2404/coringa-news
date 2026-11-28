@@ -1,0 +1,105 @@
+{
+  "formato": "filme_editorial",
+  "tipo": "PROVA_VISUAL_PRIVADA",
+  "publicar": false,
+  "titulo": "Dois mecanismos físicos | QA multitema | não é episódio",
+  "duracao": 17.2,
+  "media": {},
+  "shots": [
+    {
+      "id": "euv_exposicao",
+      "start": 0,
+      "end": 6.9,
+      "type": "mechanism",
+      "mechanism": "optical_projection",
+      "evidence": "explainer",
+      "lead": "ENGENHARIA · SEMICONDUTORES",
+      "headline": "LUZ, MÁSCARA, ESPELHOS E RESIST",
+      "subject": "Esquema didático de exposição EUV, não filmagem real nem máquina em escala",
+      "cues": [
+        {
+          "at": 0,
+          "action": "source",
+          "label": "1 · FONTE DE LUZ EUV"
+        },
+        {
+          "at": 1.1,
+          "action": "reticle",
+          "label": "2 · O PADRÃO ESTÁ NA MÁSCARA REFLEXIVA"
+        },
+        {
+          "at": 2.65,
+          "action": "projection",
+          "label": "3 · OS ESPELHOS PROJETAM O PADRÃO"
+        },
+        {
+          "at": 4.65,
+          "action": "wafer",
+          "label": "4 · O RESIST DO WAFER É EXPOSTO"
+        }
+      ],
+      "estados_esperados": [
+        "source",
+        "reticle",
+        "projection",
+        "wafer"
+      ],
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "principio_euv",
+        "aprendizado": "Mostrar fisicamente como a luz carrega um padrão e expõe uma camada no wafer"
+      }
+    },
+    {
+      "id": "eclusa_nivel",
+      "start": 6.9,
+      "end": 17.2,
+      "type": "mechanism",
+      "mechanism": "lock_explainer",
+      "evidence": "explainer",
+      "lead": "ENGENHARIA · HIDRÁULICA",
+      "headline": "ÁGUA, ELEVAÇÃO E EQUALIZAÇÃO",
+      "subject": "Esquema de eclusa e funcionamento por gravidade, sem representar filmagem do Panamá",
+      "cues": [
+        {
+          "at": 0,
+          "action": "closed",
+          "label": "1 · PORTÕES FECHADOS"
+        },
+        {
+          "at": 1.2,
+          "action": "water_enter",
+          "label": "2 · ÁGUA ENTRA PELO CONDUTO"
+        },
+        {
+          "at": 3,
+          "action": "rise",
+          "label": "3 · NAVIO FLUTUA E SOBE"
+        },
+        {
+          "at": 7.1,
+          "action": "equalize",
+          "label": "4 · NÍVEIS SE IGUALAM"
+        },
+        {
+          "at": 8.8,
+          "action": "release",
+          "label": "5 · SAÍDA LIBERADA"
+        }
+      ],
+      "estados_esperados": [
+        "closed",
+        "water_enter",
+        "rise",
+        "equalize",
+        "release"
+      ],
+      "direcao_evento": {
+        "intencao": "demonstrar_acao",
+        "fato_id": "principio_eclusa",
+        "aprendizado": "Ligar visualmente reservatório mais alto ao conduto e à válvula, mostrar água por gravidade entrando na câmara e navio flutuando até igualar níveis; só então liberar o portão"
+      }
+    }
+  ],
+  "observacao": "QA privada, sem voz, Telegram ou publicação. O segundo mecanismo agora tem 10,3 s para mostrar causa e consequência; isso não autoriza outro tema ou episódio."
+}

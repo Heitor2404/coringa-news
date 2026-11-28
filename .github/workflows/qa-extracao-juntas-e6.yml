@@ -1,0 +1,91 @@
+name: "LAB E6 — relacoes tipadas com fontes revisionadas e abstencao"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-extracao-juntas-e6.yml"
+      - "src/v4/formatos/extracao_juntas_e6.py"
+      - "tests/test_extracao_juntas_e6.py"
+      - "benchmarks/e6_gold_juntas_v1.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e6-source-typed-constraints
+  cancel-in-progress: true
+jobs:
+  evaluate_e6:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install numeric and test dependencies (no paid models)
+        run: python -m pip install -q pytest numpy scipy cairosvg pillow
+      - name: Test E6 adversarial plus prior extraction and solver regressions
+        run: |
+          python -m pytest -q \
+            tests/test_extracao_juntas_e6.py \
+            tests/test_extrator_relacoes_e5.py \
+            tests/test_descoberta_fontes_e4.py \
+            tests/test_solver_generico_e2.py \
+            tests/test_relacoes_com_evidencia_f17.py
+      - name: Re-fetch 5 new pages and require frozen revision plus extract hash
+        timeout-minutes: 6
+        run: |
+          mkdir -p qa_e6
+          python -m src.v4.formatos.extracao_juntas_e6 \
+            benchmarks/e6_gold_juntas_v1.json \
+            qa_e6/E6_TYPED_TEXT_EVAL.json
+      - name: Fixed quality gate and explicit solver/geometry block
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          report=json.loads(Path("qa_e6/E6_TYPED_TEXT_EVAL.json").read_text("utf8"))
+          gold=Path("benchmarks/e6_gold_juntas_v1.json")
+          assert report["source_pages_refetched"]==5
+          assert report["source_revisions_verified"] is True
+          assert report["joint_instance_endpoints_verified"]==0
+          assert report["dimension_fields_bound_to_instances"]==0
+          assert report["new_mechanism_simulations"]==0
+          assert report["source_to_mechanism_spec"] is False
+          assert report["human_review_required"] and not report["render_allowed"]
+          assert not report["publish"]
+          assert sum(p["sentences"] for p in report["pages"])==129
+          dev=report["metrics"]["development"]
+          held=report["metrics"]["heldout"]
+          assert (dev["positive_support"],held["positive_support"])==(3,2)
+          # Frozen threshold; do not change labels to make pass.
+          assert held["precision"] is not None and held["precision"]>=.8,held
+          assert held["recall"] is not None and held["recall"]>=.5,held
+          # Verify two example dimensions were read as values with units,
+          # while no source value was given authority to fill solver fields.
+          samples=[d for p in report["pages"]
+                   for d in p["measurements_not_usable"]]
+          assert any(d["part_word"]=="rod"
+                     and abs(d["value_in_m"]-.1524)<1e-9 for d in samples)
+          assert any(d["part_word"]=="crank"
+                     and abs(d["value_in_m"]-.0508)<1e-9 for d in samples)
+          assert all(d["safe_to_fill_spec"] is False for d in samples)
+          print(json.dumps({
+            "schema":"coringa-e6-gate-v1",
+            "samples":129,
+            "development":dev,"heldout":held,
+            "positive_support_is_tiny":True,
+            "independent_gold_validation":False,
+            "solver_ready_joints":0,
+            "automatic_specs":0,
+            "gold_sha256":hashlib.sha256(gold.read_bytes()).hexdigest(),
+            "publish":False,
+          },ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e6-typed-evidence-five-sources-no-spec
+          path: qa_e6/
+          retention-days: 5
+          if-no-files-found: warn

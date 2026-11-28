@@ -1,0 +1,48 @@
+name: "QA — impedir retorno de referências visuais legadas reprovadas"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-referencia-visual-antes-vs-safe.yml"
+      - "motor4/remotion/src/formatos/FilmeEditorial.tsx"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-referencia-visual
+  cancel-in-progress: true
+jobs:
+  referencia_privada:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: motor4/package-lock.json
+      - name: Instalar dependencias e verificar mecanismo original
+        run: |
+          python -m pip install -q pytest pillow requests numpy pyyaml cryptography
+          cd motor4
+          npm ci --no-audit --no-fund
+          npx --no-install tsc -p remotion/tsconfig.json --noEmit
+      - name: Referencia historica nao pode retornar ao caminho editorial
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.v4.formatos import filme_editorial as F
+          p=json.loads(Path('docs/v4/formatos/DEMO_MECANISMOS_FISICOS_20261119.json').read_text())
+          try:
+              F.preparar(p,Path('qa_ref_bloqueio'),Path('motor4/remotion/public'))
+          except ValueError as e:
+              assert 'A-ROTA-BLOQUEADA' in str(e)
+          else:
+              raise AssertionError('renderer rejeitado no fluxo editorial')
+          assert not Path('qa_ref_bloqueio/props.json').exists()
+          PY

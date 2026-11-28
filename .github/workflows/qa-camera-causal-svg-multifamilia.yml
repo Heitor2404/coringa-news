@@ -1,0 +1,132 @@
+name: "LAB F2 — câmera causal na máquina inteira (compressor + Otto)"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-camera-causal-svg-multifamilia.yml"
+      - "src/v4/formatos/camera_causal_svg.py"
+      - "src/v4/formatos/camera_causal_geometrias.json"
+      - "src/v4/formatos/temporizacao_causal.py"
+      - "src/v4/formatos/grafo_causal.py"
+      - "src/v4/formatos/grafo_causal_capacidades.json"
+      - "src/v4/formatos/render_compressor_conjunto_2d.py"
+      - "src/v4/formatos/render_reconstrucao_causal_2d.py"
+      - "tests/test_camera_causal_svg.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-camera-causal-svg
+  cancel-in-progress: true
+jobs:
+  duas_familias_fisicas:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Preparar renderizadores e FFmpeg sem IA
+        run: |
+          python -m pip install -q pillow cairosvg pytest numpy scipy opencv-python-headless
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: QA do grafo, enquadramento, retime e mecânica
+        run: |
+          python -m pytest -q tests/test_camera_causal_svg.py \
+            tests/test_compressor_conjunto_2d.py \
+            tests/test_reference_reconstruction_2d.py \
+            tests/test_grafo_causal.py
+      - name: Renderizar dois vídeos em modo F2 experimental (não publicar)
+        timeout-minutes: 8
+        run: |
+          mkdir -p qa_camera_causal
+          python -m src.v4.formatos.render_compressor_conjunto_2d \
+            qa_camera_causal/COMPRESSOR_F2_CAMERA_E_RITMO.mp4 --camera-causal
+          python -m src.v4.formatos.render_reconstrucao_causal_2d \
+            docs/v4/formatos/reference_first/otto_48f_measured_motion.json \
+            docs/v4/formatos/reference_first/otto_48f_causal_reviewed_scene.json \
+            qa_camera_causal/OTTO_F2_CAMERA_CAUSAL.mp4 --camera-causal
+      - name: Comparar filmagem ORIGINAL do código com F2 e conferir MP4 real
+        run: |
+          python - <<'PY'
+          import io,json,subprocess,hashlib
+          from pathlib import Path
+          import cairosvg
+          from PIL import Image,ImageDraw,ImageChops,ImageStat
+          from src.v4.formatos import render_compressor_conjunto_2d as P
+          from src.v4.formatos import render_reconstrucao_causal_2d as O
+          from src.v4.formatos import temporizacao_causal as T
+          from src.v4.formatos.compressor_pv_core import limites_fases
+          root=Path('qa_camera_causal')
+          films=[
+             ('COMPRESSOR',root/'COMPRESSOR_F2_CAMERA_E_RITMO.mp4'),
+             ('OTTO',root/'OTTO_F2_CAMERA_CAUSAL.mp4')]
+          board=Image.new('RGB',(5*270,2*500),'#E7EFF2')
+          records={}
+          for row,(kind,video) in enumerate(films):
+            m=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries',
+                 'format=duration:stream=codec_type,width,height,r_frame_rate',
+                 '-of','json',str(video)]))
+            stream=next(x for x in m['streams'] if x['codec_type']=='video')
+            assert (stream['width'],stream['height'])==(540,960)
+            assert stream['r_frame_rate']=='24/1'
+            assert abs(float(m['format']['duration'])-8)<.06
+            assert not any(s['codec_type']=='audio' for s in m['streams'])
+            frames=[]
+            for i,sec in enumerate((.2,1.4,3.1,5.7,7.5)):
+              p=root/f'{kind}_{i:02}.png'
+              subprocess.check_call(['ffmpeg','-hide_banner','-loglevel','error',
+                 '-y','-ss',str(sec),'-i',str(video),'-frames:v','1',str(p)])
+              im=Image.open(p).convert('RGB')
+              frames.append(im)
+              board.paste(im.resize((270,480)),(i*270,row*500+20))
+            diff=ImageChops.difference(frames[1].crop((55,260,486,870)),
+                                       frames[-1].crop((55,260,486,870)))
+            delta=sum(ImageStat.Stat(diff).mean)/3
+            assert delta>2, (kind,delta)
+            report=json.loads(video.with_suffix('.json').read_text('utf8'))
+            assert report['camera_causal']['habilitada'] is True
+            if kind=='COMPRESSOR':
+              assert report['layout']['escala_inalterada'] is False
+              assert report['layout']['proporcoes_e_fisica_inalteradas'] is True
+              assert report['layout']['zoom_maximo_da_camera']>1.07
+            else:
+              assert report['enquadramento_compartilhado']['zoom_maximo_da_camera']>1.02
+            assert report['publicar'] is False
+            records[kind]={'delta_fisico_rgb':round(delta,3),
+                           'sha256':hashlib.sha256(video.read_bytes()).hexdigest(),
+                           'status':'QA_TECNICO_PASSA_ESTETICA_HUMANA_PENDENTE'}
+          board.save(root/'CONTATO_10_MOMENTOS_F2.jpg',quality=91)
+          manifest=json.loads(P.MANIFESTO_PADRAO.read_text('utf8'))
+          motion=json.loads(Path('docs/v4/formatos/reference_first/otto_48f_measured_motion.json').read_text('utf8'))
+          scene=json.loads(Path('docs/v4/formatos/reference_first/otto_48f_causal_reviewed_scene.json').read_text('utf8'))
+          # Real still from the OLD identical instant versus experimental camera.
+          comp=Image.new('RGB',(4*540,960),'#EFF3F5')
+          def make_svg(svg):
+            return Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode()))).convert('RGB')
+          comp.paste(make_svg(P.frame_svg(.70,manifest)),(0,0))
+          comp.paste(make_svg(P.frame_svg(.70,manifest,camera_causal=True,tempo_s=5.6,inicio_fase_s=4.0)),(540,0))
+          comp.paste(make_svg(O.svg_frame(motion,scene,.55)),(1080,0))
+          comp.paste(make_svg(O.svg_frame(motion,scene,.55,camera_causal=True)),(1620,0))
+          comp.save(root/'ANTES_VS_F2_PV_E_OTTO.jpg',quality=91)
+          report={'estado':'PROVA_REAL_DUAS_FAMILIAS_COM_CAMERA_CAUSAL',
+                  'referencia_visual':'COMPRESSOR_COMPLETO_DE_OFICINA',
+                  'publicar':False,'revisao_estetica':'PENDENTE',
+                  'autoriza_video_final':False,
+                  'renderizadores':records}
+          (root/'QA_CAMERA_F2.json').write_text(
+            json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Enviar somente artefatos privados
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-f2-camera-causal-compressor-otto-privado
+          path: qa_camera_causal/
+          retention-days: 5
+          if-no-files-found: warn

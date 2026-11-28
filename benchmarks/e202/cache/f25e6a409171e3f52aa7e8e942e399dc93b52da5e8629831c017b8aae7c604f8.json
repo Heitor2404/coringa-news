@@ -1,0 +1,221 @@
+{
+ "pedido_sha256": "f25e6a409171e3f52aa7e8e942e399dc93b52da5e8629831c017b8aae7c604f8",
+ "provedor": "claude_code:sonnet",
+ "falhas_antes": [
+  "gemini: RuntimeError: nenhuma IA disponível (Gemini: Gemini indisponível: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high dema)"
+ ],
+ "segundos": 103.9,
+ "data": "2026-11-24T15:02:08Z",
+ "caracteres_pedido": 26263,
+ "caracteres_resposta": 3331,
+ "json": {
+  "titulo": "Por que flamingos são rosas?",
+  "acontecimento_central": "Algas e crustáceos com carotenoides são comidos pelo flamingo; o fígado processa os carotenoides e a cor rosa passa a aparecer nas penas, que começam pálidas.",
+  "referencias_visuais": [
+   "esquema ilustrativo identificado (não é filmagem real nem anatomia exata)",
+   "fluxo de partículas do alimento até o fígado",
+   "revelar interior com órgão rotulado como primitiva",
+   "tingimento gradual da plumagem",
+   "enquadramento final geral"
+  ],
+  "cenas": [
+   {
+    "id": "c1",
+    "verbo": "DEMONSTRAR",
+    "acontecimento": "O flamingo pálido recebe carotenoides do alimento; o fígado processa e a cor sobe para as penas.",
+    "modalidade": "cena_declarativa",
+    "justificativa_modalidade": "Não há mídia real nem mapa aprovado; o processo é mostrado como esquema ilustrativo com atores declarativos, sem anatomia exata.",
+    "atores": [
+     {
+      "id": "a_flamingo",
+      "rotulo": "Flamingo",
+      "papel": "protagonista",
+      "forma": {
+       "tipo": "icone",
+       "termos_en": [
+        "flamingo"
+       ],
+       "alternativa": "bloco"
+      },
+      "fatos": [
+       "b1",
+       "b2"
+      ]
+     },
+     {
+      "id": "a_alimento",
+      "rotulo": "Algas e crustáceos",
+      "papel": "origem",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "recipiente",
+       "cor": "#5FA85A"
+      },
+      "fatos": [
+       "b1"
+      ]
+     },
+     {
+      "id": "a_figado",
+      "rotulo": "Fígado (esquema)",
+      "papel": "meio",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "celula",
+       "cor": "#8B3A3A"
+      },
+      "fatos": [
+       "b2"
+      ]
+     },
+     {
+      "id": "a_penas",
+      "rotulo": "Penas",
+      "papel": "produto",
+      "forma": {
+       "tipo": "primitiva",
+       "nome": "camada",
+       "cor": "#F4A3B5"
+      },
+      "fatos": [
+       "b2"
+      ]
+     }
+    ],
+    "relacoes": [
+     {
+      "tipo": "ao_lado",
+      "a": "a_alimento",
+      "b": "a_flamingo"
+     },
+     {
+      "tipo": "dentro",
+      "a": "a_figado",
+      "b": "a_flamingo"
+     },
+     {
+      "tipo": "sobre",
+      "a": "a_penas",
+      "b": "a_flamingo"
+     }
+    ],
+    "beats": [
+     {
+      "fala": "Flamingo nasce rosa? Aqui ele está pálido. A cor vem de outro lugar.",
+      "etapa": "Pergunta",
+      "fatos": [
+       "b1"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_penas",
+        "de_saturacao": 0.1,
+        "para_saturacao": 0.1,
+        "inicio": 0.0,
+        "fim": 0.4
+       },
+       {
+        "verbo": "aparecer",
+        "alvo": "a_alimento",
+        "inicio": 0.4,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_flamingo",
+       "enquadramento": "medio",
+       "motivo": "Protagonista em quadro com plumagem ainda pálida, antes da causa."
+      }
+     },
+     {
+      "fala": "Ele come algas e pequenos crustáceos. Ali estão os carotenoides.",
+      "etapa": "Causa: alimento",
+      "fatos": [
+       "b1"
+      ],
+      "acoes": [
+       {
+        "verbo": "fluxo",
+        "de": "a_alimento",
+        "para": "a_flamingo",
+        "item": {
+         "rotulo": "Carotenoides",
+         "cor": "#F28C28",
+         "forma": "particula"
+        },
+        "quantidade": 8,
+        "inicio": 0.0,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_alimento",
+       "enquadramento": "detalhe",
+       "motivo": "Mostra os carotenoides saindo do alimento rumo ao flamingo."
+      }
+     },
+     {
+      "fala": "O fígado processa os carotenoides. As moléculas derivadas seguem para as penas.",
+      "etapa": "Processo no fígado",
+      "fatos": [
+       "b2"
+      ],
+      "acoes": [
+       {
+        "verbo": "revelar_interior",
+        "alvo": "a_flamingo",
+        "interior": "a_figado",
+        "inicio": 0.0,
+        "fim": 0.35
+       },
+       {
+        "verbo": "fluxo",
+        "de": "a_figado",
+        "para": "a_penas",
+        "item": {
+         "rotulo": "Derivados",
+         "cor": "#E8647C",
+         "forma": "particula"
+        },
+        "quantidade": 8,
+        "efeito_no_destino": "pulsar",
+        "inicio": 0.35,
+        "fim": 1.0
+       }
+      ],
+      "camera": {
+       "foco": "a_figado",
+       "enquadramento": "medio",
+       "motivo": "O processamento e o envio às penas acontecem dentro do flamingo."
+      }
+     },
+     {
+      "fala": "Quanto mais carotenoides na dieta, mais forte o rosa. A cor é o alimento.",
+      "etapa": "Payoff",
+      "fatos": [
+       "b1",
+       "b2"
+      ],
+      "acoes": [
+       {
+        "verbo": "tingir",
+        "alvo": "a_penas",
+        "de_saturacao": 0.1,
+        "para_saturacao": 0.95,
+        "inicio": 0.0,
+        "fim": 0.8
+       }
+      ],
+      "camera": {
+       "foco": "a_flamingo",
+       "enquadramento": "geral",
+       "motivo": "Payoff: plumagem rosa intensa como resultado da dieta."
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "_origem_registro": "log do Actions run 45420134949 (job 138537103175)"
+}

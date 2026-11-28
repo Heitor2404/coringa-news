@@ -1,0 +1,79 @@
+{
+  "schema": "coringa.reviewed-static.private.v1",
+  "publish": false,
+  "release": "review-e320-45860199613-1",
+  "cuts": [
+    {
+      "shot": "c4-3",
+      "chapter": "O litoral mudou",
+      "speech": "O ACÚMULO DE ROCHA A ANTIGA BAÍA FOI PREENCHIDA",
+      "source": "kilauea-volcano-lava-filled-kapoho-bay",
+      "sha256": "237f626ad422f1bfa1603076b3c7adc8744af396731273cc6e2f491ea089772e",
+      "label": "Registro aéreo: antiga baía preenchida",
+      "lead": "BAÍA DE KAPOHO",
+      "observed": "Fotografia oficial de 11 de junho: a antiga baía foi preenchida; mostra nova costa escura e mar, não a ação contínua de solidificação.",
+      "review_ref": "revisoes/e320-45860199613-1/evidencia-02.jpg",
+      "kind": "photo",
+      "reveal": {
+        "anchor_word": "ANTIGA",
+        "label": "ANTIGA BAÍA PREENCHIDA",
+        "bbox": [
+          0.17,
+          0.4,
+          0.57,
+          0.7
+        ],
+        "observation": "A faixa de rocha escura avança até o mar na fotografia oficial da baía preenchida; não indica a antiga linha de costa."
+      }
+    },
+    {
+      "shot": "c6-0",
+      "chapter": "O tamanho da transformação",
+      "speech": "NO TOTAL A LAVA COBRIU TRINTA E CINCO QUILÔMETROS QUADRADOS E MEIO",
+      "source": "map-kilauea-volcanos-lower-east-rift-zone",
+      "sha256": "b6ebc2d171849a048e5b514b56364ac725f7d57860e8b85fc59791519de961ff",
+      "label": "Mapa USGS: extensão da lava e antiga costa",
+      "lead": "EXTENSÃO DA ERUPÇÃO",
+      "observed": "Mapa oficial maio–agosto mostra extensão rosa dos fluxos de 2018, antiga costa pontilhada, 35,5 km² e delta de aproximadamente 875 acres; manter toda a legenda e autoria.",
+      "review_ref": "revisoes/e320-45860199613-1/evidencia-00.jpg",
+      "kind": "photo",
+      "reveal": {
+        "anchor_word": "TRINTA",
+        "label": "35,5 KM² COBERTOS",
+        "bbox": [
+          0.58,
+          0.84,
+          0.76,
+          0.93
+        ],
+        "observation": "O quadro de dados do mapa oficial informa explicitamente 35.5 square kilometers de área de fluxos.",
+        "detail_zoom": true
+      }
+    },
+    {
+      "shot": "c5-3",
+      "chapter": "O topo também mudou",
+      "speech": "E O COLAPSO NO TOPO FAZIAM PARTE DO MESMO PROCESSO",
+      "source": "schematic-east-west-cross-section-across-kilauea-caldera-2018-2019",
+      "sha256": "f593c35a9b0124a64329fb7cc7d4c992e9d2f11738eeb350304a9987b870d8d2",
+      "label": "Esquema científico de drenagem do reservatório",
+      "lead": "ESQUEMA · SEM ESCALA",
+      "observed": "Painéis A/B do esquema oficial mostram reservatório antes do colapso e blocos rebaixados após drenagem; C/D descrevem fases de recuperação posteriores em 2018–2019. Não é filmagem nem escala real.",
+      "review_ref": "revisoes/e323-45864804065-1/fonte-03.jpg",
+      "kind": "photo",
+      "release": "review-e323-45864804065-1",
+      "reveal": {
+        "anchor_word": "FAZIAM",
+        "label": "DRENAGEM E COLAPSO",
+        "bbox": [
+          0.53,
+          0.105,
+          0.96,
+          0.43
+        ],
+        "observation": "Painel B mostra blocos rebaixados, espaço vazio e reservatório de magma reduzido. A descrição oficial vincula a drenagem do reservatório à erupção na zona de rifte.",
+        "detail_zoom": true
+      }
+    }
+  ]
+}

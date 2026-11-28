@@ -1,0 +1,146 @@
+name: "LAB E7 — importar geometria MIT por dados para solver comum"
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths:
+      - ".github/workflows/qa-importacao-geometria-e7.yml"
+      - "src/v4/formatos/importador_geometria_e7.py"
+      - "src/v4/formatos/renderer_corpos_e1.py"
+      - "tests/test_importador_geometria_e7.py"
+      - "benchmarks/e7_open_geometry_sources_v1.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lab-e7-source-geometry-solver
+  cancel-in-progress: true
+jobs:
+  inspect_and_render_private:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install numerical and rendering test tools
+        run: |
+          python -m pip install -q pytest numpy scipy cairosvg pillow
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ffmpeg
+          fi
+      - name: Adversarial source verification and previous solver regressions
+        run: |
+          python -m pytest -q \
+            tests/test_importador_geometria_e7.py \
+            tests/test_solver_generico_e1.py \
+            tests/test_solver_generico_e2.py
+      - name: Download pinned upstream MIT examples and prove geometry to E1
+        timeout-minutes: 9
+        run: |
+          mkdir -p qa_e7
+          python -m src.v4.formatos.importador_geometria_e7 \
+            benchmarks/e7_open_geometry_sources_v1.json qa_e7 --live
+      - name: Preflight source-to-solver success and meaningful failure accounting
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          qa=json.loads(Path("qa_e7/QA_E7_GEOMETRY.json").read_text("utf8"))
+          rows={r["source_path"]:r for r in qa["source_cases"]}
+          assert len(rows)==5
+          assert qa["network_reported_live"] is True
+          assert all(r["source_https_verified_in_ci"] is True and r["license_verified"] is True for r in rows.values())
+          assert all(r["publish"] is False and r["visual_approved"] is False for r in rows.values())
+          assert qa["source_to_solver_convert_only"] and not qa["publish"]
+          # A newly source-derived target (quick-return) is required.
+          q=rows["src/examples/quick-return.csv"]
+          assert q["status"]=="PASS_SOURCE_GEOMETRY_SOLVER_ONLY",q
+          assert q["finite_slot_proof"] is True and q["full_rank"] is True
+          assert q["max_residual_m"]<1e-7
+          assert Path("qa_e7/quick_return_E7_SPEC.json").is_file()
+          assert rows["src/examples/gears.csv"]["status"].startswith("BLOCKED_")
+          print(json.dumps({"status":"PASS_SOURCE_DERIVED_GEOMETRY_WITH_LIMITS",
+             "passes":qa["passed"],"blocked":qa["blocked"],
+             "quick_return":q["status"],
+             "source_sha256":q["source_sha256"],
+             "mechanism_name_hardcode":False,
+             "production_enabled":False,"publish":False},ensure_ascii=False))
+          PY
+      - name: Generate PRIVATE geometry pilot with existing shared renderer
+        timeout-minutes: 8
+        run: |
+          python -m src.v4.formatos.renderer_corpos_e1 \
+            qa_e7/quick_return_E7_SPEC.json \
+            qa_e7/QUICK_RETURN_E7_PRIVATE.mp4 \
+            --title "RETORNO RAPIDO | DADOS CSV MIT"
+      - name: FFprobe / contact sheet / physical quick-return asymmetry
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess,math
+          from pathlib import Path
+          from src.v4.formatos import solver_restricoes_e1 as S
+          from PIL import Image
+          folder=Path("qa_e7")
+          movie=folder/"QUICK_RETURN_E7_PRIVATE.mp4"
+          report=json.loads((folder/"quick_return_E7_AUDIT.json").read_text("utf8"))
+          spec=json.loads((folder/"quick_return_E7_SPEC.json").read_text("utf8"))
+          frames=S.trajectory(spec,361)
+          # Rocker source body: second body in the CSV, not a named compositor.
+          rocker=spec["bodies"][1]["id"]
+          phi=[x["poses"][rocker][2] for x in frames]
+          peaks=[i for i in range(1,len(phi)-1)
+                  if (phi[i]-phi[i-1])*(phi[i+1]-phi[i])<0]
+          assert len(peaks)>=2,("NO_ROCKER_EXTREMA",peaks)
+          # Both forward and return times must be different for quick return.
+          a,b=peaks[0:2];swing=max(a and b-a,360-(b-a))/min(b-a,360-(b-a))
+          assert swing>1.12,("NO_QUICK_RETURN",swing,peaks)
+          assert report["source_geometry_satisfied_constraints"]>=4
+          assert report["no_mechanism_name_dispatch"] is True
+          assert report["source_loads_simulated"] is False
+          assert report["finite_slot_proof"]
+          raw=json.loads(subprocess.check_output(["ffprobe","-v","error",
+            "-show_entries","stream=codec_type,width,height,r_frame_rate:format=duration",
+            "-of","json",str(movie)]))
+          video=next(s for s in raw["streams"] if s["codec_type"]=="video")
+          assert (video["width"],video["height"])==(540,960)
+          assert not any(s["codec_type"]=="audio" for s in raw["streams"])
+          meta=json.loads(movie.with_suffix(".json").read_text("utf8"))
+          sha=hashlib.sha256(movie.read_bytes()).hexdigest()
+          assert meta["sha256"]==sha
+          assert meta["renderer"]=="single_shared_svg_compositor"
+          assert meta["publish"] is False
+          board=Image.new("RGB",(270*4,480),"#f1f4f6")
+          for col,t in enumerate((.15,.62,1.11,1.69)):
+              p=folder/f"FRAME_{col}.png"
+              subprocess.check_call(["ffmpeg","-hide_banner","-loglevel","error","-y",
+                 "-ss",str(t),"-i",str(movie),"-frames:v","1",str(p)])
+              board.paste(Image.open(p).convert("RGB").resize((270,480)),(col*270,0))
+          board.save(folder/"QUICK_RETURN_E7_CONTATO.jpg",quality=92)
+          proof={"schema":"coringa-e7-private-video-proof-v1",
+                 "source_path":report["source_path"],
+                 "source_git_blob_sha1":report["source_git_blob_sha1"],
+                 "source_sha256":report["source_sha256"],
+                 "license":"MIT",
+                 "source_to_spec":"machine_readable_structured_CSV",
+                 "source_to_spec_from_prose":False,
+                 "driver_full_cycle_physical":"rotation_by_original_rpm",
+                 "quick_return_time_ratio":swing,
+                 "rocker_extrema_indices":peaks,
+                 "joint_positions_from_source":True,
+                 "slot_finite_contact_verified":True,
+                 "video_sha256":sha,
+                 "visual_approved":False,"publish":False,
+                 "source_was_not_a_general_natural_language_topic":True,
+                 "geometry_is_schematic_2d_not_industrial_CAD":True}
+          (folder/"QA_E7_VIDEO.json").write_text(json.dumps(proof,indent=2),encoding="utf8")
+          print(json.dumps(proof,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-e7-source-geometry-mit-private-mechanism
+          path: qa_e7/
+          retention-days: 5
+          if-no-files-found: warn

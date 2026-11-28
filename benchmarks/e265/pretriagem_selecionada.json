@@ -1,0 +1,25 @@
+{
+  "publicar": false,
+  "case": "gelo_paisagem",
+  "origem": "Inspeção assistida das folhas E270, somente seleção para adquirir e revisar",
+  "selecao": [
+    {
+      "id": "n16",
+      "mostrar": "braço de mar estreito entre encostas montanhosas",
+      "pagina": "https://commons.wikimedia.org/wiki/File:N%C3%A6r%C3%B8yfjord-cruise-view.jpg",
+      "preview_sha256": "7da628aef7ae1bc5340c235379f697aa555023f4bb0d505a99f494a73dacf4ba"
+    },
+    {
+      "id": "n17",
+      "mostrar": "pico agudo com encostas esculpidas por glaciação",
+      "pagina": "https://commons.wikimedia.org/wiki/File:0_106_Walliser_Alpen_-_Matterhorn.jpg",
+      "preview_sha256": "faf19b055148d513eef78279eb0fc3a89c3a8671b7bd7ce5a51933f613140e20"
+    },
+    {
+      "id": "n18",
+      "mostrar": "paisagem ampla com vale glacial e lago",
+      "pagina": "https://commons.wikimedia.org/wiki/File:Banff_National_Park_(AB,_Canada),_Lake_Louise_--_2022_--_2197.jpg",
+      "preview_sha256": "1c2256af2f68437f828bfa83fabfe98d5c37689ece07c6e35c912d7c8e350ab9"
+    }
+  ]
+}

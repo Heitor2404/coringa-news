@@ -1,0 +1,27 @@
+{
+  "consulta": "geneva mechanism CAD",
+  "registro": "Consulta pré-registrada na E34 (seção 171). Candidatos na ordem de descoberta; nenhum é preferido pelo código.",
+  "candidatos": [
+    {
+      "url": "https://github.com/bhimanimahatale/geneva-mechanism-cad",
+      "origem_descoberta": "E34 GitHub REST (run 45324430374)",
+      "commit": "8e050a079eb5c47c019db51e7b435438d47cdc37"
+    },
+    {
+      "url": "https://github.com/ajahidny-crypto/geneva-drive-mechanism",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "28c92477315a1a4f91673fc08ae075bb7bef9c40"
+    },
+    {
+      "url": "https://github.com/cadbuildr/geneva-drive",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "1a1d5b67fbb3cac21cbe16d4a48b7302564ffb88"
+    },
+    {
+      "url": "https://github.com/SindiSekkas/geneva-drive-generator",
+      "origem_descoberta": "busca web do agente E35 (24/11)",
+      "commit": "77c5c2075b2e14322c45efbccb34f64bf2d638ff"
+    }
+  ],
+  "congelado_em": "2026-11-24"
+}

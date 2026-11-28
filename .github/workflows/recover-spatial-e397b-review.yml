@@ -1,0 +1,61 @@
+name: E397B - recuperar provas privadas sem reenvio
+on:
+  push:
+    branches: [atlas-direcao-visual-20261118]
+    paths: ['.github/workflows/recover-spatial-e397b-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: e397b-recover-46120662352
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/atlas-direcao-visual-20261118'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: ship
+            composition: SpatialShipB
+          - case: wind
+            composition: SpatialWindB
+    env:
+      MAP_CASE: ${{ matrix.case }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: ./.github/actions/setup-ffmpeg
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Confirmar status do job original
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMPOSITION: ${{ matrix.composition }}
+        run: |
+          mkdir -p qa_spatial_e397b
+          for i in $(seq 1 100); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/46120662352/jobs?per_page=100" > /tmp/e397b-jobs.json
+            if jq -e --arg name "qa ($MAP_CASE, $COMPOSITION)" '.jobs[] | select(.name==$name and .status=="completed")' /tmp/e397b-jobs.json > /tmp/e397b-job.json; then break; fi
+            sleep 12
+          done
+          jq -e '.status=="completed"' /tmp/e397b-job.json >/dev/null
+          jq '{original_run:46120662352,original_job:.id,conclusion,steps:[.steps[]|{name,conclusion}],message_id:null,delivery_confirmed_by_step:([.steps[]|select(.name=="Entregar video Telegram privado" and .conclusion=="success")]|length==1),recovery_sends_telegram:false}' /tmp/e397b-job.json > qa_spatial_e397b/original-job.json
+          jq -e '.delivery_confirmed_by_step' qa_spatial_e397b/original-job.json >/dev/null
+      - name: Recuperar MP4 original da release privada
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          repo=Heitor2404/coringa-cofre
+          test "$(gh api "repos/$repo" --jq '.private and (.id == 1454059520)')" = true
+          gh release download "review-e397b-${MAP_CASE}-46120662352-1" --repo "$repo" --pattern portrait.mp4 --dir qa_spatial_e397b
+      - name: Revalidar e espelhar JSON e contato
+        env:
+          GH_TOKEN: ${{ secrets.COFRE_TOKEN }}
+        run: |
+          python -m pip install -q pillow requests
+          python -m scripts.verificar_spatial_e397b
+          python scripts/espelhar_revisao_cofre.py "e397b-${MAP_CASE}-46120662352-recovered" qa_spatial_e397b/qa.json qa_spatial_e397b/original-job.json qa_spatial_e397b/portrait-contact.jpg qa_spatial_e397b/portrait-contact.base64.json

@@ -20,6 +20,6 @@ def main():
     for i,im in enumerate(frames):
         x=i%4*270;y=i//4*502;sheet.paste(im,(x,y));draw.text((x+5,y+480),str(times[i])+'s',fill='white')
     sheet.save(ROOT/'portrait-contact.jpg',quality=88)
-    (ROOT/'portrait-contact.base64.txt').write_text(base64.b64encode((ROOT/'portrait-contact.jpg').read_bytes()).decode('ascii'))
+    (ROOT/'portrait-contact.base64.json').write_text(json.dumps({'encoding':'base64','mime':'image/jpeg','content':base64.b64encode((ROOT/'portrait-contact.jpg').read_bytes()).decode('ascii')}))
     (ROOT/'qa.json').write_text(json.dumps({'publish':False,'case':os.environ['MAP_CASE'],'visual_approval':'PENDING','sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'frames':360,'dimensions':[720,1280],'delta_rgb':delta,'geometry':'authored illustrative nominal model; 1 unit=10m'},indent=2))
 if __name__=='__main__':main()

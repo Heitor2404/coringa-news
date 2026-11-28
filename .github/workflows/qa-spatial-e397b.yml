@@ -66,7 +66,7 @@ jobs:
           shopt -s nullglob
           root=qa_spatial_e397b
           if [[ -f "$root/portrait.mp4" ]]; then bash scripts/arquivar_cofre_review.sh "review-e397b-${MAP_CASE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "$root/portrait.mp4"; fi
-          files=("$root"/qa.json "$root"/delivery.json "$root"/*.jpg "$root"/*.base64.txt)
+          files=("$root"/qa.json "$root"/delivery.json "$root"/*.jpg "$root"/*.base64.json)
           existing=()
           for f in "${files[@]}"; do if [[ -f "$f" ]]; then existing+=("$f"); fi; done
           if (( ${#existing[@]} )); then python scripts/espelhar_revisao_cofre.py "e397b-${MAP_CASE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${existing[@]}"; fi
